@@ -1,49 +1,44 @@
 import epanetlib as en
 import matplotlib.pyplot as plt
-import numpy as np
 
 plt.close('all')
 
-# Input
-inp_file_name = 'networks/Net3.inp'
-
 # Create enData
 enData = en.pyepanet.ENepanet()
-enData.ENopen(inp_file_name,'tmp.rpt')
+enData.inpfile = 'networks/Net3.inp'
+enData.ENopen(enData.inpfile,'tmp.rpt')
 
-# Read network coordinates 
-pos = en.pyepanet.future.ENgetcoordinates(inp_file_name)
-
-# Create multi-graph
-MG = en.network.epanet_to_MultiGraph(enData, pos=pos)
+# Create MultiDiGraph
+G = en.network.epanet_to_MultiDiGraph(enData)
+en.network.draw_graph(G.to_undirected(), title=enData.inpfile)
 
 # Run base hydarulic simulation and save data
 enData.ENopenH()
-[time, node_P, node_D, link_F, link_V] = en.sim.eps_hydraulic(enData)
+G = en.sim.eps_hydraulic(enData, G)
 
 # Compute todini index
-flowunits = enData.ENgetflowunits()
-t=0
-Pstar = en.units.convert('Pressure', flowunits, 30) # m
-P = dict(zip(node_P.keys(), en.units.convert('Pressure', flowunits, np.array(node_P.values())))) # m
-D = dict(zip(node_D.keys(), en.units.convert('Demand', flowunits, np.array(node_D.values())))) # m3/s
-todini = en.metrics.todini(enData, P, D, Pstar)
+todini = en.metrics.todini(G, 30)
 plt.figure()
 plt.title('Todini Index')
-plt.plot(time, todini)
+plt.plot(G.graph['time'], todini)
 
-# Create directed-graph
-edge_attribute = dict(zip(link_F.keys(), np.array(link_F.values())[:,t]))    
-DG = en.network.epanet_to_MultiDiGraph(enData, edge_attribute, pos=pos)
+# Create MultiDiGraph for entropy
+t = 0
+attr = dict( ((u,v,k),d['flow'][t]) for u,v,k,d in G.edges(keys=True,data=True) if 'flow' in d)
+G0 = en.network.epanet_to_MultiDiGraph(enData, edge_attribute=attr)
+en.network.draw_graph(G0, edge_attribute='weight', 
+                      title='Flow at time = ' + str(G.graph['time'][t]))
+entropy = en.metrics.entropy(G0)
 
-#Plot
-en.network.draw_graph(DG, edge_attribute='weight', 
-                      title='Directed-graph, Flow at time = 0')
-                        
-# Compute entropy
-entropy = en.metrics.entropy(DG, enData)
+t = 100
+attr = dict( ((u,v,k),d['flow'][t]) for u,v,k,d in G.edges(keys=True,data=True) if 'flow' in d)
+G1 = en.network.epanet_to_MultiDiGraph(enData, edge_attribute=attr)
+en.network.draw_graph(G1, edge_attribute='weight', 
+                      title='Flow at time = ' + str(G.graph['time'][t]))
+entropy = en.metrics.entropy(G1)
 
 # Compute network cost and GHG emissions
+flowunits = G.graph['flowunits']
 if flowunits in [0,1,2,3,4]:
     tank_cost = en.metrics.read_network_data('data/US_cost_tank.txt')
     pipe_cost = en.metrics.read_network_data('data/US_cost_pipe.txt')
