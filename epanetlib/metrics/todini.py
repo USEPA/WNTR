@@ -7,25 +7,34 @@ def todini(G, Pstar):
     
     flowunits = G.graph['flowunits']
     
-    Pstar = convert('Pressure', flowunits, 30) # m
-    P = nx.get_node_attributes(G,'pressure')
-    D = nx.get_node_attributes(G,'demand')
+    h_star = convert('Pressure', flowunits, Pstar) # m
 
-    #P = dict(zip(node_P.keys(), convert('Pressure', flowunits, np.array(node_P.values())))) # m
-    #D = dict(zip(node_D.keys(), convert('Demand', flowunits, np.array(node_D.values())))) # m3/s
-
-    numer = 0
-    denom1 = 0
-    denom2 = 0
+    POut = {}
+    PExp = {}
+    PInRes = {}
+    PInPump = {}
     
     for i in G.nodes():
         if G.node[i]['nodetype']  == pyepanet.EN_JUNCTION:
-            numer = numer + np.array(D[i])*(np.array(P[i]) - Pstar)
-            denom2 = denom2 + np.array(D[i])*Pstar
+            h = convert('Hydraulic Head', flowunits, np.array(G.node[i]['head'])) # m
+            e = convert('Elevation', flowunits, G.node[i]['elevation'])# m
+            q = convert('Demand', flowunits, np.array(G.node[i]['demand'])) # m3/s
+            POut[i] = q*h
+            PExp[i] = q*(h_star+e)
         if G.node[i]['nodetype'] == pyepanet.EN_RESERVOIR:
-            denom1 = denom1 - np.array(D[i])*np.array(P[i]) # switch sign on D.
-          
-    todini_index = numer/(denom1 - denom2)
+            H = convert('Hydraulic Head', flowunits, np.array(G.node[i]['head'])) # m
+            Q = convert('Demand', flowunits, np.array(G.node[i]['demand'])) # m3/s
+            PInRes[i] = -Q*H # switch sign on Q.
+    
+    for i,j,k in G.edges(keys=True):
+        if G.edge[i][j][k]['linktype']  == pyepanet.EN_PUMP:
+            h = convert('Hydraulic Head', flowunits, np.array(G.edge[i][j][k]['headloss'])) # m
+            e = convert('Elevation', flowunits, G.node[i]['elevation'])# m
+            q = convert('Flow', flowunits, np.array(G.edge[i][j][k]['flow'])) # m3/s
+            PInPump[k] = q*(abs(h)+e)
+            
+    todini_index = (sum(POut.values()) - sum(PExp.values()))/  \
+        (sum(PInRes.values()) + sum(PInPump.values()) - sum(PExp.values()))
     
     return todini_index.tolist()
     
