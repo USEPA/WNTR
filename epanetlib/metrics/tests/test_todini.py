@@ -1,6 +1,7 @@
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
+import matplotlib.pyplot as plt
 
 import sys
 sys.path.append('C:\kaklise\EPA-Resilience\Evaluation Tool')
