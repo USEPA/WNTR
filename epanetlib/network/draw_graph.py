@@ -3,8 +3,8 @@ import matplotlib.pyplot as plt
 import networkx_extensions as nx_ext
 
 def draw_graph(G, node_attribute=None, edge_attribute=None, title=None, 
-               node_size=20, edge_width=1, 
-               node_cmap=None, edge_cmap=None):
+               node_size=20, node_range = [None,None], node_cmap=None,
+               edge_width=1, edge_range = [None,None], edge_cmap=None):
     r"""Draw networkx graph
     
     Parameters
@@ -85,5 +85,5 @@ def draw_graph(G, node_attribute=None, edge_attribute=None, title=None,
     if title is not None:
         plt.title(title)
     nx.draw_networkx(G, pos=pos, with_labels=False, 
-        nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap,
-        edgelist=edgelist, edge_color=edgecolor, width=edge_width, edge_cmap=edge_cmap)
+        nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1],
+        edgelist=edgelist, edge_color=edgecolor, width=edge_width, edge_cmap=edge_cmap, edge_vmin = edge_range[0], edge_vmax = edge_range[1])

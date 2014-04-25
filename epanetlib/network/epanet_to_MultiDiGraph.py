@@ -36,13 +36,18 @@ def epanet_to_MultiDiGraph(enData, edge_attribute=None):
                             
     G=nx.MultiDiGraph(name=enData.inpfile, 
                       flowunits=enData.ENgetflowunits(), 
-                      time=[])
+                      time=[],
+                      timestep=enData.ENgettimeparam(pyepanet.EN_REPORTSTEP))
     
     nNodes = enData.ENgetcount(pyepanet.EN_NODECOUNT) 
     for i in range(nNodes):
         nodeid = enData.ENgetnodeid(i+1)
         nodetype = enData.ENgetnodetype(i+1)
         elevation = enData.ENgetnodevalue(i+1, pyepanet.EN_ELEVATION)
+        
+        # Average volume of water consumed per day
+        #VC = average_volume_water_consumed_per_day(enData,i)
+        
         G.add_node(nodeid, nodetype=nodetype, elevation=elevation)
         
     nLinks = enData.ENgetcount(pyepanet.EN_LINKCOUNT) 
@@ -76,3 +81,13 @@ def epanet_to_MultiDiGraph(enData, edge_attribute=None):
         nx.set_node_attributes(G, 'pos', pos)
     
     return G
+"""
+def average_volume_water_consumed_per_day(enData,i):
+    pattern = enData.ENgetnodevalue(i+1, pyepanet.EN_PATTERN)
+    patlen = enData.ENgetpatternlen(pattern)
+    basedemand = enData.ENgetnodevalue(i+1, pyepanet.EN_BASEDEMAND)
+    hyd_timestep = enData.ENgettimeparam(pyepanet.EN_PATTERNSTEP)
+    start_time = enData.ENgettimeparam(pyepanet.EN_PATTERNSTART)
+    for t in range(patlen):
+        val = enData.ENgetpatternvalue(pattern,t)
+"""
