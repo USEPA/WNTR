@@ -32,14 +32,22 @@ def test_layout1():
     
     [S, Shat] = en.metrics.entropy(G)
     
+    Saverage = np.mean(S.values())
+    Smax = max(S.values())
+    Smin = min(S.values())
+    print 'Entropy: Layout 1'
+    print '  S mean: ' + repr(Saverage)
+    print '  S max: ' + repr(Smax)
+    print '  S min: ' + repr(Smin)
+    print '  Shat: ' + repr(Shat)
+    
     expected_Saverage = 0.088
-    error = abs((np.mean(S.values()) - expected_Saverage)/expected_Saverage)
+    error = abs((Saverage - expected_Saverage)/expected_Saverage)
     assert_less(error, 0.05) # 5% error
     
     expected_Smax = 0.5130
-    error = abs((max(S.values()) - expected_Smax)/expected_Smax)
-    assert_less(error, 0.05) # 5% error
-    
+    error = abs((Smax - expected_Smax)/expected_Smax)
+
     expected_Shat = 2.280
     error = abs((Shat - expected_Shat)/expected_Shat)
     assert_less(error, 0.05) # 5% error
@@ -72,12 +80,21 @@ def test_layout8():
     
     [S, Shat] = en.metrics.entropy(G)
     
+    Saverage = np.mean(S.values())
+    Smax = max(S.values())
+    Smin = min(S.values())
+    print 'Entropy: Layout 8'
+    print '  S mean: ' + repr(Saverage)
+    print '  S max: ' + repr(Smax)
+    print '  S min: ' + repr(Smin)
+    print '  Shat: ' + repr(Shat)
+    
     expected_Saverage = 0.3860
-    error = abs((np.mean(S.values()) - expected_Saverage)/expected_Saverage)
+    error = abs((Saverage - expected_Saverage)/expected_Saverage)
     assert_less(error, 0.05) # 5% error
     
     expected_Smax = 0.5130
-    error = abs((max(S.values()) - expected_Smax)/expected_Smax)
+    error = abs((Smax - expected_Smax)/expected_Smax)
     assert_less(error, 0.05) # 5% error
     
     expected_Shat = 2.670

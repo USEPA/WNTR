@@ -15,7 +15,11 @@ def entropy(G):
     S = {}  
     Q = {}
     for nodej in G.nodes():
-        sp = []
+        if nodej in sources:
+            S[nodej] = 0 # nodej is the source
+            continue 
+    
+        sp = [] # simple path
         if G.node[nodej]['nodetype']  == pyepanet.EN_JUNCTION:
             for source in sources:
                 if nx.has_path(G, source, nodej):
@@ -29,33 +33,42 @@ def entropy(G):
                 #print j, nodeid, len(sp)
         if len(sp) == 0:
             S[nodej] = np.nan # nodej is not connected to any sources
-            continue            
+            continue 
+           
+        sp = np.array(sp)
         
-        Uj = G.predecessors(nodej) # set of nodes on the upstream ends of links incident on node j
-        qij = [] # flow in link from node i to node j
-        aij = []
+        # Uj = set of nodes on the upstream ends of links incident on node j
+        Uj = G.predecessors(nodej)
+        # qij = flow in link from node i to node j
+        qij = [] 
+        # aij = number of equivalnet independent paths through the link from node i to node j
+        aij = [] 
         for nodei in Uj:
             mask = np.array([nodei in path for path in sp])
-            NDij = sum(mask) # number of paths through the link from node i to node j
+            # NDij = number of paths through the link from node i to node j
+            NDij = sum(mask) 
             if NDij == 0:
                 continue  
-            sp = np.array(sp)
             temp = sp[mask]
-            MDij = [(t[idx],t[idx+1]) for t in temp for idx in range(len(t)-1)] # links in the NDij path
+            # MDij = links in the NDij path
+            MDij = [(t[idx],t[idx+1]) for t in temp for idx in range(len(t)-1)] 
         
             flow = 0
             for link in G[nodei][nodej].keys():
                 flow = flow + G[nodei][nodej][link]['weight']
             qij.append(flow)
             
-            dk = Counter() # degree of link k in MDij
+            # dk = degree of link k in MDij
+            dk = Counter() 
             for elem in MDij:
-                dk[elem] += 1/len(G[elem[0]][elem[1]].keys()) # divide by the numnber of links between two nodes
+                # divide by the numnber of links between two nodes
+                dk[elem] += 1/len(G[elem[0]][elem[1]].keys()) 
             
             aij.append(NDij*(1-float(sum(np.array(dk.values()) - 1))/sum(dk.values())))
             
         Q[nodej] = sum(qij) # Total flow into node j
         
+        # Equation 7
         S[nodej] = 0
         for idx in range(len(qij)):
             S[nodej] = S[nodej] - \
@@ -64,6 +77,7 @@ def entropy(G):
                     
     Q0 = sum(nx_ext.get_edge_attributes_MG(G, 'weight').values())        
 
+    # Equation 3
     Shat = 0
     for nodej in G.nodes():
         if not np.isnan(S[nodej]):
