@@ -11,7 +11,8 @@ def convert(type, flowunit, data):
     type : string
         options = 'Concentration', 'Demand', 'Flow', 'Emitter Coefficient', 
         'Pipe Diameter', 'Tank Diameter', 'Elevation', 'Hydraulic Head', 
-        'Length', 'Velocity', 'Pressure', 'Volume', 'Water Age'
+        'Length', 'Velocity', 'Energy', 'Power', 'Pressure', 
+        'Source Mass Injection', 'Volume', 'Water Age'
     
     flowunit: int
         flowunit = enData.ENgetflowunits()
@@ -36,10 +37,10 @@ def convert(type, flowunit, data):
     Examples
     --------
     >>> data = np.array([10,20,30])
-    >>> en.unit_conversion('Length', 1, data)
+    >>> en.units.convert('Length', 1, data)
     array([ 3.048,  6.096,  9.144])
     
-    >>> en.unit_conversion('Pressure', 2, 30)
+    >>> en.units.convert('Pressure', 2, 30)
     21.096
     
     Notes
@@ -71,7 +72,7 @@ def convert(type, flowunit, data):
     Reaction Coeff. (Bulk)  1/day (1st-order)           1/day (1st-order)
     Reaction Coeff. (Wall)  mass / L / day (0-order)    mass / L / day (0-order)
                             ft / day (1st-order)        meters / day (1st-order)
-    Roughness Coefficient   10-3 feet (Darcy-Weisbach)  millimeters (Darcy-Weisbach),
+    Roughness Coefficient   10-3 feet (Darcy-Weisbach)  millimeters (Darcy-Weisbach)
                             unitless otherwise          unitless otherwise
     Source Mass Injection   mass / minute               mass / minute
     Velocity                feet / second               meters / second
@@ -79,8 +80,8 @@ def convert(type, flowunit, data):
     Water Age               hours                       hours
     
     Note: US Customary units apply when CFS, GPM, AFD, or MGD is chosen as flow
-    units. SI Metric units apply when flow units are expressed using either liters or
-    cubic meters.
+    units. SI Metric units apply when flow units are expressed using either 
+    liters or cubic meters.
 """
     
     if type == 'Concentration':
@@ -118,14 +119,30 @@ def convert(type, flowunit, data):
         else:
             data = data * 0.001 # mm to m
             
-    elif type in ['Tank Diameter', 'Elevation', 'Hydraulic Head', 'Length', 'Velocity']:
+    elif type in ['Tank Diameter', 'Elevation', 'Hydraulic Head', 'Length']:
         if flowunit in [0,1,2,3,4]:
-            data = data * 0.3048 # ft to m (or ft/s to m/s)
+            data = data * 0.3048 # ft to m
+    
+    elif type in 'Velocity':
+        if flowunit in [0,1,2,3,4]:
+            data = data * 0.3048 # ft/s to m/s
             
+    elif type == 'Energy':
+        data = data*3600000 # kW*hr to J
+        
+    elif type == 'Power':
+        if flowunit in [0,1,2,3,4]:
+            data = data*745.699872 # hp to W (Nm/s)
+        else:
+            data = data/1000 # kW to W (Nm/s)
+        
     elif type == 'Pressure':
         if flowunit in [0,1,2,3,4]:
             data = data * 0.7032 # psi to m
-            
+    
+    elif type == 'Source Mass Injection':
+        data = data /60 # per min to per second
+        
     elif type == 'Volume':
         if flowunit in [0,1,2,3,4]:
             data = data * math.pow(0.3048, 3) # ft3 to m3 
