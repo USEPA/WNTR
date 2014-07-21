@@ -9,7 +9,8 @@ def test_Net1():
     enData = en.pyepanet.ENepanet()
     enData.inpfile = join(datadir,'Net1.inp') 
     enData.ENopen(enData.inpfile,'tmp.rpt')
-    G = en.network.epanet_to_MultiDiGraph(enData)
+    convert_units=False
+    G = en.network.epanet_to_MultiDiGraph(enData, convert_units)
 
     node = {'11': {'elevation': 710.0, 'nodetype': 0, 'pos': (30.0, 70.0)}, 
             '10': {'elevation': 710.0, 'nodetype': 0, 'pos': (20.0, 70.0)}, 
@@ -55,7 +56,8 @@ def test_Net1_edge_attribute():
     values = [1, 2, 3, 4, 5, 6, 7, -8, -9, -10, -11, -12, -13]
     edge_attribute = dict(zip(keys, values))   
     
-    G = en.network.epanet_to_MultiDiGraph(enData, edge_attribute)
+    convert_units=False
+    G = en.network.epanet_to_MultiDiGraph(enData, convert_units, edge_attribute)
     
     node = {'11': {'elevation': 710.0, 'nodetype': 0, 'pos': (30.0, 70.0)}, 
             '10': {'elevation': 710.0, 'nodetype': 0, 'pos': (20.0, 70.0)}, 

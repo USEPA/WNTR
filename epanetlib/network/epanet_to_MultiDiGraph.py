@@ -1,7 +1,8 @@
 import epanetlib.pyepanet as pyepanet
 import networkx as nx
+from epanetlib.units import convert
 
-def epanet_to_MultiDiGraph(enData, edge_attribute=None):
+def epanet_to_MultiDiGraph(enData, convert_units=True, edge_attribute=None):
     r"""Convert ENepanet instance to networkx MultiDiGraph
     
     Parameters
@@ -45,6 +46,9 @@ def epanet_to_MultiDiGraph(enData, edge_attribute=None):
         nodetype = enData.ENgetnodetype(i+1)
         elevation = enData.ENgetnodevalue(i+1, pyepanet.EN_ELEVATION)
         
+        if convert_units:
+            elevation = convert('Elevation', G.graph['flowunits'], elevation) # m
+        
         # Average volume of water consumed per day
         #VC = average_volume_water_consumed_per_day(enData,i)
         
@@ -57,8 +61,13 @@ def epanet_to_MultiDiGraph(enData, edge_attribute=None):
         linknodes_index = enData.ENgetlinknodes(i+1)
         node1 = enData.ENgetnodeid(linknodes_index[0])
         node2 = enData.ENgetnodeid(linknodes_index[1])
+        
         length = enData.ENgetlinkvalue(i+1, pyepanet.EN_LENGTH)
         diameter = enData.ENgetlinkvalue(i+1, pyepanet.EN_DIAMETER)
+        
+        if convert_units:
+            length = convert('Length', G.graph['flowunits'], length) # m
+            diameter = convert('Pipe Diameter', G.graph['flowunits'], diameter) # m
         
         if edge_attribute == None:
             G.add_edge(node1, node2, key=linkid, linktype=linktype, 
