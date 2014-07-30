@@ -85,7 +85,7 @@ def convert(type, flowunit, data):
 """
     
     if type == 'Concentration':
-        data = data * 1.0e-6 * 0.001 # mg/L to kg/m3
+        data = data * 1.0e-6 / 0.001 # mg/L to kg/m3
         
     if type in ['Demand', 'Flow', 'Emitter Coefficient']:
         if flowunit == 0: 
@@ -128,20 +128,20 @@ def convert(type, flowunit, data):
             data = data * 0.3048 # ft/s to m/s
             
     elif type == 'Energy':
-        data = data*3600000 # kW*hr to J
+        data = data * 3600000 # kW*hr to J
         
     elif type == 'Power':
         if flowunit in [0,1,2,3,4]:
-            data = data*745.699872 # hp to W (Nm/s)
+            data = data * 745.699872 # hp to W (Nm/s)
         else:
-            data = data/1000 # kW to W (Nm/s)
+            data = data * 1000 # kW to W (Nm/s)
         
     elif type == 'Pressure':
         if flowunit in [0,1,2,3,4]:
             data = data * 0.7032 # psi to m
     
     elif type == 'Source Mass Injection':
-        data = data /60 # per min to per second
+        data = data / 60 # per min to per second
         
     elif type == 'Volume':
         if flowunit in [0,1,2,3,4]:
