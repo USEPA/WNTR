@@ -8,6 +8,12 @@ def eps_hydraulic(enData, G=None, convert_units=True):
     if G == None:
         G = epanet_to_MultiDiGraph(enData)
     
+    if G.graph['time'] == []:
+        duration = enData.ENgettimeparam(pyepanet.EN_DURATION)
+        timestep = enData.ENgettimeparam(pyepanet.EN_REPORTSTEP)
+        G.graph['time'] = range(0,duration+1,timestep)
+        
+    enData.ENopenH()
     enData.ENinitH(0)
     
     for i in G.nodes():
@@ -21,8 +27,7 @@ def eps_hydraulic(enData, G=None, convert_units=True):
         
     while True:
         t = enData.ENrunH()
-        if np.mod(t,enData.ENgettimeparam(1)) == 0:
-            G.graph['time'] = G.graph['time'] + [t]
+        if t in G.graph['time']:
             for i in G.nodes():
                 nodeindex = enData.ENgetnodeindex(i)
                 
