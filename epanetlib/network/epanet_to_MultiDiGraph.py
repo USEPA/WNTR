@@ -1,5 +1,6 @@
 import epanetlib.pyepanet as pyepanet
 import networkx as nx
+import numpy as np
 from epanetlib.units import convert
 
 def epanet_to_MultiDiGraph(enData, convert_units=True, edge_attribute=None):
@@ -46,13 +47,30 @@ def epanet_to_MultiDiGraph(enData, convert_units=True, edge_attribute=None):
         nodetype = enData.ENgetnodetype(i+1)
         elevation = enData.ENgetnodevalue(i+1, pyepanet.EN_ELEVATION)
         
+        if nodetype == 2: # tank
+            tank_diameter = enData.ENgetnodevalue(i+1, pyepanet.EN_TANKDIAM)
+            tank_minlevel = enData.ENgetnodevalue(i+1, pyepanet.EN_MINLEVEL)
+            tank_maxlevel = enData.ENgetnodevalue(i+1, pyepanet.EN_MAXLEVEL)
+        else:
+            tank_diameter = np.nan
+            tank_minlevel = np.nan
+            tank_maxlevel = np.nan
+            
         if convert_units:
             elevation = convert('Elevation', G.graph['flowunits'], elevation) # m
-        
+            tank_diameter = convert('Tank Diameter', G.graph['flowunits'], tank_diameter) # m
+            tank_minlevel = convert('Elevation', G.graph['flowunits'], tank_minlevel) # m
+            tank_maxlevel = convert('Elevation', G.graph['flowunits'], tank_maxlevel) # m
+            
         # Average volume of water consumed per day
         #VC = average_volume_water_consumed_per_day(enData,i)
         
-        G.add_node(nodeid, nodetype=nodetype, elevation=elevation)
+        if nodetype == 2: # tank
+            G.add_node(nodeid, nodetype=nodetype, elevation=elevation, 
+                   tank_diameter=tank_diameter, tank_minlevel=tank_minlevel,
+                   tank_maxlevel=tank_maxlevel)
+        else: G.add_node(nodeid, nodetype=nodetype, elevation=elevation)
+            
         
     nLinks = enData.ENgetcount(pyepanet.EN_LINKCOUNT) 
     for i in range(nLinks):
