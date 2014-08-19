@@ -1,8 +1,11 @@
 from nose.tools import *
-import epanetlib as en
 from os.path import abspath, dirname, join
 
-testdir = dirname(abspath(__file__))
+import sys
+sys.path.append('C:\kaklise\EPA-Resilience\Evaluation_Tool')
+import epanetlib as en
+
+testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','..','networks')
 
 def test_Net1():
@@ -21,7 +24,7 @@ def test_Net1():
             '23': {'elevation': 690.0, 'nodetype': 0, 'pos': (70.0, 40.0)}, 
             '32': {'elevation': 710.0, 'nodetype': 0, 'pos': (50.0, 10.0)}, 
             '31': {'elevation': 700.0, 'nodetype': 0, 'pos': (30.0, 10.0)}, 
-            '2':  {'elevation': 850.0, 'nodetype': 2, 'pos': (50.0, 90.0)}, 
+            #'2':  {'elevation': 850.0, 'nodetype': 2, 'pos': (50.0, 90.0)}, node 2 is a tank and contains additional attributes
             '9':  {'elevation': 800.0, 'nodetype': 1, 'pos': (10.0, 70.0)}}
             
     edge = {'11': {'12': {'11':  {'linktype': 1, 'diameter': 14.0, 'length': 5280.0}}, 
@@ -68,7 +71,7 @@ def test_Net1_edge_attribute():
             '23': {'elevation': 690.0, 'nodetype': 0, 'pos': (70.0, 40.0)}, 
             '32': {'elevation': 710.0, 'nodetype': 0, 'pos': (50.0, 10.0)}, 
             '31': {'elevation': 700.0, 'nodetype': 0, 'pos': (30.0, 10.0)}, 
-            '2':  {'elevation': 850.0, 'nodetype': 2, 'pos': (50.0, 90.0)}, 
+            #'2':  {'elevation': 850.0, 'nodetype': 2, 'pos': (50.0, 90.0)}, node 2 is a tank and contains additional attributes
             '9':  {'elevation': 800.0, 'nodetype': 1, 'pos': (10.0, 70.0)}}
     
     edge = {'11': {'12': {'11':  {'linktype': 1, 'diameter': 14.0, 'length': 5280.0,  'weight': 1}}, 
@@ -92,4 +95,5 @@ def test_Net1_edge_attribute():
     assert_dict_contains_subset(edge, G.edge)
     
     
-    
+if __name__ == '__main__':
+    test_Net1()
