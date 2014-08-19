@@ -18,7 +18,7 @@ from toolkit import *
 import ctypes, os, sys
 from ctypes import byref
 from pkg_resources import resource_filename
-
+import platform
 pyepanet_package = 'epanetlib.pyepanet'
 
 class EPANETException(Exception):
@@ -50,39 +50,36 @@ class ENepanet():
     
     def __init__(self, inpfile='', rptfile='', binfile=''):
         """Initialize the ENepanet class
-        
+
         Keyword arguments:
          * inpfile = the name of the EPANET input file (default '')
          * rptfile = the report file to generate (default '')
          * binfile = the optional binary output file (default '')
-        
+
         """
-        try:
-            if os.name in ['nt','dos']:
-                libepanet = resource_filename(pyepanet_package,'data/Windows/epanet2.dll')
-                self.ENlib = ctypes.windll.LoadLibrary(libepanet)
-            elif sys.platform in ['darwin']:
-                libepanet = resource_filename(pyepanet_package,'data/Darwin/libepanet.dylib')
-                self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-            else:
-                libepanet = resource_filename(pyepanet_package,'data/Linux/libepanet2.so')
-                self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-        except:
-            try:
-                if os.name in ['nt','dos']:
-                    libepanet = resource_filename(pyepanet_package,'data/Windows/epanet.dll')
-                    self.ENlib = ctypes.windll.LoadLibrary(libepanet)
-                elif sys.platform in ['darwin']:
-                    libepanet = resource_filename(pyepanet_package,'data/Darwin/libepanet2.dylib')
-                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-                else:
-                    libepanet = resource_filename(pyepanet_package,'data/Linux/libepanet.so')
-                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
-            except Exception as E:
-                raise(E)
         self.inpfile = inpfile
         self.rptfile = rptfile
         self.binfile = binfile
+
+        libnames = ['epanet2_x86','epanet2','epanet']
+        if '64' in platform.machine():
+            libnames.insert(0, 'epanet2_amd64')
+        for lib in libnames:
+            try:
+                if os.name in ['nt','dos']:
+                    libepanet = resource_filename(pyepanet_package,'data/Windows/%s.dll' % lib)
+                    self.ENlib = ctypes.windll.LoadLibrary(libepanet)
+                elif sys.platform in ['darwin']:
+                    libepanet = resource_filename(pyepanet_package,'data/Darwin/lib%s.dylib' % lib)
+                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
+                else:
+                    libepanet = resource_filename(pyepanet_package,'data/Linux/lib%s.so' % lib)
+                    self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
+                return # OK!
+            except Exception as E1:
+                if lib == libnames[-1]:
+                    raise E1
+                pass
         return
     
     def isOpen(self):
@@ -417,7 +414,7 @@ class ENepanet():
                                                byref(iLindex), byref(fSetting),
                                                byref(iNindex), byref(fLevel))
         self._error()
-        return (iCtype.value, iLindex.value, fSetting.vlaue, iNindex.value, 
+        return (iCtype.value, iLindex.value, fSetting.value, iNindex.value, 
                         fLevel.value)
     
     def ENgetcount(self, iCode):
