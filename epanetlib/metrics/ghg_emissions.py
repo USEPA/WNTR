@@ -1,30 +1,23 @@
 import epanetlib.pyepanet as pyepanet
-from operator import itemgetter
+import numpy as np  
     
-def ghg_emissions(enData, pipe_ghg):
+def ghg_emissions(G, pipe_ghg):
     
     network_ghg = 0
-    
-    nLinks = enData.ENgetcount(pyepanet.EN_LINKCOUNT)    
-    for i in range(nLinks):
-        link_id = enData.ENgetlinkid(i+1)
-        link_type = enData.ENgetlinktype(i+1)
-        if link_type in [0,1]: # pipe
-            link_diameter = enData.ENgetlinkvalue(i+1, pyepanet.EN_DIAMETER)
-            link_length = enData.ENgetlinkvalue(i+1, pyepanet.EN_LENGTH)
-            diff = [abs(float(x) - link_diameter) for x in pipe_ghg.keys()]
-            loc = min(enumerate(diff), key=itemgetter(1))[0] 
+       
+    for i,j,k in G.edges(keys=True):
+        if G.edge[i][j][k]['linktype']  in [pyepanet.EN_CVPIPE, pyepanet.EN_PIPE]:
+            link_length = G.edge[i][j][k]['length']
+            link_diameter = G.edge[i][j][k]['diameter']
+            idx = (np.abs(pipe_ghg[:,0]-link_diameter)).argmin()
+            network_ghg = network_ghg + pipe_ghg[idx,1]*link_length
             
-            network_ghg = network_ghg + pipe_ghg[pipe_ghg.keys()[loc]]*link_length
-            
-        elif link_type in [2]: # pump
+        elif G.edge[i][j][k]['linktype']  == pyepanet.EN_PUMP:
             pass
         
-        elif link_type in [3,4,5,6,7,8]: # valve 
+        elif G.edge[i][j][k]['linktype']  in [pyepanet.EN_PRV, pyepanet.EN_PSV, 
+                pyepanet.EN_PBV, pyepanet.EN_FCV, pyepanet.EN_TCV, pyepanet.EN_GPV]:
             pass
-            
-        else:
-            print "Undefined link type for " + link_id
     
     return network_ghg
     
