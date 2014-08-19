@@ -5,20 +5,23 @@ import math
 import numpy as np
 from collections import Counter
 
-def entropy(G):
+def entropy(G, sink = None):
 
     if G.is_directed() == False:
         return
     
     sources = [key for key,value in nx.get_node_attributes(G,'nodetype').items() if value == pyepanet.EN_RESERVOIR ]
     
+    if sink is None:
+        sink = G.nodes()
+        
     S = {}  
     Q = {}
-    for nodej in G.nodes():
+    for nodej in sink:
         if nodej in sources:
             S[nodej] = 0 # nodej is the source
             continue 
-    
+        
         sp = [] # simple path
         if G.node[nodej]['nodetype']  == pyepanet.EN_JUNCTION:
             for source in sources:
@@ -31,6 +34,7 @@ def entropy(G):
                     # that have the same flow direction?
                     # what about duplicating paths that have pipes in series?
                 #print j, nodeid, len(sp)
+        
         if len(sp) == 0:
             S[nodej] = np.nan # nodej is not connected to any sources
             continue 
@@ -79,11 +83,11 @@ def entropy(G):
 
     # Equation 3
     Shat = 0
-    for nodej in G.nodes():
+    for nodej in sink:
         if not np.isnan(S[nodej]):
             if nodej not in sources:
                 Shat = Shat + \
                     (Q[nodej]*S[nodej])/Q0 - \
                     Q[nodej]/Q0*math.log(Q[nodej]/Q0)
         
-    return [S, Shat] 
+    return [S, Shat, sp, dk] 
