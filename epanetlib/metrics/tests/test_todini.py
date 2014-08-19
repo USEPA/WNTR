@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import sys
-sys.path.append('C:\kaklise\EPA-Resilience\Evaluation Tool')
+sys.path.append('C:\kaklise\EPA-Resilience\Evaluation_Tool')
 import epanetlib as en
 
 testdir = dirname(abspath(str(__file__)))
@@ -16,9 +16,8 @@ def test_Todini_Fig2_optCost_GPM():
     enData.ENopen(enData.inpfile,'tmp.rpt')
     
     G = en.network.epanet_to_MultiDiGraph(enData)
-    
+
     # Run base hydarulic simulation and save data
-    enData.ENopenH()
     G = en.sim.eps_hydraulic(enData, G)
 
     # Compute todini index
@@ -39,7 +38,6 @@ def test_Todini_Fig2_optCost_CMH():
     G = en.network.epanet_to_MultiDiGraph(enData)
     
     # Run base hydarulic simulation and save data
-    enData.ENopenH()
     G = en.sim.eps_hydraulic(enData, G)
 
     # Compute todini index
@@ -60,7 +58,6 @@ def test_Todini_Fig2_solA_GPM():
     G = en.network.epanet_to_MultiDiGraph(enData)
     
     # Run base hydarulic simulation and save data
-    enData.ENopenH()
     G = en.sim.eps_hydraulic(enData, G)
 
     # Compute todini index
@@ -84,7 +81,6 @@ def test_Todini_Fig2_solA_CMH():
     G = en.network.epanet_to_MultiDiGraph(enData)
     
     # Run base hydarulic simulation and save data
-    enData.ENopenH()
     G = en.sim.eps_hydraulic(enData, G)
 
     # Compute todini index
@@ -111,7 +107,6 @@ def test_BWSN_Network_2():
     G = en.network.epanet_to_MultiDiGraph(enData)
     
     # Run base hydarulic simulation and save data
-    enData.ENopenH()
     G = en.sim.eps_hydraulic(enData, G)
 
     # Compute todini index
@@ -119,6 +114,8 @@ def test_BWSN_Network_2():
     plt.figure()
     plt.title('Todini Index')
     plt.plot(np.array(G.graph['time'])/3600, todini, 'b.-')
+    # len(time) <> len(todini) becuase the hydrulic simulation ends at 27 hours
+    # the system is disconnected at that time
     
     todini = np.array(todini)
     Tave = np.mean(todini)
@@ -141,6 +138,7 @@ def test_BWSN_Network_2():
     expected_Tmin = 0.644
     error = abs((Tmin - expected_Tmin)/expected_Tmin)
     assert_less(error, 0.1) # 10% error
+    
 
 def test_Net6():
     enData = en.pyepanet.ENepanet()
@@ -153,7 +151,6 @@ def test_Net6():
     G = en.network.epanet_to_MultiDiGraph(enData)
     
     # Run base hydarulic simulation and save data
-    enData.ENopenH()
     G = en.sim.eps_hydraulic(enData, G)
 
     # Compute todini index
@@ -185,4 +182,4 @@ def test_Net6():
     assert_less(error, 0.1) # 10% error
     
 if __name__ == '__main__':
-    test_Net6()
+    test_BWSN_Network_2()

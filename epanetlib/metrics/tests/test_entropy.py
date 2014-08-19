@@ -30,7 +30,7 @@ def test_layout1():
     G = en.network.epanet_to_MultiDiGraph(enData, edge_attribute=attr)
     en.network.draw_graph(G, edge_attribute='weight') 
     
-    [S, Shat] = en.metrics.entropy(G)
+    [S, Shat,sp,dk] = en.metrics.entropy(G)
     
     Saverage = np.mean(S.values())
     Smax = max(S.values())
@@ -80,7 +80,7 @@ def test_layout8():
     G = en.network.epanet_to_MultiDiGraph(enData, edge_attribute=attr)
     en.network.draw_graph(G, edge_attribute='weight') 
     
-    [S, Shat] = en.metrics.entropy(G)
+    [S, Shat,sp,dk] = en.metrics.entropy(G)
     
     Saverage = np.mean(S.values())
     Smax = max(S.values())
