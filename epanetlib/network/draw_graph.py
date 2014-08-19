@@ -4,7 +4,7 @@ import networkx_extensions as nx_ext
 
 def draw_graph(G, node_attribute=None, edge_attribute=None, title=None, 
                node_size=20, node_range = [None,None], node_cmap=None,
-               edge_width=1, edge_range = [None,None], edge_cmap=None):
+               edge_width=1, edge_range = [None,None], edge_cmap=None, add_colorbar=True):
     r"""Draw networkx graph
     
     Parameters
@@ -81,9 +81,20 @@ def draw_graph(G, node_attribute=None, edge_attribute=None, title=None,
         edge_cmap=plt.cm.rainbow
         
     # Plot
-    plt.figure()
+    plt.figure(facecolor='w', edgecolor='k')
     if title is not None:
         plt.title(title)
+    nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
+              nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1])
+    edges = nx.draw_networkx_edges(G, pos, 
+            edgelist=edgelist, edge_color=edgecolor, width=edge_width, edge_cmap=edge_cmap, edge_vmin = edge_range[0], edge_vmax = edge_range[1])
+    if add_colorbar and node_attribute:
+        plt.colorbar(nodes, shrink=0.5, pad = 0)
+    if add_colorbar and edge_attribute:
+        plt.colorbar(edges, shrink=0.5, pad = 0.05)
+    plt.axis('off')
+    """
     nx.draw_networkx(G, pos=pos, with_labels=False, 
         nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1],
         edgelist=edgelist, edge_color=edgecolor, width=edge_width, edge_cmap=edge_cmap, edge_vmin = edge_range[0], edge_vmax = edge_range[1])
+    """
