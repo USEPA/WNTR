@@ -14,13 +14,15 @@ enData.ENopen(enData.inpfile,'tmp.rpt')
 G = en.network.epanet_to_MultiDiGraph(enData)
 G = G.to_undirected()
 
-# Plot
+# Example plots
 en.network.draw_graph(G)
 en.network.draw_graph(G, node_attribute='elevation', edge_attribute='length', 
                       title='Multi-graph, inp layout', node_size=40, edge_width=2)
 
-# Topographic metrics
-# General information = type, number of nodes, number of edges, average degree
+degree = G.degree()
+
+
+# General topographic information = type, number of nodes, number of edges, average degree
 print nx.info(G) 
 
 # Link density = 2m/n(n-1) where n is the number of nodes and m is the number 
@@ -35,23 +37,29 @@ print "Number of self loops: " + str(G.number_of_selfloops())
 # Node degree = number of links per node
 node_degree = G.degree() 
 en.network.draw_graph(G, node_attribute=node_degree, 
-                      title='Node Degree', node_size=40)
-ave_node_degree = np.mean(node_degree.values())
-#print "Average node degree: " + str(ave_node_degree)
-    
-# Eccentricity = maximum distance from node to all other nodes in G
-ecc = nx.eccentricity(G)
-en.network.draw_graph(G, node_attribute=ecc, 
-                      title='Eccentricity', node_size=40)
+                      title='Node Degree', node_size=40, node_range=[1,5])
+terminal_nodes = [k for k,v in node_degree.iteritems() if v == 1]
+attr = dict(zip(terminal_nodes,[1]*len(terminal_nodes)))
+en.network.draw_graph(G, node_attribute=attr, 
+                      title='Terminal nodes', node_size=40, node_range=[0,1])
                       
-# Diameter = maximum eccentricity. The eccentricity of a node v is the maximum 
-# distance from v to all other nodes in MG.
-print "Diameter: " + str(nx.diameter(G))
-        
-# Shortest path length and average shortest path length
-#nx.shortest_path_length(G)
-print "Average shortest path length: " + str(nx.average_shortest_path_length(G))
-
+if nx.is_connected(G):
+    # Eccentricity = maximum distance from node to all other nodes in G
+    ecc = nx.eccentricity(G)
+    en.network.draw_graph(G, node_attribute=ecc, 
+                          title='Eccentricity', node_size=40, node_range=[15, 30])
+                      
+    # Diameter = maximum eccentricity. The eccentricity of a node v is the maximum 
+    # distance from v to all other nodes in G.
+    print "Diameter: " + str(nx.diameter(G))
+            
+    # Shortest path length and average shortest path length
+    #nx.shortest_path_length(G)
+    print "Average shortest path length: " + str(nx.average_shortest_path_length(G))
+else:
+    print "Diameter: NaN, network is not connected"
+    print "Average shortest path length: NaN, network is not connected"
+    
 # Cluster coefficient = function of the number of triangles through a node
 clust_coefficients = nx.clustering(nx.Graph(G))
 en.network.draw_graph(G, node_attribute=clust_coefficients, 
@@ -64,8 +72,9 @@ print "Meshedness coefficient: " + str(meshedness)
 # Betweenness centrality = number of times a node acts as a bridge along the 
 # shortest path between two other nodes.
 bet_cen = nx.betweenness_centrality(G)
-en.network.draw_graph(G, node_attribute=bet_cen, 
-                      title='Betweenness Centrality', node_size=40)
+bet_cen2 = dict([(k,v) for k,v in bet_cen.iteritems() if v > 0.1])
+en.network.draw_graph(G, node_attribute=bet_cen2, 
+                      title='Betweenness Centrality', node_size=40, node_range=[0.1, 0.4])
 central_pt_dom = sum(max(bet_cen.values()) - np.array(bet_cen.values()))/G.number_of_nodes()
 print "Central point dominance: " + str(central_pt_dom)
 
@@ -73,14 +82,12 @@ print "Central point dominance: " + str(central_pt_dom)
 # Articulation point = any node whose removal (along with all its incident 
 # edges) increases the number of connected components of a graph
 Nap = list(nx.articulation_points(G))
+Nap = list(set(Nap)) # get the unique nodes in Nap
 Nap_density = float(len(Nap))/G.number_of_nodes()
 print "Density of articulation points: " + str(Nap_density)
-NapFreq = []
-for i in G.nodes():
-    NapFreq.append(Nap.count(i))
-art_points = dict(zip(G.nodes(), NapFreq))
+art_points = dict(zip(Nap,[1]*len(Nap)))
 en.network.draw_graph(G, node_attribute=art_points, 
-                      title='Articulation Points', node_size=40)
+                      title='Articulation Point', node_size=40, node_range=[0,1])
     
 # Bridges, Nbr is not correct
 """
