@@ -3,7 +3,7 @@ Unit Conversion
 """
 import math
 
-def convert(type, flowunit, data):
+def convert(type, flowunit, data, MKS = True):
     r"""Convert data to meter-kilogram-second
     
     Parameters
@@ -85,69 +85,92 @@ def convert(type, flowunit, data):
 """
     
     if type == 'Concentration':
-        data = data * 1.0e-6 / 0.001 # mg/L to kg/m3
+        if MKS: data = data * (1.0e-6/0.001) # mg/L to kg/m3
+        else:   data = data / (1.0e-6/0.001) # kg/m3 to mg/L
         
     if type in ['Demand', 'Flow', 'Emitter Coefficient']:
         if flowunit == 0: 
-            data = data*0.0283168 # ft3/s to m3/s
+            if MKS: data = data * 0.0283168 # ft3/s to m3/s
+            else:   data = data / 0.0283168 # m3/s to ft3/s
         elif flowunit == 1: 
-            data = (data*0.00378541)/60 # gall/min to m3/s
+            if MKS: data = data * (0.00378541/60) # gall/min to m3/s
+            else:   data = data / (0.00378541/60) # m3/s to gall/min
         elif flowunit == 2: 
-            data = (data*1e6*0.00378541)/86400 # million gall/d to m3/s
+            if MKS: data = data * (1e6*0.00378541/86400) # million gall/d to m3/s
+            else:   data = data / (1e6*0.00378541/86400) # m3/s to million gall/d
         elif flowunit == 3: 
-            data = (data*1e6*0.00454609)/86400 # million imperial gall/d to m3/s
+            if MKS: data = data * (1e6*0.00454609)/86400 # million imperial gall/d to m3/s
+            else:   data = data / (1e6*0.00454609)/86400 # m3/s to million imperial gall/d
         elif flowunit == 4: 
-            data = (data*1233.48184)/86400 # acre-feet/day to m3/s
-        elif flowunit == 5: # 
-            data = data*0.001 # L/s to m3/s
+            if MKS: data = data * (1233.48184/86400) # acre-feet/day to m3/s
+            else:   data = data / (1233.48184/86400) # m3/s to acre-feet/day
+        elif flowunit == 5:
+            if MKS: data = data * 0.001 # L/s to m3/s
+            else:   data = data / 0.001 # m3/s to L/s
         elif flowunit == 6: 
-            data = (data*0.001)/60 # L/min to m3/s
+            if MKS: data = data * (0.001/60) # L/min to m3/s
+            else:   data = data / (0.001/60) # m3/s to L/min
         elif flowunit == 7: 
-            data = (data*1e6*0.001)/86400 # million L/day to m3/s
+            if MKS: data = data * (1e6*0.001)/86400 # million L/day to m3/s
+            else:   data = data / (1e6*0.001)/86400 # m3/s to million L/day
         elif flowunit == 8: 
-            data = data/3600 # m3/hour to m3/s
+            if MKS: data = data / 3600 # m3/hour to m3/s
+            else:   data = data * 3600 # m3/s to m3/hour
         elif flowunit == 9: 
-            data = data/86400 # m3/day to m3/s
+            if MKS: data = data / 86400 # m3/day to m3/s
+            else:   data = data * 86400 # m3/s to m3/day
             
         if type == 'Emitter Coefficient':
             if flowunit in [0,1,2,3,4]:
-                data = data / 0.7032 # flowunit/psi0.5 to flowunit/m0.5
+                if MKS: data = data / 0.7032 # flowunit/psi0.5 to flowunit/m0.5
+                else:   data = data * 0.7032 # flowunit/m0.5 to flowunit/psi0.5
                 
     elif type == 'Pipe Diameter':
         if flowunit in [0,1,2,3,4]:
-            data = data * 0.0254 # in to m
+            if MKS: data = data * 0.0254 # in to m
+            else:   data = data / 0.0254 # m to in
         else:
-            data = data * 0.001 # mm to m
+            if MKS: data = data * 0.001 # mm to m
+            else:   data = data / 0.001 # m to mm
             
     elif type in ['Tank Diameter', 'Elevation', 'Hydraulic Head', 'Length']:
         if flowunit in [0,1,2,3,4]:
-            data = data * 0.3048 # ft to m
+            if MKS: data = data * 0.3048 # ft to m
+            else: data = data / 0.3048 # m to ft
     
     elif type in 'Velocity':
         if flowunit in [0,1,2,3,4]:
-            data = data * 0.3048 # ft/s to m/s
+            if MKS: data = data * 0.3048 # ft/s to m/s
+            else:   data = data / 0.3048 # m/s to ft/s
             
     elif type == 'Energy':
-        data = data * 3600000 # kW*hr to J
+        if MKS: data = data * 3600000 # kW*hr to J
+        else:   data = data / 3600000 # J to kW*hr
         
     elif type == 'Power':
         if flowunit in [0,1,2,3,4]:
-            data = data * 745.699872 # hp to W (Nm/s)
+            if MKS: data = data * 745.699872 # hp to W (Nm/s)
+            else:   data = data / 745.699872 # W (Nm/s) to hp
         else:
-            data = data * 1000 # kW to W (Nm/s)
+            if MKS: data = data * 1000 # kW to W (Nm/s)
+            else:   data = data / 1000 # W (Nm/s) to kW
         
     elif type == 'Pressure':
         if flowunit in [0,1,2,3,4]:
-            data = data * 0.7032 # psi to m
+            if MKS: data = data * 0.7032 # psi to m
+            else:   data = data / 0.7032 # m to psi
     
     elif type == 'Source Mass Injection':
-        data = data / 60 # per min to per second
+        if MKS: data = data / 60 # per min to per second
+        else:   data = data * 60 # per second ro per min
         
     elif type == 'Volume':
         if flowunit in [0,1,2,3,4]:
-            data = data * math.pow(0.3048, 3) # ft3 to m3 
+            if MKS: data = data * math.pow(0.3048, 3) # ft3 to m3 
+            else:   data = data / math.pow(0.3048, 3) # m3 to ft3 
             
     elif type == 'Water Age':
-        data = data * 3600 # hr to s
+        if MKS: data = data * 3600 # hr to s
+        else:   data = data / 3600 # s to hr
         
     return data
