@@ -5,6 +5,9 @@ import numpy as np
 
 plt.close('all')
 
+pressure_lower_bound = en.units.convert('Pressure', 1, 30) # psi to m
+demand_factor = 0.9 # 90% of requested demand
+
 # Create enData
 enData = en.pyepanet.ENepanet()
 enData.inpfile = 'networks/Net3.inp'
@@ -23,24 +26,27 @@ G.graph['time'] = range(tstart,duration+1,timestep*6)
 # Run hydarulic simulation and save data
 G = en.sim.eps_hydraulic(enData, G)
 
-demand = en.network.nx.get_node_attributes(G,'demand')
-NZD_NODES = [k for k,v in demand.iteritems() if sum(v) > 0]
-attr = dict(zip(NZD_NODES,[1]*len(NZD_NODES)))
-en.network.draw_graph(G, node_attribute=attr, 
-                      title='NZD nodes', node_size=40, node_range=[0,1])
+# Fraction of delivered volume (FDV)
+fdv = en.metrics.fraction_delivered_volume(G, pressure_lower_bound)
+print "Average FDV: " +str(np.mean(fdv.values()))
+en.network.draw_graph(G.to_undirected(), node_attribute=fdv, 
+                      title= 'FDV', node_range=[0,1])
 
-
+# Fraction of delivered demand (FDD)
+fdd = en.metrics.fraction_delivered_demand(G, pressure_lower_bound, demand_factor)
+print "Average FDD: " +str(np.mean(fdd.values()))
+en.network.draw_graph(G.to_undirected(), node_attribute=fdd, 
+                      title= 'FDD', node_range=[0,1])
 
 # Pressure stats
-pressure_threshold = en.units.convert('Pressure', 1, 30) # psi to m
 head = nx.get_node_attributes(G,'head')
 elevation = nx.get_node_attributes(G,'elevation')
 pressure = np.array(head.values()) - np.array(elevation.values(),ndmin=2).T
-pressure_regulation = float(sum(np.min(pressure,axis=1) > pressure_threshold))/G.number_of_nodes()
+pressure_regulation = float(sum(np.min(pressure,axis=1) > pressure_lower_bound))/G.number_of_nodes()
 print "Fraction of nodes > 30 psi: " + str(pressure_regulation)
 pressure_psi = en.units.convert('Pressure', 1, pressure, MKS=False)
 print "Average node pressure: " +str(np.mean(pressure_psi)) + " psi"
-attr = dict(zip(G.nodes(), list(np.min(pressure, 1) < pressure_threshold)))
+attr = dict(zip(G.nodes(), list(np.min(pressure, 1) < pressure_lower_bound)))
 attr2 = dict([(k,v) for k,v in attr.iteritems() if v > 0])
 en.network.draw_graph(G.to_undirected(), node_attribute=attr2, title= 'Pressure')
 
@@ -49,12 +55,12 @@ VCbar = en.metrics.VCbar_perday(G) # average volume of water consumed per day, m
 R = 0.757082 # average volume of water consumed per capita per day, m3/day (=200 gall/day)
 pop = en.metrics.population(VCbar,R)
 total_population = sum(pop.values())
-print "Total Population: " + str(total_population)
+print "Total population: " + str(total_population)
 en.network.draw_graph(G.to_undirected(), node_attribute=pop, node_range = [0,400],
                       title='Population, Total = ' + str(total_population))
               
 # Compute todini index
-todini = en.metrics.todini(G, pressure_threshold)
+todini = en.metrics.todini(G, pressure_lower_bound)
 plt.figure()
 plt.plot(np.array(G.graph['time'])/3600, todini)
 plt.ylabel('Todini Index')
@@ -68,7 +74,6 @@ print "  Min: " + str(np.min(todini))
 t=36
 attr = dict( ((u,v,k),d['flow'][t]) for u,v,k,d in G.edges(keys=True,data=True) if 'flow' in d)
 G0 = en.network.epanet_to_MultiDiGraph(enData, edge_attribute=attr)
-
 bet_cen = nx.betweenness_centrality(G0)  
 bet_cen2 = dict([(k,v) for k,v in bet_cen.iteritems() if v > 0.001])
 en.network.draw_graph(G, node_attribute=bet_cen2, 
@@ -127,7 +132,7 @@ pump_cost = 3783 # average from BWN-II
 pipe_ghg = np.loadtxt('data/ghg_pipe.txt',skiprows=1)
 
 network_cost = en.metrics.cost(G, tank_cost, pipe_cost, valve_cost, pump_cost)
-print "Network Cost: $" + str(round(network_cost,2))
+print "Network cost: $" + str(round(network_cost,2))
 
 network_ghg = en.metrics.ghg_emissions(G, pipe_ghg)
-print "Network GHG Emissions: " + str(round(network_ghg,2))
+print "Network GHG emissions: " + str(round(network_ghg,2))
