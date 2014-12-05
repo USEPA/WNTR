@@ -19,9 +19,6 @@ en.network.draw_graph(G)
 en.network.draw_graph(G, node_attribute='elevation', edge_attribute='length', 
                       title='Multi-graph, inp layout', node_size=40, edge_width=2)
 
-degree = G.degree()
-
-
 # General topographic information = type, number of nodes, number of edges, average degree
 print nx.info(G) 
 
@@ -38,11 +35,47 @@ print "Number of self loops: " + str(G.number_of_selfloops())
 node_degree = G.degree() 
 en.network.draw_graph(G, node_attribute=node_degree, 
                       title='Node Degree', node_size=40, node_range=[1,5])
-terminal_nodes = [k for k,v in node_degree.iteritems() if v == 1]
+
+# Terminal nodes (degree = 1)
+terminal_nodes = en.metrics.terminal_nodes(G)
 attr = dict(zip(terminal_nodes,[1]*len(terminal_nodes)))
 en.network.draw_graph(G, node_attribute=attr, 
                       title='Terminal nodes', node_size=40, node_range=[0,1])
-                      
+print "Number of terminal nodes: " + str(len(terminal_nodes))
+print "   " + str(terminal_nodes)
+
+# NZD nodes
+nzd_nodes = en.metrics.nzd_nodes(G)
+attr = dict(zip(nzd_nodes,[1]*len(nzd_nodes)))
+en.network.draw_graph(G, node_attribute=attr, 
+                      title='NZD nodes', node_size=40, node_range=[0,1])
+print "Number of NZD nodes: " + str(len(nzd_nodes))
+print "   " + str(nzd_nodes)
+
+# Nodes connected to a tank
+tank_nodes = en.metrics.tank_nodes(G)
+attr = dict(zip(tank_nodes,[1]*len(tank_nodes)))
+en.network.draw_graph(G, node_attribute=attr, 
+                      title='Tank nodes', node_size=40, node_range=[0,1])
+print "Number of tank nodes: " + str(len(tank_nodes))
+print "   " + str(tank_nodes)
+           
+# Pipes with diameter > threshold
+diameter = en.units.convert('Pipe Diameter', 1, 20) # in to m
+pipes = en.metrics.query_pipe_attribute(G, 'diameter', np.greater, diameter)
+attr = dict(zip(pipes,[1]*len(pipes)))
+en.network.draw_graph(G, edge_attribute=attr, title='Pipes > 10 inches', edge_range=[0,1])
+print "Number of pipes > 20 inches: " + str(len(pipes))
+print "   " + str(pipes)  
+
+# Nodes with elevation <= treshold
+elevation = en.units.convert('Elevation', 1, 5) # ft to m
+nodes = en.metrics.query_node_attribute(G, 'elevation', np.less_equal, elevation)
+attr = dict(zip(nodes,[1]*len(nodes)))
+en.network.draw_graph(G, node_attribute=attr, title='Nodes <= 1000 ft elevation')
+print "Number of nodes <= 5 ft elevation: " + str(len(nodes))
+print "   " + str(nodes)  
+         
 if nx.is_connected(G):
     # Eccentricity = maximum distance from node to all other nodes in G
     ecc = nx.eccentricity(G)
@@ -109,9 +142,9 @@ alg_con = eig[-2]
 print "Algebraic connectivity: " + str(alg_con)
 
 # Critical ratio of defragmentation
-tmp = np.mean(pow(np.array(node_degree.values()),2))
-fc = 1-(1/((tmp/ave_node_degree)-1))
-print "Critical ratio of defragmentation: " + str(fc)
+#tmp = np.mean(pow(np.array(node_degree.values()),2))
+#fc = 1-(1/((tmp/ave_node_degree)-1))
+#print "Critical ratio of defragmentation: " + str(fc)
 
 
 # Other...
