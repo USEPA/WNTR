@@ -54,15 +54,18 @@ print "Mass of water consumed: " + str(total_MC)
 en.network.draw_graph(G.to_undirected(), node_attribute=MC, node_range = [0,100000],
                       title='Mass of Water Consumed, Total = ' + str(total_MC))
                       
-# Calculate average water age
+# Calculate average water age (last 48 hours)
 enData.ENsetqualtype(en.pyepanet.EN_AGE,0,0,0)
 enData.ENgetqualtype() 
 G = en.sim.eps_waterqual(enData, G)
 age = nx.get_node_attributes(G,'quality')
-temp = np.array(age.values())
-age2 = dict(zip(age.keys(),np.mean(temp,1)/3600))
-en.network.draw_graph(G, node_attribute=age2, 
-                      title='Average water age', node_size=40)
-age = np.array(age.values())
-age_h = en.units.convert('Water Age', G.graph['flowunits'], age, MKS=False)
-print "Average water age: " +str(np.mean(age_h)) + " hr"
+age_h = en.units.convert('Water Age', G.graph['flowunits'], np.array(age.values()), MKS=False)
+age_h_last_48h = age_h[:,age_h.shape[1]-round((48*3600)/timestep):]
+plt.figure()
+plt.plot(age_h_last_48h.transpose())
+plt.ylabel('Water age (last 48 hours)')
+plt.xlabel('Time (s)')
+ave_age = dict(zip(age.keys(),np.mean(age_h_last_48h,1)))
+en.network.draw_graph(G, node_attribute=ave_age, 
+                      title='Average water age (last 48 hours)', node_size=40)
+print "Average water age (last 48 hours): " +str(np.mean(age_h_last_48h)) + " hr"

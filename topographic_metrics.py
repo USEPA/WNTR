@@ -64,7 +64,7 @@ print "   " + str(tank_nodes)
 diameter = en.units.convert('Pipe Diameter', 1, 20) # in to m
 pipes = en.metrics.query_pipe_attribute(G, 'diameter', np.greater, diameter)
 attr = dict(zip(pipes,[1]*len(pipes)))
-en.network.draw_graph(G, edge_attribute=attr, title='Pipes > 10 inches', edge_range=[0,1])
+en.network.draw_graph(G, edge_attribute=attr, title='Pipes > 20 inches', edge_range=[0,1])
 print "Number of pipes > 20 inches: " + str(len(pipes))
 print "   " + str(pipes)  
 
@@ -72,7 +72,7 @@ print "   " + str(pipes)
 elevation = en.units.convert('Elevation', 1, 5) # ft to m
 nodes = en.metrics.query_node_attribute(G, 'elevation', np.less_equal, elevation)
 attr = dict(zip(nodes,[1]*len(nodes)))
-en.network.draw_graph(G, node_attribute=attr, title='Nodes <= 1000 ft elevation')
+en.network.draw_graph(G, node_attribute=attr, title='Nodes <= 5 ft elevation', node_range=[0,1])
 print "Number of nodes <= 5 ft elevation: " + str(len(nodes))
 print "   " + str(nodes)  
          
