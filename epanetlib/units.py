@@ -3,12 +3,12 @@ Unit Conversion
 """
 import math
 
-def convert(type, flowunit, data, MKS = True):
+def convert(paramtype, flowunit, data, MKS = True):
     """Convert data to meter-kilogram-second
     
     Parameters
     ----------
-    type : string
+    paramtype : string
         Parameter type, options include 'Concentration', 'Demand', 'Flow', 'Emitter Coefficient', 
         'Pipe Diameter', 'Tank Diameter', 'Elevation', 'Hydraulic Head', 
         'Length', 'Velocity', 'Energy', 'Power', 'Pressure', 
@@ -93,11 +93,11 @@ def convert(type, flowunit, data, MKS = True):
     liters or cubic meters.
 """
     
-    if type == 'Concentration':
+    if paramtype == 'Concentration':
         if MKS: data = data * (1.0e-6/0.001) # mg/L to kg/m3
         else:   data = data / (1.0e-6/0.001) # kg/m3 to mg/L
         
-    elif type in ['Demand', 'Flow', 'Emitter Coefficient']:
+    elif paramtype in ['Demand', 'Flow', 'Emitter Coefficient']:
         if flowunit == 0: 
             if MKS: data = data * 0.0283168 # ft3/s to m3/s
             else:   data = data / 0.0283168 # m3/s to ft3/s
@@ -129,12 +129,12 @@ def convert(type, flowunit, data, MKS = True):
             if MKS: data = data / 86400 # m3/day to m3/s
             else:   data = data * 86400 # m3/s to m3/day
             
-        if type == 'Emitter Coefficient':
+        if paramtype == 'Emitter Coefficient':
             if flowunit in [0,1,2,3,4]:
                 if MKS: data = data / 0.7032 # flowunit/psi0.5 to flowunit/m0.5
                 else:   data = data * 0.7032 # flowunit/m0.5 to flowunit/psi0.5
                 
-    elif type == 'Pipe Diameter':
+    elif paramtype == 'Pipe Diameter':
         if flowunit in [0,1,2,3,4]:
             if MKS: data = data * 0.0254 # in to m
             else:   data = data / 0.0254 # m to in
@@ -142,21 +142,21 @@ def convert(type, flowunit, data, MKS = True):
             if MKS: data = data * 0.001 # mm to m
             else:   data = data / 0.001 # m to mm
             
-    elif type in ['Tank Diameter', 'Elevation', 'Hydraulic Head', 'Length']:
+    elif paramtype in ['Tank Diameter', 'Elevation', 'Hydraulic Head', 'Length']:
         if flowunit in [0,1,2,3,4]:
             if MKS: data = data * 0.3048 # ft to m
             else: data = data / 0.3048 # m to ft
     
-    elif type in 'Velocity':
+    elif paramtype in 'Velocity':
         if flowunit in [0,1,2,3,4]:
             if MKS: data = data * 0.3048 # ft/s to m/s
             else:   data = data / 0.3048 # m/s to ft/s
             
-    elif type == 'Energy':
+    elif paramtype == 'Energy':
         if MKS: data = data * 3600000 # kW*hr to J
         else:   data = data / 3600000 # J to kW*hr
         
-    elif type == 'Power':
+    elif paramtype == 'Power':
         if flowunit in [0,1,2,3,4]:
             if MKS: data = data * 745.699872 # hp to W (Nm/s)
             else:   data = data / 745.699872 # W (Nm/s) to hp
@@ -164,25 +164,25 @@ def convert(type, flowunit, data, MKS = True):
             if MKS: data = data * 1000 # kW to W (Nm/s)
             else:   data = data / 1000 # W (Nm/s) to kW
         
-    elif type == 'Pressure':
+    elif paramtype == 'Pressure':
         if flowunit in [0,1,2,3,4]:
             if MKS: data = data * 0.7032 # psi to m
             else:   data = data / 0.7032 # m to psi
     
-    elif type == 'Source Mass Injection':
+    elif paramtype == 'Source Mass Injection':
         if MKS: data = data / 60 # per min to per second
         else:   data = data * 60 # per second ro per min
         
-    elif type == 'Volume':
+    elif paramtype == 'Volume':
         if flowunit in [0,1,2,3,4]:
             if MKS: data = data * math.pow(0.3048, 3) # ft3 to m3 
             else:   data = data / math.pow(0.3048, 3) # m3 to ft3 
             
-    elif type == 'Water Age':
+    elif paramtype == 'Water Age':
         if MKS: data = data * 3600 # hr to s
         else:   data = data / 3600 # s to hr
     
     else:
-        print "Invalid type: " + type + ". No conversion"
+        print "Invalid paramtype: " + paramtype + ". No conversion"
     
     return data
