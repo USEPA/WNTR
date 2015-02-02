@@ -112,6 +112,10 @@ def query_node_attribute(G, attribute, operation, value):
     -------
     pipes : list
         list of nodeid
+        
+    Examples
+    --------
+    >>> nzd_nodes = query_node_attribute(G, 'base_demand', np.greater, 0)
     """
     nodes = []
     for i in G.nodes():
