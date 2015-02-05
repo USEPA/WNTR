@@ -1,1 +1,1 @@
-print 'Test of the git repo'
+print 'test of the git repo'
