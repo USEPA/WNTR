@@ -1,5 +1,7 @@
 from epanetlib.units import convert 
 import warnings
+import re
+import networkx as nx
 
 def is_number(s):
     try:
@@ -7,6 +9,25 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
+def str_time_to_min(s):
+    pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
+    time_tuple = pattern1.search(s)
+    if bool(time_tuple):
+        return float(time_tuple.groups()[0])*60 + float(time_tuple.groups()[1]) + float(time_tuple.groups()[2])/60.0
+    else:
+        pattern2 = re.compile(r'^(\d+):(\d+)$')
+        time_tuple = pattern2.search(s)
+        if bool(time_tuple):
+            return float(time_tuple.groups()[0])*60 + float(time_tuple.groups()[1])
+        else:
+            pattern3 = re.compile(r'^(\d+)$')
+            time_tuple = pattern3.search(s)
+            if bool(time_tuple):
+                return float(time_tuple.groups()[0])*60
+            else:
+                raise RuntimeError("Time format in [CONTROLS] block of "
+                                   "INP file not recognized. ")
 
 # EPANET unit ids used in unit conversion when reading inp files
 epanet_unit_id = {'CFS': 0, 'GPM': 1, 'MGD': 2, 'IMGD': 3, 'AFD': 4,
@@ -16,6 +37,8 @@ class ParseWaterNetwork(object):
     def __init__(self):
         self._patterns = {}
         self._curves = {}
+        self._time_controls = {}
+        self._node_coordinates = {}
 
     def read_inp_file(self, wn, inp_file_name):
         """
@@ -61,7 +84,7 @@ class ParseWaterNetwork(object):
         # Read file again to get all network parameters
 
         # INP file units to convert from
-        inp_units = epanet_unit_id[wn.get_option('UNITS')]
+        inp_units = epanet_unit_id[wn.options['UNITS']]
 
         f = file(inp_file_name, 'r')
 
@@ -78,6 +101,7 @@ class ParseWaterNetwork(object):
         curves = False
         times = False
         controls = False
+        coordinates = False
 
         for line in f:
             if ']' in line:
@@ -92,6 +116,7 @@ class ParseWaterNetwork(object):
                 curves = False
                 times = False
                 controls = False
+                coordinates = False
 
             if '[PIPES]' in line:
                 pipes = True
@@ -122,6 +147,9 @@ class ParseWaterNetwork(object):
                 continue
             elif '[CONTROLS]' in line:
                 controls = True
+                continue
+            elif '[COORDINATES]' in line:
+                coordinates = True
                 continue
 
             if pipes:
@@ -187,23 +215,19 @@ class ParseWaterNetwork(object):
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 if (current[0] == 'Duration') or (current[0] == 'DURATION'):
-                    [hr, minutes] = current[1].split(':')
-                    wn.add_time_parameter('Duration', (float(hr), float(minutes)))
+                    wn.add_time_parameter('Duration', str_time_to_min(current[1]))
                 elif (current[0] == 'Hydraulic') or (current[0] == 'HYDRAULIC'):
-                    [hr, minutes] = current[2].split(':')
-                    wn.add_time_parameter('Hydraulic Timestep', (float(hr), float(minutes)))
+                    wn.add_time_parameter('Hydraulic Timestep', str_time_to_min(current[2]))
                 elif (current[0] == 'Quality') or (current[0] == 'QUALITY'):
-                    [hr, minutes] = current[2].split(':')
-                    wn.add_time_parameter('Quality Timestep', (float(hr), float(minutes)))
+                    wn.add_time_parameter('Quality Timestep', str_time_to_min(current[2]))
                 elif (current[1] == 'ClockTime') or (current[1] == 'CLOCKTIME'):
                     [time, time_format] = [current[2], current[3]]
-                    wn.add_time_parameter('Start ClockTime', (float(time), time_format))
+                    wn.add_time_parameter('Start ClockTime', (time, time_format))
                 elif (current[0] == 'Statistic') or (current[0] == 'STATISTIC'):
                     wn.add_time_parameter('Statistic', current[1])
                 else:  # Other time options
-                    [hr, minutes] = current[2].split(':')
                     key_string = current[0] + ' ' + current[1]
-                    wn.add_time_parameter(key_string, (float(hr), float(minutes)))
+                    wn.add_time_parameter(key_string, str_time_to_min(current[2]))
             if patterns:
                 # patterns are stored in a pattern dictionary pattern_dict = {'pattern_1': [ 23, 3, 4 ...], ... }
                 current = line.split()
@@ -237,6 +261,27 @@ class ParseWaterNetwork(object):
                                   "Only time controls are supported.")
                 else:
                     assert(len(current) == 6), "Error reading time controls. Check format."
+                    link_name = current[1]
+                    if link_name not in self._time_controls:
+                        if current[2].upper() == 'OPEN':
+                            self._time_controls[link_name] = {'open_times': [str_time_to_min(current[5])], 'closed_times': []}
+                        elif current[2].upper() == 'CLOSED':
+                            self._time_controls[link_name] = {'open_times': [], 'closed_times': [str_time_to_min(current[5])]}
+                        else:
+                            raise RuntimeError("Time control format not recognized.")
+                    else:
+                        if current[2].upper() == 'OPEN':
+                            self._time_controls[link_name]['open_times'].append(str_time_to_min(current[5]))
+                        elif current[2].upper() == 'CLOSED':
+                            self._time_controls[link_name]['closed_times'].append(str_time_to_min(current[5]))
+                        else:
+                            raise RuntimeError("Time control format not recognized.")
+            if coordinates:
+                current = line.split()
+                if (current == []) or (current[0].startswith(';')):
+                    continue
+                assert(len(current) == 3), "Error reading node coordinates. Check format."
+                self._node_coordinates[current[0]] = (float(current[1]), float(current[2]))
 
         f.close()
 
@@ -247,4 +292,16 @@ class ParseWaterNetwork(object):
             wn.add_curve(curve_name, tupleList)
         for pattern_name, pattern_list in self._patterns.iteritems():
             wn.add_pattern(pattern_name, pattern_list)
+        for control_link, control_dict in self._time_controls.iteritems():
+            wn.add_time_control(control_link, control_dict['open_times'], control_dict['closed_times'])
+
+        ###### Load the network connectivity into the NetworkX graph
+        # Set name
+        wn.graph.name = inp_file_name
+        # Add nodes along with their coordinates
+        for n in wn.nodes:
+            wn.graph.add_node(n, pos=self._node_coordinates[n])
+        # Add links and their connectivity
+        for link_name, link in wn.links.iteritems():
+            wn.graph.add_edge(link.start_node_name, link.end_node_name, key=link_name)
 

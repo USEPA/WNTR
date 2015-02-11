@@ -5,6 +5,7 @@ Created on Fri Jan 23 10:07:42 2015
 @author: aseth
 """
 import copy
+import networkx as nx
 import numpy as np
 
 class WaterNetwork(object):
@@ -36,16 +37,26 @@ class WaterNetwork(object):
         self._num_valves = 0
 
         # Initialize node an link lists
-        self._nodes = {}
-        self._links = {}
-        
+        # Dictionary of node or link objects indexed by their names
+        self.nodes = {}
+        self.links = {}
+
         # Initialize pattern and curve dictionaries
-        self._patterns = {}
-        self._curves = {}
+        # Dictionary of pattern or curves indexed by their names
+        self.patterns = {}
+        self.curves = {}
 
         # Initialize Options dictionaries
-        self._time_options = {}
-        self._options = {}
+        self.time_options = {}
+        self.options = {}
+
+        # Time controls are saved as a dictionary as follows:
+        # {'Link name': {'open_times': [1, 5, ...], 'closed_times': [3, 7, ...]}},
+        # where times are in minutes
+        self.time_controls = {}
+
+        # NetworkX Graph to store the pipe connectivity and node coordinates
+        self.graph = nx.MultiDiGraph(data=None)
 
     def copy(self):
         """
@@ -82,7 +93,7 @@ class WaterNetwork(object):
 
         """
         junction = Junction(name, base_demand, demand_pattern_name, elevation)
-        self._nodes[name] = junction
+        self.nodes[name] = junction
         self._num_nodes += 1
         self._num_junctions += 1
 
@@ -123,7 +134,7 @@ class WaterNetwork(object):
         tank = Tank(name, elevation, init_level,
                  min_level, max_level, diameter,
                  min_vol, vol_curve)
-        self._nodes[name] = tank
+        self.nodes[name] = tank
         self._num_nodes += 1
         self._num_tanks += 1
 
@@ -146,7 +157,7 @@ class WaterNetwork(object):
             Name of the head pattern.
         """
         reservoir = Reservoir(name, base_head, head_pattern_name)
-        self._nodes[name] = reservoir
+        self.nodes[name] = reservoir
         self._num_nodes += 1
         self._num_reservoirs += 1
 
@@ -181,7 +192,7 @@ class WaterNetwork(object):
         """
         pipe = Pipe(name, start_node_name, end_node_name, length,
                     diameter, roughness, minor_loss, status)
-        self._links[name] = pipe
+        self.links[name] = pipe
         self._num_links += 1
         self._num_pipes += 1
 
@@ -204,7 +215,7 @@ class WaterNetwork(object):
             Name of the pump curve.
         """
         pump = Pump(name, start_node_name, end_node_name, curve_name)
-        self._links[name] = pump
+        self.links[name] = pump
         self._num_links += 1
         self._num_pumps += 1
 
@@ -236,7 +247,7 @@ class WaterNetwork(object):
         """
         valve = Valve(self, name, start_node_name, end_node_name,
                       diameter, valve_type, minor_loss, setting)
-        self._links[name] = valve
+        self.links[name] = valve
         self._num_links += 1
         self._num_valves += 1
 
@@ -251,7 +262,7 @@ class WaterNetwork(object):
         pattern_list : list of floats
             A list of floats that make up the pattern.
         """
-        self._patterns[name] = pattern_list
+        self.patterns[name] = pattern_list
 
     def add_curve(self, name, xy_tuples_list):
         """
@@ -264,7 +275,7 @@ class WaterNetwork(object):
         xy_tuples_list : list of tuples
             List of X-Y coordinate tuples on the curve.
         """
-        self._curves[name] = xy_tuples_list
+        self.curves[name] = xy_tuples_list
 
     def add_time_parameter(self, name, value):
         """
@@ -277,7 +288,7 @@ class WaterNetwork(object):
         value:
             Value of the time option. Can be tuple representing (Hours, Minutes) or (Hours, AM/PM).
         """
-        self._time_options[name] = value
+        self.time_options[name] = value
 
     def add_option(self, name, value):
         """
@@ -290,42 +301,10 @@ class WaterNetwork(object):
         value:
             Value of the option.
         """
-        self._options[name] = value
-
-    def get_node(self, name):
-        """
-        Return the node object for a node name.
-
-        Parameters
-        -------
-        name : string
-            Name of the node.
-
-        Return
-        -------
-        node : Node object
-            Node object corresponding to "name".
-        """
-        return self._nodes[name]
-
-    def get_link(self, name):
-        """
-        Return the link object for a link name.
-
-        Parameters
-        -------
-        name : string
-            Name of the link.
-
-        Return
-        -------
-        link : Link object
-            Link object corresponding to "name".
-        """
-        return self._links[name]
+        self.options[name] = value
 
 
-    def query_node_attribute(self, attribute, operation, value):
+    def query_node_attribute(self, attribute, operation, value=0.0):
         """ Query node attributes, for example get all nodes with elevation <= threshold
 
         Parameters
@@ -344,13 +323,15 @@ class WaterNetwork(object):
         nodes : list of Node objects
             list of nodes
         """
-        nodes = []
-        for i in self._nodes:
-            node_attribute = self._nodes[i].get_attribute(attribute)
-            if node_attribute is not None:
-                if operation(node_attribute, value):
-                    nodes.append(self._nodes[i])
-        return nodes
+        node_attribute_dict = {}
+        for name, node in self.nodes.iteritems():
+            try:
+                node_attribute = getattr(node, attribute)
+            except AttributeError:
+                node_attribute = None
+            if operation(node_attribute, value):
+                node_attribute_dict[name] = node_attribute
+        return node_attribute_dict
 
     def query_link_attribute(self, attribute, operation, value):
         """ Query pipe attributes, for example get all pipe diameters > threshold
@@ -371,30 +352,87 @@ class WaterNetwork(object):
         pipes : list
             list of links
         """
-        links = []
-        for i in self._links:
-            link_attribute = self._links[i].get_attribute(attribute)
-            if link_attribute is not None:
-                if operation(link_attribute, value):
-                    links.append(self._links[i])
-        return links
-
-    def get_option(self, option_name):
-        """
-         Returns network option.
-
-         Parameter
-         -------
-         option_name : string
-             option name
-        """
-        for n in [option_name, option_name.upper()]:
+        link_attribute_dict = {}
+        for name, link in self.links.iteritems():
             try:
-                option_value = self._options[n]
-                return option_value
-            except KeyError:
-                continue
-        return None
+                link_attribute = getattr(link, attribute)
+            except AttributeError:
+                link_attribute = None
+            if operation(link_attribute, value):
+                link_attribute_dict[name] = link_attribute
+        return link_attribute_dict
+
+    def set_graph_node_attribute(self, attribute, operation, value=0.0):
+        """ Set node attribute in the networkX graph, for example get all nodes with elevation <= threshold
+
+        Parameters
+        ----------
+        attribute: string
+            Pipe attribute
+
+        operation: np option
+            options = np.greater, np.greater_equal, np.less, np.less_equal, np.equal, np.not_equal
+
+        value: scalar
+            threshold
+
+        """
+        node_attribute_dict = {}
+        for name, node in self.nodes.iteritems():
+            try:
+                node_attribute = getattr(node, attribute)
+            except AttributeError:
+                node_attribute = None
+            if operation(node_attribute, value):
+                node_attribute_dict[name] = node_attribute
+        nx.set_node_attributes(self.graph, attribute, node_attribute_dict)
+
+    def set_graph_link_attribute(self, attribute, operation, value):
+        """ Set link attributes in the networkX graph, for example get all pipe diameters > threshold
+
+        Parameters
+        ----------
+        attribute: string
+            Pipe attribute
+
+        operation: np option
+            options = np.greater, np.greater_equal, np.less, np.less_equal, np.equal, np.not_equal
+
+        value: scalar
+            threshold
+
+        """
+        link_attribute_dict = {}
+        for name, link in self.links.iteritems():
+            try:
+                link_attribute = getattr(link, attribute)
+            except AttributeError:
+                link_attribute = None
+            if operation(link_attribute, value):
+                link_attribute_dict[(link.start_node_name, link.end_node_name, name)] = link_attribute
+        nx.set_edge_attributes(self.graph, attribute, link_attribute_dict)
+
+
+    def add_time_control(self, link, open_times=[], closed_times=[]):
+        """
+        Add time controls to the network.
+
+        Parameter
+        -------
+        link : string
+            Name of the link
+        open_times : list of integers
+            List of times (in minutes) when the link is opened
+        closed_times : list of integers
+            List of times (in minutes) when the link is closed
+
+        """
+        if link not in self.time_controls:
+            self.time_controls[link] = {'open_times': [i for i in open_times], 'closed_times': [i for i in closed_times]}
+        else:
+            self.time_controls[link]['open_times'] += open_times
+            self.time_controls[link]['closed_times'] += closed_times
+
 
 class Node(object):
     """
@@ -413,13 +451,13 @@ class Node(object):
         ---------
         >>> node2 = Node('North Lake','Reservoir')
         """
-        self._name = name
+        self.name = name
 
     def __str__(self):
         """
         Returns the name of the node when printing to a stream.
         """
-        return self._name
+        return self.name
 
     def copy(self):
         """
@@ -436,12 +474,6 @@ class Node(object):
 
         """
         return copy.deepcopy(self)
-
-    def name(self):
-        """
-        Returns the name of the node when printing to a stream.
-        """
-        return self._name
 
 
 class Link(object):
@@ -465,15 +497,15 @@ class Link(object):
         ---------
         >>> link1 = Link('Pipe 1','Pipe', 'Node 153', 'Node 159')
         """
-        self._link_name = link_name
-        self._start_node_name = start_node_name
-        self._end_node_name = end_node_name
+        self.link_name = link_name
+        self.start_node_name = start_node_name
+        self.end_node_name = end_node_name
 
     def __str__(self):
         """
         Returns the name of the link when printing to a stream.
         """
-        return self._link_name
+        return self.link_name
 
     def copy(self):
         """
@@ -489,12 +521,6 @@ class Link(object):
         >>> link2 = link1.copy()
         """
         return copy.deepcopy(self)
-
-    def name(self):
-        """
-        Returns the name of the link.
-        """
-        return self._name
 
 
 class Junction(Node):
@@ -520,9 +546,9 @@ class Junction(Node):
             Internal units must be meters (m).
         """
         Node.__init__(self, name)
-        self._base_demand = base_demand
-        self._demand_pattern_name = demand_pattern_name
-        self._elevation = elevation
+        self.base_demand = base_demand
+        self.demand_pattern_name = demand_pattern_name
+        self.elevation = elevation
 
     def copy(self):
         """
@@ -538,31 +564,6 @@ class Junction(Node):
         >>>
         """
         return copy.deepcopy(self)
-
-    def get_attribute(self, attribute):
-        """
-        Returns a queried attribute of a junction.
-        If attribute is not specified for that junction, returns None.
-
-        Parameters
-        ---------
-        attribute : string
-           Attribute to be returned
-
-        Return
-        -------
-        attribute_value : float or string or None
-           Value of the queried attribute
-        """
-        attribute_u = attribute.upper()
-        if attribute_u == 'BASE_DEMAND':
-            return self._base_demand
-        elif attribute_u == 'DEMAND_PATTERN_NAME':
-            return self._demand_pattern_name
-        elif attribute_u == 'ELEVATION':
-            return self._elevation
-        else:
-            return None
 
 class Reservoir(Node):
     """
@@ -584,31 +585,8 @@ class Reservoir(Node):
             Name of the head pattern.
         """
         Node.__init__(self, name)
-        self._base_head = base_head
-        self._head_pattern_name = head_pattern_name
-
-    def get_attribute(self, attribute):
-        """
-        Returns a queried attribute of a reservoir.
-        If attribute is not specified for that reservoir, returns None.
-
-        Parameters
-        ---------
-        attribute : string
-           Attribute to be returned
-
-        Return
-        -------
-        attribute_value : float or string or None
-           Value of the queried attribute
-        """
-        attribute_u = attribute.upper()
-        if attribute_u == 'BASE_HEAD':
-            return self._base_head
-        elif attribute_u == 'HEAD_PATTERN_NAME':
-            return self._head_pattern_name
-        else:
-            return None
+        self.base_head = base_head
+        self.head_pattern_name = head_pattern_name
 
 class Tank(Node):
     """
@@ -647,46 +625,13 @@ class Tank(Node):
             Name of the tank volume curve.
         """
         Node.__init__(self, name)
-        self._elevation = elevation
-        self._init_level = init_level
-        self._min_level = min_level
-        self._max_level = max_level
-        self._diameter = diameter
-        self._min_vol = min_vol
-        self._vol_curve = vol_curve
-
-    def get_attribute(self, attribute):
-        """
-        Returns a queried attribute of a tank.
-        If attribute is not specified for that tank, returns None.
-
-        Parameters
-        ---------
-        attribute : string
-           Attribute to be returned
-
-        Return
-        -------
-        attribute_value : float or string or None
-           Value of the queried attribute
-        """
-        attribute_u = attribute.upper()
-        if attribute_u == 'ELEVATION':
-            return self._elevation
-        elif attribute_u == 'INIT_LEVEL':
-            return self._init_level
-        elif attribute_u == 'MIN_LEVEL':
-            return self._min_level
-        elif attribute_u == 'MAX_LEVEL':
-            return self._max_level
-        elif attribute_u == 'DIAMETER':
-            return self._diameter
-        elif attribute_u == 'MIN_VOL':
-            return self._min_vol
-        elif attribute_u == 'VOL_CURVE':
-            return self._vol_curve
-        else:
-            return None
+        self.elevation = elevation
+        self.init_level = init_level
+        self.min_level = min_level
+        self.max_level = max_level
+        self.diameter = diameter
+        self.min_vol = min_vol
+        self.vol_curve = vol_curve
 
 class Pipe(Link):
     """
@@ -720,40 +665,11 @@ class Pipe(Link):
             Pipe status. Options are 'Open', 'Closed', and 'CV'
         """
         Link.__init__(self, name, start_node_name, end_node_name)
-        self._length = length
-        self._diameter = diameter
-        self._roughness = roughness
-        self._minor_loss = minor_loss
-        self._status = status
-
-    def get_attribute(self, attribute):
-        """
-        Returns a queried attribute of a pipe.
-        If attribute is not specified for that pipe, returns None.
-
-        Parameters
-        ---------
-        attribute : string
-           Attribute to be returned
-
-        Return
-        -------
-        attribute_value : float or string or None
-           Value of the queried attribute
-        """
-        attribute_u = attribute.upper()
-        if attribute_u == 'LENGTH':
-            return self._length
-        elif attribute_u == 'DIAMETER':
-            return self._diameter
-        elif attribute_u == 'ROUGHNESS':
-            return self._roughness
-        elif attribute_u == 'MINOR_LOSS':
-            return self._minor_loss
-        elif attribute_u == 'STATUS':
-            return self._status
-        else:
-            return None
+        self.length = length
+        self.diameter = diameter
+        self.roughness = roughness
+        self.minor_loss = minor_loss
+        self.status = status
 
 
 class Pump(Link):
@@ -777,32 +693,7 @@ class Pump(Link):
             Name of the pump curve.
         """
         Link.__init__(self, name, start_node_name, end_node_name)
-        self._curve_name = curve_name
-
-    def get_attribute(self, attribute):
-        """
-        Returns a queried attribute of a pump.
-        If attribute is not specified for that pump, returns None.
-
-        Parameters
-        ---------
-        attribute : string
-           Attribute to be returned
-
-        Return
-        -------
-        attribute_value : float or string or None
-           Value of the queried attribute
-        """
-        attribute_u = attribute.upper()
-        if attribute_u == 'START_NODE_NAME':
-            return self._start_node_name
-        elif attribute_u == 'END_NODE_NAME':
-            return self._end_node_name
-        elif attribute_u == 'CURVE_NAME':
-            return self._curve_name
-        else:
-            return None
+        self.curve_name = curve_name
 
 class Valve(Link):
     """
@@ -833,40 +724,9 @@ class Valve(Link):
             Valve status. Options are 'Open', 'Closed', etc
         """
         Link.__init__(self, name, start_node_name, end_node_name)
-        self._diameter = diameter
-        self._valve_type = valve_type
-        self._minor_loss = minor_loss
-        self._setting = setting
-
-    def get_attribute(self, attribute):
-        """
-        Returns a queried attribute of a valve.
-        If attribute is not specified for that valve, returns None.
-
-        Parameters
-        ---------
-        attribute : string
-           Attribute to be returned
-
-        Return
-        -------
-        attribute_value : float or string or None
-           Value of the queried attribute
-        """
-        attribute_u = attribute.upper()
-        if attribute_u == 'START_NODE_NAME':
-            return self._start_node_name
-        elif attribute_u == 'END_NODE_NAME':
-            return self._end_node_name
-        elif attribute_u == 'DIAMETER':
-            return self._diameter
-        elif attribute_u == 'VALVE_TYPE':
-            return self._valve_type
-        elif attribute_u == 'MINOR_LOSS':
-            return self._minor_loss
-        elif attribute_u == 'SETTING':
-            return self._setting
-        else:
-            return None
+        self.diameter = diameter
+        self.valve_type = valve_type
+        self.minor_loss = minor_loss
+        self.setting = setting
 
 
