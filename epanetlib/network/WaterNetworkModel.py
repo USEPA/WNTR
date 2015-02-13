@@ -6,9 +6,10 @@ Created on Fri Jan 23 10:07:42 2015
 """
 import copy
 import networkx as nx
-import numpy as np
+import math
+from scipy.optimize import fsolve
 
-class WaterNetwork(object):
+class WaterNetworkModel(object):
     """
     The base water network class. 
     """
@@ -21,9 +22,9 @@ class WaterNetwork(object):
         
         Example
         ---------
-        >>> wn = WaterNetwork()
+        >>> wn = WaterNetworkModel()
         
-        >>> wn2 = WaterNetwork('Net3.inp')
+        >>> wn2 = WaterNetworkModel('Net3.inp')
         """
 
         # Initialize Network size parameters
@@ -57,6 +58,7 @@ class WaterNetwork(object):
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
         self.graph = nx.MultiDiGraph(data=None)
+
 
     def copy(self):
         """
@@ -245,7 +247,7 @@ class WaterNetwork(object):
         setting : string
             Valve status. Options are 'Open', 'Closed', etc
         """
-        valve = Valve(self, name, start_node_name, end_node_name,
+        valve = Valve(name, start_node_name, end_node_name,
                       diameter, valve_type, minor_loss, setting)
         self.links[name] = valve
         self._num_links += 1
@@ -264,7 +266,7 @@ class WaterNetwork(object):
         """
         self.patterns[name] = pattern_list
 
-    def add_curve(self, name, xy_tuples_list):
+    def add_curve(self, name, curve_type, xy_tuples_list):
         """
         Method to add a curve to a water network object.
 
@@ -275,7 +277,8 @@ class WaterNetwork(object):
         xy_tuples_list : list of tuples
             List of X-Y coordinate tuples on the curve.
         """
-        self.curves[name] = xy_tuples_list
+        curve = Curve(name, curve_type, xy_tuples_list)
+        self.curves[name] = curve
 
     def add_time_parameter(self, name, value):
         """
@@ -432,6 +435,86 @@ class WaterNetwork(object):
         else:
             self.time_controls[link]['open_times'] += open_times
             self.time_controls[link]['closed_times'] += closed_times
+
+    def get_pump_coefficients(self, pump_name):
+        """
+        Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
+        Coefficient can only be calculated for pump curves.
+
+        For a single point curve the coefficients are generated according to the following equation:
+
+        A = 4/3 * H_1
+        B = 1/3 * H_1/Q_1^2
+        C = 2
+
+        For a three point curve the coefficients are generated according to the following equation:
+             When the first point is a zero flow: (All INP files we have come across)
+
+             A = H_1
+             C = ln((H_1 - H_2)/(H_1 - H_3))/ln(Q_2/Q_3)
+             B = (H_1 - H_2)/Q_2^C
+
+             When the first point is not zero, numpy fsolve is called to solve the following system of
+             equation:
+
+             H_1 = A - B*Q_1^C
+             H_2 = A - B*Q_2^C
+             H_3 = A - B*Q_3^C
+
+        Multi point curves are currently not supported
+
+        Parameters
+        -------
+        pump_name : string
+            Name of the pump
+
+        Return
+        -------
+        Tuple of pump curve coefficient (A, B, C). All floats.
+        """
+        pump = self.links[pump_name]
+        curve = self.curves[pump.curve_name]
+
+        assert(isinstance(pump, Pump)), pump_name + " is not defined as a pump type. "
+
+        # 1-Point curve
+        if curve.num_points == 1:
+            H_1 = curve.points[0][1]
+            Q_1 = curve.points[0][0]
+            A = (4.0/3.0)*H_1
+            B = (1.0/3.0)*(H_1/(Q_1**2))
+            C = 2
+        # 3-Point curve
+        elif curve.num_points == 3:
+            Q_1 = curve.points[0][0]
+            H_1 = curve.points[0][1]
+            Q_2 = curve.points[1][0]
+            H_2 = curve.points[1][1]
+            Q_3 = curve.points[2][0]
+            H_3 = curve.points[2][1]
+
+            # When the first points is at zero flow
+            #if Q_1 == 0.0:
+            if False:
+                A = H_1
+                C = math.log((H_1 - H_2)/(H_1 - H_3))/math.log(Q_2/Q_3)
+                B = (H_1 - H_2)/(Q_2**C)
+            else:
+                def curve_fit(x):
+                    eq_array = [H_1 - x[0] + x[1]*Q_1**x[2],
+                                H_2 - x[0] + x[1]*Q_2**x[2],
+                                H_3 - x[0] + x[1]*Q_3**x[2]]
+                    return eq_array
+                coeff = fsolve(curve_fit, [200, 1e-3, 1.5])
+                A = coeff[0]
+                B = coeff[1]
+                C = coeff[2]
+
+        # Multi-point curve
+        else:
+            raise RuntimeError("Coefficient for Multipoint pump curves cannot be generated. ")
+
+        return (A, B, C)
 
 
 class Node(object):
@@ -728,5 +811,29 @@ class Valve(Link):
         self.valve_type = valve_type
         self.minor_loss = minor_loss
         self.setting = setting
+
+class Curve(object):
+    """
+    Curve class.
+    """
+    def __init__(self, name, curve_type, points):
+        """
+        Parameters
+        -------
+        name : string
+             Name of the curve
+        curve_type :
+             Type of curve. Options are Volume, Pump, Efficiency, Headloss.
+        points :
+             List of tuples with X-Y points.
+        """
+        self.name = name
+        self.curve_type = curve_type
+        self.points = points
+        self.num_points = len(points)
+
+
+
+
 
 

@@ -1,4 +1,6 @@
-from epanetlib.units import convert 
+from epanetlib.units import convert
+from epanetlib.network.WaterNetworkModel import Pump, Tank
+
 import warnings
 import re
 import networkx as nx
@@ -11,20 +13,32 @@ def is_number(s):
         return False
 
 def str_time_to_min(s):
+    """
+    Converts epanet time format to minutes.
+
+    Parameters
+    --------
+    s : string
+        EPANET time string. Options are 'HH:MM:SS', 'HH:MM', 'HH'
+
+    Return
+    ------
+     Integer value of time in minutes. Seconds are rounded.
+    """
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
     if bool(time_tuple):
-        return float(time_tuple.groups()[0])*60 + float(time_tuple.groups()[1]) + float(time_tuple.groups()[2])/60.0
+        return int(time_tuple.groups()[0])*60 + int(time_tuple.groups()[1]) + int(round(float(time_tuple.groups()[2])/60.0))
     else:
         pattern2 = re.compile(r'^(\d+):(\d+)$')
         time_tuple = pattern2.search(s)
         if bool(time_tuple):
-            return float(time_tuple.groups()[0])*60 + float(time_tuple.groups()[1])
+            return int(time_tuple.groups()[0])*60 + int(time_tuple.groups()[1])
         else:
             pattern3 = re.compile(r'^(\d+)$')
             time_tuple = pattern3.search(s)
             if bool(time_tuple):
-                return float(time_tuple.groups()[0])*60
+                return int(time_tuple.groups()[0])*60
             else:
                 raise RuntimeError("Time format in [CONTROLS] block of "
                                    "INP file not recognized. ")
@@ -39,6 +53,7 @@ class ParseWaterNetwork(object):
         self._curves = {}
         self._time_controls = {}
         self._node_coordinates = {}
+        self._curve_map = {}
 
     def read_inp_file(self, wn, inp_file_name):
         """
@@ -73,7 +88,10 @@ class ParseWaterNetwork(object):
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 if len(current) == 2:
-                    wn.add_option(current[0].upper(), float(current[1]) if is_number(current[1]) else current[1].upper())
+                    if current[0].upper() == 'PATTERN':
+                        wn.add_option('PATTERN', current[1])
+                    else:
+                        wn.add_option(current[0].upper(), float(current[1]) if is_number(current[1]) else current[1].upper())
                 if len(current) > 2:
                     if (current[0] == 'Unbalanced') or (current[0] == 'UNBALANCED'):
                         wn.add_option('UNBALANCED', current[1] + ' ' + current[2])
@@ -179,7 +197,12 @@ class ParseWaterNetwork(object):
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
-                wn.add_pump(current[0], current[1], current[2], current[3])
+                # Only add head curves for pumps
+                if current[3].upper() == 'HEAD':
+                    wn.add_pump(current[0], current[1], current[2], current[4])
+                    self._curve_map[current[4]] = current[0]
+                else:
+                    warnings.warn("Only HEAD curves are supported for pumps. " + current[3] + " curve is currently not supported. ")
             if reservoirs:
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
@@ -202,6 +225,7 @@ class ParseWaterNetwork(object):
                                             convert('Tank Diameter', inp_units, float(current[5])),
                                             convert('Volume', inp_units, float(current[6])),
                                             current[7])
+                    self._curve_map[current[7]] = current[0]
                 elif len(current) == 7:  # No volume curve provided
                     wn.add_tank(current[0], convert('Elevation', inp_units, float(current[1])),
                                             convert('Length', inp_units, float(current[2])),
@@ -215,19 +239,28 @@ class ParseWaterNetwork(object):
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 if (current[0] == 'Duration') or (current[0] == 'DURATION'):
-                    wn.add_time_parameter('Duration', str_time_to_min(current[1]))
+                    wn.add_time_parameter('DURATION', str_time_to_min(current[1]))
                 elif (current[0] == 'Hydraulic') or (current[0] == 'HYDRAULIC'):
-                    wn.add_time_parameter('Hydraulic Timestep', str_time_to_min(current[2]))
+                    wn.add_time_parameter('HYDRAULIC TIMESTEP', str_time_to_min(current[2]))
                 elif (current[0] == 'Quality') or (current[0] == 'QUALITY'):
-                    wn.add_time_parameter('Quality Timestep', str_time_to_min(current[2]))
+                    wn.add_time_parameter('QUALITY TIMESTEP', str_time_to_min(current[2]))
                 elif (current[1] == 'ClockTime') or (current[1] == 'CLOCKTIME'):
-                    [time, time_format] = [current[2], current[3]]
-                    wn.add_time_parameter('Start ClockTime', (time, time_format))
+                    [time, time_format] = [current[2], current[3].upper()]
+                    # convert time in AM or PM into minute of day
+                    if '12' in time:
+                        time = '0'
+                    if time_format == 'AM':
+                        time_min = str_time_to_min(time)
+                    elif time_format == 'PM':
+                        time_min = str_time_to_min(time)
+                    else:
+                        RuntimeError("Time format in INP file not recognized: " + time_format)
+                    wn.add_time_parameter('START CLOCKTIME', time_min)
                 elif (current[0] == 'Statistic') or (current[0] == 'STATISTIC'):
-                    wn.add_time_parameter('Statistic', current[1])
+                    wn.add_time_parameter('STATISTIC', current[1])
                 else:  # Other time options
                     key_string = current[0] + ' ' + current[1]
-                    wn.add_time_parameter(key_string, str_time_to_min(current[2]))
+                    wn.add_time_parameter(key_string.upper(), str_time_to_min(current[2]))
             if patterns:
                 # patterns are stored in a pattern dictionary pattern_dict = {'pattern_1': [ 23, 3, 4 ...], ... }
                 current = line.split()
@@ -287,13 +320,30 @@ class ParseWaterNetwork(object):
 
         # TODO Units need to be changed for curves depending on the type of curve
 
-        # Add the curves and patterns to their set
-        for curve_name, tupleList in self._curves.iteritems():
-            wn.add_curve(curve_name, tupleList)
+        # Add patterns to their set
         for pattern_name, pattern_list in self._patterns.iteritems():
             wn.add_pattern(pattern_name, pattern_list)
         for control_link, control_dict in self._time_controls.iteritems():
             wn.add_time_control(control_link, control_dict['open_times'], control_dict['closed_times'])
+
+        # Add curves
+        for curve_name, tupleList in self._curves.iteritems():
+            # Get the network element the curve is related to
+            # For now, only pump and tank volume curves are supported
+            try:
+                curve_element = wn.links[self._curve_map[curve_name]]
+            except AttributeError:
+                try:
+                    curve_element = wn.nodes[self._curve_map[curve_name]]
+                except AttributeError:
+                    raise RuntimeError("The following curve type is currently not supported.")
+
+            if isinstance(curve_element, Pump):
+                wn.add_curve(curve_name, 'Pump', tupleList)
+            elif isinstance(curve_element, Tank):
+                wn.add_curve(curve_name, 'Volume', tupleList)
+            else:
+                raise RuntimeError("The following curve type is currently not supported.")
 
         ###### Load the network connectivity into the NetworkX graph
         # Set name
