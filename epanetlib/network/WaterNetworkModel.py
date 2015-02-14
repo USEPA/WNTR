@@ -9,7 +9,9 @@ import networkx as nx
 import math
 from scipy.optimize import fsolve
 
+
 class WaterNetworkModel(object):
+
     """
     The base water network class. 
     """
@@ -306,6 +308,20 @@ class WaterNetworkModel(object):
         """
         self.options[name] = value
 
+    def get_nodes(self):
+        """
+        Return dictionary with all nodes.
+
+        Parameters
+        -------
+
+        Return
+        -------
+        node : dictionary
+            Node name to node.
+        """
+        return copy.deepcopy(self._nodes)
+
 
     def query_node_attribute(self, attribute, operation, value=0.0):
         """ Query node attributes, for example get all nodes with elevation <= threshold
@@ -517,6 +533,128 @@ class WaterNetworkModel(object):
         return (A, B, C)
 
 
+    def get_time_parameter(self, name):
+        """
+        Method to get a time parameter from a water network object.
+
+        Parameters
+        -------
+        name : string
+            Name of the time option.
+        value:
+            Value of the time option. Can be tuple representing 
+            (Hours, Minutes) or (Hours, AM/PM).
+        """
+        return self.time_options[name]
+
+    def isTank(self, node_name):
+        """
+        Checks whether a node with a certain name is a isTank or not
+
+        Parameters
+        -------
+        node_name : string
+            name of the node to Check
+
+        Return
+        -------
+        boolean
+
+        """
+        node = self.nodes.get(node_name)
+        return True if(isinstance(node,Tank)) else False
+
+    def isJunction(self, node_name):
+        """
+        Checks whether a node with a certain name is a Junction
+
+        Parameters
+        -------
+        node_name : string
+            name of the node to Check
+
+        Return
+        -------
+        boolean
+
+        """
+        node = self.nodes.get(node_name)
+        return True if(isinstance(node,Junction)) else False
+
+    def isReservoir(self, node_name):
+        """
+        Checks whether a node with a certain name is a Reservoir
+
+        Parameters
+        -------
+        node_name : string
+            name of the node to Check
+
+        Return
+        -------
+        boolean
+
+        """
+        node = self.nodes.get(node_name)
+        return True if(isinstance(node,Reservoir)) else False
+
+    def isPipe(self, link_name):
+        """
+        Checks whether a node with a certain name is a pipe or not
+
+        Parameters
+        -------
+        node_name : string
+            name of the link to Check
+
+        Return
+        -------
+        boolean
+
+        """
+        link = self.links.get(link_name)
+        return True if(isinstance(link,Pipe)) else False
+
+
+    def isPump(self, link_name):
+        """
+        Checks whether a node with a certain name is a pump or not
+
+        Parameters
+        -------
+        link_name : string
+            name of the link to Check
+
+        Return
+        -------
+        boolean
+
+        """
+        link = self.links.get(link_name)
+        return True if(isinstance(link,Pump)) else False
+
+
+    def isValve(self, link_name):
+        """
+        Checks whether a node with a certain name is a valve or not
+
+        Parameters
+        -------
+        link_name : string
+            name of the link to Check
+
+        Return
+        -------
+        boolean
+
+        """
+        link = self.links.get(link_name)
+        return True if(isinstance(link,Valve)) else False
+
+
+
+
+
 class Node(object):
     """
     The base node class.
@@ -557,6 +695,7 @@ class Node(object):
 
         """
         return copy.deepcopy(self)
+
 
 
 class Link(object):
@@ -755,11 +894,12 @@ class Pipe(Link):
         self.status = status
 
 
+
 class Pump(Link):
     """
     Pump class that is inherited from Link
     """
-    def __init__(self, name, start_node_name, end_node_name, curve_name=None):
+    def __init__(self, name, start_node_name, end_node_name, curve_name):
         """
         Parameters
         ----------

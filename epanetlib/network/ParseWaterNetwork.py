@@ -190,9 +190,9 @@ class ParseWaterNetwork(object):
                 if current[-1] == ';':
                     del current[-1]
                 if len(current) == 3:
-                    wn.add_junction(current[0], float(current[2]), None, convert('Elevation', inp_units, float(current[1])))
+                    wn.add_junction(current[0], convert('Demand', inp_units, float(current[2])), None, convert('Elevation', inp_units, float(current[1])))
                 else:
-                    wn.add_junction(current[0], float(current[2]), current[3], convert('Elevation', inp_units, float(current[1])))
+                    wn.add_junction(current[0], convert('Demand', inp_units, float(current[2])), current[3], convert('Elevation', inp_units, float(current[1])))
             if pumps:
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
@@ -339,9 +339,15 @@ class ParseWaterNetwork(object):
                     raise RuntimeError("The following curve type is currently not supported.")
 
             if isinstance(curve_element, Pump):
-                wn.add_curve(curve_name, 'Pump', tupleList)
+                converted_tuples = []
+                for (flow, head) in tupleList:
+                    converted_tuples.append((convert('Flow', inp_units, flow), convert('Hydraulic Head', inp_units, head)))
+                wn.add_curve(curve_name, 'Pump', converted_tuples)
             elif isinstance(curve_element, Tank):
-                wn.add_curve(curve_name, 'Volume', tupleList)
+                converted_tuples = []
+                for (volume, height) in tupleList:
+                    converted_tuples.append((convert('Volume', inp_units, volume), convert('Hydraulic Head', inp_units, height)))
+                wn.add_curve(curve_name, 'Volume', converted_tuples)
             else:
                 raise RuntimeError("The following curve type is currently not supported.")
 
