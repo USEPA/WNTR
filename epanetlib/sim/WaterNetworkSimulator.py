@@ -2,6 +2,9 @@ import numpy as np
 from epanetlib.network.WaterNetworkModel import *
 from scipy.optimize import fsolve
 import math
+from NetworkResults import NetResults
+import pandas as pd
+
 
 class WaterNetworkSimulator(object):
     def __init__(self, water_network=None):
@@ -29,14 +32,14 @@ class WaterNetworkSimulator(object):
 
     def _check_model_specified(self):
         assert (isinstance(self._wn, WaterNetworkModel)), "Water network model has not been set for the simulator" \
-                                                      "use method set_water_network_model to set model."
+                                                          "use method set_water_network_model to set model."
 
     def min_to_timestep(self, min):
         """
         Convert minutes to hydraulic timestep.
 
         Parameters
-        --------
+        -------
         min : int
             Minutes to convert to hydraulic timestep.
 
@@ -50,11 +53,11 @@ class WaterNetworkSimulator(object):
         self._check_model_specified()
         try:
             self._sim_start_min = self._wn.time_options['START CLOCKTIME']
-            self._sim_end_min = self._wn.time_options['DURATION'] + self._wn.time_options['HYDRAULIC TIMESTEP']
+            self._sim_duration = self._wn.time_options['DURATION']
             self._pattern_start_min = self._wn.time_options['PATTERN START']
             self._hydraulic_step_min = self._wn.time_options['HYDRAULIC TIMESTEP']
             self._pattern_step_min = self._wn.time_options['PATTERN TIMESTEP']
-            self._hydraulic_times_min = range(self._sim_start_min, self._sim_end_min, self._hydraulic_step_min)
+            self._hydraulic_times_min = range(0, self._sim_duration, self._hydraulic_step_min)
         except KeyError:
             KeyError("Water network model used for simulation should contain time parameters. "
                      "Consider initializing the network model data. e.g. Use parser to read EPANET"
@@ -86,11 +89,11 @@ class WaterNetworkSimulator(object):
         if start_time is None:
             start_time = 0
         if end_time is None:
-            end_time = self._sim_end_min
+            end_time = self._sim_duration
 
         # Get node object
         try:
-            node = self._wn.nodes[node_name]
+            node = self._wn.get_node(node_name)
         except KeyError:
             raise KeyError("Not a valid node name")
         # Make sure node object is a Junction
@@ -100,11 +103,13 @@ class WaterNetworkSimulator(object):
         pattern_name = node.demand_pattern_name
         if pattern_name is None:
             pattern_name = self._wn.options['PATTERN']
-        pattern_list = self._wn.patterns[pattern_name]
+        pattern_list = self._wn.get_pattern(pattern_name)
         pattern_length = len(pattern_list)
-        #offset = self._wn.time_options['PATTERN START']
+        offset = self._wn.time_options['PATTERN START']
 
-        demand_times_minutes = range(start_time, end_time, self._hydraulic_step_min)
+        assert(offset == 0.0), "Only 0.0 Pattern Start time is currently supported. "
+
+        demand_times_minutes = range(start_time, end_time + self._hydraulic_step_min, self._hydraulic_step_min)
         demand_pattern_values = [base_demand*i for i in pattern_list]
 
         demand_values = []
@@ -117,7 +122,7 @@ class WaterNetworkSimulator(object):
 
         return demand_values
 
-    def buildPyomoConcreteModel(self):
+    def run_pyomo_sim(self):
         import coopr.pyomo as pyomo
         from coopr.pyomo.base.expr import Expr_if
         from coopr.opt import SolverFactory
@@ -133,7 +138,7 @@ class WaterNetworkSimulator(object):
             return 1.0*x**1.852
 
         def Px(x):
-        #return 1.05461308881e-05 + 0.0494234328901*x - 0.201070504673*x**2 + 15.3265906777*x**3
+            #return 1.05461308881e-05 + 0.0494234328901*x - 0.201070504673*x**2 + 15.3265906777*x**3
             return 2.45944613543e-06 + 0.0138413824671*x - 2.80374270811*x**2 + 430.125623753*x**3
 
         def LossFunc(Q):
@@ -143,37 +148,39 @@ class WaterNetworkSimulator(object):
             q2 = 0.00549347323944
             return Expr_if(IF = Q < q1, THEN = f1(Q), ELSE = Expr_if(IF = Q > q2, THEN = f2(Q), ELSE = Px(Q)))  
 
-        print "BUILDING THE MODEL..."
         wn = self._wn
         model = pyomo.ConcreteModel()
-        model.timestep = wn.time_options['HYDRAULIC TIMESTEP']
-        model.duration = wn.time_options['DURATION']
+        model.timestep = self._hydraulic_step_min
+        model.duration = self._sim_duration
         n_timesteps = int(round(model.duration/model.timestep)) 
         # Define times
     
-        ######### should the last one be included?
-        model.time = pyomo.Set(initialize = range(0,n_timesteps+1))
+        model.time = pyomo.Set(initialize=range(0, n_timesteps+1))
         model.time.pprint()
         
         ###################### SETS #########################
-        list_nodes = wn.nodes.values()
-        model.num_nodes = pyomo.Set(initialize = [0,1]) # remove this later
-        model.nodes = pyomo.Set(initialize = [n.name for n in list_nodes])
-        model.tank_nodes = pyomo.Set(initialize = [n.name for n in list_nodes if isinstance(n,Tank)])
+        node_names = [name for name, node in wn.Nodes()]
+        nodes_dict = dict(wn.Nodes())
+
+        model.num_nodes = pyomo.Set(initialize=[0, 1]) # remove this later
+        model.nodes = pyomo.Set(initialize=node_names)
+        model.tank_nodes = pyomo.Set(initialize=[n for n in node_names if wn.isTank(n)])
         # ask about this one may be change names for something self explanatory
-        model.dnodes = pyomo.Set(initialize = [n.name for n in list_nodes if isinstance(n,Junction)])
-        model.rnodes = pyomo.Set(initialize = [n.name for n in list_nodes if isinstance(n,Reservoir)])
+        model.dnodes = pyomo.Set(initialize=[n for n in node_names if wn.isJunction(n)])
+        model.rnodes = pyomo.Set(initialize=[n for n in node_names if wn.isReservoir(n)])
         
         # Define link sets
-        list_links = wn.links.values()
-        model.links = pyomo.Set(initialize = [l.link_name for l in list_links])
-        model.pumplinks = pyomo.Set(initialize = [l.link_name for l in list_links if isinstance(l,Pump)])
-        model.valvelinks = pyomo.Set(initialize = [l.link_name for l in list_links if isinstance(l,Valve)])
-        model.pipelinks = pyomo.Set(initialize = [l.link_name for l in list_links if isinstance(l,Pipe)])
+        link_names = [name for name, link in wn.Links()]
+        links_dict = dict(wn.Links())
+
+        model.links = pyomo.Set(initialize=link_names)
+        model.pumplinks = pyomo.Set(initialize=[l for l in link_names if wn.isPump(l)])
+        model.valvelinks = pyomo.Set(initialize=[l for l in link_names if wn.isValve(l)])
+        model.pipelinks = pyomo.Set(initialize=[l for l in link_names if wn.isPipe(l)])
     
         #missing
-        model.curves = pyomo.Set(initialize = wn.curves.keys())
-        model.curvesp = pyomo.Set(initialize = ['A', 'B', 'C'])
+        model.curves = pyomo.Set(initialize=[curve_name for curve_name, curve in wn.Curves()])
+        model.curvesp = pyomo.Set(initialize=['A', 'B', 'C'])
     
         print "Nodes"
         model.nodes.pprint()
@@ -203,7 +210,7 @@ class WaterNetworkSimulator(object):
     
         ####### n is a binary...should we keep it as 1 or 2?
         def link_nodes_rule(model,l,n):
-            return wn.links.get(l).start_node_name if n==0 else wn.links.get(l).end_node_name
+            return links_dict.get(l).start_node() if n==0 else links_dict.get(l).end_node()
         model.link_nodes = pyomo.Param(model.links, model.num_nodes, initialize = link_nodes_rule, within = model.nodes)
     
         ####### map to time step of the pattern?
@@ -211,7 +218,8 @@ class WaterNetworkSimulator(object):
         for n in model.dnodes:
             demand_values = self.get_node_demand(n)
             for t in model.time:
-                demand_dict[(n,t)] = demand_values[t]
+                #print n, t, demand_values[t]
+                demand_dict[(n, t)] = demand_values[t]
 
         #def demand_req_rule(model,n,t):
         #    if wn.nodes.get(n).demand_pattern_name is not None:
@@ -225,24 +233,24 @@ class WaterNetworkSimulator(object):
         model.demand_req.pprint()
     
         def elevation_rule(model,n):
-            return wn.nodes.get(n).elevation
+            return nodes_dict.get(n).elevation
         model.elev = pyomo.Param((model.dnodes|model.tank_nodes), 
             within = pyomo.Reals, initialize = elevation_rule)
     
         def roughness_rule(model,l):
-            return wn.links.get(l).roughness
+            return links_dict.get(l).roughness
         model.link_rough = pyomo.Param((model.pipelinks|model.valvelinks), 
             within = pyomo.NonNegativeReals, initialize = roughness_rule)
         model.link_rough.pprint()
 
         def diameter_rule(model,l):
-            return wn.links.get(l).diameter 
+            return links_dict.get(l).diameter
         model.link_dia = pyomo.Param((model.pipelinks|model.valvelinks), 
             within = pyomo.NonNegativeReals, initialize = diameter_rule)
         model.link_dia.pprint()
 
         def length_rule(model,l):
-            return wn.links.get(l).length 
+            return links_dict.get(l).length
         model.link_len = pyomo.Param((model.pipelinks|model.valvelinks), 
             within = pyomo.NonNegativeReals, initialize = length_rule)
         model.link_len.pprint()
@@ -254,36 +262,36 @@ class WaterNetworkSimulator(object):
             #    #return wn.patterns[pattern_name][t]
             #    return wn.nodes.get(n).base_head
             #else:
-            return wn.nodes.get(n).base_head
+            return nodes_dict.get(n).base_head
         model.res_heads = pyomo.Param(model.rnodes, 
             within = pyomo.NonNegativeReals, initialize = reservoir_head_rule)
     
         model.res_heads.pprint()
 
         def tank_min_level_rule(model,n):
-            return wn.nodes.get(n).min_level
+            return nodes_dict.get(n).min_level
         model.min_level = pyomo.Param(model.tank_nodes,
             within = pyomo.NonNegativeReals, initialize = tank_min_level_rule)
     
         def tank_max_level_rule(model,n):
-            return wn.nodes.get(n).max_level
+            return nodes_dict.get(n).max_level
         model.max_level = pyomo.Param(model.tank_nodes,
             within = pyomo.NonNegativeReals, initialize = tank_max_level_rule) 
     
         def tank_diameter_rule(model,n):
-            return wn.nodes.get(n).diameter
+            return nodes_dict.get(n).diameter
         model.tank_dia = pyomo.Param(model.tank_nodes,
             within = pyomo.NonNegativeReals, initialize = tank_diameter_rule)
     
         def tank_init_level_rule(model,n):
-            return wn.nodes.get(n).init_level
+            return nodes_dict.get(n).init_level
         model.tank_inhead = pyomo.Param(model.tank_nodes,
             within = pyomo.NonNegativeReals, initialize = tank_init_level_rule)
     
         # Missing
         curveparam_dict = {}
         curve_pump_dict = {}
-        for link_name, link in wn.links.iteritems():
+        for link_name, link in wn.Links():
             if wn.isPump(link_name):
                 curve_name = link.curve_name
                 curve_pump_dict[link_name] = curve_name
@@ -394,7 +402,7 @@ class WaterNetworkSimulator(object):
             if l is max(model.time):
                 return pyomo.Constraint.Skip
             else:
-                return (model.tnet_inflow[i,l]*wn.time_options['HYDRAULIC TIMESTEP']*60.0*4.0)/(pi*(model.tank_dia[i]**2)) == model.head[i,l+1]-model.head[i,l]
+                return (model.tnet_inflow[i,l]*model.timestep*60.0*4.0)/(pi*(model.tank_dia[i]**2)) == model.head[i,l+1]-model.head[i,l]
         model.tankheadvar = pyomo.Constraint(model.tank_nodes,model.time, rule = tankheadvar_rule)        
                 
         def valvelinkflow_rule(model,i,l):
@@ -406,5 +414,158 @@ class WaterNetworkSimulator(object):
 
         instance = model.create()
         opt = SolverFactory('ipopt')
-        results = opt.solve(instance, tee=True)
-        #results.write()
+        pyomo_results = opt.solve(instance, tee=True)
+        instance.load(pyomo_results)
+
+        #help(pyomo_results.solver)
+        #help(pyomo_results.solver.statistics)
+        #print pyomo_results.solver.statistics
+
+
+        # Load pyomo results into results object
+        results = self._read_pyomo_results(instance, pyomo_results)
+
+        return results
+
+    def _read_pyomo_results(self, instance, pyomo_results):
+        """
+        Reads pyomo results from a pyomo instance and loads them into
+        a network results object.
+
+        Parameters
+        -------
+        instance : Pyomo model instance
+            Pyomo instance after instance.load() has been called.
+        pyomo_results : Pyomo results object
+            Pyomo results object
+
+        Return
+        ------
+        A NetworkResults object containing simulation results.
+        """
+        # Create results object
+        results = NetResults()
+
+        # Load general simulation options into the results object
+        self._load_general_results(results)
+
+        # Load pyomo solver statistics into the results object
+        results.solver_statistics['name'] = pyomo_results.solver.name
+        results.solver_statistics['status'] = pyomo_results.solver.status
+        results.solver_statistics['statistics'] = pyomo_results.solver.statistics.items()
+
+        # Create Delta time series
+        results.time = pd.timedelta_range(start='0 minutes',
+                                         end=str(self._sim_duration) + ' minutes',
+                                         freq=str(self._hydraulic_step_min) + 'min')
+        # Load link data
+        link_name = []
+        flowrate = []
+        velocity = []
+        times = []
+        link_type = []
+        for l in instance.links:
+            for t in instance.time:
+                link_name.append(l)
+                link_type.append(self._get_link_type(l))
+                times.append(results.time[t])
+                flow_l_t = instance.flow[l,t].value
+                flowrate.append(flow_l_t)
+                if self._wn.isPipe(l):
+                    velocity_l_t = 4*flow_l_t/(math.pi*instance.link_dia[l]**2)
+                else:
+                    velocity_l_t = 0.0
+                velocity.append(velocity_l_t)
+
+        link_data_frame = pd.DataFrame({'time': times,
+                                        'link': link_name,
+                                        'flowrate': flowrate,
+                                        'velocity': velocity,
+                                        'type': link_type})
+
+        link_pivot_table = pd.pivot_table(link_data_frame,
+                                              values=['flowrate', 'velocity', 'type'],
+                                              index=['link', 'time'],
+                                              aggfunc= lambda x: x)
+        results.link = link_pivot_table
+
+        # Load node data
+        node_name = []
+        head = []
+        pressure = []
+        demand = []
+        times = []
+        node_type = []
+        for n in instance.nodes:
+            for t in instance.time:
+                node_name.append(n)
+                node_type.append(self._get_node_type(n))
+                times.append(results.time[t])
+                head_n_t = instance.head[n,t].value
+                if self._wn.isReservoir(n):
+                    pressure_n_t = 0.0
+                else:
+                    pressure_n_t = head_n_t + instance.elev[n]
+                head.append(head_n_t)
+                pressure.append(pressure_n_t)
+                if self._wn.isJunction(n):
+                    demand.append(instance.demand_actual[n,t].value)
+                else:
+                    demand.append(0.0)
+
+        node_data_frame = pd.DataFrame({'time': times,
+                                        'node': node_name,
+                                        'demand': demand,
+                                        'head': head,
+                                        'pressure': pressure,
+                                        'type': node_type})
+
+        node_pivot_table = pd.pivot_table(node_data_frame,
+                                          values=['demand', 'head', 'pressure', 'type'],
+                                          index=['node', 'time'],
+                                          aggfunc= lambda x: x)
+        results.node = node_pivot_table
+
+        return results
+
+    def _get_link_type(self, name):
+        if self._wn.isPipe(name):
+            return 'pipe'
+        elif self._wn.isValve(name):
+            return 'valve'
+        elif self._wn.isPump(name):
+            return 'pump'
+        else:
+            raise RuntimeError('Link name ' + name + ' was not recognised as a pipe, valve, or pump.')
+
+    def _get_node_type(self, name):
+        if self._wn.isJunction(name):
+            return 'junction'
+        elif self._wn.isTank(name):
+            return 'tank'
+        elif self._wn.isReservoir(name):
+            return 'reservoir'
+        else:
+            raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, or reservoir.')
+
+    def _load_general_results(self, results):
+        """
+        Load general simulation options into the results object.
+
+        Parameter
+        ------
+        results : NetworkResults object
+        """
+        # Load general results
+        results.network_name = self._wn.name
+
+        # Load simulator options
+        results.simulator_options['type'] = 'PYOMO'
+        results.simulator_options['start_time'] = self._sim_start_min
+        results.simulator_options['duration'] = self._sim_duration
+        results.simulator_options['pattern_start_time'] = self._pattern_start_min
+        results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_min
+        results.simulator_options['pattern_time_step'] = self._pattern_step_min
+
+
+

@@ -13,21 +13,18 @@ from scipy.optimize import fsolve
 class WaterNetworkModel(object):
 
     """
-    The base water network class. 
+    The base water network model class.
     """
-    def __init__(self, inp_file_name=None):
+    def __init__(self):
         """
-        Optional Parameters
-        ----------
-        inp_file_name : string
-            Name of the epanet inp file to load network parameters.
-        
         Example
         ---------
         >>> wn = WaterNetworkModel()
         
-        >>> wn2 = WaterNetworkModel('Net3.inp')
         """
+
+        # Network name
+        self.name = None
 
         # Initialize Network size parameters
         self._num_nodes = 0
@@ -41,13 +38,13 @@ class WaterNetworkModel(object):
 
         # Initialize node an link lists
         # Dictionary of node or link objects indexed by their names
-        self.nodes = {}
-        self.links = {}
+        self._nodes = {}
+        self._links = {}
 
         # Initialize pattern and curve dictionaries
         # Dictionary of pattern or curves indexed by their names
-        self.patterns = {}
-        self.curves = {}
+        self._patterns = {}
+        self._curves = {}
 
         # Initialize Options dictionaries
         self.time_options = {}
@@ -59,6 +56,7 @@ class WaterNetworkModel(object):
         self.time_controls = {}
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
+        # SOULD THIS BE PRIVATE ??????
         self.graph = nx.MultiDiGraph(data=None)
 
 
@@ -71,10 +69,54 @@ class WaterNetworkModel(object):
 
         Example
         ------
-        >>> wn = WaterNetwork('Net3.inp')
+        >>> wn = WaterNetwork()
         >>> wn2 = wn.copy()
         """
         return copy.deepcopy(self)
+
+    def get_node(self, name):
+        """
+        Returns node object of a provided name
+
+        Parameter
+        --------
+        name : string
+            name of the node
+        """
+        return self._nodes[name]
+
+    def get_link(self, name):
+        """
+        Returns link object of a provided name
+
+        Parameter
+        --------
+        name : string
+            name of the link
+        """
+        return self._links[name]
+
+    def get_curve(self, name):
+        """
+        Returns curve object of a provided name
+
+        Parameter
+        --------
+        name : string
+            name of the curve
+        """
+        return self._curves[name]
+
+    def get_pattern(self, name):
+        """
+        Returns pattern object of a provided name
+
+        Parameter
+        --------
+        name : string
+            name of the pattern
+        """
+        return self._patterns[name]
 
     def add_junction(self, name, base_demand=None, demand_pattern_name=None, elevation=None):
         """
@@ -97,7 +139,7 @@ class WaterNetworkModel(object):
 
         """
         junction = Junction(name, base_demand, demand_pattern_name, elevation)
-        self.nodes[name] = junction
+        self._nodes[name] = junction
         self._num_nodes += 1
         self._num_junctions += 1
 
@@ -138,7 +180,7 @@ class WaterNetworkModel(object):
         tank = Tank(name, elevation, init_level,
                  min_level, max_level, diameter,
                  min_vol, vol_curve)
-        self.nodes[name] = tank
+        self._nodes[name] = tank
         self._num_nodes += 1
         self._num_tanks += 1
 
@@ -161,7 +203,7 @@ class WaterNetworkModel(object):
             Name of the head pattern.
         """
         reservoir = Reservoir(name, base_head, head_pattern_name)
-        self.nodes[name] = reservoir
+        self._nodes[name] = reservoir
         self._num_nodes += 1
         self._num_reservoirs += 1
 
@@ -196,7 +238,7 @@ class WaterNetworkModel(object):
         """
         pipe = Pipe(name, start_node_name, end_node_name, length,
                     diameter, roughness, minor_loss, status)
-        self.links[name] = pipe
+        self._links[name] = pipe
         self._num_links += 1
         self._num_pipes += 1
 
@@ -219,7 +261,7 @@ class WaterNetworkModel(object):
             Name of the pump curve.
         """
         pump = Pump(name, start_node_name, end_node_name, curve_name)
-        self.links[name] = pump
+        self._links[name] = pump
         self._num_links += 1
         self._num_pumps += 1
 
@@ -251,7 +293,7 @@ class WaterNetworkModel(object):
         """
         valve = Valve(name, start_node_name, end_node_name,
                       diameter, valve_type, minor_loss, setting)
-        self.links[name] = valve
+        self._links[name] = valve
         self._num_links += 1
         self._num_valves += 1
 
@@ -266,7 +308,7 @@ class WaterNetworkModel(object):
         pattern_list : list of floats
             A list of floats that make up the pattern.
         """
-        self.patterns[name] = pattern_list
+        self._patterns[name] = pattern_list
 
     def add_curve(self, name, curve_type, xy_tuples_list):
         """
@@ -276,11 +318,13 @@ class WaterNetworkModel(object):
         ---------
         name : string
             Name of the curve
+        curve_type : string
+            Type of curve. Options are HEAD, EFFICIENCY, VOLUME, HEADLOSS
         xy_tuples_list : list of tuples
             List of X-Y coordinate tuples on the curve.
         """
         curve = Curve(name, curve_type, xy_tuples_list)
-        self.curves[name] = curve
+        self._curves[name] = curve
 
     def add_time_parameter(self, name, value):
         """
@@ -291,9 +335,14 @@ class WaterNetworkModel(object):
         name : string
             Name of the time option.
         value:
-            Value of the time option. Can be tuple representing (Hours, Minutes) or (Hours, AM/PM).
+            Value of the time option. Must be in minutes.
+
+        Example
+        -------
+        START CLOCKTIME = 6 PM can be set using
+        >>> wn.add_time_parameter('START CLOCKTIME', 1080)
         """
-        self.time_options[name] = value
+        self.time_options[name.upper()] = value
 
     def add_option(self, name, value):
         """
@@ -306,24 +355,9 @@ class WaterNetworkModel(object):
         value:
             Value of the option.
         """
-        self.options[name] = value
+        self.options[name.upper()] = value
 
-    def get_nodes(self):
-        """
-        Return dictionary with all nodes.
-
-        Parameters
-        -------
-
-        Return
-        -------
-        node : dictionary
-            Node name to node.
-        """
-        return copy.deepcopy(self._nodes)
-
-
-    def query_node_attribute(self, attribute, operation, value=0.0):
+    def query_node_attribute(self, attribute, operation, value):
         """ Query node attributes, for example get all nodes with elevation <= threshold
 
         Parameters
@@ -339,26 +373,26 @@ class WaterNetworkModel(object):
 
         Returns
         -------
-        nodes : list of Node objects
-            list of nodes
+        nodes : dictionary of nodes
+            dictionary of node names to node objects satisfying operation threshold
         """
         node_attribute_dict = {}
-        for name, node in self.nodes.iteritems():
+        for name, node in self._nodes.iteritems():
             try:
                 node_attribute = getattr(node, attribute)
+                if operation(node_attribute, value):
+                    node_attribute_dict[name] = node_attribute
             except AttributeError:
-                node_attribute = None
-            if operation(node_attribute, value):
-                node_attribute_dict[name] = node_attribute
+                pass
         return node_attribute_dict
 
     def query_link_attribute(self, attribute, operation, value):
-        """ Query pipe attributes, for example get all pipe diameters > threshold
+        """ Query link attributes, for example get all pipe diameters > threshold
 
         Parameters
         ----------
         attribute: string
-            Pipe attribute
+            link attribute
 
         operation: np option
             options = np.greater, np.greater_equal, np.less, np.less_equal, np.equal, np.not_equal
@@ -368,68 +402,18 @@ class WaterNetworkModel(object):
 
         Return
         -------
-        pipes : list
-            list of links
+        links : dictionary of links
+            dictionary of link names to link objects satisfying operation threshold
         """
         link_attribute_dict = {}
-        for name, link in self.links.iteritems():
+        for name, link in self._links.iteritems():
             try:
                 link_attribute = getattr(link, attribute)
+                if operation(link_attribute, value):
+                    link_attribute_dict[name] = link_attribute
             except AttributeError:
-                link_attribute = None
-            if operation(link_attribute, value):
-                link_attribute_dict[name] = link_attribute
+                pass
         return link_attribute_dict
-
-    def set_graph_node_attribute(self, attribute, operation, value=0.0):
-        """ Set node attribute in the networkX graph, for example get all nodes with elevation <= threshold
-
-        Parameters
-        ----------
-        attribute: string
-            Pipe attribute
-
-        operation: np option
-            options = np.greater, np.greater_equal, np.less, np.less_equal, np.equal, np.not_equal
-
-        value: scalar
-            threshold
-
-        """
-        node_attribute_dict = {}
-        for name, node in self.nodes.iteritems():
-            try:
-                node_attribute = getattr(node, attribute)
-            except AttributeError:
-                node_attribute = None
-            if operation(node_attribute, value):
-                node_attribute_dict[name] = node_attribute
-        nx.set_node_attributes(self.graph, attribute, node_attribute_dict)
-
-    def set_graph_link_attribute(self, attribute, operation, value):
-        """ Set link attributes in the networkX graph, for example get all pipe diameters > threshold
-
-        Parameters
-        ----------
-        attribute: string
-            Pipe attribute
-
-        operation: np option
-            options = np.greater, np.greater_equal, np.less, np.less_equal, np.equal, np.not_equal
-
-        value: scalar
-            threshold
-
-        """
-        link_attribute_dict = {}
-        for name, link in self.links.iteritems():
-            try:
-                link_attribute = getattr(link, attribute)
-            except AttributeError:
-                link_attribute = None
-            if operation(link_attribute, value):
-                link_attribute_dict[(link.start_node_name, link.end_node_name, name)] = link_attribute
-        nx.set_edge_attributes(self.graph, attribute, link_attribute_dict)
 
 
     def add_time_control(self, link, open_times=[], closed_times=[]):
@@ -488,8 +472,8 @@ class WaterNetworkModel(object):
         -------
         Tuple of pump curve coefficient (A, B, C). All floats.
         """
-        pump = self.links[pump_name]
-        curve = self.curves[pump.curve_name]
+        pump = self._links[pump_name]
+        curve = self._curves[pump.curve_name]
 
         assert(isinstance(pump, Pump)), pump_name + " is not defined as a pump type. "
 
@@ -533,36 +517,22 @@ class WaterNetworkModel(object):
         return (A, B, C)
 
 
-    def get_time_parameter(self, name):
-        """
-        Method to get a time parameter from a water network object.
-
-        Parameters
-        -------
-        name : string
-            Name of the time option.
-        value:
-            Value of the time option. Can be tuple representing 
-            (Hours, Minutes) or (Hours, AM/PM).
-        """
-        return self.time_options[name]
-
     def isTank(self, node_name):
         """
-        Checks whether a node with a certain name is a isTank or not
+        Checks whether a node with a certain name is a Tank or not
 
         Parameters
         -------
         node_name : string
-            name of the node to Check
+            name of the node to check
 
         Return
         -------
         boolean
 
         """
-        node = self.nodes.get(node_name)
-        return True if(isinstance(node,Tank)) else False
+        node = self._nodes.get(node_name)
+        return True if(isinstance(node, Tank)) else False
 
     def isJunction(self, node_name):
         """
@@ -571,14 +541,14 @@ class WaterNetworkModel(object):
         Parameters
         -------
         node_name : string
-            name of the node to Check
+            name of the node to check
 
         Return
         -------
         boolean
 
         """
-        node = self.nodes.get(node_name)
+        node = self._nodes.get(node_name)
         return True if(isinstance(node,Junction)) else False
 
     def isReservoir(self, node_name):
@@ -588,14 +558,14 @@ class WaterNetworkModel(object):
         Parameters
         -------
         node_name : string
-            name of the node to Check
+            name of the node to check
 
         Return
         -------
         boolean
 
         """
-        node = self.nodes.get(node_name)
+        node = self._nodes.get(node_name)
         return True if(isinstance(node,Reservoir)) else False
 
     def isPipe(self, link_name):
@@ -605,15 +575,15 @@ class WaterNetworkModel(object):
         Parameters
         -------
         node_name : string
-            name of the link to Check
+            name of the link to check
 
         Return
         -------
         boolean
 
         """
-        link = self.links.get(link_name)
-        return True if(isinstance(link,Pipe)) else False
+        link = self._links.get(link_name)
+        return True if(isinstance(link, Pipe)) else False
 
 
     def isPump(self, link_name):
@@ -630,8 +600,8 @@ class WaterNetworkModel(object):
         boolean
 
         """
-        link = self.links.get(link_name)
-        return True if(isinstance(link,Pump)) else False
+        link = self._links.get(link_name)
+        return True if(isinstance(link, Pump)) else False
 
 
     def isValve(self, link_name):
@@ -641,18 +611,73 @@ class WaterNetworkModel(object):
         Parameters
         -------
         link_name : string
-            name of the link to Check
+            name of the link to check
 
         Return
         -------
         boolean
 
         """
-        link = self.links.get(link_name)
-        return True if(isinstance(link,Valve)) else False
+        link = self._links.get(link_name)
+        return True if(isinstance(link, Valve)) else False
 
+    def Nodes(self):
+        """
+        A generator to iterate over all nodes
 
+        Return:
+        node_name, node
+        """
+        for node_name, node in self._nodes.iteritems():
+            yield node_name, node
 
+    def Links(self):
+        """
+        A generator to iterate over all links
+
+        Return:
+        link_name, link
+        """
+        for link_name, link in self._links.iteritems():
+            yield link_name, link
+
+    def Curves(self):
+        """
+        A generator to iterate over all curves
+
+        Return:
+        curve_name, curve
+        """
+        for curve_name, curve in self._curves.iteritems():
+            yield curve_name, curve
+
+    def get_all_nodes_copy(self):
+        """
+        Return a copy of the dictionary with all nodes.
+
+        Parameters
+        -------
+
+        Return
+        -------
+        node : dictionary
+            Node name to node.
+        """
+        return copy.deepcopy(self._nodes)
+
+    def get_all_links_copy(self):
+        """
+        Return a copy of the dictionary with all nodes.
+
+        Parameters
+        -------
+
+        Return
+        -------
+        node : dictionary
+            Node name to node.
+        """
+        return copy.deepcopy(self._links)
 
 
 class Node(object):
@@ -672,30 +697,13 @@ class Node(object):
         ---------
         >>> node2 = Node('North Lake','Reservoir')
         """
-        self.name = name
+        self._name = name
 
     def __str__(self):
         """
         Returns the name of the node when printing to a stream.
         """
-        return self.name
-
-    def copy(self):
-        """
-        Copy a node object
-
-        Return
-        ------
-        A copy of the node.
-
-        Example
-        ------
-        >>> node1 = Node('North Lake', 'Reservoir')
-        >>> node2 = node1.copy()
-
-        """
-        return copy.deepcopy(self)
-
+        return self._name
 
 
 class Link(object):
@@ -719,31 +727,27 @@ class Link(object):
         ---------
         >>> link1 = Link('Pipe 1','Pipe', 'Node 153', 'Node 159')
         """
-        self.link_name = link_name
-        self.start_node_name = start_node_name
-        self.end_node_name = end_node_name
+        self._link_name = link_name
+        self._start_node_name = start_node_name
+        self._end_node_name = end_node_name
 
     def __str__(self):
         """
         Returns the name of the link when printing to a stream.
         """
-        return self.link_name
+        return self._link_name
 
-    def copy(self):
+    def start_node(self):
         """
-        Copy a link object
-
-        Return
-        ------
-        A copy of the link.
-
-        Example
-        ------
-        >>> link1 = Link('Pipe 1','Pipe', 'Node 153', 'Node 159')
-        >>> link2 = link1.copy()
+        Returns name of start node
         """
-        return copy.deepcopy(self)
+        return self._start_node_name
 
+    def end_node(self):
+        """
+        Returns name of end node
+        """
+        return self._end_node_name
 
 class Junction(Node):
     """

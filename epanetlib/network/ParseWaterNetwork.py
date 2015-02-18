@@ -70,6 +70,9 @@ class ParseWaterNetwork(object):
 
         f = file(inp_file_name, 'r')
 
+        # Set name of water network
+        wn.name = inp_file_name
+
         # Flags indicating the type of network element being read
         options = False
 
@@ -318,7 +321,6 @@ class ParseWaterNetwork(object):
 
         f.close()
 
-        # TODO Units need to be changed for curves depending on the type of curve
 
         # Add patterns to their set
         for pattern_name, pattern_list in self._patterns.iteritems():
@@ -331,12 +333,12 @@ class ParseWaterNetwork(object):
             # Get the network element the curve is related to
             # For now, only pump and tank volume curves are supported
             try:
-                curve_element = wn.links[self._curve_map[curve_name]]
+                curve_element = wn.get_link(self._curve_map[curve_name])
             except AttributeError:
                 try:
-                    curve_element = wn.nodes[self._curve_map[curve_name]]
+                    curve_element = wn.get_node(self._curve_map[curve_name])
                 except AttributeError:
-                    raise RuntimeError("The following curve type is currently not supported.")
+                    warnings.warn("Could not find node or link connected to curve: " + curve_name)
 
             if isinstance(curve_element, Pump):
                 converted_tuples = []
@@ -349,15 +351,16 @@ class ParseWaterNetwork(object):
                     converted_tuples.append((convert('Volume', inp_units, volume), convert('Hydraulic Head', inp_units, height)))
                 wn.add_curve(curve_name, 'Volume', converted_tuples)
             else:
-                raise RuntimeError("The following curve type is currently not supported.")
+                warnings.warn("The following curve type is currently not supported: " + curve_name)
 
-        ###### Load the network connectivity into the NetworkX graph
+        ### Load the network connectivity into the NetworkX graph ###
+
         # Set name
         wn.graph.name = inp_file_name
         # Add nodes along with their coordinates
-        for n in wn.nodes:
-            wn.graph.add_node(n, pos=self._node_coordinates[n])
+        for name, node in wn.Nodes():
+            wn.graph.add_node(name, pos=self._node_coordinates[name])
         # Add links and their connectivity
-        for link_name, link in wn.links.iteritems():
-            wn.graph.add_edge(link.start_node_name, link.end_node_name, key=link_name)
+        for link_name, link in wn.Links():
+            wn.graph.add_edge(link.start_node(), link.end_node(), key=link_name)
 
