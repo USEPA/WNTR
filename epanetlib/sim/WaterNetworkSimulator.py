@@ -159,24 +159,22 @@ class WaterNetworkSimulator(object):
         model.time.pprint()
         
         ###################### SETS #########################
-        node_names = [name for name, node in wn.Nodes()]
-        nodes_dict = dict(wn.Nodes())
+        node_names = [name for name, node in wn.nodes()]
 
         model.num_nodes = pyomo.Set(initialize=[0, 1]) # remove this later
         model.nodes = pyomo.Set(initialize=node_names)
-        model.tank_nodes = pyomo.Set(initialize=[n for n in node_names if wn.isTank(n)])
+        model.tank_nodes = pyomo.Set(initialize=[n for n, N in wn.nodes() if isinstance(N, Tank)])
         # ask about this one may be change names for something self explanatory
-        model.dnodes = pyomo.Set(initialize=[n for n in node_names if wn.isJunction(n)])
-        model.rnodes = pyomo.Set(initialize=[n for n in node_names if wn.isReservoir(n)])
+        model.dnodes = pyomo.Set(initialize=[n for n, N in wn.nodes() if isinstance(N, Junction)])
+        model.rnodes = pyomo.Set(initialize=[n for n, N in wn.nodes() if isinstance(N, Reservoir)])
         
         # Define link sets
-        link_names = [name for name, link in wn.Links()]
-        links_dict = dict(wn.Links())
+        link_names = [name for name, link in wn.links()]
 
         model.links = pyomo.Set(initialize=link_names)
-        model.pumplinks = pyomo.Set(initialize=[l for l in link_names if wn.isPump(l)])
-        model.valvelinks = pyomo.Set(initialize=[l for l in link_names if wn.isValve(l)])
-        model.pipelinks = pyomo.Set(initialize=[l for l in link_names if wn.isPipe(l)])
+        model.pumplinks = pyomo.Set(initialize=[l for l, L in wn.links() if isinstance(L, Pump)])
+        model.valvelinks = pyomo.Set(initialize=[l for l, L in wn.links() if isinstance(L, Valve)])
+        model.pipelinks = pyomo.Set(initialize=[l for l, L in wn.links() if isinstance(L, Pipe)])
     
         #missing
         model.curves = pyomo.Set(initialize=[curve_name for curve_name, curve in wn.Curves()])
@@ -210,7 +208,7 @@ class WaterNetworkSimulator(object):
     
         ####### n is a binary...should we keep it as 1 or 2?
         def link_nodes_rule(model,l,n):
-            return links_dict.get(l).start_node() if n==0 else links_dict.get(l).end_node()
+            return wn.get_link(l).start_node() if n==0 else wn.get_link(l).end_node()
         model.link_nodes = pyomo.Param(model.links, model.num_nodes, initialize = link_nodes_rule, within = model.nodes)
     
         ####### map to time step of the pattern?
@@ -233,24 +231,24 @@ class WaterNetworkSimulator(object):
         model.demand_req.pprint()
     
         def elevation_rule(model,n):
-            return nodes_dict.get(n).elevation
+            return wn.get_node(n).elevation
         model.elev = pyomo.Param((model.dnodes|model.tank_nodes), 
             within = pyomo.Reals, initialize = elevation_rule)
     
         def roughness_rule(model,l):
-            return links_dict.get(l).roughness
+            return wn.get_link(l).roughness
         model.link_rough = pyomo.Param((model.pipelinks|model.valvelinks), 
             within = pyomo.NonNegativeReals, initialize = roughness_rule)
         model.link_rough.pprint()
 
         def diameter_rule(model,l):
-            return links_dict.get(l).diameter
+            return wn.get_link(l).diameter
         model.link_dia = pyomo.Param((model.pipelinks|model.valvelinks), 
             within = pyomo.NonNegativeReals, initialize = diameter_rule)
         model.link_dia.pprint()
 
         def length_rule(model,l):
-            return links_dict.get(l).length
+            return wn.get_link(l).length
         model.link_len = pyomo.Param((model.pipelinks|model.valvelinks), 
             within = pyomo.NonNegativeReals, initialize = length_rule)
         model.link_len.pprint()
@@ -262,37 +260,37 @@ class WaterNetworkSimulator(object):
             #    #return wn.patterns[pattern_name][t]
             #    return wn.nodes.get(n).base_head
             #else:
-            return nodes_dict.get(n).base_head
+            return wn.get_node(n).base_head
         model.res_heads = pyomo.Param(model.rnodes, 
             within = pyomo.NonNegativeReals, initialize = reservoir_head_rule)
     
         model.res_heads.pprint()
 
         def tank_min_level_rule(model,n):
-            return nodes_dict.get(n).min_level
+            return wn.get_node(n).min_level
         model.min_level = pyomo.Param(model.tank_nodes,
             within = pyomo.NonNegativeReals, initialize = tank_min_level_rule)
     
         def tank_max_level_rule(model,n):
-            return nodes_dict.get(n).max_level
+            return wn.get_node(n).max_level
         model.max_level = pyomo.Param(model.tank_nodes,
             within = pyomo.NonNegativeReals, initialize = tank_max_level_rule) 
     
         def tank_diameter_rule(model,n):
-            return nodes_dict.get(n).diameter
+            return wn.get_node(n).diameter
         model.tank_dia = pyomo.Param(model.tank_nodes,
             within = pyomo.NonNegativeReals, initialize = tank_diameter_rule)
     
         def tank_init_level_rule(model,n):
-            return nodes_dict.get(n).init_level
+            return wn.get_node(n).init_level
         model.tank_inhead = pyomo.Param(model.tank_nodes,
             within = pyomo.NonNegativeReals, initialize = tank_init_level_rule)
     
         # Missing
         curveparam_dict = {}
         curve_pump_dict = {}
-        for link_name, link in wn.Links():
-            if wn.isPump(link_name):
+        for link_name, link in wn.links():
+            if isinstance(wn.get_link(link_name), Pump):
                 curve_name = link.curve_name
                 curve_pump_dict[link_name] = curve_name
                 coeff = wn.get_pump_coefficients(link_name) 
@@ -471,7 +469,7 @@ class WaterNetworkSimulator(object):
                 times.append(results.time[t])
                 flow_l_t = instance.flow[l,t].value
                 flowrate.append(flow_l_t)
-                if self._wn.isPipe(l):
+                if isinstance(self._wn.get_link(l), Pipe):
                     velocity_l_t = 4*flow_l_t/(math.pi*instance.link_dia[l]**2)
                 else:
                     velocity_l_t = 0.0
@@ -502,13 +500,13 @@ class WaterNetworkSimulator(object):
                 node_type.append(self._get_node_type(n))
                 times.append(results.time[t])
                 head_n_t = instance.head[n,t].value
-                if self._wn.isReservoir(n):
+                if isinstance(self._wn.get_node(n), Reservoir):
                     pressure_n_t = 0.0
                 else:
                     pressure_n_t = head_n_t + instance.elev[n]
                 head.append(head_n_t)
                 pressure.append(pressure_n_t)
-                if self._wn.isJunction(n):
+                if isinstance(self._wn.get_node(n), Junction):
                     demand.append(instance.demand_actual[n,t].value)
                 else:
                     demand.append(0.0)
@@ -529,21 +527,21 @@ class WaterNetworkSimulator(object):
         return results
 
     def _get_link_type(self, name):
-        if self._wn.isPipe(name):
+        if isinstance(self._wn.get_link(name), Pipe):
             return 'pipe'
-        elif self._wn.isValve(name):
+        elif isinstance(self._wn.get_link(name), Valve):
             return 'valve'
-        elif self._wn.isPump(name):
+        elif isinstance(self._wn.get_link(name), Pump):
             return 'pump'
         else:
             raise RuntimeError('Link name ' + name + ' was not recognised as a pipe, valve, or pump.')
 
     def _get_node_type(self, name):
-        if self._wn.isJunction(name):
+        if isinstance(self._wn.get_node(name), Junction):
             return 'junction'
-        elif self._wn.isTank(name):
+        elif isinstance(self._wn.get_node(name), Tank):
             return 'tank'
-        elif self._wn.isReservoir(name):
+        elif isinstance(self._wn.get_node(name), Reservoir):
             return 'reservoir'
         else:
             raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, or reservoir.')

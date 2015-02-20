@@ -17,14 +17,27 @@ class NetResults(object):
         self.link = None
         self.node = None
 
-    def write_to_csv(self, csv_file_name):
+    def export_to_csv(self, csv_file_name):
         """
         Write the simulation results to csv file.
 
         Parameters
         ----------
         csv_file_name : string
-            Name
-        :return:
+            Name of csv file
         """
+        # TODO
+
+        pass
+
+    def export_to_yml(self, yml_file_name):
+        """
+        Write the simulation results to yml file.
+
+        Parameters
+        ----------
+        yml_file_name : string
+            Name of yml file
+        """
+        # TODO
         pass

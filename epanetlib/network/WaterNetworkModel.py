@@ -363,7 +363,7 @@ class WaterNetworkModel(object):
         Parameters
         ----------
         attribute: string
-            Pipe attribute
+            Node attribute
 
         operation: np option
             options = np.greater, np.greater_equal, np.less, np.less_equal, np.equal, np.not_equal
@@ -435,6 +435,64 @@ class WaterNetworkModel(object):
         else:
             self.time_controls[link]['open_times'] += open_times
             self.time_controls[link]['closed_times'] += closed_times
+
+    def nodes(self):
+        """
+        A generator to iterate over all nodes
+
+        Return:
+        node_name, node
+        """
+        for node_name, node in self._nodes.iteritems():
+            yield node_name, node
+
+    def links(self):
+        """
+        A generator to iterate over all links
+
+        Return:
+        link_name, link
+        """
+        for link_name, link in self._links.iteritems():
+            yield link_name, link
+
+    def Curves(self):
+        """
+        A generator to iterate over all curves
+
+        Return:
+        curve_name, curve
+        """
+        for curve_name, curve in self._curves.iteritems():
+            yield curve_name, curve
+
+    def get_all_nodes_copy(self):
+        """
+        Return a copy of the dictionary with all nodes.
+
+        Parameters
+        -------
+
+        Return
+        -------
+        node : dictionary
+            Node name to node.
+        """
+        return copy.deepcopy(self._nodes)
+
+    def get_all_links_copy(self):
+        """
+        Return a copy of the dictionary with all nodes.
+
+        Parameters
+        -------
+
+        Return
+        -------
+        node : dictionary
+            Node name to node.
+        """
+        return copy.deepcopy(self._links)
 
     def get_pump_coefficients(self, pump_name):
         """
@@ -515,169 +573,6 @@ class WaterNetworkModel(object):
             raise RuntimeError("Coefficient for Multipoint pump curves cannot be generated. ")
 
         return (A, B, C)
-
-
-    def isTank(self, node_name):
-        """
-        Checks whether a node with a certain name is a Tank or not
-
-        Parameters
-        -------
-        node_name : string
-            name of the node to check
-
-        Return
-        -------
-        boolean
-
-        """
-        node = self._nodes.get(node_name)
-        return True if(isinstance(node, Tank)) else False
-
-    def isJunction(self, node_name):
-        """
-        Checks whether a node with a certain name is a Junction
-
-        Parameters
-        -------
-        node_name : string
-            name of the node to check
-
-        Return
-        -------
-        boolean
-
-        """
-        node = self._nodes.get(node_name)
-        return True if(isinstance(node,Junction)) else False
-
-    def isReservoir(self, node_name):
-        """
-        Checks whether a node with a certain name is a Reservoir
-
-        Parameters
-        -------
-        node_name : string
-            name of the node to check
-
-        Return
-        -------
-        boolean
-
-        """
-        node = self._nodes.get(node_name)
-        return True if(isinstance(node,Reservoir)) else False
-
-    def isPipe(self, link_name):
-        """
-        Checks whether a node with a certain name is a pipe or not
-
-        Parameters
-        -------
-        node_name : string
-            name of the link to check
-
-        Return
-        -------
-        boolean
-
-        """
-        link = self._links.get(link_name)
-        return True if(isinstance(link, Pipe)) else False
-
-
-    def isPump(self, link_name):
-        """
-        Checks whether a node with a certain name is a pump or not
-
-        Parameters
-        -------
-        link_name : string
-            name of the link to Check
-
-        Return
-        -------
-        boolean
-
-        """
-        link = self._links.get(link_name)
-        return True if(isinstance(link, Pump)) else False
-
-
-    def isValve(self, link_name):
-        """
-        Checks whether a node with a certain name is a valve or not
-
-        Parameters
-        -------
-        link_name : string
-            name of the link to check
-
-        Return
-        -------
-        boolean
-
-        """
-        link = self._links.get(link_name)
-        return True if(isinstance(link, Valve)) else False
-
-    def Nodes(self):
-        """
-        A generator to iterate over all nodes
-
-        Return:
-        node_name, node
-        """
-        for node_name, node in self._nodes.iteritems():
-            yield node_name, node
-
-    def Links(self):
-        """
-        A generator to iterate over all links
-
-        Return:
-        link_name, link
-        """
-        for link_name, link in self._links.iteritems():
-            yield link_name, link
-
-    def Curves(self):
-        """
-        A generator to iterate over all curves
-
-        Return:
-        curve_name, curve
-        """
-        for curve_name, curve in self._curves.iteritems():
-            yield curve_name, curve
-
-    def get_all_nodes_copy(self):
-        """
-        Return a copy of the dictionary with all nodes.
-
-        Parameters
-        -------
-
-        Return
-        -------
-        node : dictionary
-            Node name to node.
-        """
-        return copy.deepcopy(self._nodes)
-
-    def get_all_links_copy(self):
-        """
-        Return a copy of the dictionary with all nodes.
-
-        Parameters
-        -------
-
-        Return
-        -------
-        node : dictionary
-            Node name to node.
-        """
-        return copy.deepcopy(self._links)
 
 
 class Node(object):

@@ -358,9 +358,9 @@ class ParseWaterNetwork(object):
         # Set name
         wn.graph.name = inp_file_name
         # Add nodes along with their coordinates
-        for name, node in wn.Nodes():
+        for name, node in wn.nodes():
             wn.graph.add_node(name, pos=self._node_coordinates[name])
         # Add links and their connectivity
-        for link_name, link in wn.Links():
+        for link_name, link in wn.links():
             wn.graph.add_edge(link.start_node(), link.end_node(), key=link_name)
 
