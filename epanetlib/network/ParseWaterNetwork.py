@@ -322,10 +322,12 @@ class ParseWaterNetwork(object):
         f.close()
 
 
+
         # Add patterns to their set
         for pattern_name, pattern_list in self._patterns.iteritems():
             wn.add_pattern(pattern_name, pattern_list)
         for control_link, control_dict in self._time_controls.iteritems():
+            print control_link
             wn.add_time_control(control_link, control_dict['open_times'], control_dict['closed_times'])
 
         # Add curves

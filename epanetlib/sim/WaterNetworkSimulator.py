@@ -34,6 +34,62 @@ class WaterNetworkSimulator(object):
         assert (isinstance(self._wn, WaterNetworkModel)), "Water network model has not been set for the simulator" \
                                                           "use method set_water_network_model to set model."
 
+    def is_open(self,link_name,time):
+        link = self._wn.get_link(link_name)
+        if link_name not in self._wn.time_controls:
+            return link.get_base_status()
+        else:
+            open_times = self._wn.time_controls[link_name]['open_times']
+            closed_times = self._wn.time_controls[link_name]['closed_times']
+            if time<open_times[0] and time<closed_times[0]:
+                return link.get_base_status()
+            else:
+
+                #Check open times
+                left = 0
+                right = len(open_times)-1
+                if time >= open_times[right]:
+                    min_open = time-open_times[right];
+                elif time < open_times[left]:
+                    min_open = float("inf");
+                else:
+                    middle = int(0.5*(right+left))
+                    while(right-left>1):
+                        if(open_times[middle]>time):
+                            right = middle
+                        else:
+                            left = middle
+                        middle = int(0.5*(right+left))
+                    min_open = time-open_times[left];
+
+                #Check Closed times
+                left = 0
+                right = len(closed_times)-1
+                if time >= closed_times[right]:
+                    min_closed = time-closed_times[right]
+                elif time < closed_times[left]:
+                    min_closed = float("inf")
+                else:
+                    middle = int(0.5*(right+left))
+                    while(right-left>1):
+                        if(closed_times[middle]>time):
+                            right = middle
+                        else:
+                            left = middle
+                        middle = int(0.5*(right+left))
+                    min_closed = time-closed_times[left];
+                """
+                min_open = float("inf")
+                for t in open_times:
+                    if time>=t and min_open>=time-t:
+                        min_open = time-t
+                min_closed = float("inf")
+                for t in closed_times:
+                    if time>=t and min_closed>=time-t:
+                        min_closed = time-t
+                """
+                return True if min_open<min_closed else False
+
     def min_to_timestep(self, min):
         """
         Convert minutes to hydraulic timestep.
@@ -124,8 +180,8 @@ class WaterNetworkSimulator(object):
 
     def run_pyomo_sim(self):
         import coopr.pyomo as pyomo
-        from coopr.pyomo.base.expr import Expr_if
-        from coopr.opt import SolverFactory
+        from pyomo.core.base.expr import Expr_if
+        from pyomo.opt import SolverFactory
         import math
 
         Hw_k = 10.67
