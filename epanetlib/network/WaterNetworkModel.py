@@ -10,6 +10,10 @@ import math
 from scipy.optimize import fsolve
 
 
+link_status = dict()
+link_status['open'] = 1
+link_status['close'] = 0
+
 class WaterNetworkModel(object):
 
     """
@@ -444,6 +448,9 @@ class WaterNetworkModel(object):
             self.time_controls[link]['open_times'] += open_times
             self.time_controls[link]['closed_times'] += closed_times
 
+        self.time_controls[link]['open_times'].sort()
+        self.time_controls[link]['open_times'].sort()
+
     def nodes(self, node_type=None):
         """
         A generator to iterate over all nodes of node_type.
@@ -594,6 +601,9 @@ class Link(object):
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
+        self._base_status = 'Open'    #this should be changed
+        self._open_times = list()
+        self._closed_times = list()
 
     def __str__(self):
         """
@@ -613,6 +623,8 @@ class Link(object):
         """
         return self._end_node_name
 
+    def get_base_status(self):
+        return self._base_status
 
 class Junction(Node):
     """
@@ -763,7 +775,8 @@ class Pipe(Link):
         self.diameter = diameter
         self.roughness = roughness
         self.minor_loss = minor_loss
-        self.status = status
+        if status is not None:
+            self._base_status = status
 
 
 class Pump(Link):
@@ -898,7 +911,8 @@ class Valve(Link):
         self.diameter = diameter
         self.valve_type = valve_type
         self.minor_loss = minor_loss
-        self.setting = setting
+        if setting is not None:
+            self._base_status = setting
 
 
 class Curve(object):
