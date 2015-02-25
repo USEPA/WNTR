@@ -15,8 +15,20 @@ class WaterNetworkSimulator(object):
 
         """
         self._wn = water_network
+
+        # Simulation time options
+        self._sim_start_min = self._wn.time_options['START CLOCKTIME']
+        self._sim_duration = self._wn.time_options['DURATION']
+        self._pattern_start_min = self._wn.time_options['PATTERN START']
+        self._hydraulic_step_min = self._wn.time_options['HYDRAULIC TIMESTEP']
+        self._pattern_step_min = self._wn.time_options['PATTERN TIMESTEP']
+        self._hydraulic_times_min = range(0, self._sim_duration, self._hydraulic_step_min)
+
         if water_network is not None:
             self.init_time_params_from_model()
+
+        # Hazen-Williams resistance coefficient
+        self.Hw_k = 10.67 # SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
 
     def set_water_network_model(self, water_network):
         """
@@ -50,6 +62,9 @@ class WaterNetworkSimulator(object):
         return min/self._hydraulic_step_min
 
     def init_time_params_from_model(self):
+        """
+        Load simulation time parameters from the water network time options.
+        """
         self._check_model_specified()
         try:
             self._sim_start_min = self._wn.time_options['START CLOCKTIME']
@@ -78,9 +93,8 @@ class WaterNetworkSimulator(object):
 
         Return
         -------
-        demand_list : dictionary of floats indexed by floats
-            A dictionary of demand values indexed by each hydraulic timestep(min) between
-            start_time and end_time.
+        demand_list : list of floats
+           A list of demand values at each hydraulic timestep
         """
 
         self._check_model_specified()
@@ -122,15 +136,43 @@ class WaterNetworkSimulator(object):
 
         return demand_values
 
-    def run_pyomo_sim(self):
+
+class PyomoSimulator(WaterNetworkSimulator):
+    """
+    Pyomo simulator inherited from Water Network Simulator.
+    """
+    try:
         import coopr.pyomo as pyomo
         from coopr.pyomo.base.expr import Expr_if
         from coopr.opt import SolverFactory
-        import math
+    except ImportError:
+        raise ImportError('Error importing pyomo while running pyomo simulator.'
+                          'Make sure pyomo is installed and added to path.')
+    import math
 
-        Hw_k = 10.67
+    def __init__(self, wn=None):
+        WaterNetworkSimulator.__init__(self, wn)
+
+    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True):
+        """
+        Run water network simulation using pyomo model.
+
+        Optional Parameters
+        --------
+        solver : string
+            Name of the NLP solver. Default is 'ipopt'.
+        solver_options : dictionary
+            Dictionary of NLP solver options. Default is empty.
+        modified_hazen_williams : bool
+            Flag to use a slightly modified version of Hazen-Williams headloss
+            equation for better stability
+        """
+
         pi = math.pi
 
+        # The Hazen-Williams headloss curve is slightly modified to improve solution time.
+        # The three functions defines below - f1, f2, Px - are used to ensure that the Jacobian
+        # does not go to 0 close to zero flow.
         def f1(x):
             return 0.01*x
     
@@ -146,279 +188,157 @@ class WaterNetworkSimulator(object):
             #q2 = 0.05
             q1 = 0.00349347323944
             q2 = 0.00549347323944
-            return Expr_if(IF = Q < q1, THEN = f1(Q), ELSE = Expr_if(IF = Q > q2, THEN = f2(Q), ELSE = Px(Q)))  
+            return self.Expr_if(IF = Q < q1, THEN = f1(Q), ELSE = self.Expr_if(IF = Q > q2, THEN = f2(Q), ELSE = Px(Q)))
 
         wn = self._wn
-        model = pyomo.ConcreteModel()
+        model = self.pyomo.ConcreteModel()
         model.timestep = self._hydraulic_step_min
         model.duration = self._sim_duration
         n_timesteps = int(round(model.duration/model.timestep)) 
-        # Define times
-    
-        model.time = pyomo.Set(initialize=range(0, n_timesteps+1))
-        model.time.pprint()
-        
+
         ###################### SETS #########################
-        node_names = [name for name, node in wn.nodes()]
-
-        model.num_nodes = pyomo.Set(initialize=[0, 1]) # remove this later
-        model.nodes = pyomo.Set(initialize=node_names)
-        model.tank_nodes = pyomo.Set(initialize=[n for n, N in wn.nodes() if isinstance(N, Tank)])
-        # ask about this one may be change names for something self explanatory
-        model.dnodes = pyomo.Set(initialize=[n for n, N in wn.nodes() if isinstance(N, Junction)])
-        model.rnodes = pyomo.Set(initialize=[n for n, N in wn.nodes() if isinstance(N, Reservoir)])
-        
-        # Define link sets
-        link_names = [name for name, link in wn.links()]
-
-        model.links = pyomo.Set(initialize=link_names)
-        model.pumplinks = pyomo.Set(initialize=[l for l, L in wn.links() if isinstance(L, Pump)])
-        model.valvelinks = pyomo.Set(initialize=[l for l, L in wn.links() if isinstance(L, Valve)])
-        model.pipelinks = pyomo.Set(initialize=[l for l, L in wn.links() if isinstance(L, Pipe)])
-    
-        #missing
-        model.curves = pyomo.Set(initialize=[curve_name for curve_name, curve in wn.Curves()])
-        model.curvesp = pyomo.Set(initialize=['A', 'B', 'C'])
-    
-        print "Nodes"
-        model.nodes.pprint()
-        model.tank_nodes.pprint()
-        model.dnodes.pprint()
-        model.rnodes.pprint()
-        print "Links"
-        model.links.pprint()
-        model.valvelinks.pprint()
-        model.pumplinks.pprint()
-        model.curves.pprint()
+        model.time = self.pyomo.Set(initialize=range(0, n_timesteps+1))
+        # NODES
+        model.nodes = self.pyomo.Set(initialize=[name for name, node in wn.nodes()])
+        model.tanks = self.pyomo.Set(initialize=[n for n, N in wn.nodes(Tank)])
+        model.junctions = self.pyomo.Set(initialize=[n for n, N in wn.nodes(Junction)])
+        model.reservoirs = self.pyomo.Set(initialize=[n for n, N in wn.nodes(Reservoir)])
+        # LINKS
+        model.links = self.pyomo.Set(initialize=[name for name, link in wn.links()])
+        model.pumps = self.pyomo.Set(initialize=[l for l, L in wn.links(Pump)])
+        model.valves = self.pyomo.Set(initialize=[l for l, L in wn.links(Valve)])
+        model.pipes = self.pyomo.Set(initialize=[l for l, L in wn.links(Pipe)])
 
         ################### PARAMETERS #######################
-        #def valve_status_rule(model,l,t):
-        #    if wn.time_controls.has_key(l):
-        #        control = wn.time_controls.get(l)
-        #        if t in control.get('open_times'):
-        #            return 1 
-        #        elif t in control.get('closed_times'):
-        #            return 0
-        #        else:
-        #            return 1 if wn.links[l].setting == 'Open' else 0
-        #    else:
-        #        return 1 if wn.links[l].setting == 'Open' else 0
-        model.valvestatus = pyomo.Param(model.valvelinks, model.time, 
-            within = pyomo.Binary, initialize = 1)
-    
-        ####### n is a binary...should we keep it as 1 or 2?
-        def link_nodes_rule(model,l,n):
-            return wn.get_link(l).start_node() if n==0 else wn.get_link(l).end_node()
-        model.link_nodes = pyomo.Param(model.links, model.num_nodes, initialize = link_nodes_rule, within = model.nodes)
-    
-        ####### map to time step of the pattern?
+
         demand_dict = {}
-        for n in model.dnodes:
+        for n in model.junctions:
             demand_values = self.get_node_demand(n)
             for t in model.time:
-                #print n, t, demand_values[t]
                 demand_dict[(n, t)] = demand_values[t]
+        model.demand_required = self.pyomo.Param(model.junctions, model.time, within=self.pyomo.Reals, initialize=demand_dict)
 
-        #def demand_req_rule(model,n,t):
-        #    if wn.nodes.get(n).demand_pattern_name is not None:
-        #        pattern_name = wn.nodes.get(n).demand_pattern_name
-        #        return wn.patterns[pattern_name][t]
-        #    else:
-        #        return wn.nodes.get(n).base_demand
-        model.demand_req = pyomo.Param(model.dnodes, model.time, 
-            within = pyomo.Reals, initialize = demand_dict)
+        ################### VARIABLES #####################
 
-        model.demand_req.pprint()
+        model.head = self.pyomo.Var(model.nodes, model.time, initialize=200.0)
+        model.flow = self.pyomo.Var(model.links, model.time, within=self.pyomo.Reals, initialize=0.1)
+        model.headloss = self.pyomo.Var(model.links, model.time, within=self.pyomo.Reals, initialize=0.1)
+        model.reservoir_demand = self.pyomo.Var(model.reservoirs, model.time, within=self.pyomo.Reals, initialize=0.0)
+        model.tank_net_inflow = self.pyomo.Var(model.tanks, model.time,within=self.pyomo.Reals, initialize=0.1)
     
-        def elevation_rule(model,n):
-            return wn.get_node(n).elevation
-        model.elev = pyomo.Param((model.dnodes|model.tank_nodes), 
-            within = pyomo.Reals, initialize = elevation_rule)
-    
-        def roughness_rule(model,l):
-            return wn.get_link(l).roughness
-        model.link_rough = pyomo.Param((model.pipelinks|model.valvelinks), 
-            within = pyomo.NonNegativeReals, initialize = roughness_rule)
-        model.link_rough.pprint()
-
-        def diameter_rule(model,l):
-            return wn.get_link(l).diameter
-        model.link_dia = pyomo.Param((model.pipelinks|model.valvelinks), 
-            within = pyomo.NonNegativeReals, initialize = diameter_rule)
-        model.link_dia.pprint()
-
-        def length_rule(model,l):
-            return wn.get_link(l).length
-        model.link_len = pyomo.Param((model.pipelinks|model.valvelinks), 
-            within = pyomo.NonNegativeReals, initialize = length_rule)
-        model.link_len.pprint()
-
-        # support pattern??????????? some error
-        def reservoir_head_rule(model,n):
-            #if wn.nodes.get(n).head_pattern_name is not None:
-            #    pattern_name = wn.nodes.get(n).head_pattern_name
-            #    #return wn.patterns[pattern_name][t]
-            #    return wn.nodes.get(n).base_head
-            #else:
-            return wn.get_node(n).base_head
-        model.res_heads = pyomo.Param(model.rnodes, 
-            within = pyomo.NonNegativeReals, initialize = reservoir_head_rule)
-    
-        model.res_heads.pprint()
-
-        def tank_min_level_rule(model,n):
-            return wn.get_node(n).min_level
-        model.min_level = pyomo.Param(model.tank_nodes,
-            within = pyomo.NonNegativeReals, initialize = tank_min_level_rule)
-    
-        def tank_max_level_rule(model,n):
-            return wn.get_node(n).max_level
-        model.max_level = pyomo.Param(model.tank_nodes,
-            within = pyomo.NonNegativeReals, initialize = tank_max_level_rule) 
-    
-        def tank_diameter_rule(model,n):
-            return wn.get_node(n).diameter
-        model.tank_dia = pyomo.Param(model.tank_nodes,
-            within = pyomo.NonNegativeReals, initialize = tank_diameter_rule)
-    
-        def tank_init_level_rule(model,n):
-            return wn.get_node(n).init_level
-        model.tank_inhead = pyomo.Param(model.tank_nodes,
-            within = pyomo.NonNegativeReals, initialize = tank_init_level_rule)
-    
-        # Missing
-        curveparam_dict = {}
-        curve_pump_dict = {}
-        for link_name, link in wn.links():
-            if isinstance(wn.get_link(link_name), Pump):
-                curve_name = link.curve_name
-                curve_pump_dict[link_name] = curve_name
-                coeff = wn.get_pump_coefficients(link_name) 
-                curveparam_dict[(curve_name, 'A')] = coeff[0]
-                curveparam_dict[(curve_name, 'B')] = coeff[1]
-                curveparam_dict[(curve_name, 'C')] = coeff[2]
-
-        model.curvesp.pprint()
-        print "Cureve param dict: ", curveparam_dict
-        print "curve pumop dict: ", curve_pump_dict
-
-        
-        model.curveparam = pyomo.Param(model.curves, model.curvesp, initialize=curveparam_dict)
-        model.puculinks = pyomo.Param(model.pumplinks, initialize=curve_pump_dict)
-        #model.timestep = pyomo.Param(model.time,within = pyomo.NonNegativeReals)
-    
-        model.link_nodes.pprint()
-        model.valvestatus.pprint()
-        model.curveparam.pprint()
-        model.puculinks.pprint()
-    
-        ###################VARIABLES#####################
-        model.head = pyomo.Var(model.nodes, model.time, initialize = 200.0)
-        model.flow = pyomo.Var(model.links, model.time, within = pyomo.Reals, initialize = 0.1)
-        # why is rdemand?
-        model.rdemand = pyomo.Var(model.rnodes, model.time, within = pyomo.Reals, initialize = 0.0)
-        model.tnet_inflow = pyomo.Var(model.tank_nodes,model.time,within = pyomo.Reals, initialize = 0.1)
-    
-        # this should be changes to allow user to pass this too
         def init_demand_rule(model,n,t):
-            return model.demand_req[n,t]
-        model.demand_actual = pyomo.Var(model.dnodes, model.time, 
-            within = pyomo.Reals, initialize = init_demand_rule)
+            return model.demand_required[n,t]
+        model.demand_actual = self.pyomo.Var(model.junctions, model.time, within=self.pyomo.Reals, initialize=init_demand_rule)
     
+        ############### OBJECTIVE ########################
         def obj_rule(model):
             expr = 0
-            for i in model.dnodes:
-                for j in model.time:
-                    expr += (model.demand_actual[i,j]-model.demand_req[i,j])**2
-                    #expr += 1
+            for n in model.junctions:
+                for t in model.time:
+                    expr += (model.demand_actual[n,t]-model.demand_required[n,t])**2
             return expr
-        #return sum(((model.demand_actual[i,j]-model.demand_req[i,j])**2 for i in model.dnodes) for j in model.time)
-        model.obj = pyomo.Objective(rule = obj_rule, sense = pyomo.minimize)
-        
-        def headloss_rule(model,k,l):
-            if k in model.pumplinks:
-                return ((-1.0*(model.curveparam[model.puculinks[k],'A'] - model.curveparam[model.puculinks[k],'B']*(model.flow[k,l]**model.curveparam[model.puculinks[k],'C']))) == model.head[model.link_nodes[k,0],l] - model.head[model.link_nodes[k,1],l])
-            elif k in model.valvelinks:
-                if model.valvestatus[k,l] == 1:
-                    return (Expr_if(IF = model.flow[k,l] > 0, THEN = 1, ELSE = -1))*Hw_k*((model.link_rough[k])**(-1.852))*((model.link_dia[k])**(-4.871))*model.link_len[k]*LossFunc(abs(model.flow[k,l])) == (model.head[model.link_nodes[k,0],l] - model.head[model.link_nodes[k,1],l])
+        model.obj = self.pyomo.Objective(rule=obj_rule, sense=self.pyomo.minimize)
+
+        ############## CONSTRAINTS #####################
+
+        # Head loss inside pipes
+        for l in model.pipes:
+            pipe = wn.get_link(l)
+            pipe_resistance_coeff = self.Hw_k*(pipe.roughness**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
+            for t in model.time:
+                if modified_hazen_williams:
+                    setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=self.Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
+                                                                      *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.headloss[l,t]))
                 else:
-                    return pyomo.Constraint.Skip
+                    setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=self.Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
+                                                                      *pipe_resistance_coeff*f2(abs(model.flow[l,t])) == model.headloss[l,t]))
+
+        # Head gain provided by the pump is implemented as negative headloss
+        for l in model.pumps:
+            pump = wn.get_link(l)
+            A, B, C = pump.get_head_curve_coefficients()
+            for t in model.time:
+                setattr(model, 'pump_negative_headloss_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=model.headloss[l,t] == (-1.0*A + B*(model.flow[l,t]**C))))
+
+        # Nodal head difference between start and end node of a link
+        for l in model.links:
+            link = wn.get_link(l)
+            start_node = link.start_node()
+            end_node = link.end_node()
+            for t in model.time:
+                setattr(model, 'head_difference_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=model.headloss[l,t] == model.head[start_node,t] - model.head[end_node,t]))
+
+        # Mass Balance
+        def node_mass_balance_rule(model, n, t):
+            expr = 0
+            for l in wn.get_links_for_node(n):
+                link = wn.get_link(l)
+                if link.start_node() == n:
+                    expr -= model.flow[l,t]
+                elif link.end_node() == n:
+                    expr += model.flow[l,t]
+                else:
+                    raise RuntimeError('Node link is neither start nor end node.')
+            node = wn.get_node(n)
+            if isinstance(node, Junction):
+                return expr == model.demand_actual[n,t]
+            elif isinstance(node, Tank):
+                return expr == model.tank_net_inflow[n,t]
+            elif isinstance(node, Reservoir):
+                return expr == model.reservoir_demand[n,t]
+        model.node_mass_balance = self.pyomo.Constraint(model.nodes, model.time, rule=node_mass_balance_rule)
+
+        # Head in junctions should be greater or equal to the elevation
+        for n in model.junctions:
+            junction = wn.get_node(n)
+            elevation_n = junction.elevation
+            for t in model.time:
+                setattr(model, 'junction_elevation_'+str(n)+'_'+str(t), self.pyomo.Constraint(expr=model.head[n,t] >= elevation_n))
+
+        # Bounds on the head inside a tank
+        def tank_head_bounds_rule(model,n,t):
+            tank = wn.get_node(n)
+            return (tank.elevation + tank.min_level, model.head[n,t], tank.elevation + tank.max_level)
+        model.tank_head_bounds = self.pyomo.Constraint(model.tanks, model.time, rule=tank_head_bounds_rule)
+
+        # Flow in a pump should always be positive
+        def pump_positive_flow_rule(model,l,t):
+            return model.flow[l,t] >= 0
+        model.pump_positive_flow_bounds = self.pyomo.Constraint(model.pumps, model.time, rule=pump_positive_flow_rule)
+
+        def tank_dynamics_rule(model, n, t):
+            if t is max(model.time):
+                return self.pyomo.Constraint.Skip
             else:
-                return (Expr_if(IF = model.flow[k,l] > 0, THEN = 1, ELSE = -1))*Hw_k*((model.link_rough[k])**(-1.852))*((model.link_dia[k])**(-4.871))*model.link_len[k]*LossFunc(abs(model.flow[k,l])) == (model.head[model.link_nodes[k,0],l] - model.head[model.link_nodes[k,1],l])
-                #return ((Expr_if(IF = model.flow[k,l] > 0, THEN = 1, ELSE = -1))*Hw_k*((model.link_rough[k])**(-1.852))*((model.link_dia[k])**(-4.871))*model.link_len[k]*((abs(model.flow[k,l]))**1.852)) == (model.head[model.link_nodes[k,0],l] - model.head[model.link_nodes[k,1],l])
-        model.headloss = pyomo.Constraint(model.links,model.time, rule = headloss_rule)
-        
-        def nodebalance_rule(model,i,l):
-            exprs = 0
-            if i in model.dnodes:
-                for link in model.links:
-                    if model.link_nodes[link,0] == i :
-                        exprs -=  model.flow[link,l]
-                    elif model.link_nodes[link,1] == i :
-                        exprs +=  model.flow[link,l]
-                return exprs == model.demand_actual[i,l]
-            elif i in model.rnodes:
-                for link in model.links:
-                    if model.link_nodes[link,0] == i :
-                        exprs -= model.flow[link,l]
-                    elif model.link_nodes[link,1] == i:
-                        exprs +=  model.flow[link,l]
-                return exprs == model.rdemand[i,l]
-            elif i in model.tank_nodes:
-                for link in model.links:
-                    if model.link_nodes[link,0] == i :
-                        exprs -= model.flow[link,l]
-                    elif model.link_nodes[link,1] == i:
-                        exprs += model.flow[link,l]
-                return exprs == model.tnet_inflow[i,l]
-        model.nodebalance = pyomo.Constraint(model.nodes,model.time, rule = nodebalance_rule)
-        
-        def elevation_rule(model,i,l):
-            return model.head[i,l] - model.elev[i] >= 0
-        model.elevation = pyomo.Constraint(model.dnodes,model.time, rule = elevation_rule)
-        
-        def tankelev_rule(model,i,l):
-            return (model.elev[i]+model.min_level[i],model.head[i,l],model.elev[i]+model.max_level[i])
-        model.tankelev = pyomo.Constraint(model.tank_nodes,model.time,rule = tankelev_rule)
-        
-        def pumplinkflow_rule(model,i,l):
-            return model.flow[i,l] >= 0
-        model.pumplinkflow = pyomo.Constraint(model.pumplinks|model.valvelinks,model.time, rule = pumplinkflow_rule)
-        
-        def resheadfix_rule(model,i,l):
-            model.head[i,l].value = model.res_heads[i]
-            model.head[i,l].fixed = True
-        model.resheadfix = pyomo.BuildAction(model.rnodes,model.time, rule = resheadfix_rule)
-        
-        def tankheadinit_rule(model,i,l):
-            if l is min(model.time):
-                model.head[i,l] = model.elev[i]+model.tank_inhead[i]
-                model.head[i,l].fixed = True
-        model.tankheadinit = pyomo.BuildAction(model.tank_nodes,model.time, rule = tankheadinit_rule)
-        
-        def tankheadvar_rule(model,i,l):
-            if l is max(model.time):
-                return pyomo.Constraint.Skip
-            else:
-                return (model.tnet_inflow[i,l]*model.timestep*60.0*4.0)/(pi*(model.tank_dia[i]**2)) == model.head[i,l+1]-model.head[i,l]
-        model.tankheadvar = pyomo.Constraint(model.tank_nodes,model.time, rule = tankheadvar_rule)        
-                
-        def valvelinkflow_rule(model,i,l):
-            if model.valvestatus[i,l] == 1:
-                return pyomo.Constraint.Skip
-            else:
-                return model.flow[i,l] == 0
-        model.valvelinkflow = pyomo.Constraint(model.valvelinks,model.time, rule = valvelinkflow_rule)
+                tank = wn.get_node(n)
+                return (model.tank_net_inflow[n,t]*model.timestep*60.0*4.0)/(pi*(tank.diameter**2)) == model.head[n,t+1]-model.head[n,t]
+        model.tank_dynamics = self.pyomo.Constraint(model.tanks, model.time, rule=tank_dynamics_rule)
+
+        # Fix the head in a reservoir
+        for n in model.reservoirs:
+            reservoir_head = wn.get_node(n).base_head
+            for t in model.time:
+                model.head[n,t].value = reservoir_head
+                model.head[n,t].fixed = True
+
+        # Fix the initial head in a Tank
+        for n in model.tanks:
+            tank = wn.get_node(n)
+            tank_initial_head = tank.elevation + tank.init_level
+            t = min(model.time)
+            model.head[n,t].value = tank_initial_head
+            model.head[n,t].fixed = True
+
+        ####### CREATE INSTANCE AND SOLVE ########
 
         instance = model.create()
-        opt = SolverFactory('ipopt')
+        opt = self.SolverFactory(solver)
+        # Set solver options
+        for key, val in solver_options.iteritems():
+            opt.options[key]=val
+        # Solve pyomo model
         pyomo_results = opt.solve(instance, tee=True)
         instance.load(pyomo_results)
-
-        #help(pyomo_results.solver)
-        #help(pyomo_results.solver.statistics)
-        #print pyomo_results.solver.statistics
-
 
         # Load pyomo results into results object
         results = self._read_pyomo_results(instance, pyomo_results)
@@ -463,14 +383,15 @@ class WaterNetworkSimulator(object):
         times = []
         link_type = []
         for l in instance.links:
+            link = self._wn.get_link(l)
             for t in instance.time:
                 link_name.append(l)
                 link_type.append(self._get_link_type(l))
                 times.append(results.time[t])
                 flow_l_t = instance.flow[l,t].value
                 flowrate.append(flow_l_t)
-                if isinstance(self._wn.get_link(l), Pipe):
-                    velocity_l_t = 4*flow_l_t/(math.pi*instance.link_dia[l]**2)
+                if isinstance(link, Pipe):
+                    velocity_l_t = 4.0*flow_l_t/(math.pi*link.diameter**2)
                 else:
                     velocity_l_t = 0.0
                 velocity.append(velocity_l_t)
@@ -495,18 +416,19 @@ class WaterNetworkSimulator(object):
         times = []
         node_type = []
         for n in instance.nodes:
+            node = self._wn.get_node(n)
             for t in instance.time:
                 node_name.append(n)
                 node_type.append(self._get_node_type(n))
                 times.append(results.time[t])
                 head_n_t = instance.head[n,t].value
-                if isinstance(self._wn.get_node(n), Reservoir):
+                if isinstance(node, Reservoir):
                     pressure_n_t = 0.0
                 else:
-                    pressure_n_t = head_n_t + instance.elev[n]
+                    pressure_n_t = head_n_t + node.elevation
                 head.append(head_n_t)
                 pressure.append(pressure_n_t)
-                if isinstance(self._wn.get_node(n), Junction):
+                if isinstance(node, Junction):
                     demand.append(instance.demand_actual[n,t].value)
                 else:
                     demand.append(0.0)

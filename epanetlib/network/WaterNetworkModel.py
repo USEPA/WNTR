@@ -27,8 +27,6 @@ class WaterNetworkModel(object):
         self.name = None
 
         # Initialize Network size parameters
-        self._num_nodes = 0
-        self._num_links = 0
         self._num_junctions = 0
         self._num_reservoirs = 0
         self._num_tanks = 0
@@ -44,7 +42,6 @@ class WaterNetworkModel(object):
         # Initialize pattern and curve dictionaries
         # Dictionary of pattern or curves indexed by their names
         self._patterns = {}
-        self._curves = {}
 
         # Initialize Options dictionaries
         self.time_options = {}
@@ -56,9 +53,7 @@ class WaterNetworkModel(object):
         self.time_controls = {}
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
-        # SOULD THIS BE PRIVATE ??????
-        self.graph = nx.MultiDiGraph(data=None)
-
+        self._graph = nx.MultiDiGraph(data=None)
 
     def copy(self):
         """
@@ -118,7 +113,7 @@ class WaterNetworkModel(object):
         """
         return self._patterns[name]
 
-    def add_junction(self, name, base_demand=None, demand_pattern_name=None, elevation=None):
+    def add_junction(self, name, base_demand=None, demand_pattern_name=None, elevation=None, coordinates=None):
         """
         Add a junction to the network.
         Parameters
@@ -136,16 +131,20 @@ class WaterNetworkModel(object):
         elevation : float
             Elevation of the junction.
             Internal units must be meters (m).
+        coordinates : tuple of floats
+            X-Y coordinates of the node location
 
         """
         junction = Junction(name, base_demand, demand_pattern_name, elevation)
         self._nodes[name] = junction
-        self._num_nodes += 1
+        self._graph.add_node(name)
+        if coordinates is not None:
+            self.set_node_coordinates(name, coordinates)
         self._num_junctions += 1
 
     def add_tank(self, name, elevation=None, init_level=None,
                  min_level=None, max_level=None, diameter=None,
-                 min_vol=None, vol_curve=None):
+                 min_vol=None, vol_curve=None, coordinates=None):
         """
         Method to add tank to a water network object.
 
@@ -176,16 +175,22 @@ class WaterNetworkModel(object):
             Internal units must be cubic meters (m^3)
         vol_curve_name : string
             Name of the tank volume curve.
+        coordinates : tuple of floats
+            X-Y coordinates of the node location
         """
         tank = Tank(name, elevation, init_level,
                  min_level, max_level, diameter,
                  min_vol, vol_curve)
         self._nodes[name] = tank
-        self._num_nodes += 1
+        self._graph.add_node(name)
+        if coordinates is not None:
+            self.set_node_coordinates(name, coordinates)
         self._num_tanks += 1
 
+    def get_graph_copy(self):
+        return copy.deepcopy(self._graph)
 
-    def add_reservoir(self, name, base_head=None, head_pattern_name=None):
+    def add_reservoir(self, name, base_head=None, head_pattern_name=None, coordinates=None):
         """
         Method to add reservoir to a water network object.
 
@@ -201,10 +206,14 @@ class WaterNetworkModel(object):
             Internal units must be meters (m).
         head_pattern_name : string
             Name of the head pattern.
+        coordinates : tuple of floats
+            X-Y coordinates of the node location
         """
         reservoir = Reservoir(name, base_head, head_pattern_name)
         self._nodes[name] = reservoir
-        self._num_nodes += 1
+        self._graph.add_node(name)
+        if coordinates is not None:
+            self.set_node_coordinates(name, coordinates)
         self._num_reservoirs += 1
 
     def add_pipe(self, name, start_node_name, end_node_name, length=None,
@@ -239,7 +248,7 @@ class WaterNetworkModel(object):
         pipe = Pipe(name, start_node_name, end_node_name, length,
                     diameter, roughness, minor_loss, status)
         self._links[name] = pipe
-        self._num_links += 1
+        self._graph.add_edge(start_node_name, end_node_name, key=name)
         self._num_pipes += 1
 
     def add_pump(self, name, start_node_name, end_node_name, curve_name=None):
@@ -262,7 +271,7 @@ class WaterNetworkModel(object):
         """
         pump = Pump(name, start_node_name, end_node_name, curve_name)
         self._links[name] = pump
-        self._num_links += 1
+        self._graph.add_edge(start_node_name, end_node_name, key=name)
         self._num_pumps += 1
 
     def add_valve(self, name, start_node_name, end_node_name,
@@ -294,7 +303,7 @@ class WaterNetworkModel(object):
         valve = Valve(name, start_node_name, end_node_name,
                       diameter, valve_type, minor_loss, setting)
         self._links[name] = valve
-        self._num_links += 1
+        self._graph.add_edge(start_node_name, end_node_name, key=name)
         self._num_valves += 1
 
     def add_pattern(self, name, pattern_list):
@@ -415,7 +424,6 @@ class WaterNetworkModel(object):
                 pass
         return link_attribute_dict
 
-
     def add_time_control(self, link, open_times=[], closed_times=[]):
         """
         Add time controls to the network.
@@ -436,27 +444,36 @@ class WaterNetworkModel(object):
             self.time_controls[link]['open_times'] += open_times
             self.time_controls[link]['closed_times'] += closed_times
 
-    def nodes(self):
+    def nodes(self, node_type=None):
         """
-        A generator to iterate over all nodes
+        A generator to iterate over all nodes of node_type.
+        If no node_type is passed, this method iterates over all nodes.
 
         Return:
         node_name, node
         """
         for node_name, node in self._nodes.iteritems():
-            yield node_name, node
+            if node_type is None:
+                yield node_name, node
+            elif isinstance(node, node_type):
+                yield node_name, node
 
-    def links(self):
+    def links(self, link_type=None):
         """
-        A generator to iterate over all links
+        A generator to iterate over all links of link_type.
+        If no link_type is passed, this method iterates over all links.
+
 
         Return:
         link_name, link
         """
         for link_name, link in self._links.iteritems():
-            yield link_name, link
+            if link_type is None:
+                yield link_name, link
+            elif isinstance(link, link_type):
+                yield link_name, link
 
-    def Curves(self):
+    def curves(self):
         """
         A generator to iterate over all curves
 
@@ -494,85 +511,37 @@ class WaterNetworkModel(object):
         """
         return copy.deepcopy(self._links)
 
-    def get_pump_coefficients(self, pump_name):
+    def set_node_coordinates(self, name, coordinates):
         """
-        Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
-        Coefficient can only be calculated for pump curves.
-
-        For a single point curve the coefficients are generated according to the following equation:
-
-        A = 4/3 * H_1
-        B = 1/3 * H_1/Q_1^2
-        C = 2
-
-        For a three point curve the coefficients are generated according to the following equation:
-             When the first point is a zero flow: (All INP files we have come across)
-
-             A = H_1
-             C = ln((H_1 - H_2)/(H_1 - H_3))/ln(Q_2/Q_3)
-             B = (H_1 - H_2)/Q_2^C
-
-             When the first point is not zero, numpy fsolve is called to solve the following system of
-             equation:
-
-             H_1 = A - B*Q_1^C
-             H_2 = A - B*Q_2^C
-             H_3 = A - B*Q_3^C
-
-        Multi point curves are currently not supported
+        Method to set the node coordinates in the network x graph.
 
         Parameters
-        -------
-        pump_name : string
-            Name of the pump
+        ----------
+        name : name of the node
+        coordinates : tuple of X-Y coordinates
+        """
+        nx.set_node_attributes(self._graph, 'pos', {name: coordinates})
+
+    def get_links_for_node(self, node_name):
+        """
+        Returns a list of links connected to a node.
+
+        Parameters
+        ---------
+        node_name : string
+            Name of the node.
 
         Return
-        -------
-        Tuple of pump curve coefficient (A, B, C). All floats.
+        ------
+        A list of link names connected to the node
         """
-        pump = self._links[pump_name]
-        curve = self._curves[pump.curve_name]
+        undirected_graph = self._graph.to_undirected()
+        edges = undirected_graph.edges(node_name, data=False, keys=True)
+        list_of_links = []
+        for edge_tuple in edges:
+            list_of_links.append(edge_tuple[2])
 
-        assert(isinstance(pump, Pump)), pump_name + " is not defined as a pump type. "
-
-        # 1-Point curve
-        if curve.num_points == 1:
-            H_1 = curve.points[0][1]
-            Q_1 = curve.points[0][0]
-            A = (4.0/3.0)*H_1
-            B = (1.0/3.0)*(H_1/(Q_1**2))
-            C = 2
-        # 3-Point curve
-        elif curve.num_points == 3:
-            Q_1 = curve.points[0][0]
-            H_1 = curve.points[0][1]
-            Q_2 = curve.points[1][0]
-            H_2 = curve.points[1][1]
-            Q_3 = curve.points[2][0]
-            H_3 = curve.points[2][1]
-
-            # When the first points is at zero flow
-            #if Q_1 == 0.0:
-            if False:
-                A = H_1
-                C = math.log((H_1 - H_2)/(H_1 - H_3))/math.log(Q_2/Q_3)
-                B = (H_1 - H_2)/(Q_2**C)
-            else:
-                def curve_fit(x):
-                    eq_array = [H_1 - x[0] + x[1]*Q_1**x[2],
-                                H_2 - x[0] + x[1]*Q_2**x[2],
-                                H_3 - x[0] + x[1]*Q_3**x[2]]
-                    return eq_array
-                coeff = fsolve(curve_fit, [200, 1e-3, 1.5])
-                A = coeff[0]
-                B = coeff[1]
-                C = coeff[2]
-
-        # Multi-point curve
-        else:
-            raise RuntimeError("Coefficient for Multipoint pump curves cannot be generated. ")
-
-        return (A, B, C)
+        return list_of_links
 
 
 class Node(object):
@@ -644,6 +613,7 @@ class Link(object):
         """
         return self._end_node_name
 
+
 class Junction(Node):
     """
     Junction class that is inherited from Node
@@ -686,6 +656,7 @@ class Junction(Node):
         """
         return copy.deepcopy(self)
 
+
 class Reservoir(Node):
     """
     Reservoir class that is inherited from Node
@@ -708,6 +679,7 @@ class Reservoir(Node):
         Node.__init__(self, name)
         self.base_head = base_head
         self.head_pattern_name = head_pattern_name
+
 
 class Tank(Node):
     """
@@ -754,6 +726,7 @@ class Tank(Node):
         self.min_vol = min_vol
         self.vol_curve = vol_curve
 
+
 class Pipe(Link):
     """
     Pipe class that is inherited from Link
@@ -793,12 +766,11 @@ class Pipe(Link):
         self.status = status
 
 
-
 class Pump(Link):
     """
     Pump class that is inherited from Link
     """
-    def __init__(self, name, start_node_name, end_node_name, curve_name):
+    def __init__(self, name, start_node_name, end_node_name, head_curve):
         """
         Parameters
         ----------
@@ -811,11 +783,88 @@ class Pump(Link):
 
         Optional Parameters
         ----------
-        curve_name : string
-            Name of the pump curve.
+        head_curve : Curve object
+            Head curve object
         """
         Link.__init__(self, name, start_node_name, end_node_name)
-        self.curve_name = curve_name
+        self.curve = head_curve
+
+    def get_head_curve_coefficients(self):
+        """
+        Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
+        Coefficient can only be calculated for pump curves.
+
+        For a single point curve the coefficients are generated according to the following equation:
+
+        A = 4/3 * H_1
+        B = 1/3 * H_1/Q_1^2
+        C = 2
+
+        For a three point curve the coefficients are generated according to the following equation:
+             When the first point is a zero flow: (All INP files we have come across)
+
+             A = H_1
+             C = ln((H_1 - H_2)/(H_1 - H_3))/ln(Q_2/Q_3)
+             B = (H_1 - H_2)/Q_2^C
+
+             When the first point is not zero, numpy fsolve is called to solve the following system of
+             equation:
+
+             H_1 = A - B*Q_1^C
+             H_2 = A - B*Q_2^C
+             H_3 = A - B*Q_3^C
+
+        Multi point curves are currently not supported
+
+        Parameters
+        -------
+        pump_name : string
+            Name of the pump
+
+        Return
+        -------
+        Tuple of pump curve coefficient (A, B, C). All floats.
+        """
+
+
+        # 1-Point curve
+        if self.curve.num_points == 1:
+            H_1 = self.curve.points[0][1]
+            Q_1 = self.curve.points[0][0]
+            A = (4.0/3.0)*H_1
+            B = (1.0/3.0)*(H_1/(Q_1**2))
+            C = 2
+        # 3-Point curve
+        elif self.curve.num_points == 3:
+            Q_1 = self.curve.points[0][0]
+            H_1 = self.curve.points[0][1]
+            Q_2 = self.curve.points[1][0]
+            H_2 = self.curve.points[1][1]
+            Q_3 = self.curve.points[2][0]
+            H_3 = self.curve.points[2][1]
+
+            # When the first points is at zero flow
+            if Q_1 == 0.0:
+                A = H_1
+                C = math.log((H_1 - H_2)/(H_1 - H_3))/math.log(Q_2/Q_3)
+                B = (H_1 - H_2)/(Q_2**C)
+            else:
+                def curve_fit(x):
+                    eq_array = [H_1 - x[0] + x[1]*Q_1**x[2],
+                                H_2 - x[0] + x[1]*Q_2**x[2],
+                                H_3 - x[0] + x[1]*Q_3**x[2]]
+                    return eq_array
+                coeff = fsolve(curve_fit, [200, 1e-3, 1.5])
+                A = coeff[0]
+                B = coeff[1]
+                C = coeff[2]
+
+        # Multi-point curve
+        else:
+            raise RuntimeError("Coefficient for Multipoint pump curves cannot be generated. ")
+
+        return (A, B, C)
+
 
 class Valve(Link):
     """
@@ -850,6 +899,7 @@ class Valve(Link):
         self.valve_type = valve_type
         self.minor_loss = minor_loss
         self.setting = setting
+
 
 class Curve(object):
     """

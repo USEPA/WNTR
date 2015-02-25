@@ -11,8 +11,7 @@ parser = ParseWaterNetwork()
 
 parser.read_inp_file(wn, 'networks/Net3.inp')
 
-wn.graph = wn.graph.to_undirected()
-G = wn.graph
+G = wn.get_graph_copy().to_undirected()
 
 # Example plots
 en.network.draw_graph(G)
@@ -23,14 +22,13 @@ print nx.info(G)
 # Example of setting node and edge attribute from
 # the network class and plotting the graph
 node_attribute = {}
-for node_name, node in wn.nodes():
-    if isinstance(wn.get_node(node_name), Junction) :
+for node_name, node in wn.nodes(Junction):
         node_attribute[node_name] = node.elevation
 nx.set_node_attributes(G, 'elevation', node_attribute)
 # NX graph requires a dictionary indexed by (start_node, end_node, link_name)
 # to set edge attribute
 link_attribute = {(link.start_node(), link.end_node(), link_name): link.length
-                  for link_name, link in wn.links() if isinstance(wn.get_link(link_name), Pipe)}
+                  for link_name, link in wn.links(Pipe)}
 nx.set_edge_attributes(G, 'length', link_attribute)
 
 en.network.draw_graph(G, node_attribute='elevation', edge_attribute='length',

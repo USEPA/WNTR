@@ -31,11 +31,11 @@ print "*********************"
 #    if wn.isJunction(node_name):
 #        print node_name, node.elevation
 
-results = sim.run_pyomo_sim()
+#results = sim.run_pyomo_sim()
 
 #print results.link
 #print results.node.demand['11']['0 day 0 hours':'0 day 10 hours']
-
+"""
 print "---------------------------------------"
 print "Demand at node 11  between 0 to 5 hours"
 print "---------------------------------------"
@@ -55,6 +55,13 @@ print "------------------"
 print results.node.pressure[:, '0 day 12 hours']
 print "------------------"
 
+print "------------------"
+print "All node results "
+print "------------------"
+print results.node
+print "------------------"
+
+"""
 
 
 

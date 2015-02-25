@@ -1,9 +1,10 @@
 from epanetlib.units import convert
-from epanetlib.network.WaterNetworkModel import Pump, Tank
+from epanetlib.network.WaterNetworkModel import Pump, Tank, Curve
 
 import warnings
 import re
 import networkx as nx
+
 
 def is_number(s):
     try:
@@ -11,6 +12,7 @@ def is_number(s):
         return True
     except ValueError:
         return False
+
 
 def str_time_to_min(s):
     """
@@ -43,17 +45,20 @@ def str_time_to_min(s):
                 raise RuntimeError("Time format in [CONTROLS] block of "
                                    "INP file not recognized. ")
 
+
 # EPANET unit ids used in unit conversion when reading inp files
 epanet_unit_id = {'CFS': 0, 'GPM': 1, 'MGD': 2, 'IMGD': 3, 'AFD': 4,
                   'LPS': 5, 'LPM': 6, 'MLD': 7, 'CMH':  8, 'CMD': 9}
+
 
 class ParseWaterNetwork(object):
     def __init__(self):
         self._patterns = {}
         self._curves = {}
+        self._pump_info = {} # A dictionary storing pump info
         self._time_controls = {}
         self._node_coordinates = {}
-        self._curve_map = {}
+        self._curve_map = {} # Map from pump name to curve name
 
     def read_inp_file(self, wn, inp_file_name):
         """
@@ -202,8 +207,8 @@ class ParseWaterNetwork(object):
                     continue
                 # Only add head curves for pumps
                 if current[3].upper() == 'HEAD':
-                    wn.add_pump(current[0], current[1], current[2], current[4])
-                    self._curve_map[current[4]] = current[0]
+                    self._pump_info[current[0]] = (current[1], current[2], current[4])
+                    self._curve_map[current[0]] = current[4]
                 else:
                     warnings.warn("Only HEAD curves are supported for pumps. " + current[3] + " curve is currently not supported. ")
             if reservoirs:
@@ -284,9 +289,7 @@ class ParseWaterNetwork(object):
                 curve_name = current[0]
                 if curve_name not in self._curves:
                     self._curves[curve_name] = []
-                    self._curves[curve_name].append((float(current[1]), float(current[2])))
-                else:
-                    self._curves[curve_name].append((float(current[1]), float(current[2])))
+                self._curves[curve_name].append((convert('Flow', inp_units, float(current[1])), convert('Hydraulic Head', inp_units, float(current[2]))))
             if controls:
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')):
@@ -321,14 +324,30 @@ class ParseWaterNetwork(object):
 
         f.close()
 
-
         # Add patterns to their set
         for pattern_name, pattern_list in self._patterns.iteritems():
             wn.add_pattern(pattern_name, pattern_list)
         for control_link, control_dict in self._time_controls.iteritems():
             wn.add_time_control(control_link, control_dict['open_times'], control_dict['closed_times'])
 
-        # Add curves
+        # Add pumps with curve info
+        for pump_name, pump_info_tuple in self._pump_info.iteritems():
+            # Get curve information
+            curve_name = self._curve_map[pump_name]
+            curve_points = self._curves[curve_name]
+            curve = Curve(curve_name, 'HEAD', curve_points)
+            # Get Pump information
+            start_node = pump_info_tuple[0]
+            end_node = pump_info_tuple[1]
+            # Add pump
+            wn.add_pump(pump_name, start_node, end_node, curve)
+
+        # Set node coordinates
+        for name, node in wn.nodes():
+            wn.set_node_coordinates(name, self._node_coordinates[name])
+
+        """
+        # Add curve to network class
         for curve_name, tupleList in self._curves.iteritems():
             # Get the network element the curve is related to
             # For now, only pump and tank volume curves are supported
@@ -352,15 +371,7 @@ class ParseWaterNetwork(object):
                 wn.add_curve(curve_name, 'Volume', converted_tuples)
             else:
                 warnings.warn("The following curve type is currently not supported: " + curve_name)
+        """
 
-        ### Load the network connectivity into the NetworkX graph ###
 
-        # Set name
-        wn.graph.name = inp_file_name
-        # Add nodes along with their coordinates
-        for name, node in wn.nodes():
-            wn.graph.add_node(name, pos=self._node_coordinates[name])
-        # Add links and their connectivity
-        for link_name, link in wn.links():
-            wn.graph.add_edge(link.start_node(), link.end_node(), key=link_name)
 
