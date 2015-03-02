@@ -1,3 +1,14 @@
+"""
+QUESTIONS
+"""
+
+"""
+TODO 1. Only pump head curves are being assigned to pumps. Other curves are stored but not assigned. Unit conversion in curves.
+TODO 2. Test to see if add_junction, add_pipe, etc methods can be called with keys. Change all of them for clarity.
+TODO 3. [STATUS] block from Net3.
+TODO 4. Pipes that have status CV.
+"""
+
 from epanetlib.units import convert
 from epanetlib.network.WaterNetworkModel import Pump, Tank, Curve
 
@@ -59,6 +70,7 @@ class ParseWaterNetwork(object):
         self._time_controls = {}
         self._node_coordinates = {}
         self._curve_map = {} # Map from pump name to curve name
+        self._link_status = {} # Map from link name to the initial status
 
     def read_inp_file(self, wn, inp_file_name):
         """
@@ -128,6 +140,7 @@ class ParseWaterNetwork(object):
         times = False
         controls = False
         coordinates = False
+        status = False
 
         for line in f:
             if ']' in line:
@@ -143,6 +156,7 @@ class ParseWaterNetwork(object):
                 times = False
                 controls = False
                 coordinates = False
+                status = False
 
             if '[PIPES]' in line:
                 pipes = True
@@ -176,6 +190,9 @@ class ParseWaterNetwork(object):
                 continue
             elif '[COORDINATES]' in line:
                 coordinates = True
+                continue
+            elif '[STATUS]' in line:
+                status = True
                 continue
 
             if pipes:
@@ -321,14 +338,36 @@ class ParseWaterNetwork(object):
                     continue
                 assert(len(current) == 3), "Error reading node coordinates. Check format."
                 self._node_coordinates[current[0]] = (float(current[1]), float(current[2]))
+            if status:
+                current = line.split()
+                if (current == []) or (current[0].startswith(';')):
+                    continue
+                assert(len(current) == 2), "Error reading [STATUS] block, Check format."
+                self._link_status[current[0]] = current[1].upper()
 
         f.close()
 
         # Add patterns to their set
         for pattern_name, pattern_list in self._patterns.iteritems():
             wn.add_pattern(pattern_name, pattern_list)
+        # Add initial status to link
+        for link_name, status in self._link_status.iteritems():
+            if link_name not in self._time_controls:
+                if status == 'OPEN':
+                    self._time_controls[link_name] = {'open_times': [wn.time_options['START CLOCKTIME']], 'closed_times': []}
+                elif status == 'CLOSED':
+                    self._time_controls[link_name] = {'open_times': [], 'closed_times': [wn.time_options['START CLOCKTIME']]}
+                else:
+                    raise RuntimeError("Link status format not recognized.")
+            else:
+                if status == 'OPEN':
+                    self._time_controls[link_name]['open_times'].append(wn.time_options['START CLOCKTIME'])
+                elif status == 'CLOSED':
+                    self._time_controls[link_name]['closed_times'].append(wn.time_options['START CLOCKTIME'])
+                else:
+                    raise RuntimeError("Link status format not recognized.")
+        # Add time control
         for control_link, control_dict in self._time_controls.iteritems():
-            print control_link
             wn.add_time_control(control_link, control_dict['open_times'], control_dict['closed_times'])
 
         # Add pumps with curve info

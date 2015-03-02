@@ -4,15 +4,25 @@ Created on Fri Jan 23 10:07:42 2015
 
 @author: aseth
 """
+
+"""
+QUESTIONS
+1. Are the start end node attributes of a link only stored in the networkx graph?
+2. Node coordinates are only stored in the graph. Therefore, set_node_coordinates is a method on the WaterNetworkModel.
+3. Getting connectivity for a node using get_links_for_node. Okay name?
+"""
+
+"""
+TODO 1. Volume curve object should be an attribute of the tank.
+TODO 2. Conditional controls or Rules.
+TODO 3. Multi-point curve.
+"""
+
 import copy
 import networkx as nx
 import math
 from scipy.optimize import fsolve
 
-
-link_status = dict()
-link_status['open'] = 1
-link_status['close'] = 0
 
 class WaterNetworkModel(object):
 
@@ -449,7 +459,7 @@ class WaterNetworkModel(object):
             self.time_controls[link]['closed_times'] += closed_times
 
         self.time_controls[link]['open_times'].sort()
-        self.time_controls[link]['open_times'].sort()
+        self.time_controls[link]['closed_times'].sort()
 
     def nodes(self, node_type=None):
         """
@@ -542,8 +552,9 @@ class WaterNetworkModel(object):
         ------
         A list of link names connected to the node
         """
-        undirected_graph = self._graph.to_undirected()
-        edges = undirected_graph.edges(node_name, data=False, keys=True)
+        in_edges = self._graph.in_edges(node_name, data=False, keys=True)
+        out_edges = self._graph.out_edges(node_name, data=False, keys=True)
+        edges = in_edges + out_edges
         list_of_links = []
         for edge_tuple in edges:
             list_of_links.append(edge_tuple[2])
@@ -601,7 +612,7 @@ class Link(object):
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
-        self._base_status = 'Open'    #this should be changed
+        self._base_status = 'OPEN'
         self._open_times = list()
         self._closed_times = list()
 
@@ -652,21 +663,6 @@ class Junction(Node):
         self.base_demand = base_demand
         self.demand_pattern_name = demand_pattern_name
         self.elevation = elevation
-
-    def copy(self):
-        """
-        Copy a junction object
-
-        Return
-        ------
-        A copy of the junction.
-
-        Example
-        ------
-        >>> junction1 = Junction('Node 1')
-        >>>
-        """
-        return copy.deepcopy(self)
 
 
 class Reservoir(Node):

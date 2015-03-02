@@ -1,10 +1,36 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jan 23 10:07:42 2015
+
+@author: aseth
+"""
+
+"""
+QUESTIONS
+- Should WaterNetworkSimulator base class be abstract?
+- Should a WNM be a required attribute for derived classes?
+- Requirements on a WNM for being able to simulate.
+- Does the Pyepanet simulator read info from water network object? Or do we simply write an inp file?
+- Whats the interface to pyepanet simulator? User can provide either a WNM or an inp_file_name?
+"""
+
+"""
+TODO
+1. Use in_edges and out_edges to write node balances on the pyomo model.
+2. Parse valve settings. Fix usage.
+3. Check for rule based controls in pyomo model and throw an exception.
+4. _check_model_specified has to be extended to check for parameters in the model that must be specified.
+5.
+"""
+
+
 import numpy as np
 from epanetlib.network.WaterNetworkModel import *
 from scipy.optimize import fsolve
 import math
 from NetworkResults import NetResults
 import pandas as pd
-
+import time
 
 class WaterNetworkSimulator(object):
     def __init__(self, water_network=None):
@@ -16,19 +42,8 @@ class WaterNetworkSimulator(object):
         """
         self._wn = water_network
 
-        # Simulation time options
-        self._sim_start_min = self._wn.time_options['START CLOCKTIME']
-        self._sim_duration = self._wn.time_options['DURATION']
-        self._pattern_start_min = self._wn.time_options['PATTERN START']
-        self._hydraulic_step_min = self._wn.time_options['HYDRAULIC TIMESTEP']
-        self._pattern_step_min = self._wn.time_options['PATTERN TIMESTEP']
-        self._hydraulic_times_min = range(0, self._sim_duration, self._hydraulic_step_min)
-
         if water_network is not None:
             self.init_time_params_from_model()
-
-        # Hazen-Williams resistance coefficient
-        self.Hw_k = 10.67 # SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
 
     def set_water_network_model(self, water_network):
         """
@@ -46,15 +61,15 @@ class WaterNetworkSimulator(object):
         assert (isinstance(self._wn, WaterNetworkModel)), "Water network model has not been set for the simulator" \
                                                           "use method set_water_network_model to set model."
 
-    def is_open(self,link_name,time):
+    def is_link_open(self,link_name,time):
         link = self._wn.get_link(link_name)
         if link_name not in self._wn.time_controls:
-            return link.get_base_status()
+            return False if link.get_base_status() == 'CLOSED' else True
         else:
             open_times = self._wn.time_controls[link_name]['open_times']
             closed_times = self._wn.time_controls[link_name]['closed_times']
             if time<open_times[0] and time<closed_times[0]:
-                return link.get_base_status()
+                return False if link.get_base_status() == 'CLOSED' else True
             else:
 
                 #Check open times
@@ -192,6 +207,26 @@ class WaterNetworkSimulator(object):
 
         return demand_values
 
+    def _get_link_type(self, name):
+        if isinstance(self._wn.get_link(name), Pipe):
+            return 'pipe'
+        elif isinstance(self._wn.get_link(name), Valve):
+            return 'valve'
+        elif isinstance(self._wn.get_link(name), Pump):
+            return 'pump'
+        else:
+            raise RuntimeError('Link name ' + name + ' was not recognised as a pipe, valve, or pump.')
+
+    def _get_node_type(self, name):
+        if isinstance(self._wn.get_node(name), Junction):
+            return 'junction'
+        elif isinstance(self._wn.get_node(name), Tank):
+            return 'tank'
+        elif isinstance(self._wn.get_node(name), Reservoir):
+            return 'reservoir'
+        else:
+            raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, or reservoir.')
+
 
 class PyomoSimulator(WaterNetworkSimulator):
     """
@@ -206,8 +241,18 @@ class PyomoSimulator(WaterNetworkSimulator):
                           'Make sure pyomo is installed and added to path.')
     import math
 
-    def __init__(self, wn=None):
+    def __init__(self, wn):
+        """
+        Pyomo simulator class.
+
+        Parameters
+        ---------
+        wn : Water Network Model
+            A water network model.
+        """
         WaterNetworkSimulator.__init__(self, wn)
+        # Hazen-Williams resistance coefficient
+        self._Hw_k = 10.67 # SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
 
     def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True):
         """
@@ -223,6 +268,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             Flag to use a slightly modified version of Hazen-Williams headloss
             equation for better stability
         """
+        #t0 = time.time()
+
         pi = math.pi
 
         # The Hazen-Williams headloss curve is slightly modified to improve solution time.
@@ -264,6 +311,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.valves = self.pyomo.Set(initialize=[l for l, L in wn.links(Valve)])
         model.pipes = self.pyomo.Set(initialize=[l for l, L in wn.links(Pipe)])
 
+        #print "Created Sets: ", time.time() - t0
+
+        ####### Check for components that are not supported #######
+        for l in model.links:
+            link = wn.get_link(l)
+            if link.get_base_status().upper() == 'CV':
+                raise RuntimeError('Check valves are not supported by the Pyomo model.')
+
         ################### PARAMETERS #######################
 
         demand_dict = {}
@@ -294,35 +349,42 @@ class PyomoSimulator(WaterNetworkSimulator):
             return expr
         model.obj = self.pyomo.Objective(rule=obj_rule, sense=self.pyomo.minimize)
 
+        #print "Created Obj: ", time.time() - t0
         ############## CONSTRAINTS #####################
 
         # Head loss inside pipes
         for l in model.pipes:
             pipe = wn.get_link(l)
-            pipe_resistance_coeff = self.Hw_k*(pipe.roughness**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
+            pipe_resistance_coeff = self._Hw_k*(pipe.roughness**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
             for t in model.time:
-                if modified_hazen_williams:
-                    setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=self.Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
+                if self.is_link_open(l,t*self._hydraulic_step_min):
+                    if modified_hazen_williams:
+                        setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=self.Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
                                                                       *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.headloss[l,t]))
-                else:
-                    setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=self.Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
+                    else:
+                        setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=self.Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
                                                                       *pipe_resistance_coeff*f2(abs(model.flow[l,t])) == model.headloss[l,t]))
 
+        #print "Created headloss: ", time.time() - t0
         # Head gain provided by the pump is implemented as negative headloss
         for l in model.pumps:
             pump = wn.get_link(l)
             A, B, C = pump.get_head_curve_coefficients()
             for t in model.time:
-                setattr(model, 'pump_negative_headloss_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=model.headloss[l,t] == (-1.0*A + B*(model.flow[l,t]**C))))
+                if self.is_link_open(l,t*self._hydraulic_step_min):
+                    setattr(model, 'pump_negative_headloss_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=model.headloss[l,t] == (-1.0*A + B*(model.flow[l,t]**C))))
 
+        #print "Created head gain: ", time.time() - t0
         # Nodal head difference between start and end node of a link
         for l in model.links:
             link = wn.get_link(l)
             start_node = link.start_node()
             end_node = link.end_node()
             for t in model.time:
-                setattr(model, 'head_difference_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=model.headloss[l,t] == model.head[start_node,t] - model.head[end_node,t]))
+                if self.is_link_open(l,t*self._hydraulic_step_min):
+                    setattr(model, 'head_difference_'+str(l)+'_'+str(t), self.pyomo.Constraint(expr=model.headloss[l,t] == model.head[start_node,t] - model.head[end_node,t]))
 
+        #print "Created head_diff: ", time.time() - t0
         # Mass Balance
         def node_mass_balance_rule(model, n, t):
             expr = 0
@@ -342,6 +404,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif isinstance(node, Reservoir):
                 return expr == model.reservoir_demand[n,t]
         model.node_mass_balance = self.pyomo.Constraint(model.nodes, model.time, rule=node_mass_balance_rule)
+        #print "Created Node balance: ", time.time() - t0
 
         # Head in junctions should be greater or equal to the elevation
         for n in model.junctions:
@@ -369,6 +432,17 @@ class PyomoSimulator(WaterNetworkSimulator):
                 return (model.tank_net_inflow[n,t]*model.timestep*60.0*4.0)/(pi*(tank.diameter**2)) == model.head[n,t+1]-model.head[n,t]
         model.tank_dynamics = self.pyomo.Constraint(model.tanks, model.time, rule=tank_dynamics_rule)
 
+        #print "Created Tank Dynamics: ", time.time() - t0
+
+        # Set flow and headloss to 0 if link is closed
+        for l in model.links:
+            for t in model.time:
+                if not self.is_link_open(l,t*self._hydraulic_step_min):
+                    model.flow[l,t].value = 0.0
+                    model.flow[l,t].fixed = True
+                    model.headloss[l,t].value = 0.0
+                    model.headloss[l,t].fixed = True
+
         # Fix the head in a reservoir
         for n in model.reservoirs:
             reservoir_head = wn.get_node(n).base_head
@@ -384,15 +458,19 @@ class PyomoSimulator(WaterNetworkSimulator):
             model.head[n,t].value = tank_initial_head
             model.head[n,t].fixed = True
 
+
         ####### CREATE INSTANCE AND SOLVE ########
 
         instance = model.create()
+        #print "Created instance: ", time.time() - t0
+
         opt = self.SolverFactory(solver)
         # Set solver options
         for key, val in solver_options.iteritems():
             opt.options[key]=val
         # Solve pyomo model
         pyomo_results = opt.solve(instance, tee=True)
+        #print "Created results: ", time.time() - t0
         instance.load(pyomo_results)
 
         # Load pyomo results into results object
@@ -429,8 +507,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Create Delta time series
         results.time = pd.timedelta_range(start='0 minutes',
-                                         end=str(self._sim_duration) + ' minutes',
-                                         freq=str(self._hydraulic_step_min) + 'min')
+                                          end=str(self._sim_duration) + ' minutes',
+                                          freq=str(self._hydraulic_step_min) + 'min')
         # Load link data
         link_name = []
         flowrate = []
@@ -503,26 +581,6 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         return results
 
-    def _get_link_type(self, name):
-        if isinstance(self._wn.get_link(name), Pipe):
-            return 'pipe'
-        elif isinstance(self._wn.get_link(name), Valve):
-            return 'valve'
-        elif isinstance(self._wn.get_link(name), Pump):
-            return 'pump'
-        else:
-            raise RuntimeError('Link name ' + name + ' was not recognised as a pipe, valve, or pump.')
-
-    def _get_node_type(self, name):
-        if isinstance(self._wn.get_node(name), Junction):
-            return 'junction'
-        elif isinstance(self._wn.get_node(name), Tank):
-            return 'tank'
-        elif isinstance(self._wn.get_node(name), Reservoir):
-            return 'reservoir'
-        else:
-            raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, or reservoir.')
-
     def _load_general_results(self, results):
         """
         Load general simulation options into the results object.
@@ -543,4 +601,28 @@ class PyomoSimulator(WaterNetworkSimulator):
         results.simulator_options['pattern_time_step'] = self._pattern_step_min
 
 
+class PyEpanetSimulator(WaterNetworkSimulator):
+    """
+    Simulator class thats a wrapper around PyEPANET
+    """
+    try:
+        from epanetlib import pyepanet
+    except ImportError:
+        raise ImportError('Could not import PyEPANET')
 
+    def __init__(self, wn=None, inp_file_name=None):
+        """
+        Simulator object to be used for running pyepanet simulations.
+
+        Optional Parameters
+        ---------
+        AT LEAST ONE OF THESE PARAMETERS MUST BE SPECIFIED
+        wn : WaterNetworkModel
+            A water network
+        inp_file_name: string
+            Epanet inp file name
+        """
+        WaterNetworkSimulator.__init__(self, wn)
+
+    def run_sim(self, ):
+        pass
