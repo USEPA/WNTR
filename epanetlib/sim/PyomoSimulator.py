@@ -310,7 +310,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 flow_l_t = instance.flow[l,t].value
                 flowrate.append(flow_l_t)
                 if isinstance(link, Pipe):
-                    velocity_l_t = 4.0*flow_l_t/(math.pi*link.diameter**2)
+                    velocity_l_t = 4.0*abs(flow_l_t)/(math.pi*link.diameter**2)
                 else:
                     velocity_l_t = 0.0
                 velocity.append(velocity_l_t)
@@ -344,11 +344,15 @@ class PyomoSimulator(WaterNetworkSimulator):
                 if isinstance(node, Reservoir):
                     pressure_n_t = 0.0
                 else:
-                    pressure_n_t = head_n_t + node.elevation
+                    pressure_n_t = head_n_t - node.elevation
                 head.append(head_n_t)
                 pressure.append(pressure_n_t)
                 if isinstance(node, Junction):
                     demand.append(instance.demand_actual[n,t].value)
+                elif isinstance(node, Reservoir):
+                    demand.append(instance.reservoir_demand[n,t].value)
+                elif isinstance(node, Tank):
+                    demand.append(instance.tank_net_inflow[n,t].value)
                 else:
                     demand.append(0.0)
 

@@ -5,6 +5,7 @@ from epanetlib.network.WaterNetworkModel import *
 from epanetlib.sim.PyomoSimulator import *
 from epanetlib.sim.PyEpanetSimulator import *
 from epanetlib.sim.ScipySimulator import *
+import matplotlib.pylab as plt
 import epanetlib as en
 import numpy as np 
 import networkx as nx

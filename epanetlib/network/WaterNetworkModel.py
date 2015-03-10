@@ -490,6 +490,25 @@ class WaterNetworkModel(object):
             elif isinstance(link, link_type):
                 yield link_name, link
 
+    def num_nodes(self):
+        """
+        Number of nodes.
+
+        Return
+        ------
+        Number of nodes.
+        """
+        return len(self._nodes)
+
+    def num_links(self):
+        """
+        Number of links.
+
+        Return
+        ------
+        """
+        return len(self._links)
+
     def curves(self):
         """
         A generator to iterate over all curves

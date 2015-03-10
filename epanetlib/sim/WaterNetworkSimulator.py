@@ -10,17 +10,12 @@ QUESTIONS
 - Should WaterNetworkSimulator base class be abstract?
 - Should a WNM be a required attribute for derived classes?
 - Requirements on a WNM for being able to simulate.
-- Does the Pyepanet simulator read info from water network object? Or do we simply write an inp file?
-- Whats the interface to pyepanet simulator? User can provide either a WNM or an inp_file_name?
 """
 
 """
 TODO
-1. Use in_edges and out_edges to write node balances on the pyomo model.
-2. Parse valve settings. Fix usage.
-3. Check for rule based controls in pyomo model and throw an exception.
-4. _check_model_specified has to be extended to check for parameters in the model that must be specified.
-5.
+1. _check_model_specified has to be extended to check for parameters in the model that must be specified.
+2.
 """
 
 
@@ -45,6 +40,15 @@ class WaterNetworkSimulator(object):
 
         if water_network is not None:
             self.init_time_params_from_model()
+        else:
+            # Time parameters
+            self._sim_start_min = None
+            self._sim_duration_min = None
+            self._pattern_start_min = None
+            self._hydraulic_step_min = None
+            self._pattern_step_min = None
+            self._hydraulic_times_min = None
+            self._report_step_min = None
 
     def set_water_network_model(self, water_network):
         """
@@ -140,11 +144,13 @@ class WaterNetworkSimulator(object):
         self._check_model_specified()
         try:
             self._sim_start_min = self._wn.time_options['START CLOCKTIME']
-            self._sim_duration = self._wn.time_options['DURATION']
+            self._sim_duration_min = self._wn.time_options['DURATION']
             self._pattern_start_min = self._wn.time_options['PATTERN START']
             self._hydraulic_step_min = self._wn.time_options['HYDRAULIC TIMESTEP']
             self._pattern_step_min = self._wn.time_options['PATTERN TIMESTEP']
-            self._hydraulic_times_min = range(0, self._sim_duration, self._hydraulic_step_min)
+            self._report_step_min = self._wn.time_options['REPORT TIMESTEP']
+            self._hydraulic_times_min = np.linspace(0, self._sim_duration_min, self._sim_duration_min/self._hydraulic_step_min)
+
         except KeyError:
             KeyError("Water network model used for simulation should contain time parameters. "
                      "Consider initializing the network model data. e.g. Use parser to read EPANET"
@@ -175,7 +181,7 @@ class WaterNetworkSimulator(object):
         if start_time is None:
             start_time = 0
         if end_time is None:
-            end_time = self._sim_duration
+            end_time = self._sim_duration_min
 
         # Get node object
         try:
@@ -228,28 +234,4 @@ class WaterNetworkSimulator(object):
         else:
             raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, or reservoir.')
 
-class PyEpanetSimulator(WaterNetworkSimulator):
-    """
-    Simulator class thats a wrapper around PyEPANET
-    """
-    try:
-        from epanetlib import pyepanet
-    except ImportError:
-        raise ImportError('Could not import PyEPANET')
 
-    def __init__(self, wn=None, inp_file_name=None):
-        """
-        Simulator object to be used for running pyepanet simulations.
-
-        Optional Parameters
-        ---------
-        AT LEAST ONE OF THESE PARAMETERS MUST BE SPECIFIED
-        wn : WaterNetworkModel
-            A water network
-        inp_file_name: string
-            Epanet inp file name
-        """
-        WaterNetworkSimulator.__init__(self, wn)
-
-    def run_sim(self, ):
-        pass
