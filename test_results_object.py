@@ -3,6 +3,7 @@
 from epanetlib.network.ParseWaterNetwork import ParseWaterNetwork
 from epanetlib.network.WaterNetworkModel import *
 from epanetlib.sim.WaterNetworkSimulator import *
+from epanetlib.sim.PyomoSimulator import *
 import matplotlib.pylab as plt
 import epanetlib as en
 import numpy as np 
