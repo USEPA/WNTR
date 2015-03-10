@@ -333,7 +333,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 if isinstance(node, Reservoir):
                     pressure_n_t = 0.0
                 else:
-                    pressure_n_t = head_n_t + node.elevation
+                    pressure_n_t = head_n_t - node.elevation
                 head.append(head_n_t)
                 pressure.append(pressure_n_t)
                 if isinstance(node, Junction):
