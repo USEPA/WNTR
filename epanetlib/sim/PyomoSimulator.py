@@ -1,3 +1,14 @@
+"""
+QUESTIONS
+"""
+
+"""
+TODO
+1. Use in_edges and out_edges to write node balances on the pyomo model.
+2. Check for rule based controls in pyomo model and throw an exception.
+3. Use reporting timestep when creating the pyomo results object.
+"""
+
 try:
     from pyomo.core import *
     from pyomo.core.base.expr import Expr_if
@@ -69,8 +80,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         wn = self._wn
         model = ConcreteModel()
         model.timestep = self._hydraulic_step_min
-        model.duration = self._sim_duration
-        n_timesteps = int(round(model.duration/model.timestep)) 
+        model.duration = self._sim_duration_min
+        n_timesteps = int(round(model.duration/model.timestep))
 
         ###################### SETS #########################
         model.time = Set(initialize=range(0, n_timesteps+1))
@@ -282,7 +293,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Create Delta time series
         results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration) + ' minutes',
+                                          end=str(self._sim_duration_min) + ' minutes',
                                           freq=str(self._hydraulic_step_min) + 'min')
         # Load link data
         link_name = []
@@ -370,7 +381,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Load simulator options
         results.simulator_options['type'] = 'PYOMO'
         results.simulator_options['start_time'] = self._sim_start_min
-        results.simulator_options['duration'] = self._sim_duration
+        results.simulator_options['duration'] = self._sim_duration_min
         results.simulator_options['pattern_start_time'] = self._pattern_start_min
         results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_min
         results.simulator_options['pattern_time_step'] = self._pattern_step_min
