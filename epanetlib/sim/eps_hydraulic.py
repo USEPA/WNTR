@@ -19,6 +19,7 @@ def eps_hydraulic(enData, G=None, convert_units=True):
     for i in G.nodes():
         G.node[i]['head'] = []
         G.node[i]['demand'] = []
+        G.node[i]['pressure'] = []
         
     for u,v,k in G.edges(keys=True):
         G[u][v][k]['flow'] = []
@@ -33,13 +34,16 @@ def eps_hydraulic(enData, G=None, convert_units=True):
                 
                 head = enData.ENgetnodevalue(nodeindex, pyepanet.EN_HEAD)
                 demand = enData.ENgetnodevalue(nodeindex, pyepanet.EN_DEMAND)
+                pressure = enData.ENgetnodevalue(nodeindex, pyepanet.EN_PRESSURE)
                 
                 if convert_units:
                     head = convert('Hydraulic Head', G.graph['flowunits'], head) # m
                     demand = convert('Demand', G.graph['flowunits'], demand) # m3/s
+                    pressure = convert('Pressure', G.graph['flowunits'], pressure) # m
                 
                 G.node[i]['head'].append(head)
                 G.node[i]['demand'].append(demand)
+                G.node[i]['pressure'].append(pressure)
                 
             for u,v,k in G.edges(keys=True):
                 linkindex = enData.ENgetlinkindex(k)
