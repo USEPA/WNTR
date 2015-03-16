@@ -2,9 +2,9 @@
 Unit Conversion
 """
 import math
-
+    
 def convert(paramtype, flowunit, data, MKS = True):
-    """Convert data to meter-kilogram-second
+    """Convert epanet data to SI units (kg, m, sec)
     
     Parameters
     ----------
@@ -168,7 +168,15 @@ def convert(paramtype, flowunit, data, MKS = True):
         if flowunit in [0,1,2,3,4]:
             if MKS: data = data * 0.7032 # psi to m
             else:   data = data / 0.7032 # m to psi
-    
+        """
+        if flowunit in [0,1,2,3,4]:
+            if MKS: data = data * 6894.75729 # psi to Pa
+            else: data = data / 6894.75729 # Pa to psi
+        else: 
+            if MKS: data = data * 9806.65 # m to Pa, assumes 1000 kg/m3
+               else: data = data / 9806.65 # Pa to m
+        """
+        
     elif paramtype == 'Source Mass Injection':
         if MKS: data = data / 60 # per min to per second
         else:   data = data * 60 # per second ro per min
