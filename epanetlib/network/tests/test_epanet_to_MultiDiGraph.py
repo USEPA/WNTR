@@ -2,12 +2,13 @@ from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
 
-import sys
-sys.path.append('C:\kaklise\EPA-Resilience\Evaluation_Tool')
-import epanetlib as en
-
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','..','networks')
+packdir = join(testdir,'..','..','..')
+
+import sys
+sys.path.append(packdir)
+import epanetlib as en
 
 def test_Net1():
     enData = en.pyepanet.ENepanet()

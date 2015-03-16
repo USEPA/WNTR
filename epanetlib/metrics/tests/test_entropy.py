@@ -2,12 +2,13 @@ from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
 
-import sys
-sys.path.append('C:\kaklise\EPA-Resilience\Evaluation Tool')
-import epanetlib as en
-
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','..','networks')
+packdir = join(testdir,'..','..','..')
+
+import sys
+sys.path.append(packdir)
+import epanetlib as en
 
 def test_layout1():
     enData = en.pyepanet.ENepanet()
@@ -28,7 +29,7 @@ def test_layout1():
             ('10', '11', '12'): 150.0}
             
     G = en.network.epanet_to_MultiDiGraph(enData, edge_attribute=attr)
-    en.network.draw_graph(G, edge_attribute='weight') 
+    en.network.draw_graph_OLD(G, edge_attribute='weight') 
     
     [S, Shat,sp,dk] = en.metrics.entropy(G)
     
@@ -78,7 +79,7 @@ def test_layout8():
             ('11', '12', '16'): 20.4}
             
     G = en.network.epanet_to_MultiDiGraph(enData, edge_attribute=attr)
-    en.network.draw_graph(G, edge_attribute='weight') 
+    en.network.draw_graph_OLD(G, edge_attribute='weight') 
     
     [S, Shat,sp,dk] = en.metrics.entropy(G)
     
