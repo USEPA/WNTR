@@ -313,6 +313,10 @@ class PyomoSimulator(WaterNetworkSimulator):
                     velocity_l_t = 4.0*abs(flow_l_t)/(math.pi*link.diameter**2)
                 else:
                     velocity_l_t = 0.0
+                if isinstance(link, Pipe):
+                    velocity_l_t = 4.0*abs(flow_l_t)/(math.pi*link.diameter**2)
+                else:
+                    velocity_l_t = 0.0
                 velocity.append(velocity_l_t)
 
         link_data_frame = pd.DataFrame({'time': times,
