@@ -114,7 +114,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
 
 
 def draw_graph_OLD(G, node_attribute=None, edge_attribute=None, title=None, 
-               node_size=20, node_range = [None,None], node_cmap=None,
+               node_size=10, node_range = [None,None], node_cmap=None,
                edge_width=1, edge_range = [None,None], edge_cmap=None, add_colorbar=True):
     r"""Draw networkx graph
     
@@ -160,7 +160,7 @@ def draw_graph_OLD(G, node_attribute=None, edge_attribute=None, title=None,
     For more network draw options, see nx.draw_networkx
     
     """
-    import networkx_extensions as nx_ext
+    from network_topography import get_edge_attributes_MG
     
     # Position
     pos = nx.get_node_attributes(G,'pos')
@@ -173,13 +173,13 @@ def draw_graph_OLD(G, node_attribute=None, edge_attribute=None, title=None,
     
     if node_attribute is None: 
         nodelist = None
-        nodecolor = 'r'
+        nodecolor = 'k'
     else:
         nodelist,nodecolor = zip(*node_attribute.items())
     
     # Edge attribute
     if type(edge_attribute) is str:
-        edge_attribute = nx_ext.get_edge_attributes_MG(G,edge_attribute)
+        edge_attribute = get_edge_attributes_MG(G,edge_attribute)
 
     if edge_attribute is None: 
         edgelist = None

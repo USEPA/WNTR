@@ -1,6 +1,7 @@
 import epanetlib.pyepanet as pyepanet
 import networkx as nx
-import epanetlib.network.networkx_extensions as nx_ext
+from epanetlib.network.network_topography import get_edge_attributes_MG
+from epanetlib.network.network_topography import all_simple_paths
 import math
 import numpy as np
 from collections import Counter
@@ -26,7 +27,7 @@ def entropy(G, sink = None):
         if G.node[nodej]['nodetype']  == pyepanet.EN_JUNCTION:
             for source in sources:
                 if nx.has_path(G, source, nodej):
-                    simple_paths = nx_ext.all_simple_paths(G,source,target=nodej)
+                    simple_paths = all_simple_paths(G,source,target=nodej)
                     sp = sp + ([p for p in simple_paths]) 
                     # all_simple_paths was modified to check 'has_path' in the
                     # loop, but this is still slow for large networks
@@ -79,7 +80,7 @@ def entropy(G, sink = None):
                 qij[idx]/Q[nodej]*math.log(qij[idx]/Q[nodej]) + \
                 qij[idx]/Q[nodej]*math.log(aij[idx])
                     
-    Q0 = sum(nx_ext.get_edge_attributes_MG(G, 'weight').values())        
+    Q0 = sum(get_edge_attributes_MG(G, 'weight').values())        
 
     # Equation 3
     Shat = 0
