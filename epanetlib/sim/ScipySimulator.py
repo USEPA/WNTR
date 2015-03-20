@@ -10,12 +10,13 @@ TODO
 
 import epanetlib as en
 from epanetlib.units import convert
-import tempfile
-import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import fsolve
+#import numdifftools as ndt
 import warnings
+import copy
+import sys
 
 from WaterNetworkSimulator import *
 from epanetlib.network.WaterNetworkModel import Junction, Tank, Reservoir, Pipe, Pump
@@ -36,13 +37,6 @@ class ScipySimulator(WaterNetworkSimulator):
             A water network
         """
         WaterNetworkSimulator.__init__(self, wn)
-
-        print self._sim_duration_min
-        print self._hydraulic_step_min
-        print self._pattern_step_min
-
-        # Hazen-Williams resistance coefficient
-        self._Hw_k = 10.67 # SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
 
         # Create dictionaries with node and link id's to names
         self._node_id_to_name = {}
@@ -72,7 +66,33 @@ class ScipySimulator(WaterNetworkSimulator):
             self._link_name_to_id[link_name] = l
             l += 1
 
+        # Initial values for simulation variables
+        self._num_tanks = getattr(self._wn, '_num_tanks')
+        self._num_reservoirs = getattr(self._wn, '_num_reservoirs')
+
+        flow_0 = 0.1*np.ones(self._wn.num_links())
+        headloss_0 = 10.0*np.ones(self._wn.num_links())
+        head_0 = 200.0*np.ones(self._wn.num_nodes())
+        # Set initial tank head
+        for tank_name, tank in self._wn.nodes(Tank):
+            tank_id = self._node_name_to_id[tank_name]
+            head_0[tank_id] = tank.init_level + tank.elevation
+        tank_inflow_0 = 0.1*np.ones(self._num_tanks)
+        reservoir_demand_0 = np.ones(self._num_reservoirs)
+        # State of simulation variables
+        self._X = np.concatenate((flow_0, headloss_0, head_0, tank_inflow_0, reservoir_demand_0))
+
+        # Initialize Gradient
+        self._jac = np.zeros((len(self._X), len(self._X)))
+        self._jac_counter = 0
+
+        # Hazen-Williams resistance coefficient
+        self._Hw_k = 10.67 # SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
+
+
     def run_sim(self):
+
+        np.set_printoptions(threshold='nan',linewidth=300, precision=3, suppress=True)
 
         n_timesteps = int(round(self._sim_duration_min/self._hydraulic_step_min))+1
 
@@ -87,16 +107,18 @@ class ScipySimulator(WaterNetworkSimulator):
                 for t in range(n_timesteps):
                     demand_dict[(node_name, t)] = 0.0
 
-        num_tanks = getattr(self._wn, '_num_tanks')
+        # Create time controls dictionary
+        link_status = {}
+        for l in self._wn.time_controls:
+            status_l = []
+            for t in xrange(n_timesteps):
+                time_min = t*self._hydraulic_step_min
+                status_l_t = self.is_link_open(l, time_min)
+                status_l.append(status_l_t)
+            link_status[self._link_name_to_id[l]] = status_l
+
         num_tanks = getattr(self._wn, '_num_tanks')
         num_reservoirs = getattr(self._wn, '_num_reservoirs')
-
-        # Initial guesses for variables
-        flow_0 = 0.1*np.ones(self._wn.num_links())
-        headloss_0 = 10.0*np.ones(self._wn.num_links())
-        head_0 = 200.0*np.ones(self._wn.num_nodes())
-        tank_inflow_0 = 0.1*np.ones(num_tanks)
-        reservoir_demand_0 = np.ones(num_reservoirs)
 
         # Length of variables
         num_flows = self._wn.num_links()
@@ -127,7 +149,14 @@ class ScipySimulator(WaterNetworkSimulator):
                                           end=str(self._sim_duration_min) + ' minutes',
                                           freq=str(self._hydraulic_step_min) + 'min')
 
-        # Main simulation level
+
+        # Assert conditional controls are only provided for Tanks
+        self._verify_conditional_controls_for_tank()
+
+        # List of closed pump ids
+        pumps_closed = []
+
+        ######### MAIN SIMULATION LOOP ###############
         for t in xrange(n_timesteps):
             if t == 0:
                 first_timestep = True
@@ -138,23 +167,71 @@ class ScipySimulator(WaterNetworkSimulator):
             else:
                 first_timestep = False
 
+            # Get demands
             current_demands = [demand_dict[(self._node_id_to_name[n],t)] for n in xrange(self._wn.num_nodes())]
 
-            # Concatenate inital guess vector
-            x_0 = np.concatenate((flow_0, headloss_0, head_0, tank_inflow_0, reservoir_demand_0))
+            pipes_closed = []
+            # Get time controls
+            for l_id, status in link_status.iteritems():
+                if not status[t]:
+                    pipes_closed.append(l_id)
+
+            # Combine list of closed links
+            links_closed = pipes_closed + pumps_closed
+
+            prev_X = copy.copy(self._X)
 
             # Use scipy to solve
-            x = fsolve(self._hydraulic_equations, x_0, args=(last_tank_head, current_demands, first_timestep))
+            [x, info, flag, msg] = fsolve(self._hydraulic_equations, prev_X, fprime=self._jacobian,
+                                          args=(last_tank_head, current_demands, first_timestep, links_closed),
+                                          maxfev=100000, xtol=1e-6, full_output=True)
+
+            # Update results only if fsolve converged
+            if flag == 1:
+                self._X = x
+            else:
+                print msg
+                self._X = x
+
+            # Jacobian function
+            #temp_func = lambda x: self._hydraulic_equations(x, last_tank_head, current_demands, first_timestep, links_closed)
+            #Jfunc = ndt.Jacobian(temp_func)
+            #
+            #new_jac = Jfunc(self._X)
+            #
+            ##print "Numerical Jacobian: "
+            ##print new_jac
+            #
+            ##print "Analytical Jacobian: "
+            ##print self._jac
+            #
+            ##print self._jac == new_jac
+            ##print self._jac - new_jac
+            #all_close = np.allclose(new_jac, self._jac)
+            #print all_close
+            #if not all_close:
+            #    print self._jac - new_jac
+            #    print "\n\n Numerical Jacobian: "
+            #    print new_jac.shape
+            #    print new_jac
+            #
+            #    print "\n\n Analytical Jacobian: "
+            #    print self._jac.shape
+            #    print self._jac
+            #    exit()
 
             # Load results from scipy
-            flow = x[0:num_flows]
-            headloss = x[num_flows:num_flows+num_headloss]
-            head = x[num_flows+num_headloss:num_flows+num_headloss+num_heads]
-            tank_inflow = x[num_flows+num_headloss+num_heads:num_flows+num_headloss+num_heads+num_tanks]
-            reservoir_demand = x[num_flows+num_headloss+num_heads+num_tanks:num_flows+num_headloss+num_heads+num_tanks+num_reservoirs]
+            flow = self._X[0:num_flows]
+            headloss = self._X[num_flows:num_flows+num_headloss]
+            head = self._X[num_flows+num_headloss:num_flows+num_headloss+num_heads]
+            tank_inflow = self._X[num_flows+num_headloss+num_heads:num_flows+num_headloss+num_heads+num_tanks]
+            reservoir_demand = self._X[num_flows+num_headloss+num_heads+num_tanks:num_flows+num_headloss+num_heads+num_tanks+num_reservoirs]
             for tank_id in xrange(num_tanks):
                 node_id = self._node_name_to_id[self._tank_id_to_node_name[tank_id]]
                 last_tank_head[tank_id] = head[node_id]
+
+            # Apply conditional controls
+            pumps_closed = self._apply_conditional_controls(head, pumps_closed)
 
             # Load all node results
             timedelta = results.time[t]
@@ -198,16 +275,15 @@ class ScipySimulator(WaterNetworkSimulator):
                     velocity_l_t = 0.0
                 link_velocity.append(velocity_l_t)
 
-            # Initial guesses for variables
-            flow_0 = flow
-            headloss_0 = headloss
-            head_0 = head
-            tank_inflow_0 = tank_inflow
-            reservoir_demand_0 = reservoir_demand
 
+            #M = sp.csr_matrix(self._jac)
+            #plt.spy(M)
+            #plt.show()
 
+            #exit()
         # END MAIN SIM LOOP
 
+        # Save results into the results object
         node_data_frame = pd.DataFrame({'time': node_times,
                                         'node': node_name,
                                         'demand': node_demand,
@@ -235,7 +311,7 @@ class ScipySimulator(WaterNetworkSimulator):
 
         return results
 
-    def _hydraulic_equations(self, x, last_tank_head, nodal_demands, first_timestep):
+    def _hydraulic_equations(self, x, last_tank_head, nodal_demands, first_timestep, links_closed):
 
         # Get number of network components
         num_nodes = self._wn.num_nodes()
@@ -261,15 +337,18 @@ class ScipySimulator(WaterNetworkSimulator):
         tank_inflow = x[num_flows+num_headloss+num_heads:num_flows+num_headloss+num_heads+num_tanks]
         reservoir_demand = x[num_flows+num_headloss+num_heads+num_tanks:num_flows+num_headloss+num_heads+num_tanks+num_reservoirs]
 
+        # Reinitialize Jacobian and counter
+        self._jac_counter = 0
+        self._jac = np.zeros((len(self._X), len(self._X)))
 
         # Node balance
         node_balance_residual = self._node_balance_residual(flow, tank_inflow, reservoir_demand, nodal_demands)
 
         # Headloss balance
-        headloss_residual = self._headloss_residual(headloss, flow)
+        headloss_residual = self._headloss_residual(headloss, flow, links_closed)
 
         # Node head definition
-        head_residual = self._head_residual(head, headloss)
+        head_residual = self._head_residual(head, headloss, links_closed)
 
         # Tank head
         tank_head_residual = self._tank_head_residual(head, tank_inflow, last_tank_head, first_timestep)
@@ -277,11 +356,19 @@ class ScipySimulator(WaterNetworkSimulator):
         # Reservoir head residual
         reservoir_head_residual = self._reservoir_head_residual(head)
 
+        # Closed links flow residual
+        closed_links_flow_residual = self._closed_link_flow_residual(flow, links_closed)
+
+        # Closed links headloss residual
+        closed_links_headloss_residual = self._closed_link_headloss_residual(headloss, links_closed)
+
         all_residuals = np.concatenate((node_balance_residual,
                          headloss_residual,
                          head_residual,
                          tank_head_residual,
-                         reservoir_head_residual))
+                         reservoir_head_residual,
+                         closed_links_flow_residual,
+                         closed_links_headloss_residual))
 
 
         return all_residuals
@@ -300,6 +387,8 @@ class ScipySimulator(WaterNetworkSimulator):
         List of residuals of the node mass balances
         """
         residual = []
+        tank_inflow_offset = 2*self._wn.num_links() + self._wn.num_nodes()
+        reservoir_demand_offset = tank_inflow_offset + self._num_tanks
 
         for node_name, node in self._wn.nodes():
             node_id = self._node_name_to_id[node_name]
@@ -310,78 +399,142 @@ class ScipySimulator(WaterNetworkSimulator):
                 if link.start_node() == node_name:
                     link_id = self._link_name_to_id[l]
                     expr -= flow[link_id]
+                    self._jac[self._jac_counter, link_id] = -1.0
                 elif link.end_node() == node_name:
                     link_id = self._link_name_to_id[l]
                     expr += flow[link_id]
+                    self._jac[self._jac_counter, link_id] = 1.0
                 else:
                     raise RuntimeError('Node link is neither start nor end node.')
             if isinstance(node, Junction):
-                residual.append(nodal_demands[node_id] - expr)
+                residual.append(expr - nodal_demands[node_id])
             elif isinstance(node, Tank):
                 tank_id = self._node_name_to_tank_id[node_name]
-                residual.append(tank_inflow[tank_id] - expr)
+                residual.append(expr - tank_inflow[tank_id])
+                self._jac[self._jac_counter, tank_inflow_offset+tank_id] = -1.0
             elif isinstance(node, Reservoir):
                 reservoir_id = self._node_name_to_reservoir_id[node_name]
-                residual.append(reservoir_demand[reservoir_id] - expr)
+                residual.append(expr - reservoir_demand[reservoir_id])
+                self._jac[self._jac_counter, reservoir_demand_offset + reservoir_id] = -1.0
             else:
                 raise RuntimeError('Node type not recognised.')
+            # Increment jacobian counter
+            self._jac_counter += 1
+
         return residual
 
-    def _headloss_residual(self, headloss, flow):
+    def _headloss_residual(self, headloss, flow, links_cosed):
 
         residual = []
+        headloss_offset = self._wn.num_links()
 
         for link_name, link in self._wn.links():
             link_id = self._link_name_to_id[link_name]
-            if isinstance(link, Pipe):
+            if link_id in links_cosed:
+                continue
+            elif isinstance(link, Pipe):
                 pipe_resistance_coeff = self._Hw_k*(link.roughness**(-1.852))*(link.diameter**(-4.871))*link.length # Hazen-Williams
                 pipe_headloss = pipe_resistance_coeff*flow[link_id]*(abs(flow[link_id]))**0.852
+                #pipe_headloss = pipe_resistance_coeff*LossFunc(flow[link_id])
                 residual.append(pipe_headloss - headloss[link_id])
+                #self._jac[self._jac_counter, link_id] = pipe_resistance_coeff*1.852*abs(flow[link_id])**0.852
+                self._jac[self._jac_counter, link_id] = pipe_resistance_coeff*LossFuncDeriv(abs(flow[link_id]))
+                self._jac[self._jac_counter, headloss_offset + link_id] = -1.0
             elif isinstance(link, Pump):
                 A, B, C = link.get_head_curve_coefficients()
-                pump_headgain = -1.0*A + B*flow[link_id]**C
+                pump_headgain = -1.0*A + B*abs(flow[link_id])**C
                 residual.append(pump_headgain - headloss[link_id])
+                self._jac[self._jac_counter, link_id] = B*C*abs(flow[link_id])**(C-1)
+                self._jac[self._jac_counter, headloss_offset + link_id] = -1.0
             else:
                 residual.append(0.0 - headloss[link_id])
-                warnings.warn('Valves are not supported')
+                raise RuntimeError("Valves are currently not supported.")
+            # Increment jacobian counter
+            self._jac_counter += 1
 
         return residual
 
-    def _head_residual(self, head, headloss):
+    def _head_residual(self, head, headloss, links_closed):
 
         residual = []
+        headloss_offset = self._wn.num_links()
+        head_offset = 2*self._wn.num_links()
 
         for link_name, link in self._wn.links():
             link_id = self._link_name_to_id[link_name]
-            start_node_id = self._node_name_to_id[link.start_node()]
-            end_node_id = self._node_name_to_id[link.end_node()]
-            link_head_residual = headloss[link_id] - (head[start_node_id] - head[end_node_id])
-            residual.append(link_head_residual)
+            if link_id in links_closed:
+                continue
+            else:
+                start_node_id = self._node_name_to_id[link.start_node()]
+                end_node_id = self._node_name_to_id[link.end_node()]
+                link_head_residual = headloss[link_id] - (head[start_node_id] - head[end_node_id])
+                residual.append(link_head_residual)
+                self._jac[self._jac_counter, headloss_offset + link_id] = 1.0
+                self._jac[self._jac_counter, head_offset + start_node_id] = -1.0
+                self._jac[self._jac_counter, head_offset + end_node_id] = 1.0
+                # Increment jacobian counter
+                self._jac_counter += 1
 
         return residual
 
     def _tank_head_residual(self, head, tank_inflow, last_tank_head, first_timestep):
 
         residual = []
+        head_offset = 2*self._wn.num_links()
+        tank_inflow_offset = 2*self._wn.num_links() + self._wn.num_nodes()
 
         for tank_name, tank in self._wn.nodes(Tank):
             tank_id = self._node_name_to_tank_id[tank_name]
             node_id = self._node_name_to_id[tank_name]
             if first_timestep:
                 tank_residual = head[node_id] - (tank.init_level + tank.elevation)
+                self._jac[self._jac_counter, head_offset + node_id] = 1.0
             else:
                 tank_residual = (tank_inflow[tank_id]*self._hydraulic_step_min*60.0*4.0)/(math.pi*(tank.diameter**2)) - (head[node_id]-last_tank_head[tank_id])
+                self._jac[self._jac_counter, head_offset + node_id] = -1.0
+                self._jac[self._jac_counter, tank_inflow_offset + tank_id] = (self._hydraulic_step_min*60.0*4.0)/(math.pi*(tank.diameter**2))
             residual.append(tank_residual)
+            # Increment jacobian counter
+            self._jac_counter += 1
 
         return residual
 
     def _reservoir_head_residual(self, head):
 
         residual = []
+        head_offset = 2*self._wn.num_links()
 
         for reservoir_name, reservoir in self._wn.nodes(Reservoir):
             node_id = self._node_name_to_id[reservoir_name]
             residual.append(head[node_id] - reservoir.base_head)
+            self._jac[self._jac_counter, head_offset + node_id] = 1.0
+            # Increment jacobian counter
+            self._jac_counter += 1
+
+        return residual
+
+    def _closed_link_flow_residual(self, flow, links_closed):
+
+        residual = []
+
+        for l in links_closed:
+            residual.append(flow[l])
+            self._jac[self._jac_counter, l] = 1.0
+            # Increment jacobian counter
+            self._jac_counter += 1
+
+        return residual
+
+    def _closed_link_headloss_residual(self, headloss, links_closed):
+
+        residual = []
+        head_offset = 2*self._wn.num_links()
+
+        for l in links_closed:
+            residual.append(headloss[l])
+            self._jac[self._jac_counter, head_offset + l] = 1.0
+            # Increment jacobian counter
+            self._jac_counter += 1
 
         return residual
 
@@ -403,3 +556,126 @@ class ScipySimulator(WaterNetworkSimulator):
         results.simulator_options['pattern_start_time'] = self._pattern_start_min
         results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_min
         results.simulator_options['pattern_time_step'] = self._pattern_step_min
+
+    def _verify_conditional_controls_for_tank(self):
+        for link_name in self._wn.conditional_controls:
+            for control in self._wn.conditional_controls[link_name]:
+                for i in self._wn.conditional_controls[link_name][control]:
+                    node_name = i[0]
+                    node = self._wn.get_node(node_name)
+                    assert(isinstance(node, Tank)), "Scipy simulator only supports conditional controls on Tank."
+
+    def _apply_conditional_controls(self, head, pumps_closed):
+        for link_name_k, value in self._wn.conditional_controls.iteritems():
+            link_id_k = self._link_name_to_id[link_name_k]
+            open_above = value['open_above']
+            open_below = value['open_below']
+            closed_above = value['closed_above']
+            closed_below = value['closed_below']
+            # If link is closed and the tank level goes below threshold, then open the link
+            for i in open_below:
+                node_name_i = i[0]
+                value_i = i[1]
+                tank_i = self._wn.get_node(node_name_i)
+                node_id_i = self._node_name_to_id[node_name_i]
+                current_tank_level = head[node_id_i] - tank_i.elevation
+                if link_id_k in pumps_closed:
+                    if current_tank_level <= value_i:
+                        pumps_closed.remove(link_id_k)
+                        print "Pump ", link_name_k, " opened"
+            # If link is open and the tank level goes above threshold, then close the link
+            for i in closed_above:
+                node_name_i = i[0]
+                value_i = i[1]
+                tank_i = self._wn.get_node(node_name_i)
+                node_id_i = self._node_name_to_id[node_name_i]
+                current_tank_level = head[node_id_i] - tank_i.elevation
+                if link_id_k not in pumps_closed and current_tank_level >= value_i:
+                    pumps_closed.append(link_id_k)
+                    print "Pump ", link_name_k, " closed"
+            # If link is closed and tank level goes above threshold, then open the link
+            for i in open_above:
+                node_name_i = i[0]
+                value_i = i[1]
+                tank_i = self._wn.get_node(node_name_i)
+                node_id_i = self._node_name_to_id[node_name_i]
+                current_tank_level = head[node_id_i] - tank_i.elevation
+                if link_id_k in pumps_closed:
+                    if current_tank_level >= value_i:
+                        pumps_closed.remove(link_id_k)
+                        print "Pump ", link_name_k, " opened"
+            # If link is open and the tank level goes below threshold, then close the link
+            for i in closed_below:
+                node_name_i = i[0]
+                value_i = i[1]
+                tank_i = self._wn.get_node(node_name_i)
+                node_id_i = self._node_name_to_id[node_name_i]
+                current_tank_level = head[node_id_i] - tank_i.elevation
+                if link_id_k not in pumps_closed and current_tank_level <= value_i:
+                    pumps_closed.append(link_id_k)
+                    print "Pump ", link_name_k, " closed"
+
+        return pumps_closed
+
+    # Dummy function for fsolve to return the jacobian
+    def _jacobian(self, x, last_tank_head, current_demands, first_timestep, links_closed):
+        return self._jac
+
+
+def f1(x):
+    return 0.01*x
+
+
+def f2(x):
+    return 1.0*x**1.852
+
+
+def Px(x):
+    #return 1.05461308881e-05 + 0.0494234328901*x - 0.201070504673*x**2 + 15.3265906777*x**3
+    return 2.45944613543e-06 + 0.0138413824671*x - 2.80374270811*x**2 + 430.125623753*x**3
+
+def d_f1(x):
+    return 0.01
+
+
+def d_f2(x):
+    return 1.852*x**0.852
+
+
+def d_Px(x):
+    #return 1.05461308881e-05 + 0.0494234328901*x - 0.201070504673*x**2 + 15.3265906777*x**3
+    return 0.0138413824671 - 2*2.80374270811*x + 3*430.125623753*x**2
+
+def LossFunc(Q):
+    #q1 = 0.01
+    #q2 = 0.05
+    headloss = 0.
+    abs_Q = abs(Q)
+    q1 = 0.00349347323944
+    q2 = 0.00549347323944
+    if abs_Q < q1:
+        headloss = f1(abs_Q)
+    elif abs_Q > q2:
+        headloss = f2(abs_Q)
+    else:
+        headloss = Px(abs_Q)
+
+    if Q < 0:
+        return -1*headloss
+    else:
+        return headloss
+
+def LossFuncDeriv(abs_Q):
+    #q1 = 0.01
+    #q2 = 0.05
+    headloss = 0.
+    q1 = 0.00349347323944
+    q2 = 0.00549347323944
+    if abs_Q < q1:
+        d_headloss = d_f1(abs_Q)
+    elif abs_Q > q2:
+        d_headloss = d_f2(abs_Q)
+    else:
+        d_headloss = d_Px(abs_Q)
+
+    return d_headloss
