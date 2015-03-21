@@ -39,7 +39,7 @@ parser = ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
 
 # Graph the network
-en.network.draw_graph(wn._graph, title= wn.name)
+en.network.draw_graph(wn, title= wn.name)
 
 # Simulate using EPANET
 epanet_sim = EpanetSimulator(wn)

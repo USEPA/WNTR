@@ -1,3 +1,8 @@
+"""
+TODO This file needs to be updated to use the WaterNetworkModel 
+Pyomo and Scipy only?
+"""
+
 # This script is intended to replicate the resilience study in
 # Ostfeld et al (2002) Reliability simulation of water distribution systems 
 # - single and multiquality, Urban Water, 4, 53-61
@@ -7,7 +12,12 @@ import epanetlib as en
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
+from sympy.physics import units
 
+# Define water pressure unit in meters
+if not units.find_unit('waterpressure'):
+    units.waterpressure = 9806.65*units.Pa
+    
 plt.close('all')
 np.random.seed(67823)
 
@@ -21,9 +31,9 @@ failure_probability = np.random.uniform(0,1,Imax) < 0.01 # 0.01 for Base, 1.0 fo
 demand_multiplier = np.random.uniform(0,0.1,Imax)
 conc_multiplier = np.random.uniform(0.1,0.2,Imax)
 
-pressure_lower_bound = en.units.convert('Pressure', 1, 40) # psi to m
+pressure_lower_bound = 40*float(units.psi/units.waterpressure) # psi to m
 demand_factor = 0.9 # 90% of requested demand
-quality_upper_bound = en.units.convert('Concentration', 1, 200) # mg/L to kg/m3
+quality_upper_bound = 200*float((units.mg/units.l)/(units.kg/units.m**3)) # mg/L to kg/m3
 
 FDD = [{}]*Imax
 FDV = [{}]*Imax
@@ -35,12 +45,12 @@ enData.ENopen(enData.inpfile,'tmp.rpt')
     
 # Create MultiDiGraph
 G = en.network.epanet_to_MultiDiGraph(enData)
-    
+
 junction_index = [enData.ENgetnodeindex(k) for k,v in nx.get_node_attributes(G,'nodetype').iteritems() if v == en.pyepanet.EN_JUNCTION]
 reservoir_index = [enData.ENgetnodeindex(k) for k,v in nx.get_node_attributes(G,'nodetype').iteritems() if v == en.pyepanet.EN_RESERVOIR]
 tank_index = [enData.ENgetnodeindex(k) for k,v in nx.get_node_attributes(G,'nodetype').iteritems() if v == en.pyepanet.EN_TANK]
 pump_index = [enData.ENgetnodeindex(k) for k,v in nx.get_node_attributes(G,'nodetype').iteritems() if v == en.pyepanet.EN_PUMP]    
-pipe_index = [enData.ENgetlinkindex(k[2]) for k,v in en.network.nx_ext.get_edge_attributes_MG(G, 'linktype').iteritems() if v == en.pyepanet.EN_PIPE]    
+pipe_index = [enData.ENgetlinkindex(k[2]) for k,v in en.network.get_edge_attributes_MG(G, 'linktype').iteritems() if v == en.pyepanet.EN_PIPE]    
     
 for i in range(Imax):
       

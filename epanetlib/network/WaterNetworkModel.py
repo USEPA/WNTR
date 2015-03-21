@@ -386,8 +386,58 @@ class WaterNetworkModel(object):
             Value of the option.
         """
         self.options[name.upper()] = value
+    
+    def get_node_attribute(self, attribute, node_type=None):
+        """ Get node attributes
 
-    def query_node_attribute(self, attribute, operation, value):
+        Parameters
+        ----------
+        attribute: string
+            Node attribute
+
+        node_type: string
+            options = Node, Junction, Reservoir, Tank, default = Node
+
+        Returns
+        -------
+        node_attribute : dictionary of nodes
+            dictionary of node names to attribute
+        """
+        node_attribute = {}
+        for node_name, node in self.nodes(node_type):
+            try:
+                node_attribute[node_name] = getattr(node, attribute)
+            except AttributeError:
+                pass
+            
+        return node_attribute
+    
+    def get_link_attribute(self, attribute, link_type=None):
+        """ Get link attributes
+
+        Parameters
+        ----------
+        attribute: string
+            Link attribute
+
+        node_type: string
+            options = Link, Pipe, Pump, Valve, default = Link
+
+        Returns
+        -------
+        link_attribute : dictionary of links
+            dictionary of link names to attribute
+        """
+        link_attribute = {}
+        for link_name, link in self.links(link_type):
+            try:
+               link_attribute[link_name] = getattr(link, attribute)
+            except AttributeError:
+                pass
+            
+        return link_attribute
+        
+    def query_node_attribute(self, attribute, operation, value, node_type=None):
         """ Query node attributes, for example get all nodes with elevation <= threshold
 
         Parameters
@@ -407,7 +457,7 @@ class WaterNetworkModel(object):
             dictionary of node names to node objects satisfying operation threshold
         """
         node_attribute_dict = {}
-        for name, node in self._nodes.iteritems():
+        for name, node in self.nodes(node_type):
             try:
                 node_attribute = getattr(node, attribute)
                 if operation(node_attribute, value):
@@ -416,7 +466,7 @@ class WaterNetworkModel(object):
                 pass
         return node_attribute_dict
 
-    def query_link_attribute(self, attribute, operation, value):
+    def query_link_attribute(self, attribute, operation, value, link_type=None):
         """ Query link attributes, for example get all pipe diameters > threshold
 
         Parameters
@@ -436,7 +486,7 @@ class WaterNetworkModel(object):
             dictionary of link names to link objects satisfying operation threshold
         """
         link_attribute_dict = {}
-        for name, link in self._links.iteritems():
+        for name, link in self.links(link_type):
             try:
                 link_attribute = getattr(link, attribute)
                 if operation(link_attribute, value):

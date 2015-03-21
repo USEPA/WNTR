@@ -3,12 +3,13 @@ from os.path import abspath, dirname, join
 import numpy as np
 import matplotlib.pyplot as plt
 
-import sys
-sys.path.append('C:\kaklise\EPA-Resilience\Evaluation_Tool')
-import epanetlib as en
-
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','..','networks')
+packdir = join(testdir,'..','..','..')
+
+import sys
+sys.path.append(packdir)
+import epanetlib as en
 
 def test_Todini_Fig2_optCost_GPM():
     enData = en.pyepanet.ENepanet()

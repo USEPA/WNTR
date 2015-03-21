@@ -1,19 +1,61 @@
-"""
-Extension of networkx functions
-"""
 import networkx as nx
 
+def terminal_nodes(G):
+    """ Get all nodes with degree 1
+    
+    Parameters
+    ----------
+    G : graph
+        A networkx graph
+        
+    Returns
+    -------
+    terminal_nodes : list
+        list of node indexes
+    """
+    
+    node_degree = G.degree() 
+    terminal_nodes = [k for k,v in node_degree.iteritems() if v == 1]
+    
+    return terminal_nodes
+
+def bridges(G):
+    """ Get bridge links"""
+    
+    n = nx.number_connected_components(G)
+    bridges = []
+    for (node1, node2, link_name) in G.edges(keys=True):
+        # if node1 and node2 have a neighbor in common, no bridge
+        if len(set(G.neighbors(node1)) & set(G.neighbors(node2))) == 0: 
+            G.remove_edge(node1, node2, key=link_name)
+            if nx.number_connected_components(G) > n:
+                bridges.append(link_name)
+            G.add_edge(node1, node2, key=link_name)
+    
+    return bridges
+    
+"""
+Extension of networkx functions
+"""      
+
+"""
+TODO set_edge_attributes_MG is probably not needed with the WaterNetworkModel
+"""
 def set_edge_attributes_MG(MG,name,attributes):
     #Adaptation of nx.set_edge_attributes
     
     for (u,v,k),value in attributes.items():
         MG.edge[u][v][k][name]=value
         
+"""
+TODO get_edge_attributes_MG is probably not needed with the WaterNetworkModel
+"""     
 def get_edge_attributes_MG(MG,name):
     #Adaptation of nx.get_edge_attributes
 
     return dict( ((u,v,k),d[name]) for u,v,k,d in MG.edges(keys=True,data=True) if name in d)
-        
+    
+    
 def all_simple_paths(G, source, target, cutoff=None):
     # Adaptation of nx.all_simple_paths
     
