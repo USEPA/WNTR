@@ -25,9 +25,9 @@ def is_number(s):
         return False
 
 
-def str_time_to_min(s):
+def str_time_to_sec(s):
     """
-    Converts epanet time format to minutes.
+    Converts epanet time format to seconds.
 
     Parameters
     --------
@@ -36,22 +36,22 @@ def str_time_to_min(s):
 
     Return
     ------
-     Integer value of time in minutes. Seconds are rounded.
+     Integer value of time in seconds.
     """
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
     if bool(time_tuple):
-        return int(time_tuple.groups()[0])*60 + int(time_tuple.groups()[1]) + int(round(float(time_tuple.groups()[2])/60.0))
+        return int(time_tuple.groups()[0])*60*60 + int(time_tuple.groups()[1])*60 + int(round(time_tuple.groups()[2]))
     else:
         pattern2 = re.compile(r'^(\d+):(\d+)$')
         time_tuple = pattern2.search(s)
         if bool(time_tuple):
-            return int(time_tuple.groups()[0])*60 + int(time_tuple.groups()[1])
+            return int(time_tuple.groups()[0])*60*60 + int(time_tuple.groups()[1])*60
         else:
             pattern3 = re.compile(r'^(\d+)$')
             time_tuple = pattern3.search(s)
             if bool(time_tuple):
-                return int(time_tuple.groups()[0])*60
+                return int(time_tuple.groups()[0])*60*60
             else:
                 raise RuntimeError("Time format in [CONTROLS] block of "
                                    "INP file not recognized. ")
@@ -68,6 +68,7 @@ class ParseWaterNetwork(object):
         self._curves = {}
         self._pump_info = {} # A dictionary storing pump info
         self._time_controls = {}
+        self._conditional_controls = {}
         self._node_coordinates = {}
         self._curve_map = {} # Map from pump name to curve name
         self._link_status = {} # Map from link name to the initial status
@@ -264,20 +265,20 @@ class ParseWaterNetwork(object):
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 if (current[0] == 'Duration') or (current[0] == 'DURATION'):
-                    wn.add_time_parameter('DURATION', str_time_to_min(current[1]))
+                    wn.add_time_parameter('DURATION', str_time_to_sec(current[1]))
                 elif (current[0] == 'Hydraulic') or (current[0] == 'HYDRAULIC'):
-                    wn.add_time_parameter('HYDRAULIC TIMESTEP', str_time_to_min(current[2]))
+                    wn.add_time_parameter('HYDRAULIC TIMESTEP', str_time_to_sec(current[2]))
                 elif (current[0] == 'Quality') or (current[0] == 'QUALITY'):
-                    wn.add_time_parameter('QUALITY TIMESTEP', str_time_to_min(current[2]))
+                    wn.add_time_parameter('QUALITY TIMESTEP', str_time_to_sec(current[2]))
                 elif (current[1] == 'ClockTime') or (current[1] == 'CLOCKTIME'):
                     [time, time_format] = [current[2], current[3].upper()]
                     # convert time in AM or PM into minute of day
                     if '12' in time:
                         time = '0'
                     if time_format == 'AM':
-                        time_min = str_time_to_min(time)
+                        time_min = str_time_to_sec(time)
                     elif time_format == 'PM':
-                        time_min = str_time_to_min(time)
+                        time_min = str_time_to_sec(time)
                     else:
                         RuntimeError("Time format in INP file not recognized: " + time_format)
                     wn.add_time_parameter('START CLOCKTIME', time_min)
@@ -285,7 +286,7 @@ class ParseWaterNetwork(object):
                     wn.add_time_parameter('STATISTIC', current[1])
                 else:  # Other time options
                     key_string = current[0] + ' ' + current[1]
-                    wn.add_time_parameter(key_string.upper(), str_time_to_min(current[2]))
+                    wn.add_time_parameter(key_string.upper(), str_time_to_sec(current[2]))
             if patterns:
                 # patterns are stored in a pattern dictionary pattern_dict = {'pattern_1': [ 23, 3, 4 ...], ... }
                 current = line.split()
@@ -313,23 +314,53 @@ class ParseWaterNetwork(object):
                     continue
                 current = [i.upper() for i in current]
                 if 'TIME' not in current:
-                    warnings.warn("Warning: Conditional controls are currently not supported. "
+                    warnings.warn("Warning: Conditional controls are currently not supported by the PYOMO simulator. "
                                   "Only time controls are supported.")
+                    if 'IF' in current:
+                        link_name = current[1]
+                        if link_name not in self._conditional_controls:
+                            self._conditional_controls[link_name] = {}
+                        node_index = current.index('NODE') + 1
+                        node_name = current[node_index]
+                        node = wn.get_node(node_name)
+                        if not isinstance(node, Tank):
+                            raise RuntimeError("Conditional controls are only supported for Tank levels."
+                                               + node_name + " is not a tank.")
+                        if 'OPEN' in current and 'BELOW' in current:
+                            value_index = current.index('BELOW') + 1
+                            value = convert("Hydraulic Head", inp_units, float(current[value_index]))
+                            wn.add_conditional_controls(link_name, node_name, value, 'OPEN', 'BELOW')
+                        elif 'OPEN' in current and 'ABOVE' in current:
+                            value_index = current.index('ABOVE') + 1
+                            value = convert("Hydraulic Head", inp_units, float(current[value_index]))
+                            wn.add_conditional_controls(link_name, node_name, value, 'OPEN', 'ABOVE')
+                        elif 'CLOSED' in current and 'ABOVE' in current:
+                            value_index = current.index('ABOVE') + 1
+                            value = convert("Hydraulic Head", inp_units, float(current[value_index]))
+                            wn.add_conditional_controls(link_name, node_name, value, 'CLOSED', 'ABOVE')
+                        elif 'CLOSED' in current and 'BELOW' in current:
+                            value_index = current.index('BELOW') + 1
+                            value = convert("Hydraulic Head", inp_units, float(current[value_index]))
+                            wn.add_conditional_controls(link_name, node_name, value, 'CLOSED', 'BELOW')
+                        else:
+                            raise RuntimeError("Conditional control not recognized: " + line)
+                    else:
+                        raise RuntimeError("The following control is not recognized: " + line)
                 else:
                     assert(len(current) == 6), "Error reading time controls. Check format."
                     link_name = current[1]
                     if link_name not in self._time_controls:
                         if current[2].upper() == 'OPEN':
-                            self._time_controls[link_name] = {'open_times': [str_time_to_min(current[5])], 'closed_times': []}
+                            self._time_controls[link_name] = {'open_times': [str_time_to_sec(current[5])], 'closed_times': []}
                         elif current[2].upper() == 'CLOSED':
-                            self._time_controls[link_name] = {'open_times': [], 'closed_times': [str_time_to_min(current[5])]}
+                            self._time_controls[link_name] = {'open_times': [], 'closed_times': [str_time_to_sec(current[5])]}
                         else:
                             raise RuntimeError("Time control format not recognized.")
                     else:
                         if current[2].upper() == 'OPEN':
-                            self._time_controls[link_name]['open_times'].append(str_time_to_min(current[5]))
+                            self._time_controls[link_name]['open_times'].append(str_time_to_sec(current[5]))
                         elif current[2].upper() == 'CLOSED':
-                            self._time_controls[link_name]['closed_times'].append(str_time_to_min(current[5]))
+                            self._time_controls[link_name]['closed_times'].append(str_time_to_sec(current[5]))
                         else:
                             raise RuntimeError("Time control format not recognized.")
             if coordinates:

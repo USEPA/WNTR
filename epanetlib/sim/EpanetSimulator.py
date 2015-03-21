@@ -1,11 +1,11 @@
 try:
     from epanetlib import pyepanet
-    from epanetlib.units import convert
 except ImportError:
     raise ImportError('Error importing pyepanet while running epanet simulator.'
                       'Make sure pyepanet is installed and added to path.')
 from WaterNetworkSimulator import *
 import pandas as pd
+from epanetlib.units import convert
 
 class EpanetSimulator(WaterNetworkSimulator):
     """
@@ -31,7 +31,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         # Create enData
         enData = pyepanet.ENepanet()
         enData.inpfile = self._wn.name
-        enData.ENopen(enData.inpfile,'tmp.rpt')
+        enData.ENopen(enData.inpfile, 'tmp.rpt')
         
         flowunits = enData.ENgetflowunits()
         
@@ -42,8 +42,8 @@ class EpanetSimulator(WaterNetworkSimulator):
         results.network_name = self._wn.name
         results.simulator_options['type'] = 'EPANET'
         results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration_min) + ' minutes',
-                                          freq=str(self._hydraulic_step_min) + 'min')
+                                          end=str(self._sim_duration_sec) + ' seconds',
+                                          freq=str(self._hydraulic_step_sec/60) + 'min')
     
         # data for results object
         node_name = []
@@ -57,7 +57,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         link_times = []
         link_velocity = []
         link_flowrate = []
-        
+
         while True:
             t = enData.ENrunH()
             timedelta = pd.Timedelta(seconds = t)
@@ -79,7 +79,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                     node_head.append(head)
                     node_demand.append(demand)
                     node_pressure.append(pressure)
-                    
+
                 for name, link in self._wn.links():
                     linkindex = enData.ENgetlinkindex(name)
                     
@@ -95,7 +95,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                     link_times.append(timedelta)
                     link_flowrate.append(flow)
                     link_velocity.append(velocity)
-                
+
             tstep = enData.ENnextH()
             if tstep <= 0:
                 break
@@ -112,7 +112,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                                           index=['node', 'time'],
                                           aggfunc= lambda x: x)
         results.node = node_pivot_table
-        
+
         link_data_frame = pd.DataFrame({'time': link_times,
                                         'link': link_name,
                                         'flowrate': link_flowrate,
@@ -124,5 +124,24 @@ class EpanetSimulator(WaterNetworkSimulator):
                                               index=['link', 'time'],
                                               aggfunc= lambda x: x)
         results.link = link_pivot_table
-        
+
         return results
+
+    def _load_general_results(self, results):
+        """
+        Load general simulation options into the results object.
+
+        Parameter
+        ------
+        results : NetworkResults object
+        """
+        # Load general results
+        results.network_name = self._wn.name
+
+        # Load simulator options
+        results.simulator_options['type'] = 'EPANET'
+        results.simulator_options['start_time'] = self._sim_start_sec
+        results.simulator_options['duration'] = self._sim_duration_sec
+        results.simulator_options['pattern_start_time'] = self._pattern_start_sec
+        results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_sec
+        results.simulator_options['pattern_time_step'] = self._pattern_step_sec

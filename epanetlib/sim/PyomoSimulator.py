@@ -62,7 +62,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # does not go to 0 close to zero flow.
         def f1(x):
             return 0.01*x
-    
+
         def f2(x):
             return 1.0*x**1.852
 
@@ -79,8 +79,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         wn = self._wn
         model = ConcreteModel()
-        model.timestep = self._hydraulic_step_min
-        model.duration = self._sim_duration_min
+        model.timestep = self._hydraulic_step_sec
+        model.duration = self._sim_duration_sec
         n_timesteps = int(round(model.duration/model.timestep))
 
         ###################### SETS #########################
@@ -142,7 +142,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             pipe = wn.get_link(l)
             pipe_resistance_coeff = self._Hw_k*(pipe.roughness**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
             for t in model.time:
-                if self.is_link_open(l,t*self._hydraulic_step_min):
+                if self.is_link_open(l,t*self._hydraulic_step_sec):
                     if modified_hazen_williams:
                         setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
                                                                       *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.headloss[l,t]))
@@ -156,7 +156,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             pump = wn.get_link(l)
             A, B, C = pump.get_head_curve_coefficients()
             for t in model.time:
-                if self.is_link_open(l,t*self._hydraulic_step_min):
+                if self.is_link_open(l,t*self._hydraulic_step_sec):
                     setattr(model, 'pump_negative_headloss_'+str(l)+'_'+str(t), Constraint(expr=model.headloss[l,t] == (-1.0*A + B*(model.flow[l,t]**C))))
 
         #print "Created head gain: ", time.time() - t0
@@ -166,7 +166,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             start_node = link.start_node()
             end_node = link.end_node()
             for t in model.time:
-                if self.is_link_open(l,t*self._hydraulic_step_min):
+                if self.is_link_open(l,t*self._hydraulic_step_sec):
                     setattr(model, 'head_difference_'+str(l)+'_'+str(t), Constraint(expr=model.headloss[l,t] == model.head[start_node,t] - model.head[end_node,t]))
 
         #print "Created head_diff: ", time.time() - t0
@@ -214,7 +214,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 return Constraint.Skip
             else:
                 tank = wn.get_node(n)
-                return (model.tank_net_inflow[n,t]*model.timestep*60.0*4.0)/(pi*(tank.diameter**2)) == model.head[n,t+1]-model.head[n,t]
+                return (model.tank_net_inflow[n,t]*model.timestep*4.0)/(pi*(tank.diameter**2)) == model.head[n,t+1]-model.head[n,t]
         model.tank_dynamics = Constraint(model.tanks, model.time, rule=tank_dynamics_rule)
 
         #print "Created Tank Dynamics: ", time.time() - t0
@@ -222,7 +222,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Set flow and headloss to 0 if link is closed
         for l in model.links:
             for t in model.time:
-                if not self.is_link_open(l,t*self._hydraulic_step_min):
+                if not self.is_link_open(l,t*self._hydraulic_step_sec):
                     model.flow[l,t].value = 0.0
                     model.flow[l,t].fixed = True
                     model.headloss[l,t].value = 0.0
@@ -293,8 +293,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Create Delta time series
         results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration_min) + ' minutes',
-                                          freq=str(self._hydraulic_step_min) + 'min')
+                                          end=str(self._sim_duration_sec) + ' minutes',
+                                          freq=str(self._hydraulic_step_sec) + 'min')
         # Load link data
         link_name = []
         flowrate = []
@@ -388,9 +388,9 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Load simulator options
         results.simulator_options['type'] = 'PYOMO'
-        results.simulator_options['start_time'] = self._sim_start_min
-        results.simulator_options['duration'] = self._sim_duration_min
-        results.simulator_options['pattern_start_time'] = self._pattern_start_min
-        results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_min
-        results.simulator_options['pattern_time_step'] = self._pattern_step_min
+        results.simulator_options['start_time'] = self._sim_start_sec
+        results.simulator_options['duration'] = self._sim_duration_sec
+        results.simulator_options['pattern_start_time'] = self._pattern_start_sec
+        results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_sec
+        results.simulator_options['pattern_time_step'] = self._pattern_step_sec
 

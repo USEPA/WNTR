@@ -42,13 +42,13 @@ class WaterNetworkSimulator(object):
             self.init_time_params_from_model()
         else:
             # Time parameters
-            self._sim_start_min = None
-            self._sim_duration_min = None
-            self._pattern_start_min = None
-            self._hydraulic_step_min = None
-            self._pattern_step_min = None
-            self._hydraulic_times_min = None
-            self._report_step_min = None
+            self._sim_start_sec = None
+            self._sim_duration_sec = None
+            self._pattern_start_sec = None
+            self._hydraulic_step_sec = None
+            self._pattern_step_sec = None
+            self._hydraulic_times_sec = None
+            self._report_step_sec = None
 
     def set_water_network_model(self, water_network):
         """
@@ -66,17 +66,28 @@ class WaterNetworkSimulator(object):
         assert (isinstance(self._wn, WaterNetworkModel)), "Water network model has not been set for the simulator" \
                                                           "use method set_water_network_model to set model."
 
-    def is_link_open(self,link_name,time):
+    def is_link_open(self, link_name, time):
         link = self._wn.get_link(link_name)
         if link_name not in self._wn.time_controls:
             return False if link.get_base_status() == 'CLOSED' else True
         else:
             open_times = self._wn.time_controls[link_name]['open_times']
             closed_times = self._wn.time_controls[link_name]['closed_times']
-            if time<open_times[0] and time<closed_times[0]:
+        base_status = False if link.get_base_status() == 'CLOSED' else True
+        if link_name not in self._wn.time_controls:
+            return base_status
+        else:
+            open_times = self._wn.time_controls[link_name]['open_times']
+            closed_times = self._wn.time_controls[link_name]['closed_times']
+            if len(open_times) == 0 and len(closed_times) == 0:
+                return base_status
+            if len(open_times) == 0 and len(closed_times) != 0:
+                return base_status if time < closed_times[0] else False
+            elif len(open_times) != 0 and len(closed_times) == 0:
+                return base_status if time < open_times[0] else True
+            elif time < open_times[0] and time < closed_times[0]:
                 return False if link.get_base_status() == 'CLOSED' else True
             else:
-
                 #Check open times
                 left = 0
                 right = len(open_times)-1
@@ -122,20 +133,20 @@ class WaterNetworkSimulator(object):
                 """
                 return True if min_open<min_closed else False
 
-    def min_to_timestep(self, min):
+    def sec_to_timestep(self, sec):
         """
-        Convert minutes to hydraulic timestep.
+        Convert seconds to hydraulic timestep.
 
         Parameters
         -------
-        min : int
-            Minutes to convert to hydraulic timestep.
+        sec : int
+            Seconds to convert to hydraulic timestep.
 
         Return
         -------
         hydraulic timestep
         """
-        return min/self._hydraulic_step_min
+        return sec/self._hydraulic_step_sec
 
     def init_time_params_from_model(self):
         """
@@ -143,13 +154,13 @@ class WaterNetworkSimulator(object):
         """
         self._check_model_specified()
         try:
-            self._sim_start_min = self._wn.time_options['START CLOCKTIME']
-            self._sim_duration_min = self._wn.time_options['DURATION']
-            self._pattern_start_min = self._wn.time_options['PATTERN START']
-            self._hydraulic_step_min = self._wn.time_options['HYDRAULIC TIMESTEP']
-            self._pattern_step_min = self._wn.time_options['PATTERN TIMESTEP']
-            self._report_step_min = self._wn.time_options['REPORT TIMESTEP']
-            self._hydraulic_times_min = np.linspace(0, self._sim_duration_min, self._sim_duration_min/self._hydraulic_step_min)
+            self._sim_start_sec = self._wn.time_options['START CLOCKTIME']
+            self._sim_duration_sec = self._wn.time_options['DURATION']
+            self._pattern_start_sec = self._wn.time_options['PATTERN START']
+            self._hydraulic_step_sec = self._wn.time_options['HYDRAULIC TIMESTEP']
+            self._pattern_step_sec = self._wn.time_options['PATTERN TIMESTEP']
+            self._report_step_sec = self._wn.time_options['REPORT TIMESTEP']
+            self._hydraulic_times_sec = np.linspace(0, self._sim_duration_sec, self._sim_duration_sec/self._hydraulic_step_sec)
 
         except KeyError:
             KeyError("Water network model used for simulation should contain time parameters. "
@@ -181,7 +192,7 @@ class WaterNetworkSimulator(object):
         if start_time is None:
             start_time = 0
         if end_time is None:
-            end_time = self._sim_duration_min
+            end_time = self._sim_duration_sec
 
         # Get node object
         try:
@@ -201,13 +212,13 @@ class WaterNetworkSimulator(object):
 
         assert(offset == 0.0), "Only 0.0 Pattern Start time is currently supported. "
 
-        demand_times_minutes = range(start_time, end_time + self._hydraulic_step_min, self._hydraulic_step_min)
+        demand_times_minutes = range(start_time, end_time + self._hydraulic_step_sec, self._hydraulic_step_sec)
         demand_pattern_values = [base_demand*i for i in pattern_list]
 
         demand_values = []
         for t in demand_times_minutes:
             # Modulus with the last pattern time to get time within pattern range
-            pattern_index = t / self._pattern_step_min
+            pattern_index = t / self._pattern_step_sec
             # Modulus with the pattern time step to get the pattern index
             pattern_index = pattern_index % pattern_length
             demand_values.append(demand_pattern_values[pattern_index])

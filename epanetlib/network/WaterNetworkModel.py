@@ -14,7 +14,7 @@ QUESTIONS
 
 """
 TODO 1. Volume curve object should be an attribute of the tank.
-TODO 2. Conditional controls or Rules.
+TODO 2. Conditional controls are only supported for Tank pump relation. Other control should be added.
 TODO 3. Multi-point curve.
 """
 
@@ -65,6 +65,13 @@ class WaterNetworkModel(object):
         # {'Link name': {'open_times': [1, 5, ...], 'closed_times': [3, 7, ...]}},
         # where times are in minutes
         self.time_controls = {}
+
+        # Conditional controls are saved as a dictionary as follows:
+        # {'Link name': {'open_below': [('node_name', level_value), ...],
+        #                'open_above': [('node_name', level_value), ...],
+        #                'closed_below': [('node_name', level_value), ...],
+        #                'closed_above': [('node_name', level_value), ...]}}
+        self.conditional_controls = {}
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
         self._graph = nx.MultiDiGraph(data=None)
@@ -460,6 +467,41 @@ class WaterNetworkModel(object):
 
         self.time_controls[link]['open_times'].sort()
         self.time_controls[link]['closed_times'].sort()
+
+    def add_conditional_controls(self, link_name, node_name, level_value, open_or_closed, above_or_below):
+        """
+        Add conditional controls to the network.
+
+        link_name : string
+            Name of the link.
+        node_name : string
+            Name of the node.
+        level_value : string
+             level value in meters for the control to activate.
+        open_or_closed : string
+            Link would open or close. Options are 'OPEN'. 'CLOSED'
+        above_or_below : string
+            Control will activate if head value is below or above. Options are 'ABOVE', 'BELOW'
+        """
+        if link_name not in self.conditional_controls:
+            self.conditional_controls[link_name] = {'open_above':[],
+                                                    'open_below':[],
+                                                    'closed_above':[],
+                                                    'closed_below':[]}
+        # Add conditional control
+        upper_open_or_closed = open_or_closed.upper()
+        upper_above_or_below = above_or_below.upper()
+        if upper_open_or_closed == 'OPEN' and upper_above_or_below == 'ABOVE':
+            self.conditional_controls[link_name]['open_above'].append((node_name, level_value))
+        elif upper_open_or_closed == 'OPEN' and upper_above_or_below == 'BELOW':
+            self.conditional_controls[link_name]['open_below'].append((node_name, level_value))
+        elif upper_open_or_closed == 'CLOSED' and upper_above_or_below == 'ABOVE':
+            self.conditional_controls[link_name]['closed_above'].append((node_name, level_value))
+        elif upper_open_or_closed == 'CLOSED' and upper_above_or_below == 'BELOW':
+            self.conditional_controls[link_name]['closed_below'].append((node_name, level_value))
+        else:
+            raise RuntimeError("String option open_or_closed or above_or_below not recognized: "
+                               + open_or_closed + " " + above_or_below)
 
     def nodes(self, node_type=None):
         """

@@ -12,11 +12,13 @@ import epanetlib as en
 from epanetlib.units import convert
 import matplotlib.pyplot as plt
 import numpy as np
+np.set_printoptions(threshold='nan', linewidth=300, precision=3, suppress=True)
 from scipy.optimize import fsolve
 #import numdifftools as ndt
 import warnings
 import copy
 import sys
+import time
 
 from WaterNetworkSimulator import *
 from epanetlib.network.WaterNetworkModel import Junction, Tank, Reservoir, Pipe, Pump
@@ -89,12 +91,12 @@ class ScipySimulator(WaterNetworkSimulator):
         # Hazen-Williams resistance coefficient
         self._Hw_k = 10.67 # SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
 
+        self._func_eval_time = 0.0
 
     def run_sim(self):
 
-        np.set_printoptions(threshold='nan',linewidth=300, precision=3, suppress=True)
-
-        n_timesteps = int(round(self._sim_duration_min/self._hydraulic_step_min))+1
+        # Number of hydraulic timesteps
+        n_timesteps = int(round(self._sim_duration_sec/self._hydraulic_step_sec))+1
 
         # Get all demand for complete time interval
         demand_dict = {}
@@ -112,7 +114,7 @@ class ScipySimulator(WaterNetworkSimulator):
         for l in self._wn.time_controls:
             status_l = []
             for t in xrange(n_timesteps):
-                time_min = t*self._hydraulic_step_min
+                time_min = t*self._hydraulic_step_sec
                 status_l_t = self.is_link_open(l, time_min)
                 status_l.append(status_l_t)
             link_status[self._link_name_to_id[l]] = status_l
@@ -144,10 +146,13 @@ class ScipySimulator(WaterNetworkSimulator):
         # Load general simulation options into the results object
         self._load_general_results(results)
 
+        #
+        self._func_eval_time = 0.0
+
         # Create Delta time series
         results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration_min) + ' minutes',
-                                          freq=str(self._hydraulic_step_min) + 'min')
+                                          end=str(self._sim_duration_sec) + ' seconds',
+                                          freq=str(self._hydraulic_step_sec/60) + 'min')
 
 
         # Assert conditional controls are only provided for Tanks
@@ -275,12 +280,6 @@ class ScipySimulator(WaterNetworkSimulator):
                     velocity_l_t = 0.0
                 link_velocity.append(velocity_l_t)
 
-
-            #M = sp.csr_matrix(self._jac)
-            #plt.spy(M)
-            #plt.show()
-
-            #exit()
         # END MAIN SIM LOOP
 
         # Save results into the results object
@@ -309,20 +308,17 @@ class ScipySimulator(WaterNetworkSimulator):
                                               aggfunc= lambda x: x)
         results.link = link_pivot_table
 
+        print "Function evaluation time: ", self._func_eval_time
         return results
 
     def _hydraulic_equations(self, x, last_tank_head, nodal_demands, first_timestep, links_closed):
 
+        t0 = time.time()
         # Get number of network components
         num_nodes = self._wn.num_nodes()
         num_links = self._wn.num_links()
-        #num_junctions = getattr(self._wn, '_num_junctions')
         num_tanks = getattr(self._wn, '_num_tanks')
         num_reservoirs = getattr(self._wn, '_num_reservoirs')
-        #num_pipes = getattr(self._wn, '_num_pipes')
-        #num_pumps = getattr(self._wn, '_num_pumps')
-        #num_valves = getattr(self._wn, '_num_valves')
-
 
         # Calculate number of variables
         num_flows = num_links
@@ -370,7 +366,7 @@ class ScipySimulator(WaterNetworkSimulator):
                          closed_links_flow_residual,
                          closed_links_headloss_residual))
 
-
+        self._func_eval_time += time.time() - t0
         return all_residuals
 
     def _node_balance_residual(self, flow, tank_inflow, reservoir_demand, nodal_demands):
@@ -490,9 +486,9 @@ class ScipySimulator(WaterNetworkSimulator):
                 tank_residual = head[node_id] - (tank.init_level + tank.elevation)
                 self._jac[self._jac_counter, head_offset + node_id] = 1.0
             else:
-                tank_residual = (tank_inflow[tank_id]*self._hydraulic_step_min*60.0*4.0)/(math.pi*(tank.diameter**2)) - (head[node_id]-last_tank_head[tank_id])
+                tank_residual = (tank_inflow[tank_id]*self._hydraulic_step_sec*4.0)/(math.pi*(tank.diameter**2)) - (head[node_id]-last_tank_head[tank_id])
                 self._jac[self._jac_counter, head_offset + node_id] = -1.0
-                self._jac[self._jac_counter, tank_inflow_offset + tank_id] = (self._hydraulic_step_min*60.0*4.0)/(math.pi*(tank.diameter**2))
+                self._jac[self._jac_counter, tank_inflow_offset + tank_id] = (self._hydraulic_step_sec*4.0)/(math.pi*(tank.diameter**2))
             residual.append(tank_residual)
             # Increment jacobian counter
             self._jac_counter += 1
@@ -551,11 +547,11 @@ class ScipySimulator(WaterNetworkSimulator):
 
         # Load simulator options
         results.simulator_options['type'] = 'SCIPY'
-        results.simulator_options['start_time'] = self._sim_start_min
-        results.simulator_options['duration'] = self._sim_duration_min
-        results.simulator_options['pattern_start_time'] = self._pattern_start_min
-        results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_min
-        results.simulator_options['pattern_time_step'] = self._pattern_step_min
+        results.simulator_options['start_time'] = self._sim_start_sec
+        results.simulator_options['duration'] = self._sim_duration_sec
+        results.simulator_options['pattern_start_time'] = self._pattern_start_sec
+        results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_sec
+        results.simulator_options['pattern_time_step'] = self._pattern_step_sec
 
     def _verify_conditional_controls_for_tank(self):
         for link_name in self._wn.conditional_controls:
