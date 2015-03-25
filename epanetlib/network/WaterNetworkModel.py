@@ -1011,15 +1011,15 @@ class Valve(Link):
             Type of valve. Options are 'PRV', etc
         minor_loss : float
             Pipe minor loss coefficient
-        setting : string
-            Valve status. Options are 'Open', 'Closed', etc
+        setting : float
+            Valve setting.
         """
         Link.__init__(self, name, start_node_name, end_node_name)
         self.diameter = diameter
         self.valve_type = valve_type
         self.minor_loss = minor_loss
-        if setting is not None:
-            self._base_status = setting
+        self.setting = setting
+        self._base_status = 'OPEN'
 
 
 class Curve(object):

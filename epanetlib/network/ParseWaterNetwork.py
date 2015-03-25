@@ -114,16 +114,26 @@ class ParseWaterNetwork(object):
                     else:
                         wn.add_option(current[0].upper(), float(current[1]) if is_number(current[1]) else current[1].upper())
                 if len(current) > 2:
-                    if (current[0] == 'Unbalanced') or (current[0] == 'UNBALANCED'):
+                    if current[0].upper() == 'UNBALANCED':
                         wn.add_option('UNBALANCED', current[1] + ' ' + current[2])
                     else:
                         wn.add_option(current[0].upper() + ' ' + current[1].upper(), float(current[2]) if is_number(current[2]) else current[2].upper())
+
         f.close()
 
         # Read file again to get all network parameters
 
         # INP file units to convert from
         inp_units = epanet_unit_id[wn.options['UNITS']]
+
+        # Change units in options dictionary
+        if 'MINIMUM PRESSURE' in wn.options:
+            pressure_value = wn.options['MINIMUM PRESSURE']
+            wn.options['MINIMUM PRESSURE'] = convert('Pressure', inp_units, pressure_value)
+        if 'NOMINAL PRESSURE' in wn.options:
+            pressure_value = wn.options['NOMINAL PRESSURE']
+            wn.options['NOMINAL PRESSURE'] = convert('Pressure', inp_units, pressure_value)
+            assert wn.options['NOMINAL PRESSURE'] >= wn.options['MINIMUM PRESSURE'], "Nominal pressure must be greater than minimum pressure. "
 
         f = file(inp_file_name, 'r')
 
@@ -207,8 +217,12 @@ class ParseWaterNetwork(object):
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
+                valve_type = current[4].upper()
+                if valve_type != 'PRV':
+                    raise warnings.warn("Only PRV valves are currently supported. ")
                 wn.add_valve(current[0], current[1], current[2], convert('Pipe Diameter', inp_units, float(current[3])),
-                                                                 current[4].upper(), float(current[6]), current[5].upper())
+                                                                 current[4].upper(), float(current[6]),
+                                                                 convert('Pressure', inp_units, float(current[5].upper())))
             if junctions:
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
