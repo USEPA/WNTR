@@ -39,7 +39,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Hazen-Williams resistance coefficient
         self._Hw_k = 10.67 # SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
 
-    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True):
+    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=False):
         """
         Run water network simulation using pyomo model.
 
@@ -114,11 +114,38 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.demand_required = Param(model.junctions, model.time, within=Reals, initialize=demand_dict)
 
         ################### VARIABLES #####################
+        def flow_init_rule(model, l, t):
+            if l in model.pipes or l in model.valves:
+                return 0.3048  # Flow in pipe initialized to 1 ft/s
+            elif l in model.pumps:
+                pump = wn.get_link(l)
+                return pump.get_design_flow()
 
-        model.head = Var(model.nodes, model.time, initialize=200.0)
-        model.flow = Var(model.links, model.time, within=Reals, initialize=0.1)
-        model.headloss = Var(model.links, model.time, within=Reals, initialize=0.1)
-        model.reservoir_demand = Var(model.reservoirs, model.time, within=Reals, initialize=0.0)
+        model.flow = Var(model.links, model.time, within=Reals, initialize=flow_init_rule)
+
+        def init_headloss_rule(model, l, t):
+            if l in model.pipes:
+                pipe = wn.get_link(l)
+                pipe_resistance_coeff = self._Hw_k*(pipe.roughness**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
+                return pipe_resistance_coeff*LossFunc(abs(model.flow[l,t]))
+            elif l in model.pumps:
+                pump = wn.get_link(l)
+                A, B, C = pump.get_head_curve_coefficients()
+                return -1.0*A + B*(model.flow[l,t]**C)
+            else:
+                return 10.0
+        #model.headloss = Var(model.links, model.time, within=Reals, initialize=10.0)
+
+        def init_head_rule(model, n, t):
+            if n in model.junctions or n in model.tanks:
+                #print wn.get_node(n).elevation
+                return wn.get_node(n).elevation
+            else:
+                return 100.0
+        model.head = Var(model.nodes, model.time, initialize=init_head_rule)
+
+
+        model.reservoir_demand = Var(model.reservoirs, model.time, within=Reals, initialize=0.1)
         model.tank_net_inflow = Var(model.tanks, model.time,within=Reals, initialize=0.1)
     
         def init_demand_rule(model,n,t):
@@ -133,6 +160,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                     expr += (model.demand_actual[n,t]-model.demand_required[n,t])**2
             return expr
         model.obj = Objective(rule=obj_rule, sense=minimize)
+        #model.obj = Objective(expr=1.0, sense=minimize)
 
         #print "Created Obj: ", time.time() - t0
         ############## CONSTRAINTS #####################
@@ -141,26 +169,37 @@ class PyomoSimulator(WaterNetworkSimulator):
         for l in model.pipes:
             pipe = wn.get_link(l)
             pipe_resistance_coeff = self._Hw_k*(pipe.roughness**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
+            start_node = pipe.start_node()
+            end_node = pipe.end_node()
             for t in model.time:
                 if self.is_link_open(l,t*self._hydraulic_step_sec):
                     if modified_hazen_williams:
+                        #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
+                        #                                              *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.headloss[l,t]))
                         setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
-                                                                      *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.headloss[l,t]))
+                                                                      *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.head[start_node,t] - model.head[end_node,t]))
                     else:
-                        setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
-                                                                      *pipe_resistance_coeff*f2(abs(model.flow[l,t])) == model.headloss[l,t]))
+                        #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
+                        #                                              *pipe_resistance_coeff*f2(abs(model.flow[l,t])) == model.headloss[l,t]))
+                        #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=pipe_resistance_coeff*model.flow[l,t]*(abs(model.flow[l,t]))**0.852 == model.head[start_node,t] - model.head[end_node,t]))
+                        setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=pipe_resistance_coeff*model.flow[l,t]*(abs(model.flow[l,t]))**0.852 == model.head[start_node,t] - model.head[end_node,t]))
 
         #print "Created headloss: ", time.time() - t0
         # Head gain provided by the pump is implemented as negative headloss
         for l in model.pumps:
             pump = wn.get_link(l)
+            start_node = pump.start_node()
+            end_node = pump.end_node()
             A, B, C = pump.get_head_curve_coefficients()
             for t in model.time:
+                #if self.is_link_open(l,t*self._hydraulic_step_sec):
+                #    setattr(model, 'pump_negative_headloss_'+str(l)+'_'+str(t), Constraint(expr=model.headloss[l,t] == (-1.0*A + B*(model.flow[l,t]**C))))
                 if self.is_link_open(l,t*self._hydraulic_step_sec):
-                    setattr(model, 'pump_negative_headloss_'+str(l)+'_'+str(t), Constraint(expr=model.headloss[l,t] == (-1.0*A + B*(model.flow[l,t]**C))))
+                    setattr(model, 'pump_negative_headloss_'+str(l)+'_'+str(t), Constraint(expr=model.head[start_node,t] - model.head[end_node,t] == (-1.0*A + B*(model.flow[l,t]**C))))
 
         #print "Created head gain: ", time.time() - t0
         # Nodal head difference between start and end node of a link
+        """
         for l in model.links:
             link = wn.get_link(l)
             start_node = link.start_node()
@@ -168,7 +207,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             for t in model.time:
                 if self.is_link_open(l,t*self._hydraulic_step_sec):
                     setattr(model, 'head_difference_'+str(l)+'_'+str(t), Constraint(expr=model.headloss[l,t] == model.head[start_node,t] - model.head[end_node,t]))
-
+        """
         #print "Created head_diff: ", time.time() - t0
         # Mass Balance
         def node_mass_balance_rule(model, n, t):
@@ -184,6 +223,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             node = wn.get_node(n)
             if isinstance(node, Junction):
                 return expr == model.demand_actual[n,t]
+                #return expr == model.demand_required[n,t]
             elif isinstance(node, Tank):
                 return expr == model.tank_net_inflow[n,t]
             elif isinstance(node, Reservoir):
@@ -209,6 +249,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             return model.flow[l,t] >= 0
         model.pump_positive_flow_bounds = Constraint(model.pumps, model.time, rule=pump_positive_flow_rule)
 
+
         def tank_dynamics_rule(model, n, t):
             if t is max(model.time):
                 return Constraint.Skip
@@ -225,8 +266,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                 if not self.is_link_open(l,t*self._hydraulic_step_sec):
                     model.flow[l,t].value = 0.0
                     model.flow[l,t].fixed = True
-                    model.headloss[l,t].value = 0.0
-                    model.headloss[l,t].fixed = True
+                    #model.headloss[l,t].value = 0.0
+                    #model.headloss[l,t].fixed = True
 
         # Fix the head in a reservoir
         for n in model.reservoirs:
@@ -243,7 +284,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             model.head[n,t].value = tank_initial_head
             model.head[n,t].fixed = True
 
-
         ####### CREATE INSTANCE AND SOLVE ########
 
         instance = model.create()
@@ -258,6 +298,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         pyomo_results = opt.solve(instance, tee=True)
         #print "Created results: ", time.time() - t0
         instance.load(pyomo_results)
+
+        #opt.options['mu_strategy'] = 'monotone'
+        #opt.options['mu_init'] = 1e-6
+
+        #pyomo_results = opt.solve(instance, tee=True)
+        #print "Created results: ", time.time() - t0
+        #instance.load(pyomo_results)
+
 
         # Load pyomo results into results object
         results = self._read_pyomo_results(instance, pyomo_results)
