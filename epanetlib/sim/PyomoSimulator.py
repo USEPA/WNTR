@@ -225,13 +225,34 @@ class PyomoSimulator(WaterNetworkSimulator):
                         weights = {'tank_level':1.0, 'pressure':1.0, 'flowrate':1.0, 'demand':1.0},
                         solver='ipopt', 
                         solver_options={}, 
-                        modified_hazen_williams=True):
+                        modified_hazen_williams=True, 
+                        dma_dict=None,
+                        fix_base_demand=False):
         import numpy as np
         # Do it in the constructor? make it an attribute?
         model = self.build_hydraulic_model(modified_hazen_williams)
         wn = self._wn
 
+        if dma_dict is not None:
+            # Define demand multipliers
+            N_DMA = set(dma_dict.values())
+            model.d_multiplier = Var(N_DMA,model.time,initialize=1.0,within=NonNegativeReals)
+            model.base_demand = Var(model.junctions,initialize=1.0)
+
+            def dma_demand_rule(m,n,t):
+                dma = dma_dict[n]
+                if fix_base_demand:
+                    return m.demand_actual[n,t] == wn.get_node(n).base_demand*m.d_multiplier[dma,t]
+                else:
+                    if wn.get_node(n).base_demand!=0:
+                        return m.demand_actual[n,t] == m.base_demand[n]*m.d_multiplier[dma,t]
+                    else:
+                        return m.demand_actual[n,t] == 0.0
+            model.dma_constraint = Constraint(model.junctions, model.time, rule = dma_demand_rule)
+
         # Temporal the calibrator should check if initial values are provided if not they should be fixed
+
+        # for the reservoir should look for the head at any time and fix it for all times...
         # Fix the head in a reservoir
         for n in model.reservoirs:
             reservoir_head = wn.get_node(n).base_head
@@ -239,6 +260,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 model.head[n,t].value = reservoir_head
                 model.head[n,t].fixed = True
 
+        # Look for initial values in data. If not provided should exit calibration
         # Fix the initial head in a Tank
         for n in model.tanks:
             tank = wn.get_node(n)
@@ -339,10 +361,26 @@ class PyomoSimulator(WaterNetworkSimulator):
         
         
 
-    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True):
+    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands = None):
         
         # Do it in the constructor? make it an attribute?
         model = self.build_hydraulic_model(modified_hazen_williams)
+
+        #######################TEMPORAL#############################
+        dateToTimestep = lambda DateTime: (((DateTime.days*24+DateTime.hours)*60+DateTime.minutes)*60+DateTime.seconds)/self._hydraulic_step_sec
+        if fixed_demands is not None:
+            nodes = fixed_demands.node.index.get_level_values('node').drop_duplicates()
+            for n in nodes:
+                if self._get_node_type(n) == 'junction':
+                    times = fixed_demands.node['demand'][n].index
+                    for dt in times:
+                        t = dateToTimestep(dt)
+                        model.demand_actual[n,t].value = fixed_demands.node['demand'][n][dt]
+                        model.demand_actual[n,t].fixed = True
+
+        ####################################################
+
+
         # Initial conditions
         # Fix the head in a reservoir
         for n in model.reservoirs:
