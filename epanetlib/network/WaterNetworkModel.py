@@ -272,7 +272,7 @@ class WaterNetworkModel(object):
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         self._num_pipes += 1
 
-    def add_pump(self, name, start_node_name, end_node_name, curve_name=None):
+    def add_pump(self, name, start_node_name, end_node_name, info_type='HEAD', info_value=None):
         """
         Method to add pump to a water network object.
 
@@ -287,10 +287,12 @@ class WaterNetworkModel(object):
 
         Optional Parameters
         ----------
-        curve_name : string
-            Name of the pump curve.
+        info_type : string
+            Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
+        info_value : float or Curve object
+            Float value of power in KW. Head curve object.
         """
-        pump = Pump(name, start_node_name, end_node_name, curve_name)
+        pump = Pump(name, start_node_name, end_node_name, info_type, info_value)
         self._links[name] = pump
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         self._num_pumps += 1
@@ -883,14 +885,14 @@ class Pipe(Link):
         self.roughness = roughness
         self.minor_loss = minor_loss
         if status is not None:
-            self._base_status = status
+            self._base_status = status.upper()
 
 
 class Pump(Link):
     """
     Pump class that is inherited from Link
     """
-    def __init__(self, name, start_node_name, end_node_name, head_curve):
+    def __init__(self, name, start_node_name, end_node_name, info_type, info_value):
         """
         Parameters
         ----------
@@ -903,11 +905,21 @@ class Pump(Link):
 
         Optional Parameters
         ----------
-        head_curve : Curve object
-            Head curve object
+        info_type : string
+            Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
+        info_value : float or curve type
+            Where power is a fixed value in KW, while a head curve is a Curve object.
         """
         Link.__init__(self, name, start_node_name, end_node_name)
-        self.curve = head_curve
+        self.curve = None
+        self.power = None
+        self.info_type = info_type
+        if info_type == 'HEAD':
+            self.curve = info_value
+        elif info_type == 'POWER':
+            self.power = info_value
+        else:
+            raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
 
     def get_head_curve_coefficients(self):
         """
@@ -984,6 +996,17 @@ class Pump(Link):
             raise RuntimeError("Coefficient for Multipoint pump curves cannot be generated. ")
 
         return (A, B, C)
+
+    def get_design_flow(self):
+        """
+        Returns the design flow value for the pump.
+        Equals to the first point on the pump curve.
+
+        """
+        try:
+            return self.curve.points[-1][0]
+        except IndexError:
+            raise IndexError("Curve point does not exist")
 
 
 class Valve(Link):

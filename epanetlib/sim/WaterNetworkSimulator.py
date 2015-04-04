@@ -245,4 +245,10 @@ class WaterNetworkSimulator(object):
         else:
             raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, or reservoir.')
 
-
+    def _verify_conditional_controls_for_tank(self):
+        for link_name in self._wn.conditional_controls:
+            for control in self._wn.conditional_controls[link_name]:
+                for i in self._wn.conditional_controls[link_name][control]:
+                    node_name = i[0]
+                    node = self._wn.get_node(node_name)
+                    assert(isinstance(node, Tank)), "Scipy simulator only supports conditional controls on Tank level."

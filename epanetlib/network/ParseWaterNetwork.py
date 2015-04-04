@@ -242,7 +242,9 @@ class ParseWaterNetwork(object):
                     self._pump_info[current[0]] = (current[1], current[2], current[4])
                     self._curve_map[current[0]] = current[4]
                 else:
-                    warnings.warn("Only HEAD curves are supported for pumps. " + current[3] + " curve is currently not supported. ")
+                    wn.add_pump(current[0], current[1], current[2], current[3].upper(),
+                                convert('Power', inp_units, float(current[4])))
+                    #warnings.warn("Only HEAD curves are supported for pumps. " + current[3] + " curve is currently not supported. ")
             if reservoirs:
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
@@ -328,8 +330,8 @@ class ParseWaterNetwork(object):
                     continue
                 current = [i.upper() for i in current]
                 if 'TIME' not in current:
-                    warnings.warn("Warning: Conditional controls are currently not supported by the PYOMO simulator. "
-                                  "Only time controls are supported.")
+                    #warnings.warn("Warning: Conditional controls are currently not supported by the PYOMO simulator. "
+                    #              "Only time controls are supported.")
                     if 'IF' in current:
                         link_name = current[1]
                         if link_name not in self._conditional_controls:
@@ -425,7 +427,7 @@ class ParseWaterNetwork(object):
             start_node = pump_info_tuple[0]
             end_node = pump_info_tuple[1]
             # Add pump
-            wn.add_pump(pump_name, start_node, end_node, curve)
+            wn.add_pump(pump_name, start_node, end_node, 'HEAD', curve)
 
         # Set node coordinates
         for name, node in wn.nodes():
