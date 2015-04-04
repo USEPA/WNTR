@@ -6,7 +6,7 @@ QUESTIONS
 TODO
 1. Use in_edges and out_edges to write node balances on the pyomo model.
 2. Use reporting timestep when creating the pyomo results object.
-3. Support for check valves. 
+3. Support for check valves.
 """
 
 try:
@@ -26,6 +26,7 @@ class PyomoSimulator(WaterNetworkSimulator):
     Pyomo simulator inherited from Water Network Simulator.
     """
 
+
     def __init__(self, wn):
         """
         Pyomo simulator class.
@@ -44,9 +45,16 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._Qtol = 2.8e-5 # Flow tolerance in ft^3/s.
         self._g = 9.81 # Acceleration due to gravity
 
-        # Number of hydraulic timesteps
-        self._n_timesteps = int(round(self._sim_duration_sec/self._hydraulic_step_sec))+1
+        self._n_timesteps = 0 # Number of hydraulic timesteps
+        self._demand_dict = {} # demand dictionary
+        self._link_status = {} # dictionary of link statuses
+        self._valve_status = {} # dictionary of valve statuses
 
+        self._initialize_results_dict()
+
+    def _initialize_simulation(self):
+        # Number of hydraulic timesteps
+        self._n_timesteps = int(round(self._sim_duration_sec / self._hydraulic_step_sec)) + 1
         # Get all demand for complete time interval
         self._demand_dict = {}
         for node_name, node in self._wn.nodes():
@@ -63,7 +71,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         for l, link in self._wn.links():
             status_l = []
             for t in xrange(self._n_timesteps):
-                time_min = t*self._hydraulic_step_sec
+                time_min = t * self._hydraulic_step_sec
                 status_l_t = self.is_link_open(l, time_min)
                 status_l.append(status_l_t)
             self._link_status[l] = status_l
@@ -73,6 +81,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         for valve_name, valve in self._wn.links(Valve):
             self._valve_status[valve_name] = 'ACTIVE'
 
+    def _initialize_results_dict(self):
         # Data for results object
         self._pyomo_sim_results = {}
         self._pyomo_sim_results['node_name'] = []
@@ -533,6 +542,10 @@ class PyomoSimulator(WaterNetworkSimulator):
                         dma_dict=None,
                         fix_base_demand=False):
         import numpy as np
+
+        # Initialise demand dictionaries and link statuses 
+        self._initialize_simulation()
+
         # Do it in the constructor? make it an attribute?
         model = self.build_hydraulic_model(modified_hazen_williams)
         wn = self._wn
@@ -694,6 +707,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
 
         #print link_status
+        self._initialize_simulation()
 
         # Create results object
         results = NetResults()
