@@ -3,39 +3,47 @@ import matplotlib.pyplot as plt
 
 def draw_graph(wn, node_attribute=None, link_attribute=None, title=None, 
                node_size=10, node_range = [None,None], node_cmap=None,
-               edge_width=1, edge_range = [None,None], edge_cmap=None, 
+               link_width=1, link_range = [None,None], link_cmap=None, 
                add_colorbar=True, directed=False):
 
-    r"""Draw networkx graph
+    r"""Draw a WaterNetworkModel networkx graph
     
     Parameters
     ----------
     wn : WaterNetworkModel
         A WaterNetworkModel object
     
-    node_attribute: str or dict, optional (default = None)
+    node_attribute: str, list, or dict, optional (default = None)
         If node_attribute is a string, then the node_attribute dictonary is 
-        populated using node_attribute = nx.get_node_attributes(G,node_attribute)
+        populated using node_attribute = wn.get_node_attribute(str)
+        If node_attribute is a list, then each node is given a value of 1.
         If node_attribute is a dict, then it shoud be in the format
         {nodeid: x} where nodeid is a string and x is a float
         
-    edge_attribute: str or dict, optional (default = None)
-        If edge_attribute is a string, then the edge_attribute dictonary is 
-        populated using edge_attribute = nx_ext.edge_attribute_MG(G,edge_attribute)
-        If edge_attribute is a dict, then it shoud be in the format
-        {(nodeid1, nodeid2, linkid): x} where nodeid1 is a string, 
-        nodeid2 is a string, linkid is a string,
-        and x is a float.  nodeid1 is the start node and nodeid2 is the end node
+    link_attribute: str, list, or dict, optional (default = None)
+        If link_attribute is a string, then the link_attribute dictonary is 
+        populated using edge_attribute = wn.get_link_attribute(str)
+        If link_attribute is a list, then each link is given a value of 1.
+        If link_attribute is a dict, then it shoud be in the format
+        {linkid: x} where linkid is a string and x is a float.  
         
     title: str, optional (default = None)
         
-    node_size: int, optional (default = 20)
+    node_size: int, optional (default = 10)
     
-    edge_width: int, optional (default = 1)
+    node_range: list, optional (default = [None,None])
     
     node_cmap: matplotlib.pyplot.cm colormap, optional (default = rainbow)
     
-    edge_cmp: matplotlib.pyplot.cm colormap, optional (default = rainbow)
+    link_width: int, optional (default = 1)
+    
+    link_range: list, optional (default = [None,None])
+    
+    link_cmap: matplotlib.pyplot.cm colormap, optional (default = rainbow)
+    
+    add_colorbar: bool, optional (default = True)
+    
+    directed: bool, optional (default = False)
     
     Examples
     --------
@@ -44,7 +52,6 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     >>> parser.read_inp_file(wn, 'Net1.inp')
     >>> en.network.draw_graph(wn)
 
-    
     Notes
     -----
     For more network draw options, see nx.draw_networkx
@@ -90,12 +97,12 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         link_attribute = attr
     # Define link list, color, and colormap
     if link_attribute is None: 
-        edgelist = None
-        edgecolor = 'k'
+        linklist = None
+        linkcolor = 'k'
     else:
-        edgelist,edgecolor = zip(*link_attribute.items())
-    if edge_cmap is None:
-        edge_cmap=plt.cm.rainbow
+        linklist,linkcolor = zip(*link_attribute.items())
+    if link_cmap is None:
+        link_cmap=plt.cm.rainbow
         
     # Plot
     plt.figure(facecolor='w', edgecolor='k')
@@ -104,7 +111,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
               nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1])
     edges = nx.draw_networkx_edges(G, pos, 
-            edgelist=edgelist, edge_color=edgecolor, width=edge_width, edge_cmap=edge_cmap, edge_vmin = edge_range[0], edge_vmax = edge_range[1])
+            edgelist=linklist, edge_color=linkcolor, width=link_width, edge_cmap=link_cmap, edge_vmin = link_range[0], edge_vmax = link_range[1])
     if add_colorbar and node_attribute:
         plt.colorbar(nodes, shrink=0.5, pad = 0)
     if add_colorbar and link_attribute:
