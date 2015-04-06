@@ -24,7 +24,18 @@ def average_water_consumed_perday(enData):
         qbar[nodeid] = qbar_n    
         
     return qbar
-
+    
+def average_demand_perday(G):
+    # qbar = average demand per day
+    qbar = dict.fromkeys(G.nodes())
+    for i in G.nodes():
+        if G.node[i]['nodetype']  == pyepanet.EN_JUNCTION:
+            qbar[i] = np.mean(G.node[i]['demand'])*3600*24 # m3/day
+        else:
+            qbar[i] = 0
+            
+    return qbar
+    
 def population(qbar, R):
     # pop = population per node
     pop = np.array(qbar.values())/R
@@ -68,15 +79,7 @@ def lcml(*list):
   return reduce(lcm, *list)
   
   
-def VCbar_perday(G):
-    # qbar = average volume of water consumed per day
-    VCbar = dict.fromkeys(G.nodes())
-    for i in G.nodes():
-        if G.node[i]['nodetype']  == pyepanet.EN_JUNCTION:
-            VCbar[i] = np.mean(G.node[i]['demand'])*3600*24 # m3/day
-        else:
-            VCbar[i] = 0
-    return VCbar
+
     
 def VC(G):
     # VC = volume of water consumed
