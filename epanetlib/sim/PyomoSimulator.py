@@ -541,9 +541,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                     return a2*x**3 + b2*x**2 + c2*x + d2
                 #print "Switch point 1: ", x3
                 #print "Switch point 2:", x4
-                return Expr_if(IF=p <= x3, THEN=L2(p),
-                               ELSE=Expr_if(IF=p <= x4, THEN=P2(p),
-                                            ELSE=L3(p)))
+                return Expr_if(IF=p <= 1e-6, THEN=1e6*p, ELSE=Expr_if(IF=p <= x3, THEN=L2(p),
+                                                                      ELSE=Expr_if(IF=p <= x4, THEN=P2(p),
+                                                                      ELSE=L3(p))))
 
         def pressure_dependent_demand_nl(full_demand, p):
 
@@ -736,13 +736,13 @@ class PyomoSimulator(WaterNetworkSimulator):
         #print "Created Node balance: ", time.time() - t0
 
 
-
+        """
         # Head in junctions should be greater or equal to the elevation
         for n in model.junctions:
             junction = wn.get_node(n)
             elevation_n = junction.elevation
             setattr(model, 'junction_elevation_'+str(n), Constraint(expr=model.head[n] >= elevation_n))
-
+        """
         """
         # Bounds on the head inside a tank
         def tank_head_bounds_rule(model,n):
@@ -756,6 +756,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             return model.flow[l] >= 0
         model.pump_positive_flow_bounds = Constraint(model.pumps, rule=pump_positive_flow_rule)
         """
+
 
         def tank_dynamics_rule(model, n):
             if first_timestep:
@@ -786,7 +787,16 @@ class PyomoSimulator(WaterNetworkSimulator):
             model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)
         else:
             model.pressure_driven_demand = Constraint(model.junctions, rule=pressure_driven_demand_rule)
+
+        """
+        # Positive demand constraint
+        def demand_bounds_rule(model, j):
+            return model.demand_actual[j] >= 1e-4
+        model.demand_bounds = Constraint(model.junctions, rule=demand_bounds_rule)
+        """
+
         return model.create()
+
 
 
     def run_calibration(self,
@@ -1016,8 +1026,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                     #expr += (model.demand_actual[n]-model.demand_required[n])**2
                     expr += (model.demand_actual[n])**1
                 return expr
-            model.obj = Objective(rule=obj_rule, sense=maximize)
-            #model.obj = Objective(expr=1, sense=minimize)
+            #model.obj = Objective(rule=obj_rule, sense=maximize)
+            model.obj = Objective(expr=1, sense=minimize)
 
             #print "Created Obj: ", time.time() - t0
             ####### CREATE INSTANCE AND SOLVE ########
@@ -1212,7 +1222,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 node_name.append(n)
                 node_type.append(self._get_node_type(n))
                 times.append(results.time[t])
-                head_n_t = instance.head[n,t].value
+                head_n_t = instance.head[n, t].value
                 if isinstance(node, Reservoir):
                     pressure_n_t = 0.0
                 else:
@@ -1282,7 +1292,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             if isinstance(node, Reservoir):
                 pressure_n = 0.0
             else:
-                pressure_n = head_n - node.elevation
+                pressure_n = abs(head_n - node.elevation)
             if isinstance(node, Junction):
                 demand = instance.demand_actual[n].value
             elif isinstance(node, Reservoir):
@@ -1292,6 +1302,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 demand = 0.0
 
+            if head_n < -1e4:
+                pressure_n = 0.0
+                head_n = node.elevation
             self._pyomo_sim_results['node_name'].append(node_name)
             self._pyomo_sim_results['node_type'].append(node_type)
             self._pyomo_sim_results['node_times'].append(time)

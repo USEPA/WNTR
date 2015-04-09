@@ -20,6 +20,7 @@ TODO
 
 
 import numpy as np
+import warnings
 from epanetlib.network.WaterNetworkModel import *
 from scipy.optimize import fsolve
 import math
@@ -49,6 +50,112 @@ class WaterNetworkSimulator(object):
             self._pattern_step_sec = None
             self._hydraulic_times_sec = None
             self._report_step_sec = None
+
+        # A dictionary containing pump outage information
+        # format is PUMP_NAME: (start time in sec, end time in sec)
+        self._pump_outage = {}
+
+    def timedelta_to_sec(self, timedelta):
+        """
+        Converts timedelta to seconds.
+
+        Parameters
+        ------
+        timedelta : Pandas tmedelta object.
+
+        Return
+        -----
+        seconds as integer
+        """
+
+        return int(timedelta.days*24*60*60 + timedelta.hours*60*60 + timedelta.minutes*60 + timedelta.seconds)
+
+    def add_pump_outage(self, pump_name, start_time, end_time):
+        """
+        Add time of pump outage for a particular pump.
+
+        Parameters
+        -------
+
+        pump_name: String
+            Name of the pump.
+        start_time: String
+            Start time of the pump outage. Pandas Timedelta format: e.g. '0 days 00:00:00'
+        end_time: String
+            End time of the pump outage. Pandas Timedelta format: e.g. '0 days 05:00:00'
+
+        Example
+        ------
+        >>> sim.add_pump_outage('PUMP-3845', pd.Timedelta('0 days 11:00:00'), pd.Timedelta('1 days 02:00:00'))
+
+        """
+        if self._wn is None:
+            raise RuntimeError("Pump outage time cannot be defined before a network object is"
+                               "defined in the simulator.")
+
+        # Check if pump_name is valid
+        try:
+            pump = self._wn.get_link(pump_name)
+        except KeyError:
+            raise KeyError(pump_name + " is not a valid link in the network.")
+        if not isinstance(pump, Pump):
+            raise RuntimeError(pump_name + " is not a valid pump in the network.")
+
+        # Check if atart time and end time are valid
+        try:
+            start = pd.Timedelta(start_time)
+            end = pd.Timedelta(end_time)
+        except RuntimeError:
+            raise RuntimeError("The format of start or end time is not valid Pandas Timedelta format.")
+
+        start_sec = self.timedelta_to_sec(start)
+        end_sec = self.timedelta_to_sec(end)
+
+        if pump_name in self._pump_outage.keys():
+            warnings.warn("Pump name " + pump_name + " already has a pump outage time defined."
+                                                     " Old time range is being overridden.")
+            self._pump_outage[pump_name] = (start_sec, end_sec)
+        else:
+            self._pump_outage[pump_name] = (start_sec, end_sec)
+
+    def all_pump_outage(self, start_time, end_time):
+        """
+        Add time of outage for all pumps in the network.
+
+        Parameter
+        -------
+        start_time: String
+            Start time of the pump outage. Pandas Timedelta format: e.g. '0 days 00:00:00'
+        end_time: String
+            End time of the pump outage. Pandas Timedelta format: e.g. '0 days 05:00:00'
+
+        Example
+        ------
+        >>> sim.add_pump_outage('PUMP-3845', pd.Timedelta('0 days 11:00:00'), pd.Timedelta('1 days 02:00:00'))
+
+        """
+
+        if self._wn is None:
+            raise RuntimeError("All pump outage time cannot be defined before a network object is"
+                               "defined in the simulator.")
+
+        try:
+            start = pd.Timedelta(start_time)
+            end = pd.Timedelta(end_time)
+        except RuntimeError:
+            raise RuntimeError("The format of start or end time is not valid Pandas Timedelta format.")
+
+        start_sec = self.timedelta_to_sec(start)
+        end_sec = self.timedelta_to_sec(end)
+
+        for pump_name, pump in self._wn.links(Pump):
+            if pump_name in self._pump_outage.keys():
+                warnings.warn("Pump name " + pump_name + " already has a pump outage time defined."
+                                                         " Old time range is being overridden.")
+                self._pump_outage[pump_name] = (start_sec, end_sec)
+            else:
+                self._pump_outage[pump_name] = (start_sec, end_sec)
+
 
     def set_water_network_model(self, water_network):
         """
@@ -131,7 +238,7 @@ class WaterNetworkSimulator(object):
                     if time>=t and min_closed>=time-t:
                         min_closed = time-t
                 """
-                return True if min_open<min_closed else False
+                return True if min_open < min_closed else False
 
     def sec_to_timestep(self, sec):
         """
@@ -176,14 +283,14 @@ class WaterNetworkSimulator(object):
         node_name : string
             Name of the node.
         start_time : float
-            The start time of the demand values requested. Default is 0 min.
+            The start time of the demand values requested. Default is 0 sec.
         end_time : float
-            The end time of the demand values requested. Default is the simulation end time.
+            The end time of the demand values requested. Default is the simulation end time in sec.
 
         Return
         -------
         demand_list : list of floats
-           A list of demand values at each hydraulic timestep
+           A list of demand values at each hydraulic timestep.
         """
 
         self._check_model_specified()
