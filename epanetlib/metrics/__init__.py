@@ -1,7 +1,8 @@
-from epanetlib.metrics.todini import *
-from epanetlib.metrics.entropy import *
-from epanetlib.metrics.cost import *
-from epanetlib.metrics.ghg_emissions import *
-from epanetlib.metrics.health_impacts import *
-from epanetlib.metrics.fraction_delivered import *
-from epanetlib.metrics.topography import *
+from todini import todini
+from entropy import entropy
+from cost import cost
+from ghg_emissions import ghg_emissions
+from health_impacts import average_demand_perday, population
+from fraction_delivered import fraction_delivered_volume
+from fraction_delivered import fraction_delivered_demand
+from fraction_delivered import fraction_delivered_quality
