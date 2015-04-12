@@ -39,8 +39,20 @@ class WaterNetworkSimulator(object):
         """
         self._wn = water_network
 
+        # A dictionary containing pump outage information
+        # format is PUMP_NAME: (start time in sec, end time in sec)
+        self._pump_outage = {}
+        # A dictionary containing information to stop flow from a tank once
+        # the minimum head is reached. This dict contains the pipes connected to the tank,
+        # the node connected to the tank, and the minimum allowable head in the tank.
+        # e.g. : 'Tank-2': {'node_name': 'Junction-1',
+        #                   'link_name': 'Pipe-3',
+        #                   'min_head': 100}
+        self._tank_controls = {}
+
         if water_network is not None:
             self.init_time_params_from_model()
+            self._init_tank_controls()
         else:
             # Time parameters
             self._sim_start_sec = None
@@ -51,9 +63,24 @@ class WaterNetworkSimulator(object):
             self._hydraulic_times_sec = None
             self._report_step_sec = None
 
-        # A dictionary containing pump outage information
-        # format is PUMP_NAME: (start time in sec, end time in sec)
-        self._pump_outage = {}
+
+    def _init_tank_controls(self):
+
+        for tank_name, tank in self._wn.nodes(Tank):
+            self._tank_controls[tank_name] = {}
+            links_next_to_tank = self._wn.get_links_for_node(tank_name)
+            if len(links_next_to_tank) != 1:
+                warnings.warn('Pump outage analysis requires tank to be connected to a single link.'
+                              'Multiple links out of a Tank are not supported for pump outage.')
+            link = self._wn.get_link(links_next_to_tank[0])
+            node_next_to_tank = link.start_node()
+            if node_next_to_tank == tank_name:
+                node_next_to_tank = link.end_node()
+            min_head = tank.elevation + tank.min_level
+            # Add to tank controls dictionary
+            self._tank_controls[tank_name]['node_name'] = node_next_to_tank
+            self._tank_controls[tank_name]['link_name'] = links_next_to_tank[0]
+            self._tank_controls[tank_name]['min_head'] = min_head
 
     def timedelta_to_sec(self, timedelta):
         """
@@ -168,6 +195,7 @@ class WaterNetworkSimulator(object):
         """
         self._wn = water_network
         self.init_time_params_from_model()
+        self._init_tank_controls()
 
     def _check_model_specified(self):
         assert (isinstance(self._wn, WaterNetworkModel)), "Water network model has not been set for the simulator" \

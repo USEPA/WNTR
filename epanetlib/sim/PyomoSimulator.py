@@ -60,8 +60,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._P0 = self._wn.options['MINIMUM PRESSURE']
             self._PF = self._wn.options['NOMINAL PRESSURE']
             # Calculate polynomials for smoothing abrupt changes in PDD curve
-            self._pdd_smoothing_polynomial_left = [] # left hand side smoothing curve parameters
-            self._pdd_smoothing_polynomial_right = [] # right hand side smoothing curve parameters
+            self._pdd_smoothing_polynomial_left = []  # left hand side smoothing curve parameters
+            self._pdd_smoothing_polynomial_right = []  # right hand side smoothing curve parameters
             #self._smoothing_points = self._fit_smoothing_curve()
         else:
             self._P0 = None
@@ -547,7 +547,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         def pressure_dependent_demand_nl(full_demand, p):
 
-            delta = 0.3
+            delta = 0.1
             # Defining Line 1
             a1 = 1e-6
             b1 = full_demand
@@ -558,7 +558,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Defining PDD function
             def PDD(x):
                 return full_demand*math.sqrt((x - self._P0)/(self._PF - self._P0))
-            """
+
             def PDD_deriv(x):
                 return (full_demand/2)*(1/(self._PF - self._P0))*(1/math.sqrt((x - self._P0)/(self._PF - self._P0)))
 
@@ -577,15 +577,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             y3 = PDD(x3)
             x4 = self._PF + x_gap*delta
             y4 = L1(x4)
-            print x3, y3, x4, y4
             A2 = A(x3, x4)
-            print A2
             rhs2 = np.array([y3, y4, PDD_deriv(x3), a1])
-            print rhs2
-            print PDD_deriv(x3)
-            print a1
             c2 = np.linalg.solve(A2, rhs2)
-            print c2
 
             def smooth_polynomial(p_):
                 return c2[0]*p_**3 + c2[1]*p_**2 + c2[2]*p_ + c2[3]
@@ -593,9 +587,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             return Expr_if(IF=p <= x3, THEN=PDD(p),
                            ELSE=Expr_if(IF=p <= x4, THEN=smooth_polynomial(p),
                                         ELSE=L1(p)))
-            """
-            return Expr_if(IF=p <= self._PF, THEN=PDD(p),
-                           ELSE=L1(p))
+
+            #return Expr_if(IF=p <= self._PF, THEN=PDD(p),
+            #               ELSE=L1(p))
 
 
         wn = self._wn
@@ -941,8 +935,9 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._verify_conditional_controls_for_tank()
 
         # List of closed pump ids
-        pumps_closed_by_rule = []
-        pumps_closed_by_outage = []
+        pumps_closed_by_rule = [] # List of pumps that are closed by level controls defined in inp file
+        pumps_closed_by_outage = [] # List of pump closed by pump outage times provided by user
+        links_closed_by_tank_controls = []  # List of pipes closed when tank level goes below min
 
         # Create solver instance
         opt = SolverFactory(solver)
@@ -978,14 +973,24 @@ class PyomoSimulator(WaterNetworkSimulator):
                                                                                                 pumps_closed_by_rule,
                                                                                                 links_closed_by_time,
                                                                                                 t)
+                # Apply tank controls
+                if self._tank_controls:
+                    links_closed_by_tank_controls = self._apply_tank_controls(instance)
+
             if self._pump_outage:
                 pumps_closed_by_outage = self._apply_pump_outage(t)
+
+
 
             #print "Pumps closed: ", pumps_closed
             #print "Pipes Closed: ", pipes_closed
 
             # Combine list of closed links
-            links_closed = links_closed_by_time + pumps_closed_by_rule + pumps_closed_by_outage
+            links_closed = links_closed_by_time \
+                           + pumps_closed_by_rule \
+                           + pumps_closed_by_outage \
+                           + links_closed_by_tank_controls
+
 
             #for i in links_closed:
             #    print "Link: ", i, " closed"
@@ -1389,6 +1394,29 @@ class PyomoSimulator(WaterNetworkSimulator):
                 pumps_closed_by_outage.append(pump_name)
 
         return pumps_closed_by_outage
+
+    def _apply_tank_controls(self, instance):
+
+        pipes_closed_by_tank = []
+
+        for tank_name, control_info in self._tank_controls.iteritems():
+            link_name_to_tank = control_info['link_name']
+            link_to_tank = self._wn.get_link(link_name_to_tank)
+            if isinstance(link_to_tank, Pump):
+                warnings.warn('Pump is connected directly to tank!. '
+                              'This may lead to issues when tank level goes'
+                              'below minimum.')
+            head_in_tank = instance.head[tank_name].value
+            node_next_to_tank = control_info['node_name']
+            min_tank_head = control_info['min_head']
+            head_at_next_node = instance.head[node_next_to_tank].value
+            # make link closed if the tank head is below min and
+            # the head at connected node is below this minimum. That is,
+            # flow will be out of the tank
+            if head_in_tank <= min_tank_head and head_at_next_node <= head_in_tank:
+                pipes_closed_by_tank.append(link_name_to_tank)
+
+        return pipes_closed_by_tank
 
     def _set_valve_status(self, instance):
         """
