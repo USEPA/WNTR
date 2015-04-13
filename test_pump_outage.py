@@ -1,121 +1,67 @@
-from epanetlib.network.ParseWaterNetwork import ParseWaterNetwork
-from epanetlib.network.WaterNetworkModel import *
-from epanetlib.sim.WaterNetworkSimulator import *
-from epanetlib.sim.EpanetSimulator import *
-from epanetlib.sim.ScipySimulator import *
-from epanetlib.sim.PyomoSimulator import *
-import matplotlib.pylab as plt
 import epanetlib as en
-import numpy as np
-import networkx as nx
-import pandas as pd
-import time
+import matplotlib.pylab as plt
 
 plt.close('all')
 
-inp_file_pdd = 'networks/Net1_PDD.inp'
-inp_file_original = 'networks/Net1.inp'
+inp_file = 'networks/Net1.inp'
 
-# Create pressure dependent water network model
-wn_pdd = WaterNetworkModel()
-parser = ParseWaterNetwork()
-parser.read_inp_file(wn_pdd, inp_file_pdd)
+# Create water network model from inp file
+wn = en.network.WaterNetworkModel()
+parser = en.network.ParseWaterNetwork()
+parser.read_inp_file(wn, inp_file)
 
-# Create and parse original water network model
-wn_original = WaterNetworkModel()
-parser_orig = ParseWaterNetwork()
-parser_orig.read_inp_file(wn_original, inp_file_original)
+# Nominal pressure must be provided for pressure driven analysis
+wn.options['NOMINAL PRESSURE'] = 30 # Meter head
+wn.options['MINIMUM PRESSURE'] = 0 # Meter head
 
-pyomo_sim_pdd = PyomoSimulator(wn_pdd)
-pyomo_sim_pdd.all_pump_outage('0 days 02:00:00', '1 days 00:00:00')
-t0 = time.time()
-pyomo_results_pdd = pyomo_sim_pdd.run_sim()
-print "Overall simulation time: ", time.time()-t0
-#exit()
+# Create simulation object of the PYOMO simulator
+pyomo_sim = en.sim.PyomoSimulator(wn)
 
+# Define power outage times
+pyomo_sim.all_pump_outage('0 days 02:00:00', '0 days 18:00:00')
+#pyomo_sim_pdd.add_pump_outage('335', '0 days 02:00:00', '0 days 15:00:00')
 
-pyomo_sim_original = PyomoSimulator(wn_original)
-t0 = time.time()
-pyomo_results_original = pyomo_sim_original.run_sim()
-print "Overall simulation time: ", time.time()-t0
+# Run simulation
+pyomo_results = pyomo_sim.run_sim()
 
-
+# Plot some results
 plt.figure()
-pyomo_results_pdd.node['demand'].plot(label='PUMP OUTAGE')
-pyomo_results_original.node['demand'].plot(label='ORIGINAL')
-plt.title('Node Demand')
+# Actual demand at all nodes
+plt.subplot(2,2,1)
+for node_name, node in wn.nodes(en.network.Junction):
+    actual_demands = pyomo_results.node['demand'][node_name]
+    plt.plot(actual_demands, label=node_name)
+plt.ylim([0, 0.025])
+plt.ylabel('Actual Demand (m^3/s)')
+plt.xlabel('Time (Hours)')
 plt.legend()
-
-plt.figure()
-pyomo_results_pdd.node['head'].plot(label='PUMP OUTAGE')
-pyomo_results_original.node['head'].plot(label='ORIGINAL')
-plt.title('Node Head')
+# Expected demand at all nodes
+plt.subplot(2,2,3)
+for node_name, node in wn.nodes(en.network.Junction):
+    expected_demands = pyomo_results.node['expected_demand'][node_name]
+    plt.plot(expected_demands, label=node_name)
+plt.ylim([0, 0.025])
+plt.ylabel('Expected Demand (m^3/s)')
+plt.xlabel('Time (Hours)')
 plt.legend()
-
-plt.figure()
-pyomo_results_pdd.node['pressure'].plot(label='PUMP OUTAGE')
-pyomo_results_original.node['pressure'].plot(label='ORIGINAL')
-plt.title('Node Pressure')
+# Pressure in the tanks
+plt.subplot(2,2,2)
+for tank_name, tank in wn.nodes(en.network.Tank):
+    tank_pressure = pyomo_results.node['pressure'][tank_name]
+    plt.plot(tank_pressure, label=tank_name)
+plt.ylim([0, 50])
+plt.ylabel('Tank Pressure (m)')
+plt.xlabel('Time (Hours)')
 plt.legend()
-
-plt.figure()
-pyomo_results_pdd.link['flowrate'].plot(label='PUMP OUTAGE')
-pyomo_results_original.link['flowrate'].plot(label='ORIGINAL')
-plt.title('Link Flowrate')
-plt.legend()
-
-plt.figure()
-pyomo_results_pdd.link['velocity'].plot(label='PUMP OUTAGE')
-pyomo_results_original.link['velocity'].plot(label='ORIGINAL')
-plt.title('Link Velocity')
+# Pump flow
+plt.subplot(2,2,4)
+for pump_name, pump in wn.links(en.network.Pump):
+    pump_flow = pyomo_results.link['flowrate'][pump_name]
+    plt.plot(pump_flow, label=pump_name)
+plt.ylim([0, 0.05])
+plt.ylabel('Pump Flow (m^3/s)')
+plt.xlabel('Time (Hours)')
 plt.legend()
 
 plt.show()
-
-flow_diff_tol = 1e-3
-head_diff_tol = 1e-3
-
-print "DEMAND COMPARISON"
-for node_name, node in wn_original.nodes():
-    #    if isinstance(link, Pump):
-    for t in pyomo_results_original.time:
-        #epanet_flow = epanet_results.link.flowrate[link_name][t]
-        orig_demand = pyomo_results_original.node.demand[node_name][t]
-        pdd_demand = pyomo_results_pdd.node.demand[node_name][t]
-        demand_diff = abs(orig_demand - pdd_demand)
-        if demand_diff > flow_diff_tol:
-            print node_name, t, demand_diff, "\t Original: ", orig_demand, "PDD: ", pdd_demand
-
-print "PRESSURE COMPARISON"
-for node_name, node in wn_original.nodes():
-    #    if isinstance(link, Pump):
-    for t in pyomo_results_original.time:
-        #epanet_flow = epanet_results.link.flowrate[link_name][t]
-        orig_pressure = pyomo_results_original.node.pressure[node_name][t]
-        pdd_pressure = pyomo_results_pdd.node.pressure[node_name][t]
-        pressure_diff = abs(orig_pressure - pdd_pressure)
-        if pressure_diff > flow_diff_tol:
-            print node_name, t, pressure_diff, "\t Original: ", orig_pressure, "PDD: ", pdd_pressure
-
-
-
-"""
-print "FLOW COMPARISON"
-for link_name, link in wn.links():
-    #    if isinstance(link, Pump):
-    for t in epanet_results.time:
-        epanet_flow = epanet_results.link.flowrate[link_name][t]
-        pyomo_flow = pyomo_results.link.flowrate[link_name][t]
-        flow_diff = abs(epanet_flow - pyomo_flow)
-        if flow_diff > flow_diff_tol:
-            print link_name, t, flow_diff, "\t Epanet: ", epanet_flow, "Pyomo: ", pyomo_flow
-"""
-print "Original demands at Tank"
-print pyomo_results_original.node['demand']['2']
-print "PDD demands at Tank"
-print pyomo_results_pdd.node['demand']['2']
-print "PDD pressure at Tank"
-print pyomo_results_pdd.node['pressure']['2']
-
-exit()
 

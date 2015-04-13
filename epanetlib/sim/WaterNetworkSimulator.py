@@ -53,6 +53,15 @@ class WaterNetworkSimulator(object):
         if water_network is not None:
             self.init_time_params_from_model()
             self._init_tank_controls()
+            # Pressure driven demand parameters
+            if 'NOMINAL PRESSURE' in self._wn.options:
+                self._PF = self._wn.options['NOMINAL PRESSURE']
+            else:
+                self._PF = None
+            if 'MINIMUM PRESSURE' in self._wn.options:
+                self._P0 = self._wn.options['MINIMUM PRESSURE']
+            else:
+                self._P0 = 0 # meters head
         else:
             # Time parameters
             self._sim_start_sec = None
@@ -120,6 +129,10 @@ class WaterNetworkSimulator(object):
             raise RuntimeError("Pump outage time cannot be defined before a network object is"
                                "defined in the simulator.")
 
+        if 'NOMINAL PRESSURE' not in self._wn.options:
+            raise RuntimeError("Pump outage analysis requires nominal pressure to be provided"
+                               "for the water network model.")
+
         # Check if pump_name is valid
         try:
             pump = self._wn.get_link(pump_name)
@@ -165,6 +178,10 @@ class WaterNetworkSimulator(object):
         if self._wn is None:
             raise RuntimeError("All pump outage time cannot be defined before a network object is"
                                "defined in the simulator.")
+
+        if 'NOMINAL PRESSURE' not in self._wn.options:
+            raise RuntimeError("Pump outage analysis requires nominal pressure to be provided"
+                               "for the water network model.")
 
         try:
             start = pd.Timedelta(start_time)
