@@ -615,7 +615,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             delta = 0.1
             # Defining Line 1
-            a1 = 1e-6
+            a1 = 1e-9
             b1 = full_demand
 
             def L1(x):
