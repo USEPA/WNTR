@@ -85,7 +85,8 @@ class WaterNetworkSimulator(object):
             node_next_to_tank = link.start_node()
             if node_next_to_tank == tank_name:
                 node_next_to_tank = link.end_node()
-            min_head = tank.elevation + tank.min_level
+            # Minimum tank level is equal to the elevation
+            min_head = tank.elevation #+ tank.min_level
             # Add to tank controls dictionary
             self._tank_controls[tank_name]['node_name'] = node_next_to_tank
             self._tank_controls[tank_name]['link_name'] = links_next_to_tank[0]
