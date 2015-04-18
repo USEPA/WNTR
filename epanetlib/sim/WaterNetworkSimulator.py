@@ -68,11 +68,6 @@ class WaterNetworkSimulator(object):
 
     def is_link_open(self, link_name, time):
         link = self._wn.get_link(link_name)
-        if link_name not in self._wn.time_controls:
-            return False if link.get_base_status() == 'CLOSED' else True
-        else:
-            open_times = self._wn.time_controls[link_name]['open_times']
-            closed_times = self._wn.time_controls[link_name]['closed_times']
         base_status = False if link.get_base_status() == 'CLOSED' else True
         if link_name not in self._wn.time_controls:
             return base_status
