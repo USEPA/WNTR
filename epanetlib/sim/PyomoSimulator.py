@@ -21,7 +21,6 @@ import math
 from WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
-from pyomo_utils import CheckInstanceFeasibility
 
 class PyomoSimulator(WaterNetworkSimulator):
     """
