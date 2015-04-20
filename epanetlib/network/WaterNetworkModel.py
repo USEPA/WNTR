@@ -73,6 +73,9 @@ class WaterNetworkModel(object):
         #                'closed_above': [('node_name', level_value), ...]}}
         self.conditional_controls = {}
 
+        # Name of pipes that are check valves
+        self._check_valves = []
+
         # NetworkX Graph to store the pipe connectivity and node coordinates
         self._graph = nx.MultiDiGraph(data=None)
 
@@ -268,6 +271,9 @@ class WaterNetworkModel(object):
         """
         pipe = Pipe(name, start_node_name, end_node_name, length,
                     diameter, roughness, minor_loss, status)
+        # Add to list of cv
+        if status.upper() == 'CV':
+            self._check_valves.append(name)
         self._links[name] = pipe
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         self._num_pipes += 1

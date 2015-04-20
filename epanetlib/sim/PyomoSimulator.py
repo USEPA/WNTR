@@ -6,7 +6,7 @@ QUESTIONS
 TODO
 1. Use in_edges and out_edges to write node balances on the pyomo model.
 2. Use reporting timestep when creating the pyomo results object.
-3. Support for check valves.
+3. Test behaviour of check valves. We may require a minimum of two trials at every timestep.
 """
 
 try:
@@ -21,6 +21,7 @@ import math
 from WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
+from pyomo_utils import CheckInstanceFeasibility
 
 class PyomoSimulator(WaterNetworkSimulator):
     """
@@ -108,23 +109,33 @@ class PyomoSimulator(WaterNetworkSimulator):
     def _initialize_from_pyomo_results(self, instance, last_instance):
 
         for l in instance.links:
-            if l in instance.pumps:
-                instance.flow[l].value = last_instance.flow[l].value + self._Qtol
+            if abs(last_instance.flow[l].value) < self._Qtol:
+                instance.flow[l].value = 100*self._Qtol
             else:
-                instance.flow[l].value = last_instance.flow[l].value
+                if l in instance.pumps and last_instance.flow[l].value < -self._Qtol:
+                    instance.flow[l].value = 100*self._Qtol
+                else:
+                    instance.flow[l].value = last_instance.flow[l].value + self._Qtol
+
         for n in instance.nodes:
             instance.head[n].value = last_instance.head[n].value
             if n in instance.junctions:
                 junction = self._wn.get_node(n)
                 if instance.head[n].value - junction.elevation <= self._P0:
-                    instance.demand_actual[n] = 0.0
+                    instance.demand_actual[n] = 100*self._Qtol
                 else:
-                    instance.demand_actual[n] = abs(instance.demand_actual[n].value)
+                    instance.demand_actual[n] = abs(instance.demand_actual[n].value) + self._Qtol
 
         for r in instance.reservoirs:
-            instance.reservoir_demand[r].value = last_instance.reservoir_demand[r].value
+            if abs(last_instance.reservoir_demand[r].value) < self._Qtol:
+                instance.reservoir_demand[r].value = 100*self._Qtol
+            else:
+                instance.reservoir_demand[r].value = last_instance.reservoir_demand[r].value + self._Qtol
         for t in instance.tanks:
-            instance.tank_net_inflow[t].value = last_instance.tank_net_inflow[t].value
+            if abs(last_instance.tank_net_inflow[t].value) < self._Qtol:
+                instance.tank_net_inflow[t].value = 100*self._Qtol
+            else:
+                instance.tank_net_inflow[t].value = last_instance.tank_net_inflow[t].value + self._Qtol
 
 
     def _fit_smoothing_curve(self):
@@ -266,12 +277,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.pipes = Set(initialize=[l for l, L in wn.links(Pipe)])
 
         #print "Created Sets: ", time.time() - t0
-
-        ####### Check for components that are not supported #######
-        for l in model.links:
-            link = wn.get_link(l)
-            if link.get_base_status().upper() == 'CV':
-                raise RuntimeError('Check valves are not supported by the Pyomo model.')
 
         ################### PARAMETERS #######################
 
@@ -637,7 +642,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 return (full_demand)*(1/(self._PF - self._P0))
 
             # Define Line 2
-            a2 = 1e-6
+            a2 = 1e-9
             b2 = 0.0
             def L2(x):
                 return a2*x + b2
@@ -674,6 +679,18 @@ class PyomoSimulator(WaterNetworkSimulator):
             def smooth_polynomial_rhs(p_):
                 return c2[0]*p_**3 + c2[1]*p_**2 + c2[2]*p_ + c2[3]
 
+            """
+            print "X1: ", x1
+            print "X2: ", x2
+            print "X3: ", x3
+            print "X4: ", x4
+            print "L1: ", a1, b1
+            print "PDD: ", (full_demand)*(1/(self._PF - self._P0))
+            print "L2: ", a2, b2
+            print "P1: ", c1[0], c1[1], c1[2], c1[3]
+            print "P2: ", c2[0], c2[1], c2[2], c2[3]
+            exit()
+            """
 
             return Expr_if(IF=p <= x1, THEN=L2(p),
                ELSE=Expr_if(IF=p <= x2, THEN=smooth_polynomial_lhs(p),
@@ -711,12 +728,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.pipes = Set(initialize=[l for l, L in wn.links(Pipe)])
 
         #print "Created Sets: ", time.time() - t0
-
-        ####### Check for components that are not supported #######
-        for l in model.links:
-            link = wn.get_link(l)
-            if link.get_base_status().upper() == 'CV':
-                raise RuntimeError('Check valves are not supported by the Pyomo model.')
 
         ################### PARAMETERS #######################
 
@@ -846,12 +857,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             return (tank.elevation + tank.min_level, model.head[n], tank.elevation + tank.max_level)
         model.tank_head_bounds = Constraint(model.tanks, rule=tank_head_bounds_rule)
         """
-        """
+
         # Flow in a pump should always be positive
         def pump_positive_flow_rule(model,l):
             return model.flow[l] >= 0
         model.pump_positive_flow_bounds = Constraint(model.pumps, rule=pump_positive_flow_rule)
-        """
 
 
         def tank_dynamics_rule(model, n):
@@ -1038,20 +1048,24 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._verify_conditional_controls_for_tank()
 
         # List of closed pump ids
-        pumps_closed_by_rule = [] # List of pumps that are closed by level controls defined in inp file
-        pumps_closed_by_outage = [] # List of pump closed by pump outage times provided by user
-        links_closed_by_tank_controls = []  # List of pipes closed when tank level goes below min
+        pumps_closed_by_rule = set([]) # Set of pumps that are closed by level controls defined in inp file
+        pumps_closed_by_outage = set([]) # Set of pump closed by pump outage times provided by user
+        links_closed_by_tank_controls = set([])  # Set of pipes closed when tank level goes below min
+        closed_check_valves = set([]) # Set of closed check valves
 
         # Create solver instance
         opt = SolverFactory(solver)
         # Set solver options
         for key, val in solver_options.iteritems():
             opt.options[key]=val
+        #opt.options['halt_on_ampl_error'] = 'yes'
+        opt.options['bound_relax_factor'] = 0.0
 
         ######### MAIN SIMULATION LOOP ###############
         t = 0
         step_iter = 0
         valve_status_changed = False
+        check_valve_status_changed = False
         while t < self._n_timesteps and step_iter < self._max_step_iter:
             if t == 0:
                 first_timestep = True
@@ -1064,18 +1078,19 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Get demands
             current_demands = {n_name: self._demand_dict[n_name, t] for n_name, n in self._wn.nodes(Junction)}
 
-            links_closed_by_time = []
+            links_closed_by_time = set([])
+
             # Get time controls
             for link_name, status in self._link_status.iteritems():
                 if not status[t]:
-                    links_closed_by_time.append(link_name)
+                    links_closed_by_time.add(link_name)
 
             # Apply conditional controls, THESE WILL OVERIDE TIME CONTROLS
             if not first_timestep:
-                [pumps_closed_by_rule, links_closed_by_time] = self._apply_conditional_controls(instance,
-                                                                                                pumps_closed_by_rule,
-                                                                                                links_closed_by_time,
-                                                                                                t)
+                self._apply_conditional_controls(instance,
+                                                 pumps_closed_by_rule,
+                                                 links_closed_by_time,
+                                                 t)
                 # Apply tank controls
                 if self._tank_controls:
                     links_closed_by_tank_controls = self._apply_tank_controls(instance)
@@ -1084,11 +1099,14 @@ class PyomoSimulator(WaterNetworkSimulator):
                 pumps_closed_by_outage = self._apply_pump_outage(t)
 
             # Combine list of closed links
+            """
             links_closed = links_closed_by_time \
                            + pumps_closed_by_rule \
                            + pumps_closed_by_outage \
-                           + links_closed_by_tank_controls
-
+                           + links_closed_by_tank_controls \
+                           + closed_check_valves
+            """
+            links_closed = links_closed_by_time.union(pumps_closed_by_rule.union(pumps_closed_by_outage.union(links_closed_by_tank_controls.union(closed_check_valves))))
 
             #for i in links_closed:
             #    print "Link: ", i, " closed"
@@ -1132,9 +1150,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             #model.obj = Objective(rule=obj_rule, sense=maximize)
             model.obj = Objective(expr=1, sense=minimize)
 
+            #t0 = time.time()
             #print "Created Obj: ", time.time() - t0
-            ####### CREATE INSTANCE AND SOLVE ########
-            instance = model.create()
+            ####### CREATE INSTANCE ########
+            #instance = model.create()
+            instance = model # Create does not need to be called for NLP ?
             #print "Model creation: ", time.time() - t0
 
             # Initializing from previous timestep
@@ -1148,13 +1168,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             for l in instance.links:
                 if l in links_closed:
                     instance.flow[l].fixed = True
-                    instance.flow[l].value = 0
+                    instance.flow[l].value = self._Qtol/10.0
                 else:
                     instance.flow[l].fixed = False
-                    #model.headloss[l,t].value = 0.0
-                    #model.headloss[l,t].fixed = True
-
-            #print "Fixing flow: ", time.time() - t0
 
             # Pressure Reducing Valve (PRV) constraints based on status
             for l in model.valves:
@@ -1164,7 +1180,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 pressure_setting = valve.setting
                 status = self._valve_status[l]
                 if status == 'CLOSED':
-                    model.flow[l].value = 0.0
+                    model.flow[l].value = self._Qtol/10.0
                     model.flow[l].fixed = True
                 elif status == 'OPEN':
                     diameter = valve.diameter
@@ -1181,7 +1197,13 @@ class PyomoSimulator(WaterNetworkSimulator):
             #t0 = time.time()
             # Solve pyomo model
             #instance.pprint()
+            #for l in instance.pumps:
+            #    print l, instance.flow[l].value
+
+            #CheckInstanceFeasibility(instance, 1e-3)
+
             pyomo_results = opt.solve(instance, tee=False)
+            #exit()
             instance.load(pyomo_results)
 
             #print "Solution time: ", time.time() - t0
@@ -1190,12 +1212,13 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Set valve status based on pyomo results
             if self._wn._num_valves != 0:
                 valve_status_changed = self._set_valve_status(instance)
+                check_valve_status_changed = self._set_check_valves_closed(instance, closed_check_valves)
             #print "Setting valve status: ", time.time() - t0
 
             #t0 = time.time()
             #print self._valve_status
             # Resolve the same timestep if the valve status has changed
-            if valve_status_changed:
+            if valve_status_changed or check_valve_status_changed:
                 step_iter += 1
             else:
                 step_iter = 0
@@ -1205,7 +1228,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                     last_tank_head[tank_name] = instance.head[tank_name].value
                 # Load results into self._pyomo_sim_results
                 self._append_pyomo_results(instance, timedelta)
-                last_instance = copy.copy(instance)
+
+            last_instance = copy.copy(instance)
             #print "Appending pyomo results: ", time.time() - t0
 
         if step_iter == self._max_step_iter:
@@ -1442,11 +1466,11 @@ class PyomoSimulator(WaterNetworkSimulator):
                 current_tank_level = instance.head[node_name_i].value - tank_i.elevation
                 if link_name_k in pumps_closed:
                     if current_tank_level <= value_i:
-                        pumps_closed = [j for j in pumps_closed if j != link_name_k]
+                        pumps_closed.remove(link_name_k)
                         #print "Pump ", link_name_k, " opened"
                         # Overriding time controls
                         if link_name_k in pipes_closed:
-                            pipes_closed = [m for m in pipes_closed if m != link_name_k]
+                            pipes_closed.remove(link_name_k)
                             # If the links base status is closed then
                             # all rest of timestep should be opened
                             link = self._wn.get_link(link_name_k)
@@ -1461,7 +1485,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 tank_i = self._wn.get_node(node_name_i)
                 current_tank_level = instance.head[node_name_i].value - tank_i.elevation
                 if link_name_k not in pumps_closed and current_tank_level >= value_i:
-                    pumps_closed.append(link_name_k)
+                    pumps_closed.add(link_name_k)
                     #print "Pump ", link_name_k, " closed"
             # If link is closed and tank level goes above threshold, then open the link
             for i in open_above:
@@ -1471,10 +1495,10 @@ class PyomoSimulator(WaterNetworkSimulator):
                 current_tank_level = instance.head[node_name_i].value - tank_i.elevation
                 if link_name_k in pumps_closed:
                     if current_tank_level >= value_i:
-                        pumps_closed = [j for j in pumps_closed if j != link_name_k]
+                        pumps_closed.remove(link_name_k)
                         #print "Pump ", link_name_k, " opened"
                         if link_name_k in pipes_closed:
-                            pipes_closed = [m for m in pipes_closed if m != link_name_k]
+                            pipes_closed.remove(link_name_k)
                             # If the links base status is closed then
                             # all rest of timestep should be opened
                             link = self._wn.get_link(link_name_k)
@@ -1489,25 +1513,24 @@ class PyomoSimulator(WaterNetworkSimulator):
                 tank_i = self._wn.get_node(node_name_i)
                 current_tank_level = instance.head[node_name_i].value - tank_i.elevation
                 if link_name_k not in pumps_closed and current_tank_level <= value_i:
-                    pumps_closed.append(link_name_k)
+                    pumps_closed.add(link_name_k)
                     #print "Pump ", link_name_k, " closed"
 
-        return [pumps_closed, pipes_closed]
 
     def _apply_pump_outage(self, t):
 
-        pumps_closed_by_outage = []
+        pumps_closed_by_outage = set([])
         time_t = self._hydraulic_step_sec*t
 
         for pump_name, time_tuple in self._pump_outage.iteritems():
             if time_t >= time_tuple[0] and time_t <= time_tuple[1]:
-                pumps_closed_by_outage.append(pump_name)
+                pumps_closed_by_outage.add(pump_name)
 
         return pumps_closed_by_outage
 
     def _apply_tank_controls(self, instance):
 
-        pipes_closed_by_tank = []
+        pipes_closed_by_tank = set([])
 
         for tank_name, control_info in self._tank_controls.iteritems():
             link_name_to_tank = control_info['link_name']
@@ -1524,7 +1547,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             # the head at connected node is below this minimum. That is,
             # flow will be out of the tank
             if head_in_tank <= min_tank_head and head_at_next_node <= head_in_tank:
-                pipes_closed_by_tank.append(link_name_to_tank)
+                pipes_closed_by_tank.add(link_name_to_tank)
+                #print "Tank closed: ", tank_name
 
         return pipes_closed_by_tank
 
@@ -1544,6 +1568,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         """
         valve_status_changed = False
+        # See EPANET2 Manual pg 191 for the description of the logic used below
         for valve_name in instance.valves:
             status = self._valve_status[valve_name]
             valve = self._wn.get_link(valve_name)
@@ -1578,6 +1603,35 @@ class PyomoSimulator(WaterNetworkSimulator):
                     valve_status_changed = True
 
         return valve_status_changed
+
+    def _set_check_valves_closed(self, instance, check_valves_closed):
+
+        check_valve_status_changed = False
+        # See EPANET2 Manual pg 191 for the description of the logic used below
+        for pipe_name in self._wn._check_valves:
+            pipe = self._wn.get_link(pipe_name)
+            start_node = pipe.start_node()
+            end_node = pipe.end_node()
+            headloss = instance.head[start_node].value - instance.head[end_node].value
+            if abs(headloss) > self._Htol:
+                if headloss < -self._Htol:
+                    if pipe_name not in check_valves_closed:
+                        check_valves_closed.add(pipe_name)
+                        check_valve_status_changed = True
+                elif instance.flow[pipe_name].value < -self._Qtol:
+                    if pipe_name not in check_valves_closed:
+                        check_valves_closed.add(pipe_name)
+                        check_valve_status_changed = True
+                else:
+                    if pipe_name in check_valves_closed:
+                        check_valves_closed.remove(pipe_name)
+                        check_valve_status_changed = True
+            elif instance.flow[pipe_name].value < -self._Qtol:
+                check_valves_closed.add(pipe_name)
+                check_valve_status_changed = True
+
+        #print check_valves_closed
+        return check_valve_status_changed
 
     def _load_general_results(self, results):
         """

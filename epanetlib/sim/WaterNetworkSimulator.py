@@ -79,8 +79,15 @@ class WaterNetworkSimulator(object):
             self._tank_controls[tank_name] = {}
             links_next_to_tank = self._wn.get_links_for_node(tank_name)
             if len(links_next_to_tank) != 1:
-                warnings.warn('Pump outage analysis requires tank to be connected to a single link.'
-                              'Multiple links out of a Tank are not supported for pump outage.')
+                # Remove CV's from list of links next to tank
+                for l in links_next_to_tank:
+                    link = self._wn.get_link(l)
+                    if link.get_base_status() == 'CV':
+                        links_next_to_tank.remove(l)
+            if len(links_next_to_tank) != 1:
+                warnings.warn('Pump outage analysis requires tank to be connected to a single link that'
+                              ' is not a check valve. Please set tank controls manually to provide the link'
+                              ' that should be closed when tank level goes below minimum.')
             link = self._wn.get_link(links_next_to_tank[0])
             node_next_to_tank = link.start_node()
             if node_next_to_tank == tank_name:
