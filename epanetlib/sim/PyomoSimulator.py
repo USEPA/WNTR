@@ -742,7 +742,12 @@ class PyomoSimulator(WaterNetworkSimulator):
                     return pump.get_design_flow()
                 else:
                     return 0.3048
-        model.flow = Var(model.links, within=Reals, initialize=flow_init_rule)
+        def flow_bounds_rule(model, l):
+            if l in model.pumps:
+                return (1e-8, np.inf)
+            else:
+                return (-np.inf, np.inf)
+        model.flow = Var(model.links, within=Reals, initialize=flow_init_rule, bounds=flow_bounds_rule)
 
         def init_headloss_rule(model, l):
             if l in model.pipes:
@@ -856,12 +861,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             return (tank.elevation + tank.min_level, model.head[n], tank.elevation + tank.max_level)
         model.tank_head_bounds = Constraint(model.tanks, rule=tank_head_bounds_rule)
         """
-
-        # Flow in a pump should always be positive
-        def pump_positive_flow_rule(model,l):
-            return model.flow[l] >= 0
-        model.pump_positive_flow_bounds = Constraint(model.pumps, rule=pump_positive_flow_rule)
-
 
         def tank_dynamics_rule(model, n):
             if first_timestep:
@@ -1057,7 +1056,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Set solver options
         for key, val in solver_options.iteritems():
             opt.options[key]=val
-        #opt.options['halt_on_ampl_error'] = 'yes'
         opt.options['bound_relax_factor'] = 0.0
 
         ######### MAIN SIMULATION LOOP ###############
@@ -1095,8 +1093,23 @@ class PyomoSimulator(WaterNetworkSimulator):
                     links_closed_by_tank_controls = self._apply_tank_controls(instance)
 
             if self._pump_outage:
-                pumps_closed_by_outage = self._apply_pump_outage(t)
+                self._apply_pump_outage(pumps_closed_by_outage, links_closed_by_time, t)
 
+            """
+            # print controls
+            print "Links closed by time controls: "
+            for i in links_closed_by_time:
+                print "\tLink: ", i, " closed"
+            print "Links closed by conditional controls: "
+            for i in pumps_closed_by_rule:
+                print "\tLink: ", i, " closed"
+            print "Pumps closed by outage: "
+            for i in pumps_closed_by_outage:
+                print "\tLink: ", i, " closed"
+            print "Links closed by tank controls: "
+            for i in links_closed_by_tank_controls:
+                print "\tLink: ", i, " closed"
+            """
             # Combine list of closed links
             """
             links_closed = links_closed_by_time \
@@ -1107,12 +1120,10 @@ class PyomoSimulator(WaterNetworkSimulator):
             """
             links_closed = links_closed_by_time.union(pumps_closed_by_rule.union(pumps_closed_by_outage.union(links_closed_by_tank_controls.union(closed_check_valves))))
 
-            #for i in links_closed:
-            #    print "Link: ", i, " closed"
 
             timedelta = results.time[t]
             if step_iter == 0:
-                print "Running Hydraulic Simulation at time", timedelta, " ..."
+                print "Running Hydraulic Simulation at time", timedelta, " ... "
             else:
                 print "\t Trial", str(step_iter+1), "Running Hydraulic Simulation at time", timedelta, " ..."
             t0 = time.time()
@@ -1192,14 +1203,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             #print "PRV constraint: ", time.time() - t0
 
-
-            #t0 = time.time()
-            # Solve pyomo model
-            #instance.pprint()
             #for l in instance.pumps:
             #    print l, instance.flow[l].value
-
-            #CheckInstanceFeasibility(instance, 1e-3)
 
             pyomo_results = opt.solve(instance, tee=False)
             #exit()
@@ -1516,16 +1521,27 @@ class PyomoSimulator(WaterNetworkSimulator):
                     #print "Pump ", link_name_k, " closed"
 
 
-    def _apply_pump_outage(self, t):
+    def _apply_pump_outage(self, pumps_closed_by_outage, links_closed_by_time_controls, t):
 
-        pumps_closed_by_outage = set([])
         time_t = self._hydraulic_step_sec*t
 
         for pump_name, time_tuple in self._pump_outage.iteritems():
             if time_t >= time_tuple[0] and time_t <= time_tuple[1]:
                 pumps_closed_by_outage.add(pump_name)
+            elif pump_name in pumps_closed_by_outage:
+                pumps_closed_by_outage.remove(pump_name)
+                # Override time controls
+                if pump_name in links_closed_by_time_controls:
+                    links_closed_by_time_controls.remove(pump_name)
+                    # If the links base status is closed then
+                    # all rest of timestep should be opened
+                    link = self._wn.get_link(pump_name)
+                    closed_times = self._wn.time_controls[pump_name]['closed_times']
+                    if link.get_base_status().upper() == 'CLOSED' or \
+                        (len(closed_times) == 1 and closed_times[0] == 0):
+                        for tt in xrange(t, self._n_timesteps):
+                            self._link_status[pump_name][tt] = True
 
-        return pumps_closed_by_outage
 
     def _apply_tank_controls(self, instance):
 
