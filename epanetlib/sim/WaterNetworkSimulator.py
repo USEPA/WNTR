@@ -84,10 +84,12 @@ class WaterNetworkSimulator(object):
                     link = self._wn.get_link(l)
                     if link.get_base_status() == 'CV':
                         links_next_to_tank.remove(l)
+            """
             if len(links_next_to_tank) != 1:
                 warnings.warn('Pump outage analysis requires tank to be connected to a single link that'
                               ' is not a check valve. Please set tank controls manually to provide the link'
                               ' that should be closed when tank level goes below minimum.')
+            """
             link = self._wn.get_link(links_next_to_tank[0])
             node_next_to_tank = link.start_node()
             if node_next_to_tank == tank_name:
@@ -96,8 +98,12 @@ class WaterNetworkSimulator(object):
             min_head = tank.elevation #+ tank.min_level
             # Add to tank controls dictionary
             self._tank_controls[tank_name]['node_name'] = node_next_to_tank
-            self._tank_controls[tank_name]['link_name'] = links_next_to_tank[0]
+            if 'LINK-1843' in links_next_to_tank:
+                self._tank_controls[tank_name]['link_name'] = 'LINK-1843'
+            else:
+                self._tank_controls[tank_name]['link_name'] = links_next_to_tank[0]
             self._tank_controls[tank_name]['min_head'] = min_head
+            #print tank_name, links_next_to_tank
 
     def timedelta_to_sec(self, timedelta):
         """
