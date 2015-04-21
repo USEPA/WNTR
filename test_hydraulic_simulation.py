@@ -3,8 +3,7 @@ import matplotlib.pylab as plt
 
 plt.close('all')
 
-inp_file = 'networks/Net1_with_time_controls.inp'
-#inp_file = 'networks/Net1.inp'
+inp_file = 'networks/Net1.inp'
 
 # Create a water network model
 wn = en.network.WaterNetworkModel()
