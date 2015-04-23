@@ -19,35 +19,58 @@ if not units.find_unit('waterpressure'):
 pressure_lower_bound = 30*float(units.psi/units.waterpressure) # psi to m
 demand_factor = 0.9 # 90% of requested demand
 
-# Create enData
+inp_file = 'networks/Net3.inp'
+adjust_demand = False
+
+####### OLD WAY - BEGIN #######
+# Create enData for G
 enData = en.pyepanet.ENepanet()
-enData.inpfile = 'networks/Net3.inp'
+enData.inpfile = inp_file
 enData.ENopen(enData.inpfile,'tmp.rpt')
 
 # Create MultiDiGraph and plot as an undirected network
 G = en.network.epanet_to_MultiDiGraph(enData)
 en.network.draw_graph_OLD(G.to_undirected(), title=enData.inpfile)
 
-# Setup timesteps for analysis, default = 0:EN_REPORTSTEP:EN_DURATION
-duration = enData.ENgettimeparam(en.pyepanet.EN_DURATION)
-timestep = enData.ENgettimeparam(en.pyepanet.EN_REPORTSTEP)
-tstart = 24*3600
-G.graph['time'] = range(tstart,duration+1,timestep*6)
-
 # Run hydarulic simulation and save data
 G = en.sim.eps_hydraulic(enData, G)
 
+## Fraction of delivered volume (FDV)
+#fdv = en.metrics.fraction_delivered_volume_old(G, pressure_lower_bound)
+#print "Average FDV: " +str(np.mean(fdv.values()))
+#en.network.draw_graph_OLD(G.to_undirected(), node_attribute=fdv, 
+#                      title= 'FDV', node_range=[0,1])
+#
+## Fraction of delivered demand (FDD)
+#fdd = en.metrics.fraction_delivered_demand_old(G, pressure_lower_bound, demand_factor)
+#print "Average FDD: " +str(np.mean(fdd.values()))
+#en.network.draw_graph_OLD(G.to_undirected(), node_attribute=fdd, 
+#                      title= 'FDD', node_range=[0,1])     
+####### OLD WAY - END #######
+
+####### NEW WAY - BEGIN #######
+# Create a water network model for results object
+wn = en.network.WaterNetworkModel()
+parser = en.network.ParseWaterNetwork()
+parser.read_inp_file(wn, inp_file)
+
+# Simulate using EPANET
+epanet_sim = en.sim.EpanetSimulator(wn)
+epanet_results = epanet_sim.run_sim()
+
+
 # Fraction of delivered volume (FDV)
-fdv = en.metrics.fraction_delivered_volume(G, pressure_lower_bound)
+fdv = en.metrics.fraction_delivered_volume(epanet_results, pressure_lower_bound, adjust_demand)
 print "Average FDV: " +str(np.mean(fdv.values()))
 en.network.draw_graph_OLD(G.to_undirected(), node_attribute=fdv, 
                       title= 'FDV', node_range=[0,1])
 
 # Fraction of delivered demand (FDD)
-fdd = en.metrics.fraction_delivered_demand(G, pressure_lower_bound, demand_factor)
+fdd = en.metrics.fraction_delivered_demand(epanet_results, pressure_lower_bound, demand_factor, adjust_demand)
 print "Average FDD: " +str(np.mean(fdd.values()))
 en.network.draw_graph_OLD(G.to_undirected(), node_attribute=fdd, 
                       title= 'FDD', node_range=[0,1])
+####### NEW WAY - END #######
 
 # Pressure stats
 head = nx.get_node_attributes(G,'head')
