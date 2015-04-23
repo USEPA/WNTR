@@ -10,9 +10,9 @@ TODO
 """
 
 try:
+    from pyomo.environ import *
     from pyomo.core import *
     from pyomo.core.base.expr import Expr_if
-    from pyomo.environ import *
     from pyomo.opt import SolverFactory
 except ImportError:
     raise ImportError('Error importing pyomo while running pyomo simulator.'
@@ -374,6 +374,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.nodes = Set(initialize=[name for name, node in wn.nodes()])
         model.tanks = Set(initialize=[n for n, N in wn.nodes(Tank)])
         model.junctions = Set(initialize=[n for n, N in wn.nodes(Junction)])
+        model.leaks = Set(initialize = [n for n, N in wn.nodes(Leak)])
         model.reservoirs = Set(initialize=[n for n, N in wn.nodes(Reservoir)])
         # LINKS
         model.links = Set(initialize=[name for name, link in wn.links()])
@@ -496,6 +497,14 @@ class PyomoSimulator(WaterNetworkSimulator):
                 return expr == model.tank_net_inflow[n]
             elif isinstance(node, Reservoir):
                 return expr == model.reservoir_demand[n]
+            elif isinstance(node, Leak):
+                print '****************************************************************************************'
+                print '\n\n\nDouble check units with Arpan.'
+                print 'Also double check whether head is guage or absolute.'
+                print 'We need to add a check for negative guage pressure at leak node.'
+                print 'What should leak elevation be?\n\n\n'
+                print '****************************************************************************************'
+                return expr == node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*(model.head[n])**0.5
         model.node_mass_balance = Constraint(model.nodes, rule=node_mass_balance_rule)
         #print "Created Node balance: ", time.time() - t0
 

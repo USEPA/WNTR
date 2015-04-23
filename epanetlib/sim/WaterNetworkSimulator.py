@@ -242,8 +242,10 @@ class WaterNetworkSimulator(object):
             return 'tank'
         elif isinstance(self._wn.get_node(name), Reservoir):
             return 'reservoir'
+        elif isinstance(self._wn.get_node(name), Leak):
+            return 'leak'
         else:
-            raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, or reservoir.')
+            raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, reservoir, or leak.')
 
     def _verify_conditional_controls_for_tank(self):
         for link_name in self._wn.conditional_controls:
