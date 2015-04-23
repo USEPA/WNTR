@@ -28,7 +28,7 @@ junction_attr = wn.get_node_attribute('elevation', node_type=en.network.Junction
 pipe_attr = wn.get_link_attribute('length', link_type=en.network.Pipe)
 en.network.draw_graph(wn, node_attribute=junction_attr, 
                            link_attribute=pipe_attr, title='Node elevation and pipe length', 
-                           node_size=40, edge_width=2)
+                           node_size=40, link_width=2)
 
 # Link density = 2m/n(n-1) where n is the number of nodes and m is the number
 # of edges in G. The density is 0 for a graph without edges and 1 for a dense
@@ -62,7 +62,7 @@ print "   " + str(nzd_nodes.keys())
 diameter = 20*float((units.inches/units.m)) # in to m
 pipes = wn.query_link_attribute('diameter', np.greater, diameter)
 en.network.draw_graph(wn, link_attribute=pipes.keys(), 
-                           title='Pipes > 20 inches', edge_width=2, edge_range=[0,1])
+                           title='Pipes > 20 inches', link_width=2, link_range=[0,1])
 print "Number of pipes > 20 inches: " + str(len(pipes))
 print "   " + str(pipes)
 
@@ -103,8 +103,8 @@ print "Meshedness coefficient: " + str(meshedness)
 # Betweenness centrality = number of times a node acts as a bridge along the
 # shortest path between two other nodes.
 bet_cen = nx.betweenness_centrality(G)
-bet_cen2 = dict([(k,v) for k,v in bet_cen.iteritems() if v > 0.1])
-en.network.draw_graph(wn, node_attribute=bet_cen2,
+bet_cen_trim = dict([(k,v) for k,v in bet_cen.iteritems() if v > 0.1])
+en.network.draw_graph(wn, node_attribute=bet_cen_trim,
                       title='Betweenness Centrality', node_size=40, node_range=[0.1, 0.4])
 central_pt_dom = sum(max(bet_cen.values()) - np.array(bet_cen.values()))/G.number_of_nodes()
 print "Central point dominance: " + str(central_pt_dom)
@@ -122,7 +122,7 @@ en.network.draw_graph(wn, node_attribute=Nap,
 # Bridge = a link is considered a bridge if the removal of that link increases 
 # the number of connected components in the network.
 bridges = en.network.bridges(G)
-en.network.draw_graph(wn, link_attribute=bridges, title='Bridges', edge_width=2, edge_range=[0,1])
+en.network.draw_graph(wn, link_attribute=bridges, title='Bridges', link_width=2, link_range=[0,1])
 Nbr_density = float(len(bridges))/G.number_of_edges()
 print "Density of bridges: " + str(Nbr_density)
 

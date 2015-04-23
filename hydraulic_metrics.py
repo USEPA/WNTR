@@ -62,9 +62,9 @@ attr2 = dict([(k,v) for k,v in attr.iteritems() if v > 0])
 en.network.draw_graph_OLD(G.to_undirected(), node_attribute=attr2, title= 'Pressure')
 
 # Compute population per node
-VCbar = en.metrics.VCbar_perday(G) # average volume of water consumed per day, m3/day
+qbar = en.metrics.average_demand_perday(G) # average volume of water consumed per day, m3/day
 R = 0.757082 # average volume of water consumed per capita per day, m3/day (=200 gall/day)
-pop = en.metrics.population(VCbar,R)
+pop = en.metrics.population(qbar,R)
 total_population = sum(pop.values())
 print "Total population: " + str(total_population)
 en.network.draw_graph_OLD(G.to_undirected(), node_attribute=pop, node_range = [0,400],
