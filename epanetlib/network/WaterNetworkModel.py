@@ -497,13 +497,13 @@ class WaterNetworkModel(object):
                 pass
         return link_attribute_dict
 
-    def add_time_control(self, link, open_times=[], closed_times=[]):
+    def add_time_control(self, link_name, open_times=[], closed_times=[], active_times=[]):
         """
         Add time controls to the network.
 
         Parameter
         -------
-        link : string
+        link_name : string
             Name of the link
         open_times : list of integers
             List of times (in minutes) when the link is opened
@@ -511,14 +511,18 @@ class WaterNetworkModel(object):
             List of times (in minutes) when the link is closed
 
         """
-        if link not in self.time_controls:
-            self.time_controls[link] = {'open_times': [i for i in open_times], 'closed_times': [i for i in closed_times]}
+        #link = self.get_link(link_name)
+        if link_name not in self.time_controls:
+            #self.time_controls[link_name] = {'open_times': [i for i in open_times], 'closed_times': [i for i in closed_times]}
+            self.time_controls[link_name] = {'open_times': [i for i in open_times], 'closed_times': [i for i in closed_times], 'active_times': [i for i in active_times]}
         else:
-            self.time_controls[link]['open_times'] += open_times
-            self.time_controls[link]['closed_times'] += closed_times
+            self.time_controls[link_name]['open_times'] += open_times
+            self.time_controls[link_name]['closed_times'] += closed_times
+            self.time_controls[link_name]['active_times'] += active_times
 
-        self.time_controls[link]['open_times'].sort()
-        self.time_controls[link]['closed_times'].sort()
+        self.time_controls[link_name]['open_times'].sort()
+        self.time_controls[link_name]['closed_times'].sort()
+        self.time_controls[link_name]['active_times'].sort()
 
     def add_conditional_controls(self, link_name, node_name, level_value, open_or_closed, above_or_below):
         """

@@ -2,7 +2,8 @@
 Unit Conversion
 """
 import math
-    
+import numpy as np
+
 def convert(paramtype, flowunit, data, MKS = True):
     """Convert epanet data to SI units (kg, m, sec)
     
@@ -27,7 +28,7 @@ def convert(paramtype, flowunit, data, MKS = True):
         - EN_CMH = 8 cubic meters per hour
         - EN_CMD = 9 cubic meters per day
 
-    data : numpy array or scalar
+    data : list, numpy array, dictonary, or scalar
         Data values to convert
     
     MKS : bool, default = True
@@ -35,8 +36,8 @@ def convert(paramtype, flowunit, data, MKS = True):
     
     Returns
     -------
-    converted_data : numpy array or scalar
-        Converted data, same size as data
+    converted_data : list, numpy array, dictonary, or scalar
+        Converted data, same size and type as data
         
     Examples
     --------
@@ -92,7 +93,13 @@ def convert(paramtype, flowunit, data, MKS = True):
     units. SI Metric units apply when flow units are expressed using either 
     liters or cubic meters.
 """
-    
+    data_type = type(data)
+    if data_type is dict:
+        data_keys = data.keys()
+        data = np.array(data.values())
+    elif data_type is list:
+        data = np.array(data)
+        
     if paramtype == 'Concentration':
         if MKS: data = data * (1.0e-6/0.001) # mg/L to kg/m3
         else:   data = data / (1.0e-6/0.001) # kg/m3 to mg/L
@@ -193,4 +200,9 @@ def convert(paramtype, flowunit, data, MKS = True):
     else:
         print "Invalid paramtype: " + paramtype + ". No conversion"
     
+    if data_type is dict:
+        data = dict(zip(data_keys, data))
+    elif data_type is list:
+        data = list(data)
+        
     return data
