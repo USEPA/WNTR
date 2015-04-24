@@ -221,11 +221,17 @@ class WaterNetworkModel(object):
         G = copy.deepcopy(self._graph)
         
         for index, value in node_attribute.iteritems():
-            node_name = index[0] # if the index is taken from a pivot table, it's indexed by (node, time)
+            if type(index) is tuple:
+                node_name = index[0] # if the index is taken from a pivot table, it's indexed by (node, time)
+            else:
+                node_name = index
             nx.set_node_attributes(G, 'weight', {node_name: value})
             
         for index, value in link_attribute.iteritems():
-            link_name = index[0] # if the index is taken from a pivot table, it's indexed by (link, time)
+            if type(index) is tuple:
+                link_name = index[0] # if the index is taken from a pivot table, it's indexed by (link, time)
+            else:
+                link_name = index
             link = self.get_link(link_name)
             if value < 0: # change the direction of the link and value
                 link_type = G[link.start_node()][link.end_node()][link_name]['type'] # 'type' should be the only other attribute on G.edge

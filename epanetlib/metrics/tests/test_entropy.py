@@ -11,27 +11,30 @@ sys.path.append(packdir)
 import epanetlib as en
 
 def test_layout1():
-    enData = en.pyepanet.ENepanet()
-    enData.inpfile = join(datadir,'Awumah_layout1.inp') 
-    enData.ENopen(enData.inpfile,'tmp.rpt')
+    inp_file = join(datadir,'Awumah_layout1.inp') 
+
+    # Create a water network model for results object
+    wn = en.network.WaterNetworkModel()
+    parser = en.network.ParseWaterNetwork()
+    parser.read_inp_file(wn, inp_file)
     
-    attr = {('1', '2', '1'): 940.7,
-            ('2', '3', '2'): 550.0,
-            ('1', '4', '3'): 659.3,
-            ('2', '5', '4'): 290.7,
-            ('3', '6', '5'): 400.0,
-            ('4', '5', '6'): 59.3,
-            ('4', '7', '7'): 450.0, 
-            ('5', '8', '8'): 200.0, 
-            ('6', '9', '9'): 300.0, 
-            ('7', '10', '10'): 250.0,
-            ('9', '12', '11'): 100.0,
-            ('10', '11', '12'): 150.0}
-            
-    G = en.network.epanet_to_MultiDiGraph(enData, edge_attribute=attr)
-    en.network.draw_graph_OLD(G, edge_attribute='weight') 
+    attr = {'1': 940.7,
+            '2': 550.0,
+            '3': 659.3,
+            '4': 290.7,
+            '5': 400.0,
+            '6': 59.3,
+            '7': 450.0, 
+            '8': 200.0, 
+            '9': 300.0, 
+            '10': 250.0,
+            '11': 100.0,
+            '12': 150.0}
+   
+    G_flowrate = wn.get_weighted_graph_copy(link_attribute=attr)    
+    en.network.draw_graph(wn, link_attribute=attr) 
     
-    [S, Shat,sp,dk] = en.metrics.entropy(G)
+    [S, Shat,sp,dk] = en.metrics.entropy(G_flowrate)
     
     Saverage = np.mean(S.values())
     Smax = max(S.values())
@@ -57,31 +60,34 @@ def test_layout1():
 
 
 def test_layout8():
-    enData = en.pyepanet.ENepanet()
-    enData.inpfile = join(datadir,'Awumah_layout8.inp') 
-    enData.ENopen(enData.inpfile,'tmp.rpt')
+    inp_file = join(datadir,'Awumah_layout8.inp') 
+
+    # Create a water network model for results object
+    wn = en.network.WaterNetworkModel()
+    parser = en.network.ParseWaterNetwork()
+    parser.read_inp_file(wn, inp_file)
     
-    attr = {('1', '2', '1'): 678.8,
-            ('2', '3', '2'): 403.3,
-            ('1', '4', '3'): 921.2,
-            ('2', '5', '4'): 175.5,
-            ('3', '6', '5'): 253.3,
-            ('4', '5', '6'): 227.1,
-            ('5', '6', '7'): 126.3,
-            ('4', '7', '8'): 544.1, 
-            ('5', '8', '9'): 126.3, 
-            ('6', '9', '10'): 279.6, 
-            ('7', '8', '11'): 200.0,
-            ('7', '10', '12'): 144.1,
-            ('8', '11', '13'): 126.3,
-            ('9', '12', '14'): 79.6,
-            ('10', '11', '15'): 44.1,
-            ('11', '12', '16'): 20.4}
-            
-    G = en.network.epanet_to_MultiDiGraph(enData, edge_attribute=attr)
-    en.network.draw_graph_OLD(G, edge_attribute='weight') 
+    attr = {'1': 678.8,
+            '2': 403.3,
+            '3': 921.2,
+            '4': 175.5,
+            '5': 253.3,
+            '6': 227.1,
+            '7': 126.3,
+            '8': 544.1, 
+            '9': 126.3, 
+            '10': 279.6, 
+            '11': 200.0,
+            '12': 144.1,
+            '13': 126.3,
+            '14': 79.6,
+            '15': 44.1,
+            '16': 20.4}
+   
+    G_flowrate = wn.get_weighted_graph_copy(link_attribute=attr)    
+    en.network.draw_graph(wn, link_attribute=attr) 
     
-    [S, Shat,sp,dk] = en.metrics.entropy(G)
+    [S, Shat,sp,dk] = en.metrics.entropy(G_flowrate)
     
     Saverage = np.mean(S.values())
     Smax = max(S.values())
