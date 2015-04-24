@@ -94,7 +94,8 @@ en.network.draw_graph_OLD(G.to_undirected(), node_attribute=pop, node_range = [0
                       title='Population, Total = ' + str(total_population))
               
 # Compute todini index
-todini = en.metrics.todini(G, pressure_lower_bound)
+#todini = en.metrics.todini(G, pressure_lower_bound)
+todini = en.metrics.todini(epanet_results,wn, pressure_lower_bound)
 plt.figure()
 plt.plot(np.array(G.graph['time'])/3600, todini)
 plt.ylabel('Todini Index')
