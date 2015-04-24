@@ -36,26 +36,7 @@ def bridges(G):
     
 """
 Extension of networkx functions
-"""      
-
-"""
-TODO set_edge_attributes_MG is probably not needed with the WaterNetworkModel
-"""
-def set_edge_attributes_MG(MG,name,attributes):
-    #Adaptation of nx.set_edge_attributes
-    
-    for (u,v,k),value in attributes.items():
-        MG.edge[u][v][k][name]=value
-        
-"""
-TODO get_edge_attributes_MG is probably not needed with the WaterNetworkModel
-"""     
-def get_edge_attributes_MG(MG,name):
-    #Adaptation of nx.get_edge_attributes
-
-    return dict( ((u,v,k),d[name]) for u,v,k,d in MG.edges(keys=True,data=True) if name in d)
-    
-    
+"""        
 def all_simple_paths(G, source, target, cutoff=None):
     # Adaptation of nx.all_simple_paths
     
