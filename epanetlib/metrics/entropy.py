@@ -1,17 +1,15 @@
-import epanetlib.pyepanet as pyepanet
 import networkx as nx
-from epanetlib.network.network_topography import get_edge_attributes_MG
 from epanetlib.network.network_topography import all_simple_paths
 import math
 import numpy as np
 from collections import Counter
 
 def entropy(G, sink = None):
-
+    
     if G.is_directed() == False:
         return
     
-    sources = [key for key,value in nx.get_node_attributes(G,'nodetype').items() if value == pyepanet.EN_RESERVOIR ]
+    sources = [key for key,value in nx.get_node_attributes(G,'type').items() if value == 'reservoir' ]
     
     if sink is None:
         sink = G.nodes()
@@ -24,7 +22,7 @@ def entropy(G, sink = None):
             continue 
         
         sp = [] # simple path
-        if G.node[nodej]['nodetype']  == pyepanet.EN_JUNCTION:
+        if G.node[nodej]['type']  == 'junction':
             for source in sources:
                 if nx.has_path(G, source, nodej):
                     simple_paths = all_simple_paths(G,source,target=nodej)
@@ -76,19 +74,21 @@ def entropy(G, sink = None):
         # Equation 7
         S[nodej] = 0
         for idx in range(len(qij)):
-            S[nodej] = S[nodej] - \
-                qij[idx]/Q[nodej]*math.log(qij[idx]/Q[nodej]) + \
-                qij[idx]/Q[nodej]*math.log(aij[idx])
+            if qij[idx]/Q[nodej] > 0:
+                S[nodej] = S[nodej] - \
+                    qij[idx]/Q[nodej]*math.log(qij[idx]/Q[nodej]) + \
+                    qij[idx]/Q[nodej]*math.log(aij[idx])
                     
-    Q0 = sum(get_edge_attributes_MG(G, 'weight').values())        
+    Q0 = sum(nx.get_edge_attributes(G, 'weight').values())   
 
     # Equation 3
     Shat = 0
     for nodej in sink:
         if not np.isnan(S[nodej]):
             if nodej not in sources:
-                Shat = Shat + \
-                    (Q[nodej]*S[nodej])/Q0 - \
-                    Q[nodej]/Q0*math.log(Q[nodej]/Q0)
+                if Q[nodej]/Q0 > 0:
+                    Shat = Shat + \
+                        (Q[nodej]*S[nodej])/Q0 - \
+                        Q[nodej]/Q0*math.log(Q[nodej]/Q0)
         
     return [S, Shat, sp, dk] 

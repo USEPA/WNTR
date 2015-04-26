@@ -249,11 +249,6 @@ class WaterNetworkSimulator(object):
 
     def is_link_open(self, link_name, time):
         link = self._wn.get_link(link_name)
-        if link_name not in self._wn.time_controls:
-            return False if link.get_base_status() == 'CLOSED' else True
-        else:
-            open_times = self._wn.time_controls[link_name]['open_times']
-            closed_times = self._wn.time_controls[link_name]['closed_times']
         base_status = False if link.get_base_status() == 'CLOSED' else True
         if link_name not in self._wn.time_controls:
             return base_status
@@ -267,7 +262,7 @@ class WaterNetworkSimulator(object):
             elif len(open_times) != 0 and len(closed_times) == 0:
                 return base_status if time < open_times[0] else True
             elif time < open_times[0] and time < closed_times[0]:
-                return False if link.get_base_status() == 'CLOSED' else True
+                return base_status
             else:
                 #Check open times
                 left = 0
@@ -302,17 +297,50 @@ class WaterNetworkSimulator(object):
                             left = middle
                         middle = int(0.5*(right+left))
                     min_closed = time-closed_times[left];
-                """
-                min_open = float("inf")
-                for t in open_times:
-                    if time>=t and min_open>=time-t:
-                        min_open = time-t
-                min_closed = float("inf")
-                for t in closed_times:
-                    if time>=t and min_closed>=time-t:
-                        min_closed = time-t
-                """
+                    
                 return True if min_open < min_closed else False
+
+
+    def give_link_status(self,link_name,time):
+        link = self._wn.get_link(link_name)
+    
+        base_status = link.get_base_status()
+        if link_name not in self._wn.time_controls:
+            return base_status
+        else:
+            count_base = 1
+            time_diff_values = dict()
+            time_controls = self._wn.time_controls[link_name]
+            for key in time_controls.keys():
+                list_times = self._wn.time_controls[link_name][key]
+                time_diff_values[key] = float("inf");
+                if list_times:
+                    if time < list_times[0]:
+                        count_base+=1
+                    else:
+                        left = 0
+                        right = len(list_times)-1
+                        if time >= list_times[right]:
+                            min_diff = time-list_times[right];
+                        elif time < list_times[left]:
+                            min_diff = float("inf");
+                        else:
+                            middle = int(0.5*(right+left))
+                            while(right-left>1):
+                                if(list_times[middle]>time):
+                                    right = middle
+                                else:
+                                    left = middle
+                                middle = int(0.5*(right+left))
+                            min_diff = time-list_times[left]
+                        time_diff_values[key] = min_diff
+            
+            if count_base>=len(time_controls.keys()):
+                return base_status
+            else:
+                name_list = min(time_diff_values, key=lambda k: time_diff_values[k]) 
+                return name_list.split('_')[0].upper()
+                    
 
     def sec_to_timestep(self, sec):
         """
