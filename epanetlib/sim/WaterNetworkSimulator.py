@@ -49,10 +49,14 @@ class WaterNetworkSimulator(object):
         #                   'link_name': 'Pipe-3',
         #                   'min_head': 100}
         self._tank_controls = {}
+        # A dictionary containing links connected to reservoir
+        # 'Pump-2':'Lake-1'
+        self._reservoir_links = {}
 
         if water_network is not None:
             self.init_time_params_from_model()
             self._init_tank_controls()
+            self._init_reservoir_links()
             # Pressure driven demand parameters
             if 'NOMINAL PRESSURE' in self._wn.options:
                 self._PF = self._wn.options['NOMINAL PRESSURE']
@@ -72,6 +76,12 @@ class WaterNetworkSimulator(object):
             self._hydraulic_times_sec = None
             self._report_step_sec = None
 
+    def _init_reservoir_links(self):
+
+        for reserv_name, reserv in self._wn.nodes(Reservoir):
+            links_next_to_reserv = self._wn.get_links_for_node(reserv_name)
+            for l in links_next_to_reserv:
+                self._reservoir_links[l] = reserv_name
 
     def _init_tank_controls(self):
 
@@ -96,13 +106,18 @@ class WaterNetworkSimulator(object):
                 node_next_to_tank = link.end_node()
             # Minimum tank level is equal to the elevation
             min_head = tank.elevation #+ tank.min_level
+            max_head = tank.max_level + tank.elevation + 1.0
             # Add to tank controls dictionary
             self._tank_controls[tank_name]['node_name'] = node_next_to_tank
+            # Adding a hack for Tank-3326 in Net6.
+            # There does not seem to be a general rule of selecting
+            # the link to close when this tank goes below minimum level.
             if 'LINK-1843' in links_next_to_tank:
                 self._tank_controls[tank_name]['link_name'] = 'LINK-1843'
             else:
                 self._tank_controls[tank_name]['link_name'] = links_next_to_tank[0]
             self._tank_controls[tank_name]['min_head'] = min_head
+            self._tank_controls[tank_name]['max_head'] = max_head
             #print tank_name, links_next_to_tank
 
     def timedelta_to_sec(self, timedelta):
