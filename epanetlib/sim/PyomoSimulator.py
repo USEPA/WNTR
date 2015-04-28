@@ -10,10 +10,10 @@ TODO
 """
 
 try:
+    from pyomo.environ import *
     from pyomo.core import *
     from pyomo.core.base.expr import Expr_if
-    from pyomo.environ import *
-    from pyomo.opt import SolverFactory
+    #from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
 except ImportError:
     raise ImportError('Error importing pyomo while running pyomo simulator.'
                       'Make sure pyomo is installed and added to path.')
@@ -21,6 +21,7 @@ import math
 from WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
+#from pyomo_utils import CheckInstanceFeasibility
 
 class PyomoSimulator(WaterNetworkSimulator):
     """
@@ -28,7 +29,7 @@ class PyomoSimulator(WaterNetworkSimulator):
     """
 
 
-    def __init__(self, wn):
+    def __init__(self, wn, PD_or_DD='DEMAND DRIVEN'):
         """
         Pyomo simulator class.
 
@@ -37,7 +38,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         wn : Water Network Model
             A water network model.
         """
-        WaterNetworkSimulator.__init__(self, wn)
+        WaterNetworkSimulator.__init__(self, wn, PD_or_DD)
 
         # Global constants
         self._Hw_k = 10.67 # Hazen-Williams resistance coefficient in SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
@@ -135,10 +136,14 @@ class PyomoSimulator(WaterNetworkSimulator):
             instance.head[n].value = last_instance.head[n].value
             if n in instance.junctions:
                 junction = self._wn.get_node(n)
-                if instance.head[n].value - junction.elevation <= self._P0:
-                    instance.demand_actual[n] = 100*self._Qtol
+                if self._pressure_driven:
+                    if instance.head[n].value - junction.elevation <= junction.P0:
+                        instance.demand_actual[n] = 100*self._Qtol
+                    else:
+                        instance.demand_actual[n] = abs(instance.demand_actual[n].value) + self._Qtol
                 else:
                     instance.demand_actual[n] = abs(instance.demand_actual[n].value) + self._Qtol
+                    
 
         for r in instance.reservoirs:
             if abs(last_instance.reservoir_demand[r].value) < self._Qtol:
@@ -537,10 +542,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             return Expr_if(IF = Q < q1, THEN = f1(Q), ELSE = Expr_if(IF = Q > q2, THEN = f2(Q), ELSE = Px(Q)))
 
 
-        # Pressure driven demand equation
-        
-        def pressure_dependent_demand_nl(full_demand, p):
-
+        def pressure_dependent_demand_nl(full_demand, p, PF, P0):
+            # Pressure driven demand equation
             delta = 0.1
             # Defining Line 1
             a1 = 1e-5
@@ -552,10 +555,10 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Defining PDD function
 
             def PDD(x):
-                return full_demand*math.sqrt((x - self._P0)/(self._PF - self._P0))
+                return full_demand*math.sqrt((x - P0)/(PF - P0))
 
             def PDD_deriv(x):
-                return (full_demand/2)*(1/(self._PF - self._P0))*(1/math.sqrt((x - self._P0)/(self._PF - self._P0)))
+                return (full_demand/2)*(1/(PF - P0))*(1/math.sqrt((x - P0)/(PF - P0)))
 
             # Define Line 2
             a2 = 1e-5
@@ -569,21 +572,21 @@ class PyomoSimulator(WaterNetworkSimulator):
                                 [3*x_1**2, 2*x_1,  1, 0],
                                 [3*x_2**2, 2*x_2,  1, 0]])
 
-            x_gap = self._PF - self._P0
+            x_gap = PF - P0
 
             assert x_gap > delta, "Delta should be greater than the gap between nominal and minimum pressure."
 
             # Get parameters for the second polynomial
-            x1 = self._P0 - x_gap*delta
+            x1 = P0 - x_gap*delta
             y1 = L2(x1)
-            x2 = self._P0 + x_gap*delta
+            x2 = P0 + x_gap*delta
             y2 = PDD(x2)
             A1 = A(x1, x2)
             rhs1 = np.array([y1, y2, a2, PDD_deriv(x2)])
             c1 = np.linalg.solve(A1, rhs1)
-            x3 = self._PF - x_gap*delta
+            x3 = PF - x_gap*delta
             y3 = PDD(x3)
-            x4 = self._PF + x_gap*delta
+            x4 = PF + x_gap*delta
             y4 = L1(x4)
             A2 = A(x3, x4)
             rhs2 = np.array([y3, y4, PDD_deriv(x3), a1])
@@ -608,12 +611,12 @@ class PyomoSimulator(WaterNetworkSimulator):
                                         ELSE=L1(p)))
             """
             """
-            return Expr_if(IF=p <= self._PF, THEN=PDD(p),
+            return Expr_if(IF=p <= PF, THEN=PDD(p),
                            ELSE=L1(p))
             """
 
 
-        def pressure_dependent_demand_linear(full_demand, p):
+        def pressure_dependent_demand_linear(full_demand, p, PF, P0):
 
             delta = 0.1
             # Defining Line 1
@@ -626,17 +629,17 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Defining PDD function
             """
             def PDD(x):
-                return full_demand*math.sqrt((x - self._P0)/(self._PF - self._P0))
+                return full_demand*math.sqrt((x - P0)/(PF - P0))
 
             def PDD_deriv(x):
-                return (full_demand/2)*(1/(self._PF - self._P0))*(1/math.sqrt((x - self._P0)/(self._PF - self._P0)))
+                return (full_demand/2)*(1/(PF - P0))*(1/math.sqrt((x - P0)/(PF - P0)))
             """
             # Linear PDD Function
             def PDD(x):
-                return full_demand*((x - self._P0)/(self._PF - self._P0))
+                return full_demand*((x - P0)/(PF - P0))
 
             def PDD_deriv(x):
-                return (full_demand)*(1/(self._PF - self._P0))
+                return (full_demand)*(1/(PF - P0))
 
             # Define Line 2
             a2 = 1e-9
@@ -650,21 +653,21 @@ class PyomoSimulator(WaterNetworkSimulator):
                                 [3*x_1**2, 2*x_1,  1, 0],
                                 [3*x_2**2, 2*x_2,  1, 0]])
 
-            x_gap = self._PF - self._P0
+            x_gap = PF - P0
 
             assert x_gap > delta, "Delta should be greater than the gap between nominal and minimum pressure."
 
             # Get parameters for the second polynomial
-            x1 = self._P0 - x_gap*delta
+            x1 = P0 - x_gap*delta
             y1 = L2(x1)
-            x2 = self._P0 + x_gap*delta
+            x2 = P0 + x_gap*delta
             y2 = PDD(x2)
             A1 = A(x1, x2)
             rhs1 = np.array([y1, y2, a2, PDD_deriv(x2)])
             c1 = np.linalg.solve(A1, rhs1)
-            x3 = self._PF - x_gap*delta
+            x3 = PF - x_gap*delta
             y3 = PDD(x3)
-            x4 = self._PF + x_gap*delta
+            x4 = PF + x_gap*delta
             y4 = L1(x4)
             A2 = A(x3, x4)
             rhs2 = np.array([y3, y4, PDD_deriv(x3), a1])
@@ -682,7 +685,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             print "X3: ", x3
             print "X4: ", x4
             print "L1: ", a1, b1
-            print "PDD: ", (full_demand)*(1/(self._PF - self._P0))
+            print "PDD: ", (full_demand)*(1/(PF - P0))
             print "L2: ", a2, b2
             print "P1: ", c1[0], c1[1], c1[2], c1[3]
             print "P2: ", c2[0], c2[1], c2[2], c2[3]
@@ -701,7 +704,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                         ELSE=L1(p)))
             """
             """
-            return Expr_if(IF=p <= self._PF, THEN=PDD(p),
+            return Expr_if(IF=p <= PF, THEN=PDD(p),
                            ELSE=L1(p))
             """
 
@@ -717,6 +720,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.nodes = Set(initialize=[name for name, node in wn.nodes()])
         model.tanks = Set(initialize=[n for n, N in wn.nodes(Tank)])
         model.junctions = Set(initialize=[n for n, N in wn.nodes(Junction)])
+        model.leaks = Set(initialize = [n for n, N in wn.nodes(Leak)])
         model.reservoirs = Set(initialize=[n for n, N in wn.nodes(Reservoir)])
         # LINKS
         model.links = Set(initialize=[name for name, link in wn.links()])
@@ -742,9 +746,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                     return 0.3048
         def flow_bounds_rule(model, l):
             if l in model.pumps and l not in pumps_closed_by_outage:
-                return (1e-8, np.inf)
+                return (0.0, None)
             else:
-                return (-np.inf, np.inf)
+                return (None, None)
         model.flow = Var(model.links, within=Reals, initialize=flow_init_rule, bounds=flow_bounds_rule)
 
         def init_headloss_rule(model, l):
@@ -764,11 +768,13 @@ class PyomoSimulator(WaterNetworkSimulator):
         #model.headloss = Var(model.links, model.time, within=Reals, initialize=10.0)
 
         def init_head_rule(model, n):
-            if n in model.junctions or n in model.tanks:
-                if self._PF is not None:
-                    return wn.get_node(n).elevation + self._PF
+            if n in model.junctions:
+                if self._pressure_driven:
+                    return wn.get_node(n).elevation + wn.get_node(n).PF
                 else:
                     return wn.get_node(n).elevation
+            elif n in model.tanks:
+                return wn.get_node(n).elevation
             else:
                 return 100.0
         model.head = Var(model.nodes, initialize=init_head_rule)
@@ -790,7 +796,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             pipe_resistance_coeff = self._Hw_k*(pipe.roughness**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
             start_node = pipe.start_node()
             end_node = pipe.end_node()
-            if l not in links_closed:
+            if l in links_closed:
+                pass
+            else:
                 if modified_hazen_williams:
                     #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
                     #                                              *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.headloss[l,t]))
@@ -853,6 +861,14 @@ class PyomoSimulator(WaterNetworkSimulator):
                 return expr == model.tank_net_inflow[n]
             elif isinstance(node, Reservoir):
                 return expr == model.reservoir_demand[n]
+            elif isinstance(node, Leak):
+                print '****************************************************************************************'
+                print '\n\n\nDouble check units with Arpan.'
+                print 'Also double check whether head is guage or absolute.'
+                print 'We need to add a check for negative guage pressure at leak node.'
+                print 'What should leak elevation be?\n\n\n'
+                print '****************************************************************************************'
+                return expr == node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*(model.head[n])**0.5
         model.node_mass_balance = Constraint(model.nodes, rule=node_mass_balance_rule)
         #print "Created Node balance: ", time.time() - t0
 
@@ -886,22 +902,22 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Pressure driven demand constraint
         def pressure_driven_demand_rule(model, j):
             junction = wn.get_node(j)
-            #print "Junction: ",j, "P0 = ", self._P0, "Pf = ", self._PF, "required_dem= ", model.demand_required[j], "Elevation: ", junction.elevation
+            #print "Junction: ",j, "P0 = ", junction.P0, "Pf = ", junction.PF, "required_dem= ", model.demand_required[j], "Elevation: ", junction.elevation
             if model.demand_required[j] <= self._Qtol:
                 return model.demand_actual[j] == model.demand_required[j]
             else:
                 #return pressure_dependent_demand_square(model.head[j], junction.elevation) == (model.demand_actual[j]/model.demand_required[j])**2
                 #return pressure_dependent_demand_square(model.head[j], junction.elevation) >= (model.demand_actual[j]/model.demand_required[j])**2
-                #return pressure_dependent_demand_nl(model.demand_required[j], model.head[j]-junction.elevation) == model.demand_actual[j]
-                return pressure_dependent_demand_linear(model.demand_required[j], model.head[j]-junction.elevation) == model.demand_actual[j]
+                #return pressure_dependent_demand_nl(model.demand_required[j], model.head[j]-junction.elevation, junction.PF, junction.P0) == model.demand_actual[j]
+                return pressure_dependent_demand_linear(model.demand_required[j], model.head[j]-junction.elevation, junction.PF, junction.P0) == model.demand_actual[j]
 
         def demand_driven_rule(model, j):
             return model.demand_actual[j] == model.demand_required[j]
 
-        if self._PF == None:
-            model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)
-        else:
+        if self._pressure_driven:
             model.pressure_driven_demand = Constraint(model.junctions, rule=pressure_driven_demand_rule)
+        else:
+            model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)
 
         """
         # Positive demand constraint
@@ -1328,8 +1344,11 @@ class PyomoSimulator(WaterNetworkSimulator):
                                         pumps_closed_by_outage,
                                         links_closed_by_time,
                                         pumps_closed_by_drain_to_reservoir,
+                                        links_closed_by_tank_controls,
                                         t)
                 #self._override_tank_controls(links_closed_by_tank_controls, pumps_closed_by_outage)
+
+
             """
             # print controls
             print "Links closed by time controls: "
@@ -1354,6 +1373,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Combine list of closed links
             #links_closed = links_closed_by_time.union(pumps_closed_by_rule.union(pumps_closed_by_outage.union(links_closed_by_tank_controls.union(closed_check_valves))))
             links_closed = pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(links_closed_by_tank_controls.union(closed_check_valves))))
+            #links_closed = pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(closed_check_valves)))
 
 
             timedelta = results.time[t]
@@ -1403,6 +1423,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             instance = model # Create does not need to be called for NLP ?
             #print "Model creation: ", time.time() - t0
 
+
             # Initializing from previous timestep
             if not first_timestep:
                 #instance.load(pyomo_results)
@@ -1436,15 +1457,18 @@ class PyomoSimulator(WaterNetworkSimulator):
                     end_node_obj = self._wn.get_node(end_node)
                     model.head[end_node].value = pressure_setting + end_node_obj.elevation
                     model.head[end_node].fixed = True
-
+                else:
+                    raise RuntimeError("Valve Status not recognized.")
             #print "PRV constraint: ", time.time() - t0
 
             #for l in instance.pumps:
             #    print l, instance.flow[l].value
 
-            pyomo_results = opt.solve(instance, tee=False)
+            pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
             #exit()
             instance.load(pyomo_results)
+
+            #CheckInstanceFeasibility(instance, 1e-4)
 
             #print "Solution time: ", time.time() - t0
 
@@ -1795,6 +1819,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                            pumps_closed_by_outage,
                            links_closed_by_time_controls,
                            pumps_closed_by_drain_to_reserv,
+                           links_closed_by_tank_controls,
                            t):
 
         time_t = self._hydraulic_step_sec*t
@@ -1819,9 +1844,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif pump_name in pumps_closed_by_outage:
                 pumps_closed_by_outage.remove(pump_name)
                 self._override_time_controls(links_closed_by_time_controls, pump_name, t)
+                links_closed_by_tank_controls.clear()
             elif pump_name in pumps_closed_by_drain_to_reserv:
                 pumps_closed_by_drain_to_reserv.remove(pump_name)
                 self._override_time_controls(links_closed_by_time_controls, pump_name, t)
+                links_closed_by_tank_controls.clear()
 
     def _apply_tank_controls(self, instance, pipes_closed_by_tank, links_closed_by_time, t):
 

@@ -16,6 +16,12 @@ QUESTIONS
 TODO 1. Volume curve object should be an attribute of the tank.
 TODO 2. Conditional controls are only supported for Tank pump relation. Other control should be added.
 TODO 3. Multi-point curve.
+TODO 4. Michael: Add better documentation to your changes
+TODO 5. Michael: raise errors rather than using quit()
+TODO 6. Michael: Consistency in arguements - check test_nominal_pressures file
+TODO 7. Michael: change junction.PF to junction ._PF and junction.P0 to junction._P0
+TODO 8. Michael: what if someone tries to set_nom_P with an empty network model?
+TODO 9. Michael: initial junction P0 and PF attributes
 """
 
 import copy
@@ -309,6 +315,70 @@ class WaterNetworkModel(object):
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         self.set_link_type((start_node_name, end_node_name, name), 'pipe')
         self._num_pipes += 1
+
+    def remove_pipe(self, name):
+        """
+        Method to remove a pipe from the water network object.
+
+        Parameters
+        ----------
+        name: string
+           Name of the pipe
+        """
+        self._graph.remove_edge(self._links[name]._start_node_name, self._links[name]._end_node_name, key=name)
+        self._links.pop(name)
+        self._num_pipes -= 1
+
+    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75):
+        """
+        Method to add a leak to the water network object.
+
+        Parameters
+        ----------
+        leak_name: string
+           Name of the leak
+        pipe_name: string
+           Name of the pipe where the leak ocurrs.
+           Currently assuming the leak ocurrs halfway between nodes.
+        leak_area: float
+           Area of the leak in m^2
+        """
+
+        # Get attributes of original pipe
+        start_node_name = self.get_link(pipe_name)._start_node_name
+        end_node_name = self.get_link(pipe_name)._end_node_name
+        base_status = self.get_link(pipe_name)._base_status
+        open_times = self.get_link(pipe_name)._open_times
+        closed_times = self.get_link(pipe_name)._closed_times
+        length = self.get_link(pipe_name).length
+        orig_pipe_diameter = self.get_link(pipe_name).diameter
+        roughness = self.get_link(pipe_name).roughness
+        minor_loss = self.get_link(pipe_name).minor_loss
+
+        # Remove original pipe
+        self.remove_pipe(pipe_name)
+
+        # Add a leak node
+        if leak_diameter is not None:
+            if leak_area is not None:
+                raise RuntimeError('When trying to add a leak, you may only specify the area or diameter, not both.')
+            else:
+                leak_area = math.pi/4.0*leak_diameter**2
+        else:
+            if leak_area is None:
+                raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
+        orig_pipe_area = math.pi/4.0*orig_pipe_diameter**2
+        if leak_area > orig_pipe_area:
+            raise RuntimeError('')
+        leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff)
+        self._nodes[leak_name] = leak
+        self._graph.add_node(leak_name)
+
+        # Add pipe from start node to leak
+        self.add_pipe(pipe_name+'a',start_node_name, leak_name, length/2.0, orig_pipe_diameter, roughness, minor_loss)
+
+        # Add pipe from leak to end node
+        self.add_pipe(pipe_name+'b', leak_name, end_node_name, length/2.0, orig_pipe_diameter, roughness, minor_loss)
 
     def add_pump(self, name, start_node_name, end_node_name, info_type='HEAD', info_value=None):
         """
@@ -740,6 +810,25 @@ class WaterNetworkModel(object):
 
         return list_of_links
 
+    def set_nominal_pressures(self, res = None, constant_nominal_pressure = None):
+        """
+        Takes a results object and adds nominal pressures to each junction.
+        """
+        if res is not None and constant_nominal_pressure is None:
+            for junction_name,junction in self.nodes(Junction):
+                min_P = res.node['pressure'][junction_name].min()
+                if min_P <= 0.0:
+                    print 'error: base case had negative pressure at junction ',junction_name
+                else:
+                    junction.PF = 0.8*min_P
+                    junction.P0 = 0.0
+        elif constant_nominal_pressure is not None and res is None:
+            for junction_name,junction in self.nodes(Junction):
+                junction.PF = constant_nominal_pressure
+                junction.P0 = 0.0
+        else:
+            print 'error: either you have not specified any nominal pressure or you have tried to specify in multiple ways'
+            quit()
 
 class Node(object):
     """
@@ -843,6 +932,26 @@ class Junction(Node):
         self.demand_pattern_name = demand_pattern_name
         self.elevation = elevation
 
+class Leak(Node):
+    """
+    Leak class that is inherited from Node
+    """
+    def __init__(self, leak_name, pipe_name, area, leak_discharge_coeff):
+        """
+        Parameters
+        ----------
+        leak_name: string
+           Name of the leak.
+        pipe_name: string
+           Name of the pipe where the leak ocurrs
+        area: float
+           Area of the leak in m^2
+        """
+        Node.__init__(self, leak_name)
+        self.pipe_name = pipe_name
+        self.area = area
+        self.leak_discharge_coeff = leak_discharge_coeff
+        self.elevation = 0.0
 
 class Reservoir(Node):
     """
