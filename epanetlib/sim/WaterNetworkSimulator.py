@@ -30,7 +30,7 @@ import time
 
 
 class WaterNetworkSimulator(object):
-    def __init__(self, water_network=None):
+    def __init__(self, water_network=None, PD_or_DD = 'DEMAND DRIVEN'):
         """
         Water Network Simulator class.
 
@@ -54,14 +54,23 @@ class WaterNetworkSimulator(object):
             self.init_time_params_from_model()
             self._init_tank_controls()
             # Pressure driven demand parameters
-            if 'NOMINAL PRESSURE' in self._wn.options:
-                self._PF = self._wn.options['NOMINAL PRESSURE']
+            if PD_or_DD == 'PRESSURE DRIVEN':
+                self._pressure_driven = True
+            elif PD_or_DD == 'DEMAND DRIVEN':
+                self._pressure_driven = False
             else:
-                self._PF = None
-            if 'MINIMUM PRESSURE' in self._wn.options:
-                self._P0 = self._wn.options['MINIMUM PRESSURE']
-            else:
-                self._P0 = 0 # meters head
+                print 'Arguement for specifying demand driven or pressure driven is not recognized.'
+                print 'Please use \'PRESSURE DRIVEN\' or \'DEMAND DRIVEN\'.'
+                quit()
+
+            #if 'NOMINAL PRESSURE' in self._wn.options:
+            #    self._PF = self._wn.options['NOMINAL PRESSURE']
+            #else:
+            #    self._PF = None
+            #if 'MINIMUM PRESSURE' in self._wn.options:
+            #    self._P0 = self._wn.options['MINIMUM PRESSURE']
+            #else:
+            #    self._P0 = 0 # meters head
         else:
             # Time parameters
             self._sim_start_sec = None
@@ -193,9 +202,9 @@ class WaterNetworkSimulator(object):
             raise RuntimeError("All pump outage time cannot be defined before a network object is"
                                "defined in the simulator.")
 
-        if 'NOMINAL PRESSURE' not in self._wn.options:
-            raise RuntimeError("Pump outage analysis requires nominal pressure to be provided"
-                               "for the water network model.")
+        #if 'NOMINAL PRESSURE' not in self._wn.options:
+        #    raise RuntimeError("Pump outage analysis requires nominal pressure to be provided"
+        #                       "for the water network model.")
 
         try:
             start = pd.Timedelta(start_time)

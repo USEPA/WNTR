@@ -28,7 +28,7 @@ class PyomoSimulator(WaterNetworkSimulator):
     """
 
 
-    def __init__(self, wn):
+    def __init__(self, wn, PD_or_DD='DEMAND DRIVEN'):
         """
         Pyomo simulator class.
 
@@ -37,7 +37,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         wn : Water Network Model
             A water network model.
         """
-        WaterNetworkSimulator.__init__(self, wn)
+        WaterNetworkSimulator.__init__(self, wn, PD_or_DD)
 
         # Global constants
         self._Hw_k = 10.67 # Hazen-Williams resistance coefficient in SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
@@ -120,10 +120,14 @@ class PyomoSimulator(WaterNetworkSimulator):
             instance.head[n].value = last_instance.head[n].value
             if n in instance.junctions:
                 junction = self._wn.get_node(n)
-                if instance.head[n].value - junction.elevation <= self._P0:
-                    instance.demand_actual[n] = 100*self._Qtol
+                if self._pressure_driven:
+                    if instance.head[n].value - junction.elevation <= junction.P0:
+                        instance.demand_actual[n] = 100*self._Qtol
+                    else:
+                        instance.demand_actual[n] = abs(instance.demand_actual[n].value) + self._Qtol
                 else:
                     instance.demand_actual[n] = abs(instance.demand_actual[n].value) + self._Qtol
+                    
 
         for r in instance.reservoirs:
             if abs(last_instance.reservoir_demand[r].value) < self._Qtol:
@@ -483,65 +487,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             return Expr_if(IF = Q < q1, THEN = f1(Q), ELSE = Expr_if(IF = Q > q2, THEN = f2(Q), ELSE = Px(Q)))
 
 
-        # Pressure driven demand equation
-        def pressure_dependent_demand_square(head, elevation):
-            p = head - elevation
-
-            # Defining Line 1
-            def L1(x):
-                a_1 = 1e-3
-                b_1 = 0
-                return a_1*x + b_1
-
-            # Defining Line 2
-            def L2(x):
-                a_2 = 1/(self._PF - self._P0)
-                b_2 = -1*(self._P0/(self._PF - self._P0))
-                #print "Line 1: ", a_2, b_2
-                return a_2*x + b_2
-
-            # Define Line 3
-            def L3(x):
-                a_3 = 0
-                b_3 = 1
-                #print "Line 2: ", a_3, b_3
-                return a_3*x + b_3
-
-            if len(self._smoothing_points) == 4:
-                x1 = self._smoothing_points[0]
-                x2 = self._smoothing_points[1]
-                x3 = self._smoothing_points[2]
-                x4 = self._smoothing_points[3]
-            elif len(self._smoothing_points) == 2:
-                x3 = self._smoothing_points[0]
-                x4 = self._smoothing_points[1]
-            else:
-                raise RuntimeError("The PDD expression must have 4 or 2 points of switching.")
-
-            if self._pdd_smoothing_polynomial_left:
-                [a1, b1, c1, d1] = self._pdd_smoothing_polynomial_left
-                def P1(x):
-                    return a1*x**3 + b1*x**2 + c1*x + d1
-                [a2, b2, c2, d2] = self._pdd_smoothing_polynomial_right
-                def P2(x):
-                    return a2*x**3 + b2*x**2 + c2*x + d2
-                return Expr_if(IF=p <= x1, THEN=L1(p),
-                               ELSE=Expr_if(IF=p <= x2, THEN=P1(p),
-                                            ELSE=Expr_if(IF=p <= x3, THEN=L2(p),
-                                                         ELSE=Expr_if(IF=p <= x4, THEN=P2(p),
-                                                                      ELSE=L3(p)))))
-            else:
-                def P2(x):
-                    [a2, b2, c2, d2] = self._pdd_smoothing_polynomial_right
-                    #print "Polynomial: ", a2, b2, c2, d2
-                    return a2*x**3 + b2*x**2 + c2*x + d2
-                #print "Switch point 1: ", x3
-                #print "Switch point 2:", x4
-                return Expr_if(IF=p <= 1e-6, THEN=1e6*p, ELSE=Expr_if(IF=p <= x3, THEN=L2(p),
-                                                                      ELSE=Expr_if(IF=p <= x4, THEN=P2(p),
-                                                                      ELSE=L3(p))))
-
-        def pressure_dependent_demand_nl(full_demand, p):
+        def pressure_dependent_demand_nl(full_demand, p, PF, P0):
 
             delta = 0.1
             # Defining Line 1
@@ -554,10 +500,10 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Defining PDD function
 
             def PDD(x):
-                return full_demand*math.sqrt((x - self._P0)/(self._PF - self._P0))
+                return full_demand*math.sqrt((x - P0)/(PF - P0))
 
             def PDD_deriv(x):
-                return (full_demand/2)*(1/(self._PF - self._P0))*(1/math.sqrt((x - self._P0)/(self._PF - self._P0)))
+                return (full_demand/2)*(1/(PF - P0))*(1/math.sqrt((x - P0)/(PF - P0)))
 
             # Define Line 2
             a2 = 1e-5
@@ -571,21 +517,21 @@ class PyomoSimulator(WaterNetworkSimulator):
                                 [3*x_1**2, 2*x_1,  1, 0],
                                 [3*x_2**2, 2*x_2,  1, 0]])
 
-            x_gap = self._PF - self._P0
+            x_gap = PF - P0
 
             assert x_gap > delta, "Delta should be greater than the gap between nominal and minimum pressure."
 
             # Get parameters for the second polynomial
-            x1 = self._P0 - x_gap*delta
+            x1 = P0 - x_gap*delta
             y1 = L2(x1)
-            x2 = self._P0 + x_gap*delta
+            x2 = P0 + x_gap*delta
             y2 = PDD(x2)
             A1 = A(x1, x2)
             rhs1 = np.array([y1, y2, a2, PDD_deriv(x2)])
             c1 = np.linalg.solve(A1, rhs1)
-            x3 = self._PF - x_gap*delta
+            x3 = PF - x_gap*delta
             y3 = PDD(x3)
-            x4 = self._PF + x_gap*delta
+            x4 = PF + x_gap*delta
             y4 = L1(x4)
             A2 = A(x3, x4)
             rhs2 = np.array([y3, y4, PDD_deriv(x3), a1])
@@ -610,12 +556,12 @@ class PyomoSimulator(WaterNetworkSimulator):
                                         ELSE=L1(p)))
             """
             """
-            return Expr_if(IF=p <= self._PF, THEN=PDD(p),
+            return Expr_if(IF=p <= PF, THEN=PDD(p),
                            ELSE=L1(p))
             """
 
 
-        def pressure_dependent_demand_linear(full_demand, p):
+        def pressure_dependent_demand_linear(full_demand, p, PF, P0):
 
             delta = 0.1
             # Defining Line 1
@@ -628,17 +574,17 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Defining PDD function
             """
             def PDD(x):
-                return full_demand*math.sqrt((x - self._P0)/(self._PF - self._P0))
+                return full_demand*math.sqrt((x - P0)/(PF - P0))
 
             def PDD_deriv(x):
-                return (full_demand/2)*(1/(self._PF - self._P0))*(1/math.sqrt((x - self._P0)/(self._PF - self._P0)))
+                return (full_demand/2)*(1/(PF - P0))*(1/math.sqrt((x - P0)/(PF - P0)))
             """
             # Linear PDD Function
             def PDD(x):
-                return full_demand*((x - self._P0)/(self._PF - self._P0))
+                return full_demand*((x - P0)/(PF - P0))
 
             def PDD_deriv(x):
-                return (full_demand)*(1/(self._PF - self._P0))
+                return (full_demand)*(1/(PF - P0))
 
             # Define Line 2
             a2 = 1e-9
@@ -652,21 +598,21 @@ class PyomoSimulator(WaterNetworkSimulator):
                                 [3*x_1**2, 2*x_1,  1, 0],
                                 [3*x_2**2, 2*x_2,  1, 0]])
 
-            x_gap = self._PF - self._P0
+            x_gap = PF - P0
 
             assert x_gap > delta, "Delta should be greater than the gap between nominal and minimum pressure."
 
             # Get parameters for the second polynomial
-            x1 = self._P0 - x_gap*delta
+            x1 = P0 - x_gap*delta
             y1 = L2(x1)
-            x2 = self._P0 + x_gap*delta
+            x2 = P0 + x_gap*delta
             y2 = PDD(x2)
             A1 = A(x1, x2)
             rhs1 = np.array([y1, y2, a2, PDD_deriv(x2)])
             c1 = np.linalg.solve(A1, rhs1)
-            x3 = self._PF - x_gap*delta
+            x3 = PF - x_gap*delta
             y3 = PDD(x3)
-            x4 = self._PF + x_gap*delta
+            x4 = PF + x_gap*delta
             y4 = L1(x4)
             A2 = A(x3, x4)
             rhs2 = np.array([y3, y4, PDD_deriv(x3), a1])
@@ -684,7 +630,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             print "X3: ", x3
             print "X4: ", x4
             print "L1: ", a1, b1
-            print "PDD: ", (full_demand)*(1/(self._PF - self._P0))
+            print "PDD: ", (full_demand)*(1/(PF - P0))
             print "L2: ", a2, b2
             print "P1: ", c1[0], c1[1], c1[2], c1[3]
             print "P2: ", c2[0], c2[1], c2[2], c2[3]
@@ -703,7 +649,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                         ELSE=L1(p)))
             """
             """
-            return Expr_if(IF=p <= self._PF, THEN=PDD(p),
+            return Expr_if(IF=p <= PF, THEN=PDD(p),
                            ELSE=L1(p))
             """
 
@@ -767,11 +713,13 @@ class PyomoSimulator(WaterNetworkSimulator):
         #model.headloss = Var(model.links, model.time, within=Reals, initialize=10.0)
 
         def init_head_rule(model, n):
-            if n in model.junctions or n in model.tanks:
-                if self._PF is not None:
-                    return wn.get_node(n).elevation + self._PF
+            if n in model.junctions:
+                if self._pressure_driven:
+                    return wn.get_node(n).elevation + wn.get_node(n).PF
                 else:
                     return wn.get_node(n).elevation
+            elif n in model.tanks:
+                return wn.get_node(n).elevation
             else:
                 return 100.0
         model.head = Var(model.nodes, initialize=init_head_rule)
@@ -885,22 +833,22 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Pressure driven demand constraint
         def pressure_driven_demand_rule(model, j):
             junction = wn.get_node(j)
-            #print "Junction: ",j, "P0 = ", self._P0, "Pf = ", self._PF, "required_dem= ", model.demand_required[j], "Elevation: ", junction.elevation
+            #print "Junction: ",j, "P0 = ", junction.P0, "Pf = ", junction.PF, "required_dem= ", model.demand_required[j], "Elevation: ", junction.elevation
             if model.demand_required[j] <= self._Qtol:
                 return model.demand_actual[j] == model.demand_required[j]
             else:
                 #return pressure_dependent_demand_square(model.head[j], junction.elevation) == (model.demand_actual[j]/model.demand_required[j])**2
                 #return pressure_dependent_demand_square(model.head[j], junction.elevation) >= (model.demand_actual[j]/model.demand_required[j])**2
-                #return pressure_dependent_demand_nl(model.demand_required[j], model.head[j]-junction.elevation) == model.demand_actual[j]
-                return pressure_dependent_demand_linear(model.demand_required[j], model.head[j]-junction.elevation) == model.demand_actual[j]
+                #return pressure_dependent_demand_nl(model.demand_required[j], model.head[j]-junction.elevation, junction.PF, junction.P0) == model.demand_actual[j]
+                return pressure_dependent_demand_linear(model.demand_required[j], model.head[j]-junction.elevation, junction.PF, junction.P0) == model.demand_actual[j]
 
         def demand_driven_rule(model, j):
             return model.demand_actual[j] == model.demand_required[j]
 
-        if self._PF == None:
-            model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)
-        else:
+        if self._pressure_driven:
             model.pressure_driven_demand = Constraint(model.junctions, rule=pressure_driven_demand_rule)
+        else:
+            model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)
 
         """
         # Positive demand constraint
