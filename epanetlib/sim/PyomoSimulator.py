@@ -21,6 +21,7 @@ import math
 from WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
+from pyomo_utils import CheckInstanceFeasibility
 
 class PyomoSimulator(WaterNetworkSimulator):
     """
@@ -42,8 +43,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Global constants
         self._Hw_k = 10.67 # Hazen-Williams resistance coefficient in SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
         self._Dw_k = 0.0826 # Darcy-Weisbach constant in SI units = 0.0252 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
-        self._Htol = 0.00015 # Head tolerance in meters.
-        self._Qtol = 2.8e-5 # Flow tolerance in ft^3/s.
+        self._Htol = 1e-7 # Head tolerance in meters.
+        self._Qtol = 1e-7 # Flow tolerance in ft^3/s.
         self._g = 9.81 # Acceleration due to gravity
 
         self._n_timesteps = 0 # Number of hydraulic timesteps
@@ -742,9 +743,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                     return 0.3048
         def flow_bounds_rule(model, l):
             if l in model.pumps and l not in pumps_closed_by_outage:
-                return (1e-8, np.inf)
+                return (0.0, None)
             else:
-                return (-np.inf, np.inf)
+                return (None, None)
         model.flow = Var(model.links, within=Reals, initialize=flow_init_rule, bounds=flow_bounds_rule)
 
         def init_headloss_rule(model, l):
@@ -790,7 +791,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             pipe_resistance_coeff = self._Hw_k*(pipe.roughness**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
             start_node = pipe.start_node()
             end_node = pipe.end_node()
-            if l not in links_closed:
+            if l in links_closed:
+                pass
+            else:
                 if modified_hazen_williams:
                     #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
                     #                                              *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.headloss[l,t]))
@@ -1328,9 +1331,11 @@ class PyomoSimulator(WaterNetworkSimulator):
                                         pumps_closed_by_outage,
                                         links_closed_by_time,
                                         pumps_closed_by_drain_to_reservoir,
+                                        links_closed_by_tank_controls,
                                         t)
                 #self._override_tank_controls(links_closed_by_tank_controls, pumps_closed_by_outage)
-            """
+
+
             # print controls
             print "Links closed by time controls: "
             for i in links_closed_by_time:
@@ -1349,11 +1354,17 @@ class PyomoSimulator(WaterNetworkSimulator):
                 print "\tLink: ", i, " closed"
             print "Valve Status: "
             print self._valve_status
+
+
+            """
+            if 'LINK-1873' in links_closed_by_tank_controls:
+                pumps_closed_by_rule.add('PUMP-3849')
             """
 
             # Combine list of closed links
             #links_closed = links_closed_by_time.union(pumps_closed_by_rule.union(pumps_closed_by_outage.union(links_closed_by_tank_controls.union(closed_check_valves))))
             links_closed = pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(links_closed_by_tank_controls.union(closed_check_valves))))
+            #links_closed = pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(closed_check_valves)))
 
 
             timedelta = results.time[t]
@@ -1403,6 +1414,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             instance = model # Create does not need to be called for NLP ?
             #print "Model creation: ", time.time() - t0
 
+
             # Initializing from previous timestep
             if not first_timestep:
                 #instance.load(pyomo_results)
@@ -1442,9 +1454,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             #for l in instance.pumps:
             #    print l, instance.flow[l].value
 
-            pyomo_results = opt.solve(instance, tee=False)
+            pyomo_results = opt.solve(instance, tee=True, keepfiles=False)
             #exit()
             instance.load(pyomo_results)
+
+            CheckInstanceFeasibility(instance, 1e-4)
 
             #print "Solution time: ", time.time() - t0
 
@@ -1795,6 +1809,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                            pumps_closed_by_outage,
                            links_closed_by_time_controls,
                            pumps_closed_by_drain_to_reserv,
+                           links_closed_by_tank_controls,
                            t):
 
         time_t = self._hydraulic_step_sec*t
@@ -1819,9 +1834,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif pump_name in pumps_closed_by_outage:
                 pumps_closed_by_outage.remove(pump_name)
                 self._override_time_controls(links_closed_by_time_controls, pump_name, t)
+                links_closed_by_tank_controls.clear()
             elif pump_name in pumps_closed_by_drain_to_reserv:
                 pumps_closed_by_drain_to_reserv.remove(pump_name)
                 self._override_time_controls(links_closed_by_time_controls, pump_name, t)
+                links_closed_by_tank_controls.clear()
 
     def _apply_tank_controls(self, instance, pipes_closed_by_tank, links_closed_by_time, t):
 
