@@ -91,7 +91,7 @@ en.network.draw_graph(wn, node_attribute=pop, node_range = [0,400], node_size=40
               
 # Compute todini index
 #todini = en.metrics.todini(G, pressure_lower_bound)
-todini = en.metrics.todini(epanet_results,wn, pressure_lower_bound)
+todini = en.metrics.todini(results,wn, pressure_lower_bound)
 plt.figure()
 plt.plot(todini)
 plt.ylabel('Todini Index')
@@ -157,8 +157,8 @@ valve_cost = np.loadtxt('data/cost_valve.txt',skiprows=1)
 pump_cost = 3783 # average from BWN-II
 pipe_ghg = np.loadtxt('data/ghg_pipe.txt',skiprows=1)
 
-#network_cost = en.metrics.cost(G, tank_cost, pipe_cost, valve_cost, pump_cost)
-#print "Network cost: $" + str(round(network_cost,2))
+network_cost = en.metrics.cost(wn, tank_cost, pipe_cost, valve_cost, pump_cost)
+print "Network cost: $" + str(round(network_cost,2))
 
-#network_ghg = en.metrics.ghg_emissions(G, pipe_ghg)
-#print "Network GHG emissions: " + str(round(network_ghg,2))
+network_ghg = en.metrics.ghg_emissions(wn, pipe_ghg)
+print "Network GHG emissions: " + str(round(network_ghg,2))

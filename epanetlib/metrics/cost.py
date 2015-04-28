@@ -1,38 +1,36 @@
-import epanetlib.pyepanet as pyepanet
+from epanetlib.network import Tank, Pipe, Pump, Valve
 import numpy as np  
 
-def cost(G, tank_cost, pipe_cost, valve_cost, pump_cost):
-
+def cost(wn, tank_cost, pipe_cost, valve_cost, pump_cost):
+    
+    # Initialize network construction cost
     network_cost = 0
     
-    for i in G.nodes():
-        if G.node[i]['nodetype']  == pyepanet.EN_JUNCTION:
-            pass
-        elif G.node[i]['nodetype'] == pyepanet.EN_RESERVOIR:
-            pass
-        elif G.node[i]['nodetype'] == pyepanet.EN_TANK:
-            tank_diameter = G.node[i]['tank_diameter']
-            tank_minlevel = G.node[i]['tank_minlevel']
-            tank_maxlevel = G.node[i]['tank_maxlevel']
-            tank_volume = (tank_diameter/2)**2*(tank_maxlevel-tank_minlevel)
-            idx = (np.abs(tank_cost[:,0]-tank_volume)).argmin()
-            network_cost = network_cost + tank_cost[idx,1]
-
-    for i,j,k in G.edges(keys=True):
-        if G.edge[i][j][k]['linktype']  in [pyepanet.EN_CVPIPE, pyepanet.EN_PIPE]:
-            link_length = G.edge[i][j][k]['length']
-            link_diameter = G.edge[i][j][k]['diameter']
-            idx = (np.abs(pipe_cost[:,0]-link_diameter)).argmin()
-            network_cost = network_cost + pipe_cost[idx,1]*link_length
-            
-        elif G.edge[i][j][k]['linktype']  == pyepanet.EN_PUMP:
-            network_cost = network_cost + pump_cost
+    # Tank construction cost
+    for node_name, node in wn.nodes(Tank):
+        tank_diameter = wn.get_node(node_name).diameter
+        tank_minlevel = wn.get_node(node_name).min_level
+        tank_maxlevel = wn.get_node(node_name).max_level
+        tank_volume = (tank_diameter/2)**2*(tank_maxlevel-tank_minlevel)
+        idx = (np.abs(tank_cost[:,0]-tank_volume)).argmin()
+        network_cost = network_cost + tank_cost[idx,1]
+    
+    # Pipe construction cost
+    for link_name, link in wn.links(Pipe):
+        link_length = wn.get_link(link_name).length
+        link_diameter = wn.get_link(link_name).diameter
+        idx = (np.abs(pipe_cost[:,0]-link_diameter)).argmin()
+        network_cost = network_cost + pipe_cost[idx,1]*link_length   
+    
+    # Pump construction cost
+    for link_name, link in wn.links(Pump):        
+        network_cost = network_cost + pump_cost
         
-        elif G.edge[i][j][k]['linktype']  in [pyepanet.EN_PRV, pyepanet.EN_PSV, 
-                pyepanet.EN_PBV, pyepanet.EN_FCV, pyepanet.EN_TCV, pyepanet.EN_GPV]:
-            link_diameter =  G.edge[i][j][k]['diameter']
-            idx = (np.abs(valve_cost[:,0]-link_diameter)).argmin()
-            network_cost = network_cost + valve_cost[idx,1]
+    # Valve construction cost    
+    for link_name, link in wn.links(Valve):        
+        link_diameter =  wn.get_link(link_name).diameter
+        idx = (np.abs(valve_cost[:,0]-link_diameter)).argmin()
+        network_cost = network_cost + valve_cost[idx,1]
     
     return network_cost
 """
