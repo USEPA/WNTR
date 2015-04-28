@@ -13,7 +13,7 @@ try:
     from pyomo.environ import *
     from pyomo.core import *
     from pyomo.core.base.expr import Expr_if
-    from pyomo.opt import SolverFactory
+    #from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
 except ImportError:
     raise ImportError('Error importing pyomo while running pyomo simulator.'
                       'Make sure pyomo is installed and added to path.')
@@ -21,7 +21,7 @@ import math
 from WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
-from pyomo_utils import CheckInstanceFeasibility
+#from pyomo_utils import CheckInstanceFeasibility
 
 class PyomoSimulator(WaterNetworkSimulator):
     """
@@ -43,8 +43,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Global constants
         self._Hw_k = 10.67 # Hazen-Williams resistance coefficient in SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
         self._Dw_k = 0.0826 # Darcy-Weisbach constant in SI units = 0.0252 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
-        self._Htol = 1e-7 # Head tolerance in meters.
-        self._Qtol = 1e-7 # Flow tolerance in ft^3/s.
+        self._Htol = 0.00015 # Head tolerance in meters.
+        self._Qtol = 2.8e-5 # Flow tolerance in ft^3/s.
         self._g = 9.81 # Acceleration due to gravity
 
         self._n_timesteps = 0 # Number of hydraulic timesteps
@@ -1349,6 +1349,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 #self._override_tank_controls(links_closed_by_tank_controls, pumps_closed_by_outage)
 
 
+            """
             # print controls
             print "Links closed by time controls: "
             for i in links_closed_by_time:
@@ -1367,11 +1368,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                 print "\tLink: ", i, " closed"
             print "Valve Status: "
             print self._valve_status
-
-
-            """
-            if 'LINK-1873' in links_closed_by_tank_controls:
-                pumps_closed_by_rule.add('PUMP-3849')
             """
 
             # Combine list of closed links
@@ -1461,17 +1457,18 @@ class PyomoSimulator(WaterNetworkSimulator):
                     end_node_obj = self._wn.get_node(end_node)
                     model.head[end_node].value = pressure_setting + end_node_obj.elevation
                     model.head[end_node].fixed = True
-
+                else:
+                    raise RuntimeError("Valve Status not recognized.")
             #print "PRV constraint: ", time.time() - t0
 
             #for l in instance.pumps:
             #    print l, instance.flow[l].value
 
-            pyomo_results = opt.solve(instance, tee=True, keepfiles=False)
+            pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
             #exit()
             instance.load(pyomo_results)
 
-            CheckInstanceFeasibility(instance, 1e-4)
+            #CheckInstanceFeasibility(instance, 1e-4)
 
             #print "Solution time: ", time.time() - t0
 
