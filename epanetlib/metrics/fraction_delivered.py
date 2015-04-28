@@ -131,7 +131,7 @@ def fraction_delivered_demand(results, Pstar, Dstar, adjust_demand_flag=False):
                # t = number of time steps when the delivered demand is greater than
                # Dstar * the requiested demand
                 # the quality threshold
-                t = sum(Ad > Rd*Dstar)
+                t = sum(Ad*Dstar < Rd)
                 
                 fdd[i] = float(t)/T
             

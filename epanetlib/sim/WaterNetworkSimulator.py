@@ -167,9 +167,6 @@ class WaterNetworkSimulator(object):
             raise RuntimeError("Pump outage time cannot be defined before a network object is"
                                "defined in the simulator.")
 
-        if 'NOMINAL PRESSURE' not in self._wn.options:
-            raise RuntimeError("Pump outage analysis requires nominal pressure to be provided"
-                               "for the water network model.")
 
         # Check if pump_name is valid
         try:
