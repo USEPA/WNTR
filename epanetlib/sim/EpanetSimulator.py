@@ -51,6 +51,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         node_times = []
         node_head = []
         node_demand = []
+        node_expected_demand = []
         node_pressure = []
         link_name = []
         link_type = []
@@ -66,11 +67,13 @@ class EpanetSimulator(WaterNetworkSimulator):
                     nodeindex = enData.ENgetnodeindex(name)
                     head = enData.ENgetnodevalue(nodeindex, pyepanet.EN_HEAD)
                     demand = enData.ENgetnodevalue(nodeindex, pyepanet.EN_DEMAND)
+                    expected_demand = demand
                     pressure = enData.ENgetnodevalue(nodeindex, pyepanet.EN_PRESSURE)
                     
-                    if convert_units:
+                    if convert_units: # expected demand is already converted
                         head = convert('Hydraulic Head', flowunits, head) # m
                         demand = convert('Demand', flowunits, demand) # m3/s
+                        expected_demand = convert('Demand', flowunits, expected_demand) # m3/s
                         pressure = convert('Pressure', flowunits, pressure) # Pa
                     
                     node_name.append(name)
@@ -78,6 +81,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                     node_times.append(timedelta)
                     node_head.append(head)
                     node_demand.append(demand)
+                    node_expected_demand.append(expected_demand)
                     node_pressure.append(pressure)
 
                 for name, link in self._wn.links():
@@ -103,12 +107,13 @@ class EpanetSimulator(WaterNetworkSimulator):
         node_data_frame = pd.DataFrame({'time': node_times,
                                         'node': node_name,
                                         'demand': node_demand,
+                                        'expected_demand': node_expected_demand,
                                         'head': node_head,
                                         'pressure': node_pressure,
                                         'type': node_type})
 
         node_pivot_table = pd.pivot_table(node_data_frame,
-                                          values=['demand', 'head', 'pressure', 'type'],
+                                          values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
                                           index=['node', 'time'],
                                           aggfunc= lambda x: x)
         results.node = node_pivot_table
