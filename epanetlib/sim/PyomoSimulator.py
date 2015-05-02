@@ -1309,6 +1309,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         step_iter = 0
         valve_status_changed = False
         check_valve_status_changed = False
+        reservoir_link_closed_flag = False
         instance = None
         while t < self._n_timesteps and step_iter < self._max_step_iter:
             if t == 0:
@@ -1340,12 +1341,12 @@ class PyomoSimulator(WaterNetworkSimulator):
                     self._apply_tank_controls(instance, links_closed_by_tank_controls, links_closed_by_time, t)
 
             if self._pump_outage:
-                self._apply_pump_outage(instance,
-                                        pumps_closed_by_outage,
-                                        links_closed_by_time,
-                                        pumps_closed_by_drain_to_reservoir,
-                                        links_closed_by_tank_controls,
-                                        t)
+                reservoir_link_closed_flag = self._apply_pump_outage(instance,
+                                                                     pumps_closed_by_outage,
+                                                                     links_closed_by_time,
+                                                                     pumps_closed_by_drain_to_reservoir,
+                                                                     links_closed_by_tank_controls,
+                                                                     t)
                 #self._override_tank_controls(links_closed_by_tank_controls, pumps_closed_by_outage)
 
 
@@ -1482,7 +1483,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             #t0 = time.time()
             #print self._valve_status
             # Resolve the same timestep if the valve status has changed
-            if valve_status_changed or check_valve_status_changed:
+            if valve_status_changed \
+                    or check_valve_status_changed \
+                    or reservoir_link_closed_flag:
                 step_iter += 1
             else:
                 #for valve_name in model.valves:
@@ -1823,6 +1826,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                            t):
 
         time_t = self._hydraulic_step_sec*t
+        reservoir_links_closed_flag = False
 
         for pump_name, time_tuple in self._pump_outage.iteritems():
             if time_t >= time_tuple[0] and time_t <= time_tuple[1]:
@@ -1832,7 +1836,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                 if pump_name in self._reservoir_links.keys():
                     if instance is not None:
                         if instance.flow[pump_name].value < -self._Qtol:
-                            pumps_closed_by_drain_to_reserv.add(pump_name)
+                            if pump_name not in pumps_closed_by_drain_to_reserv:
+                                pumps_closed_by_drain_to_reserv.add(pump_name)
+                                reservoir_links_closed_flag = True
                             if pump_name in pumps_closed_by_outage:
                                 pumps_closed_by_outage.remove(pump_name)
                         else:
@@ -1849,6 +1855,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                 pumps_closed_by_drain_to_reserv.remove(pump_name)
                 self._override_time_controls(links_closed_by_time_controls, pump_name, t)
                 links_closed_by_tank_controls.clear()
+
+        return reservoir_links_closed_flag
 
     def _apply_tank_controls(self, instance, pipes_closed_by_tank, links_closed_by_time, t):
 
