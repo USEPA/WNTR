@@ -36,23 +36,23 @@ wn.set_nominal_pressures(res = res_demand_driven)
 pump_stations = {
     '1': ['PUMP-3829'], # Controls TANK-3326
     '2': ['PUMP-3830', 'PUMP-3831', 'PUMP-3832', 'PUMP-3833', 'PUMP-3834'], #  Controls TANK-3325, Pump station 2 is connected to the reservoir
-    '3': ['PUMP-3835', 'PUMP-3836', 'PUMP-3837', 'PUMP-3838'], #, # Controls TANK-3333
+    '3': ['PUMP-3835', 'PUMP-3836', 'PUMP-3837', 'PUMP-3838'], # Controls TANK-3333
     '4': ['PUMP-3839', 'PUMP-3840', 'PUMP-3841'], # Controls TANK-3333
     '5': ['PUMP-3842', 'PUMP-3843', 'PUMP-3844'], # Controls TANK-3335
     '6': ['PUMP-3845', 'PUMP-3846'], # Controls TANK-3336
     '7': ['PUMP-3847', 'PUMP-3848'], # Controls TANK-3337
-    '8': ['PUMP-3849', 'PUMP-3850', 'PUMP-3851', 'PUMP-3852', 'PUMP-3853'],#, # Controls TANK-3337
+    '8': ['PUMP-3849', 'PUMP-3850', 'PUMP-3851', 'PUMP-3852', 'PUMP-3853'], # Controls TANK-3337
     '9': ['PUMP-3854', 'PUMP-3855', 'PUMP-3856'], # TANK-3340
     '10': ['PUMP-3857', 'PUMP-3858', 'PUMP-3859'], # Controls TANK-3341
-    '11': ['PUMP-3860', 'PUMP-3861', 'PUMP-3862'], #, # Controls TANK-3342
+    '11': ['PUMP-3860', 'PUMP-3861', 'PUMP-3862'], # Controls TANK-3342
     '12': ['PUMP-3863', 'PUMP-3864', 'PUMP-3865', 'PUMP-3866'], # Controls TANK-3343
     '13': ['PUMP-3867', 'PUMP-3868', 'PUMP-3869'], # Controls TANK-3346
     '14': ['PUMP-3870', 'PUMP-3871'], # Controls TANK-3347
     '15': ['PUMP-3872', 'PUMP-3873', 'PUMP-3874'], # Controls TANK-3349
     '16': ['PUMP-3875', 'PUMP-3876', 'PUMP-3877'], # Controls TANK-3348
-    '17': ['PUMP-3878'],#, # Controls TANK-3352
+    '17': ['PUMP-3878'], # Controls TANK-3352
     '18': ['PUMP-3879', 'PUMP-3880', 'PUMP-3881'], # Controls TANK-3353
-    '19': ['PUMP-3882', 'PUMP-3883', 'PUMP-3884'], #, # Controls TANK-3355
+    '19': ['PUMP-3882', 'PUMP-3883', 'PUMP-3884'], # Controls TANK-3355
     '20': ['PUMP-3885'], # Controls TANK-3354
     '21': ['PUMP-3886', 'PUMP-3887', 'PUMP-3888'], # Controls TANK-3356
     '22': ['PUMP-3889']} # No curve, only power 15?
@@ -89,65 +89,4 @@ for k,v in pump_stations.iteritems():
     t1 = time.time() - t0
     print t1
     
-    """
-    # Analysis
-    percent_demand_met = pyomo_results[k].node.loc[nzd_junctions, 'demand']/pyomo_results[k].node.loc[nzd_junctions, 'expected_demand']
-    
-    attr_percent_demand_met = {}
-    for j in nzd_junctions:
-        attr_percent_demand_met[j] = percent_demand_met[j].mean()
-    en.network.draw_graph(wn, node_attribute=attr_percent_demand_met, node_size=30, node_range=[0,1], title='Average percent demand met.  Power outage at pump ') # + pump_name)
-    
-    percent_demand_met = percent_demand_met.unstack().T 
-    percent_demand_met.index = percent_demand_met.index.format() 
-    
-    plt.figure()
-    percent_demand_met.plot(legend=False)
-    #percent_demand_met.mean(axis=1).plot(label='Average', color='k', linewidth=2.0, legend=False)
-    plt.ylim( (-0.05, 1.05) )
-    #plt.legend(loc='best')
-    plt.ylabel('Percent demand met')
-    plt.title('Power outage')
-    
-    # Actual demand at all nodes
-    plt.figure()
-    for node_name, node in wn.nodes(en.network.Junction):
-        actual_demands = pyomo_results[k].node['demand'][node_name]
-        plt.plot(actual_demands, label=node_name)
-    #plt.ylim([0, 0.025])
-    plt.ylabel('Actual Demand (m^3/s)')
-    plt.xlabel('Time (Hours)')
-    #plt.legend()
-    
-    # Expected demand at all nodes
-    plt.figure()
-    for node_name, node in wn.nodes(en.network.Junction):
-        expected_demands = pyomo_results[k].node['expected_demand'][node_name]
-        plt.plot(expected_demands, label=node_name)
-    #plt.ylim([0, 0.025])
-    plt.ylabel('Expected Demand (m^3/s)')
-    plt.xlabel('Time (Hours)')
-    #plt.legend()
-    
-    # Pressure in the tanks
-    plt.figure()
-    for tank_name, tank in wn.nodes(en.network.Tank):
-        tank_pressure = pyomo_results[k].node['pressure'][tank_name]
-        plt.plot(tank_pressure, label=tank_name)
-    #plt.ylim([0, 50])
-    plt.ylabel('Tank Pressure (m)')
-    plt.xlabel('Time (Hours)')
-    plt.legend()
-    
-    # Pump flow
-    plt.figure()
-    #for pump_name, pump in wn.links(en.network.Pump):
-    for pump_name in v:
-        pump_flow = pyomo_results[k].link['flowrate'][pump_name]
-        plt.plot(pump_flow, label=pump_name)
-    #plt.ylim([0, 0.05])
-    plt.ylabel('Pump Flow (m^3/s)')
-    plt.xlabel('Time (Hours)')
-    plt.legend()
-    """
 pickle.dump(pyomo_results, open('all_scenario_results.pickle', 'wb'))
