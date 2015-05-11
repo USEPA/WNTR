@@ -1435,9 +1435,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             instance = model # Create does not need to be called for NLP ?
             #print "Model creation: ", time.time() - t0
 
-            #instance.pprint()
-            #exit()
-
             # Initializing from previous timestep
             if not first_timestep:
                 #instance.load(pyomo_results)
@@ -1475,19 +1472,16 @@ class PyomoSimulator(WaterNetworkSimulator):
                     model.head[end_node].fixed = True
                 else:
                     raise RuntimeError("Valve Status not recognized.")
-            #print "PRV constraint: ", time.time() - t0
-
-            #for l in instance.pumps:
-            #    print l, instance.flow[l].value
 
             pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
-            #exit()
             instance.load(pyomo_results)
 
             #CheckInstanceFeasibility(instance, 1e-6)
 
-            #low_flow_pumps_closed_flag = self._close_low_flow_pumps(instance, pumps_closed_by_low_flow)
-
+            if (pyomo_results.solver.status == SolverStatus.ok) and (pyomo_results.solver.termination_condition == TerminationCondition.optimal):
+                low_flow_pumps_closed_flag = False
+            else:
+                low_flow_pumps_closed_flag = self._close_low_flow_pumps(instance, pumps_closed_by_low_flow, pumps_closed_by_outage)
 
             #print "Solution time: ", time.time() - t0
 
@@ -1507,11 +1501,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                     or low_flow_pumps_closed_flag:
                 step_iter += 1
             else:
-                #for valve_name in model.valves:
-                #    status = self._valve_status[valve_name]
-                #    print valve_name, '  ', status
-                #for pump_name in model.pumps:
-                #    print pump_name, '  ', self._wn.get_link(pump_name).get_base_status()
                 step_iter = 0
                 t += 1
                 # Load last tank head
@@ -1931,25 +1920,31 @@ class PyomoSimulator(WaterNetworkSimulator):
             head_sp = pressure_setting + start_node_elevation
             if status == 'ACTIVE':
                 if instance.flow[valve_name].value < -self._Qtol:
+                    #print "----- Valve ", valve_name, " closed:  ", instance.flow[valve_name].value, " < ", -self._Qtol
                     self._valve_status[valve_name] = 'CLOSED'
                     valve_status_changed = True
                 elif instance.head[start_node].value < head_sp - self._Htol:
+                    #print "----- Valve ", valve_name, " opened:  ", instance.head[start_node].value, " < ", head_sp - self._Htol
                     self._valve_status[valve_name] = 'OPEN'
                     valve_status_changed = True
             elif status == 'OPEN':
                 if instance.flow[valve_name].value < -self._Qtol:
+                    #print "----- Valve ", valve_name, " closed:  ", instance.flow[valve_name].value, " < ", -self._Qtol
                     self._valve_status[valve_name] = 'CLOSED'
                     valve_status_changed = True
                 elif instance.head[start_node].value > head_sp + self._Htol:
+                    #print "----- Valve ", valve_name, " active:  ", instance.head[start_node].value, " > ", head_sp + self._Htol
                     self._valve_status[valve_name] = 'ACTIVE'
                     valve_status_changed = True
             elif status == 'CLOSED':
                 if instance.head[start_node].value > instance.head[end_node].value + self._Htol \
                     and instance.head[start_node].value < head_sp - self._Htol:
+                    #print "----- Valve ", valve_name, " opened: from closed"
                     self._valve_status[valve_name] = 'OPEN'
                     valve_status_changed = True
                 elif instance.head[start_node].value > instance.head[end_node].value + self._Htol \
                     and instance.head[end_node].value < head_sp - self._Htol:
+                    #print "----- Valve ", valve_name, " active from closed"
                     self._valve_status[valve_name] = 'ACTIVE'
                     valve_status_changed = True
         return valve_status_changed
@@ -1983,15 +1978,18 @@ class PyomoSimulator(WaterNetworkSimulator):
         #print check_valves_closed
         return check_valve_status_changed
 
-    def _close_low_flow_pumps(self, instance, pumps_closed_by_low_flow):
+    def _close_low_flow_pumps(self, instance, pumps_closed_by_low_flow, pumps_closed_by_outage):
         low_flow_pumps_closed_flag = False
         for pump in instance.pumps:
-            if abs(instance.flow[pump].value) < self._Qtol:
-                if pump not in pumps_closed_by_low_flow:
+            if abs(instance.flow[pump].value) < 1e-6*self._Qtol:
+                if pump not in pumps_closed_by_low_flow and pump not in pumps_closed_by_outage:
                     pumps_closed_by_low_flow.add(pump)
                     low_flow_pumps_closed_flag = True
             elif pump in pumps_closed_by_low_flow:
                 pumps_closed_by_low_flow.remove(pump)
+        for pump in pumps_closed_by_outage:
+            pumps_closed_by_low_flow.discard(pump)
+
         return low_flow_pumps_closed_flag
 
     def _load_general_results(self, results):
