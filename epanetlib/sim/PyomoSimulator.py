@@ -13,7 +13,7 @@ try:
     from pyomo.environ import *
     from pyomo.core import *
     from pyomo.core.base.expr import Expr_if
-    #from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
+    from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
 except ImportError:
     raise ImportError('Error importing pyomo while running pyomo simulator.'
                       'Make sure pyomo is installed and added to path.')
@@ -44,7 +44,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._Hw_k = 10.67 # Hazen-Williams resistance coefficient in SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
         self._Dw_k = 0.0826 # Darcy-Weisbach constant in SI units = 0.0252 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
         self._Htol = 0.00015 # Head tolerance in meters.
-        self._Qtol = 2.8e-5 # Flow tolerance in ft^3/s.
+        self._Qtol = 2.8e-5 # Flow tolerance in m^3/s.
         self._g = 9.81 # Acceleration due to gravity
 
         self._n_timesteps = 0 # Number of hydraulic timesteps
@@ -620,7 +620,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             delta = 0.1
             # Defining Line 1
-            a1 = 1e-9
+            a1 = 1e-11
             b1 = full_demand
 
             def L1(x):
@@ -642,7 +642,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 return (full_demand)*(1/(PF - P0))
 
             # Define Line 2
-            a2 = 1e-9
+            a2 = 1e-11
             b2 = 0.0
             def L2(x):
                 return a2*x + b2
@@ -902,12 +902,10 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Pressure driven demand constraint
         def pressure_driven_demand_rule(model, j):
             junction = wn.get_node(j)
-            #print "Junction: ",j, "P0 = ", junction.P0, "Pf = ", junction.PF, "required_dem= ", model.demand_required[j], "Elevation: ", junction.elevation
-            if model.demand_required[j] <= self._Qtol:
-                return model.demand_actual[j] == model.demand_required[j]
+            if model.demand_required[j] == 0.0:
+                #return Constraint.Skip
+                return model.demand_actual[j] == 0.0
             else:
-                #return pressure_dependent_demand_square(model.head[j], junction.elevation) == (model.demand_actual[j]/model.demand_required[j])**2
-                #return pressure_dependent_demand_square(model.head[j], junction.elevation) >= (model.demand_actual[j]/model.demand_required[j])**2
                 #return pressure_dependent_demand_nl(model.demand_required[j], model.head[j]-junction.elevation, junction.PF, junction.P0) == model.demand_actual[j]
                 return pressure_dependent_demand_linear(model.demand_required[j], model.head[j]-junction.elevation, junction.PF, junction.P0) == model.demand_actual[j]
 
@@ -919,6 +917,13 @@ class PyomoSimulator(WaterNetworkSimulator):
         else:
             model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)
 
+        """
+        # Fixed zero demand
+        for j in model.junctions:
+            if model.demand_required[j] == 0.0:
+                model.demand_actual[j].value = 0.0
+                model.demand_actual[j].fixed = True
+        """
         """
         # Positive demand constraint
         def demand_bounds_rule(model, j):
@@ -1288,7 +1293,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._load_general_results(results)
 
         # Assert conditional controls are only provided for Tanks
-        self._verify_conditional_controls_for_tank()
+        # self._verify_conditional_controls_for_tank()
 
         # List of closed pump ids
         pumps_closed_by_rule = set([]) # Set of pumps that are closed by level controls defined in inp file
@@ -1296,6 +1301,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         links_closed_by_tank_controls = set([])  # Set of pipes closed when tank level goes below min
         closed_check_valves = set([]) # Set of closed check valves
         pumps_closed_by_drain_to_reservoir = set([]) # Set of link close because of reverse flow into the reservoir
+        pumps_closed_by_low_flow = set([])
 
         # Create solver instance
         opt = SolverFactory(solver)
@@ -1310,6 +1316,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         valve_status_changed = False
         check_valve_status_changed = False
         reservoir_link_closed_flag = False
+        low_flow_pumps_closed_flag = False
         instance = None
         while t < self._n_timesteps and step_iter < self._max_step_iter:
             if t == 0:
@@ -1367,13 +1374,17 @@ class PyomoSimulator(WaterNetworkSimulator):
             print "Links closed by drain to reservoir:"
             for i in pumps_closed_by_drain_to_reservoir:
                 print "\tLink: ", i, " closed"
+            print "Pumps closed by low flow:"
+            for i in pumps_closed_by_low_flow:
+                print "\tLink: ", i, " closed"
             print "Valve Status: "
             print self._valve_status
             """
 
             # Combine list of closed links
             #links_closed = links_closed_by_time.union(pumps_closed_by_rule.union(pumps_closed_by_outage.union(links_closed_by_tank_controls.union(closed_check_valves))))
-            links_closed = pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(links_closed_by_tank_controls.union(closed_check_valves))))
+            #links_closed = pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(links_closed_by_tank_controls.union(closed_check_valves))))
+            links_closed = pumps_closed_by_low_flow.union(pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(links_closed_by_tank_controls.union(closed_check_valves)))))
             #links_closed = pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(closed_check_valves)))
 
 
@@ -1424,7 +1435,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             instance = model # Create does not need to be called for NLP ?
             #print "Model creation: ", time.time() - t0
 
-
             # Initializing from previous timestep
             if not first_timestep:
                 #instance.load(pyomo_results)
@@ -1436,7 +1446,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             for l in instance.links:
                 if l in links_closed:
                     instance.flow[l].fixed = True
-                    instance.flow[l].value = self._Qtol/10.0
+                    #instance.flow[l].value = self._Qtol/10.0
+                    instance.flow[l].value = 0.0
                 else:
                     instance.flow[l].fixed = False
 
@@ -1448,7 +1459,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                 pressure_setting = valve.setting
                 status = self._valve_status[l]
                 if status == 'CLOSED':
-                    model.flow[l].value = self._Qtol/10.0
+                    #model.flow[l].value = self._Qtol/10.0
+                    model.flow[l].value = 0.0
                     model.flow[l].fixed = True
                 elif status == 'OPEN':
                     diameter = valve.diameter
@@ -1460,16 +1472,16 @@ class PyomoSimulator(WaterNetworkSimulator):
                     model.head[end_node].fixed = True
                 else:
                     raise RuntimeError("Valve Status not recognized.")
-            #print "PRV constraint: ", time.time() - t0
-
-            #for l in instance.pumps:
-            #    print l, instance.flow[l].value
 
             pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
-            #exit()
             instance.load(pyomo_results)
 
-            #CheckInstanceFeasibility(instance, 1e-4)
+            #CheckInstanceFeasibility(instance, 1e-6)
+
+            if (pyomo_results.solver.status == SolverStatus.ok) and (pyomo_results.solver.termination_condition == TerminationCondition.optimal):
+                low_flow_pumps_closed_flag = False
+            else:
+                low_flow_pumps_closed_flag = self._close_low_flow_pumps(instance, pumps_closed_by_low_flow, pumps_closed_by_outage)
 
             #print "Solution time: ", time.time() - t0
 
@@ -1485,14 +1497,10 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Resolve the same timestep if the valve status has changed
             if valve_status_changed \
                     or check_valve_status_changed \
-                    or reservoir_link_closed_flag:
+                    or reservoir_link_closed_flag \
+                    or low_flow_pumps_closed_flag:
                 step_iter += 1
             else:
-                #for valve_name in model.valves:
-                #    status = self._valve_status[valve_name]
-                #    print valve_name, '  ', status
-                #for pump_name in model.pumps:
-                #    print pump_name, '  ', self._wn.get_link(pump_name).get_base_status()
                 step_iter = 0
                 t += 1
                 # Load last tank head
@@ -1912,25 +1920,31 @@ class PyomoSimulator(WaterNetworkSimulator):
             head_sp = pressure_setting + start_node_elevation
             if status == 'ACTIVE':
                 if instance.flow[valve_name].value < -self._Qtol:
+                    #print "----- Valve ", valve_name, " closed:  ", instance.flow[valve_name].value, " < ", -self._Qtol
                     self._valve_status[valve_name] = 'CLOSED'
                     valve_status_changed = True
                 elif instance.head[start_node].value < head_sp - self._Htol:
+                    #print "----- Valve ", valve_name, " opened:  ", instance.head[start_node].value, " < ", head_sp - self._Htol
                     self._valve_status[valve_name] = 'OPEN'
                     valve_status_changed = True
             elif status == 'OPEN':
                 if instance.flow[valve_name].value < -self._Qtol:
+                    #print "----- Valve ", valve_name, " closed:  ", instance.flow[valve_name].value, " < ", -self._Qtol
                     self._valve_status[valve_name] = 'CLOSED'
                     valve_status_changed = True
                 elif instance.head[start_node].value > head_sp + self._Htol:
+                    #print "----- Valve ", valve_name, " active:  ", instance.head[start_node].value, " > ", head_sp + self._Htol
                     self._valve_status[valve_name] = 'ACTIVE'
                     valve_status_changed = True
             elif status == 'CLOSED':
                 if instance.head[start_node].value > instance.head[end_node].value + self._Htol \
                     and instance.head[start_node].value < head_sp - self._Htol:
+                    #print "----- Valve ", valve_name, " opened: from closed"
                     self._valve_status[valve_name] = 'OPEN'
                     valve_status_changed = True
                 elif instance.head[start_node].value > instance.head[end_node].value + self._Htol \
                     and instance.head[end_node].value < head_sp - self._Htol:
+                    #print "----- Valve ", valve_name, " active from closed"
                     self._valve_status[valve_name] = 'ACTIVE'
                     valve_status_changed = True
         return valve_status_changed
@@ -1963,6 +1977,20 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         #print check_valves_closed
         return check_valve_status_changed
+
+    def _close_low_flow_pumps(self, instance, pumps_closed_by_low_flow, pumps_closed_by_outage):
+        low_flow_pumps_closed_flag = False
+        for pump in instance.pumps:
+            if abs(instance.flow[pump].value) < 1e-6*self._Qtol:
+                if pump not in pumps_closed_by_low_flow and pump not in pumps_closed_by_outage:
+                    pumps_closed_by_low_flow.add(pump)
+                    low_flow_pumps_closed_flag = True
+            elif pump in pumps_closed_by_low_flow:
+                pumps_closed_by_low_flow.remove(pump)
+        for pump in pumps_closed_by_outage:
+            pumps_closed_by_low_flow.discard(pump)
+
+        return low_flow_pumps_closed_flag
 
     def _load_general_results(self, results):
         """

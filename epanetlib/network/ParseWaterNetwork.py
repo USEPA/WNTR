@@ -339,9 +339,9 @@ class ParseWaterNetwork(object):
                         node_index = current.index('NODE') + 1
                         node_name = current[node_index]
                         node = wn.get_node(node_name)
-                        if not isinstance(node, Tank):
-                            raise RuntimeError("Conditional controls are only supported for Tank levels."
-                                               + node_name + " is not a tank.")
+                        #if not isinstance(node, Tank):
+                        #    raise RuntimeError("Conditional controls are only supported for Tank levels."
+                        #                       + node_name + " is not a tank.")
                         if 'OPEN' in current and 'BELOW' in current:
                             value_index = current.index('BELOW') + 1
                             value = convert("Hydraulic Head", inp_units, float(current[value_index]))
