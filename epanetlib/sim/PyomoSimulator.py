@@ -1213,8 +1213,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         instance = model.create()
         
         print "DONE BUILDING MODEL. Timing: ", time.time()-t0
-        #import pyomo_utils as pyu
-        #pyu.CheckInstanceFeasibility(instance,1e-3)
+        import pyomo_utils as pyu
+        pyu.CheckInstanceFeasibility(instance,1e-3)
         #opt = SolverFactory(solver,solver_io='nl')
         opt = SolverFactory(solver)
         # Set solver options
