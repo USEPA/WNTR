@@ -35,7 +35,7 @@ network_sim._hydraulic_step_sec = time_step*60
 result_assumed_demands = network_sim.run_sim()
 
 if inp_file == './networks/Net6_mod.inp':
-	links_with_controls = ['LINK-1843','LINK-1828']
+	links_with_controls = ['LINK-1843','LINK-1828', 'LINK-1827']
 	pumps = wn.links(Pump)
 	for pname, p in pumps:
 		links_with_controls.append(pname)
@@ -73,9 +73,6 @@ else:
 
 # Add noise to demands
 result_true_demands = copy.deepcopy(result_assumed_demands)
-#error1 = add_noise(result_true_demands,{'demand':flowrate_noise})
-
-
 error1 = add_noise2(wn,result_true_demands,{'demand':demand_noise})
 to_fix =  build_fix_demand_dictionary(result_true_demands)
 wn_true_demands = copy.deepcopy(wn)
@@ -89,7 +86,6 @@ result_true_states = network_sim_true_demand.run_sim(fixed_demands=to_fix)
 # Run calibration
 nodes_to_measure = wn._nodes.keys()
 links_to_measure = wn._links.keys()
-
 true_states = get_measurements_from_sim_result(copy.deepcopy(result_true_states),
 							nodes_to_measure,
 							links_to_measure,
@@ -101,7 +97,6 @@ true_measurements = copy.deepcopy(true_states)
 #error2 = add_noise(true_measurements,{'pressure':pressure_noise,'flowrate':flowrate_noise,'head':head_noise})
 error2 = add_noise2(wn,true_measurements,{'pressure':pressure_noise,'head':head_noise,'flowrate':flowrate_noise})
 
-
 # d* instead of d double dag
 true_measurements.node['demand']=result_assumed_demands.node['demand']
 
@@ -112,8 +107,6 @@ add_time_controls(calibrated_wn, cond_timed_controls)
 network_cal =  PyomoSimulator(calibrated_wn)
 network_cal._sim_duration_sec = run_time*60
 network_cal._hydraulic_step_sec = time_step*60 
-
-
 calibration_results = network_cal.run_calibration(true_measurements,
 		weights =  {'tank_level':1.0, 'pressure':1.0,'head':1.0, 'flowrate':10000.0, 'demand':10000.0},
 #		dma_dict=None,
@@ -129,11 +122,15 @@ print "Error accumulation true measurements\n",error2
 #result_assumed_demands.node['demand'].to_csv('simulation.dat')
 #calibration_results.node['demand'].to_csv('calibration.dat')
 
-"""
-print "\nDEMANDS\n"
+print "\nDEMAND Differences\n"
 printDifferences(calibration_results,result_assumed_demands,'demand')
-print "\nFLOWS\n"
+print "\nFLOWS Differences \n"
 printDifferences(calibration_results,result_assumed_demands,'flowrate')
+
+
+#calibration_results.plot_link_attribute(['LINK-1827','LINK-1828'],'flowrate')
+#result_assumed_demands.plot_link_attribute(['LINK-1827','LINK-1828'],'flowrate')
+
 """
 plt.figure()
 if 'head' in calibration_results.node.columns:
@@ -168,8 +165,8 @@ result_assumed_demands.link['flowrate'].plot(label='SIM_ASSUMED_DEMAND')
 result_true_states.link['flowrate'].plot(label='SIM_TRUE_DEMAND')
 plt.title('Link Flowrate')
 plt.legend()
-
 plt.show()
+"""
 
 
 

@@ -254,7 +254,58 @@ class WaterNetworkSimulator(object):
                                                           "use method set_water_network_model to set model."
 
     def is_link_open(self, link_name, time):
-        return True if link.give_link_status(link_name,time) == 'OPEN' else False 
+        link = self._wn.get_link(link_name)
+        base_status = False if link.get_base_status() == 'CLOSED' else True
+        if link_name not in self._wn.time_controls:
+            return base_status
+        else:
+            open_times = self._wn.time_controls[link_name]['open_times']
+            closed_times = self._wn.time_controls[link_name]['closed_times']
+            if len(open_times) == 0 and len(closed_times) == 0:
+                return base_status
+            if len(open_times) == 0 and len(closed_times) != 0:
+                return base_status if time < closed_times[0] else False
+            elif len(open_times) != 0 and len(closed_times) == 0:
+                return base_status if time < open_times[0] else True
+            elif time < open_times[0] and time < closed_times[0]:
+                return base_status
+            else:
+                #Check open times
+                left = 0
+                right = len(open_times)-1
+                if time >= open_times[right]:
+                    min_open = time-open_times[right];
+                elif time < open_times[left]:
+                    min_open = float("inf");
+                else:
+                    middle = int(0.5*(right+left))
+                    while(right-left>1):
+                        if(open_times[middle]>time):
+                            right = middle
+                        else:
+                            left = middle
+                        middle = int(0.5*(right+left))
+                    min_open = time-open_times[left];
+
+                #Check Closed times
+                left = 0
+                right = len(closed_times)-1
+                if time >= closed_times[right]:
+                    min_closed = time-closed_times[right]
+                elif time < closed_times[left]:
+                    min_closed = float("inf")
+                else:
+                    middle = int(0.5*(right+left))
+                    while(right-left>1):
+                        if(closed_times[middle]>time):
+                            right = middle
+                        else:
+                            left = middle
+                        middle = int(0.5*(right+left))
+                    min_closed = time-closed_times[left];
+                    
+                return True if min_open < min_closed else False
+
 
     def give_link_status(self,link_name,time):
         link = self._wn.get_link(link_name)

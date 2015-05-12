@@ -72,3 +72,6 @@ class NetResults(object):
         plt.ylabel(param)
         plt.title('Link ' +  param)
         plt.show()
+
+
+
