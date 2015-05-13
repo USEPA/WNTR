@@ -20,7 +20,7 @@ from calibration_utils import *
 #inp_file = './networks/Net3.inp'
 inp_file = './networks/Net6_mod.inp'
 
-run_time = 120 #minutes
+run_time = 480#minutes
 time_step = 60 #minutes
 with_noise = False
 wn = WaterNetworkModel()
@@ -35,12 +35,13 @@ network_sim._hydraulic_step_sec = time_step*60
 result_assumed_demands = network_sim.run_sim()
 
 if inp_file == './networks/Net6_mod.inp':
-	links_with_controls = ['LINK-1843','LINK-1828', 'LINK-1827']
+	links_with_controls = ['LINK-1843', 'LINK-1827']
 	pumps = wn.links(Pump)
 	for pname, p in pumps:
 		links_with_controls.append(pname)
 	cond_timed_controls = get_conditional_controls_in_time(result_assumed_demands,links_with_controls)
-	valve_status = get_valve_status_updates(wn,result_assumed_demands)
+	valves_to_check = ['LINK-1828','VALVE-3891', 'VALVE-3890']
+	valve_status = get_valve_status_updates(wn,result_assumed_demands,valves_to_check)
 	cond_timed_controls.update(valve_status)
 
 elif inp_file == './networks/Net3.inp':
@@ -49,6 +50,8 @@ elif inp_file == './networks/Net3.inp':
 else:
 	print "CONTROLS NOT ADDED"
 	cond_timed_controls = dict()
+
+print cond_timed_controls
 
 # with DMA
 dma_dict = dict()
@@ -61,10 +64,10 @@ for n in junctions:
 		dma_dict[n[0]]=n[1].demand_pattern_name
 
 if with_noise:
-	demand_noise = 0.1
+	demand_noise = 0.0002
 	pressure_noise = 0.01
-	head_noise = 0.001
-	flowrate_noise = 0.01
+	head_noise = 0.00001
+	flowrate_noise = 0.00
 else:
 	demand_noise = 0.0
 	pressure_noise = 0.0
@@ -89,7 +92,7 @@ links_to_measure = wn._links.keys()
 true_states = get_measurements_from_sim_result(copy.deepcopy(result_true_states),
 							nodes_to_measure,
 							links_to_measure,
-							node_params=['head','demand'],
+							node_params=['head'],
 							link_params=['flowrate'],
 							duration_min=run_time)
 
@@ -107,6 +110,7 @@ add_time_controls(calibrated_wn, cond_timed_controls)
 network_cal =  PyomoSimulator(calibrated_wn)
 network_cal._sim_duration_sec = run_time*60
 network_cal._hydraulic_step_sec = time_step*60 
+
 calibration_results = network_cal.run_calibration(true_measurements,
 		weights =  {'tank_level':1.0, 'pressure':1.0,'head':1.0, 'flowrate':10000.0, 'demand':10000.0},
 #		dma_dict=None,
@@ -115,23 +119,24 @@ calibration_results = network_cal.run_calibration(true_measurements,
 #		dma_dict=dma_dict,
 #		fix_base_demand=True)
 
-print "Error accumulation true demand\n",error1 
-print "Error accumulation true measurements\n",error2 
+#print "Error accumulation true demand\n",error1 
+#print "Error accumulation true measurements\n",error2 
 
 # Print results to .dat file
-#result_assumed_demands.node['demand'].to_csv('simulation.dat')
-#calibration_results.node['demand'].to_csv('calibration.dat')
 
 print "\nDEMAND Differences\n"
 printDifferences(calibration_results,result_assumed_demands,'demand')
 print "\nFLOWS Differences \n"
 printDifferences(calibration_results,result_assumed_demands,'flowrate')
 
-
-#calibration_results.plot_link_attribute(['LINK-1827','LINK-1828'],'flowrate')
-#result_assumed_demands.plot_link_attribute(['LINK-1827','LINK-1828'],'flowrate')
-
 """
+true_measurements.plot_link_attribute(['VALVE-3890','VALVE-3891'],'flowrate',legend='true')
+calibration_results.plot_link_attribute(['VALVE-3890','VALVE-3891'],'flowrate',legend='calib')
+result_assumed_demands.plot_link_attribute(['VALVE-3890','VALVE-3891'],'flowrate',legend='base')
+plt.ylim(-0.01,0.05)
+plt.show()
+"""
+
 plt.figure()
 if 'head' in calibration_results.node.columns:
 	calibration_results.node['head'].plot(label='ESTIMATION')
@@ -166,7 +171,7 @@ result_true_states.link['flowrate'].plot(label='SIM_TRUE_DEMAND')
 plt.title('Link Flowrate')
 plt.legend()
 plt.show()
-"""
+
 
 
 

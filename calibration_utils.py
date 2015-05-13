@@ -200,7 +200,7 @@ def build_fix_demand_dictionary(result_object):
 
 def get_conditional_controls_in_time(result_object, subject_to_conditions = None):
 	controls = dict()
-	tol=1e-5
+	tol=1e-6
 	if subject_to_conditions is None:
 		links = result_object.link.index.get_level_values('link').drop_duplicates()
 	else:
@@ -215,7 +215,6 @@ def get_conditional_controls_in_time(result_object, subject_to_conditions = None
 			pt = times[j-1]
 			flow = result_object.link['flowrate'][l][t]
 			pflow = result_object.link['flowrate'][l][pt] 
-			#print flow, pflow
 			if not (flow<=tol and flow>=-tol) and (pflow<=tol and pflow>=-tol):
 				open_times.append(t.total_seconds())
 			elif (flow<=tol and flow>=-tol) and not (pflow<=tol and pflow>=-tol):
@@ -229,13 +228,11 @@ def get_conditional_controls_in_time(result_object, subject_to_conditions = None
 
 def get_valve_status_updates(wn, result_object, valves_to_check = None, tol=1e-4):
 	status = dict()
-
-	if valves_to_check is None:
-		valves =  result_object.link[result_object.link['type']=='valve']
-		valves = valves.index.get_level_values('link').drop_duplicates()
-	else:
-		all_valves = set([result_object.link['type']=='valve'].index.get_level_values('link').drop_duplicates())
-		valves = all_valves.intersection(set(valves_to_check))
+	valves =  result_object.link[result_object.link['type']=='valve']
+	valves = valves.index.get_level_values('link').drop_duplicates()
+	if valves_to_check is not None:
+		all_links= set(result_object.link.index.get_level_values('link').drop_duplicates())
+		valves = all_links.intersection(set(valves_to_check))
 
 	for v in valves:
 		times = result_object.link['flowrate'][v].index
@@ -249,19 +246,25 @@ def get_valve_status_updates(wn, result_object, valves_to_check = None, tol=1e-4
 		prev_status = 0
 		tol = 1e-5
 		for t in times:
-			if abs(result_object.node['pressure'][end_node_name][t]-valve.setting)<tol:
-				if prev_status!=1:
-					active_times.append(t.total_seconds())
-					prev_status=1
-			else:
+			if valve._base_status == 'CV':
 				if result_object.link['flowrate'][v][t]<=tol and result_object.link['flowrate'][v][t]>=-tol:
-					if prev_status!=2:
-						closed_times.append(t.total_seconds())
-						prev_status=2
+					closed_times.append(t.total_seconds())
 				else:
-					if prev_status!=3:
-						open_times.append(t.total_seconds())
-						prev_status=3
+					open_times.append(t.total_seconds())
+			else:
+				if abs(result_object.node['pressure'][end_node_name][t]-valve.setting)<tol:
+					if prev_status!=1:
+						active_times.append(t.total_seconds())
+						prev_status=1
+				else:
+					if result_object.link['flowrate'][v][t]<=tol and result_object.link['flowrate'][v][t]>=-tol:
+						if prev_status!=2:
+							closed_times.append(t.total_seconds())
+							prev_status=2
+		    			else:
+		    				if prev_status!=3:
+		    					open_times.append(t.total_seconds())
+		    					prev_status=3
 		status[v] = dict()
 		status[v]['open_times']=open_times
 		status[v]['closed_times']=closed_times
@@ -270,7 +273,6 @@ def get_valve_status_updates(wn, result_object, valves_to_check = None, tol=1e-4
 
 
 def add_time_controls(wn,dict_time_controls):
-	print dict_time_controls
 	for l in dict_time_controls.keys():
 		open_times =  dict_time_controls[l]['open_times']
 		closed_times = dict_time_controls[l]['closed_times']
