@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 def draw_graph(wn, node_attribute=None, link_attribute=None, title=None, 
                node_size=10, node_range = [None,None], node_cmap=None,
                link_width=1, link_range = [None,None], link_cmap=None, 
-               add_colorbar=True, directed=False):
+               add_colorbar=True, figsize=None, directed=False):
 
     r"""Draw a WaterNetworkModel networkx graph
     
@@ -117,7 +117,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         link_cmap=plt.cm.jet
         
     # Plot
-    plt.figure(facecolor='w', edgecolor='k')
+    plt.figure(facecolor='w', edgecolor='k', figsize=figsize)
     if title is not None:
         plt.title(title)
     nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
