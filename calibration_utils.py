@@ -1,6 +1,9 @@
 from epanetlib.network.ParseWaterNetwork import ParseWaterNetwork
 from epanetlib.network.WaterNetworkModel import *
 from epanetlib.sim.WaterNetworkSimulator import *
+from epanetlib.sim.EpanetSimulator import *
+from epanetlib.sim.ScipySimulator import *
+from epanetlib.sim.PyomoSimulator import *
 import matplotlib.pylab as plt
 import epanetlib as en
 import numpy as np 
@@ -8,6 +11,7 @@ import networkx as nx
 import pandas as pd
 import copy
 import sys
+import time
 
 
 def get_measurements_from_sim_result(network_results,nodes_to_measure=[],links_to_measure=[],node_params=['demand','head','pressure'],link_params=['flowrate'],duration_min=2880):
@@ -198,9 +202,84 @@ def build_fix_demand_dictionary(result_object):
 			demands[(n,t)] = times = result_object.node['demand'][n][dt]
 	return demands
 
-def get_conditional_controls_in_time(result_object, subject_to_conditions = None):
+def build_measurement_dictionary(result_object, ignore_parameters=['expected_demand', 'type', 'velocity']):
+	measurements = dict()
+	type_nodes = set(result_object.node['type'].values)
+	# nodes
+	for nt in type_nodes:
+		measurements[nt] = dict()
+		node_measurements = result_object.node[result_object.node['type'] == nt]
+		columns = node_measurements.columns.values
+		parameters = [p for p in columns if p not in ignore_parameters]
+		node_names = node_measurements.index.get_level_values('node').drop_duplicates()
+		for param in parameters:
+			measurements[nt][param] = dict()
+			all_param_measurements = node_measurements[param]
+			param_measurements = all_param_measurements.dropna()
+			for n in node_names:
+				node_measure_times = param_measurements[n].index
+				for dt in node_measure_times:
+					t = dt.total_seconds()
+					measurements[nt][param][n,t] = param_measurements[n][dt]
+	# links
+	type_links = set(result_object.link['type'].values)
+	for lt in type_links:
+		measurements[lt] = dict()
+		link_measurements = result_object.link[result_object.link['type'] == lt]
+		columns = link_measurements.columns.values
+		parameters = [p for p in columns if p not in ignore_parameters]
+		link_names = link_measurements.index.get_level_values('link').drop_duplicates()
+		for param in parameters:
+			measurements[lt][param] = dict()
+			all_param_measurements = link_measurements[param]
+			param_measurements = all_param_measurements.dropna()
+			for l in link_names:
+				link_measure_times = param_measurements[l].index
+				for dt in link_measure_times:
+					t = dt.total_seconds()
+					measurements[lt][param][l,t] = param_measurements[l][dt]
+	return measurements
+
+def build_link_status_dictionary(wn, result_object,tol=1e-6):
+	status = dict()
+	type_links = set(result_object.link['type'].values)
+	for lt in type_links:
+		status[lt] = dict()
+		link_measurements = result_object.link[result_object.link['type'] == lt]
+		link_names = link_measurements['flowrate'].index.get_level_values('link').drop_duplicates()
+		if lt == 'valve':
+			for l in link_names:
+				valve = wn.get_link(l)
+				end_node_name = valve.end_node()
+				end_node = wn.get_node(end_node_name)
+				status[lt][l] = dict()
+				link_measure_times = result_object.link['flowrate'][l].index
+				for dt in link_measure_times:
+					t = dt.total_seconds()
+					if abs(result_object.node['pressure'][end_node_name][dt]-valve.setting)<tol:
+						status[lt][l][t] = 2
+					else:
+						flow = result_object.link['flowrate'][l][dt]
+						if flow<=tol and flow>=-tol:
+							status[lt][l][t] = 0
+						else:
+							status[lt][l][t] = 1
+		else:
+			for l in link_names:
+				status[lt][l] = dict()
+				link_measure_times = result_object.link['flowrate'][l].index
+				for dt in link_measure_times:
+					t = dt.total_seconds()
+					flow = result_object.link['flowrate'][l][dt]
+					if flow<=tol and flow>=-tol:
+						status[lt][l][t] = 0
+					else:
+						status[lt][l][t] = 1
+	return status
+
+
+def get_conditional_controls_in_time(result_object, subject_to_conditions = None, tol=1e-6):
 	controls = dict()
-	tol=1e-6
 	if subject_to_conditions is None:
 		links = result_object.link.index.get_level_values('link').drop_duplicates()
 	else:
@@ -272,12 +351,56 @@ def get_valve_status_updates(wn, result_object, valves_to_check = None, tol=1e-4
 	return status
 
 
+def build_time_controls_dictionary(wn, result_object, links_with_controls = None, valves_to_check = None):
+	timed_controls = get_conditional_controls_in_time(result_object,links_with_controls)
+	valve_status = get_valve_status_updates(wn,result_object,valves_to_check)
+	timed_controls.update(valve_status)
+	return timed_controls
+
+
 def add_time_controls(wn,dict_time_controls):
 	for l in dict_time_controls.keys():
 		open_times =  dict_time_controls[l]['open_times']
 		closed_times = dict_time_controls[l]['closed_times']
 		active_times = dict_time_controls[l]['active_times']
 		wn.add_time_control(l,open_times,closed_times,active_times)
+
+def generate_measurements(wn, duration_sec, time_step_sec, noise_dict, nodes_to_measure, links_to_measure, with_noise=False):
+	network_simulator = PyomoSimulator(wn)
+	network_simulator._sim_duration_sec = duration_sec
+	network_simulator._hydraulic_step_sec = time_step_sec
+	result_assumed_demands = network_simulator.run_sim()
+	if with_noise:
+		result_true_demands = copy.deepcopy(result_assumed_demands)
+		error1 = add_noise2(wn,result_true_demands,{'demand':noise_dict['demand']})
+		to_fix =  build_fix_demand_dictionary(result_true_demands)
+
+		network_simulator_noise = PyomoSimulator(wn)
+		network_simulator_noise._sim_duration_sec = duration_sec
+		network_simulator_noise._hydraulic_step_sec = time_step_sec
+		result_true_states = network_simulator_noise.run_sim(fixed_demands=to_fix)
+	else:
+		result_true_states = copy.deepcopy(result_assumed_demands)
+
+	true_states = get_measurements_from_sim_result(copy.deepcopy(result_true_states),
+							nodes_to_measure,
+							links_to_measure,
+							node_params=['head'],
+							link_params=['flowrate'],
+							duration_min=network_simulator._sim_duration_sec/60.0)
+
+	true_measurements = copy.deepcopy(true_states)
+	if with_noise:
+		error2 = add_noise2(wn,true_measurements,noise_dict)
+		print "Error accumulation demands\n",error1 
+		print "Error accumulation measurements\n",error2
+
+
+	# estimate for regularization term
+	true_measurements.node['demand']=result_assumed_demands.node['demand']
+	true_measurements_dict = build_measurement_dictionary(true_measurements)
+	return (result_assumed_demands, result_true_states, true_measurements_dict)
+
 
 def printDifferences(results1,results2,prop,tol=1e-2):
 	
