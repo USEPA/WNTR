@@ -50,7 +50,7 @@ junction_index = [enData.ENgetnodeindex(k) for k,v in nx.get_node_attributes(G,'
 reservoir_index = [enData.ENgetnodeindex(k) for k,v in nx.get_node_attributes(G,'nodetype').iteritems() if v == en.pyepanet.EN_RESERVOIR]
 tank_index = [enData.ENgetnodeindex(k) for k,v in nx.get_node_attributes(G,'nodetype').iteritems() if v == en.pyepanet.EN_TANK]
 pump_index = [enData.ENgetnodeindex(k) for k,v in nx.get_node_attributes(G,'nodetype').iteritems() if v == en.pyepanet.EN_PUMP]    
-pipe_index = [enData.ENgetlinkindex(k[2]) for k,v in en.network.get_edge_attributes_MG(G, 'linktype').iteritems() if v == en.pyepanet.EN_PIPE]    
+pipe_index = [enData.ENgetlinkindex(k[2]) for k,v in nx.get_edge_attributes(G, 'linktype').iteritems() if v == en.pyepanet.EN_PIPE]    
     
 for i in range(Imax):
       
