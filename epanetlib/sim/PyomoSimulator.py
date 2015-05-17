@@ -406,7 +406,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                         exprn = (model.head[start_node,t] - model.head[end_node,t])*model.flow[l,t]*self._g*1000.0 == -power
                         model.pump_headloss.add(exprn)
                         #setattr(model, 'pump_negative_headloss_'+str(l), Constraint(expr=(model.head[start_node] - model.head[end_node])*model.flow[l]*self._g*1000.0 == -pump.power))
-        print "Pipes and pumps loss Time: ", time.time()-t0
+        print "Time to build pipe-pump headloss constraints: ", time.time()-t0
         #print "Created head gain: ", time.time() - t0
         # Nodal head difference between start and end node of a link
         """
@@ -470,7 +470,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 tank = wn.get_node(n)
                 return (model.tank_net_inflow[n,t]*model.timestep*4.0)/(pi*(tank.diameter**2)) == model.head[n,t]-model.head[n,t-1]
         model.tank_dynamics = Constraint(model.tanks, model.time, rule=tank_dynamics_rule)
-        print "Tank_dynamics: ", time.time()-t0
+        print "Time to build tank Euler constraints: ", time.time()-t0
 
         t0 = time.time()
         model.valve_status = ConstraintList()
@@ -496,7 +496,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                         end_node_obj = self._wn.get_node(end_node)
                         model.head[end_node,t].value = pressure_setting + end_node_obj.elevation
                         model.head[end_node,t].fixed = True
-        print "Valve head loss Time: ", time.time()-t0
+        print "Time to build valve headloss constraints: ", time.time()-t0
 
 
         #print "Created Tank Dynamics: ", time.time() - t0
@@ -995,21 +995,25 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Look for initial values in data. If not provided should exit calibration
         # Fix the initial head in a Tank
+        """
         for n in model.tanks:
             tank = wn.get_node(n)
             tank_initial_head = tank.elevation + tank.init_level
             t = min(model.time)
             model.head[n,t].value = tank_initial_head
             model.head[n,t].fixed = True
-
+        """
 
         # Fix to zero the nodes that have base demand zero
+        """
         junctions_zero_base = wn.query_node_attribute('base_demand', np.equal, 0.0, node_type=Junction).keys()
         for n in junctions_zero_base:
             for t in model.time:
                 model.demand_actual[n,t].value = 0.0
                 model.demand_actual[n,t].fixed = True
+        """
 
+        """
         # fixed to zero the times at which the pipe was closed
         for l in model.links:
             for t in model.time:
@@ -1017,6 +1021,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 if not self.is_link_open(l,time_sec):
                     model.flow[l,t].value = 0.0
                     model.flow[l,t].fixed = True
+        """
         
         t0 = time.time()
         def node_mass_balance_rule(model, n, t):
@@ -1039,7 +1044,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         #model.node_mass_balance.deactivate()
         model.node_mass_balance2 = Constraint(model.nodes, model.time, rule=node_mass_balance_rule)
-        print "Mass balance Time: ", time.time()-t0
+        print "Time to build mass balance constraint: ", time.time()-t0
 
                
         ############### OBJECTIVE ########################

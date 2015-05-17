@@ -33,7 +33,7 @@ inp_file = './networks/Net6_mod.inp'
 run_time = 1440#minutes
 time_step = 60 #minutes
 with_noise = False
-generate_measures = True
+generate_measures = False
 wn = WaterNetworkModel()
 wn.name = inp_file
 parser = ParseWaterNetwork()
@@ -76,9 +76,13 @@ if generate_measures:
 	stored.measurement_dict = true_measurements_dict
 	stored.time_controls_dict = cond_timed_controls
 	stored.status_dict = status_dict
+	t0 = time.time()
 	pk.dump( stored, open( "measure_struc.p", "wb" ) )
+	print "\nTime to pickle the data :", time.time() - t0
 else:
+	t0 = time.time()
 	stored = pk.load( open( "measure_struc.p", "rb" ) )
+	print "\nTime to unpickle data :", time.time() - t0
 
 
 # Run calibration
