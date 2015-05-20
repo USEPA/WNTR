@@ -22,12 +22,15 @@ TODO 6. Michael: Consistency in arguements - check test_nominal_pressures file
 TODO 7. Michael: change junction.PF to junction ._PF and junction.P0 to junction._P0
 TODO 8. Michael: what if someone tries to set_nom_P with an empty network model?
 TODO 9. Michael: initial junction P0 and PF attributes
+TODO 10. Michael: Check units on nominal pressures
+TODO 11. Michael: Fix elevation for pipe leak model
 """
 
 import copy
 import networkx as nx
 import math
 from scipy.optimize import fsolve
+from epanetlib.units import convert
 
 
 class WaterNetworkModel(object):
@@ -810,25 +813,47 @@ class WaterNetworkModel(object):
 
         return list_of_links
 
-    def set_nominal_pressures(self, res = None, constant_nominal_pressure = None):
+    def set_nominal_pressures(self, res = None, constant_nominal_pressure = None, units = None):
         """
-        Takes a results object and adds nominal pressures to each junction.
+        A method for setting nominal pressures (hydraulic head - elevation) for pressure driven simulations.
+
+        Parameters
+        ----------
+        res: results object
+            Use the res parameter if you want to set nominal pressures based on the results of a
+            demand driven simulation. For each junction, the nominal pressure will be set to 80% of 
+            the minimum pressure for that junction in the results. The results object should use
+            internal units (SI units).
+        constant_nominal_pressure: float
+            Use the constant_nominal pressure parameter if you want all junctions to have the same 
+            nominal pressure. If this approach is used, you must specify the units.
+        units: string
+            The units parameter is required if you use the constant_nominal_pressure. It specifies
+            the units of the constant_nominal_pressure parameter.
         """
         if res is not None and constant_nominal_pressure is None:
+            if units is not None:
+                raise RuntimeError('You specified units when using the results object approach. See help(set_nominal_pressures).')
             for junction_name,junction in self.nodes(Junction):
                 min_P = res.node['pressure'][junction_name].min()
                 if min_P <= 0.0:
-                    print 'error: base case had negative pressure at junction ',junction_name
+                    raise RuntimeError('error: base case had negative pressure at a junction')
                 else:
                     junction.PF = 0.8*min_P
                     junction.P0 = 0.0
         elif constant_nominal_pressure is not None and res is None:
+            if units is None:
+                raise RuntimeError('error: If you use constant_nominal_pressure, you must specify units.')
+            if units.upper() not in ['PSI','M']:
+                raise RuntimeError('The only units currently supported for the set_nominal_pressures method are \'psi\'(pounds per square inch) and \'m\'(meters).')
+            constant_nominal_pressure = float(constant_nominal_pressure)
+            if units.upper()=='PSI':
+                constant_nominal_pressure = convert('Pressure',0,constant_nominal_pressure)
             for junction_name,junction in self.nodes(Junction):
                 junction.PF = constant_nominal_pressure
                 junction.P0 = 0.0
         else:
-            print 'error: either you have not specified any nominal pressure or you have tried to specify in multiple ways'
-            quit()
+            raise RuntimeError('error: either you have not specified any nominal pressure or you have tried to specify in multiple ways')
 
 class Node(object):
     """
