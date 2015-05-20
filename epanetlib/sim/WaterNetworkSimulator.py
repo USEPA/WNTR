@@ -302,8 +302,8 @@ class WaterNetworkSimulator(object):
                         else:
                             left = middle
                         middle = int(0.5*(right+left))
-                    min_closed = time-closed_times[left];
-                    
+                    min_closed = time-closed_times[left]
+
                 return True if min_open < min_closed else False
 
 
