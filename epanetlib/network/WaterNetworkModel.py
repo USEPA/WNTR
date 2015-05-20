@@ -357,6 +357,12 @@ class WaterNetworkModel(object):
         orig_pipe_diameter = self.get_link(pipe_name).diameter
         roughness = self.get_link(pipe_name).roughness
         minor_loss = self.get_link(pipe_name).minor_loss
+        if hasattr(self.get_link(pipe_name), '_base_status'):
+            status = self.get_link(pipe_name)._base_status
+            if status!='OPEN':
+                raise RuntimeError('You tried to add a leak to a pipe that is not open')
+        else:
+            status = None
 
         # Remove original pipe
         self.remove_pipe(pipe_name)
@@ -372,16 +378,17 @@ class WaterNetworkModel(object):
                 raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
         orig_pipe_area = math.pi/4.0*orig_pipe_diameter**2
         if leak_area > orig_pipe_area:
-            raise RuntimeError('')
-        leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff)
+            raise RuntimeError('You specified a leak area (or diameter) that is larger than the area (or diameter) of the original pipe')
+        leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff, self.get_node(start_node_name).elevation, self.get_node(end_node_name).elevation)
         self._nodes[leak_name] = leak
         self._graph.add_node(leak_name)
+        self.set_node_type(leak_name, 'leak')
 
         # Add pipe from start node to leak
-        self.add_pipe(pipe_name+'a',start_node_name, leak_name, length/2.0, orig_pipe_diameter, roughness, minor_loss)
+        self.add_pipe(pipe_name+'a',start_node_name, leak_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
 
         # Add pipe from leak to end node
-        self.add_pipe(pipe_name+'b', leak_name, end_node_name, length/2.0, orig_pipe_diameter, roughness, minor_loss)
+        self.add_pipe(pipe_name+'b', leak_name, end_node_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
 
     def add_pump(self, name, start_node_name, end_node_name, info_type='HEAD', info_value=None):
         """
@@ -961,7 +968,7 @@ class Leak(Node):
     """
     Leak class that is inherited from Node
     """
-    def __init__(self, leak_name, pipe_name, area, leak_discharge_coeff):
+    def __init__(self, leak_name, pipe_name, area, leak_discharge_coeff, start_elevation, end_elevation):
         """
         Parameters
         ----------
@@ -976,7 +983,7 @@ class Leak(Node):
         self.pipe_name = pipe_name
         self.area = area
         self.leak_discharge_coeff = leak_discharge_coeff
-        self.elevation = 0.0
+        self.elevation = (start_elevation+end_elevation)/2.0
 
 class Reservoir(Node):
     """
