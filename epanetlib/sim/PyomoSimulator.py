@@ -7,6 +7,9 @@ TODO
 1. Use in_edges and out_edges to write node balances on the pyomo model.
 2. Use reporting timestep when creating the pyomo results object.
 3. Test behaviour of check valves. We may require a minimum of two trials at every timestep.
+4. Check for negative pressure at leak node
+5. Double check units of leak model
+6. Leak model assumes all pressures are guage
 """
 
 try:
@@ -874,13 +877,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif isinstance(node, Reservoir):
                 return expr == model.reservoir_demand[n]
             elif isinstance(node, Leak):
-                print '****************************************************************************************'
-                print '\n\n\nDouble check units with Arpan.'
-                print 'Also double check whether head is guage or absolute.'
-                print 'We need to add a check for negative guage pressure at leak node.'
-                print 'What should leak elevation be?\n\n\n'
-                print '****************************************************************************************'
-                return expr == node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*(model.head[n])**0.5
+                return expr**2 == node.leak_discharge_coeff**2*node.area**2*(2*self._g)*(model.head[n])
         model.node_mass_balance = Constraint(model.nodes, rule=node_mass_balance_rule)
         #print "Created Node balance: ", time.time() - t0
 
