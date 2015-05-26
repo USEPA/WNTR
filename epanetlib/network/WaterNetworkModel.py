@@ -334,7 +334,13 @@ class WaterNetworkModel(object):
 
     def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75):
         """
-        Method to add a leak to the water network object.
+        Method to add a leak to the water network object. Leaks are modeled by:
+
+        Q = leak_discharge_coeff*leak_area*sqrt(2*g*h)
+        where:
+           Q is the volumetric flow rate of water out of the leak
+           g is the acceleration due to gravity
+           h is the gauge head at the leak, P_g/(rho*g); Note that this is not the hydraulic head (P_g - elevation)
 
         Parameters
         ----------
@@ -342,9 +348,14 @@ class WaterNetworkModel(object):
            Name of the leak
         pipe_name: string
            Name of the pipe where the leak ocurrs.
-           Currently assuming the leak ocurrs halfway between nodes.
+           Assumes the leak ocurrs halfway between nodes.
         leak_area: float
-           Area of the leak in m^2
+           Area of the leak in m^2. Either the leak area or the leak diameter must be specified, but not both.
+        leak_diameter
+           Diameter of the leak in m. The area of the leak is calculated with leak_diameter assuming the leak is in the shape of a hole.
+           Either the leak area or the leak diameter must be specified, but not both.
+        leak_discharge_coeff
+           Leak discharge coefficient
         """
 
         # Get attributes of original pipe
