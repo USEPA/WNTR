@@ -22,6 +22,19 @@ from WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
 from pyomo_utils import CheckInstanceFeasibility
+import cProfile
+
+def do_cprofile(func):
+    def profiled_func(*args, **kwargs):
+        profile = cProfile.Profile()
+        try:
+            profile.enable()
+            result = func(*args, **kwargs)
+            profile.disable()
+            return result
+        finally:
+            profile.print_stats()
+    return profiled_func
 
 class PyomoSimulator(WaterNetworkSimulator):
     """
@@ -539,7 +552,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         def LossFunc(Q):
             q1 = 0.00349347323944
             q2 = 0.00549347323944
-            return Expr_if(IF = Q < q1, THEN = f1(Q), ELSE = Expr_if(IF = Q > q2, THEN = f2(Q), ELSE = Px(Q)))
+            return Expr_if(IF = Q < q1, THEN = f1(Q), ELSE = Expr_if(IF = Q > q2, THEN = f2(Q), ELSE = 2.45944613543e-06 + 0.0138413824671*Q - 2.80374270811*Q**2 + 430.125623753*Q**3))
 
 
         def pressure_dependent_demand_nl(full_demand, p, PF, P0):
@@ -931,7 +944,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.demand_bounds = Constraint(model.junctions, rule=demand_bounds_rule)
         """
 
-        return model.create()
+        return model
 
 
 
@@ -1245,6 +1258,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         return results
 
+    @do_cprofile
     def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands = None):
         
         """
