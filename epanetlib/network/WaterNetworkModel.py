@@ -22,12 +22,15 @@ TODO 6. Michael: Consistency in arguements - check test_nominal_pressures file
 TODO 7. Michael: change junction.PF to junction ._PF and junction.P0 to junction._P0
 TODO 8. Michael: what if someone tries to set_nom_P with an empty network model?
 TODO 9. Michael: initial junction P0 and PF attributes
+TODO 10. Michael: Check units on nominal pressures
+TODO 11. Michael: Fix elevation for pipe leak model
 """
 
 import copy
 import networkx as nx
 import math
 from scipy.optimize import fsolve
+from epanetlib.units import convert
 
 
 class WaterNetworkModel(object):
@@ -354,6 +357,12 @@ class WaterNetworkModel(object):
         orig_pipe_diameter = self.get_link(pipe_name).diameter
         roughness = self.get_link(pipe_name).roughness
         minor_loss = self.get_link(pipe_name).minor_loss
+        if hasattr(self.get_link(pipe_name), '_base_status'):
+            status = self.get_link(pipe_name)._base_status
+            if status!='OPEN':
+                raise RuntimeError('You tried to add a leak to a pipe that is not open')
+        else:
+            status = None
 
         # Remove original pipe
         self.remove_pipe(pipe_name)
@@ -369,16 +378,17 @@ class WaterNetworkModel(object):
                 raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
         orig_pipe_area = math.pi/4.0*orig_pipe_diameter**2
         if leak_area > orig_pipe_area:
-            raise RuntimeError('')
-        leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff)
+            raise RuntimeError('You specified a leak area (or diameter) that is larger than the area (or diameter) of the original pipe')
+        leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff, self.get_node(start_node_name).elevation, self.get_node(end_node_name).elevation)
         self._nodes[leak_name] = leak
         self._graph.add_node(leak_name)
+        self.set_node_type(leak_name, 'leak')
 
         # Add pipe from start node to leak
-        self.add_pipe(pipe_name+'a',start_node_name, leak_name, length/2.0, orig_pipe_diameter, roughness, minor_loss)
+        self.add_pipe(pipe_name+'a',start_node_name, leak_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
 
         # Add pipe from leak to end node
-        self.add_pipe(pipe_name+'b', leak_name, end_node_name, length/2.0, orig_pipe_diameter, roughness, minor_loss)
+        self.add_pipe(pipe_name+'b', leak_name, end_node_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
 
     def add_pump(self, name, start_node_name, end_node_name, info_type='HEAD', info_value=None):
         """
@@ -810,25 +820,44 @@ class WaterNetworkModel(object):
 
         return list_of_links
 
-    def set_nominal_pressures(self, res = None, constant_nominal_pressure = None):
+    def set_nominal_pressures(self, res = None, constant_nominal_pressure = None, units = 'm'):
         """
-        Takes a results object and adds nominal pressures to each junction.
+        A method for setting nominal pressures (hydraulic head - elevation) for pressure driven simulations.
+
+        Parameters
+        ----------
+        res: results object
+            Use the res parameter if you want to set nominal pressures based on the results of
+            another simulation. For each junction, the nominal pressure will be set to 80% of 
+            the minimum pressure for that junction in the results. The results object should use
+            internal units (SI units).
+        constant_nominal_pressure: float
+            Use the constant_nominal pressure parameter if you want all junctions to have the same 
+            nominal pressure.
+        units: string
+            The units parameter is used if you use the constant_nominal_pressure. It specifies
+            the units of the constant_nominal_pressure parameter. Default is meters. Supported units:
+            meters and psi.
         """
         if res is not None and constant_nominal_pressure is None:
             for junction_name,junction in self.nodes(Junction):
                 min_P = res.node['pressure'][junction_name].min()
                 if min_P <= 0.0:
-                    print 'error: base case had negative pressure at junction ',junction_name
+                    raise RuntimeError('error: base case had negative pressure at a junction')
                 else:
                     junction.PF = 0.8*min_P
                     junction.P0 = 0.0
         elif constant_nominal_pressure is not None and res is None:
+            if units.upper() not in ['PSI','M']:
+                raise RuntimeError('The only units currently supported for the set_nominal_pressures method are \'psi\'(pounds per square inch) and \'m\'(meters).')
+            constant_nominal_pressure = float(constant_nominal_pressure)
+            if units.upper()=='PSI':
+                constant_nominal_pressure = convert('Pressure',0,constant_nominal_pressure)
             for junction_name,junction in self.nodes(Junction):
                 junction.PF = constant_nominal_pressure
                 junction.P0 = 0.0
         else:
-            print 'error: either you have not specified any nominal pressure or you have tried to specify in multiple ways'
-            quit()
+            raise RuntimeError('error: either you have not specified any nominal pressure or you have tried to specify the nominal pressure in multiple ways')
 
 class Node(object):
     """
@@ -936,7 +965,7 @@ class Leak(Node):
     """
     Leak class that is inherited from Node
     """
-    def __init__(self, leak_name, pipe_name, area, leak_discharge_coeff):
+    def __init__(self, leak_name, pipe_name, area, leak_discharge_coeff, start_elevation, end_elevation):
         """
         Parameters
         ----------
@@ -951,7 +980,7 @@ class Leak(Node):
         self.pipe_name = pipe_name
         self.area = area
         self.leak_discharge_coeff = leak_discharge_coeff
-        self.elevation = 0.0
+        self.elevation = (start_elevation+end_elevation)/2.0
 
 class Reservoir(Node):
     """
