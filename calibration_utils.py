@@ -13,6 +13,15 @@ import copy
 import sys
 import time
 
+class calibration_data_struct:
+    def __init__(self):
+        self.sim_results = None
+        self.noise_sim_results = None
+        self.measurement_dict = None
+        self.time_controls_dict = None
+        self.status_dict = None
+        self.init_dict = None
+        self.regularization_dict = None
 
 def get_measurements_from_sim_result(network_results,nodes_to_measure=[],links_to_measure=[],node_params=['demand','head','pressure'],link_params=['flowrate'],duration_min=2880):
 
@@ -66,130 +75,81 @@ def select_measurements_per_property(dict_nodes,dict_links,measurements):
 			if l not in dict_links[mp]:
 				measurements.link[mp][l] = np.nan
 
-def add_noise(measurements,dict_percentage=None):
-	if dict_percentage is None:
-		dict_percentage = dict()
-		dict_percentage['demand'] = measurements.node['demand'].mean()*0.02
-		dict_percentage['pressure'] = measurements.node['pressure'].mean()*0.05
-		dict_percentage['head'] = measurements.node['head'].max()*0.005
-		dict_percentage['flowrate'] = measurements.link['flowrate'].mean()*0.02
-		dict_percentage['velocity'] = measurements.link['velocity'].mean()*0.02
-
-	nodes = measurements.node.index.get_level_values('node').drop_duplicates()
-	links = measurements.link.index.get_level_values('link').drop_duplicates()
-
-	node_measured_properties = measurements.node.columns
-	link_measured_properties = measurements.link.columns
-
-	error = dict()
-	node_noise_properties = set(node_measured_properties).intersection(dict_percentage.keys())
-	for mp in node_noise_properties:
-		error[mp] = 0.0
-		std = dict_percentage[mp]
-		if dict_percentage[mp]>0.0:
-			for n in nodes:
-				times = measurements.node[mp][n].index
-				for dt in times:
-					meas_error = np.random.normal(0.0, std)
-					value = measurements.node[mp][n][dt] 
-					if mp is 'demand':
-						value = value - meas_error if(value+meas_error<0) else value + meas_error
-						measurements.node[mp][n][dt] = value
-					else:
-						measurements.node[mp][n][dt] += meas_error
-					error[mp] += meas_error
-
-	link_noise_properties = set(link_measured_properties).intersection(dict_percentage.keys())
-	for mp in link_noise_properties:
-		error[mp] = 0.0
-		std = dict_percentage[mp]
-		if dict_percentage[mp]>0.0:
-			for l in links:
-				times = measurements.link[mp][l].index
-				for dt in times:
-					meas_error = np.random.normal(0.0, std)
-					measurements.link[mp][l][dt] += meas_error
-					error[mp] += meas_error
-	return error
-
-
-def add_noise2(wn, measurements,dict_percentage=None):
-	if dict_percentage is None:
-		dict_percentage = dict()
-		dict_percentage['demand'] = 0.02
-		dict_percentage['pressure'] = 0.05
-		dict_percentage['head'] = 0.005
-		dict_percentage['flowrate'] = 0.02
-
-	nodes = measurements.node.index.get_level_values('node').drop_duplicates()
-	links = measurements.link.index.get_level_values('link').drop_duplicates()
-
-	node_measured_properties = measurements.node.columns
-	link_measured_properties = measurements.link.columns
-
-	# gives an indication of how much noise was added
+def add_additive_noise(wn,measurements,dict_percentage,tol=1e-5,truncated=True):
 	noise_magnitude = dict()
+	if isinstance(measurements,dict):
+		print "TODO"
+		return None
+	else:
+		nodes = measurements.node.index.get_level_values('node').drop_duplicates()
+		links = measurements.link.index.get_level_values('link').drop_duplicates()
 
-	# Add noise to node properties
-	node_noise_properties = set(node_measured_properties).intersection(dict_percentage.keys())
-	for mp in node_noise_properties:
-		count_error = 0
-		noise_magnitude[mp] = 0.0
-		if dict_percentage[mp]>0.0:
-			if mp == 'demand':
-				for n in nodes:
-					node = wn.get_node(n)
-					if isinstance(node,Junction):
-						times = measurements.node[mp][n].index
-						base = node.base_demand
-						std = dict_percentage[mp]*base
-						if std>0:
+		node_measured_properties = measurements.node.columns
+		link_measured_properties = measurements.link.columns
+		# gives an indication of how much noise was added
+		node_noise_properties = set(node_measured_properties).intersection(dict_percentage.keys())
+		for mp in node_noise_properties:
+			count_error = 0
+			noise_magnitude[mp] = 0.0
+			if dict_percentage[mp]>0.0:
+				if mp == 'demand':
+					for n in nodes:
+						node = wn.get_node(n)
+						if isinstance(node,Junction):
+							times = measurements.node[mp][n].index
+							#base = node.base_demand
+							base = measurements.node[mp][n].mean()
+							#print measurements.node[mp][n]
+							#print base, node.base_demand
+							std = dict_percentage[mp]*base
 							for dt in times:
-								meas_error = np.random.normal(0.0, std)
-								value = measurements.node[mp][n][dt] 
-								value = value - meas_error if(value+meas_error<0) else value + meas_error
-								measurements.node[mp][n][dt] = value
+								if measurements.node[mp][n][dt]>tol:
+									if truncated:
+										meas_error = truncnorm.rvs(0.0, np.inf, 0.0, std) 
+									else:
+										meas_error = np.random.normal(0.0, std)
+									measurements.node[mp][n][dt] += meas_error
+									noise_magnitude[mp] += abs(meas_error)
+									count_error += 1
+				else:
+					for n in nodes:
+						base = measurements.node[mp][n].mean()
+						std = dict_percentage[mp]*base
+						times = measurements.node[mp][n].index
+						for dt in times:
+							if measurements.node[mp][n][dt]<-tol or measurements.node[mp][n][dt]>tol:
+								if truncated:
+									meas_error = truncnorm.rvs(0.0, np.inf, 0.0, std) 
+								else:
+									meas_error = np.random.normal(0.0, std)
+								measurements.node[mp][n][dt] += meas_error
 								noise_magnitude[mp] += abs(meas_error)
 								count_error += 1
-				
-			else:
-				base = measurements.node[mp].mean()
-				std = dict_percentage[mp]*base
-				for n in nodes:
-					times = measurements.node[mp][n].index
+			if count_error>0:
+				noise_magnitude[mp] = noise_magnitude[mp]/count_error
+
+		# Add noise to link properties
+		link_noise_properties = set(link_measured_properties).intersection(dict_percentage.keys())
+		for mp in link_noise_properties:
+			count_error = 0
+			noise_magnitude[mp] = 0.0
+			if dict_percentage[mp]>0.0:
+				for l in links:
+					base = sum(abs(v) for v in measurements.link[mp][l])/float(len(measurements.link[mp][l].index))
+					std = base*dict_percentage[mp]
+					times = measurements.link[mp][l].index
 					for dt in times:
-						meas_error = np.random.normal(0.0, std)
-						measurements.node[mp][n][dt] += meas_error
-						noise_magnitude[mp] += abs(meas_error)
-						count_error += 1
-		if count_error>0:
-			noise_magnitude[mp] = noise_magnitude[mp]/count_error
-
-	# Add noise to link properties
-	link_noise_properties = set(link_measured_properties).intersection(dict_percentage.keys())
-	for mp in link_noise_properties:
-		count_error = 0
-		noise_magnitude[mp] = 0.0
-		base = measurements.link[mp].max()/2.0
-		std = base*dict_percentage[mp]
-		if std>0:
-			for l in links:
-				times = measurements.link[mp][l].index
-				for dt in times:
-					meas_error = np.random.normal(0.0, std)
-					value = measurements.link[mp][l][dt]
-					# Dont want to change direction of the flow by applying noise and dont apply noise to zero flows
-					if value>0:
-						measurements.link[mp][l][dt] = value + meas_error if (value+meas_error)>0 else value - meas_error
-					elif value<0:
-						measurements.link[mp][l][dt] = value + meas_error if (value+meas_error)<0 else value - meas_error
-					noise_magnitude[mp] += abs(meas_error)
-					count_error += 1
-		if count_error>0:
-			noise_magnitude[mp] = noise_magnitude[mp]/count_error
-
+						if measurements.link[mp][l][dt]<-tol or measurements.link[mp][l][dt]>tol:
+							if truncated:
+								meas_error = truncnorm.rvs(0.0, np.inf, 0.0, std)  
+							else:
+								meas_error = np.random.normal(0.0, std)
+								measurements.link[mp][l][dt] += meas_error
+								noise_magnitude[mp] += abs(meas_error)
+								count_error += 1
+			if count_error>0:
+				noise_magnitude[mp] = noise_magnitude[mp]/count_error
 	return noise_magnitude
-
 
 def build_fix_demand_dictionary(result_object):
 	time_step_sec = float(result_object.simulator_options['hydraulic_time_step']) 
@@ -203,42 +163,50 @@ def build_fix_demand_dictionary(result_object):
 	return demands
 
 def build_measurement_dictionary(result_object, ignore_parameters=['expected_demand', 'type', 'velocity']):
-	measurements = dict()
-	type_nodes = set(result_object.node['type'].values)
-	# nodes
-	for nt in type_nodes:
-		measurements[nt] = dict()
-		node_measurements = result_object.node[result_object.node['type'] == nt]
-		columns = node_measurements.columns.values
-		parameters = [p for p in columns if p not in ignore_parameters]
-		node_names = node_measurements.index.get_level_values('node').drop_duplicates()
-		for param in parameters:
-			measurements[nt][param] = dict()
-			all_param_measurements = node_measurements[param]
-			param_measurements = all_param_measurements.dropna()
-			for n in node_names:
-				node_measure_times = param_measurements[n].index
-				for dt in node_measure_times:
-					t = dt.total_seconds()
-					measurements[nt][param][n,t] = param_measurements[n][dt]
-	# links
-	type_links = set(result_object.link['type'].values)
-	for lt in type_links:
-		measurements[lt] = dict()
-		link_measurements = result_object.link[result_object.link['type'] == lt]
-		columns = link_measurements.columns.values
-		parameters = [p for p in columns if p not in ignore_parameters]
-		link_names = link_measurements.index.get_level_values('link').drop_duplicates()
-		for param in parameters:
-			measurements[lt][param] = dict()
-			all_param_measurements = link_measurements[param]
-			param_measurements = all_param_measurements.dropna()
-			for l in link_names:
-				link_measure_times = param_measurements[l].index
-				for dt in link_measure_times:
-					t = dt.total_seconds()
-					measurements[lt][param][l,t] = param_measurements[l][dt]
-	return measurements
+	if isinstance(result_object,dict):
+		measurements = copy.deepcopy(result_object)
+		for m1 in measurements.keys():
+			for m2 in measurements[m1].keys():
+				if m2 in ignore_parameters:
+					del measurements[m1][m2]
+		return measurements
+	else:
+		measurements = dict()
+		type_nodes = set(result_object.node['type'].values)
+		# nodes
+		for nt in type_nodes:
+			measurements[nt] = dict()
+			node_measurements = result_object.node[result_object.node['type'] == nt]
+			columns = node_measurements.columns.values
+			parameters = [p for p in columns if p not in ignore_parameters]
+			node_names = node_measurements.index.get_level_values('node').drop_duplicates()
+			for param in parameters:
+				measurements[nt][param] = dict()
+				all_param_measurements = node_measurements[param]
+				param_measurements = all_param_measurements.dropna()
+				for n in node_names:
+					node_measure_times = param_measurements[n].index
+					for dt in node_measure_times:
+						t = dt.total_seconds()
+						measurements[nt][param][n,t] = param_measurements[n][dt]
+		# links
+		type_links = set(result_object.link['type'].values)
+		for lt in type_links:
+			measurements[lt] = dict()
+			link_measurements = result_object.link[result_object.link['type'] == lt]
+			columns = link_measurements.columns.values
+			parameters = [p for p in columns if p not in ignore_parameters]
+			link_names = link_measurements.index.get_level_values('link').drop_duplicates()
+			for param in parameters:
+				measurements[lt][param] = dict()
+				all_param_measurements = link_measurements[param]
+				param_measurements = all_param_measurements.dropna()
+				for l in link_names:
+					link_measure_times = param_measurements[l].index
+					for dt in link_measure_times:
+						t = dt.total_seconds()
+						measurements[lt][param][l,t] = param_measurements[l][dt]
+		return measurements
 
 def build_link_status_dictionary(wn, result_object,tol=1e-6):
 	status = dict()
@@ -365,14 +333,15 @@ def add_time_controls(wn,dict_time_controls):
 		active_times = dict_time_controls[l]['active_times']
 		wn.add_time_control(l,open_times,closed_times,active_times)
 
-def generate_measurements(wn, duration_sec, time_step_sec, noise_dict, nodes_to_measure, links_to_measure, with_noise=False):
+def generate_measurements(wn, duration_sec, time_step_sec, noise_dict, nodes_to_measure, links_to_measure, with_noise=False, truncated=True):
 	network_simulator = PyomoSimulator(wn)
 	network_simulator._sim_duration_sec = duration_sec
 	network_simulator._hydraulic_step_sec = time_step_sec
 	result_assumed_demands = network_simulator.run_sim()
-	if with_noise:
+	init_dict = build_initialization_dict(result_assumed_demands)
+	if with_noise and noise_dict['demand']>0.0:
 		result_true_demands = copy.deepcopy(result_assumed_demands)
-		error1 = add_noise2(wn,result_true_demands,{'demand':noise_dict['demand']})
+		error1 = add_additive_noise(wn,result_true_demands,{'demand':noise_dict['demand']},truncated=truncated)
 		to_fix =  build_fix_demand_dictionary(result_true_demands)
 
 		network_simulator_noise = PyomoSimulator(wn)
@@ -391,16 +360,69 @@ def generate_measurements(wn, duration_sec, time_step_sec, noise_dict, nodes_to_
 
 	true_measurements = copy.deepcopy(true_states)
 	if with_noise:
-		error2 = add_noise2(wn,true_measurements,noise_dict)
+		error2 = add_additive_noise(wn,true_measurements,noise_dict,truncated=truncated)
 		print "Error accumulation demands\n",error1 
 		print "Error accumulation measurements\n",error2
 
 
 	# estimate for regularization term
-	true_measurements.node['demand']=result_assumed_demands.node['demand']
+	#true_measurements.node['demand']=result_assumed_demands.node['demand']
 	true_measurements_dict = build_measurement_dictionary(true_measurements)
-	return (result_assumed_demands, result_true_states, true_measurements_dict)
+	regularization_dict = build_regularization_dict(result_assumed_demands)
+	return (result_assumed_demands, result_true_states, true_measurements_dict, init_dict, regularization_dict)
 
+#from time_utils import *
+#@run_lineprofile(follow=[])
+def generate_calibration_data(wn, duration_sec, time_step_sec, noise_dict, nodes_to_measure, links_to_measure, with_noise=False, truncated=True):
+	# container
+	data = calibration_data_struct()
+
+	# simulator
+	network_simulator = PyomoSimulator(wn)
+	network_simulator._sim_duration_sec = duration_sec
+	network_simulator._hydraulic_step_sec = time_step_sec
+	data.sim_results = network_simulator.run_sim()
+	data.init_dict = build_initialization_dict(data.sim_results)
+	if with_noise and noise_dict['demand']>0.0:
+		result_true_demands = copy.deepcopy(data.sim_results)
+		error1 = add_additive_noise(wn,result_true_demands,{'demand':noise_dict['demand']},truncated=truncated)
+		#error1 = add_noise2(wn,result_true_demands,{'demand':noise_dict['demand']})
+		to_fix =  build_fix_demand_dictionary(result_true_demands)
+		network_simulator_noise = PyomoSimulator(wn)
+		network_simulator_noise._sim_duration_sec = duration_sec
+		network_simulator_noise._hydraulic_step_sec = time_step_sec
+		data.noise_sim_results = network_simulator_noise.run_sim(fixed_demands=to_fix)
+
+	else:
+		data.noise_sim_results = copy.deepcopy(data.sim_results)
+
+	true_measurements = get_measurements_from_sim_result(copy.deepcopy(data.noise_sim_results),
+							nodes_to_measure,
+							links_to_measure,
+							node_params=['head'],
+							link_params=['flowrate'],
+							duration_min=network_simulator._sim_duration_sec/60.0)
+
+	if with_noise:
+		#true_measurements.plot_link_attribute(links_to_plot=['204'])
+		error2 = add_additive_noise(wn,true_measurements,noise_dict,truncated=truncated)
+		print "Error accumulation demands\n",error1 
+		print "Error accumulation measurements\n",error2
+	
+	# store measurements in dictionary
+	data.measurement_dict = build_measurement_dictionary(true_measurements)
+	#from print_utils import *
+	#pretty_print_dict(data.measurement_dict)
+	# estimate for regularization term
+	data.regularization_dict = build_regularization_dict(data.init_dict)
+
+	return data
+
+def build_initialization_dict(result_object):
+	return build_measurement_dictionary(result_object, ignore_parameters=['expected_demand', 'type', 'velocity', 'pressure'])
+
+def build_regularization_dict(result_object,ignore_parameters=['expected_demand', 'type', 'velocity', 'pressure','head','flowrate']):
+	return build_measurement_dictionary(result_object, ignore_parameters)
 
 def printDifferences(results1,results2,prop,tol=1e-2):
 	
