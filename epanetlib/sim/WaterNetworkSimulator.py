@@ -35,6 +35,8 @@ class WaterNetworkSimulator(object):
         Water Network Simulator class.
 
         water_network: WaterNetwork object
+        PD_or_DD: string, specifies whether the simulation will be demand driven or pressure driven
+                  Options are 'DEMAND DRIVEN' or 'PRESSURE DRIVEN'
 
         """
         self._wn = water_network

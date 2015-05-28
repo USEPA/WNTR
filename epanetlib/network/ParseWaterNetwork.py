@@ -7,6 +7,14 @@ TODO 1. Only pump head curves are being assigned to pumps. Other curves are stor
 TODO 2. Test to see if add_junction, add_pipe, etc methods can be called with keys. Change all of them for clarity.
 TODO 3. [STATUS] block from Net3.
 TODO 4. Pipes that have status CV.
+TODO 5. What if '[' or ']' is in comments of inp file?
+TODO 6. Add error or something if user tries to specify Hydraulics or Quality in inp file. I don't think the parser will even handle these correctly right now.
+TODO 7. What if an inp file is parsed after a water network has been populated? What if an inp file is parsed twice?
+TODO 8. Document somehow that [TAGS], [DEMANDS], [RULES], [ENERGY], [EMITTERS], [QUALITY], [SOURCES], [REACTIONS], [MIXING], [REPORT], [VERTICES], [LABELS], [BACKDROP] in an inp file is not used/supported.
+TODO 9. Add pump is only used for power pumps?
+TODO 10. What if a comment is left at the end of a line that has junction/tank/etc. info?
+TODO 11. I think start clocktime is broken
+TODO 12. Document Somehow that the only type of curve supported is a head vs. flow curve.
 """
 
 from epanetlib.units import convert
@@ -128,12 +136,14 @@ class ParseWaterNetwork(object):
 
         # Change units in options dictionary
         if 'MINIMUM PRESSURE' in wn.options:
-            pressure_value = wn.options['MINIMUM PRESSURE']
-            wn.options['MINIMUM PRESSURE'] = convert('Pressure', inp_units, pressure_value)
+            raise RuntimeError('Specifying nominal and/or minimum pressures in an inp file is not supported') # Updated 5/27/15
+            #pressure_value = wn.options['MINIMUM PRESSURE']
+            #wn.options['MINIMUM PRESSURE'] = convert('Pressure', inp_units, pressure_value)
         if 'NOMINAL PRESSURE' in wn.options:
-            pressure_value = wn.options['NOMINAL PRESSURE']
-            wn.options['NOMINAL PRESSURE'] = convert('Pressure', inp_units, pressure_value)
-            assert wn.options['NOMINAL PRESSURE'] >= wn.options['MINIMUM PRESSURE'], "Nominal pressure must be greater than minimum pressure. "
+            raise RuntimeError('Specifying nominal and/or minimum pressures in an inp file is not supported') # Updated 5/27/15
+            #pressure_value = wn.options['NOMINAL PRESSURE']
+            #wn.options['NOMINAL PRESSURE'] = convert('Pressure', inp_units, pressure_value)
+            #assert wn.options['NOMINAL PRESSURE'] >= wn.options['MINIMUM PRESSURE'], "Nominal pressure must be greater than minimum pressure. "
 
         f = file(inp_file_name, 'r')
 
@@ -249,7 +259,7 @@ class ParseWaterNetwork(object):
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
-                if len(current) == 2:
+                if (len(current) == 2 or current[2].startswith(';')):
                     wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])))
                 else:
                     wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])), current[2])
@@ -267,7 +277,7 @@ class ParseWaterNetwork(object):
                                             convert('Tank Diameter', inp_units, float(current[5])),
                                             convert('Volume', inp_units, float(current[6])),
                                             current[7])
-                    self._curve_map[current[7]] = current[0]
+                    self._curve_map[current[7]] = current[0] # Is this backwards?
                 elif len(current) == 7:  # No volume curve provided
                     wn.add_tank(current[0], convert('Elevation', inp_units, float(current[1])),
                                             convert('Length', inp_units, float(current[2])),
@@ -363,7 +373,7 @@ class ParseWaterNetwork(object):
                     else:
                         raise RuntimeError("The following control is not recognized: " + line)
                 else:
-                    assert(len(current) == 6), "Error reading time controls. Check format."
+                    assert(len(current) == 6), "Error reading time controls. Check format." # This means ClockTime format is not supported?
                     link_name = current[1]
                     if link_name not in self._time_controls:
                         if current[2].upper() == 'OPEN':
