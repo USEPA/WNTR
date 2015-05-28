@@ -25,7 +25,7 @@ inp_file = './networks/Net6_mod.inp'
 run_time = 1440#minutes
 time_step = 60 #minutes
 with_noise = False
-generate_measures = True
+generate_measures = False
 wn = WaterNetworkModel()
 wn.name = inp_file
 parser = ParseWaterNetwork()
@@ -129,19 +129,19 @@ network_cal =  PyomoSimulator(calibrated_wn)
 network_cal._sim_duration_sec = run_time*60
 network_cal._hydraulic_step_sec = time_step*60  
 
-"""
-for k in ['tank','pipe','valve','pump','reservoir']:
-	del cdata.init_dict[k]
-
-del cdata.init_dict['junction']['demand']
-"""
+junctions_to_calibrate =  [n for n,N in wn.nodes(Junction)]
+ro = [l for l,L in wn.links(Pipe)]
+pipes_to_calibrate = [ro[i] for i in range(10)]
+#pipes_to_calibrate = []
+calibrate_lists = {'demand':junctions_to_calibrate,'roughness':pipes_to_calibrate}
 
 calibration_results = network_cal.run_calibration(cdata.measurement_dict,
+	calibrate_lists,
 	#weights =  {'tank_level':1.0, 'pressure':1.0,'head':1.0, 'flowrate':1000.0, 'demand':1000.0},
 	solver_options={'halt_on_ampl_error':'yes'},
 	weights =  {'tank_level':100.0, 'pressure':1.0,'head':1.0, 'flowrate':1000.0, 'demand':100.0},
-	external_link_statuses = cdata.status_dict,
 	init_dict = cdata.init_dict,
+	external_link_statuses = cdata.status_dict,
 	regularization_dict = cdata.regularization_dict)
 
 #print "Error accumulation true demand\n",error1 

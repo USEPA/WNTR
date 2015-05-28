@@ -248,7 +248,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         return smoothing_points
 
 
-    def build_hydraulic_model(self, modified_hazen_williams=True, external_mass_balance=False, external_link_statuses=None):
+    def build_hydraulic_model(self, modified_hazen_williams=True, external_link_statuses=None, calibrated_vars=None):
         """
         Build water network hadloss and node balance constraints.
 
@@ -370,14 +370,66 @@ class PyomoSimulator(WaterNetworkSimulator):
                 elif external_link_statuses[link_type][link_name][time_seconds]==0:
                     return 'CLOSED'
                 else:
-                    print 'ERROR: NOT A VALID CASE EXTERNAL LINK STATUS'
-                    sys.exit()
+                    raise RuntimeError('Not valid case for link status function in build_hydraulic_model.')
+
+        t0 = time.time()
+        # Mass Balance
+        if calibrated_vars is not None:
+            model.demand_estimated_nodes = calibrated_vars['demand']
+            model.unestimated_nodes = [n for n in model.junctions if n not in model.demand_estimated_nodes]
+        else:
+            model.unestimated_nodes = [n for n in model.junctions]
+
+        for n in model.unestimated_nodes:
+            for t in model.time:
+                model.demand_actual[n,t].value = model.demand_required[n,t]
+                model.demand_actual[n,t].fixed = True
+
+        def node_mass_balance_rule(model, n, t):
+            expr = 0
+            for l in wn.get_links_for_node(n):
+                link = wn.get_link(l)
+                if link.start_node() == n:
+                    expr -= model.flow[l,t]
+                elif link.end_node() == n:
+                    expr += model.flow[l,t]
+                else:
+                    raise RuntimeError('Node link is neither start nor end node.')
+            node = wn.get_node(n)
+            if isinstance(node, Junction):
+                return expr == model.demand_actual[n,t]
+            elif isinstance(node, Tank):
+                return expr == model.tank_net_inflow[n,t]
+            elif isinstance(node, Reservoir):
+                return expr == model.reservoir_demand[n,t]
+
+        model.node_mass_balance = Constraint(model.nodes, model.time, rule=node_mass_balance_rule)
+        
+        print "Time to build mass balance constraint: ", time.time()-t0
+
+        t0 = time.time()
+        # pipe roughness equations
+        if calibrated_vars is not None:
+            model.calibrate_pipes = calibrated_vars['roughness']
+            model.uncalibrated_pipes = [l for l in model.pipes if l not in model.calibrate_pipes]
+        else:
+            model.calibrate_pipes = list()
+            model.uncalibrated_pipes = [l for l in model.pipes]
+
+        # variable for roughness calibration
+        model.var_roughness = Var(model.pipes, within=NonNegativeReals, initialize=100)
+
+        for l in model.uncalibrated_pipes:
+            pipe = wn.get_link(l)
+            model.var_roughness[l].value = pipe.roughness
+            model.var_roughness[l].fixed = True
 
         model.pipe_headloss = ConstraintList()
-        # Head loss inside pipes
         for l in model.pipes:
             pipe = wn.get_link(l)
-            pipe_resistance_coeff = self._Hw_k*(pipe.roughness**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
+            # initialize roughness 
+            #model.var_roughness[l].value = pipe.roughness
+            pipe_resistance_coeff = self._Hw_k*(model.var_roughness[l]**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
             start_node = pipe.start_node()
             end_node = pipe.end_node()
             for t in model.time:
@@ -392,9 +444,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                         #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=pipe_resistance_coeff*model.flow[l,t]*(abs(model.flow[l,t]))**0.852 == model.head[start_node,t] - model.head[end_node,t]))
                         exprn = pipe_resistance_coeff*model.flow[l,t]*(abs(model.flow[l,t]))**0.852 == model.head[start_node,t] - model.head[end_node,t]
                     model.pipe_headloss.add(exprn)
-                else:
-                    model.flow[l,t].value = 0.0
-                    model.flow[l,t].fixed = True
 
         # Head gain provided by the pump is implemented as negative headloss
         model.pump_headloss = ConstraintList()
@@ -426,27 +475,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                         #setattr(model, 'pump_negative_headloss_'+str(l), Constraint(expr=(model.head[start_node] - model.head[end_node])*model.flow[l]*self._g*1000.0 == -pump.power))
         print "Time to build pipe-pump headloss constraints: ", time.time()-t0
 
-        # Mass Balance
-        if not external_mass_balance:
-            def node_mass_balance_rule(model, n, t):
-                expr = 0
-                for l in wn.get_links_for_node(n):
-                    link = wn.get_link(l)
-                    if link.start_node() == n:
-                        expr -= model.flow[l,t]
-                    elif link.end_node() == n:
-                        expr += model.flow[l,t]
-                    else:
-                        raise RuntimeError('Node link is neither start nor end node.')
-                node = wn.get_node(n)
-                if isinstance(node, Junction):
-                    #return expr == model.demand_actual[n,t]
-                    return expr == model.demand_required[n,t]
-                elif isinstance(node, Tank):
-                    return expr == model.tank_net_inflow[n,t]
-                elif isinstance(node, Reservoir):
-                    return expr == model.reservoir_demand[n,t]
-            model.node_mass_balance = Constraint(model.nodes, model.time, rule=node_mass_balance_rule)
         #print "Created Node balance: ", time.time() - t0
         
         """
@@ -936,7 +964,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
 
     def run_calibration(self,
-                        measurements, 
+                        measurements,
+                        calibrated_vars, 
                         weights = {'tank_level':1.0, 'pressure':1.0,'head':1.0, 'flowrate':1.0, 'demand':1.0},
                         solver='ipopt', 
                         solver_options={}, 
@@ -950,8 +979,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Initialise demand dictionaries and link statuses
         self._initialize_simulation()
 
-        # Do it in the constructor? make it an attribute?
-        model = self.build_hydraulic_model(modified_hazen_williams,external_mass_balance=True,external_link_statuses=external_link_statuses)
+        if not calibrated_vars['demand'] and not calibrated_vars['roughness']:
+            raise RuntimeError("List of node-names link-names for calibration is required.")
+
+        # define base model
+        model = self.build_hydraulic_model(modified_hazen_williams,
+            external_link_statuses = external_link_statuses,
+            calibrated_vars = calibrated_vars)
+        # define base network
         wn = self._wn
 
         def is_link_open(link_name, link_type, time_seconds):
@@ -1001,32 +1036,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             for t in model.time:
                 model.demand_actual[n,t].value = 0.0
                 model.demand_actual[n,t].fixed = True
-        """
-        
-        
-        t0 = time.time()
-        def node_mass_balance_rule(model, n, t):
-            expr = 0
-            for l in wn.get_links_for_node(n):
-                link = wn.get_link(l)
-                if link.start_node() == n:
-                    expr -= model.flow[l,t]
-                elif link.end_node() == n:
-                    expr += model.flow[l,t]
-                else:
-                    raise RuntimeError('Node link is neither start nor end node.')
-            node = wn.get_node(n)
-            if isinstance(node, Junction):
-                return expr == model.demand_actual[n,t]
-            elif isinstance(node, Tank):
-                return expr == model.tank_net_inflow[n,t]
-            elif isinstance(node, Reservoir):
-                return expr == model.reservoir_demand[n,t]
-
-        #model.node_mass_balance.deactivate()
-        model.node_mass_balance2 = Constraint(model.nodes, model.time, rule=node_mass_balance_rule)
-        print "Time to build mass balance constraint: ", time.time()-t0
-
+        """ 
                
         ############### OBJECTIVE ########################
         def initialize_from_dictionary(model, measurements):
