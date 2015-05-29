@@ -144,7 +144,7 @@ class WaterNetworkSimulator(object):
         seconds as integer
         """
 
-        return int(timedelta.days*24*60*60 + timedelta.hours*60*60 + timedelta.minutes*60 + timedelta.seconds)
+        return int(timedelta.components.days*24*60*60 + timedelta.components.hours*60*60 + timedelta.components.minutes*60 + timedelta.components.seconds)
 
     def add_pump_outage(self, pump_name, start_time, end_time):
         """
