@@ -1,6 +1,8 @@
 import epanetlib as en
 import matplotlib.pylab as plt
 
+# This is a git test line
+
 plt.close('all')
 
 inp_file = 'networks/net_test_3.inp'
