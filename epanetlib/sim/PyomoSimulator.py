@@ -1303,7 +1303,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         model = self.build_hydraulic_model(modified_hazen_williams)
 
         #######################TEMPORAL#############################
-        dateToTimestep = lambda DateTime: (((DateTime.days*24+DateTime.hours)*60+DateTime.minutes)*60+DateTime.seconds)/self._hydraulic_step_sec
+        dateToTimestep = lambda DateTime: (((DateTime.components.days*24+DateTime.components.hours)*60+DateTime.components.minutes)*60+DateTime.components.seconds)/self._hydraulic_step_sec
         if fixed_demands is not None:
             nodes = fixed_demands.node.index.get_level_values('node').drop_duplicates()
             for n in nodes:

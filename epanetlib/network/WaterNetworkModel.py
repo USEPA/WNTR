@@ -334,7 +334,13 @@ class WaterNetworkModel(object):
 
     def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75):
         """
-        Method to add a leak to the water network object.
+        Method to add a leak to the water network object. Leaks are modeled by:
+
+        Q = leak_discharge_coeff*leak_area*sqrt(2*g*h)
+        where:
+           Q is the volumetric flow rate of water out of the leak
+           g is the acceleration due to gravity
+           h is the gauge head at the leak, P_g/(rho*g); Note that this is not the hydraulic head (P_g - elevation)
 
         Parameters
         ----------
@@ -342,9 +348,14 @@ class WaterNetworkModel(object):
            Name of the leak
         pipe_name: string
            Name of the pipe where the leak ocurrs.
-           Currently assuming the leak ocurrs halfway between nodes.
+           Assumes the leak ocurrs halfway between nodes.
         leak_area: float
-           Area of the leak in m^2
+           Area of the leak in m^2. Either the leak area or the leak diameter must be specified, but not both.
+        leak_diameter
+           Diameter of the leak in m. The area of the leak is calculated with leak_diameter assuming the leak is in the shape of a hole.
+           Either the leak area or the leak diameter must be specified, but not both.
+        leak_discharge_coeff
+           Leak discharge coefficient
         """
 
         # Get attributes of original pipe
@@ -820,7 +831,7 @@ class WaterNetworkModel(object):
 
         return list_of_links
 
-    def set_nominal_pressures(self, res = None, constant_nominal_pressure = None, units = 'm'):
+    def set_nominal_pressures(self, res = None, fraction_of_min = 0.8, constant_nominal_pressure = None, units = 'm', minimum_pressure = 0.0):
         """
         A method for setting nominal pressures (hydraulic head - elevation) for pressure driven simulations.
 
@@ -828,9 +839,12 @@ class WaterNetworkModel(object):
         ----------
         res: results object
             Use the res parameter if you want to set nominal pressures based on the results of
-            another simulation. For each junction, the nominal pressure will be set to 80% of 
-            the minimum pressure for that junction in the results. The results object should use
+            another simulation. For each junction, the nominal pressure will be the product of fraction_of_min
+            and the minimum pressure for that junction in the results. The results object should use
             internal units (SI units).
+        fraction_of_min: float, 0<=fraction_of_min<=1
+            Specifies the fraction of the minimum pressure for that junction from the results to set the 
+            nominal pressure to. Must be between 0 and 1.
         constant_nominal_pressure: float
             Use the constant_nominal pressure parameter if you want all junctions to have the same 
             nominal pressure.
@@ -838,15 +852,20 @@ class WaterNetworkModel(object):
             The units parameter is used if you use the constant_nominal_pressure. It specifies
             the units of the constant_nominal_pressure parameter. Default is meters. Supported units:
             meters and psi.
+        minimum_pressure: float
+            Value to set the minimum pressure to. Below this pressure, the acual demand will be 0.
         """
         if res is not None and constant_nominal_pressure is None:
             for junction_name,junction in self.nodes(Junction):
                 min_P = res.node['pressure'][junction_name].min()
                 if min_P <= 0.0:
-                    raise RuntimeError('error: base case had negative pressure at a junction')
+                    raise RuntimeError('error: Results had negative pressure at a junction')
                 else:
-                    junction.PF = 0.8*min_P
-                    junction.P0 = 0.0
+                    assert fraction_of_min >= 0.0, "fraction_of_min must be between 0 and 1."
+                    assert fraction_of_min <= 1.0, "fraction_of_min must be between 0 and 1."
+                    junction.PF = fraction_of_min*min_P
+                    junction.P0 = minimum_pressure
+                    assert junction.PF >= junction.P0, "Nominal pressure must be greater than minimum pressure."
         elif constant_nominal_pressure is not None and res is None:
             if units.upper() not in ['PSI','M']:
                 raise RuntimeError('The only units currently supported for the set_nominal_pressures method are \'psi\'(pounds per square inch) and \'m\'(meters).')
@@ -855,7 +874,8 @@ class WaterNetworkModel(object):
                 constant_nominal_pressure = convert('Pressure',0,constant_nominal_pressure)
             for junction_name,junction in self.nodes(Junction):
                 junction.PF = constant_nominal_pressure
-                junction.P0 = 0.0
+                junction.P0 = minimum_pressure
+                assert junction.PF >= junction.P0, "Nominal pressure must be greater than minimum pressure."
         else:
             raise RuntimeError('error: either you have not specified any nominal pressure or you have tried to specify the nominal pressure in multiple ways')
 

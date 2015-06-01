@@ -35,6 +35,8 @@ class WaterNetworkSimulator(object):
         Water Network Simulator class.
 
         water_network: WaterNetwork object
+        PD_or_DD: string, specifies whether the simulation will be demand driven or pressure driven
+                  Options are 'DEMAND DRIVEN' or 'PRESSURE DRIVEN'
 
         """
         self._wn = water_network
@@ -142,7 +144,7 @@ class WaterNetworkSimulator(object):
         seconds as integer
         """
 
-        return int(timedelta.days*24*60*60 + timedelta.hours*60*60 + timedelta.minutes*60 + timedelta.seconds)
+        return int(timedelta.components.days*24*60*60 + timedelta.components.hours*60*60 + timedelta.components.minutes*60 + timedelta.components.seconds)
 
     def add_pump_outage(self, pump_name, start_time, end_time):
         """
