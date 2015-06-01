@@ -22,10 +22,10 @@ from calibration_utils import *
 #inp_file = './networks/Net3.inp'
 inp_file = './networks/Net6_mod.inp'
 
-run_time = 1440#minutes
+run_time = 120#minutes
 time_step = 60 #minutes
 with_noise = False
-generate_measures = False
+generate_measures = True
 wn = WaterNetworkModel()
 wn.name = inp_file
 parser = ParseWaterNetwork()
@@ -92,6 +92,10 @@ if generate_measures:
 	nodes_to_measure = wn._nodes.keys()
 	#links_to_measure = [l for l,L in wn.links(Pump)]
 	links_to_measure = wn._links.keys()
+	print "Links: ",len(links_to_measure)
+	print "Node: ",len(nodes_to_measure)
+	print "Tanks:" ,len([n for n,N in wn.nodes(Tank)])
+	print "Pumps:", len([l for l,L in wn.links(Pump)])
 	cdata = generate_calibration_data(wn,run_time*60,time_step*60, noise_dict, nodes_to_measure, links_to_measure, with_noise=with_noise, truncated=False)
 
 	if inp_file == './networks/Net6_mod.inp':
@@ -138,7 +142,7 @@ calibrate_lists = {'demand':junctions_to_calibrate,'roughness':pipes_to_calibrat
 calibration_results = network_cal.run_calibration(cdata.measurement_dict,
 	calibrate_lists,
 	#weights =  {'tank_level':1.0, 'pressure':1.0,'head':1.0, 'flowrate':1000.0, 'demand':1000.0},
-	solver_options={'halt_on_ampl_error':'yes'},
+	solver_options={'halt_on_ampl_error':'yes','bound_push':1e-12},
 	weights =  {'tank_level':100.0, 'pressure':1.0,'head':1.0, 'flowrate':1000.0, 'demand':100.0},
 	init_dict = cdata.init_dict,
 	external_link_statuses = cdata.status_dict,

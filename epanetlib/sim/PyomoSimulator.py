@@ -1200,7 +1200,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         #opt = SolverFactory(solver)
         # Set solver options
         for key, val in solver_options.iteritems():
-            opt.options[key]=val
+            opt.options[key]=val    
 
         #opt.options['print_options_documentation']='yes'
         # Solve pyomo model

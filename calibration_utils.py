@@ -386,7 +386,7 @@ def generate_calibration_data(wn, duration_sec, time_step_sec, noise_dict, nodes
 	if with_noise and noise_dict['demand']>0.0:
 		result_true_demands = copy.deepcopy(data.sim_results)
 		error1 = add_additive_noise(wn,result_true_demands,{'demand':noise_dict['demand']},truncated=truncated)
-		#error1 = add_noise2(wn,result_true_demands,{'demand':noise_dict['demand']})
+		print "Accumulation error in demands\n",error1
 		to_fix =  build_fix_demand_dictionary(result_true_demands)
 		network_simulator_noise = PyomoSimulator(wn)
 		network_simulator_noise._sim_duration_sec = duration_sec
@@ -405,9 +405,8 @@ def generate_calibration_data(wn, duration_sec, time_step_sec, noise_dict, nodes
 
 	if with_noise:
 		#true_measurements.plot_link_attribute(links_to_plot=['204'])
-		error2 = add_additive_noise(wn,true_measurements,noise_dict,truncated=truncated)
-		print "Error accumulation demands\n",error1 
-		print "Error accumulation measurements\n",error2
+		error2 = add_additive_noise(wn,true_measurements,noise_dict,truncated=truncated) 
+		print "Accumulation error in measurements\n",error2
 	
 	# store measurements in dictionary
 	data.measurement_dict = build_measurement_dictionary(true_measurements)
