@@ -65,9 +65,7 @@ class WaterNetworkSimulator(object):
             elif PD_or_DD == 'DEMAND DRIVEN':
                 self._pressure_driven = False
             else:
-                print 'Arguement for specifying demand driven or pressure driven is not recognized.'
-                print 'Please use \'PRESSURE DRIVEN\' or \'DEMAND DRIVEN\'.'
-                quit()
+                raise RuntimeError("Argument for specifying demand driven or pressure driven is not recognized. Please use \'PRESSURE DRIVEN\' or \'DEMAND DRIVEN\'.")
 
             #if 'NOMINAL PRESSURE' in self._wn.options:
             #    self._PF = self._wn.options['NOMINAL PRESSURE']
