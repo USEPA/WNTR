@@ -1015,19 +1015,18 @@ class PyomoSimulator(WaterNetworkSimulator):
             model.head[n,t].value = tank_initial_head
             model.head[n,t].fixed = True
         """
-
-        if 'tank' not in measurements.keys():
-            raise RuntimeError("Provide level of all tanks in measurements at one timestep.")
-        else:    
-            if 'head' not in measurements['tank'].keys():
+        if len(model.tanks)>0:
+            if 'tank' not in measurements.keys():
                 raise RuntimeError("Provide level of all tanks in measurements at one timestep.")
-            else:
-                measured_tanks = zip(*measurements['tank']['head'].keys())
-                names = measured_tanks[0]
-                for n in model.tanks:
-                    if n not in names:
-                        print "Error: provide level of tank ", n, "in the measurements"
-                        raise RuntimeError("Provide level of tank " + str(n) +" in the measurements at one timestep.")
+            else:    
+                if 'head' not in measurements['tank'].keys():
+                    raise RuntimeError("Provide level of all tanks in measurements at one timestep.")
+                else:
+                    measured_tanks = zip(*measurements['tank']['head'].keys())
+                    names = measured_tanks[0]
+                    for n in model.tanks:
+                        if n not in names:
+                            raise RuntimeError("Provide level of tank " + str(n) +" in the measurements at one timestep.")
 
         # Fix to zero the nodes that have base demand zero
         """
@@ -1206,15 +1205,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Solve pyomo model
         pyomo_results = opt.solve(instance, tee=True,keepfiles=False)
 
-        #print opt._problem_files
+        print opt._problem_files
         print "Solving. Timing: ", time.time()-t0
         #print pyomo_results['Solution']_problem_files
         #help(pyomo_results['Solution'])
         #print "Created results: ", time.time() - t0
         instance.load(pyomo_results)
-        #instance.tank_net_inflow.pprint()
-        #print model.head['10',0].value
-        #print model.head['101',0].value
+        #instance.pprint()
+        
         #r2 = opt.solve(instance, tee=True,keepfiles=False)
         # Load pyomo results into results object
         results = self._read_pyomo_results(instance, pyomo_results)

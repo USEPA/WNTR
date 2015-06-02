@@ -22,7 +22,7 @@ from calibration_utils import *
 #inp_file = './networks/Net3.inp'
 inp_file = './networks/Net6_mod.inp'
 
-run_time = 120#minutes
+run_time = 1440#minutes
 time_step = 60 #minutes
 with_noise = False
 generate_measures = True
@@ -135,8 +135,8 @@ network_cal._hydraulic_step_sec = time_step*60
 
 junctions_to_calibrate =  [n for n,N in wn.nodes(Junction)]
 ro = [l for l,L in wn.links(Pipe)]
-pipes_to_calibrate = [ro[i] for i in range(10)]
-#pipes_to_calibrate = []
+#pipes_to_calibrate = [ro[i] for i in range(10)]
+pipes_to_calibrate = []
 calibrate_lists = {'demand':junctions_to_calibrate,'roughness':pipes_to_calibrate}
 
 calibration_results = network_cal.run_calibration(cdata.measurement_dict,
@@ -146,12 +146,13 @@ calibration_results = network_cal.run_calibration(cdata.measurement_dict,
 	weights =  {'tank_level':100.0, 'pressure':1.0,'head':1.0, 'flowrate':1000.0, 'demand':100.0},
 	init_dict = cdata.init_dict,
 	external_link_statuses = cdata.status_dict,
-	regularization_dict = cdata.regularization_dict)
+	regularization_dict = cdata.regularization_dict,
+	modified_hazen_williams = True)
 
 #print "Error accumulation true demand\n",error1 
 #print "Error accumulation true measurements\n",error2 
 
-
+"""
 print "\nDEMAND Differences\n"
 printDifferences(calibration_results,cdata.noise_sim_results,'demand')
 print "\nFLOWS Differences \n"
@@ -192,7 +193,7 @@ cdata.noise_sim_results.link['flowrate'].plot(label='SIM_TRUE_DEMAND')
 plt.title('Link Flowrate')
 plt.legend()
 plt.show()
-
+"""
 
 
 
