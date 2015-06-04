@@ -972,7 +972,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                         modified_hazen_williams=True,
                         external_link_statuses=None,
                         init_dict = None,
-                        regularization_dict = None):
+                        regularization_dict = None,
+                        pandas_result = True):
         import numpy as np
        
         
@@ -1022,8 +1023,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             if 'head' not in measurements['tank'].keys():
                 raise RuntimeError("Provide level of all tanks in measurements at one timestep.")
             else:
-                measured_tanks = zip(*measurements['tank']['head'].keys())
-                names = measured_tanks[0]
+                measured_tanks = measurements['tank']['head'].keys()
+                names = measured_tanks
                 for n in model.tanks:
                     if n not in names:
                         print "Error: provide level of tank ", n, "in the measurements"
@@ -1118,6 +1119,81 @@ class PyomoSimulator(WaterNetworkSimulator):
                         else:
                             print 'WARNING: ',tp, ' not supported as a measurement for ', tm
 
+        def initialize_from_dictionary2(model, measurements):
+
+            time_step_inverse = 1.0/self._hydraulic_step_sec
+            # initialize variables to measurements
+            for tm in measurements.keys():
+                type_params = measurements[tm].keys()
+                if tm == 'tank':
+                    for tp in type_params:
+                        if tp == 'demand':
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec*time_step_inverse
+                                    model.tank_net_inflow[n,t].value = meas
+                        elif tp == 'pressure':
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec*time_step_inverse
+                                    model.head[n,t].value = meas + wn.get_node(n).elevation
+                        elif tp == 'head':
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec*time_step_inverse
+                                    model.head[n,t].value = meas
+                        else:
+                            print 'WARNING: ',tp, ' not supported as a measurement for ', tm
+
+                elif tm == 'reservoir':
+                    for tp in type_params:
+                        if tp == 'demand':
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec*time_step_inverse
+                                    model.reservoir_demand[n,t].value = meas
+                        elif tp == 'head':
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec*time_step_inverse
+                                    model.head[n,t].value = meas
+                        else:
+                            print 'WARNING: ',tp, ' not supported as a measurement for ', tm
+
+                elif tm == 'junction':
+                    for tp in type_params:
+                        if tp == 'demand':
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec*time_step_inverse
+                                    model.demand_actual[n,t].value = meas
+                        elif tp == 'pressure':
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec*time_step_inverse
+                                    model.head[n,t].value = meas + wn.get_node(n).elevation
+                        elif tp == 'head':
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec*time_step_inverse
+                                    model.head[n,t].value = meas
+                        else:
+                            print 'WARNING: ',tp, ' not supported as a measurement for ', tm
+
+                else:
+                    # this take care of pipes pumps and valves
+                    for tp in type_params:
+                        if tp == 'flowrate':
+                            for l, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec*time_step_inverse                       
+                                    if is_link_open(l,tm,t_sec):
+                                        model.flow[l,t].value =  meas
+                                    else:
+                                        model.flow[l,t].value =  0.0
+                        else:
+                            print 'WARNING: ',tp, ' not supported as a measurement for ', tm
+
 
         def build_objective_expression(model, measurements):
             ts_inv = 1.0/self._hydraulic_step_sec
@@ -1171,19 +1247,72 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             return obj_expr
 
+        def build_objective_expression2(model, measurements, weighted=True):
+            ts_inv = 1.0/self._hydraulic_step_sec
+            obj_expr = 0
+            tol = 1e-4
+            r_weight = copy.deepcopy(measurements)
+            for nt in r_weight.iterkeys():
+                for param in r_weight[nt].iterkeys():
+                    for n, tvals in r_weight[nt][param].iteritems():
+                        for t_sec, meas in tvals.iteritems():
+                            if not meas<tol and not meas>-tol:
+                                r_weight[nt][param][n][t_sec] = 1.0/(meas*1e3)
+                            else:
+                                r_weight[nt][param][n][t_sec] = 10.0
+            # junction measurements
+            tm = 'junction'
+            junction_measures = measurements.get(tm)
+            if junction_measures is not None:
+                params = junction_measures.keys()
+                tp = 'demand'
+                if tp in params:
+                    # Regularization term
+                    obj_expr += sum(r_weight[tm][tp][n][t_sec]*(meas-model.demand_actual[n,t_sec*ts_inv])**2 for n, tvals in junction_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights[tp]
+                tp = 'head'
+                if tp in params:
+                    obj_expr += sum(r_weight[tm][tp][n][t_sec]*(meas-model.head[n,t_sec*ts_inv])**2 for n, tvals in junction_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights[tp]
+                tp = 'pressure'
+                if tp in params:
+                    obj_expr += sum(r_weight[tm][tp][n][t_sec]*((meas+wn.get_node(n).elevation)-model.head[n,t_sec*ts_inv])**2 for n, tvals in junction_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights[tp]
+
+            # tank measurements
+            tm = 'tank'
+            tank_measures = measurements.get(tm)
+            if tank_measures is not None:
+                params = tank_measures.keys()
+                tp = 'head'
+                if tp in params:
+                    obj_expr += sum(r_weight[tm][tp][n][t_sec]*(meas-model.head[n,t_sec*ts_inv])**2 for n, tvals in tank_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights['tank_level']
+                tp = 'pressure'
+                if tp in params:
+                    obj_expr += sum(r_weight[tm][tp][n][t_sec]*((meas+wn.get_node(n).elevation)-model.head[n,t_sec*ts_inv])**2 for n, tvals in tank_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights[tp]
+
+            # link measurements
+            link_types = ['valve','pipe','pump']
+            for lt in link_types:
+                link_measures = measurements.get(lt)
+                if link_measures is not None:
+                    params = link_measures.keys()
+                    tp = 'flowrate'
+                    if tp in params:
+                        obj_expr += sum(r_weight[lt][tp][l][t_sec]*(meas-model.flow[l,t_sec*ts_inv])**2 for l, tvals in link_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights[tp]
+
+            return obj_expr
+
         t0 = time.time()
         # Initialization of variables
         # initialize variables to simulation result
         if init_dict is not None:
-            initialize_from_dictionary(model, init_dict)
+            initialize_from_dictionary2(model, init_dict)
         # Override inizialization of variables that were measured
-        initialize_from_dictionary(model, measurements)
+        initialize_from_dictionary2(model, measurements)
 
         # Objective expression
-        obj_expr = build_objective_expression(model, measurements)
+        obj_expr = build_objective_expression2(model, measurements)
         # add regularization term
         if regularization_dict is not None:
-            obj_expr += 0.5*build_objective_expression(model, regularization_dict)
+            obj_expr += 0.5*build_objective_expression2(model, regularization_dict)
 
         model.obj = Objective(expr=obj_expr, sense=minimize)
         print "Time to build the objective: ", time.time()-t0 
@@ -1217,11 +1346,11 @@ class PyomoSimulator(WaterNetworkSimulator):
         #print model.head['101',0].value
         #r2 = opt.solve(instance, tee=True,keepfiles=False)
         # Load pyomo results into results object
-        results = self._read_pyomo_results(instance, pyomo_results)
+        results = self._read_pyomo_results(instance, pyomo_results, pandas_result =  pandas_result)
 
         return results
 
-    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands = None):
+    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands = None, pandas_result=True):
         
         """
         # Do it in the constructor? make it an attribute?
@@ -1496,41 +1625,89 @@ class PyomoSimulator(WaterNetworkSimulator):
         #opt.options['mu_strategy'] = 'monotone'
         #opt.options['mu_init'] = 1e-6
 
-        #t0 = time.time()
-
 
         # Save results into the results object
-        node_data_frame = pd.DataFrame({'time':     self._pyomo_sim_results['node_times'],
-                                        'node':     self._pyomo_sim_results['node_name'],
-                                        'demand':   self._pyomo_sim_results['node_demand'],
-                                        'expected_demand':   self._pyomo_sim_results['node_expected_demand'],
-                                        'head':     self._pyomo_sim_results['node_head'],
-                                        'pressure': self._pyomo_sim_results['node_pressure'],
-                                        'type':     self._pyomo_sim_results['node_type']})
+        if pandas_result:
+            node_data_frame = pd.DataFrame({'time':     self._pyomo_sim_results['node_times'],
+                                            'node':     self._pyomo_sim_results['node_name'],
+                                            'demand':   self._pyomo_sim_results['node_demand'],
+                                            'expected_demand':   self._pyomo_sim_results['node_expected_demand'],
+                                            'head':     self._pyomo_sim_results['node_head'],
+                                            'pressure': self._pyomo_sim_results['node_pressure'],
+                                            'type':     self._pyomo_sim_results['node_type']})
 
-        node_pivot_table = pd.pivot_table(node_data_frame,
-                                          values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
-                                          index=['node', 'time'],
-                                          aggfunc= lambda x: x)
-        results.node = node_pivot_table
-
-        link_data_frame = pd.DataFrame({'time':     self._pyomo_sim_results['link_times'],
-                                        'link':     self._pyomo_sim_results['link_name'],
-                                        'flowrate': self._pyomo_sim_results['link_flowrate'],
-                                        'velocity': self._pyomo_sim_results['link_velocity'],
-                                        'type':     self._pyomo_sim_results['link_type']})
-
-        link_pivot_table = pd.pivot_table(link_data_frame,
-                                              values=['flowrate', 'velocity', 'type'],
-                                              index=['link', 'time'],
+            node_pivot_table = pd.pivot_table(node_data_frame,
+                                              values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
+                                              index=['node', 'time'],
                                               aggfunc= lambda x: x)
-        results.link = link_pivot_table
+            results.node = node_pivot_table
 
-        #print " Converting results to pivot table: ", time.time() - t0
+            link_data_frame = pd.DataFrame({'time':     self._pyomo_sim_results['link_times'],
+                                            'link':     self._pyomo_sim_results['link_name'],
+                                            'flowrate': self._pyomo_sim_results['link_flowrate'],
+                                            'velocity': self._pyomo_sim_results['link_velocity'],
+                                            'type':     self._pyomo_sim_results['link_type']})
+
+            link_pivot_table = pd.pivot_table(link_data_frame,
+                                                  values=['flowrate', 'velocity', 'type'],
+                                                  index=['link', 'time'],
+                                                  aggfunc= lambda x: x)
+            results.link = link_pivot_table
+        else:
+            node_dict = dict()
+            node_types = set(self._pyomo_sim_results['node_type'])
+            map_properties = dict()
+            map_properties['node_demand'] = 'demand'
+            map_properties['node_head'] = 'head'
+            map_properties['node_pressure'] = 'pressure'
+            map_properties['node_expected_demand'] = 'expected_demand'
+            N = len(self._pyomo_sim_results['node_name'])
+            n_nodes = len(self._wn._nodes.keys())
+            hydraulic_time_step = float(copy.deepcopy(self._hydraulic_step_sec))
+            T = N/n_nodes
+            for node_type in node_types:
+                node_dict[node_type] = dict()
+                for prop, prop_name in map_properties.iteritems():
+                    node_dict[node_type][prop_name] = dict()
+                    for i in xrange(n_nodes):
+                        node_name = self._pyomo_sim_results['node_name'][i]
+                        n_type = self._get_node_type(node_name)
+                        if n_type == node_type:
+                            node_dict[node_type][prop_name][node_name] = dict()
+                            for ts in xrange(T):
+                                time_sec = hydraulic_time_step*ts
+                                #print i+n_nodes*ts
+                                node_dict[node_type][prop_name][node_name][time_sec] = self._pyomo_sim_results[prop][i+n_nodes*ts]
+
+            results.node = node_dict
+
+            link_dict = dict()
+            link_types = set(self._pyomo_sim_results['link_type'])
+            map_properties = dict()
+            map_properties['link_flowrate'] = 'flowrate'
+            map_properties['link_velocity'] = 'velocity'
+            N = len(self._pyomo_sim_results['link_name'])
+            n_links = len(self._wn._links.keys())
+            T = N/n_links
+            for link_type in link_types:
+                link_dict[link_type] = dict()
+                for prop, prop_name in map_properties.iteritems():
+                    link_dict[link_type][prop_name] = dict()
+                    for i in xrange(n_links):
+                        link_name = self._pyomo_sim_results['link_name'][i]
+                        l_type = self._get_link_type(link_name)
+                        if l_type == link_type:
+                            link_dict[link_type][prop_name][link_name] = dict()
+                            for ts in xrange(T):
+                                time_sec = hydraulic_time_step*ts
+                                link_dict[link_type][prop_name][link_name][time_sec] = self._pyomo_sim_results[prop][i+n_links*ts]
+
+            results.link = link_dict
+
 
         return results
 
-    def _read_pyomo_results(self, instance, pyomo_results):
+    def _read_pyomo_results(self, instance, pyomo_results, pandas_result = True):
         """
         Reads pyomo results from a pyomo instance and loads them into
         a network results object.
@@ -1565,14 +1742,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         link_name = []
         flowrate = []
         velocity = []
-        times = []
+        link_times = []
         link_type = []
         for l in instance.links:
             link = self._wn.get_link(l)
             for t in instance.time:
                 link_name.append(l)
                 link_type.append(self._get_link_type(l))
-                times.append(results.time[t])
+                link_times.append(results.time[t])
                 flow_l_t = instance.flow[l,t].value
                 flowrate.append(flow_l_t)
                 if isinstance(link, Pipe):
@@ -1580,18 +1757,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                 else:
                     velocity_l_t = 0.0
                 velocity.append(velocity_l_t)
-
-        link_data_frame = pd.DataFrame({'time': times,
-                                        'link': link_name,
-                                        'flowrate': flowrate,
-                                        'velocity': velocity,
-                                        'type': link_type})
-
-        link_pivot_table = pd.pivot_table(link_data_frame,
-                                              values=['flowrate', 'velocity', 'type'],
-                                              index=['link', 'time'],
-                                              aggfunc= lambda x: x)
-        results.link = link_pivot_table
 
         # Load node data
         node_name = []
@@ -1626,20 +1791,95 @@ class PyomoSimulator(WaterNetworkSimulator):
                 else:
                     demand.append(0.0)
                     expected_demand.append(0.0)
+        if pandas_result:
 
-        node_data_frame = pd.DataFrame({'time': times,
-                                        'node': node_name,
-                                        'demand': demand,
-                                        'expected_demand': expected_demand,
-                                        'head': head,
-                                        'pressure': pressure,
-                                        'type': node_type})
+            link_data_frame = pd.DataFrame({'time': link_times,
+                                    'link': link_name,
+                                    'flowrate': flowrate,
+                                    'velocity': velocity,
+                                    'type': link_type})
 
-        node_pivot_table = pd.pivot_table(node_data_frame,
-                                          values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
-                                          index=['node', 'time'],
-                                          aggfunc= lambda x: x)
-        results.node = node_pivot_table
+            link_pivot_table = pd.pivot_table(link_data_frame,
+                                                  values=['flowrate', 'velocity', 'type'],
+                                                  index=['link', 'time'],
+                                                  aggfunc= lambda x: x)
+            results.link = link_pivot_table
+
+            node_data_frame = pd.DataFrame({'time': times,
+                                            'node': node_name,
+                                            'demand': demand,
+                                            'expected_demand': expected_demand,
+                                            'head': head,
+                                            'pressure': pressure,
+                                            'type': node_type})
+
+            node_pivot_table = pd.pivot_table(node_data_frame,
+                                              values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
+                                              index=['node', 'time'],
+                                              aggfunc= lambda x: x)
+            results.node = node_pivot_table
+        else:
+            pyomo_sim_results = {}
+            pyomo_sim_results['node_name'] = node_name
+            pyomo_sim_results['node_type'] = node_type
+            pyomo_sim_results['node_head'] = head
+            pyomo_sim_results['node_demand'] = demand
+            pyomo_sim_results['node_expected_demand'] = expected_demand
+            pyomo_sim_results['node_pressure'] = pressure
+            pyomo_sim_results['link_name'] = link_name
+            pyomo_sim_results['link_type'] = link_type
+            pyomo_sim_results['link_velocity'] = velocity
+            pyomo_sim_results['link_flowrate'] = flowrate
+
+            hydraulic_time_step = float(copy.deepcopy(self._hydraulic_step_sec))
+            node_dict = dict()
+            node_types = set(self._pyomo_sim_results['node_type'])
+            map_properties = dict()
+            map_properties['node_demand'] = 'demand'
+            map_properties['node_head'] = 'head'
+            map_properties['node_pressure'] = 'pressure'
+            map_properties['node_expected_demand'] = 'expected_demand'
+            N = len(pyomo_sim_results['node_name'])
+            n_nodes = len(self._wn._nodes.keys())
+            T = N/n_nodes
+            for node_type in node_types:
+                node_dict[node_type] = dict()
+                for prop, prop_name in map_properties.iteritems():
+                    node_dict[node_type][prop_name] = dict()
+                    for i in xrange(n_nodes):
+                        node_name = pyomo_sim_results['node_name'][i]
+                        n_type = self._get_node_type(node_name)
+                        if n_type == node_type:
+                            node_dict[node_type][prop_name][node_name] = dict()
+                            for ts in xrange(T):
+                                time_sec = hydraulic_time_step*ts
+                                #print i+n_nodes*ts
+                                node_dict[node_type][prop_name][node_name][time_sec] = pyomo_sim_results[prop][i+n_nodes*ts]
+
+            results.node = node_dict
+
+            link_dict = dict()
+            link_types = set(self._pyomo_sim_results['link_type'])
+            map_properties = dict()
+            map_properties['link_flowrate'] = 'flowrate'
+            map_properties['link_velocity'] = 'velocity'
+            N = len(pyomo_sim_results['link_name'])
+            n_links = len(self._wn._links.keys())
+            T = N/n_links
+            for link_type in link_types:
+                link_dict[link_type] = dict()
+                for prop, prop_name in map_properties.iteritems():
+                    link_dict[link_type][prop_name] = dict()
+                    for i in xrange(n_links):
+                        link_name = pyomo_sim_results['link_name'][i]
+                        l_type = self._get_link_type(link_name)
+                        if l_type == link_type:
+                            link_dict[link_type][prop_name][link_name] = dict()
+                            for ts in xrange(T):
+                                time_sec = hydraulic_time_step*ts
+                                link_dict[link_type][prop_name][link_name][time_sec] = pyomo_sim_results[prop][i+n_links*ts]
+
+            results.link = link_dict
 
         return results
 

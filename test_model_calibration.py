@@ -22,14 +22,91 @@ from calibration_utils import *
 #inp_file = './networks/Net3.inp'
 inp_file = './networks/Net6_mod.inp'
 
-run_time = 120#minutes
+run_time = 1440#minutes
 time_step = 60 #minutes
+pandas_result = False
 with_noise = False
 generate_measures = True
 wn = WaterNetworkModel()
 wn.name = inp_file
 parser = ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
+
+"""
+from print_utils import *
+
+network_simulator = PyomoSimulator(wn)
+network_simulator._sim_duration_sec = run_time*60
+network_simulator._hydraulic_step_sec = time_step*60
+sim_results = network_simulator.run_sim(pandas_result=False)
+
+link_status = build_link_status_dictionary(wn,sim_results)
+
+if inp_file == './networks/Net6_mod.inp':
+	links_with_controls = ['LINK-1843', 'LINK-1827']
+	valves_to_check = ['LINK-1828','VALVE-3891', 'VALVE-3890']
+	pumps = wn.links(Pump)
+	for pname, p in pumps:
+		links_with_controls.append(pname)
+	cond_timed_controls = build_time_controls_dictionary(wn,sim_results,links_with_controls,valves_to_check)
+elif inp_file == './networks/Net3.inp':
+	links_with_controls = ['335','330']
+	cond_timed_controls = build_time_controls_dictionary(wn,sim_results,links_with_controls)
+
+pretty_print_dict(cond_timed_controls)
+
+nodes_to_measure = wn._nodes.keys()
+links_to_measure = wn._links.keys()
+get_measurements_from_sim_result(sim_results,nodes_to_measure,links_to_measure,node_params=['demand','head','pressure'],link_params=['flowrate'])
+build_meas = build_measurement_dictionary2(sim_results)
+
+
+network_simulator2 = PyomoSimulator(wn)
+network_simulator2._sim_duration_sec = run_time*60
+network_simulator2._hydraulic_step_sec = time_step*60
+sim_results2 = network_simulator2.run_sim(pandas_result=True)
+
+if inp_file == './networks/Net6_mod.inp':
+	links_with_controls = ['LINK-1843', 'LINK-1827']
+	valves_to_check = ['LINK-1828','VALVE-3891', 'VALVE-3890']
+	pumps = wn.links(Pump)
+	for pname, p in pumps:
+		links_with_controls.append(pname)
+	cond_timed_controls2 = build_time_controls_dictionary(wn,sim_results2,links_with_controls,valves_to_check)
+elif inp_file == './networks/Net3.inp':
+	links_with_controls = ['335','330']
+	cond_timed_controls2 = build_time_controls_dictionary(wn,sim_results2,links_with_controls)
+
+pretty_print_dict(cond_timed_controls2)
+
+link_status2 = build_link_status_dictionary(wn,sim_results2)
+
+get_measurements_from_sim_result(sim_results2,nodes_to_measure,links_to_measure,node_params=['demand','head','pressure'],link_params=['flowrate'])
+build_meas2 = build_measurement_dictionary2(sim_results2)
+
+
+r=0.0
+residual = copy.deepcopy(build_meas)
+for node_type in residual.keys():
+	for param in residual[node_type].keys():
+		for node in residual[node_type][param].keys():
+			for t in residual[node_type][param][node].keys():
+				residual[node_type][param][node][t] = abs(build_meas[node_type][param][node][t])-abs(build_meas2[node_type][param][node][t])
+				r += residual[node_type][param][node][t]
+print 'r1: ',r
+#pretty_print_dict(residual)
+
+r=0.0
+residual = copy.deepcopy(link_status2)
+for link_type in residual.keys():
+	for l in residual[link_type].keys():
+		for t in residual[link_type][l].keys():
+			residual[link_type][l][t] = link_status[link_type][l][t]-link_status2[link_type][l][t]
+			r += residual[link_type][l][t]
+print 'r2: ',r
+#pretty_print_dict(residual)
+"""
+
 
 #print wn._patterns
 """
@@ -96,8 +173,9 @@ if generate_measures:
 	print "Node: ",len(nodes_to_measure)
 	print "Tanks:" ,len([n for n,N in wn.nodes(Tank)])
 	print "Pumps:", len([l for l,L in wn.links(Pump)])
-	cdata = generate_calibration_data(wn,run_time*60,time_step*60, noise_dict, nodes_to_measure, links_to_measure, with_noise=with_noise, truncated=False)
-
+	t0= time.time()
+	cdata = generate_calibration_data2(wn,run_time*60,time_step*60, noise_dict, nodes_to_measure, links_to_measure, with_noise=with_noise, truncated=False, pandas_result=pandas_result)
+	print "TIME OF DATA GENERATION ", time.time() - t0
 	if inp_file == './networks/Net6_mod.inp':
 		links_with_controls = ['LINK-1843', 'LINK-1827']
 		valves_to_check = ['LINK-1828','VALVE-3891', 'VALVE-3890']
@@ -135,8 +213,8 @@ network_cal._hydraulic_step_sec = time_step*60
 
 junctions_to_calibrate =  [n for n,N in wn.nodes(Junction)]
 ro = [l for l,L in wn.links(Pipe)]
-pipes_to_calibrate = [ro[i] for i in range(10)]
-#pipes_to_calibrate = []
+#pipes_to_calibrate = [ro[i] for i in range(10)]
+pipes_to_calibrate = []
 calibrate_lists = {'demand':junctions_to_calibrate,'roughness':pipes_to_calibrate}
 
 calibration_results = network_cal.run_calibration(cdata.measurement_dict,
@@ -146,7 +224,8 @@ calibration_results = network_cal.run_calibration(cdata.measurement_dict,
 	weights =  {'tank_level':100.0, 'pressure':1.0,'head':1.0, 'flowrate':1000.0, 'demand':100.0},
 	init_dict = cdata.init_dict,
 	external_link_statuses = cdata.status_dict,
-	regularization_dict = cdata.regularization_dict)
+	regularization_dict = cdata.regularization_dict,
+	pandas_result = pandas_result)
 
 #print "Error accumulation true demand\n",error1 
 #print "Error accumulation true measurements\n",error2 
@@ -157,7 +236,7 @@ printDifferences(calibration_results,cdata.noise_sim_results,'demand')
 print "\nFLOWS Differences \n"
 printDifferences(calibration_results,cdata.noise_sim_results,'flowrate')
 
-
+"""
 plt.figure()
 if 'head' in calibration_results.node.columns:
 	calibration_results.node['head'].plot(label='ESTIMATION')
@@ -192,7 +271,7 @@ cdata.noise_sim_results.link['flowrate'].plot(label='SIM_TRUE_DEMAND')
 plt.title('Link Flowrate')
 plt.legend()
 plt.show()
-
+"""
 
 
 
