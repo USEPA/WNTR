@@ -22,6 +22,8 @@ class calibration_data_struct:
         self.status_dict = None
         self.init_dict = None
         self.regularization_dict = None
+        self.sim_duration_sec = None
+        self.sim_time_step_sec = None
 
 def get_measurements_from_sim_result(network_results,nodes_to_measure=[],links_to_measure=[],node_params=['demand','head','pressure'],link_params=['flowrate']):
 
@@ -29,6 +31,7 @@ def get_measurements_from_sim_result(network_results,nodes_to_measure=[],links_t
 	nodes = network_results.node
 
 	if isinstance(links,dict) and isinstance(nodes,dict):
+		
 		back_nodes = copy.deepcopy(nodes)
 		for node_type, node_type_vals in nodes.iteritems():
 			for param, param_vals in node_type_vals.iteritems():
@@ -40,7 +43,6 @@ def get_measurements_from_sim_result(network_results,nodes_to_measure=[],links_t
 				else:
 					del back_nodes[node_type][param]
 
-
 		# remove empty entries
 		for node_type, node_type_vals in back_nodes.iteritems():
 			for param in back_nodes[node_type].keys():
@@ -49,7 +51,27 @@ def get_measurements_from_sim_result(network_results,nodes_to_measure=[],links_t
 		for node_type in back_nodes.keys():
 			if not back_nodes[node_type]:
 				del back_nodes[node_type]
+		"""
 
+		for node_type, node_type_vals in nodes.iteritems():
+			for param in node_type_vals.keys():
+				if param in node_params:
+					if nodes_to_measure:
+						for node in nodes[node_type][param].keys():
+							if node not in nodes_to_measure:
+								del nodes[node_type][param][node]
+				else:
+					del nodes[node_type][param]
+
+		# remove empty entries
+		for node_type, node_type_vals in nodes.iteritems():
+			for param in nodes[node_type].keys():
+				if not nodes[node_type][param]:
+					del nodes[node_type][param]
+		for node_type in nodes.keys():
+			if not nodes[node_type]:
+				del nodes[node_type]
+		"""
 		back_links = copy.deepcopy(links)
 		for link_type, link_type_vals in links.iteritems():
 			for param, param_vals in link_type_vals.iteritems():
@@ -69,13 +91,32 @@ def get_measurements_from_sim_result(network_results,nodes_to_measure=[],links_t
 		for link_type in back_links.keys():
 			if not back_links[link_type]:
 				del back_links[link_type]
+		"""
 
+		for link_type, link_type_vals in links.iteritems():
+			for param in link_type_vals.keys():
+				if param in link_params:
+					if links_to_measure:
+						for link in links[link_type][param].keys():
+							if link not in links_to_measure:
+								del links[link_type][param][link]
+				else:
+					del links[link_type][param]
+
+		# remove empty entries
+		for link_type, link_type_vals in links.iteritems():
+			for param in link_type_vals.keys():
+				if not links[link_type][param]:
+					del links[link_type][param]
+		for link_type in links.keys():
+			if not links[link_type]:
+				del links[link_type]
+		"""
 		network_results.node = back_nodes
 		network_results.link = back_links
 	else:
 		if len(nodes)==0 and len(links)==0:
-			print "SIMULATION ERROR: Check epanet tmp.rpt file."
-			sys.exit()
+			RuntimeError("Non measurements to select.")
 
 		# List of times
 		time_step_sec = float(network_results.simulator_options['hydraulic_time_step']) 
@@ -126,20 +167,34 @@ def add_additive_noise(wn,measurements,dict_percentage,tol=1e-5,truncated=True):
 	if isinstance(measurements.node,dict) and isinstance(measurements.link,dict):
 		# Add noise to node measurements
 		parameters_to_add_noise = [key for key,vals in dict_percentage.iteritems() if vals>0.0]
-		for node_type, param_list in result_object.node.iteritems():
+		for node_type, param_list in measurements.node.iteritems():
 			for param, node_list in param_list.iteritems():
 				if param in parameters_to_add_noise:
-					count_error = 0
-					noise_magnitude[param] = 0.0
-					for n, tvals in node_list.iteritems():
-						node = wn.get_node(n)
-						if param == 'demand':
-							if isinstance(node,Junction):
+					if dict_percentage[param]>0.0:
+						count_error = 0
+						noise_magnitude[param] = 0.0
+						for n, tvals in node_list.iteritems():
+							node = wn.get_node(n)
+							if param == 'demand':
+								if isinstance(node,Junction):
+									measures = tvals.values()
+									mean = sum(m for m in measures)/float(len(measures))
+									std = dict_percentage[param]*mean
+									for t, meas in tvals.iteritems():
+										if meas>tol:
+											if truncated:
+												meas_error = truncnorm.rvs(0.0, np.inf, 0.0, std) 
+											else:
+												meas_error = np.random.normal(0.0, std)
+											measurements.node[node_type][param][n][t] += meas_error
+											noise_magnitude[param] += abs(meas_error)
+											count_error += 1
+							else:
 								measures = tvals.values()
-								mean = sum(m for m in measures)/float(len(measures))
-								std = dict_percentage[param]*mean
+								mean = sum(abs(m) for m in measures)/float(len(measures))
+								std = dict_percentage[mp]*mean
 								for t, meas in tvals.iteritems():
-									if meas>tol:
+									if abs(meas)>tol:
 										if truncated:
 											meas_error = truncnorm.rvs(0.0, np.inf, 0.0, std) 
 										else:
@@ -147,43 +202,31 @@ def add_additive_noise(wn,measurements,dict_percentage,tol=1e-5,truncated=True):
 										measurements.node[node_type][param][n][t] += meas_error
 										noise_magnitude[param] += abs(meas_error)
 										count_error += 1
-						else:
+						if count_error>0:
+							noise_magnitude[param] = noise_magnitude[param]/float(count_error)
+
+		# Add noise to node measurements
+		for link_type, param_list in measurements.link.iteritems():
+			for param, link_list in param_list.iteritems():
+				if param in parameters_to_add_noise:
+					if dict_percentage[param]>0.0:
+						count_error = 0
+						noise_magnitude[param] = 0.0
+						for l, tvals in link_list.iteritems():
 							measures = tvals.values()
 							mean = sum(abs(m) for m in measures)/float(len(measures))
-							std = dict_percentage[mp]*mean
+							std = dict_percentage[param]*mean
 							for t, meas in tvals.iteritems():
-								if meas>tol:
+								if abs(meas)>tol:
 									if truncated:
 										meas_error = truncnorm.rvs(0.0, np.inf, 0.0, std) 
 									else:
 										meas_error = np.random.normal(0.0, std)
-									measurements.node[node_type][param][n][t] += meas_error
+									measurements.link[link_type][param][l][t] += meas_error
 									noise_magnitude[param] += abs(meas_error)
 									count_error += 1
-				if count_error>0:
-					noise_magnitude[param] = noise_magnitude[param]/float(count_error)
-
-		# Add noise to node measurements
-		for link_type, param_list in result_object.link.iteritems():
-			for param, link_list in param_list.iteritems():
-				if param in parameters_to_add_noise:
-					count_error = 0
-					noise_magnitude[param] = 0.0
-					for l, tvals in link_list.iteritems():
-						measures = tvals.values()
-						mean = sum(abs(m) for m in measures)/float(len(measures))
-						std = dict_percentage[param]*mean
-						for t, meas in tvals.iteritems():
-							if meas>tol:
-								if truncated:
-									meas_error = truncnorm.rvs(0.0, np.inf, 0.0, std) 
-								else:
-									meas_error = np.random.normal(0.0, std)
-								measurements.link[link_type][param][l][t] += meas_error
-								noise_magnitude[param] += abs(meas_error)
-								count_error += 1
-				if count_error>0:
-					noise_magnitude[param] = noise_magnitude[param]/float(count_error)
+						if count_error>0:
+							noise_magnitude[param] = noise_magnitude[param]/float(count_error)
 
 	else:
 		nodes = measurements.node.index.get_level_values('node').drop_duplicates()
@@ -275,52 +318,6 @@ def build_fix_demand_dictionary(result_object):
 	return demands
 
 def build_measurement_dictionary(result_object, ignore_parameters=['expected_demand', 'type', 'velocity']):
-	if isinstance(result_object.node,dict) and isinstance(result_object.link,dict):
-		measurements = copy.deepcopy(result_object.node)
-		measurements.update(copy.deepcopy(result_object.link))
-		for meas_type in measurements.iterkeys():
-			for param in measurements[meas_type].keys():
-				if param in ignore_parameters:
-					del measurements[meas_type][param]
-	else:
-		measurements = dict()
-		type_nodes = set(result_object.node['type'].values)
-		# nodes
-		for nt in type_nodes:
-			measurements[nt] = dict()
-			node_measurements = result_object.node[result_object.node['type'] == nt]
-			columns = node_measurements.columns.values
-			parameters = [p for p in columns if p not in ignore_parameters]
-			node_names = node_measurements.index.get_level_values('node').drop_duplicates()
-			for param in parameters:
-				measurements[nt][param] = dict()
-				all_param_measurements = node_measurements[param]
-				param_measurements = all_param_measurements.dropna()
-				for n in node_names:
-					node_measure_times = param_measurements[n].index
-					for dt in node_measure_times:
-						t = dt.total_seconds()
-						measurements[nt][param][n,t] = param_measurements[n][dt]
-		# links
-		type_links = set(result_object.link['type'].values)
-		for lt in type_links:
-			measurements[lt] = dict()
-			link_measurements = result_object.link[result_object.link['type'] == lt]
-			columns = link_measurements.columns.values
-			parameters = [p for p in columns if p not in ignore_parameters]
-			link_names = link_measurements.index.get_level_values('link').drop_duplicates()
-			for param in parameters:
-				measurements[lt][param] = dict()
-				all_param_measurements = link_measurements[param]
-				param_measurements = all_param_measurements.dropna()
-				for l in link_names:
-					link_measure_times = param_measurements[l].index
-					for dt in link_measure_times:
-						t = dt.total_seconds()
-						measurements[lt][param][l,t] = param_measurements[l][dt]
-	return measurements
-
-def build_measurement_dictionary2(result_object, ignore_parameters=['expected_demand', 'type', 'velocity']):
 	if isinstance(result_object.node,dict) and isinstance(result_object.link,dict):
 		measurements = copy.deepcopy(result_object.node)
 		measurements.update(copy.deepcopy(result_object.link))
@@ -557,10 +554,10 @@ def get_valve_status_updates(wn, result_object, valves_to_check = None, tol=1e-4
 								if prev_status!=2:
 									closed_times.append(t)
 									prev_status=2
-								else:
-									if prev_status!=3:
-										open_times.append(t)
-										prev_status=3
+							else:
+								if prev_status!=3:
+									open_times.append(t)
+									prev_status=3
 			status[v] = dict()
 			status[v]['open_times']=open_times
 			status[v]['closed_times']=closed_times
@@ -628,59 +625,20 @@ def add_time_controls(wn,dict_time_controls):
 
 #from time_utils import *
 #@run_lineprofile(follow=[])
-def generate_calibration_data(wn, duration_sec, time_step_sec, noise_dict, nodes_to_measure, links_to_measure, with_noise=False, truncated=True):
+
+def generate_calibration_data(wn, duration_sec, time_step_sec, noise_dict, nodes_to_measure, links_to_measure, with_noise=False, truncated=True, pandas_result=True, simulator='pyomo'):
 	# container
 	data = calibration_data_struct()
 
 	# simulator
-	network_simulator = PyomoSimulator(wn)
-	network_simulator._sim_duration_sec = duration_sec
-	network_simulator._hydraulic_step_sec = time_step_sec
-	data.sim_results = network_simulator.run_sim()
-	data.init_dict = build_initialization_dict(data.sim_results)
-	if with_noise and noise_dict['demand']>0.0:
-		result_true_demands = copy.deepcopy(data.sim_results)
-		error1 = add_additive_noise(wn,result_true_demands,{'demand':noise_dict['demand']},truncated=truncated)
-		print "Accumulation error in demands\n",error1
-		to_fix =  build_fix_demand_dictionary(result_true_demands)
-		network_simulator_noise = PyomoSimulator(wn)
-		network_simulator_noise._sim_duration_sec = duration_sec
-		network_simulator_noise._hydraulic_step_sec = time_step_sec
-		data.noise_sim_results = network_simulator_noise.run_sim(fixed_demands=to_fix)
-
+	if simulator=='epanet':
+		network_simulator = EpanetSimulator(wn)
 	else:
-		data.noise_sim_results = copy.deepcopy(data.sim_results)
-
-	true_measurements = get_measurements_from_sim_result(copy.deepcopy(data.noise_sim_results),
-							nodes_to_measure,
-							links_to_measure,
-							node_params=['head'],
-							link_params=['flowrate'])
-
-	if with_noise:
-		#true_measurements.plot_link_attribute(links_to_plot=['204'])
-		error2 = add_additive_noise(wn,true_measurements,noise_dict,truncated=truncated) 
-		print "Accumulation error in measurements\n",error2
-	
-	# store measurements in dictionary
-	data.measurement_dict = build_measurement_dictionary(true_measurements)
-	#from print_utils import *
-	#pretty_print_dict(data.measurement_dict)
-	# estimate for regularization term
-	data.regularization_dict = build_regularization_dict(data.sim_results)
-
-	return data
-
-def generate_calibration_data2(wn, duration_sec, time_step_sec, noise_dict, nodes_to_measure, links_to_measure, with_noise=False, truncated=True, pandas_result=True):
-	# container
-	data = calibration_data_struct()
-
-	# simulator
-	network_simulator = PyomoSimulator(wn)
+		network_simulator = PyomoSimulator(wn)
 	network_simulator._sim_duration_sec = duration_sec
 	network_simulator._hydraulic_step_sec = time_step_sec
 	data.sim_results = network_simulator.run_sim(pandas_result=pandas_result)
-	data.init_dict = build_initialization_dict2(data.sim_results)
+	data.init_dict = build_initialization_dict(data.sim_results)
 	if with_noise and noise_dict['demand']>0.0:
 		result_true_demands = copy.deepcopy(data.sim_results)
 		error1 = add_additive_noise(wn,result_true_demands,{'demand':noise_dict['demand']},truncated=truncated)
@@ -702,19 +660,19 @@ def generate_calibration_data2(wn, duration_sec, time_step_sec, noise_dict, node
 							node_params=['head'],
 							link_params=['flowrate'])
 
-	
-
 	if with_noise:
 		#true_measurements.plot_link_attribute(links_to_plot=['204'])
 		error2 = add_additive_noise(wn,true_measurements,noise_dict,truncated=truncated) 
 		print "Accumulation error in measurements\n",error2
 	
 	# store measurements in dictionary
-	data.measurement_dict = build_measurement_dictionary2(true_measurements)
+	data.measurement_dict = build_measurement_dictionary(true_measurements)
 	#from print_utils import *
 	#pretty_print_dict(data.measurement_dict)
 	# estimate for regularization term
-	data.regularization_dict = build_regularization_dict2(data.sim_results)
+	data.regularization_dict = build_regularization_dict(data.sim_results)
+	data.sim_duration_sec = duration_sec
+	data.sim_time_step_sec = time_step_sec
 
 	return data
 
@@ -724,16 +682,39 @@ def build_initialization_dict(result_object):
 def build_regularization_dict(result_object,ignore_parameters=['expected_demand', 'type', 'velocity', 'pressure','head','flowrate']):
 	return build_measurement_dictionary(result_object, ignore_parameters)
 
-def build_initialization_dict2(result_object):
-	return build_measurement_dictionary2(result_object, ignore_parameters=['expected_demand', 'type', 'velocity', 'pressure'])
+def compare_plot(results1,results2,parameter_to_compare,type_meas=[]):
+	
+	r1 = build_measurement_dictionary(results1)
+	r2 = build_measurement_dictionary(results2)
 
-def build_regularization_dict2(result_object,ignore_parameters=['expected_demand', 'type', 'velocity', 'pressure','head','flowrate']):
-	return build_measurement_dictionary2(result_object, ignore_parameters)
+	l1 = list()
+	l2 = list()
+
+	if not type_meas:
+		type_meas = r1.keys()
+
+	for node_type in r1.keys():
+		if node_type in type_meas:
+			for param in r1[node_type].keys():
+				if param == parameter_to_compare:
+					for node in r1[node_type][param].keys():
+						for t in r1[node_type][param][node].keys():
+							l1.append(r1[node_type][param][node][t])
+							l2.append(r2[node_type][param][node][t])
+							#print node_type," ",param,node,t,r1[node_type][param][node][t],r2[node_type][param][node][t]
+
+	#for i in range(len(l1)):
+	#	print l1[i],"  ", l2[i]
+	min_max = [min(min(l1),min(l2)),max(max(l1),max(l2))]
+	plt.plot(min_max,min_max)
+	plt.title(parameter_to_compare)
+	plt.plot(l1,l2,'r.')
+	
 
 def printDifferences(results1,results2,prop,tol=1e-2):
 	if isinstance(results1.link,dict) and isinstance(results1.node,dict):
-		dict_res1 = build_measurement_dictionary2(results1)
-		dict_res2 = build_measurement_dictionary2(results2)
+		dict_res1 = build_measurement_dictionary(results1)
+		dict_res2 = build_measurement_dictionary(results2)
 		r = 0.0
 		residual = copy.deepcopy(dict_res1)
 		print "Type  Parameter  name  time  result1  result2"
@@ -769,3 +750,6 @@ def printDifferences(results1,results2,prop,tol=1e-2):
 						print l," ",t," ",links1[prop][l][t], links2[prop][l][t], abs(links1[prop][l][t]-links2[prop][l][t])
 		else:
 			print "Property not in the results file"
+
+
+

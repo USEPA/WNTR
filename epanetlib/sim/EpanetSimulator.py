@@ -44,6 +44,13 @@ class EpanetSimulator(WaterNetworkSimulator):
         results.time = pd.timedelta_range(start='0 minutes',
                                           end=str(self._sim_duration_sec) + ' seconds',
                                           freq=str(self._hydraulic_step_sec/60) + 'min')
+
+        # Load simulator options
+        results.simulator_options['start_time'] = self._sim_start_sec
+        results.simulator_options['duration'] = self._sim_duration_sec
+        results.simulator_options['pattern_start_time'] = self._pattern_start_sec
+        results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_sec
+        results.simulator_options['pattern_time_step'] = self._pattern_step_sec
     
         # data for results object
         node_name = []
@@ -105,6 +112,8 @@ class EpanetSimulator(WaterNetworkSimulator):
                 break
         
         if pandas_result:
+            #print len(set(node_times))
+            #print len(set(node_name))
             node_data_frame = pd.DataFrame({'time': node_times,
                                             'node': node_name,
                                             'demand': node_demand,
@@ -145,9 +154,9 @@ class EpanetSimulator(WaterNetworkSimulator):
             epanet_sim_results['link_velocity'] = link_velocity
             epanet_sim_results['link_flowrate'] = link_flowrate
 
-            hydraulic_time_step = float(copy.deepcopy(self._hydraulic_step_sec))
+            hydraulic_time_step = copy.deepcopy(self._hydraulic_step_sec)
             node_dict = dict()
-            node_types = set(self._pyomo_sim_results['node_type'])
+            node_types = set(epanet_sim_results['node_type'])
             map_properties = dict()
             map_properties['node_demand'] = 'demand'
             map_properties['node_head'] = 'head'
@@ -156,6 +165,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             N = len(epanet_sim_results['node_name'])
             n_nodes = len(self._wn._nodes.keys())
             T = N/n_nodes
+            #print T
             for node_type in node_types:
                 node_dict[node_type] = dict()
                 for prop, prop_name in map_properties.iteritems():
@@ -173,7 +183,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             results.node = node_dict
 
             link_dict = dict()
-            link_types = set(self._pyomo_sim_results['link_type'])
+            link_types = set(epanet_sim_results['link_type'])
             map_properties = dict()
             map_properties['link_flowrate'] = 'flowrate'
             map_properties['link_velocity'] = 'velocity'

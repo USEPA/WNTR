@@ -38,135 +38,41 @@ from print_utils import *
 network_simulator = PyomoSimulator(wn)
 network_simulator._sim_duration_sec = run_time*60
 network_simulator._hydraulic_step_sec = time_step*60
-sim_results = network_simulator.run_sim(pandas_result=False)
-
-link_status = build_link_status_dictionary(wn,sim_results)
-
-if inp_file == './networks/Net6_mod.inp':
-	links_with_controls = ['LINK-1843', 'LINK-1827']
-	valves_to_check = ['LINK-1828','VALVE-3891', 'VALVE-3890']
-	pumps = wn.links(Pump)
-	for pname, p in pumps:
-		links_with_controls.append(pname)
-	cond_timed_controls = build_time_controls_dictionary(wn,sim_results,links_with_controls,valves_to_check)
-elif inp_file == './networks/Net3.inp':
-	links_with_controls = ['335','330']
-	cond_timed_controls = build_time_controls_dictionary(wn,sim_results,links_with_controls)
-
-pretty_print_dict(cond_timed_controls)
-
-nodes_to_measure = wn._nodes.keys()
-links_to_measure = wn._links.keys()
-get_measurements_from_sim_result(sim_results,nodes_to_measure,links_to_measure,node_params=['demand','head','pressure'],link_params=['flowrate'])
-build_meas = build_measurement_dictionary2(sim_results)
-
+sim_results = network_simulator.run_sim(pandas_result=pandas_result)
 
 network_simulator2 = PyomoSimulator(wn)
 network_simulator2._sim_duration_sec = run_time*60
 network_simulator2._hydraulic_step_sec = time_step*60
-sim_results2 = network_simulator2.run_sim(pandas_result=True)
+sim_results2 = network_simulator2.run_sim(pandas_result=pandas_result)
 
-if inp_file == './networks/Net6_mod.inp':
-	links_with_controls = ['LINK-1843', 'LINK-1827']
-	valves_to_check = ['LINK-1828','VALVE-3891', 'VALVE-3890']
-	pumps = wn.links(Pump)
-	for pname, p in pumps:
-		links_with_controls.append(pname)
-	cond_timed_controls2 = build_time_controls_dictionary(wn,sim_results2,links_with_controls,valves_to_check)
-elif inp_file == './networks/Net3.inp':
-	links_with_controls = ['335','330']
-	cond_timed_controls2 = build_time_controls_dictionary(wn,sim_results2,links_with_controls)
+noise_dict = dict()
+noise_dict['demand'] = 0.1
+noise_dict['pressure'] = 0.0
+noise_dict['head'] = 0.0
+noise_dict['flowrate'] = 0.0
+add_additive_noise(wn,sim_results2,noise_dict,tol=1e-5,truncated=False)
+#print sim_results.link
+#print sim_results2.link
 
-pretty_print_dict(cond_timed_controls2)
+compare_plot(sim_results,sim_results2,'demand',['junction'])
+plt.figure()
+compare_plot(sim_results,sim_results2,'head')
+plt.figure()
+compare_plot(sim_results,sim_results2,'flowrate')
+plt.show()
 
-link_status2 = build_link_status_dictionary(wn,sim_results2)
-
-get_measurements_from_sim_result(sim_results2,nodes_to_measure,links_to_measure,node_params=['demand','head','pressure'],link_params=['flowrate'])
-build_meas2 = build_measurement_dictionary2(sim_results2)
-
-
-r=0.0
-residual = copy.deepcopy(build_meas)
-for node_type in residual.keys():
-	for param in residual[node_type].keys():
-		for node in residual[node_type][param].keys():
-			for t in residual[node_type][param][node].keys():
-				residual[node_type][param][node][t] = abs(build_meas[node_type][param][node][t])-abs(build_meas2[node_type][param][node][t])
-				r += residual[node_type][param][node][t]
-print 'r1: ',r
-#pretty_print_dict(residual)
-
-r=0.0
-residual = copy.deepcopy(link_status2)
-for link_type in residual.keys():
-	for l in residual[link_type].keys():
-		for t in residual[link_type][l].keys():
-			residual[link_type][l][t] = link_status[link_type][l][t]-link_status2[link_type][l][t]
-			r += residual[link_type][l][t]
-print 'r2: ',r
-#pretty_print_dict(residual)
+sys.exit()
 """
-
-
-#print wn._patterns
-"""
-if generate_measures:
-	noise_dict = dict()
-	noise_dict['demand'] = 0.00
-	noise_dict['pressure'] = 0.00
-	noise_dict['head'] = 0.000
-	noise_dict['flowrate'] = 0.1
-
-	nodes_to_measure = wn._nodes.keys()
-	links_to_measure = wn._links.keys()
-	result_meas = generate_measurements(wn,run_time*60,time_step*60, noise_dict, nodes_to_measure, links_to_measure, with_noise=with_noise, truncated=True)
-	result_assumed_demands = result_meas[0]
-	result_true_states = result_meas[1]
-	true_measurements_dict = result_meas[2]
-	init_dictionary = result_meas[3]
-
-	if inp_file == './networks/Net6_mod.inp':
-		links_with_controls = ['LINK-1843', 'LINK-1827']
-		valves_to_check = ['LINK-1828','VALVE-3891', 'VALVE-3890']
-		pumps = wn.links(Pump)
-		for pname, p in pumps:
-			links_with_controls.append(pname)
-		cond_timed_controls = build_time_controls_dictionary(wn,result_assumed_demands,links_with_controls,valves_to_check)
-	elif inp_file == './networks/Net3.inp':
-		links_with_controls = ['335','330']
-		cond_timed_controls = build_time_controls_dictionary(wn,result_assumed_demands,links_with_controls)
-	else:
-		print "CONTROLS NOT ADDED"
-		cond_timed_controls = dict()
-
-	status_dict = build_link_status_dictionary(wn, result_true_states)
-
-	cdata = calibration_data_struct()
-	cdata.sim_results = result_assumed_demands
-	cdata.noise_sim_results = result_true_states
-	cdata.measurement_dict = true_measurements_dict
-	cdata.time_controls_dict = cond_timed_controls
-	cdata.status_dict = status_dict
-	cdata.init_dict = init_dictionary
-	t0 = time.time()
-	pk.dump( cdata, open( "measure_struc.p", "wb" ) )
-	print "\nTime to pickle the data :", time.time() - t0
-else:
-	t0 = time.time()
-	cdata = pk.load( open( "measure_struc.p", "rb" ) )
-	print "\nTime to unpickle data :", time.time() - t0
-"""
-
 
 if generate_measures:
 	noise_dict = dict()
 	noise_dict['demand'] = 0.000
 	noise_dict['pressure'] = 0.00
 	noise_dict['head'] = 0.000
-	noise_dict['flowrate'] = 0.005
+	noise_dict['flowrate'] = 0.0
 
-	#nodes_to_measure = [n for n,N in wn.nodes(Tank)]
-	nodes_to_measure = wn._nodes.keys()
+	nodes_to_measure = [n for n,N in wn.nodes(Tank)]
+	#nodes_to_measure = wn._nodes.keys()
 	#links_to_measure = [l for l,L in wn.links(Pump)]
 	links_to_measure = wn._links.keys()
 	print "Links: ",len(links_to_measure)
@@ -174,7 +80,15 @@ if generate_measures:
 	print "Tanks:" ,len([n for n,N in wn.nodes(Tank)])
 	print "Pumps:", len([l for l,L in wn.links(Pump)])
 	t0= time.time()
-	cdata = generate_calibration_data2(wn,run_time*60,time_step*60, noise_dict, nodes_to_measure, links_to_measure, with_noise=with_noise, truncated=False, pandas_result=pandas_result)
+	cdata = generate_calibration_data(wn,run_time*60,
+		time_step*60, 
+		noise_dict, 
+		nodes_to_measure, 
+		links_to_measure, 
+		with_noise=with_noise, 
+		truncated=False, 
+		pandas_result=pandas_result,
+		simulator = 'pyomo')
 	print "TIME OF DATA GENERATION ", time.time() - t0
 	if inp_file == './networks/Net6_mod.inp':
 		links_with_controls = ['LINK-1843', 'LINK-1827']
@@ -201,6 +115,13 @@ else:
 	cdata = pk.load( open( "measure_struc.p", "rb" ) )
 	print "\nTime to unpickle data :", time.time() - t0
 
+"""
+network_simulator2 = EpanetSimulator(wn)
+network_simulator2._sim_duration_sec = cdata.sim_duration_sec
+network_simulator2._hydraulic_step_sec = cdata.sim_time_step_sec
+sim_results2 = network_simulator2.run_sim(pandas_result=pandas_result)
+cdata.init_dict = build_initialization_dict(sim_results2)
+"""
 
 # Run calibration
 calibrated_wn = copy.deepcopy(wn)
@@ -208,8 +129,8 @@ calibrated_wn = copy.deepcopy(wn)
 calibrated_wn.conditional_controls = dict()
 add_time_controls(calibrated_wn, cdata.time_controls_dict)
 network_cal =  PyomoSimulator(calibrated_wn)
-network_cal._sim_duration_sec = run_time*60
-network_cal._hydraulic_step_sec = time_step*60  
+network_cal._sim_duration_sec = cdata.sim_duration_sec
+network_cal._hydraulic_step_sec = cdata.sim_time_step_sec
 
 junctions_to_calibrate =  [n for n,N in wn.nodes(Junction)]
 ro = [l for l,L in wn.links(Pipe)]
@@ -227,14 +148,19 @@ calibration_results = network_cal.run_calibration(cdata.measurement_dict,
 	regularization_dict = cdata.regularization_dict,
 	pandas_result = pandas_result)
 
-#print "Error accumulation true demand\n",error1 
-#print "Error accumulation true measurements\n",error2 
 
-
+compare_plot(calibration_results,cdata.noise_sim_results,'demand')
+plt.figure()
+compare_plot(calibration_results,cdata.noise_sim_results,'head')
+plt.figure()
+compare_plot(calibration_results,cdata.noise_sim_results,'flowrate')
+plt.show()
+"""
 print "\nDEMAND Differences\n"
 printDifferences(calibration_results,cdata.noise_sim_results,'demand')
 print "\nFLOWS Differences \n"
 printDifferences(calibration_results,cdata.noise_sim_results,'flowrate')
+"""
 
 """
 plt.figure()
