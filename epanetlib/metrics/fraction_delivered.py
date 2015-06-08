@@ -3,20 +3,26 @@ import numpy as np
 import pandas as pd
 
 def fraction_delivered_volume(results, Pstar, adjust_demand_flag=False):
-    """Fraction of delivered volume, at consumer (NZD) nodes
+    """Fraction of delivered volume for each consumer node averaged over all
+    time steps
     
     Parameters
     ----------
-    G : graph
-        A networkx graph
+    results: pandas dataframe
+        Results object from simultation
     
     Pstar : scalar
-        pressure threshold
+        Minimum pressure threshold if the demand needs to be adjusted.
+        
+    adjust_demand_flag : bool, optional
+        (default = false) Flag to determine if demand needs to be adjusted.
+        This step is already accounted for if using Pyomo simulator but may
+        need to be set to true if using EPANET simulator
         
     Returns
     -------
     fdv : dict
-        fraction of delivered volume per node
+        fraction of delivered volume for each node averaged over all time steps
     
     Notes
     -----
@@ -49,15 +55,41 @@ def fraction_delivered_volume(results, Pstar, adjust_demand_flag=False):
     
 def fraction_delivered_volume_time(results, Pstar, adjust_demand_flag=False):
     """
-    Returns the fraction delivered demand as a time series
+    Fraction delivered volume for each node and time step
+    
+    Parameters
+    ----------
+    results: pandas dataframe
+        Results object from simultation
+        
+    Pstar : scalar
+        Minimum pressure threshold if the demand needs to be adjusted. 
+        
+        **NOTE: Pstar needs to be tested**
+        
+    adjust_demand_flag : bool, optional
+        (default = false) Flag to determine if demand needs to be adjusted.
+        This step is already accounted for if using Pyomo simulator but may
+        need to be set to true if using EPANET simulator
+        
+        **NOTE: adjust_demand_flag needs to be tested**
+        
+    Returns 
+    -------    
+    fdv_time : dict
+        fraction of delivered volume for each node and time step
+        
+    Notes
+    -----
+    Modified from Equation 2 in Ostfeld et al, Urban Water, 4, 2002
     """  
     exp_demand = results.node.loc[:,'expected_demand']
     act_recieved = results.node.loc[:,'demand']
     
-#    # Check minimum pressure
-#    if adjust_demand_flag == True:
-#        P = np.array(results.node.loc[:,'head'])
-#        act_recieved = adjust_demand(act_recieved, P, Pstar)
+    # Check minimum pressure
+    if adjust_demand_flag == True:
+        P = np.array(results.node.loc[:,'head'])
+        act_recieved = adjust_demand(act_recieved, P, Pstar)
         
     fdv = exp_demand / act_recieved
     
@@ -66,50 +98,7 @@ def fraction_delivered_volume_time(results, Pstar, adjust_demand_flag=False):
     #fdv = act_recieved >= exp_demand
     fdv_time = fdv.loc[results.node.loc[:,'type'] == 'junction',:]
 
-    return fdv_time
-
-def fraction_delivered_volume_old( G, Pstar):
-    """Fraction of delivered volume, at consumer (NZD) nodes
-    
-    Parameters
-    ----------
-    G : graph
-        A networkx graph
-    
-    Pstar : scalar
-        pressure threshold
-        
-    Returns
-    -------
-    fdv : dict
-        fraction of delivered volume per node
-    
-    Notes
-    -----
-    Equation 2 in Ostfeld et al, Urban Water, 4, 2002
-    """
-    
-    fdv = dict()
-    T = len(G.graph['time'])
-    
-    for i in G.nodes():
-        if G.node[i]['nodetype']  == pyepanet.EN_JUNCTION:
-            if sum(G.node[i]['demand'])  > 0: # demand > 0
-                P = np.array(G.node[i]['head']) # m
-                Rd = np.array(G.node[i]['demand']) # m3/s
-                Ad = adjust_demand(Rd, P, Pstar)
-                
-                # Vj = volume of delivered demand
-                # VT = volume of requested demand
-                Vj = sum(Ad*T)
-                VT = sum(Rd*T)
-                
-                if VT > 0:
-                    fdv[i] = float(Vj)/VT
-                else:
-                    fdv[i] = 1
-    
-    return fdv    
+    return fdv_time   
 
 def fraction_delivered_demand(results, Pstar, Dstar, adjust_demand_flag=False):
     """Fraction of delivered demand, at consumer (NZD) nodes
@@ -150,61 +139,13 @@ def fraction_delivered_demand(results, Pstar, Dstar, adjust_demand_flag=False):
                     P = np.array(results.node.loc[i,'head']) # m
                     Ad = adjust_demand(Ad, P, Pstar)
                
-               # t = number of time steps when the delivered demand is greater than
-               # Dstar * the requiested demand
-                # the quality threshold
+                # Number of time steps the expected demand times the demand
+                # factor is less than the actual demand from the nodes
                 t = sum(Ad*Dstar < Rd)
                 
-                fdd[i] = float(t)/T
-            
+                fdd[i] = float(t)/T          
     return fdd
-    
-    
-    
-def fraction_delivered_demand_old(G, Pstar, Dstar):
-    """Fraction of delivered demand, at consumer (NZD) nodes
-    
-    Parameters
-    ----------
-    G : graph
-        A networkx graph
-    
-    Pstar : scalar
-        pressure threshold
-    
-    Dstar : scalar
-        demand factor
-        
-    Returns
-    -------
-    fdd : dict
-        fraction of delivered demand per node
-    
-    Notes
-    -----
-    Equation 3 in Ostfeld et al, Urban Water, 4, 2002
-    
-    """
-    
-    fdd = dict()
-    T = len(G.graph['time'])
-    
-    for i in G.nodes():
-        if G.node[i]['nodetype']  == pyepanet.EN_JUNCTION:
-            if sum(G.node[i]['demand'])  > 0: # demand > 0
-                P = np.array(G.node[i]['head']) # m
-                Rd = np.array(G.node[i]['demand']) # m3/s
-                Ad = adjust_demand(Rd, P, Pstar)
-               
-               # t = number of time steps when the delivered demand is greater than
-               # Dstar * the requiested demand
-                # the quality threshold
-                t = sum(Ad > Rd*Dstar)
-                
-                fdd[i] = float(t)/T
-            
-    return fdd    
-    
+       
 def adjust_demand(Rd, P, Pstar):
     """Adjust simulated demands based on node pressure
     

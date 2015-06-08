@@ -13,37 +13,54 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     wn : WaterNetworkModel
         A WaterNetworkModel object
     
-    node_attribute: str, list, or dict, optional (default = None)
-        If node_attribute is a string, then the node_attribute dictonary is 
-        populated using node_attribute = wn.get_node_attribute(str)
-        If node_attribute is a list, then each node is given a value of 1.
-        If node_attribute is a dict, then it shoud be in the format
-        {nodeid: x} where nodeid is a string and x is a float
+    node_attribute : str, list, or dict, optional 
+        (default = None)
         
-    link_attribute: str, list, or dict, optional (default = None)
-        If link_attribute is a string, then the link_attribute dictonary is 
-        populated using edge_attribute = wn.get_link_attribute(str)
-        If link_attribute is a list, then each link is given a value of 1.
-        If link_attribute is a dict, then it shoud be in the format
-        {linkid: x} where linkid is a string and x is a float.  
+        - If node_attribute is a string, then the node_attribute dictonary is 
+          populated using node_attribute = wn.get_node_attribute(str)
+        - If node_attribute is a list, then each node is given a value of 1.
+        - If node_attribute is a dict, then it shoud be in the format
+          {nodeid: x} where nodeid is a string and x is a float
         
-    title: str, optional (default = None)
+    link_attribute : str, list, or dict, optional 
+        (default = None)
         
-    node_size: int, optional (default = 10)
+        - If link_attribute is a string, then the link_attribute dictonary is 
+          populated using edge_attribute = wn.get_link_attribute(str)
+        - If link_attribute is a list, then each link is given a value of 1.
+        - If link_attribute is a dict, then it shoud be in the format
+          {linkid: x} where linkid is a string and x is a float.  
+        
+    title : str, optional 
+        (default = None)
+        
+    node_size : int, optional 
+        (default = 10)
     
-    node_range: list, optional (default = [None,None])
+    node_range : list, optional 
+        (default = [None,None])
     
-    node_cmap: matplotlib.pyplot.cm colormap, optional (default = jet)
+    node_cmap : matplotlib.pyplot.cm colormap, optional 
+        (default = jet)
     
-    link_width: int, optional (default = 1)
+    link_width : int, optional 
+        (default = 1)
     
-    link_range: list, optional (default = [None,None])
+    link_range : list, optional 
+        (default = [None,None])
     
-    link_cmap: matplotlib.pyplot.cm colormap, optional (default = jet)
+    link_cmap : matplotlib.pyplot.cm colormap, optional 
+        (default = jet)
     
-    add_colorbar: bool, optional (default = True)
+    add_colorbar : bool, optional 
+        (default = True)
     
-    directed: bool, optional (default = False)
+    directed : bool, optional 
+        (default = False)
+        
+    Returns
+    -------
+    Figure
     
     Examples
     --------
