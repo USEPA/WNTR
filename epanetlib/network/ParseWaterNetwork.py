@@ -248,13 +248,19 @@ class ParseWaterNetwork(object):
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
                 # Only add head curves for pumps
-                if current[3].upper() == 'HEAD':
+                if current[3].upper() == 'SPEED':
+                    raise RuntimeError('Speed settings for pumps are not currently supported')
+                elif current[3].upper() == 'PATTERN':
+                    raise RuntimeError('Speed patterns for pumps are not currently supported')
+                elif current[3].upper() == 'HEAD':
                     self._pump_info[current[0]] = (current[1], current[2], current[4])
                     self._curve_map[current[0]] = current[4]
-                else:
+                elif current[3].upper() == 'POWER':
                     wn.add_pump(current[0], current[1], current[2], current[3].upper(),
                                 convert('Power', inp_units, float(current[4])))
-                    #warnings.warn("Only HEAD curves are supported for pumps. " + current[3] + " curve is currently not supported. ")
+                else:
+                    raise RuntimeError('Pump keyword in inp file not recognized.')
+
             if reservoirs:
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):

@@ -10,6 +10,7 @@ TODO
 4. Check for negative pressure at leak node
 5. Double check units of leak model
 6. Leak model assumes all pressures are guage
+7. Check self._n_timesteps in _initialize_simulation
 """
 
 try:
@@ -43,6 +44,10 @@ class PyomoSimulator(WaterNetworkSimulator):
         ---------
         wn : Water Network Model
             A water network model.
+
+        PD_or_DD: string, specifies whether the simulation will be demand driven or pressure driven
+                  Options are 'DEMAND DRIVEN' or 'PRESSURE DRIVEN'
+
         """
         WaterNetworkSimulator.__init__(self, wn, PD_or_DD)
 

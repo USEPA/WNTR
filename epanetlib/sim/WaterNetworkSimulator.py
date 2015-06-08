@@ -65,9 +65,7 @@ class WaterNetworkSimulator(object):
             elif PD_or_DD == 'DEMAND DRIVEN':
                 self._pressure_driven = False
             else:
-                print 'Arguement for specifying demand driven or pressure driven is not recognized.'
-                print 'Please use \'PRESSURE DRIVEN\' or \'DEMAND DRIVEN\'.'
-                quit()
+                raise RuntimeError("Argument for specifying demand driven or pressure driven is not recognized. Please use \'PRESSURE DRIVEN\' or \'DEMAND DRIVEN\'.")
 
             #if 'NOMINAL PRESSURE' in self._wn.options:
             #    self._PF = self._wn.options['NOMINAL PRESSURE']
@@ -256,6 +254,23 @@ class WaterNetworkSimulator(object):
                                                           "use method set_water_network_model to set model."
 
     def is_link_open(self, link_name, time):
+        """
+        Check if a link is open or closed.
+
+        Parameters
+        ---------
+        link_name: string
+            Name of link that is being checked for an open or closed status
+
+        time: int or float ???
+            time at which the link is being checked for an open or closed status
+            units: Seconds
+
+        Returns
+        -------
+        True if the link is open
+        False if the link is closed
+        """
         link = self._wn.get_link(link_name)
         base_status = False if link.get_base_status() == 'CLOSED' else True
         if link_name not in self._wn.time_controls:
