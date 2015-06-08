@@ -637,7 +637,8 @@ def generate_calibration_data(wn, duration_sec, time_step_sec, noise_dict, nodes
 		network_simulator = PyomoSimulator(wn)
 	network_simulator._sim_duration_sec = duration_sec
 	network_simulator._hydraulic_step_sec = time_step_sec
-	data.sim_results = network_simulator.run_sim(pandas_result=pandas_result)
+	data.sim_results = network_simulator.run_sim(solver_options={'halt_on_ampl_error':'yes','bound_push':1e-12},
+		pandas_result=pandas_result)
 	data.init_dict = build_initialization_dict(data.sim_results)
 	if with_noise and noise_dict['demand']>0.0:
 		result_true_demands = copy.deepcopy(data.sim_results)
@@ -701,13 +702,16 @@ def compare_plot(results1,results2,parameter_to_compare,type_meas=[]):
 						for t in r1[node_type][param][node].keys():
 							l1.append(r1[node_type][param][node][t])
 							l2.append(r2[node_type][param][node][t])
-							#print node_type," ",param,node,t,r1[node_type][param][node][t],r2[node_type][param][node][t]
+							#if abs(r1[node_type][param][node][t]-r2[node_type][param][node][t])>1e-1:
+							#	print node_type," ",param,node,t,r1[node_type][param][node][t],r2[node_type][param][node][t]
 
 	#for i in range(len(l1)):
 	#	print l1[i],"  ", l2[i]
 	min_max = [min(min(l1),min(l2)),max(max(l1),max(l2))]
 	plt.plot(min_max,min_max)
-	plt.title(parameter_to_compare)
+	plt.title(parameter_to_compare + ' Net3')
+	plt.xlabel('PYOMO')
+	plt.ylabel('EPANET')
 	plt.plot(l1,l2,'r.')
 	
 

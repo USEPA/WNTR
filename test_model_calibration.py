@@ -24,7 +24,7 @@ inp_file = './networks/Net6_mod.inp'
 
 run_time = 1440#minutes
 time_step = 60 #minutes
-pandas_result = False
+pandas_result = True
 with_noise = False
 generate_measures = True
 wn = WaterNetworkModel()
@@ -33,28 +33,17 @@ parser = ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
 
 """
-from print_utils import *
-
 network_simulator = PyomoSimulator(wn)
 network_simulator._sim_duration_sec = run_time*60
 network_simulator._hydraulic_step_sec = time_step*60
 sim_results = network_simulator.run_sim(pandas_result=pandas_result)
 
-network_simulator2 = PyomoSimulator(wn)
+network_simulator2 = EpanetSimulator(wn)
 network_simulator2._sim_duration_sec = run_time*60
 network_simulator2._hydraulic_step_sec = time_step*60
 sim_results2 = network_simulator2.run_sim(pandas_result=pandas_result)
 
-noise_dict = dict()
-noise_dict['demand'] = 0.1
-noise_dict['pressure'] = 0.0
-noise_dict['head'] = 0.0
-noise_dict['flowrate'] = 0.0
-add_additive_noise(wn,sim_results2,noise_dict,tol=1e-5,truncated=False)
-#print sim_results.link
-#print sim_results2.link
-
-compare_plot(sim_results,sim_results2,'demand',['junction'])
+compare_plot(sim_results,sim_results2,'demand',['tank','reservoir'])
 plt.figure()
 compare_plot(sim_results,sim_results2,'head')
 plt.figure()

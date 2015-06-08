@@ -16,6 +16,7 @@ try:
     from pyomo.environ import *
     from pyomo.core import *
     from pyomo.core.base.expr import Expr_if
+    from pyomo.core.base.expr import exp as pyomoexp
     from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
 except ImportError:
     raise ImportError('Error importing pyomo while running pyomo simulator.'
@@ -28,6 +29,52 @@ import time
 
 #from time_utils import * 
 #from pyomo_utils import CheckInstanceFeasibility
+"""
+Class for keeping approximation functions in a single place 
+and avoid code duplications. Should be located in a better place
+This is just a temporal implementation
+"""
+class ApproxFunctions():
+
+    def __init__(self):
+        self.q1 = 0.00349347323944
+        self.q2 = 0.00549347323944
+    # The Hazen-Williams headloss curve is slightly modified to improve solution time.
+    # The three functions defines below - f1, f2, Px - are used to ensure that the Jacobian
+    # does not go to 0 close to zero flow.
+    def leftFunct(self,x):
+        return 0.01*x
+
+    def rightFunct(self,x):
+        return 1.0*x**1.852
+
+    def middleFunct(self,x):
+        #return 1.05461308881e-05 + 0.0494234328901*x - 0.201070504673*x**2 + 15.3265906777*x**3
+        return 2.45944613543e-06 + 0.0138413824671*x - 2.80374270811*x**2 + 430.125623753*x**3
+
+    # discontinuous approximation of hazen williams headloss function
+    def hazenWDisc(self,Q):
+        return Expr_if(IF = Q < self.q1, THEN = self.leftFunct(Q), 
+            ELSE = Expr_if(IF = Q > self.q2, THEN = self.rightFunct(Q), 
+                ELSE = self.middleFunct(Q)))
+
+    # could be a lambda function
+    def sigmoidFunction(self,x,switch_x,alpha=1e-5):
+        return 1.0 / (1.0 + pyomoexp(-(x-switch_x)/alpha))
+
+    def leftLayer(self,x,alpha=1e-5):
+        switch_x = self.q1
+        return (1-self.sigmoidFunction(x,switch_x,alpha))*self.leftFunct(x)+ self.sigmoidFunction(x,switch_x,alpha)*self.middleFunct(x)
+
+    def hazenWCont(self,x, alpha=1e-5):
+        switch_x = self.q2
+        sigma = self.sigmoidFunction(x,switch_x,alpha)
+        return  (1-sigma)*self.leftLayer(x,alpha)+sigma*self.rightFunct(x)
+
+    def hazenWDisc2(self,Q):
+        return Expr_if(IF = Q < self.q2, THEN =  self.leftLayer(Q,1e-5),
+            ELSE = self.rightFunct(Q))
+
 
 class PyomoSimulator(WaterNetworkSimulator):
     """
@@ -262,25 +309,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         pi = math.pi
 
-        # The Hazen-Williams headloss curve is slightly modified to improve solution time.
-        # The three functions defines below - f1, f2, Px - are used to ensure that the Jacobian
-        # does not go to 0 close to zero flow.
-        def f1(x):
-            return 0.01*x
-
-        def f2(x):
-            return 1.0*x**1.852
-
-        def Px(x):
-            #return 1.05461308881e-05 + 0.0494234328901*x - 0.201070504673*x**2 + 15.3265906777*x**3
-            return 2.45944613543e-06 + 0.0138413824671*x - 2.80374270811*x**2 + 430.125623753*x**3
-
-        def LossFunc(Q):
-            #q1 = 0.01
-            #q2 = 0.05
-            q1 = 0.00349347323944
-            q2 = 0.00549347323944
-            return Expr_if(IF = Q < q1, THEN = f1(Q), ELSE = Expr_if(IF = Q > q2, THEN = f2(Q), ELSE = Px(Q)))
+        # for the approximation of hazen williams equation
+        approximator = ApproxFunctions()
 
         wn = self._wn
         model = ConcreteModel()
@@ -438,9 +468,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                 if is_link_open(l,'pipe',time_sec):
                     #print l,t
                     if modified_hazen_williams:
-                        #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
-                        #                                              *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.head[start_node,t] - model.head[end_node,t]))
-                        exprn = Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1) * pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.head[start_node,t] - model.head[end_node,t]
+                        exprn = Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1) * pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l,t])) == model.head[start_node,t] - model.head[end_node,t]
+                        #exprn =  Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)*pipe_resistance_coeff*approximator.hazenWCont(abs(model.flow[l,t])) == model.head[start_node,t] - model.head[end_node,t]
                     else:
                         #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=pipe_resistance_coeff*model.flow[l,t]*(abs(model.flow[l,t]))**0.852 == model.head[start_node,t] - model.head[end_node,t]))
                         exprn = pipe_resistance_coeff*model.flow[l,t]*(abs(model.flow[l,t]))**0.852 == model.head[start_node,t] - model.head[end_node,t]
@@ -559,22 +588,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         pi = math.pi
 
-        # The Hazen-Williams headloss curve is slightly modified to improve solution time.
-        # The three functions defines below - f1, f2, Px - are used to ensure that the Jacobian
-        # does not go to 0 close to zero flow.
-        def f1(x):
-            return 0.01*x
-
-        def f2(x):
-            return 1.0*x**1.852
-
-        def Px(x):
-            return 2.45944613543e-06 + 0.0138413824671*x - 2.80374270811*x**2 + 430.125623753*x**3
-
-        def LossFunc(Q):
-            q1 = 0.00349347323944
-            q2 = 0.00549347323944
-            return Expr_if(IF = Q < q1, THEN = f1(Q), ELSE = Expr_if(IF = Q > q2, THEN = f2(Q), ELSE = Px(Q)))
+        # for the approximation of hazen williams equation
+        approximator = ApproxFunctions()
 
 
         def pressure_dependent_demand_nl(full_demand, p, PF, P0):
@@ -835,10 +850,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                 pass
             else:
                 if modified_hazen_williams:
-                    #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
-                    #                                              *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.headloss[l,t]))
                     setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=Expr_if(IF=model.flow[l]>0, THEN=1, ELSE=-1)
-                            *pipe_resistance_coeff*LossFunc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
+                            *pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
                 else:
                     #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
                     #                                              *pipe_resistance_coeff*f2(abs(model.flow[l,t])) == model.headloss[l,t]))
@@ -1204,7 +1217,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Solve pyomo model
         pyomo_results = opt.solve(instance, tee=True,keepfiles=False)
 
-        print opt._problem_files
+        #print opt._problem_files
         print "Solving. Timing: ", time.time()-t0
         #print pyomo_results['Solution']_problem_files
         #help(pyomo_results['Solution'])
