@@ -882,7 +882,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif isinstance(node, Reservoir):
                 return expr == model.reservoir_demand[n]
             elif isinstance(node, Leak):
-                return expr**2 == node.leak_discharge_coeff**2*node.area**2*(2*self._g)*(model.head[n])
+                return expr**2 == node.leak_discharge_coeff**2*node.area**2*(2*self._g)*(model.head[n]-node.elevation)
         model.node_mass_balance = Constraint(model.nodes, rule=node_mass_balance_rule)
         #print "Created Node balance: ", time.time() - t0
 
