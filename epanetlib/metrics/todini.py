@@ -36,7 +36,7 @@
 import epanetlib.pyepanet as pyepanet
 import numpy as np
 
-def todini(results,wn, Pstar):
+def todini(results, wn, Pstar):
     
     POut = {}
     PExp = {}
