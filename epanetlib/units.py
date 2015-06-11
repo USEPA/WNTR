@@ -1,11 +1,9 @@
-"""
-Unit Conversion
-"""
 import math
 import numpy as np
 
 def convert(paramtype, flowunit, data, MKS = True):
-    """Convert epanet data to SI units (kg, m, sec)
+    
+    r"""Convert epanet data to SI units (kg, m, sec)
     
     Parameters
     ----------
@@ -92,7 +90,9 @@ def convert(paramtype, flowunit, data, MKS = True):
     Note: US Customary units apply when CFS, GPM, AFD, or MGD is chosen as flow
     units. SI Metric units apply when flow units are expressed using either 
     liters or cubic meters.
-"""
+    
+    """
+    
     data_type = type(data)
     if data_type is dict:
         data_keys = data.keys()

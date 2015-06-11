@@ -2,27 +2,25 @@ from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
 import matplotlib.pyplot as plt
+import epanetlib as en
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','..','networks')
 packdir = join(testdir,'..','..','..')
 
-import sys
-sys.path.append(packdir)
-import epanetlib as en
-
 def test_Todini_Fig2_optCost_GPM():
-    enData = en.pyepanet.ENepanet()
-    enData.inpfile = join(datadir,'Todini_Fig2_optCost_GPM.inp') 
-    enData.ENopen(enData.inpfile,'tmp.rpt')
-    
-    G = en.network.epanet_to_MultiDiGraph(enData)
+    inp_file = join(datadir,'Todini_Fig2_optCost_GPM.inp') 
 
-    # Run base hydarulic simulation and save data
-    G = en.sim.eps_hydraulic(enData, G)
+    # Create a water network model for results object
+    wn = en.network.WaterNetworkModel()
+    parser = en.network.ParseWaterNetwork()
+    parser.read_inp_file(wn, inp_file)
+    
+    sim = en.sim.EpanetSimulator(wn)
+    results = sim.run_sim()
 
     # Compute todini index
-    todini = en.metrics.todini(G, 30) # h* = 30 m
+    todini = en.metrics.todini(results, wn, 30) # h* = 30 m
     
     print 'Todini: Fig2_optCost'
     print todini[0]
@@ -32,17 +30,18 @@ def test_Todini_Fig2_optCost_GPM():
     assert_less(error, 0.1) # 10% error
 
 def test_Todini_Fig2_optCost_CMH():
-    enData = en.pyepanet.ENepanet()
-    enData.inpfile = join(datadir,'Todini_Fig2_optCost_CMH.inp') 
-    enData.ENopen(enData.inpfile,'tmp.rpt')
+    inp_file = join(datadir,'Todini_Fig2_optCost_CMH.inp') 
+
+    # Create a water network model for results object
+    wn = en.network.WaterNetworkModel()
+    parser = en.network.ParseWaterNetwork()
+    parser.read_inp_file(wn, inp_file)
     
-    G = en.network.epanet_to_MultiDiGraph(enData)
-    
-    # Run base hydarulic simulation and save data
-    G = en.sim.eps_hydraulic(enData, G)
+    sim = en.sim.EpanetSimulator(wn)
+    results = sim.run_sim()
 
     # Compute todini index
-    todini = en.metrics.todini(G, 30) # h* = 30 m
+    todini = en.metrics.todini(results, wn, 30) # h* = 30 m
     
     print 'Todini: Fig2_optCost'
     print todini[0]
@@ -52,20 +51,18 @@ def test_Todini_Fig2_optCost_CMH():
     assert_less(error, 0.1) # 10% error
     
 def test_Todini_Fig2_solA_GPM():
-    enData = en.pyepanet.ENepanet()
-    enData.inpfile = join(datadir,'Todini_Fig2_solA_GPM.inp') 
-    enData.ENopen(enData.inpfile,'tmp.rpt')
+    inp_file = join(datadir,'Todini_Fig2_solA_GPM.inp') 
+
+    # Create a water network model for results object
+    wn = en.network.WaterNetworkModel()
+    parser = en.network.ParseWaterNetwork()
+    parser.read_inp_file(wn, inp_file)
     
-    G = en.network.epanet_to_MultiDiGraph(enData)
-    
-    # Run base hydarulic simulation and save data
-    G = en.sim.eps_hydraulic(enData, G)
+    sim = en.sim.EpanetSimulator(wn)
+    results = sim.run_sim()
 
     # Compute todini index
-    todini = en.metrics.todini(G, 30)
-    plt.figure()
-    plt.title('Todini Index')
-    plt.plot(np.array(G.graph['time'])/3600, todini, 'b.-')
+    todini = en.metrics.todini(results, wn, 30) # h* = 30 m
     
     print 'Todini: Fig2_solA'
     print todini[0]
@@ -75,20 +72,18 @@ def test_Todini_Fig2_solA_GPM():
     assert_less(error, 0.1) # 10% error
 
 def test_Todini_Fig2_solA_CMH():
-    enData = en.pyepanet.ENepanet()
-    enData.inpfile = join(datadir,'Todini_Fig2_solA_CMH.inp') 
-    enData.ENopen(enData.inpfile,'tmp.rpt')
+    inp_file = join(datadir,'Todini_Fig2_solA_CMH.inp') 
+
+    # Create a water network model for results object
+    wn = en.network.WaterNetworkModel()
+    parser = en.network.ParseWaterNetwork()
+    parser.read_inp_file(wn, inp_file)
     
-    G = en.network.epanet_to_MultiDiGraph(enData)
-    
-    # Run base hydarulic simulation and save data
-    G = en.sim.eps_hydraulic(enData, G)
+    sim = en.sim.EpanetSimulator(wn)
+    results = sim.run_sim()
 
     # Compute todini index
-    todini = en.metrics.todini(G, 30)
-    plt.figure()
-    plt.title('Todini Index')
-    plt.plot(np.array(G.graph['time'])/3600, todini, 'b.-')
+    todini = en.metrics.todini(results, wn, 30) # h* = 30 m
     
     print 'Todini: Fig2_solA'
     print todini[0]
@@ -98,23 +93,18 @@ def test_Todini_Fig2_solA_CMH():
     assert_less(error, 0.1) # 10% error
     
 def test_BWSN_Network_2():
-    enData = en.pyepanet.ENepanet()
-    enData.inpfile = join(datadir,'BWSN_Network_2.inp') 
-    enData.ENopen(enData.inpfile,'tmp.rpt')
+    inp_file = join(datadir,'BWSN_Network_2.inp') 
+
+    # Create a water network model for results object
+    wn = en.network.WaterNetworkModel()
+    parser = en.network.ParseWaterNetwork()
+    parser.read_inp_file(wn, inp_file)
     
-    # change duration to 51 hours
-    enData.ENsettimeparam(en.pyepanet.EN_DURATION, 51*3600) 
-    
-    G = en.network.epanet_to_MultiDiGraph(enData)
-    
-    # Run base hydarulic simulation and save data
-    G = en.sim.eps_hydraulic(enData, G)
+    sim = en.sim.EpanetSimulator(wn)
+    results = sim.run_sim()
 
     # Compute todini index
-    todini = en.metrics.todini(G, 21.1)
-    plt.figure()
-    plt.title('Todini Index')
-    plt.plot(np.array(G.graph['time'])/3600, todini, 'b.-')
+    todini = en.metrics.todini(results, wn, 21.1)
     # len(time) <> len(todini) becuase the hydrulic simulation ends at 27 hours
     # the system is disconnected at that time
     
@@ -142,23 +132,18 @@ def test_BWSN_Network_2():
     
 
 def test_Net6():
-    enData = en.pyepanet.ENepanet()
-    enData.inpfile = join(datadir,'Net6.inp') 
-    enData.ENopen(enData.inpfile,'tmp.rpt')
+    inp_file = join(datadir,'Net6.inp') 
+
+    # Create a water network model for results object
+    wn = en.network.WaterNetworkModel()
+    parser = en.network.ParseWaterNetwork()
+    parser.read_inp_file(wn, inp_file)
     
-    # change duration to 48 hours
-    enData.ENsettimeparam(en.pyepanet.EN_DURATION, 48*3600) 
-    
-    G = en.network.epanet_to_MultiDiGraph(enData)
-    
-    # Run base hydarulic simulation and save data
-    G = en.sim.eps_hydraulic(enData, G)
+    sim = en.sim.EpanetSimulator(wn)
+    results = sim.run_sim()
 
     # Compute todini index
-    todini = en.metrics.todini(G, 21.1)
-    plt.figure()
-    plt.title('Todini Index')
-    plt.plot(np.array(G.graph['time'])/3600, todini, 'b.-')
+    todini = en.metrics.todini(results, wn, 21.1)
     
     todini = np.array(todini)
     Tave = np.mean(todini)

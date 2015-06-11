@@ -10,6 +10,7 @@ TODO
 4. Check for negative pressure at leak node
 5. Double check units of leak model
 6. Leak model assumes all pressures are guage
+7. Check self._n_timesteps in _initialize_simulation
 """
 
 try:
@@ -90,6 +91,10 @@ class PyomoSimulator(WaterNetworkSimulator):
         ---------
         wn : Water Network Model
             A water network model.
+
+        PD_or_DD: string, specifies whether the simulation will be demand driven or pressure driven
+                  Options are 'DEMAND DRIVEN' or 'PRESSURE DRIVEN'
+
         """
         WaterNetworkSimulator.__init__(self, wn, PD_or_DD)
 
@@ -910,7 +915,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif isinstance(node, Reservoir):
                 return expr == model.reservoir_demand[n]
             elif isinstance(node, Leak):
-                return expr**2 == node.leak_discharge_coeff**2*node.area**2*(2*self._g)*(model.head[n])
+                return expr**2 == node.leak_discharge_coeff**2*node.area**2*(2*self._g)*(model.head[n]-node.elevation)
         model.node_mass_balance = Constraint(model.nodes, rule=node_mass_balance_rule)
         #print "Created Node balance: ", time.time() - t0
 
@@ -1236,7 +1241,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         model = self.build_hydraulic_model(modified_hazen_williams)
 
         #######################TEMPORAL#############################
-        dateToTimestep = lambda DateTime: (((DateTime.days*24+DateTime.hours)*60+DateTime.minutes)*60+DateTime.seconds)/self._hydraulic_step_sec
+        dateToTimestep = lambda DateTime: (((DateTime.components.days*24+DateTime.components.hours)*60+DateTime.components.minutes)*60+DateTime.components.seconds)/self._hydraulic_step_sec
         if fixed_demands is not None:
             nodes = fixed_demands.node.index.get_level_values('node').drop_duplicates()
             for n in nodes:
