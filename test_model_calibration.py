@@ -22,9 +22,9 @@ from calibration_utils import *
 #inp_file = './networks/Net3.inp'
 inp_file = './networks/Net6_mod.inp'
 
-run_time = 1440#minutes
+run_time = 30#minutes
 time_step = 60 #minutes
-pandas_result = True
+pandas_result = False
 with_noise = False
 generate_measures = True
 wn = WaterNetworkModel()

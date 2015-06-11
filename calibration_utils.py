@@ -709,7 +709,7 @@ def compare_plot(results1,results2,parameter_to_compare,type_meas=[]):
 	#	print l1[i],"  ", l2[i]
 	min_max = [min(min(l1),min(l2)),max(max(l1),max(l2))]
 	plt.plot(min_max,min_max)
-	plt.title(parameter_to_compare + ' Net3')
+	plt.title(parameter_to_compare + ' Net6')
 	plt.xlabel('PYOMO')
 	plt.ylabel('EPANET')
 	plt.plot(l1,l2,'r.')

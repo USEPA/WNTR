@@ -1213,7 +1213,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         for key, val in solver_options.iteritems():
             opt.options[key]=val    
 
-        #opt.options['print_options_documentation']='yes'
+        #opt.options['save_model']='tmp_model.nl'
         # Solve pyomo model
         pyomo_results = opt.solve(instance, tee=True,keepfiles=False)
 
