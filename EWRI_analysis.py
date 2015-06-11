@@ -219,8 +219,8 @@ for k,v in pump_stations.iteritems():
         tr = temp[td::].idxmax()
         if val < 0.98:
             minFDV_kn[j] = val
-            time_to_disruption_kn[j] = (td-te).hours
-            time_to_recovery_kn[j] = (tr-td).hours
+            time_to_disruption_kn[j] = (td-te).components.hours
+            time_to_recovery_kn[j] = (tr-td).components.hours
     
         if val < 0.98:
             count_nodes[k] = count_nodes[k] + 1
@@ -259,8 +259,8 @@ for k,v in pump_stations.iteritems():
     td = temp.idxmin()
     tr = temp[td::].idxmax()
     minFDV_k[k] = val
-    time_to_disruption_k[k] = (td-te).hours
-    time_to_recovery_k[k] = (tr-td).hours
+    time_to_disruption_k[k] = (td-te).components.hours
+    time_to_recovery_k[k] = (tr-td).components.hours
 
     if graphic:
         # State Transition Plot

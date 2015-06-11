@@ -11,6 +11,7 @@ TODO
 5. Double check units of leak model
 6. Leak model assumes all pressures are guage
 7. Resolve first timestep if conditional controls are not satisfied.
+8. Check self._n_timesteps in _initialize_simulation
 """
 
 try:
@@ -58,6 +59,10 @@ class PyomoSimulator(WaterNetworkSimulator):
         ---------
         wn : Water Network Model
             A water network model.
+
+        PD_or_DD: string, specifies whether the simulation will be demand driven or pressure driven
+                  Options are 'DEMAND DRIVEN' or 'PRESSURE DRIVEN'
+
         """
         WaterNetworkSimulator.__init__(self, wn, PD_or_DD)
 
@@ -825,7 +830,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif isinstance(node, Reservoir):
                 return expr == model.reservoir_demand[n]
             elif isinstance(node, Leak):
-                return expr**2 == node.leak_discharge_coeff**2*node.area**2*(2*self._g)*(model.head[n])
+                return expr**2 == node.leak_discharge_coeff**2*node.area**2*(2*self._g)*(model.head[n]-node.elevation)
         model.node_mass_balance = Constraint(model.nodes, rule=node_mass_balance_rule)
 
         def tank_dynamics_rule(model, n):
@@ -1212,9 +1217,7 @@ class PyomoSimulator(WaterNetworkSimulator):
     def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None):
         
         """
-        Main method to run a simulation.
-
-        Parameters
+        Optional Parameters
         ----------
         solver : String
             Name of the nonlinear programming solver to be used for solving the hydraulic equations.
@@ -1227,7 +1230,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         fixed_demands: Dictionary (node_name, time_step): demand value
             An external dictionary of demand values can be provided using this parameter. This option is used in the
             calibration work.
-        :return:
         """
 
         # Create and initialize dictionaries containing demand values and link statuses

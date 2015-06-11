@@ -1,14 +1,11 @@
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
+import epanetlib as en
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','..','networks')
 packdir = join(testdir,'..','..','..')
-
-import sys
-sys.path.append(packdir)
-import epanetlib as en
 
 def test_terminal_nodes():
     inp_file = join(datadir,'Net1.inp')

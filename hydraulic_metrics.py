@@ -23,53 +23,37 @@ wn = en.network.WaterNetworkModel()
 parser = en.network.ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
 
-#wn.options['MINIMUM PRESSURE'] = 0 # m
-#wn.options['NOMINAL PRESSURE'] = 40*float(units.psi/units.waterpressure) # psi to m  
-
 # Simulate hydrulics
 sim = en.sim.EpanetSimulator(wn)
 results = sim.run_sim()
 
 # Fraction of delivered volume (FDV)
 adjust_demand_flag = True
-fdv = en.metrics.fraction_delivered_volume(results, pressure_lower_bound, adjust_demand_flag)
+fdv = en.metrics.fraction_delivered_volume(results, 
+                                           pressure_lower_bound, 
+                                           adjust_demand_flag)                                          
 print "Average FDV: " +str(np.mean(fdv.values()))
-en.network.draw_graph(wn, node_attribute=fdv, node_size=40,
-                      title= 'FDV', node_range=[0,1])
+
+en.network.draw_graph(wn                    , 
+                      node_attribute = fdv  , 
+                      node_size      = 40   ,
+                      title          = 'FDV', 
+                      node_range     = [0,1])
 
 # Fraction of delivered demand (FDD)
-fdd = en.metrics.fraction_delivered_demand(results, pressure_lower_bound, demand_factor, adjust_demand_flag)
+fdd = en.metrics.fraction_delivered_demand(results, 
+                                           pressure_lower_bound, 
+                                           demand_factor, 
+                                           adjust_demand_flag)
 print "Average FDD: " +str(np.mean(fdd.values()))
-en.network.draw_graph(wn, node_attribute=fdd, node_size=40,
-                      title= 'FDD', node_range=[0,1])
-                      
-                  
-####### OLD WAY - BEGIN ######
-# Create enData for G
-enData = en.pyepanet.ENepanet()
-enData.inpfile = inp_file
-enData.ENopen(enData.inpfile,'tmp.rpt')
 
-# Create MultiDiGraph and plot as an undirected network
-G = en.network.epanet_to_MultiDiGraph(enData)
+en.network.draw_graph(wn                    , 
+                      node_attribute = fdd  , 
+                      node_size      = 40   ,
+                      title          = 'FDD', 
+                      node_range     = [0,1])
 
-# Run hydarulic simulation and save data
-G = en.sim.eps_hydraulic(enData, G)
-
-## Fraction of delivered volume (FDV)
-fdv = en.metrics.fraction_delivered_volume_old(G, pressure_lower_bound)
-print "Average FDV: " +str(np.mean(fdv.values()))
-en.network.draw_graph(wn, node_attribute=fdv, node_size=40,
-                      title= 'FDV', node_range=[0,1])
-
-# Fraction of delivered demand (FDD)
-fdd = en.metrics.fraction_delivered_demand_old(G, pressure_lower_bound, demand_factor)
-print "Average FDD: " +str(np.mean(fdd.values()))
-en.network.draw_graph(wn, node_attribute=fdd, node_size=40,
-                      title= 'FDD', node_range=[0,1])     
-####### OLD WAY - END #######
-
-
+# Create list of node names
 junctions = [node_name for node_name, node in wn.nodes(en.network.Junction)]
 
 # Pressure stats
