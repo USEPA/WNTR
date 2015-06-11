@@ -18,6 +18,7 @@ try:
     from pyomo.environ import *
     from pyomo.core import *
     from pyomo.core.base.expr import Expr_if
+    from pyomo.core.base.expr import exp as pyomoexp
     from pyomo.opt import SolverFactory, SolverStatus, TerminationCondition
 except ImportError:
     raise ImportError('Error importing pyomo while running pyomo simulator.'
@@ -44,6 +45,52 @@ import time
 
 #from time_utils import * 
 #from pyomo_utils import CheckInstanceFeasibility
+"""
+Class for keeping approximation functions in a single place 
+and avoid code duplications. Should be located in a better place
+This is just a temporal implementation
+"""
+class ApproxFunctions():
+
+    def __init__(self):
+        self.q1 = 0.00349347323944
+        self.q2 = 0.00549347323944
+    # The Hazen-Williams headloss curve is slightly modified to improve solution time.
+    # The three functions defines below - f1, f2, Px - are used to ensure that the Jacobian
+    # does not go to 0 close to zero flow.
+    def leftFunct(self,x):
+        return 0.01*x
+
+    def rightFunct(self,x):
+        return 1.0*x**1.852
+
+    def middleFunct(self,x):
+        #return 1.05461308881e-05 + 0.0494234328901*x - 0.201070504673*x**2 + 15.3265906777*x**3
+        return 2.45944613543e-06 + 0.0138413824671*x - 2.80374270811*x**2 + 430.125623753*x**3
+
+    # discontinuous approximation of hazen williams headloss function
+    def hazenWDisc(self,Q):
+        return Expr_if(IF = Q < self.q1, THEN = self.leftFunct(Q), 
+            ELSE = Expr_if(IF = Q > self.q2, THEN = self.rightFunct(Q), 
+                ELSE = self.middleFunct(Q)))
+
+    # could be a lambda function
+    def sigmoidFunction(self,x,switch_x,alpha=1e-5):
+        return 1.0 / (1.0 + pyomoexp(-(x-switch_x)/alpha))
+
+    def leftLayer(self,x,alpha=1e-5):
+        switch_x = self.q1
+        return (1-self.sigmoidFunction(x,switch_x,alpha))*self.leftFunct(x)+ self.sigmoidFunction(x,switch_x,alpha)*self.middleFunct(x)
+
+    def hazenWCont(self,x, alpha=1e-5):
+        switch_x = self.q2
+        sigma = self.sigmoidFunction(x,switch_x,alpha)
+        return  (1-sigma)*self.leftLayer(x,alpha)+sigma*self.rightFunct(x)
+
+    def hazenWDisc2(self,Q):
+        return Expr_if(IF = Q < self.q2, THEN =  self.leftLayer(Q,1e-5),
+            ELSE = self.rightFunct(Q))
+
 
 class PyomoSimulator(WaterNetworkSimulator):
     """
@@ -267,7 +314,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         return smoothing_points
 
 
-    def _build_hydraulic_model(self, modified_hazen_williams=True, external_mass_balance=False, external_link_statuses=None):
+    def _build_hydraulic_model(self, modified_hazen_williams=True, external_link_statuses=None, calibrated_vars=None):
         """
         Build water network hadloss and node balance constraints.
 
@@ -281,25 +328,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         pi = math.pi
 
-        # The Hazen-Williams headloss curve is slightly modified to improve solution time.
-        # The three functions defines below - f1, f2, Px - are used to ensure that the Jacobian
-        # does not go to 0 close to zero flow.
-        def f1(x):
-            return 0.01*x
-
-        def f2(x):
-            return 1.0*x**1.852
-
-        def Px(x):
-            #return 1.05461308881e-05 + 0.0494234328901*x - 0.201070504673*x**2 + 15.3265906777*x**3
-            return 2.45944613543e-06 + 0.0138413824671*x - 2.80374270811*x**2 + 430.125623753*x**3
-
-        def LossFunc(Q):
-            #q1 = 0.01
-            #q2 = 0.05
-            q1 = 0.00349347323944
-            q2 = 0.00549347323944
-            return Expr_if(IF = Q < q1, THEN = f1(Q), ELSE = Expr_if(IF = Q > q2, THEN = f2(Q), ELSE = Px(Q)))
+        # for the approximation of hazen williams equation
+        approximator = ApproxFunctions()
 
         wn = self._wn
         model = ConcreteModel()
@@ -343,9 +373,15 @@ class PyomoSimulator(WaterNetworkSimulator):
                     return pump.get_design_flow()
                 else:
                     return 0.3048
+
+        def flow_bounds_rule(model, l, t):
+            if l in model.pumps:
+                return (0.0, None)
+            else:
+                return (None, None)
                 
 
-        model.flow = Var(model.links, model.time, within=Reals, initialize=flow_init_rule)
+        model.flow = Var(model.links, model.time, within=Reals, initialize=flow_init_rule, bounds = flow_bounds_rule)
 
         def init_head_rule(model, n, t):
             if n in model.junctions or n in model.tanks:
@@ -361,7 +397,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         def init_demand_rule(model,n,t):
             return model.demand_required[n,t]
-        model.demand_actual = Var(model.junctions, model.time, within=NonNegativeReals, initialize=init_demand_rule)
+        model.demand_actual = Var(model.junctions, model.time, within=Reals, initialize=init_demand_rule,bounds=(0.0,None))
 
         ############## CONSTRAINTS #####################
         t0 = time.time()
@@ -383,24 +419,76 @@ class PyomoSimulator(WaterNetworkSimulator):
                 elif external_link_statuses[link_type][link_name][time_seconds]==0:
                     return 'CLOSED'
                 else:
-                    print 'ERROR: NOT A VALID CASE EXTERNAL LINK STATUS'
-                    sys.exit()
+                    raise RuntimeError('Not valid case for link status function in build_hydraulic_model.')
+
+        t0 = time.time()
+        # Mass Balance
+        if calibrated_vars is not None:
+            model.demand_estimated_nodes = calibrated_vars['demand']
+            model.unestimated_nodes = [n for n in model.junctions if n not in model.demand_estimated_nodes]
+        else:
+            model.unestimated_nodes = [n for n in model.junctions]
+
+        for n in model.unestimated_nodes:
+            for t in model.time:
+                model.demand_actual[n,t].value = model.demand_required[n,t]
+                model.demand_actual[n,t].fixed = True
+
+        def node_mass_balance_rule(model, n, t):
+            expr = 0
+            for l in wn.get_links_for_node(n):
+                link = wn.get_link(l)
+                if link.start_node() == n:
+                    expr -= model.flow[l,t]
+                elif link.end_node() == n:
+                    expr += model.flow[l,t]
+                else:
+                    raise RuntimeError('Node link is neither start nor end node.')
+            node = wn.get_node(n)
+            if isinstance(node, Junction):
+                return expr == model.demand_actual[n,t]
+            elif isinstance(node, Tank):
+                return expr == model.tank_net_inflow[n,t]
+            elif isinstance(node, Reservoir):
+                return expr == model.reservoir_demand[n,t]
+
+        model.node_mass_balance = Constraint(model.nodes, model.time, rule=node_mass_balance_rule)
+        
+        print "Time to build mass balance constraint: ", time.time()-t0
+
+        t0 = time.time()
+        # pipe roughness equations
+        if calibrated_vars is not None:
+            model.calibrate_pipes = calibrated_vars['roughness']
+            model.uncalibrated_pipes = [l for l in model.pipes if l not in model.calibrate_pipes]
+        else:
+            model.calibrate_pipes = list()
+            model.uncalibrated_pipes = [l for l in model.pipes]
+
+        # variable for roughness calibration
+        model.var_roughness = Var(model.pipes, within=NonNegativeReals, initialize=100)
+
+        for l in model.uncalibrated_pipes:
+            pipe = wn.get_link(l)
+            model.var_roughness[l].value = pipe.roughness
+            model.var_roughness[l].fixed = True
 
         model.pipe_headloss = ConstraintList()
-        # Head loss inside pipes
         for l in model.pipes:
             pipe = wn.get_link(l)
-            pipe_resistance_coeff = self._Hw_k*(pipe.roughness**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
+            # initialize roughness 
+            #model.var_roughness[l].value = pipe.roughness
+            pipe_resistance_coeff = self._Hw_k*(model.var_roughness[l]**(-1.852))*(pipe.diameter**(-4.871))*pipe.length # Hazen-Williams
             start_node = pipe.start_node()
             end_node = pipe.end_node()
             for t in model.time:
                 time_sec =t*self._hydraulic_step_sec
+                #print l,t
                 if is_link_open(l,'pipe',time_sec):
                     #print l,t
                     if modified_hazen_williams:
-                        #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)
-                        #                                              *pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.head[start_node,t] - model.head[end_node,t]))
-                        exprn = Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1) * pipe_resistance_coeff*LossFunc(abs(model.flow[l,t])) == model.head[start_node,t] - model.head[end_node,t]
+                        exprn = Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1) * pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l,t])) == model.head[start_node,t] - model.head[end_node,t]
+                        #exprn =  Expr_if(IF=model.flow[l,t]>0, THEN = 1, ELSE = -1)*pipe_resistance_coeff*approximator.hazenWCont(abs(model.flow[l,t])) == model.head[start_node,t] - model.head[end_node,t]
                     else:
                         #setattr(model, 'pipe_headloss_'+str(l)+'_'+str(t), Constraint(expr=pipe_resistance_coeff*model.flow[l,t]*(abs(model.flow[l,t]))**0.852 == model.head[start_node,t] - model.head[end_node,t]))
                         exprn = pipe_resistance_coeff*model.flow[l,t]*(abs(model.flow[l,t]))**0.852 == model.head[start_node,t] - model.head[end_node,t]
@@ -420,6 +508,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                         #setattr(model, 'pump_negative_headloss_'+str(l)+'_'+str(t), Constraint(expr=model.head[start_node,t] - model.head[end_node,t] == (-1.0*A + B*(model.flow[l,t]**C))))
                         exprn = model.head[start_node,t] - model.head[end_node,t] == (-1.0*A + B*(model.flow[l,t]**C))
                         model.pump_headloss.add(exprn)
+                    else:
+                        model.flow[l,t].value = 0.0
+                        model.flow[l,t].fixed = True
             elif pump.info_type == 'POWER':
                 power = pump.power
                 for t in model.time:
@@ -427,62 +518,20 @@ class PyomoSimulator(WaterNetworkSimulator):
                     if is_link_open(l,'pump',time_sec):
                         exprn = (model.head[start_node,t] - model.head[end_node,t])*model.flow[l,t]*self._g*1000.0 == -power
                         model.pump_headloss.add(exprn)
+                    else:
+                        model.flow[l,t].value = 0.0
+                        model.flow[l,t].fixed = True
                         #setattr(model, 'pump_negative_headloss_'+str(l), Constraint(expr=(model.head[start_node] - model.head[end_node])*model.flow[l]*self._g*1000.0 == -pump.power))
         print "Time to build pipe-pump headloss constraints: ", time.time()-t0
-        #print "Created head gain: ", time.time() - t0
-        # Nodal head difference between start and end node of a link
-        """
-        for l in model.links:
-            link = wn.get_link(l)
-            start_node = link.start_node()
-            end_node = link.end_node()
-            for t in model.time:
-                if self.is_link_open(l,t*self._hydraulic_step_sec):
-                    setattr(model, 'head_difference_'+str(l)+'_'+str(t), Constraint(expr=model.headloss[l,t] == model.head[start_node,t] - model.head[end_node,t]))
-        """
-        #print "Created head_diff: ", time.time() - t0
-        # Mass Balance
-        if not external_mass_balance:
-            def node_mass_balance_rule(model, n, t):
-                expr = 0
-                for l in wn.get_links_for_node(n):
-                    link = wn.get_link(l)
-                    if link.start_node() == n:
-                        expr -= model.flow[l,t]
-                    elif link.end_node() == n:
-                        expr += model.flow[l,t]
-                    else:
-                        raise RuntimeError('Node link is neither start nor end node.')
-                node = wn.get_node(n)
-                if isinstance(node, Junction):
-                    #return expr == model.demand_actual[n,t]
-                    return expr == model.demand_required[n,t]
-                elif isinstance(node, Tank):
-                    return expr == model.tank_net_inflow[n,t]
-                elif isinstance(node, Reservoir):
-                    return expr == model.reservoir_demand[n,t]
-            model.node_mass_balance = Constraint(model.nodes, model.time, rule=node_mass_balance_rule)
+
         #print "Created Node balance: ", time.time() - t0
-
-        """
-        # Head in junctions should be greater or equal to the elevation
-        for n in model.junctions:
-            junction = wn.get_node(n)
-            elevation_n = junction.elevation
-            for t in model.time:
-                setattr(model, 'junction_elevation_'+str(n)+'_'+str(t), Constraint(expr=model.head[n,t] >= elevation_n))
-
-        # Bounds on the head inside a tank
-        def tank_head_bounds_rule(model,n,t):
-            tank = wn.get_node(n)
-            return (tank.elevation + tank.min_level, model.head[n,t], tank.elevation + tank.max_level)
-        model.tank_head_bounds = Constraint(model.tanks, model.time, rule=tank_head_bounds_rule)
-        """
         
+        """
         # Flow in a pump should always be positive
         def pump_positive_flow_rule(model,l,t):
             return model.flow[l,t] >= 0
         model.pump_positive_flow_bounds = Constraint(model.pumps, model.time, rule=pump_positive_flow_rule)
+        """
 
         t0 = time.time()
         def tank_dynamics_rule(model, n, t):
@@ -558,22 +607,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         t0 = time.time()
 
-        # The Hazen-Williams headloss curve is slightly modified to improve solution time.
-        # The three functions defines below - f1, f2, Px - are used to ensure that the Jacobian
-        # does not go to 0 close to zero flow.
-        def f1(x):
-            return 0.01*x
-
-        def f2(x):
-            return 1.0*x**1.852
-
-        def Px(x):
-            return 2.45944613543e-06 + 0.0138413824671*x - 2.80374270811*x**2 + 430.125623753*x**3
-
-        def LossFunc(Q):
-            q1 = 0.00349347323944
-            q2 = 0.00549347323944
-            return Expr_if(IF=Q < q1, THEN=f1(Q), ELSE=Expr_if(IF=Q > q2, THEN=f2(Q), ELSE=2.45944613543e-06 + 0.0138413824671*Q - 2.80374270811*Q**2 + 430.125623753*Q**3))
+        # for the approximation of hazen williams equation
+        approximator = ApproxFunctions()
 
         def pressure_dependent_demand_nl(full_demand, p, PF, P0):
             # Pressure driven demand equation
@@ -782,7 +817,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 if modified_hazen_williams:
                     setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=Expr_if(IF=model.flow[l]>0, THEN=1, ELSE=-1)
-                            *pipe_resistance_coeff*LossFunc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
+                            *pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
                 else:
                     setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=pipe_resistance_coeff*model.flow[l]*(abs(model.flow[l]))**0.852 == model.head[start_node] - model.head[end_node]))
 
@@ -862,14 +897,16 @@ class PyomoSimulator(WaterNetworkSimulator):
 
 
     def run_calibration(self,
-                        measurements, 
+                        measurements,
+                        calibrated_vars, 
                         weights = {'tank_level':1.0, 'pressure':1.0,'head':1.0, 'flowrate':1.0, 'demand':1.0},
                         solver='ipopt', 
                         solver_options={}, 
                         modified_hazen_williams=True,
-                        external_link_statuses=None, 
-                        dma_dict=None,
-                        fix_base_demand=False):
+                        external_link_statuses=None,
+                        init_dict = None,
+                        regularization_dict = None,
+                        pandas_result = True):
         import numpy as np
        
         
@@ -877,25 +914,26 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._initialize_simulation()
 
         # Do it in the constructor? make it an attribute?
-        model = self._build_hydraulic_model(modified_hazen_williams,external_mass_balance=True,external_link_statuses=external_link_statuses)
+        model = self._build_hydraulic_model(modified_hazen_williams,
+                                            external_mass_balance=True,
+                                            external_link_statuses=external_link_statuses)
         wn = self._wn
 
-        if dma_dict is not None:
-            # Define demand multipliers
-            N_DMA = set(dma_dict.values())
-            model.d_multiplier = Var(N_DMA,model.time,initialize=1.0,within=NonNegativeReals)
-            model.base_demand = Var(model.junctions,initialize=1.0)
+        if not calibrated_vars['demand'] and not calibrated_vars['roughness']:
+            raise RuntimeError("List of node-names link-names for calibration is required.")
 
-            def dma_demand_rule(m,n,t):
-                dma = dma_dict[n]
-                if fix_base_demand:
-                    return m.demand_actual[n,t] == wn.get_node(n).base_demand*m.d_multiplier[dma,t]
-                else:
-                    if wn.get_node(n).base_demand!=0:
-                        return m.demand_actual[n,t] == m.base_demand[n]*m.d_multiplier[dma,t]
-                    else:
-                        return m.demand_actual[n,t] == 0.0
-            model.dma_constraint = Constraint(model.junctions, model.time, rule = dma_demand_rule)
+        # define base model
+        model = self.build_hydraulic_model(modified_hazen_williams,
+            external_link_statuses = external_link_statuses,
+            calibrated_vars = calibrated_vars)
+        # define base network
+        wn = self._wn
+
+        def is_link_open(link_name, link_type, time_seconds):
+            if external_link_statuses is None:
+                return self.is_link_open(link_name,time_seconds)
+            else:
+                return True if external_link_statuses[link_type][link_name][time_seconds]!=0 else False
 
         # Temporal the calibrator should check if initial values are provided if not they should be fixed
 
@@ -917,6 +955,20 @@ class PyomoSimulator(WaterNetworkSimulator):
             model.head[n,t].value = tank_initial_head
             model.head[n,t].fixed = True
         """
+        if len(model.tanks)>0:
+            if 'tank' not in measurements.keys():
+                raise RuntimeError("Provide level of all tanks in measurements at one timestep.")
+            else:    
+                if 'head' not in measurements['tank'].keys():
+                    raise RuntimeError("Provide level of all tanks in measurements at one timestep.")
+                else:
+                    measured_tanks = measurements['tank']['head'].keys()
+                    names = measured_tanks
+                    for n in model.tanks:
+                        if n not in names:
+                            print "Error: provide level of tank ", n, "in the measurements"
+                            raise RuntimeError("Provide level of tank " + str(n) +" in the measurements at one timestep.")
+
 
         # Fix to zero the nodes that have base demand zero
         """
@@ -925,203 +977,96 @@ class PyomoSimulator(WaterNetworkSimulator):
             for t in model.time:
                 model.demand_actual[n,t].value = 0.0
                 model.demand_actual[n,t].fixed = True
-        """
+        """ 
 
-        """
-        # fixed to zero the times at which the pipe was closed
-        for l in model.links:
-            for t in model.time:
-                time_sec = t*self._hydraulic_step_sec
-                if not self.is_link_open(l,time_sec):
-                    model.flow[l,t].value = 0.0
-                    model.flow[l,t].fixed = True
-        """
-        
-        t0 = time.time()
-        def node_mass_balance_rule(model, n, t):
-            expr = 0
-            for l in wn.get_links_for_node(n):
-                link = wn.get_link(l)
-                if link.start_node() == n:
-                    expr -= model.flow[l,t]
-                elif link.end_node() == n:
-                    expr += model.flow[l,t]
-                else:
-                    raise RuntimeError('Node link is neither start nor end node.')
-            node = wn.get_node(n)
-            if isinstance(node, Junction):
-                return expr == model.demand_actual[n,t]
-            elif isinstance(node, Tank):
-                return expr == model.tank_net_inflow[n,t]
-            elif isinstance(node, Reservoir):
-                return expr == model.reservoir_demand[n,t]
+        def initialize_from_dictionary(model, measurements):
 
-        #model.node_mass_balance.deactivate()
-        model.node_mass_balance2 = Constraint(model.nodes, model.time, rule=node_mass_balance_rule)
-        print "Time to build mass balance constraint: ", time.time()-t0
-
-               
-        ############### OBJECTIVE ########################
-        def build_objective_expression2(model, measurements):
-            node_measurements = measurements.node
-            link_measurements = measurements.link
-
-            node_params = node_measurements.columns
-            link_params = link_measurements.columns
-
-            # helper function
-            time_step_inverse = 1.0/self._hydraulic_step_sec
-            dateToTimestep = lambda DateTime: DateTime.total_seconds()*time_step_inverse
-
-
-            node_ids = node_measurements.index.get_level_values('node').drop_duplicates()
-            link_ids = link_measurements.index.get_level_values('link').drop_duplicates()
-
-            ##################################################
-            obj_expr = 0
-            for param in node_params:
-                all_param_measurements = measurements.node[param]
-                param_measurements = all_param_measurements.dropna()
-                node_names = param_measurements.index.get_level_values('node').drop_duplicates()
-                if param == 'demand':
-                    for n in node_names:
-                        node_measure_times = list(param_measurements[n].index)
-                        type_node = self._get_node_type(n)
-                        for dt in node_measure_times:
-                            t = dateToTimestep(dt)
-                            if type_node =='junction':
-                                model.demand_actual[n,t].value = param_measurements[n][dt]
-                            elif type_node =='tank':
-                                model.tank_net_inflow[n,t].value = param_measurements[n][dt]
-                            elif type_node =='reservoir':
-                                model.reservoir_demand[n,t].value = param_measurements[n][dt]
-                            else:
-                                print 'WARNING: ignored ',param, ' measurement', n,' ',dt,' ', param_measurements[n][dt]
-                    obj_expr += sum((param_measurements[n][dt]-model.demand_actual[n,dateToTimestep(dt)])**2 for n in node_names for dt in param_measurements[n].index if self._get_node_type(n)=='junction')*weights[param]
-                elif param == 'pressure':
-                    for n in node_names:
-                        node_measure_times = param_measurements[n].index
-                        type_node = self._get_node_type(n)
-                        for dt in node_measure_times:
-                            t = dateToTimestep(dt)
-                            if type_node == 'junction':
-                                model.head[n,t].value = param_measurements[n][dt]+wn.get_node(n).elevation
-                            elif type_node == 'tank':
-                                model.head[n,t].value = param_measurements[n][dt]+wn.get_node(n).elevation
-                    obj_expr += sum(((param_measurements[n][dt]+wn.get_node(n).elevation)-model.head[n,dateToTimestep(dt)])**2 for n in node_names for dt in param_measurements[n].index if self._get_node_type(n)!='reservoir')*weights[param]
-                elif param == 'head':
-                    for n in node_names:
-                        node_measure_times = param_measurements[n].index
-                        for dt in node_measure_times:
-                            t = dateToTimestep(dt)
-                            model.head[n,t].value = param_measurements[n][dt]
-                    obj_expr += sum((param_measurements[n][dt]-model.head[n,dateToTimestep(dt)])**2 for n in node_names for dt in param_measurements[n].index if self._get_node_type(n)=='tank')*weights['tank_level']
-                    obj_expr += sum((param_measurements[n][dt]-model.head[n,dateToTimestep(dt)])**2 for n in node_names for dt in param_measurements[n].index if self._get_node_type(n)!='tank')*weights[param]
-
-
-            for param in link_params:
-                all_param_measurements = measurements.link[param]
-                param_measurements = all_param_measurements.dropna()
-                link_names = param_measurements.index.get_level_values('link').drop_duplicates()
-                if param == 'flowrate':
-                    for l in link_names:
-                        link_measure_times = list(param_measurements[l].index)
-                        for dt in link_measure_times:
-                            t = dateToTimestep(dt)
-                            if self.give_link_status(l,t*self._hydraulic_step_sec)!='CLOSED':
-                                model.flow[l,t].value =  param_measurements[l][dt]
-                            else:
-                                model.flow[l,t].value =  0.0
-                    obj_expr += sum((param_measurements[l][dt]-model.flow[l,dateToTimestep(dt)])**2 for l in link_names for dt in list(param_measurements[l].index))*weights[param]
-                else:
-                    if param != 'type':
-                        print 'WARNING: ',param, ' measurements are not currently supported for calibration.'
-
-            return obj_expr
-
-        def initialize_from_measurements(model, measurements):
-
-            time_step_inverse = 1.0/self._hydraulic_step_sec
             # initialize variables to measurements
             for tm in measurements.keys():
                 type_params = measurements[tm].keys()
                 if tm == 'tank':
                     for tp in type_params:
-                        time_node_tuples = measurements[tm][tp].keys()
                         if tp == 'demand':
-                            for node_time in time_node_tuples:
-                                n = node_time[0]
-                                t = node_time[1]*time_step_inverse
-                                model.tank_net_inflow[n,t].value = measurements[tm][tp][node_time]
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec/self._hydraulic_step_sec
+                                    model.tank_net_inflow[n,t].value = meas
                         elif tp == 'pressure':
-                            for node_time in time_node_tuples:
-                                n = node_time[0]
-                                t = node_time[1]*time_step_inverse
-                                model.head[n,t].value = measurements[tm][tp][node_time] + wn.get_node(n).elevation
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec/self._hydraulic_step_sec
+                                    model.head[n,t].value = meas + wn.get_node(n).elevation
                         elif tp == 'head':
-                            for node_time in time_node_tuples:
-                                n = node_time[0]
-                                t = node_time[1]*time_step_inverse
-                                model.head[n,t].value = measurements[tm][tp][node_time]
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec/self._hydraulic_step_sec
+                                    model.head[n,t].value = meas
                         else:
                             print 'WARNING: ',tp, ' not supported as a measurement for ', tm
 
                 elif tm == 'reservoir':
                     for tp in type_params:
-                        time_node_tuples = measurements[tm][tp].keys()
                         if tp == 'demand':
-                            for node_time in time_node_tuples:
-                                n = node_time[0]
-                                t = node_time[1]*time_step_inverse
-                                model.reservoir_demand[n,t].value = measurements[tm][tp][node_time]
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec/self._hydraulic_step_sec
+                                    model.reservoir_demand[n,t].value = meas
                         elif tp == 'head':
-                            for node_time in time_node_tuples:
-                                n = node_time[0]
-                                t = node_time[1]*time_step_inverse
-                                model.head[n,t].value = measurements[tm][tp][node_time]
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec/self._hydraulic_step_sec
+                                    model.head[n,t].value = meas
                         else:
                             print 'WARNING: ',tp, ' not supported as a measurement for ', tm
 
                 elif tm == 'junction':
                     for tp in type_params:
-                        time_node_tuples = measurements[tm][tp].keys()
                         if tp == 'demand':
-                            for node_time in time_node_tuples:
-                                n = node_time[0]
-                                t = node_time[1]*time_step_inverse
-                                model.demand_actual[n,t].value = measurements[tm][tp][node_time]
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec/self._hydraulic_step_sec
+                                    model.demand_actual[n,t].value = meas
                         elif tp == 'pressure':
-                            for node_time in time_node_tuples:
-                                n = node_time[0]
-                                t = node_time[1]*time_step_inverse
-                                model.head[n,t].value = measurements[tm][tp][node_time] + wn.get_node(n).elevation
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec/self._hydraulic_step_sec
+                                    model.head[n,t].value = meas + wn.get_node(n).elevation
                         elif tp == 'head':
-                            for node_time in time_node_tuples:
-                                n = node_time[0]
-                                t = node_time[1]*time_step_inverse
-                                model.head[n,t].value = measurements[tm][tp][node_time]
+                            for n, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec/self._hydraulic_step_sec
+                                    model.head[n,t].value = meas
                         else:
                             print 'WARNING: ',tp, ' not supported as a measurement for ', tm
 
                 else:
                     # this take care of pipes pumps and valves
                     for tp in type_params:
-                        time_link_tuples = measurements[tm][tp].keys()
                         if tp == 'flowrate':
-                            for link_time in time_link_tuples:
-                                l = link_time[0]
-                                t = link_time[1]*time_step_inverse                        
-                                if self.give_link_status(l,link_time[1])!='CLOSED':
-                                    model.flow[l,t].value =  measurements[tm][tp][link_time]
-                                else:
-                                    model.flow[l,t].value =  0.0
+                            for l, tvals in measurements[tm][tp].iteritems():
+                                for t_sec, meas in tvals.iteritems():
+                                    t = t_sec/self._hydraulic_step_sec                       
+                                    if is_link_open(l,tm,t_sec):
+                                        model.flow[l,t].value =  meas
+                                    else:
+                                        model.flow[l,t].value =  0.0
                         else:
                             print 'WARNING: ',tp, ' not supported as a measurement for ', tm
 
 
-        def build_objective_expression(model, measurements):
-            ts_inv = 1.0/self._hydraulic_step_sec
+        def build_objective_expression(model, measurements, weighted=True):
+            ts_inv = self._hydraulic_step_sec
             obj_expr = 0
+            tol = 1e-4
+            r_weight = copy.deepcopy(measurements)
+            for nt in r_weight.iterkeys():
+                for param in r_weight[nt].iterkeys():
+                    for n, tvals in r_weight[nt][param].iteritems():
+                        for t_sec, meas in tvals.iteritems():
+                            if not meas<tol and not meas>-tol:
+                                r_weight[nt][param][n][t_sec] = 1.0/(meas*1e3)
+                            else:
+                                r_weight[nt][param][n][t_sec] = 10.0
             # junction measurements
             tm = 'junction'
             junction_measures = measurements.get(tm)
@@ -1130,13 +1075,13 @@ class PyomoSimulator(WaterNetworkSimulator):
                 tp = 'demand'
                 if tp in params:
                     # Regularization term
-                    obj_expr += sum((junction_measures[tp][nt]-model.demand_actual[nt[0],nt[1]*ts_inv])**2 for nt in junction_measures[tp].keys())*weights[tp]
+                    obj_expr += sum(r_weight[tm][tp][n][t_sec]*(meas-model.demand_actual[n,t_sec/ts_inv])**2 for n, tvals in junction_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights[tp]
                 tp = 'head'
                 if tp in params:
-                    obj_expr += sum((junction_measures[tp][nt]-model.head[nt[0],nt[1]*ts_inv])**2 for nt in junction_measures[tp].keys())*weights[tp]
+                    obj_expr += sum(r_weight[tm][tp][n][t_sec]*(meas-model.head[n,t_sec/ts_inv])**2 for n, tvals in junction_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights[tp]
                 tp = 'pressure'
                 if tp in params:
-                    obj_expr += sum(((junction_measures[tp][nt]+wn.get_node(nt[0]).elevation)-model.head[nt[0],nt[1]*ts_inv])**2 for nt in junction_measures[tp].keys())*weights[tp]
+                    obj_expr += sum(r_weight[tm][tp][n][t_sec]*((meas+wn.get_node(n).elevation)-model.head[n,t_sec/ts_inv])**2 for n, tvals in junction_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights[tp]
 
             # tank measurements
             tm = 'tank'
@@ -1145,38 +1090,37 @@ class PyomoSimulator(WaterNetworkSimulator):
                 params = tank_measures.keys()
                 tp = 'head'
                 if tp in params:
-                    obj_expr += sum((tank_measures[tp][nt]-model.head[nt[0],nt[1]*ts_inv])**2 for nt in tank_measures[tp].keys())*weights['tank_level']
+                    obj_expr += sum(r_weight[tm][tp][n][t_sec]*(meas-model.head[n,t_sec/ts_inv])**2 for n, tvals in tank_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights['tank_level']
                 tp = 'pressure'
                 if tp in params:
-                    obj_expr += sum(((tank_measures[tp][nt]+wn.get_node(nt[0]).elevation)-model.head[nt[0],nt[1]*ts_inv])**2 for nt in tank_measures[tp].keys())*weights[tp]
+                    obj_expr += sum(r_weight[tm][tp][n][t_sec]*((meas+wn.get_node(n).elevation)-model.head[n,t_sec/ts_inv])**2 for n, tvals in tank_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights[tp]
 
             # link measurements
-            link_types = ['valve','link','pump']
+            link_types = ['valve','pipe','pump']
             for lt in link_types:
                 link_measures = measurements.get(lt)
                 if link_measures is not None:
                     params = link_measures.keys()
                     tp = 'flowrate'
                     if tp in params:
-                        obj_expr += sum((link_measures[tp][link_time]-model.flow[link_time[0],link_time[1]*ts_inv])**2 for link_time in link_measures[tp].keys())*weights[tp]
-            # reservoir measurements (should be passed only for one timestep.. may could be just ignored)
-            """
-            tm = 'reservoir'
-            reservoir_measures = measurements.get(tm)
-            if reservoir_measures is not None:
-                params = reservoir_measures.keys()
-                tp = 'head'
-                if tp in params:
-                    obj_expr += sum((reservoir_measures[tp][nt]-model.head[nt[0],nt[1]*ts_inv])**2 for nt in reservoir_measures[tp].keys())*weights[tp]
-            """
+                        obj_expr += sum(r_weight[lt][tp][l][t_sec]*(meas-model.flow[l,t_sec/ts_inv])**2 for l, tvals in link_measures[tp].iteritems() for t_sec, meas in tvals.iteritems())*weights[tp]
+
             return obj_expr
 
         t0 = time.time()
-        if isinstance(measurements,dict):
-            initialize_from_measurements(model, measurements)
-            obj_expr = build_objective_expression(model, measurements)
-        else:
-            obj_expr = build_objective_expression2(model, measurements)
+        # Initialization of variables
+        # initialize variables to simulation result
+        if init_dict is not None:
+            initialize_from_dictionary(model, init_dict)
+        # Override inizialization of variables that were measured
+        initialize_from_dictionary(model, measurements)
+
+        # Objective expression
+        obj_expr = build_objective_expression(model, measurements)
+        # add regularization term
+        if regularization_dict is not None:
+            obj_expr += 0.5*build_objective_expression(model, regularization_dict)
+
         model.obj = Objective(expr=obj_expr, sense=minimize)
         print "Time to build the objective: ", time.time()-t0 
 
@@ -1192,9 +1136,9 @@ class PyomoSimulator(WaterNetworkSimulator):
         #opt = SolverFactory(solver)
         # Set solver options
         for key, val in solver_options.iteritems():
-            opt.options[key]=val
+            opt.options[key]=val    
 
-        #opt.options['print_options_documentation']='yes'
+        #opt.options['save_model']='tmp_model.nl'
         # Solve pyomo model
         pyomo_results = opt.solve(instance, tee=True,keepfiles=False)
 
@@ -1204,18 +1148,15 @@ class PyomoSimulator(WaterNetworkSimulator):
         #help(pyomo_results['Solution'])
         #print "Created results: ", time.time() - t0
         instance.load(pyomo_results)
-        #instance.tank_net_inflow.pprint()
-        #print model.head['10',0].value
-        #print model.head['101',0].value
-
+        #r2 = opt.solve(instance, tee=True,keepfiles=False)
         # Load pyomo results into results object
-        results = self._read_pyomo_results(instance, pyomo_results)
+        results = self._read_pyomo_results(instance, pyomo_results, pandas_result=pandas_result)
 
         return results
 
 
-    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None):
-        
+    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True):
+
         """
         Optional Parameters
         ----------
@@ -1420,31 +1361,82 @@ class PyomoSimulator(WaterNetworkSimulator):
         ######## END OF MAIN SIMULATION LOOP ##########
 
         # Save results into the results object
-        node_data_frame = pd.DataFrame({'time':     self._pyomo_sim_results['node_times'],
-                                        'node':     self._pyomo_sim_results['node_name'],
-                                        'demand':   self._pyomo_sim_results['node_demand'],
-                                        'expected_demand':   self._pyomo_sim_results['node_expected_demand'],
-                                        'head':     self._pyomo_sim_results['node_head'],
-                                        'pressure': self._pyomo_sim_results['node_pressure'],
-                                        'type':     self._pyomo_sim_results['node_type']})
+        if pandas_result:
+            node_data_frame = pd.DataFrame({'time':     self._pyomo_sim_results['node_times'],
+                                            'node':     self._pyomo_sim_results['node_name'],
+                                            'demand':   self._pyomo_sim_results['node_demand'],
+                                            'expected_demand':   self._pyomo_sim_results['node_expected_demand'],
+                                            'head':     self._pyomo_sim_results['node_head'],
+                                            'pressure': self._pyomo_sim_results['node_pressure'],
+                                            'type':     self._pyomo_sim_results['node_type']})
 
-        node_pivot_table = pd.pivot_table(node_data_frame,
-                                          values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
-                                          index=['node', 'time'],
-                                          aggfunc= lambda x: x)
-        results.node = node_pivot_table
-
-        link_data_frame = pd.DataFrame({'time':     self._pyomo_sim_results['link_times'],
-                                        'link':     self._pyomo_sim_results['link_name'],
-                                        'flowrate': self._pyomo_sim_results['link_flowrate'],
-                                        'velocity': self._pyomo_sim_results['link_velocity'],
-                                        'type':     self._pyomo_sim_results['link_type']})
-
-        link_pivot_table = pd.pivot_table(link_data_frame,
-                                              values=['flowrate', 'velocity', 'type'],
-                                              index=['link', 'time'],
+            node_pivot_table = pd.pivot_table(node_data_frame,
+                                              values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
+                                              index=['node', 'time'],
                                               aggfunc= lambda x: x)
-        results.link = link_pivot_table
+            results.node = node_pivot_table
+
+            link_data_frame = pd.DataFrame({'time':     self._pyomo_sim_results['link_times'],
+                                            'link':     self._pyomo_sim_results['link_name'],
+                                            'flowrate': self._pyomo_sim_results['link_flowrate'],
+                                            'velocity': self._pyomo_sim_results['link_velocity'],
+                                            'type':     self._pyomo_sim_results['link_type']})
+
+            link_pivot_table = pd.pivot_table(link_data_frame,
+                                                  values=['flowrate', 'velocity', 'type'],
+                                                  index=['link', 'time'],
+                                                  aggfunc= lambda x: x)
+            results.link = link_pivot_table
+        else:
+            node_dict = dict()
+            node_types = set(self._pyomo_sim_results['node_type'])
+            map_properties = dict()
+            map_properties['node_demand'] = 'demand'
+            map_properties['node_head'] = 'head'
+            map_properties['node_pressure'] = 'pressure'
+            map_properties['node_expected_demand'] = 'expected_demand'
+            N = len(self._pyomo_sim_results['node_name'])
+            n_nodes = len(self._wn._nodes.keys())
+            hydraulic_time_step = float(copy.deepcopy(self._hydraulic_step_sec))
+            T = N/n_nodes
+            for node_type in node_types:
+                node_dict[node_type] = dict()
+                for prop, prop_name in map_properties.iteritems():
+                    node_dict[node_type][prop_name] = dict()
+                    for i in xrange(n_nodes):
+                        node_name = self._pyomo_sim_results['node_name'][i]
+                        n_type = self._get_node_type(node_name)
+                        if n_type == node_type:
+                            node_dict[node_type][prop_name][node_name] = dict()
+                            for ts in xrange(T):
+                                time_sec = hydraulic_time_step*ts
+                                node_dict[node_type][prop_name][node_name][time_sec] = self._pyomo_sim_results[prop][i+n_nodes*ts]
+
+            results.node = node_dict
+
+            link_dict = dict()
+            link_types = set(self._pyomo_sim_results['link_type'])
+            map_properties = dict()
+            map_properties['link_flowrate'] = 'flowrate'
+            map_properties['link_velocity'] = 'velocity'
+            N = len(self._pyomo_sim_results['link_name'])
+            n_links = len(self._wn._links.keys())
+            T = N/n_links
+            for link_type in link_types:
+                link_dict[link_type] = dict()
+                for prop, prop_name in map_properties.iteritems():
+                    link_dict[link_type][prop_name] = dict()
+                    for i in xrange(n_links):
+                        link_name = self._pyomo_sim_results['link_name'][i]
+                        l_type = self._get_link_type(link_name)
+                        if l_type == link_type:
+                            link_dict[link_type][prop_name][link_name] = dict()
+                            for ts in xrange(T):
+                                time_sec = hydraulic_time_step*ts
+                                link_dict[link_type][prop_name][link_name][time_sec] = self._pyomo_sim_results[prop][i+n_links*ts]
+
+            results.link = link_dict
+
         return results
 
     def _fix_instance_variables(self, first_timestep, instance, links_closed):
@@ -1453,7 +1445,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             reservoir_head = self._wn.get_node(n).base_head
             instance.head[n].value = reservoir_head
             instance.head[n].fixed = True
-
         # Fix the initial head in a Tank
         if first_timestep:
             for n in instance.tanks:
@@ -1461,7 +1452,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                 tank_initial_head = tank.elevation + tank.init_level
                 instance.head[n].value = tank_initial_head
                 instance.head[n].fixed = True
-
         # Set flow to 0 if link is closed
         for l in instance.links:
             if l in links_closed:
@@ -1496,7 +1486,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 raise RuntimeError("Valve Status not recognized.")
 
-    def _read_pyomo_results(self, instance, pyomo_results):
+    def _read_pyomo_results(self, instance, pyomo_results, pandas_result = True):
         """
         Reads pyomo results from a pyomo instance and loads them into
         a network results object.
@@ -1531,14 +1521,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         link_name = []
         flowrate = []
         velocity = []
-        times = []
+        link_times = []
         link_type = []
-        for l in instance.links:
-            link = self._wn.get_link(l)
-            for t in instance.time:
+        for t in instance.time:
+            for l in instance.links:
+                link = self._wn.get_link(l)
                 link_name.append(l)
                 link_type.append(self._get_link_type(l))
-                times.append(results.time[t])
+                link_times.append(results.time[t])
                 flow_l_t = instance.flow[l,t].value
                 flowrate.append(flow_l_t)
                 if isinstance(link, Pipe):
@@ -1546,18 +1536,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                 else:
                     velocity_l_t = 0.0
                 velocity.append(velocity_l_t)
-
-        link_data_frame = pd.DataFrame({'time': times,
-                                        'link': link_name,
-                                        'flowrate': flowrate,
-                                        'velocity': velocity,
-                                        'type': link_type})
-
-        link_pivot_table = pd.pivot_table(link_data_frame,
-                                              values=['flowrate', 'velocity', 'type'],
-                                              index=['link', 'time'],
-                                              aggfunc= lambda x: x)
-        results.link = link_pivot_table
 
         # Load node data
         node_name = []
@@ -1567,9 +1545,9 @@ class PyomoSimulator(WaterNetworkSimulator):
         expected_demand = []
         times = []
         node_type = []
-        for n in instance.nodes:
-            node = self._wn.get_node(n)
-            for t in instance.time:
+        for t in instance.time:
+            for n in instance.nodes:
+                node = self._wn.get_node(n)
                 node_name.append(n)
                 node_type.append(self._get_node_type(n))
                 times.append(results.time[t])
@@ -1592,20 +1570,97 @@ class PyomoSimulator(WaterNetworkSimulator):
                 else:
                     demand.append(0.0)
                     expected_demand.append(0.0)
+        
+        if pandas_result:
 
-        node_data_frame = pd.DataFrame({'time': times,
-                                        'node': node_name,
-                                        'demand': demand,
-                                        'expected_demand': expected_demand,
-                                        'head': head,
-                                        'pressure': pressure,
-                                        'type': node_type})
+            link_data_frame = pd.DataFrame({'time': link_times,
+                                    'link': link_name,
+                                    'flowrate': flowrate,
+                                    'velocity': velocity,
+                                    'type': link_type})
 
-        node_pivot_table = pd.pivot_table(node_data_frame,
-                                          values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
-                                          index=['node', 'time'],
-                                          aggfunc= lambda x: x)
-        results.node = node_pivot_table
+            link_pivot_table = pd.pivot_table(link_data_frame,
+                                                  values=['flowrate', 'velocity', 'type'],
+                                                  index=['link', 'time'],
+                                                  aggfunc= lambda x: x)
+            results.link = link_pivot_table
+
+            node_data_frame = pd.DataFrame({'time': times,
+                                            'node': node_name,
+                                            'demand': demand,
+                                            'expected_demand': expected_demand,
+                                            'head': head,
+                                            'pressure': pressure,
+                                            'type': node_type})
+
+            node_pivot_table = pd.pivot_table(node_data_frame,
+                                              values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
+                                              index=['node', 'time'],
+                                              aggfunc= lambda x: x)
+            results.node = node_pivot_table
+        else:
+            pyomo_sim_results = {}
+            pyomo_sim_results['node_name'] = node_name
+            pyomo_sim_results['node_type'] = node_type
+            pyomo_sim_results['node_head'] = head
+            pyomo_sim_results['node_demand'] = demand
+            pyomo_sim_results['node_expected_demand'] = expected_demand
+            pyomo_sim_results['node_pressure'] = pressure
+            pyomo_sim_results['link_name'] = link_name
+            pyomo_sim_results['link_type'] = link_type
+            pyomo_sim_results['link_velocity'] = velocity
+            pyomo_sim_results['link_flowrate'] = flowrate
+
+            hydraulic_time_step = float(copy.deepcopy(self._hydraulic_step_sec))
+            node_dict = dict()
+            node_types = set(pyomo_sim_results['node_type'])
+            map_properties = dict()
+            map_properties['node_demand'] = 'demand'
+            map_properties['node_head'] = 'head'
+            map_properties['node_pressure'] = 'pressure'
+            map_properties['node_expected_demand'] = 'expected_demand'
+            N = len(pyomo_sim_results['node_name'])
+            n_nodes = len(self._wn._nodes.keys())
+            T = N/n_nodes
+            for node_type in node_types:
+                node_dict[node_type] = dict()
+                for prop, prop_name in map_properties.iteritems():
+                    node_dict[node_type][prop_name] = dict()
+                    for i in xrange(n_nodes):
+                        node_name = pyomo_sim_results['node_name'][i]
+                        n_type = self._get_node_type(node_name)
+                        if n_type == node_type:
+                            node_dict[node_type][prop_name][node_name] = dict()
+                            for ts in xrange(T):
+                                time_sec = hydraulic_time_step*ts
+                                #print i+n_nodes*ts
+                                node_dict[node_type][prop_name][node_name][time_sec] = pyomo_sim_results[prop][i+n_nodes*ts]
+
+            results.node = node_dict
+
+            link_dict = dict()
+            link_types = set(pyomo_sim_results['link_type'])
+            map_properties = dict()
+            map_properties['link_flowrate'] = 'flowrate'
+            map_properties['link_velocity'] = 'velocity'
+            N = len(pyomo_sim_results['link_name'])
+            n_links = len(self._wn._links.keys())
+            T = N/n_links
+            for link_type in link_types:
+                link_dict[link_type] = dict()
+                for prop, prop_name in map_properties.iteritems():
+                    link_dict[link_type][prop_name] = dict()
+                    for i in xrange(n_links):
+                        link_name = pyomo_sim_results['link_name'][i]
+                        l_type = self._get_link_type(link_name)
+                        if l_type == link_type:
+                            link_dict[link_type][prop_name][link_name] = dict()
+                            for ts in xrange(T):
+                                time_sec = hydraulic_time_step*ts
+                                link_dict[link_type][prop_name][link_name][time_sec] = pyomo_sim_results[prop][i+n_links*ts]
+
+            results.link = link_dict
+
 
         return results
 
