@@ -235,6 +235,78 @@ class WaterNetworkSimulator(object):
             else:
                 self._pump_outage[pump_name] = (start_sec, end_sec)
 
+    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None):
+        """
+        Method to add a leak to the simulation. Leaks are modeled by:
+
+        Q = leak_discharge_coeff*leak_area*sqrt(2*g*h)
+        where:
+           Q is the volumetric flow rate of water out of the leak
+           g is the acceleration due to gravity
+           h is the gauge head at the leak, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
+
+        Parameters
+        ----------
+        leak_name: string
+           Name of the leak
+        pipe_name: string
+           Name of the pipe where the leak ocurrs.
+           Assumes the leak ocurrs halfway between nodes.
+        leak_area: float
+           Area of the leak in m^2. Either the leak area or the leak diameter must be specified, but not both.
+        leak_diameter: float
+           Diameter of the leak in m. The area of the leak is calculated with leak_diameter assuming the leak is in the shape of a hole.
+           Either the leak area or the leak diameter must be specified, but not both.
+        leak_discharge_coeff: float
+           Leak discharge coefficient
+        start_time: string
+           Start time of the leak. Pandas Timedelta format: e.g. '0 days 00:00:00'
+        fix_time: string
+           Time at which the leak is fixed. Pandas Timedelta format: e.g. '0 days 05:00:00'
+        """
+
+        # Get attributes of original pipe
+        start_node_name = self.get_link(pipe_name)._start_node_name
+        end_node_name = self.get_link(pipe_name)._end_node_name
+        base_status = self.get_link(pipe_name)._base_status
+        open_times = self.get_link(pipe_name)._open_times
+        closed_times = self.get_link(pipe_name)._closed_times
+        length = self.get_link(pipe_name).length
+        orig_pipe_diameter = self.get_link(pipe_name).diameter
+        roughness = self.get_link(pipe_name).roughness
+        minor_loss = self.get_link(pipe_name).minor_loss
+        if hasattr(self.get_link(pipe_name), '_base_status'):
+            status = self.get_link(pipe_name)._base_status
+            if status!='OPEN':
+                raise RuntimeError('You tried to add a leak to a pipe that is not open')
+        else:
+            status = None
+
+        # Remove original pipe
+        self.remove_pipe(pipe_name)
+
+        # Add a leak node
+        if leak_diameter is not None:
+            if leak_area is not None:
+                raise RuntimeError('When trying to add a leak, you may only specify the area or diameter, not both.')
+            else:
+                leak_area = math.pi/4.0*leak_diameter**2
+        else:
+            if leak_area is None:
+                raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
+        orig_pipe_area = math.pi/4.0*orig_pipe_diameter**2
+        if leak_area > orig_pipe_area:
+            raise RuntimeError('You specified a leak area (or diameter) that is larger than the area (or diameter) of the original pipe')
+        leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff, self.get_node(start_node_name).elevation, self.get_node(end_node_name).elevation)
+        self._nodes[leak_name] = leak
+        self._graph.add_node(leak_name)
+        self.set_node_type(leak_name, 'leak')
+
+        # Add pipe from start node to leak
+        self.add_pipe(pipe_name+'a',start_node_name, leak_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
+
+        # Add pipe from leak to end node
+        self.add_pipe(pipe_name+'b', leak_name, end_node_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
 
     def set_water_network_model(self, water_network):
         """
