@@ -1,5 +1,5 @@
 import epanetlib as en
-import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
 
 plt.close('all')
 
@@ -10,13 +10,11 @@ wn = en.network.WaterNetworkModel()
 parser = en.network.ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
 
-# Graph the network
-#en.network.draw_graph(wn, title= wn.name)
-
 # Simulate using PYOMO
-wn.set_nominal_pressures(constant_nominal_pressure = 20.0, units = 'm')
+wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
 wn.add_leak('leak1','2',leak_diameter=0.3)
 pyomo_sim = en.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
+pyomo_sim.add_leak(leak_name = 'leak1', pipe_name = 'pipe2', leak_diameter=0.25, )
 leak_results = pyomo_sim.run_sim()
 
 # Plot Pyomo results
