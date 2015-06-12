@@ -23,7 +23,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         """
         WaterNetworkSimulator.__init__(self, wn)
         
-    def run_sim(self, convert_units=True):
+    def run_sim(self, WQ = None, convert_units=True):
         """
         Run water network simulation using epanet.
 
@@ -43,7 +43,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         results.simulator_options['type'] = 'EPANET'
         results.time = pd.timedelta_range(start='0 minutes',
                                           end=str(self._sim_duration_sec) + ' seconds',
-                                          freq=str(self._hydraulic_step_sec/60) + 'min')
+                                          freq=str(self._report_step_sec/60) + 'min')
     
         # data for results object
         node_name = []
@@ -53,6 +53,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         node_demand = []
         node_expected_demand = []
         node_pressure = []
+        node_quality = []
         link_name = []
         link_type = []
         link_times = []
@@ -103,19 +104,96 @@ class EpanetSimulator(WaterNetworkSimulator):
             tstep = enData.ENnextH()
             if tstep <= 0:
                 break
-        
-        node_data_frame = pd.DataFrame({'time': node_times,
-                                        'node': node_name,
-                                        'demand': node_demand,
-                                        'expected_demand': node_expected_demand,
-                                        'head': node_head,
-                                        'pressure': node_pressure,
-                                        'type': node_type})
 
-        node_pivot_table = pd.pivot_table(node_data_frame,
-                                          values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
-                                          index=['node', 'time'],
-                                          aggfunc= lambda x: x)
+        enData.ENsolveH()
+        #enData.ENsaveH()
+        
+        if WQ:
+            wq_type = WQ[0]
+            if wq_type == 'CHEM': # what if there is already a chem defined in the inp file?
+                wq_node = WQ[1]
+                wq_sourceType = WQ[2]
+                wq_sourceQual = WQ[3]
+                wq_startTime = WQ[4]
+                wq_endTime = WQ[5]
+                if wq_sourceType == 'CONCEN':
+                    wq_sourceType = pyepanet.EN_CONCEN
+                elif wq_sourceType == 'MASS':
+                    wq_sourceType = pyepanet.EN_MASS
+                elif wq_sourceType == 'FLOWPACED':
+                    wq_sourceType = pyepanet.EN_FLOWPACED
+                elif wq_sourceType == 'SETPOINT':
+                    wq_sourceType = pyepanet.EN_SETPOINT
+                else:
+                    pass
+                
+                enData.ENsetqualtype(pyepanet.EN_CHEM, 'Chemical', 'mg/L', '')
+                nodeid = enData.ENgetnodeindex(wq_node)
+                enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEQUAL, wq_sourceQual)
+                enData.ENaddpattern('wq')
+                patternid = enData.ENgetpatternindex('wq')
+                enData.ENsetpatternvalue(patternid, 1, 1)
+                enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEPAT, patternid)
+                enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCETYPE, wq_sourceType)
+                
+            elif wq_type == 'AGE':
+                enData.ENsetqualtype(pyepanet.EN_AGE,0,0,0)  
+                
+            elif wq_type == 'TRACE':
+                wq_node = WQ[1]
+                enData.ENsetqualtype(pyepanet.EN_TRACE,0,0,wq_node)   
+                
+            else:
+                pass
+            
+            enData.ENopenQ()
+            enData.ENinitQ(1)
+            while True:
+                t = enData.ENrunQ()
+                timedelta = pd.Timedelta(seconds = t)
+                if timedelta in results.time:
+                    for name, node in self._wn.nodes():
+                        nodeindex = enData.ENgetnodeindex(name)
+                        quality = enData.ENgetnodevalue(nodeindex, pyepanet.EN_QUALITY)
+                    
+                        if convert_units:
+                            if wq_type == 'CHEM':
+                                quality = convert('Concentration', flowunits, quality) # kg/m3
+                            elif wq_type == 'AGE':
+                                quality = convert('Water Age', flowunits, quality) # s
+                        
+                        node_quality.append(quality)
+                    
+                tstep = enData.ENnextQ()
+                if tstep <= 0:
+                    break
+                
+            node_data_frame = pd.DataFrame({'time': node_times,
+                                            'node': node_name,
+                                            'demand': node_demand,
+                                            'expected_demand': node_expected_demand,
+                                            'head': node_head,
+                                            'pressure': node_pressure,
+                                            'quality': node_quality,
+                                            'type': node_type})
+            node_pivot_table = pd.pivot_table(node_data_frame,
+                                              values=['demand', 'expected_demand', 'head', 'pressure', 'quality', 'type'],
+                                              index=['node', 'time'],
+                                              aggfunc= lambda x: x)
+        else:                              
+            node_data_frame = pd.DataFrame({'time': node_times,
+                                            'node': node_name,
+                                            'demand': node_demand,
+                                            'expected_demand': node_expected_demand,
+                                            'head': node_head,
+                                            'pressure': node_pressure,
+                                            'type': node_type})
+    
+            node_pivot_table = pd.pivot_table(node_data_frame,
+                                              values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
+                                              index=['node', 'time'],
+                                              aggfunc= lambda x: x)
+                                   
         results.node = node_pivot_table
 
         link_data_frame = pd.DataFrame({'time': link_times,
@@ -129,7 +207,8 @@ class EpanetSimulator(WaterNetworkSimulator):
                                               index=['link', 'time'],
                                               aggfunc= lambda x: x)
         results.link = link_pivot_table
-
+        
+        
         return results
 
     def _load_general_results(self, results):
