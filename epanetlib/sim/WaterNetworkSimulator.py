@@ -51,6 +51,9 @@ class WaterNetworkSimulator(object):
         # A dictionary containing leak characteristics
         # format is LEAK_NAME: {'original_pipe':copy_of_original_pipe, 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff}
         self._leak_info = {}
+        # A dictionary containing pipe names and associated leak names
+        # format is PIPE_NAME: LEAK_NAME
+        self._pipes_with_leaks = {}
         # A dictionary containing information to stop flow from a tank once
         # the minimum head is reached. This dict contains the pipes connected to the tank,
         # the node connected to the tank, and the minimum allowable head in the tank.
@@ -282,10 +285,10 @@ class WaterNetworkSimulator(object):
             pipe = self._wn.get_link(pipe_name)
         except KeyError:
             raise KeyError(pipe_name + " is not a valid link in the network.")
-        if not isinstance(link, Pipe):
+        if not isinstance(pipe, Pipe):
             raise RuntimeError(pipe_name + " is not a valid pipe in the network.")
 
-        # Check if atart time and end time are valid
+        # Check if start time and end time are valid
         try:
             start = pd.Timedelta(start_time)
             end = pd.Timedelta(fix_time)
@@ -303,52 +306,28 @@ class WaterNetworkSimulator(object):
         elif leak_area is None:
             raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
 
+        # Ensure pipe does not already have a leak and leak does not already exist
+        if pipe_name in self._pipes_with_leaks.keys():
+            warning.warn('Pipe '+pipe_name+' already has a leak. Old leak is being overridden.')
+            tmp_leak_name = self._pipes_with_leaks[pipe_name]
+            self._leak_times.pop(tmp_leak_name)
+            self._leak_info.pop(tmp_leak_name)
+        if leak_name in self._pipes_with_leaks.values():
+            warnings.warn('Leak '+leak_name+' is already associated with a pipe. Old pipe will no longer have a leak.')
+            for tmp_pipe_name, tmp_leak_name in self._pipes_with_leaks.iteritems():
+                if tmp_leak_name == leak_name:
+                    self._pipes_with_leaks.pop(tmp_pipe_name)
+
+
         # Store leak information
-        if leak_name.upper() in self._leak_times.keys() or leak_name.upper() in self._leak_info.keys():
-            warnings.warn("Leak " + leak_name + " has already been defined."
-                                                     " Old leak information is being overridden.")
-            self._leak_times[leak_name.upper()] = (start_sec, end_sec)
-            self._leak_info[leak_name.upper()] = {'original_pipe':copy.deepcopy(pipe), 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff}
-        else:
-            self._leak_times[leak_name.upper()] = (start_sec, end_sec)
-            self._leak_info[leak_name.upper()] = {'original_pipe':copy.deepcopy(pipe), 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff}
+        self._pipes_with_leaks[pipe_name] = leak_name
+        self._leak_times[leak_name] = (start_sec, end_sec)
+        self._leak_info[leak_name] = {'original_pipe':copy.deepcopy(pipe), 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff}
 
         # Check if the leak area is larger than the pipe area
         orig_pipe_area = math.pi/4.0*pipe.diameter**2
         if leak_area > orig_pipe_area:
             raise RuntimeError('You specified a leak area (or diameter) that is larger than the area (or diameter) of the original pipe')
-
-        # Get attributes of original pipe
-        #start_node_name = self.get_link(pipe_name)._start_node_name
-        #end_node_name = self.get_link(pipe_name)._end_node_name
-        #base_status = self.get_link(pipe_name)._base_status
-        #open_times = self.get_link(pipe_name)._open_times
-        #closed_times = self.get_link(pipe_name)._closed_times
-        #length = self.get_link(pipe_name).length
-        #orig_pipe_diameter = self.get_link(pipe_name).diameter
-        #roughness = self.get_link(pipe_name).roughness
-        #minor_loss = self.get_link(pipe_name).minor_loss
-        #if hasattr(self.get_link(pipe_name), '_base_status'):
-        #    status = self.get_link(pipe_name)._base_status
-        #    if status!='OPEN':
-        #        raise RuntimeError('You tried to add a leak to a pipe that is not open')
-        #else:
-        #    status = None
-        #
-        ## Remove original pipe
-        #self.remove_pipe(pipe_name)
-        #
-        ## Add a leak node
-        #leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff, self.get_node(start_node_name).elevation, self.get_node(end_node_name).elevation)
-        #self._nodes[leak_name] = leak
-        #self._graph.add_node(leak_name)
-        #self.set_node_type(leak_name, 'leak')
-        #
-        ## Add pipe from start node to leak
-        #self.add_pipe(pipe_name+'a',start_node_name, leak_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
-        #
-        ## Add pipe from leak to end node
-        #self.add_pipe(pipe_name+'b', leak_name, end_node_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
 
     def set_water_network_model(self, water_network):
         """

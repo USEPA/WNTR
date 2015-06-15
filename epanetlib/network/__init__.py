@@ -1,4 +1,4 @@
-from WaterNetworkModel import WaterNetworkModel, Node, Link, Junction, Reservoir, Tank, Pipe, Pump, Valve, Curve
+from WaterNetworkModel import WaterNetworkModel, Node, Link, Junction, Reservoir, Tank, Pipe, Pump, Valve, Curve, Leak
 from ParseWaterNetwork import ParseWaterNetwork
 from draw_graph import draw_graph
 from epanet_to_MultiDiGraph import epanet_to_MultiDiGraph

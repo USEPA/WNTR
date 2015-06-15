@@ -29,7 +29,6 @@ import pandas as pd
 from six import iteritems
 from pyomo_utils import CheckInstanceFeasibility
 import cProfile
-from 
 
 def do_cprofile(func):
     def profiled_func(*args, **kwargs):
@@ -1220,7 +1219,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Get time controls
             for link_name, status in self._link_status.iteritems():
                 if not status[t]:
-                    links_closed_by_time.add(link_name)
+                    if link_name in self._pipes_with_leaks.keys():
+                        links_closed_by_time.add(link_name+'A')
+                        links_closed_by_time.add(link_name+'B')
+                    else:
+                        links_closed_by_time.add(link_name)
 
             # Apply conditional controls based on the results of the previous simulation
             # These will override time controls
@@ -1839,8 +1842,33 @@ class PyomoSimulator(WaterNetworkSimulator):
         orig_pipe = current_link_info['original_pipe']
         self._wn.remove_pipe(orig_pipe._link_name)
 
+        # Get start and end node info
+        start_node_elevation = self._wn.get_node(orig_pipe._start_node_name).elevation
+        end_node_elevation = self._wn.get_node(orig_pipe._end_node_name).elevation
+
         # Add a leak node
-        leak = Leak(leak_name, orig_pipe._link_name, self._leak_info[leak_name])
+        leak = Leak(leak_name, orig_pipe._link_name, current_leak_info['leak_area'], current_leak_info['leak_discharge_coeff'], start_node_elevation, end_node_elevation)
+        self._wn._nodes[leak_name] = leak
+        self._wn._graph.add_node(leak_name)
+        self._wn.set_node_type(leak_name, 'leak')
+
+        # Add new pipes
+        self._wn.add_pipe(orig_pipe._link_name+'A', orig_pipe._start_node_name, leak_name, orig_pipe.length/2.0, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
+        self._wn.add_pipe(orig_pipe._link_name+'B', leak_name, orig_pipe._end_node_name, orig_pipe.length/2.0, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
+
+    def _deactivate_leak(self, leak_name):
+        # Remove pipes on either side of leak
+        current_link_info = self._leak_info[leak_name]
+        orig_pipe = current_link_info['original_pipe']
+        self._wn.remove_pipe(orig_pipe._link_name+'A')
+        self._wn.remove_pipe(orig_pipe._link_name+'B')
+
+        # Remove leak node
+        self._wn._graph.remove_node(leak_name)
+        self._wn._nodes.pop(leak_name)
+        
+        # Replace original pipe
+        self._wn.add_pipe(orig_pipe._link_name, orig_pipe._start_node_name, orig_pipe._end_node_name, orig_pipe.length, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
 
     def _apply_tank_controls(self, instance, pipes_closed_by_tank, links_closed_by_time, t):
 
