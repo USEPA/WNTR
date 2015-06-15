@@ -27,6 +27,7 @@ import math
 from NetworkResults import NetResults
 import pandas as pd
 import time
+import copy
 
 
 class WaterNetworkSimulator(object):
@@ -44,6 +45,12 @@ class WaterNetworkSimulator(object):
         # A dictionary containing pump outage information
         # format is PUMP_NAME: (start time in sec, end time in sec)
         self._pump_outage = {}
+        # A dictionary containg leak time information
+        # format is LEAK_NAME: (start time in sec, end time in sec)
+        self._leak_times = {}
+        # A dictionary containing leak characteristics
+        # format is LEAK_NAME: {'original_pipe':copy_of_original_pipe, 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff}
+        self._leak_info = {}
         # A dictionary containing information to stop flow from a tank once
         # the minimum head is reached. This dict contains the pipes connected to the tank,
         # the node connected to the tank, and the minimum allowable head in the tank.
@@ -255,58 +262,93 @@ class WaterNetworkSimulator(object):
         leak_area: float
            Area of the leak in m^2. Either the leak area or the leak diameter must be specified, but not both.
         leak_diameter: float
-           Diameter of the leak in m. The area of the leak is calculated with leak_diameter assuming the leak is in the shape of a hole.
+           Diameter of the leak in m. The area of the leak is calculated with leak_diameter assuming the leak is in the shape of a circle.
            Either the leak area or the leak diameter must be specified, but not both.
         leak_discharge_coeff: float
-           Leak discharge coefficient
+           Leak discharge coefficient; Takes on values between 0 and 1
         start_time: string
-           Start time of the leak. Pandas Timedelta format: e.g. '0 days 00:00:00'
+           Start time of the leak. Pandas Timedelta format: e.g. '0 days 00:00:00'. Default is the start of the simulation.
         fix_time: string
-           Time at which the leak is fixed. Pandas Timedelta format: e.g. '0 days 05:00:00'
+           Time at which the leak is fixed. Pandas Timedelta format: e.g. '0 days 05:00:00'. Default is that the leak does not get fixed during the simulation.
         """
 
-        # Get attributes of original pipe
-        start_node_name = self.get_link(pipe_name)._start_node_name
-        end_node_name = self.get_link(pipe_name)._end_node_name
-        base_status = self.get_link(pipe_name)._base_status
-        open_times = self.get_link(pipe_name)._open_times
-        closed_times = self.get_link(pipe_name)._closed_times
-        length = self.get_link(pipe_name).length
-        orig_pipe_diameter = self.get_link(pipe_name).diameter
-        roughness = self.get_link(pipe_name).roughness
-        minor_loss = self.get_link(pipe_name).minor_loss
-        if hasattr(self.get_link(pipe_name), '_base_status'):
-            status = self.get_link(pipe_name)._base_status
-            if status!='OPEN':
-                raise RuntimeError('You tried to add a leak to a pipe that is not open')
-        else:
-            status = None
+        # Check if water network is specified
+        if self._wn is None:
+            raise RuntimeError("Leaks cannot be defined before a network object is"
+                               "defined in the simulator.")
 
-        # Remove original pipe
-        self.remove_pipe(pipe_name)
+        # Check if pipe_name is valid
+        try:
+            pipe = self._wn.get_link(pipe_name)
+        except KeyError:
+            raise KeyError(pipe_name + " is not a valid link in the network.")
+        if not isinstance(link, Pipe):
+            raise RuntimeError(pipe_name + " is not a valid pipe in the network.")
 
-        # Add a leak node
+        # Check if atart time and end time are valid
+        try:
+            start = pd.Timedelta(start_time)
+            end = pd.Timedelta(fix_time)
+        except RuntimeError:
+            raise RuntimeError("The format of start or fix time is not valid Pandas Timedelta format.")
+        start_sec = self.timedelta_to_sec(start)
+        end_sec = self.timedelta_to_sec(end)
+
+        # Set leak_area if leak_diameter was passed as an argument
         if leak_diameter is not None:
             if leak_area is not None:
                 raise RuntimeError('When trying to add a leak, you may only specify the area or diameter, not both.')
             else:
                 leak_area = math.pi/4.0*leak_diameter**2
+        elif leak_area is None:
+            raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
+
+        # Store leak information
+        if leak_name.upper() in self._leak_times.keys() or leak_name.upper() in self._leak_info.keys():
+            warnings.warn("Leak " + leak_name + " has already been defined."
+                                                     " Old leak information is being overridden.")
+            self._leak_times[leak_name.upper()] = (start_sec, end_sec)
+            self._leak_info[leak_name.upper()] = {'original_pipe':copy.deepcopy(pipe), 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff}
         else:
-            if leak_area is None:
-                raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
-        orig_pipe_area = math.pi/4.0*orig_pipe_diameter**2
+            self._leak_times[leak_name.upper()] = (start_sec, end_sec)
+            self._leak_info[leak_name.upper()] = {'original_pipe':copy.deepcopy(pipe), 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff}
+
+        # Check if the leak area is larger than the pipe area
+        orig_pipe_area = math.pi/4.0*pipe.diameter**2
         if leak_area > orig_pipe_area:
             raise RuntimeError('You specified a leak area (or diameter) that is larger than the area (or diameter) of the original pipe')
-        leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff, self.get_node(start_node_name).elevation, self.get_node(end_node_name).elevation)
-        self._nodes[leak_name] = leak
-        self._graph.add_node(leak_name)
-        self.set_node_type(leak_name, 'leak')
 
-        # Add pipe from start node to leak
-        self.add_pipe(pipe_name+'a',start_node_name, leak_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
-
-        # Add pipe from leak to end node
-        self.add_pipe(pipe_name+'b', leak_name, end_node_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
+        # Get attributes of original pipe
+        #start_node_name = self.get_link(pipe_name)._start_node_name
+        #end_node_name = self.get_link(pipe_name)._end_node_name
+        #base_status = self.get_link(pipe_name)._base_status
+        #open_times = self.get_link(pipe_name)._open_times
+        #closed_times = self.get_link(pipe_name)._closed_times
+        #length = self.get_link(pipe_name).length
+        #orig_pipe_diameter = self.get_link(pipe_name).diameter
+        #roughness = self.get_link(pipe_name).roughness
+        #minor_loss = self.get_link(pipe_name).minor_loss
+        #if hasattr(self.get_link(pipe_name), '_base_status'):
+        #    status = self.get_link(pipe_name)._base_status
+        #    if status!='OPEN':
+        #        raise RuntimeError('You tried to add a leak to a pipe that is not open')
+        #else:
+        #    status = None
+        #
+        ## Remove original pipe
+        #self.remove_pipe(pipe_name)
+        #
+        ## Add a leak node
+        #leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff, self.get_node(start_node_name).elevation, self.get_node(end_node_name).elevation)
+        #self._nodes[leak_name] = leak
+        #self._graph.add_node(leak_name)
+        #self.set_node_type(leak_name, 'leak')
+        #
+        ## Add pipe from start node to leak
+        #self.add_pipe(pipe_name+'a',start_node_name, leak_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
+        #
+        ## Add pipe from leak to end node
+        #self.add_pipe(pipe_name+'b', leak_name, end_node_name, length/2.0, orig_pipe_diameter, roughness, minor_loss, status)
 
     def set_water_network_model(self, water_network):
         """

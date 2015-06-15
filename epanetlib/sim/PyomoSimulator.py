@@ -29,6 +29,7 @@ import pandas as pd
 from six import iteritems
 from pyomo_utils import CheckInstanceFeasibility
 import cProfile
+from 
 
 def do_cprofile(func):
     def profiled_func(*args, **kwargs):
@@ -1831,6 +1832,15 @@ class PyomoSimulator(WaterNetworkSimulator):
                 #links_closed_by_tank_controls.clear()
 
         return reservoir_links_closed_flag
+
+    def _activate_leak(self, leak_name):
+        # Remove original pipe
+        current_link_info = self._leak_info[leak_name]
+        orig_pipe = current_link_info['original_pipe']
+        self._wn.remove_pipe(orig_pipe._link_name)
+
+        # Add a leak node
+        leak = Leak(leak_name, orig_pipe._link_name, self._leak_info[leak_name])
 
     def _apply_tank_controls(self, instance, pipes_closed_by_tank, links_closed_by_time, t):
 
