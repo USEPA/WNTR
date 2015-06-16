@@ -49,7 +49,7 @@ class WaterNetworkSimulator(object):
         # format is LEAK_NAME: (start time in sec, end time in sec)
         self._leak_times = {}
         # A dictionary containing leak characteristics
-        # format is LEAK_NAME: {'original_pipe':copy_of_original_pipe, 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff}
+        # format is LEAK_NAME: {'original_pipe':copy_of_original_pipe, 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff, 'shutoff_valve_loc':shutoff_valve_loc}
         self._leak_info = {}
         # A dictionary containing pipe names and associated leak names
         # format is PIPE_NAME: LEAK_NAME
@@ -245,7 +245,7 @@ class WaterNetworkSimulator(object):
             else:
                 self._pump_outage[pump_name] = (start_sec, end_sec)
 
-    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None):
+    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None, shutoff_valve_loc = 'ISOLATE'):
         """
         Method to add a leak to the simulation. Leaks are modeled by:
 
@@ -272,7 +272,14 @@ class WaterNetworkSimulator(object):
         start_time: string
            Start time of the leak. Pandas Timedelta format: e.g. '0 days 00:00:00'. Default is the start of the simulation.
         fix_time: string
-           Time at which the leak is fixed. Pandas Timedelta format: e.g. '0 days 05:00:00'. Default is that the leak does not get fixed during the simulation.
+           Time at which the leak is fixed. Pandas Timedelta format: e.g. '0 days 05:00:00'. Default is that the leak does not get 
+           fixed during the simulation.
+        shutoff_valve_loc: string
+           Location of pipe shutoff valve. Options are 'START_NODE', 'END_NODE', or 'ISOLATE'. 'START_NODE' indicates that the 
+           shutoff valve is between the start node and the leak. 'END_NODE' indicates that the shutoff valve is between the leak 
+           and the end node. 'ISOLATE' indicates that there is a shutoff valve on both sides of the leak, so a closed pipe means 
+           an isolated leak. The default is 'ISOLATE'. This is used for time controls and conditional controls. If tank levels
+           fall too low, the link closest to the tank is closed.
         """
 
         # Check if water network is specified
@@ -322,7 +329,7 @@ class WaterNetworkSimulator(object):
         # Store leak information
         self._pipes_with_leaks[pipe_name] = leak_name
         self._leak_times[leak_name] = (start_sec, end_sec)
-        self._leak_info[leak_name] = {'original_pipe':copy.deepcopy(pipe), 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff}
+        self._leak_info[leak_name] = {'original_pipe':copy.deepcopy(pipe), 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff, 'shutoff_valve_loc':shutoff_valve_loc.upper()}
 
         # Check if the leak area is larger than the pipe area
         orig_pipe_area = math.pi/4.0*pipe.diameter**2
