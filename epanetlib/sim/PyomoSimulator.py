@@ -29,7 +29,7 @@ import math
 from WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
-from pyomo_utils import CheckInstanceFeasibility
+#from pyomo_utils import CheckInstanceFeasibility
 import cProfile
 
 def do_cprofile(func):
@@ -199,16 +199,45 @@ class PyomoSimulator(WaterNetworkSimulator):
     def _initialize_from_pyomo_results(self, instance, last_instance):
 
         for l in instance.links:
-            if abs(last_instance.flow[l].value) < self._Qtol:
-                instance.flow[l].value = 100*self._Qtol
-            else:
-                if l in instance.pumps and last_instance.flow[l].value < -self._Qtol:
+            try:
+                last_instance_flow = last_instance.flow[l].value
+                if abs(last_instance.flow[l].value) < self._Qtol:
                     instance.flow[l].value = 100*self._Qtol
                 else:
-                    instance.flow[l].value = last_instance.flow[l].value + self._Qtol
+                    if l in instance.pumps and last_instance.flow[l].value < -self._Qtol:
+                        instance.flow[l].value = 100*self._Qtol
+                    else:
+                        instance.flow[l].value = last_instance.flow[l].value + self._Qtol
+            except KeyError:
+                link = self._wn.get_link(l)
+                start_node = link.start_node()
+                end_node = link.end_node()
+                if l in self._pipes_with_leaks.keys():
+                    instance.flow[l].value = (last_instance.flow[l+'__A'].value + last_instance.flow[l+'__B'].value)/2.0 + self._Qtol
+                elif start_node in self._leak_info.keys():
+                    orig_pipe = self._leak_info[start_node]['original_pipe']
+                    orig_pipe_name = orig_pipe._link_name
+                    instance.flow[l].value = last_instance.flow[orig_pipe_name].value + self._Qtol
+                elif end_node in self._leak_info.keys():
+                    orig_pipe = self._leak_info[end_node]['original_pipe']
+                    orig_pipe_name = orig_pipe._link_name
+                    instance.flow[l].value = last_instance.flow[orig_pipe_name].value + self._Qtol
+                else:
+                    raise RuntimeError('Weird. The try statement should only fail'
+                                       'for the first time step/trial after activating'
+                                       'a leak and only for a link with a leak')
+
 
         for n in instance.nodes:
-            instance.head[n].value = last_instance.head[n].value
+            try:
+                instance.head[n].value = last_instance.head[n].value
+            except KeyError:
+                if n not in self._leak_info.keys():
+                    raise KeyError('Weird. The try statement should only fail'
+                                   'for the first timestep/trial after activating'
+                                   'a leak and only for a leak')
+                orig_pipe = self._leak_info[n]['original_pipe']
+                instance.head[n].value = last_instance.head[orig_pipe.start_node()].value
             if n in instance.junctions:
                 junction = self._wn.get_node(n)
                 if self._pressure_driven:
@@ -891,7 +920,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Leak demand constraint
         def leak_demand_rule(model, n):
             leak = wn.get_node(n)
-            return model.leak_demand[n]**2 == node.leak_discharge_coeff**2*node.area**2*2*self._g*(model.head[n]-node.elevation)
+            return model.leak_demand[n]**2 == leak.leak_discharge_coeff**2*leak.area**2*2*self._g*(model.head[n]-leak.elevation)
         model.leak_demand_con = Constraint(model.leaks, rule=leak_demand_rule)
 
         return model
@@ -1781,10 +1810,10 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._pyomo_sim_results['node_name'].append(leak_name)
             self._pyomo_sim_results['node_type'].append('leak')
             self._pyomo_sim_results['node_times'].append(time)
-            self._pyomo_sim_results['node_head'].append('N/A')
+            self._pyomo_sim_results['node_head'].append(0.0)
             self._pyomo_sim_results['node_demand'].append(0.0)
             self._pyomo_sim_results['node_expected_demand'].append(0.0)
-            self._pyomo_sim_results['node_pressure'].append('N/A')
+            self._pyomo_sim_results['node_pressure'].append(0.0)
 
 
 

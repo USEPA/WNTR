@@ -22,8 +22,8 @@ node_list.append('leak1')
 t_step = range(len(leak_results.node['demand'][node_list[0]]))
 link_list = [name for name,link in wn.links()]
 link_list.remove('pipe2')
-link_list.add('pipe2__A')
-link_list.add('pipe2__B')
+link_list.append('pipe2__A')
+link_list.append('pipe2__B')
 tank_list = [name for name,node in wn.nodes(en.network.Tank)]
 
 if len(tank_list)>0:
