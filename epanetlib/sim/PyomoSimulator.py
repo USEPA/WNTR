@@ -1258,7 +1258,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                             if self._leak_info[leak_name]['shutoff_valve_loc'] == 'ISOLATE':
                                 links_closed_by_time.add(link_name+'__A')
                                 links_closed_by_time.add(link_name+'__B')
-                            elif: self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
+                            elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
                                 links_closed_by_time.add(link_name+'__A')
                             else:
                                 links_closed_by_time.add(link_name+'__B')
@@ -1720,11 +1720,23 @@ class PyomoSimulator(WaterNetworkSimulator):
                 velocity_l = 4.0*abs(flowrate)/(math.pi*link.diameter**2)
             else:
                 velocity_l = 0.0
-            self._pyomo_sim_results['link_name'].append(link_name)
-            self._pyomo_sim_results['link_type'].append(link_type)
-            self._pyomo_sim_results['link_times'].append(time)
-            self._pyomo_sim_results['link_velocity'].append(velocity_l)
-            self._pyomo_sim_results['link_flowrate'].append(flowrate)
+            if link_name in self._pipes_with_leaks.keys():
+                self._pyomo_sim_results['link_name'].append(link_name+'__A')
+                self._pyomo_sim_results['link_type'].append(link_type)
+                self._pyomo_sim_results['link_times'].append(time)
+                self._pyomo_sim_results['link_velocity'].append(velocity_l)
+                self._pyomo_sim_results['link_flowrate'].append(flowrate)
+                self._pyomo_sim_results['link_name'].append(link_name+'__B')
+                self._pyomo_sim_results['link_type'].append(link_type)
+                self._pyomo_sim_results['link_times'].append(time)
+                self._pyomo_sim_results['link_velocity'].append(velocity_l)
+                self._pyomo_sim_results['link_flowrate'].append(flowrate)
+            else:
+                self._pyomo_sim_results['link_name'].append(link_name)
+                self._pyomo_sim_results['link_type'].append(link_type)
+                self._pyomo_sim_results['link_times'].append(time)
+                self._pyomo_sim_results['link_velocity'].append(velocity_l)
+                self._pyomo_sim_results['link_flowrate'].append(flowrate)
 
         # Load node data
         for n in instance.nodes:
@@ -1747,6 +1759,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif isinstance(node, Tank):
                 demand = instance.tank_net_inflow[n].value
                 expected_demand = instance.tank_net_inflow[n].value
+            elif isinstance(node, Leak):
+                demand = instance.leak_demand[n].value
+                expected_demand = instance.leak_demand[n].value
             else:
                 demand = 0.0
                 expected_demand = 0.0
@@ -1761,6 +1776,16 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._pyomo_sim_results['node_demand'].append(demand)
             self._pyomo_sim_results['node_expected_demand'].append(expected_demand)
             self._pyomo_sim_results['node_pressure'].append(pressure_n)
+
+        for leak_name in self._inactive_leaks:
+            self._pyomo_sim_results['node_name'].append(leak_name)
+            self._pyomo_sim_results['node_type'].append('leak')
+            self._pyomo_sim_results['node_times'].append(time)
+            self._pyomo_sim_results['node_head'].append('N/A')
+            self._pyomo_sim_results['node_demand'].append(0.0)
+            self._pyomo_sim_results['node_expected_demand'].append(0.0)
+            self._pyomo_sim_results['node_pressure'].append('N/A')
+
 
 
     def _apply_conditional_controls(self, instance, pumps_closed, links_closed_by_time, t):
