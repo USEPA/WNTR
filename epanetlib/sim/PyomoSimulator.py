@@ -13,6 +13,7 @@ TODO
 7. Resolve first timestep if conditional controls are not satisfied.
 8. Check self._n_timesteps in _initialize_simulation
 9. Check _apply_conditional_controls
+10. In _build_hydraulic_model_at_instant, when setting constraints for head gain for pumps with outtage, why is headloss 0 if modified_hazen_williams is true?
 """
 
 try:
@@ -792,6 +793,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             return model.demand_required[n]
         model.demand_actual = Var(model.junctions, within=Reals, initialize=init_demand_rule)
 
+        def init_leak_demand_rule(model,n):
+            node = wn.get_node(n)
+            return node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
+        model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule)
+
         ############## CONSTRAINTS #####################
 
         # Head loss inside pipes
@@ -853,8 +859,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif isinstance(node, Reservoir):
                 return expr == model.reservoir_demand[n]
             elif isinstance(node, Leak):
-                return expr**2 == node.leak_discharge_coeff**2*node.area**2*(2*self._g)*(model.head[n]-node.elevation)
+                return expr == model.leak_demand[n]
         model.node_mass_balance = Constraint(model.nodes, rule=node_mass_balance_rule)
+
 
         def tank_dynamics_rule(model, n):
             if first_timestep:
@@ -881,8 +888,13 @@ class PyomoSimulator(WaterNetworkSimulator):
         else:
             model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)
 
-        return model
+        # Leak demand constraint
+        def leak_demand_rule(model, n):
+            leak = wn.get_node(n)
+            return model.leak_demand[n]**2 == node.leak_discharge_coeff**2*node.area**2*2*self._g*(model.head[n]-node.elevation)
+        model.leak_demand_con = Constraint(model.leaks, rule=leak_demand_rule)
 
+        return model
 
     def run_calibration(self,
                         measurements,
@@ -1783,7 +1795,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                             links_closed_by_time.remove(link_name_k+'__A')
                             # If the links base status is closed then
                             # all rest of timesteps should be opened
-                            link = self._wn.get_link(link_name_k) michael: there is a mistake here
+                            link = self._wn.get_link(link_name_k+'__A')
                             if link.get_base_status() == 'CLOSED':
                                 for tt in xrange(t, self._n_timesteps):
                                     self._link_status[link_name_k][tt] = True
@@ -1795,7 +1807,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                             links_closed_by_time.remove(link_name_k+'__B')
                             # If the links base status is closed then
                             # all rest of timesteps should be opened
-                            link = self._wn.get_link(link_name_k)
+                            link = self._wn.get_link(link_name_k+'__B')
                             if link.get_base_status() == 'CLOSED':
                                 for tt in xrange(t, self._n_timesteps):
                                     self._link_status[link_name_k][tt] = True
@@ -1847,7 +1859,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                             links_closed_by_time.remove(link_name_k+'__A')
                             # If the links base status is closed then
                             # all rest of timesteps should be opened
-                            link = self._wn.get_link(link_name_k)
+                            link = self._wn.get_link(link_name_k+'__A')
                             if link.get_base_status() == 'CLOSED':
                                 for tt in xrange(t, self._n_timesteps):
                                     self._link_status[link_name_k][tt] = True
@@ -1859,7 +1871,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                             links_closed_by_time.remove(link_name_k+'__B')
                             # If the links base status is closed then
                             # all rest of timesteps should be opened
-                            link = self._wn.get_link(link_name_k)
+                            link = self._wn.get_link(link_name_k+'__B')
                             if link.get_base_status() == 'CLOSED':
                                 for tt in xrange(t, self._n_timesteps):
                                     self._link_status[link_name_k][tt] = True
@@ -2014,13 +2026,13 @@ class PyomoSimulator(WaterNetworkSimulator):
                     pipes_closed_by_tank.add(link_name_to_tank)
                 elif link_name_to_tank in pipes_closed_by_tank:
                     pipes_closed_by_tank.remove(link_name_to_tank)
-                    self._override_time_controls(links_closed_by_time, control_info['link_name'], t) michael: check this function call
+                    self._override_time_controls(links_closed_by_time, control_info['link_name'], t)
             else:
                 if head_in_tank <= min_tank_head:
                     pipes_closed_by_tank.add(link_name_to_tank)
                 elif link_name_to_tank in pipes_closed_by_tank:
                     pipes_closed_by_tank.remove(link_name_to_tank)
-                    self._override_time_controls(links_closed_by_time, control_info['link_name'], t) michael: check this function call
+                    self._override_time_controls(links_closed_by_time, control_info['link_name'], t)
         return new_leak_flag
 
     def _override_time_controls(self, links_closed_by_time_controls, link_name, t):
@@ -2039,7 +2051,17 @@ class PyomoSimulator(WaterNetworkSimulator):
             links_closed_by_time_controls.remove(link_name+'__A')
             # If the links base status is closed then
             # all rest of timestep should be opened
-            link = self._wn.get_link(link_name)
+            link = self._wn.get_link(link_name+'__A')
+            closed_times = self._wn.time_controls[link_name]['closed_times']
+            if link.get_base_status().upper() == 'CLOSED' or \
+                    (len(closed_times) == 1 and closed_times[0] == 0):
+                for tt in xrange(t, self._n_timesteps):
+                    self._link_status[link_name][tt] = True
+        if link_name+'__B' in links_closed_by_time_controls:
+            links_closed_by_time_controls.remove(link_name+'__B')
+            # If the links base status is closed then
+            # all rest of timestep should be opened
+            link = self._wn.get_link(link_name+'__B')
             closed_times = self._wn.time_controls[link_name]['closed_times']
             if link.get_base_status().upper() == 'CLOSED' or \
                     (len(closed_times) == 1 and closed_times[0] == 0):
