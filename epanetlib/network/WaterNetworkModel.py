@@ -920,7 +920,7 @@ class Leak(Node):
     """
     Leak class that is inherited from Node
     """
-    def __init__(self, leak_name, pipe_name, area, leak_discharge_coeff, start_elevation, end_elevation):
+    def __init__(self, leak_name, pipe_name, area, leak_discharge_coeff, elevation):
         """
         Parameters
         ----------
@@ -935,7 +935,7 @@ class Leak(Node):
         self.pipe_name = pipe_name
         self.area = area
         self.leak_discharge_coeff = leak_discharge_coeff
-        self.elevation = (start_elevation+end_elevation)/2.0
+        self.elevation = elevation
 
 class Reservoir(Node):
     """

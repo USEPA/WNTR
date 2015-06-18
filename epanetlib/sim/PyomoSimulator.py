@@ -2011,11 +2011,17 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._wn.remove_pipe(orig_pipe._link_name)
 
         # Get start and end node info
-        start_node_elevation = self._wn.get_node(orig_pipe._start_node_name).elevation
-        end_node_elevation = self._wn.get_node(orig_pipe._end_node_name).elevation
+        start_node = self._wn.get_node(orig_pipe.start_node())
+        end_node = self._wn.get_node(orig_pipe.end_node())
+        if isinstance(start_node, Reservoir):
+            leak_elevation = end_node.elevation
+        elif isinstance(end_node, Reservoir):
+            leak_elevation = start_node.elevation
+        else:
+            leak_elevation = (start_node.elevation + end_node.elevation)/2.0
 
         # Add a leak node
-        leak = Leak(leak_name, orig_pipe._link_name, current_leak_info['leak_area'], current_leak_info['leak_discharge_coeff'], start_node_elevation, end_node_elevation)
+        leak = Leak(leak_name, orig_pipe._link_name, current_leak_info['leak_area'], current_leak_info['leak_discharge_coeff'], leak_elevation)
         self._wn._nodes[leak_name] = leak
         self._wn._graph.add_node(leak_name)
         self._wn.set_node_type(leak_name, 'leak')
@@ -2046,14 +2052,18 @@ class PyomoSimulator(WaterNetworkSimulator):
             leak_name = None
             if link_name_to_tank in self._pipes_with_leaks.keys():
                 leak_name = self._pipes_with_leaks[link_name_to_tank]
-                tmp_link_name_to_tank = link_name_to_tank+'__A'
-                link_to_tank = self._wn.get_link(tmp_link_name_to_tank)
-                link_to_tank_start_node_name = link_to_tank._start_node_name
-                link_to_tank_end_node_name = link_to_tank._end_node_name
-                if tank_name != link_to_tank_start_node_name and tank_name != link_to_tank_end_node_name:
-                    tmp_link_name_to_tank = link_name_to_tank+'__B'
+                if leak_name in self._active_leaks:
+                    tmp_link_name_to_tank = link_name_to_tank+'__A'
                     link_to_tank = self._wn.get_link(tmp_link_name_to_tank)
-                link_name_to_tank = tmp_link_name_to_tank
+                    link_to_tank_start_node_name = link_to_tank.start_node()
+                    link_to_tank_end_node_name = link_to_tank.end_node()
+                    if tank_name != link_to_tank_start_node_name and tank_name != link_to_tank_end_node_name:
+                        tmp_link_name_to_tank = link_name_to_tank+'__B'
+                        link_to_tank = self._wn.get_link(tmp_link_name_to_tank)
+                    link_name_to_tank = tmp_link_name_to_tank
+                else:
+                    leak_name = None
+                    link_to_tank = self._wn.get_link(link_name_to_tank)
             else:
                 link_to_tank = self._wn.get_link(link_name_to_tank)
             if isinstance(link_to_tank, Pump):
