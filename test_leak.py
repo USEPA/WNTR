@@ -32,7 +32,7 @@ if len(tank_list)>0:
     fig = plt.figure(figsize=(11,6))
     ax = fig.add_subplot(111)
     for tank_name in tank_list:
-        ax.plot(t_step, leak_results.node['head'][tank_name],label=tank_name)
+        ax.plot(t_step, leak_results.node['pressure'][tank_name],label=tank_name)
     ax.set_title('Tank levels')
     ax.set_xlabel('Timestep')
     ax.set_ylabel('m')
@@ -45,7 +45,7 @@ if len(tank_list)>0:
 fig = plt.figure(figsize=(11,6))
 ax = fig.add_subplot(111)
 for node_name in node_list:
-    ax.plot(t_step, leak_results.node['head'][node_name],label=node_name)
+    ax.plot(t_step, leak_results.node['pressure'][node_name],label=node_name)
 ax.set_title('Node Pressure')
 ax.set_xlabel('Timestep')
 ax.set_ylabel('m')

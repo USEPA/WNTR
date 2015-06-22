@@ -810,6 +810,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                     return node.elevation
             elif n in model.tanks:
                 return node.elevation
+            elif n in model.leaks:
+                return node.elevation
             else:
                 return 100.0
         model.head = Var(model.nodes, initialize=init_head_rule)
