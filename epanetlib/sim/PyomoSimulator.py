@@ -114,7 +114,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         WaterNetworkSimulator.__init__(self, wn, PD_or_DD)
 
         # Global constants
-        self._Hw_k = 10.67 # Hazen-Williams resistance coefficient in SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
+        self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
         self._Dw_k = 0.0826 # Darcy-Weisbach constant in SI units = 0.0252 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
         self._Htol = 0.00015 # Head tolerance in meters.
         self._Qtol = 2.8e-5 # Flow tolerance in m^3/s.
