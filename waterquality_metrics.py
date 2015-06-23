@@ -1,49 +1,75 @@
-"""
-TODO This file needs to be updated to use the WaterNetworkModel (EPANET ONLY)
-TODO Metrics must be updated to use NetworkResults
-"""
-
 import epanetlib as en
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
 from sympy.physics import units
+import pandas as pd
 
 plt.close('all')
+
+inp_file = 'networks/Net3.inp'
+
+# Create a water network model for results object
+wn = en.network.WaterNetworkModel()
+parser = en.network.ParseWaterNetwork()
+parser.read_inp_file(wn, inp_file)
+
+# Define WQ scenario
+"""
+Scenario format: 
+QualityType, options = CHEM, AGE, or TRACE
+Node, (used for CHEM and TRACE only) 
+SourceType, options = CONCEN, MASS, FLOWPACED, or SETPOINT (used for CHEM only)
+SourceQual, kg/m3 (used for CHEM only)
+Start time, s  (used for CHEM only)
+End time, s) (used for CHEM only)
+"""
+sceanrio_CHEM = ['CHEM', '121', 'SETPOINT', 1000, 0, 1000]  # pattern (start/end time) not currently used, assumes constant injection
+sceanrio_AGE = ['AGE']
+sceanrio_TRACE = ['TRACE', '111']
+
+# Run a hydraulic and water quality simulation with EPANET
+sim = en.sim.EpanetSimulator(wn)
+results_CHEM = sim.run_sim(WQ = sceanrio_CHEM)
+results_AGE = sim.run_sim(WQ = sceanrio_AGE)
+results_TRACE = sim.run_sim(WQ = sceanrio_TRACE)
+
+# plot chem scenario
+CHEM_at_5hr = results_CHEM.node.loc[(slice(None), pd.Timedelta(hours = 5)), 'quality']
+CHEM_at_5hr.reset_index(level=1, drop=True, inplace=True)
+attr = dict(CHEM_at_5hr)
+en.network.draw_graph(wn, node_attribute=attr, node_size=20, title='Chemical concentration, time = 5 hours')
+CHEM_at_node = results_CHEM.node.loc[('208', slice(None)), 'quality']
+plt.figure()
+CHEM_at_node.plot(title='Chemical concentration, node 208')
+
+# Plot age scenario (convert to hours)
+AGE_at_5hr = results_AGE.node.loc[(slice(None), pd.Timedelta(hours = 5)), 'quality']/3600
+AGE_at_5hr.reset_index(level=1, drop=True, inplace=True)
+attr = dict(AGE_at_5hr)
+en.network.draw_graph(wn, node_attribute=attr, node_size=20, title='Water age (hrs), time = 5 hours')
+AGE_at_node = results_AGE.node.loc[('208', slice(None)), 'quality']/3600
+plt.figure()
+AGE_at_node.plot(title='Water age, node 208')
+
+# Plot trace scenario 
+TRACE_at_5hr = results_TRACE.node.loc[(slice(None), pd.Timedelta(hours = 5)), 'quality']
+TRACE_at_5hr.reset_index(level=1, drop=True, inplace=True)
+attr = dict(TRACE_at_5hr)
+en.network.draw_graph(wn, node_attribute=attr, node_size=20, title='Trace percent, time = 5 hours')
+TRACE_at_node = results_TRACE.node.loc[('208', slice(None)), 'quality']
+plt.figure()
+TRACE_at_node.plot(title='Trace percent, node 208')
 
 quality_lower_bound = 0.2*float((units.mg/units.l)/(units.kg/units.m**3)) # mg/L to kg/m3
 quality_upper_bound = 4*float((units.mg/units.l)/(units.kg/units.m**3)) # mg/L to kg/m3
 
-# Create enData
-enData = en.pyepanet.ENepanet()
-enData.inpfile = 'networks/Net3_wSource.inp'
-enData.ENopen(enData.inpfile,'tmp.rpt')
-
-# Define a concentration source (I DON'T THINK THIS WORKS)
-#enData.ENsetqualtype(en.pyepanet.EN_CHEM, 'Chlorine', 'mg/L', '')
-#nodeid = enData.ENgetnodeindex('121')
-#enData.ENsetnodevalue(nodeid, en.pyepanet.EN_SOURCEQUAL, 4)
-
-# Create MultiDiGraph and plot as an undirected network
-G = en.network.epanet_to_MultiDiGraph(enData)
-en.network.draw_graph_OLD(G.to_undirected(), title=enData.inpfile)
-
-# Setup timesteps for analysis, default = 0:EN_REPORTSTEP:EN_DURATION
-duration = enData.ENgettimeparam(en.pyepanet.EN_DURATION)
-timestep = enData.ENgettimeparam(en.pyepanet.EN_REPORTSTEP)
-tstart = 24*3600
-G.graph['time'] = range(tstart,duration+1,timestep)
-
-# Run hydarulic simulation and save data
-G = en.sim.eps_hydraulic(enData, G)
-
-# Run hydarulic simulation and save data
-G = en.sim.eps_waterqual(enData, G)
-
+"""
+OLD CODE
 # Fraction of delivered quality (FDQ)
 fdq = en.metrics.fraction_delivered_quality(G, quality_upper_bound)
 print "Average FDQ: " +str(np.mean(fdq.values()))
-en.network.draw_graph_OLD(G.to_undirected(), node_attribute=fdq, title= 'FDQ')
+en.network.draw_graph(wn, node_attribute=fdq, title= 'FDQ')
 
 # Chlorine concentration stats
 CL = nx.get_node_attributes(G,'quality')
@@ -57,7 +83,7 @@ print "Average CL concentration: " +str(np.mean(CL_mgL)) + " mg/L"
 MC = en.metrics.health_impacts.MC(G) 
 total_MC = sum(MC.values())
 print "Mass of water consumed: " + str(total_MC)
-en.network.draw_graph_OLD(G.to_undirected(), node_attribute=MC, node_range = [0,100000],
+en.network.draw_graph(wn, node_attribute=MC, node_range = [0,100000],
                       title='Mass of Water Consumed, Total = ' + str(total_MC))
                       
 # Calculate average water age (last 48 hours)
@@ -75,3 +101,4 @@ ave_age = dict(zip(age.keys(),np.mean(age_h_last_48h,1)))
 en.network.draw_graph_OLD(G, node_attribute=ave_age, 
                       title='Average water age (last 48 hours)', node_size=40)
 print "Average water age (last 48 hours): " +str(np.mean(age_h_last_48h)) + " hr"
+"""
