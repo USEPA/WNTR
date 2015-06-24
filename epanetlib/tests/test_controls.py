@@ -12,12 +12,39 @@ class TestTimeControls(unittest.TestCase):
         self.wn = en.network.WaterNetworkModel()
         parser = en.network.ParseWaterNetwork()
         parser.read_inp_file(self.wn, inp_file)
-        self.wn.set_nominal_pressures(constant_nominal_pressure = 1.0)
+        self.wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
         
         pyomo_sim = en.sim.PyomoSimulator(self.wn, 'PRESSURE DRIVEN')
         self.pyomo_results = pyomo_sim.run_sim()
 
     def test_time_control_open_vs_closed(self):
+            for t in self.pyomo_results.link.loc['pipe2'].index:
+                if t.components.hours < 5 or t.components.hours >= 10:
+                    self.assertAlmostEqual(self.pyomo_results.link.at[('pipe2',t),'flowrate'], 150/3600.0)
+                else:
+                    self.assertAlmostEqual(self.pyomo_results.link.at[('pipe2',t),'flowrate'], 0.0)
+
+class TestConditionalControls(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        inp_file = 'networks_for_testing/conditional_controls_test_network.inp'
+        self.wn = en.network.WaterNetworkModel()
+        parser = en.network.ParseWaterNetwork()
+        parser.read_inp_file(self.wn, inp_file)
+        self.wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
+        
+        pyomo_sim = en.sim.PyomoSimulator(self.wn, 'PRESSURE DRIVEN')
+        self.pyomo_results = pyomo_sim.run_sim()
+
+    def test_control_by_tank_level(self):
+            for t in self.pyomo_results.link.loc['pipe2'].index:
+                if t.components.hours < 5 or t.components.hours >= 10:
+                    self.assertAlmostEqual(self.pyomo_results.link.at[('pipe2',t),'flowrate'], 150/3600.0)
+                else:
+                    self.assertAlmostEqual(self.pyomo_results.link.at[('pipe2',t),'flowrate'], 0.0)
+
+    def test_control_by_junction_pressure(self):
             for t in self.pyomo_results.link.loc['pipe2'].index:
                 if t.components.hours < 5 or t.components.hours >= 10:
                     self.assertAlmostEqual(self.pyomo_results.link.at[('pipe2',t),'flowrate'], 150/3600.0)
