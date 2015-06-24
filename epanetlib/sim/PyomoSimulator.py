@@ -27,7 +27,7 @@ import math
 from WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
-from pyomo_utils import CheckInstanceFeasibility
+#from pyomo_utils import CheckInstanceFeasibility
 import cProfile
 
 def do_cprofile(func):
