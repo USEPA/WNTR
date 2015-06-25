@@ -23,7 +23,7 @@ from epanetlib.network.WaterNetworkModel import Pump, Tank, Curve
 import warnings
 import re
 import networkx as nx
-
+import copy
 
 def is_number(s):
     try:
@@ -344,7 +344,9 @@ class ParseWaterNetwork(object):
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')):
                     continue
+                current_copy = copy.deepcopy(current)
                 current = [i.upper() for i in current]
+                current[1] = current_copy[1] # don't capitalize the link name
                 if 'TIME' not in current:
                     #warnings.warn("Warning: Conditional controls are currently not supported by the PYOMO simulator. "
                     #              "Only time controls are supported.")
@@ -353,7 +355,7 @@ class ParseWaterNetwork(object):
                         if link_name not in self._conditional_controls:
                             self._conditional_controls[link_name] = {}
                         node_index = current.index('NODE') + 1
-                        node_name = current[node_index]
+                        node_name = current_copy[node_index]
                         node = wn.get_node(node_name)
                         #if not isinstance(node, Tank):
                         #    raise RuntimeError("Conditional controls are only supported for Tank levels."
