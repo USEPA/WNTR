@@ -581,6 +581,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                          first_timestep,
                                          links_closed,
                                          pumps_closed_by_outage,
+                                         last_instance,
                                          modified_hazen_williams=True):
         """
         Build hydraulic constraints at a particular time instance.
@@ -834,16 +835,27 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Mass Balance
         def node_mass_balance_rule(model, n):
-            expr = 0
-            for l in wn.get_links_for_node(n):
-                link = wn.get_link(l)
-                if link.start_node() == n:
-                    expr -= model.flow[l]
-                elif link.end_node() == n:
-                    expr += model.flow[l]
-                else:
-                    raise RuntimeError('Node link is neither start nor end node.')
             node = wn.get_node(n)
+            if isinstance(node, Tank) and not first_timestep:
+                expr = 0
+                for l in wn.get_links_for_node(n):
+                    link = wn.get_link(l)
+                    if link.start_node() == n:
+                        expr -= last_instance.flow[l].value
+                    elif link.end_node() == n:
+                        expr += last_instance.flow[l].value
+                    else:
+                        raise RuntimeError('Node link is neither start nor end node.')
+            else:
+                expr = 0
+                for l in wn.get_links_for_node(n):
+                    link = wn.get_link(l)
+                    if link.start_node() == n:
+                        expr -= model.flow[l]
+                    elif link.end_node() == n:
+                        expr += model.flow[l]
+                    else:
+                        raise RuntimeError('Node link is neither start nor end node.')
             if isinstance(node, Junction):
                 return expr == model.demand_actual[n]
                 #return expr == model.demand_required[n]
@@ -1280,12 +1292,21 @@ class PyomoSimulator(WaterNetworkSimulator):
             #t0 = time.time()
             # Build the hydraulic constraints at current timestep
             # These constraints do not include valve flow constraints
-            model = self._build_hydraulic_model_at_instant(last_tank_head,
-                                                          current_demands,
-                                                          first_timestep,
-                                                          links_closed,
-                                                          pumps_closed_by_outage,
-                                                          modified_hazen_williams)
+            if first_timestep:
+                model = self._build_hydraulic_model_at_instant(last_tank_head,
+                                                               current_demands,
+                                                               first_timestep,
+                                                               links_closed,
+                                                               pumps_closed_by_outage,
+                                                               modified_hazen_williams)
+            else:
+                model = self._build_hydraulic_model_at_instant(last_tank_head,
+                                                               current_demands,
+                                                               first_timestep,
+                                                               links_closed,
+                                                               pumps_closed_by_outage,
+                                                               last_instance,
+                                                               modified_hazen_williams)
             #print "Total build model time : ", time.time() - t0
 
             # Add constant objective
@@ -1337,7 +1358,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 self._append_pyomo_results(instance, timedelta)
 
             # Copy last instance. Used to manually initialize next timestep.
-            last_instance = copy.copy(instance)
+            last_instance = copy.deepcopy(instance)
 
             # Reset time controls
             links_closed_by_time = set([])
