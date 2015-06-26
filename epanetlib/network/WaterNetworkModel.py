@@ -61,6 +61,7 @@ class WaterNetworkModel(object):
         # Dictionary of node or link objects indexed by their names
         self._nodes = {}
         self._links = {}
+        self._curves = {}
 
         # Initialize pattern and curve dictionaries
         # Dictionary of pattern or curves indexed by their names
@@ -361,7 +362,11 @@ class WaterNetworkModel(object):
         name: string
            Name of the pipe
         """
-        self._graph.remove_edge(self._links[name]._start_node_name, self._links[name]._end_node_name, key=name)
+        pipe = self.get_link(name)
+        status = pipe.get_base_status()
+        if status == 'CV':
+            self._check_valves.remove(name)
+        self._graph.remove_edge(pipe.start_node(), pipe.end_node(), key=name)
         self._links.pop(name)
         self._num_pipes -= 1
 

@@ -3,6 +3,8 @@ import sys
 sys.path.append('../../')
 import epanetlib as en
 import copy
+import numpy as np
+from scipy.optimize import fsolve
 
 class TestNetworkCreation(unittest.TestCase):
 
@@ -52,6 +54,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(j.base_demand, 150.0)
         self.assertEqual(j.demand_pattern_name, 'pattern1')
         self.assertEqual(j.elevation, 15.0)
+        self.assertEqual(wn._graph.nodes(),['j1'])
         self.assertEqual(type(j.base_demand), float)
         self.assertEqual(type(j.elevation), float)
 
@@ -66,6 +69,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(n.max_level, 100.0)
         self.assertEqual(n.diameter, 10.0)
         self.assertEqual(n.min_vol, 0.0)
+        self.assertEqual(wn._graph.nodes(),['t1'])
         self.assertEqual(type(n.elevation), float)
         self.assertEqual(type(n.init_level), float)
         self.assertEqual(type(n.min_level), float)
@@ -80,6 +84,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(n._name, 'r1')
         self.assertEqual(n.base_head, 30.0)
         self.assertEqual(n.head_pattern_name, 'pattern1')
+        self.assertEqual(wn._graph.nodes(),['r1'])
         self.assertEqual(type(n.base_head), float)
 
     def test_add_pipe(self):
@@ -96,6 +101,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l.diameter, 1.0)
         self.assertEqual(l.roughness, 100.0)
         self.assertEqual(l.minor_loss, 0.0)
+        self.assertEqual(wn._graph.edges(), [('j1','j2')])
         self.assertEqual(type(l.length), float)
         self.assertEqual(type(l.diameter), float)
         self.assertEqual(type(l.roughness), float)
@@ -109,6 +115,48 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(wn._check_valves, ['p1'])
 
     def test_remove_pipe(self):
+        wn = en.network.WaterNetworkModel()
+        wn.add_junction('j1')
+        wn.add_junction('j2')
+        wn.add_junction('j3')
+        wn.add_pipe('p2','j1','j3')
+        wn.add_pipe('p1','j1','j2', status = 'cv')
+        wn.remove_pipe('p1')
+        link_list = [link_name for link_name, link in wn.links()]
+        self.assertEqual(link_list, ['p2'])
+        self.assertEqual(wn._check_valves,[])
+        self.assertEqual(wn._num_pipes, 1)
+        self.assertEqual(wn._graph.edges(), [('j1','j3')])
+
+    def test_1_pt_head_curve(self):
+        q2 = 10.0
+        h2 = 20.0
+        wn = en.network.WaterNetworkModel()
+        wn.add_curve('curve1','HEAD',[(q2, h2)])
+        curve = wn.get_curve('curve1')
+        wn.add_junction('j1')
+        wn.add_junction('j2')
+        wn.add_pump('p1', 'j1', 'j2', 'HEAD', curve)
+        link = wn.get_link('p1')
+        a,b,c = link.get_head_curve_coefficients()
+        q1 = 0.0
+        h1 = 4.0/3.0*h2
+        q3 = 2.0*q1
+        h3 = 0.0
+
+        def curve_fun(x):
+            f=[1.0,1.0,1.0]
+            f[0] = h1 - x[0] + x[1]*q1**x[2]
+            f[1] = h2 - x[0] + x[1]*q2**x[2]
+            f[2] = h3 - x[0] + x[1]*q3**x[2]
+            return f
+
+        X = [a,b,c]
+        Y = curve_fun(X)
+
+        self.assertAlmostEqual(Y[0],0.0)
+        self.assertAlmostEqual(Y[1],0.0)
+        self.assertAlmostEqual(Y[2],0.0)
 
     def test_get_links_for_node(self):
         wn = en.network.WaterNetworkModel()
