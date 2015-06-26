@@ -35,8 +35,16 @@ class TestConditionalControls(unittest.TestCase):
         
         pyomo_sim = en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
         results = pyomo_sim.run_sim()
+
+        activated_flag = False
         for t in results.link.loc['pump1'].index:
-            self.assertLessEqual(results.node.at[('tank1',t),'pressure'], 50.0)
+            if results.node.at[('tank1',t),'pressure'] >= 50.0:
+                activated_flag = True
+                continue
+            if activated_flag:
+                self.assertAlmostEqual(results.link.at[('pump1',t),'flowrate'], 0.0)
+            else:
+                self.assertGreaterEqual(results.link.at[('pump1',t),'flowrate'], 0.0001)
 
     def test_open_link_by_tank_level(self):
         inp_file = 'networks_for_testing/conditional_controls_test_network_2.inp'

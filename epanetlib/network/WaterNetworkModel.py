@@ -168,6 +168,10 @@ class WaterNetworkModel(object):
             X-Y coordinates of the node location
 
         """
+        if base_demand is not None:
+            base_demand = float(base_demand)
+        if elevation is not None:
+            elevation = float(elevation)
         junction = Junction(name, base_demand, demand_pattern_name, elevation)
         self._nodes[name] = junction
         self._graph.add_node(name)
@@ -212,6 +216,24 @@ class WaterNetworkModel(object):
         coordinates : tuple of floats
             X-Y coordinates of the node location
         """
+        if elevation is not None:
+            elevation = float(elevation)
+        if init_level is not None:
+            init_level = float(init_level)
+        if min_level is not None:
+            min_level = float(min_level)
+        if max_level is not None:
+            max_level = float(max_level)
+        if diameter is not None:
+            diameter = float(diameter)
+        if min_vol is not None:
+            min_vol = float(min_vol)
+        if init_level is not None and min_level is not None:
+            assert init_level >= min_level, "Initial tank level must be greater than or equal to the tank minimum level."
+        if init_level is not None and max_level is not None:
+            assert init_level <= max_level, "Initial tank level must be less than or equal to the tank maximum level."
+        if min_level is not None and max_level is not None:
+            assert min_level <= max_level, "Tank minimum level must be less than or equal to the tank maximum level."
         tank = Tank(name, elevation, init_level,
                  min_level, max_level, diameter,
                  min_vol, vol_curve)
@@ -272,6 +294,8 @@ class WaterNetworkModel(object):
         coordinates : tuple of floats
             X-Y coordinates of the node location
         """
+        if base_head is not None:
+            base_head = float(base_head)
         reservoir = Reservoir(name, base_head, head_pattern_name)
         self._nodes[name] = reservoir
         self._graph.add_node(name)
@@ -309,11 +333,20 @@ class WaterNetworkModel(object):
         status : string
             Pipe status. Options are 'Open', 'Closed', and 'CV'
         """
+        if length is not None:
+            length = float(length)
+        if diameter is not None:
+            diameter = float(diameter)
+        if roughness is not None:
+            roughness = float(roughness)
+        if minor_loss is not None:
+            minor_loss = float(minor_loss)
         pipe = Pipe(name, start_node_name, end_node_name, length,
                     diameter, roughness, minor_loss, status)
         # Add to list of cv
-        if status.upper() == 'CV':
-            self._check_valves.append(name)
+        if status is not None:
+            if status.upper() == 'CV':
+                self._check_valves.append(name)
         self._links[name] = pipe
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         self.set_link_type((start_node_name, end_node_name, name), 'pipe')
