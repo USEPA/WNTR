@@ -329,10 +329,10 @@ class WaterNetworkModel(object):
            Name of the pipe
         """
         pipe = self.get_link(name)
-        status = pipe._base_status
+        status = pipe.get_base_status()
         if status == 'CV':
             self._check_valves.remove(name)
-        self._graph.remove_edge(self._links[name]._start_node_name, self._links[name]._end_node_name, key=name)
+        self._graph.remove_edge(pipe.start_node(), pipe.end_node(), key=name)
         self._links.pop(name)
         self._num_pipes -= 1
 
