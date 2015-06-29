@@ -1,23 +1,33 @@
 # These tests run a demand driven simulation with both Pyomo and Epanet and compare the results for the example networks
 import unittest
 import sys
-sys.path.append('../../')
-import epanetlib as en
+import os, inspect
+resilienceMainDir = os.path.abspath( 
+    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
+        inspect.currentframe() ) ) ), '..', '..' ))
 
 class TestNet1(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        inp_file = 'networks_for_testing/net_test_2.inp'
-        self.wn = en.network.WaterNetworkModel()
-        parser = en.network.ParseWaterNetwork()
+        sys.path.append(resilienceMainDir)
+        import epanetlib as en
+        self.en = en
+
+        inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/net_test_2.inp'
+        self.wn = self.en.network.WaterNetworkModel()
+        parser = self.en.network.ParseWaterNetwork()
         parser.read_inp_file(self.wn, inp_file)
         
-        epanet_sim = en.sim.EpanetSimulator(self.wn)
+        epanet_sim = self.en.sim.EpanetSimulator(self.wn)
         self.epanet_results = epanet_sim.run_sim()
         
-        pyomo_sim = en.sim.PyomoSimulator(self.wn, 'DEMAND DRIVEN')
+        pyomo_sim = self.en.sim.PyomoSimulator(self.wn, 'DEMAND DRIVEN')
         self.pyomo_results = pyomo_sim.run_sim(solver_options = {'tol':1e-10}, modified_hazen_williams=False)
+
+    @classmethod
+    def tearDownClass(self):
+        sys.path.remove(resilienceMainDir)
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():

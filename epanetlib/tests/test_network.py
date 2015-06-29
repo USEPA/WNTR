@@ -8,8 +8,6 @@ import os, inspect
 resilienceMainDir = os.path.abspath( 
     os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
         inspect.currentframe() ) ) ), '..', '..' ))
-#sys.path.append('../../')
-
 import copy
 import numpy as np
 from scipy.optimize import fsolve
@@ -22,7 +20,7 @@ class TestNetworkCreation(unittest.TestCase):
         import epanetlib as en
         self.en = en
 
-        inp_file = 'networks_for_testing/Net6_mod.inp'
+        inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/Net6_mod.inp'
         self.wn = self.en.network.WaterNetworkModel()
         parser = self.en.network.ParseWaterNetwork()
         parser.read_inp_file(self.wn, inp_file)
