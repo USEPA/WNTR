@@ -1,7 +1,15 @@
 import unittest
 import sys
-sys.path.append('../../')
-import epanetlib as en
+# HACK until resilience is a proper module
+# __file__ fails if script is called in different ways on Windows
+# __file__ fails if someone does os.chdir() before
+# sys.argv[0] also fails because it doesn't not always contains the path
+import os, inspect
+resilienceMainDir = os.path.abspath( 
+    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
+        inspect.currentframe() ) ) ), '..', '..' ))
+#sys.path.append('../../')
+
 import copy
 import numpy as np
 from scipy.optimize import fsolve
@@ -10,10 +18,18 @@ class TestNetworkCreation(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
+        sys.path.append(resilienceMainDir)
+        import epanetlib as en
+        self.en = en
+
         inp_file = 'networks_for_testing/Net6_mod.inp'
-        self.wn = en.network.WaterNetworkModel()
-        parser = en.network.ParseWaterNetwork()
+        self.wn = self.en.network.WaterNetworkModel()
+        parser = self.en.network.ParseWaterNetwork()
         parser.read_inp_file(self.wn, inp_file)
+
+    @classmethod
+    def tearDownClasss(self):
+        sys.path.remove(resilienceMainDir)
 
     def test_num_junctions(self):
         self.assertEqual(self.wn._num_junctions, 3323)
@@ -46,8 +62,18 @@ class TestNetworkCreation(unittest.TestCase):
 
 class TestNetworkMethods(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(self):
+        sys.path.append(resilienceMainDir)
+        import epanetlib as en
+        self.en = en
+
+    @classmethod
+    def tearDownClasss(self):
+        sys.path.remove(resilienceMainDir)
+
     def test_add_junction(self):
-        wn = en.network.WaterNetworkModel()
+        wn = self.en.network.WaterNetworkModel()
         wn.add_junction('j1', 150, 'pattern1', 15)
         j = wn.get_node('j1')
         self.assertEqual(j._name, 'j1')
@@ -59,7 +85,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(type(j.elevation), float)
 
     def test_add_tank(self):
-        wn = en.network.WaterNetworkModel()
+        wn = self.en.network.WaterNetworkModel()
         wn.add_tank('t1', 15, 75, 0, 100, 10, 0)
         n = wn.get_node('t1')
         self.assertEqual(n._name, 't1')
@@ -78,7 +104,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(type(n.min_vol), float)
 
     def test_add_reservoir(self):
-        wn = en.network.WaterNetworkModel()
+        wn = self.en.network.WaterNetworkModel()
         wn.add_reservoir('r1', 30, 'pattern1')
         n = wn.get_node('r1')
         self.assertEqual(n._name, 'r1')
@@ -88,7 +114,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(type(n.base_head), float)
 
     def test_add_pipe(self):
-        wn = en.network.WaterNetworkModel()
+        wn = self.en.network.WaterNetworkModel()
         wn.add_junction('j1')
         wn.add_junction('j2')
         wn.add_pipe('p1', 'j1', 'j2', 1000, 1, 100, 0, 'Open')
@@ -108,14 +134,14 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(type(l.minor_loss), float)
 
     def test_add_pipe_with_cv(self):
-        wn = en.network.WaterNetworkModel()
+        wn = self.en.network.WaterNetworkModel()
         wn.add_junction('j1')
         wn.add_junction('j2')
         wn.add_pipe('p1', 'j1', 'j2', 1000, 1, 100, 0, 'cv')
         self.assertEqual(wn._check_valves, ['p1'])
 
     def test_remove_pipe(self):
-        wn = en.network.WaterNetworkModel()
+        wn = self.en.network.WaterNetworkModel()
         wn.add_junction('j1')
         wn.add_junction('j2')
         wn.add_junction('j3')
@@ -131,7 +157,7 @@ class TestNetworkMethods(unittest.TestCase):
     def test_1_pt_head_curve(self):
         q2 = 10.0
         h2 = 20.0
-        wn = en.network.WaterNetworkModel()
+        wn = self.en.network.WaterNetworkModel()
         wn.add_curve('curve1','HEAD',[(q2, h2)])
         curve = wn.get_curve('curve1')
         wn.add_junction('j1')
@@ -141,7 +167,7 @@ class TestNetworkMethods(unittest.TestCase):
         a,b,c = link.get_head_curve_coefficients()
         q1 = 0.0
         h1 = 4.0/3.0*h2
-        q3 = 2.0*q1
+        q3 = 2.0*q2
         h3 = 0.0
 
         def curve_fun(x):
@@ -158,8 +184,38 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertAlmostEqual(Y[1],0.0)
         self.assertAlmostEqual(Y[2],0.0)
 
+    def test_3_pt_head_curve(self):
+        q1 = 0.0
+        h1 = 35.0
+        q2 = 10.0
+        h2 = 20.0
+        q3 = 18.0
+        h3 = 2.0
+        wn = self.en.network.WaterNetworkModel()
+        wn.add_curve('curve1','HEAD',[(q1, h1),(q2,h2),(q3,h3)])
+        curve = wn.get_curve('curve1')
+        wn.add_junction('j1')
+        wn.add_junction('j2')
+        wn.add_pump('p1', 'j1', 'j2', 'HEAD', curve)
+        link = wn.get_link('p1')
+        a,b,c = link.get_head_curve_coefficients()
+
+        def curve_fun(x):
+            f=[1.0,1.0,1.0]
+            f[0] = h1 - x[0] + x[1]*q1**x[2]
+            f[1] = h2 - x[0] + x[1]*q2**x[2]
+            f[2] = h3 - x[0] + x[1]*q3**x[2]
+            return f
+
+        X = [a,b,c]
+        Y = curve_fun(X)
+
+        self.assertAlmostEqual(Y[0],0.0)
+        self.assertAlmostEqual(Y[1],0.0)
+        self.assertAlmostEqual(Y[2],0.0)
+
     def test_get_links_for_node(self):
-        wn = en.network.WaterNetworkModel()
+        wn = self.en.network.WaterNetworkModel()
         wn.add_junction('j1')
         wn.add_junction('j2')
         wn.add_junction('j3')
