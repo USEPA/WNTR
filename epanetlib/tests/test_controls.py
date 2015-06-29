@@ -71,17 +71,17 @@ class TestConditionalControls(unittest.TestCase):
             else:
                 self.assertGreaterEqual(results.link.at[('pump1',t),'flowrate'], 0.0001)
 
-#    def test_open_link_by_tank_level(self):
-#        inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/conditional_controls_test_network_2.inp'
-#        wn = self.en.network.WaterNetworkModel()
-#        parser = self.en.network.ParseWaterNetwork()
-#        parser.read_inp_file(wn, inp_file)
-#        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
-#        
-#        pyomo_sim = self.en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
-#        results = pyomo_sim.run_sim()
-#        for t in results.link.loc['pump1'].index:
-#            self.assertGreaterEqual(results.node.at[('tank1',t),'pressure'], 30.0)
+    def test_open_link_by_tank_level(self):
+        inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/conditional_controls_test_network_2.inp'
+        wn = self.en.network.WaterNetworkModel()
+        parser = self.en.network.ParseWaterNetwork()
+        parser.read_inp_file(wn, inp_file)
+        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
+        
+        pyomo_sim = self.en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        results = pyomo_sim.run_sim()
+        for t in results.link.loc['pump1'].index:
+            self.assertGreaterEqual(results.node.at[('tank1',t),'pressure'], 30.0)
 
 if __name__ == '__main__':
     unittest.main()
