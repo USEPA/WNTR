@@ -10,10 +10,15 @@ TODO
 4. Check for negative pressure at leak node
 5. Double check units of leak model
 6. Leak model assumes all pressures are guage
-7. Resolve first timestep if conditional controls are not satisfied.
+7. Resolve first timestep/trial if conditional controls are not satisfied.
 8. Check self._n_timesteps in _initialize_simulation
 9. Check _apply_conditional_controls
 10. In _build_hydraulic_model_at_instant, when setting constraints for head gain for pumps with outtage, why is headloss 0 if modified_hazen_williams is true?
+11. Rewrite controls
+12. Modify implementation of leak: change network structure once and set demand to 0 if leak is inactive
+13. Try out alternative leak implementation: have demand come out of existing nodes
+14. Generalize tank controls for multiple pipes connected to tanks
+15. Fix the PDD smoothing so that pressure is not negative when demand is 0
 """
 
 try:
@@ -612,6 +617,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                          first_timestep,
                                          links_closed,
                                          pumps_closed_by_outage,
+                                         last_link_flows,
                                          modified_hazen_williams=True):
         """
         Build hydraulic constraints at a particular time instance.
@@ -872,16 +878,27 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Mass Balance
         def node_mass_balance_rule(model, n):
-            expr = 0
-            for l in wn.get_links_for_node(n):
-                link = wn.get_link(l)
-                if link.start_node() == n:
-                    expr -= model.flow[l]
-                elif link.end_node() == n:
-                    expr += model.flow[l]
-                else:
-                    raise RuntimeError('Node link is neither start nor end node.')
             node = wn.get_node(n)
+            if isinstance(node, Tank) and not first_timestep:
+                expr = 0
+                for l in wn.get_links_for_node(n):
+                    link = wn.get_link(l)
+                    if link.start_node() == n:
+                        expr -= last_link_flows[l]
+                    elif link.end_node() == n:
+                        expr += last_link_flows[l]
+                    else:
+                        raise RuntimeError('Node link is neither start nor end node.')
+            else:
+                expr = 0
+                for l in wn.get_links_for_node(n):
+                    link = wn.get_link(l)
+                    if link.start_node() == n:
+                        expr -= model.flow[l]
+                    elif link.end_node() == n:
+                        expr += model.flow[l]
+                    else:
+                        raise RuntimeError('Node link is neither start nor end node.')
             if isinstance(node, Junction):
                 return expr == model.demand_actual[n]
                 #return expr == model.demand_required[n]
@@ -1258,6 +1275,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 last_tank_head = {} # Tank head at previous timestep
                 for tank_name, tank in self._wn.nodes(Tank):
                     last_tank_head[tank_name] = tank.elevation + tank.init_level
+                last_link_flows = {} # Link flowrates at previous timestep
             else:
                 first_timestep = False
 
@@ -1355,12 +1373,22 @@ class PyomoSimulator(WaterNetworkSimulator):
             #t0 = time.time()
             # Build the hydraulic constraints at current timestep
             # These constraints do not include valve flow constraints
-            model = self._build_hydraulic_model_at_instant(last_tank_head,
-                                                          current_demands,
-                                                          first_timestep,
-                                                          links_closed,
-                                                          pumps_closed_by_outage,
-                                                          modified_hazen_williams)
+            if first_timestep:
+                model = self._build_hydraulic_model_at_instant(last_tank_head,
+                                                               current_demands,
+                                                               first_timestep,
+                                                               links_closed,
+                                                               pumps_closed_by_outage,
+                                                               None,
+                                                               modified_hazen_williams)
+            else:
+                model = self._build_hydraulic_model_at_instant(last_tank_head,
+                                                               current_demands,
+                                                               first_timestep,
+                                                               links_closed,
+                                                               pumps_closed_by_outage,
+                                                               last_link_flows,
+                                                               modified_hazen_williams)
             #print "Total build model time : ", time.time() - t0
 
             # Add constant objective
@@ -1409,11 +1437,14 @@ class PyomoSimulator(WaterNetworkSimulator):
                 # Load last tank head
                 for tank_name, tank in self._wn.nodes(Tank):
                     last_tank_head[tank_name] = instance.head[tank_name].value
+                # Load last link flows
+                for link_name, link in self._wn.links():
+                    last_link_flows[link_name] = instance.flow[link_name].value
                 # Load results into self._pyomo_sim_results
                 self._append_pyomo_results(instance, timedelta)
 
             # Copy last instance. Used to manually initialize next timestep.
-            last_instance = copy.copy(instance)
+            last_instance = copy.deepcopy(instance)
 
             # Reset time controls
             links_closed_by_time = set([])
