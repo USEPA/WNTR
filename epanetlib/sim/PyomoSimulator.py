@@ -19,6 +19,8 @@ TODO
 13. Try out alternative leak implementation: have demand come out of existing nodes
 14. Generalize tank controls for multiple pipes connected to tanks
 15. Fix the PDD smoothing so that pressure is not negative when demand is 0
+16. Update _apply_tank_controls since we now calculate tank levels based on flowrates from the previous timestep.
+17. Why override time controls at the end of _apply_tank_controls?
 """
 
 try:
@@ -204,45 +206,16 @@ class PyomoSimulator(WaterNetworkSimulator):
     def _initialize_from_pyomo_results(self, instance, last_instance):
 
         for l in instance.links:
-            try:
-                last_instance_flow = last_instance.flow[l].value
-                if abs(last_instance.flow[l].value) < self._Qtol:
+            if abs(last_instance.flow[l].value) < self._Qtol:
+                instance.flow[l].value = 100*self._Qtol
+            else:
+                if l in instance.pumps and last_instance.flow[l].value < -self._Qtol:
                     instance.flow[l].value = 100*self._Qtol
                 else:
-                    if l in instance.pumps and last_instance.flow[l].value < -self._Qtol:
-                        instance.flow[l].value = 100*self._Qtol
-                    else:
-                        instance.flow[l].value = last_instance.flow[l].value + self._Qtol
-            except KeyError:
-                link = self._wn.get_link(l)
-                start_node = link.start_node()
-                end_node = link.end_node()
-                if l in self._pipes_with_leaks.keys():
-                    instance.flow[l].value = (last_instance.flow[l+'__A'].value + last_instance.flow[l+'__B'].value)/2.0 + self._Qtol
-                elif start_node in self._leak_info.keys():
-                    orig_pipe = self._leak_info[start_node]['original_pipe']
-                    orig_pipe_name = orig_pipe._link_name
-                    instance.flow[l].value = last_instance.flow[orig_pipe_name].value + self._Qtol
-                elif end_node in self._leak_info.keys():
-                    orig_pipe = self._leak_info[end_node]['original_pipe']
-                    orig_pipe_name = orig_pipe._link_name
-                    instance.flow[l].value = last_instance.flow[orig_pipe_name].value + self._Qtol
-                else:
-                    raise RuntimeError('Weird. The try statement should only fail'
-                                       'for the first time step/trial after activating'
-                                       'a leak and only for a link with a leak')
-
+                    instance.flow[l].value = last_instance.flow[l].value + self._Qtol
 
         for n in instance.nodes:
-            try:
-                instance.head[n].value = last_instance.head[n].value
-            except KeyError:
-                if n not in self._leak_info.keys():
-                    raise KeyError('Weird. The try statement should only fail'
-                                   'for the first timestep/trial after activating'
-                                   'a leak and only for a leak')
-                orig_pipe = self._leak_info[n]['original_pipe']
-                instance.head[n].value = last_instance.head[orig_pipe.start_node()].value
+            instance.head[n].value = last_instance.head[n].value
             if n in instance.junctions:
                 junction = self._wn.get_node(n)
                 if self._pressure_driven:
@@ -831,8 +804,11 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.demand_actual = Var(model.junctions, within=Reals, initialize=init_demand_rule)
 
         def init_leak_demand_rule(model,n):
-            node = wn.get_node(n)
-            return node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
+            if n in self._active_leaks:
+                node = wn.get_node(n)
+                return node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
+            else:
+                return 0.0
         model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule)
 
         ############## CONSTRAINTS #####################
@@ -938,8 +914,13 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Leak demand constraint
         def leak_demand_rule(model, n):
-            leak = wn.get_node(n)
-            return model.leak_demand[n]**2 == leak.leak_discharge_coeff**2*leak.area**2*2*self._g*(model.head[n]-leak.elevation)
+            if n in self._active_leaks:
+                leak = wn.get_node(n)
+                return model.leak_demand[n]**2 == leak.leak_discharge_coeff**2*leak.area**2*2*self._g*(model.head[n]-leak.elevation)
+            elif n in self._inactive_leaks:
+                return model.leak_demand[n] == 0.0
+            else:
+                raise RuntimeError('There is a bug.')
         model.leak_demand_con = Constraint(model.leaks, rule=leak_demand_rule)
 
         return model
@@ -1221,6 +1202,14 @@ class PyomoSimulator(WaterNetworkSimulator):
             calibration work.
         """
 
+        # Add leak to network
+        for leak_name in self.pipes_with_leaks.values():
+            self._add_leak_to_wn_object(leak_name)
+        self._update_tank_controls_for_leaks()
+        self._update_links_next_to_reservoirs_for_leaks()
+        self._update_time_controls_for_leaks()
+        self._update_conditional_controls_for_leaks()
+
         # Create and initialize dictionaries containing demand values and link statuses
         if fixed_demands is None:
             self._initialize_simulation()
@@ -1267,7 +1256,9 @@ class PyomoSimulator(WaterNetworkSimulator):
         check_valve_status_changed = False
         reservoir_link_closed_flag = False
         low_flow_pumps_closed_flag = False
+=================================================================
         new_leak_next_to_tank_flag = False
+=================================================================
         first_timestep = True
         while t < self._n_timesteps and step_iter < self._max_step_iter:
             if t == 0:
@@ -1289,30 +1280,17 @@ class PyomoSimulator(WaterNetworkSimulator):
                 leak_end = leak_time_tuple[1]
                 if current_time_sec >= leak_start and current_time_sec < leak_end:
                     if leak_name not in self._active_leaks:
-                        self._activate_leak(leak_name)
                         self._inactive_leaks.remove(leak_name)
                         self._active_leaks.add(leak_name)
                 else:
                     if leak_name in self._active_leaks:
-                        self._deactivate_leak(leak_name)
                         self._inactive_leaks.add(leak_name)
                         self._active_leaks.remove(leak_name)
 
             # Get time controls
             for link_name, status in self._link_status.iteritems():
                 if not status[t]:
-                    if link_name in self._pipes_with_leaks.keys():
-                        leak_name = self._pipes_with_leaks[link_name]
-                        if leak_name in self._active_leaks:
-                            if self._leak_info[leak_name]['shutoff_valve_loc'] == 'ISOLATE':
-                                links_closed_by_time.add(link_name+'__A')
-                                links_closed_by_time.add(link_name+'__B')
-                            elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
-                                links_closed_by_time.add(link_name+'__A')
-                            else:
-                                links_closed_by_time.add(link_name+'__B')
-                        else:
-                            links_closed_by_time.add(link_name)
+                    links_closed_by_time.add(link_name)
 
             # Apply conditional controls based on the results of the previous simulation
             # These will override time controls
@@ -1325,7 +1303,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 # Apply tank controls based on the results of the previous simulation
                 # These will override time controls
                 if self._tank_controls:
-                    new_leak_next_to_tank_flag = self._apply_tank_controls(instance, links_closed_by_tank_controls, links_closed_by_time, t)
+                    self._apply_tank_controls(instance, links_closed_by_tank_controls, links_closed_by_time, t)
 
             # Apply pump outage
             # These will override time controls, pumps closed by drain to reservoir, and links closed by tank controls
@@ -1362,7 +1340,34 @@ class PyomoSimulator(WaterNetworkSimulator):
             """
 
             # Combine list of closed links, does not include pumps closed by outage (they are passed separately for model construction).
+            links_closed_last_step = links_closed
             links_closed = pumps_closed_by_low_flow.union(pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(links_closed_by_tank_controls.union(closed_check_valves)))))
+
+            # If a link with a leak got opened while the leak is inactive, we need to make sure both segments get opened.
+            for link_name in links_closed_last_step:
+                if link_name not in links_closed: # Link was closed last step and is open this step
+                    link = self._wn.get_link(link_name)
+                    start_node_name = link.start_node()
+                    end_node_name = link.end_node()
+                    if start_node_name in self._inactive_leaks:
+                        leak_links = self._wn.get_links_for_node(start_node_name)
+                        if len(leak_links) != 2:
+                            raise RuntimeError('There is a bug.')
+                        leak_links.remove(link_name)
+                        other_segment = leak_links[0]
+                        if other_segment in links_closed:
+                            links_closed.remove(other_segment)
+                    elif end_node_name in self._inactive_leaks:
+                        leak_links = self._wn.get_links_for_node(start_node_name)
+                        if len(leak_links) != 2:
+                            raise RuntimeError('There is a bug.')
+                        leak_links.remove(link_name)
+                        other_segment = leak_links[0]
+                        if other_segment in links_closed:
+                            links_closed.remove(other_segment)
+                    
+                        
+                    
 
             timedelta = results.time[t]
             if step_iter == 0:
@@ -1428,8 +1433,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             if valve_status_changed \
                     or check_valve_status_changed \
                     or reservoir_link_closed_flag \
-                    or low_flow_pumps_closed_flag \
-                    or new_leak_next_to_tank_flag:
+                    or low_flow_pumps_closed_flag:
                 step_iter += 1
             else:
                 step_iter = 0
@@ -1782,23 +1786,11 @@ class PyomoSimulator(WaterNetworkSimulator):
                 velocity_l = 4.0*abs(flowrate)/(math.pi*link.diameter**2)
             else:
                 velocity_l = 0.0
-            if link_name in self._pipes_with_leaks.keys():
-                self._pyomo_sim_results['link_name'].append(link_name+'__A')
-                self._pyomo_sim_results['link_type'].append(link_type)
-                self._pyomo_sim_results['link_times'].append(time)
-                self._pyomo_sim_results['link_velocity'].append(velocity_l)
-                self._pyomo_sim_results['link_flowrate'].append(flowrate)
-                self._pyomo_sim_results['link_name'].append(link_name+'__B')
-                self._pyomo_sim_results['link_type'].append(link_type)
-                self._pyomo_sim_results['link_times'].append(time)
-                self._pyomo_sim_results['link_velocity'].append(velocity_l)
-                self._pyomo_sim_results['link_flowrate'].append(flowrate)
-            else:
-                self._pyomo_sim_results['link_name'].append(link_name)
-                self._pyomo_sim_results['link_type'].append(link_type)
-                self._pyomo_sim_results['link_times'].append(time)
-                self._pyomo_sim_results['link_velocity'].append(velocity_l)
-                self._pyomo_sim_results['link_flowrate'].append(flowrate)
+            self._pyomo_sim_results['link_name'].append(link_name)
+            self._pyomo_sim_results['link_type'].append(link_type)
+            self._pyomo_sim_results['link_times'].append(time)
+            self._pyomo_sim_results['link_velocity'].append(velocity_l)
+            self._pyomo_sim_results['link_flowrate'].append(flowrate)
 
         # Load node data
         for n in instance.nodes:
@@ -1839,17 +1831,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._pyomo_sim_results['node_expected_demand'].append(expected_demand)
             self._pyomo_sim_results['node_pressure'].append(pressure_n)
 
-        for leak_name in self._inactive_leaks:
-            self._pyomo_sim_results['node_name'].append(leak_name)
-            self._pyomo_sim_results['node_type'].append('leak')
-            self._pyomo_sim_results['node_times'].append(time)
-            self._pyomo_sim_results['node_head'].append(0.0)
-            self._pyomo_sim_results['node_demand'].append(0.0)
-            self._pyomo_sim_results['node_expected_demand'].append(0.0)
-            self._pyomo_sim_results['node_pressure'].append(0.0)
-
-
-
     def _apply_conditional_controls(self, instance, pumps_closed, links_closed_by_time, t):
         for link_name_k, value in self._wn.conditional_controls.iteritems():
             open_above = value['open_above']
@@ -1874,52 +1855,15 @@ class PyomoSimulator(WaterNetworkSimulator):
                             if link.get_base_status() == 'CLOSED':
                                 for tt in xrange(t, self._n_timesteps):
                                     self._link_status[link_name_k][tt] = True
-                if link_name_k+'__A' in pumps_closed:
-                    if current_tank_level <= value_i:
-                        pumps_closed.remove(link_name_k+'__A')
-                        # Overriding time controls
-                        if link_name_k+'__A' in links_closed_by_time:
-                            links_closed_by_time.remove(link_name_k+'__A')
-                            # If the links base status is closed then
-                            # all rest of timesteps should be opened
-                            link = self._wn.get_link(link_name_k+'__A')
-                            if link.get_base_status() == 'CLOSED':
-                                for tt in xrange(t, self._n_timesteps):
-                                    self._link_status[link_name_k][tt] = True
-                if link_name_k+'__B' in pumps_closed:
-                    if current_tank_level <= value_i:
-                        pumps_closed.remove(link_name_k+'__B')
-                        # Overriding time controls
-                        if link_name_k+'__B' in links_closed_by_time:
-                            links_closed_by_time.remove(link_name_k+'__B')
-                            # If the links base status is closed then
-                            # all rest of timesteps should be opened
-                            link = self._wn.get_link(link_name_k+'__B')
-                            if link.get_base_status() == 'CLOSED':
-                                for tt in xrange(t, self._n_timesteps):
-                                    self._link_status[link_name_k][tt] = True
 
             # If link is open and the tank level goes above threshold, then close the link
-            if link_name_k in self._pipes_with_leaks.keys():
-                leak_name = self._pipes_with_leaks[link_name_k]
-                if leak_name in self._active_leaks:
-                    for i in closed_above:
-                        node_name_i = i[0]
-                        value_i = i[1]
-                        tank_i = self._wn.get_node(node_name_i)
-                        current_tank_level = instance.head[node_name_i].value - tank_i.elevation
-                        if link_name_k+'__A' not in pumps_closed and current_tank_level >= value_i and (self._leak_info[leak_name]['shutoff_valve_loc']=='ISOLATE' or self._leak_info[leak_name]['shutoff_valve_loc']=='START_NODE'):
-                            pumps_closed.add(link_name_k+'__A')
-                        if link_name_k+'__b' not in pumps_closed and current_tank_level >= value_i and (self._leak_info[leak_name]['shutoff_valve_loc']=='ISOLATE' or self._leak_info[leak_name]['shutoff_valve_loc']=='END_NODE'):
-                            pumps_closed.add(link_name_k+'__B')
-                else:
-                    for i in closed_above:
-                        node_name_i = i[0]
-                        value_i = i[1]
-                        tank_i = self._wn.get_node(node_name_i)
-                        current_tank_level = instance.head[node_name_i].value - tank_i.elevation
-                        if link_name_k not in pumps_closed and current_tank_level >= value_i:
-                            pumps_closed.add(link_name_k)
+            for i in closed_above:
+                node_name_i = i[0]
+                value_i = i[1]
+                tank_i = self._wn.get_node(node_name_i)
+                current_tank_level = instance.head[node_name_i].value - tank_i.elevation
+                if link_name_k not in pumps_closed and current_tank_level >= value_i:
+                    pumps_closed.add(link_name_k)
 
             # If link is closed and tank level goes above threshold, then open the link
             for i in open_above:
@@ -1938,52 +1882,15 @@ class PyomoSimulator(WaterNetworkSimulator):
                             if link.get_base_status() == 'CLOSED':
                                 for tt in xrange(t, self._n_timesteps):
                                     self._link_status[link_name_k][tt] = True
-                if link_name_k+'__A' in pumps_closed:
-                    if current_tank_level >= value_i:
-                        pumps_closed.remove(link_name_k+'__A')
-                        # Overriding time controls
-                        if link_name_k+'__A' in links_closed_by_time:
-                            links_closed_by_time.remove(link_name_k+'__A')
-                            # If the links base status is closed then
-                            # all rest of timesteps should be opened
-                            link = self._wn.get_link(link_name_k+'__A')
-                            if link.get_base_status() == 'CLOSED':
-                                for tt in xrange(t, self._n_timesteps):
-                                    self._link_status[link_name_k][tt] = True
-                if link_name_k+'__B' in pumps_closed:
-                    if current_tank_level >= value_i:
-                        pumps_closed.remove(link_name_k+'__B')
-                        # Overriding time controls
-                        if link_name_k+'__B' in links_closed_by_time:
-                            links_closed_by_time.remove(link_name_k+'__B')
-                            # If the links base status is closed then
-                            # all rest of timesteps should be opened
-                            link = self._wn.get_link(link_name_k+'__B')
-                            if link.get_base_status() == 'CLOSED':
-                                for tt in xrange(t, self._n_timesteps):
-                                    self._link_status[link_name_k][tt] = True
 
             # If link is open and the tank level goes below threshold, then close the link
-            if link_name_k in self._pipes_with_leaks.keys():
-                leak_name = self._pipes_with_leaks[link_name_k]
-                if leak_name in self._active_leaks:
-                    for i in closed_below:
-                        node_name_i = i[0]
-                        value_i = i[1]
-                        tank_i = self._wn.get_node(node_name_i)
-                        current_tank_level = instance.head[node_name_i].value - tank_i.elevation
-                        if link_name_k+'__A' not in pumps_closed and current_tank_level <= value_i and (self._leak_info[leak_name]['shutoff_valve_loc']=='ISOLATE' or self._leak_info[leak_name]['shutoff_valve_loc']=='START_NODE'):
-                            pumps_closed.add(link_name_k+'__A')
-                        if link_name_k+'__B' not in pumps_closed and current_tank_level <= value_i and (self._leak_info[leak_name]['shutoff_valve_loc']=='ISOLATE' or self._leak_info[leak_name]['shutoff_valve_loc']=='END_NODE'):
-                            pumps_closed.add(link_name_k+'__B')
-                else:
-                    for i in closed_below:
-                        node_name_i = i[0]
-                        value_i = i[1]
-                        tank_i = self._wn.get_node(node_name_i)
-                        current_tank_level = instance.head[node_name_i].value - tank_i.elevation
-                        if link_name_k not in pumps_closed and current_tank_level <= value_i:
-                            pumps_closed.add(link_name_k)
+            for i in closed_below:
+                node_name_i = i[0]
+                value_i = i[1]
+                tank_i = self._wn.get_node(node_name_i)
+                current_tank_level = instance.head[node_name_i].value - tank_i.elevation
+                if link_name_k not in pumps_closed and current_tank_level <= value_i:
+                    pumps_closed.add(link_name_k)
 
     def _override_tank_controls(self, links_closed_by_tank_controls, pumps_closed_by_outage):
         #links_closed_by_tank_controls.clear()
@@ -2037,7 +1944,84 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         return reservoir_links_closed_flag
 
-    def _activate_leak(self, leak_name):
+    def _update_tank_controls_for_leaks(self):
+        # Update tank controls
+        for tank_name, tank_control_dict in self._tank_controls.iteritems():
+            if tank_control_dict['link_name'] in self._pipes_with_leaks.keys():
+                link_next_to_tank = tank_control_dict['link_name']
+                self._tank_controls[tank_name]['node_name'] = self._pipes_with_leaks[link_next_to_tank]
+                tmp_link_next_to_tank = link_next_to_tank+'__A'
+                tmp_link = self._wn.get_link(tmp_link_next_to_tank)
+                tmp_start_node = tmp_link.start_node()
+                if tmp_start_node != tank_name:
+                    tmp_link_next_to_tank = link_next_to_tank+'__B'
+                    tmp_link = self._wn.get_link(tmp_link_next_to_tank)
+                    tmp_end_node = tmp_link.end_node()
+                    if tmp_end_node != tank_name:
+                        raise RuntimeError('Could not find link next to tank after adding leak.')
+                    else:
+                        self._tank_controls[tank_name]['link_name'] = tmp_link_next_to_tank
+                else:
+                    self._tank_controls[tank_name]['link_name'] = tmp_link_next_to_tank
+
+    def _update_links_next_to_reservoirs_for_leaks(self):
+        # Update links next to reservoirs
+        for link_name, reserv_name in self._reservoir_links.iteritems():
+            if link_name in self._pipes_with_leaks.keys():
+                tmp_reserv_link_name = link_name+'__A'
+                tmp_reserv_link = self._wn.get_link(tmp_reserv_link_name)
+                tmp_start_node = tmp_reserv_link.start_node()
+                if tmp_start_node != reserv_name:
+                    tmp_reserv_link_name = link_name+'__B'
+                    tmp_reserv_link = self._wn.get_link(tmp_reserv_link_name)
+                    tmp_end_node = tmp_reserv_link.end_node()
+                    if tmp_end_node != reserv_name:
+                        raise RuntimeError('Could not find link next to reservoir after adding leak.')
+                    else:
+                        self._reservoir_links[tmp_reserv_link_name] = reserv_name
+                        self._reservoir_links.pop(link_name)
+                else:
+                    self._reservoir_links[tmp_reserv_link_name] = reserv_name
+                    self._reservoir_links.pop(link_name)
+
+    def _update_time_controls_for_leaks(self):
+        # Update time controls
+        for control_link_name, control_dict in self._wn.time_controls.iteritems():
+            if control_link_name in self._pipes_with_leaks.keys():
+                leak_name = self._pipes_with_leaks[control_link_name]
+                if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
+                    self._wn.time_controls[control_link_name+'__A'] = control_dict
+                    self._wn.time_controls.pop(control_link_name)
+                elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'END_NODE':
+                    self._wn.time_controls[control_link_name+'__B'] = control_dict
+                    self._wn.time_controls.pop(control_link_name)
+                elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'ISOLATE':
+                    self._wn.time_controls[control_link_name+'__A'] = control_dict
+                    self._wn.time_controls[control_link_name+'__B'] = control_dict
+                    self._wn.time_controls.pop(control_link_name)
+                else:
+                    raise ValueError('Shutoff valve location for leak is not recognized.')
+
+    def _update_conditional_controls_for_leaks(self):
+        # Update conditional controls
+        for control_link_name, control_dict in self._wn.conditional_controls.iteritems():
+            if control_link_name in self._pipes_with_leaks.keys():
+                leak_name = self._pipes_with_leaks[control_link_name]
+                if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
+                    self._wn.conditional_controls[control_link_name+'__A'] = control_dict
+                    self._wn.conditional_controls.pop(control_link_name)
+                elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'END_NODE':
+                    self._wn.conditional_controls[control_link_name+'__B'] = control_dict
+                    self._wn.conditional_controls.pop(control_link_name)
+                elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'ISOLATE':
+                    self._wn.conditional_controls[control_link_name+'__A'] = control_dict
+                    self._wn.conditional_controls[control_link_name+'__B'] = control_dict
+                    self._wn.conditional_controls.pop(control_link_name)
+                else:
+                    raise ValueError('Shutoff valve location for leak is not recognized.')
+                
+
+    def _add_leak_to_wn_object(self, leak_name):
         # Remove original pipe
         current_leak_info = self._leak_info[leak_name]
         orig_pipe = current_leak_info['original_pipe']
@@ -2078,59 +2062,24 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._wn.add_pipe(orig_pipe._link_name, orig_pipe._start_node_name, orig_pipe._end_node_name, orig_pipe.length, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
 
     def _apply_tank_controls(self, instance, pipes_closed_by_tank, links_closed_by_time, t):
-        new_leak_flag = False
         for tank_name, control_info in self._tank_controls.iteritems():
-            tmp_flag = True
             link_name_to_tank = control_info['link_name']
-            leak_name = None
-            if link_name_to_tank in self._pipes_with_leaks.keys():
-                leak_name = self._pipes_with_leaks[link_name_to_tank]
-                if leak_name in self._active_leaks:
-                    tmp_link_name_to_tank = link_name_to_tank+'__A'
-                    link_to_tank = self._wn.get_link(tmp_link_name_to_tank)
-                    link_to_tank_start_node_name = link_to_tank.start_node()
-                    link_to_tank_end_node_name = link_to_tank.end_node()
-                    if tank_name != link_to_tank_start_node_name and tank_name != link_to_tank_end_node_name:
-                        tmp_link_name_to_tank = link_name_to_tank+'__B'
-                        link_to_tank = self._wn.get_link(tmp_link_name_to_tank)
-                    link_name_to_tank = tmp_link_name_to_tank
-                else:
-                    leak_name = None
-                    link_to_tank = self._wn.get_link(link_name_to_tank)
-            else:
-                link_to_tank = self._wn.get_link(link_name_to_tank)
+            link_to_tank = self._wn.get_link(link_name_to_tank)
             if isinstance(link_to_tank, Pump):
-                raise RuntimeError('Tank control is not supported for pumps!.')
+                raise RuntimeError('Tank control is not supported for pumps!')
             head_in_tank = instance.head[tank_name].value
-            if leak_name is not None:
-                node_next_to_tank = leak_name
-            else:
-                node_next_to_tank = control_info['node_name']
+            node_next_to_tank = control_info['node_name']
             min_tank_head = control_info['min_head']
-            try:
-                head_at_next_node = instance.head[node_next_to_tank].value
-            except KeyError:
-                tmp_flag = False
-                new_leak_flag = True
-                if leak_name is None:
-                    raise RuntimeError('This is weird. The try statement should only fail the first timestep/trial'
-                                       'of an active leak (and only if the leak is next to a tank)')
+            head_at_next_node = instance.head[node_next_to_tank].value
             # make link closed if the tank head is below min and
             # the head at connected node is below this minimum. That is,
             # flow will be out of the tank
-            if tmp_flag:
-                if head_in_tank <= min_tank_head and head_at_next_node <= head_in_tank:
-                    pipes_closed_by_tank.add(link_name_to_tank)
-                elif link_name_to_tank in pipes_closed_by_tank:
-                    pipes_closed_by_tank.remove(link_name_to_tank)
-                    self._override_time_controls(links_closed_by_time, control_info['link_name'], t)
-            else:
-                if head_in_tank <= min_tank_head:
-                    pipes_closed_by_tank.add(link_name_to_tank)
-                elif link_name_to_tank in pipes_closed_by_tank:
-                    pipes_closed_by_tank.remove(link_name_to_tank)
-                    self._override_time_controls(links_closed_by_time, control_info['link_name'], t)
-        return new_leak_flag
+            if head_in_tank <= min_tank_head and head_at_next_node <= head_in_tank:
+                pipes_closed_by_tank.add(link_name_to_tank)
+            elif link_name_to_tank in pipes_closed_by_tank:
+                pipes_closed_by_tank.remove(link_name_to_tank)
+                self._override_time_controls(links_closed_by_time, link_name_to_tank, t)
+        return pipes_closed_by_tank
 
     def _override_time_controls(self, links_closed_by_time_controls, link_name, t):
         # Override time controls
@@ -2139,26 +2088,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             # If the links base status is closed then
             # all rest of timestep should be opened
             link = self._wn.get_link(link_name)
-            closed_times = self._wn.time_controls[link_name]['closed_times']
-            if link.get_base_status().upper() == 'CLOSED' or \
-                    (len(closed_times) == 1 and closed_times[0] == 0):
-                for tt in xrange(t, self._n_timesteps):
-                    self._link_status[link_name][tt] = True
-        if link_name+'__A' in links_closed_by_time_controls:
-            links_closed_by_time_controls.remove(link_name+'__A')
-            # If the links base status is closed then
-            # all rest of timestep should be opened
-            link = self._wn.get_link(link_name+'__A')
-            closed_times = self._wn.time_controls[link_name]['closed_times']
-            if link.get_base_status().upper() == 'CLOSED' or \
-                    (len(closed_times) == 1 and closed_times[0] == 0):
-                for tt in xrange(t, self._n_timesteps):
-                    self._link_status[link_name][tt] = True
-        if link_name+'__B' in links_closed_by_time_controls:
-            links_closed_by_time_controls.remove(link_name+'__B')
-            # If the links base status is closed then
-            # all rest of timestep should be opened
-            link = self._wn.get_link(link_name+'__B')
             closed_times = self._wn.time_controls[link_name]['closed_times']
             if link.get_base_status().upper() == 'CLOSED' or \
                     (len(closed_times) == 1 and closed_times[0] == 0):
