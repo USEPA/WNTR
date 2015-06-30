@@ -10,8 +10,13 @@ TODO
 4. Check for negative pressure at leak node
 5. Double check units of leak model
 6. Leak model assumes all pressures are guage
-7. Resolve first timestep if conditional controls are not satisfied.
+7. Resolve first timestep/trial if conditional controls are not satisfied.
 8. Check self._n_timesteps in _initialize_simulation
+9. Rewrite controls
+10. Modify implementation of leak: change network structure once and set demand to 0 if leak is inactive
+11. Try out alternative leak implementation: have demand come out of existing nodes
+12. Generalize tank controls for multiple pipes connected to tanks
+13. Fix the PDD smoothing so that pressure is not negative when demand is 0
 """
 
 try:
@@ -581,7 +586,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                          first_timestep,
                                          links_closed,
                                          pumps_closed_by_outage,
-                                         last_instance,
+                                         last_link_flows,
                                          modified_hazen_williams=True):
         """
         Build hydraulic constraints at a particular time instance.
@@ -841,9 +846,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                 for l in wn.get_links_for_node(n):
                     link = wn.get_link(l)
                     if link.start_node() == n:
-                        expr -= last_instance.flow[l].value
+                        expr -= last_link_flows[l]
                     elif link.end_node() == n:
-                        expr += last_instance.flow[l].value
+                        expr += last_link_flows[l]
                     else:
                         raise RuntimeError('Node link is neither start nor end node.')
             else:
@@ -1222,6 +1227,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 last_tank_head = {} # Tank head at previous timestep
                 for tank_name, tank in self._wn.nodes(Tank):
                     last_tank_head[tank_name] = tank.elevation + tank.init_level
+                last_link_flows = {} # Link flowrates at previous timestep
             else:
                 first_timestep = False
 
@@ -1298,6 +1304,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                                                first_timestep,
                                                                links_closed,
                                                                pumps_closed_by_outage,
+                                                               None,
                                                                modified_hazen_williams)
             else:
                 model = self._build_hydraulic_model_at_instant(last_tank_head,
@@ -1305,7 +1312,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                                                first_timestep,
                                                                links_closed,
                                                                pumps_closed_by_outage,
-                                                               last_instance,
+                                                               last_link_flows,
                                                                modified_hazen_williams)
             #print "Total build model time : ", time.time() - t0
 
@@ -1354,6 +1361,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                 # Load last tank head
                 for tank_name, tank in self._wn.nodes(Tank):
                     last_tank_head[tank_name] = instance.head[tank_name].value
+                # Load last link flows
+                for link_name, link in self._wn.links():
+                    last_link_flows[link_name] = instance.flow[link_name].value
                 # Load results into self._pyomo_sim_results
                 self._append_pyomo_results(instance, timedelta)
 

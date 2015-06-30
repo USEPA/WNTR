@@ -1,3 +1,8 @@
+"""
+TODO
+1. Modify conditional controls tests to match epanet (resolve timestep is control is activated)
+"""
+
 # These tests test controls
 import unittest
 import sys
@@ -63,13 +68,13 @@ class TestConditionalControls(unittest.TestCase):
 
         activated_flag = False
         for t in results.link.loc['pump1'].index:
-            if results.node.at[('tank1',t),'pressure'] >= 50.0:
-                activated_flag = True
-                continue
             if activated_flag:
                 self.assertAlmostEqual(results.link.at[('pump1',t),'flowrate'], 0.0)
             else:
                 self.assertGreaterEqual(results.link.at[('pump1',t),'flowrate'], 0.0001)
+            if results.node.at[('tank1',t),'pressure'] >= 50.0 and not activated_flag:
+                activated_flag = True
+        self.assertEqual(activated_flag, True)
 
     def test_open_link_by_tank_level(self):
         inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/conditional_controls_test_network_2.inp'
@@ -80,8 +85,14 @@ class TestConditionalControls(unittest.TestCase):
         
         pyomo_sim = self.en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
         results = pyomo_sim.run_sim()
+
+        activated_flag = False
         for t in results.link.loc['pump1'].index:
-            self.assertGreaterEqual(results.node.at[('tank1',t),'pressure'], 30.0)
+            if activated_flag:
+                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.002)
+            if results.node.at[('tank1',t),'pressure'] >= 300.0 and not activated_flag:
+                activated_flag = True
+        self.assertEqual(activated_flag, True)
 
 if __name__ == '__main__':
     unittest.main()
