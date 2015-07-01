@@ -1203,7 +1203,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
 
         # Add leak to network
-        for leak_name in self.pipes_with_leaks.values():
+        for leak_name in self._pipes_with_leaks.values():
             self._add_leak_to_wn_object(leak_name)
         self._update_tank_controls_for_leaks()
         self._update_links_next_to_reservoirs_for_leaks()
@@ -1336,32 +1336,35 @@ class PyomoSimulator(WaterNetworkSimulator):
             print self._valve_status
             """
 
-            # Combine list of closed links, does not include pumps closed by outage (they are passed separately for model construction).
-            links_closed_last_step = links_closed
-            links_closed = pumps_closed_by_low_flow.union(pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(links_closed_by_tank_controls.union(closed_check_valves)))))
+            if first_timestep:
+                links_closed = pumps_closed_by_low_flow.union(pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(links_closed_by_tank_controls.union(closed_check_valves)))))
+            else:
+                # Combine list of closed links, does not include pumps closed by outage (they are passed separately for model construction).
+                links_closed_last_step = links_closed
+                links_closed = pumps_closed_by_low_flow.union(pumps_closed_by_drain_to_reservoir.union(links_closed_by_time.union(pumps_closed_by_rule.union(links_closed_by_tank_controls.union(closed_check_valves)))))
 
-            # If a link with a leak got opened while the leak is inactive, we need to make sure both segments get opened.
-            for link_name in links_closed_last_step:
-                if link_name not in links_closed: # Link was closed last step and is open this step
-                    link = self._wn.get_link(link_name)
-                    start_node_name = link.start_node()
-                    end_node_name = link.end_node()
-                    if start_node_name in self._inactive_leaks:
-                        leak_links = self._wn.get_links_for_node(start_node_name)
-                        if len(leak_links) != 2:
-                            raise RuntimeError('There is a bug.')
-                        leak_links.remove(link_name)
-                        other_segment = leak_links[0]
-                        if other_segment in links_closed:
-                            links_closed.remove(other_segment)
-                    elif end_node_name in self._inactive_leaks:
-                        leak_links = self._wn.get_links_for_node(start_node_name)
-                        if len(leak_links) != 2:
-                            raise RuntimeError('There is a bug.')
-                        leak_links.remove(link_name)
-                        other_segment = leak_links[0]
-                        if other_segment in links_closed:
-                            links_closed.remove(other_segment)
+                # If a link with a leak got opened while the leak is inactive, we need to make sure both segments get opened.
+                for link_name in links_closed_last_step:
+                    if link_name not in links_closed: # Link was closed last step and is open this step
+                        link = self._wn.get_link(link_name)
+                        start_node_name = link.start_node()
+                        end_node_name = link.end_node()
+                        if start_node_name in self._inactive_leaks:
+                            leak_links = self._wn.get_links_for_node(start_node_name)
+                            if len(leak_links) != 2:
+                                raise RuntimeError('There is a bug.')
+                            leak_links.remove(link_name)
+                            other_segment = leak_links[0]
+                            if other_segment in links_closed:
+                                links_closed.remove(other_segment)
+                        elif end_node_name in self._inactive_leaks:
+                            leak_links = self._wn.get_links_for_node(start_node_name)
+                            if len(leak_links) != 2:
+                                raise RuntimeError('There is a bug.')
+                            leak_links.remove(link_name)
+                            other_segment = leak_links[0]
+                            if other_segment in links_closed:
+                                links_closed.remove(other_segment)
                     
                         
                     
