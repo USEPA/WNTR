@@ -1256,9 +1256,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         check_valve_status_changed = False
         reservoir_link_closed_flag = False
         low_flow_pumps_closed_flag = False
-=================================================================
-        new_leak_next_to_tank_flag = False
-=================================================================
         first_timestep = True
         while t < self._n_timesteps and step_iter < self._max_step_iter:
             if t == 0:
