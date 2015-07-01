@@ -2,6 +2,7 @@ import epanetlib as en
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
+import pandas as pd
 
 inp_file = 'networks/Net1.inp'
 
@@ -15,7 +16,7 @@ wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
 pyomo_sim = en.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
 #pyomo_sim.add_leak(leak_name = 'leak1', pipe_name = '12', leak_diameter=0.1, start_time = '0 days 05:00:00', fix_time = '0 days 20:00:00')
 pyomo_sim.add_leak(leak_name = 'leak2', pipe_name = '10', leak_diameter=0.1, start_time = '0 days 05:00:00', fix_time = '0 days 15:00:00')
-pyomo_sim.add_leak(leak_name = 'leak3', pipe_name = '110', leak_diameter=0.1, start_time = '0 days 05:00:00', fix_time = '0 days 15:00:00')
+pyomo_sim.add_leak(leak_name = 'leak3', pipe_name = '110', leak_diameter=0.1, start_time = '0 days 05:00:00', fix_time = '0 days 13:00:00')
 leak_results = pyomo_sim.run_sim()
 
 # Plot Pyomo results
@@ -85,3 +86,14 @@ pdf.close()
 #    print '\n\n\n\n',node_name
 #    print leak_results.node['pressure'][node_name]
 #    print leak_results.node['demand'][node_name]
+
+time = pd.timedelta_range(start = '0 days 13:00:00', end = '0 days 13:00:00')
+print '\n\n\n'
+print 'Node\t\tPressure\t\tHead\t\tDemand'
+for node_name in node_list:
+    print node_name,'\t\t',leak_results.node.at[(node_name,time[0]),'pressure'],'\t\t',leak_results.node.at[(node_name,time[0]),'head'],'\t\t',leak_results.node.at[(node_name,time[0]),'demand']
+
+print '\n\n\n'
+print 'Link\t\tFlowrate'
+for link_name in link_list:
+    print link_name,'\t\t',leak_results.link.at[(link_name,time[0]),'flowrate']

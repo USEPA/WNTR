@@ -826,8 +826,10 @@ class PyomoSimulator(WaterNetworkSimulator):
                 if modified_hazen_williams:
                     setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=Expr_if(IF=model.flow[l]>0, THEN=1, ELSE=-1)
                             *pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
+                    self._constraint_names.add('pipe_headloss_'+str(l))
                 else:
                     setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=pipe_resistance_coeff*model.flow[l]*(abs(model.flow[l]))**0.852 == model.head[start_node] - model.head[end_node]))
+                    self._constraint_names.add('pipe_headloss_'+str(l))
 
         # Head gain provided by the pump is implemented as negative headloss
         for l in model.pumps:
@@ -840,16 +842,20 @@ class PyomoSimulator(WaterNetworkSimulator):
                     pipe_resistance_coeff = self._Hw_k*(200.0**(-1.852))*(1**(-4.871))*10.0 # Hazen-Williams coefficient
                     if modified_hazen_williams:
                         setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=model.head[start_node] - model.head[end_node] == 0))
+                        self._constraint_names.add('pipe_headloss_'+str(l))
                     else:
                         setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=pipe_resistance_coeff*model.flow[l]*(abs(model.flow[l]))**0.852 == model.head[start_node] - model.head[end_node]))
+                        self._constraint_names.add('pipe_headloss_'+str(l))
                 else:
                     if pump.info_type == 'HEAD':
                         A, B, C = pump.get_head_curve_coefficients()
                         if l not in links_closed:
                             setattr(model, 'pump_negative_headloss_'+str(l), Constraint(expr=model.head[start_node] - model.head[end_node] == (-1.0*A + B*((model.flow[l])**C))))
+                            self._constraint_names.add('pump_negative_headloss_'+str(l))
                     elif pump.info_type == 'POWER':
                         if l not in links_closed:
                             setattr(model, 'pump_negative_headloss_'+str(l), Constraint(expr=(model.head[start_node] - model.head[end_node])*model.flow[l]*self._g*1000.0 == -pump.power))
+                            self._constraint_names.add('pump_negative_headloss_'+str(l))
                     else:
                         raise RuntimeError('Pump info type not recognised. ' + l)
 
@@ -886,6 +892,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif isinstance(node, Leak):
                 return expr == model.leak_demand[n]
         model.node_mass_balance = Constraint(model.nodes, rule=node_mass_balance_rule)
+        self._constraint_names.add('node_mass_balance')
 
 
         def tank_dynamics_rule(model, n):
@@ -895,6 +902,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 tank = wn.get_node(n)
                 return (model.tank_net_inflow[n]*model.timestep*4.0)/(math.pi*(tank.diameter**2)) == model.head[n]-last_tank_head[n]
         model.tank_dynamics = Constraint(model.tanks, rule=tank_dynamics_rule)
+        self._constraint_names.add('tank_dynamics')
 
         # Pressure driven demand constraint
         def pressure_driven_demand_rule(model, j):
@@ -910,8 +918,10 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         if self._pressure_driven:
             model.pressure_driven_demand = Constraint(model.junctions, rule=pressure_driven_demand_rule)
+            self._constraint_names.add('pressure_driven_demand')
         else:
             model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)
+            self._constraint_names.add('pressure_driven_demand')
 
         # Leak demand constraint
         def leak_demand_rule(model, n):
@@ -923,6 +933,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 raise RuntimeError('There is a bug.')
         model.leak_demand_con = Constraint(model.leaks, rule=leak_demand_rule)
+        self._constraint_names.add('leak_demand_con')
 
         return model
 
@@ -1259,6 +1270,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         low_flow_pumps_closed_flag = False
         first_timestep = True
         while t < self._n_timesteps and step_iter < self._max_step_iter:
+            self._constraint_names = set([])
             if t == 0:
                 first_timestep = True
                 last_tank_head = {} # Tank head at previous timestep
@@ -1414,6 +1426,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
             instance.load(pyomo_results)
             #CheckInstanceFeasibility(instance, 1e-6)
+            #self._check_constraint_violation(instance)
 
             # Check if the solver converged. Else we assume there was a pump with very low flow that needs to be closed.
             if (pyomo_results.solver.status == SolverStatus.ok) and (pyomo_results.solver.termination_condition == TerminationCondition.optimal):
@@ -1575,6 +1588,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 setattr(model, 'valve_headloss_' + str(l), Constraint(
                     expr=valve_resistance_coefficient * model.flow[l] ** 2 == model.head[start_node] - model.head[
                         end_node]))
+                self._constraint_names.add('valve_headloss_'+str(l))
             elif status == 'ACTIVE':
                 end_node_obj = self._wn.get_node(end_node)
                 model.head[end_node].value = pressure_setting + end_node_obj.elevation
@@ -1799,7 +1813,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             if isinstance(node, Reservoir):
                 pressure_n = 0.0
             else:
-                pressure_n = abs(head_n - node.elevation)
+                pressure_n = (head_n - node.elevation)
             if isinstance(node, Junction):
                 demand = instance.demand_actual[n].value
                 expected_demand = instance.demand_required[n]
@@ -2210,3 +2224,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_sec
         results.simulator_options['pattern_time_step'] = self._pattern_step_sec
 
+    def _check_constraint_violation(self, instance):
+        for constraint_name in self._constraint_names:
+            con = getattr(instance, constraint_name)
+            for constraint_key in con.keys():
+                con_value = value(con[constraint_key].body)
+                con_lower = value(con[constraint_key].lower)
+                con_upper = value(con[constraint_key].upper)
+                if (con_lower - con_value) >= 1.0e-5 or (con_value - con_upper) >= 1.0e-5:
+                    print constraint_name,'[',constraint_key,']',' is not satisfied:'
+                    print 'lower: ',con_lower, '\t body: ',con_value,'\t upper: ',con_upper 
+                    con.pprint()
