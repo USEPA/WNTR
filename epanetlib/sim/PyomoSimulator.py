@@ -21,6 +21,7 @@ TODO
 15. Fix the PDD smoothing so that pressure is not negative when demand is 0
 16. Update _apply_tank_controls since we now calculate tank levels based on flowrates from the previous timestep.
 17. Why override time controls at the end of _apply_tank_controls?
+18. Put in a check for negative pump head gain
 """
 
 try:
@@ -809,7 +810,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 return node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
             else:
                 return 0.0
-        model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule)
+        model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule, bounds = (0.0, None))
 
         ############## CONSTRAINTS #####################
 
@@ -1358,7 +1359,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                             if other_segment in links_closed:
                                 links_closed.remove(other_segment)
                         elif end_node_name in self._inactive_leaks:
-                            leak_links = self._wn.get_links_for_node(start_node_name)
+                            leak_links = self._wn.get_links_for_node(end_node_name)
                             if len(leak_links) != 2:
                                 raise RuntimeError('There is a bug.')
                             leak_links.remove(link_name)
@@ -1366,9 +1367,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                             if other_segment in links_closed:
                                 links_closed.remove(other_segment)
                     
-                        
-                    
-
             timedelta = results.time[t]
             if step_iter == 0:
                 print "Running Hydraulic Simulation at time", timedelta, " ... "
