@@ -825,6 +825,11 @@ class WaterNetworkModel(object):
             Value to set the minimum pressure to. Below this pressure, the acual demand will be 0.
         """
         if res is not None and constant_nominal_pressure is None:
+            if units.upper() not in ['PSI','M']:
+                raise ValueError('The only units currently supported for the set_nominal_pressures method are \'psi\'(pounds per square inch) and \'m\'(meters).')
+            minimum_pressure = float(minimum_pressure)
+            if units.upper()=='PSI':
+                minimum_pressure = convert('Pressure',0,minimum_pressure)
             for junction_name,junction in self.nodes(Junction):
                 min_P = res.node['pressure'][junction_name].min()
                 if min_P <= 0.0:
@@ -837,10 +842,12 @@ class WaterNetworkModel(object):
                     assert junction.PF >= junction.P0, "Nominal pressure must be greater than minimum pressure."
         elif constant_nominal_pressure is not None and res is None:
             if units.upper() not in ['PSI','M']:
-                raise RuntimeError('The only units currently supported for the set_nominal_pressures method are \'psi\'(pounds per square inch) and \'m\'(meters).')
+                raise ValueError('The only units currently supported for the set_nominal_pressures method are \'psi\'(pounds per square inch) and \'m\'(meters).')
             constant_nominal_pressure = float(constant_nominal_pressure)
+            minimum_pressure = float(minimum_pressure)
             if units.upper()=='PSI':
                 constant_nominal_pressure = convert('Pressure',0,constant_nominal_pressure)
+                minimum_pressure = convert('Pressure',0,minimum_pressure)
             for junction_name,junction in self.nodes(Junction):
                 junction.PF = constant_nominal_pressure
                 junction.P0 = minimum_pressure

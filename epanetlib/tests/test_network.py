@@ -47,6 +47,12 @@ class TestNetworkCreation(unittest.TestCase):
     def test_num_valves(self):
         self.assertEqual(self.wn._num_valves, 2)
 
+    def test_num_nodes(self):
+        self.assertEqual(self.wn.num_nodes(), 3323+1+34)
+
+    def test_num_links(self):
+        self.assertEqual(self.wn.num_links(), 3829+61+2)
+
     def test_junction_attr(self):
         j = self.wn.get_node('JUNCTION-18')
         self.assertAlmostEqual(j.base_demand, 48.56/60.0*0.003785411784)
@@ -64,6 +70,13 @@ class TestNetworkMethods(unittest.TestCase):
     def setUpClass(self):
         sys.path.append(resilienceMainDir)
         import epanetlib as en
+        from epanetlib.network.WaterNetworkModel import Junction, Tank, Reservoir, Pipe, Pump, Valve
+        self.Junction = Junction
+        self.Tank = Tank
+        self.Reservoir = Reservoir
+        self.Pipe = Pipe
+        self.Pump = Pump
+        self.Valve = Valve
         self.en = en
 
     @classmethod
@@ -152,6 +165,57 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(wn._num_pipes, 1)
         self.assertEqual(wn._graph.edges(), [('j1','j3')])
 
+    def test_nodes(self):
+        wn = self.en.network.WaterNetworkModel()
+        wn.add_junction('j1')
+        wn.add_junction('j2')
+        wn.add_tank('t1')
+        wn.add_reservoir('r1')
+        wn.add_reservoir('r2')
+        wn.add_junction('j3')
+        node_list = [name for name,node in wn.nodes()]
+        node_list.sort()
+        junction_list = [name for name, junction in wn.nodes(self.Junction)]
+        junction_list.sort()
+        tank_list = [name for name, tank in wn.nodes(self.Tank)]
+        tank_list.sort()
+        reservoir_list = [name for name, reservoir in wn.nodes(self.Reservoir)]
+        reservoir_list.sort()
+        self.assertEqual(node_list,['j1','j2','j3','r1','r2','t1'])
+        self.assertEqual(junction_list,['j1','j2','j3'])
+        self.assertEqual(tank_list,['t1'])
+        self.assertEqual(reservoir_list,['r1','r2'])
+        for name,node in wn.nodes():
+            self.assertEqual(name, node._name)
+
+    def test_links(self):
+        wn = self.en.network.WaterNetworkModel()
+        wn.add_junction('j1')
+        wn.add_junction('j2')
+        wn.add_tank('t1')
+        wn.add_reservoir('r1')
+        wn.add_reservoir('r2')
+        wn.add_junction('j3')
+        wn.add_pipe('p1','j1','j2')
+        wn.add_pipe('p2','j1','t1')
+        wn.add_pipe('p3','r1','j1')
+        wn.add_pump('pump1','r2','t2')
+        wn.add_valve('v1','t2','j2')
+        link_list = [name for name,link in wn.links()]
+        link_list.sort()
+        self.assertEqual(link_list,['p1','p2','p3','pump1','v1'])
+        pipe_list = [name for name,pipe in wn.links(self.Pipe)]
+        pipe_list.sort()
+        self.assertEqual(pipe_list,['p1','p2','p3'])
+        pump_list = [name for name,pump in wn.links(self.Pump)]
+        pump_list.sort()
+        self.assertEqual(pump_list,['pump1'])
+        valve_list = [name for name,valve in wn.links(self.Valve)]
+        valve_list.sort()
+        self.assertEqual(valve_list,['v1'])
+        for name,link in wn.links():
+            self.assertEqual(name, link._link_name)
+
     def test_1_pt_head_curve(self):
         q2 = 10.0
         h2 = 20.0
@@ -238,6 +302,63 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l3,['p4'])
         self.assertEqual(l4,['p2'])
         self.assertEqual(l5,['p3'])
+
+    def test_set_nominal_pressures(self):
+        wn = self.en.network.WaterNetworkModel()
+        parser = self.en.network.ParseWaterNetwork()
+        parser.read_inp_file(wn, 'networks_for_testing/Net1.inp')
+
+        wn.set_nominal_pressures(constant_nominal_pressure = 15.0, minimum_pressure = 1.0)
+
+        for name,j in wn.nodes(self.Junction):
+            self.assertAlmostEqual(j.PF, 15.0)
+            self.assertAlmostEqual(j.P0, 1.0)
+
+        wn.set_nominal_pressures(constant_nominal_pressure = 1.421970206324*15.0, units = 'psi', minimum_pressure = 1.421970206324)
+
+        for name,j in wn.nodes(self.Junction):
+            self.assertAlmostEqual(j.PF, 15.0)
+            self.assertAlmostEqual(j.P0, 1.0)
+
+        with self.assertRaises(ValueError):
+            wn.set_nominal_pressures(constant_nominal_pressure = 15.0, units = 'ft')
+
+    def test_set_nominal_pressures_with_results(self):
+        wn = self.en.network.WaterNetworkModel()
+        parser = self.en.network.ParseWaterNetwork()
+        parser.read_inp_file(wn, 'networks_for_testing/Net1.inp')
+
+        pyomo_sim = self.en.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
+        results = pyomo_sim.run_sim()
+        
+        wn.set_nominal_pressures(res = results, fraction_of_min = 0.75, units = 'psi', minimum_pressure = 1.421970206324)
+        j = wn.get_node('11')
+        self.assertAlmostEqual(j.PF, 0.75*77.3910234918)
+        self.assertAlmostEqual(j.P0, 1.0)
+        j = wn.get_node('10')
+        self.assertAlmostEqual(j.PF, 0.75*77.3910234918)
+        self.assertAlmostEqual(j.P0, 1.0)
+        j = wn.get_node('13')
+        self.assertAlmostEqual(j.PF, 0.75*81.6949265612)
+        self.assertAlmostEqual(j.P0, 1.0)
+        j = wn.get_node('12')
+        self.assertAlmostEqual(j.PF, 0.75*80.9063684082)
+        self.assertAlmostEqual(j.P0, 1.0)
+        j = wn.get_node('21')
+        self.assertAlmostEqual(j.PF, 0.75*79.5580682795)
+        self.assertAlmostEqual(j.P0, 1.0)
+        j = wn.get_node('22')
+        self.assertAlmostEqual(j.PF, 0.75*81.1983520877)
+        self.assertAlmostEqual(j.P0, 1.0)
+        j = wn.get_node('23')
+        self.assertAlmostEqual(j.PF, 0.75*82.6793639998)
+        self.assertAlmostEqual(j.P0, 1.0)
+        j = wn.get_node('32')
+        self.assertAlmostEqual(j.PF, 0.75*74.9831385665)
+        self.assertAlmostEqual(j.P0, 1.0)
+        j = wn.get_node('31')
+        self.assertAlmostEqual(j.PF, 0.75*78.542154444)
+        self.assertAlmostEqual(j.P0, 1.0)
 
 if __name__ == '__main__':
     unittest.main()

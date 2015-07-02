@@ -106,14 +106,14 @@ def convert(paramtype, flowunit, data, MKS = True):
         
     elif paramtype in ['Demand', 'Flow', 'Emitter Coefficient']:
         if flowunit == 0: 
-            if MKS: data = data * 0.0283168 # ft3/s to m3/s
-            else:   data = data / 0.0283168 # m3/s to ft3/s
+            if MKS: data = data * 0.0283168466 # ft3/s to m3/s
+            else:   data = data / 0.0283168466 # m3/s to ft3/s
         elif flowunit == 1: 
-            if MKS: data = data * (0.00378541/60) # gall/min to m3/s
-            else:   data = data / (0.00378541/60) # m3/s to gall/min
+            if MKS: data = data * (0.003785411784/60.0) # gall/min to m3/s
+            else:   data = data / (0.003785411784/60.0) # m3/s to gall/min
         elif flowunit == 2: 
-            if MKS: data = data * (1e6*0.00378541/86400) # million gall/d to m3/s
-            else:   data = data / (1e6*0.00378541/86400) # m3/s to million gall/d
+            if MKS: data = data * (1e6*0.003785411784/86400.0) # million gall/d to m3/s
+            else:   data = data / (1e6*0.003785411784/86400.0) # m3/s to million gall/d
         elif flowunit == 3: 
             if MKS: data = data * (1e6*0.00454609)/86400 # million imperial gall/d to m3/s
             else:   data = data / (1e6*0.00454609)/86400 # m3/s to million imperial gall/d
@@ -160,8 +160,8 @@ def convert(paramtype, flowunit, data, MKS = True):
             else:   data = data / 0.3048 # m/s to ft/s
             
     elif paramtype == 'Energy':
-        if MKS: data = data * 3600000 # kW*hr to J
-        else:   data = data / 3600000 # J to kW*hr
+        if MKS: data = data * 3600000.0 # kW*hr to J
+        else:   data = data / 3600000.0 # J to kW*hr
         
     elif paramtype == 'Power':
         if flowunit in [0,1,2,3,4]:
@@ -173,8 +173,8 @@ def convert(paramtype, flowunit, data, MKS = True):
         
     elif paramtype == 'Pressure':
         if flowunit in [0,1,2,3,4]:
-            if MKS: data = data * 0.7032 # psi to m
-            else:   data = data / 0.7032 # m to psi
+            if MKS: data = data * 0.703249614902 # psi to m
+            else:   data = data / 0.703249614902 # m to psi
         """
         if flowunit in [0,1,2,3,4]:
             if MKS: data = data * 6894.75729 # psi to Pa
@@ -185,8 +185,8 @@ def convert(paramtype, flowunit, data, MKS = True):
         """
         
     elif paramtype == 'Source Mass Injection':
-        if MKS: data = data / 60 # per min to per second
-        else:   data = data * 60 # per second ro per min
+        if MKS: data = data / 60.0 # per min to per second
+        else:   data = data * 60.0 # per second ro per min
         
     elif paramtype == 'Volume':
         if flowunit in [0,1,2,3,4]:
@@ -194,8 +194,8 @@ def convert(paramtype, flowunit, data, MKS = True):
             else:   data = data / math.pow(0.3048, 3) # m3 to ft3 
             
     elif paramtype == 'Water Age':
-        if MKS: data = data * 3600 # hr to s
-        else:   data = data / 3600 # s to hr
+        if MKS: data = data * 3600.0 # hr to s
+        else:   data = data / 3600.0 # s to hr
     
     else:
         print "Invalid paramtype: " + paramtype + ". No conversion"
