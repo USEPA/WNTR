@@ -90,6 +90,8 @@ class TestConditionalControls(unittest.TestCase):
         for t in results.link.loc['pump1'].index:
             if activated_flag:
                 self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.002)
+            else:
+                self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
             if results.node.at[('tank1',t),'pressure'] >= 300.0 and not activated_flag:
                 activated_flag = True
         self.assertEqual(activated_flag, True)

@@ -15,13 +15,14 @@ TODO
 9. Check _apply_conditional_controls
 10. In _build_hydraulic_model_at_instant, when setting constraints for head gain for pumps with outtage, why is headloss 0 if modified_hazen_williams is true?
 11. Rewrite controls
-12. Modify implementation of leak: change network structure once and set demand to 0 if leak is inactive
-13. Try out alternative leak implementation: have demand come out of existing nodes
-14. Generalize tank controls for multiple pipes connected to tanks
-15. Fix the PDD smoothing so that pressure is not negative when demand is 0
-16. Update _apply_tank_controls since we now calculate tank levels based on flowrates from the previous timestep.
-17. Why override time controls at the end of _apply_tank_controls?
-18. Put in a check for negative pump head gain
+12. Try out alternative leak implementation: have demand come out of existing nodes
+13. Generalize tank controls for multiple pipes connected to tanks
+14. Fix the PDD smoothing so that pressure is not negative when demand is 0
+15. Update _apply_tank_controls since we now calculate tank levels based on flowrates from the previous timestep.
+16. Why override time controls at the end of _apply_tank_controls?
+17. Put in a check for negative pump head gain
+18. Consider flowrates in L/s to reduce solve time
+19. What happens to a node pressure if all links connected to that node are closed (actually closed, not just 0 flow)?
 """
 
 try:
@@ -1378,7 +1379,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                             other_segment = leak_links[0]
                             if other_segment in links_closed:
                                 links_closed.remove(other_segment)
-                    
+
             timedelta = results.time[t]
             if step_iter == 0:
                 print "Running Hydraulic Simulation at time", timedelta, " ... "
@@ -1855,18 +1856,18 @@ class PyomoSimulator(WaterNetworkSimulator):
                 value_i = i[1]
                 tank_i = self._wn.get_node(node_name_i)
                 current_tank_level = instance.head[node_name_i].value - tank_i.elevation
-                if link_name_k in pumps_closed:
-                    if current_tank_level <= value_i:
+                if current_tank_level <= value_i:
+                    if link_name_k in pumps_closed:
                         pumps_closed.remove(link_name_k)
-                        # Overriding time controls
-                        if link_name_k in links_closed_by_time:
-                            links_closed_by_time.remove(link_name_k)
-                            # If the links base status is closed then
-                            # all rest of timesteps should be opened
-                            link = self._wn.get_link(link_name_k)
-                            if link.get_base_status() == 'CLOSED':
-                                for tt in xrange(t, self._n_timesteps):
-                                    self._link_status[link_name_k][tt] = True
+                    # Overriding time controls
+                    if link_name_k in links_closed_by_time:
+                        links_closed_by_time.remove(link_name_k)
+                    # If the links base status is closed then
+                    # all rest of timesteps should be opened
+                    link = self._wn.get_link(link_name_k)
+                    if link.get_base_status() == 'CLOSED':
+                        for tt in xrange(t, self._n_timesteps):
+                            self._link_status[link_name_k][tt] = True
 
             # If link is open and the tank level goes above threshold, then close the link
             for i in closed_above:
@@ -1883,17 +1884,17 @@ class PyomoSimulator(WaterNetworkSimulator):
                 value_i = i[1]
                 tank_i = self._wn.get_node(node_name_i)
                 current_tank_level = instance.head[node_name_i].value - tank_i.elevation
-                if link_name_k in pumps_closed:
-                    if current_tank_level >= value_i:
+                if current_tank_level >= value_i:
+                    if link_name_k in pumps_closed:
                         pumps_closed.remove(link_name_k)
-                        if link_name_k in links_closed_by_time:
-                            links_closed_by_time.remove(link_name_k)
-                            # If the links base status is closed then
-                            # all rest of timesteps should be opened
-                            link = self._wn.get_link(link_name_k)
-                            if link.get_base_status() == 'CLOSED':
-                                for tt in xrange(t, self._n_timesteps):
-                                    self._link_status[link_name_k][tt] = True
+                    if link_name_k in links_closed_by_time:
+                        links_closed_by_time.remove(link_name_k)
+                    # If the links base status is closed then
+                    # all rest of timesteps should be opened
+                    link = self._wn.get_link(link_name_k)
+                    if link.get_base_status() == 'CLOSED':
+                        for tt in xrange(t, self._n_timesteps):
+                            self._link_status[link_name_k][tt] = True
 
             # If link is open and the tank level goes below threshold, then close the link
             for i in closed_below:
