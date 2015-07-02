@@ -14,9 +14,9 @@ parser.read_inp_file(wn, inp_file)
 # Simulate using PYOMO
 wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
 pyomo_sim = en.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
-#pyomo_sim.add_leak(leak_name = 'leak1', pipe_name = '12', leak_diameter=0.1, start_time = '0 days 05:00:00', fix_time = '0 days 20:00:00')
-pyomo_sim.add_leak(leak_name = 'leak2', pipe_name = '10', leak_diameter=0.1, start_time = '0 days 05:00:00', fix_time = '0 days 15:00:00')
-pyomo_sim.add_leak(leak_name = 'leak3', pipe_name = '110', leak_diameter=0.1, start_time = '0 days 05:00:00', fix_time = '0 days 13:00:00')
+pyomo_sim.add_leak(leak_name = 'leak1', pipe_name = '12', leak_diameter=0.05, start_time = '0 days 05:00:00', fix_time = '0 days 20:00:00')
+pyomo_sim.add_leak(leak_name = 'leak2', pipe_name = '10', leak_diameter=0.05, start_time = '0 days 05:00:00', fix_time = '0 days 15:00:00')
+pyomo_sim.add_leak(leak_name = 'leak3', pipe_name = '110', leak_diameter=0.05, start_time = '0 days 05:00:00', fix_time = '0 days 15:00:00')
 leak_results = pyomo_sim.run_sim()
 
 # Plot Pyomo results
@@ -31,7 +31,7 @@ if len(tank_list)>0:
     fig = plt.figure(figsize=(11,6))
     ax = fig.add_subplot(111)
     for tank_name in tank_list:
-        ax.plot(t_step, leak_results.node['head'][tank_name],label=tank_name)
+        ax.plot(t_step, leak_results.node['pressure'][tank_name],label=tank_name)
     ax.set_title('Tank levels')
     ax.set_xlabel('Timestep')
     ax.set_ylabel('m')
@@ -44,8 +44,8 @@ if len(tank_list)>0:
 fig = plt.figure(figsize=(11,6))
 ax = fig.add_subplot(111)
 for node_name in node_list:
-    ax.plot(t_step, leak_results.node['head'][node_name],label=node_name)
-ax.set_title('Node Head')
+    ax.plot(t_step, leak_results.node['pressure'][node_name],label=node_name)
+ax.set_title('Node Pressure')
 ax.set_xlabel('Timestep')
 ax.set_ylabel('m')
 ax.legend(loc=0, prop={'size':9})
@@ -87,13 +87,13 @@ pdf.close()
 #    print leak_results.node['pressure'][node_name]
 #    print leak_results.node['demand'][node_name]
 
-time = pd.timedelta_range(start = '0 days 13:00:00', end = '0 days 13:00:00')
-print '\n\n\n'
-print 'Node\t\tPressure\t\tHead\t\tDemand'
-for node_name in node_list:
-    print node_name,'\t\t',leak_results.node.at[(node_name,time[0]),'pressure'],'\t\t',leak_results.node.at[(node_name,time[0]),'head'],'\t\t',leak_results.node.at[(node_name,time[0]),'demand']
-
-print '\n\n\n'
-print 'Link\t\tFlowrate'
-for link_name in link_list:
-    print link_name,'\t\t',leak_results.link.at[(link_name,time[0]),'flowrate']
+#time = pd.timedelta_range(start = '0 days 13:00:00', end = '0 days 13:00:00')
+#print '\n\n\n'
+#print 'Node\t\tPressure\t\tHead\t\tDemand'
+#for node_name in node_list:
+#    print node_name,'\t\t',leak_results.node.at[(node_name,time[0]),'pressure'],'\t\t',leak_results.node.at[(node_name,time[0]),'head'],'\t\t',leak_results.node.at[(node_name,time[0]),'demand']
+#
+#print '\n\n\n'
+#print 'Link\t\tFlowrate'
+#for link_name in link_list:
+#    print link_name,'\t\t',leak_results.link.at[(link_name,time[0]),'flowrate']
