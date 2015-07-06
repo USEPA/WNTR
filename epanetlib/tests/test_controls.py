@@ -33,7 +33,7 @@ class TestTimeControls(unittest.TestCase):
         self.pyomo_results = pyomo_sim.run_sim()
 
     @classmethod
-    def tearDownClasss(self):
+    def tearDownClass(self):
         sys.path.remove(resilienceMainDir)
 
     def test_time_control_open_vs_closed(self):
@@ -52,7 +52,7 @@ class TestConditionalControls(unittest.TestCase):
         self.en = en
 
     @classmethod
-    def tearDownClasss(self):
+    def tearDownClass(self):
         sys.path.remove(resilienceMainDir)
 
 

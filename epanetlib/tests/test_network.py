@@ -26,7 +26,7 @@ class TestNetworkCreation(unittest.TestCase):
         parser.read_inp_file(self.wn, inp_file)
 
     @classmethod
-    def tearDownClasss(self):
+    def tearDownClass(self):
         sys.path.remove(resilienceMainDir)
 
     def test_num_junctions(self):
@@ -80,7 +80,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.en = en
 
     @classmethod
-    def tearDownClasss(self):
+    def tearDownClass(self):
         sys.path.remove(resilienceMainDir)
 
     def test_add_junction(self):
