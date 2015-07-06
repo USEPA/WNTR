@@ -2081,13 +2081,14 @@ class PyomoSimulator(WaterNetworkSimulator):
             if isinstance(link_to_tank, Pump):
                 raise RuntimeError('Tank control is not supported for pumps!')
             head_in_tank = instance.head[tank_name].value
+            next_head_in_tank = self.predict_next_tank_head(tank_name, instance)
             node_next_to_tank = control_info['node_name']
             min_tank_head = control_info['min_head']
             head_at_next_node = instance.head[node_next_to_tank].value
             # make link closed if the tank head is below min and
             # the head at connected node is below this minimum. That is,
             # flow will be out of the tank
-            if head_in_tank <= min_tank_head and head_at_next_node <= head_in_tank:
+            if next_head_in_tank <= min_tank_head and head_at_next_node <= head_in_tank:
                 pipes_closed_by_tank.add(link_name_to_tank)
             elif link_name_to_tank in pipes_closed_by_tank:
                 pipes_closed_by_tank.remove(link_name_to_tank)
@@ -2106,6 +2107,20 @@ class PyomoSimulator(WaterNetworkSimulator):
                     (len(closed_times) == 1 and closed_times[0] == 0):
                 for tt in xrange(t, self._n_timesteps):
                     self._link_status[link_name][tt] = True
+
+    def predict_next_tank_head(self,tank_name, instance):
+        tank_net_inflow = 0.0
+        tank = self._wn.get_node(tank_name)
+        for l in self._wn.get_links_for_node(tank_name):
+            link = self._wn.get_link(l)
+            if link.start_node() == tank_name:
+                tank_net_inflow -= instance.flow[l].value
+            elif link.end_node() == tank_name:
+                tank_net_inflow += instance.flow[l].value
+            else:
+                raise RuntimeError('Node link is neither start nor end node.')
+        new_tank_head = instance.head[tank_name].value + tank_net_inflow*self._hydraulic_step_sec*4.0/(math.pi*tank.diameter**2)
+        return new_tank_head
 
     def _set_valve_status(self, instance):
         """
