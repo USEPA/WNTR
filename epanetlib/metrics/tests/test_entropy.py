@@ -4,7 +4,7 @@ import numpy as np
 import epanetlib as en
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','..','networks')
+datadir = join(testdir,'..','..','..','examples','networks')
 packdir = join(testdir,'..','..','..')
 
 def test_layout1():

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import epanetlib as en
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','..','networks')
+datadir = join(testdir,'..','..','..','examples','networks')
 packdir = join(testdir,'..','..','..')
 
 def test_Todini_Fig2_optCost_GPM():
