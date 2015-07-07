@@ -2,19 +2,15 @@ import epanetlib as en
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
-from sympy.physics import units
 import pandas as pd
 
-plt.close('all')
-
+# Create a water network model
 inp_file = 'networks/Net3.inp'
-
-# Create a water network model for results object
 wn = en.network.WaterNetworkModel()
 parser = en.network.ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
 
-# Define WQ scenario
+# Define WQ scenarios
 """
 Scenario format: 
 QualityType, options = CHEM, AGE, or TRACE
@@ -28,44 +24,50 @@ sceanrio_CHEM = ['CHEM', '121', 'SETPOINT', 1000, 0, 1000]  # pattern (start/end
 sceanrio_AGE = ['AGE']
 sceanrio_TRACE = ['TRACE', '111']
 
-# Run a hydraulic and water quality simulation with EPANET
+# Simulate hydraulics and water quality for each scenario
 sim = en.sim.EpanetSimulator(wn)
 results_CHEM = sim.run_sim(WQ = sceanrio_CHEM)
 results_AGE = sim.run_sim(WQ = sceanrio_AGE)
 results_TRACE = sim.run_sim(WQ = sceanrio_TRACE)
 
 # plot chem scenario
-CHEM_at_5hr = results_CHEM.node.loc[(slice(None), pd.Timedelta(hours = 5)), 'quality']
+CHEM_at_5hr = results_CHEM.node.loc[(slice(None), 
+                                     pd.Timedelta(hours = 5)), 'quality']
 CHEM_at_5hr.reset_index(level=1, drop=True, inplace=True)
 attr = dict(CHEM_at_5hr)
-en.network.draw_graph(wn, node_attribute=attr, node_size=20, title='Chemical concentration, time = 5 hours')
+en.network.draw_graph(wn, node_attribute=attr, node_size=20, 
+                      title='Chemical concentration, time = 5 hours')
 CHEM_at_node = results_CHEM.node.loc[('208', slice(None)), 'quality']
 plt.figure()
 CHEM_at_node.plot(title='Chemical concentration, node 208')
 
 # Plot age scenario (convert to hours)
-AGE_at_5hr = results_AGE.node.loc[(slice(None), pd.Timedelta(hours = 5)), 'quality']/3600
+AGE_at_5hr = results_AGE.node.loc[(slice(None), 
+                                   pd.Timedelta(hours = 5)), 'quality']/3600
 AGE_at_5hr.reset_index(level=1, drop=True, inplace=True)
 attr = dict(AGE_at_5hr)
-en.network.draw_graph(wn, node_attribute=attr, node_size=20, title='Water age (hrs), time = 5 hours')
+en.network.draw_graph(wn, node_attribute=attr, node_size=20, 
+                      title='Water age (hrs), time = 5 hours')
 AGE_at_node = results_AGE.node.loc[('208', slice(None)), 'quality']/3600
 plt.figure()
 AGE_at_node.plot(title='Water age, node 208')
 
 # Plot trace scenario 
-TRACE_at_5hr = results_TRACE.node.loc[(slice(None), pd.Timedelta(hours = 5)), 'quality']
+TRACE_at_5hr = results_TRACE.node.loc[(slice(None), 
+                                       pd.Timedelta(hours = 5)), 'quality']
 TRACE_at_5hr.reset_index(level=1, drop=True, inplace=True)
 attr = dict(TRACE_at_5hr)
-en.network.draw_graph(wn, node_attribute=attr, node_size=20, title='Trace percent, time = 5 hours')
+en.network.draw_graph(wn, node_attribute=attr, node_size=20, 
+                      title='Trace percent, time = 5 hours')
 TRACE_at_node = results_TRACE.node.loc[('208', slice(None)), 'quality']
 plt.figure()
 TRACE_at_node.plot(title='Trace percent, node 208')
 
-quality_lower_bound = 0.2*float((units.mg/units.l)/(units.kg/units.m**3)) # mg/L to kg/m3
-quality_upper_bound = 4*float((units.mg/units.l)/(units.kg/units.m**3)) # mg/L to kg/m3
+quality_lower_bound = 0.0002 # kg/m3 (0.2 mg/L)
+quality_upper_bound = 0.004 # kg/m3 (4 mg/L)
 
 """
-OLD CODE
+UPDATE
 # Fraction of delivered quality (FDQ)
 fdq = en.metrics.fraction_delivered_quality(G, quality_upper_bound)
 print "Average FDQ: " +str(np.mean(fdq.values()))
