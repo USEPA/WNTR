@@ -6,7 +6,7 @@ resilienceMainDir = os.path.abspath(
     os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
         inspect.currentframe() ) ) ), '..', '..' ))
 
-class TestNet1(unittest.TestCase):
+class TestWithEpanet(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
