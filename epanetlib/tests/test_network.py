@@ -20,7 +20,7 @@ class TestNetworkCreation(unittest.TestCase):
         import epanetlib as en
         self.en = en
 
-        inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/Net6_mod.inp'
+        inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/net_test_6.inp'
         self.wn = self.en.network.WaterNetworkModel()
         parser = self.en.network.ParseWaterNetwork()
         parser.read_inp_file(self.wn, inp_file)
@@ -306,7 +306,7 @@ class TestNetworkMethods(unittest.TestCase):
     def test_set_nominal_pressures(self):
         wn = self.en.network.WaterNetworkModel()
         parser = self.en.network.ParseWaterNetwork()
-        parser.read_inp_file(wn, resilienceMainDir+'/epanetlib/tests/networks_for_testing/Net1.inp')
+        parser.read_inp_file(wn, resilienceMainDir+'/epanetlib/tests/networks_for_testing/net_test_4.inp')
 
         wn.set_nominal_pressures(constant_nominal_pressure = 15.0, minimum_pressure = 1.0)
 
@@ -326,7 +326,7 @@ class TestNetworkMethods(unittest.TestCase):
     def test_set_nominal_pressures_with_results(self):
         wn = self.en.network.WaterNetworkModel()
         parser = self.en.network.ParseWaterNetwork()
-        parser.read_inp_file(wn, resilienceMainDir+'/epanetlib/tests/networks_for_testing/Net1.inp')
+        parser.read_inp_file(wn, resilienceMainDir+'/epanetlib/tests/networks_for_testing/net_test_4.inp')
 
         pyomo_sim = self.en.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
         results = pyomo_sim.run_sim()
