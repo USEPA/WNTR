@@ -3,7 +3,7 @@ import epanetlib as en
 from os.path import abspath, dirname, join
 
 testdir = dirname(abspath(__file__))
-datadir = join(testdir,'..','..','..','networks')
+datadir = join(testdir,'..','..','tests','networks_for_testing')
 
 def test_ENgetcoordinates():
     enData = en.pyepanet.ENepanet()

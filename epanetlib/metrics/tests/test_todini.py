@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import epanetlib as en
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','..','networks')
+datadir = join(testdir,'..','..','tests','networks_for_testing')
 packdir = join(testdir,'..','..','..')
 
 def test_Todini_Fig2_optCost_GPM():
@@ -132,7 +132,7 @@ def test_BWSN_Network_2():
     
 
 def test_Net6():
-    inp_file = join(datadir,'Net6.inp') 
+    inp_file = join(datadir,'Net6_mod.inp') 
 
     # Create a water network model for results object
     wn = en.network.WaterNetworkModel()
