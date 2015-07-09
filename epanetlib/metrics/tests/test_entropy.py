@@ -29,7 +29,7 @@ def test_layout1():
             '12': 150.0}
    
     G_flowrate = wn.get_weighted_graph_copy(link_attribute=attr)    
-    en.network.draw_graph(wn, link_attribute=attr) 
+    #en.network.draw_graph(wn, link_attribute=attr) 
     
     [S, Shat,sp,dk] = en.metrics.entropy(G_flowrate)
     
@@ -82,7 +82,7 @@ def test_layout8():
             '16': 20.4}
    
     G_flowrate = wn.get_weighted_graph_copy(link_attribute=attr)    
-    en.network.draw_graph(wn, link_attribute=attr) 
+    #en.network.draw_graph(wn, link_attribute=attr) 
     
     [S, Shat,sp,dk] = en.metrics.entropy(G_flowrate)
     
