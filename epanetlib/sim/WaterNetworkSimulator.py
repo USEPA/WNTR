@@ -45,22 +45,28 @@ class WaterNetworkSimulator(object):
         # A dictionary containing pump outage information
         # format is PUMP_NAME: (start time in sec, end time in sec)
         self._pump_outage = {}
+
         # A dictionary containg leak time information
         # format is LEAK_NAME: (start time in sec, end time in sec)
         self._leak_times = {}
+
         # A dictionary containing leak characteristics
         # format is LEAK_NAME: {'original_pipe':copy_of_original_pipe, 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff, 'shutoff_valve_loc':shutoff_valve_loc}
         self._leak_info = {}
+
         # A dictionary containing pipe names and associated leak names
         # format is PIPE_NAME: LEAK_NAME
         self._pipes_with_leaks = {}
+
         # A dictionary containing information to stop flow from a tank once
         # the minimum head is reached. This dict contains the pipes connected to the tank,
         # the node connected to the tank, and the minimum allowable head in the tank.
-        # e.g. : 'Tank-2': {'node_name': 'Junction-1',
-        #                   'link_name': 'Pipe-3',
+        # The index of each link must match the index of it's corresponding node.
+        # e.g. : 'Tank-2': {'node_names': ['Junction-1','Junction-3'],
+        #                   'link_names': ['Pipe-3', 'Pipe-8'],
         #                   'min_head': 100}
         self._tank_controls = {}
+
         # A dictionary containing links connected to reservoir
         # 'Pump-2':'Lake-1'
         self._reservoir_links = {}
@@ -103,41 +109,29 @@ class WaterNetworkSimulator(object):
                 self._reservoir_links[l] = reserv_name
 
     def _init_tank_controls(self):
+        # Setting the links and nodes next to tanks, min heads, and max heads
 
         for tank_name, tank in self._wn.nodes(Tank):
+
             self._tank_controls[tank_name] = {}
+            self._tank_controls[tank_name]['node_names'] = []
+            self._tank_controls[tank_name]['link_names'] = []
+
+            # Set minimum head and maximum head
+            self._tank_controls[tank_name]['min_head'] = tank.elevation + tank.min_level
+            self._tank_controls[tank_name]['max_head'] = tank.elevation + tank.max_level
+
+            # Get links next to the tank
             links_next_to_tank = self._wn.get_links_for_node(tank_name)
-            if len(links_next_to_tank) != 1:
-                # Remove CV's from list of links next to tank
-                for l in links_next_to_tank:
-                    link = self._wn.get_link(l)
-                    if link.get_base_status() == 'CV':
-                        links_next_to_tank.remove(l)
-            """
-            if len(links_next_to_tank) != 1:
-                warnings.warn('Pump outage analysis requires tank to be connected to a single link that'
-                              ' is not a check valve. Please set tank controls manually to provide the link'
-                              ' that should be closed when tank level goes below minimum.')
-            """
-            link = self._wn.get_link(links_next_to_tank[0])
-            node_next_to_tank = link.start_node()
-            if node_next_to_tank == tank_name:
-                node_next_to_tank = link.end_node()
-            # Minimum tank level is equal to the elevation
-            min_head = tank.elevation #+ tank.min_level
-            max_head = tank.max_level + tank.elevation + 1.0
-            # Add to tank controls dictionary
-            self._tank_controls[tank_name]['node_name'] = node_next_to_tank
-            # Adding a hack for Tank-3326 in Net6.
-            # There does not seem to be a general rule of selecting
-            # the link to close when this tank goes below minimum level.
-            if 'LINK-1843' in links_next_to_tank:
-                self._tank_controls[tank_name]['link_name'] = 'LINK-1843'
-            else:
-                self._tank_controls[tank_name]['link_name'] = links_next_to_tank[0]
-            self._tank_controls[tank_name]['min_head'] = min_head
-            self._tank_controls[tank_name]['max_head'] = max_head
-            #print tank_name, links_next_to_tank
+
+            # store the link names and node names
+            for link_name in links_next_to_tank:
+                link = self._wn.get_link(link_name)
+                node_next_to_tank = link.start_node()
+                if node_next_to_tank == tank_name:
+                    node_next_to_tank = link.end_node()
+                self._tank_controls[tank_name]['node_names'].append(node_next_to_tank)
+                self._tank_controls[tank_name]['link_names'].append(link_name)
 
     def timedelta_to_sec(self, timedelta):
         """
