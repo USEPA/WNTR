@@ -296,16 +296,16 @@ class ParseWaterNetwork(object):
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')):
                     continue
-                if (current[0] == 'Duration') or (current[0] == 'DURATION'):
+                if (current[0].upper() == 'DURATION'):
                     wn.add_time_parameter('DURATION', str_time_to_sec(current[1]))
-                elif (current[0] == 'Hydraulic') or (current[0] == 'HYDRAULIC'):
+                elif (current[0].upper() == 'HYDRAULIC'):
                     wn.add_time_parameter('HYDRAULIC TIMESTEP', str_time_to_sec(current[2]))
-                elif (current[0] == 'Quality') or (current[0] == 'QUALITY'):
+                elif (current[0].upper() == 'QUALITY'):
                     wn.add_time_parameter('QUALITY TIMESTEP', str_time_to_sec(current[2]))
-                elif (current[1] == 'ClockTime') or (current[1] == 'CLOCKTIME'):
+                elif (current[1].upper() == 'CLOCKTIME'):
                     [time, time_format] = [current[2], current[3].upper()]
                     # convert time in AM or PM into minute of day
-                    if '12' in time:
+                    if '12' in time and time_format == 'AM':
                         time = '0'
                     if time_format == 'AM':
                         time_min = str_time_to_sec(time)
@@ -314,11 +314,28 @@ class ParseWaterNetwork(object):
                     else:
                         RuntimeError("Time format in INP file not recognized: " + time_format)
                     wn.add_time_parameter('START CLOCKTIME', time_min)
-                elif (current[0] == 'Statistic') or (current[0] == 'STATISTIC'):
+                elif (current[0].upper() == 'STATISTIC'):
                     wn.add_time_parameter('STATISTIC', current[1])
                 else:  # Other time options
                     key_string = current[0] + ' ' + current[1]
                     wn.add_time_parameter(key_string.upper(), str_time_to_sec(current[2]))
+
+                if 'PATTERN START' in wn.time_options.keys():
+                    if wn.time_options['PATTERN START'] != 0.0:
+                        raise ValueError('Currently, only a patern start time of 0.0 is supported')
+
+                if 'REPORT START' in wn.time_options.keys():
+                    if wn.time_options['REPORT START'] != 0.0:
+                        raise ValueError('Currently, only a report start time of 0.0 is supported')
+
+                if 'REPORT TIMESTEP' in wn.time_options.keys():
+                    if wn.time_options['REPORT TIMESTEP'] != wn.time_options['HYDRAULIC TIMESTEP']:
+                        raise ValueError('Currently, only a report timestep equal to the hydraulic timestep is supported')
+
+                if 'START CLOCKTIME' in wn.time_options.keys():
+                    if wn.time_options['START CLOCKTIME'] != 0.0:
+                        raise ValueError('Currently, only a start clocktime of 12 am is supported')
+
             if patterns:
                 # patterns are stored in a pattern dictionary pattern_dict = {'pattern_1': [ 23, 3, 4 ...], ... }
                 current = line.split()

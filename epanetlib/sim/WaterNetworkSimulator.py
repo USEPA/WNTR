@@ -492,7 +492,7 @@ class WaterNetworkSimulator(object):
             self._hydraulic_step_sec = self._wn.time_options['HYDRAULIC TIMESTEP']
             self._pattern_step_sec = self._wn.time_options['PATTERN TIMESTEP']
             self._report_step_sec = self._wn.time_options['REPORT TIMESTEP']
-            self._hydraulic_times_sec = np.linspace(0, self._sim_duration_sec, self._sim_duration_sec/self._hydraulic_step_sec)
+            # I don't think that this line is used: self._hydraulic_times_sec = np.linspace(0, self._sim_duration_sec, self._sim_duration_sec/self._hydraulic_step_sec)
 
         except KeyError:
             KeyError("Water network model used for simulation should contain time parameters. "
