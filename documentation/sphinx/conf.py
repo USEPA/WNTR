@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# resilience documentation build configuration file, created by
+# WNTR documentation build configuration file, created by
 # sphinx-quickstart on Tue Jun 09 14:55:44 2015.
 #
 # This file is execfile()d with the current directory set to its
@@ -34,6 +34,7 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.pngmath',
+    'sphinx.ext.autosummary',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -49,7 +50,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'resilience'
+project = u'WNTR'
 copyright = u'2015, SNL, EPA, Purdue'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -182,7 +183,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'resiliencedoc'
+htmlhelp_basename = 'wntrdoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -202,7 +203,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'resilience.tex', u'resilience Documentation',
+  ('index', 'wntr.tex', u'wntr Documentation',
    u'SNL, EPA, Purdue', 'manual'),
 ]
 
@@ -232,7 +233,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'resilience', u'resilience Documentation',
+    ('index', 'wntr', u'wntr Documentation',
      [u'SNL, EPA, Purdue'], 1)
 ]
 
@@ -246,8 +247,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'resilience', u'resilience Documentation',
-   u'SNL, EPA, Purdue', 'resilience', 'One line description of project.',
+  ('index', 'wntr', u'wntr Documentation',
+   u'SNL, EPA, Purdue', 'wntr', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -262,3 +263,5 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+autosummary_generate = True
