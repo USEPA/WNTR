@@ -118,7 +118,7 @@ class WaterNetworkSimulator(object):
             self._tank_controls[tank_name]['link_names'] = []
 
             # Set minimum head and maximum head
-            self._tank_controls[tank_name]['min_head'] = tank.elevation + tank.min_level
+            self._tank_controls[tank_name]['min_head'] = tank.elevation #+ tank.min_level
             self._tank_controls[tank_name]['max_head'] = tank.elevation + tank.max_level
 
             # Get links next to the tank

@@ -23,6 +23,7 @@ TODO
 17. Put in a check for negative pump head gain
 18. Consider flowrates in L/s to reduce solve time
 19. What happens to a node pressure if all links connected to that node are closed (actually closed, not just 0 flow)?
+20. Think about controls in context of multiple trials for a single timestep
 """
 
 try:
@@ -1247,10 +1248,9 @@ class PyomoSimulator(WaterNetworkSimulator):
         links_closed_by_drain_to_reservoir = set([]) # Set of links closed because of reverse flow into the reservoir
         pumps_closed_by_low_flow = set([]) # Set of pumps closed by low flow
 
+        # monitor the status of leaks
         self._active_leaks = set([])
         self._inactive_leaks = set([leak_name for leak_name in self._leak_times.keys()])
-
-        first_time_below_level = {}
 
         # Create solver instance
         opt = SolverFactory(solver)
@@ -1283,10 +1283,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 first_timestep = False
 
-            for tank_name, tank in self._wn.nodes(Tank):
-                if last_tank_head[tank_name] >= self._tank_controls[tank_name]['min_head']:
-                    first_time_below_level[tank_name] = True
-
             # Get demands at current timestep
             current_demands = {n_name: self._demand_dict[n_name, t] for n_name, n in self._wn.nodes(Junction)}
 
@@ -1304,18 +1300,17 @@ class PyomoSimulator(WaterNetworkSimulator):
                         self._inactive_leaks.add(leak_name)
                         self._active_leaks.remove(leak_name)
 
-            # Apply controls
-            self._apply_controls(instance, first_timestep, links_closed_by_controls, t)
-
-            # Apply pump outage
-            # These will override time controls, pumps closed by drain to reservoir, and links closed by tank controls
+            # Pre-solve controls
+            # These controls depend on the results of the previous timestep,
+            # and they do not require a resolve if activated
+            self._apply_controls(instance, first_timestep, links_closed_by_controls, t) # time controls and conditional controls
             if self._pump_outage:
-                self._apply_pump_outage(pumps_closed_by_outage, t)
-
-            if not first_timestep:
-                links_closed_last_step = links_closed
+                self._apply_pump_outage(pumps_closed_by_outage, t) # pump outage controls
+            self._close_all_links_for_tanks_below_min_head(instance, links_closed_by_tank_controls) # controls for closing links if the tank level gets too low or opening links if the tank level goes back above the minimum head
 
             # Combine list of closed links
+            if not first_timestep:
+                links_closed_last_step = links_closed
             links_closed = pumps_closed_by_low_flow.union(
                            links_closed_by_drain_to_reservoir.union(
                            links_closed_by_controls.union(
@@ -1323,27 +1318,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                            closed_check_valves.union(
                            pumps_closed_by_outage)))))
 
+            # check that links with inactive leaks were opened properly (if they were opened)
             if not first_timestep:
-                # If a link with a leak got opened while the leak is inactive, we need to make sure both segments get opened.
-                for link_name in links_closed_last_step:
-                    if link_name not in links_closed: # Link was closed last step and is open this step
-                        link = self._wn.get_link(link_name)
-                        start_node_name = link.start_node()
-                        end_node_name = link.end_node()
-                        if start_node_name in self._inactive_leaks:
-                            leak_links = self._wn.get_links_for_node(start_node_name)
-                            if len(leak_links) != 2:
-                                raise RuntimeError('There is a bug.')
-                            leak_links.remove(link_name)
-                            other_segment = leak_links[0]
-                            links_closed.discard(other_segment)
-                        elif end_node_name in self._inactive_leaks:
-                            leak_links = self._wn.get_links_for_node(end_node_name)
-                            if len(leak_links) != 2:
-                                raise RuntimeError('There is a bug.')
-                            leak_links.remove(link_name)
-                            other_segment = leak_links[0]
-                            links_closed.discard(other_segment)
+                self._fully_open_links_with_inactive_leaks(links_closed_last_step, links_closed)
 
             timedelta = results.time[t]
             if step_iter == 0:
@@ -1384,8 +1361,12 @@ class PyomoSimulator(WaterNetworkSimulator):
             #CheckInstanceFeasibility(instance, 1e-6)
             #self._check_constraint_violation(instance)
 
+            # Post-solve controls
+            # These controls depend on the current timestep,
+            # and the current timestep needs resolved if they are activated.
             self._close_links_for_drain_to_reservoir(instance, links_closed_by_drain_to_reservoir)
-            self._apply_tank_controls(instance, links_closed_by_tank_controls, t)
+            self._check_tank_controls(instance, links_closed_by_tank_controls)
+            self._close_low_flow_pumps()
 
             # Check if the solver converged. Else we assume there was a pump with very low flow that needs to be closed.
             if (pyomo_results.solver.status == SolverStatus.ok) and (pyomo_results.solver.termination_condition == TerminationCondition.optimal):
@@ -1996,39 +1977,41 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Replace original pipe
         self._wn.add_pipe(orig_pipe._link_name, orig_pipe._start_node_name, orig_pipe._end_node_name, orig_pipe.length, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
 
-    def _apply_tank_controls(self, instance, pipes_closed_by_tank, links_closed_by_time, t):
+    def _close_all_links_for_tanks_below_min_head(instance, links_closed_by_tank_controls):
         for tank_name, control_info in self._tank_controls.iteritems():
-            link_name_to_tank = control_info['link_name']
-            link_to_tank = self._wn.get_link(link_name_to_tank)
-            if isinstance(link_to_tank, Pump):
-                raise RuntimeError('Tank control is not supported for pumps!')
             head_in_tank = instance.head[tank_name].value
             next_head_in_tank = self.predict_next_tank_head(tank_name, instance)
-            node_next_to_tank = control_info['node_name']
             min_tank_head = control_info['min_head']
-            head_at_next_node = instance.head[node_next_to_tank].value
-            # make link closed if the tank head is below min and
-            # the head at connected node is below this minimum. That is,
-            # flow will be out of the tank
-            if next_head_in_tank <= min_tank_head and head_at_next_node <= head_in_tank:
-                pipes_closed_by_tank.add(link_name_to_tank)
-            elif link_name_to_tank in pipes_closed_by_tank:
-                pipes_closed_by_tank.remove(link_name_to_tank)
-                self._override_time_controls(links_closed_by_time, link_name_to_tank, t)
-        return pipes_closed_by_tank
-
-    def _override_time_controls(self, links_closed_by_time_controls, link_name, t):
-        # Override time controls
-        if link_name in links_closed_by_time_controls:
-            links_closed_by_time_controls.remove(link_name)
-            # If the links base status is closed then
-            # all rest of timestep should be opened
-            link = self._wn.get_link(link_name)
-            closed_times = self._wn.time_controls[link_name]['closed_times']
-            if link.get_base_status().upper() == 'CLOSED' or \
-                    (len(closed_times) == 1 and closed_times[0] == 0):
-                for tt in xrange(t, self._n_timesteps):
-                    self._link_status[link_name][tt] = True
+            if next_head_in_tank <= min_tank_head and head_in_tank >= min_tank_head:
+                for link_name in control_info['link_names']:
+                    link = self._wn.get_link(link_name)
+                    if isinstance(link, Pump) or link.get_base_status() == 'CV':
+                        if link.end_node() == tank_name:
+                            continue
+                        else:
+                            links_closed_by_tank_controls.add(link_name)
+                    else:
+                        links_closed_by_tank_controls.add(link_name)
+            elif next_head_in_tank >= min_tank_head and head_in_tank <= min_tank_head:
+                for link_name in control_info['link_names']:
+                    links_closed_by_tank_controls.discard(link_name)
+                
+    def _check_tank_controls(instance, links_closed_by_tank_controls):
+        for tank_name, control_info in self._tank_controls.iteritems():
+            head_in_tank = instance.head[tank_name].value
+            min_tank_head = control_info['min_head']
+            if head_in_tank <= min_tank_head:
+                link_names = control_info['link_names']
+                node_names = control_info['node_names']
+                for i in len(link_names):
+                    link_name = link_names[i]
+                    node_name = node_names[i]
+                    if link_name not in links_closed_by_tank_controls: # the link is currently open
+                        if instance.head[node_name] <= instance.head[tank_name]:
+                            links_closed_by_tank_controls.add(link_name)
+                    else: # the link is currently closed
+                        if instance.head[node_name] >= instance.head[tank_name]:
+                            links_closed_by_tank_controls.discard(link_name)
 
     def predict_next_tank_head(self,tank_name, instance):
         tank_net_inflow = 0.0
@@ -2181,12 +2164,34 @@ class PyomoSimulator(WaterNetworkSimulator):
             end_node_name = link.end_node()
 
             if start_node_name == reservoir_name:
-                if instance.flow[link_name].value <= 0.0:
+                if instance.flow[link_name].value <= -self._Qtol:
                     links_closed_by_drain_to_reservoir.add(link_name)
                 else:
                     links_closed_by_drain_to_reservoir.discard(link_name)
             elif end_node_name == reservoir_name:
-                if instance.flow[link_name].value >= 0.0:
+                if instance.flow[link_name].value >= self._Qtol:
                     links_closed_by_drain_to_reservoir.add(link_name)
                 else:
                     links_closed_by_drain_to_reservoir.discard(link_name)
+
+    def _fully_open_links_with_inactive_leaks(links_closed_last_step, links_closed):
+        # If a link with a leak got opened while the leak is inactive, we need to make sure both segments get opened.
+        for link_name in links_closed_last_step:
+            if link_name not in links_closed: # Link was closed last step and is open this step
+                link = self._wn.get_link(link_name)
+                start_node_name = link.start_node()
+                end_node_name = link.end_node()
+                if start_node_name in self._inactive_leaks:
+                    leak_links = self._wn.get_links_for_node(start_node_name)
+                    if len(leak_links) != 2:
+                        raise RuntimeError('There is a bug.')
+                    leak_links.remove(link_name)
+                    other_segment = leak_links[0]
+                    links_closed.discard(other_segment)
+                elif end_node_name in self._inactive_leaks:
+                    leak_links = self._wn.get_links_for_node(end_node_name)
+                    if len(leak_links) != 2:
+                        raise RuntimeError('There is a bug.')
+                    leak_links.remove(link_name)
+                    other_segment = leak_links[0]
+                    links_closed.discard(other_segment)
