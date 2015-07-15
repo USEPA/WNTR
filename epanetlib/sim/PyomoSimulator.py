@@ -24,6 +24,8 @@ TODO
 18. Consider flowrates in L/s to reduce solve time
 19. What happens to a node pressure if all links connected to that node are closed (actually closed, not just 0 flow)?
 20. Think about controls in context of multiple trials for a single timestep
+21. Is the pump low flow problem a low flow problem or a low suction pressure problem or both?
+22. Currently, pumps closed for low flow never open back up. Fix this.
 """
 
 try:
@@ -592,6 +594,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                          nodal_demands,
                                          first_timestep,
                                          links_closed,
+                                         pumps_closed_by_outage,
                                          last_link_flows,
                                          modified_hazen_williams=True):
         """
@@ -1306,7 +1309,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._apply_controls(instance, first_timestep, links_closed_by_controls, t) # time controls and conditional controls
             if self._pump_outage:
                 self._apply_pump_outage(pumps_closed_by_outage, t) # pump outage controls
-            self._close_all_links_for_tanks_below_min_head(instance, links_closed_by_tank_controls) # controls for closing links if the tank level gets too low or opening links if the tank level goes back above the minimum head
+            if not first_timestep:
+                self._close_all_links_for_tanks_below_min_head(instance, links_closed_by_tank_controls) # controls for closing links if the tank level gets too low or opening links if the tank level goes back above the minimum head
 
             # Combine list of closed links
             if not first_timestep:
@@ -1315,8 +1319,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                            links_closed_by_drain_to_reservoir.union(
                            links_closed_by_controls.union(
                            links_closed_by_tank_controls.union(
-                           closed_check_valves.union(
-                           pumps_closed_by_outage)))))
+                           closed_check_valves))))
 
             # check that links with inactive leaks were opened properly (if they were opened)
             if not first_timestep:
@@ -1335,6 +1338,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                                            current_demands,
                                                            first_timestep,
                                                            links_closed,
+                                                           pumps_closed_by_outage,
                                                            last_link_flows,
                                                            modified_hazen_williams)
             #print "Total build model time : ", time.time() - t0
@@ -1366,26 +1370,22 @@ class PyomoSimulator(WaterNetworkSimulator):
             # and the current timestep needs resolved if they are activated.
             self._close_links_for_drain_to_reservoir(instance, links_closed_by_drain_to_reservoir)
             self._check_tank_controls(instance, links_closed_by_tank_controls)
-            self._close_low_flow_pumps()
-
             # Check if the solver converged. Else we assume there was a pump with very low flow that needs to be closed.
-            if (pyomo_results.solver.status == SolverStatus.ok) and (pyomo_results.solver.termination_condition == TerminationCondition.optimal):
-                low_flow_pumps_closed_flag = False
-            else:
-                # Close low flow pumps. This overrides pumps closed by outage.
-                low_flow_pumps_closed_flag = self._close_low_flow_pumps(instance, pumps_closed_by_low_flow, pumps_closed_by_outage)
+            if (pyomo_results.solver.status != SolverStatus.ok) or (pyomo_results.solver.termination_condition != TerminationCondition.optimal):
+                self._close_low_flow_pumps(instance, pumps_closed_by_low_flow, pumps_closed_by_outage)
+            self._set_check_valves_closed(instance, closed_check_valves)
+            new_links_closed = pumps_closed_by_low_flow.union(
+                           links_closed_by_drain_to_reservoir.union(
+                           links_closed_by_controls.union(
+                           links_closed_by_tank_controls.union(
+                           closed_check_valves))))
 
             # Set valve status based on pyomo results
             if self._wn._num_valves != 0:
                 valve_status_changed = self._set_valve_status(instance)
-                check_valve_status_changed = self._set_check_valves_closed(instance, closed_check_valves)
 
             # Another trial at the same timestep is required if the following conditions are met:
-            if valve_status_changed \
-                    or check_valve_status_changed \
-                    or reservoir_link_closed_flag \
-                    or low_flow_pumps_closed_flag \
-                    or resolve_for_tank_controls:
+            if valve_status_changed or new_links_closed!=links_closed:
                 step_iter += 1
             else:
                 step_iter = 0
@@ -1403,9 +1403,6 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             # Copy last instance. Used to manually initialize next timestep.
             last_instance = copy.deepcopy(instance)
-
-            # Reset time controls
-            links_closed_by_time = set([])
 
             if step_iter == self._max_step_iter:
                 raise RuntimeError('Simulation did not converge at timestep ' + str(t) + ' in '+str(self._max_step_iter)+' trials.')
@@ -2084,9 +2081,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                     valve_status_changed = True
         return valve_status_changed
 
-    def _set_check_valves_closed(self, instance, check_valves_closed):
-
-        check_valve_status_changed = False
+    def _set_check_valves_closed(self, instance, closed_check_valves):
         # See EPANET2 Manual pg 191 for the description of the logic used below
         for pipe_name in self._wn._check_valves:
             pipe = self._wn.get_link(pipe_name)
@@ -2095,36 +2090,24 @@ class PyomoSimulator(WaterNetworkSimulator):
             headloss = instance.head[start_node].value - instance.head[end_node].value
             if abs(headloss) > self._Htol:
                 if headloss < -self._Htol:
-                    if pipe_name not in check_valves_closed:
-                        check_valves_closed.add(pipe_name)
-                        check_valve_status_changed = True
+                    closed_check_valves.add(pipe_name)
                 elif instance.flow[pipe_name].value < -self._Qtol:
-                    if pipe_name not in check_valves_closed:
-                        check_valves_closed.add(pipe_name)
-                        check_valve_status_changed = True
+                    closed_check_valves.add(pipe_name)
                 else:
-                    if pipe_name in check_valves_closed:
-                        check_valves_closed.remove(pipe_name)
-                        check_valve_status_changed = True
+                    closed_check_valves.discard(pipe_name)
             elif instance.flow[pipe_name].value < -self._Qtol:
-                check_valves_closed.add(pipe_name)
-                check_valve_status_changed = True
-
-        #print check_valves_closed
-        return check_valve_status_changed
+                closed_check_valves.add(pipe_name)
 
     def _close_low_flow_pumps(self, instance, pumps_closed_by_low_flow, pumps_closed_by_outage):
-        low_flow_pumps_closed_flag = False
+        new_pumps_closed_by_low_flow = set([])
         for pump in instance.pumps:
             if abs(instance.flow[pump].value) < self._pump_zero_flow_tol:
                 if pump not in pumps_closed_by_low_flow and pump not in pumps_closed_by_outage:
                     pumps_closed_by_low_flow.add(pump)
-                    low_flow_pumps_closed_flag = True
             elif pump in pumps_closed_by_low_flow:
                 pumps_closed_by_low_flow.remove(pump)
         for pump in pumps_closed_by_outage:
             pumps_closed_by_low_flow.discard(pump)
-        return low_flow_pumps_closed_flag
 
     def _load_general_results(self, results):
         """
@@ -2166,12 +2149,12 @@ class PyomoSimulator(WaterNetworkSimulator):
             if start_node_name == reservoir_name:
                 if instance.flow[link_name].value <= -self._Qtol:
                     links_closed_by_drain_to_reservoir.add(link_name)
-                else:
+                elif instance.head[reservoir_name].value >= instance.head[end_node_name].value:
                     links_closed_by_drain_to_reservoir.discard(link_name)
             elif end_node_name == reservoir_name:
                 if instance.flow[link_name].value >= self._Qtol:
                     links_closed_by_drain_to_reservoir.add(link_name)
-                else:
+                elif instance.head[reservoir_name].value >= instance.head[start_node_name].value:
                     links_closed_by_drain_to_reservoir.discard(link_name)
 
     def _fully_open_links_with_inactive_leaks(links_closed_last_step, links_closed):
