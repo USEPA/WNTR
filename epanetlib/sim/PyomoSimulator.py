@@ -1249,7 +1249,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         links_closed_by_tank_controls = set([])  # Set of pipes closed when tank level goes below min
         closed_check_valves = set([]) # Set of closed check valves
         links_closed_by_drain_to_reservoir = set([]) # Set of links closed because of reverse flow into the reservoir
-        pumps_closed_by_low_flow = set([]) # Set of pumps closed by low flow
+        pumps_closed_by_low_suction_pressure = set([]) # set of pumps closed because the suction pressure is low
+        pumps_closed_by_low_flow = set([]) # Set of pumps that do not have low suction pressure, but are closed by low flow
 
         # monitor the status of leaks
         self._active_leaks = set([])
@@ -1269,10 +1270,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         step_iter = 0 # trial
         instance = None
         valve_status_changed = False
-        check_valve_status_changed = False
-        reservoir_link_closed_flag = False
-        low_flow_pumps_closed_flag = False
-        resolve_for_tank_controls = False
         first_timestep = True
         while t < self._n_timesteps and step_iter < self._max_step_iter:
 
@@ -1319,7 +1316,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                            links_closed_by_drain_to_reservoir.union(
                            links_closed_by_controls.union(
                            links_closed_by_tank_controls.union(
-                           closed_check_valves))))
+                           closed_check_valves.union(
+                           pumps_closed_by_low_suction_pressure)))))
 
             # check that links with inactive leaks were opened properly (if they were opened)
             if not first_timestep:
@@ -1372,7 +1370,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._check_tank_controls(instance, links_closed_by_tank_controls)
             # Check if the solver converged. Else we assume there was a pump with very low flow that needs to be closed.
             if (pyomo_results.solver.status != SolverStatus.ok) or (pyomo_results.solver.termination_condition != TerminationCondition.optimal):
-                self._close_low_flow_pumps(instance, pumps_closed_by_low_flow, pumps_closed_by_outage)
+                self._close_low_flow_pumps(instance, pumps_closed_by_low_suction_pressure, pumps_closed_by_low_flow, pumps_closed_by_outage)
             self._set_check_valves_closed(instance, closed_check_valves)
             new_links_closed = pumps_closed_by_low_flow.union(
                            links_closed_by_drain_to_reservoir.union(
@@ -2098,16 +2096,24 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif instance.flow[pipe_name].value < -self._Qtol:
                 closed_check_valves.add(pipe_name)
 
-    def _close_low_flow_pumps(self, instance, pumps_closed_by_low_flow, pumps_closed_by_outage):
-        new_pumps_closed_by_low_flow = set([])
-        for pump in instance.pumps:
-            if abs(instance.flow[pump].value) < self._pump_zero_flow_tol:
-                if pump not in pumps_closed_by_low_flow and pump not in pumps_closed_by_outage:
-                    pumps_closed_by_low_flow.add(pump)
-            elif pump in pumps_closed_by_low_flow:
-                pumps_closed_by_low_flow.remove(pump)
-        for pump in pumps_closed_by_outage:
-            pumps_closed_by_low_flow.discard(pump)
+    def _close_low_flow_pumps(self, instance, pumps_closed_by_low_suction_pressure, pumps_closed_by_low_flow, pumps_closed_by_outage):
+        for pump_name in instance.pumps:
+            pump = self._wn.get_link(pump_name)
+            start_node_name = pump.start_node()
+            start_node = self._wn.get_node(start_node_name)
+            if (instance.head[start_node_name] - start_node.elevation) <= self._Htol #or abs(instance.flow[pump_name].value) < self._pump_zero_flow_tol:
+                if pump_name not in pumps_closed_by_outage:
+                    pumps_closed_by_low_suction_pressure.add(pump_name)
+            else:
+                pumps_closed_by_low_suction_pressure.discard(pump_name)
+                if abs(instance.flow[pump_name].value) < self.pump_zero_flow_tol:
+                    if pump_name not in pumps_closed_by_low_flow:
+                        pumps_closed_by_low_flow.add(pump_name)
+                    else:
+                        pumps_closed_by_low_flow.remove(pump_name)
+        for pump_name in pumps_closed_by_outage:
+            pumps_closed_by_low_flow.discard(pump_name)
+            pumps_closed_by_low_suction_pressure.discard(pump_name)
 
     def _load_general_results(self, results):
         """
