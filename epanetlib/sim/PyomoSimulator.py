@@ -746,11 +746,21 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         def modified_pump_curve(q, A, B, C):
             delta = 1.0e-8
+            L1_slope = -1.0e-11
+            x1 = 1.0e-8
+            x2 = 2.0*x1
             def L1(q):
-                return -1.0e-11*q+A
+                return L1_slope*q+A
             def pump_curve(q):
                 return A-B*q**C
+            def pump_curve_deriv(q):
+                return -B*C*q**(C-1.0)
+            def get_rhs(A,B,C):
+                return np.matrix([[L1_slope*x1+A],[A-B*x2**C],[L1_slope],[-B*C*x2**(C-1.0)]])
+            coeff_matrix = np.matrix([[x1**3, x1**2, x1, 1.0],[x2**3, x2**2, x2, 1.0],[3*x1**2, 2*x1, 1.0, 0.0],[3*x2**2, 2*x2, 1.0, 0.0]])
             
+            def smooth_poly(q):
+                return 
             
 
         ######## MAIN HYDRAULIC MODEL EQUATIONS ##########
