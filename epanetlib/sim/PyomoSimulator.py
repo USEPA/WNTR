@@ -1408,7 +1408,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Another trial at the same timestep is required if the following conditions are met:
             if valve_status_changed or new_links_closed!=links_closed:
                 step_iter += 1
-                instance = copy.deepcopy(last_instance)
+                if t!=0:
+                    instance = copy.deepcopy(last_instance)
             else:
                 step_iter = 0
                 t += 1
