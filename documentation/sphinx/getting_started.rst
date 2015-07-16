@@ -25,7 +25,7 @@ hydraulic_simulators.py         Compare EPANET, Pyomo, and Python hydraulic simu
 water_network_modifications.py  Modify a water network model
 topographic_metrics.py          Compute topographic resilience metrics
 hydrulic_metrics.py             Compute hydraulic resilience metrics
-waterquality_metrics.py         Compute waterquality resilence metrics
+waterquality_metrics.py         Compute water quality resilience metrics
 pipe_leak_simulation.py	        Simulate a pipe leak							
 power_outage_simulation.py      Simulate a power outage
 converting_units.py             Convert units
