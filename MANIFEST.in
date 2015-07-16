@@ -1,0 +1,3 @@
+include epanetlib\pyepanet\data\Darwin\*
+include epanetlib\pyepanet\data\Linux\*
+include epanetlib\pyepanet\data\Windows\*
