@@ -1,7 +1,7 @@
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
-from sympy.physics import units
+#from sympy.physics import units
 import epanetlib as en
 
 testdir = dirname(abspath(str(__file__)))
@@ -123,7 +123,7 @@ def test_query_node_attribute():
     parser = en.network.ParseWaterNetwork()
     parser.read_inp_file(wn, inp_file)
     
-    elevation = 700*float(units.ft/units.m) # ft to m
+    elevation = 213.36 #700*float(units.ft/units.m) # ft to m
     nodes = wn.query_node_attribute('elevation', np.less, elevation)
     
     expected_nodes = ['13', '22', '23']
@@ -137,7 +137,7 @@ def test_query_pipe_attribute():
     parser = en.network.ParseWaterNetwork()
     parser.read_inp_file(wn, inp_file)
     
-    length = 5280*float(units.ft/units.m) # ft to m
+    length = 1609.344 #5280*float(units.ft/units.m) # ft to m
     pipes = wn.query_link_attribute('length', np.greater, length)
     
     expected_pipes = ['10']
