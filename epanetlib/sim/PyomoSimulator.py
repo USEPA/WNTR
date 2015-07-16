@@ -744,6 +744,15 @@ class PyomoSimulator(WaterNetworkSimulator):
                                          ELSE=Expr_if(IF=p <= x4, THEN=smooth_polynomial_rhs(p),
                                                       ELSE=L1(p)))))
 
+        def modified_pump_curve(q, A, B, C):
+            delta = 1.0e-8
+            def L1(q):
+                return -1.0e-11*q+A
+            def pump_curve(q):
+                return A-B*q**C
+            
+            
+
         ######## MAIN HYDRAULIC MODEL EQUATIONS ##########
 
         wn = self._wn
