@@ -8,26 +8,41 @@ def convert(paramtype, flowunit, data, MKS = True):
     Parameters
     ----------
     paramtype : string
-        Parameter type, options include 'Concentration', 'Demand', 'Flow', 'Emitter Coefficient', 
-        'Pipe Diameter', 'Tank Diameter', 'Elevation', 'Hydraulic Head', 
-        'Length', 'Velocity', 'Energy', 'Power', 'Pressure', 
-        'Source Mass Injection', 'Volume', 'Water Age'
+        Parameter type, options include:
+        
+        - Concentration
+        - Demand
+        - Flow
+        - Emitter Coefficient
+        - Pipe Diameter
+        - Tank Diameter
+        - Elevation
+        - Hydraulic Head
+        - Length
+        - Velocity
+        - Energy
+        - Power
+        - Pressure
+        - Source Mass Injection
+        - Volume
+        - Water Age
     
     flowunit : int
-        The flowunit from the inp file, found using enData.ENgetflowunits()
-        - EN_CFS = 0 cubic feet per second
-        - EN_GPM = 1 gallons per minute
-        - EN_MGD = 2 million gallons per day
-        - EN_IMGD = 3 Imperial mgd
-        - EN_AFD = 4 acre-feet per day
-        - EN_LPS = 5 liters per second
-        - EN_LPM = 6 liters per minute
-        - EN_MLD = 7 million liters per day
-        - EN_CMH = 8 cubic meters per hour
-        - EN_CMD = 9 cubic meters per day
+        The flowunit from the inp file, found using enData.ENgetflowunits(), options include:
+        
+        - 0 = cubic feet per second, pyepanet.EN_CFS
+        - 1 = gallons per minute, pyepanet.EN_GPM
+        - 2 = million gallons per day, pyepanet.EN_MGD
+        - 3 = Imperial mgd, pyepanet.EN_IMGD 
+        - 4 = acre-feet per day, pyepanet.EN_AFD
+        - 5 = liters per second, pyepanet.EN_LPS
+        - 6 = liters per minute, pyepanet.EN_LPM
+        - 7 = million liters per day, pyepanet.EN_MLD
+        - 8 = cubic meters per hour, pyepanet.EN_CMH
+        - 9 = cubic meters per day, pyepanet.EN_CMD
 
     data : list, numpy array, dictonary, or scalar
-        Data values to convert
+        Data value(s) to convert
     
     MKS : bool, default = True
         Convert to meter-kg-seconds (True) or from meter-kg-seconds (False)

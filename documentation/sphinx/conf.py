@@ -36,11 +36,13 @@ extensions = [
     'sphinx.ext.pngmath',
     'sphinx.ext.autosummary',
     'sphinx.ext.todo',
+    'sphinx.ext.viewcode',
 ]
 
 autosummary_generate = True
-todo_include_todos=True
-    
+todo_include_todos = True
+viewcode_import = True
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 

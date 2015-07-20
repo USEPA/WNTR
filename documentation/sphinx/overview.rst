@@ -22,7 +22,7 @@ design, maintenance, and operations of that system.
 All these aspects must work together to limit the effects of disasters and 
 enables rapid return to normal delivery of safe water to customers.
 
-WNTR is a python package designed to simulate and analyze resilience of 
+The Water Network Tool for Resilience (WNTR, pronounced *winter*) is a python package designed to simulate and analyze resilience of 
 water distribution networks.  The software includes:
 
 * Pressure driven and demand driven hydraulic simulation
