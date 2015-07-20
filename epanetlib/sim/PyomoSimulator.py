@@ -2024,14 +2024,14 @@ class PyomoSimulator(WaterNetworkSimulator):
             if head_in_tank <= min_tank_head:
                 link_names = control_info['link_names']
                 node_names = control_info['node_names']
-                for i in len(link_names):
+                for i in range(len(link_names)):
                     link_name = link_names[i]
                     node_name = node_names[i]
                     if link_name not in links_closed_by_tank_controls: # the link is currently open
-                        if instance.head[node_name] <= instance.head[tank_name]:
+                        if instance.head[node_name].value <= instance.head[tank_name].value:
                             links_closed_by_tank_controls.add(link_name)
                     else: # the link is currently closed
-                        if instance.head[node_name] >= instance.head[tank_name]:
+                        if instance.head[node_name].value >= instance.head[tank_name].value:
                             links_closed_by_tank_controls.discard(link_name)
 
     def predict_next_tank_head(self,tank_name, instance):
@@ -2129,7 +2129,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             start_node = self._wn.get_node(start_node_name)
             if isinstance(start_node, Reservoir):
                 continue
-            if (instance.head[start_node_name] - start_node.elevation) <= self._Htol:
+            if (instance.head[start_node_name].value - start_node.elevation) <= self._Htol:
                 if pump_name not in pumps_closed_by_outage:
                     pumps_closed_by_low_suction_pressure.add(pump_name)
             else:
