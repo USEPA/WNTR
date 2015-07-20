@@ -2055,6 +2055,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._wn._nodes[leak_name] = leak
         self._wn._graph.add_node(leak_name)
         self._wn.set_node_type(leak_name, 'leak')
+        leak_coordinates = ((self._wn._graph.node[orig_pipe.start_node()]['pos'][0] + self._wn._graph.node[orig_pipe.end_node()]['pos'][0])/2.0,(self._wn._graph.node[orig_pipe.start_node()]['pos'][1] + self._wn._graph.node[orig_pipe.end_node()]['pos'][1])/2.0)
+        self._wn.set_node_coordinates(leak_name, leak_coordinates)
 
         # Add new pipes
         self._wn.add_pipe(orig_pipe._link_name+'__A', orig_pipe._start_node_name, leak_name, orig_pipe.length/2.0, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
