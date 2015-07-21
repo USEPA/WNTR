@@ -13,14 +13,13 @@ Make sure WNTR is on your Python path.  In Python, you can update your
 path by using the following command::
 
 	import sys
-	sys.path.append('path\to\WNTR')
+	sys.path.append('path/to/WNTR')
 
 To permanently add the location of WNTR to your Python path, edit your
 environment variables through the Control Panel (System / Advanced / 
 Environment / User).  Add the location of WNTR to the PYTHONPATH variable.
 
-NOTE...the resilience tool should be installed in site-packages and the 
-path should not have to be set....we're working on setup.py now.
+.. todo:: The resilience tool should be installed in site-packages and the path should not have to be set....we're working on setup.py now.
 
 Python
 ------
@@ -29,7 +28,7 @@ https://www.python.org/.  Python distributions can also be used to manage
 the Python interface.  Python distributions include Python(x,y) (for Windows) 
 and Anaconda (for Windows and Linux). These distributions include most of the 
 Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
-Matplotlib, and Scipy. Pyomo would need to be installed separatly.
+Matplotlib, and Scipy. Pyomo would need to be installed separately.
 
 Python(x,y) can be downloaded from https://code.google.com/p/pythonxy/.  
 
@@ -42,7 +41,7 @@ editing and debug features.  The Spyder IDE includes an editor window,
 console window, and object inspection window in a layout that is very similar 
 to using MATLAB. Debugging features are also available from the toolbar.  
 Code documentation is displayed in the object inspection 
-window, pop-up information on class stucture and functions is displayed in the 
+window, pop-up information on class structure and functions is displayed in the 
 editor and console windows.  
 Python(x,y) also comes with SciTE, a cross platform text editor designed for 
 editing code.  SciTE recognizes many languages (including Python and YML) and 
@@ -52,15 +51,15 @@ Python packages
 ---------------
 The following python packages are required for WNTR:
 
-* Pyomo version X: optimization modeling language used for hydraulic simualtion, 
+* Pyomo version X [Hart2014]_: optimization modeling language used for hydraulic simulation, 
   https://software.sandia.gov/trac/pyomo
 * Numpy version X: support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
 * Scipy version X: efficient routines for numerical integration, 
   http://www.scipy.org/
-* NetworkX version X: create and analyze complex networks, 
+* NetworkX version X [Hagberg2008]_: create and analyze complex networks, 
   https://networkx.github.io/
-* Pandas version X: analysis and storage of timeseries data, 
+* Pandas version X [McKinney2013]_: analysis and storage of time series data, 
   http://pandas.pydata.org/
 * Matplotlib version X: produce figures, 
   http://matplotlib.org/
@@ -78,7 +77,7 @@ standard Python.  To install Pyomo, for example, use the following command::
 For additional information on using pip, see https://pypi.python.org/pypi/pip.
 
 
-NOTE...we can include these dependencies in setup.py
+.. todo:: We can include these dependencies in setup.py
 
 IPOPT
 -----
@@ -93,9 +92,9 @@ Download Ipopt from http://www.coin-or.org/download/binary/CoinAll/.
 
 Download HSL from http://www.hsl.rl.ac.uk/ipopt/.
 
-* Select Windows or Linux in the COIN-HSL Archive, Personal Licence box
+* Select Windows or Linux in the COIN-HSL Archive, Personal License box
 * Select Personal License, fill out the form and accept
 * Download the zip file from the link sent via email
 * Extract the files to bin folder for Ipopt.  For example, if Ipopt was saved 
-  in C:\Program Files\COIN-OR\1.7.4\win32-msvc11, extract the HSL files to 
-  C:\Program Files\COIN-OR\1.7.4\win32-msvc11\bin.
+  in C:/Program Files/COIN-OR/1.7.4/win32-msvc11, extract the HSL files to 
+  C:/Program Files/COIN-OR/1.7.4/win32-msvc11/bin.

@@ -1,6 +1,8 @@
 WNTR 0.1 documentation
 =======================
 
+Contents:
+
 .. toctree::
    :maxdepth: 1
 
@@ -12,7 +14,6 @@ WNTR 0.1 documentation
    simulation
    resilience
    license
-   sourcecode/index
    reference
 
 Indices and tables

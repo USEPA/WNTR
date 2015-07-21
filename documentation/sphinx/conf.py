@@ -35,7 +35,13 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.pngmath',
     'sphinx.ext.autosummary',
+    'sphinx.ext.todo',
+    'sphinx.ext.viewcode',
 ]
+
+autosummary_generate = True
+todo_include_todos = True
+viewcode_import = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -51,7 +57,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'WNTR'
-copyright = u'2015, SNL, EPA, Purdue'
+copyright = u'2015 Sandia National Laboratories'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -105,7 +111,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = 'sphinxdoc'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -124,7 +130,7 @@ html_theme = 'default'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = 'figures/logo.jpg'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -197,14 +203,19 @@ latex_elements = {
 
 # Additional stuff for the LaTeX preamble.
 #'preamble': '',
+
+'classoptions': ',openany,oneside',
+'babel': '\\usepackage[english]{babel}',
+'fncychap': '',
+'fontenc': ''
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'wntr.tex', u'wntr Documentation',
-   u'SNL, EPA, Purdue', 'manual'),
+  ('index_latex', 'wntr.tex', u'WNTR Documentation',
+   u'', 'manual', 'True'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -225,7 +236,7 @@ latex_documents = [
 #latex_appendices = []
 
 # If false, no module index is generated.
-#latex_domain_indices = True
+latex_domain_indices = True
 
 
 # -- Options for manual page output ---------------------------------------
@@ -233,8 +244,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'wntr', u'wntr Documentation',
-     [u'SNL, EPA, Purdue'], 1)
+    ('index', 'wntr', u'WNTR Documentation',
+     [u''], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -247,8 +258,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'wntr', u'wntr Documentation',
-   u'SNL, EPA, Purdue', 'wntr', 'One line description of project.',
+  ('index', 'wntr', u'WNTR Documentation',
+   u'', 'wntr', 'One line description of project.',
    'Miscellaneous'),
 ]
 
@@ -264,4 +275,3 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
 
-autosummary_generate = True

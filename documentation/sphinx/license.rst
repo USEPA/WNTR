@@ -6,8 +6,7 @@ All rights reserved.
 
 This software is distributed under the Revised BSD License (see below).
 WNTR also leverages a variety of third-party software packages, which
-have separate licensing policies.  See the License Notice in the User
-Manual for more information.
+have separate licensing policies. 
 
 Revised BSD License
 -------------------
