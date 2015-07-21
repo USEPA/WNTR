@@ -1,4 +1,3 @@
-# Simulate a pipe leak
 import epanetlib as en
 import matplotlib.pyplot as plt
 
@@ -25,54 +24,12 @@ pyomo_sim.add_leak(leak_name = 'leak2', pipe_name = '225', leak_diameter=0.1,
 results = pyomo_sim.run_sim()
 
 # Plot results
-"""
-node_list = [name for name,node in wn.nodes()]
-t_step = range(len(results.node['demand'][node_list[0]]))
-link_list = [name for name,link in wn.links()]
-tank_list = [name for name,node in wn.nodes(en.network.Tank)]
+plt.figure()
+results.node.loc['leak1', 'demand'].plot()
+results.link.loc['123__A', 'flowrate'].plot()
+results.link.loc['123__B', 'flowrate'].plot()
 
-if len(tank_list)>0:
-    fig = plt.figure(figsize=(11,6))
-    ax = fig.add_subplot(111)
-    for tank_name in tank_list:
-        ax.plot(t_step, results.node['pressure'][tank_name],label=tank_name)
-    ax.set_title('Tank levels')
-    ax.set_xlabel('Timestep')
-    ax.set_ylabel('m')
-    ax.legend(loc=0, prop={'size':9})
-    plt.gcf().subplots_adjust(bottom=0.2)
-    plt.gcf().subplots_adjust(left=0.15)
-
-fig = plt.figure(figsize=(11,6))
-ax = fig.add_subplot(111)
-for node_name in node_list:
-    ax.plot(t_step, results.node['pressure'][node_name],label=node_name)
-ax.set_title('Node Pressure')
-ax.set_xlabel('Timestep')
-ax.set_ylabel('m')
-ax.legend(loc=0, prop={'size':9})
-plt.gcf().subplots_adjust(bottom=0.2)
-plt.gcf().subplots_adjust(left=0.15)
-
-fig = plt.figure(figsize=(11,6))
-ax = fig.add_subplot(111)
-for node_name in node_list:
-    ax.plot(t_step, results.node['demand'][node_name],label=node_name)
-ax.set_title('Node Demand')
-ax.set_xlabel('Timestep')
-ax.set_ylabel('m3/s')
-ax.legend(loc=0, prop={'size':9})
-plt.gcf().subplots_adjust(bottom=0.2)
-plt.gcf().subplots_adjust(left=0.15)
-
-fig = plt.figure(figsize=(11,6))
-ax = fig.add_subplot(111)
-for link_name in link_list:
-    ax.plot(t_step, results.link['flowrate'][link_name],label=link_name)
-ax.set_title('Link Flowrate')
-ax.set_xlabel('Timestep')
-ax.set_ylabel('m3/s')
-ax.legend(loc=0, prop={'size':9})
-plt.gcf().subplots_adjust(bottom=0.2)
-plt.gcf().subplots_adjust(left=0.15)
-"""
+plt.figure()
+results.node.loc['leak2', 'demand'].plot()
+results.link.loc['225__A', 'flowrate'].plot()
+results.link.loc['225__B', 'flowrate'].plot()

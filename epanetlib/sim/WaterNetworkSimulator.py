@@ -40,7 +40,7 @@ class WaterNetworkSimulator(object):
                   Options are 'DEMAND DRIVEN' or 'PRESSURE DRIVEN'
 
         """
-        self._wn = water_network
+        self._wn = copy.deepcopy(water_network)
 
         # A dictionary containing pump outage information
         # format is PUMP_NAME: (start time in sec, end time in sec)

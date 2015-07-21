@@ -12,7 +12,7 @@ WNTR 0.1 documentation
    simulation
    resilience
    license
-   source/index
+   sourcecode/index
    reference
 
 Indices and tables

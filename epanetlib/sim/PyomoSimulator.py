@@ -1979,12 +1979,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._wn._nodes[leak_name] = leak
         self._wn._graph.add_node(leak_name)
         self._wn.set_node_type(leak_name, 'leak')
+        leak_coordinates = ((self._wn._graph.node[orig_pipe.start_node()]['pos'][0] + self._wn._graph.node[orig_pipe.end_node()]['pos'][0])/2.0,(self._wn._graph.node[orig_pipe.start_node()]['pos'][1] + self._wn._graph.node[orig_pipe.end_node()]['pos'][1])/2.0)
+        self._wn.set_node_coordinates(leak_name, leak_coordinates)
 
         # Add new pipes
-        self._wn.add_pipe(orig_pipe._link_name+'__A', orig_pipe._start_node_name, leak_name, orig_pipe.length/2.0, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
-        self._wn.add_pipe(orig_pipe._link_name+'__B', leak_name, orig_pipe._end_node_name, orig_pipe.length/2.0, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
+        self._wn.add_pipe(orig_pipe._link_name+'__A', orig_pipe.start_node(), leak_name, orig_pipe.length/2.0, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
+        self._wn.add_pipe(orig_pipe._link_name+'__B', leak_name, orig_pipe.end_node(), orig_pipe.length/2.0, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
 
-    def _deactivate_leak(self, leak_name):
+    def _remove_leak_from_wn_object(self, leak_name):
         # Remove pipes on either side of leak
         current_leak_info = self._leak_info[leak_name]
         orig_pipe = current_leak_info['original_pipe']
@@ -1996,7 +1998,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._wn._nodes.pop(leak_name)
         
         # Replace original pipe
-        self._wn.add_pipe(orig_pipe._link_name, orig_pipe._start_node_name, orig_pipe._end_node_name, orig_pipe.length, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
+        self._wn.add_pipe(orig_pipe._link_name, orig_pipe.start_node(), orig_pipe.end_node(), orig_pipe.length, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
 
     def _close_all_links_for_tanks_below_min_head(self, instance, links_closed_by_tank_controls):
         for tank_name, control_info in self._tank_controls.iteritems():

@@ -1,19 +1,17 @@
-# Use the sympy package to convert data to SI units
 from sympy.physics import units
 
-# Pipe diameter. Convert from inches to meters
+# Convert 12 inches to meters
 D = 12*float(units.inch/units.meter)
 
-# Concentration.  Covert from mg/L to kg/m3
+# Covert 0.2 mg/L to kg/m3
 C = 0.2*float((units.mg/units.l)/(units.kg/units.m**3))
 
-# Water pressure. Convert from psi to m
+# Convert 30 psi to m (assuming density = 1000 kg/m3 and gravity = 9.81 m/s2)
 if not units.find_unit('waterpressure'):
-    units.waterpressure = 9806.65*units.Pa
+    units.waterpressure = 9810*units.Pa
 P = 30*float(units.psi/units.waterpressure)
 
-# Average volume of water consumed per capita per day. Convert from gallons/day 
-# to m3/day 
+# Convert 200 gallons/day to m3/day 
 if not units.find_unit('gallon'):
     units.gallon = 4*units.quart
-R = 200*float((units.gallon/units.day)/(units.m**3/units.day)) 
+R = 200*float(units.gallon/units.m**3) 
