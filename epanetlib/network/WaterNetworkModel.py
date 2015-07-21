@@ -855,6 +855,215 @@ class WaterNetworkModel(object):
         else:
             raise RuntimeError('error: either you have not specified any nominal pressure or you have tried to specify the nominal pressure in multiple ways')
 
+
+    def _sec_to_string(self, sec):
+        hours = int(sec/3600.)
+        sec -= hours*3600
+        mm = int(sec/60.)
+        sec -= mm*60
+        return (hours, mm, sec)
+
+
+    def write_inpfile(self, filename):
+        """
+         Write the current network into an EPANET inp file.
+
+         Parameters
+         ---------
+         filename : String
+            Name of the inp file. example - Net3_adjusted_demands.inp
+        """
+        # TODO: This is still a very alpha version with hard coded unit conversions to LPS (among other things).
+
+        f = open(filename, 'w')
+
+        # Print title
+        print >> f, '[TITLE]'
+        if self.name is not None:
+            print >> f, self.name
+
+        # Print junctions information
+        print >> f, '[JUNCTIONS]'
+        text_format = '{:10s} {:15f} {:15f} {:>10s} {:>3s}'
+        label_format = '{:10s} {:>15s} {:>15s} {:>10s}'
+        print >> f, label_format.format(';ID', 'Elevation', 'Demand', 'Pattern')
+        for junction_name, junction in self.nodes(Junction):
+            if junction.demand_pattern_name is not None:
+                print >> f, text_format.format(junction_name, junction.elevation, junction.base_demand*1000.0, junction.demand_pattern_name, ';')
+            else:
+                print >> f, text_format.format(junction_name, junction.elevation, junction.base_demand*1000.0, '', ';')
+
+        # Print reservoir information
+        print >> f, '[RESERVOIRS]'
+        text_format = '{:10s} {:15f} {:>10s} {:>3s}'
+        label_format = '{:10s} {:>15s} {:>10s}'
+        print >> f, label_format.format(';ID', 'Head', 'Pattern')
+        for reservoir_name, reservoir in self.nodes(Reservoir):
+            if reservoir.head_pattern_name is not None:
+                print >> f, text_format.format(reservoir_name, reservoir.base_head, reservoir.head_pattern_name, ';')
+            else:
+                print >> f, text_format.format(reservoir_name, reservoir.base_head, '', ';')
+
+        # Print tank information
+        print >> f, '[TANKS]'
+        text_format = '{:10s} {:15f} {:15f} {:15f} {:15f} {:15f} {:15f} {:>10s} {:>3s}'
+        label_format = '{:10s} {:>15s} {:>15s} {:>15s} {:>15s} {:>15s} {:>15s} {:>10s}'
+        print >> f, label_format.format(';ID', 'Elevation', 'Initial Level', 'Minimum Level', 'Maximum Level', 'Diameter', 'Minimum Volume', 'Volume Curve')
+        for tank_name, tank in self.nodes(Tank):
+            if tank.vol_curve is not None:
+                print >> f, text_format.format(tank_name, tank.elevation, tank.init_level, tank.min_level, tank.max_level, tank.diameter, tank.min_vol, tank.vol_curve, ';')
+            else:
+                print >> f, text_format.format(tank_name, tank.elevation, tank.init_level, tank.min_level, tank.max_level, tank.diameter, tank.min_vol, '', ';')
+
+        # Print pipe information
+        print >> f, '[PIPES]'
+        text_format = '{:10s} {:10s} {:10s} {:15f} {:15f} {:15f} {:15f} {:>10s} {:>3s}'
+        label_format = '{:10s} {:>10s} {:>10s} {:>15s} {:>15s} {:>15s} {:>15s} {:>10s}'
+        print >> f, label_format.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status')
+        for pipe_name, pipe in self.links(Pipe):
+            print >> f, text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), pipe.length, pipe.diameter*1000, pipe.roughness, pipe.minor_loss, pipe.get_base_status(), ';')
+
+        # Print pump information
+        print >> f, '[PUMPS]'
+        text_format = '{:10s} {:10s} {:10s} {:10s} {:10s} {:>3s}'
+        label_format = '{:10s} {:>10s} {:>10s} {:>10s}'
+        print >> f, label_format.format(';ID', 'Node1', 'Node2', 'Parameters')
+        for pump_name, pump in self.links(Pump):
+            if pump.info_type == 'HEAD':
+                print >> f, text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, pump.curve.name, ';')
+            elif pump.info_type == 'POWER':
+                print >> f, text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, str(pump.power), ';')
+            else:
+                raise RuntimeError('Only head or power info is supported of pumps.')
+        # Print valve information
+        print >> f, '[VALVES]'
+        text_format = '{:10s} {:10s} {:10s} {:10f} {:10s} {:10f} {:10f} {:>3s}'
+        label_format = '{:10s} {:10s} {:10s} {:10s} {:10s} {:10s} {:10s}'
+        print >> f, label_format.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss')
+        for valve_name, valve in self.links(Valve):
+            print >> f, text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve.setting, valve.minor_loss, ';')
+
+        # Print status information
+        print >> f, '[STATUS]'
+        text_format = '{:10s} {:10s}'
+        label_format = '{:10s} {:10s}'
+        print >> f, label_format.format(';ID', 'Setting')
+        for link_name, link in self.links():
+            if link.get_base_status() is not None and link.get_base_status() != 'CV':
+                print >> f, text_format.format(link_name, link.get_base_status())
+
+        # Print pattern information
+        num_columns = 8
+        print >> f, '[PATTERNS]'
+        label_format = '{:10s} {:10s}'
+        print >> f, label_format.format(';ID', 'Multipliers')
+        for pattern_name, pattern in self._patterns.iteritems():
+            count = 0
+            for i in pattern:
+                if count%8 == 0:
+                    print >>f, '\n', pattern_name, i,
+                else:
+                    print >>f, i,
+                count += 1
+            print >>f, ''
+
+        # Print curves
+        print >> f, '[CURVES]'
+        text_format = '{:10s} {:10f} {:10f} {:>3s}'
+        label_format = '{:10s} {:10s} {:10s}'
+        print >> f, label_format.format(';ID', 'X-Value', 'Y-Value')
+        for pump_name, pump in self.links(Pump):
+            if pump.info_type == 'HEAD':
+                curve = pump.curve
+                curve_name = curve.name
+                for i in curve.points:
+                    print >>f, text_format.format(curve_name, 1000*i[0], i[1], ';')
+                print >>f, ''
+
+        # Print Controls
+        print >> f, '[CONTROLS]'
+        # Time controls
+        for link_name, all_control in self.time_controls.iteritems():
+            open_times = all_control.get('open_times')
+            closed_times = all_control.get('closed_times')
+            if open_times is not None:
+                for i in open_times:
+                    print >> f, 'Link', link_name, 'OPEN AT TIME', int(i/3600.0)
+            if closed_times is not None:
+                for i in closed_times:
+                    print >> f, 'Link', link_name, 'CLOSED AT TIME', int(i/3600.0)
+
+        print >> f, ''
+        # Conditional controls
+        for link_name, all_control in self.conditional_controls.iteritems():
+            open_below = all_control.get('open_below')
+            closed_above = all_control.get('closed_above')
+            open_above = all_control.get('open_above')
+            closed_below = all_control.get('closed_below')
+            if open_below is not None:
+                for i in open_below:
+                    print >> f, 'Link', link_name, 'OPEN IF Node', i[0], 'BELOW', i[1]
+            if closed_above is not None:
+                for i in closed_above:
+                    print >> f, 'Link', link_name, 'CLOSED IF Node', i[0], 'ABOVE', i[1]
+            if open_above is not None:
+                for i in open_above:
+                    print >> f, 'Link', link_name, 'OPEN IF Node', i[0], 'ABOVE', i[1]
+            if closed_below is not None:
+                for i in closed_below:
+                    print >> f, 'Link', link_name, 'CLOSED IF Node', i[0], 'BELOW', i[1]
+
+            print >> f,''
+
+        # Options
+        print >> f, '[OPTIONS]'
+        text_format_string = '{:20s} {:10s}'
+        text_format_float = '{:20s} {:<10.8f}'
+        for key, val in self.options.iteritems():
+            if key == 'UNITS':
+                print >>f, text_format_string.format('UNITS', 'LPS')
+            elif isinstance(val, float):
+                print >>f, text_format_float.format(key, val)
+            elif isinstance(val, str):
+                print >>f, text_format_string.format(key, val)
+            else:
+                raise RuntimeError('Options value not recognised')
+
+        print >> f, ''
+
+        # Time options
+        print >> f, '[TIMES]'
+        text_format = '{:20s} {:10s}'
+        for key, val in self.time_options.iteritems():
+            if key == 'START CLOCKTIME':
+                hrs, mm, sec = self._sec_to_string(val)
+                if hrs < 12:
+                    time_format = ' AM'
+                else:
+                    time_format = ' PM'
+                print >>f, text_format.format(key, str(hrs)+time_format)
+            elif isinstance(val, float) or isinstance(val, int):
+                hrs, mm, sec = self._sec_to_string(val)
+                print >>f, text_format.format(key, str(hrs)+':'+str(mm)+':'+str(sec))
+            elif isinstance(val, str):
+                print >>f, text_format.format(key, val)
+            else:
+                raise RuntimeError('Time options value not recognised')
+
+        print >> f, ''
+
+        # Coordinates
+        print >> f, '[COORDINATES]'
+        text_format = '{:10s} {:<10.2f} {:<10.2f}'
+        label_format = '{:10s} {:10s} {:10s}'
+        print >>f, label_format.format(';Node', 'X-Coord', 'Y-Coord')
+        coord = nx.get_node_attributes(self._graph, 'pos')
+        for key, val in coord.iteritems():
+            print >>f, text_format.format(key, val[0], val[1])
+
+        f.close()
+
+
 class Node(object):
     """
     The base node class.
