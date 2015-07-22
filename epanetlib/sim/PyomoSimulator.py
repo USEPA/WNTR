@@ -2176,13 +2176,16 @@ class PyomoSimulator(WaterNetworkSimulator):
         results.simulator_options['pattern_time_step'] = self._pattern_step_sec
 
     def _check_constraint_violation(self, instance):
-        for constraint_name in self._constraint_names:
+        constraint_names = set([])
+        for (constraint_name, idx, con) in instance.active_component_data(Constraint, descend_into=True, sort=True):
+            constraint_names.add(constraint_name)
+        for constraint_name in constraint_names:
             con = getattr(instance, constraint_name)
             for constraint_key in con.keys():
                 con_value = value(con[constraint_key].body)
                 con_lower = value(con[constraint_key].lower)
                 con_upper = value(con[constraint_key].upper)
-                if (con_lower - con_value) >= 1.0e-5 or (con_value - con_upper) >= 1.0e-5:
+                if (con_lower - con_value) >= 1.0e-6 or (con_value - con_upper) >= 1.0e-6:
                     print constraint_name,'[',constraint_key,']',' is not satisfied:'
                     print 'lower: ',con_lower, '\t body: ',con_value,'\t upper: ',con_upper 
                     con.pprint()
