@@ -766,7 +766,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             return Expr_if(IF=p <= x1, THEN=L1(p),
                            ELSE=Expr_if(IF=p <= x2, THEN=smooth_poly(p),
-                                        Else=leak_model(p,Cd,A)))
+                                        ELSE=leak_model(p,Cd,A)))
 
         ######## MAIN HYDRAULIC MODEL EQUATIONS ##########
 
