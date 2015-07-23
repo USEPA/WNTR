@@ -741,6 +741,33 @@ class PyomoSimulator(WaterNetworkSimulator):
                                          ELSE=Expr_if(IF=p <= x4, THEN=smooth_polynomial_rhs(p),
                                                       ELSE=L1(p)))))
 
+        def piecewise_pipe_leak_demand(p, Cd, A):
+            delta = 1.0e-4
+            L1_slope = 1.0e-11
+            x1 = 0.0
+            x2 = delta
+            c = L1_slope
+            d = 0.0
+            def L1(p):
+                return L1_slope*p
+            def leak_model(p, Cd, A):
+                return Cd*A*math.sqrt(2.0*self._g)*p**0.5
+            def get_rhs(x, Cd, A):
+                return np.matrix([[Cd*A*math.sqrt(2.0*self._g)*x**0.5-c*x-d],[0.5*Cd*A*math.sqrt(2.0*self._g)*x**(-0.5)-c]])
+
+            coeff_matrix = np.matrix([[x2**3.0, x2**2.0],[3*x2**2.0, 2*x2]])
+
+            poly_coeff = np.linalg.solve(coeff_matrix, get_rhs(x2, Cd, A))
+            a = float(poly_coeff[0][0])
+            b = float(poly_coeff[1][0])
+
+            def smooth_poly(p):
+                return a*p**3 + b*p**2 + c*p + d
+
+            return Expr_if(IF=p <= x1, THEN=L1(p),
+                           ELSE=Expr_if(IF=p <= x2, THEN=smooth_poly(p),
+                                        ELSE=leak_model(p,Cd,A)))
+
         ######## MAIN HYDRAULIC MODEL EQUATIONS ##########
 
         wn = self._wn
@@ -811,7 +838,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 return node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
             else:
                 return 0.0
-        model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule, bounds = (0.0, None))
+        model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule, bounds = (None, None))
 
         ############## CONSTRAINTS #####################
 
@@ -928,7 +955,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         def leak_demand_rule(model, n):
             if n in self._active_leaks:
                 leak = wn.get_node(n)
-                return model.leak_demand[n]**2 == leak.leak_discharge_coeff**2*leak.area**2*2*self._g*(model.head[n]-leak.elevation)
+                return model.leak_demand[n] == piecewise_pipe_leak_demand(model.head[n]-leak.elevation, leak.leak_discharge_coeff, leak.area)
+                #return model.leak_demand[n]**2 == leak.leak_discharge_coeff**2*leak.area**2*2*self._g*(model.head[n]-leak.elevation)
             elif n in self._inactive_leaks:
                 return model.leak_demand[n] == 0.0
             else:
@@ -2243,13 +2271,16 @@ class PyomoSimulator(WaterNetworkSimulator):
         results.simulator_options['pattern_time_step'] = self._pattern_step_sec
 
     def _check_constraint_violation(self, instance):
-        for constraint_name in self._constraint_names:
+        constraint_names = set([])
+        for (constraint_name, idx, con) in instance.active_component_data(Constraint, descend_into=True, sort=True):
+            constraint_names.add(constraint_name)
+        for constraint_name in constraint_names:
             con = getattr(instance, constraint_name)
             for constraint_key in con.keys():
                 con_value = value(con[constraint_key].body)
                 con_lower = value(con[constraint_key].lower)
                 con_upper = value(con[constraint_key].upper)
-                if (con_lower - con_value) >= 1.0e-5 or (con_value - con_upper) >= 1.0e-5:
+                if (con_lower - con_value) >= 1.0e-6 or (con_value - con_upper) >= 1.0e-6:
                     print constraint_name,'[',constraint_key,']',' is not satisfied:'
                     print 'lower: ',con_lower, '\t body: ',con_value,'\t upper: ',con_upper 
                     con.pprint()
