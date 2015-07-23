@@ -4,6 +4,7 @@ TODO
 """
 
 # These tests test controls
+import epanetlib as en
 import unittest
 import sys
 # HACK until resilience is a proper module
@@ -19,22 +20,14 @@ class TestTimeControls(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
-        import epanetlib as en
-        self.en = en
-
         inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/time_controls_test_network.inp'
-        self.wn = self.en.network.WaterNetworkModel()
-        parser = self.en.network.ParseWaterNetwork()
+        self.wn = en.network.WaterNetworkModel()
+        parser = en.network.ParseWaterNetwork()
         parser.read_inp_file(self.wn, inp_file)
         self.wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
         
-        pyomo_sim = self.en.sim.PyomoSimulator(self.wn, 'PRESSURE DRIVEN')
+        pyomo_sim = en.sim.PyomoSimulator(self.wn, 'PRESSURE DRIVEN')
         self.pyomo_results = pyomo_sim.run_sim()
-
-    @classmethod
-    def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
 
     def test_time_control_open_vs_closed(self):
         for t in self.pyomo_results.link.loc['pipe2'].index:
@@ -45,25 +38,14 @@ class TestTimeControls(unittest.TestCase):
 
 class TestConditionalControls(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(self):
-        sys.path.append(resilienceMainDir)
-        import epanetlib as en
-        self.en = en
-
-    @classmethod
-    def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
-
-
     def test_close_link_by_tank_level(self):
         inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/conditional_controls_test_network_1.inp'
-        wn = self.en.network.WaterNetworkModel()
-        parser = self.en.network.ParseWaterNetwork()
+        wn = en.network.WaterNetworkModel()
+        parser = en.network.ParseWaterNetwork()
         parser.read_inp_file(wn, inp_file)
         wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
         
-        pyomo_sim = self.en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        pyomo_sim = en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
         results = pyomo_sim.run_sim()
 
         activated_flag = False
@@ -78,12 +60,12 @@ class TestConditionalControls(unittest.TestCase):
 
     def test_open_link_by_tank_level(self):
         inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/conditional_controls_test_network_2.inp'
-        wn = self.en.network.WaterNetworkModel()
-        parser = self.en.network.ParseWaterNetwork()
+        wn = en.network.WaterNetworkModel()
+        parser = en.network.ParseWaterNetwork()
         parser.read_inp_file(wn, inp_file)
         wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
         
-        pyomo_sim = self.en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        pyomo_sim = en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
         results = pyomo_sim.run_sim()
 
         activated_flag = False
