@@ -96,5 +96,20 @@ class TestConditionalControls(unittest.TestCase):
                 activated_flag = True
         self.assertEqual(activated_flag, True)
 
+class TestTankControls(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        sys.path.append(resilienceMainDir)
+        import epanetlib as en
+        self.en = en
+
+    @classmethod
+    def tearDownClass(self):
+        sys.path.remove(resilienceMainDir)
+
+    def test_init_tank_controls(self):
+        
+
 if __name__ == '__main__':
     unittest.main()
