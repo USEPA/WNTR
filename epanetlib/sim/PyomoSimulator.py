@@ -1392,7 +1392,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             #print 'links_closed_by_tank_controls',links_closed_by_tank_controls
             #print 'closed_check_valves',closed_check_valves
             #print 'pumps_closed_by_low_suction_pressure',pumps_closed_by_low_suction_pressure
-            print 'links_closed = ',links_closed
+            #print 'links_closed = ',links_closed
             model = self._build_hydraulic_model_at_instant(last_tank_head,
                                                            current_demands,
                                                            first_timestep,
@@ -1421,8 +1421,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Solve the instance and load results
             pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
             instance.load(pyomo_results)
-            print 'junction1 pressure = ',instance.head['junction1'].value-self._wn.get_node('junction1').elevation
-            print 'tank1 pressure = ',instance.head['tank1'].value-self._wn.get_node('tank1').elevation
             #CheckInstanceFeasibility(instance, 1e-6)
             #self._check_constraint_violation(instance)
 
@@ -1444,7 +1442,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                            links_closed_by_tank_controls.union(
                            closed_check_valves.union(
                            pumps_closed_by_low_suction_pressure))))
-            print 'new_links_closed = ',new_links_closed
+            #print 'new_links_closed = ',new_links_closed
 
             # Set valve status based on pyomo results
             if self._wn._num_valves != 0:
@@ -1855,7 +1853,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Get time controls
         for link_name, status in self._link_status.iteritems():
-            if not status[t] and status[t-1]:
+            if not status[t] and (status[t-1] or t==0):
                 links_closed_by_controls.add(link_name)
             elif status[t] and not status[t-1]:
                 links_closed_by_controls.remove(link_name)
