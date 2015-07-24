@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """
+Classes and methods used for specifying a water network model.
+"""
+
+"""
 Created on Fri Jan 23 10:07:42 2015
 
 @author: aseth
@@ -90,8 +94,9 @@ class WaterNetworkModel(object):
         self._graph = nx.MultiDiGraph(data=None)
 
     def copy(self):
-        """
-        Copy a water network object
+        
+        r"""Copy a water network object
+
         Returns
         -------
         A copy of the water network
@@ -1143,6 +1148,9 @@ class Link(object):
         return self._end_node_name
 
     def get_base_status(self):
+        """
+        Returns the base status of the link
+        """
         return self._base_status
 
 class Junction(Node):

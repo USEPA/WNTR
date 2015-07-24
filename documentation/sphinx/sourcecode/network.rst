@@ -3,12 +3,26 @@ Network model
 
 WaterNetworkModel
 -----------------
-.. autoclass:: epanetlib.network.WaterNetworkModel
-   :members:
+.. automodule:: epanetlib.network.WaterNetworkModel
+
+.. autosummary::
+   :toctree: stubs
+
+   WaterNetworkModel
+   Node
+   Link
+   Junction
+   Leak
+   Reservoir
+   Tank
+   Pipe
+   Pump
+   Valve
+   Curve
 
 ParseWaterNetwork
 -----------------
-.. autoclass:: epanetlib.network.ParseWaterNetwork
+.. automodule:: epanetlib.network.ParseWaterNetwork
    :members:
    
 draw_graph
