@@ -17,7 +17,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         Epanet simulator class.
 
         Parameters
-        ---------
+        ----------
         wn : Water Network Model
             A water network model.
         """
@@ -295,8 +295,8 @@ class EpanetSimulator(WaterNetworkSimulator):
         """
         Load general simulation options into the results object.
 
-        Parameter
-        ------
+        Parameters
+        ----------
         results : NetworkResults object
         """
         # Load general results

@@ -114,7 +114,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         Pyomo simulator class.
 
         Parameters
-        ---------
+        ----------
         wn : Water Network Model
             A water network model.
 
@@ -329,8 +329,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
         Build water network hadloss and node balance constraints.
 
-        Optional Parameters
-        --------
+        Other Parameters
+        -------------------
         modified_hazen_williams : bool
             Flag to use a slightly modified version of Hazen-Williams headloss
             equation for better stability
@@ -598,7 +598,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         Build hydraulic constraints at a particular time instance.
 
         Parameters
-        --------
+        ----------
         last_tank_head : dict of string: float
             Dictionary containing tank names and their respective head at the last timestep.
         nodal_demands : dict of string: float
@@ -610,8 +610,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         pumps_closed_by_outage : list of strings
             Name of pumps closed due to a power outage
 
-        Optional Parameters
-        --------
+        Other Parameters
+        -------------------
         modified_hazen_williams : bool
             Flag to use a slightly modified version of Hazen-Williams headloss
             equation for better stability
@@ -1228,8 +1228,8 @@ class PyomoSimulator(WaterNetworkSimulator):
     def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True):
 
         """
-        Optional Parameters
-        ----------
+        Other Parameters
+        -------------------
         solver : String
             Name of the nonlinear programming solver to be used for solving the hydraulic equations.
             Default is 'ipopt'.
@@ -1631,14 +1631,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         a network results object.
 
         Parameters
-        -------
+        ----------
         instance : Pyomo model instance
             Pyomo instance after instance.load() has been called.
         pyomo_results : Pyomo results object
             Pyomo results object
 
-        Return
-        ------
+        Returns
+        -------
         A NetworkResults object containing simulation results.
         """
         # Create results object
@@ -1810,7 +1810,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         the pyomo_sim_results dictionary.
 
         Parameters
-        -------
+        ----------
         instance : Pyomo model instance
             Pyomo instance after instance.load() has been called.
         time : time string
@@ -2158,11 +2158,11 @@ class PyomoSimulator(WaterNetworkSimulator):
         simulation.
 
         Parameters
-        -------
+        ----------
         instance : pyomo model instance
 
-        Return
-        ------
+        Returns
+        -------
         valve_status_change : bool
             True if there was a change in valve status, False otherwise.
 
@@ -2255,8 +2255,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
         Load general simulation options into the results object.
 
-        Parameter
-        ------
+        Parameters
+        ----------
         results : NetworkResults object
         """
         # Load general results

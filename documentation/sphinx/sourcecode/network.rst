@@ -1,11 +1,28 @@
 Network model
 =============
 
-.. currentmodule:: epanetlib
+WaterNetworkModel
+-----------------
+.. autoclass:: epanetlib.network.WaterNetworkModel
+   :members:
 
-.. autosummary::
-   :toctree: stubs
+ParseWaterNetwork
+-----------------
+.. autoclass:: epanetlib.network.ParseWaterNetwork
+   :members:
    
-   network.WaterNetworkModel
-   network.ParseWaterNetwork
+draw_graph
+-----------------
+.. automodule:: epanetlib.network.draw_graph
+   :members:
+   
+network_topography
+------------------
+.. automodule:: epanetlib.network.network_topography
+   :members:
 
+epanet_to_MultiDiGraph
+----------------------
+.. automodule:: epanetlib.network.epanet_to_MultiDiGraph
+   :members:
+   

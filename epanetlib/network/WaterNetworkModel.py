@@ -40,7 +40,7 @@ class WaterNetworkModel(object):
     """
     def __init__(self):
         """
-        Example
+        Examples
         ---------
         >>> wn = WaterNetworkModel()
         
@@ -92,12 +92,12 @@ class WaterNetworkModel(object):
     def copy(self):
         """
         Copy a water network object
-        Return
-        ------
+        Returns
+        -------
         A copy of the water network
 
-        Example
-        ------
+        Examples
+        --------
         >>> wn = WaterNetwork()
         >>> wn2 = wn.copy()
         """
@@ -107,8 +107,8 @@ class WaterNetworkModel(object):
         """
         Returns node object of a provided name
 
-        Parameter
-        --------
+        Parameters
+        ----------
         name : string
             name of the node
         """
@@ -118,8 +118,8 @@ class WaterNetworkModel(object):
         """
         Returns link object of a provided name
 
-        Parameter
-        --------
+        Parameters
+        ----------
         name : string
             name of the link
         """
@@ -129,8 +129,8 @@ class WaterNetworkModel(object):
         """
         Returns curve object of a provided name
 
-        Parameter
-        --------
+        Parameters
+        ----------
         name : string
             name of the curve
         """
@@ -140,8 +140,8 @@ class WaterNetworkModel(object):
         """
         Returns pattern object of a provided name
 
-        Parameter
-        --------
+        Parameters
+        ----------
         name : string
             name of the pattern
         """
@@ -150,13 +150,14 @@ class WaterNetworkModel(object):
     def add_junction(self, name, base_demand=None, demand_pattern_name=None, elevation=None, coordinates=None):
         """
         Add a junction to the network.
+        
         Parameters
-        -------
+        ----------
         name : string
             Name of the junction.
 
-        Optional Parameters
-        -------
+        Other Parameters
+        -------------------
         base_demand : float
             Base demand at the junction.
             Internal units must be cubic meters per second (m^3/s).
@@ -188,12 +189,12 @@ class WaterNetworkModel(object):
         Method to add tank to a water network object.
 
         Parameters
-        ------
+        ----------
         name : string
             Name of the tank.
 
-        Optional Parameters
-        -------
+        Other Parameters
+        ----------------
         elevation : float
             Elevation at the Tank.
             Internal units must be meters (m).
@@ -281,12 +282,12 @@ class WaterNetworkModel(object):
         Method to add reservoir to a water network object.
 
         Parameters
-        ------
+        ----------
         name : string
             Name of the reservoir.
 
-        Optional Parameters
-        -------
+        Other Parameters
+        -------------------
         base_head : float
             Base head at the reservoir.
             Internal units must be meters (m).
@@ -319,8 +320,8 @@ class WaterNetworkModel(object):
         end_node_name : string
              Name of the end node
 
-        Optional Parameters
-        -----------
+        Other Parameters
+        -------------------
         length : float
             Length of the pipe.
             Internal units must be meters (m)
@@ -383,8 +384,8 @@ class WaterNetworkModel(object):
         end_node_name : string
              Name of the end node
 
-        Optional Parameters
-        ----------
+        Other Parameters
+        -------------------
         info_type : string
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
         info_value : float or Curve object
@@ -410,8 +411,8 @@ class WaterNetworkModel(object):
         end_node_name : string
              Name of the end node
 
-        Optional Parameters
-        ----------
+        Other Parameters
+        -------------------
         diameter : float
             Diameter of the valve.
             Internal units must be meters (m)
@@ -434,7 +435,7 @@ class WaterNetworkModel(object):
         Method to add pattern to a water network object.
 
         Parameters
-        ---------
+        ----------
         name : string
             name of the pattern
         pattern_list : list of floats
@@ -447,7 +448,7 @@ class WaterNetworkModel(object):
         Method to add a curve to a water network object.
 
         Parameters
-        ---------
+        ----------
         name : string
             Name of the curve
         curve_type : string
@@ -463,14 +464,14 @@ class WaterNetworkModel(object):
         Method to add a time parameter to a water network object.
 
         Parameters
-        -------
+        ----------
         name : string
             Name of the time option.
         value:
             Value of the time option. Must be in minutes.
 
-        Example
-        -------
+        Examples
+        --------
         START CLOCKTIME = 6 PM can be set using
         >>> wn.add_time_parameter('START CLOCKTIME', 1080)
         """
@@ -481,7 +482,7 @@ class WaterNetworkModel(object):
         Method to add a options to a water network object.
 
         Parameters
-        -------
+        ----------
         name : string
             Name of the option.
         value:
@@ -582,7 +583,7 @@ class WaterNetworkModel(object):
         value: scalar
             threshold
 
-        Return
+        Returns
         -------
         links : dictionary of links
             dictionary of link names to link objects satisfying operation threshold
@@ -601,8 +602,8 @@ class WaterNetworkModel(object):
         """
         Add time controls to the network.
 
-        Parameter
-        -------
+        Parameters
+        ----------
         link_name : string
             Name of the link
         open_times : list of integers
@@ -627,7 +628,9 @@ class WaterNetworkModel(object):
     def add_conditional_controls(self, link_name, node_name, level_value, open_or_closed, above_or_below):
         """
         Add conditional controls to the network.
-
+        
+        Parameters
+        ----------
         link_name : string
             Name of the link.
         node_name : string
@@ -664,7 +667,8 @@ class WaterNetworkModel(object):
         A generator to iterate over all nodes of node_type.
         If no node_type is passed, this method iterates over all nodes.
 
-        Return:
+        Returns
+        -------
         node_name, node
         """
         for node_name, node in self._nodes.iteritems():
@@ -679,7 +683,8 @@ class WaterNetworkModel(object):
         If no link_type is passed, this method iterates over all links.
 
 
-        Return:
+        Returns
+        -------
         link_name, link
         """
         for link_name, link in self._links.iteritems():
@@ -692,8 +697,8 @@ class WaterNetworkModel(object):
         """
         Number of nodes.
 
-        Return
-        ------
+        Returns
+        -------
         Number of nodes.
         """
         return len(self._nodes)
@@ -702,8 +707,8 @@ class WaterNetworkModel(object):
         """
         Number of links.
 
-        Return
-        ------
+        Returns
+        -------
         """
         return len(self._links)
 
@@ -711,7 +716,8 @@ class WaterNetworkModel(object):
         """
         A generator to iterate over all curves
 
-        Return:
+        Returns
+        -------
         curve_name, curve
         """
         for curve_name, curve in self._curves.iteritems():
@@ -722,9 +728,9 @@ class WaterNetworkModel(object):
         Return a copy of the dictionary with all nodes.
 
         Parameters
-        -------
+        ----------
 
-        Return
+        Returns
         -------
         node : dictionary
             Node name to node.
@@ -736,9 +742,9 @@ class WaterNetworkModel(object):
         Return a copy of the dictionary with all nodes.
 
         Parameters
-        -------
+        ----------
 
-        Return
+        Returns
         -------
         node : dictionary
             Node name to node.
@@ -783,12 +789,12 @@ class WaterNetworkModel(object):
         Returns a list of links connected to a node.
 
         Parameters
-        ---------
+        ----------
         node_name : string
             Name of the node.
 
-        Return
-        ------
+        Returns
+        -------
         A list of link names connected to the node
         """
         in_edges = self._graph.in_edges(node_name, data=False, keys=True)
@@ -869,7 +875,7 @@ class WaterNetworkModel(object):
          Write the current network into an EPANET inp file.
 
          Parameters
-         ---------
+         ----------
          filename : String
             Name of the inp file. example - Net3_adjusted_demands.inp
         """
@@ -1077,7 +1083,7 @@ class Node(object):
         node_type : string
             Type of the node. Options are 'Junction', 'Tank', or 'Reservoir'
 
-        Example
+        Examples
         ---------
         >>> node2 = Node('North Lake','Reservoir')
         """
@@ -1107,7 +1113,7 @@ class Link(object):
         end_node_name : string
              Name of the end node
 
-        Example
+        Examples
         ---------
         >>> link1 = Link('Pipe 1','Pipe', 'Node 153', 'Node 159')
         """
@@ -1146,12 +1152,12 @@ class Junction(Node):
     def __init__(self, name, base_demand=None, demand_pattern_name=None, elevation=None):
         """
         Parameters
-        ------
+        ----------
         name : string
             Name of the junction.
 
-        Optional Parameters
-        -------
+        Other Parameters
+        ----------------
         base_demand : float
             Base demand at the junction.
             Internal units must be cubic meters per second (m^3/s).
@@ -1194,12 +1200,12 @@ class Reservoir(Node):
     def __init__(self, name, base_head=None, head_pattern_name=None):
         """
         Parameters
-        ------
+        ----------
         name : string
             Name of the reservoir.
 
-        Optional Parameters
-        -------
+        Other Parameters
+        ----------------
         base_head : float
             Base head at the reservoir.
             Internal units must be meters (m).
@@ -1220,12 +1226,12 @@ class Tank(Node):
                  min_vol=None, vol_curve=None):
         """
         Parameters
-        ------
+        ----------
         name : string
             Name of the tank.
 
-        Optional Parameters
-        -------
+        Other Parameters
+        ----------------
         elevation : float
             Elevation at the Tank.
             Internal units must be meters (m).
@@ -1273,8 +1279,8 @@ class Pipe(Link):
         end_node_name : string
              Name of the end node
 
-        Optional Parameters
-        -----------
+        Other Parameters
+        ----------------
         length : float
             Length of the pipe.
             Internal units must be meters (m)
@@ -1312,8 +1318,8 @@ class Pump(Link):
         end_node_name : string
              Name of the end node
 
-        Optional Parameters
-        ----------
+        Other Parameters
+        ----------------
         info_type : string
             Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
         info_value : float or curve type
@@ -1358,11 +1364,11 @@ class Pump(Link):
         Multi point curves are currently not supported
 
         Parameters
-        -------
+        ----------
         pump_name : string
             Name of the pump
 
-        Return
+        Returns
         -------
         Tuple of pump curve coefficient (A, B, C). All floats.
         """
@@ -1434,8 +1440,8 @@ class Valve(Link):
         end_node_name : string
              Name of the end node
 
-        Optional Parameters
-        ----------
+        Other Parameters
+        ----------------
         diameter : float
             Diameter of the valve.
             Internal units must be meters (m)

@@ -1,6 +1,17 @@
+"""
+Future python extensions for the EPANET Programmers Toolkit
+"""
+
 import string
 
 def ENgetcoordinates(inp_file_name=None):
+    """
+    Returns network coordinates
+    
+    Parameters
+    ----------
+    inp_file_name : string
+    """
     f = open(inp_file_name)
     sInpText = f.read()
     dataXY = []									# this will store our results
@@ -42,6 +53,9 @@ def ENgetcoordinates(inp_file_name=None):
     return pos					# once we have reached the end of this section... return the results 
 
 def parseInpFileLine(line=""):
+    """
+    Parse inp file, line by line
+    """
     line = line.strip(string.whitespace)		# remove leading and trailing whitespace
     line = line.expandtabs(1)					# change internal tabs into spaces
     arr = line.split(";")						# remove any comments

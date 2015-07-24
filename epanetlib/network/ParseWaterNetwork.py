@@ -42,8 +42,8 @@ def str_time_to_sec(s):
     s : string
         EPANET time string. Options are 'HH:MM:SS', 'HH:MM', 'HH'
 
-    Return
-    ------
+    Returns
+    -------
      Integer value of time in seconds.
     """
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
