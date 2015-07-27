@@ -15,7 +15,7 @@ QUESTIONS
 """
 TODO
 1. _check_model_specified has to be extended to check for parameters in the model that must be specified.
-2.
+2. don't copy the water network model?
 """
 
 
