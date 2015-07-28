@@ -17,7 +17,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         Epanet simulator class.
 
         Parameters
-        ---------
+        ----------
         wn : Water Network Model
             A water network model.
         """
@@ -122,7 +122,6 @@ class EpanetSimulator(WaterNetworkSimulator):
             TODO:
             I'm not sure why I have to use ENsolveH, seems like the hydaulic data would be available from above
             What if there is already a chem defined in the inp file?
-            Assumes constant injection.  Pattern not working.
             """
             enData.ENsolveH() 
             #enData.ENsaveH()
@@ -144,20 +143,41 @@ class EpanetSimulator(WaterNetworkSimulator):
                 else:
                     print "Invalid Source Type for CHEM scenario"
                 
+                if wq_endTime == -1:
+                    wq_endTime = enData.ENgettimeparam(pyepanet.EN_DURATION)
+                if wq_startTime > wq_endTime:
+                    raise RuntimeError('Start time is greater than end time')
+                    
+                # Set quality type
                 enData.ENsetqualtype(pyepanet.EN_CHEM, 'Chemical', 'mg/L', '')
+                
+                # Set source quality
                 wq_sourceQual = convert('Concentration', flowunits, wq_sourceQual, MKS = False) # kg/m3 to mg/L
                 nodeid = enData.ENgetnodeindex(wq_node)
                 enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEQUAL, wq_sourceQual)
-                enData.ENaddpattern('wq')
-                patternid = enData.ENgetpatternindex('wq')
-                enData.ENsetpatternvalue(patternid, 1, 1)  # Assumes constant injection
-                enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEPAT, patternid)
+                
+                # Set source type
                 enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCETYPE, wq_sourceType)
                 
+                # Set pattern
+                patternstep = enData.ENgettimeparam(pyepanet.EN_PATTERNSTEP)
+                duration = enData.ENgettimeparam(pyepanet.EN_DURATION)
+                patternlen = duration/patternstep
+                patternstart = wq_startTime/patternstep
+                patternend = wq_endTime/patternstep
+                pattern = [0]*patternlen
+                pattern[patternstart:patternend] = [1]*(patternend-patternstart)
+                enData.ENaddpattern('wq')
+                patternid = enData.ENgetpatternindex('wq')
+                enData.ENsetpattern(patternid, pattern)  
+                enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEPAT, patternid)
+                
             elif wq_type == 'AGE':
+                # Set quality type
                 enData.ENsetqualtype(pyepanet.EN_AGE,0,0,0)  
                 
             elif wq_type == 'TRACE':
+                # Set quality type
                 wq_node = WQ[1]
                 enData.ENsetqualtype(pyepanet.EN_TRACE,0,0,wq_node)   
                 
@@ -312,8 +332,8 @@ class EpanetSimulator(WaterNetworkSimulator):
         """
         Load general simulation options into the results object.
 
-        Parameter
-        ------
+        Parameters
+        ----------
         results : NetworkResults object
         """
         # Load general results

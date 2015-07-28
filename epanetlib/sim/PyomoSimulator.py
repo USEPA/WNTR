@@ -114,7 +114,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         Pyomo simulator class.
 
         Parameters
-        ---------
+        ----------
         wn : Water Network Model
             A water network model.
 
@@ -329,8 +329,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
         Build water network hadloss and node balance constraints.
 
-        Optional Parameters
-        --------
+        Other Parameters
+        -------------------
         modified_hazen_williams : bool
             Flag to use a slightly modified version of Hazen-Williams headloss
             equation for better stability
@@ -598,7 +598,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         Build hydraulic constraints at a particular time instance.
 
         Parameters
-        --------
+        ----------
         last_tank_head : dict of string: float
             Dictionary containing tank names and their respective head at the last timestep.
         nodal_demands : dict of string: float
@@ -610,8 +610,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         pumps_closed_by_outage : list of strings
             Name of pumps closed due to a power outage
 
-        Optional Parameters
-        --------
+        Other Parameters
+        -------------------
         modified_hazen_williams : bool
             Flag to use a slightly modified version of Hazen-Williams headloss
             equation for better stability
@@ -741,6 +741,33 @@ class PyomoSimulator(WaterNetworkSimulator):
                                          ELSE=Expr_if(IF=p <= x4, THEN=smooth_polynomial_rhs(p),
                                                       ELSE=L1(p)))))
 
+        def piecewise_pipe_leak_demand(p, Cd, A):
+            delta = 1.0e-4
+            L1_slope = 1.0e-11
+            x1 = 0.0
+            x2 = delta
+            c = L1_slope
+            d = 0.0
+            def L1(p):
+                return L1_slope*p
+            def leak_model(p, Cd, A):
+                return Cd*A*math.sqrt(2.0*self._g)*p**0.5
+            def get_rhs(x, Cd, A):
+                return np.matrix([[Cd*A*math.sqrt(2.0*self._g)*x**0.5-c*x-d],[0.5*Cd*A*math.sqrt(2.0*self._g)*x**(-0.5)-c]])
+
+            coeff_matrix = np.matrix([[x2**3.0, x2**2.0],[3*x2**2.0, 2*x2]])
+
+            poly_coeff = np.linalg.solve(coeff_matrix, get_rhs(x2, Cd, A))
+            a = float(poly_coeff[0][0])
+            b = float(poly_coeff[1][0])
+
+            def smooth_poly(p):
+                return a*p**3 + b*p**2 + c*p + d
+
+            return Expr_if(IF=p <= x1, THEN=L1(p),
+                           ELSE=Expr_if(IF=p <= x2, THEN=smooth_poly(p),
+                                        ELSE=leak_model(p,Cd,A)))
+
         ######## MAIN HYDRAULIC MODEL EQUATIONS ##########
 
         wn = self._wn
@@ -811,7 +838,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 return node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
             else:
                 return 0.0
-        model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule, bounds = (0.0, None))
+        model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule, bounds = (None, None))
 
         ############## CONSTRAINTS #####################
 
@@ -928,7 +955,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         def leak_demand_rule(model, n):
             if n in self._active_leaks:
                 leak = wn.get_node(n)
-                return model.leak_demand[n]**2 == leak.leak_discharge_coeff**2*leak.area**2*2*self._g*(model.head[n]-leak.elevation)
+                return model.leak_demand[n] == piecewise_pipe_leak_demand(model.head[n]-leak.elevation, leak.leak_discharge_coeff, leak.area)
+                #return model.leak_demand[n]**2 == leak.leak_discharge_coeff**2*leak.area**2*2*self._g*(model.head[n]-leak.elevation)
             elif n in self._inactive_leaks:
                 return model.leak_demand[n] == 0.0
             else:
@@ -1200,8 +1228,8 @@ class PyomoSimulator(WaterNetworkSimulator):
     def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True):
 
         """
-        Optional Parameters
-        ----------
+        Other Parameters
+        -------------------
         solver : String
             Name of the nonlinear programming solver to be used for solving the hydraulic equations.
             Default is 'ipopt'.
@@ -1603,14 +1631,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         a network results object.
 
         Parameters
-        -------
+        ----------
         instance : Pyomo model instance
             Pyomo instance after instance.load() has been called.
         pyomo_results : Pyomo results object
             Pyomo results object
 
-        Return
-        ------
+        Returns
+        -------
         A NetworkResults object containing simulation results.
         """
         # Create results object
@@ -1782,7 +1810,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         the pyomo_sim_results dictionary.
 
         Parameters
-        -------
+        ----------
         instance : Pyomo model instance
             Pyomo instance after instance.load() has been called.
         time : time string
@@ -2130,11 +2158,11 @@ class PyomoSimulator(WaterNetworkSimulator):
         simulation.
 
         Parameters
-        -------
+        ----------
         instance : pyomo model instance
 
-        Return
-        ------
+        Returns
+        -------
         valve_status_change : bool
             True if there was a change in valve status, False otherwise.
 
@@ -2227,8 +2255,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
         Load general simulation options into the results object.
 
-        Parameter
-        ------
+        Parameters
+        ----------
         results : NetworkResults object
         """
         # Load general results
