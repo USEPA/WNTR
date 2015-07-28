@@ -37,11 +37,13 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.todo',
     'sphinx.ext.viewcode',
+    'numpydoc',
 ]
 
 autosummary_generate = True
 todo_include_todos = True
 viewcode_import = True
+numpydoc_show_class_members = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

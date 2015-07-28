@@ -42,7 +42,7 @@ class ScipySimulator(WaterNetworkSimulator):
         Simulator object to be used for running scipy simulations.
 
         Parameters
-        ---------
+        ----------
         wn : WaterNetworkModel
             A water network
         """
@@ -543,12 +543,12 @@ class ScipySimulator(WaterNetworkSimulator):
         Mass balance at all the nodes
 
         Parameters
-        ---------
+        ----------
         flow : list of floats
              List of flow values in each pipe
 
-        Return
-        --------
+        Returns
+        -------
         List of residuals of the node mass balances
         """
         residual = []
@@ -707,8 +707,8 @@ class ScipySimulator(WaterNetworkSimulator):
         """
         Load general simulation options into the results object.
 
-        Parameter
-        ------
+        Parameters
+        ----------
         results : NetworkResults object
         """
         # Load general results

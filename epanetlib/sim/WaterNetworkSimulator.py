@@ -15,7 +15,7 @@ QUESTIONS
 """
 TODO
 1. _check_model_specified has to be extended to check for parameters in the model that must be specified.
-2.
+2. don't copy the water network model?
 """
 
 
@@ -138,11 +138,11 @@ class WaterNetworkSimulator(object):
         Converts timedelta to seconds.
 
         Parameters
-        ------
+        ----------
         timedelta : Pandas tmedelta object.
 
-        Return
-        -----
+        Returns
+        -------
         seconds as integer
         """
 
@@ -153,7 +153,7 @@ class WaterNetworkSimulator(object):
         Add time of pump outage for a particular pump.
 
         Parameters
-        -------
+        ----------
 
         pump_name: String
             Name of the pump.
@@ -162,8 +162,8 @@ class WaterNetworkSimulator(object):
         end_time: String
             End time of the pump outage. Pandas Timedelta format: e.g. '0 days 05:00:00'
 
-        Example
-        ------
+        Examples
+        --------
         >>> sim.add_pump_outage('PUMP-3845', pd.Timedelta('0 days 11:00:00'), pd.Timedelta('1 days 02:00:00'))
 
         """
@@ -201,15 +201,15 @@ class WaterNetworkSimulator(object):
         """
         Add time of outage for all pumps in the network.
 
-        Parameter
-        -------
+        Parameters
+        ----------
         start_time: String
             Start time of the pump outage. Pandas Timedelta format: e.g. '0 days 00:00:00'
         end_time: String
             End time of the pump outage. Pandas Timedelta format: e.g. '0 days 05:00:00'
 
-        Example
-        ------
+        Examples
+        --------
         >>> sim.add_pump_outage('PUMP-3845', pd.Timedelta('0 days 11:00:00'), pd.Timedelta('1 days 02:00:00'))
 
         """
@@ -245,9 +245,10 @@ class WaterNetworkSimulator(object):
 
         Q = leak_discharge_coeff*leak_area*sqrt(2*g*h)
         where:
-           Q is the volumetric flow rate of water out of the leak
-           g is the acceleration due to gravity
-           h is the gauge head at the leak, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
+        
+        Q is the volumetric flow rate of water out of the leak
+        g is the acceleration due to gravity
+        h is the gauge head at the leak, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
 
         Parameters
         ----------
@@ -335,7 +336,7 @@ class WaterNetworkSimulator(object):
         Set the WaterNetwork model for the simulator.
 
         Parameters
-        ---------
+        ----------
         water_network : WaterNetwork object
             Water network model object
         """
@@ -352,7 +353,7 @@ class WaterNetworkSimulator(object):
         Check if a link is open or closed.
 
         Parameters
-        ---------
+        ----------
         link_name: string
             Name of link that is being checked for an open or closed status
 
@@ -464,11 +465,11 @@ class WaterNetworkSimulator(object):
         Convert seconds to hydraulic timestep.
 
         Parameters
-        -------
+        ----------
         sec : int
             Seconds to convert to hydraulic timestep.
 
-        Return
+        Returns
         -------
         hydraulic timestep
         """
@@ -498,7 +499,7 @@ class WaterNetworkSimulator(object):
         Calculates the demands at a node based on the demand pattern.
 
         Parameters
-        ---------
+        ----------
         node_name : string
             Name of the node.
         start_time : float
@@ -506,7 +507,7 @@ class WaterNetworkSimulator(object):
         end_time : float
             The end time of the demand values requested. Default is the simulation end time in sec.
 
-        Return
+        Returns
         -------
         demand_list : list of floats
            A list of demand values at each hydraulic timestep.
