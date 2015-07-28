@@ -865,6 +865,7 @@ class ENepanet():
          * afMult  = array of pattern multipliers
         
         """
+        afMult = (ctypes.c_float * len(afMult))(*afMult)
         self.errcode = self.ENlib.ENsetpattern(iIndex, afMult, len(afMult))
         self._error()
         return

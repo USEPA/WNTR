@@ -18,9 +18,9 @@ Node, (used for CHEM and TRACE only)
 SourceType, options = CONCEN, MASS, FLOWPACED, or SETPOINT (used for CHEM only)
 SourceQual, kg/m3 (used for CHEM only)
 Start time, s  (used for CHEM only)
-End time, s) (used for CHEM only)
+End time, s (used for CHEM only, -1 = simulation duration)
 """
-sceanrio_CHEM = ['CHEM', '121', 'SETPOINT', 1000, 0, 1000]  # pattern (start/end time) not currently used, assumes constant injection
+sceanrio_CHEM = ['CHEM', '121', 'SETPOINT', 1000, 3600*5, 3600*15]
 sceanrio_AGE = ['AGE']
 sceanrio_TRACE = ['TRACE', '111']
 
