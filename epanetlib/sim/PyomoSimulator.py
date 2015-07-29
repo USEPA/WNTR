@@ -897,6 +897,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Add Pressure Reducing Valve (PRV) constraints based on status
             self._add_valve_constraints(instance)
 
+            # Check for isolated junctions. If all links connected to a junction are closed,
+            # then the head is fixed to the elevation, the demand if fixed to 0, and
+            # the mass balance for that junction is deactivated
+            self._check_for_isolated_junctions(instance, links_closed)
+
             # Solve the instance and load results
             pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
             instance.load(pyomo_results)
@@ -1530,6 +1535,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             if next_head_in_tank <= min_tank_head and head_in_tank >= min_tank_head:
                 for link_name in control_info['link_names']:
                     link = self._wn.get_link(link_name)
+                    if isinstance(link, Valve):
+                        raise NotImplementedError('Placing valves directly next to tanks is not yet supported.'+
+                                                  'Try placing a dummy pipe and junction between the tank and valve.')
                     if isinstance(link, Pump) or link.get_base_status() == 'CV':
                         if link.end_node() == tank_name:
                             continue
@@ -1733,3 +1741,24 @@ class PyomoSimulator(WaterNetworkSimulator):
                     leak_links.remove(link_name)
                     other_segment = leak_links[0]
                     links_closed.discard(other_segment)
+
+    def _check_for_isolated_junctions(self, instance, links_closed):
+        # Check for isolated junctions. If all links connected to a junction are closed,
+        # then the head is fixed to the elevation, the demand if fixed to 0,
+        # the mass balance for that junction is deactivated, and
+        # the PDD constraint for that junction is deactivated
+
+        for junction_name in instance.junctions:
+            junction = self._wn.get_node(junction_name)
+            connected_links = self._wn.get_links_for_node(junction_name)
+            isolated = True
+            for link_name in connected_links:
+                if link_name not in links_closed:
+                    isolated = False
+            if isolated:
+                instance.head[junction_name] = junction.elevation
+                instance.head[junction_name].fixed = True
+                instance.demand_actual[junction_name] = 0.0
+                instance.demand_actual[junction_name].fixed = True
+                instance.node_mass_balance[junction_name].deactivate()
+                instance.pressure_driven_demand[junction_name].deactivate()
