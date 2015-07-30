@@ -946,7 +946,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Set valve status based on pyomo results
             if self._wn._num_valves != 0:
                 valve_status_changed = self._set_valve_status(instance)
-                check_valve_status_changed = self._set_check_valves_closed(instance, closed_check_valves)
+            check_valve_status_changed = self._set_check_valves_closed(instance, closed_check_valves)
 
             # Another trial at the same timestep is required if the following conditions are met:
             if valve_status_changed \
