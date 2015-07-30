@@ -1,33 +1,3 @@
-"""
-QUESTIONS
-"""
-
-"""
-TODO
-1. Use in_edges and out_edges to write node balances on the pyomo model.
-2. Use reporting timestep when creating the pyomo results object.
-3. Test behaviour of check valves. We may require a minimum of two trials at every timestep.
-4. Check for negative pressure at leak node
-5. Double check units of leak model
-6. Leak model assumes all pressures are guage
-7. Resolve first timestep/trial if conditional controls are not satisfied.
-8. Check self._n_timesteps in _initialize_simulation
-9. Check _apply_conditional_controls
-10. In _build_hydraulic_model_at_instant, when setting constraints for head gain for pumps with outtage, why is headloss 0 if modified_hazen_williams is true?
-11. Rewrite controls
-12. Try out alternative leak implementation: have demand come out of existing nodes
-13. Generalize tank controls for multiple pipes connected to tanks
-14. Fix the PDD smoothing so that pressure is not negative when demand is 0
-15. Update _apply_tank_controls since we now calculate tank levels based on flowrates from the previous timestep.
-16. Why override time controls at the end of _apply_tank_controls?
-17. Put in a check for negative pump head gain
-18. Consider flowrates in L/s to reduce solve time
-19. What happens to a node pressure if all links connected to that node are closed (actually closed, not just 0 flow)?
-20. Think about controls in context of multiple trials for a single timestep
-21. Is the pump low flow problem a low flow problem or a low suction pressure problem or both?
-22. Currently, pumps closed for low flow never open back up. Fix this.
-"""
-
 try:
     from pyomo.environ import *
     from pyomo.core import *
