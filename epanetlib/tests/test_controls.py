@@ -111,13 +111,18 @@ class TestTankControls(unittest.TestCase):
     def test_pipe_closed_for_low_level(self):
         inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/tank_controls_test_network1.inp'
         wn = self.en.network.WaterNetworkModel()
-        parser = self.en.network.ParseWaternetwork()
+        parser = self.en.network.ParseWaterNetwork()
         parser.read_inp_file(wn, inp_file)
         wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
         sim = self.en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
         results = sim.run_sim()
-        
-        
+
+        tank_level_dropped_flag = False
+        for t in results.link.loc['pipe1'].index:
+            if results.node.at[('tank1',t),'pressure'] <= 0.0:
+                self.assertLessEqual(results.link.at[('pipe1',t),'flowrate'],0.0)
+                tank_level_dropped_flag = True
+        self.assertEqual(tank_level_dropped_flag, True)
 
 if __name__ == '__main__':
     unittest.main()
