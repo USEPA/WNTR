@@ -904,6 +904,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             # Solve the instance and load results
             pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
+            if pyomo_results.solver.status!=SolverStatus.ok or pyomo_results.solver.termination_condition!=TerminationCondition.optimal:
+                raise RuntimeError('Solver did not converge.')
             instance.load(pyomo_results)
             #CheckInstanceFeasibility(instance, 1e-6)
             #self._check_constraint_violation(instance)
