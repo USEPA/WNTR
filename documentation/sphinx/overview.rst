@@ -37,8 +37,8 @@ WNTR is compatible with EPANET inp files [Rossman2000]_.  A flowchart of feature
 
 .. todo:: Add additional background from the Roadmap
 
-.. figure:: figures/ResiliencyWorkflowBW.png
-   :scale: 50 %
+.. figure:: figures/roadmap_flowchart.png
+   :scale: 100 %
    :alt: map to buried treasure
 
    Flowchart of WNTR capabilities

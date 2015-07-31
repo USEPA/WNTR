@@ -33,5 +33,12 @@ converting_units.py             Convert units
 Several EPANET inp files are included in the examples folder.  These example
 network range from a simple 9 node networks to a 13,000 node network.
 
-More advanced case studies are also included in the examples folder.  These include ...
+More advanced case studies are also included in the examples/case studies folder.  These include:
 
+==============================  ======================================================
+Case Study                      Description
+==============================  ======================================================
+Power outage
+Pipe break
+...
+==============================  ======================================================
