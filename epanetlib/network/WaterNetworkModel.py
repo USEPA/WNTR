@@ -74,6 +74,7 @@ class WaterNetworkModel(object):
         # Initialize Options dictionaries
         self.time_options = {}
         self.options = {}
+        self.reaction_options = {}
 
         # Time controls are saved as a dictionary as follows:
         # {'Link name': {'open_times': [1, 5, ...], 'closed_times': [3, 7, ...]}},
@@ -494,6 +495,19 @@ class WaterNetworkModel(object):
             Value of the option.
         """
         self.options[name.upper()] = value
+
+    def add_reaction_option(self, name, value):
+        """
+        Method to add a reaction option to a water network object.
+
+        Parameters
+        ----------
+        name : string
+            Name of the option.
+        value:
+            Value of the option.
+        """
+        self.reaction_options[name.upper()] = value
     
     def get_node_attribute(self, attribute, node_type=None):
         """ Get node attributes
@@ -1042,9 +1056,18 @@ class WaterNetworkModel(object):
 
         print >> f, ''
 
+        # Reaction Options
+        print >> f, '[REACTIONS]'
+        text_format_float = '{:20s} {:<10.8f}'
+        for key, val in self.reaction_options.iteritems():
+            print >>f, text_format_float.format(key, val)
+
+        print >> f, ''
+
         # Time options
         print >> f, '[TIMES]'
         text_format = '{:20s} {:10s}'
+        time_text_format = '{:20s} {:d}:{:d}:{:d}'
         for key, val in self.time_options.iteritems():
             if key == 'START CLOCKTIME':
                 hrs, mm, sec = self._sec_to_string(val)
@@ -1055,7 +1078,7 @@ class WaterNetworkModel(object):
                 print >>f, text_format.format(key, str(hrs)+time_format)
             elif isinstance(val, float) or isinstance(val, int):
                 hrs, mm, sec = self._sec_to_string(val)
-                print >>f, text_format.format(key, str(hrs)+':'+str(mm)+':'+str(sec))
+                print >>f, time_text_format.format(key, hrs, mm, sec)
             elif isinstance(val, str):
                 print >>f, text_format.format(key, val)
             else:

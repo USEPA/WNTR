@@ -49,7 +49,7 @@ def str_time_to_sec(s):
     pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     time_tuple = pattern1.search(s)
     if bool(time_tuple):
-        return int(time_tuple.groups()[0])*60*60 + int(time_tuple.groups()[1])*60 + int(round(time_tuple.groups()[2]))
+        return int(time_tuple.groups()[0])*60*60 + int(time_tuple.groups()[1])*60 + int(round(float(time_tuple.groups()[2])))
     else:
         pattern2 = re.compile(r'^(\d+):(\d+)$')
         time_tuple = pattern2.search(s)
@@ -61,7 +61,7 @@ def str_time_to_sec(s):
             if bool(time_tuple):
                 return int(time_tuple.groups()[0])*60*60
             else:
-                raise RuntimeError("Time format in [CONTROLS] block of "
+                raise RuntimeError("Time format in "
                                    "INP file not recognized. ")
 
 
@@ -162,6 +162,7 @@ class ParseWaterNetwork(object):
         controls = False
         coordinates = False
         status = False
+        reactions = False
 
         for line in f:
             if ']' in line:
@@ -178,6 +179,7 @@ class ParseWaterNetwork(object):
                 controls = False
                 coordinates = False
                 status = False
+                reactions = False
 
             if '[PIPES]' in line:
                 pipes = True
@@ -214,6 +216,9 @@ class ParseWaterNetwork(object):
                 continue
             elif '[STATUS]' in line:
                 status = True
+                continue
+            elif '[REACTIONS]' in line:
+                reactions = True
                 continue
 
             if pipes:
@@ -426,7 +431,13 @@ class ParseWaterNetwork(object):
                     continue
                 assert(len(current) == 2), "Error reading [STATUS] block, Check format."
                 self._link_status[current[0]] = current[1].upper()
-
+            if reactions:
+                current = line.split()
+                if (current == []) or (current[0].startswith(';')):
+                    continue
+                assert len(current) == 3, 'INP file option in [REACTIONS] block not recognized: '+line
+                wn.add_reaction_option(current[0].upper() + ' ' + current[1].upper(), float(current[2])) 
+            
         f.close()
 
         # Add patterns to their set
