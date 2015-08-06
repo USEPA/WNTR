@@ -1,23 +1,22 @@
-# Compare EPANET, Scipy, and Pyomo simulators using demand driven simulation
-import epanetlib as en
+import wntr
 import matplotlib.pylab as plt
 
 # Create a water network model
 inp_file = 'networks/Net1.inp'
-wn = en.network.WaterNetworkModel()
-parser = en.network.ParseWaterNetwork()
+wn = wntr.network.WaterNetworkModel()
+parser = wntr.network.ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
 
 # Simulate using EPANET
-epanet_sim = en.sim.EpanetSimulator(wn)
+epanet_sim = wntr.sim.EpanetSimulator(wn)
 epanet_results = epanet_sim.run_sim()
 
 # Simulate using Scipy
-scipy_sim = en.sim.ScipySimulator(wn)
+scipy_sim = wntr.sim.ScipySimulator(wn)
 scipy_results = scipy_sim.run_sim()
 
 # Simulate using PYOMO
-pyomo_sim = en.sim.PyomoSimulator(wn)
+pyomo_sim = wntr.sim.PyomoSimulator(wn)
 pyomo_results = pyomo_sim.run_sim()
 
 # Compare results

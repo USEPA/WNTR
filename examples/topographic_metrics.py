@@ -1,4 +1,4 @@
-import epanetlib as en
+import wntr
 import numpy as np 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -7,15 +7,15 @@ plt.close('all')
 
 # Create a water network model
 inp_file = 'networks/Net3.inp'
-wn = en.network.WaterNetworkModel()
-parser = en.network.ParseWaterNetwork()
+wn = wntr.network.WaterNetworkModel()
+parser = wntr.network.ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
 
 # Get a copy of the graph and convert the MultiDiGraph to a MultiGraph
 G = wn.get_graph_copy().to_undirected()
 
 # Graph the network
-en.network.draw_graph(wn, title= wn.name)
+wntr.network.draw_graph(wn, title= wn.name)
             
 # Print general topographic information (type, number of nodes, 
 # number of edges, average degree)
@@ -23,9 +23,9 @@ print nx.info(G)
 
 # Set node and edge attribute and plot the graph. 
 junction_attr = wn.get_node_attribute('elevation', 
-                                      node_type=en.network.Junction)
-pipe_attr = wn.get_link_attribute('length', link_type=en.network.Pipe)
-en.network.draw_graph(wn, node_attribute=junction_attr, 
+                                      node_type=wntr.network.Junction)
+pipe_attr = wn.get_link_attribute('length', link_type=wntr.network.Pipe)
+wntr.network.draw_graph(wn, node_attribute=junction_attr, 
                            link_attribute=pipe_attr, 
                            title='Node elevation and pipe length', 
                            node_size=40, link_width=2)
@@ -41,19 +41,19 @@ print "Number of self loops: " + str(G.number_of_selfloops())
 
 # Compute node degree (number of links per node)
 node_degree = G.degree()
-en.network.draw_graph(wn, node_attribute=node_degree,
+wntr.network.draw_graph(wn, node_attribute=node_degree,
                       title='Node Degree', node_size=40, node_range=[1,5])
 
 # Compute number of terminal nodes (degree = 1)
-terminal_nodes = en.network.terminal_nodes(G)
-en.network.draw_graph(wn, node_attribute=terminal_nodes,
+terminal_nodes = wntr.network.terminal_nodes(G)
+wntr.network.draw_graph(wn, node_attribute=terminal_nodes,
                       title='Terminal nodes', node_size=40, node_range=[0,1])
 print "Number of terminal nodes: " + str(len(terminal_nodes))
 print "   " + str(terminal_nodes)
 
 # Compute number of NZD nodes (base demand > 0)
 nzd_nodes = wn.query_node_attribute('base_demand', np.greater, 0.0)
-en.network.draw_graph(wn, node_attribute=nzd_nodes.keys(),
+wntr.network.draw_graph(wn, node_attribute=nzd_nodes.keys(),
                       title='NZD nodes', node_size=40, node_range=[0,1])
 print "Number of NZD nodes: " + str(len(nzd_nodes))
 print "   " + str(nzd_nodes.keys())
@@ -61,7 +61,7 @@ print "   " + str(nzd_nodes.keys())
 # Compute pipes with diameter > threshold
 diameter = 0.508 # m (20 inches)
 pipes = wn.query_link_attribute('diameter', np.greater, diameter)
-en.network.draw_graph(wn, link_attribute=pipes.keys(), 
+wntr.network.draw_graph(wn, link_attribute=pipes.keys(), 
                       title='Pipes > 20 inches', link_width=2, 
                       link_range=[0,1])
 print "Number of pipes > 20 inches: " + str(len(pipes))
@@ -70,7 +70,7 @@ print "   " + str(pipes)
 # Compute nodes with elevation <= treshold
 elevation = 1.524 # m (5 feet)
 nodes = wn.query_node_attribute('elevation', np.less_equal, elevation)
-en.network.draw_graph(wn, node_attribute=nodes.keys(), 
+wntr.network.draw_graph(wn, node_attribute=nodes.keys(), 
                       title='Nodes <= 5 ft elevation', node_size=40, 
                       node_range=[0,1])
 print "Number of nodes <= 5 ft elevation: " + str(len(nodes))
@@ -79,7 +79,7 @@ print "   " + str(nodes)
 if nx.is_connected(G):
     # Compute eccentricity (maximum distance from node to all other nodes in G)
     ecc = nx.eccentricity(G)
-    en.network.draw_graph(wn, node_attribute=ecc, title='Eccentricity', 
+    wntr.network.draw_graph(wn, node_attribute=ecc, title='Eccentricity', 
                           node_size=40, node_range=[15, 30])
 
     # Compute diameter (maximum eccentricity. The eccentricity of a node v is 
@@ -98,7 +98,7 @@ else:
 # Compute cluster coefficient (function of the number of triangles through 
 # a node)
 clust_coefficients = nx.clustering(nx.Graph(G))
-en.network.draw_graph(wn, node_attribute=clust_coefficients,
+wntr.network.draw_graph(wn, node_attribute=clust_coefficients,
                       title='Clustering Coefficient', node_size=40)
 
 # Compute meshedness coefficient
@@ -109,7 +109,7 @@ print "Meshedness coefficient: " + str(meshedness)
 # along the shortest path between two other nodes.)
 bet_cen = nx.betweenness_centrality(G)
 bet_cen_trim = dict([(k,v) for k,v in bet_cen.iteritems() if v > 0.1])
-en.network.draw_graph(wn, node_attribute=bet_cen_trim, 
+wntr.network.draw_graph(wn, node_attribute=bet_cen_trim, 
                       title='Betweenness Centrality', node_size=40, 
                       node_range=[0.1, 0.4])
 central_pt_dom = sum(max(bet_cen.values()) - np.array(bet_cen.values()))/G.number_of_nodes()
@@ -122,13 +122,13 @@ Nap = list(nx.articulation_points(G))
 Nap = list(set(Nap)) # get the unique nodes in Nap
 Nap_density = float(len(Nap))/G.number_of_nodes()
 print "Density of articulation points: " + str(Nap_density)
-en.network.draw_graph(wn, node_attribute=Nap, title='Articulation Point', 
+wntr.network.draw_graph(wn, node_attribute=Nap, title='Articulation Point', 
                       node_size=40, node_range=[0,1])
 
 # Compute bridges (a link is considered a bridge if the removal of that link 
 # increases the number of connected components in the network.)
-bridges = en.network.bridges(G)
-en.network.draw_graph(wn, link_attribute=bridges, title='Bridges', 
+bridges = wntr.network.bridges(G)
+wntr.network.draw_graph(wn, link_attribute=bridges, title='Bridges', 
                       link_width=2, link_range=[0,1])
 Nbr_density = float(len(bridges))/G.number_of_edges()
 print "Density of bridges: " + str(Nbr_density)
@@ -153,5 +153,5 @@ print "Critical ratio of defragmentation: " + str(fc)
 # Compute closeness centrality (inverse of the sum of shortest path from one
 # node to all other nodes)
 clo_cen = nx.closeness_centrality(G)
-en.network.draw_graph(wn, node_attribute=clo_cen,
+wntr.network.draw_graph(wn, node_attribute=clo_cen,
                       title='Closeness Centrality', node_size=40)

@@ -1,10 +1,10 @@
 # Modify Network Stucture/Operations/Controls and simulate hydraulics
-import epanetlib as en
+import wntr
 
 # Create a water network model
 inp_file = 'networks/Net3.inp'
-wn = en.network.WaterNetworkModel()
-parser = en.network.ParseWaterNetwork()
+wn = wntr.network.WaterNetworkModel()
+parser = wntr.network.ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
 
 # Modify the water network model
@@ -14,7 +14,7 @@ wn.time_options['REPORT TIMESTEP'] = 1800
 wn.set_nominal_pressures(constant_nominal_pressure = 15) 
 
 # Create simulation object of the PYOMO simulator
-sim = en.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
+sim = wntr.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
 
 # Define pipe leaks
 sim.add_leak(leak_name = 'leak1', pipe_name = '123', leak_diameter=0.05, 
