@@ -22,7 +22,8 @@ class EpanetSimulator(WaterNetworkSimulator):
             A water network model.
         """
         WaterNetworkSimulator.__init__(self, wn)
-        
+
+
     def run_sim(self, WQ = None, convert_units=True, pandas_result=True):
         """
         Run water network simulation using epanet.
@@ -32,11 +33,10 @@ class EpanetSimulator(WaterNetworkSimulator):
         enData = pyepanet.ENepanet()
         enData.inpfile = self._wn.name
         enData.ENopen(enData.inpfile, 'tmp.rpt')
-        
         flowunits = enData.ENgetflowunits()
         
         enData.ENopenH()
-        enData.ENinitH(0)
+        enData.ENinitH(1)
         
         results = NetResults()
         results.network_name = self._wn.name
@@ -117,14 +117,9 @@ class EpanetSimulator(WaterNetworkSimulator):
                 results.simulator_options['error_code'] = 1
             if enData.Errflag:
                 results.simulator_options['error_code'] = 2
+        
+        enData.ENcloseH()
         if WQ:
-            """
-            TODO:
-            I'm not sure why I have to use ENsolveH, seems like the hydaulic data would be available from above
-            What if there is already a chem defined in the inp file?
-            """
-            enData.ENsolveH() 
-            #enData.ENsaveH()
             wq_type = WQ[0]
             if wq_type == 'CHEM': 
                 wq_node = WQ[1]
@@ -183,9 +178,9 @@ class EpanetSimulator(WaterNetworkSimulator):
                 
             else:
                 print "Invalid Quality Type"
-            
             enData.ENopenQ()
-            enData.ENinitQ(1)
+            enData.ENinitQ(0)
+
             while True:
                 t = enData.ENrunQ()
                 timedelta = pd.Timedelta(seconds = t)
@@ -210,7 +205,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 results.simulator_options['error_code'] = 1
             if enData.Errflag:
                 results.simulator_options['error_code'] = 2
-
+            enData.ENcloseQ()
         # close epanet 
         enData.ENclose()
 
