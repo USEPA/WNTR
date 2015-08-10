@@ -1,10 +1,10 @@
 # Modify Network Stucture/Operations/Controls and simulate hydraulics
-import epanetlib as en
+import wntr
 
 # Create a water network model
 inp_file = 'networks/Net3.inp'
-wn = en.network.WaterNetworkModel()
-parser = en.network.ParseWaterNetwork()
+wn = wntr.network.WaterNetworkModel()
+parser = wntr.network.ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
 
 # Set the simulation duration to 10 hours
@@ -18,7 +18,7 @@ wn.add_pipe('new pipe', start_node_name = 'new junction',
             roughness = 1, minor_loss = 3)
             
 # Graph the network with new junction and pipe
-en.network.draw_graph(wn, title= wn.name)
+wntr.network.draw_graph(wn, title= wn.name)
        
 # Remove a node and pipe
 
@@ -58,5 +58,5 @@ wn.set_nominal_pressures(constant_nominal_pressure = 30.0,
                          minimum_pressure = 0) 
 
 # Simulate hydraulics
-sim = en.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
+sim = wntr.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
 results = sim.run_sim()

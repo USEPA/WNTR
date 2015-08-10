@@ -12,7 +12,7 @@ at Sandia National Laboratories.
 
 Tests can be run locally using nosetests in the WNTR directory::
 
-	nosetests -v --with-coverage --cover-package=epanetlib epanetlib
+	nosetests -v --with-coverage --cover-package=wntr wntr
 
 Bug reports
 -----------

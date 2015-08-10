@@ -1,13 +1,6 @@
 Overview
 ======================================
 
-.. todo:: 
-
-     Add a section to the documentation on tips for users:
-          * Place check valves next to reservoirs if you don't want water flowing back into the reservoir
-          * Place check bypasses around pumps if you want them.
-          * Pipes with large diameters, large roughness coefficients, and small lengths will have small resistance coefficients. If the resistance coefficient is too small, weird things may happen.
-
 Water distribution systems face multiple challenges, including: 
 aging infrastructure, 
 water quality concerns, 
@@ -44,9 +37,8 @@ WNTR is compatible with EPANET inp files [Rossman2000]_.  A flowchart of feature
 
 .. todo:: Add additional background from the Roadmap
 
-.. figure:: figures/ResiliencyWorkflowBW.png
-   :scale: 50 %
+.. figure:: figures/roadmap_flowchart.png
+   :scale: 100 %
    :alt: map to buried treasure
 
    Flowchart of WNTR capabilities
-

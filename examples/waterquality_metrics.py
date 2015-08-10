@@ -1,4 +1,4 @@
-import epanetlib as en
+import wntr
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
@@ -6,8 +6,8 @@ import pandas as pd
 
 # Create a water network model
 inp_file = 'networks/Net3.inp'
-wn = en.network.WaterNetworkModel()
-parser = en.network.ParseWaterNetwork()
+wn = wntr.network.WaterNetworkModel()
+parser = wntr.network.ParseWaterNetwork()
 parser.read_inp_file(wn, inp_file)
 
 # Define WQ scenarios
@@ -20,12 +20,12 @@ SourceQual, kg/m3 (used for CHEM only)
 Start time, s  (used for CHEM only)
 End time, s (used for CHEM only, -1 = simulation duration)
 """
-sceanrio_CHEM = ['CHEM', '121', 'SETPOINT', 1000, 3600*5, 3600*15]
+sceanrio_CHEM = ['CHEM', '121', 'SETPOINT', 1000, 3600*2, 3600*15]
 sceanrio_AGE = ['AGE']
 sceanrio_TRACE = ['TRACE', '111']
 
 # Simulate hydraulics and water quality for each scenario
-sim = en.sim.EpanetSimulator(wn)
+sim = wntr.sim.EpanetSimulator(wn)
 results_CHEM = sim.run_sim(WQ = sceanrio_CHEM)
 results_AGE = sim.run_sim(WQ = sceanrio_AGE)
 results_TRACE = sim.run_sim(WQ = sceanrio_TRACE)
@@ -35,7 +35,7 @@ CHEM_at_5hr = results_CHEM.node.loc[(slice(None),
                                      pd.Timedelta(hours = 5)), 'quality']
 CHEM_at_5hr.reset_index(level=1, drop=True, inplace=True)
 attr = dict(CHEM_at_5hr)
-en.network.draw_graph(wn, node_attribute=attr, node_size=20, 
+wntr.network.draw_graph(wn, node_attribute=attr, node_size=20, 
                       title='Chemical concentration, time = 5 hours')
 CHEM_at_node = results_CHEM.node.loc[('208', slice(None)), 'quality']
 plt.figure()
@@ -46,7 +46,7 @@ AGE_at_5hr = results_AGE.node.loc[(slice(None),
                                    pd.Timedelta(hours = 5)), 'quality']/3600
 AGE_at_5hr.reset_index(level=1, drop=True, inplace=True)
 attr = dict(AGE_at_5hr)
-en.network.draw_graph(wn, node_attribute=attr, node_size=20, 
+wntr.network.draw_graph(wn, node_attribute=attr, node_size=20, 
                       title='Water age (hrs), time = 5 hours')
 AGE_at_node = results_AGE.node.loc[('208', slice(None)), 'quality']/3600
 plt.figure()
@@ -57,7 +57,7 @@ TRACE_at_5hr = results_TRACE.node.loc[(slice(None),
                                        pd.Timedelta(hours = 5)), 'quality']
 TRACE_at_5hr.reset_index(level=1, drop=True, inplace=True)
 attr = dict(TRACE_at_5hr)
-en.network.draw_graph(wn, node_attribute=attr, node_size=20, 
+wntr.network.draw_graph(wn, node_attribute=attr, node_size=20, 
                       title='Trace percent, time = 5 hours')
 TRACE_at_node = results_TRACE.node.loc[('208', slice(None)), 'quality']
 plt.figure()

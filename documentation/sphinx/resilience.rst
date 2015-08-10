@@ -8,7 +8,9 @@ Resilience Metrics
    :scale: 100 %
    :alt: map to buried treasure
 
-   State transition plot, adopted from [Barker2013]_ 
+   State transition plot
+
+State transition plot [Barker2013]_
 
    
    
