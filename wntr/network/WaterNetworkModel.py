@@ -35,14 +35,14 @@ import networkx as nx
 import math
 from scipy.optimize import fsolve
 from wntr.units import convert
-
+import wntr.network
 
 class WaterNetworkModel(object):
 
     """
     The base water network model class.
     """
-    def __init__(self):
+    def __init__(self, inp_file_name = None):
         """
         Examples
         ---------
@@ -93,6 +93,10 @@ class WaterNetworkModel(object):
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
         self._graph = nx.MultiDiGraph(data=None)
+        
+        if inp_file_name:
+            parser = wntr.network.ParseWaterNetwork()
+            parser.read_inp_file(self, inp_file_name)
 
     def copy(self):
         
