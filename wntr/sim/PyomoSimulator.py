@@ -1759,7 +1759,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 con_value = value(con[constraint_key].body)
                 con_lower = value(con[constraint_key].lower)
                 con_upper = value(con[constraint_key].upper)
-                if (con_lower - con_value) >= 1.0e-6 or (con_value - con_upper) >= 1.0e-6:
+                if (con_lower - con_value) >= 1.0e-5 or (con_value - con_upper) >= 1.0e-5:
                     print constraint_name,'[',constraint_key,']',' is not satisfied:'
                     print 'lower: ',con_lower, '\t body: ',con_value,'\t upper: ',con_upper 
-                    con.pprint()
+                    print 'lower: ',con[constraint_key].lower, '\t body: ',con[constraint_key].body,'\t upper: ',con[constraint_key].upper 
