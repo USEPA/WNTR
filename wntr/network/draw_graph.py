@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 def draw_graph(wn, node_attribute=None, link_attribute=None, title=None, 
                node_size=10, node_range = [None,None], node_cmap=None,
                link_width=1, link_range = [None,None], link_cmap=None, 
-               add_colorbar=True, figsize=None, directed=False):
+               add_colorbar=True, figsize=None, dpi=None, directed=False):
 
     r"""Draw a WaterNetworkModel networkx graph
     
@@ -134,7 +134,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         link_cmap=plt.cm.jet
         
     # Plot
-    plt.figure(facecolor='w', edgecolor='k', figsize=figsize)
+    plt.figure(facecolor='w', edgecolor='k', figsize=figsize, dpi=dpi)
     if title is not None:
         plt.title(title)
     nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
@@ -146,4 +146,18 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     if add_colorbar and link_attribute:
         plt.colorbar(edges, shrink=0.5, pad = 0.05)
     plt.axis('off')
+
+def custom_colormap(numcolors=11, colors=['blue','white','red']):
+    """ 
+    Create a custom colormap
+    Default is blue to white to red with 11 colors.  
+    Colors can be specified in any way understandable by matplotlib.colors.ColorConverter.to_rgb()
+    """
+
+    from matplotlib.colors import LinearSegmentedColormap 
+    
+    cmap = LinearSegmentedColormap.from_list(name='custom', 
+                                             colors = colors,
+                                             N=numcolors)
+    return cmap
     
