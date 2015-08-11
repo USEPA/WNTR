@@ -874,11 +874,15 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             # Solve the instance and load results
             pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
-            if pyomo_results.solver.status!=SolverStatus.ok or pyomo_results.solver.termination_condition!=TerminationCondition.optimal:
-                raise RuntimeError('Solver did not converge.')
             instance.load(pyomo_results)
+            if pyomo_results.solver.status!=SolverStatus.ok or pyomo_results.solver.termination_condition!=TerminationCondition.optimal:
+                self._check_constraint_violation(instance)
+                instance.pprint()
+                for node_name, node in self._wn.nodes():
+                    if not isinstance(node, Reservoir):
+                        print node_name,' pressure: ',instance.head[node_name].value - node.elevation
+                raise RuntimeError('Solver did not converge.')
             #CheckInstanceFeasibility(instance, 1e-6)
-            #self._check_constraint_violation(instance)
 
             # Post-solve controls
             # These controls depend on the current timestep,
