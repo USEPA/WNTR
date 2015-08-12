@@ -3,9 +3,7 @@ import wntr
 
 # Create a water network model
 inp_file = 'networks/Net3.inp'
-wn = wntr.network.WaterNetworkModel()
-parser = wntr.network.ParseWaterNetwork()
-parser.read_inp_file(wn, inp_file)
+wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Set the simulation duration to 10 hours
 wn.time_options['DURATION'] = 3600*10
