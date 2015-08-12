@@ -91,7 +91,7 @@ class Earthquake(object):
         
         return PGA
     
-    def correction_factor_lookup_table(self, link, material='PVC', topography='Stiff alluvial', 
+    def correction_factor_lookup_table(self, link, material='PE', topography='Stiff alluvial', 
                       liquifaction='None'):
         """
         Isoyama et al., 2000 correction factor lookup table
