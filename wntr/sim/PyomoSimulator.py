@@ -703,7 +703,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         return model
 
 
-    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True):
+    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True, demo=False):
 
         """
         Other Parameters
@@ -720,7 +720,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             An external dictionary of demand values can be provided using this parameter. This option is used in the
             calibration work.
         """
-
+        if demo:
+            import pickle
+            results = pickle.load(open('demo.pickle', 'rb'))
+            return results
+            
         # Add leak to network
         for leak_name in self._pipes_with_leaks.values():
             self._add_leak_to_wn_object(leak_name)

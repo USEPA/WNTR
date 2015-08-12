@@ -123,8 +123,13 @@ class ScipySimulator(WaterNetworkSimulator):
             self._P0 = None
             self._PF = None
 
-    def run_sim(self):
-
+    def run_sim(self, demo=False):
+        
+        if demo:
+            import pickle
+            results = pickle.load(open('demo.pickle', 'rb'))
+            return results
+            
         # Number of hydraulic timesteps
         n_timesteps = int(round(self._sim_duration_sec/self._hydraulic_step_sec))+1
 
