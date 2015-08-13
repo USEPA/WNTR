@@ -1448,7 +1448,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
     def _update_conditional_controls_for_leaks(self):
         # Update conditional controls
-        for control_link_name, control_dict in self._wn.conditional_controls.iteritems():
+        tmp_conditional_controls = copy.deepcopy(self._wn.conditional_controls)
+        for control_link_name, control_dict in tmp_conditional_controls.iteritems():
             if control_link_name in self._pipes_with_leaks.keys():
                 leak_name = self._pipes_with_leaks[control_link_name]
                 if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
