@@ -24,14 +24,14 @@ class EpanetSimulator(WaterNetworkSimulator):
         WaterNetworkSimulator.__init__(self, wn)
 
 
-    def run_sim(self, WQ = None, convert_units=True, pandas_result=True, demo=False):
+    def run_sim(self, WQ = None, convert_units=True, pandas_result=True, demo=None):
         """
         Run water network simulation using epanet.
 
         """
         if demo:
             import pickle
-            results = pickle.load(open('demo.pickle', 'rb'))
+            results = pickle.load(open(demo, 'rb'))
             return results
             
         # Create enData
