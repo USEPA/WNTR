@@ -704,7 +704,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         return model
 
 
-    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True, demo=False):
+    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True, demo=None):
 
         """
         Other Parameters
@@ -723,7 +723,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
         if demo:
             import pickle
-            results = pickle.load(open('demo.pickle', 'rb'))
+            results = pickle.load(open(demo, 'rb'))
             return results
             
         # Add leak to network

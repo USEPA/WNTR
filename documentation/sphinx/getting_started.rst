@@ -3,7 +3,7 @@ Getting started
 
 To use WNTR, import the package from within a python console::
 
-	import wntr as wn	
+	import wntr	
 
 A simple script, getting_started.py, is included in the examples
 folder.  This example demonstrates how to:
