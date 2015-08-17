@@ -10,7 +10,7 @@ wntr.network.draw_graph(wn, title=wn.name)
 
 # Simulate hydraulics
 sim = wntr.sim.EpanetSimulator(wn)
-results = sim.run_sim(demo=True)
+results = sim.run_sim()
 
 # Plot results on the network
 pressure_at_5hr = results.node.loc[(slice(None), pd.Timedelta(hours = 5)), 'pressure']
