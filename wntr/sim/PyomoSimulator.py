@@ -419,6 +419,87 @@ class PyomoSimulator(WaterNetworkSimulator):
                                          ELSE=Expr_if(IF=p <= x4, THEN=smooth_polynomial_rhs(p),
                                                       ELSE=L1(p)))))
 
+        def pressure_dependent_demand_nl_alt(full_demand, p, PF, P0):
+            # Pressure driven demand equation
+
+            assert (PF-P0) >= 0.1, "Minimum pressure and nominal pressure are too close."
+
+            x1 = P0 - 1e-4
+            x2 = P0 - 1e-8
+            x3 = P0 + 1e-8
+            x4 = P0 + 1e-4
+            x5 = PF - 1e-4
+            x6 = PF
+
+            y1 = -1e-6
+            y2 = -1e-8
+            y3 = 1e-8
+            y6 = full_demand
+
+            def F1(p):
+                b = y1 - self._slope_of_PDD_curve*x1
+                return self._slope_of_PDD_curve*p + b
+            def F2(p):
+                return p-P0
+            def F3(p):
+                return full_demand*math.sqrt((p - P0)/(PF - P0))
+            def F4(p):
+                b = full_demand - self._slope_of_PDD_curve*PF
+                return self._slope_of_PDD_curve*p + b
+
+            def F1_deriv(p):
+                return self._slope_of_PDD_curve
+            def F2_deriv(p):
+                return 1.0
+            def F3_deriv(p):
+                return (full_demand/2)*(1/(PF - P0))*(1/math.sqrt((p - P0)/(PF - P0)))
+            def F4_deriv(p):
+                return self._slope_of_PDD_curve
+
+
+            ## The parameters of the smoothing polynomials are estimated by solving a
+            ## set of linear equation Ax=b.
+            # Define A matrix as a function of 2 points on the polynomial.
+            def A(x_1, x_2):
+                return np.array([[x_1**3, x_1**2, x_1, 1],
+                                [x_2**3, x_2**2, x_2, 1],
+                                [3*x_1**2, 2*x_1,  1, 0],
+                                [3*x_2**2, 2*x_2,  1, 0]])
+
+            x_gap = PF - P0
+            assert x_gap > delta, "Delta should be greater than the gap between nominal and minimum pressure."
+
+            # Get parameters for the second polynomial
+            x1 = P0 - x_gap*delta
+            y1 = L2(x1)
+            x2 = P0 + x_gap*delta
+            y2 = PDD(x2)
+            A1 = A(x1, x2)
+            rhs1 = np.array([y1, y2, 0.0, PDD_deriv(x2)])
+            c1 = np.linalg.solve(A1, rhs1)
+            x3 = PF - x_gap*delta
+            y3 = PDD(x3)
+            x4 = PF + x_gap*delta
+            y4 = L1(x4)
+            A2 = A(x3, x4)
+            rhs2 = np.array([y3, y4, PDD_deriv(x3), self._slope_of_PDD_curve])
+            c2 = np.linalg.solve(A2, rhs2)
+
+            def smooth_polynomial_lhs(p_):
+                return c1[0]*p_**3 + c1[1]*p_**2 + c1[2]*p_ + c1[3]
+
+            def smooth_polynomial_rhs(p_):
+                return c2[0]*p_**3 + c2[1]*p_**2 + c2[2]*p_ + c2[3]
+
+            def PDD_pyomo(p):
+                return full_demand*sqrt((p - P0)/(PF - P0))
+
+            return Expr_if(IF=p <= x1, THEN=L2(p),
+               ELSE=Expr_if(IF=p <= x2, THEN=smooth_polynomial_lhs(p),
+                            ELSE=Expr_if(IF=p <= x3, THEN=PDD_pyomo(p),
+                                         ELSE=Expr_if(IF=p <= x4, THEN=smooth_polynomial_rhs(p),
+                                                      ELSE=L1(p)))))
+
 
         # Currently this function is being called for every node at every time step.
         # TODO : Refactor pressure_dependent_demand_linear so that its created only once for the entire simulation.
