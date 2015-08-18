@@ -101,20 +101,20 @@ class TestTankControls(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         sys.path.append(resilienceMainDir)
-        import epanetlib as en
-        self.en = en
+        import wntr
+        self.wntr = wntr
 
     @classmethod
     def tearDownClass(self):
         sys.path.remove(resilienceMainDir)
 
     def test_pipe_closed_for_low_level(self):
-        inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/tank_controls_test_network1.inp'
-        wn = self.en.network.WaterNetworkModel()
-        parser = self.en.network.ParseWaterNetwork()
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_test_network1.inp'
+        wn = self.wntr.network.WaterNetworkModel()
+        parser = self.wntr.network.ParseWaterNetwork()
         parser.read_inp_file(wn, inp_file)
         wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
-        sim = self.en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
         results = sim.run_sim()
 
         tank_level_dropped_flag = False
@@ -125,18 +125,11 @@ class TestTankControls(unittest.TestCase):
         self.assertEqual(tank_level_dropped_flag, True)
 
     def test_reopen_pipe_after_tank_fills_back_up(self):
-        inp_file = resilienceMainDir+'/epanetlib/tests/networks_for_testing/tank_controls_test_network2.inp'
-        wn = self.en.network.WaterNetworkModel(inp_file)
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_test_network2.inp'
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
-        sim = self.en.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
         results = sim.run_sim()
-
-        for node_name in results.node.index.levels[0]:
-            print node_name
-            print results.node.loc[node_name]
-        for link_name in results.link.index.levels[0]:
-            print link_name
-            print results.link.loc[link_name]
 
         tank_level_dropped_flag = False
         tank_refilled_flag = False
