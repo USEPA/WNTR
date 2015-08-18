@@ -1629,8 +1629,9 @@ class PyomoSimulator(WaterNetworkSimulator):
 
     def _update_conditional_controls_for_leaks(self):
         # Update conditional controls
-        tmp_conditional_controls = copy.deepcopy(self._wn.conditional_controls)
-        for control_link_name, control_dict in tmp_conditional_controls.iteritems():
+        conditional_controls_keys = self._wn.conditional_controls.keys()
+        for control_link_name in conditional_controls_keys:
+            control_dict = self._wn.conditional_controls[control_link_name]
             if control_link_name in self._pipes_with_leaks.keys():
                 leak_name = self._pipes_with_leaks[control_link_name]
                 if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
@@ -1645,7 +1646,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                     self._wn.conditional_controls.pop(control_link_name)
                 else:
                     raise ValueError('Shutoff valve location for leak is not recognized.')
-                
 
     def _add_leak_to_wn_object(self, leak_name):
         # Remove original pipe
