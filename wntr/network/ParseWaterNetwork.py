@@ -366,7 +366,7 @@ class ParseWaterNetwork(object):
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')):
                     continue
-                current_copy = copy.deepcopy(current)
+                current_copy = current
                 current = [i.upper() for i in current]
                 current[1] = current_copy[1] # don't capitalize the link name
                 if 'TIME' not in current:

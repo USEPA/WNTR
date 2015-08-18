@@ -153,7 +153,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     if title is not None:
         plt.title(title)
     nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
-              nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1])
+              nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1],linewidths=0)
     edges = nx.draw_networkx_edges(G, pos, 
             edgelist=linklist, edge_color=linkcolor, width=link_width, edge_cmap=link_cmap, edge_vmin = link_range[0], edge_vmax = link_range[1])
     if add_colorbar and node_attribute:

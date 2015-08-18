@@ -177,19 +177,19 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._pyomo_sim_results['link_velocity'] = []
         self._pyomo_sim_results['link_flowrate'] = []
 
-    def _initialize_from_pyomo_results(self, instance, last_instance):
+    def _initialize_from_pyomo_results(self, instance, last_instance_results):
 
         for l in instance.links:
-            if abs(last_instance.flow[l].value) < self._Qtol:
+            if abs(last_instance_results['flow'][l]) < self._Qtol:
                 instance.flow[l].value = 100*self._Qtol
             else:
-                if l in instance.pumps and last_instance.flow[l].value < -self._Qtol:
+                if l in instance.pumps and last_instance_results['flow'][l] < -self._Qtol:
                     instance.flow[l].value = 100*self._Qtol
                 else:
-                    instance.flow[l].value = last_instance.flow[l].value + self._Qtol
+                    instance.flow[l].value = last_instance_results['flow'][l] + self._Qtol
 
         for n in instance.nodes:
-            instance.head[n].value = last_instance.head[n].value
+            instance.head[n].value = last_instance_results['head'][n]
             if n in instance.junctions:
                 junction = self._wn.get_node(n)
                 if self._pressure_driven:
@@ -201,17 +201,37 @@ class PyomoSimulator(WaterNetworkSimulator):
                     instance.demand_actual[n] = abs(instance.demand_actual[n].value) + self._Qtol
 
         for r in instance.reservoirs:
-            if abs(last_instance.reservoir_demand[r].value) < self._Qtol:
+            if abs(last_instance_results['reservoir_demand'][r]) < self._Qtol:
                 instance.reservoir_demand[r].value = 100*self._Qtol
             else:
-                instance.reservoir_demand[r].value = last_instance.reservoir_demand[r].value + self._Qtol
+                instance.reservoir_demand[r].value = last_instance_results['reservoir_demand'][r] + self._Qtol
         for t in instance.tanks:
-            if abs(last_instance.tank_net_inflow[t].value) < self._Qtol:
+            if abs(last_instance_results['tank_net_inflow'][t]) < self._Qtol:
                 instance.tank_net_inflow[t].value = 100*self._Qtol
             else:
-                instance.tank_net_inflow[t].value = last_instance.tank_net_inflow[t].value + self._Qtol
+                instance.tank_net_inflow[t].value = last_instance_results['tank_net_inflow'][t] + self._Qtol
 
-
+    def _read_instance_results(self,instance):
+        # Initialize dictionary
+        last_instance_results = {}
+        last_instance_results['flow'] = {}
+        last_instance_results['head'] = {}
+        last_instance_results['demand_actual'] = {}
+        last_instance_results['reservoir_demand'] = {}
+        last_instance_results['tank_net_inflow'] = {}
+        # Load results into dictionary
+        for l in instance.links:
+            last_instance_results['flow'][l] = instance.flow[l].value
+        for n in instance.nodes:
+            last_instance_results['head'][n] = instance.head[n].value
+            if n in instance.junctions:
+                last_instance_results['demand_actual'][n] = instance.demand_actual[n].value
+        for r in instance.reservoirs:
+            last_instance_results['reservoir_demand'][r] = instance.reservoir_demand[r].value
+        for t in instance.tanks:
+            last_instance_results['tank_net_inflow'][t] = instance.tank_net_inflow[t].value
+        return last_instance_results
+        
     def _fit_smoothing_curve(self):
         delta = 0.1
         smoothing_points = []
@@ -893,11 +913,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             if first_timestep:
                 self._apply_controls(None, first_timestep, links_closed_by_controls, t) # time controls and conditional controls
             else:
-                self._apply_controls(last_instance, first_timestep, links_closed_by_controls, t) # time controls and conditional controls
+                self._apply_controls(last_instance_results, first_timestep, links_closed_by_controls, t) # time controls and conditional controls
             if self._pump_outage:
                 self._apply_pump_outage(pumps_closed_by_outage, t) # pump outage controls
             if not first_timestep and step_iter==0:
-                self._close_all_links_for_tanks_below_min_head(last_instance, links_closed_by_tank_controls) # controls for closing links if the tank level gets too low or opening links if the tank level goes back above the minimum head
+                self._close_all_links_for_tanks_below_min_head(last_instance_results, links_closed_by_tank_controls) # controls for closing links if the tank level gets too low or opening links if the tank level goes back above the minimum head
 
             # Combine list of closed links
             if not first_timestep:
@@ -944,7 +964,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Initialize instance from the results of previous timestep
             if not first_timestep:
                 #instance.load(pyomo_results)
-                self._initialize_from_pyomo_results(instance, last_instance)
+                self._initialize_from_pyomo_results(instance, last_instance_results)
 
             # Fix variables. This has to be done after the call to _initialize_from_pyomo_results above.
             self._fix_instance_variables(first_timestep, instance, links_closed)
@@ -1013,7 +1033,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 self._append_pyomo_results(instance, timedelta)
 
                 # Copy last instance. Used to manually initialize next timestep.
-                last_instance = copy.deepcopy(instance)
+                last_instance_results = self._read_instance_results(instance)
 
             if step_iter == self._max_step_iter:
                 raise RuntimeError('Simulation did not converge at timestep ' + str(t) + ' in '+str(self._max_step_iter)+' trials.')
@@ -1057,7 +1077,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             map_properties['node_expected_demand'] = 'expected_demand'
             N = len(self._pyomo_sim_results['node_name'])
             n_nodes = len(self._wn._nodes.keys())
-            hydraulic_time_step = float(copy.deepcopy(self._hydraulic_step_sec))
+            hydraulic_time_step = float(self._hydraulic_step_sec)
             T = N/n_nodes
             for node_type in node_types:
                 node_dict[node_type] = dict()
@@ -1272,7 +1292,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             pyomo_sim_results['link_velocity'] = velocity
             pyomo_sim_results['link_flowrate'] = flowrate
 
-            hydraulic_time_step = float(copy.deepcopy(self._hydraulic_step_sec))
+            hydraulic_time_step = float(self._hydraulic_step_sec)
             node_dict = dict()
             node_types = set(pyomo_sim_results['node_type'])
             map_properties = dict()
@@ -1415,7 +1435,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 	            node_name_i = i[0]
 	            value_i = i[1]
 	            node_i = self._wn.get_node(node_name_i)
-	            current_node_value = instance.head[node_name_i].value - node_i.elevation
+	            current_node_value = instance['head'][node_name_i] - node_i.elevation
 	            if current_node_value <= value_i:
                         links_closed_by_controls.discard(link_name_k)
 	
@@ -1424,7 +1444,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 	            node_name_i = i[0]
 	            value_i = i[1]
 	            node_i = self._wn.get_node(node_name_i)
-	            current_node_value = instance.head[node_name_i].value - node_i.elevation
+	            current_node_value = instance['head'][node_name_i] - node_i.elevation
 	            if current_node_value >= value_i:
 	                links_closed_by_controls.add(link_name_k)
 	
@@ -1433,7 +1453,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 	            node_name_i = i[0]
 	            value_i = i[1]
 	            node_i = self._wn.get_node(node_name_i)
-	            current_node_value = instance.head[node_name_i].value - node_i.elevation
+	            current_node_value = instance['head'][node_name_i] - node_i.elevation
 	            if current_node_value >= value_i:
                         links_closed_by_controls.discard(link_name_k)
 	
@@ -1442,7 +1462,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 	            node_name_i = i[0]
 	            value_i = i[1]
 	            node_i = self._wn.get_node(node_name_i)
-	            current_node_value = instance.head[node_name_i].value - node_i.elevation
+	            current_node_value = instance['head'][node_name_i] - node_i.elevation
 	            if current_node_value <= value_i:
 	                links_closed_by_controls.add(link_name_k)
 
@@ -1529,8 +1549,9 @@ class PyomoSimulator(WaterNetworkSimulator):
 
     def _update_conditional_controls_for_leaks(self):
         # Update conditional controls
-        tmp_conditional_controls = copy.deepcopy(self._wn.conditional_controls)
-        for control_link_name, control_dict in tmp_conditional_controls.iteritems():
+        conditional_controls_keys = self._wn.conditional_controls.keys()
+        for control_link_name in conditional_controls_keys:
+            control_dict = self._wn.conditional_controls[control_link_name]
             if control_link_name in self._pipes_with_leaks.keys():
                 leak_name = self._pipes_with_leaks[control_link_name]
                 if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
@@ -1545,7 +1566,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                     self._wn.conditional_controls.pop(control_link_name)
                 else:
                     raise ValueError('Shutoff valve location for leak is not recognized.')
-                
 
     def _add_leak_to_wn_object(self, leak_name):
         # Remove original pipe
@@ -1591,7 +1611,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
     def _close_all_links_for_tanks_below_min_head(self, instance, links_closed_by_tank_controls):
         for tank_name, control_info in self._tank_controls.iteritems():
-            head_in_tank = instance.head[tank_name].value
+            head_in_tank = instance['head'][tank_name]
             next_head_in_tank = self.predict_next_tank_head(tank_name, instance)
             min_tank_head = control_info['min_head']
             if next_head_in_tank <= min_tank_head and head_in_tank >= min_tank_head:
@@ -1634,12 +1654,12 @@ class PyomoSimulator(WaterNetworkSimulator):
         for l in self._wn.get_links_for_node(tank_name):
             link = self._wn.get_link(l)
             if link.start_node() == tank_name:
-                tank_net_inflow -= instance.flow[l].value
+                tank_net_inflow -= instance['flow'][l]
             elif link.end_node() == tank_name:
-                tank_net_inflow += instance.flow[l].value
+                tank_net_inflow += instance['flow'][l]
             else:
                 raise RuntimeError('Node link is neither start nor end node.')
-        new_tank_head = instance.head[tank_name].value + tank_net_inflow*self._hydraulic_step_sec*4.0/(math.pi*tank.diameter**2)
+        new_tank_head = instance['head'][tank_name] + tank_net_inflow*self._hydraulic_step_sec*4.0/(math.pi*tank.diameter**2)
         return new_tank_head
 
     def _set_valve_status(self, instance):
