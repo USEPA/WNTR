@@ -431,11 +431,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             x5 = PF - 1e-4
             x6 = PF
 
-            y1 = -1e-6
-            y2 = -1e-8
-            y3 = 1e-8
-            y6 = full_demand
-
             def F1(p):
                 b = y1 - self._slope_of_PDD_curve*x1
                 return self._slope_of_PDD_curve*p + b
@@ -466,39 +461,44 @@ class PyomoSimulator(WaterNetworkSimulator):
                                 [3*x_1**2, 2*x_1,  1, 0],
                                 [3*x_2**2, 2*x_2,  1, 0]])
 
-            x_gap = PF - P0
-            assert x_gap > delta, "Delta should be greater than the gap between nominal and minimum pressure."
+            y1 = -1e-6
+            y2 = -1e-8
+            y3 = 1e-8
+            y4 = F3(x4)
+            y5 = F3(x5)
+            y6 = full_demand
 
-            # Get parameters for the second polynomial
-            x1 = P0 - x_gap*delta
-            y1 = L2(x1)
-            x2 = P0 + x_gap*delta
-            y2 = PDD(x2)
             A1 = A(x1, x2)
-            rhs1 = np.array([y1, y2, 0.0, PDD_deriv(x2)])
-            c1 = np.linalg.solve(A1, rhs1)
-            x3 = PF - x_gap*delta
-            y3 = PDD(x3)
-            x4 = PF + x_gap*delta
-            y4 = L1(x4)
             A2 = A(x3, x4)
-            rhs2 = np.array([y3, y4, PDD_deriv(x3), self._slope_of_PDD_curve])
-            c2 = np.linalg.solve(A2, rhs2)
+            A3 = A(x5, x6)
 
-            def smooth_polynomial_lhs(p_):
+            rhs1 = np.array([y1, y2, F1_deriv(x1), F2_deriv(x2)])
+            rhs2 = np.array([y3, y4, F2_deriv(x3), F3_deriv(x4)])
+            rhs3 = np.array([y5, y6, F3_deriv(x5), F4_deriv(x6)])
+
+            c1 = np.linalg.solve(A1, rhs1)
+            c2 = np.linalg.solve(A2, rhs2)
+            c3 = np.linalg.solve(A3, rhs3)
+
+            def smooth_polynomial_1(p_):
                 return c1[0]*p_**3 + c1[1]*p_**2 + c1[2]*p_ + c1[3]
 
-            def smooth_polynomial_rhs(p_):
+            def smooth_polynomial_2(p_):
                 return c2[0]*p_**3 + c2[1]*p_**2 + c2[2]*p_ + c2[3]
+
+            def smooth_polynomial_3(p_):
+                return c3[0]*p_**3 + c3[1]*p_**2 + c3[2]*p_ + c3[3]
 
             def PDD_pyomo(p):
                 return full_demand*sqrt((p - P0)/(PF - P0))
 
-            return Expr_if(IF=p <= x1, THEN=L2(p),
-               ELSE=Expr_if(IF=p <= x2, THEN=smooth_polynomial_lhs(p),
-                            ELSE=Expr_if(IF=p <= x3, THEN=PDD_pyomo(p),
-                                         ELSE=Expr_if(IF=p <= x4, THEN=smooth_polynomial_rhs(p),
-                                                      ELSE=L1(p)))))
+            return Expr_if(IF=p <= x1, THEN=F1(p),
+               ELSE=Expr_if(IF=p <= x2, THEN=smooth_polynomial_1(p),
+                            ELSE=Expr_if(IF=p <= x3, THEN=F2(p),
+                                         ELSE=Expr_if(IF=p <= x4, THEN=smooth_polynomial_2(p),
+                                                      ELSE=Expr_if(IF=p <= x5, THEN=PDD_pyomo(p),
+                                                                   ELSE=Expr_if(IF=p <=x6, THEN=smooth_polynomial_3(p),
+                                                                                ELSE=F4(p)))))))
 
 
         # Currently this function is being called for every node at every time step.
