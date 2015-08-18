@@ -274,7 +274,6 @@ class EpanetSimulator(WaterNetworkSimulator):
             epanet_sim_results['link_flowrate'] = link_flowrate
 
 
-            hydraulic_time_step = copy.deepcopy(self._hydraulic_step_sec)
             node_dict = dict()
             node_types = set(epanet_sim_results['node_type'])
             map_properties = dict()
@@ -297,7 +296,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                         if n_type == node_type:
                             node_dict[node_type][prop_name][node_name] = dict()
                             for ts in xrange(T):
-                                time_sec = hydraulic_time_step*ts
+                                time_sec = self._hydraulic_step_sec*ts
                                 #print i+n_nodes*ts
                                 node_dict[node_type][prop_name][node_name][time_sec] = epanet_sim_results[prop][i+n_nodes*ts]
 
@@ -321,7 +320,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                         if l_type == link_type:
                             link_dict[link_type][prop_name][link_name] = dict()
                             for ts in xrange(T):
-                                time_sec = hydraulic_time_step*ts
+                                time_sec = self._hydraulic_step_sec*ts
                                 link_dict[link_type][prop_name][link_name][time_sec] = epanet_sim_results[prop][i+n_links*ts]
 
             results.link = link_dict
