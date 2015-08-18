@@ -7,9 +7,7 @@ plt.close('all')
 
 # Create a water network model
 inp_file = 'networks/Net3.inp'
-wn = wntr.network.WaterNetworkModel()
-parser = wntr.network.ParseWaterNetwork()
-parser.read_inp_file(wn, inp_file)
+wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Get a copy of the graph and convert the MultiDiGraph to a MultiGraph
 G = wn.get_graph_copy().to_undirected()

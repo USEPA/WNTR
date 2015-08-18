@@ -2,10 +2,8 @@ import wntr
 import matplotlib.pylab as plt
 
 # Create a water network model
-inp_file = 'networks/Net1.inp'
-wn = wntr.network.WaterNetworkModel()
-parser = wntr.network.ParseWaterNetwork()
-parser.read_inp_file(wn, inp_file)
+inp_file = 'networks/Net3.inp'
+wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Simulate using EPANET
 epanet_sim = wntr.sim.EpanetSimulator(wn)

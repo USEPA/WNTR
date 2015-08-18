@@ -204,19 +204,19 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._pyomo_sim_results['link_velocity'] = []
         self._pyomo_sim_results['link_flowrate'] = []
 
-    def _initialize_from_pyomo_results(self, instance, last_instance):
+    def _initialize_from_pyomo_results(self, instance, last_instance_results):
 
         for l in instance.links:
-            if abs(last_instance.flow[l].value) < self._Qtol:
+            if abs(last_instance_results['flow'][l]) < self._Qtol:
                 instance.flow[l].value = 100*self._Qtol
             else:
-                if l in instance.pumps and last_instance.flow[l].value < -self._Qtol:
+                if l in instance.pumps and last_instance_results['flow'][l] < -self._Qtol:
                     instance.flow[l].value = 100*self._Qtol
                 else:
-                    instance.flow[l].value = last_instance.flow[l].value + self._Qtol
+                    instance.flow[l].value = last_instance_results['flow'][l] + self._Qtol
 
         for n in instance.nodes:
-            instance.head[n].value = last_instance.head[n].value
+            instance.head[n].value = last_instance_results['head'][n]
             if n in instance.junctions:
                 junction = self._wn.get_node(n)
                 if self._pressure_driven:
@@ -228,17 +228,37 @@ class PyomoSimulator(WaterNetworkSimulator):
                     instance.demand_actual[n] = abs(instance.demand_actual[n].value) + self._Qtol
 
         for r in instance.reservoirs:
-            if abs(last_instance.reservoir_demand[r].value) < self._Qtol:
+            if abs(last_instance_results['reservoir_demand'][r]) < self._Qtol:
                 instance.reservoir_demand[r].value = 100*self._Qtol
             else:
-                instance.reservoir_demand[r].value = last_instance.reservoir_demand[r].value + self._Qtol
+                instance.reservoir_demand[r].value = last_instance_results['reservoir_demand'][r] + self._Qtol
         for t in instance.tanks:
-            if abs(last_instance.tank_net_inflow[t].value) < self._Qtol:
+            if abs(last_instance_results['tank_net_inflow'][t]) < self._Qtol:
                 instance.tank_net_inflow[t].value = 100*self._Qtol
             else:
-                instance.tank_net_inflow[t].value = last_instance.tank_net_inflow[t].value + self._Qtol
+                instance.tank_net_inflow[t].value = last_instance_results['tank_net_inflow'][t] + self._Qtol
 
-
+    def _read_instance_results(self,instance):
+        # Initialize dictionary
+        last_instance_results = {}
+        last_instance_results['flow'] = {}
+        last_instance_results['head'] = {}
+        last_instance_results['demand_actual'] = {}
+        last_instance_results['reservoir_demand'] = {}
+        last_instance_results['tank_net_inflow'] = {}
+        # Load results into dictionary
+        for l in instance.links:
+            last_instance_results['flow'][l] = instance.flow[l].value
+        for n in instance.nodes:
+            last_instance_results['head'][n] = instance.head[n].value
+            if n in instance.junctions:
+                last_instance_results['demand_actual'][n] = instance.demand_actual[n].value
+        for r in instance.reservoirs:
+            last_instance_results['reservoir_demand'][r] = instance.reservoir_demand[r].value
+        for t in instance.tanks:
+            last_instance_results['tank_net_inflow'][t] = instance.tank_net_inflow[t].value
+        return last_instance_results
+        
     def _fit_smoothing_curve(self):
         delta = 0.1
         smoothing_points = []
@@ -418,6 +438,87 @@ class PyomoSimulator(WaterNetworkSimulator):
                             ELSE=Expr_if(IF=p <= x3, THEN=PDD_pyomo(p),
                                          ELSE=Expr_if(IF=p <= x4, THEN=smooth_polynomial_rhs(p),
                                                       ELSE=L1(p)))))
+
+        def pressure_dependent_demand_nl_alt(full_demand, p, PF, P0):
+            # Pressure driven demand equation
+
+            assert (PF-P0) >= 0.1, "Minimum pressure and nominal pressure are too close."
+
+            x1 = P0 - 1e-4
+            x2 = P0 - 1e-8
+            x3 = P0 + 1e-8
+            x4 = P0 + 1e-4
+            x5 = PF - 1e-4
+            x6 = PF
+
+            def F1(p):
+                b = y1 - self._slope_of_PDD_curve*x1
+                return self._slope_of_PDD_curve*p + b
+            def F2(p):
+                return p-P0
+            def F3(p):
+                return full_demand*math.sqrt((p - P0)/(PF - P0))
+            def F4(p):
+                b = full_demand - self._slope_of_PDD_curve*PF
+                return self._slope_of_PDD_curve*p + b
+
+            def F1_deriv(p):
+                return self._slope_of_PDD_curve
+            def F2_deriv(p):
+                return 1.0
+            def F3_deriv(p):
+                return (full_demand/2)*(1/(PF - P0))*(1/math.sqrt((p - P0)/(PF - P0)))
+            def F4_deriv(p):
+                return self._slope_of_PDD_curve
+
+
+            ## The parameters of the smoothing polynomials are estimated by solving a
+            ## set of linear equation Ax=b.
+            # Define A matrix as a function of 2 points on the polynomial.
+            def A(x_1, x_2):
+                return np.array([[x_1**3, x_1**2, x_1, 1],
+                                [x_2**3, x_2**2, x_2, 1],
+                                [3*x_1**2, 2*x_1,  1, 0],
+                                [3*x_2**2, 2*x_2,  1, 0]])
+
+            y1 = -1e-6
+            y2 = -1e-8
+            y3 = 1e-8
+            y4 = F3(x4)
+            y5 = F3(x5)
+            y6 = full_demand
+
+            A1 = A(x1, x2)
+            A2 = A(x3, x4)
+            A3 = A(x5, x6)
+
+            rhs1 = np.array([y1, y2, F1_deriv(x1), F2_deriv(x2)])
+            rhs2 = np.array([y3, y4, F2_deriv(x3), F3_deriv(x4)])
+            rhs3 = np.array([y5, y6, F3_deriv(x5), F4_deriv(x6)])
+
+            c1 = np.linalg.solve(A1, rhs1)
+            c2 = np.linalg.solve(A2, rhs2)
+            c3 = np.linalg.solve(A3, rhs3)
+
+            def smooth_polynomial_1(p_):
+                return c1[0]*p_**3 + c1[1]*p_**2 + c1[2]*p_ + c1[3]
+
+            def smooth_polynomial_2(p_):
+                return c2[0]*p_**3 + c2[1]*p_**2 + c2[2]*p_ + c2[3]
+
+            def smooth_polynomial_3(p_):
+                return c3[0]*p_**3 + c3[1]*p_**2 + c3[2]*p_ + c3[3]
+
+            def PDD_pyomo(p):
+                return full_demand*sqrt((p - P0)/(PF - P0))
+
+            return Expr_if(IF=p <= x1, THEN=F1(p),
+               ELSE=Expr_if(IF=p <= x2, THEN=smooth_polynomial_1(p),
+                            ELSE=Expr_if(IF=p <= x3, THEN=F2(p),
+                                         ELSE=Expr_if(IF=p <= x4, THEN=smooth_polynomial_2(p),
+                                                      ELSE=Expr_if(IF=p <= x5, THEN=PDD_pyomo(p),
+                                                                   ELSE=Expr_if(IF=p <=x6, THEN=smooth_polynomial_3(p),
+                                                                                ELSE=F4(p)))))))
 
 
         # Currently this function is being called for every node at every time step.
@@ -704,7 +805,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         return model
 
 
-    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True):
+    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True, demo=None):
 
         """
         Other Parameters
@@ -721,7 +822,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             An external dictionary of demand values can be provided using this parameter. This option is used in the
             calibration work.
         """
-
+        if demo:
+            import pickle
+            results = pickle.load(open(demo, 'rb'))
+            return results
+            
         # Add leak to network
         for leak_name in self._pipes_with_leaks.values():
             self._add_leak_to_wn_object(leak_name)
@@ -922,7 +1027,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Initialize instance from the results of previous timestep
             if not first_timestep:
                 #instance.load(pyomo_results)
-                self._initialize_from_pyomo_results(instance, last_instance)
+                self._initialize_from_pyomo_results(instance, last_instance_results)
 
             # Fix variables. This has to be done after the call to _initialize_from_pyomo_results above.
             self._fix_instance_variables(first_timestep, instance, links_closed)
@@ -967,7 +1072,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 self._append_pyomo_results(instance, timedelta)
 
             # Copy last instance. Used to manually initialize next timestep.
-            last_instance = copy.deepcopy(instance)
+            last_instance_results = self._read_instance_results(instance)
 
             # Reset time controls
             links_closed_by_time = set([])
@@ -1524,7 +1629,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
     def _update_conditional_controls_for_leaks(self):
         # Update conditional controls
-        for control_link_name, control_dict in self._wn.conditional_controls.iteritems():
+        tmp_conditional_controls = copy.deepcopy(self._wn.conditional_controls)
+        for control_link_name, control_dict in tmp_conditional_controls.iteritems():
             if control_link_name in self._pipes_with_leaks.keys():
                 leak_name = self._pipes_with_leaks[control_link_name]
                 if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
@@ -1759,7 +1865,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 con_value = value(con[constraint_key].body)
                 con_lower = value(con[constraint_key].lower)
                 con_upper = value(con[constraint_key].upper)
-                if (con_lower - con_value) >= 1.0e-6 or (con_value - con_upper) >= 1.0e-6:
+                if (con_lower - con_value) >= 1.0e-5 or (con_value - con_upper) >= 1.0e-5:
                     print constraint_name,'[',constraint_key,']',' is not satisfied:'
                     print 'lower: ',con_lower, '\t body: ',con_value,'\t upper: ',con_upper 
-                    con.pprint()
+                    print 'lower: ',con[constraint_key].lower, '\t body: ',con[constraint_key].body,'\t upper: ',con[constraint_key].upper 

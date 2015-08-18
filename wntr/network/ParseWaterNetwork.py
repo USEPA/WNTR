@@ -18,7 +18,7 @@ TODO 12. Document Somehow that the only type of curve supported is a head vs. fl
 """
 
 from wntr.units import convert
-from wntr.network.WaterNetworkModel import Pump, Tank, Curve
+import wntr.network
 
 import warnings
 import re
@@ -366,7 +366,7 @@ class ParseWaterNetwork(object):
                 current = line.split()
                 if (current == []) or (current[0].startswith(';')):
                     continue
-                current_copy = copy.deepcopy(current)
+                current_copy = current
                 current = [i.upper() for i in current]
                 current[1] = current_copy[1] # don't capitalize the link name
                 if 'TIME' not in current:
@@ -468,7 +468,7 @@ class ParseWaterNetwork(object):
             # Get curve information
             curve_name = self._curve_map[pump_name]
             curve_points = self._curves[curve_name]
-            curve = Curve(curve_name, 'HEAD', curve_points)
+            curve = wntr.network.Curve(curve_name, 'HEAD', curve_points)
             # Get Pump information
             start_node = pump_info_tuple[0]
             end_node = pump_info_tuple[1]

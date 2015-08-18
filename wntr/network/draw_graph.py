@@ -1,10 +1,11 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import pandas as pd
 
 def draw_graph(wn, node_attribute=None, link_attribute=None, title=None, 
                node_size=10, node_range = [None,None], node_cmap=None,
                link_width=1, link_range = [None,None], link_cmap=None, 
-               add_colorbar=True, figsize=None, directed=False):
+               add_colorbar=True, figsize=None, dpi=None, directed=False):
 
     r"""Draw a WaterNetworkModel networkx graph
     
@@ -13,21 +14,27 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     wn : WaterNetworkModel
         A WaterNetworkModel object
     
-    node_attribute : str, list, or dict, optional 
+    node_attribute : str, list, pd.Series, or dict, optional 
         (default = None)
         
         - If node_attribute is a string, then the node_attribute dictonary is 
           populated using node_attribute = wn.get_node_attribute(str)
         - If node_attribute is a list, then each node is given a value of 1.
+        - If node_attribute is a pd.Series, then it shoud be in the format
+          {(nodeid,time): x} or {nodeid: x} where nodeid is a string and x is a float. 
+          The time index is not used in the plot.
         - If node_attribute is a dict, then it shoud be in the format
           {nodeid: x} where nodeid is a string and x is a float
         
-    link_attribute : str, list, or dict, optional 
+    link_attribute : str, list, pd.Series, or dict, optional 
         (default = None)
         
         - If link_attribute is a string, then the link_attribute dictonary is 
           populated using edge_attribute = wn.get_link_attribute(str)
         - If link_attribute is a list, then each link is given a value of 1.
+        - If link_attribute is a pd.Series, then it shoud be in the format
+          {(linkid,time): x} or {linkid: x} where linkid is a string and x is a float. 
+          The time index is not used in the plot.
         - If link_attribute is a dict, then it shoud be in the format
           {linkid: x} where linkid is a string and x is a float.  
         
@@ -64,9 +71,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     
     Examples
     --------
-    >>> wn = en.network.WaterNetworkModel()
-    >>> parser = en.network.ParseWaterNetwork()
-    >>> parser.read_inp_file(wn, 'Net1.inp')
+    >>> wn = en.network.WaterNetworkModel('Net1.inp')
     >>> en.network.draw_graph(wn)
 
     Notes
@@ -86,10 +91,15 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         pos = None
     
     # Node attribute
-    if type(node_attribute) is str:
+    if isinstance(node_attribute, str):
         node_attribute = wn.get_node_attribute(node_attribute)
-    if type(node_attribute) is list:
+    if isinstance(node_attribute, list):
         node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
+    if isinstance(node_attribute, pd.Series):
+        if node_attribute.index.nlevels == 2: # (nodeid, time) index
+            node_attribute.reset_index(level=1, drop=True, inplace=True) # drop time
+        node_attribute = dict(node_attribute)
+    
     # Define node list, color, and colormap
     if node_attribute is None: 
         nodelist = None
@@ -100,10 +110,15 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         node_cmap=plt.cm.jet
         
     # Link attribute
-    if type(link_attribute) is str:
+    if isinstance(link_attribute, str):
         link_attribute = wn.get_link_attribute(link_attribute)
-    if type(link_attribute) is list:
+    if isinstance(link_attribute, list):
         link_attribute = dict(zip(link_attribute,[1]*len(link_attribute)))
+    if isinstance(link_attribute, pd.Series):
+        if link_attribute.index.nlevels == 2: # (linkid, time) index
+            link_attribute.reset_index(level=1, drop=True, inplace=True) # drop time
+        link_attribute = dict(link_attribute)
+    
     # Replace link_attribute dictonary defined as
     # {link_name: attr} with {(start_node, end_node, link_name): attr}
     if link_attribute is not None:  
@@ -134,7 +149,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         link_cmap=plt.cm.jet
         
     # Plot
-    plt.figure(facecolor='w', edgecolor='k', figsize=figsize)
+    plt.figure(facecolor='w', edgecolor='k', figsize=figsize, dpi=dpi)
     if title is not None:
         plt.title(title)
     nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
@@ -146,4 +161,18 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     if add_colorbar and link_attribute:
         plt.colorbar(edges, shrink=0.5, pad = 0.05)
     plt.axis('off')
+
+def custom_colormap(numcolors=11, colors=['blue','white','red']):
+    """ 
+    Create a custom colormap
+    Default is blue to white to red with 11 colors.  
+    Colors can be specified in any way understandable by matplotlib.colors.ColorConverter.to_rgb()
+    """
+
+    from matplotlib.colors import LinearSegmentedColormap 
+    
+    cmap = LinearSegmentedColormap.from_list(name='custom', 
+                                             colors = colors,
+                                             N=numcolors)
+    return cmap
     

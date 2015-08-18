@@ -6,9 +6,7 @@ import pandas as pd
 
 # Create a water network model
 inp_file = 'networks/Net3.inp'
-wn = wntr.network.WaterNetworkModel()
-parser = wntr.network.ParseWaterNetwork()
-parser.read_inp_file(wn, inp_file)
+wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Define WQ scenarios
 """
