@@ -1014,7 +1014,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             map_properties['node_expected_demand'] = 'expected_demand'
             N = len(self._pyomo_sim_results['node_name'])
             n_nodes = len(self._wn._nodes.keys())
-            hydraulic_time_step = float(copy.deepcopy(self._hydraulic_step_sec))
+            hydraulic_time_step = float(self._hydraulic_step_sec)
             T = N/n_nodes
             for node_type in node_types:
                 node_dict[node_type] = dict()
@@ -1229,7 +1229,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             pyomo_sim_results['link_velocity'] = velocity
             pyomo_sim_results['link_flowrate'] = flowrate
 
-            hydraulic_time_step = float(copy.deepcopy(self._hydraulic_step_sec))
+            hydraulic_time_step = float(self._hydraulic_step_sec)
             node_dict = dict()
             node_types = set(pyomo_sim_results['node_type'])
             map_properties = dict()
