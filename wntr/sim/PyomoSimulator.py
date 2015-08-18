@@ -204,19 +204,19 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._pyomo_sim_results['link_velocity'] = []
         self._pyomo_sim_results['link_flowrate'] = []
 
-    def _initialize_from_pyomo_results(self, instance, last_instance):
+    def _initialize_from_pyomo_results(self, instance, last_instance_results):
 
         for l in instance.links:
-            if abs(last_instance.flow[l].value) < self._Qtol:
+            if abs(last_instance_results['flow'][l]) < self._Qtol:
                 instance.flow[l].value = 100*self._Qtol
             else:
-                if l in instance.pumps and last_instance.flow[l].value < -self._Qtol:
+                if l in instance.pumps and last_instance_results['flow'][l] < -self._Qtol:
                     instance.flow[l].value = 100*self._Qtol
                 else:
-                    instance.flow[l].value = last_instance.flow[l].value + self._Qtol
+                    instance.flow[l].value = last_instance_results['flow'][l] + self._Qtol
 
         for n in instance.nodes:
-            instance.head[n].value = last_instance.head[n].value
+            instance.head[n].value = last_instance_results['head'][n]
             if n in instance.junctions:
                 junction = self._wn.get_node(n)
                 if self._pressure_driven:
@@ -228,17 +228,37 @@ class PyomoSimulator(WaterNetworkSimulator):
                     instance.demand_actual[n] = abs(instance.demand_actual[n].value) + self._Qtol
 
         for r in instance.reservoirs:
-            if abs(last_instance.reservoir_demand[r].value) < self._Qtol:
+            if abs(last_instance_results['reservoir_demand'][r]) < self._Qtol:
                 instance.reservoir_demand[r].value = 100*self._Qtol
             else:
-                instance.reservoir_demand[r].value = last_instance.reservoir_demand[r].value + self._Qtol
+                instance.reservoir_demand[r].value = last_instance_results['reservoir_demand'][r] + self._Qtol
         for t in instance.tanks:
-            if abs(last_instance.tank_net_inflow[t].value) < self._Qtol:
+            if abs(last_instance_results['tank_net_inflow'][t]) < self._Qtol:
                 instance.tank_net_inflow[t].value = 100*self._Qtol
             else:
-                instance.tank_net_inflow[t].value = last_instance.tank_net_inflow[t].value + self._Qtol
+                instance.tank_net_inflow[t].value = last_instance_results['tank_net_inflow'][t] + self._Qtol
 
-
+    def _read_instance_results(self,instance):
+        # Initialize dictionary
+        last_instance_results = {}
+        last_instance_results['flow'] = {}
+        last_instance_results['head'] = {}
+        last_instance_results['demand_actual'] = {}
+        last_instance_results['reservoir_demand'] = {}
+        last_instance_results['tank_net_inflow'] = {}
+        # Load results into dictionary
+        for l in instance.links:
+            last_instance_results['flow'][l] = instance.flow[l].value
+        for n in instance.nodes:
+            last_instance_results['head'][n] = instance.head[n].value
+            if n in instance.junctions:
+                last_instance_results['demand_actual'][n] = instance.demand_actual[n].value
+        for r in instance.reservoirs:
+            last_instance_results['reservoir_demand'][r] = instance.reservoir_demand[r].value
+        for t in instance.tanks:
+            last_instance_results['tank_net_inflow'][t] = instance.tank_net_inflow[t].value
+        return last_instance_results
+        
     def _fit_smoothing_curve(self):
         delta = 0.1
         smoothing_points = []
@@ -1007,7 +1027,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Initialize instance from the results of previous timestep
             if not first_timestep:
                 #instance.load(pyomo_results)
-                self._initialize_from_pyomo_results(instance, last_instance)
+                self._initialize_from_pyomo_results(instance, last_instance_results)
 
             # Fix variables. This has to be done after the call to _initialize_from_pyomo_results above.
             self._fix_instance_variables(first_timestep, instance, links_closed)
@@ -1052,7 +1072,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 self._append_pyomo_results(instance, timedelta)
 
             # Copy last instance. Used to manually initialize next timestep.
-            last_instance = copy.deepcopy(instance)
+            last_instance_results = self._read_instance_results(instance)
 
             # Reset time controls
             links_closed_by_time = set([])
