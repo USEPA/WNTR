@@ -40,6 +40,7 @@ import pandas as pd
 from six import iteritems
 
 import cProfile
+import gc
 
 def do_cprofile(func):
     def profiled_func(*args, **kwargs):
@@ -882,6 +883,12 @@ class PyomoSimulator(WaterNetworkSimulator):
         low_flow_pumps_closed_flag = False
         first_timestep = True
         while t < self._n_timesteps and step_iter < self._max_step_iter:
+            # HACK to work around circular references here and the
+            # fact that 2.7.10 does not appear to collect memory as
+            # frequently.  This is harmless, except for the small
+            # amount of time it takes to run the GC.
+            gc.collect()
+
             self._constraint_names = set([])
             if t == 0:
                 first_timestep = True
