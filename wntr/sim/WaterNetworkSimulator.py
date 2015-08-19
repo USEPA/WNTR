@@ -24,7 +24,7 @@ import copy
 
 
 class WaterNetworkSimulator(object):
-    def __init__(self, water_network=None, PD_or_DD = 'DEMAND DRIVEN'):
+    def __init__(self, water_network=None, PD_or_DD = 'DEMAND DRIVEN', copy_wn = True):
         """
         Water Network Simulator class.
 
@@ -33,7 +33,10 @@ class WaterNetworkSimulator(object):
                   Options are 'DEMAND DRIVEN' or 'PRESSURE DRIVEN'
 
         """
-        self._wn = copy.deepcopy(water_network)
+        if copy_wn:
+            self._wn = copy.deepcopy(water_network)
+        else:
+            self._wn = water_network
 
         # A dictionary containing pump outage information
         # format is PUMP_NAME: (start time in sec, end time in sec)
