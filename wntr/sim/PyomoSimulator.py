@@ -108,7 +108,7 @@ class PyomoSimulator(WaterNetworkSimulator):
     """
 
 
-    def __init__(self, wn, PD_or_DD='DEMAND DRIVEN'):
+    def __init__(self, wn, PD_or_DD='DEMAND DRIVEN', copy_wn = True):
         """
         Pyomo simulator class.
 
@@ -121,7 +121,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                   Options are 'DEMAND DRIVEN' or 'PRESSURE DRIVEN'
 
         """
-        WaterNetworkSimulator.__init__(self, wn, PD_or_DD)
+        WaterNetworkSimulator.__init__(self, wn, PD_or_DD, copy_wn)
 
         # Global constants
         self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
@@ -803,7 +803,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._constraint_names.add('leak_demand_con')
 
         return model
-
 
     def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True, demo=None):
 
