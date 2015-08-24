@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 """
 Created on Fri Jan 23 10:07:42 2015
 
@@ -344,75 +344,104 @@ class WaterNetworkSimulator(object):
         assert (isinstance(self._wn, WaterNetworkModel)), "Water network model has not been set for the simulator" \
                                                           "use method set_water_network_model to set model."
 
-    def is_link_open(self, link_name, time):
+    def link_action(self, link_name, time):
         """
         Check if a link is open or closed.
-
+    
         Parameters
         ----------
         link_name: string
             Name of link that is being checked for an open or closed status
-
+    
         time: int or float ???
             time at which the link is being checked for an open or closed status
             units: Seconds
-
+    
         Returns
         -------
-        True if the link is open
-        False if the link is closed
+        0 if link should be closed
+        1 if link should be opened
+        2 if no action should be taken
         """
         link = self._wn.get_link(link_name)
         base_status = False if link.get_base_status() == 'CLOSED' else True
         if link_name not in self._wn.time_controls:
-            return base_status
-        else:
-            open_times = self._wn.time_controls[link_name]['open_times']
-            closed_times = self._wn.time_controls[link_name]['closed_times']
-            if len(open_times) == 0 and len(closed_times) == 0:
-                return base_status
-            if len(open_times) == 0 and len(closed_times) != 0:
-                return base_status if time < closed_times[0] else False
-            elif len(open_times) != 0 and len(closed_times) == 0:
-                return base_status if time < open_times[0] else True
-            elif time < open_times[0] and time < closed_times[0]:
-                return base_status
+            if time == 0:
+                if base_status:
+                    return 2
+                else:
+                    return 0
             else:
-                #Check open times
-                left = 0
-                right = len(open_times)-1
-                if time >= open_times[right]:
-                    min_open = time-open_times[right];
-                elif time < open_times[left]:
-                    min_open = float("inf");
+                return 2
+        else:
+            if time == 0:
+                if base_status and time not in self._wn.time_controls[link_name]['closed_times']:
+                    return 2
+                elif base_status and time in self._wn.time_controls[link_name]['closed_times']:
+                    return 0
+                elif not base_status and time not in self._wn.time_controls[link_name]['open_times']:
+                    return 0
+                elif not base_status and time in self._wn.time_controls[link_name]['open_times']:
+                    return 2
                 else:
-                    middle = int(0.5*(right+left))
-                    while(right-left>1):
-                        if(open_times[middle]>time):
-                            right = middle
-                        else:
-                            left = middle
-                        middle = int(0.5*(right+left))
-                    min_open = time-open_times[left];
-
-                #Check Closed times
-                left = 0
-                right = len(closed_times)-1
-                if time >= closed_times[right]:
-                    min_closed = time-closed_times[right]
-                elif time < closed_times[left]:
-                    min_closed = float("inf")
+                    raise RuntimeError('There appears to be a bug. Please report this error to the developers.')
+            else:
+                if time in self._wn.time_controls[link_name]['open_times']:
+                    return 1
+                elif time in self._wn.time_controls[link_name]['closed_times']:
+                    return 0
                 else:
-                    middle = int(0.5*(right+left))
-                    while(right-left>1):
-                        if(closed_times[middle]>time):
-                            right = middle
-                        else:
-                            left = middle
-                        middle = int(0.5*(right+left))
-                    min_closed = time-closed_times[left]
+                    return 2
 
-                return True if min_open < min_closed else False
+        #if link_name not in self._wn.time_controls:
+        #    return base_status
+        #else:
+        #    open_times = self._wn.time_controls[link_name]['open_times']
+        #    closed_times = self._wn.time_controls[link_name]['closed_times']
+        #    if len(open_times) == 0 and len(closed_times) == 0:
+        #        return base_status
+        #    if len(open_times) == 0 and len(closed_times) != 0:
+        #        return base_status if time < closed_times[0] else False
+        #    elif len(open_times) != 0 and len(closed_times) == 0:
+        #        return base_status if time < open_times[0] else True
+        #    elif time < open_times[0] and time < closed_times[0]:
+        #        return base_status
+        #    else:
+        #        #Check open times
+        #        left = 0
+        #        right = len(open_times)-1
+        #        if time >= open_times[right]:
+        #            min_open = time-open_times[right];
+        #        elif time < open_times[left]:
+        #            min_open = float("inf");
+        #        else:
+        #            middle = int(0.5*(right+left))
+        #            while(right-left>1):
+        #                if(open_times[middle]>time):
+        #                    right = middle
+        #                else:
+        #                    left = middle
+        #                middle = int(0.5*(right+left))
+        #            min_open = time-open_times[left];
+        #
+        #        #Check Closed times
+        #        left = 0
+        #        right = len(closed_times)-1
+        #        if time >= closed_times[right]:
+        #            min_closed = time-closed_times[right]
+        #        elif time < closed_times[left]:
+        #            min_closed = float("inf")
+        #        else:
+        #            middle = int(0.5*(right+left))
+        #            while(right-left>1):
+        #                if(closed_times[middle]>time):
+        #                    right = middle
+        #                else:
+        #                    left = middle
+        #                middle = int(0.5*(right+left))
+        #            min_closed = time-closed_times[left]
+        #
+        #        return True if min_open < min_closed else False
 
 
     def give_link_status(self,link_name,time):

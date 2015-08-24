@@ -149,12 +149,17 @@ class PyomoSimulator(WaterNetworkSimulator):
                     for t in range(self._n_timesteps):
                         self._demand_dict[(node_name, t)] = 0.0
         # Create time controls dictionary
+        # Format: {link_name:list}
+        # Where list can contain 0, 1, or 2
+        #    0: link should be closed at corresponding timestep
+        #    1: link should be opened at corresponding timestep
+        #    2: no action should be taken at corresponding timestep
         self._link_status = {}
         for l, link in self._wn.links():
             status_l = []
             for t in xrange(self._n_timesteps):
                 time_sec = t * self._hydraulic_step_sec
-                status_l_t = self.is_link_open(l, time_sec)
+                status_l_t = self.link_action(l, time_sec)
                 status_l.append(status_l_t)
             self._link_status[l] = status_l
         # Create valve status dictionary
@@ -1424,10 +1429,10 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Get time controls
         for link_name, status in self._link_status.iteritems():
-            if not status[t] and (status[t-1] or t==0):
+            if status[t] == 0:
                 links_closed_by_controls.add(link_name)
-            elif status[t] and not status[t-1]:
-                links_closed_by_controls.remove(link_name)
+            elif status[t] == 1:
+                links_closed_by_controls.discard(link_name)
 
         if not first_timestep:
             for link_name_k, value in self._wn.conditional_controls.iteritems():

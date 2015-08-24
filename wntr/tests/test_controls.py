@@ -200,18 +200,29 @@ class TestControlCombinations(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_open_by_time_close_by_condition(self):
-        self.assertEqual(True, False)
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve_test_network_1.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb_1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
         sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
         results = sim.run_sim()
 
+        flag1 = False
+        flag2 = False
         for t in results.link.loc['pipe1'].index:
-            self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
+            if t.components.hours == 6:
+                flag1 = True
+            if results.node.at[('tank1',t),'head'] <= 30.0:
+                flag1 = False
+                flag2 = True
+            if flag1 == False:
+                self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
+            elif flag1 == True:
+                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.001)
+
+        self.assertEqual(flag1, False)
+        self.assertEqual(flag2, True)
 
     def test_close_by_condition_open_by_time_stay(self):
-        self.assertEqual(False, True)
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb_2.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
@@ -221,36 +232,36 @@ class TestControlCombinations(unittest.TestCase):
         flag1 = False
         flag2 = False
         for t in results.link.loc['pipe1'].index:
-            if results.node.at[('tank1',t),'head'] >= results.node.at[('tank2',t),'head']:
-                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.001)
+            if t.components.hours == 19:
+                flag1 = False
+            if results.node.at[('tank1',t),'head'] <= 30.0:
                 flag1 = True
-            else:
-                self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
                 flag2 = True
+            if flag1 == False:
+                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.001)
+            elif flag1 == True:
+                self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
 
-        self.assertEqual(flag1, True)
+        self.assertEqual(flag1, False)
         self.assertEqual(flag2, True)
 
     def test_close_by_condition_open_by_time_reclose(self):
-        self.assertEqual(False, True)
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve_test_network_2.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb_3.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
         sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
         results = sim.run_sim()
 
         flag1 = False
-        flag2 = False
         for t in results.link.loc['pipe1'].index:
-            if results.node.at[('tank1',t),'head'] >= results.node.at[('tank2',t),'head']:
-                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.001)
+            if results.node.at[('tank1',t),'head'] <= 30.0:
                 flag1 = True
-            else:
+            if flag1 == False:
+                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.001)
+            elif flag1 == True:
                 self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
-                flag2 = True
 
         self.assertEqual(flag1, True)
-        self.assertEqual(flag2, True)
 
 if __name__ == '__main__':
     unittest.main()
