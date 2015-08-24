@@ -330,35 +330,13 @@ class TestNetworkMethods(unittest.TestCase):
 
         pyomo_sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
         results = pyomo_sim.run_sim()
-        
+
         wn.set_nominal_pressures(res = results, fraction_of_min = 0.75, units = 'psi', minimum_pressure = 1.421970206324)
-        j = wn.get_node('11')
-        self.assertAlmostEqual(j.PF, 0.75*77.3910234918)
-        self.assertAlmostEqual(j.P0, 1.0)
-        j = wn.get_node('10')
-        self.assertAlmostEqual(j.PF, 0.75*77.3910234918)
-        self.assertAlmostEqual(j.P0, 1.0)
-        j = wn.get_node('13')
-        self.assertAlmostEqual(j.PF, 0.75*81.6949265612)
-        self.assertAlmostEqual(j.P0, 1.0)
-        j = wn.get_node('12')
-        self.assertAlmostEqual(j.PF, 0.75*80.9063684082)
-        self.assertAlmostEqual(j.P0, 1.0)
-        j = wn.get_node('21')
-        self.assertAlmostEqual(j.PF, 0.75*79.5580682795)
-        self.assertAlmostEqual(j.P0, 1.0)
-        j = wn.get_node('22')
-        self.assertAlmostEqual(j.PF, 0.75*81.1983520877)
-        self.assertAlmostEqual(j.P0, 1.0)
-        j = wn.get_node('23')
-        self.assertAlmostEqual(j.PF, 0.75*82.6793639998)
-        self.assertAlmostEqual(j.P0, 1.0)
-        j = wn.get_node('32')
-        self.assertAlmostEqual(j.PF, 0.75*74.9831385665)
-        self.assertAlmostEqual(j.P0, 1.0)
-        j = wn.get_node('31')
-        self.assertAlmostEqual(j.PF, 0.75*78.542154444)
-        self.assertAlmostEqual(j.P0, 1.0)
+
+        for junction_name, junction in wn.nodes(self.wntr.network.Junction):
+            print junction_name
+            self.assertAlmostEqual(junction.PF, 0.75*results.node.loc[junction_name]['pressure'].min())
+            self.assertAlmostEqual(junction.P0, 1.0)
 
 if __name__ == '__main__':
     unittest.main()

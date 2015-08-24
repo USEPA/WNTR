@@ -1441,8 +1441,12 @@ class PyomoSimulator(WaterNetworkSimulator):
 	            node_name_i = i[0]
 	            value_i = i[1]
 	            node_i = self._wn.get_node(node_name_i)
-	            current_node_value = instance['head'][node_name_i] - node_i.elevation
-	            if current_node_value <= value_i:
+                    if isinstance(node_i, Tank):
+                        next_head_in_tank = self.predict_next_tank_head(node_name_i, instance)
+                        node_value = next_head_in_tank - node_i.elevation
+                    else:
+                        node_value = instance['head'][node_name_i] - node_i.elevation
+	            if node_value <= value_i:
                         links_closed_by_controls.discard(link_name_k)
 	
 	        # If link is open and the node level/pressure goes above threshold, then close the link
@@ -1450,8 +1454,12 @@ class PyomoSimulator(WaterNetworkSimulator):
 	            node_name_i = i[0]
 	            value_i = i[1]
 	            node_i = self._wn.get_node(node_name_i)
-	            current_node_value = instance['head'][node_name_i] - node_i.elevation
-	            if current_node_value >= value_i:
+                    if isinstance(node_i, Tank):
+                        next_head_in_tank = self.predict_next_tank_head(node_name_i, instance)
+                        node_value = next_head_in_tank - node_i.elevation
+                    else:
+                        node_value = instance['head'][node_name_i] - node_i.elevation
+	            if node_value >= value_i:
 	                links_closed_by_controls.add(link_name_k)
 	
 	        # If link is closed and node level/pressure goes above threshold, then open the link
@@ -1459,8 +1467,12 @@ class PyomoSimulator(WaterNetworkSimulator):
 	            node_name_i = i[0]
 	            value_i = i[1]
 	            node_i = self._wn.get_node(node_name_i)
-	            current_node_value = instance['head'][node_name_i] - node_i.elevation
-	            if current_node_value >= value_i:
+                    if isinstance(node_i, Tank):
+                        next_head_in_tank = self.predict_next_tank_head(node_name_i, instance)
+                        node_value = next_head_in_tank - node_i.elevation
+                    else:
+                        node_value = instance['head'][node_name_i] - node_i.elevation
+	            if node_value >= value_i:
                         links_closed_by_controls.discard(link_name_k)
 	
 	        # If link is open and the node level/pressure goes below threshold, then close the link
@@ -1468,8 +1480,12 @@ class PyomoSimulator(WaterNetworkSimulator):
 	            node_name_i = i[0]
 	            value_i = i[1]
 	            node_i = self._wn.get_node(node_name_i)
-	            current_node_value = instance['head'][node_name_i] - node_i.elevation
-	            if current_node_value <= value_i:
+                    if isinstance(node_i, Tank):
+                        next_head_in_tank = self.predict_next_tank_head(node_name_i, instance)
+                        node_value = next_head_in_tank - node_i.elevation
+                    else:
+                        node_value = instance['head'][node_name_i] - node_i.elevation
+	            if node_value <= value_i:
 	                links_closed_by_controls.add(link_name_k)
 
     def _override_tank_controls(self, links_closed_by_tank_controls, pumps_closed_by_outage):
