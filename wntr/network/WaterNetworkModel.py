@@ -634,32 +634,6 @@ class WaterNetworkModel(object):
         self.time_controls[link_name]['closed_times'].sort()
         self.time_controls[link_name]['active_times'].sort()
 
-        # This should only be used until the simulator can take partial timesteps
-        hydraulic_step = self.time_options['HYDRAULIC TIMESTEP']
-        assert type(hydraulic_step) == int
-        for i in xrange(len(self.time_controls[link_name]['open_times'])):
-            time = self.time_controls[link_name]['open_times'][i]
-            assert type(time) == int
-            if time%hydraulic_step != 0:
-                new_time = (time/hydraulic_step + 1)*hydraulic_step
-                self.time_controls[link_name]['open_times'][i] = new_time
-
-        # This should only be used until the simulator can take partial timesteps
-        for i in xrange(len(self.time_controls[link_name]['closed_times'])):
-            time = self.time_controls[link_name]['closed_times'][i]
-            assert type(time) == int
-            if time%hydraulic_step != 0:
-                new_time = (time/hydraulic_step + 1)*hydraulic_step
-                self.time_controls[link_name]['closed_times'][i] = new_time
-
-        # This should only be used until the simulator can take partial timesteps
-        for i in xrange(len(self.time_controls[link_name]['active_times'])):
-            time = self.time_controls[link_name]['active_times'][i]
-            assert type(time) == int
-            if time%hydraulic_step != 0:
-                new_time = (time/hydraulic_step + 1)*hydraulic_step
-                self.time_controls[link_name]['active_times'][i] = new_time
-
     def add_conditional_controls(self, link_name, node_name, level_value, open_or_closed, above_or_below):
         """
         Add conditional controls to the network.
