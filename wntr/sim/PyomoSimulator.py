@@ -844,7 +844,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 if modified_hazen_williams:
                     setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=Expr_if(IF=model.flow[l]>0, THEN=1, ELSE=-1)
-                            *pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
+                                                                       *pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
                     self._constraint_names.add('pipe_headloss_'+str(l))
                 else:
                     setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=pipe_resistance_coeff*model.flow[l]*(abs(model.flow[l]))**0.852 == model.head[start_node] - model.head[end_node]))
@@ -860,7 +860,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                     # replace pump by pipe of length 10m, diameter 1m, and roughness coefficient of 200
                     pipe_resistance_coeff = self._Hw_k*(200.0**(-1.852))*(1**(-4.871))*10.0 # Hazen-Williams coefficient
                     if modified_hazen_williams:
-                        setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=model.head[start_node] - model.head[end_node] == 0))
+                        setattr(model, 'pipe_headloss_'+str(l), Constraint(expr= Expr_if(IF=model.flow[l]>0, THEN=1, ELSE=-1)
+                                                                           *pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
                         self._constraint_names.add('pipe_headloss_'+str(l))
                     else:
                         setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=pipe_resistance_coeff*model.flow[l]*(abs(model.flow[l]))**0.852 == model.head[start_node] - model.head[end_node]))
