@@ -882,6 +882,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Mass Balance
         def node_mass_balance_rule(model, n):
             node = wn.get_node(n)
+            # If the node is a tank, calculate the tank net inflow from the previous timestep.
+            # This is used to calculate the tank level at the current timestep.
             if isinstance(node, Tank) and not first_timestep:
                 expr = 0
                 for l in wn.get_links_for_node(n):
@@ -892,6 +894,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                         expr += last_link_flows[l]
                     else:
                         raise RuntimeError('Node link is neither start nor end node.')
+            # For all other nodes, use the flow rates for the current timestep
             else:
                 expr = 0
                 for l in wn.get_links_for_node(n):
@@ -916,8 +919,11 @@ class PyomoSimulator(WaterNetworkSimulator):
 
 
         def tank_dynamics_rule(model, n):
+            # The tank level at the first timestep is know
             if first_timestep:
                 return Constraint.Skip
+            # The tank level for the current timestep is calculated from the flow rates
+            # of the previous timestep
             else:
                 tank = wn.get_node(n)
                 return (model.tank_net_inflow[n]*model.timestep*4.0)/(math.pi*(tank.diameter**2)) == model.head[n]-last_tank_head[n]
@@ -974,6 +980,11 @@ class PyomoSimulator(WaterNetworkSimulator):
         fixed_demands: Dictionary (node_name, time_step): demand value
             An external dictionary of demand values can be provided using this parameter. This option is used in the
             calibration work.
+        pandas_result: bool
+            Indicates whether the results should be stored in a pandas object or not. If not, a dictionary is used.
+        demo: string
+            Filename of pickled results object. If provided, the simulation is not run. Instead, the pickled results
+            object is returned.
         """
         if demo:
             import pickle
@@ -1673,7 +1684,12 @@ class PyomoSimulator(WaterNetworkSimulator):
                 pumps_closed_by_outage.discard(pump_name)
 
     def _update_tank_controls_for_leaks(self):
-        # Update tank controls
+        # Update tank controls in consideration of leaks
+        # If the link connected to the tank has a leak, then the node next to the
+        # tank corresponding to that link should be replaced with the leak node.
+        # Then determine which pipe is attached (link_next_to_tank__A or link_next_to_tank__B)
+        # to the tank and replace the original pipe with it.
+
         for tank_name, tank_control_dict in self._tank_controls.iteritems():
             for i in range(len(tank_control_dict['link_names'])):
                 link_next_to_tank = tank_control_dict['link_names'][i]
@@ -1694,7 +1710,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                         self._tank_controls[tank_name]['link_names'][i] = tmp_link_next_to_tank
 
     def _update_links_next_to_reservoirs_for_leaks(self):
-        # Update links next to reservoirs
+        # Update links next to reservoirs in consideration of leaks
         for link_name, reserv_name in self._reservoir_links.iteritems():
             if link_name in self._pipes_with_leaks.keys():
                 tmp_reserv_link_name = link_name+'__A'
