@@ -28,9 +28,20 @@ class WaterNetworkSimulator(object):
         """
         Water Network Simulator class.
 
-        water_network: WaterNetwork object
-        PD_or_DD: string, specifies whether the simulation will be demand driven or pressure driven
-                  Options are 'DEMAND DRIVEN' or 'PRESSURE DRIVEN'
+        water_network: WaterNetwork object 
+
+        PD_or_DD: string, specifies whether the simulation will be
+                  demand driven or pressure driven Options are 'DEMAND
+                  DRIVEN' or 'PRESSURE DRIVEN'
+        
+        copy_wn: Specifies whether or not a copy of the water network
+                 should be used. The purpose of copying the water
+                 network is so that changes to the water network from
+                 adding leaks may be discarded. The option to use a
+                 copy of the water network should be removed after the
+                 add_leak method is moved to the water network
+                 object. The simulator should not make any changes to
+                 the water network object.
 
         """
         if copy_wn:
@@ -79,14 +90,6 @@ class WaterNetworkSimulator(object):
             else:
                 raise RuntimeError("Argument for specifying demand driven or pressure driven is not recognized. Please use \'PRESSURE DRIVEN\' or \'DEMAND DRIVEN\'.")
 
-            #if 'NOMINAL PRESSURE' in self._wn.options:
-            #    self._PF = self._wn.options['NOMINAL PRESSURE']
-            #else:
-            #    self._PF = None
-            #if 'MINIMUM PRESSURE' in self._wn.options:
-            #    self._P0 = self._wn.options['MINIMUM PRESSURE']
-            #else:
-            #    self._P0 = 0 # meters head
         else:
             # Time parameters
             self._sim_start_sec = None
@@ -98,6 +101,7 @@ class WaterNetworkSimulator(object):
             self._report_step_sec = None
 
     def _init_reservoir_links(self):
+        # Creating the _reservoir_links dictionary
 
         for reserv_name, reserv in self._wn.nodes(Reservoir):
             links_next_to_reserv = self._wn.get_links_for_node(reserv_name)
@@ -176,16 +180,18 @@ class WaterNetworkSimulator(object):
         if not isinstance(pump, Pump):
             raise RuntimeError(pump_name + " is not a valid pump in the network.")
 
-        # Check if atart time and end time are valid
+        # Check if start time and end time are valid
         try:
             start = pd.Timedelta(start_time)
             end = pd.Timedelta(end_time)
         except RuntimeError:
             raise RuntimeError("The format of start or end time is not valid Pandas Timedelta format.")
 
+        # Convert start time and end time to seconds
         start_sec = self.timedelta_to_sec(start)
         end_sec = self.timedelta_to_sec(end)
 
+        # Add the pump outage information (start time and end time) to the _pump_outage dictionary
         if pump_name in self._pump_outage.keys():
             warnings.warn("Pump name " + pump_name + " already has a pump outage time defined."
                                                      " Old time range is being overridden.")
@@ -214,19 +220,18 @@ class WaterNetworkSimulator(object):
             raise RuntimeError("All pump outage time cannot be defined before a network object is"
                                "defined in the simulator.")
 
-        #if 'NOMINAL PRESSURE' not in self._wn.options:
-        #    raise RuntimeError("Pump outage analysis requires nominal pressure to be provided"
-        #                       "for the water network model.")
-
+        # Check if start time and end time are valid
         try:
             start = pd.Timedelta(start_time)
             end = pd.Timedelta(end_time)
         except RuntimeError:
             raise RuntimeError("The format of start or end time is not valid Pandas Timedelta format.")
 
+        # Convert start time and end time to seconds
         start_sec = self.timedelta_to_sec(start)
         end_sec = self.timedelta_to_sec(end)
 
+        # Add the pump outage information (start time and end time) to the _pump_outage dictionary
         for pump_name, pump in self._wn.links(Pump):
             if pump_name in self._pump_outage.keys():
                 warnings.warn("Pump name " + pump_name + " already has a pump outage time defined."
@@ -292,6 +297,8 @@ class WaterNetworkSimulator(object):
             end = pd.Timedelta(fix_time)
         except RuntimeError:
             raise RuntimeError("The format of start or fix time is not valid Pandas Timedelta format.")
+
+        # Convert start time and end time to seconds
         start_sec = self.timedelta_to_sec(start)
         end_sec = self.timedelta_to_sec(end)
 
@@ -316,6 +323,9 @@ class WaterNetworkSimulator(object):
                 if tmp_leak_name == leak_name:
                     self._pipes_with_leaks.pop(tmp_pipe_name)
 
+        # Ensure the name of the leak is not already used for another node
+        if leak_name in self._wn.get_all_nodes_copy().keys():
+            raise ValueError('The leak name you provided, '+leak_name+', is already being used for another node.')
 
         # Store leak information
         self._pipes_with_leaks[pipe_name] = leak_name
@@ -346,14 +356,14 @@ class WaterNetworkSimulator(object):
 
     def link_action(self, link_name, time):
         """
-        Check if a link is open or closed.
+        Check what should happen to a link at a particular time according to the time controls.
     
         Parameters
         ----------
         link_name: string
             Name of link that is being checked for an open or closed status
     
-        time: int or float ???
+        time: int
             time at which the link is being checked for an open or closed status
             units: Seconds
     
@@ -392,57 +402,6 @@ class WaterNetworkSimulator(object):
                     return 0
                 else:
                     return 2
-
-        #if link_name not in self._wn.time_controls:
-        #    return base_status
-        #else:
-        #    open_times = self._wn.time_controls[link_name]['open_times']
-        #    closed_times = self._wn.time_controls[link_name]['closed_times']
-        #    if len(open_times) == 0 and len(closed_times) == 0:
-        #        return base_status
-        #    if len(open_times) == 0 and len(closed_times) != 0:
-        #        return base_status if time < closed_times[0] else False
-        #    elif len(open_times) != 0 and len(closed_times) == 0:
-        #        return base_status if time < open_times[0] else True
-        #    elif time < open_times[0] and time < closed_times[0]:
-        #        return base_status
-        #    else:
-        #        #Check open times
-        #        left = 0
-        #        right = len(open_times)-1
-        #        if time >= open_times[right]:
-        #            min_open = time-open_times[right];
-        #        elif time < open_times[left]:
-        #            min_open = float("inf");
-        #        else:
-        #            middle = int(0.5*(right+left))
-        #            while(right-left>1):
-        #                if(open_times[middle]>time):
-        #                    right = middle
-        #                else:
-        #                    left = middle
-        #                middle = int(0.5*(right+left))
-        #            min_open = time-open_times[left];
-        #
-        #        #Check Closed times
-        #        left = 0
-        #        right = len(closed_times)-1
-        #        if time >= closed_times[right]:
-        #            min_closed = time-closed_times[right]
-        #        elif time < closed_times[left]:
-        #            min_closed = float("inf")
-        #        else:
-        #            middle = int(0.5*(right+left))
-        #            while(right-left>1):
-        #                if(closed_times[middle]>time):
-        #                    right = middle
-        #                else:
-        #                    left = middle
-        #                middle = int(0.5*(right+left))
-        #            min_closed = time-closed_times[left]
-        #
-        #        return True if min_open < min_closed else False
-
 
     def give_link_status(self,link_name,time):
         link = self._wn.get_link(link_name)
@@ -487,16 +446,16 @@ class WaterNetworkSimulator(object):
 
     def sec_to_timestep(self, sec):
         """
-        Convert seconds to hydraulic timestep.
+        Convert a number of seconds to a number of hydraulic timesteps.
 
         Parameters
         ----------
         sec : int
-            Seconds to convert to hydraulic timestep.
+            Seconds to convert to number of hydraulic timesteps.
 
         Returns
         -------
-        hydraulic timestep
+        number of hydraulic timesteps
         """
         return sec/self._hydraulic_step_sec
 
@@ -512,7 +471,6 @@ class WaterNetworkSimulator(object):
             self._hydraulic_step_sec = self._wn.time_options['HYDRAULIC TIMESTEP']
             self._pattern_step_sec = self._wn.time_options['PATTERN TIMESTEP']
             self._report_step_sec = self._wn.time_options['REPORT TIMESTEP']
-            # I don't think that this line is used: self._hydraulic_times_sec = np.linspace(0, self._sim_duration_sec, self._sim_duration_sec/self._hydraulic_step_sec)
 
         except KeyError:
             KeyError("Water network model used for simulation should contain time parameters. "

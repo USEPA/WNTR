@@ -47,7 +47,7 @@ class WaterNetworkModel(object):
         self._num_pumps = 0
         self._num_valves = 0
 
-        # Initialize node an link lists
+        # Initialize node and link lists
         # Dictionary of node or link objects indexed by their names
         self._nodes = {}
         self._links = {}
@@ -64,7 +64,7 @@ class WaterNetworkModel(object):
 
         # Time controls are saved as a dictionary as follows:
         # {'Link name': {'open_times': [1, 5, ...], 'closed_times': [3, 7, ...]}},
-        # where times are in minutes
+        # where times are in seconds
         self.time_controls = {}
 
         # Conditional controls are saved as a dictionary as follows:

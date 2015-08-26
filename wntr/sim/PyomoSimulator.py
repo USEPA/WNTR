@@ -12,7 +12,7 @@ from WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
 
-import cProfile
+import cProfile#, pstats, StringIO
 import gc
 
 def do_cprofile(func):
@@ -30,6 +30,38 @@ import time
 
 
 """
+Issues:
+1. Negative pressures:
+     We see negative pressures in the following scenarios:
+          - A tank level drops to a negative pressue (because we haven't yet implemented adaptive timesteps)
+          - The PDD constraint requires the pressure to be negative for the demand to be 0. We tried creating
+            and alternative PDD constraint (see pressure_dependent_demand_nl_alt) to correct this, but
+            it didn't quite work.
+          - If a pipe has drained of water, our model doesn't know it. Consider the case where the flowrate
+            in a pipe is 0. The start node has an actual demand of 0, so the pressure is close to 0. Because
+            the flowrate is 0, the head at the end node has to be the same as the head at the start node.
+            However, if the end node is at a higher elevation than the start node, then the pressure will be
+            lower than the pressure at the start node by the difference in elevation.
+          - The outlet pressure of a pump is low. If the outlet pressure is less than the pump head, then the
+            inlet pressure will be negative.
+     I think if we simply put a lower bound on the pressue and implemented an adaptive timestep, all of these
+     problems would be solved except the one where a pipe has drained all water out of it and the model doesn't
+     know it. I don't know how to solve that problem yet. 
+
+2. Infeasible problems due to pumps:
+     Orinially, we were seeing ampl evaluation errors for pumps becuase the first or second derivative is
+     undefined when q = 0. We decided to close pumps with low flow rates and resolve the problem. However, 
+     we didn't have any criteria to open these pumps back up. We stopped closing pumps for low flow rates
+     and modified the pump curve to be a piecewise function with a line with a small slope when q is close
+     to 0. There was another problem. If the pressure at the end node of the pump needs to be larger than
+     what the pump can provide, then the problem becomes infeasible because we placed a lower bound of 0.0 
+     on the pump flow rate. Thus, we made the lower bound -0.1 and started treating pumps as check valves.
+     Reducing the lower bound allows the flow rate to become negative, and then we have a way to identify
+     whether or not the pump should be closed. If we completely removed the lower bound on the pump flow 
+     rate or reduced it too much, then Ipopt had trouble solving some problems. I am not sure why though. 
+"""
+
+"""
 Class for keeping approximation functions in a single place 
 and avoid code duplications. Should be located in a better place
 This is just a temporal implementation
@@ -40,8 +72,8 @@ class ApproxFunctions():
         self.q1 = 0.00349347323944
         self.q2 = 0.00549347323944
     # The Hazen-Williams headloss curve is slightly modified to improve solution time.
-    # The three functions defines below - f1, f2, Px - are used to ensure that the Jacobian
-    # does not go to 0 close to zero flow.
+    # The three functions defined below - f1, f2, Px - are used to ensure that the Jacobian
+    # is well defined at zero flow.
     def leftFunct(self,x):
         return 0.01*x
 
@@ -88,33 +120,41 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         Parameters
         ----------
-        wn : Water Network Model
-            A water network model.
+        wn : WaterNetwork object
 
-        PD_or_DD: string, specifies whether the simulation will be demand driven or pressure driven
-                  Options are 'DEMAND DRIVEN' or 'PRESSURE DRIVEN'
+        PD_or_DD: string, specifies whether the simulation will be
+                  demand driven or pressure driven Options are 'DEMAND
+                  DRIVEN' or 'PRESSURE DRIVEN'
+
+        copy_wn: Specifies whether or not a copy of the water network
+                 should be used. The purpose of copying the water
+                 network is so that changes to the water network from
+                 adding leaks may be discarded. The option to use a
+                 copy of the water network should be removed after the
+                 add_leak method is moved to the water network
+                 object. The simulator should not make any changes to
+                 the water network object.
 
         """
         WaterNetworkSimulator.__init__(self, wn, PD_or_DD, copy_wn)
 
         # Global constants
-        self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
-        self._Dw_k = 0.0826 # Darcy-Weisbach constant in SI units = 0.0252 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
+        self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units (it equals 4.727 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
+        self._Dw_k = 0.0826 # Darcy-Weisbach constant in SI units (it equals 0.0252 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
         self._Htol = 0.00015 # Head tolerance in meters.
         self._Qtol = 2.8e-5 # Flow tolerance in m^3/s.
-        self._pump_zero_flow_tol = 2.8e-11 # Pump is closed below this flow in m^3/s
         self._g = 9.81 # Acceleration due to gravity
         self._slope_of_PDD_curve = 1e-11 # The flat lines in the PDD model are provided a small slope for numerical stability
         self._pdd_smoothing_delta = 0.1 # Tightness of polynomial used to smooth sharp changes in PDD model.
 
         self._n_timesteps = 0 # Number of hydraulic timesteps
         self._demand_dict = {} # demand dictionary
-        self._link_status = {} # dictionary of link statuses
+        self._link_status = {} # dictionary of link statuses. 0 means close link, 1 means open link, 2 means take no action
         self._valve_status = {} # dictionary of valve statuses
 
         self._initialize_results_dict()
         self._max_step_iter = 10 # maximum number of newton solves at each timestep.
-                                 # model is resolved when a valve status changes.
+                                 # model is resolved when a valve status changes, the links closed changes, or the solver does not converge.
 
 
     def _initialize_simulation(self, fixed_demands=None):
@@ -151,6 +191,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Create time controls dictionary
         # Format: {link_name:list}
         # Where list can contain 0, 1, or 2
+        # Each entry in the list corresponds to a timestep
         #    0: link should be closed at corresponding timestep
         #    1: link should be opened at corresponding timestep
         #    2: no action should be taken at corresponding timestep
@@ -169,8 +210,19 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._valve_status[valve_name] = 'ACTIVE'
 
     def _correct_time_controls_for_timestep(self):
-        # This should only be used until the simulator can take partial timesteps
+        """
+        This method should only be used until the simulator can take
+        partial timesteps. The idea here is to correct the time
+        controls in case the user specified a time between hydraulic
+        timesteps. If so, the time control is delayed until the
+        following hydraulic timestep. For example, suppose a user
+        specified this control in the inp file:
 
+             LINK Pipe-12 CLOSED AT TIME 8:35
+
+        Also suppose that the hydraulic timestep is 1 hour. This
+        control would be modified so that Pipe-12 is closed at 9:00.
+        """
         for link_name in self._wn.time_controls.keys():
             assert type(self._hydraulic_step_sec) == int
             for i in xrange(len(self._wn.time_controls[link_name]['open_times'])):
@@ -359,20 +411,22 @@ class PyomoSimulator(WaterNetworkSimulator):
                                          last_link_flows,
                                          modified_hazen_williams=True):
         """
-        Build hydraulic constraints at a particular time instance.
+        Build hydraulic constraints at a particular time.
 
         Parameters
         ----------
         last_tank_head : dict of string: float
             Dictionary containing tank names and their respective head at the last timestep.
         nodal_demands : dict of string: float
-            Dictionary containing junction names and their respective respective demand at current timestep.
+            Dictionary containing junction names and their respective respective expected demand at current timestep.
         first_timestep : bool
             Flag indicating wheather its the first timestep
         links_closed : list of strings
             Name of links that are closed.
         pumps_closed_by_outage : list of strings
             Name of pumps closed due to a power outage
+        last_link_flows: dict of string: float
+            Dictionary containing link names and their respective flow rates at the last timestep.
 
         Other Parameters
         -------------------
@@ -390,6 +444,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         # TODO : Refactor pressure_dependent_demand_linear so that its created only once for the entire simulation.
         def pressure_dependent_demand_nl(full_demand, p, PF, P0):
             # Pressure driven demand equation
+            # Returns the right hand side of the equation
+            #
+            #            0                                 if p<= P0
+            # D_actual = full_demand*sqrt((p-P0)/(PF-P0))  if P0 <= p <= PF
+            #            full_demand                       if p >= PF
+            #
+            # But with smoothing polynomials between the functions
+            # Additionally, the first and last functions have small slopes
             delta = self._pdd_smoothing_delta
             # Defining Line 1 - demand above nominal pressure
             def L1(p):
@@ -448,6 +510,9 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         def pressure_dependent_demand_nl_alt(full_demand, p, PF, P0):
             # Pressure driven demand equation
+            # Alternative version of pressure_dependent_demand_nl
+            # The original version doesn't get to 0 demand until the pressure gets down to about x1, which may be significantly negative
+            # This version was made in an attempt to correct this. However, it doesn't work.
 
             assert (PF-P0) >= 0.1, "Minimum pressure and nominal pressure are too close."
 
@@ -531,6 +596,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Currently this function is being called for every node at every time step.
         # TODO : Refactor pressure_dependent_demand_linear so that its created only once for the entire simulation.
         def pressure_dependent_demand_linear(full_demand, p, PF, P0):
+            # This is a linear version of pressure_dependent_demand_nl
 
             delta = self._pdd_smoothing_delta
             # Defining Line 1 - demand above nominal pressure
@@ -587,20 +653,32 @@ class PyomoSimulator(WaterNetworkSimulator):
                                                       ELSE=L1(p)))))
 
         def modified_pump_curve(q, A, B, C):
-            delta = 1.0e-8
+            # The pump curve is
+            #
+            #      H = A-B*q**C
+            #
+            # However, if C is not an integer and is less than 2, then either the first or
+            # second derivative with respect to q is undefined when q=0. Thus, we modify
+            # the pump curve near q = 0 to be a line. Then we place a smoothing polynomial
+            # between the line and the actual pump curve.
             L1_slope = -1.0e-11
             x1 = 1.0e-8
             x2 = 2.0*x1
+
+            # The line for q<=x1
             def L1(q,A):
                 return L1_slope*q+A
+            # The actual pump curve
             def pump_curve(q,A,B,C):
                 return A-B*q**C
+
+            # Get the coefficients of the smoothing polynomial
             def get_rhs(A,B,C):
                 return np.matrix([[L1_slope*x1+A],[A-B*x2**C],[L1_slope],[-B*C*x2**(C-1.0)]])
-
             coeff_matrix = np.matrix([[x1**3, x1**2, x1, 1.0],[x2**3, x2**2, x2, 1.0],[3*x1**2, 2*x1, 1.0, 0.0],[3*x2**2, 2*x2, 1.0, 0.0]])
             poly_coeff = np.linalg.solve(coeff_matrix, get_rhs(A,B,C))
 
+            # The smoothing polynomial
             def smooth_poly(q):
                 a = float(poly_coeff[0][0])
                 b = float(poly_coeff[1][0])
@@ -613,25 +691,42 @@ class PyomoSimulator(WaterNetworkSimulator):
                                         ELSE=pump_curve(q,A,B,C)))
 
         def piecewise_pipe_leak_demand(p, Cd, A):
+            # This is needed so that the pressure at a leak node can be negative
+            # without having water flow into the network through the leak.
+            # When the pressure is <= 0, the demand is close to zero (we use
+            # a line with a very small slope). A smoothing polynomial is used
+            # between the line and the actual leak model.
+            #
+            # Originally, we were placing a lower bound on the leak demand.
+            # However, that implicitly placed a lower bound on the pressure.
+            # In extreme scenarios, the pressure may need to be negative, so
+            # we occasionally ran into infeasible problems when we used a
+            # lower bound.
             delta = 1.0e-4
             L1_slope = 1.0e-11
             x1 = 0.0
             x2 = delta
+
+            # Two of the polynomial coefficients are known
             c = L1_slope
             d = 0.0
+
+            # The line for p <= 0
             def L1(p):
                 return L1_slope*p
+            # The leak demand model
             def leak_model(p, Cd, A):
                 return Cd*A*math.sqrt(2.0*self._g)*p**0.5
+
+            # Get the smoothing polynomial coefficients
             def get_rhs(x, Cd, A):
                 return np.matrix([[Cd*A*math.sqrt(2.0*self._g)*x**0.5-c*x-d],[0.5*Cd*A*math.sqrt(2.0*self._g)*x**(-0.5)-c]])
-
             coeff_matrix = np.matrix([[x2**3.0, x2**2.0],[3*x2**2.0, 2*x2]])
-
             poly_coeff = np.linalg.solve(coeff_matrix, get_rhs(x2, Cd, A))
             a = float(poly_coeff[0][0])
             b = float(poly_coeff[1][0])
 
+            # The smoothing polynomial
             def smooth_poly(p):
                 return a*p**3 + b*p**2 + c*p + d
 
@@ -674,15 +769,28 @@ class PyomoSimulator(WaterNetworkSimulator):
                 else:
                     return 0.3048
         def flow_bounds_rule(model, l):
+            # If the link is a pump and is not closed by an outage, then the bounds
+            # should be (0.0, None). If the pump is closed by an outage, then it is
+            # replaced by a pipe (although this should change soon), so there should
+            # not be any bounds on it.
             if l in model.pumps and l not in pumps_closed_by_outage:
                 pump = self._wn.get_link(l)
                 if pump.info_type == 'POWER':
                     return (0.0, None)
+                # If the pump uses a pump curve, the we have to make the lower bound
+                # slightly negative and treat the pump as a check valve. The reason
+                # for this is that if the outlet pressure needs to be higher than
+                # the pump can provide, then the problem will be infeasible. Thus,
+                # we let the flow rate go slightly negative and resolve the problem
+                # with the pump closed. Allowing the flow rate to go slightly negative
+                # provides a way to identify the pumps that need closed.
                 elif pump.info_type == 'HEAD':
                     return (-0.01, None)
                     #return (0.0, None)
                 else:
                     raise ValueError('Pump info type not recognized: '+pump.info_type)
+            # If the link is not a pump, or the pump is closed by an outage, then there
+            # should not be any bounds on the flow rate.
             else:
                 return (None, None)
         model.flow = Var(model.links, within=Reals, initialize=flow_init_rule, bounds=flow_bounds_rule)
@@ -710,6 +818,11 @@ class PyomoSimulator(WaterNetworkSimulator):
             return model.demand_required[n]
         model.demand_actual = Var(model.junctions, within=Reals, initialize=init_demand_rule)
 
+        # If the leak is active, initialize the demand to that predicted by the model with the initial head.
+        # If the leak is inactive, initialize the demand to 0.0, which is the solution
+        # The bounds are set to (None, None), but we use a piecewise function for the leak demand so that
+        # the leak demand will not actually go very negative. See the method piecewise_pipe_leak_demand above
+        # for more details.
         def init_leak_demand_rule(model,n):
             if n in self._active_leaks:
                 node = wn.get_node(n)
@@ -993,6 +1106,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             #print 'pumps_closed_by_low_suction_pressure: ',pumps_closed_by_low_suction_pressure
             #print 'pumps_closed_by_outage: ',pumps_closed_by_outage
             #print 'links_closed: ',links_closed
+            #pr = cProfile.Profile()
+            #pr.enable()
             model = self._build_hydraulic_model_at_instant(last_tank_head,
                                                            current_demands,
                                                            first_timestep,
@@ -1000,6 +1115,12 @@ class PyomoSimulator(WaterNetworkSimulator):
                                                            pumps_closed_by_outage,
                                                            last_link_flows,
                                                            modified_hazen_williams)
+            #pr.disable()
+            #s = StringIO.StringIO()
+            #sortby = 'cumulative'
+            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+            #ps.print_stats()
+            #print s.getvalue()
             #print "Total build model time : ", time.time() - t0
 
             # Add constant objective
