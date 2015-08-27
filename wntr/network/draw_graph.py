@@ -161,6 +161,8 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     if add_colorbar and link_attribute:
         plt.colorbar(edges, shrink=0.5, pad = 0.05)
     plt.axis('off')
+    
+    return nodes, edges
 
 def custom_colormap(numcolors=11, colors=['blue','white','red']):
     """ 
