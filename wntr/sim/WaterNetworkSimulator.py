@@ -403,47 +403,6 @@ class WaterNetworkSimulator(object):
                 else:
                     return 2
 
-    def give_link_status(self,link_name,time):
-        link = self._wn.get_link(link_name)
-    
-        base_status = link.get_base_status()
-        if link_name not in self._wn.time_controls:
-            return base_status
-        else:
-            count_base = 1
-            time_diff_values = dict()
-            time_controls = self._wn.time_controls[link_name]
-            for key in time_controls.keys():
-                list_times = self._wn.time_controls[link_name][key]
-                time_diff_values[key] = float("inf");
-                if list_times:
-                    if time < list_times[0]:
-                        count_base+=1
-                    else:
-                        left = 0
-                        right = len(list_times)-1
-                        if time >= list_times[right]:
-                            min_diff = time-list_times[right];
-                        elif time < list_times[left]:
-                            min_diff = float("inf");
-                        else:
-                            middle = int(0.5*(right+left))
-                            while(right-left>1):
-                                if(list_times[middle]>time):
-                                    right = middle
-                                else:
-                                    left = middle
-                                middle = int(0.5*(right+left))
-                            min_diff = time-list_times[left]
-                        time_diff_values[key] = min_diff
-            
-            if count_base>=len(time_controls.keys()):
-                return base_status
-            else:
-                name_list = min(time_diff_values, key=lambda k: time_diff_values[k]) 
-                return name_list.split('_')[0].upper()
-                    
-
     def sec_to_timestep(self, sec):
         """
         Convert a number of seconds to a number of hydraulic timesteps.
