@@ -15,6 +15,7 @@ QUESTIONS
 import numpy as np
 import warnings
 from wntr.network.WaterNetworkModel import *
+from wntr.misc import *
 from scipy.optimize import fsolve
 import math
 from NetworkResults import NetResults
@@ -24,7 +25,7 @@ import copy
 
 
 class WaterNetworkSimulator(object):
-    def __init__(self, water_network=None, PD_or_DD = 'DEMAND DRIVEN', copy_wn = True):
+    def __init__(self, water_network=None, PD_or_DD = 'DEMAND DRIVEN'):
         """
         Water Network Simulator class.
 
@@ -33,37 +34,20 @@ class WaterNetworkSimulator(object):
         PD_or_DD: string, specifies whether the simulation will be
                   demand driven or pressure driven Options are 'DEMAND
                   DRIVEN' or 'PRESSURE DRIVEN'
-        
-        copy_wn: Specifies whether or not a copy of the water network
-                 should be used. The purpose of copying the water
-                 network is so that changes to the water network from
-                 adding leaks may be discarded. The option to use a
-                 copy of the water network should be removed after the
-                 add_leak method is moved to the water network
-                 object. The simulator should not make any changes to
-                 the water network object.
 
         """
-        if copy_wn:
-            self._wn = copy.deepcopy(water_network)
-        else:
-            self._wn = water_network
+        self._wn = water_network
+
+        # Create an internal time controls dictionary. This is needed
+        # because the time controls dictionary must be corrected for
+        # the given hydraulic timestep. We do not want to modify the
+        # water network object in any way.
+        self._time_controls = {}
+        self._init_time_controls()
 
         # A dictionary containing pump outage information
         # format is PUMP_NAME: (start time in sec, end time in sec)
         self._pump_outage = {}
-
-        # A dictionary containg leak time information
-        # format is LEAK_NAME: (start time in sec, end time in sec)
-        self._leak_times = {}
-
-        # A dictionary containing leak characteristics
-        # format is LEAK_NAME: {'original_pipe':copy_of_original_pipe, 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff, 'shutoff_valve_loc':shutoff_valve_loc}
-        self._leak_info = {}
-
-        # A dictionary containing pipe names and associated leak names
-        # format is PIPE_NAME: LEAK_NAME
-        self._pipes_with_leaks = {}
 
         # A dictionary containing information to stop flow from a tank once
         # the minimum head is reached. This dict contains the pipes connected to the tank,
@@ -100,6 +84,14 @@ class WaterNetworkSimulator(object):
             self._hydraulic_times_sec = None
             self._report_step_sec = None
 
+    def _init_time_controls(self):
+        for link_name in self._wn.time_controls.keys():
+            self._time_controls[link_name] = {'open_times':[], 'closed_times':[]}
+            for t in self._wn.time_controls[link_name]['open_times']:
+                self._time_controls[link_name]['open_times'].append(t)
+            for t in self._wn.time_controls[link_name]['closed_times']:
+                self._time_controls[link_name]['closed_times'].append(t)
+
     def _init_reservoir_links(self):
         # Creating the _reservoir_links dictionary
 
@@ -132,21 +124,6 @@ class WaterNetworkSimulator(object):
                     node_next_to_tank = link.end_node()
                 self._tank_controls[tank_name]['node_names'].append(node_next_to_tank)
                 self._tank_controls[tank_name]['link_names'].append(link_name)
-
-    def timedelta_to_sec(self, timedelta):
-        """
-        Converts timedelta to seconds.
-
-        Parameters
-        ----------
-        timedelta : Pandas tmedelta object.
-
-        Returns
-        -------
-        seconds as integer
-        """
-
-        return int(timedelta.components.days*24*60*60 + timedelta.components.hours*60*60 + timedelta.components.minutes*60 + timedelta.components.seconds)
 
     def add_pump_outage(self, pump_name, start_time, end_time):
         """
@@ -188,8 +165,8 @@ class WaterNetworkSimulator(object):
             raise RuntimeError("The format of start or end time is not valid Pandas Timedelta format.")
 
         # Convert start time and end time to seconds
-        start_sec = self.timedelta_to_sec(start)
-        end_sec = self.timedelta_to_sec(end)
+        start_sec = timedelta_to_sec(start)
+        end_sec = timedelta_to_sec(end)
 
         # Add the pump outage information (start time and end time) to the _pump_outage dictionary
         if pump_name in self._pump_outage.keys():
@@ -228,8 +205,8 @@ class WaterNetworkSimulator(object):
             raise RuntimeError("The format of start or end time is not valid Pandas Timedelta format.")
 
         # Convert start time and end time to seconds
-        start_sec = self.timedelta_to_sec(start)
-        end_sec = self.timedelta_to_sec(end)
+        start_sec = timedelta_to_sec(start)
+        end_sec = timedelta_to_sec(end)
 
         # Add the pump outage information (start time and end time) to the _pump_outage dictionary
         for pump_name, pump in self._wn.links(Pump):
@@ -240,102 +217,9 @@ class WaterNetworkSimulator(object):
             else:
                 self._pump_outage[pump_name] = (start_sec, end_sec)
 
-    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None, shutoff_valve_loc = 'ISOLATE'):
-        """
-        Method to add a leak to the simulation. Leaks are modeled by:
 
-        Q = leak_discharge_coeff*leak_area*sqrt(2*g*h)
-        where:
-        
-        Q is the volumetric flow rate of water out of the leak
-        g is the acceleration due to gravity
-        h is the gauge head at the leak, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
-
-        Parameters
-        ----------
-        leak_name: string
-           Name of the leak
-        pipe_name: string
-           Name of the pipe where the leak ocurrs.
-           Assumes the leak ocurrs halfway between nodes.
-        leak_area: float
-           Area of the leak in m^2. Either the leak area or the leak diameter must be specified, but not both.
-        leak_diameter: float
-           Diameter of the leak in m. The area of the leak is calculated with leak_diameter assuming the leak is in the shape of a circle.
-           Either the leak area or the leak diameter must be specified, but not both.
-        leak_discharge_coeff: float
-           Leak discharge coefficient; Takes on values between 0 and 1
-        start_time: string
-           Start time of the leak. Pandas Timedelta format: e.g. '0 days 00:00:00'. Default is the start of the simulation.
-        fix_time: string
-           Time at which the leak is fixed. Pandas Timedelta format: e.g. '0 days 05:00:00'. Default is that the leak does not get 
-           fixed during the simulation.
-        shutoff_valve_loc: string
-           Location of pipe shutoff valve. Options are 'START_NODE', 'END_NODE', or 'ISOLATE'. 'START_NODE' indicates that the 
-           shutoff valve is between the start node and the leak. 'END_NODE' indicates that the shutoff valve is between the leak 
-           and the end node. 'ISOLATE' indicates that there is a shutoff valve on both sides of the leak, so a closed pipe means 
-           an isolated leak. The default is 'ISOLATE'. This is used for time controls and conditional controls. If tank levels
-           fall too low, the link closest to the tank is closed.
-        """
-
-        # Check if water network is specified
-        if self._wn is None:
-            raise RuntimeError("Leaks cannot be defined before a network object is"
-                               "defined in the simulator.")
-
-        # Check if pipe_name is valid
-        try:
-            pipe = self._wn.get_link(pipe_name)
-        except KeyError:
-            raise KeyError(pipe_name + " is not a valid link in the network.")
-        if not isinstance(pipe, Pipe):
-            raise RuntimeError(pipe_name + " is not a valid pipe in the network.")
-
-        # Check if start time and end time are valid
-        try:
-            start = pd.Timedelta(start_time)
-            end = pd.Timedelta(fix_time)
-        except RuntimeError:
-            raise RuntimeError("The format of start or fix time is not valid Pandas Timedelta format.")
-
-        # Convert start time and end time to seconds
-        start_sec = self.timedelta_to_sec(start)
-        end_sec = self.timedelta_to_sec(end)
-
-        # Set leak_area if leak_diameter was passed as an argument
-        if leak_diameter is not None:
-            if leak_area is not None:
-                raise RuntimeError('When trying to add a leak, you may only specify the area or diameter, not both.')
-            else:
-                leak_area = math.pi/4.0*leak_diameter**2
-        elif leak_area is None:
-            raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
-
-        # Ensure pipe does not already have a leak and leak does not already exist
-        if pipe_name in self._pipes_with_leaks.keys():
-            warning.warn('Pipe '+pipe_name+' already has a leak. Old leak is being overridden.')
-            tmp_leak_name = self._pipes_with_leaks[pipe_name]
-            self._leak_times.pop(tmp_leak_name)
-            self._leak_info.pop(tmp_leak_name)
-        if leak_name in self._pipes_with_leaks.values():
-            warnings.warn('Leak '+leak_name+' is already associated with a pipe. Old pipe will no longer have a leak.')
-            for tmp_pipe_name, tmp_leak_name in self._pipes_with_leaks.iteritems():
-                if tmp_leak_name == leak_name:
-                    self._pipes_with_leaks.pop(tmp_pipe_name)
-
-        # Ensure the name of the leak is not already used for another node
-        if leak_name in self._wn.get_all_nodes_copy().keys():
-            raise ValueError('The leak name you provided, '+leak_name+', is already being used for another node.')
-
-        # Store leak information
-        self._pipes_with_leaks[pipe_name] = leak_name
-        self._leak_times[leak_name] = (start_sec, end_sec)
-        self._leak_info[leak_name] = {'original_pipe':copy.deepcopy(pipe), 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff, 'shutoff_valve_loc':shutoff_valve_loc.upper()}
-
-        # Check if the leak area is larger than the pipe area
-        orig_pipe_area = math.pi/4.0*pipe.diameter**2
-        if leak_area > orig_pipe_area:
-            raise RuntimeError('You specified a leak area (or diameter) that is larger than the area (or diameter) of the original pipe')
+    def add_leak(self, *args, **kwargs):
+        raise RuntimeError('The interface to the add_leak method has been moved to WaterNetworkModel.')
 
     def set_water_network_model(self, water_network):
         """
@@ -375,7 +259,7 @@ class WaterNetworkSimulator(object):
         """
         link = self._wn.get_link(link_name)
         base_status = False if link.get_base_status() == 'CLOSED' else True
-        if link_name not in self._wn.time_controls:
+        if link_name not in self._time_controls:
             if time == 0:
                 if base_status:
                     return 2
@@ -385,20 +269,20 @@ class WaterNetworkSimulator(object):
                 return 2
         else:
             if time == 0:
-                if base_status and time not in self._wn.time_controls[link_name]['closed_times']:
+                if base_status and time not in self._time_controls[link_name]['closed_times']:
                     return 2
-                elif base_status and time in self._wn.time_controls[link_name]['closed_times']:
+                elif base_status and time in self._time_controls[link_name]['closed_times']:
                     return 0
-                elif not base_status and time not in self._wn.time_controls[link_name]['open_times']:
+                elif not base_status and time not in self._time_controls[link_name]['open_times']:
                     return 0
-                elif not base_status and time in self._wn.time_controls[link_name]['open_times']:
+                elif not base_status and time in self._time_controls[link_name]['open_times']:
                     return 2
                 else:
                     raise RuntimeError('There appears to be a bug. Please report this error to the developers.')
             else:
-                if time in self._wn.time_controls[link_name]['open_times']:
+                if time in self._time_controls[link_name]['open_times']:
                     return 1
-                elif time in self._wn.time_controls[link_name]['closed_times']:
+                elif time in self._time_controls[link_name]['closed_times']:
                     return 0
                 else:
                     return 2

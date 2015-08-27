@@ -21,6 +21,7 @@ import networkx as nx
 import math
 from scipy.optimize import fsolve
 from wntr.units import convert
+from wntr.misc import *
 import wntr.network
 
 class WaterNetworkModel(object):
@@ -79,7 +80,22 @@ class WaterNetworkModel(object):
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
         self._graph = nx.MultiDiGraph(data=None)
-        
+
+        # A dictionary containg leak time information. The format is
+        # LEAK_NAME: (start time in sec, end time in sec)
+        self.leak_times = {}
+
+        # A dictionary containing leak characteristics. The format is
+        # LEAK_NAME: {'original_pipe': copy_of_original_pipe,
+        # 'leak_area': leak_area, 'leak_discharge_coeff':
+        # leak_discharge_coeff, 'shutoff_valve_loc':
+        # shutoff_valve_loc}
+        self._leak_info = {}
+
+        # A dictionary containing pipe names and associated leak names
+        # format is PIPE_NAME: LEAK_NAME
+        self._pipes_with_leaks = {}
+
         if inp_file_name:
             parser = wntr.network.ParseWaterNetwork()
             parser.read_inp_file(self, inp_file_name)
@@ -878,6 +894,172 @@ class WaterNetworkModel(object):
         sec -= mm*60
         return (hours, mm, sec)
 
+    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None, shutoff_valve_loc = 'ISOLATE'):
+        """
+        Method to add a leak to the simulation. Leaks are modeled by:
+
+        Q = leak_discharge_coeff*leak_area*sqrt(2*g*h)
+        where:
+        
+        Q is the volumetric flow rate of water out of the leak
+        g is the acceleration due to gravity
+        h is the gauge head at the leak, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
+
+        Parameters
+        ----------
+        leak_name: string
+           Name of the leak
+        pipe_name: string
+           Name of the pipe where the leak ocurrs.
+           Assumes the leak ocurrs halfway between nodes.
+        leak_area: float
+           Area of the leak in m^2. Either the leak area or the leak diameter must be specified, but not both.
+        leak_diameter: float
+           Diameter of the leak in m. The area of the leak is calculated with leak_diameter assuming the leak is in the shape of a circle.
+           Either the leak area or the leak diameter must be specified, but not both.
+        leak_discharge_coeff: float
+           Leak discharge coefficient; Takes on values between 0 and 1
+        start_time: string
+           Start time of the leak. Pandas Timedelta format: e.g. '0 days 00:00:00'. Default is the start of the simulation.
+        fix_time: string
+           Time at which the leak is fixed. Pandas Timedelta format: e.g. '0 days 05:00:00'. Default is that the leak does not get 
+           fixed during the simulation.
+        shutoff_valve_loc: string
+           Location of pipe shutoff valve. Options are 'START_NODE', 'END_NODE', or 'ISOLATE'. 'START_NODE' indicates that the 
+           shutoff valve is between the start node and the leak. 'END_NODE' indicates that the shutoff valve is between the leak 
+           and the end node. 'ISOLATE' indicates that there is a shutoff valve on both sides of the leak, so a closed pipe means 
+           an isolated leak. The default is 'ISOLATE'. This is used for time controls and conditional controls. If tank levels
+           fall too low, the link closest to the tank is closed.
+        """
+
+        # Check if pipe_name is valid
+        try:
+            pipe = self.get_link(pipe_name)
+        except KeyError:
+            raise KeyError(pipe_name + " is not a valid link in the network.")
+        if not isinstance(pipe, Pipe):
+            raise RuntimeError(pipe_name + " is not a valid pipe in the network.")
+
+        # Check if start time and end time are valid
+        try:
+            start = pd.Timedelta(start_time)
+            end = pd.Timedelta(fix_time)
+        except RuntimeError:
+            raise RuntimeError("The format of start or fix time is not valid Pandas Timedelta format.")
+
+        # Convert start time and end time to seconds
+        start_sec = timedelta_to_sec(start)
+        end_sec = timedelta_to_sec(end)
+
+        # Set leak_area if leak_diameter was passed as an argument
+        if leak_diameter is not None:
+            if leak_area is not None:
+                raise RuntimeError('When trying to add a leak, you may only specify the area or diameter, not both.')
+            else:
+                leak_area = math.pi/4.0*leak_diameter**2
+        elif leak_area is None:
+            raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
+
+        # Ensure pipe does not already have a leak and leak does not already exist
+        if pipe_name in self._pipes_with_leaks.keys():
+            warning.warn('Pipe '+pipe_name+' already has a leak. Old leak is being overridden.')
+            tmp_leak_name = self._pipes_with_leaks[pipe_name]
+            self.leak_times.pop(tmp_leak_name)
+            self._leak_info.pop(tmp_leak_name)
+        if leak_name in self._pipes_with_leaks.values():
+            warnings.warn('Leak '+leak_name+' is already associated with a pipe. Old pipe will no longer have a leak.')
+            for tmp_pipe_name, tmp_leak_name in self._pipes_with_leaks.iteritems():
+                if tmp_leak_name == leak_name:
+                    self._pipes_with_leaks.pop(tmp_pipe_name)
+
+        # Ensure the name of the leak is not already used for another node
+        if leak_name in self.get_all_nodes_copy().keys():
+            raise ValueError('The leak name you provided, '+leak_name+', is already being used for another node.')
+
+        # Store leak information
+        self._pipes_with_leaks[pipe_name] = leak_name
+        self.leak_times[leak_name] = (start_sec, end_sec)
+        self._leak_info[leak_name] = {'original_pipe':pipe, 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff, 'shutoff_valve_loc':shutoff_valve_loc.upper()}
+
+        # Check if the leak area is larger than the pipe area
+        orig_pipe_area = math.pi/4.0*pipe.diameter**2
+        if leak_area > orig_pipe_area:
+            raise RuntimeError('You specified a leak area (or diameter) that is larger than the area (or diameter) of the original pipe.')
+
+        # Remove original pipe
+        self.remove_pipe(pipe_name)
+
+        # Get start and end node info
+        start_node = self.get_node(pipe.start_node())
+        end_node = self.get_node(pipe.end_node())
+        if isinstance(start_node, Reservoir):
+            leak_elevation = end_node.elevation
+        elif isinstance(end_node, Reservoir):
+            leak_elevation = start_node.elevation
+        else:
+            leak_elevation = (start_node.elevation + end_node.elevation)/2.0
+
+        # Add a leak node
+        leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff, leak_elevation)
+        self._nodes[leak_name] = leak
+        self._graph.add_node(leak_name)
+        self.set_node_type(leak_name, 'leak')
+        leak_coordinates = ((self._graph.node[pipe.start_node()]['pos'][0] + self._graph.node[pipe.end_node()]['pos'][0])/2.0,(self._graph.node[pipe.start_node()]['pos'][1] + self._graph.node[pipe.end_node()]['pos'][1])/2.0)
+        self.set_node_coordinates(leak_name, leak_coordinates)
+
+        # Add new pipes
+        self.add_pipe(pipe_name+'__A', pipe.start_node(), leak_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, pipe.get_base_status())
+        self.add_pipe(pipe_name+'__B', leak_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, pipe.get_base_status())
+
+        # Update time and conditional controls
+        self._update_time_controls_for_leak(leak_name)
+        self._update_conditional_controls_for_leak(leak_name)
+
+    def _update_time_controls_for_leak(self, leak_name):
+        # Update time controls in consideration of leaks
+
+        # If the pipe with the leak has a time control
+        pipe_name = self._leak_info[leak_name]['original_pipe'].name()
+        if pipe_name in self.time_controls.keys():
+            control_dict = self.time_controls[pipe_name]
+            # Replace the time control for the original link with a time control
+            # for either original_link__A, original_link__B, or both, depending
+            # on the shutoff_valve_loc argument provided to the add_leak method.
+            if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
+                self.time_controls[pipe_name+'__A'] = control_dict
+                self.time_controls.pop(pipe_name)
+            elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'END_NODE':
+                self.time_controls[pipe_name+'__B'] = control_dict
+                self.time_controls.pop(pipe_name)
+            elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'ISOLATE':
+                self.time_controls[pipe_name+'__A'] = control_dict
+                self.time_controls[pipe_name+'__B'] = control_dict
+                self.time_controls.pop(pipe_name)
+            else:
+                raise ValueError('Shutoff valve location for leak is not recognized.')
+
+    def _update_conditional_controls_for_leak(self, leak_name):
+        # Update conditional controls in consideration of leaks
+
+        # If the pipe with the leak has a conditional control
+        pipe_name = self._leak_info[leak_name]['original_pipe'].name()
+        if pipe_name in self.conditional_controls.keys():
+            control_dict = self.conditional_controls[pipe_name]
+            # Replace the conditional control for the original link with a conditional control
+            # for either original_link__A, original_link__B, or both, depending
+            # on the shutoff_valve_loc argument provided to the add_leak_method.
+            if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
+                self.conditional_controls[pipe_name+'__A'] = control_dict
+                self.conditional_controls.pop(pipe_name)
+            elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'END_NODE':
+                self.conditional_controls[pipe_name+'__B'] = control_dict
+                self.conditional_controls.pop(pipe_name)
+            elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'ISOLATE':
+                self.conditional_controls[pipe_name+'__A'] = control_dict
+                self.conditional_controls[pipe_name+'__B'] = control_dict
+                self.conditional_controls.pop(pipe_name)
+            else:
+                raise ValueError('Shutoff valve location for leak is not recognized.')
 
     def write_inpfile(self, filename):
         """
@@ -1113,6 +1295,11 @@ class Node(object):
         """
         return self._name
 
+    def name(self):
+        """
+        Returns the name of the node.
+        """
+        return self._name
 
 class Link(object):
     """
@@ -1165,6 +1352,12 @@ class Link(object):
         Returns the base status of the link
         """
         return self._base_status
+
+    def name(self):
+        """
+        Returns the name of the link
+        """
+        return self._link_name
 
 class Junction(Node):
     """
