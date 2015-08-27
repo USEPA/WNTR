@@ -16,20 +16,6 @@ QUESTIONS
 3. Getting connectivity for a node using get_links_for_node. Okay name?
 """
 
-"""
-TODO 1. Volume curve object should be an attribute of the tank.
-TODO 2. Conditional controls are only supported for Tank pump relation. Other control should be added.
-TODO 3. Multi-point curve.
-TODO 4. Michael: Add better documentation to your changes
-TODO 5. Michael: raise errors rather than using quit()
-TODO 6. Michael: Consistency in arguements - check test_nominal_pressures file
-TODO 7. Michael: change junction.PF to junction ._PF and junction.P0 to junction._P0
-TODO 8. Michael: what if someone tries to set_nom_P with an empty network model?
-TODO 9. Michael: initial junction P0 and PF attributes
-TODO 10. Michael: Check units on nominal pressures
-TODO 11. Michael: Fix elevation for pipe leak model
-"""
-
 import copy
 import networkx as nx
 import math
@@ -61,7 +47,7 @@ class WaterNetworkModel(object):
         self._num_pumps = 0
         self._num_valves = 0
 
-        # Initialize node an link lists
+        # Initialize node and link lists
         # Dictionary of node or link objects indexed by their names
         self._nodes = {}
         self._links = {}
@@ -78,7 +64,7 @@ class WaterNetworkModel(object):
 
         # Time controls are saved as a dictionary as follows:
         # {'Link name': {'open_times': [1, 5, ...], 'closed_times': [3, 7, ...]}},
-        # where times are in minutes
+        # where times are in seconds
         self.time_controls = {}
 
         # Conditional controls are saved as a dictionary as follows:
@@ -630,9 +616,9 @@ class WaterNetworkModel(object):
         link_name : string
             Name of the link
         open_times : list of integers
-            List of times (in minutes) when the link is opened
+            List of times (in seconds) when the link is opened
         closed_times : list of integers
-            List of times (in minutes) when the link is closed
+            List of times (in seconds) when the link is closed
 
         """
         #link = self.get_link(link_name)
