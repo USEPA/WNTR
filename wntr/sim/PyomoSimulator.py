@@ -761,10 +761,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                 if modified_hazen_williams:
                     setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=Expr_if(IF=model.flow[l]>0, THEN=1, ELSE=-1)
                                                                        *pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
-                    self._constraint_names.add('pipe_headloss_'+str(l))
                 else:
                     setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=pipe_resistance_coeff*model.flow[l]*(abs(model.flow[l]))**0.852 == model.head[start_node] - model.head[end_node]))
-                    self._constraint_names.add('pipe_headloss_'+str(l))
 
         # Head gain provided by the pump is implemented as negative headloss
         for l in model.pumps:
@@ -778,20 +776,16 @@ class PyomoSimulator(WaterNetworkSimulator):
                     if modified_hazen_williams:
                         setattr(model, 'pipe_headloss_'+str(l), Constraint(expr= Expr_if(IF=model.flow[l]>0, THEN=1, ELSE=-1)
                                                                            *pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
-                        self._constraint_names.add('pipe_headloss_'+str(l))
                     else:
                         setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=pipe_resistance_coeff*model.flow[l]*(abs(model.flow[l]))**0.852 == model.head[start_node] - model.head[end_node]))
-                        self._constraint_names.add('pipe_headloss_'+str(l))
                 else:
                     if pump.info_type == 'HEAD':
                         A, B, C = pump.get_head_curve_coefficients()
                         if l not in links_closed:
                             setattr(model, 'pump_negative_headloss_'+str(l), Constraint(expr=model.head[end_node] - model.head[start_node] == (modified_pump_curve(model.flow[l],A,B,C))))
-                            self._constraint_names.add('pump_negative_headloss_'+str(l))
                     elif pump.info_type == 'POWER':
                         if l not in links_closed:
                             setattr(model, 'pump_negative_headloss_'+str(l), Constraint(expr=(model.head[start_node] - model.head[end_node])*model.flow[l]*self._g*1000.0 == -pump.power))
-                            self._constraint_names.add('pump_negative_headloss_'+str(l))
                     else:
                         raise RuntimeError('Pump info type not recognised. ' + l)
 
@@ -831,7 +825,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             elif isinstance(node, Leak):
                 return expr == model.leak_demand[n]
         model.node_mass_balance = Constraint(model.nodes, rule=node_mass_balance_rule)
-        self._constraint_names.add('node_mass_balance')
 
 
         def tank_dynamics_rule(model, n):
@@ -844,7 +837,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                 tank = wn.get_node(n)
                 return (model.tank_net_inflow[n]*model.timestep*4.0)/(math.pi*(tank.diameter**2)) == model.head[n]-last_tank_head[n]
         model.tank_dynamics = Constraint(model.tanks, rule=tank_dynamics_rule)
-        self._constraint_names.add('tank_dynamics')
 
         # Pressure driven demand constraint
         def pressure_driven_demand_rule(model, j):
@@ -860,10 +852,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         if self._pressure_driven:
             model.pressure_driven_demand = Constraint(model.junctions, rule=pressure_driven_demand_rule)
-            self._constraint_names.add('pressure_driven_demand')
         else:
             model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)
-            self._constraint_names.add('pressure_driven_demand')
 
         # Leak demand constraint
         def leak_demand_rule(model, n):
@@ -876,7 +866,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 raise RuntimeError('There is a bug.')
         model.leak_demand_con = Constraint(model.leaks, rule=leak_demand_rule)
-        self._constraint_names.add('leak_demand_con')
 
         return model
 
@@ -921,20 +910,13 @@ class PyomoSimulator(WaterNetworkSimulator):
         else:
             self._initialize_simulation(fixed_demands)
 
-        # Create results object
+        # Create results object and load general simulation options. 
         results = NetResults()
-        results.link = pd.DataFrame(columns=['time', 'link', 'flowrate', 'velocity', 'type'])
-        results.node = pd.DataFrame(columns=['time', 'node', 'demand', 'expected_demand', 'head', 'pressure', 'type'])
-        results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration_sec) + ' seconds',
-                                          freq=str(self._hydraulic_step_sec/60) + 'min')
-
-        # Load general simulation options into the results object
         self._load_general_results(results)
 
         # Create sets for storing closed links
-        links_closed_by_controls = set([]) # Set of links that are closed by conditional or time controls defined in inp file
-        pumps_closed_by_outage = set([]) # Set of pump closed by pump outage times provided by user
+        links_closed_by_controls = set([]) # Set of links that are closed by conditional or time controls
+        pumps_closed_by_outage = set([]) # Set of pumps closed by pump outage times provided by user
         links_closed_by_tank_controls = set([])  # Set of pipes closed when tank level goes below min
         closed_check_valves = set([]) # Set of closed check valves
         links_closed_by_drain_to_reservoir = set([]) # Set of links closed because of reverse flow into the reservoir
@@ -967,7 +949,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             # amount of time it takes to run the GC.
             gc.collect()
 
-            self._constraint_names = set([])
             if t == 0:
                 first_timestep = True
                 last_tank_head = {} # Tank head at previous timestep
@@ -981,34 +962,29 @@ class PyomoSimulator(WaterNetworkSimulator):
             current_demands = {n_name: self._demand_dict[n_name, t] for n_name, n in self._wn.nodes(Junction)}
 
             # activate/deactivate leaks
-            for leak_name, leak_time_tuple in self._leak_times.iteritems():
-                current_time_sec = t*self._hydraulic_step_sec
-                leak_start = leak_time_tuple[0]
-                leak_end = leak_time_tuple[1]
-                if current_time_sec >= leak_start and current_time_sec < leak_end:
-                    if leak_name not in self._active_leaks:
-                        self._inactive_leaks.remove(leak_name)
-                        self._active_leaks.add(leak_name)
-                else:
-                    if leak_name in self._active_leaks:
-                        self._inactive_leaks.add(leak_name)
-                        self._active_leaks.remove(leak_name)
+            self._activate_deactivate_leaks(t)
 
             # Pre-solve controls
             # These controls depend on the results of the previous timestep,
             # and they do not require a resolve if activated
-            if first_timestep:
-                self._apply_controls(None, first_timestep, links_closed_by_controls, t) # time controls and conditional controls
-            else:
-                self._apply_controls(last_instance_results, first_timestep, links_closed_by_controls, t) # time controls and conditional controls
-            if self._pump_outage:
-                self._apply_pump_outage(pumps_closed_by_outage, t) # pump outage controls
-            if not first_timestep and step_iter==0:
-                self._close_all_links_for_tanks_below_min_head(last_instance_results, links_closed_by_tank_controls) # controls for closing links if the tank level gets too low or opening links if the tank level goes back above the minimum head
+            if step_iter == 0: # the step_iter == 0 is very important so that the post-solve controls are not overwritten
+                if first_timestep:
+                    self._apply_controls(None, first_timestep, links_closed_by_controls, t) # For the first timestep, we only apply time controls and None is passed in place of last_instance_results
+                else:
+                    self._apply_controls(last_instance_results, first_timestep, links_closed_by_controls, t) # time controls and conditional controls
+                if self._pump_outage:
+                    self._apply_pump_outage(pumps_closed_by_outage, t) # pump outage controls
+                if not first_timestep: 
+                    self._close_all_links_for_tanks_below_min_head(last_instance_results, links_closed_by_tank_controls) # controls for closing links if the tank level gets too low or opening links if the tank level goes back above the minimum head
 
-            # Combine list of closed links
+            # Create a copy of the links closed during the last timestep
+            # This is used for the method _fully_open_links_with_inactive_leaks
             if not first_timestep:
                 links_closed_last_step = links_closed
+
+            # Combine list of closed links. If a link is closed by any
+            # of these sets, then the link is closed no matter what
+            # the other sets say.
             links_closed = links_closed_by_drain_to_reservoir.union(
                            links_closed_by_controls.union(
                            links_closed_by_tank_controls.union(
@@ -1024,18 +1000,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 print "\t Trial", str(step_iter+1), "Running Hydraulic Simulation at time", timedelta, " ..."
 
-            #t0 = time.time()
             # Build the hydraulic constraints at current timestep
             # These constraints do not include valve flow constraints
-            #print 'links_closed_by_drain_to_reservoir: ',links_closed_by_drain_to_reservoir
-            #print 'links_closed_by_controls: ',links_closed_by_controls
-            #print 'links_closed_by_tank_controls: ',links_closed_by_tank_controls
-            #print 'closed_check_valves: ',closed_check_valves
-            #print 'pumps_closed_by_low_suction_pressure: ',pumps_closed_by_low_suction_pressure
-            #print 'pumps_closed_by_outage: ',pumps_closed_by_outage
-            #print 'links_closed: ',links_closed
-            #pr = cProfile.Profile()
-            #pr.enable()
             model = self._build_hydraulic_model_at_instant(last_tank_head,
                                                            current_demands,
                                                            first_timestep,
@@ -1043,13 +1009,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                                                            pumps_closed_by_outage,
                                                            last_link_flows,
                                                            modified_hazen_williams)
-            #pr.disable()
-            #s = StringIO.StringIO()
-            #sortby = 'cumulative'
-            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            #ps.print_stats()
-            #print s.getvalue()
-            #print "Total build model time : ", time.time() - t0
 
             # Add constant objective
             model.obj = Objective(expr=1, sense=minimize)
@@ -1058,7 +1017,6 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             # Initialize instance from the results of previous timestep
             if not first_timestep:
-                #instance.load(pyomo_results)
                 self._initialize_from_pyomo_results(instance, last_instance_results)
 
             # Fix variables. This has to be done after the call to _initialize_from_pyomo_results above.
@@ -1067,34 +1025,32 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Add Pressure Reducing Valve (PRV) constraints based on status
             self._add_valve_constraints(instance)
 
-            # Check for isolated junctions. If all links connected to a junction are closed,
-            # then the head is fixed to the elevation, the demand if fixed to 0, and
-            # the mass balance for that junction is deactivated
+            # Check for isolated junctions. If all links connected to
+            # a junction are closed, then the head is fixed to the
+            # elevation, the demand if fixed to 0, and the mass
+            # balance for that junction is deactivated
             self._check_for_isolated_junctions(instance, links_closed)
 
             # Solve the instance and load results
             pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
             instance.load(pyomo_results)
-            #CheckInstanceFeasibility(instance, 1e-6)
 
-            # Post-solve controls
-            # These controls depend on the current timestep,
-            # and the current timestep needs resolved if they are activated.
+            # Post-solve controls 
+            #
+            # These controls depend on the current timestep, and the
+            # current timestep needs resolved if they are activated.
             self._close_links_for_drain_to_reservoir(instance, links_closed_by_drain_to_reservoir)
             self._check_tank_controls(instance, links_closed_by_tank_controls)
             #self._close_low_suction_pressure_pumps(instance, pumps_closed_by_low_suction_pressure, pumps_closed_by_outage)
             self._set_check_valves_closed(instance, closed_check_valves) # HEAD pumps are also treated as check valves
 
-            #print 'links_closed_by_drain_to_reservoir = ',links_closed_by_drain_to_reservoir
-            #print 'links_closed_by_controls',links_closed_by_controls
-            #print 'links_closed_by_tank_controls',links_closed_by_tank_controls
-            #print 'closed_check_valves',closed_check_valves
-            #print 'pumps_closed_by_low_suction_pressure',pumps_closed_by_low_suction_pressure
+            # Combine the sets of closed links into new_links_closed
+            # This is used for comparison with links_closed to see if 
+            # the timestep needs to be resolved.
             new_links_closed = links_closed_by_drain_to_reservoir.union(
                            links_closed_by_controls.union(
                            links_closed_by_tank_controls.union(
                            closed_check_valves))) #.union(pumps_closed_by_low_suction_pressure))))
-            #print 'new_links_closed = ',new_links_closed
 
             # Set valve status based on pyomo results
             if self._wn._num_valves != 0:
@@ -1102,8 +1058,6 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             # Another trial at the same timestep is required if the following conditions are met:
             if valve_status_changed or new_links_closed!=links_closed or pyomo_results.solver.status!=SolverStatus.ok or pyomo_results.solver.termination_condition!=TerminationCondition.optimal:
-                #print 'valve_status_changed = ',valve_status_changed
-                #print 'new_links_closed!=links_closed = ',new_links_closed!=links_closed
                 step_iter += 1
             else:
                 step_iter = 0
@@ -1254,192 +1208,12 @@ class PyomoSimulator(WaterNetworkSimulator):
                 setattr(model, 'valve_headloss_' + str(l), Constraint(
                     expr=valve_resistance_coefficient * model.flow[l] ** 2 == model.head[start_node] - model.head[
                         end_node]))
-                self._constraint_names.add('valve_headloss_'+str(l))
             elif status == 'ACTIVE':
                 end_node_obj = self._wn.get_node(end_node)
                 model.head[end_node].value = pressure_setting + end_node_obj.elevation
                 model.head[end_node].fixed = True
             else:
                 raise RuntimeError("Valve Status not recognized.")
-
-    def _read_pyomo_results(self, instance, pyomo_results, pandas_result = True):
-        """
-        Reads pyomo results from a pyomo instance and loads them into
-        a network results object.
-
-        Parameters
-        ----------
-        instance : Pyomo model instance
-            Pyomo instance after instance.load() has been called.
-        pyomo_results : Pyomo results object
-            Pyomo results object
-
-        Returns
-        -------
-        A NetworkResults object containing simulation results.
-        """
-        # Create results object
-        results = NetResults()
-
-        # Load general simulation options into the results object
-        self._load_general_results(results)
-
-        # Load pyomo solver statistics into the results object
-        results.solver_statistics['name'] = pyomo_results.solver.name
-        results.solver_statistics['status'] = pyomo_results.solver.status
-        results.solver_statistics['statistics'] = pyomo_results.solver.statistics.items()
-
-        # Create Delta time series
-        results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration_sec) + ' seconds',
-                                          freq=str(self._hydraulic_step_sec/60) + 'min')
-        # Load link data
-        link_name = []
-        flowrate = []
-        velocity = []
-        link_times = []
-        link_type = []
-        for t in instance.time:
-            for l in instance.links:
-                link = self._wn.get_link(l)
-                link_name.append(l)
-                link_type.append(self._get_link_type(l))
-                link_times.append(results.time[t])
-                flow_l_t = instance.flow[l,t].value
-                flowrate.append(flow_l_t)
-                if isinstance(link, Pipe):
-                    velocity_l_t = 4.0*abs(flow_l_t)/(math.pi*link.diameter**2)
-                else:
-                    velocity_l_t = 0.0
-                velocity.append(velocity_l_t)
-
-        # Load node data
-        node_name = []
-        head = []
-        pressure = []
-        demand = []
-        expected_demand = []
-        times = []
-        node_type = []
-        for t in instance.time:
-            for n in instance.nodes:
-                node = self._wn.get_node(n)
-                node_name.append(n)
-                node_type.append(self._get_node_type(n))
-                times.append(results.time[t])
-                head_n_t = instance.head[n, t].value
-                if isinstance(node, Reservoir):
-                    pressure_n_t = 0.0
-                else:
-                    pressure_n_t = head_n_t - node.elevation
-                head.append(head_n_t)
-                pressure.append(pressure_n_t)
-                if isinstance(node, Junction):
-                    demand.append(instance.demand_actual[n,t].value)
-                    expected_demand.append(instance.demand_required[n,t])
-                elif isinstance(node, Reservoir):
-                    demand.append(instance.reservoir_demand[n,t].value)
-                    expected_demand.append(instance.reservoir_demand[n,t].value)
-                elif isinstance(node, Tank):
-                    demand.append(instance.tank_net_inflow[n,t].value)
-                    expected_demand.append(instance.tank_net_inflow[n,t].value)
-                else:
-                    demand.append(0.0)
-                    expected_demand.append(0.0)
-        
-        if pandas_result:
-
-            link_data_frame = pd.DataFrame({'time': link_times,
-                                    'link': link_name,
-                                    'flowrate': flowrate,
-                                    'velocity': velocity,
-                                    'type': link_type})
-
-            link_pivot_table = pd.pivot_table(link_data_frame,
-                                                  values=['flowrate', 'velocity', 'type'],
-                                                  index=['link', 'time'],
-                                                  aggfunc= lambda x: x)
-            results.link = link_pivot_table
-
-            node_data_frame = pd.DataFrame({'time': times,
-                                            'node': node_name,
-                                            'demand': demand,
-                                            'expected_demand': expected_demand,
-                                            'head': head,
-                                            'pressure': pressure,
-                                            'type': node_type})
-
-            node_pivot_table = pd.pivot_table(node_data_frame,
-                                              values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
-                                              index=['node', 'time'],
-                                              aggfunc= lambda x: x)
-            results.node = node_pivot_table
-        else:
-            pyomo_sim_results = {}
-            pyomo_sim_results['node_name'] = node_name
-            pyomo_sim_results['node_type'] = node_type
-            pyomo_sim_results['node_head'] = head
-            pyomo_sim_results['node_demand'] = demand
-            pyomo_sim_results['node_expected_demand'] = expected_demand
-            pyomo_sim_results['node_pressure'] = pressure
-            pyomo_sim_results['link_name'] = link_name
-            pyomo_sim_results['link_type'] = link_type
-            pyomo_sim_results['link_velocity'] = velocity
-            pyomo_sim_results['link_flowrate'] = flowrate
-
-            hydraulic_time_step = float(self._hydraulic_step_sec)
-            node_dict = dict()
-            node_types = set(pyomo_sim_results['node_type'])
-            map_properties = dict()
-            map_properties['node_demand'] = 'demand'
-            map_properties['node_head'] = 'head'
-            map_properties['node_pressure'] = 'pressure'
-            map_properties['node_expected_demand'] = 'expected_demand'
-            N = len(pyomo_sim_results['node_name'])
-            n_nodes = len(self._wn._nodes.keys())
-            T = N/n_nodes
-            for node_type in node_types:
-                node_dict[node_type] = dict()
-                for prop, prop_name in map_properties.iteritems():
-                    node_dict[node_type][prop_name] = dict()
-                    for i in xrange(n_nodes):
-                        node_name = pyomo_sim_results['node_name'][i]
-                        n_type = self._get_node_type(node_name)
-                        if n_type == node_type:
-                            node_dict[node_type][prop_name][node_name] = dict()
-                            for ts in xrange(T):
-                                time_sec = hydraulic_time_step*ts
-                                #print i+n_nodes*ts
-                                node_dict[node_type][prop_name][node_name][time_sec] = pyomo_sim_results[prop][i+n_nodes*ts]
-
-            results.node = node_dict
-
-            link_dict = dict()
-            link_types = set(pyomo_sim_results['link_type'])
-            map_properties = dict()
-            map_properties['link_flowrate'] = 'flowrate'
-            map_properties['link_velocity'] = 'velocity'
-            N = len(pyomo_sim_results['link_name'])
-            n_links = len(self._wn._links.keys())
-            T = N/n_links
-            for link_type in link_types:
-                link_dict[link_type] = dict()
-                for prop, prop_name in map_properties.iteritems():
-                    link_dict[link_type][prop_name] = dict()
-                    for i in xrange(n_links):
-                        link_name = pyomo_sim_results['link_name'][i]
-                        l_type = self._get_link_type(link_name)
-                        if l_type == link_type:
-                            link_dict[link_type][prop_name][link_name] = dict()
-                            for ts in xrange(T):
-                                time_sec = hydraulic_time_step*ts
-                                link_dict[link_type][prop_name][link_name][time_sec] = pyomo_sim_results[prop][i+n_links*ts]
-
-            results.link = link_dict
-
-
-        return results
-
 
     def _append_pyomo_results(self, instance, time):
         """
@@ -1511,13 +1285,27 @@ class PyomoSimulator(WaterNetworkSimulator):
 
     def _apply_controls(self, instance, first_timestep, links_closed_by_controls, t):
 
-        # Get time controls
+        # Activate/deactivate time controls
+        # From self._link_status,
+        #     0 means close the link
+        #     1 means open the link
+        #     2 means take no action
         for link_name, status in self._link_status.iteritems():
             if status[t] == 0:
                 links_closed_by_controls.add(link_name)
             elif status[t] == 1:
                 links_closed_by_controls.discard(link_name)
+            elif status[t] == 2:
+                continue
+            else:
+                raise RuntimeError('This appears to be a bug. Please report this error tot he developers.')
 
+        # Check the conditional controls. If the conditional controls
+        # say that a pipe should be opened or closed, it overrides the 
+        # time controls.
+
+        # Conditional controls are based on the results from the previous
+        # timestep, so they are not applied during the first timestep.
         if not first_timestep:
             for link_name_k, value in self._wn.conditional_controls.iteritems():
                 open_above = value['open_above']
@@ -1525,6 +1313,14 @@ class PyomoSimulator(WaterNetworkSimulator):
 	        closed_above = value['closed_above']
 	        closed_below = value['closed_below']
 	
+                # Tank levels are calculated from the flow rates of the previous timestep. Therefore,
+                # if a conditional control is based on a tank level, then we calculate the tank level
+                # before solving the current timestep. If the threshold will be crossed, then we open 
+                # or close the specified links.
+
+                # If the conditional control is based on a junction pressure, then we open or close
+                # the specified pipe based on the results from the previous timestep.
+
 	        # If link is closed and the node level/pressure goes below threshold, then open the link
 	        for i in open_below:
 	            node_name_i = i[0]
@@ -1590,6 +1386,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                     links_closed_by_tank_controls.remove(link_next_to_tank)
 
     def _apply_pump_outage(self, pumps_closed_by_outage, t):
+        # If the time is within the time period of the pump outage,
+        # then add the pump name to the pumps_closed_by_outage set.
 
         time_t = self._hydraulic_step_sec*t
 
@@ -1627,8 +1425,11 @@ class PyomoSimulator(WaterNetworkSimulator):
 
     def _update_links_next_to_reservoirs_for_leaks(self):
         # Update links next to reservoirs in consideration of leaks
+
         for link_name, reserv_name in self._reservoir_links.iteritems():
+            # If the link has a leak
             if link_name in self._pipes_with_leaks.keys():
+                # Determine if the __A side or the __B side of the link is connected to the reservoir
                 tmp_reserv_link_name = link_name+'__A'
                 tmp_reserv_link = self._wn.get_link(tmp_reserv_link_name)
                 tmp_start_node = tmp_reserv_link.start_node()
@@ -1639,16 +1440,28 @@ class PyomoSimulator(WaterNetworkSimulator):
                     if tmp_end_node != reserv_name:
                         raise RuntimeError('Could not find link next to reservoir after adding leak.')
                     else:
+                        # Once we have determined which link is connected to the reservoir, 
+                        # replace the original link with the new one (either original_link__A
+                        # or original_link__B).
                         self._reservoir_links[tmp_reserv_link_name] = reserv_name
                         self._reservoir_links.pop(link_name)
                 else:
+                    # Once we have determined which link is connected to the reservoir, 
+                    # replace the original link with the new one (either original_link__A
+                    # or original_link__B).
                     self._reservoir_links[tmp_reserv_link_name] = reserv_name
                     self._reservoir_links.pop(link_name)
 
     def _update_time_controls_for_leaks(self):
-        # Update time controls
+        # Update time controls in consideration of leaks
+
+        # For all links with time controls
         for control_link_name, control_dict in self._wn.time_controls.iteritems():
+            # If the link has a leak
             if control_link_name in self._pipes_with_leaks.keys():
+                # Replace the time control for the original link with a time control
+                # for either original_link__A, original_link__B, or both, depending
+                # on the shutoff_valve_loc argument provided to the add_leak method.
                 leak_name = self._pipes_with_leaks[control_link_name]
                 if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
                     self._wn.time_controls[control_link_name+'__A'] = control_dict
@@ -1664,11 +1477,19 @@ class PyomoSimulator(WaterNetworkSimulator):
                     raise ValueError('Shutoff valve location for leak is not recognized.')
 
     def _update_conditional_controls_for_leaks(self):
-        # Update conditional controls
+        # Update conditional controls in consideration of leaks
+
+        # Loop through all links with conditional controls
+        # for control_link_name, control_dict in self._wn.conditional_controls.iteritems()
+        # did not work because the dictionary changed during the loop.
         conditional_controls_keys = self._wn.conditional_controls.keys()
         for control_link_name in conditional_controls_keys:
             control_dict = self._wn.conditional_controls[control_link_name]
+            # If the link has a leak
             if control_link_name in self._pipes_with_leaks.keys():
+                # Replace the conditional control for the original link with a conditional control
+                # for either original_link__A, original_link__B, or both, depending
+                # on the shutoff_valve_loc argument provided to the add_leak_method.
                 leak_name = self._pipes_with_leaks[control_link_name]
                 if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
                     self._wn.conditional_controls[control_link_name+'__A'] = control_dict
@@ -1711,25 +1532,32 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._wn.add_pipe(orig_pipe._link_name+'__A', orig_pipe.start_node(), leak_name, orig_pipe.length/2.0, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
         self._wn.add_pipe(orig_pipe._link_name+'__B', leak_name, orig_pipe.end_node(), orig_pipe.length/2.0, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
 
-    def _remove_leak_from_wn_object(self, leak_name):
-        # Remove pipes on either side of leak
-        current_leak_info = self._leak_info[leak_name]
-        orig_pipe = current_leak_info['original_pipe']
-        self._wn.remove_pipe(orig_pipe._link_name+'__A')
-        self._wn.remove_pipe(orig_pipe._link_name+'__B')
-
-        # Remove leak node
-        self._wn._graph.remove_node(leak_name)
-        self._wn._nodes.pop(leak_name)
-        
-        # Replace original pipe
-        self._wn.add_pipe(orig_pipe._link_name, orig_pipe.start_node(), orig_pipe.end_node(), orig_pipe.length, orig_pipe.diameter, orig_pipe.roughness, orig_pipe.minor_loss, orig_pipe._base_status)
-
     def _close_all_links_for_tanks_below_min_head(self, instance, links_closed_by_tank_controls):
+        """
+        If the tank head goes below min_head, then close all links
+        connected to the tank except check valves and pumps that can
+        only allow flow into the tank.
+        
+        If the tank head goes above mind_head, open all the links
+        connected to the tank.
+        
+        Tank levels, are calculated from the flow rates of the
+        previous timestep, so this method uses the tank level for the
+        next timestep.
+        """
+ 
         for tank_name, control_info in self._tank_controls.iteritems():
             head_in_tank = instance['head'][tank_name]
             next_head_in_tank = self.predict_next_tank_head(tank_name, instance)
             min_tank_head = control_info['min_head']
+            """
+            Only close the links if the tank level crosses the
+            threshold.  We do not close the links if the level was and
+            is below the threshold. The reason for this is that a link
+            may get opened in the post-solve controls
+            (_check_tank_controls), and we do not want to overwrite
+            that.
+            """
             if next_head_in_tank <= min_tank_head and head_in_tank >= min_tank_head:
                 for link_name in control_info['link_names']:
                     link = self._wn.get_link(link_name)
@@ -1748,6 +1576,15 @@ class PyomoSimulator(WaterNetworkSimulator):
                     links_closed_by_tank_controls.discard(link_name)
                 
     def _check_tank_controls(self, instance, links_closed_by_tank_controls):
+        """
+        Generally, if a tank level drops below its minimum, then the
+        links connected to the tank get closed. The idea here is to
+        open links that would allow flow into the tank if the link
+        were open. This is done by comparing the head at the node next
+        to the tank to the head in the tank. Also, if an open link is
+        allowing water to flow out of a tank below its minimum level,
+        then that link is closed.
+        """
         for tank_name, control_info in self._tank_controls.iteritems():
             head_in_tank = instance.head[tank_name].value
             min_tank_head = control_info['min_head']
@@ -1760,6 +1597,15 @@ class PyomoSimulator(WaterNetworkSimulator):
                     if link_name not in links_closed_by_tank_controls: # the link is currently open
                         if instance.head[node_name].value + self._Htol <= instance.head[tank_name].value:
                             links_closed_by_tank_controls.add(link_name)
+                        link = self._wn.get_link(link_name)
+                        start_node_name = link.start_node()
+                        end_node_name = link.end_node()
+                        if start_node_name == tank_name:
+                            if instance.flow[link_name].value >= 0.0:
+                                links_closed_by_tank_controls.add(link_name)
+                        elif end_node_name == tank_name:
+                            if instance.flow[link_name].value <= 0.0:
+                                links_closed_by_tank_controls.add(link_name)
                     else: # the link is currently closed
                         if instance.head[node_name].value >= instance.head[tank_name].value + self._Htol:
                             links_closed_by_tank_controls.discard(link_name)
@@ -1837,7 +1683,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
     def _set_check_valves_closed(self, instance, closed_check_valves):
         # See EPANET2 Manual pg 191 for the description of the logic used below
-        # Also, treat HEAD pumps as check valves
+        # Also, treat HEAD pumps as check valves because the lower bound on the flow rate is not set to 0.0
         for pipe_name in self._wn._check_valves:
             pipe = self._wn.get_link(pipe_name)
             start_node = pipe.start_node()
@@ -1893,6 +1739,9 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
         # Load general results
         results.network_name = self._wn.name
+        results.time = pd.timedelta_range(start='0 minutes',
+                                          end=str(self._sim_duration_sec) + ' seconds',
+                                          freq=str(self._hydraulic_step_sec/60) + 'min')
 
         # Load simulator options
         results.simulator_options['type'] = 'PYOMO'
@@ -1918,6 +1767,13 @@ class PyomoSimulator(WaterNetworkSimulator):
                     print 'lower: ',con[constraint_key].lower, '\t body: ',con[constraint_key].body,'\t upper: ',con[constraint_key].upper 
 
     def _close_links_for_drain_to_reservoir(self, instance, links_closed_by_drain_to_reservoir):
+        """
+        Close the link if water is flowing into the reservoir.  Open
+        the link if the reservoir head is larger than the head at the
+        node next to the reservoir (i.e. water would flow out of the
+        reservoir if the link were open).
+        """
+
         for link_name, reservoir_name in self._reservoir_links.iteritems():
             link = self._wn.get_link(link_name)
             start_node_name = link.start_node()
@@ -1957,10 +1813,13 @@ class PyomoSimulator(WaterNetworkSimulator):
                     links_closed.discard(other_segment)
 
     def _check_for_isolated_junctions(self, instance, links_closed):
-        # Check for isolated junctions. If all links connected to a junction are closed,
-        # then the head is fixed to the elevation, the demand if fixed to 0,
-        # the mass balance for that junction is deactivated, and
-        # the PDD constraint for that junction is deactivated
+        """
+        Check for isolated junctions. If all links connected to a
+        junction are closed, then the head is fixed to the elevation,
+        the demand if fixed to 0, the mass balance for that junction
+        is deactivated, and the PDD constraint for that junction is
+        deactivated
+        """
 
         for junction_name in instance.junctions:
             junction = self._wn.get_node(junction_name)
@@ -1977,3 +1836,23 @@ class PyomoSimulator(WaterNetworkSimulator):
                 instance.node_mass_balance[junction_name].deactivate()
                 instance.pressure_driven_demand[junction_name].deactivate()
 
+    def _activate_deactivate_leaks(self,t):
+        """
+        Track which leaks are active based on the time. The constraint
+        for active leaks sets the leak demand equal to the leak
+        model. The constraint for inactive leaks sets the leak demand
+        to 0. This way, the water network object does not need to be
+        changed during the simulation.
+        """
+        for leak_name, leak_time_tuple in self._leak_times.iteritems():
+            current_time_sec = t*self._hydraulic_step_sec
+            leak_start = leak_time_tuple[0]
+            leak_end = leak_time_tuple[1]
+            if current_time_sec >= leak_start and current_time_sec < leak_end:
+                if leak_name not in self._active_leaks:
+                    self._inactive_leaks.remove(leak_name)
+                    self._active_leaks.add(leak_name)
+            else:
+                if leak_name in self._active_leaks:
+                    self._inactive_leaks.add(leak_name)
+                    self._active_leaks.remove(leak_name)
