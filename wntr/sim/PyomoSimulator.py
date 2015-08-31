@@ -1674,6 +1674,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         the demand if fixed to 0, the mass balance for that junction
         is deactivated, and the PDD constraint for that junction is
         deactivated
+
+        Do we need to do this for leaks as well?
         """
 
         for junction_name in instance.junctions:
@@ -1699,7 +1701,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         to 0. This way, the water network object does not need to be
         changed during the simulation.
         """
-        for leak_name, leak_time_tuple in self.leak_times.iteritems():
+        for leak_name, leak_time_tuple in self._wn.leak_times.iteritems():
             current_time_sec = t*self._hydraulic_step_sec
             leak_start = leak_time_tuple[0]
             leak_end = leak_time_tuple[1]
