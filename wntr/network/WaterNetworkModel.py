@@ -1494,6 +1494,8 @@ class Junction(Node):
         self.base_demand = base_demand
         self.demand_pattern_name = demand_pattern_name
         self.elevation = elevation
+        self.PF = 20.0
+        self.P0 = 0.0
 
 class Leak(Node):
     """
