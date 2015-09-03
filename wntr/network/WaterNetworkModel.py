@@ -88,8 +88,8 @@ class WaterNetworkModel(object):
         # A dictionary containing leak characteristics. The format is
         # LEAK_NAME: {'original_pipe': copy_of_original_pipe,
         # 'leak_area': leak_area, 'leak_discharge_coeff':
-        # leak_discharge_coeff, 'shutoff_valve_loc':
-        # shutoff_valve_loc}
+        # leak_discharge_coeff, 'control_dest':
+        # control_dest}
         self._leak_info = {}
 
         # A dictionary containing pipe names and associated leak names
@@ -894,7 +894,7 @@ class WaterNetworkModel(object):
         sec -= mm*60
         return (hours, mm, sec)
 
-    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None, shutoff_valve_loc = 'ISOLATE'):
+    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None, control_dest = 'REMOVE'):
         """
         Method to add a leak to the simulation. Leaks are modeled by:
 
@@ -913,23 +913,39 @@ class WaterNetworkModel(object):
            Name of the pipe where the leak ocurrs.
            Assumes the leak ocurrs halfway between nodes.
         leak_area: float
-           Area of the leak in m^2. Either the leak area or the leak diameter must be specified, but not both.
+           Area of the leak in m^2. Either the leak area or the leak
+           diameter must be specified, but not both.
         leak_diameter: float
-           Diameter of the leak in m. The area of the leak is calculated with leak_diameter assuming the leak is in the shape of a circle.
-           Either the leak area or the leak diameter must be specified, but not both.
+           Diameter of the leak in m. The area of the leak is
+           calculated with leak_diameter assuming the leak is in the
+           shape of a circle.  Either the leak area or the leak
+           diameter must be specified, but not both.
         leak_discharge_coeff: float
            Leak discharge coefficient; Takes on values between 0 and 1
         start_time: string
-           Start time of the leak. Pandas Timedelta format: e.g. '0 days 00:00:00'. Default is the start of the simulation.
+           Start time of the leak. Pandas Timedelta format: e.g. '0
+           days 00:00:00'. Default is the start of the simulation.
         fix_time: string
-           Time at which the leak is fixed. Pandas Timedelta format: e.g. '0 days 05:00:00'. Default is that the leak does not get 
-           fixed during the simulation.
-        shutoff_valve_loc: string
-           Location of pipe shutoff valve. Options are 'START_NODE', 'END_NODE', or 'ISOLATE'. 'START_NODE' indicates that the 
-           shutoff valve is between the start node and the leak. 'END_NODE' indicates that the shutoff valve is between the leak 
-           and the end node. 'ISOLATE' indicates that there is a shutoff valve on both sides of the leak, so a closed pipe means 
-           an isolated leak. The default is 'ISOLATE'. This is used for time controls and conditional controls. If tank levels
-           fall too low, the link closest to the tank is closed.
+           Time at which the leak is fixed. Pandas Timedelta format:
+           e.g. '0 days 05:00:00'. Default is that the leak does not
+           get fixed during the simulation.
+        control_dest: string
+           Control destination. Options are 'REMOVE', 'START_NODE',
+           'END_NODE', or 'ISOLATE'. This argument is used to update
+           time and conditional controls. When a leak is added to a
+           pipe, the pipe is replaced with a leak node and two new
+           pipes on either side of the leak node. If there is a time
+           or conditional control associated with the original pipe,
+           it must be either removed or associated with one (or both)
+           of the new pipes. 'REMOVE' indicates that the control will
+           be discarded. 'START_NODE' indicates that the control will
+           be associated with the pipe between the start node and the
+           leak. 'END_NODE' indicates that the control will be
+           associated with the pipe between the leak and the end
+           node. 'ISOLATE' indicates that control will affect both
+           pipes on either side of the leak. The default is
+           'REMOVE'. If tank levels fall too low, the link closest to
+           the tank is closed.
         """
 
         # Check if pipe_name is valid
@@ -962,7 +978,7 @@ class WaterNetworkModel(object):
 
         # Ensure pipe does not already have a leak and leak does not already exist
         if pipe_name in self._pipes_with_leaks.keys():
-            warning.warn('Pipe '+pipe_name+' already has a leak. Old leak is being overridden.')
+            warnings.warn('Pipe '+pipe_name+' already has a leak. Old leak is being overridden.')
             tmp_leak_name = self._pipes_with_leaks[pipe_name]
             self.leak_times.pop(tmp_leak_name)
             self._leak_info.pop(tmp_leak_name)
@@ -979,7 +995,7 @@ class WaterNetworkModel(object):
         # Store leak information
         self._pipes_with_leaks[pipe_name] = leak_name
         self.leak_times[leak_name] = (start_sec, end_sec)
-        self._leak_info[leak_name] = {'original_pipe':pipe, 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff, 'shutoff_valve_loc':shutoff_valve_loc.upper()}
+        self._leak_info[leak_name] = {'original_pipe':pipe, 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff, 'control_dest':control_dest.upper()}
 
         # Check if the leak area is larger than the pipe area
         orig_pipe_area = math.pi/4.0*pipe.diameter**2
@@ -1057,6 +1073,7 @@ class WaterNetworkModel(object):
         # added or removed. If remove is True, the leak is being
         # removed. If remove is False, the leak is being added.
 
+        # If the leak is being added
         if not remove:
             # If the pipe with the leak has a time control
             pipe_name = self._leak_info[leak_name]['original_pipe'].name()
@@ -1064,48 +1081,58 @@ class WaterNetworkModel(object):
                 control_dict = self.time_controls[pipe_name]
                 # Replace the time control for the original link with a time control
                 # for either original_link__A, original_link__B, or both, depending
-                # on the shutoff_valve_loc argument provided to the add_leak method.
-                if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
+                # on the control_dest argument provided to the add_leak method.
+                if self._leak_info[leak_name]'control_dest'] == 'REMOVE':
+                    warnings.warn('The time controls for pipe '+pipe_name+' are being removed permanently.'+ 
+                    'Try help(wntr.network.add_leak) to change what happens to the time controls when adding a leak to a pipe with time controls.'+
+                                  'Alternatively, you can use the methods add_time_control and/or remove_time_control.')
+                    self.time_controls.pop(pipe_name)
+                elif self._leak_info[leak_name]['control_dest'] == 'START_NODE':
                     self.time_controls[pipe_name+'__A'] = control_dict
                     self.time_controls.pop(pipe_name)
-                elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'END_NODE':
+                elif self._leak_info[leak_name]['control_dest'] == 'END_NODE':
                     self.time_controls[pipe_name+'__B'] = control_dict
                     self.time_controls.pop(pipe_name)
-                elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'ISOLATE':
+                elif self._leak_info[leak_name]['control_dest'] == 'ISOLATE':
                     self.time_controls[pipe_name+'__A'] = control_dict
                     self.time_controls[pipe_name+'__B'] = control_dict
                     self.time_controls.pop(pipe_name)
                 else:
                     raise ValueError('Shutoff valve location for leak is not recognized.')
 
+        # If the leak is being removed
         else:
-            # If the pipe with the leak has a time control
+            # Get the name of the original pipe
             pipe_name = self._leak_info[leak_name]['original_pipe'].name()
-            if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
+            # Depending on the control_dest argument provided to
+            # the add_leak method, remove the time control for either
+            # original_pipe__A, original_pipe__B, or both. Then add
+            # the time control for the original pipe.
+            if self._leak_info[leak_name]['control_dest'] == 'START_NODE':
                 if (pipe_name+'__A') in self.time_controls.keys():
                     control_dict = self.time_controls[pipe_name+'__A']
-                    # Replace the time control for the original link with a time control
-                    # for either original_link__A, original_link__B, or both, depending
-                    # on the shutoff_valve_loc argument provided to the add_leak method.
                     self.time_controls[pipe_name] = control_dict
                     self.time_controls.pop(pipe_name+'__A')
-            elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'END_NODE':
+                if (pipe_name+'__B') in self.time_controls.keys():
+                    self.time_controls.pop(pipe_name+'__B')
+            elif self._leak_info[leak_name]['control_dest'] == 'END_NODE':
                 if (pipe_name+'__B') in self.time_controls.keys():
                     control_dict = self.time_controls[pipe_name+'__B']
-                    # Replace the time control for the original link with a time control
-                    # for either original_link__A, original_link__B, or both, depending
-                    # on the shutoff_valve_loc argument provided to the add_leak method.
                     self.time_controls[pipe_name] = control_dict
                     self.time_controls.pop(pipe_name+'__B')
-            elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'ISOLATE':
+                if (pipe_name+'__A') in self.time_controls.keys():
+                    self.time_controls.pop(pipe_name+'__A')
+            elif self._leak_info[leak_name]['control_dest'] == 'ISOLATE':
                 if (pipe_name+'__A') in self.time_controls.keys():
                     control_dict = self.time_controls[pipe_name+'__A']
-                    # Replace the time control for the original link with a time control
-                    # for either original_link__A, original_link__B, or both, depending
-                    # on the shutoff_valve_loc argument provided to the add_leak method.
                     self.time_controls[pipe_name] = control_dict
                     self.time_controls.pop(pipe_name+'__A')
                     self.time_controls.pop(pipe_name+'__B')
+            elif self._leak_info[leak_name]['control_dest'] == 'REMOVE':
+                if (pipe_name+'__A') in self.time_controls.keys():
+                    self.time_controls.pop(pipe_name+'__A')
+                if (pipe_name+'__B') in self.time_controls.keys():
+                    self.time_controls.pop(pipe_name+'__B')                
             else:
                 raise ValueError('Shutoff valve location for leak is not recognized.')
 
@@ -1124,14 +1151,14 @@ class WaterNetworkModel(object):
                 control_dict = self.conditional_controls[pipe_name]
                 # Replace the conditional control for the original link with a conditional control
                 # for either original_link__A, original_link__B, or both, depending
-                # on the shutoff_valve_loc argument provided to the add_leak_method.
-                if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
+                # on the control_dest argument provided to the add_leak method.
+                if self._leak_info[leak_name]['control_dest'] == 'START_NODE':
                     self.conditional_controls[pipe_name+'__A'] = control_dict
                     self.conditional_controls.pop(pipe_name)
-                elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'END_NODE':
+                elif self._leak_info[leak_name]['control_dest'] == 'END_NODE':
                     self.conditional_controls[pipe_name+'__B'] = control_dict
                     self.conditional_controls.pop(pipe_name)
-                elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'ISOLATE':
+                elif self._leak_info[leak_name]['control_dest'] == 'ISOLATE':
                     self.conditional_controls[pipe_name+'__A'] = control_dict
                     self.conditional_controls[pipe_name+'__B'] = control_dict
                     self.conditional_controls.pop(pipe_name)
@@ -1141,28 +1168,19 @@ class WaterNetworkModel(object):
         else:
             # If the pipe with the leak has a conditional control
             pipe_name = self._leak_info[leak_name]['original_pipe'].name()
-            if self._leak_info[leak_name]['shutoff_valve_loc'] == 'START_NODE':
+            if self._leak_info[leak_name]['control_dest'] == 'START_NODE':
                 if (pipe_name+'__A') in self.conditional_controls.keys():
                     control_dict = self.conditional_controls[pipe_name+'__A']
-                    # Replace the time control for the original link with a time control
-                    # for either original_link__A, original_link__B, or both, depending
-                    # on the shutoff_valve_loc argument provided to the add_leak method.
                     self.conditional_controls[pipe_name] = control_dict
                     self.conditional_controls.pop(pipe_name+'__A')
-            elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'END_NODE':
+            elif self._leak_info[leak_name]['control_dest'] == 'END_NODE':
                 if (pipe_name+'__B') in self.conditional_controls.keys():
                     control_dict = self.conditional_controls[pipe_name+'__B']
-                    # Replace the time control for the original link with a time control
-                    # for either original_link__A, original_link__B, or both, depending
-                    # on the shutoff_valve_loc argument provided to the add_leak method.
                     self.conditional_controls[pipe_name] = control_dict
                     self.conditional_controls.pop(pipe_name+'__B')
-            elif self._leak_info[leak_name]['shutoff_valve_loc'] == 'ISOLATE':
+            elif self._leak_info[leak_name]['control_dest'] == 'ISOLATE':
                 if (pipe_name+'__A') in self.conditional_controls.keys():
                     control_dict = self.conditional_controls[pipe_name+'__A']
-                    # Replace the time control for the original link with a time control
-                    # for either original_link__A, original_link__B, or both, depending
-                    # on the shutoff_valve_loc argument provided to the add_leak method.
                     self.conditional_controls[pipe_name] = control_dict
                     self.conditional_controls.pop(pipe_name+'__A')
                     self.conditional_controls.pop(pipe_name+'__B')
