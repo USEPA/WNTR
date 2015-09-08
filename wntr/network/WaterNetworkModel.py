@@ -894,7 +894,7 @@ class WaterNetworkModel(object):
         sec -= mm*60
         return (hours, mm, sec)
 
-    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None, control_dest = 'REMOVE'):
+    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None, control_dest = 'ISOLATE'):
         """
         Method to add a leak to the simulation. Leaks are modeled by:
 
@@ -944,7 +944,7 @@ class WaterNetworkModel(object):
            associated with the pipe between the leak and the end
            node. 'ISOLATE' indicates that control will affect both
            pipes on either side of the leak. The default is
-           'REMOVE'. If tank levels fall too low, the link closest to
+           'ISOLATE'. If tank levels fall too low, the link closest to
            the tank is closed.
         """
 
@@ -1034,7 +1034,17 @@ class WaterNetworkModel(object):
     def remove_leak(self, leak_name):
         """
         Method to remove a leak from the WaterNetworkModel object. The
-        original pipe will be placed back in the network.
+        original pipe will be placed back in the network. The
+        control_dest argument passed to the add_leak method will be
+        used in a similar manner here. If 'REMOVE' was passed to the
+        control_dest argument, then any time or conditional control
+        associated with either pipe (on either side of the leak) will
+        be discarded. If 'ISOLATE' or 'START NODE' was passed, then
+        any time or conditional control associated with the pipe on
+        the start node side of the leak will be moved to the original
+        pipe. If 'END NODE' was passed, then any time or conditional
+        control associated with the pipe on the end node side of the
+        leak will be moved to the original pipe.
 
         Parameters
         ----------
@@ -1082,10 +1092,10 @@ class WaterNetworkModel(object):
                 # Replace the time control for the original link with a time control
                 # for either original_link__A, original_link__B, or both, depending
                 # on the control_dest argument provided to the add_leak method.
-                if self._leak_info[leak_name]'control_dest'] == 'REMOVE':
-                    warnings.warn('The time controls for pipe '+pipe_name+' are being removed permanently.'+ 
-                    'Try help(wntr.network.add_leak) to change what happens to the time controls when adding a leak to a pipe with time controls.'+
-                                  'Alternatively, you can use the methods add_time_control and/or remove_time_control.')
+                if self._leak_info[leak_name]['control_dest'] == 'REMOVE':
+                    #warnings.warn('The time controls for pipe '+pipe_name+' are being removed permanently.'+ 
+                    #'Try help(wntr.network.add_leak) to change what happens to the time controls when adding a leak to a pipe with time controls.'+
+                    #              'Alternatively, you can use the methods add_time_control and/or remove_time_control.')
                     self.time_controls.pop(pipe_name)
                 elif self._leak_info[leak_name]['control_dest'] == 'START_NODE':
                     self.time_controls[pipe_name+'__A'] = control_dict
@@ -1098,7 +1108,7 @@ class WaterNetworkModel(object):
                     self.time_controls[pipe_name+'__B'] = control_dict
                     self.time_controls.pop(pipe_name)
                 else:
-                    raise ValueError('Shutoff valve location for leak is not recognized.')
+                    raise ValueError('control dest argument for leak is not recognized.')
 
         # If the leak is being removed
         else:
@@ -1127,6 +1137,7 @@ class WaterNetworkModel(object):
                     control_dict = self.time_controls[pipe_name+'__A']
                     self.time_controls[pipe_name] = control_dict
                     self.time_controls.pop(pipe_name+'__A')
+                if (pipe_name+'__B') in self.time_controls.keys()
                     self.time_controls.pop(pipe_name+'__B')
             elif self._leak_info[leak_name]['control_dest'] == 'REMOVE':
                 if (pipe_name+'__A') in self.time_controls.keys():
@@ -1134,7 +1145,7 @@ class WaterNetworkModel(object):
                 if (pipe_name+'__B') in self.time_controls.keys():
                     self.time_controls.pop(pipe_name+'__B')                
             else:
-                raise ValueError('Shutoff valve location for leak is not recognized.')
+                raise ValueError('control_dest argument for leak is not recognized.')
 
 
     def _update_conditional_controls_for_leak(self, leak_name, remove = False):
@@ -1144,6 +1155,7 @@ class WaterNetworkModel(object):
         # added or removed. If remove is True, the leak is being
         # removed. If remove is False, the leak is being added.
 
+        # If the leak is being added
         if not remove:
             # If the pipe with the leak has a conditional control
             pipe_name = self._leak_info[leak_name]['original_pipe'].name()
@@ -1152,7 +1164,9 @@ class WaterNetworkModel(object):
                 # Replace the conditional control for the original link with a conditional control
                 # for either original_link__A, original_link__B, or both, depending
                 # on the control_dest argument provided to the add_leak method.
-                if self._leak_info[leak_name]['control_dest'] == 'START_NODE':
+                if self._leak_info[leak_name]['control_dest'] == 'REMOVE':
+                    self.conditional_controls.pop(pipe_name)
+                elif self._leak_info[leak_name]['control_dest'] == 'START_NODE':
                     self.conditional_controls[pipe_name+'__A'] = control_dict
                     self.conditional_controls.pop(pipe_name)
                 elif self._leak_info[leak_name]['control_dest'] == 'END_NODE':
@@ -1163,8 +1177,9 @@ class WaterNetworkModel(object):
                     self.conditional_controls[pipe_name+'__B'] = control_dict
                     self.conditional_controls.pop(pipe_name)
                 else:
-                    raise ValueError('Shutoff valve location for leak is not recognized.')
+                    raise ValueError('control_dest argument for leak is not recognized.')
 
+        # If the leak is being removed
         else:
             # If the pipe with the leak has a conditional control
             pipe_name = self._leak_info[leak_name]['original_pipe'].name()
@@ -1173,19 +1188,29 @@ class WaterNetworkModel(object):
                     control_dict = self.conditional_controls[pipe_name+'__A']
                     self.conditional_controls[pipe_name] = control_dict
                     self.conditional_controls.pop(pipe_name+'__A')
+                if (pipe_name+'__B') in self.conditional_controls.keys():
+                    self.conditional_controls.pop(pipe_name+'__B')
             elif self._leak_info[leak_name]['control_dest'] == 'END_NODE':
                 if (pipe_name+'__B') in self.conditional_controls.keys():
                     control_dict = self.conditional_controls[pipe_name+'__B']
                     self.conditional_controls[pipe_name] = control_dict
                     self.conditional_controls.pop(pipe_name+'__B')
+                if (pipe_name+'__A') in self.conditional_controls.keys():
+                    self.conditional_controls.pop(pipe_name+'__A')
             elif self._leak_info[leak_name]['control_dest'] == 'ISOLATE':
                 if (pipe_name+'__A') in self.conditional_controls.keys():
                     control_dict = self.conditional_controls[pipe_name+'__A']
                     self.conditional_controls[pipe_name] = control_dict
                     self.conditional_controls.pop(pipe_name+'__A')
+                if (pipe_name+'__B') in self.conditional_controls.keys():
+                    self.conditional_controls.pop(pipe_name+'__B')
+            elif self._leak_info[leak_name]['control_dest'] == 'REMOVE':
+                if (pipe_name+'__A') in self.conditional_controls.keys():
+                    self.conditional_controls.pop(pipe_name+'__A')
+                if (pipe_name+'__B') in self.conditional_controls.keys():
                     self.conditional_controls.pop(pipe_name+'__B')
             else:
-                raise ValueError('Shutoff valve location for leak is not recognized.')
+                raise ValueError('control_dest argument for leak is not recognized.')
 
 
     def write_inpfile(self, filename):
