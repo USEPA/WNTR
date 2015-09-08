@@ -23,6 +23,7 @@ from scipy.optimize import fsolve
 from wntr.units import convert
 from wntr.misc import *
 import wntr.network
+import pandas as pd
 
 class WaterNetworkModel(object):
 
@@ -959,13 +960,17 @@ class WaterNetworkModel(object):
         # Check if start time and end time are valid
         try:
             start = pd.Timedelta(start_time)
-            end = pd.Timedelta(fix_time)
+            if fix_time is not None:
+                end = pd.Timedelta(fix_time)
         except RuntimeError:
             raise RuntimeError("The format of start or fix time is not valid Pandas Timedelta format.")
 
         # Convert start time and end time to seconds
         start_sec = timedelta_to_sec(start)
-        end_sec = timedelta_to_sec(end)
+        if fix_time is not None:
+            end_sec = timedelta_to_sec(end)
+        else:
+            end_sec = self.time_options['DURATION'] + self.time_options['START CLOCKTIME'] + self.time_options['HYDRAULIC TIMESTEP']
 
         # Set leak_area if leak_diameter was passed as an argument
         if leak_diameter is not None:
@@ -1137,7 +1142,7 @@ class WaterNetworkModel(object):
                     control_dict = self.time_controls[pipe_name+'__A']
                     self.time_controls[pipe_name] = control_dict
                     self.time_controls.pop(pipe_name+'__A')
-                if (pipe_name+'__B') in self.time_controls.keys()
+                if (pipe_name+'__B') in self.time_controls.keys():
                     self.time_controls.pop(pipe_name+'__B')
             elif self._leak_info[leak_name]['control_dest'] == 'REMOVE':
                 if (pipe_name+'__A') in self.time_controls.keys():

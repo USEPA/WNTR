@@ -1,4 +1,4 @@
-def timedelta_to_sec(self, timedelta):
+def timedelta_to_sec(timedelta):
     """
     Converts timedelta to seconds.
 
