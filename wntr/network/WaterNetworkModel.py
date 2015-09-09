@@ -82,17 +82,6 @@ class WaterNetworkModel(object):
         # NetworkX Graph to store the pipe connectivity and node coordinates
         self._graph = nx.MultiDiGraph(data=None)
 
-        # A dictionary containg leak time information. The format is
-        # LEAK_NAME: (start time in sec, end time in sec)
-        self.leak_times = {}
-
-        # A dictionary containing leak characteristics. The format is
-        # LEAK_NAME: {'original_pipe': copy_of_original_pipe,
-        # 'leak_area': leak_area, 'leak_discharge_coeff':
-        # leak_discharge_coeff, 'control_dest':
-        # control_dest}
-        self._leak_info = {}
-
         # A dictionary containing pipe names and associated leak names
         # format is PIPE_NAME: LEAK_NAME
         self._pipes_with_leaks = {}
@@ -948,6 +937,14 @@ class WaterNetworkModel(object):
            'ISOLATE'. If tank levels fall too low, the link closest to
            the tank is closed.
         """
+        # Ensure pipe does not already have a leak and leak does not already exist
+        if pipe_name in self._pipes_with_leaks.keys():
+            warnings.warn('Pipe '+pipe_name+' already has a leak. Old leak is being overridden.')
+            tmp_leak_name = self._pipes_with_leaks[pipe_name]
+            self.remove_leak(tmp_leak_name)
+        if leak_name in [name for name,node in self.nodes(Leak)]:
+            warnings.warn('Leak '+leak_name+' is already associated with a pipe. Old pipe will no longer have a leak.')
+            self.remove_leak(leak_name)
 
         # Check if pipe_name is valid
         try:
@@ -981,34 +978,14 @@ class WaterNetworkModel(object):
         elif leak_area is None:
             raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
 
-        # Ensure pipe does not already have a leak and leak does not already exist
-        if pipe_name in self._pipes_with_leaks.keys():
-            warnings.warn('Pipe '+pipe_name+' already has a leak. Old leak is being overridden.')
-            tmp_leak_name = self._pipes_with_leaks[pipe_name]
-            self.leak_times.pop(tmp_leak_name)
-            self._leak_info.pop(tmp_leak_name)
-        if leak_name in self._pipes_with_leaks.values():
-            warnings.warn('Leak '+leak_name+' is already associated with a pipe. Old pipe will no longer have a leak.')
-            for tmp_pipe_name, tmp_leak_name in self._pipes_with_leaks.iteritems():
-                if tmp_leak_name == leak_name:
-                    self._pipes_with_leaks.pop(tmp_pipe_name)
-
         # Ensure the name of the leak is not already used for another node
         if leak_name in self.get_all_nodes_copy().keys():
             raise ValueError('The leak name you provided, '+leak_name+', is already being used for another node.')
-
-        # Store leak information
-        self._pipes_with_leaks[pipe_name] = leak_name
-        self.leak_times[leak_name] = (start_sec, end_sec)
-        self._leak_info[leak_name] = {'original_pipe':pipe, 'leak_area':leak_area, 'leak_discharge_coeff':leak_discharge_coeff, 'control_dest':control_dest.upper()}
 
         # Check if the leak area is larger than the pipe area
         orig_pipe_area = math.pi/4.0*pipe.diameter**2
         if leak_area > orig_pipe_area:
             raise RuntimeError('You specified a leak area (or diameter) that is larger than the area (or diameter) of the original pipe.')
-
-        # Remove original pipe
-        self.remove_pipe(pipe_name)
 
         # Get start and end node info
         start_node = self.get_node(pipe.start_node())
@@ -1020,8 +997,14 @@ class WaterNetworkModel(object):
         else:
             leak_elevation = (start_node.elevation + end_node.elevation)/2.0
 
+        # Store leak information
+        self._pipes_with_leaks[pipe_name] = leak_name
+
+        # Remove original pipe
+        self.remove_pipe(pipe_name)
+
         # Add a leak node
-        leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff, leak_elevation)
+        leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff, leak_elevation, start_sec, end_sec, pipe, control_dest)
         self._nodes[leak_name] = leak
         self._graph.add_node(leak_name)
         self.set_node_type(leak_name, 'leak')
@@ -1057,8 +1040,11 @@ class WaterNetworkModel(object):
              name of the leak to be removed
 
         """
+        # Get the leak node
+        leak = self.get_node(leak_name)
+
         # Get the original pipe and pipe name
-        pipe = self._leak_info[leak_name]['original_pipe']
+        pipe = leak.original_pipe
         pipe_name = pipe.name()
 
         # Remove the changes to the time controls dictionary and the conditional controls dictionary
@@ -1067,8 +1053,6 @@ class WaterNetworkModel(object):
 
         # Remove the leak information
         self._pipes_with_leaks.pop(pipe_name)
-        self.leak_times.pop(leak_name)
-        self._leak_info.pop(leak_name)
 
         # Remove the pipes on either side of the leak
         self.remove_pipe(pipe_name+'__A')
@@ -1088,27 +1072,29 @@ class WaterNetworkModel(object):
         # added or removed. If remove is True, the leak is being
         # removed. If remove is False, the leak is being added.
 
+        leak = self.get_node(leak_name)
+
         # If the leak is being added
         if not remove:
             # If the pipe with the leak has a time control
-            pipe_name = self._leak_info[leak_name]['original_pipe'].name()
+            pipe_name = leak.orig_pipe_name
             if pipe_name in self.time_controls.keys():
                 control_dict = self.time_controls[pipe_name]
                 # Replace the time control for the original link with a time control
                 # for either original_link__A, original_link__B, or both, depending
                 # on the control_dest argument provided to the add_leak method.
-                if self._leak_info[leak_name]['control_dest'] == 'REMOVE':
+                if leak.control_dest == 'REMOVE':
                     #warnings.warn('The time controls for pipe '+pipe_name+' are being removed permanently.'+ 
                     #'Try help(wntr.network.add_leak) to change what happens to the time controls when adding a leak to a pipe with time controls.'+
                     #              'Alternatively, you can use the methods add_time_control and/or remove_time_control.')
                     self.time_controls.pop(pipe_name)
-                elif self._leak_info[leak_name]['control_dest'] == 'START_NODE':
+                elif leak.control_dest == 'START_NODE':
                     self.time_controls[pipe_name+'__A'] = control_dict
                     self.time_controls.pop(pipe_name)
-                elif self._leak_info[leak_name]['control_dest'] == 'END_NODE':
+                elif leak.control_dest == 'END_NODE':
                     self.time_controls[pipe_name+'__B'] = control_dict
                     self.time_controls.pop(pipe_name)
-                elif self._leak_info[leak_name]['control_dest'] == 'ISOLATE':
+                elif leak.control_dest == 'ISOLATE':
                     self.time_controls[pipe_name+'__A'] = control_dict
                     self.time_controls[pipe_name+'__B'] = control_dict
                     self.time_controls.pop(pipe_name)
@@ -1118,33 +1104,33 @@ class WaterNetworkModel(object):
         # If the leak is being removed
         else:
             # Get the name of the original pipe
-            pipe_name = self._leak_info[leak_name]['original_pipe'].name()
+            pipe_name = leak.orig_pipe_name
             # Depending on the control_dest argument provided to
             # the add_leak method, remove the time control for either
             # original_pipe__A, original_pipe__B, or both. Then add
             # the time control for the original pipe.
-            if self._leak_info[leak_name]['control_dest'] == 'START_NODE':
+            if leak.control_dest == 'START_NODE':
                 if (pipe_name+'__A') in self.time_controls.keys():
                     control_dict = self.time_controls[pipe_name+'__A']
                     self.time_controls[pipe_name] = control_dict
                     self.time_controls.pop(pipe_name+'__A')
                 if (pipe_name+'__B') in self.time_controls.keys():
                     self.time_controls.pop(pipe_name+'__B')
-            elif self._leak_info[leak_name]['control_dest'] == 'END_NODE':
+            elif leak.control_dest == 'END_NODE':
                 if (pipe_name+'__B') in self.time_controls.keys():
                     control_dict = self.time_controls[pipe_name+'__B']
                     self.time_controls[pipe_name] = control_dict
                     self.time_controls.pop(pipe_name+'__B')
                 if (pipe_name+'__A') in self.time_controls.keys():
                     self.time_controls.pop(pipe_name+'__A')
-            elif self._leak_info[leak_name]['control_dest'] == 'ISOLATE':
+            elif leak.control_dest == 'ISOLATE':
                 if (pipe_name+'__A') in self.time_controls.keys():
                     control_dict = self.time_controls[pipe_name+'__A']
                     self.time_controls[pipe_name] = control_dict
                     self.time_controls.pop(pipe_name+'__A')
                 if (pipe_name+'__B') in self.time_controls.keys():
                     self.time_controls.pop(pipe_name+'__B')
-            elif self._leak_info[leak_name]['control_dest'] == 'REMOVE':
+            elif leak.control_dest == 'REMOVE':
                 if (pipe_name+'__A') in self.time_controls.keys():
                     self.time_controls.pop(pipe_name+'__A')
                 if (pipe_name+'__B') in self.time_controls.keys():
@@ -1160,24 +1146,26 @@ class WaterNetworkModel(object):
         # added or removed. If remove is True, the leak is being
         # removed. If remove is False, the leak is being added.
 
+        leak = self.get_node(leak_name)
+
         # If the leak is being added
         if not remove:
             # If the pipe with the leak has a conditional control
-            pipe_name = self._leak_info[leak_name]['original_pipe'].name()
+            pipe_name = leak.orig_pipe_name
             if pipe_name in self.conditional_controls.keys():
                 control_dict = self.conditional_controls[pipe_name]
                 # Replace the conditional control for the original link with a conditional control
                 # for either original_link__A, original_link__B, or both, depending
                 # on the control_dest argument provided to the add_leak method.
-                if self._leak_info[leak_name]['control_dest'] == 'REMOVE':
+                if leak.control_dest == 'REMOVE':
                     self.conditional_controls.pop(pipe_name)
-                elif self._leak_info[leak_name]['control_dest'] == 'START_NODE':
+                elif leak.control_dest == 'START_NODE':
                     self.conditional_controls[pipe_name+'__A'] = control_dict
                     self.conditional_controls.pop(pipe_name)
-                elif self._leak_info[leak_name]['control_dest'] == 'END_NODE':
+                elif leak.control_dest == 'END_NODE':
                     self.conditional_controls[pipe_name+'__B'] = control_dict
                     self.conditional_controls.pop(pipe_name)
-                elif self._leak_info[leak_name]['control_dest'] == 'ISOLATE':
+                elif leak.control_dest == 'ISOLATE':
                     self.conditional_controls[pipe_name+'__A'] = control_dict
                     self.conditional_controls[pipe_name+'__B'] = control_dict
                     self.conditional_controls.pop(pipe_name)
@@ -1187,29 +1175,29 @@ class WaterNetworkModel(object):
         # If the leak is being removed
         else:
             # If the pipe with the leak has a conditional control
-            pipe_name = self._leak_info[leak_name]['original_pipe'].name()
-            if self._leak_info[leak_name]['control_dest'] == 'START_NODE':
+            pipe_name = leak.orig_pipe_name
+            if leak.control_dest == 'START_NODE':
                 if (pipe_name+'__A') in self.conditional_controls.keys():
                     control_dict = self.conditional_controls[pipe_name+'__A']
                     self.conditional_controls[pipe_name] = control_dict
                     self.conditional_controls.pop(pipe_name+'__A')
                 if (pipe_name+'__B') in self.conditional_controls.keys():
                     self.conditional_controls.pop(pipe_name+'__B')
-            elif self._leak_info[leak_name]['control_dest'] == 'END_NODE':
+            elif leak.control_dest == 'END_NODE':
                 if (pipe_name+'__B') in self.conditional_controls.keys():
                     control_dict = self.conditional_controls[pipe_name+'__B']
                     self.conditional_controls[pipe_name] = control_dict
                     self.conditional_controls.pop(pipe_name+'__B')
                 if (pipe_name+'__A') in self.conditional_controls.keys():
                     self.conditional_controls.pop(pipe_name+'__A')
-            elif self._leak_info[leak_name]['control_dest'] == 'ISOLATE':
+            elif leak.control_dest == 'ISOLATE':
                 if (pipe_name+'__A') in self.conditional_controls.keys():
                     control_dict = self.conditional_controls[pipe_name+'__A']
                     self.conditional_controls[pipe_name] = control_dict
                     self.conditional_controls.pop(pipe_name+'__A')
                 if (pipe_name+'__B') in self.conditional_controls.keys():
                     self.conditional_controls.pop(pipe_name+'__B')
-            elif self._leak_info[leak_name]['control_dest'] == 'REMOVE':
+            elif leak.control_dest == 'REMOVE':
                 if (pipe_name+'__A') in self.conditional_controls.keys():
                     self.conditional_controls.pop(pipe_name+'__A')
                 if (pipe_name+'__B') in self.conditional_controls.keys():
@@ -1549,7 +1537,7 @@ class Leak(Node):
     """
     Leak class that is inherited from Node
     """
-    def __init__(self, leak_name, pipe_name, area, leak_discharge_coeff, elevation):
+    def __init__(self, leak_name, pipe_name, area, leak_discharge_coeff, elevation, start_sec, end_sec, pipe, control_dest):
         """
         Parameters
         ----------
@@ -1559,12 +1547,103 @@ class Leak(Node):
            Name of the pipe where the leak ocurrs
         area: float
            Area of the leak in m^2
+        leak_discharge_coeff: float
+           Discharge coefficient
+        elevation: float
+           Elevation of the leak
+        start_sec: int
+           The time at which the leak starts in seconds.
+        end_sec: int
+           The time at which the leak is repaired in seconds.
+        pipe: Pipe
+           Pipe object for the pipe on which the leak occurs.
+        control_dest: string
+           Control destination. Options are 'REMOVE', 'START_NODE',
+           'END_NODE', or 'ISOLATE'. This argument is used to update
+           time and conditional controls. When a leak is added to a
+           pipe, the pipe is replaced with a leak node and two new
+           pipes on either side of the leak node. If there is a time
+           or conditional control associated with the original pipe,
+           it must be either removed or associated with one (or both)
+           of the new pipes. 'REMOVE' indicates that the control will
+           be discarded. 'START_NODE' indicates that the control will
+           be associated with the pipe between the start node and the
+           leak. 'END_NODE' indicates that the control will be
+           associated with the pipe between the leak and the end
+           node. 'ISOLATE' indicates that control will affect both
+           pipes on either side of the leak. The default is
+           'ISOLATE'. If tank levels fall too low, the link closest to
+           the tank is closed.
         """
         Node.__init__(self, leak_name)
-        self.pipe_name = pipe_name
+        self.orig_pipe_name = pipe_name
         self.area = area
         self.leak_discharge_coeff = leak_discharge_coeff
         self.elevation = elevation
+        self.start_sec = start_sec
+        self.end_sec = end_sec
+        self.original_pipe = pipe
+        self.control_dest = control_dest.upper()
+
+    def set_start_time(self, start_time):
+        """
+        Method to set the time at which the leak starts.
+
+        Parameters
+        ----------
+        start_time: string
+           Start time of the leak. Pandas Timedelta format: e.g. '0
+           days 00:00:00'.
+        """
+        start = pd.Timedelta(start_time)
+        self.start_sec = timedelta_to_sec(start)
+
+    def set_fix_time(self, fix_time):
+        """
+        Method to set the time at which the leak is repaired.
+
+        Parameters
+        ----------
+        fix_time: string
+           Time at which the leak is repaired. Pandas Timedelta
+           format: e.g., '0 days 00:00:00'.
+        """
+        end = pd.Timedelta(fix_time)
+        self.end_sec = timedelta_to_sec(end)
+
+    def set_area(self, area):
+        """
+        Method to set the orifice area of the leak.
+
+        Parameters
+        ----------
+        area: float
+           Area of the leak in m^2.
+        """
+        self.area = area
+
+    def set_diameter(self, d):
+        """
+        Method to set the orifice area of the leak.
+
+        Parameters
+        ----------
+        d: float
+           Diameter of the leak in meters. The leak area will be set
+           by area = 0.25*pi*d^2.
+        """
+        self.area = math.pi/4.0*d**2.0
+
+    def set_discharge_coefficient(self, c):
+        """
+        Method to set the discharge coefficient of the leak.
+
+        Parameters
+        ----------
+        c: float
+           Discharge coefficient
+        """
+        self.leak_discharge_coeff = c
 
 class Reservoir(Node):
     """

@@ -911,7 +911,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # monitor the status of leaks
         self._active_leaks = set([])
-        self._inactive_leaks = set([leak_name for leak_name in self._wn.leak_times.keys()])
+        self._inactive_leaks = set([leak_name for leak_name,leak in self._wn.nodes(Leak)])
 
         # Create solver instance
         opt = SolverFactory(solver)
@@ -1701,10 +1701,10 @@ class PyomoSimulator(WaterNetworkSimulator):
         to 0. This way, the water network object does not need to be
         changed during the simulation.
         """
-        for leak_name, leak_time_tuple in self._wn.leak_times.iteritems():
+        for leak_name, leak in self._wn.nodes(Leak):
             current_time_sec = t*self._hydraulic_step_sec
-            leak_start = leak_time_tuple[0]
-            leak_end = leak_time_tuple[1]
+            leak_start = leak.start_sec
+            leak_end = leak.end_sec
             if current_time_sec >= leak_start and current_time_sec < leak_end:
                 if leak_name not in self._active_leaks:
                     self._inactive_leaks.remove(leak_name)
