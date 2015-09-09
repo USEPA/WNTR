@@ -12,6 +12,7 @@ from WaterNetworkSimulator import *
 from wntr.misc import *
 import pandas as pd
 from six import iteritems
+import warnings
 
 import cProfile#, pstats, StringIO
 import gc
@@ -906,7 +907,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         pumps_closed_by_outage = set([]) # Set of pumps closed by pump outage times provided by user
         links_closed_by_tank_controls = set([])  # Set of pipes closed when tank level goes below min
         closed_check_valves = set([]) # Set of closed check valves
-        links_closed_by_drain_to_reservoir = set([]) # Set of links closed because of reverse flow into the reservoir
+        #links_closed_by_drain_to_reservoir = set([]) # Set of links closed because of reverse flow into the reservoir
         #pumps_closed_by_low_suction_pressure = set([]) # set of pumps closed because the suction pressure is low
 
         # monitor the status of leaks
@@ -972,10 +973,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Combine list of closed links. If a link is closed by any
             # of these sets, then the link is closed no matter what
             # the other sets say.
-            links_closed = links_closed_by_drain_to_reservoir.union(
-                           links_closed_by_controls.union(
+            links_closed = links_closed_by_controls.union(
                            links_closed_by_tank_controls.union(
-                           closed_check_valves))) #.union(pumps_closed_by_low_suction_pressure))))
+                           closed_check_valves))
 
             # check that links with inactive leaks were opened properly (if they were opened)
             if not first_timestep:
@@ -1026,7 +1026,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             #
             # These controls depend on the current timestep, and the
             # current timestep needs resolved if they are activated.
-            self._close_links_for_drain_to_reservoir(instance, links_closed_by_drain_to_reservoir)
+            self._raise_warning_for_drain_to_reservoir(instance)#, links_closed_by_drain_to_reservoir)
             self._check_tank_controls(instance, links_closed_by_tank_controls)
             #self._close_low_suction_pressure_pumps(instance, pumps_closed_by_low_suction_pressure, pumps_closed_by_outage)
             self._set_check_valves_closed(instance, closed_check_valves) # HEAD pumps are also treated as check valves
@@ -1034,10 +1034,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Combine the sets of closed links into new_links_closed
             # This is used for comparison with links_closed to see if 
             # the timestep needs to be resolved.
-            new_links_closed = links_closed_by_drain_to_reservoir.union(
-                           links_closed_by_controls.union(
+            new_links_closed = links_closed_by_controls.union(
                            links_closed_by_tank_controls.union(
-                           closed_check_valves))) #.union(pumps_closed_by_low_suction_pressure))))
+                           closed_check_valves))
 
             # Set valve status based on pyomo results
             if self._wn._num_valves != 0:
@@ -1618,7 +1617,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                     print 'lower: ',con_lower, '\t body: ',con_value,'\t upper: ',con_upper 
                     print 'lower: ',con[constraint_key].lower, '\t body: ',con[constraint_key].body,'\t upper: ',con[constraint_key].upper 
 
-    def _close_links_for_drain_to_reservoir(self, instance, links_closed_by_drain_to_reservoir):
+    def _raise_warning_for_drain_to_reservoir(self, instance):#, links_closed_by_drain_to_reservoir):
         """
         Close the link if water is flowing into the reservoir.  Open
         the link if the reservoir head is larger than the head at the
@@ -1633,14 +1632,20 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             if start_node_name == reservoir_name:
                 if instance.flow[link_name].value <= -self._Qtol:
-                    links_closed_by_drain_to_reservoir.add(link_name)
-                elif instance.head[reservoir_name].value >= instance.head[end_node_name].value:
-                    links_closed_by_drain_to_reservoir.discard(link_name)
+                    #links_closed_by_drain_to_reservoir.add(link_name)
+                    warnings.warn('Water is flowing into reservoir '+start_node_name+'. '
+                                  'If you do not want this to happen, consider adding a '
+                                  'check valve to the pipe connected to the reservoir.')
+                #elif instance.head[reservoir_name].value >= instance.head[end_node_name].value:
+                #    links_closed_by_drain_to_reservoir.discard(link_name)
             elif end_node_name == reservoir_name:
                 if instance.flow[link_name].value >= self._Qtol:
-                    links_closed_by_drain_to_reservoir.add(link_name)
-                elif instance.head[reservoir_name].value >= instance.head[start_node_name].value:
-                    links_closed_by_drain_to_reservoir.discard(link_name)
+                    #links_closed_by_drain_to_reservoir.add(link_name)
+                    warnings.warn('Water is flowing into reservoir '+end_node_name+'. '
+                                  'If you do not want this to happen, consider adding a '
+                                  'check valve to the pipe connected to the reservoir.')
+                #elif instance.head[reservoir_name].value >= instance.head[start_node_name].value:
+                #    links_closed_by_drain_to_reservoir.discard(link_name)
 
     def _fully_open_links_with_inactive_leaks(self, links_closed_last_step, links_closed):
         # I don't think this method is needed any more. I will raise an error if the code attempts to use it.
