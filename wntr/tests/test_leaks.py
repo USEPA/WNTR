@@ -9,6 +9,7 @@ resilienceMainDir = os.path.abspath(
     os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
         inspect.currentframe() ) ) ), '..', '..' ))
 import math
+import pandas as pd
 
 class TestLeakAdditionaAndRemoval(unittest.TestCase):
 
@@ -183,3 +184,24 @@ class TestLeakResults(unittest.TestCase):
         for node_name, node in wn.nodes():
             for t in pyomo_results.node.loc[node_name].index:
                 self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'pressure'] - epanet_results.node.at[(node_name,t),'pressure']), 0.001)
+
+    def test_remove_leak_results(self):
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
+        results1 = sim.run_sim()
+        wn.add_leak('leak1','pipe2', leak_diameter = 0.08, leak_discharge_coeff = 0.75, start_time = '0 days 04:00:00', fix_time = '0 days 12:00:00')
+        wn.remove_leak('leak1')
+        sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
+        results2 = sim.run_sim()
+
+        self.assertEqual(True, (results1.node == results2.node)['demand'].all())
+        self.assertEqual(True, (results1.node == results2.node)['expected_demand'].all())
+        self.assertEqual(True, (results1.node == results2.node)['head'].all())
+        self.assertEqual(True, (results1.node == results2.node)['pressure'].all())
+        self.assertEqual(True, (results1.node == results2.node)['type'].all())
+
+        self.assertEqual(True, (results1.link == results2.link)['flowrate'].all())
+        self.assertEqual(True, (results1.link == results2.link)['velocity'].all())
+        self.assertEqual(True, (results1.link == results2.link)['type'].all())
+
