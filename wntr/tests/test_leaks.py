@@ -143,3 +143,41 @@ class TestLeakResults(unittest.TestCase):
                 self.assertAlmostEqual(results.node.at[('leak1',t),'demand'], 0.0)
             else:
                 self.assertAlmostEqual(results.node.at[('leak1',t),'demand'], 0.75*math.pi/4.0*0.01**2.0*math.sqrt(2*9.81*results.node.at[('leak1',t),'pressure']))
+
+    def test_leak_against_epanet(self):
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        wn.add_leak('leak1','pipe2', leak_diameter = 0.08, leak_discharge_coeff = 0.75, start_time = '0 days 04:00:00', fix_time = '0 days 12:00:00')
+        sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
+        pyomo_results = sim.run_sim()
+
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13B.inp'
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        sim = self.wntr.sim.EpanetSimulator(wn)
+        epanet_results = sim.run_sim()
+
+        for link_name, link in wn.links():
+            for t in pyomo_results.link.loc[link_name].index:
+                self.assertLessEqual(abs(pyomo_results.link.at[(link_name,t),'flowrate'] - epanet_results.link.at[(link_name,t),'flowrate']), 0.00001)
+
+        for link_name, link in wn.links():
+            for t in pyomo_results.link.loc[link_name].index:
+                self.assertLessEqual(abs(pyomo_results.link.at[(link_name,t),'velocity'] - epanet_results.link.at[(link_name,t),'velocity']), 0.0001)
+
+        for node_name, node in wn.nodes():
+            if node_name != 'tank1': # remove this if statement after fixing ticket 45
+                for t in pyomo_results.node.loc[node_name].index:
+                    self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'demand'] - epanet_results.node.at[(node_name,t),'demand']), 0.00001)
+
+        for node_name, node in wn.nodes():
+            if node_name != 'tank1': # remove this if statement after fixing ticket 45
+                for t in pyomo_results.node.loc[node_name].index:
+                    self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'expected_demand'] - epanet_results.node.at[(node_name,t),'expected_demand']), 0.00001)
+
+        for node_name, node in wn.nodes():
+            for t in pyomo_results.node.loc[node_name].index:
+                self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'head'] - epanet_results.node.at[(node_name,t),'head']), 0.001)
+
+        for node_name, node in wn.nodes():
+            for t in pyomo_results.node.loc[node_name].index:
+                self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'pressure'] - epanet_results.node.at[(node_name,t),'pressure']), 0.001)
