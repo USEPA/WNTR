@@ -32,6 +32,8 @@ class TestLeakAdditionaAndRemoval(unittest.TestCase):
         self.assertEqual(True, 'leak1' in [name for name,n in wn.nodes()])
         self.assertEqual(True, 'leak1' in [name for name,n in wn.nodes(self.wntr.network.Leak)])
         self.assertEqual(True, 'pipe1__A' in [name for name,l in wn.links()])
+        self.assertEqual(True, 'pipe1__A' in [name for name,l in wn.links(self.wntr.network.Pipe)])
+        self.assertEqual(True, 'pipe1__B' in [name for name,l in wn.links()])
         self.assertEqual(True, 'pipe1__B' in [name for name,l in wn.links(self.wntr.network.Pipe)])
         self.assertEqual(pipe.start_node(), pipeA.start_node())
         self.assertEqual(pipe.end_node(), pipeB.end_node())
