@@ -86,11 +86,13 @@ class WaterNetworkSimulator(object):
 
     def _init_time_controls(self):
         for link_name in self._wn.time_controls.keys():
-            self._time_controls[link_name] = {'open_times':[], 'closed_times':[]}
+            self._time_controls[link_name] = {'open_times':[], 'closed_times':[], 'active_times':[]}
             for t in self._wn.time_controls[link_name]['open_times']:
                 self._time_controls[link_name]['open_times'].append(t)
             for t in self._wn.time_controls[link_name]['closed_times']:
                 self._time_controls[link_name]['closed_times'].append(t)
+            for t in self._wn.time_controls[link_name]['active_times']:
+                self._time_controls[link_name]['active_times'].append(t)
 
     def _init_reservoir_links(self):
         # Creating the _reservoir_links dictionary

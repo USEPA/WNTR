@@ -65,7 +65,7 @@ class WaterNetworkModel(object):
         self.reaction_options = {}
 
         # Time controls are saved as a dictionary as follows:
-        # {'Link name': {'open_times': [1, 5, ...], 'closed_times': [3, 7, ...]}},
+        # {'Link name': {'open_times': [1, 5, ...], 'closed_times': [3, 7, ...], 'active_times':[1,4,7,...]}},
         # where times are in seconds
         self.time_controls = {}
 
