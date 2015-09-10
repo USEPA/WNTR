@@ -32,35 +32,73 @@ import time
 
 
 """
-Issues:
+Issues to be aware of:
 1. Negative pressures:
      We see negative pressures in the following scenarios:
-          - A tank level drops to a negative pressue (because we haven't yet implemented adaptive timesteps)
-          - The PDD constraint requires the pressure to be negative for the demand to be 0. We tried creating
-            and alternative PDD constraint (see pressure_dependent_demand_nl_alt) to correct this, but
-            it didn't quite work.
-          - If a pipe has drained of water, our model doesn't know it. Consider the case where the flowrate
-            in a pipe is 0. The start node has an actual demand of 0, so the pressure is close to 0. Because
-            the flowrate is 0, the head at the end node has to be the same as the head at the start node.
-            However, if the end node is at a higher elevation than the start node, then the pressure will be
-            lower than the pressure at the start node by the difference in elevation.
-          - The outlet pressure of a pump is low. If the outlet pressure is less than the pump head, then the
-            inlet pressure will be negative.
-     I think if we simply put a lower bound on the pressue and implemented an adaptive timestep, all of these
-     problems would be solved except the one where a pipe has drained all water out of it and the model doesn't
-     know it. I don't know how to solve that problem yet. 
 
-2. Infeasible problems due to pumps:
-     Orinially, we were seeing ampl evaluation errors for pumps becuase the first or second derivative is
-     undefined when q = 0. We decided to close pumps with low flow rates and resolve the problem. However, 
-     we didn't have any criteria to open these pumps back up. We stopped closing pumps for low flow rates
-     and modified the pump curve to be a piecewise function with a line with a small slope when q is close
-     to 0. There was another problem. If the pressure at the end node of the pump needs to be larger than
-     what the pump can provide, then the problem becomes infeasible because we placed a lower bound of 0.0 
-     on the pump flow rate. Thus, we made the lower bound -0.1 and started treating pumps as check valves.
-     Reducing the lower bound allows the flow rate to become negative, and then we have a way to identify
-     whether or not the pump should be closed. If we completely removed the lower bound on the pump flow 
-     rate or reduced it too much, then Ipopt had trouble solving some problems. I am not sure why though. 
+          - A tank level drops to a negative pressue (because we
+            haven't yet implemented adaptive timesteps)
+
+          - The current implementation of the PDD constraint requires
+            the pressure to be negative for the demand to be 0. We are
+            trying an alternative PDD constraint (see
+            pressure_dependent_demand_nl_alt) to correct this, but it
+            is not finished.
+
+          - If a pipe has drained of water, our model doesn't know
+            it. Consider the case where the flowrate in a pipe is
+            0. The start node has an actual demand of 0, so the
+            pressure is close to 0. Because the flowrate is 0, the
+            head at the end node has to be the same as the head at the
+            start node.  However, if the end node is at a higher
+            elevation than the start node, then the pressure will be
+            lower than the pressure at the start node by the
+            difference in elevation. (Remember, here, pressure =
+            head-elevation)
+
+          - The outlet pressure of a pump is low. If the outlet
+            pressure is less than the pump head, then the inlet
+            pressure will be negative.
+
+     I think if we simply put a lower bound on the pressue and
+     implemented an adaptive timestep, all of these problems would be
+     solved except the one where a pipe has drained all water out of
+     it and the model doesn't know it. I don't know how to solve that
+     problem yet.
+
+2. Infeasible problems due to pumps: 
+     Orinially, we were seeing ampl evaluation errors for pumps
+     becuase the first or second derivative is undefined when q = 0
+     (for some pumps - it depends on the particular pump curve). We
+     decided to close pumps with low flow rates and resolve the
+     problem. However, we didn't have any criteria to open these pumps
+     back up. We stopped closing pumps for low flow rates and modified
+     the pump curve to be a piecewise function with a line with a
+     small slope when q is close to 0. There was another problem. If
+     the pressure at the end node of the pump needs to be larger than
+     what the pump can provide, then the problem becomes infeasible
+     because we placed a lower bound of 0.0 on the pump flow
+     rate. Thus, we made the lower bound -0.1 and started treating
+     pumps as check valves.  Reducing the lower bound allows the flow
+     rate to become negative, and then we have a way to identify
+     whether or not the pump should be closed. If we completely
+     removed the lower bound on the pump flow rate or reduced it too
+     much, then Ipopt had trouble solving some problems. I am not sure
+     why though. This way, the pumps can be reopened when the start
+     node head plus the maximum pump head is greater than or equal to
+     the end node head.
+
+3. Leaks:
+
+     Originally, we placed a lower bound on the leak flow rate of 0.0
+     (i.e., we did not want to allow flow into the network). However,
+     this implied a lower bound on the pressure at the leak node of
+     0.0. In cases where the pressure at the leak node needed to be
+     negative, this caused the problem to be infeasible. Thus, we made
+     the constraint relating the pressure at the leak to the leak flow
+     rate a piecewise function. When P<=0, the leak flow rate is
+     1E-11*P. When P>=delta, the normal model is used. In between, a
+     smoothing polynomial is used.
 """
 
 """
