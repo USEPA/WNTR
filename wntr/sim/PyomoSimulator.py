@@ -89,7 +89,6 @@ Issues to be aware of:
      the end node head.
 
 3. Leaks:
-
      Originally, we placed a lower bound on the leak flow rate of 0.0
      (i.e., we did not want to allow flow into the network). However,
      this implied a lower bound on the pressure at the leak node of
@@ -99,6 +98,7 @@ Issues to be aware of:
      rate a piecewise function. When P<=0, the leak flow rate is
      1E-11*P. When P>=delta, the normal model is used. In between, a
      smoothing polynomial is used.
+
 """
 
 """
@@ -1707,7 +1707,17 @@ class PyomoSimulator(WaterNetworkSimulator):
         junction are closed, then the head is fixed to the elevation,
         the demand if fixed to 0, the mass balance for that junction
         is deactivated, and the PDD constraint for that junction is
-        deactivated
+        deactivated.
+
+        If all of the links connected to a junction are are closed,
+        and the simulation is demand driven, then the junction head is
+        a variable that does not appear in any constraints and Ipopt
+        throws a too few degrees of freedom error. To fix this
+        problem, we added the _check_for_isolated_junctions
+        method. This problem does not occur if running a pressure
+        driven simulation. However, the _check_for_isolated_junctions
+        method is used regardless of the type of simulation. Should we
+        just use it for demand driven? Does it matter?
 
         Do we need to do this for leaks as well?
         """
