@@ -622,7 +622,10 @@ class ParseWaterNetwork(object):
 
         # Set node coordinates
         for name, node in wn.nodes():
-            wn.set_node_coordinates(name, self._node_coordinates[name])
+            if name in self._node_coordinates.keys():
+                wn.set_node_coordinates(name, self._node_coordinates[name])
+            else:
+                warnings.warn('Coordinates are not provided for node '+name+'.')
 
         """
         # Add curve to network class
