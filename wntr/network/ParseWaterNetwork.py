@@ -114,6 +114,16 @@ class ParseWaterNetwork(object):
             if options:
                 # all options are stored as string
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 if len(current) == 2:
@@ -223,6 +233,16 @@ class ParseWaterNetwork(object):
 
             if pipes:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
                 wn.add_pipe(current[0], current[1], current[2], convert('Length', inp_units, float(current[3])),
@@ -230,6 +250,16 @@ class ParseWaterNetwork(object):
                                                                 float(current[5]), float(current[6]), current[7].upper())
             if valves:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
                 valve_type = current[4].upper()
@@ -240,6 +270,16 @@ class ParseWaterNetwork(object):
                                                                  convert('Pressure', inp_units, float(current[5].upper())))
             if junctions:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
                 if current[-1] == ';':
@@ -248,8 +288,19 @@ class ParseWaterNetwork(object):
                     wn.add_junction(current[0], convert('Demand', inp_units, float(current[2])), None, convert('Elevation', inp_units, float(current[1])))
                 else:
                     wn.add_junction(current[0], convert('Demand', inp_units, float(current[2])), current[3], convert('Elevation', inp_units, float(current[1])))
+
             if pumps:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
                 # Only add head curves for pumps
@@ -268,6 +319,16 @@ class ParseWaterNetwork(object):
 
             if reservoirs:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
                 if (len(current) == 2 or current[2].startswith(';')):
@@ -276,6 +337,16 @@ class ParseWaterNetwork(object):
                     wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])), current[2])
             if tanks:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
                 if current[-1] == ';':
@@ -299,6 +370,16 @@ class ParseWaterNetwork(object):
             if times:
                 # times options are saved a tuple of floats (hr,min) or (time, 'am/pm')
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 if (current[0].upper() == 'DURATION'):
@@ -344,6 +425,16 @@ class ParseWaterNetwork(object):
             if patterns:
                 # patterns are stored in a pattern dictionary pattern_dict = {'pattern_1': [ 23, 3, 4 ...], ... }
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 pattern_name = current[0]
@@ -356,14 +447,35 @@ class ParseWaterNetwork(object):
                         self._patterns[pattern_name].append(float(i))
             if curves:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 curve_name = current[0]
                 if curve_name not in self._curves:
                     self._curves[curve_name] = []
                 self._curves[curve_name].append((convert('Flow', inp_units, float(current[1])), convert('Hydraulic Head', inp_units, float(current[2]))))
+
             if controls:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 current_copy = current
@@ -419,20 +531,53 @@ class ParseWaterNetwork(object):
                             self._time_controls[link_name]['closed_times'].append(str_time_to_sec(current[5]))
                         else:
                             raise RuntimeError("Time control format not recognized.")
+
             if coordinates:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 assert(len(current) == 3), "Error reading node coordinates. Check format."
                 self._node_coordinates[current[0]] = (float(current[1]), float(current[2]))
+
             if status:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 assert(len(current) == 2), "Error reading [STATUS] block, Check format."
                 self._link_status[current[0]] = current[1].upper()
+
             if reactions:
                 current = line.split()
+                comment_flag = False
+                count = 0
+                for i in xrange(len(current)):
+                    entry = current[count]
+                    if entry.startswith(';'):
+                        comment_flag = True
+                    if comment_flag:
+                        current.pop(count)
+                    else:
+                        count += 1
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 assert len(current) == 3, 'INP file option in [REACTIONS] block not recognized: '+line
