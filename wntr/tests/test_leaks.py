@@ -168,14 +168,12 @@ class TestLeakResults(unittest.TestCase):
                 self.assertLessEqual(abs(pyomo_results.link.at[(link_name,t),'velocity'] - epanet_results.link.at[(link_name,t),'velocity']), 0.0001)
 
         for node_name, node in wn.nodes():
-            if node_name != 'tank1': # remove this if statement after fixing ticket 45
-                for t in pyomo_results.node.loc[node_name].index:
-                    self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'demand'] - epanet_results.node.at[(node_name,t),'demand']), 0.00001)
+            for t in pyomo_results.node.loc[node_name].index:
+                self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'demand'] - epanet_results.node.at[(node_name,t),'demand']), 0.00001)
 
         for node_name, node in wn.nodes():
-            if node_name != 'tank1': # remove this if statement after fixing ticket 45
-                for t in pyomo_results.node.loc[node_name].index:
-                    self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'expected_demand'] - epanet_results.node.at[(node_name,t),'expected_demand']), 0.00001)
+            for t in pyomo_results.node.loc[node_name].index:
+                self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'expected_demand'] - epanet_results.node.at[(node_name,t),'expected_demand']), 0.00001)
 
         for node_name, node in wn.nodes():
             for t in pyomo_results.node.loc[node_name].index:
