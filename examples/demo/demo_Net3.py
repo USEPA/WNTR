@@ -1,9 +1,9 @@
 
 # coding: utf-8
 
-# # WNTR Demo: Earthquake Scenario
+## WNTR Demo: Earthquake Scenario
 
-# #### Import python packages, including WNTR
+##### Import python packages, including WNTR
 
 # In[1]:
 
@@ -19,7 +19,7 @@ np.random.seed(12345)
 demo = False
 
 
-# #### Create a water network model using an EPANET inp file
+##### Create a water network model using an EPANET inp file
 
 # In[2]:
 
@@ -27,7 +27,7 @@ inp_file = '../networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 
-# #### Define earthquake epicenter, magnitude, and depth
+##### Define earthquake epicenter, magnitude, and depth
 
 # In[3]:
 
@@ -36,7 +36,7 @@ magnitude = 5 # Richter scale
 depth = 10000 # m, shallow depth
 
 
-# #### Plot location of eipcenter on the network
+##### Plot location of eipcenter on the network
 
 # In[4]:
 
@@ -45,7 +45,7 @@ plt.hold('True')
 plt.scatter(epicenter[0], epicenter[1], s=1000, c='r', marker='*', zorder=2)
 
 
-# #### Generate the earthquake scenario
+##### Generate the earthquake scenario
 
 # In[5]:
 
@@ -63,21 +63,21 @@ print "Min, Max, Average repair rate: " + str(np.round(np.min(earthquake.repair_
 print "Number of pipe failures: " + str(len(earthquake.pipes_to_leak))
 
 
-# #### Plot peak ground acceleration
+##### Plot peak ground acceleration
 
 # In[6]:
 
 wntr.network.draw_graph(wn, link_attribute=earthquake.pga, node_size=0, link_width=1.5, title='Peak ground acceleration', figsize=(12,8), dpi=100)
 
 
-# #### Plot repair rate (# of repairs needed per m)
+##### Plot repair rate (# of repairs needed per m)
 
 # In[7]:
 
 wntr.network.draw_graph(wn, link_attribute=earthquake.repair_rate, node_size=0, link_width=1.5, title='Repair rate', figsize=(12,8), dpi=100)
 
 
-# #### Plot location of pipes with leaks
+##### Plot location of pipes with leaks
 
 # In[8]:
 
@@ -87,7 +87,7 @@ gray_red_colormap = wntr.network.custom_colormap(2, colors = ['0.75','red'])
 wntr.network.draw_graph(wn, link_attribute=earthquake.pipe_status, node_size=0, link_width=1.5, link_cmap=gray_red_colormap, link_range=[0,1], title='Failed pipes (in red)', add_colorbar=False, figsize=(10,8), dpi=100)
 
 
-# #### Simulate hydraulics without repair
+##### Simulate hydraulics without repair
 
 # In[9]:
 
@@ -98,19 +98,16 @@ wn.time_options['HYDRAULIC TIMESTEP'] = 3600
 wn.time_options['REPORT TIMESTEP'] = 3600
 
 time_of_failure = 5 # time of failure
-duration_of_failure = 20 # Select duration of failure
+duration_of_failure = 20 # Select duration of failure     
 for pipe_name in earthquake.pipes_to_leak:
     # Select leak diameter, uniform dist, between 0.01 and pipe diameter 
     pipe_diameter = wn.get_link(pipe_name).diameter
     leak_diameter = np.round(np.random.uniform(0.01,0.5*pipe_diameter,1), 2)[0] 
-    # Add pipe leak to the simulator
-    wn.add_leak(leak_name = "Leak"+pipe_name, pipe_name = pipe_name, leak_diameter = leak_diameter, 
-                 start_time = pd.Timedelta(time_of_failure, unit='h'), fix_time = pd.Timedelta(time_of_failure + duration_of_failure, unit='h'))
-
+    # Add pipe leak to the network
+    wn.add_leak(leak_name = "Leak"+pipe_name, pipe_name = pipe_name, leak_diameter = leak_diameter, start_time = 
+                pd.Timedelta(time_of_failure, unit='h'), fix_time = pd.Timedelta(time_of_failure + duration_of_failure, unit='h'))
 
 sim = wntr.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
-
-
 
 if demo:
     results = pickle.load(open('demo_Net3.pickle', 'rb'))
@@ -119,7 +116,7 @@ else:
     pickle.dump(results, open('demo_Net3.pickle', 'wb'))
 
 
-# #### Define top leaks for repair
+##### Define top leaks for repair
 
 # In[10]:
 
@@ -140,7 +137,7 @@ pipes_to_fix = leaked_sum[0:4]
 print pipes_to_fix
 
 
-# #### Simulate hydraulics with repair
+##### Simulate hydraulics with repair
 
 # In[11]:
 
@@ -150,7 +147,7 @@ for leak_name in pipes_to_fix.index:
     leak.set_fix_time(pd.Timedelta(time_of_failure+duration_of_failure, unit='h'))
 
 sim = wntr.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
-        
+
 if demo:
     results_repair = pickle.load(open('demo_Net3_repair.pickle', 'rb'))
 else:
@@ -158,7 +155,7 @@ else:
     pickle.dump(results_repair, open('demo_Net3_repair.pickle', 'wb'))
 
 
-# #### Compare results
+##### Compare results
 
 # In[12]:
 
