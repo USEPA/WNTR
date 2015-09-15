@@ -886,7 +886,7 @@ class WaterNetworkModel(object):
 
     def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None, control_dest = 'ISOLATE'):
         """
-        Method to add a leak to the simulation. Leaks are modeled by:
+        Method to add a pipe leak to the network. Leaks are modeled by:
 
         Q = leak_discharge_coeff*leak_area*sqrt(2*g*h)
         where:
@@ -1532,6 +1532,58 @@ class Junction(Node):
         self.elevation = elevation
         self.PF = 20.0
         self.P0 = 0.0
+        self.leak = False
+        self.leak_area = 0.0
+        self.leak_discharge_coeff = 0.0
+        self.leak_start_time = 0
+        self.leak_fix_time = None
+
+    def add_leak(self, area, discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None):
+        """
+        Method to add a leak to a tank. Leaks are modeled by:
+
+        Q = discharge_coeff*area*sqrt(2*g*h)
+
+        where:
+           Q is the volumetric flow rate of water out of the leak
+           g is the acceleration due to gravity
+           h is the guage head at the bottom of the tank, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
+
+        Note that WNTR assumes the leak is at the bottom of the tank.
+
+        Parameters
+        ----------
+        area: float
+           Area of the leak in m^2.
+        discharge_coeff: float
+           Leak discharge coefficient; Takes on values between 0 and 1.
+        start_time: string
+           Start time of the leak. Pandas Timedelta format: e.g. '0
+           days 00:00:00'. Default is the start of the simulation.
+        fix_time: string
+           Time at which the leak is fixed. pandas Timedelta format:
+           e.g. '0 days 05:00:00'. Default is that the leak does not
+           get repaired during the simulation.
+        """
+
+        self.leak = True
+        self.leak_area = area
+        self.leak_discharge_coeff = discharge_coeff
+        
+        start = pd.Timedelta(start_time)
+        self.leak_start_time = timedelta_to_sec(start)
+        if fix_time is not None:
+            end = pd.Timedelta(fix_time)
+            self.leak_fix_time = timedelta_to_sec(end)
+        else:
+            self.leak_fix_time = None
+
+    def remove_leak(self):
+        """
+        Method to remove a leak from a tank.
+        """
+        self.leak = False
+
 
 class Leak(Node):
     """
@@ -1713,7 +1765,57 @@ class Tank(Node):
         self.diameter = diameter
         self.min_vol = min_vol
         self.vol_curve = vol_curve
+        self.leak = False
+        self.leak_area = 0.0
+        self.leak_discharge_coeff = 0.0
+        self.leak_start_time = 0
+        self.leak_fix_time = None
 
+    def add_leak(self, area, discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None):
+        """
+        Method to add a leak to a tank. Leaks are modeled by:
+
+        Q = discharge_coeff*area*sqrt(2*g*h)
+
+        where:
+           Q is the volumetric flow rate of water out of the leak
+           g is the acceleration due to gravity
+           h is the guage head at the bottom of the tank, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
+
+        Note that WNTR assumes the leak is at the bottom of the tank.
+
+        Parameters
+        ----------
+        area: float
+           Area of the leak in m^2.
+        discharge_coeff: float
+           Leak discharge coefficient; Takes on values between 0 and 1.
+        start_time: string
+           Start time of the leak. Pandas Timedelta format: e.g. '0
+           days 00:00:00'. Default is the start of the simulation.
+        fix_time: string
+           Time at which the leak is fixed. pandas Timedelta format:
+           e.g. '0 days 05:00:00'. Default is that the leak does not
+           get repaired during the simulation.
+        """
+
+        self.leak = True
+        self.leak_area = area
+        self.leak_discharge_coeff = discharge_coeff
+        
+        start = pd.Timedelta(start_time)
+        self.leak_start_time = timedelta_to_sec(start)
+        if fix_time is not None:
+            end = pd.Timedelta(fix_time)
+            self.leak_fix_time = timedelta_to_sec(end)
+        else:
+            self.leak_fix_time = None
+
+    def remove_leak(self):
+        """
+        Method to remove a leak from a tank.
+        """
+        self.leak = False
 
 class Pipe(Link):
     """

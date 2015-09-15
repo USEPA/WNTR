@@ -358,7 +358,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                          first_timestep,
                                          links_closed,
                                          pumps_closed_by_outage,
-                                         last_link_flows,
+                                         last_tank_net_inflows,
                                          modified_hazen_williams=True):
         """
         Build hydraulic constraints at a particular time.
@@ -375,8 +375,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             Name of links that are closed.
         pumps_closed_by_outage : list of strings
             Name of pumps closed due to a power outage
-        last_link_flows: dict of string: float
-            Dictionary containing link names and their respective flow rates at the last timestep.
+        last_tank_net_inflows: dict of string: float
+            Dictionary containing tank names and their respective net inflows at the last timestep.
 
         Other Parameters
         -------------------
@@ -826,32 +826,17 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Mass Balance
         def node_mass_balance_rule(model, n):
             node = wn.get_node(n)
-            # If the node is a tank, calculate the tank net inflow from the previous timestep.
-            # This is used to calculate the tank level at the current timestep.
-            if isinstance(node, Tank) and not first_timestep:
-                expr = 0
-                for l in wn.get_links_for_node(n):
-                    link = wn.get_link(l)
-                    if link.start_node() == n:
-                        expr -= last_link_flows[l]
-                    elif link.end_node() == n:
-                        expr += last_link_flows[l]
-                    else:
-                        raise RuntimeError('Node link is neither start nor end node.')
-            # For all other nodes, use the flow rates for the current timestep
-            else:
-                expr = 0
-                for l in wn.get_links_for_node(n):
-                    link = wn.get_link(l)
-                    if link.start_node() == n:
-                        expr -= model.flow[l]
-                    elif link.end_node() == n:
-                        expr += model.flow[l]
-                    else:
-                        raise RuntimeError('Node link is neither start nor end node.')
+            expr = 0
+            for l in wn.get_links_for_node(n):
+                link = wn.get_link(l)
+                if link.start_node() == n:
+                    expr -= model.flow[l]
+                elif link.end_node() == n:
+                    expr += model.flow[l]
+                else:
+                    raise RuntimeError('Node link is neither start nor end node.')
             if isinstance(node, Junction):
                 return expr == model.demand_actual[n]
-                #return expr == model.demand_required[n]
             elif isinstance(node, Tank):
                 return expr == model.tank_net_inflow[n]
             elif isinstance(node, Reservoir):
@@ -862,14 +847,14 @@ class PyomoSimulator(WaterNetworkSimulator):
 
 
         def tank_dynamics_rule(model, n):
-            # The tank level at the first timestep is know
+            # The tank level at the first timestep is known
             if first_timestep:
                 return Constraint.Skip
             # The tank level for the current timestep is calculated from the flow rates
             # of the previous timestep
             else:
                 tank = wn.get_node(n)
-                return (model.tank_net_inflow[n]*model.timestep*4.0)/(math.pi*(tank.diameter**2)) == model.head[n]-last_tank_head[n]
+                return (last_tank_net_inflows[n]*model.timestep*4.0)/(math.pi*(tank.diameter**2)) == model.head[n]-last_tank_head[n]
         model.tank_dynamics = Constraint(model.tanks, rule=tank_dynamics_rule)
 
         # Pressure driven demand constraint
@@ -947,6 +932,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         closed_check_valves = set([]) # Set of closed check valves
 
         # monitor the status of leaks
+        # This applies to leak nodes added to the network, not leaks associated with tanks or junctions
         self._active_leaks = set([])
         self._inactive_leaks = set([leak_name for leak_name,leak in self._wn.nodes(Leak)])
 
@@ -978,7 +964,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 last_tank_head = {} # Tank head at previous timestep
                 for tank_name, tank in self._wn.nodes(Tank):
                     last_tank_head[tank_name] = tank.elevation + tank.init_level
-                last_link_flows = None # Link flowrates at previous timestep
+                last_tank_net_inflows = None # Tank net inflows at previous timestep
             else:
                 first_timestep = False
 
@@ -1030,7 +1016,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                                                            first_timestep,
                                                            links_closed,
                                                            pumps_closed_by_outage,
-                                                           last_link_flows,
+                                                           last_tank_net_inflows,
                                                            modified_hazen_williams)
 
             # Add constant objective
@@ -1090,9 +1076,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                     last_tank_head[tank_name] = instance.head[tank_name].value
                 # Load last link flows
                 if first_timestep:
-                    last_link_flows = {}
-                for link_name, link in self._wn.links():
-                    last_link_flows[link_name] = instance.flow[link_name].value
+                    last_tank_net_inflows = {}
+                for tank_name, tank in self._wn.nodes(Tank):
+                    last_tank_net_inflows[tank_name] = instance.tank_net_inflow[tank_name].value
                 # Load results into self._pyomo_sim_results
                 self._append_pyomo_results(instance, timedelta)
 
