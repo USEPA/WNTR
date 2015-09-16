@@ -24,6 +24,7 @@ from wntr.units import convert
 from wntr.misc import *
 import wntr.network
 import pandas as pd
+import numpy as np
 
 class WaterNetworkModel(object):
 
@@ -1576,7 +1577,7 @@ class Junction(Node):
             end = pd.Timedelta(fix_time)
             self.leak_fix_time = timedelta_to_sec(end)
         else:
-            self.leak_fix_time = None
+            self.leak_fix_time = np.inf
 
     def remove_leak(self):
         """
@@ -1809,7 +1810,7 @@ class Tank(Node):
             end = pd.Timedelta(fix_time)
             self.leak_fix_time = timedelta_to_sec(end)
         else:
-            self.leak_fix_time = None
+            self.leak_fix_time = np.inf
 
     def remove_leak(self):
         """

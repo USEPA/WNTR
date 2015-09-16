@@ -291,6 +291,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._pyomo_sim_results['node_demand'] = []
         self._pyomo_sim_results['node_expected_demand'] = []
         self._pyomo_sim_results['node_pressure'] = []
+        self._pyomo_sim_results['leak_flow'] = []
         self._pyomo_sim_results['link_name'] = []
         self._pyomo_sim_results['link_type'] = []
         self._pyomo_sim_results['link_times'] = []
@@ -331,6 +332,21 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 instance.tank_net_inflow[t].value = last_instance_results['tank_net_inflow'][t] + self._Qtol
 
+        for n in instance.leaks:
+            if n in self._active_leaks:
+                node = self._wn.get_node(n)
+                instance.leak_demand[n].value = node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(last_instance_results['head'][n]-node.elevation)
+            else:
+                instance.leak_demand[n].value = 0.0
+
+        for n in instance.tanks_with_leaks:
+            node = self._wn.get_node(n)
+            instance.tank_leak_demand[n].value = node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(last_instance_results['head'][n]-node.elevation)
+
+        for n in instance.junctions_with_leaks:
+            node = self._wn.get_node(n)
+            instance.junction_leak_demand[n].value = node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(last_instance_results['head'][n]-node.elevation)
+
     def _read_instance_results(self,instance):
         # Initialize dictionary
         last_instance_results = {}
@@ -353,13 +369,14 @@ class PyomoSimulator(WaterNetworkSimulator):
         return last_instance_results
         
     def _build_hydraulic_model_at_instant(self,
-                                         last_tank_head,
-                                         nodal_demands,
-                                         first_timestep,
-                                         links_closed,
-                                         pumps_closed_by_outage,
-                                         last_tank_net_inflows,
-                                         modified_hazen_williams=True):
+                                          t,
+                                          last_tank_head,
+                                          nodal_demands,
+                                          first_timestep,
+                                          links_closed,
+                                          pumps_closed_by_outage,
+                                          last_tank_net_inflows,
+                                          modified_hazen_williams=True):
         """
         Build hydraulic constraints at a particular time.
 
@@ -385,6 +402,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             equation for better stability
         """
 
+        current_time_sec = t*self._hydraulic_step_sec
         t0 = time.time()
 
         # for the approximation of hazen williams equation
@@ -698,11 +716,18 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.junctions = Set(initialize=[n for n, N in wn.nodes(Junction)])
         model.leaks = Set(initialize = [n for n, N in wn.nodes(Leak)])
         model.reservoirs = Set(initialize=[n for n, N in wn.nodes(Reservoir)])
+
         # LINKS
         model.links = Set(initialize=[name for name, link in wn.links()])
         model.pumps = Set(initialize=[l for l, L in wn.links(Pump)])
         model.valves = Set(initialize=[l for l, L in wn.links(Valve)])
         model.pipes = Set(initialize=[l for l, L in wn.links(Pipe)])
+
+        # Tanks with leaks
+        model.tanks_with_leaks = Set(initialize=[n for n, N in wn.nodes(Tank) if N.leak==True and current_time_sec >= N.leak_start_time and current_time_sec < N.leak_fix_time])
+
+        # Junctions with leaks
+        model.junctions_with_leaks = Set(initialize=[n for n, N in wn.nodes(Junction) if N.leak==True and current_time_sec>=N.leak_start_time and current_time_sec<N.leak_fix_time])
 
         ################### PARAMETERS #######################
         # Params are being created for easy access to results without the need of querying the network.
@@ -781,6 +806,21 @@ class PyomoSimulator(WaterNetworkSimulator):
                 return 0.0
         model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule, bounds = (None, None))
 
+        # Declare variables for leaks in tanks and junctions. These
+        # are separate from the leaks above. The leaks above are
+        # actual nodes in the network. Leaks in tanks and junctions
+        # are associate with the tank or junction rather than an
+        # independent node.
+        def init_tank_leak_rule(model,n):
+            node = wn.get_node(n)
+            return node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
+        model.tank_leak_demand = Var(model.tanks_with_leaks, within=Reals, initialize=init_tank_leak_rule, bounds=(None,None))
+
+        def init_junction_leak_rule(model,n):
+            node = wn.get_node(n)
+            return node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
+        model.junction_leak_demand = Var(model.junctions_with_leaks, within=Reals, initialize=init_junction_leak_rule, bounds=(None,None))
+
         ############## CONSTRAINTS #####################
 
         # Head loss inside pipes
@@ -836,9 +876,15 @@ class PyomoSimulator(WaterNetworkSimulator):
                 else:
                     raise RuntimeError('Node link is neither start nor end node.')
             if isinstance(node, Junction):
-                return expr == model.demand_actual[n]
+                if n in model.junctions_with_leaks:
+                    return expr == model.demand_actual[n] + model.junction_leak_demand[n]
+                else:
+                    return expr == model.demand_actual[n]
             elif isinstance(node, Tank):
-                return expr == model.tank_net_inflow[n]
+                if n in model.tanks_with_leaks:
+                    return expr - model.tank_leak_demand[n] == model.tank_net_inflow[n]
+                else:
+                    return expr == model.tank_net_inflow[n]
             elif isinstance(node, Reservoir):
                 return expr == model.reservoir_demand[n]
             elif isinstance(node, Leak):
@@ -885,6 +931,18 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 raise RuntimeError('There is a bug.')
         model.leak_demand_con = Constraint(model.leaks, rule=leak_demand_rule)
+
+        # Tank leak demand constraint
+        def tank_leak_rule(model, n):
+            node = wn.get_node(n)
+            return model.tank_leak_demand[n] == piecewise_pipe_leak_demand(model.head[n]-node.elevation, node.leak_discharge_coeff, node.leak_area)
+        model.tank_leak_con = Constraint(model.tanks_with_leaks, rule=tank_leak_rule)
+
+        # Junction leak demand constraint
+        def junction_leak_rule(model, n):
+            node = wn.get_node(n)
+            return model.junction_leak_demand[n]==piecewise_pipe_leak_demand(model.head[n]-node.elevation,node.leak_discharge_coeff,node.leak_area)
+        model.junction_leak_con = Constraint(model.junctions_with_leaks, rule=junction_leak_rule)
 
         return model
 
@@ -1011,7 +1069,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             # Build the hydraulic constraints at current timestep
             # These constraints do not include valve flow constraints
-            model = self._build_hydraulic_model_at_instant(last_tank_head,
+            model = self._build_hydraulic_model_at_instant(t,
+                                                           last_tank_head,
                                                            current_demands,
                                                            first_timestep,
                                                            links_closed,
@@ -1106,10 +1165,11 @@ class PyomoSimulator(WaterNetworkSimulator):
                                             'expected_demand':   self._pyomo_sim_results['node_expected_demand'],
                                             'head':     self._pyomo_sim_results['node_head'],
                                             'pressure': self._pyomo_sim_results['node_pressure'],
+                                            'leak_flow': self._pyomo_sim_results['leak_flow'],
                                             'type':     self._pyomo_sim_results['node_type']})
 
             node_pivot_table = pd.pivot_table(node_data_frame,
-                                              values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
+                                              values=['demand', 'expected_demand', 'head', 'pressure', 'leak_flow', 'type'],
                                               index=['node', 'time'],
                                               aggfunc= lambda x: x)
             results.node = node_pivot_table
@@ -1266,20 +1326,31 @@ class PyomoSimulator(WaterNetworkSimulator):
             if isinstance(node, Junction):
                 demand = instance.demand_actual[n].value
                 expected_demand = instance.demand_required[n]
+                if n in instance.junctions_with_leaks:
+                    leak_flow = instance.junction_leak_demand[n].value
+                else:
+                    leak_flow = 0.0
                 #if n=='101' or n=='10':
                 #    print n,'  ',head_n, '  ', node.elevation
             elif isinstance(node, Reservoir):
                 demand = instance.reservoir_demand[n].value
                 expected_demand = instance.reservoir_demand[n].value
+                leak_flow = 0.0
             elif isinstance(node, Tank):
                 demand = instance.tank_net_inflow[n].value
                 expected_demand = instance.tank_net_inflow[n].value
+                if n in instance.tanks_with_leaks:
+                    leak_flow = instance.tank_leak_demand[n].value
+                else:
+                    leak_flow = 0.0
             elif isinstance(node, Leak):
                 demand = instance.leak_demand[n].value
                 expected_demand = instance.leak_demand[n].value
+                leak_flow = instance.leak_demand[n].value
             else:
                 demand = 0.0
                 expected_demand = 0.0
+                leak_flow = 0.0
 
             #if head_n < -1e4:
             #    pressure_n = 0.0
@@ -1291,6 +1362,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._pyomo_sim_results['node_demand'].append(demand)
             self._pyomo_sim_results['node_expected_demand'].append(expected_demand)
             self._pyomo_sim_results['node_pressure'].append(pressure_n)
+            self._pyomo_sim_results['leak_flow'].append(leak_flow)
 
     def _apply_controls(self, instance, first_timestep, links_closed_by_controls, t):
 
