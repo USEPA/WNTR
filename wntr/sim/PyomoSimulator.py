@@ -836,7 +836,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                     setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=Expr_if(IF=model.flow[l]>0, THEN=1, ELSE=-1)
                                                                        *pipe_resistance_coeff*approximator.hazenWDisc(abs(model.flow[l])) == model.head[start_node] - model.head[end_node]))
                 else:
-                    setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=pipe_resistance_coeff*model.flow[l]*(abs(model.flow[l]))**0.852 == model.head[start_node] - model.head[end_node]))
+                    setattr(model, 'pipe_headloss_'+str(l), Constraint(expr=Expr_if(IF=model.flow[l]>0, THEN=1, ELSE=-1)*pipe_resistance_coeff*(abs(model.flow[l]))**1.852 == model.head[start_node] - model.head[end_node]))
 
         # Head gain provided by the pump is implemented as negative headloss
         for l in model.pumps:
