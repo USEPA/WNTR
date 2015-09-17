@@ -225,7 +225,7 @@ class ScipySimulator(WaterNetworkSimulator):
 
 
             # Combine list of closed links
-            links_closed = pipes_closed + pumps_closed + valves_closed
+            links_closed = list(set(pipes_closed + pumps_closed + valves_closed))
 
             #prev_X = copy.copy(self._X)
 
