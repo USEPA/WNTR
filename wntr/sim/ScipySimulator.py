@@ -10,6 +10,7 @@ TODO
 4. Support for passing options to NewtonSolver
 """
 
+import wntr
 from wntr.units import convert
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,6 +27,20 @@ import time
 from WaterNetworkSimulator import *
 from wntr.network.WaterNetworkModel import Junction, Tank, Reservoir, Pipe, Pump
 import pandas as pd
+
+import cProfile
+def do_cprofile(func):
+    def profiled_func(*args, **kwargs):
+        profile = cProfile.Profile()
+        try:
+            profile.enable()
+            result = func(*args, **kwargs)
+            profile.disable()
+            return result
+        finally:
+            profile.print_stats()
+    return profiled_func
+import time
 
 newton_solver = True
 ZERO_DEMAND = 1e-6
@@ -113,7 +128,8 @@ class ScipySimulator(WaterNetworkSimulator):
         # Hazen-Williams resistance coefficient
         self._Hw_k = 10.67 # SI units = 4.727 in EPANET GPM units. See Table 3.1 in EPANET 2 User manual.
 
-        self._func_eval_time = 0.0
+        self._residual_eval_time = 0.0
+        self._jacobian_eval_time = 0.0
 
         # Pressure driven demand parameters
         if 'NOMINAL PRESSURE' in self._wn.options and 'MINIMUM PRESSURE' in self._wn.options:
@@ -122,7 +138,7 @@ class ScipySimulator(WaterNetworkSimulator):
         else:
             self._P0 = None
             self._PF = None
-
+    
     def run_sim(self, demo=None):
         
         if demo:
@@ -179,7 +195,7 @@ class ScipySimulator(WaterNetworkSimulator):
         self._load_general_results(results)
 
         # reinitialize function evaluation time for multiple calls to run_sim
-        self._func_eval_time = 0.0
+        self._residual_eval_time = 0.0
 
         # Create Delta time series
         results.time = pd.timedelta_range(start='0 minutes',
@@ -365,7 +381,7 @@ class ScipySimulator(WaterNetworkSimulator):
                                               aggfunc= lambda x: x)
         results.link = link_pivot_table
 
-        print "\tFunction evaluation time: ", self._func_eval_time
+        print "\tFunction evaluation time: ", self._residual_eval_time + self._jacobian_eval_time
         print "\tLinear solver time: ", total_linear_solver_time
         return results
 
@@ -417,11 +433,13 @@ class ScipySimulator(WaterNetworkSimulator):
                          closed_links_flow_residual,
                          pressure_driven_demand_residual))
 
-        self._func_eval_time += time.time() - t0
+        self._residual_eval_time += time.time() - t0
         return np.array(all_residuals)
 
     # Dummy function for fsolve to return the jacobian
     def _jacobian(self, x, (last_tank_head, current_demands, first_timestep, links_closed)):
+
+        t0 = time.time()
 
         num_vars = len(x)
         shape = (num_vars, num_vars)
@@ -550,6 +568,7 @@ class ScipySimulator(WaterNetworkSimulator):
 
         jac = sp.csr_matrix((val, (row,col)), shape=shape)
 
+        self._jacobian_eval_time += time.time() - t0
         return jac
 
 
