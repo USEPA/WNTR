@@ -197,6 +197,8 @@ class ScipySimulator(WaterNetworkSimulator):
 
         solver = NewtonSolver()
         pipes_closed = []
+        
+        total_linear_solver_time = 0
 
         ######### MAIN SIMULATION LOOP ###############
         for t in xrange(n_timesteps):
@@ -231,11 +233,12 @@ class ScipySimulator(WaterNetworkSimulator):
 
             # Load all node results
             timedelta = results.time[t]
-            print "Running Hydraulic Simulation at time ", timedelta, " ..."
-
+            #print "Running Hydraulic Simulation at time ", timedelta, " ..."
+            
             if newton_solver:
                 [self._X, iter_count] = solver.solve(self._hydraulic_equations, self._jacobian, self._X_init, (last_tank_head, current_demands, first_timestep, links_closed))
                 #print "Number of iterations: ", iter_count
+                total_linear_solver_time += solver._total_linear_solver_time
             else:
                 # Use scipy to solve
 
@@ -362,7 +365,8 @@ class ScipySimulator(WaterNetworkSimulator):
                                               aggfunc= lambda x: x)
         results.link = link_pivot_table
 
-        print "Function evaluation time: ", self._func_eval_time
+        print "\tFunction evaluation time: ", self._func_eval_time
+        print "\tLinear solver time: ", total_linear_solver_time
         return results
 
     def _hydraulic_equations(self, x, (last_tank_head, nodal_demands, first_timestep, links_closed)):
@@ -758,7 +762,7 @@ class ScipySimulator(WaterNetworkSimulator):
                 if link_id_k in pumps_closed:
                     if current_tank_level <= value_i:
                         pumps_closed.remove(link_id_k)
-                        print "Pump ", link_name_k, " opened"
+                        #print "Pump ", link_name_k, " opened"
             # If link is open and the tank level goes above threshold, then close the link
             for i in closed_above:
                 node_name_i = i[0]
@@ -768,7 +772,7 @@ class ScipySimulator(WaterNetworkSimulator):
                 current_tank_level = head[node_id_i] - tank_i.elevation
                 if link_id_k not in pumps_closed and current_tank_level >= value_i:
                     pumps_closed.append(link_id_k)
-                    print "Pump ", link_name_k, " closed"
+                    #print "Pump ", link_name_k, " closed"
             # If link is closed and tank level goes above threshold, then open the link
             for i in open_above:
                 node_name_i = i[0]
@@ -779,7 +783,7 @@ class ScipySimulator(WaterNetworkSimulator):
                 if link_id_k in pumps_closed:
                     if current_tank_level >= value_i:
                         pumps_closed.remove(link_id_k)
-                        print "Pump ", link_name_k, " opened"
+                        #print "Pump ", link_name_k, " opened"
             # If link is open and the tank level goes below threshold, then close the link
             for i in closed_below:
                 node_name_i = i[0]
@@ -789,7 +793,7 @@ class ScipySimulator(WaterNetworkSimulator):
                 current_tank_level = head[node_id_i] - tank_i.elevation
                 if link_id_k not in pumps_closed and current_tank_level <= value_i:
                     pumps_closed.append(link_id_k)
-                    print "Pump ", link_name_k, " closed"
+                    #print "Pump ", link_name_k, " closed"
 
         return pumps_closed
 

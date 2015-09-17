@@ -1,10 +1,12 @@
 import numpy as np
 import scipy.sparse as sp
 import copy
+import time
 
 class NewtonSolver(object):
     def __init__(self, options={}):
         self._options = options
+        self._total_linear_solver_time = 0
 
     def solve(self, Residual, Jacobian, x0, args):
 
@@ -42,7 +44,8 @@ class NewtonSolver(object):
         else:
             bt = self._options['BACKTRACKING']
 
-
+        # MAIN NEWTON LOOP
+        self._total_linear_solver_time = 0
         for iter in xrange(maxiter):
             r = Residual(x, args)
             J = Jacobian(x, args)
@@ -54,10 +57,12 @@ class NewtonSolver(object):
 
             if r_norm < tol:
                 return [x, iter]
-
+            
+            # Call Linear solver
+            t0 = time.time()
             d = -sp.linalg.spsolve(J,r)
             #d = -np.linalg.solve(J, r)
-
+            self._total_linear_solver_time += time.time() - t0
 
             # Backtracking
             alpha = 1

@@ -1025,9 +1025,11 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             timedelta = results.time[t]
             if step_iter == 0:
-                print "Running Hydraulic Simulation at time", timedelta, " ... "
+                pass
+                #print "Running Hydraulic Simulation at time", timedelta, " ... "
             else:
-                print "\t Trial", str(step_iter+1), "Running Hydraulic Simulation at time", timedelta, " ..."
+                pass
+                #print "\t Trial", str(step_iter+1), "Running Hydraulic Simulation at time", timedelta, " ..."
 
             # Build the hydraulic constraints at current timestep
             # These constraints do not include valve flow constraints
