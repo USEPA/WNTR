@@ -146,11 +146,12 @@ class ScipySimulator(WaterNetworkSimulator):
 
         # Create time controls dictionary
         link_status = {}
-        for l in self._wn.time_controls:
+        self._correct_time_controls_for_timestep() # should only be used until the simulator can take partial timesteps
+        for l, link in self._wn.links():
             status_l = []
             for t in xrange(n_timesteps):
-                time_min = t*self._hydraulic_step_sec
-                status_l_t = self.is_link_open(l, time_min)
+                time_sec = t*self._hydraulic_step_sec
+                status_l_t = self.link_action(l, time_sec)
                 status_l.append(status_l_t)
             link_status[self._link_name_to_id[l]] = status_l
 
@@ -195,6 +196,7 @@ class ScipySimulator(WaterNetworkSimulator):
         valves_closed = []
 
         solver = NewtonSolver()
+        pipes_closed = []
 
         ######### MAIN SIMULATION LOOP ###############
         for t in xrange(n_timesteps):
@@ -210,11 +212,16 @@ class ScipySimulator(WaterNetworkSimulator):
             # Get demands
             current_demands = [demand_dict[(self._node_id_to_name[n], t)] for n in xrange(self._wn.num_nodes())]
 
-            pipes_closed = []
             # Get time controls
             for l_id, status in link_status.iteritems():
-                if not status[t]:
+                if status[t] == 0 and l_id not in pipes_closed:
                     pipes_closed.append(l_id)
+                elif status[t] == 1 and l_id in pipes_closed:
+                    pipes_closed.remove(l_id)
+                elif status[t] == 2:
+                    continue
+                else:
+                    raise RuntimeError('Add error message here.')
 
 
             # Combine list of closed links

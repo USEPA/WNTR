@@ -409,3 +409,41 @@ class WaterNetworkSimulator(object):
                     node_name = i[0]
                     node = self._wn.get_node(node_name)
                     assert(isinstance(node, Tank)), "Scipy simulator only supports conditional controls on Tank level."
+
+    def _correct_time_controls_for_timestep(self):
+        """
+        This method should only be used until the simulator can take
+        partial timesteps. The idea here is to correct the time
+        controls in case the user specified a time between hydraulic
+        timesteps. If so, the time control is delayed until the
+        following hydraulic timestep. For example, suppose a user
+        specified this control in the inp file:
+
+             LINK Pipe-12 CLOSED AT TIME 8:35
+
+        Also suppose that the hydraulic timestep is 1 hour. This
+        control would be modified so that Pipe-12 is closed at 9:00.
+        """
+        for link_name in self._time_controls.keys():
+            assert type(self._hydraulic_step_sec) == int
+            for i in xrange(len(self._time_controls[link_name]['open_times'])):
+                time = self._time_controls[link_name]['open_times'][i]
+                assert type(time) == int
+                if time%self._hydraulic_step_sec != 0:
+                    new_time = (time/self._hydraulic_step_sec + 1)*self._hydraulic_step_sec
+                    self._time_controls[link_name]['open_times'][i] = new_time
+
+            for i in xrange(len(self._time_controls[link_name]['closed_times'])):
+                time = self._time_controls[link_name]['closed_times'][i]
+                assert type(time) == int
+                if time%self._hydraulic_step_sec != 0:
+                    new_time = (time/self._hydraulic_step_sec + 1)*self._hydraulic_step_sec
+                    self._time_controls[link_name]['closed_times'][i] = new_time
+
+            for i in xrange(len(self._time_controls[link_name]['active_times'])):
+                time = self._time_controls[link_name]['active_times'][i]
+                assert type(time) == int
+                if time%self._hydraulic_step_sec != 0:
+                    new_time = (time/self._hydraulic_step_sec + 1)*self._hydraulic_step_sec
+                    self._time_controls[link_name]['active_times'][i] = new_time
+
