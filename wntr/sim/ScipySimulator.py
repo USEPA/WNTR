@@ -249,7 +249,7 @@ class ScipySimulator(WaterNetworkSimulator):
 
             # Load all node results
             timedelta = results.time[t]
-            #print "Running Hydraulic Simulation at time ", timedelta, " ..."
+            print "Running Hydraulic Simulation at time ", timedelta, " ..."
             
             if newton_solver:
                 [self._X, iter_count] = solver.solve(self._hydraulic_equations, self._jacobian, self._X_init, (last_tank_head, current_demands, first_timestep, links_closed))
@@ -381,8 +381,8 @@ class ScipySimulator(WaterNetworkSimulator):
                                               aggfunc= lambda x: x)
         results.link = link_pivot_table
 
-        print "\tFunction evaluation time: ", self._residual_eval_time + self._jacobian_eval_time
-        print "\tLinear solver time: ", total_linear_solver_time
+        #print "\tFunction evaluation time: ", self._residual_eval_time + self._jacobian_eval_time
+        #print "\tLinear solver time: ", total_linear_solver_time
         return results
 
     def _hydraulic_equations(self, x, (last_tank_head, nodal_demands, first_timestep, links_closed)):

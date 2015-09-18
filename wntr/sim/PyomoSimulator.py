@@ -14,7 +14,7 @@ import pandas as pd
 from six import iteritems
 import warnings
 
-import cProfile#, pstats, StringIO
+import cProfile, pstats, StringIO
 import gc
 
 def do_cprofile(func):
@@ -187,6 +187,9 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._max_step_iter = 10 # maximum number of newton solves at each timestep.
                                  # model is resolved when a valve status changes, the links closed changes, or the solver does not converge.
 
+        # Timing
+        self.prep_time_before_main_loop = 0.0
+        self.solve_step = {}
 
     def _initialize_simulation(self, fixed_demands=None):
 
@@ -930,6 +933,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             Filename of pickled results object. If provided, the simulation is not run. Instead, the pickled results
             object is returned.
         """
+
+        start_run_sim_time = time.time()
+
         if demo:
             import pickle
             results = pickle.load(open(demo, 'rb'))
@@ -971,13 +977,15 @@ class PyomoSimulator(WaterNetworkSimulator):
         instance = None
         valve_status_changed = False
         first_timestep = True
+        start_main_loop_time = time.time()
+        self.prep_time_before_main_loop = start_main_loop_time - start_run_sim_time
         while t < self._n_timesteps and step_iter < self._max_step_iter:
 
             # HACK to work around circular references here and the
             # fact that 2.7.10 does not appear to collect memory as
             # frequently.  This is harmless, except for the small
             # amount of time it takes to run the GC.
-            gc.collect()
+            #gc.collect()
 
             if t == 0:
                 first_timestep = True
@@ -1025,11 +1033,11 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             timedelta = results.time[t]
             if step_iter == 0:
-                pass
-                #print "Running Hydraulic Simulation at time", timedelta, " ... "
+                #pass
+                print "Running Hydraulic Simulation at time", timedelta, " ... "
             else:
-                pass
-                #print "\t Trial", str(step_iter+1), "Running Hydraulic Simulation at time", timedelta, " ..."
+                #pass
+                print "\t Trial", str(step_iter+1), "Running Hydraulic Simulation at time", timedelta, " ..."
 
             # Build the hydraulic constraints at current timestep
             # These constraints do not include valve flow constraints
@@ -1064,7 +1072,10 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._check_for_isolated_junctions(instance, links_closed)
 
             # Solve the instance and load results
+            start_solve_step = time.time()
             pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
+            end_solve_step = time.time()
+            self.solve_step[t] = end_solve_step - start_solve_step
             instance.load(pyomo_results)
 
             # Post-solve controls 
