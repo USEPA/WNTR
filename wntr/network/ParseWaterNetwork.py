@@ -145,12 +145,12 @@ class ParseWaterNetwork(object):
         inp_units = epanet_unit_id[wn.options['UNITS']]
 
         # Change units in options dictionary
-        if 'MINIMUM PRESSURE' in wn.options:
-            raise RuntimeError('Specifying nominal and/or minimum pressures in an inp file is not supported') # Updated 5/27/15
+        #if 'MINIMUM PRESSURE' in wn.options:
+            #raise RuntimeError('Specifying nominal and/or minimum pressures in an inp file is not supported') # Updated 5/27/15
             #pressure_value = wn.options['MINIMUM PRESSURE']
             #wn.options['MINIMUM PRESSURE'] = convert('Pressure', inp_units, pressure_value)
-        if 'NOMINAL PRESSURE' in wn.options:
-            raise RuntimeError('Specifying nominal and/or minimum pressures in an inp file is not supported') # Updated 5/27/15
+        #if 'NOMINAL PRESSURE' in wn.options:
+            #raise RuntimeError('Specifying nominal and/or minimum pressures in an inp file is not supported') # Updated 5/27/15
             #pressure_value = wn.options['NOMINAL PRESSURE']
             #wn.options['NOMINAL PRESSURE'] = convert('Pressure', inp_units, pressure_value)
             #assert wn.options['NOMINAL PRESSURE'] >= wn.options['MINIMUM PRESSURE'], "Nominal pressure must be greater than minimum pressure. "
