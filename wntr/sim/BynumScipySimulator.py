@@ -186,10 +186,12 @@ class ScipySimulator(WaterNetworkSimulator):
         self._initialize_demand(net_status)
         self._X_init = np.concatenate((self.flow0, self.head0, self.demand0))
 
-        
+        while net_status.time_sec <= self._wn.time_options['DURATION']:
+            self._X = self.solve_hydraulics(net_status)
+            results = self.save_results(self._X)
+            net_status.update_network_status(results)
 
-
-    def solve_hydraulics(self, net_status):
+    def solve_hydraulics(self, x0, net_status):
         """
         Method to solve the hydraulic equations given the network status
 
@@ -197,6 +199,19 @@ class ScipySimulator(WaterNetworkSimulator):
         ----------
         net_status: a NetworkStatus object
         """
+        self.solver.solve(self._hydraulic_equations, self._jacobian, x0)
+
+    def _hydraulic_equations(self, x):
+        flow = x[:self.num_links]
+        head = x[self.num_links:self.num_links+self.num_nodes]
+        demand = x[self.num_links+self.num_nodes:]
+        self.get_node_balance_residual(flow, demand)
+        self.get_headloss_residual(head, flow)
+        self.get_demand_or_head_residual(head, demand)
+
+        all_residuals = np.concatenate((self.node_balance_residual, self.headloss_residual, self.demand_or_head_residual))
+
+        return np.array(all_residuals)
 
 
     def get_node_balance_residual(self, flow, demand):
