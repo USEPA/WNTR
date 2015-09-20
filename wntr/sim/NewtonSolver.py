@@ -8,12 +8,6 @@ class NewtonSolver(object):
         self._options = options
         self._total_linear_solver_time = 0
 
-    def solve(self, Residual, Jacobian, x0, args):
-
-        x = copy.copy(x0)
-
-        num_vars = len(x)
-
         if 'MAXITER' not in self._options:
             maxiter = 1000
         else:
@@ -44,8 +38,14 @@ class NewtonSolver(object):
         else:
             bt = self._options['BACKTRACKING']
 
+
+    def solve(self, Residual, Jacobian, x0, args):
+
+        x = copy.copy(x0)
+
+        num_vars = len(x)
+
         # MAIN NEWTON LOOP
-        self._total_linear_solver_time = 0
         for iter in xrange(maxiter):
             r = Residual(x, args)
             J = Jacobian(x, args)
