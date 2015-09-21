@@ -23,12 +23,18 @@ class EpanetSimulator(WaterNetworkSimulator):
         """
         WaterNetworkSimulator.__init__(self, wn)
 
+        # Timing
+        self.prep_time_before_main_loop = 0.0
+        self.solve_step = {}
 
     def run_sim(self, WQ = None, convert_units=True, pandas_result=True, demo=None):
         """
         Run water network simulation using epanet.
 
         """
+
+        start_run_sim_time = time.time()
+
         if demo:
             import pickle
             results = pickle.load(open(demo, 'rb'))
@@ -73,8 +79,13 @@ class EpanetSimulator(WaterNetworkSimulator):
         link_velocity = []
         link_flowrate = []
 
+        start_main_loop_time = time.time()
+        self.prep_time_before_main_loop = start_main_loop_time - start_run_sim_time
         while True:
+            start_solve_step = time.time()
             t = enData.ENrunH()
+            end_solve_step = time.time()
+            self.solve_step[t/self._wn.time_options['HYDRAULIC TIMESTEP']] = end_solve_step - start_solve_step
             timedelta = pd.Timedelta(seconds = t)
             if timedelta in results.time:
                 for name, node in self._wn.nodes():

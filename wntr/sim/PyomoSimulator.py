@@ -190,6 +190,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Timing
         self.prep_time_before_main_loop = 0.0
         self.solve_step = {}
+        self.build_model_time = {}
 
     def _initialize_simulation(self, fixed_demands=None):
 
@@ -1041,6 +1042,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             # Build the hydraulic constraints at current timestep
             # These constraints do not include valve flow constraints
+            start_build_model = time.time()
             model = self._build_hydraulic_model_at_instant(t,
                                                            last_tank_head,
                                                            current_demands,
@@ -1052,6 +1054,13 @@ class PyomoSimulator(WaterNetworkSimulator):
 
             # Add constant objective
             model.obj = Objective(expr=1, sense=minimize)
+            
+            end_build_model = time.time()
+            if step_iter == 0:
+                self.build_model_time[t] = end_build_model - start_build_model
+            else:
+                self.build_model_time[t] += end_build_model - start_build_model
+
             #Create does not need to be called for NLP
             instance = model
 
@@ -1075,7 +1084,10 @@ class PyomoSimulator(WaterNetworkSimulator):
             start_solve_step = time.time()
             pyomo_results = opt.solve(instance, tee=False, keepfiles=False)
             end_solve_step = time.time()
-            self.solve_step[t] = end_solve_step - start_solve_step
+            if step_iter == 0:
+                self.solve_step[t] = end_solve_step - start_solve_step
+            else:
+                self.solve_step[t] += end_solve_step - start_solve_step
             instance.load(pyomo_results)
 
             # Post-solve controls 

@@ -138,9 +138,15 @@ class ScipySimulator(WaterNetworkSimulator):
         else:
             self._P0 = None
             self._PF = None
+
+        # Timing
+        self.prep_time_before_main_loop = 0.0
+        self.solve_step = {}
     
     def run_sim(self, demo=None):
         
+        start_run_sim_time = time.time()
+
         if demo:
             import pickle
             results = pickle.load(open(demo, 'rb'))
@@ -216,6 +222,9 @@ class ScipySimulator(WaterNetworkSimulator):
         
         total_linear_solver_time = 0
 
+        start_main_loop_time = time.time()
+        self.prep_time_before_main_loop = start_main_loop_time - start_run_sim_time
+
         ######### MAIN SIMULATION LOOP ###############
         for t in xrange(n_timesteps):
             if t == 0:
@@ -252,7 +261,10 @@ class ScipySimulator(WaterNetworkSimulator):
             print "Running Hydraulic Simulation at time ", timedelta, " ..."
             
             if newton_solver:
+                start_solve_step = time.time()
                 [self._X, iter_count] = solver.solve(self._hydraulic_equations, self._jacobian, self._X_init, (last_tank_head, current_demands, first_timestep, links_closed))
+                end_solve_step = time.time()
+                self.solve_step[t] = end_solve_step - start_solve_step
                 #print "Number of iterations: ", iter_count
                 total_linear_solver_time += solver._total_linear_solver_time
             else:
