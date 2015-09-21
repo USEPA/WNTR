@@ -114,6 +114,10 @@ class ScipySimulator(WaterNetworkSimulator):
             l += 1
 
     def _init_jacobian(self):
+        # TODO: There is no need to loop over all columns - we know which ones matter
+
+        # Create the jacobian as a scipy.sparse.csr_matrix
+        # Initialize with any jacobian entry that has the possibility to be non-zero as 1.0
         num_vars = self.num_nodes*2 + self.num_links
         row = []
         col = []
@@ -218,7 +222,7 @@ class ScipySimulator(WaterNetworkSimulator):
                     self.pump_powers[link_id] = link.power
 
 
-    def run_eps(self):
+    def run_sim(self):
         """
         Method to run an extended period simulation
         """
@@ -240,6 +244,7 @@ class ScipySimulator(WaterNetworkSimulator):
         self._X_init = np.concatenate((self.head0, self.demand0, self.flow0))
 
         while net_status.time_sec <= self._wn.time_options['DURATION']:
+            self.set_jacobian_constants()
             self._X = self.solve_hydraulics(net_status)
             results = self.save_results(self._X)
             net_status.update_network_status(results)
@@ -267,8 +272,83 @@ class ScipySimulator(WaterNetworkSimulator):
 
         return all_residuals
 
+    def set_jacobian_constants(self, links_closed, valve_settings):
+        # set the jacobian entries that depend on the network status
+        # but do not depend on the value of any variable.
+        for i in xrange(self.num_nodes*2, self.num_nodes*2+self.num_links): # Equations/rows
+            link_id = i - 2*self.num_nodes
+            start_node_id = self.link_start_nodes[link_id]
+            end_node_id = self.link_end_nodes[link_id]
+            if link_id in links_closed:
+                self.jacobian[i,start_node_id] = 0.0
+                self.jacobian[i,end_node_id] = 0.0
+                self.jacobian[i,i] = 1.0
+            elif link_id in self._pipe_ids:
+                self.jacobian[i,start_node_id] = -1.0
+                self.jacobian[i,end_node_id] = 1.0
+            elif link_id in self._pump_ids:
+                if link_id in self.head_curve_coefficients.keys():
+                    self.jacobian[i,start_node_id] = 1.0
+                    self.jacobian[i,end_node_id] = -1.0
+            elif link_id in self._valve_ids:
+                if link_id in self._prv_ids:
+                    if type(valve_settings[link_id]) == float: # Active
+                        self.jacobian[i,start_node_id] = 0.0
+                        self.jacobian[i,end_node_id] = 1.0
+                        self.jacobian[i,i] = 0.0
+                    elif valve_settings[link_id] == 'OPEN':
+                        self.jacobian[i,start_node_id] = -1.0
+                        self.jacobian[i,end_node_id] = 1.0
+                    elif valve_settings[link_id] == 'CLOSED':
+                        self.jacobian[i,start_node_id] = 0.0
+                        self.jacobian[i,end_node_id] = 0.0
+                        self.jacobian[i,i] = 1.0
+                
 
-    def get_node_balance_residual(self, flow, demand):
+
+    def get_jacobian(self, x, links_closed, valve_settings):
+        for i in xrange(self.num_nodes*2, self.num_nodes*2+self.num_links): # Equations/rows
+            link_id = i - 2*self.num_nodes
+            if link_id in links_closed:
+                pass
+            elif link_id in self._pipe_ids:
+                flow = x[i]
+                pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
+                if flow < -self.hw_q2:
+                    self.jacobian[i,i] = -1.852*pipe_resistance_coeff*abs(flow)**0.852
+                elif flow <= -self.hw_q1:
+                    self.jacobian[i,i] = -pipe_resistance_coeff*(3.0*self.hw_a*abs(flow)**2 + 2*self.hw_b*abs(flow) + self.hw_c)
+                elif flow <= 0.0:
+                    self.jacobian[i,i] = -pipe_resistance_coeff*self.hw_m
+                elif flow < self.hw_q1:
+                    self.jacobian[i,i] = pipe_resistance_coeff*self.hw_m
+                elif flow <= self.hw_q2:
+                    self.jacobian[i,i] = pipe_resistance_coeff*(3.0*self.hw_a*flow**2 + 2*self.hw_b*flow + self.hw_c)
+                else:
+                    self.jacobian[i,i] = 1.852*pipe_resistance_coeff*flow**0.852
+            elif link_id in self._pump_ids:
+                flow = x[i]
+                if link_id in self.head_curve_coefficients.keys():
+                    head_curve_tuple = self.head_curve_coefficients[link_id]
+                    B = head_curve_tuple[1]
+                    C = head_curve_tuple[2]
+                    self.jacobian[i,i] = -B*C*abs(flow)**(C-1.0)
+                elif link_id in self.pump_powers.keys():
+                    start_node_id = self.link_start_nodes[link_id]
+                    end_node_id = self.link_end_nodes[link_id]
+                    self.jacobian[i,start_node_id] = 1000.0*self._g*flow
+                    self.jacobian[i,end_node_id] = -1000.0*self._g*flow
+                    self.jacobian[i,i] = 1000.0*self._g*x[start_node_id] - 1000.0*self._g*x[end_node_id]
+            elif link_id in self._valve_ids:
+                if link_id in self._prv_ids:
+                    if valve_settings[link_id] == 'OPEN':
+                        flow = x[i]
+                        pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
+                        self.jacobian[i,i] = 2.0*pipe_resistance_coeff*abs(flow)
+
+        return self.jacobian    
+
+    def get_node_balance_residual(self, x):
         """
         Mass balance at all the nodes
 
@@ -282,6 +362,9 @@ class ScipySimulator(WaterNetworkSimulator):
         List of residuals of the node mass balances
         """
 
+        demand = x[self.num_nodes:self.num_nodes*2]
+        flow = x[self.num_nodes*2:]
+
         for node_id in xrange(self.num_nodes):
             expr = 0
             for l in self.out_link_ids_for_nodes[node_id]:
@@ -290,7 +373,10 @@ class ScipySimulator(WaterNetworkSimulator):
                 expr += flow[link_id]
             self.node_balance_residual[node_id] = expr - demand[node_id]
 
-    def get_headloss_residual(self, head, flow, links_closed, valve_settings):
+    def get_headloss_residual(self, x, links_closed, valve_settings):
+
+        head = x[:self.num_nodes]
+        flow = x[self.num_nodes*2:]
 
         for link_id in xrange(self.num_links):
             link_flow = flow[link_id]
@@ -346,7 +432,10 @@ class ScipySimulator(WaterNetworkSimulator):
             else:
                 raise RuntimeError('Type of link is not recognized')
 
-    def get_demand_or_head_residual(self, head, demand, expected_demands, tank_heads, reservoir_heads):
+    def get_demand_or_head_residual(self, x, expected_demands, tank_heads, reservoir_heads):
+
+        head = x[:self.num_nodes]
+        demand = x[self.num_nodes:self.num_nodes*2]
 
         for node_id in xrange(self.num_nodes):
             if node_id in self._junction_ids:
