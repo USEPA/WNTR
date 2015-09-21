@@ -766,7 +766,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         def init_leak_demand_rule(model,n):
             if n in self._active_leaks:
                 node = wn.get_node(n)
-                return node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
+                return node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(value(model.head[n])-node.elevation)
             else:
                 return 0.0
         model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule, bounds = (None, None))
