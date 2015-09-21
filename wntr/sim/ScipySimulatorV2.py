@@ -122,6 +122,22 @@ class ScipySimulator(WaterNetworkSimulator):
         row = []
         col = []
         data = []
+
+        % csrm.data[4] = 6.2
+        
+
+
+        row_idx = 0
+        # create the node balance equations
+        for n in Nodes:
+            add.some_stuff()
+            row_idx += 1
+
+        # create the pipe headloss equations
+        for p in Pipes:
+            add_some_other_stuff
+            row_idx += 1
+
         for i in xrange(num_vars): # Equations/rows
             for j in xrange(num_vars): # Variabls/Columns
                 if i < self.num_nodes: # Node balances
