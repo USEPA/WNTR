@@ -34,15 +34,18 @@ class ScipySimulator(WaterNetworkSimulator):
         # Initialize residuals
         # Equations will be ordered:
         #    1.) Node mass balance residuals
-        #    2.) Headloss residuals
-        #    3.) Demand/head residuals
+        #    2.) Demand/head residuals
+        #    3.) Headloss residuals
         self.node_balance_residual = np.ones(self.num_nodes)
-        self.headloss_residual = np.ones(self.num_links)
         self.demand_or_head_residual = np.ones(self.num_nodes)
+        self.headloss_residual = np.ones(self.num_links)
 
         # Set miscelaneous link and node attributes
         self._set_node_attributes()
         self._set_link_attributes()
+
+        # Initialize Jacobian
+        self._init_jacobian()
 
     def _initialize_global_constants(self):
         self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units (it equals 4.727 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
@@ -79,7 +82,7 @@ class ScipySimulator(WaterNetworkSimulator):
             elif isinstance(node, Reservoir):
                 self._reservoir_ids.append(n)
             elif isinstance(node, Junction):
-                self.junction_ids.append(n)
+                self._junction_ids.append(n)
             else:
                 raise RuntimeError('Node is not a junction, tank, or reservoir.')
             n += 1
@@ -109,6 +112,56 @@ class ScipySimulator(WaterNetworkSimulator):
             else:
                 raise RuntimeError('Link is not a pipe, pump, or valve.')
             l += 1
+
+    def _init_jacobian(self):
+        num_vars = self.num_nodes*2 + self.num_links
+        row = []
+        col = []
+        data = []
+        for i in xrange(num_vars): # Equations/rows
+            for j in xrange(num_vars): # Variabls/Columns
+                if i < self.num_nodes: # Node balances
+                    if j == self.num_nodes + i:
+                        row.append(i)
+                        col.append(j)
+                        data.append(-1.0)
+                    elif j >= 2*self.num_nodes:
+                        link_id = j - 2*self.num_nodes
+                        node_id = i
+                        if link_id in self.in_link_ids_for_nodes[node_id]:
+                            row.append(i)
+                            col.append(j)
+                            data.append(1.0)
+                        elif link_id in self.out_link_ids_for_nodes[node_id]:
+                            row.append(i)
+                            col.append(j)
+                            data.append(-1.0)
+                elif i < 2*self.num_nodes: # Demand/Head equations
+                    node_id = i - self.num_nodes
+                    if node_id in self._tank_ids or node_id in self._reservoir_ids:
+                        if j == node_id:
+                            row.append(i)
+                            col.append(j)
+                            data.append(1.0)
+                    elif node_id in self._junction_ids:
+                        if j == i:
+                            row.append(i)
+                            col.append(j)
+                            data.append(1.0)
+                elif i < 2*self.num_nodes + self.num_links: # Headloss equations
+                    link_id = i - 2*self.num_nodes
+                    if j == self.link_start_nodes[link_id] or j == self.link_end_nodes[link_id]:
+                        row.append(i)
+                        col.append(j)
+                        data.append(1.0)
+                    elif i == j:
+                        row.append(i)
+                        col.append(j)
+                        data.append(1.0)
+                
+        self.jacobian = sparse.csr_matrix((data, (row,col)),shape=(num_vars,num_vars))
+
+        print self.jacobian.toarray()
 
     def _set_node_attributes(self):
         self.out_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
@@ -175,16 +228,16 @@ class ScipySimulator(WaterNetworkSimulator):
 
         # Initialize X
         # Vars will be ordered:
-        #    1.) flow
-        #    2.) head
-        #    3.) demand
-        self.flow0 = np.zeros(self.num_links)
+        #    1.) head
+        #    2.) demand
+        #    3.) flow
         self.head0 = np.zeros(self.num_nodes)
         self.demand0 = np.zeros(self.num_nodes)
-        self._initialize_flow(net_status)
+        self.flow0 = np.zeros(self.num_links)
         self._initialize_head(net_status)
         self._initialize_demand(net_status)
-        self._X_init = np.concatenate((self.flow0, self.head0, self.demand0))
+        self._initialize_flow(net_status)
+        self._X_init = np.concatenate((self.head0, self.demand0, self.flow0))
 
         while net_status.time_sec <= self._wn.time_options['DURATION']:
             self._X = self.solve_hydraulics(net_status)
@@ -199,19 +252,20 @@ class ScipySimulator(WaterNetworkSimulator):
         ----------
         net_status: a NetworkStatus object
         """
-        self.solver.solve(self._hydraulic_equations, self._jacobian, x0)
 
-    def _hydraulic_equations(self, x):
-        flow = x[:self.num_links]
-        head = x[self.num_links:self.num_links+self.num_nodes]
-        demand = x[self.num_links+self.num_nodes:]
+        self.solver.solve(self._hydraulic_equations, self.get_jacobian, x0)
+
+    def get_hydraulic_equations(self, x):
+        head = x[:self.num_nodes]
+        demand = x[self.num_nodes:self.num_nodes*2]
+        flow = x[self.num_nodes*2:]
         self.get_node_balance_residual(flow, demand)
-        self.get_headloss_residual(head, flow)
         self.get_demand_or_head_residual(head, demand)
+        self.get_headloss_residual(head, flow)
 
-        all_residuals = np.concatenate((self.node_balance_residual, self.headloss_residual, self.demand_or_head_residual))
+        all_residuals = np.concatenate((self.node_balance_residual, self.demand_or_head_residual, self.headloss_residual))
 
-        return np.array(all_residuals)
+        return all_residuals
 
 
     def get_node_balance_residual(self, flow, demand):
