@@ -1416,6 +1416,33 @@ class WaterNetworkModel(object):
 
         f.close()
 
+class NodeTypes(object):
+    def __init__(self):
+        self.junction = 0
+        self.tank = 1
+        self.reservoir = 2
+
+    def node_type_to_str(value):
+        if value == 0:
+            return 'Junction'
+        elif value == 1:
+            return 'Tank'
+        elif value == 2:
+            return 'Reservoir'
+
+class LinkTypes(object):
+    def __init__(self):
+        self.pipe = 0
+        self.pump = 1
+        self.valve = 2
+
+    def link_type_to_str(value):
+        if value == 0:
+            return 'Pipe'
+        elif value == 1:
+            return 'Pump'
+        elif value == 2:
+            return 'Valve'
 
 class Node(object):
     """

@@ -2,7 +2,7 @@ from wntr import *
 import numpy as np
 import scipy.sparse as sparse
 import warnings
-
+from WaterNetworkSimulator import *
 
 class ScipySimulator(WaterNetworkSimulator):
     """
@@ -20,8 +20,6 @@ class ScipySimulator(WaterNetworkSimulator):
         """
 
         WaterNetworkSimulator.__init__(wn)
-        self._initialize_results_dict()
-
 
     def run_sim(self):
         """
@@ -29,6 +27,8 @@ class ScipySimulator(WaterNetworkSimulator):
         """
 
         model = ScipyModel(self._wn)
+        model.initialize_results_dict()
+
         self.solver = NewtonSolver()
 
         results = NetRestuls()
@@ -39,25 +39,22 @@ class ScipySimulator(WaterNetworkSimulator):
         #    1.) head
         #    2.) demand
         #    3.) flow
-        self.head0 = np.zeros(self.num_nodes)
-        self.demand0 = np.zeros(self.num_nodes)
-        self.flow0 = np.zeros(self.num_links)
-        self._initialize_head(net_status)
-        self._initialize_demand(net_status)
-        self._initialize_flow(net_status)
-        self._X_init = np.concatenate((self.head0, self.demand0, self.flow0))
+        model.set_network_status_by_id()
+        head0 = model.initialize_head()
+        demand0 = model.initialize_demand()
+        flow0 = model.initialize_flow()
+        
+        X_init = np.concatenate((head0, demand0, flow0))
 
         while self._wn.time_sec <= self._wn.time_options['DURATION']:
-            events_to_make_changes = []
-            events_to back_up = []
-            for event in event_list:
-                status = event.EventNeeedsToMakeChanges()
-                if status == SimulationEventStatus.ChangesRequired:
-            model.set_network_statuses_by_id()
+            model.set_network_status_by_id()
             self.set_jacobian_constants()
-            self._X = self.solve_hydraulics(net_status)
-            results = self.save_results(self._X)
-            net_status.update_network_status(results)
+            [self._X,num_iters] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            model.save_results(self._X)
+            model.update_network(self._X, self._demand_dict)
+
+        model.get_results(results)
+        return results
 
     def solve_hydraulics(self, x0, net_status):
         """
@@ -70,23 +67,18 @@ class ScipySimulator(WaterNetworkSimulator):
 
         self.solver.solve(self._hydraulic_equations, self.get_jacobian, x0)
 
-    def _initialize_flow(self, net_status):
-        for link_name in net_status.links_closed:
-            self.flow0[self._link_name_to_id[link_name]] = 0.0
+    def _get_demand_dict(self):
 
-    def _initialize_head(self, net_status):
-        for node_id in self._junction_ids:
-            self.head0[node_id] = self.node_elevations[node_id]
-        for tank_name in net_status.tank_heads.keys():
-            tank_id = self._node_name_to_id[tank_name]
-            self.head0[tank_id] = net_status.tank_heads[tank_name]
-        for reservoir_name in net_status.reservoir_heads.keys():
-            reservoir_id = self._node_name_to_id[reservoir_name]
-            self.head0[reservoir_id] = net_status.reservoir_heads[reservoir_name]
+        # Number of hydraulic timesteps
+        self._n_timesteps = int(round(self._wn.time_options['DURATION'] / self._wn.time_options['HYDRAULIC TIMESTEP'])) + 1
 
-    def _initialize_demand(self, net_status):
-        for junction_name in net_status.expected_demands.keys():
-            junction_id = self._node_name_to_id[junction_name]
-            self.demand0[junction_id] = net_status.expected_demands[junction_name]
-            
-
+        # Get all demand for complete time interval
+        self._demand_dict = {}
+        for node_name, node in self._wn.nodes():
+            if isinstance(node, Junction):
+                demand_values = self.get_node_demand(node_name)
+                for t in range(self._n_timesteps):
+                    self._demand_dict[(node_name, t)] = demand_values[t]
+            else:
+                for t in range(self._n_timesteps):
+                    self._demand_dict[(node_name, t)] = 0.0

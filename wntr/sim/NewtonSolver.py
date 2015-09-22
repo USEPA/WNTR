@@ -39,7 +39,7 @@ class NewtonSolver(object):
             self.bt = self._options['BACKTRACKING']
 
 
-    def solve(self, Residual, Jacobian, x0, args):
+    def solve(self, Residual, Jacobian, x0):
 
         x = copy.copy(x0)
 
@@ -47,8 +47,8 @@ class NewtonSolver(object):
 
         # MAIN NEWTON LOOP
         for iter in xrange(self.maxiter):
-            r = Residual(x, args)
-            J = Jacobian(x, args)
+            r = Residual(x)
+            J = Jacobian(x)
             #J = Jfunc(x)
 
             r_norm = np.max(r)
