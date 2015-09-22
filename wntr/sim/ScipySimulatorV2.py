@@ -19,16 +19,15 @@ class ScipySimulator(WaterNetworkSimulator):
             A water network
         """
 
-        WaterNetworkSimulator.__init__(self.wn)
-
+        WaterNetworkSimulator.__init__(wn)
 
 
     def run_sim(self):
         """
         Method to run an extended period simulation
         """
-        # Create NetworkStatus object
-        net_status = NetworkStatus(self._wn)
+
+        model = ScipyModel(self._wn)
         self.solver = NewtonSolver()
 
         # Initialize X
@@ -44,7 +43,7 @@ class ScipySimulator(WaterNetworkSimulator):
         self._initialize_flow(net_status)
         self._X_init = np.concatenate((self.head0, self.demand0, self.flow0))
 
-        while net_status.time_sec <= self._wn.time_options['DURATION']:
+        while self._wn.time_sec <= self._wn.time_options['DURATION']:
             self.set_jacobian_constants()
             self._X = self.solve_hydraulics(net_status)
             results = self.save_results(self._X)

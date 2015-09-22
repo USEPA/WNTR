@@ -41,6 +41,7 @@ class WaterNetworkModel(object):
 
         # Network name
         self.name = None
+        self.time_sec = 0.0
 
         # Initialize Network size parameters
         self._num_junctions = 0
@@ -1447,6 +1448,23 @@ class Node(object):
         """
         return self._name
 
+class LinkStatus(object):
+    def __init__(self):
+        self.closed = 0
+        self.open = 1
+        self.active = 2
+        self.cv = 3
+
+    def str_to_status(self, value):
+        if value.upper() == 'OPEN':
+            return self.open
+        elif value.upper() == 'CLOSED':
+            return self.closed
+        elif value.upper() == 'ACTIVE':
+            return self.active
+        elif value.upper() == 'CV':
+            return self.cv
+
 class Link(object):
     """
     The base link class.
@@ -1471,9 +1489,9 @@ class Link(object):
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
-        self._base_status = 'OPEN'
-        self._open_times = list()
-        self._closed_times = list()
+        status_options = LinkStatus()
+        self._base_status = status_options.open
+        self.current_status = status_options.open
 
     def __str__(self):
         """
@@ -1529,6 +1547,7 @@ class Junction(Node):
         """
         Node.__init__(self, name)
         self.base_demand = base_demand
+        self.current_demand = base_demand
         self.demand_pattern_name = demand_pattern_name
         self.elevation = elevation
         self.PF = 20.0
@@ -1719,6 +1738,7 @@ class Reservoir(Node):
         """
         Node.__init__(self, name)
         self.base_head = base_head
+        self.current_head = base_head
         self.head_pattern_name = head_pattern_name
 
 
@@ -1761,6 +1781,7 @@ class Tank(Node):
         Node.__init__(self, name)
         self.elevation = elevation
         self.init_level = init_level
+        self.current_level = init_level
         self.min_level = min_level
         self.max_level = max_level
         self.diameter = diameter
@@ -1854,8 +1875,13 @@ class Pipe(Link):
         self.diameter = diameter
         self.roughness = roughness
         self.minor_loss = minor_loss
+        status_options = LinkStatus()
         if status is not None:
-            self._base_status = status.upper()
+            self._base_status = status_options.str_to_status(status)
+            if self._base_status == status_options.cv:
+                self.current_status = status_options.open
+            else:
+                self.current_status = self._base_status
 
 
 class Pump(Link):
@@ -1881,6 +1907,8 @@ class Pump(Link):
             Where power is a fixed value in KW, while a head curve is a Curve object.
         """
         Link.__init__(self, name, start_node_name, end_node_name)
+        self.base_speed = 1.0
+        self.current_speed = 1.0
         self.curve = None
         self.power = None
         self.info_type = info_type
@@ -2011,8 +2039,11 @@ class Valve(Link):
         self.diameter = diameter
         self.valve_type = valve_type
         self.minor_loss = minor_loss
-        self.setting = setting
-        self._base_status = 'OPEN'
+        self.base_setting = setting
+        self.current_setting = setting
+        status_options = LinkStatus()
+        self._base_status = status_options.active
+        self.current_status = status_options.active
 
 
 class Curve(object):

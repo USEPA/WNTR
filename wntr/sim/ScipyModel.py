@@ -159,6 +159,40 @@ class ScipyModel(object):
     def _set_jacobian_structure(self):
         # Create the jacobian as a scipy.sparse.csr_matrix
         # Initialize all jacobian entries that have the possibility to be non-zero
+
+        # Structure of jacobian:
+        #
+        # H_n => Head for node id n
+        # D_n => Demand for node id n
+        # F_l => Flow for link id l
+        # node_bal_n => node balance for node id n
+        # D/H_n      => demand/head equation for node id n
+        # headloss_l => headloss equation for link id l
+        # in link refers to a link that has node_n as an end node
+        # out link refers to a link that has node_n as a start node
+        # * means 1 if the node is a tank or reservoir, 0 otherwise
+        # ** means 1 if the node is a junction, 0 otherwise
+        # NZ means could be non-zero, but depends on network status and/or variable values
+        #
+        # Variable          H_1   H_2   H_n   H_(N-1)   H_N   D_1   D_2   D_n   D_(N-1)   D_N   F_1   F_2   F_l   F_(L-1)   F_L
+        # Equation
+        # node_bal_1         0     0     0     0         0     -1    0     0     0         0    (1 for in link, -1 for out link) 
+        # node_bal_2         0     0     0     0         0     0     -1    0     0         0    (1 for in link, -1 for out link) 
+        # node_bal_n         0     0     0     0         0     0     0     -1    0         0    (1 for in link, -1 for out link) 
+        # node_bal_(N-1)     0     0     0     0         0     0     0     0     -1        0    (1 for in link, -1 for out link) 
+        # node_bal_N         0     0     0     0         0     0     0     0     0         -1   (1 for in link, -1 for out link) 
+        # D/H_1              *     0     0     0         0     **    0     0     0         0     0      0     0    0         0   
+        # D/H_2              0     *     0     0         0     0     **    0     0         0     0      0     0    0         0
+        # D/H_n              0     0     *     0         0     0     0     **    0         0     0      0     0    0         0
+        # D/H_(N-1)          0     0     0     *         0     0     0     0     **        0     0      0     0    0         0
+        # D/H_N              0     0     0     0         *     0     0     0     0         **    0      0     0    0         0
+        # headloss_1         (NZ for start node and end node)  0     0     0     0         0     NZ     0     0    0         0
+        # headloss_2         (NZ for start node and end node)  0     0     0     0         0     0      NZ    0    0         0
+        # headloss_l         (NZ for start node and end node)  0     0     0     0         0     0      0     NZ   0         0
+        # headloss_(L-1)     (NZ for start node and end node)  0     0     0     0         0     0      0     0    NZ        0
+        # headloss_L         (NZ for start node and end node)  0     0     0     0         0     0      0     0    0         NZ
+
+
         num_vars = self.num_nodes*2 + self.num_links
         self.jac_row = []
         self.jac_col = []
@@ -244,22 +278,25 @@ class ScipyModel(object):
         # ordering is very important here
         # the csr_matrix data is stored by going though all columns of the first row, then all columns of the second row, etc
         # ex:
-        # row = [0,1,2,4,3,3]
-        # col = [0,1,2,4,3,1]
-        # value = [0,1,2,4,3,18]
-        # A = sparse.csr_matrix((value,(row,col)),shape=(5,5))
+        # row = [0,1,2,0,1,2,0,1,2]
+        # col = [0,0,0,1,1,1,2,2,2]
+        # value = [0,1,2,3,4,5,6,7,8]
+        # A = sparse.csr_matrix((value,(row,col)),shape=(3,3))
         #
         # then A=>
-        #          0   0  0  0  0
-        #          0   1  0  0  0
-        #          0   0  2  0  0
-        #          0  18  0  3  0
-        #          0   0  0  0  4
+        #          0   3  6
+        #          1   4  7
+        #          2   5  8
         # and A.data =>
-        #              [0  1  2  18  3  4]
+        #              [0, 3, 6, 1, 4, 7, 2, 5, 8]
 
         value_ndx = self.jac_ndx_of_first_headloss
 
+        # Set jacobian entries for headloss equations
+        # Each row in the jacobian associated with a headloss equation
+        # has 3 entries: one for the start node head, one for the end node
+        # head, and one for the flow in the link. However, the ordering of
+        # the start and end node heads is unknown.
         for link_id in self._link_ids:
             start_node_id = self.link_start_nodes[link_id]
             end_node_id = self.link_end_nodes[link_id]
@@ -346,46 +383,70 @@ class ScipyModel(object):
         self.jacobian.data = self.jac_values
 
     def get_jacobian(self, x, links_closed, valve_settings):
-        for i in xrange(self.num_nodes*2, self.num_nodes*2+self.num_links): # Equations/rows
-            link_id = i - 2*self.num_nodes
+
+        value_ndx = self.jac_ndx_of_first_headloss
+        flows = x[self.num_nodes*2:]
+
+        # Set the jacobian entries that depend on variable values
+        for link_id in self._link_ids:
             if link_id in links_closed:
-                pass
+                value_ndx += 3
             elif link_id in self._pipe_ids:
-                flow = x[i]
+                value_ndx += 2
+                flow = flows[link_id]
                 pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
                 if flow < -self.hw_q2:
-                    self.jacobian[i,i] = -1.852*pipe_resistance_coeff*abs(flow)**0.852
+                    self.jac_values[value_ndx] = -1.852*pipe_resistance_coeff*abs(flow)**0.852
                 elif flow <= -self.hw_q1:
-                    self.jacobian[i,i] = -pipe_resistance_coeff*(3.0*self.hw_a*abs(flow)**2 + 2*self.hw_b*abs(flow) + self.hw_c)
+                    self.jac_values[value_ndx] = -pipe_resistance_coeff*(3.0*self.hw_a*abs(flow)**2 + 2*self.hw_b*abs(flow) + self.hw_c)
                 elif flow <= 0.0:
-                    self.jacobian[i,i] = -pipe_resistance_coeff*self.hw_m
+                    self.jac_values[value_ndx] = -pipe_resistance_coeff*self.hw_m
                 elif flow < self.hw_q1:
-                    self.jacobian[i,i] = pipe_resistance_coeff*self.hw_m
+                    self.jac_values[value_ndx] = pipe_resistance_coeff*self.hw_m
                 elif flow <= self.hw_q2:
-                    self.jacobian[i,i] = pipe_resistance_coeff*(3.0*self.hw_a*flow**2 + 2*self.hw_b*flow + self.hw_c)
+                    self.jac_values[value_ndx] = pipe_resistance_coeff*(3.0*self.hw_a*flow**2 + 2*self.hw_b*flow + self.hw_c)
                 else:
-                    self.jacobian[i,i] = 1.852*pipe_resistance_coeff*flow**0.852
+                    self.jac_values[value_ndx] = 1.852*pipe_resistance_coeff*flow**0.852
+                value_ndx += 1
             elif link_id in self._pump_ids:
-                flow = x[i]
+                flow = flows[link_id]
                 if link_id in self.head_curve_coefficients.keys():
+                    value_ndx += 2
                     head_curve_tuple = self.head_curve_coefficients[link_id]
                     B = head_curve_tuple[1]
                     C = head_curve_tuple[2]
-                    self.jacobian[i,i] = -B*C*abs(flow)**(C-1.0)
+                    self.jac_values[value_ndx] = -B*C*abs(flow)**(C-1.0)
+                    value_ndx += 1
                 elif link_id in self.pump_powers.keys():
                     start_node_id = self.link_start_nodes[link_id]
                     end_node_id = self.link_end_nodes[link_id]
-                    self.jacobian[i,start_node_id] = 1000.0*self._g*flow
-                    self.jacobian[i,end_node_id] = -1000.0*self._g*flow
-                    self.jacobian[i,i] = 1000.0*self._g*x[start_node_id] - 1000.0*self._g*x[end_node_id]
+                    if start_node_id < end_node_id: # start node head comes first
+                        self.jac_values[value_ndx] = 1000.0*self._g*flow
+                        value_ndx += 1
+                        self.jac_values[value_ndx] = -1000.0*self._g*flow
+                        value_ndx += 1
+                    else:
+                        self.jac_values[value_ndx] = -1000.0*self._g*flow
+                        value_ndx += 1
+                        self.jac_values[value_ndx] = 1000.0*self._g*flow
+                        value_ndx += 1
+                    self.jac_values[value_ndx] = 1000.0*self._g*x[start_node_id] - 1000.0*self._g*x[end_node_id]
+                    value_ndx += 1
             elif link_id in self._valve_ids:
                 if link_id in self._prv_ids:
-                    if valve_settings[link_id] == 'OPEN':
-                        flow = x[i]
+                    if type(valve_settings[link_id]) == float: # active valve
+                        value_ndx += 3
+                    elif valve_settings[link_id] == 'OPEN':
+                        value_ndx += 2
+                        flow = flows[link_id]
                         pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
-                        self.jacobian[i,i] = 2.0*pipe_resistance_coeff*abs(flow)
+                        self.jac_values[value_ndx] = 2.0*pipe_resistance_coeff*abs(flow)
+                        value_ndx += 1
+                    elif valve_settings[link_id] == 'CLOSED':
+                        value_ndx += 3
 
-        return self.jacobian    
+        self.jacobian.data = self.jac_values
+        return self.jacobian
 
     def get_node_balance_residual(self, flow, demand):
         """
