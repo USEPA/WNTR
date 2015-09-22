@@ -15,8 +15,8 @@ class ScipyModel(object):
         self._initialize_name_id_maps()
 
         # Number of nodes and links
-        self.num_nodes = len(self._node_id_to_name.keys())
-        self.num_links = len(self._link_id_to_name.keys())
+        self.num_nodes = self._wn.num_nodes()
+        self.num_links = self._wn.num_links()
 
         # Initialize residuals
         # Equations will be ordered:
@@ -37,20 +37,18 @@ class ScipyModel(object):
     def _initialize_global_constants(self):
         self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units (it equals 4.727 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
         self._Dw_k = 0.0826 # Darcy-Weisbach constant in SI units (it equals 0.0252 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
-        self._Htol = 0.00015 # Head tolerance in meters.
-        self._Qtol = 2.8e-5 # Flow tolerance in m^3/s.
         self._g = 9.81 # Acceleration due to gravity
-        self._slope_of_PDD_curve = 1e-11 # The flat lines in the PDD model are provided a small slope for numerical stability
-        self._pdd_smoothing_delta = 0.1 # Tightness of polynomial used to smooth sharp changes in PDD model.
 
     def _initialize_name_id_maps(self):
         self._node_id_to_name = {}
         self._node_name_to_id = {}
         self._link_id_to_name = {}
         self._link_name_to_id = {}
+        self._node_ids = []
         self._junction_ids = []
         self._tank_ids = []
         self._reservoir_ids = []
+        self._link_ids = []
         self._pipe_ids = []
         self._pump_ids = []
         self._valve_ids = []
@@ -64,6 +62,7 @@ class ScipyModel(object):
         for node_name, node in self._wn.nodes():
             self._node_id_to_name[n] = node_name
             self._node_name_to_id[node_name] = n
+            self._node_ids.append(n)
             if isinstance(node, Tank):
                 self._tank_ids.append(n)
             elif isinstance(node, Reservoir):
@@ -78,6 +77,7 @@ class ScipyModel(object):
         for link_name, link in self._wn.links():
             self._link_id_to_name[l] = link_name
             self._link_name_to_id[link_name] = l
+            self._link_ids.append(l)
             if isinstance(link, Pipe):
                 self._pipe_ids.append(l)
             elif isinstance(link, Pump):
@@ -157,76 +157,71 @@ class ScipyModel(object):
 
 
     def _set_jacobian_structure(self):
-        # TODO: There is no need to loop over all columns - we know which ones matter
-
         # Create the jacobian as a scipy.sparse.csr_matrix
-        # Initialize with any jacobian entry that has the possibility to be non-zero as 1.0
+        # Initialize all jacobian entries that have the possibility to be non-zero
         num_vars = self.num_nodes*2 + self.num_links
         self.jac_row = []
         self.jac_col = []
         self.jac_values = []
-        self.jac_idx_of_first_headloss = 0
+        self.jac_ndx_of_first_headloss = 0
 
-        value_idx = 0
-        row_idx = 0
+        value_ndx = 0
+        row_ndx = 0
         # Jacobian entries for the node balance equations
-        for node_id in xrange(self.num_nodes):
-            self.jac_row.append(row_idx)
+        for node_id in self._node_ids:
+            self.jac_row.append(row_ndx)
             self.jac_col.append(self.num_nodes + node_id)
             self.jac_values.append(-1.0)
-            value_idx +=1
+            value_ndx += 1
             for link_id in self.in_link_ids_for_nodes[node_id]:
-                self.jac_row.append(row_idx)
+                self.jac_row.append(row_ndx)
                 self.jac_col.append(link_id + 2*self.num_nodes)
-            row_idx += 1
+                self.jac_values.append(1.0)
+                value_ndx += 1
+            for link_id in self.out_link_ids_for_nodes[node_id]:
+                self.jac_row.append(row_ndx)
+                self.jac_col.append(link_id + 2*self.num_nodes)
+                self.jac_values.append(-1.0)
+                value_ndx += 1
+            row_ndx += 1
 
-        # create the pipe headloss equations
-        for p in Pipes:
-            add_some_other_stuff
-            row_idx += 1
+        # Jacobian entries for demand/head equations
+        for node_id in self._node_ids:
+            if node_id in self._tank_ids or node_id in self._reservoir_ids:
+                self.jac_row.append(row_ndx)
+                self.jac_col.append(node_id)
+                self.jac_values.append(1.0)
+                value_ndx += 1
+            elif node_id in self._junction_ids:
+                self.jac_row.append(row_ndx)
+                self.jac_col.append(node_id + self.num_nodes)
+                self.jac_values.append(1.0)
+                value_ndx += 1
+            row_ndx += 1
 
-        for i in xrange(num_vars): # Equations/rows
-            for j in xrange(num_vars): # Variabls/Columns
-                if i < self.num_nodes: # Node balances
-                    if j == self.num_nodes + i:
-                        row.append(i)
-                        col.append(j)
-                        data.append(-1.0)
-                    elif j >= 2*self.num_nodes:
-                        link_id = j - 2*self.num_nodes
-                        node_id = i
-                        if link_id in self.in_link_ids_for_nodes[node_id]:
-                            row.append(i)
-                            col.append(j)
-                            data.append(1.0)
-                        elif link_id in self.out_link_ids_for_nodes[node_id]:
-                            row.append(i)
-                            col.append(j)
-                            data.append(-1.0)
-                elif i < 2*self.num_nodes: # Demand/Head equations
-                    node_id = i - self.num_nodes
-                    if node_id in self._tank_ids or node_id in self._reservoir_ids:
-                        if j == node_id:
-                            row.append(i)
-                            col.append(j)
-                            data.append(1.0)
-                    elif node_id in self._junction_ids:
-                        if j == i:
-                            row.append(i)
-                            col.append(j)
-                            data.append(1.0)
-                elif i < 2*self.num_nodes + self.num_links: # Headloss equations
-                    link_id = i - 2*self.num_nodes
-                    if j == self.link_start_nodes[link_id] or j == self.link_end_nodes[link_id]:
-                        row.append(i)
-                        col.append(j)
-                        data.append(1.0)
-                    elif i == j:
-                        row.append(i)
-                        col.append(j)
-                        data.append(1.0)
-                
-        self.jacobian = sparse.csr_matrix((data, (row,col)),shape=(num_vars,num_vars))
+        self.jac_ndx_of_first_headloss = value_ndx
+
+        # Jacobian entries for the headloss equations
+        for link_id in self._link_ids:
+            start_node_id = self.link_start_nodes[link_id]
+            end_node_id = self.link_end_nodes[link_id]
+            self.jac_row.append(row_ndx)
+            self.jac_col.append(start_node_id)
+            self.jac_values.append(0.0)
+            value_ndx += 1
+            self.jac_row.append(row_ndx)
+            self.jac_col.append(end_node_id)
+            self.jac_values.append(0.0)
+            value_ndx += 1
+            self.jac_row.append(row_ndx)
+            self.jac_col.append(link_id + 2*self.num_nodes)
+            self.jac_values.append(0.0)
+            value_ndx += 1
+            row_ndx += 1
+
+        self.jacobian = sparse.csr_matrix((self.jac_values, (self.jac_row,self.jac_col)),shape=(num_vars,num_vars))
+
+        self.jac_values = self.jacobian.data
 
         print self.jacobian.toarray()
 
@@ -245,36 +240,110 @@ class ScipyModel(object):
     def set_jacobian_constants(self, links_closed, valve_settings):
         # set the jacobian entries that depend on the network status
         # but do not depend on the value of any variable.
-        for i in xrange(self.num_nodes*2, self.num_nodes*2+self.num_links): # Equations/rows
-            link_id = i - 2*self.num_nodes
+
+        # ordering is very important here
+        # the csr_matrix data is stored by going though all columns of the first row, then all columns of the second row, etc
+        # ex:
+        # row = [0,1,2,4,3,3]
+        # col = [0,1,2,4,3,1]
+        # value = [0,1,2,4,3,18]
+        # A = sparse.csr_matrix((value,(row,col)),shape=(5,5))
+        #
+        # then A=>
+        #          0   0  0  0  0
+        #          0   1  0  0  0
+        #          0   0  2  0  0
+        #          0  18  0  3  0
+        #          0   0  0  0  4
+        # and A.data =>
+        #              [0  1  2  18  3  4]
+
+        value_ndx = self.jac_ndx_of_first_headloss
+
+        for link_id in self._link_ids:
             start_node_id = self.link_start_nodes[link_id]
             end_node_id = self.link_end_nodes[link_id]
             if link_id in links_closed:
-                self.jacobian[i,start_node_id] = 0.0
-                self.jacobian[i,end_node_id] = 0.0
-                self.jacobian[i,i] = 1.0
+                self.jac_values[value_ndx] = 0.0 # entry for start node head variable
+                value_ndx += 1
+                self.jac_values[value_ndx] = 0.0 # entry for end node head variable
+                value_ndx += 1
+                self.jac_values[value_ndx] = 1.0 # entry for flow variable
+                value_ndx += 1
             elif link_id in self._pipe_ids:
-                self.jacobian[i,start_node_id] = -1.0
-                self.jacobian[i,end_node_id] = 1.0
+                if start_node_id < end_node_id:
+                    self.jac_values[value_ndx] = -1.0 # entry for start node head variable
+                    value_ndx += 1
+                    self.jac_values[value_ndx] = 1.0 # entry for end node head variable
+                    value_ndx += 1
+                else:
+                    self.jac_values[value_ndx] = 1.0 # entry for end node head variable
+                    value_ndx += 1
+                    self.jac_values[value_ndx] = -1.0 # entry for start node head variable 
+                    value_ndx += 1
+                value_ndx += 1 # for the entry on that row for the flow variable
             elif link_id in self._pump_ids:
                 if link_id in self.head_curve_coefficients.keys():
-                    self.jacobian[i,start_node_id] = 1.0
-                    self.jacobian[i,end_node_id] = -1.0
+                    if start_node_id < end_node_id:
+                        self.jac_values[value_ndx] = 1.0 # entry for start node head variable
+                        value_ndx += 1
+                        self.jac_values[value_ndx] = -1.0 # entry for end node head variable
+                        value_ndx += 1
+                    else:
+                        self.jac_values[value_ndx] = -1.0 # entry for end node head variable
+                        value_ndx += 1
+                        self.jac_values[value_ndx] = 1.0 # entry for start node head variable 
+                        value_ndx += 1
+                    value_ndx += 1 # for the entry on that row for the flow variable
+                elif link_id in self.pump_powers.keys():
+                    value_ndx += 3
+                else:
+                    raise RuntimeError('Developers missed a type of pump in set_jacobian_constants.')
             elif link_id in self._valve_ids:
                 if link_id in self._prv_ids:
                     if type(valve_settings[link_id]) == float: # Active
-                        self.jacobian[i,start_node_id] = 0.0
-                        self.jacobian[i,end_node_id] = 1.0
-                        self.jacobian[i,i] = 0.0
+                        if start_node_id < end_node_id: # start node column comes first
+                            self.jac_values[value_ndx] = 0.0
+                            value_ndx += 1
+                            self.jac_values[value_ndx] = 1.0
+                            value_ndx += 1
+                            self.jac_values[value_ndx] = 0.0
+                            value_ndx += 1
+                        else: # end node column comes first
+                            self.jac_values[value_ndx] = 1.0
+                            value_ndx += 1
+                            self.jac_values[value_ndx] = 0.0
+                            value_ndx += 1
+                            self.jac_values[value_ndx] = 0.0
+                            value_ndx += 1
                     elif valve_settings[link_id] == 'OPEN':
-                        self.jacobian[i,start_node_id] = -1.0
-                        self.jacobian[i,end_node_id] = 1.0
+                        if start_node_id < end_node_id: # start node column comes first
+                            self.jac_values[value_ndx] = -1.0
+                            value_ndx += 1
+                            self.jac_values[value_ndx] = 1.0
+                            value_ndx += 1
+                            value_ndx += 1
+                        else: # end node column comes first
+                            self.jac_values[value_ndx] = 1.0
+                            value_ndx += 1
+                            self.jac_values[value_ndx] = -1.0
+                            value_ndx += 1
+                            value_ndx += 1
                     elif valve_settings[link_id] == 'CLOSED':
-                        self.jacobian[i,start_node_id] = 0.0
-                        self.jacobian[i,end_node_id] = 0.0
-                        self.jacobian[i,i] = 1.0
-                
+                        self.jac_values[value_ndx] = 0.0
+                        value_ndx += 1
+                        self.jac_values[value_ndx] = 0.0
+                        value_ndx += 1
+                        self.jac_values[value_ndx] = 1.0
+                        value_ndx += 1
+                    else:
+                        raise RuntimeError('Valve setting not recognized.')
+                else:
+                    raise RuntimeError('Developers missed a type of valve.')
+            else:
+                raise RuntimeError('Developers missed a type of link in set_jacobian_constants')
 
+        self.jacobian.data = self.jac_values
 
     def get_jacobian(self, x, links_closed, valve_settings):
         for i in xrange(self.num_nodes*2, self.num_nodes*2+self.num_links): # Equations/rows
@@ -318,7 +387,7 @@ class ScipyModel(object):
 
         return self.jacobian    
 
-    def get_node_balance_residual(self, x):
+    def get_node_balance_residual(self, flow, demand):
         """
         Mass balance at all the nodes
 
@@ -332,9 +401,6 @@ class ScipyModel(object):
         List of residuals of the node mass balances
         """
 
-        demand = x[self.num_nodes:self.num_nodes*2]
-        flow = x[self.num_nodes*2:]
-
         for node_id in xrange(self.num_nodes):
             expr = 0
             for l in self.out_link_ids_for_nodes[node_id]:
@@ -343,10 +409,7 @@ class ScipyModel(object):
                 expr += flow[link_id]
             self.node_balance_residual[node_id] = expr - demand[node_id]
 
-    def get_headloss_residual(self, x, links_closed, valve_settings):
-
-        head = x[:self.num_nodes]
-        flow = x[self.num_nodes*2:]
+    def get_headloss_residual(self, head, flow, links_closed, valve_settings):
 
         for link_id in xrange(self.num_links):
             link_flow = flow[link_id]
@@ -402,10 +465,7 @@ class ScipyModel(object):
             else:
                 raise RuntimeError('Type of link is not recognized')
 
-    def get_demand_or_head_residual(self, x, expected_demands, tank_heads, reservoir_heads):
-
-        head = x[:self.num_nodes]
-        demand = x[self.num_nodes:self.num_nodes*2]
+    def get_demand_or_head_residual(self, head, demand, expected_demands, tank_heads, reservoir_heads):
 
         for node_id in xrange(self.num_nodes):
             if node_id in self._junction_ids:
