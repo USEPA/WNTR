@@ -20,6 +20,7 @@ class ScipySimulator(WaterNetworkSimulator):
         """
 
         WaterNetworkSimulator.__init__(wn)
+        self._initialize_results_dict()
 
 
     def run_sim(self):
@@ -29,6 +30,9 @@ class ScipySimulator(WaterNetworkSimulator):
 
         model = ScipyModel(self._wn)
         self.solver = NewtonSolver()
+
+        results = NetRestuls()
+        self._load_general_results(results)
 
         # Initialize X
         # Vars will be ordered:
@@ -44,6 +48,12 @@ class ScipySimulator(WaterNetworkSimulator):
         self._X_init = np.concatenate((self.head0, self.demand0, self.flow0))
 
         while self._wn.time_sec <= self._wn.time_options['DURATION']:
+            events_to_make_changes = []
+            events_to back_up = []
+            for event in event_list:
+                status = event.EventNeeedsToMakeChanges()
+                if status == SimulationEventStatus.ChangesRequired:
+            model.set_network_statuses_by_id()
             self.set_jacobian_constants()
             self._X = self.solve_hydraulics(net_status)
             results = self.save_results(self._X)
@@ -79,3 +89,4 @@ class ScipySimulator(WaterNetworkSimulator):
             junction_id = self._node_name_to_id[junction_name]
             self.demand0[junction_id] = net_status.expected_demands[junction_name]
             
+

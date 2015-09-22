@@ -447,3 +447,33 @@ class WaterNetworkSimulator(object):
                     new_time = (time/self._hydraulic_step_sec + 1)*self._hydraulic_step_sec
                     self._time_controls[link_name]['active_times'][i] = new_time
 
+    def _initialize_results_dict(self):
+        # Data for results object
+        self._sim_results = {}
+        self._sim_results['node_name'] = []
+        self._sim_results['node_type'] = []
+        self._sim_results['node_times'] = []
+        self._sim_results['node_head'] = []
+        self._sim_results['node_demand'] = []
+        self._sim_results['node_expected_demand'] = []
+        self._sim_results['node_pressure'] = []
+        self._sim_results['link_name'] = []
+        self._sim_results['link_type'] = []
+        self._sim_results['link_times'] = []
+        self._sim_results['link_velocity'] = []
+        self._sim_results['link_flowrate'] = []
+
+    def _load_general_results(self, results):
+        """
+        Load general simulation options into the results object.
+
+        Parameters
+        ----------
+        results : NetworkResults object
+        """
+        # Load general results
+        results.network_name = self._wn.name
+        results.time = pd.timedelta_range(start='0 minutes',
+                                          end=str(self._sim_duration_sec) + ' seconds',
+                                          freq=str(self._hydraulic_step_sec/60) + 'min')
+
