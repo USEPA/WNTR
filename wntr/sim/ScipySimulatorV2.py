@@ -6,6 +6,7 @@ from WaterNetworkSimulator import *
 from ScipyModel import *
 from wntr.network.WaterNetworkModel import *
 from NewtonSolver import *
+from NetworkResults import *
 
 class ScipySimulator(WaterNetworkSimulator):
     """
@@ -23,6 +24,7 @@ class ScipySimulator(WaterNetworkSimulator):
         """
 
         WaterNetworkSimulator.__init__(self, wn)
+        self._get_demand_dict()
 
     def run_sim(self):
         """
@@ -34,7 +36,7 @@ class ScipySimulator(WaterNetworkSimulator):
 
         self.solver = NewtonSolver()
 
-        results = NetRestuls()
+        results = NetResults()
         self._load_general_results(results)
 
         # Initialize X
@@ -50,11 +52,14 @@ class ScipySimulator(WaterNetworkSimulator):
         X_init = np.concatenate((head0, demand0, flow0))
 
         while self._wn.time_sec <= self._wn.time_options['DURATION']:
+            print self._wn.time_sec
             model.set_network_status_by_id()
-            self.set_jacobian_constants()
+            model.set_jacobian_constants()
             [self._X,num_iters] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
-            model.save_results(self._X)
-            model.update_network(self._X, self._demand_dict)
+            model.save_results(self._X, results)
+            self._wn.time_sec += self._wn.time_options['HYDRAULIC TIMESTEP']
+            if self._wn.time_sec <= self._wn.time_options['DURATION']:
+                model.update_network(self._X, self._demand_dict)
 
         model.get_results(results)
         return results

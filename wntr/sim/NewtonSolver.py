@@ -29,9 +29,9 @@ class NewtonSolver(object):
             self.rho = self._options['BT_C']
 
         if 'BT_MAXITER' not in self._options:
-            self.bt_self.maxiter = 100
+            self.bt_maxiter = 100
         else:
-            self.bt_self.maxiter = self._options['BT_MAXITER']
+            self.bt_maxiter = self._options['BT_MAXITER']
 
         if 'BACKTRACKING' not in self._options:
             self.bt = False
@@ -67,7 +67,7 @@ class NewtonSolver(object):
             # Backtracking
             alpha = 1
             if self.bt:
-                for iter_bt in xrange(self.bt_self.maxiter):
+                for iter_bt in xrange(self.bt_maxiter):
                     x_ = x + alpha*d
                     lhs = np.max(Residual(x_, args))
                     #rhs = np.max(r + self.bt_c*alpha*J*d)

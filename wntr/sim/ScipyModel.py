@@ -284,8 +284,6 @@ class ScipyModel(object):
 
         self.jac_values = self.jacobian.data
 
-        print self.jacobian.toarray()
-
     def get_hydraulic_equations(self, x):
         head = x[:self.num_nodes]
         demand = x[self.num_nodes:self.num_nodes*2]
@@ -426,11 +424,11 @@ class ScipyModel(object):
                 flow = flows[link_id]
                 pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
                 if flow < -self.hw_q2:
-                    self.jac_values[value_ndx] = -1.852*pipe_resistance_coeff*abs(flow)**0.852
+                    self.jac_values[value_ndx] = 1.852*pipe_resistance_coeff*abs(flow)**0.852
                 elif flow <= -self.hw_q1:
-                    self.jac_values[value_ndx] = -pipe_resistance_coeff*(3.0*self.hw_a*abs(flow)**2 + 2*self.hw_b*abs(flow) + self.hw_c)
+                    self.jac_values[value_ndx] = pipe_resistance_coeff*(3.0*self.hw_a*abs(flow)**2 + 2*self.hw_b*abs(flow) + self.hw_c)
                 elif flow <= 0.0:
-                    self.jac_values[value_ndx] = -pipe_resistance_coeff*self.hw_m
+                    self.jac_values[value_ndx] = pipe_resistance_coeff*self.hw_m
                 elif flow < self.hw_q1:
                     self.jac_values[value_ndx] = pipe_resistance_coeff*self.hw_m
                 elif flow <= self.hw_q2:
@@ -476,6 +474,7 @@ class ScipyModel(object):
                         value_ndx += 3
 
         self.jacobian.data = self.jac_values
+        #self.check_jac(x)
         return self.jacobian
 
     def get_node_balance_residual(self, flow, demand):
@@ -494,9 +493,9 @@ class ScipyModel(object):
 
         for node_id in xrange(self.num_nodes):
             expr = 0
-            for l in self.out_link_ids_for_nodes[node_id]:
+            for link_id in self.out_link_ids_for_nodes[node_id]:
                 expr -= flow[link_id]
-            for l in self.in_link_ids_for_nodes[node_id]:
+            for link_id in self.in_link_ids_for_nodes[node_id]:
                 expr += flow[link_id]
             self.node_balance_residual[node_id] = expr - demand[node_id]
 
@@ -562,11 +561,11 @@ class ScipyModel(object):
 
         for node_id in xrange(self.num_nodes):
             if node_id in self._junction_ids:
-                if self._pressure_driven:
-                    node_elevation = self.node_elevations[node_id]
-                    raise NotImplementedError('PDD is not implemented yet.')
-                else:
-                    self.demand_or_head_residual[node_id] = demand[node_id] - self.junction_demand[node_id]
+                #if self._pressure_driven:
+                #    node_elevation = self.node_elevations[node_id]
+                #    raise NotImplementedError('PDD is not implemented yet.')
+                #else:
+                self.demand_or_head_residual[node_id] = demand[node_id] - self.junction_demand[node_id]
             elif node_id in self._tank_ids:
                 self.demand_or_head_residual[node_id] = head[node_id] - self.tank_head[node_id]
             elif node_id in self._reservoir_ids:
@@ -586,7 +585,7 @@ class ScipyModel(object):
             head[reservoir_id] = self.reservoir_head[reservoir_id]
         return head
 
-    def initialize_demand(self, net_status):
+    def initialize_demand(self):
         demand = np.zeros(self.num_nodes)
         for junction_id in self._junction_ids:
             demand[junction_id] = self.junction_demand[junction_id]
@@ -628,7 +627,7 @@ class ScipyModel(object):
         self._sim_results['link_times'] = []
         self._sim_results['link_flowrate'] = []
 
-    def save_results(self, x):
+    def save_results(self, x, results):
         node_types_obj = NodeTypes()
         link_types_obj = LinkTypes()
         head = x[:self.num_nodes]
@@ -637,7 +636,7 @@ class ScipyModel(object):
         for node_id in self._node_ids:
             self._sim_results['node_name'].append(self._node_id_to_name[node_id])
             self._sim_results['node_type'].append(node_types_obj.node_type_to_str(self.node_types[node_id]))
-            self._sim_results['node_times'].append(self._wn.time_sec)
+            self._sim_results['node_times'].append(results.time[int(self._wn.time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])])
             self._sim_results['node_head'].append(head[node_id])
             self._sim_results['node_demand'].append(demand[node_id])
             if self.node_types[node_id] == node_types_obj.junction:
@@ -652,7 +651,7 @@ class ScipyModel(object):
         for link_id in self._link_ids:
             self._sim_results['link_name'].append(self._link_id_to_name[link_id])
             self._sim_results['link_type'].append(link_types_obj.link_type_to_str(self.link_types[link_id]))
-            self._sim_results['link_times'].append(self._wn.time_sec)
+            self._sim_results['link_times'].append(results.time[int(self._wn.time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])])
             self._sim_results['link_flowrate'].append(flow[link_id])
 
     def update_network(self, x, demand_dict):
@@ -660,7 +659,7 @@ class ScipyModel(object):
         flow = x[2*self.num_nodes:]
         for tank_name, tank in self._wn.nodes(Tank):
             tank_id = self._node_name_to_id[tank_name]
-            q_net = -demand[tank_id]
+            q_net = demand[tank_id]
             delta_h = 4.0*q_net*self._wn.time_options['HYDRAULIC TIMESTEP']/(math.pi*tank.diameter**2)
             tank.current_level = tank.current_level + delta_h
 
@@ -694,3 +693,63 @@ class ScipyModel(object):
                                           index=['link', 'time'],
                                           aggfunc= lambda x: x)
         results.link = link_pivot_table
+
+    def print_jacobian(self, jacobian):
+        #np.set_printoptions(threshold='nan')
+        #print jacobian.toarray()
+            
+        def construct_string(name, values):
+            string = '{0:<10s}'.format(name)
+            for i in xrange(len(values)):
+                if type(values[i]) == str:
+                    string = string+'{0:<6s}'.format(values[i])
+                else:
+                    string = string+'{0:<6.2f}'.format(values[i])
+            return string
+
+        print construct_string('variable',[node_name for node_name, node in self._wn.nodes()]+[node_name for node_name, node in self._wn.nodes()]+[link_name for link_name, link in self._wn.links()])
+        for node_id in xrange(self.num_nodes):
+            print construct_string(self._node_id_to_name[node_id], jacobian.getrow(node_id).toarray()[0])
+        for node_id in xrange(self.num_nodes):
+            print construct_string(self._node_id_to_name[node_id], jacobian.getrow(self.num_nodes+node_id).toarray()[0])
+        for link_id in xrange(self.num_links):
+            print construct_string(self._link_id_to_name[link_id], jacobian.getrow(2*self.num_nodes+link_id).toarray()[0])
+
+    def check_jac(self, x):
+        import copy
+        approx_jac = np.matrix(np.zeros((self.num_nodes*2+self.num_links, self.num_nodes*2+self.num_links)))
+
+        step = 0.0001
+
+        resids = self.get_hydraulic_equations(x)
+
+        for i in xrange(len(x)):
+            x1 = copy.deepcopy(x)
+            x2 = copy.deepcopy(x)
+            x1[i] = x1[i] + step
+            x2[i] = x2[i] + 2*step
+            resids1 = self.get_hydraulic_equations(x1)
+            resids2 = self.get_hydraulic_equations(x2)
+            deriv_column = (-3.0*resids+4.0*resids1-resids2)/(2*step)
+            approx_jac[:,i] = np.matrix(deriv_column).transpose()
+
+
+        approx_jac = sparse.csr_matrix(approx_jac)
+
+        difference = approx_jac - self.jacobian
+
+        success = True
+        for i in xrange(len(x)):
+            for j in xrange(len(x)):
+                if abs(approx_jac[i,j]-self.jacobian[i,j]) > 0.0000001:
+                    print abs(approx_jac[i,j]-self.jacobian[i,j])
+                    success = False
+
+        if not success:
+            print x
+            self.print_jacobian(self.jacobian)
+            self.print_jacobian(approx_jac)
+            self.print_jacobian(difference)
+
+            raise RuntimeError('Jacobian is not correct!')
+                

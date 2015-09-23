@@ -1422,7 +1422,7 @@ class NodeTypes(object):
         self.tank = 1
         self.reservoir = 2
 
-    def node_type_to_str(value):
+    def node_type_to_str(self, value):
         if value == 0:
             return 'Junction'
         elif value == 1:
@@ -1436,7 +1436,7 @@ class LinkTypes(object):
         self.pump = 1
         self.valve = 2
 
-    def link_type_to_str(value):
+    def link_type_to_str(self,value):
         if value == 0:
             return 'Pipe'
         elif value == 1:
