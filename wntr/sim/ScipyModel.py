@@ -2,6 +2,7 @@ from wntr import *
 import numpy as np
 import scipy.sparse as sparse
 import math
+from wntr.network.WaterNetworkModel import *
 
 class ScipyModel(object):
     def __init__(self, wn):

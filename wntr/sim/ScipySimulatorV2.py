@@ -3,6 +3,9 @@ import numpy as np
 import scipy.sparse as sparse
 import warnings
 from WaterNetworkSimulator import *
+from ScipyModel import *
+from wntr.network.WaterNetworkModel import *
+from NewtonSolver import *
 
 class ScipySimulator(WaterNetworkSimulator):
     """
@@ -19,7 +22,7 @@ class ScipySimulator(WaterNetworkSimulator):
             A water network
         """
 
-        WaterNetworkSimulator.__init__(wn)
+        WaterNetworkSimulator.__init__(self, wn)
 
     def run_sim(self):
         """
