@@ -4,7 +4,8 @@ import time
 
 # Create a water network model
 #inp_file = 'networks/Net6_mod_scipy.inp'
-inp_file = 'networks/Net3_timing.inp'
+#inp_file = 'networks/Net3_timing.inp
+inp_file = 'networks/Net3_easy_copy.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Simulate using Epanet
