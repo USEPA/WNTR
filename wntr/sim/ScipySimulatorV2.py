@@ -8,6 +8,7 @@ from wntr.network.WaterNetworkModel import *
 from NewtonSolverV2 import *
 from NetworkResults import *
 import time
+import copy
 
 class ScipySimulatorV2(WaterNetworkSimulator):
     """
@@ -63,17 +64,18 @@ class ScipySimulatorV2(WaterNetworkSimulator):
 
         while self._wn.time_sec <= self._wn.time_options['DURATION']:
             print self._wn.time_sec
+            model.update_junction_demands(self._demand_dict)
             model.set_network_status_by_id()
             model.set_jacobian_constants()
             start_solve_step = time.time()
             [self._X,num_iters] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             end_solve_step = time.time()
-            X_init = self._X
+            X_init = copy.copy(self._X)
             self.solve_step[int(self._wn.time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])] = end_solve_step - start_solve_step
             model.save_results(self._X, results)
             self._wn.time_sec += self._wn.time_options['HYDRAULIC TIMESTEP']
             if self._wn.time_sec <= self._wn.time_options['DURATION']:
-                model.update_network(self._X, self._demand_dict)
+                model.update_tank_heads(self._X)
 
         model.get_results(results)
         return results

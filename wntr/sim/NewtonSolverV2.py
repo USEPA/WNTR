@@ -51,7 +51,7 @@ class NewtonSolverV2(object):
             J = Jacobian(x)
             #J = Jfunc(x)
 
-            r_norm = np.max(r)
+            r_norm = np.max(abs(r))
 
             #print iter, r_norm
 
