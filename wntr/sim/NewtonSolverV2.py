@@ -3,59 +3,59 @@ import scipy.sparse as sp
 import copy
 import time
 
-class NewtonSolver(object):
+class NewtonSolverV2(object):
     def __init__(self, options={}):
         self._options = options
         self._total_linear_solver_time = 0
 
-    def solve(self, Residual, Jacobian, x0, args):
+        if 'MAXITER' not in self._options:
+            self.maxiter = 1000
+        else:
+            self.maxiter = self._options['MAXITER']
+
+        if 'TOL' not in self._options:
+            self.tol = 1e-6
+        else:
+            self.tol = self._options['TOL']
+
+        if 'BT_C' not in self._options:
+            self.bt_c = 0.0001
+        else:
+            self.bt_c = self._options['BT_C']
+
+        if 'BT_RHO' not in self._options:
+            self.rho = 0.5
+        else:
+            self.rho = self._options['BT_C']
+
+        if 'BT_MAXITER' not in self._options:
+            self.bt_maxiter = 100
+        else:
+            self.bt_maxiter = self._options['BT_MAXITER']
+
+        if 'BACKTRACKING' not in self._options:
+            self.bt = False
+        else:
+            self.bt = self._options['BACKTRACKING']
+
+
+    def solve(self, Residual, Jacobian, x0):
 
         x = copy.copy(x0)
 
         num_vars = len(x)
 
-        if 'MAXITER' not in self._options:
-            maxiter = 1000
-        else:
-            maxiter = self._options['MAXITER']
-
-        if 'TOL' not in self._options:
-            tol = 1e-6
-        else:
-            tol = self._options['TOL']
-
-        if 'BT_C' not in self._options:
-            bt_c = 0.0001
-        else:
-            bt_c = self._options['BT_C']
-
-        if 'BT_RHO' not in self._options:
-            rho = 0.5
-        else:
-            rho = self._options['BT_C']
-
-        if 'BT_MAXITER' not in self._options:
-            bt_maxiter = 100
-        else:
-            bt_maxiter = self._options['BT_MAXITER']
-
-        if 'BACKTRACKING' not in self._options:
-            bt = False
-        else:
-            bt = self._options['BACKTRACKING']
-
         # MAIN NEWTON LOOP
-        self._total_linear_solver_time = 0
-        for iter in xrange(maxiter):
-            r = Residual(x, args)
-            J = Jacobian(x, args)
+        for iter in xrange(self.maxiter):
+            r = Residual(x)
+            J = Jacobian(x)
             #J = Jfunc(x)
 
             r_norm = np.max(r)
 
             #print iter, r_norm
 
-            if r_norm < tol:
+            if r_norm < self.tol:
                 return [x, iter]
             
             # Call Linear solver
@@ -66,20 +66,20 @@ class NewtonSolver(object):
 
             # Backtracking
             alpha = 1
-            if bt:
-                for iter_bt in xrange(bt_maxiter):
+            if self.bt:
+                for iter_bt in xrange(self.bt_maxiter):
                     x_ = x + alpha*d
                     lhs = np.max(Residual(x_, args))
-                    #rhs = np.max(r + bt_c*alpha*J*d)
+                    #rhs = np.max(r + self.bt_c*alpha*J*d)
                     rhs = r_norm
                     #print "     ", iter, iter_bt, alpha
                     if lhs < rhs:
                         x = x_
                         break
                     else:
-                        alpha = alpha*rho
+                        alpha = alpha*self.rho
 
-                if iter_bt+1 >= bt_maxiter:
+                if iter_bt+1 >= self.bt_self.maxiter:
                     raise RuntimeError("Backtracking failed. ")
             else:
                 x = x + d

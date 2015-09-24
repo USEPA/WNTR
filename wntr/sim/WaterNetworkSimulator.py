@@ -259,8 +259,9 @@ class WaterNetworkSimulator(object):
         1 if link should be opened
         2 if no action should be taken
         """
+        status_options = LinkStatus()
         link = self._wn.get_link(link_name)
-        base_status = False if link.get_base_status() == 'CLOSED' else True
+        base_status = False if link.get_base_status() == status_options.closed else True
         if link_name not in self._time_controls:
             if time == 0:
                 if base_status:
@@ -446,18 +447,4 @@ class WaterNetworkSimulator(object):
                 if time%self._hydraulic_step_sec != 0:
                     new_time = (time/self._hydraulic_step_sec + 1)*self._hydraulic_step_sec
                     self._time_controls[link_name]['active_times'][i] = new_time
-
-    def _load_general_results(self, results):
-        """
-        Load general simulation options into the results object.
-
-        Parameters
-        ----------
-        results : NetworkResults object
-        """
-        # Load general results
-        results.network_name = self._wn.name
-        results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration_sec) + ' seconds',
-                                          freq=str(self._hydraulic_step_sec/60) + 'min')
 

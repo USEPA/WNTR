@@ -5,10 +5,10 @@ import warnings
 from WaterNetworkSimulator import *
 from ScipyModel import *
 from wntr.network.WaterNetworkModel import *
-from NewtonSolver import *
+from NewtonSolverV2 import *
 from NetworkResults import *
 
-class ScipySimulator(WaterNetworkSimulator):
+class ScipySimulatorV2(WaterNetworkSimulator):
     """
     Run simulation using custom newton solver and linear solvers from scipy.sparse.
     """
@@ -34,7 +34,7 @@ class ScipySimulator(WaterNetworkSimulator):
         model = ScipyModel(self._wn)
         model.initialize_results_dict()
 
-        self.solver = NewtonSolver()
+        self.solver = NewtonSolverV2()
 
         results = NetResults()
         self._load_general_results(results)
@@ -90,3 +90,18 @@ class ScipySimulator(WaterNetworkSimulator):
             else:
                 for t in range(self._n_timesteps):
                     self._demand_dict[(node_name, t)] = 0.0
+
+    def _load_general_results(self, results):
+        """
+        Load general simulation options into the results object.
+
+        Parameters
+        ----------
+        results : NetworkResults object
+        """
+        # Load general results
+        results.network_name = self._wn.name
+        results.time = pd.timedelta_range(start='0 minutes',
+                                          end=str(self._sim_duration_sec) + ' seconds',
+                                          freq=str(self._hydraulic_step_sec/60) + 'min')
+
