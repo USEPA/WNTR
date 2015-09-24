@@ -5,7 +5,7 @@ import cProfile, pstats, StringIO
 
 # Create a water network model
 #inp_file = 'networks/Net6_mod_scipy.inp'
-inp_file = 'networks/Net3_easy.inp'
+inp_file = 'networks/Net3_easy_copy.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Simulate using Epanet

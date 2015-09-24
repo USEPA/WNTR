@@ -7,6 +7,7 @@ from ScipyModel import *
 from wntr.network.WaterNetworkModel import *
 from NewtonSolverV2 import *
 from NetworkResults import *
+import time
 
 class ScipySimulatorV2(WaterNetworkSimulator):
     """
@@ -26,10 +27,16 @@ class ScipySimulatorV2(WaterNetworkSimulator):
         WaterNetworkSimulator.__init__(self, wn)
         self._get_demand_dict()
 
+        # Timing
+        self.prep_time_before_main_loop = 0
+        self.solve_step = {}
+
     def run_sim(self):
         """
         Method to run an extended period simulation
         """
+
+        start_run_sim_time = time.time()
 
         model = ScipyModel(self._wn)
         model.initialize_results_dict()
@@ -51,11 +58,18 @@ class ScipySimulatorV2(WaterNetworkSimulator):
         
         X_init = np.concatenate((head0, demand0, flow0))
 
+        start_main_loop_time = time.time()
+        self.prep_time_before_main_loop - start_main_loop_time - start_run_sim_time
+
         while self._wn.time_sec <= self._wn.time_options['DURATION']:
             print self._wn.time_sec
             model.set_network_status_by_id()
             model.set_jacobian_constants()
+            start_solve_step = time.time()
             [self._X,num_iters] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            end_solve_step = time.time()
+            X_init = self._X
+            self.solve_step[int(self._wn.time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])] = end_solve_step - start_solve_step
             model.save_results(self._X, results)
             self._wn.time_sec += self._wn.time_options['HYDRAULIC TIMESTEP']
             if self._wn.time_sec <= self._wn.time_options['DURATION']:

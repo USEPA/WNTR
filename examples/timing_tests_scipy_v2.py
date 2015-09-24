@@ -10,10 +10,10 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Simulate using Epanet
 print "-----------------------------------"
-print "PYOMO SIMULATOR: "
+print "SCIPY SIMULATOR V2: "
 pr = cProfile.Profile()
 pr.enable()
-sim = wntr.sim.PyomoSimulator(wn)
+sim = wntr.sim.ScipySimulatorV2(wn)
 results = sim.run_sim()
 pr.disable()
 print "-----------------------------------"
@@ -28,3 +28,4 @@ sortby = 'tottime'
 ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
 ps.print_stats(20)
 print s.getvalue()
+
