@@ -721,13 +721,13 @@ class ScipyModel(object):
         import copy
         approx_jac = np.matrix(np.zeros((self.num_nodes*2+self.num_links, self.num_nodes*2+self.num_links)))
 
-        step = 0.0000001
+        step = 0.0001
 
         resids = self.get_hydraulic_equations(x)
 
         for i in xrange(len(x)):
-            x1 = copy.deepcopy(x)
-            x2 = copy.deepcopy(x)
+            x1 = copy.copy(x)
+            x2 = copy.copy(x)
             x1[i] = x1[i] + step
             x2[i] = x2[i] + 2*step
             resids1 = self.get_hydraulic_equations(x1)
@@ -747,6 +747,8 @@ class ScipyModel(object):
                     equation_type = 'blah'
                     node_or_link = 'blah'
                     node_or_link_name = 'blah'
+                    wrt = 'blah'
+                    wrt_name = 'blah'
                     if i < self.num_nodes:
                         equation_type = 'node balance'
                         node_or_link = 'node'
@@ -760,7 +762,16 @@ class ScipyModel(object):
                         node_or_link = 'link'
                         node_or_link_name = self._link_id_to_name[i - 2*self.num_nodes]
                         print 'flow for link ',node_or_link_name,' = ',x[i]
-                    print 'jacobian entry for ',equation_type,' for ',node_or_link,' ',node_or_link_name,' is incorrect.'
+                    if j < self.num_nodes:
+                        wrt = 'head'
+                        wrt_name = self._node_id_to_name[j]
+                    elif j< 2*self.num_nodes:
+                        wrt = 'demand'
+                        wrt_name = self._node_id_to_name[j - self.num_nodes]
+                    else:
+                        wrt = 'flow'
+                        wrt_name = self._link_id_to_name[j - 2*self.num_nodes]
+                    print 'jacobian entry for ',equation_type,' for ',node_or_link,' ',node_or_link_name,' with respect to ',wrt,wrt_name,' is incorrect.'
                     print 'error = ',abs(approx_jac[i,j]-self.jacobian[i,j])
                     print 'approximation = ',approx_jac[i,j]
                     print 'exact = ',self.jacobian[i,j]
