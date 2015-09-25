@@ -33,6 +33,7 @@ class ScipyModel(object):
         self._set_link_attributes()
 
         # network status objects
+        # these objects use node/link ids rather than names
         self.tank_head = {}
         self.reservoir_head = {}
         self.junction_demand = {}
@@ -47,6 +48,9 @@ class ScipyModel(object):
         self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units (it equals 4.727 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
         self._Dw_k = 0.0826 # Darcy-Weisbach constant in SI units (it equals 0.0252 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
         self._g = 9.81 # Acceleration due to gravity
+
+        # Constants for the modified hazen-williams formula
+        # The names match the names used in the simulation white paper
         self.hw_q1 = 0.00349347323944
         self.hw_q2 = 0.00549347323944
         self.hw_a = 430.125623753
@@ -56,15 +60,28 @@ class ScipyModel(object):
         self.hw_m = 0.01
 
     def _initialize_name_id_maps(self):
-        self._node_id_to_name = {}
-        self._node_name_to_id = {}
-        self._link_id_to_name = {}
-        self._link_name_to_id = {}
-        self._node_ids = []
-        self._junction_ids = []
-        self._tank_ids = []
-        self._reservoir_ids = []
-        self._link_ids = []
+        # ids are intergers
+        self._node_id_to_name = {} # {id1: name1, id2: name2, etc.}
+        self._node_name_to_id = {} # {name1: id1, name2: id2, etc.}
+        self._link_id_to_name = {} # {id1: name1, id2: name2, etc.}
+        self._link_name_to_id = {} # {name1: id1, name2: id2, etc.}
+
+        # Lists of types of nodes
+        # self._node_ids is ordered by increasing id. In fact, the index equals the id.
+        # The ordering of the other lists is not significant.
+        # Each node has only one id. For example, if 'Tank-5' has id 8, then 8 will be used
+        # for 'Tank-5' in self._node_ids and self._tank_ids.
+        self._node_ids = [] 
+        self._junction_ids = [] 
+        self._tank_ids = [] 
+        self._reservoir_ids = [] 
+
+        # Lists of types of links
+        # self._link_ids is ordered by increasing id. In fact, the index equals the id.
+        # The ordering of the other lists is not significant.
+        # Each link has only one id. For example, if 'Pump-5' has id 8, then 8 will be used
+        # for 'Pump-5' in self._link_ids and self._pump_ids.
+        self._link_ids = [] 
         self._pipe_ids = []
         self._pump_ids = []
         self._valve_ids = []
@@ -73,11 +90,15 @@ class ScipyModel(object):
         self._pbv_ids = []
         self._fcv_ids = []
         self._tcv_ids = []
+
+        # Lists of types of nodes and links.
+        # The values in the lists are attributes of the classes NodeTypes and LinkTypes
+        # found in WaterNetworkModel.py. The index is the node/link id.
         self.node_types = []
         self.link_types = []
 
-        node_type_options = NodeTypes()
-        link_type_options = LinkTypes()
+        self.node_type_options = NodeTypes()
+        self.link_type_options = LinkTypes()
 
         n = 0
         for node_name, node in self._wn.nodes():
