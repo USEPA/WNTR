@@ -11,6 +11,7 @@ Created on Sat Sep 26 12:33 AM 2015
 """
 
 import weakref
+import numpy as np
 
 class ControlAction(object):
     """ 
@@ -96,13 +97,13 @@ class Control(object):
 
     New control classes (classes derived from Control) must implement
     the following methods:
-       _IsControlActionRequired(self, wnm, node_head, node_demand, link_flowrate)
+       _IsControlActionRequired(self, wnm)
        _FireControlAction(self, wnm)
     """
     def __init__(self):
         pass
 
-    def IsControlActionRequired(self, wnm, node_head, node_demand, link_flowrate):
+    def IsControlActionRequired(self, wnm):
         """"
         This method is called to see if any action is required
         by this control object. This method returns a tuple
@@ -120,22 +121,10 @@ class Control(object):
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that
             is being simulated.
-
-        node_head : dict
-            A dictionary of the current simulation values for the head (m).
-            The keys are the node names, and the values are the values for the head.
-
-        node_demand : dict
-            A dictionary of the current simulation values for the demand (m3/s).
-            The keys are the node names, and the values are the values for the demand.
-
-        link_flowrate : dict
-            A dictionary of the current simulation values for the flowrate in the link (m3/s)
-            The keys are the link names, and the values are the values for the flowrate
         """
-        return _IsControlActionRequiredImpl(self, wnm, node_head, node_demand, link_flowrate)
+        return _IsControlActionRequiredImpl(self, wnm)
 
-    def _IsControlActionRequiredImpl(self, wnm, node_head, node_demand, link_flowrate):
+    def _IsControlActionRequiredImpl(self, wnm)
         """
         This method should be implemented in derived Control classes as 
         the main implementation of IsActionRequired.
@@ -153,18 +142,6 @@ class Control(object):
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that
             is being simulated.
-
-        node_head : dict
-            A dictionary of the current simulation values for the head (m).
-            The keys are the node names, and the values are the values for the head.
-
-        node_demand : dict
-            A dictionary of the current simulation values for the demand (m3/s).
-            The keys are the node names, and the values are the values for the demand.
-
-        link_flowrate : dict
-            A dictionary of the current simulation values for the flowrate in the link (m3/s)
-            The keys are the link names, and the values are the values for the flowrate
         """
         raise NotImplementedError('_IsControlActionRequiredImpl is not implemented. '
                                   'This method must be implemented in any '
@@ -226,14 +203,14 @@ class TimeControl(Control):
         return TimeControl(time_sec, t)
 
     
-    def _IsControlActionRequiredImpl(self, wnm, node_head, node_demand, link_flowrate):
+    def _IsControlActionRequiredImpl(self, wnm)
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
         if wnm.time_sec > self._time_sec:
             return (True, wnm.time_sec - self._time_sec)
-        return (False, 0)
+        return (False, None)
 
     def _FireControlActionImpl(wnm):
         """
@@ -244,9 +221,6 @@ class TimeControl(Control):
         self._control_action.FireControlAction(wnm)
 
 class ConditionalControl(Control):
-    above = 1
-    equals = 2
-    below = 3
     """
     A class for creating conditional controls to fire a control action
     when a particular object/attribute becomes higher or lower than a 
@@ -260,37 +234,59 @@ class ConditionalControl(Control):
     source_attribute : string
        The name of the attribute being monitored
 
-    comparison_flag : (ConditionalControl.Above, ConditionalControl.Equals, ConditionalControl.Below)
-       The comparison to be used
+    operation : one the numpy operations listed below
+       The comparison operation to be used. This must be 
+       one of the numpy comparison operations, e.g.:
 
-    value : float/string
-       The value to compare against
+       greater(x1, x2[, out]) Return the truth value of (x1 > x2) element-wise.
+       greater_equal(x1, x2[, out]) Return the truth value of (x1 >= x2) element-wise.
+       less(x1, x2[, out]) Return the truth value of (x1 < x2) element-wise.
+       less_equal(x1, x2[, out]) Return the truth value of (x1 =< x2) element-wise.
+
+    threshold : float
+       The threshold value to compare against. In this implementation, this must
+       be a float.
 
     control_action : An object derived from ControlAction This is the
        event action that will be fired when the condition becomes true
     """
 
-    def __init__(self, source_obj, source_attribute, comparison_flag, value, control_action):
+    def __init__(self, source_obj, source_attribute, operation, threshold, control_action):
         self._source_obj = source_obj
         self._source_attribute = source_attribute
-        self._comparison_flag = comparison_flag
-        self._value = value
+        self._operation = operation
+        self._threshold = threshold
         self._control_action = control_action
+        self._prev_time_sec = 0
+        self._prev_value = None
 
     @classmethod
-    def WithTarget(source_obj, source_attribute, comparison_flag, value, target_obj, target_attribute, target_value):
+    def WithTarget(source_obj, source_attribute, operation, threshold, target_obj, target_attribute, target_value):
         ca = TargetAttributeControlAction(target_obj, target_attribute, target_value)
-        return ConditionalControl(source_obj, source_attribute, comparison_flag, value, ca)
+        return ConditionalControl(source_obj, source_attribute, operation, threshold, ca)
 
-    
-    def _IsControlActionRequiredImpl(self, wnm, node_head, node_demand, link_flowrate):
+    def _IsControlActionRequiredImpl(self, wnm)
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
-        if wnm.time_sec > self._time_sec:
-            return (True, wnm.time_sec - self._time_sec)
-        return (False, 0)
+        value = getattr(source_obj, source_attribute)
+        if self._operation(value, self._threshold):
+            # control action is required
+            if self._prev_time_sec is None or self._prev_value is None:
+                assert wnm.time_step == 0, 'This should only happen during the first simulation timestep'
+                
+            # let's do linear interpolation to determine the estimated switch time
+            change_required = True
+            m = (value - self._prev_value)/(wnm.time_sec - self._prev_time)
+            new_time = (self._threshold - self._prev_value)/m + self._prev_time
+            return (True, new_time)
+
+        self._prev_time_sec = wnm.time_sec
+        self._prev_value = value
+        
+        return (False, None)
+        
 
     def _FireControlActionImpl(wnm):
         """
