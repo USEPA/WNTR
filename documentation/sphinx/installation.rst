@@ -5,21 +5,14 @@ Requirements for WNTR include Python 2.7 along with several Python packages and
 Ipopt. WNTR can be installed using git.  More information on installing and 
 using git can be found at http://git-scm.com. 
 
-To clone the WNTR repository, use the following command::
+To clone the WNTR repository, use the following commands::
 
 	git clone https://software.sandia.gov/git/resilience
+	cd resilience
+	python setup.py install
 
-Make sure WNTR is on your Python path.  In Python, you can update your
-path by using the following command::
-
-	import sys
-	sys.path.append('path/to/WNTR')
-
-To permanently add the location of WNTR to your Python path, edit your
-environment variables through the Control Panel (System / Advanced / 
-Environment / User).  Add the location of WNTR to the PYTHONPATH variable.
-
-.. todo:: The resilience tool should be installed in site-packages and the path should not have to be set....we're working on setup.py now.
+Developers should use the 'develop' option instead of 'install'.  You can also 
+clone the git repository using ssh instead of https.
 
 Python
 ------
@@ -30,7 +23,7 @@ and Anaconda (for Windows and Linux). These distributions include most of the
 Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
 Matplotlib, and Scipy. Pyomo would need to be installed separately.
 
-Python(x,y) can be downloaded from https://code.google.com/p/pythonxy/.  
+Python(x,y) can be downloaded from https://code.google.com/p/pythonxy/.  A 'Full' installation is suggested.
 
 Anaconda can be downloaded from https://store.continuum.io/cshop/anaconda/.
 
@@ -51,7 +44,7 @@ Python packages
 ---------------
 The following python packages are required for WNTR:
 
-* Pyomo version X [Hart2014]_: optimization modeling language used for hydraulic simulation, 
+* Pyomo version 4.0.9682 [Hart2014]_: optimization modeling language used for hydraulic simulation, 
   https://software.sandia.gov/trac/pyomo
 * Numpy version X: support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
@@ -66,18 +59,14 @@ The following python packages are required for WNTR:
 
 The following packages are optional for WNTR:
 
-* Scipy version X: convert units, 
+* Sympy version X: convert units, 
   http://www.sympy.org/en/index.html
-
-All packages can be installed using pip (I think), which is distributed with 
-standard Python.  To install Pyomo, for example, use the following command::
-
-	pip install pyomo 
-
+* Numpydoc version X: build the user manual,
+  https://github.com/numpy/numpydoc
+  
+Most packages can be installed using pip, which is distributed with 
+standard Python.  
 For additional information on using pip, see https://pypi.python.org/pypi/pip.
-
-
-.. todo:: We can include these dependencies in setup.py
 
 IPOPT
 -----
@@ -90,11 +79,11 @@ Download Ipopt from http://www.coin-or.org/download/binary/CoinAll/.
 * Select COIN-OR-1.7.4-win32-msvc11.exe for Windows 
 * Download and run the executable
 
-Download HSL from http://www.hsl.rl.ac.uk/ipopt/.
+Download HSL [HSL2013]_ from http://www.hsl.rl.ac.uk/ipopt/.
 
 * Select Windows or Linux in the COIN-HSL Archive, Personal License box
 * Select Personal License, fill out the form and accept
 * Download the zip file from the link sent via email
-* Extract the files to bin folder for Ipopt.  For example, if Ipopt was saved 
-  in C:/Program Files/COIN-OR/1.7.4/win32-msvc11, extract the HSL files to 
+* Extract the zip file and save the files to the bin folder for Ipopt.  For example, if Ipopt was saved 
+  in C:/Program Files/COIN-OR/1.7.4/win32-msvc11, extract the HSL zip file, copy the files from the extracted folder, and paste them in 
   C:/Program Files/COIN-OR/1.7.4/win32-msvc11/bin.

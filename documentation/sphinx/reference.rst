@@ -7,6 +7,8 @@ Reference
 
 .. [Hart2014] Hart W., Laird C., Watson J.P., Woodruff D. (2014), Pyomo -- Optimization Modeling in Python (Springer Optimization and Its Applications) 2012 edition
 
+.. [HSL2013] HSL(2013). A collection of Fortran codes for large scale scientific  computation. http://www.hsl.rl.ac.uk
+
 .. [McKinney2013] McKinney W. (2013) Python for Data Analysis: Data Wrangling with Pandas, NumPy, and IPython
 
 .. [Rossman2000] Rossman LA. (2000). EPANET 2 Users Manual. [Technical report] Cincinnati, OH: U. S. Environmental Protection Agency. EPA/600/R--00/057
