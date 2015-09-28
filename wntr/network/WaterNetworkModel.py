@@ -42,6 +42,10 @@ class WaterNetworkModel(object):
         # Network name
         self.name = None
 
+        # Time parameters
+        self.sim_time_sec = 0.0
+        self.start_time_sec = 0.0 # 12 AM for now
+
         # Initialize Network size parameters
         self._num_junctions = 0
         self._num_reservoirs = 0
@@ -368,7 +372,7 @@ class WaterNetworkModel(object):
         """
         pipe = self.get_link(name)
         status = pipe.get_base_status()
-        if status == 'CV':
+        if status == LinkStatus.cv:
             self._check_valves.remove(name)
         self._graph.remove_edge(pipe.start_node(), pipe.end_node(), key=name)
         self._links.pop(name)
@@ -1013,8 +1017,8 @@ class WaterNetworkModel(object):
         self.set_node_coordinates(leak_name, leak_coordinates)
 
         # Add new pipes
-        self.add_pipe(pipe_name+'__A', pipe.start_node(), leak_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, pipe.get_base_status())
-        self.add_pipe(pipe_name+'__B', leak_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, pipe.get_base_status())
+        self.add_pipe(pipe_name+'__A', pipe.start_node(), leak_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()))
+        self.add_pipe(pipe_name+'__B', leak_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()))
 
         # Update time and conditional controls
         self._update_time_controls_for_leak(leak_name)
@@ -1064,7 +1068,7 @@ class WaterNetworkModel(object):
         self._graph.remove_node(leak_name)
 
         # Place the original pipe back in the network
-        self.add_pipe(pipe.name(), pipe.start_node(), pipe.end_node(), pipe.length, pipe.diameter, pipe.roughness, pipe.minor_loss, pipe.get_base_status())
+        self.add_pipe(pipe.name(), pipe.start_node(), pipe.end_node(), pipe.length, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()))
 
     def _update_time_controls_for_leak(self, leak_name, remove = False):
         # Update time controls in consideration of leaks
@@ -1206,6 +1210,20 @@ class WaterNetworkModel(object):
             else:
                 raise ValueError('control_dest argument for leak is not recognized.')
 
+    def shifted_time_sec(self):
+        """ 
+        Returns the time in seconds shifted by the
+        simulation start time (e.g. as specified in the
+        inp file). This is, this is the time since 12 AM
+        on the first day.
+        """
+        return self.sim_time_sec + self._start_time_sec
+    
+    def clock_time_sec(self):
+        """
+        Return the current time of day in seconds from 12 AM
+        """
+        return self.shifted_time_sec() % (24*3600)
 
     def write_inpfile(self, filename):
         """
@@ -1264,7 +1282,7 @@ class WaterNetworkModel(object):
         label_format = '{:10s} {:>10s} {:>10s} {:>15s} {:>15s} {:>15s} {:>15s} {:>10s}'
         print >> f, label_format.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status')
         for pipe_name, pipe in self.links(Pipe):
-            print >> f, text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), pipe.length, pipe.diameter*1000, pipe.roughness, pipe.minor_loss, pipe.get_base_status(), ';')
+            print >> f, text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), pipe.length, pipe.diameter*1000, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';')
 
         # Print pump information
         print >> f, '[PUMPS]'
@@ -1292,8 +1310,8 @@ class WaterNetworkModel(object):
         label_format = '{:10s} {:10s}'
         print >> f, label_format.format(';ID', 'Setting')
         for link_name, link in self.links():
-            if link.get_base_status() is not None and link.get_base_status() != 'CV':
-                print >> f, text_format.format(link_name, link.get_base_status())
+            if link.get_base_status() is not None and link.get_base_status() != LinkStatus.cv:
+                print >> f, text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status()))
 
         # Print pattern information
         num_columns = 8
@@ -1415,6 +1433,40 @@ class WaterNetworkModel(object):
 
         f.close()
 
+        
+class NodeTypes(object):
+    junction = 0
+    tank = 1
+    reservoir = 2
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def node_type_to_str(self, value):
+        if value == self.junction:
+            return 'Junction'
+        elif value == self.tank:
+            return 'Tank'
+        elif value == self.reservoir:
+            return 'Reservoir'
+
+class LinkTypes(object):
+    pipe = 0
+    pump = 1
+    valve = 2
+
+    def __init__(self):
+        pass
+
+    @classmethod
+    def link_type_to_str(self, value):
+        if value == self.pipe:
+            return 'Pipe'
+        elif value == self.pump:
+            return 'Pump'
+        elif value == self.valve:
+            return 'Valve'
 
 class Node(object):
     """
@@ -1447,6 +1499,38 @@ class Node(object):
         """
         return self._name
 
+class LinkStatus(object):
+    closed = 0
+    opened = 1
+    active = 2
+    cv = 3
+    def __init__(self):
+        pass
+
+    @classmethod
+    def str_to_status(self, value):
+        if type(value) == int:
+            return value
+        elif value.upper() == 'OPEN':
+            return self.opened
+        elif value.upper() == 'CLOSED':
+            return self.closed
+        elif value.upper() == 'ACTIVE':
+            return self.active
+        elif value.upper() == 'CV':
+            return self.cv
+
+    @classmethod
+    def status_to_str(self, value):
+        if value == self.opened:
+            return 'OPEN'
+        elif value == self.closed:
+            return 'CLOSED'
+        elif value == self.active:
+            return 'ACTIVE'
+        elif value == self.cv:
+            return 'CV'
+
 class Link(object):
     """
     The base link class.
@@ -1471,9 +1555,8 @@ class Link(object):
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
-        self._base_status = 'OPEN'
-        self._open_times = list()
-        self._closed_times = list()
+        self._base_status = LinkStatus.opened
+        self.current_status = LinkStatus.opened
 
     def __str__(self):
         """
@@ -1529,6 +1612,7 @@ class Junction(Node):
         """
         Node.__init__(self, name)
         self.base_demand = base_demand
+        self.current_demand = base_demand
         self.demand_pattern_name = demand_pattern_name
         self.elevation = elevation
         self.PF = 20.0
@@ -1719,6 +1803,7 @@ class Reservoir(Node):
         """
         Node.__init__(self, name)
         self.base_head = base_head
+        self.current_head = base_head
         self.head_pattern_name = head_pattern_name
 
 
@@ -1761,6 +1846,7 @@ class Tank(Node):
         Node.__init__(self, name)
         self.elevation = elevation
         self.init_level = init_level
+        self.current_level = init_level
         self.min_level = min_level
         self.max_level = max_level
         self.diameter = diameter
@@ -1855,7 +1941,11 @@ class Pipe(Link):
         self.roughness = roughness
         self.minor_loss = minor_loss
         if status is not None:
-            self._base_status = status.upper()
+            self._base_status = LinkStatus.str_to_status(status)
+            if self._base_status == LinkStatus.cv:
+                self.current_status = LinkStatus.opened
+            else:
+                self.current_status = self._base_status
 
 
 class Pump(Link):
@@ -1881,6 +1971,8 @@ class Pump(Link):
             Where power is a fixed value in KW, while a head curve is a Curve object.
         """
         Link.__init__(self, name, start_node_name, end_node_name)
+        self.base_speed = 1.0
+        self.current_speed = 1.0
         self.curve = None
         self.power = None
         self.info_type = info_type
@@ -2011,8 +2103,10 @@ class Valve(Link):
         self.diameter = diameter
         self.valve_type = valve_type
         self.minor_loss = minor_loss
-        self.setting = setting
-        self._base_status = 'OPEN'
+        self.base_setting = setting
+        self.current_setting = setting
+        self._base_status = LinkStatus.active
+        self.current_status = LinkStatus.active
 
 
 class Curve(object):
