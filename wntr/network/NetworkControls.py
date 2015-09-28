@@ -103,6 +103,37 @@ class Control(object):
     def __init__(self):
         pass
 
+    def InformSuccessfulTimestep(self, wnm):
+        """
+        This method is called by the simulator to let the control know
+        about a successful timestep. This allows the control to log
+        any history information that it may need to log.
+
+        Parameters
+        ----------
+
+        wnm : WaterNetworkModel object
+            The water network model object that is being simulated
+        """
+        self._InformSuccessfulTimestepImpl(wnm)
+        
+    def _InformSuccessfulTimestepImpl(self, wnm):
+        """
+        This method should be overriden by derived classes from Control. 
+        Please see Control::InformSuccessfulTimestep for documentation 
+        information. This should not be called directly, instead 
+        InformSuccessfulTimestep should be called.
+
+        Parameters
+        ----------
+
+        wnm : WaterNetworkModel object
+            The water network model object that is being simulated
+        """
+        raise NotImplementedError('_InformSuccessfulTimestepImpl is not implemented. '
+                                  'This method must be implemented in any '
+                                  ' class derived from Control.')  
+
     def IsControlActionRequired(self, wnm):
         """
         This method is called to see if any action is required
@@ -231,6 +262,9 @@ class TimeControl(Control):
         t = TargetAttributeControlAction(target_obj, attribute, value)
         return TimeControl(time_sec, time_flag, daily_flag, t)
 
+    def _InformSuccessfulTimestepImpl(self, wnm):
+        # time controls don't need to store any history at this point
+        pass
     
     def _IsControlActionRequiredImpl(self, wnm)
         """
@@ -300,11 +334,20 @@ class ConditionalControl(Control):
         self._control_action = control_action
         self._prev_time_sec = 0
         self._prev_value = None
+        if source_obj is None:
+            raise ValueError('source_obj of None passed to ConditionalControlObject.')
+        if not hasattr(source_obj, source_attribute):
+            raise ValueError('In ConditionalControlObject, source_obj does not contain the attribute specified by source_attribute.')
 
     @classmethod
     def WithTarget(source_obj, source_attribute, operation, threshold, target_obj, target_attribute, target_value):
         ca = TargetAttributeControlAction(target_obj, target_attribute, target_value)
         return ConditionalControl(source_obj, source_attribute, operation, threshold, ca)
+
+    def _InformSuccessfulTimestepImpl(self, wnm):
+        # set the previous value and previous time for linear interpolation
+        self._prev_time_sec = wnm.sim_time_sec
+        self._prev_value = getattr(source_obj, source_attribute)
 
     def _IsControlActionRequiredImpl(self, wnm)
         """
