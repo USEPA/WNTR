@@ -1435,31 +1435,37 @@ class WaterNetworkModel(object):
 
         
 class NodeTypes(object):
-    def __init__(self):
-        self.junction = 0
-        self.tank = 1
-        self.reservoir = 2
+    junction = 0
+    tank = 1
+    reservoir = 2
 
+    def __init__(self):
+        pass
+
+    @classmethod
     def node_type_to_str(self, value):
-        if value == 0:
+        if value == self.junction:
             return 'Junction'
-        elif value == 1:
+        elif value == self.tank:
             return 'Tank'
-        elif value == 2:
+        elif value == self.reservoir:
             return 'Reservoir'
 
 class LinkTypes(object):
-    def __init__(self):
-        self.pipe = 0
-        self.pump = 1
-        self.valve = 2
+    pipe = 0
+    pump = 1
+    valve = 2
 
-    def link_type_to_str(self,value):
-        if value == 0:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def link_type_to_str(self, value):
+        if value == self.pipe:
             return 'Pipe'
-        elif value == 1:
+        elif value == self.pump:
             return 'Pump'
-        elif value == 2:
+        elif value == self.valve:
             return 'Valve'
 
 class Node(object):
@@ -1501,6 +1507,7 @@ class LinkStatus(object):
     def __init__(self):
         pass
 
+    @classmethod
     def str_to_status(self, value):
         if type(value) == int:
             return value
@@ -1513,6 +1520,7 @@ class LinkStatus(object):
         elif value.upper() == 'CV':
             return self.cv
 
+    @classmethod
     def status_to_str(self, value):
         if value == self.opened:
             return 'OPEN'

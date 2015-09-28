@@ -259,9 +259,8 @@ class WaterNetworkSimulator(object):
         1 if link should be opened
         2 if no action should be taken
         """
-        status_options = LinkStatus()
         link = self._wn.get_link(link_name)
-        base_status = False if link.get_base_status() == status_options.closed else True
+        base_status = False if link.get_base_status() == LinkStatus.closed else True
         if link_name not in self._time_controls:
             if time == 0:
                 if base_status:

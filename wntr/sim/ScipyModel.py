@@ -97,9 +97,6 @@ class ScipyModel(object):
         self.node_types = []
         self.link_types = []
 
-        self.node_type_options = NodeTypes()
-        self.link_type_options = LinkTypes()
-
         n = 0
         for node_name, node in self._wn.nodes():
             self._node_id_to_name[n] = node_name
@@ -107,13 +104,13 @@ class ScipyModel(object):
             self._node_ids.append(n)
             if isinstance(node, Tank):
                 self._tank_ids.append(n)
-                self.node_types.append(node_type_options.tank)
+                self.node_types.append(NodeTypes.tank)
             elif isinstance(node, Reservoir):
                 self._reservoir_ids.append(n)
-                self.node_types.append(node_type_options.reservoir)
+                self.node_types.append(NodeTypes.reservoir)
             elif isinstance(node, Junction):
                 self._junction_ids.append(n)
-                self.node_types.append(node_type_options.junction)
+                self.node_types.append(NodeTypes.junction)
             else:
                 raise RuntimeError('Node is not a junction, tank, or reservoir.')
             n += 1
@@ -125,13 +122,13 @@ class ScipyModel(object):
             self._link_ids.append(l)
             if isinstance(link, Pipe):
                 self._pipe_ids.append(l)
-                self.link_types.append(link_type_options.pipe)
+                self.link_types.append(LinkTypes.pipe)
             elif isinstance(link, Pump):
                 self._pump_ids.append(l)
-                self.link_types.append(link_type_options.pump)
+                self.link_types.append(LinkTypes.pump)
             elif isinstance(link, Valve):
                 self._valve_ids.append(l)
-                self.link_types.append(link_type_options.valve)
+                self.link_types.append(LinkTypes.valve)
                 if link.valve_type == 'PRV':
                     self._prv_ids.append(l)
                 elif link.valve_type == 'PSV':
@@ -337,7 +334,6 @@ class ScipyModel(object):
         #              [0, 3, 6, 1, 4, 7, 2, 5, 8]
 
         value_ndx = self.jac_ndx_of_first_headloss
-        status_options = LinkStatus()
 
         # Set jacobian entries for headloss equations
         # Each row in the jacobian associated with a headloss equation
@@ -385,7 +381,7 @@ class ScipyModel(object):
                     raise RuntimeError('Developers missed a type of pump in set_jacobian_constants.')
             elif link_id in self._valve_ids:
                 if link_id in self._prv_ids:
-                    if self.valve_status[link_id] == status_options.active: # Active
+                    if self.valve_status[link_id] == LinkStatus.active: # Active
                         if start_node_id < end_node_id: # start node column comes first
                             self.jac_values[value_ndx] = 0.0
                             value_ndx += 1
@@ -400,7 +396,7 @@ class ScipyModel(object):
                             value_ndx += 1
                             self.jac_values[value_ndx] = 0.0
                             value_ndx += 1
-                    elif self.valve_status[link_id] == status_options.open:
+                    elif self.valve_status[link_id] == LinkStatus.opened:
                         if start_node_id < end_node_id: # start node column comes first
                             self.jac_values[value_ndx] = -1.0
                             value_ndx += 1
@@ -413,7 +409,7 @@ class ScipyModel(object):
                             self.jac_values[value_ndx] = -1.0
                             value_ndx += 1
                             value_ndx += 1
-                    elif self.valve_status[link_id] == status_options.closed:
+                    elif self.valve_status[link_id] == LinkStatus.closed:
                         self.jac_values[value_ndx] = 0.0
                         value_ndx += 1
                         self.jac_values[value_ndx] = 0.0
@@ -433,8 +429,6 @@ class ScipyModel(object):
 
         value_ndx = self.jac_ndx_of_first_headloss
         flows = x[self.num_nodes*2:]
-
-        status_options = LinkStatus()
 
         # Set the jacobian entries that depend on variable values
         for link_id in self._link_ids:
@@ -483,15 +477,15 @@ class ScipyModel(object):
                     value_ndx += 1
             elif link_id in self._valve_ids:
                 if link_id in self._prv_ids:
-                    if self.valve_status[link_id] == status_options.active: # active valve
+                    if self.valve_status[link_id] == LinkStatus.active: # active valve
                         value_ndx += 3
-                    elif self.valve_status[link_id] == status_options.open:
+                    elif self.valve_status[link_id] == LinkStatus.opened:
                         value_ndx += 2
                         flow = flows[link_id]
                         pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
                         self.jac_values[value_ndx] = 2.0*pipe_resistance_coeff*abs(flow)
                         value_ndx += 1
-                    elif self.valve_status[link_id] == status_options.closed:
+                    elif self.valve_status[link_id] == LinkStatus.closed:
                         value_ndx += 3
 
         self.jacobian.data = self.jac_values
@@ -521,8 +515,6 @@ class ScipyModel(object):
             self.node_balance_residual[node_id] = expr - demand[node_id]
 
     def get_headloss_residual(self, head, flow):
-
-        status_options = LinkStatus()
 
         for link_id in xrange(self.num_links):
             link_flow = flow[link_id]
@@ -564,9 +556,9 @@ class ScipyModel(object):
 
             elif link_id in self._valve_ids:
                 if link_id in self._prv_ids:
-                    if self.valve_status[link_id] == status_options.active:
+                    if self.valve_status[link_id] == LinkStatus.active:
                         self.headloss_residual[link_id] = head[end_node_id] - (self.valve_settings[link_id]+self.node_elevations[end_node_id])
-                    elif self.valve_status[link_id] == status_options.open:
+                    elif self.valve_status[link_id] == LinkStatus.opened:
                         pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
                         pipe_headloss = pipe_resistance_coeff*abs(flow)**2
                         self.headloss_residual[link_id] = pipe_headloss - (head[start_node_id]-head[end_node_id])
@@ -622,10 +614,9 @@ class ScipyModel(object):
         for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
             self.junction_demand[junction_id] = junction.current_demand
-        status_options = LinkStatus()
         links_closed = []
         for link_name, link in self._wn.links():
-            if link.current_status == status_options.closed:
+            if link.current_status == LinkStatus.closed:
                 link_id = self._link_name_to_id[link_name]
                 self.links_closed.append(link_id)
         for valve_name, valve in self._wn.links(Valve):
@@ -649,30 +640,28 @@ class ScipyModel(object):
         self._sim_results['link_flowrate'] = []
 
     def save_results(self, x, results):
-        node_types_obj = NodeTypes()
-        link_types_obj = LinkTypes()
         head = x[:self.num_nodes]
         demand = x[self.num_nodes:2*self.num_nodes]
         flow = x[2*self.num_nodes:]
         for node_id in self._node_ids:
             self._sim_results['node_name'].append(self._node_id_to_name[node_id])
-            self._sim_results['node_type'].append(node_types_obj.node_type_to_str(self.node_types[node_id]))
-            self._sim_results['node_times'].append(results.time[int(self._wn.time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])])
+            self._sim_results['node_type'].append(NodeTypes.node_type_to_str(self.node_types[node_id]))
+            self._sim_results['node_times'].append(results.time[int(self._wn.sim_time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])])
             self._sim_results['node_head'].append(head[node_id])
             self._sim_results['node_demand'].append(demand[node_id])
-            if self.node_types[node_id] == node_types_obj.junction:
+            if self.node_types[node_id] == NodeTypes.junction:
                 self._sim_results['node_expected_demand'].append(self.junction_demand[node_id])
                 self._sim_results['node_pressure'].append(head[node_id] - self.node_elevations[node_id])
-            elif self.node_types[node_id] == node_types_obj.tank:
+            elif self.node_types[node_id] == NodeTypes.tank:
                 self._sim_results['node_expected_demand'].append(demand[node_id])
                 self._sim_results['node_pressure'].append(head[node_id] - self.node_elevations[node_id])
-            elif self.node_types[node_id] == node_types_obj.reservoir:
+            elif self.node_types[node_id] == NodeTypes.reservoir:
                 self._sim_results['node_expected_demand'].append(demand[node_id])
                 self._sim_results['node_pressure'].append(0.0)
         for link_id in self._link_ids:
             self._sim_results['link_name'].append(self._link_id_to_name[link_id])
-            self._sim_results['link_type'].append(link_types_obj.link_type_to_str(self.link_types[link_id]))
-            self._sim_results['link_times'].append(results.time[int(self._wn.time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])])
+            self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
+            self._sim_results['link_times'].append(results.time[int(self._wn.sim_time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])])
             self._sim_results['link_flowrate'].append(flow[link_id])
 
     def update_tank_heads(self, x):
@@ -688,7 +677,7 @@ class ScipyModel(object):
     def update_junction_demands(self, demand_dict):
         for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
-            t = self._wn.time_sec/self._wn.time_options['HYDRAULIC TIMESTEP']
+            t = self._wn.sim_time_sec/self._wn.time_options['HYDRAULIC TIMESTEP']
             junction.current_demand = demand_dict[(junction_name,t)]
 
     def get_results(self,results):

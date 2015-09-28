@@ -125,7 +125,6 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(type(n.base_head), float)
 
     def test_add_pipe(self):
-        status_options = self.wntr.network.LinkStatus()
         wn = self.wntr.network.WaterNetworkModel()
         wn.add_junction('j1')
         wn.add_junction('j2')
@@ -134,7 +133,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l._link_name, 'p1')
         self.assertEqual(l.start_node(), 'j1')
         self.assertEqual(l.end_node(), 'j2')
-        self.assertEqual(l.get_base_status(), status_options.open)
+        self.assertEqual(l.get_base_status(), self.wntr.network.LinkStatus.opened)
         self.assertEqual(l.length, 1000.0)
         self.assertEqual(l.diameter, 1.0)
         self.assertEqual(l.roughness, 100.0)
