@@ -104,7 +104,7 @@ class Control(object):
         pass
 
     def IsControlActionRequired(self, wnm):
-        """"
+        """
         This method is called to see if any action is required
         by this control object. This method returns a tuple
         that indicates if action is required and a recommended
@@ -187,20 +187,49 @@ class TimeControl(Control):
     Parameters
     ----------
     time_sec : float
-        time (in seconds) when the events should be fired
+        time (in seconds) when the events should be fired.
+
+    time_flag : string, ('SIM_TIME', 'CLOCK_TIME')
+
+        SIM_TIME: indicates that the value of time_sec is in seconds
+            since the start of the simulation
+
+        SHIFTED_TIME: indicates that the value of time_sec is shifted
+            by the start time set for the simulation. That is,
+            time_sec is in seconds since 12 AM on the first day of the
+            simulation.  Therefore, 7200 refers to 2:00 AM regardless
+            of the start time in the simulation.
+
+    daily_flag : bool
+        False : control will execute once when time is first encountered
+        True : control will execute at the same time daily
 
     control_action : An object derived from ControlAction This is the
        event action that will be fired at the specified time
     """
 
-    def __init__(self, time_sec, control_action):
+    def __init__(self, wnm, time_sec, time_flag, daily_flag, control_action):
         self._time_sec = time_sec
+        self._time_flag = time_flag
+        assert time_flag == 'SIM_TIME' or time_flag == 'SHIFTED_TIME'
+        self._daily_flag = daily_flag
         self._control_action = control_action
+        self._control_complete = False
+        self._prev_time_sec = None
+
+        if daily_flag and time_sec > 24*3600:
+            raise ValueError('In TimeControl, a daily control was requested, however, the time passed in was not between 0 and 24*3600')
+        
+        if time_flag == 'SIM_TIME' and self._time_sec < wnm.sim_time_sec:
+            self._control_complete = True
+
+        if time_flag == 'SHIFTED_TIME' and self._time_sec < wnm.shifted_time_sec():
+            self._time_sec += 24*3600
 
     @classmethod
-    def WithTarget(time_sec, target_obj, attribute, value):
+    def WithTarget(time_sec, time_flag, daily_flag, target_obj, attribute, value):
         t = TargetAttributeControlAction(target_obj, attribute, value)
-        return TimeControl(time_sec, t)
+        return TimeControl(time_sec, time_flag, daily_flag, t)
 
     
     def _IsControlActionRequiredImpl(self, wnm)
@@ -208,8 +237,16 @@ class TimeControl(Control):
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
-        if wnm.time_sec > self._time_sec:
-            return (True, wnm.time_sec - self._time_sec)
+        if self._control_complete:
+            return (False, None)
+
+        if self._time_flag == 'SIM_TIME':
+            if self._time_sec <= wnm.sim_time_sec:
+                return (True, wnm.sim_time_sec - self._time_sec)
+        elif self._time_flag == 'SHIFTED_TIME':
+            if self._time_sec <= wnm.shifted_time_sec():
+                return (True, wnm.shifted_time_sec() - self._time_sec)
+
         return (False, None)
 
     def _FireControlActionImpl(wnm):
@@ -219,6 +256,10 @@ class TimeControl(Control):
         """
         assert self._control_action is not None, '_control_action is None inside TimeControl'
         self._control_action.FireControlAction(wnm)
+        if self._daily_flag:
+            self._time_sec += 24*3600
+        else:
+            self._control_complete = True
 
 class ConditionalControl(Control):
     """

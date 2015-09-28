@@ -41,7 +41,10 @@ class WaterNetworkModel(object):
 
         # Network name
         self.name = None
-        self.time_sec = 0.0
+
+        # Time parameters
+        self.sim_time_sec = 0.0
+        self.start_time_sec = 0.0 # 12 AM for now
 
         # Initialize Network size parameters
         self._num_junctions = 0
@@ -1211,6 +1214,20 @@ class WaterNetworkModel(object):
             else:
                 raise ValueError('control_dest argument for leak is not recognized.')
 
+    def shifted_time_sec(self):
+        """ 
+        Returns the time in seconds shifted by the
+        simulation start time (e.g. as specified in the
+        inp file). This is, this is the time since 12 AM
+        on the first day.
+        """
+        return self.sim_time_sec + self._start_time_sec
+    
+    def clock_time_sec(self):
+        """
+        Return the current time of day in seconds from 12 AM
+        """
+        return self.shifted_time_sec() % (24*3600)
 
     def write_inpfile(self, filename):
         status_options = LinkStatus()
@@ -1421,6 +1438,7 @@ class WaterNetworkModel(object):
 
         f.close()
 
+        
 class NodeTypes(object):
     def __init__(self):
         self.junction = 0
