@@ -342,7 +342,6 @@ class WaterNetworkModel(object):
         status : string
             Pipe status. Options are 'Open', 'Closed', and 'CV'
         """
-        status_options = LinkStatus()
         if length is not None:
             length = float(length)
         if diameter is not None:
@@ -371,10 +370,9 @@ class WaterNetworkModel(object):
         name: string
            Name of the pipe
         """
-        status_options = LinkStatus()
         pipe = self.get_link(name)
         status = pipe.get_base_status()
-        if status == status_options.cv:
+        if status == LinkStatus.cv:
             self._check_valves.remove(name)
         self._graph.remove_edge(pipe.start_node(), pipe.end_node(), key=name)
         self._links.pop(name)
@@ -1019,9 +1017,8 @@ class WaterNetworkModel(object):
         self.set_node_coordinates(leak_name, leak_coordinates)
 
         # Add new pipes
-        status_options = LinkStatus()
-        self.add_pipe(pipe_name+'__A', pipe.start_node(), leak_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, status_options.status_to_str(pipe.get_base_status()))
-        self.add_pipe(pipe_name+'__B', leak_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, status_options.status_to_str(pipe.get_base_status()))
+        self.add_pipe(pipe_name+'__A', pipe.start_node(), leak_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()))
+        self.add_pipe(pipe_name+'__B', leak_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()))
 
         # Update time and conditional controls
         self._update_time_controls_for_leak(leak_name)
@@ -1071,8 +1068,7 @@ class WaterNetworkModel(object):
         self._graph.remove_node(leak_name)
 
         # Place the original pipe back in the network
-        status_options = LinkStatus()
-        self.add_pipe(pipe.name(), pipe.start_node(), pipe.end_node(), pipe.length, pipe.diameter, pipe.roughness, pipe.minor_loss, status_options.status_to_str(pipe.get_base_status()))
+        self.add_pipe(pipe.name(), pipe.start_node(), pipe.end_node(), pipe.length, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()))
 
     def _update_time_controls_for_leak(self, leak_name, remove = False):
         # Update time controls in consideration of leaks
@@ -1230,7 +1226,6 @@ class WaterNetworkModel(object):
         return self.shifted_time_sec() % (24*3600)
 
     def write_inpfile(self, filename):
-        status_options = LinkStatus()
         """
          Write the current network into an EPANET inp file.
 
@@ -1287,7 +1282,7 @@ class WaterNetworkModel(object):
         label_format = '{:10s} {:>10s} {:>10s} {:>15s} {:>15s} {:>15s} {:>15s} {:>10s}'
         print >> f, label_format.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status')
         for pipe_name, pipe in self.links(Pipe):
-            print >> f, text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), pipe.length, pipe.diameter*1000, pipe.roughness, pipe.minor_loss, status_options.status_to_str(pipe.get_base_status()), ';')
+            print >> f, text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), pipe.length, pipe.diameter*1000, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';')
 
         # Print pump information
         print >> f, '[PUMPS]'
@@ -1315,8 +1310,8 @@ class WaterNetworkModel(object):
         label_format = '{:10s} {:10s}'
         print >> f, label_format.format(';ID', 'Setting')
         for link_name, link in self.links():
-            if link.get_base_status() is not None and link.get_base_status() != status_options.cv:
-                print >> f, text_format.format(link_name, status_options.status_to_str(link.get_base_status()))
+            if link.get_base_status() is not None and link.get_base_status() != LinkStatus.cv:
+                print >> f, text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status()))
 
         # Print pattern information
         num_columns = 8
@@ -1440,31 +1435,37 @@ class WaterNetworkModel(object):
 
         
 class NodeTypes(object):
-    def __init__(self):
-        self.junction = 0
-        self.tank = 1
-        self.reservoir = 2
+    junction = 0
+    tank = 1
+    reservoir = 2
 
+    def __init__(self):
+        pass
+
+    @classmethod
     def node_type_to_str(self, value):
-        if value == 0:
+        if value == self.junction:
             return 'Junction'
-        elif value == 1:
+        elif value == self.tank:
             return 'Tank'
-        elif value == 2:
+        elif value == self.reservoir:
             return 'Reservoir'
 
 class LinkTypes(object):
-    def __init__(self):
-        self.pipe = 0
-        self.pump = 1
-        self.valve = 2
+    pipe = 0
+    pump = 1
+    valve = 2
 
-    def link_type_to_str(self,value):
-        if value == 0:
+    def __init__(self):
+        pass
+
+    @classmethod
+    def link_type_to_str(self, value):
+        if value == self.pipe:
             return 'Pipe'
-        elif value == 1:
+        elif value == self.pump:
             return 'Pump'
-        elif value == 2:
+        elif value == self.valve:
             return 'Valve'
 
 class Node(object):
@@ -1499,17 +1500,19 @@ class Node(object):
         return self._name
 
 class LinkStatus(object):
+    closed = 0
+    opened = 1
+    active = 2
+    cv = 3
     def __init__(self):
-        self.closed = 0
-        self.open = 1
-        self.active = 2
-        self.cv = 3
+        pass
 
+    @classmethod
     def str_to_status(self, value):
         if type(value) == int:
             return value
         elif value.upper() == 'OPEN':
-            return self.open
+            return self.opened
         elif value.upper() == 'CLOSED':
             return self.closed
         elif value.upper() == 'ACTIVE':
@@ -1517,8 +1520,9 @@ class LinkStatus(object):
         elif value.upper() == 'CV':
             return self.cv
 
+    @classmethod
     def status_to_str(self, value):
-        if value == self.open:
+        if value == self.opened:
             return 'OPEN'
         elif value == self.closed:
             return 'CLOSED'
@@ -1551,9 +1555,8 @@ class Link(object):
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
-        status_options = LinkStatus()
-        self._base_status = status_options.open
-        self.current_status = status_options.open
+        self._base_status = LinkStatus.opened
+        self.current_status = LinkStatus.opened
 
     def __str__(self):
         """
@@ -1937,11 +1940,10 @@ class Pipe(Link):
         self.diameter = diameter
         self.roughness = roughness
         self.minor_loss = minor_loss
-        status_options = LinkStatus()
         if status is not None:
-            self._base_status = status_options.str_to_status(status)
-            if self._base_status == status_options.cv:
-                self.current_status = status_options.open
+            self._base_status = LinkStatus.str_to_status(status)
+            if self._base_status == LinkStatus.cv:
+                self.current_status = LinkStatus.opened
             else:
                 self.current_status = self._base_status
 
@@ -2103,9 +2105,8 @@ class Valve(Link):
         self.minor_loss = minor_loss
         self.base_setting = setting
         self.current_setting = setting
-        status_options = LinkStatus()
-        self._base_status = status_options.active
-        self.current_status = status_options.active
+        self._base_status = LinkStatus.active
+        self.current_status = LinkStatus.active
 
 
 class Curve(object):

@@ -62,8 +62,8 @@ class ScipySimulatorV2(WaterNetworkSimulator):
         start_main_loop_time = time.time()
         self.prep_time_before_main_loop - start_main_loop_time - start_run_sim_time
 
-        while self._wn.time_sec <= self._wn.time_options['DURATION']:
-            print self._wn.time_sec
+        while self._wn.sim_time_sec <= self._wn.time_options['DURATION']:
+            print self._wn.sim_time_sec
             model.update_junction_demands(self._demand_dict)
             model.set_network_status_by_id()
             model.set_jacobian_constants()
@@ -71,10 +71,10 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             [self._X,num_iters] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             end_solve_step = time.time()
             X_init = copy.copy(self._X)
-            self.solve_step[int(self._wn.time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])] = end_solve_step - start_solve_step
+            self.solve_step[int(self._wn.sim_time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])] = end_solve_step - start_solve_step
             model.save_results(self._X, results)
-            self._wn.time_sec += self._wn.time_options['HYDRAULIC TIMESTEP']
-            if self._wn.time_sec <= self._wn.time_options['DURATION']:
+            self._wn.sim_time_sec += self._wn.time_options['HYDRAULIC TIMESTEP']
+            if self._wn.sim_time_sec <= self._wn.time_options['DURATION']:
                 model.update_tank_heads(self._X)
 
         model.get_results(results)

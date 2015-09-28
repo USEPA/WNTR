@@ -1491,14 +1491,13 @@ class PyomoSimulator(WaterNetworkSimulator):
             (_check_tank_controls), and we do not want to overwrite
             that.
             """
-            status_options = LinkStatus()
             if next_head_in_tank <= min_tank_head and head_in_tank >= min_tank_head:
                 for link_name in control_info['link_names']:
                     link = self._wn.get_link(link_name)
                     if isinstance(link, Valve):
                         raise NotImplementedError('Placing valves directly next to tanks is not yet supported.'+
                                                   'Try placing a dummy pipe and junction between the tank and valve.')
-                    if isinstance(link, Pump) or link.get_base_status() == status_options.cv:
+                    if isinstance(link, Pump) or link.get_base_status() == LinkStatus.cv:
                         if link.end_node() == tank_name:
                             continue
                         else:
