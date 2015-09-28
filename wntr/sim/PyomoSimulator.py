@@ -1251,7 +1251,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             valve = self._wn.get_link(l)
             start_node = valve.start_node()
             end_node = valve.end_node()
-            pressure_setting = valve.setting
+            pressure_setting = valve.base_setting
             status = self._valve_status[l]
             if status == 'CLOSED':
                 # model.flow[l].value = self._Qtol/10.0
@@ -1497,7 +1497,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                     if isinstance(link, Valve):
                         raise NotImplementedError('Placing valves directly next to tanks is not yet supported.'+
                                                   'Try placing a dummy pipe and junction between the tank and valve.')
-                    if isinstance(link, Pump) or link.get_base_status() == 'CV':
+                    if isinstance(link, Pump) or link.get_base_status() == LinkStatus.cv:
                         if link.end_node() == tank_name:
                             continue
                         else:
@@ -1577,7 +1577,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         for valve_name in instance.valves:
             status = self._valve_status[valve_name]
             valve = self._wn.get_link(valve_name)
-            pressure_setting = valve.setting
+            pressure_setting = valve.base_setting
             start_node = valve.start_node()
             start_node_elevation = self._wn.get_node(start_node).elevation
             end_node = valve.end_node()
