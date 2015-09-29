@@ -66,10 +66,10 @@ print "  Min: " + str(np.min(todini))
 # Create a weighted graph for flowrate at time 36 hours
 t = pd.Timedelta(hours = 36)
 attr = results.link.loc[(slice(None), t), 'flowrate']
-G_flowrate_36hrs = wn.get_weighted_graph_copy(link_attribute=attr)
+G_flowrate_36hrs = wn.get_weighted_graph_deep_copy(link_attribute=attr)
 
 node_attr = results.node.loc[(slice(None), t), 'demand']
-G_temp = wn.get_weighted_graph_copy(node_attribute=node_attr)
+G_temp = wn.get_weighted_graph_deep_copy(node_attribute=node_attr)
  
 # Compute betweenness-centrality time 36 hours
 bet_cen = nx.betweenness_centrality(G_flowrate_36hrs)
@@ -101,7 +101,7 @@ T = pd.timedelta_range(start=pd.Timedelta(hours = 0), end=pd.Timedelta(hours = 2
 shat = []
 for t in T: 
     attr = results.link.loc[(slice(None), t), 'flowrate']
-    G_flowrate_t = wn.get_weighted_graph_copy(link_attribute=attr)
+    G_flowrate_t = wn.get_weighted_graph_deep_copy(link_attribute=attr)
     entropy = wntr.metrics.entropy(G_flowrate_t)
     shat.append(entropy[1])
 plt.figure()

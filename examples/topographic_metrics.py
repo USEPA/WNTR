@@ -10,7 +10,7 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Get a copy of the graph and convert the MultiDiGraph to a MultiGraph
-G = wn.get_graph_copy().to_undirected()
+G = wn.get_graph_deep_copy().to_undirected()
 
 # Graph the network
 wntr.network.draw_graph(wn, title= wn.name)

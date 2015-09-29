@@ -318,7 +318,7 @@ class WaterNetworkModel(object):
             raise RuntimeError('When trying to add a leak, you must specify either the area or the diameter.')
 
         # Ensure the name of the leak is not already used for another node
-        if leak_name in self.get_all_nodes_copy().keys():
+        if leak_name in self.get_all_nodes_deep_copy().keys():
             raise ValueError('The leak name you provided, '+leak_name+', is already being used for another node.')
 
         # Check if the leak area is larger than the pipe area
@@ -688,31 +688,31 @@ class WaterNetworkModel(object):
         """
         return self._links[name]
 
-    def get_all_nodes_copy(self):
+    def get_all_nodes_deep_copy(self):
         """
-        Return a copy of the dictionary with all nodes.
+        Return a deep copy of the dictionary with all nodes.
 
         Parameters
         ----------
 
         Returns
         -------
-        node : dictionary
+        dictionary
             Node name to node.
         """
         return copy.deepcopy(self._nodes)
 
-    def get_all_links_copy(self):
+    def get_all_links_deep_copy(self):
         """
-        Return a copy of the dictionary with all nodes.
+        Return a deep copy of the dictionary with all links.
 
         Parameters
         ----------
 
         Returns
         -------
-        node : dictionary
-            Node name to node.
+        dictionary
+            Link name to link.
         """
         return copy.deepcopy(self._links)
 
@@ -760,10 +760,13 @@ class WaterNetworkModel(object):
         """
         return self._patterns[name]
 
-    def get_graph_copy(self):
+    def get_graph_deep_copy(self):
+        """
+        Returns a deep copy of the WaterNetworkModel networkx graph.
+        """
         return copy.deepcopy(self._graph)
     
-    def get_weighted_graph_copy(self, node_attribute={}, link_attribute={}):
+    def get_weighted_graph_deep_copy(self, node_attribute={}, link_attribute={}):
         
         G = copy.deepcopy(self._graph)
         
