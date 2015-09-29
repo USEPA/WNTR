@@ -167,7 +167,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                   DRIVEN' or 'PRESSURE DRIVEN'
 
         """
-        WaterNetworkSimulator.__init__(self, wn, PD_or_DD)
+        super(PyomoSimulator, self).__init__(wn, PD_or_DD)
 
         # Global constants
         self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units (it equals 4.727 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.

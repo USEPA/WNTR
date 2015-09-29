@@ -1670,7 +1670,7 @@ class Junction(Node):
             Elevation of the junction.
             Internal units must be meters (m).
         """
-        Node.__init__(self, name)
+        super(Junction, self).__init__(name)
         self.base_demand = base_demand
         self.current_demand = base_demand
         self.demand_pattern_name = demand_pattern_name
@@ -1772,7 +1772,7 @@ class Leak(Node):
            'ISOLATE'. If tank levels fall too low, the link closest to
            the tank is closed.
         """
-        Node.__init__(self, leak_name)
+        super(Leak, self).__init__(leak_name)
         self.orig_pipe_name = pipe_name
         self.area = area
         self.leak_discharge_coeff = leak_discharge_coeff
@@ -1878,7 +1878,7 @@ class Tank(Node):
         vol_curve : string
             Name of the tank volume curve.
         """
-        Node.__init__(self, name)
+        super(Tank, self).__init__(name)
         self.elevation = elevation
         self.init_level = init_level
         self.current_level = init_level
@@ -1958,7 +1958,7 @@ class Reservoir(Node):
         head_pattern_name : string
             Name of the head pattern.
         """
-        Node.__init__(self, name)
+        super(Reservoir, self).__init__(name)
         self.base_head = base_head
         self.current_head = base_head
         self.head_pattern_name = head_pattern_name
@@ -1994,7 +1994,7 @@ class Pipe(Link):
         status : string
             Pipe status. Options are 'Open', 'Closed', and 'CV'
         """
-        Link.__init__(self, name, start_node_name, end_node_name)
+        super(Pipe, self).__init__(name, start_node_name, end_node_name)
         self.length = length
         self.diameter = diameter
         self.roughness = roughness
@@ -2029,7 +2029,7 @@ class Pump(Link):
         info_value : float or curve type
             Where power is a fixed value in KW, while a head curve is a Curve object.
         """
-        Link.__init__(self, name, start_node_name, end_node_name)
+        super(Pump, self).__init__(name, start_node_name, end_node_name)
         self.base_speed = 1.0
         self.current_speed = 1.0
         self.curve = None
@@ -2158,7 +2158,7 @@ class Valve(Link):
         setting : float
             Valve setting.
         """
-        Link.__init__(self, name, start_node_name, end_node_name)
+        super(Valve, self).__init__(name, start_node_name, end_node_name)
         self.diameter = diameter
         self.valve_type = valve_type
         self.minor_loss = minor_loss
