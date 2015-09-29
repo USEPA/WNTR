@@ -2,9 +2,11 @@ import pandas as pd
 import numpy as np
 import wntr
 import networkx as nx
+import time
 
 #@profile 
-def test_pandas_pivottable(nnodes, ntimes, use_timedelta): 
+def test_pandas_pivottable(nnodes=100, ntimes=50, use_timedelta=True): 
+    t0 = time.time()
     
     if use_timedelta:
         time_slice = pd.Timedelta(seconds = 5)
@@ -59,6 +61,9 @@ def test_pandas_pivottable(nnodes, ntimes, use_timedelta):
     pressure_data = node_pivot_table['pressure'] # returns a multiindex pd.Series
     node1_data = node_pivot_table.loc[(1, slice(None)), :] # returns a multiindex pd.Series
     node1_data_at_5hr = node1_data.loc[(1,time_slice),:] # returns pd.Series
+
+    t1 = time.time()
+    print 'pivottable time: ',t1-t0
 
 if __name__ == '__main__':
     nnodes = 100

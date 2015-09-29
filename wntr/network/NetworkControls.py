@@ -75,10 +75,12 @@ class TargetAttributeControlAction(ControlAction):
         ControlAction base class instead.
         """
         target = self._target_obj_ref()
-        assert target is not None, 'target is None inside TargetAttribureControlAction::_FireControlActionImpl'
-        if target is not None:
-            assert hasattr(target, self._attribute), 'attribute specified in TargetAttributeControlAction is not valid for targe_obj'
-            setattr(target, self._attribute, value)
+        if target is None:
+            raise ValueError('target is None inside TargetAttribureControlAction::_FireControlActionImpl. This may be because a target_obj was added, but later the object itself was deleted.')
+        if not hasattr(target, self._attribute):
+            raise ValueError('attribute specified in TargetAttributeControlAction is not valid for targe_obj')
+
+        setattr(target, self._attribute, value)
 
 class Control(object):
     """
@@ -103,38 +105,7 @@ class Control(object):
     def __init__(self):
         pass
 
-    def InformSuccessfulTimestep(self, wnm):
-        """
-        This method is called by the simulator to let the control know
-        about a successful timestep. This allows the control to log
-        any history information that it may need to log.
-
-        Parameters
-        ----------
-
-        wnm : WaterNetworkModel object
-            The water network model object that is being simulated
-        """
-        self._InformSuccessfulTimestepImpl(wnm)
-        
-    def _InformSuccessfulTimestepImpl(self, wnm):
-        """
-        This method should be overriden by derived classes from Control. 
-        Please see Control::InformSuccessfulTimestep for documentation 
-        information. This should not be called directly, instead 
-        InformSuccessfulTimestep should be called.
-
-        Parameters
-        ----------
-
-        wnm : WaterNetworkModel object
-            The water network model object that is being simulated
-        """
-        raise NotImplementedError('_InformSuccessfulTimestepImpl is not implemented. '
-                                  'This method must be implemented in any '
-                                  ' class derived from Control.')  
-
-    def IsControlActionRequired(self, wnm):
+    def IsControlActionRequired(self, wnm, presolve_flag):
         """
         This method is called to see if any action is required
         by this control object. This method returns a tuple
@@ -152,27 +123,25 @@ class Control(object):
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that
             is being simulated.
-        """
-        return _IsControlActionRequiredImpl(self, wnm)
 
-    def _IsControlActionRequiredImpl(self, wnm)
+        presolve_flag : bool
+            This is true if we are calling before the solve, and false if 
+            we are calling after the solve.
+        """
+        return _IsControlActionRequiredImpl(self, wnm, presolve_flag)
+
+    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This method should be implemented in derived Control classes as 
-        the main implementation of IsActionRequired.
+        the main implementation of IsControlActionRequired.
 
         The derived classes that override this method should return 
         a tuple that indicates if action is required and a recommended
         time for the simulation to backup before firing the control 
         action.
 
-        This method should not be called directly. Use IsActionRequired
-        instead.
-
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that
-            is being simulated.
+        This method should not be called directly. Use IsControlActionRequired
+        instead. For more details see documentation for IsControlActionRequired
         """
         raise NotImplementedError('_IsControlActionRequiredImpl is not implemented. '
                                   'This method must be implemented in any '
@@ -242,11 +211,11 @@ class TimeControl(Control):
     def __init__(self, wnm, time_sec, time_flag, daily_flag, control_action):
         self._time_sec = time_sec
         self._time_flag = time_flag
-        assert time_flag == 'SIM_TIME' or time_flag == 'SHIFTED_TIME'
+        if time_flag != 'SIM_TIME' and time_flag != 'SHIFTED_TIME':
+            raise ValueError('In TimeControl::__init__, time_flag must be "SIM_TIME" or "SHIFTED_TIME"')
+
         self._daily_flag = daily_flag
         self._control_action = control_action
-        self._control_complete = False
-        self._prev_time_sec = None
 
         if daily_flag and time_sec > 24*3600:
             raise ValueError('In TimeControl, a daily control was requested, however, the time passed in was not between 0 and 24*3600')
@@ -258,27 +227,23 @@ class TimeControl(Control):
             self._time_sec += 24*3600
 
     @classmethod
-    def WithTarget(time_sec, time_flag, daily_flag, target_obj, attribute, value):
+    def WithTarget(self, time_sec, time_flag, daily_flag, target_obj, attribute, value):
         t = TargetAttributeControlAction(target_obj, attribute, value)
         return TimeControl(time_sec, time_flag, daily_flag, t)
-
-    def _InformSuccessfulTimestepImpl(self, wnm):
-        # time controls don't need to store any history at this point
-        pass
     
-    def _IsControlActionRequiredImpl(self, wnm)
+    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
-        if self._control_complete:
+        if presolve_flag == False:
             return (False, None)
 
         if self._time_flag == 'SIM_TIME':
-            if self._time_sec <= wnm.sim_time_sec:
+            if wnm.prev_sim_time_sec < self._time_sec and self._time_sec <= wnm.sim_time_sec:
                 return (True, wnm.sim_time_sec - self._time_sec)
         elif self._time_flag == 'SHIFTED_TIME':
-            if self._time_sec <= wnm.shifted_time_sec():
+            if wnm.prev_shifted_time_sec() < self._time_sec and self._time_sec <= wnm.shifted_time_sec():
                 return (True, wnm.shifted_time_sec() - self._time_sec)
 
         return (False, None)
@@ -288,12 +253,12 @@ class TimeControl(Control):
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
-        assert self._control_action is not None, '_control_action is None inside TimeControl'
+        if self._control_action is None:
+            raise ValueError('_control_action is None inside TimeControl')
+
         self._control_action.FireControlAction(wnm)
         if self._daily_flag:
             self._time_sec += 24*3600
-        else:
-            self._control_complete = True
 
 class ConditionalControl(Control):
     """
@@ -322,52 +287,45 @@ class ConditionalControl(Control):
        The threshold value to compare against. In this implementation, this must
        be a float.
 
-    control_action : An object derived from ControlAction This is the
-       event action that will be fired when the condition becomes true
+    control_action : An object derived from ControlAction 
+       This is the event action that will be fired when the condition becomes true
     """
 
-    def __init__(self, source_obj, source_attribute, operation, threshold, control_action):
+    def __init__(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, control_action):
         self._source_obj = source_obj
         self._source_attribute = source_attribute
+        self._prev_source_attribute = prev_source_attribute
         self._operation = operation
         self._threshold = threshold
         self._control_action = control_action
-        self._prev_time_sec = 0
-        self._prev_value = None
+
         if source_obj is None:
             raise ValueError('source_obj of None passed to ConditionalControlObject.')
         if not hasattr(source_obj, source_attribute):
             raise ValueError('In ConditionalControlObject, source_obj does not contain the attribute specified by source_attribute.')
 
     @classmethod
-    def WithTarget(source_obj, source_attribute, operation, threshold, target_obj, target_attribute, target_value):
+    def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
         ca = TargetAttributeControlAction(target_obj, target_attribute, target_value)
-        return ConditionalControl(source_obj, source_attribute, operation, threshold, ca)
+        return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
 
-    def _InformSuccessfulTimestepImpl(self, wnm):
-        # set the previous value and previous time for linear interpolation
-        self._prev_time_sec = wnm.sim_time_sec
-        self._prev_value = getattr(source_obj, source_attribute)
-
-    def _IsControlActionRequiredImpl(self, wnm)
+    def _IsControlActionRequiredImpl(self, wnm):
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
         value = getattr(source_obj, source_attribute)
+        prev_value = getattr(source_obj, source_attribute_prev)
         if self._operation(value, self._threshold):
             # control action is required
-            if self._prev_time_sec is None or self._prev_value is None:
+            if wnm.prev_sim_time_sec is None or prev_value is None:
                 assert wnm.time_step == 0, 'This should only happen during the first simulation timestep'
+                return (True, 0)
                 
             # let's do linear interpolation to determine the estimated switch time
-            change_required = True
-            m = (value - self._prev_value)/(wnm.time_sec - self._prev_time)
-            new_time = (self._threshold - self._prev_value)/m + self._prev_time
+            m = (value - prev_value)/(wnm.sim_time_sec - wnm.prev_sim_time_sec)
+            new_time = (self._threshold - prev_value)/m + wnm.prev_sim_time_sec
             return (True, new_time)
-
-        self._prev_time_sec = wnm.time_sec
-        self._prev_value = value
         
         return (False, None)
         

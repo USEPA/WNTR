@@ -25,7 +25,7 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             A water network
         """
 
-        WaterNetworkSimulator.__init__(self, wn)
+        super(ScipySimulatorV2, self).__init__(wn)
         self._get_demand_dict()
 
         # Timing

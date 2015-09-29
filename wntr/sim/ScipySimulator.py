@@ -60,7 +60,7 @@ class ScipySimulator(WaterNetworkSimulator):
         wn : WaterNetworkModel
             A water network
         """
-        WaterNetworkSimulator.__init__(self, wn)
+        super(ScipySimulator, self).__init__(wn)
 
         # Create dictionaries with node and link id's to names
         self._node_id_to_name = {}
