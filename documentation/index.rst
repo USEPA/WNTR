@@ -12,7 +12,9 @@ WNTR 0.1 documentation
    simulation
    resilience
    license
-   sourcecode/index
+   testing
+   tracsite
+   API Documentation <apidoc/wntr>
    reference
 
 Indices and tables
@@ -21,4 +23,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
 

@@ -13,7 +13,7 @@ folder.  This example demonstrates how to:
 * Simulate hydraulics
 * Plot simulation results on the network
 
-.. literalinclude:: ../../examples/getting_started.py
+.. literalinclude:: ../examples/getting_started.py
 
 Additional examples are included in the examples folder.  These examples
 include:

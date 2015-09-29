@@ -36,7 +36,16 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.pngmath',
     'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary',
+    'numpydoc',
 ]
+
+autosummary_generate = True
+viewcode_import = True
+numpydoc_show_class_members = True
+numpydoc_class_members_toctree = True
+autodoc_member_order = 'bysource'
+autoclass_content = 'both'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -81,7 +90,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = ['_build', '../wntr/network/NetworkControls.py', '../wntr/sim/ScipyModel.py', '../wntr/sim/ScipyModelV2.py']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

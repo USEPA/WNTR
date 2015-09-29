@@ -37,4 +37,4 @@ SI units. Results are stored in SI units and can be converted to other units if 
 The sympy package can be used to convert between units.  The example converting_units.py
 demonstrates its use.
 
-.. literalinclude:: ../../examples/converting_units.py
+.. literalinclude:: ../examples/converting_units.py
