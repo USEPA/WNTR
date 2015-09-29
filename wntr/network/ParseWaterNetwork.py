@@ -126,6 +126,13 @@ class ParseWaterNetwork(object):
                         count += 1
                 if (current == []) or (current[0].startswith(';')):
                     continue
+                if current[0].upper() == 'HEADLOSS':
+                    if current[1].upper != 'H-W':
+                        warnings.warn('WNTR currently only supports the Hazen-Williams headloss formula (unless you are using the EpanetSimulator).')
+                if current[0].upper() == 'QUALITY':
+                    if current[1].upper() != 'NONE':
+                        warnings.warn('WNTR does not support water quality analysis (unless you are using the EpanetSimulator).')
+                #if current[0].upper() == 'HYDRAULICS' or current[0].upper() == ''
                 if len(current) == 2:
                     if current[0].upper() == 'PATTERN':
                         wn.add_option('PATTERN', current[1])
