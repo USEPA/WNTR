@@ -37,6 +37,11 @@ class WaterNetworkModel(object):
         ---------
         >>> wn = WaterNetworkModel()
         
+        Parameters
+        ----------
+        inp_file_name: string
+           directory and filename of inp file to load into the WaterNetworkModel object.
+
         """
 
         # Network name
@@ -95,7 +100,7 @@ class WaterNetworkModel(object):
             parser = wntr.network.ParseWaterNetwork()
             parser.read_inp_file(self, inp_file_name)
 
-    def add_junction(self, name, base_demand=None, demand_pattern_name=None, elevation=None, coordinates=None):
+    def add_junction(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0, coordinates=None):
         """
         Add a junction to the network.
         
@@ -118,10 +123,8 @@ class WaterNetworkModel(object):
             X-Y coordinates of the node location
 
         """
-        if base_demand is not None:
-            base_demand = float(base_demand)
-        if elevation is not None:
-            elevation = float(elevation)
+        base_demand = float(base_demand)
+        elevation = float(elevation)
         junction = Junction(name, base_demand, demand_pattern_name, elevation)
         self._nodes[name] = junction
         self._graph.add_node(name)
@@ -130,8 +133,8 @@ class WaterNetworkModel(object):
         self.set_node_type(name, 'junction')
         self._num_junctions += 1
 
-    def add_tank(self, name, elevation=None, init_level=None,
-                 min_level=None, max_level=None, diameter=None,
+    def add_tank(self, name, elevation=0.0, init_level=3.048,
+                 min_level=0.0, max_level=6.096, diameter=15.24,
                  min_vol=None, vol_curve=None, coordinates=None):
         """
         Method to add tank to a water network object.
@@ -166,24 +169,15 @@ class WaterNetworkModel(object):
         coordinates : tuple of floats
             X-Y coordinates of the node location
         """
-        if elevation is not None:
-            elevation = float(elevation)
-        if init_level is not None:
-            init_level = float(init_level)
-        if min_level is not None:
-            min_level = float(min_level)
-        if max_level is not None:
-            max_level = float(max_level)
-        if diameter is not None:
-            diameter = float(diameter)
+        elevation = float(elevation)
+        init_level = float(init_level)
+        min_level = float(min_level)
+        max_level = float(max_level)
+        diameter = float(diameter)
         if min_vol is not None:
             min_vol = float(min_vol)
-        if init_level is not None and min_level is not None:
-            assert init_level >= min_level, "Initial tank level must be greater than or equal to the tank minimum level."
-        if init_level is not None and max_level is not None:
-            assert init_level <= max_level, "Initial tank level must be less than or equal to the tank maximum level."
-        if min_level is not None and max_level is not None:
-            assert min_level <= max_level, "Tank minimum level must be less than or equal to the tank maximum level."
+        assert init_level >= min_level, "Initial tank level must be greater than or equal to the tank minimum level."
+        assert init_level <= max_level, "Initial tank level must be less than or equal to the tank maximum level."
         tank = Tank(name, elevation, init_level,
                  min_level, max_level, diameter,
                  min_vol, vol_curve)
@@ -194,7 +188,7 @@ class WaterNetworkModel(object):
         self.set_node_type(name, 'tank')
         self._num_tanks += 1
 
-    def add_reservoir(self, name, base_head=None, head_pattern_name=None, coordinates=None):
+    def add_reservoir(self, name, base_head=0.0, head_pattern_name=None, coordinates=None):
         """
         Method to add reservoir to a water network object.
 
@@ -213,8 +207,7 @@ class WaterNetworkModel(object):
         coordinates : tuple of floats
             X-Y coordinates of the node location
         """
-        if base_head is not None:
-            base_head = float(base_head)
+        base_head = float(base_head)
         reservoir = Reservoir(name, base_head, head_pattern_name)
         self._nodes[name] = reservoir
         self._graph.add_node(name)
@@ -359,8 +352,8 @@ class WaterNetworkModel(object):
         self._update_conditional_controls_for_leak(leak_name)
 
 
-    def add_pipe(self, name, start_node_name, end_node_name, length=None,
-                 diameter=None, roughness=None, minor_loss=None, status=None):
+    def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
+                 diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN'):
         """
         Method to add pipe to a water network object.
 
@@ -388,26 +381,21 @@ class WaterNetworkModel(object):
         status : string
             Pipe status. Options are 'Open', 'Closed', and 'CV'
         """
-        if length is not None:
-            length = float(length)
-        if diameter is not None:
-            diameter = float(diameter)
-        if roughness is not None:
-            roughness = float(roughness)
-        if minor_loss is not None:
-            minor_loss = float(minor_loss)
+        length = float(length)
+        diameter = float(diameter)
+        roughness = float(roughness)
+        minor_loss = float(minor_loss)
         pipe = Pipe(name, start_node_name, end_node_name, length,
                     diameter, roughness, minor_loss, status)
         # Add to list of cv
-        if status is not None:
-            if status.upper() == 'CV':
-                self._check_valves.append(name)
+        if status.upper() == 'CV':
+            self._check_valves.append(name)
         self._links[name] = pipe
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         self.set_link_type((start_node_name, end_node_name, name), 'pipe')
         self._num_pipes += 1
 
-    def add_pump(self, name, start_node_name, end_node_name, info_type='HEAD', info_value=None):
+    def add_pump(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0):
         """
         Method to add pump to a water network object.
 
@@ -434,7 +422,7 @@ class WaterNetworkModel(object):
         self._num_pumps += 1
 
     def add_valve(self, name, start_node_name, end_node_name,
-                 diameter=None, valve_type=None, minor_loss=None, setting=None):
+                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
         """
         Method to add valve to a water network object.
 
@@ -456,8 +444,11 @@ class WaterNetworkModel(object):
             Type of valve. Options are 'PRV', etc
         minor_loss : float
             Pipe minor loss coefficient
-        setting : string
-            Valve status. Options are 'Open', 'Closed', etc
+        setting : float or string
+            pressure setting for PRV, PSV, or PBV
+            flow setting for FCV
+            loss coefficient for TCV
+            name of headloss curve for GPV
         """
         valve = Valve(name, start_node_name, end_node_name,
                       diameter, valve_type, minor_loss, setting)
@@ -802,8 +793,9 @@ class WaterNetworkModel(object):
         attribute: string
             Node attribute
 
-        node_type: string
-            options = Node, Junction, Reservoir, Tank, default = Node
+        node_type: class
+            options = Node, Junction, Reservoir, Tank, or None, default = None
+            Note: None and Node produce the same results
 
         Returns
         -------
@@ -828,7 +820,8 @@ class WaterNetworkModel(object):
             Link attribute
 
         node_type: string
-            options = Link, Pipe, Pump, Valve, default = Link
+            options = Link, Pipe, Pump, Valve, or None, default = None
+            Note: None and Link produce the same results
 
         Returns
         -------
@@ -855,13 +848,17 @@ class WaterNetworkModel(object):
         operation: np option
             options = np.greater, np.greater_equal, np.less, np.less_equal, np.equal, np.not_equal
 
-        value: scalar
+        value: float or int
             threshold
+
+        node_type: class
+            options = Node, Junction, Reservoir, Tank, or None, default = None
+            Note None and Node produce the same results
 
         Returns
         -------
-        nodes : dictionary of nodes
-            dictionary of node names to node objects satisfying operation threshold
+        dictionary
+            dictionary of node names to attribute for nodes of node_type satisfying operation threshold
         """
         node_attribute_dict = {}
         for name, node in self.nodes(node_type):
@@ -884,13 +881,17 @@ class WaterNetworkModel(object):
         operation: np option
             options = np.greater, np.greater_equal, np.less, np.less_equal, np.equal, np.not_equal
 
-        value: scalar
+        value: float or int
             threshold
+
+        link_type: class
+            options = Link, Pipe, Pump, Valve, or None, default = None
+            Note: None and Link produce the same results
 
         Returns
         -------
-        links : dictionary of links
-            dictionary of link names to link objects satisfying operation threshold
+        dictionary
+            dictionary of link names to attributes for links of link_type  satisfying operation threshold
         """
         link_attribute_dict = {}
         for name, link in self.links(link_type):
@@ -1655,7 +1656,7 @@ class Junction(Node):
     """
     Junction class that is inherited from Node
     """
-    def __init__(self, name, base_demand=None, demand_pattern_name=None, elevation=None):
+    def __init__(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0):
         """
         Parameters
         ----------
@@ -1849,8 +1850,8 @@ class Tank(Node):
     """
     Tank class that is inherited from Node
     """
-    def __init__(self, name, elevation=None, init_level=None,
-                 min_level=None, max_level=None, diameter=None,
+    def __init__(self, name, elevation=0.0, init_level=3.048,
+                 min_level=0.0, max_level=6.096, diameter=15.24,
                  min_vol=None, vol_curve=None):
         """
         Parameters
@@ -1946,7 +1947,7 @@ class Reservoir(Node):
     """
     Reservoir class that is inherited from Node
     """
-    def __init__(self, name, base_head=None, head_pattern_name=None):
+    def __init__(self, name, base_head=0.0, head_pattern_name=None):
         """
         Parameters
         ----------
@@ -1970,8 +1971,8 @@ class Pipe(Link):
     """
     Pipe class that is inherited from Link
     """
-    def __init__(self, name, start_node_name, end_node_name, length=None,
-                 diameter=None, roughness=None, minor_loss=None, status=None):
+    def __init__(self, name, start_node_name, end_node_name, length=304.8,
+                 diameter=0.3048, roughness=100, minor_loss=0.00, status='OPEN'):
         """
         Parameters
         ----------
@@ -2014,7 +2015,7 @@ class Pump(Link):
     """
     Pump class that is inherited from Link
     """
-    def __init__(self, name, start_node_name, end_node_name, info_type, info_value):
+    def __init__(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0):
         """
         Parameters
         ----------
@@ -2037,10 +2038,10 @@ class Pump(Link):
         self.current_speed = 1.0
         self.curve = None
         self.power = None
-        self.info_type = info_type
-        if info_type == 'HEAD':
+        self.info_type = info_type.upper()
+        if self.info_type == 'HEAD':
             self.curve = info_value
-        elif info_type == 'POWER':
+        elif self.info_type == 'POWER':
             self.power = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
@@ -2138,7 +2139,7 @@ class Valve(Link):
     Valve class that is inherited from Link
     """
     def __init__(self, name, start_node_name, end_node_name,
-                 diameter=None, valve_type=None, minor_loss=None, setting=None):
+                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
         """
         Parameters
         ----------
@@ -2158,8 +2159,8 @@ class Valve(Link):
             Type of valve. Options are 'PRV', etc
         minor_loss : float
             Pipe minor loss coefficient
-        setting : float
-            Valve setting.
+        setting : float or string
+            Valve setting or name of headloss curve for GPV
         """
         super(Valve, self).__init__(name, start_node_name, end_node_name)
         self.diameter = diameter
