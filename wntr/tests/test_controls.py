@@ -122,7 +122,7 @@ class TestTankControls(unittest.TestCase):
 
         tank_level_dropped_flag = False
         for t in results.link.loc['pipe1'].index:
-            if results.node.at[('tank1',t),'pressure'] <= 0.0:
+            if results.node.at[('tank1',t),'pressure'] <= 10.0:
                 self.assertLessEqual(results.link.at[('pipe1',t),'flowrate'],0.0)
                 tank_level_dropped_flag = True
         self.assertEqual(tank_level_dropped_flag, True)
@@ -137,10 +137,10 @@ class TestTankControls(unittest.TestCase):
         tank_level_dropped_flag = False
         tank_refilled_flag = False
         for t in results.link.loc['pipe1'].index:
-            if results.node.at[('tank1',t),'pressure'] <= 0.0:
+            if results.node.at[('tank1',t),'pressure'] <= 10.0:
                 self.assertLessEqual(results.link.at[('pipe1',t),'flowrate'],0.0)
                 tank_level_dropped_flag = True
-            elif results.node.at[('tank1',t),'pressure'] > 0.0:
+            elif results.node.at[('tank1',t),'pressure'] > 10.0:
                 self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'],0.001)
                 if tank_level_dropped_flag:
                     tank_refilled_flag = True
