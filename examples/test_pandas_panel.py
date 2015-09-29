@@ -3,7 +3,7 @@ import numpy as np
 import time
 
 #@profile 
-def test_pandas_panels(nnodes=100, ntimes=50, use_timedelta=True): 
+def test_pandas_panels(nnodes=100, ntimes=50, use_timedelta=False): 
 
     t0 = time.time()
 
