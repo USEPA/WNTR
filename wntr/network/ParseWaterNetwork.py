@@ -127,12 +127,16 @@ class ParseWaterNetwork(object):
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 if current[0].upper() == 'HEADLOSS':
-                    if current[1].upper != 'H-W':
-                        warnings.warn('WNTR currently only supports the Hazen-Williams headloss formula (unless you are using the EpanetSimulator).')
+                    if current[1].upper() != 'H-W':
+                        warnings.warn('WNTR currently only supports the '+current[1]+' headloss formula in the EpanetSimulator.')
                 if current[0].upper() == 'QUALITY':
                     if current[1].upper() != 'NONE':
-                        warnings.warn('WNTR does not support water quality analysis (unless you are using the EpanetSimulator).')
-                #if current[0].upper() == 'HYDRAULICS' or current[0].upper() == ''
+                        warnings.warn('WNTR only supports water quality analysis in the EpanetSimulator.')
+                if current[0].upper() == 'HYDRAULICS' or current[0].upper() == 'MAP':
+                    warnings.warn('The '+current[0]+' option in the inp file is currently only supported in the EpanetSimulator.')
+                if current[0].upper() == 'DEMAND':
+                    if float(current[2]) != 1.0:
+                        warnings.warn('The '+current[0]+' '+current[1]+' option in the inp file is currently only supported in the EpanetSimulator.')
                 if len(current) == 2:
                     if current[0].upper() == 'PATTERN':
                         wn.add_option('PATTERN', current[1])
@@ -180,6 +184,11 @@ class ParseWaterNetwork(object):
         coordinates = False
         status = False
         reactions = False
+        demands = False
+        rules = False
+        energy = False
+        emitters = False
+        report = False
 
         for line in f:
             if ']' in line:
@@ -197,6 +206,11 @@ class ParseWaterNetwork(object):
                 coordinates = False
                 status = False
                 reactions = False
+                demands = False
+                rules = False
+                energy = False
+                emitters = False
+                report = False
 
             if '[PIPES]' in line:
                 pipes = True
@@ -237,6 +251,21 @@ class ParseWaterNetwork(object):
             elif '[REACTIONS]' in line:
                 reactions = True
                 continue
+            elif '[DEMANDS]' in line:
+                demands = True
+                continue
+            elif '[RULES]' in line:
+                rules = True
+                continue
+            elif '[ENERGY]' in line:
+                energy = True
+                continue
+            elif '[EMITTERS]' in line:
+                emitters = True
+                continue
+            elif '[REPORT]' in line:
+                report = True
+                continue
 
             if pipes:
                 current = line.split()
@@ -252,6 +281,8 @@ class ParseWaterNetwork(object):
                         count += 1
                 if (current == []) or (current[0].startswith(';')) or (current[0] == ';ID'):
                     continue
+                if float(current[6]) != 0:
+                    warnings.warn('Currently, only the EpanetSimulator supports non-zero minor losses in pipes.')
                 wn.add_pipe(current[0], current[1], current[2], convert('Length', inp_units, float(current[3])),
                                                                 convert('Pipe Diameter', inp_units, float(current[4])),
                                                                 float(current[5]), float(current[6]), current[7].upper())
@@ -271,7 +302,9 @@ class ParseWaterNetwork(object):
                     continue
                 valve_type = current[4].upper()
                 if valve_type != 'PRV':
-                    raise warnings.warn("Only PRV valves are currently supported. ")
+                    warnings.warn("Only PRV valves are currently supported. ")
+                if float(current[6]) != 0:
+                    warnings.warn('Currently, only the EpanetSimulator supports non-zero minor losses in valves.')
                 wn.add_valve(current[0], current[1], current[2], convert('Pipe Diameter', inp_units, float(current[3])),
                                                                  current[4].upper(), float(current[6]),
                                                                  convert('Pressure', inp_units, float(current[5].upper())))
@@ -312,9 +345,9 @@ class ParseWaterNetwork(object):
                     continue
                 # Only add head curves for pumps
                 if current[3].upper() == 'SPEED':
-                    raise RuntimeError('Speed settings for pumps are not currently supported')
+                    warnings.warn('Speed settings for pumps are currently only supported in the EpanetSimulator.')
                 elif current[3].upper() == 'PATTERN':
-                    raise RuntimeError('Speed patterns for pumps are not currently supported')
+                    warnings.warn('Speed patterns for pumps are currently only supported in the EpanetSimulator.')
                 elif current[3].upper() == 'HEAD':
                     self._pump_info[current[0]] = (current[1], current[2], current[4])
                     self._curve_map[current[0]] = current[4]
@@ -341,7 +374,9 @@ class ParseWaterNetwork(object):
                 if (len(current) == 2 or current[2].startswith(';')):
                     wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])))
                 else:
+                    warnings.warn('Patterns for reservoir heads are currently only supported in the EpanetSimulator.')
                     wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])), current[2])
+
             if tanks:
                 current = line.split()
                 comment_flag = False
@@ -359,6 +394,10 @@ class ParseWaterNetwork(object):
                 if current[-1] == ';':
                     del current[-1]
                 if len(current) == 8:  # Volume curve provided
+                    warnings.warn('Currently, only the EpanetSimulator utilizes maximum levels for tanks. The other simulators do not place an upper limit on tank levels yet.')
+                    if float(current[6]) != 0:
+                        warnings.warn('Currently, only the EpanetSimulator utilizes minimum volumes for tanks. The other simulators only use the minimum level and only support cylindrical tanks.')
+                    warnings.warn('Currently, only the EpanetSimulator supports volume curves. The other simulators only support cylindrical tanks.')
                     wn.add_tank(current[0], convert('Elevation', inp_units, float(current[1])),
                                             convert('Length', inp_units, float(current[2])),
                                             convert('Length', inp_units, float(current[3])),
@@ -368,12 +407,22 @@ class ParseWaterNetwork(object):
                                             current[7])
                     self._curve_map[current[7]] = current[0] # Is this backwards?
                 elif len(current) == 7:  # No volume curve provided
+                    warnings.warn('Currently, only the EpanetSimulator utilizes maximum levels for tanks. The other simulators do not place an upper limit on tank levels yet.')
+                    if float(current[6]) != 0:
+                        warnings.warn('Currently, only the EpanetSimulator utilizes minimum volumes for tanks. The other simulators only use the minimum level and only support sylindrical tanks.')
                     wn.add_tank(current[0], convert('Elevation', inp_units, float(current[1])),
                                             convert('Length', inp_units, float(current[2])),
                                             convert('Length', inp_units, float(current[3])),
                                             convert('Length', inp_units, float(current[4])),
                                             convert('Tank Diameter', inp_units, float(current[5])),
                                             convert('Volume', inp_units, float(current[6])))
+
+            if demands:
+                current = line.split()
+                if len(current)>0:
+                    if not current[0].startswith(';'):
+                        warnings.warn('Multiple demands per junction are currently only supported by the EpanetSimulator. Please check the [DEMANDS] section of your inp file.')
+
             if times:
                 # times options are saved a tuple of floats (hr,min) or (time, 'am/pm')
                 current = line.split()
@@ -415,19 +464,29 @@ class ParseWaterNetwork(object):
 
                 if 'PATTERN START' in wn.time_options.keys():
                     if wn.time_options['PATTERN START'] != 0.0:
-                        raise ValueError('Currently, only a patern start time of 0.0 is supported')
+                        warnings.warn('Currently, only the EpanetSimulator supports a non-zero patern start time.')
 
                 if 'REPORT START' in wn.time_options.keys():
                     if wn.time_options['REPORT START'] != 0.0:
-                        raise ValueError('Currently, only a report start time of 0.0 is supported')
+                        warnings.warn('Currently, only a report start time of 0 is supported')
 
                 if 'REPORT TIMESTEP' in wn.time_options.keys():
                     if wn.time_options['REPORT TIMESTEP'] != wn.time_options['HYDRAULIC TIMESTEP']:
-                        raise ValueError('Currently, only a report timestep equal to the hydraulic timestep is supported')
+                        warnings.warn('Currently, only a report timestep equal to the hydraulic timestep is supported')
 
                 if 'START CLOCKTIME' in wn.time_options.keys():
                     if wn.time_options['START CLOCKTIME'] != 0.0:
-                        raise ValueError('Currently, only a start clocktime of 12 am is supported')
+                        warnings.warn('Currently, only a start clocktime of 12 am is supported (except the EpanetSimulator).')
+                        
+                if 'STATISTIC' in wn.time_options.keys():
+                    if wn.time_options['STATISTIC'].upper() != 'NONE':
+                        warnings.warn('Currently, only the EpanetSimulator supports the STATISTIC option in the inp file.')
+
+            if report:
+                current = line.split()
+                if len(current)>0:
+                    if not current[0].startswith(';'):
+                        warnings.warn('Currently, only the EpanetSimulator supports the [REPORT] section of the inp file.')
 
             if patterns:
                 # patterns are stored in a pattern dictionary pattern_dict = {'pattern_1': [ 23, 3, 4 ...], ... }
@@ -489,8 +548,6 @@ class ParseWaterNetwork(object):
                 current = [i.upper() for i in current]
                 current[1] = current_copy[1] # don't capitalize the link name
                 if 'TIME' not in current:
-                    #warnings.warn("Warning: Conditional controls are currently not supported by the PYOMO simulator. "
-                    #              "Only time controls are supported.")
                     if 'IF' in current:
                         link_name = current[1]
                         if link_name not in self._conditional_controls:
@@ -498,9 +555,6 @@ class ParseWaterNetwork(object):
                         node_index = current.index('NODE') + 1
                         node_name = current_copy[node_index]
                         node = wn.get_node(node_name)
-                        #if not isinstance(node, Tank):
-                        #    raise RuntimeError("Conditional controls are only supported for Tank levels."
-                        #                       + node_name + " is not a tank.")
                         if 'OPEN' in current and 'BELOW' in current:
                             value_index = current.index('BELOW') + 1
                             value = convert("Hydraulic Head", inp_units, float(current[value_index]))
@@ -522,7 +576,9 @@ class ParseWaterNetwork(object):
                     else:
                         raise RuntimeError("The following control is not recognized: " + line)
                 else:
-                    assert(len(current) == 6), "Error reading time controls. Check format." # This means ClockTime format is not supported?
+                    if len(current) != 6:
+                        warnings.warn('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
+
                     link_name = current[1]
                     if link_name not in self._time_controls:
                         if current[2].upper() == 'OPEN':
@@ -538,6 +594,24 @@ class ParseWaterNetwork(object):
                             self._time_controls[link_name]['closed_times'].append(str_time_to_sec(current[5]))
                         else:
                             raise RuntimeError("Time control format not recognized.")
+
+            if rules:
+                current = line.split()
+                if len(current)>0:
+                    if not current[0].startswith(';'):
+                        warnings.warn('Rules are currently only supported in the EpanetSimulator.')
+
+            if energy:
+                current = line.split()
+                if len(current)>0:
+                    if not current[0].startswith(';'):
+                        warnings.warn('Energy analyses are currently only performed by the EpanetSimulator.')
+
+            if emitters:
+                current = line.split()
+                if len(current)>0:
+                    if not current[0].startswith(';'):
+                        warnings.warn('Emitters are currently only supported by the EpanetSimulator.')
 
             if coordinates:
                 current = line.split()

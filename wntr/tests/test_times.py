@@ -10,8 +10,9 @@ resilienceMainDir = os.path.abspath(
         inspect.currentframe() ) ) ), '..', '..' ))
 import copy
 import numpy as np
+import warnings
 
-class TestNetworkTimeErrors(unittest.TestCase):
+class TestNetworkTimeWarnings(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
@@ -28,32 +29,43 @@ class TestNetworkTimeErrors(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel()
         parser = self.wntr.network.ParseWaterNetwork()
         
-        with self.assertRaises(ValueError):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             parser.read_inp_file(wn, inp_file)
+            self.assertIn('Currently, only the EpanetSimulator supports a non-zero patern start time.',str(w[1].message))
 
     def test_report_time_step(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_9.inp'
         wn = self.wntr.network.WaterNetworkModel()
         parser = self.wntr.network.ParseWaterNetwork()
         
-        with self.assertRaises(ValueError):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             parser.read_inp_file(wn, inp_file)
+            self.assertIn('Currently, only a report timestep equal to the hydraulic timestep is supported',str(w[1].message))
+
 
     def test_report_start_time(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_10.inp'
         wn = self.wntr.network.WaterNetworkModel()
         parser = self.wntr.network.ParseWaterNetwork()
         
-        with self.assertRaises(ValueError):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             parser.read_inp_file(wn, inp_file)
+            self.assertIn('Currently, only a report start time of 0 is supported',str(w[1].message))
+
 
     def test_start_clocktime(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_11.inp'
         wn = self.wntr.network.WaterNetworkModel()
         parser = self.wntr.network.ParseWaterNetwork()
         
-        with self.assertRaises(ValueError):
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             parser.read_inp_file(wn, inp_file)
+            self.assertIn('Currently, only a start clocktime of 12 am is supported (except the EpanetSimulator).',str(w[1].message))
+
 
 class TestNetworkTimeBehavior(unittest.TestCase):
 
