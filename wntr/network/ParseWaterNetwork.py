@@ -138,22 +138,33 @@ class ParseWaterNetwork(object):
                     if float(current[2]) != 1.0:
                         warnings.warn('The '+current[0]+' '+current[1]+' option in the inp file is currently only supported in the EpanetSimulator.')
                 if len(current) == 2:
-                    if current[0].upper() == 'PATTERN':
-                        wn.add_option('PATTERN', current[1])
+                    if current[0].upper() == 'PATTERN' or current[0].upper() == 'MAP':
+                        setattr(wn.options, current[0].lower(), current[1])
+                    elif current[0].upper() == 'QUALITY':
+                        wn.options.quality_option = current[1].upper()
+                    elif current[0].upper() == 'UNBALANCED':
+                        wn.options.unbalanced_option = current[1].upper()
                     else:
-                        wn.add_option(current[0].upper(), float(current[1]) if is_number(current[1]) else current[1].upper())
+                        setattr(wn.options, current[0].lower(), float(current[1]) if is_number(current[1]) else current[1].upper())
                 if len(current) > 2:
                     if current[0].upper() == 'UNBALANCED':
-                        wn.add_option('UNBALANCED', current[1] + ' ' + current[2])
+                        wn.options.unbalanced_option = current[1].upper()
+                        wn.options.unbalanced_value = int(current[2])
+                    elif current[0].upper() == 'HYDRAULICS':
+                        wn.options.hydraulics_option = current[1].upper()
+                        wn.options.hydraulics_filename = current[2]
+                    elif current[0].upper() == 'QUALITY':
+                        wn.options.quality_option = current[1].upper()
+                        wn.options.quality_value = current[2]
                     else:
-                        wn.add_option(current[0].upper() + ' ' + current[1].upper(), float(current[2]) if is_number(current[2]) else current[2].upper())
+                        setattr(wn.options, current[0].lower()+'_'+current[1].lower(), float(current[2]) if is_number(current[2]) else current[2].upper())
 
         f.close()
 
         # Read file again to get all network parameters
 
         # INP file units to convert from
-        inp_units = epanet_unit_id[wn.options['UNITS']]
+        inp_units = epanet_unit_id[wn.options.units]
 
         # Change units in options dictionary
         #if 'MINIMUM PRESSURE' in wn.options:
@@ -439,48 +450,40 @@ class ParseWaterNetwork(object):
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 if (current[0].upper() == 'DURATION'):
-                    wn.add_time_parameter('DURATION', str_time_to_sec(current[1]))
+                    wn.options.duration = str_time_to_sec(current[1])
                 elif (current[0].upper() == 'HYDRAULIC'):
-                    wn.add_time_parameter('HYDRAULIC TIMESTEP', str_time_to_sec(current[2]))
+                    wn.options.hydraulic_timestep = str_time_to_sec(current[2])
                 elif (current[0].upper() == 'QUALITY'):
-                    wn.add_time_parameter('QUALITY TIMESTEP', str_time_to_sec(current[2]))
+                    wn.options.quality_timestep = str_time_to_sec(current[2])
                 elif (current[1].upper() == 'CLOCKTIME'):
                     [time, time_format] = [current[2], current[3].upper()]
-                    # convert time in AM or PM into minute of day
+                    # convert time in AM or PM into seconds from 12 am
+                    time_sec = str_time_to_sec(time)
+                    if time_format == 'PM' and '12' not in time:
+                        time_sec += 12*3600
                     if '12' in time and time_format == 'AM':
-                        time = '0'
-                    if time_format == 'AM':
-                        time_min = str_time_to_sec(time)
-                    elif time_format == 'PM':
-                        time_min = str_time_to_sec(time)
-                    else:
-                        RuntimeError("Time format in INP file not recognized: " + time_format)
-                    wn.add_time_parameter('START CLOCKTIME', time_min)
+                        time_sec -= 12*3600
+                    wn.options.start_clocktime = time_sec
                 elif (current[0].upper() == 'STATISTIC'):
-                    wn.add_time_parameter('STATISTIC', current[1])
+                    wn.options.statistic = current[1].upper()
                 else:  # Other time options
-                    key_string = current[0] + ' ' + current[1]
-                    wn.add_time_parameter(key_string.upper(), str_time_to_sec(current[2]))
+                    key_string = current[0] + '_' + current[1]
+                    setattr(wn.options, key_string.lower(), str_time_to_sec(current[2]))
 
-                if 'PATTERN START' in wn.time_options.keys():
-                    if wn.time_options['PATTERN START'] != 0.0:
-                        warnings.warn('Currently, only the EpanetSimulator supports a non-zero patern start time.')
+                if wn.options.pattern_start != 0.0:
+                    warnings.warn('Currently, only the EpanetSimulator supports a non-zero patern start time.')
 
-                if 'REPORT START' in wn.time_options.keys():
-                    if wn.time_options['REPORT START'] != 0.0:
-                        warnings.warn('Currently, only a report start time of 0 is supported')
+                if wn.options.report_start != 0.0:
+                    warnings.warn('Currently, only the EpanetSimulator supports a non-zero report start time.')
 
-                if 'REPORT TIMESTEP' in wn.time_options.keys():
-                    if wn.time_options['REPORT TIMESTEP'] != wn.time_options['HYDRAULIC TIMESTEP']:
-                        warnings.warn('Currently, only a report timestep equal to the hydraulic timestep is supported')
+                if wn.options.report_timestep != wn.options.hydraulic_timestep:
+                    warnings.warn('Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.')
 
-                if 'START CLOCKTIME' in wn.time_options.keys():
-                    if wn.time_options['START CLOCKTIME'] != 0.0:
-                        warnings.warn('Currently, only a start clocktime of 12 am is supported (except the EpanetSimulator).')
+                if wn.options.start_clocktime != 0.0:
+                    warnings.warn('Currently, only the EpanetSimulator supports a start clocktime other than 12 am.')
                         
-                if 'STATISTIC' in wn.time_options.keys():
-                    if wn.time_options['STATISTIC'].upper() != 'NONE':
-                        warnings.warn('Currently, only the EpanetSimulator supports the STATISTIC option in the inp file.')
+                if wn.options.statistic != 'NONE':
+                    warnings.warn('Currently, only the EpanetSimulator supports the STATISTIC option in the inp file.')
 
             if report:
                 current = line.split()
@@ -673,16 +676,16 @@ class ParseWaterNetwork(object):
         for link_name, status in self._link_status.iteritems():
             if link_name not in self._time_controls:
                 if status == 'OPEN':
-                    self._time_controls[link_name] = {'open_times': [wn.time_options['START CLOCKTIME']], 'closed_times': []}
+                    self._time_controls[link_name] = {'open_times': [wn.options.start_clocktime], 'closed_times': []}
                 elif status == 'CLOSED':
-                    self._time_controls[link_name] = {'open_times': [], 'closed_times': [wn.time_options['START CLOCKTIME']]}
+                    self._time_controls[link_name] = {'open_times': [], 'closed_times': [wn.options.start_clocktime]}
                 else:
                     raise RuntimeError("Link status format not recognized.")
             else:
                 if status == 'OPEN':
-                    self._time_controls[link_name]['open_times'].append(wn.time_options['START CLOCKTIME'])
+                    self._time_controls[link_name]['open_times'].append(wn.options.start_clocktime)
                 elif status == 'CLOSED':
-                    self._time_controls[link_name]['closed_times'].append(wn.time_options['START CLOCKTIME'])
+                    self._time_controls[link_name]['closed_times'].append(wn.options.start_clocktime)
                 else:
                     raise RuntimeError("Link status format not recognized.")
         # Add time control

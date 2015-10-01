@@ -28,7 +28,7 @@ def test_Net1():
     length = wn.get_link_attribute('length')
 
     # Data from the INP file, converted using flowunits
-    flowunits = epanet_unit_id[wn.options['UNITS']]
+    flowunits = epanet_unit_id[wn.options.units]
     expected_node = {'11': {'type': 'junction', 'pos': (30.0, 70.0)}, 
                      '10': {'type': 'junction', 'pos': (20.0, 70.0)}, 
                      '13': {'type': 'junction', 'pos': (70.0, 70.0)}, 

@@ -67,9 +67,8 @@ class WaterNetworkModel(object):
         # Dictionary of pattern or curves indexed by their names
         self._patterns = {}
 
-        # Initialize Options dictionaries
-        self.time_options = {}
-        self.options = {}
+        # Initialize options object
+        self.options = WaterNetworkOptions()
         self.reaction_options = {}
 
         # Time controls are saved as a dictionary as follows:
@@ -289,7 +288,7 @@ class WaterNetworkModel(object):
         if fix_time is not None:
             end_sec = fix_time 
         else:
-            end_sec = self.time_options['DURATION'] + self.time_options['START CLOCKTIME'] + self.time_options['HYDRAULIC TIMESTEP']
+            end_sec = self.options.duration + self.options.start_clocktime + self.options.hydraulic_timestep
 
         # Set leak_area if leak_diameter was passed as an argument
         if leak_diameter is not None:
@@ -475,37 +474,6 @@ class WaterNetworkModel(object):
         """
         curve = Curve(name, curve_type, xy_tuples_list)
         self._curves[name] = curve
-
-    def add_time_parameter(self, name, value):
-        """
-        Method to add a time parameter to a water network object.
-
-        Parameters
-        ----------
-        name : string
-            Name of the time option.
-        value:
-            Value of the time option. Must be in minutes.
-
-        Examples
-        --------
-        START CLOCKTIME = 6 PM can be set using
-        >>> wn.add_time_parameter('START CLOCKTIME', 1080)
-        """
-        self.time_options[name.upper()] = value
-
-    def add_option(self, name, value):
-        """
-        Method to add a options to a water network object.
-
-        Parameters
-        ----------
-        name : string
-            Name of the option.
-        value:
-            Value of the option.
-        """
-        self.options[name.upper()] = value
 
     def add_reaction_option(self, name, value):
         """
@@ -1210,17 +1178,32 @@ class WaterNetworkModel(object):
 
         # Options
         print >> f, '[OPTIONS]'
-        text_format_string = '{:20s} {:10s}'
-        text_format_float = '{:20s} {:<10.8f}'
-        for key, val in self.options.iteritems():
-            if key == 'UNITS':
-                print >>f, text_format_string.format('UNITS', 'LPS')
-            elif isinstance(val, float):
-                print >>f, text_format_float.format(key, val)
-            elif isinstance(val, str):
-                print >>f, text_format_string.format(key, val)
-            else:
-                raise RuntimeError('Options value not recognised')
+        text_format_string = '{:20s} {:20s}'
+        text_format_float = '{:20s} {:<20.8f}'
+        print >>f, text_format_string.format('UNITS', 'LPS')
+        print >>f, text_format_string.format('HEADLOSS', self.options.headloss)
+        if self.options.hydraulics_option is not None:
+            print >>f, '{:20s} {:20s} {:<30s}'.format('HYDRAULICS', self.options.hydraulics_option, self.options.hydraulics_filename)
+        if self.options.quality_value is None:
+            print >>f, text_format_string.format('QUALITY', self.options.quality_option)
+        else:
+            print >>f, '{:20s} {:20s} {:20s}'.format('QUALITY', self.options.quality_option, self.options.quality_value)
+        print >>f, text_format_float.format('VISCOSITY', self.options.viscosity)
+        print >>f, text_format_float.format('DIFFUSIVITY', self.options.diffusivity)
+        print >>f, text_format_float.format('SPECIFIC GRAVITY', self.options.specific_gravity)
+        print >>f, text_format_float.format('TRIALS', self.options.trials)
+        print >>f, text_format_float.format('ACCURACY', self.options.accuracy)
+        if self.options.unbalanced_value is None:
+            print >>f, text_format_string.format('UNBALANCED', self.options.unbalanced_option)
+        else:
+            print >>f, '{:20s} {:20s} {:20d}'.format('UNBALANCED', self.options.unbalanced_option, self.options.unbalanced_value)
+        if self.options.pattern is not None:
+            print >>f, text_format_string.format('PATTERN', self.options.pattern)
+        print >>f, text_format_float.format('DEMAND MULTIPLIER', self.options.demand_multiplier)
+        print >>f, text_format_float.format('EMITTER EXPONENT', self.options.emitter_exponent)
+        print >>f, text_format_float.format('TOLERANCE', self.options.tolerance)
+        if self.options.map is not None:
+            print >>f, text_format_string.format('MAP', self.options.map)
 
         print >> f, ''
 
@@ -1236,21 +1219,32 @@ class WaterNetworkModel(object):
         print >> f, '[TIMES]'
         text_format = '{:20s} {:10s}'
         time_text_format = '{:20s} {:d}:{:d}:{:d}'
-        for key, val in self.time_options.iteritems():
-            if key == 'START CLOCKTIME':
-                hrs, mm, sec = self._sec_to_string(val)
-                if hrs < 12:
-                    time_format = ' AM'
-                else:
-                    time_format = ' PM'
-                print >>f, text_format.format(key, str(hrs)+time_format)
-            elif isinstance(val, float) or isinstance(val, int):
-                hrs, mm, sec = self._sec_to_string(val)
-                print >>f, time_text_format.format(key, hrs, mm, sec)
-            elif isinstance(val, str):
-                print >>f, text_format.format(key, val)
-            else:
-                raise RuntimeError('Time options value not recognised')
+        hrs, mm, sec = self._sec_to_string(self.options.duration)
+        print >>f, time_text_format.format('DURATION', hrs, mm, sec)
+        hrs, mm, sec = self._sec_to_string(self.options.hydraulic_timestep)
+        print >>f, time_text_format.format('HYDRAULIC TIMESTEP', hrs, mm, sec)
+        hrs, mm, sec = self._sec_to_string(self.options.pattern_timestep)
+        print >>f, time_text_format.format('PATTERN TIMESTEP', hrs, mm, sec)
+        hrs, mm, sec = self._sec_to_string(self.options.pattern_start)
+        print >>f, time_text_format.format('PATTERN START', hrs, mm, sec)
+        hrs, mm, sec = self._sec_to_string(self.options.report_timestep)
+        print >>f, time_text_format.format('REPORT TIMESTEP', hrs, mm, sec)
+        hrs, mm, sec = self._sec_to_string(self.options.report_start)
+        print >>f, time_text_format.format('REPORT START', hrs, mm, sec)
+
+        hrs, mm, sec = self._sec_to_string(self.options.start_clocktime)
+        if hrs < 12:
+            time_format = ' AM'
+        else:
+            hrs -= 12
+            time_format = ' PM'
+        print >>f, '{:20s} {:d}:{:d}:{:d}{:s}'.format('START CLOCKTIME', hrs, mm, sec, time_format)
+
+        hrs, mm, sec = self._sec_to_string(self.options.quality_timestep)
+        print >>f, time_text_format.format('QUALITY TIMESTEP', hrs, mm, sec)
+        hrs, mm, sec = self._sec_to_string(self.options.rule_timestep)
+        print >>f, time_text_format.format('RULE TIMESTEP', hrs, mm, sec)
+        print >>f, text_format.format('STATISTIC', self.options.statistic)
 
         print >> f, ''
 
@@ -1411,7 +1405,61 @@ class WaterNetworkModel(object):
                     self.conditional_controls.pop(pipe_name+'__B')
             else:
                 raise ValueError('control_dest argument for leak is not recognized.')
-        
+ 
+class WaterNetworkOptions(object):
+    """
+    A class to manage options.
+    """
+
+    def __init__(self):
+        # Time related options
+        self.duration = 0.0
+        "Simulation duration in seconds."
+
+        self.hydraulic_timestep = 3600.0
+        "Hydraulic timestep in seconds."
+
+        self.pattern_timestep = 3600.0
+        "Pattern timestep in seconds."
+
+        self.pattern_start = 0.0
+        "Time offset in seconds at which all patterns will start. E.g., a value of 7200 would start the simulation with each pattern in the time period that corresponds to hour 2."
+
+        self.report_timestep = 3600.0
+        "Reporting timestep in seconds."
+
+        self.report_start = 0.0
+        "Start time of the report in seconds from the start of the simulation."
+
+        self.start_clocktime = 0.0
+        "Time of day in seconds from 12 am at which the simulation begins."
+
+        self.quality_timestep = 360.0
+        self.rule_timestep = 360.0
+        self.statistic = 'NONE'
+
+        # general options
+        self.pattern = None
+        "Name of the default pattern for junction demands. If None, the junctions without patterns will be held constant."
+       
+        self.units = 'GPM'
+        self.headloss = 'H-W'
+        self.hydraulics_option = None #string 
+        self.hydraulics_filename = None #string
+        self.quality_option = 'NONE'
+        self.quality_value = None #string
+        self.viscosity = 1.0
+        self.diffusivity = 1.0
+        self.specific_gravity = 1.0
+        self.trials = 40
+        self.accuracy = 0.001
+        self.unbalanced_option = 'STOP'
+        self.unbalanced_value = None #int
+        self.demand_multiplier = 1.0
+        self.emitter_exponent = 0.5
+        self.tolerance = 0.01
+        self.map = None
+
 class NodeTypes(object):
     """
     An enum class for types of nodes.

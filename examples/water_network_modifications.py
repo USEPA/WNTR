@@ -6,11 +6,7 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Set the simulation duration to 10 hours
-wn.options
-wn.time_options
-wn.reaction_options
-
-wn.time_options['DURATION'] = 3600*10
+wn.options.duration = 3600*10
 
 # Modifiy conditional/time controls
 wn.conditional_controls

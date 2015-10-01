@@ -132,9 +132,9 @@ class ScipySimulator(WaterNetworkSimulator):
         self._jacobian_eval_time = 0.0
 
         # Pressure driven demand parameters
-        if 'NOMINAL PRESSURE' in self._wn.options and 'MINIMUM PRESSURE' in self._wn.options:
-            self._P0 = self._wn.options['MINIMUM PRESSURE']
-            self._PF = self._wn.options['NOMINAL PRESSURE']
+        if hasattr(self._wn.options, 'nominal_pressure') and hasattr(self._wn.options, 'minimum_pressure'):
+            self._P0 = self._wn.options.minimum_pressure
+            self._PF = self._wn.options.nominal_pressure
         else:
             self._P0 = None
             self._PF = None

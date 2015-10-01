@@ -646,7 +646,7 @@ class ScipyModel(object):
         for node_id in self._node_ids:
             self._sim_results['node_name'].append(self._node_id_to_name[node_id])
             self._sim_results['node_type'].append(NodeTypes.node_type_to_str(self.node_types[node_id]))
-            self._sim_results['node_times'].append(results.time[int(self._wn.sim_time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])])
+            self._sim_results['node_times'].append(results.time[int(self._wn.sim_time_sec/self._wn.options.hydraulic_timestep)])
             self._sim_results['node_head'].append(head[node_id])
             self._sim_results['node_demand'].append(demand[node_id])
             if self.node_types[node_id] == NodeTypes.junction:
@@ -661,7 +661,7 @@ class ScipyModel(object):
         for link_id in self._link_ids:
             self._sim_results['link_name'].append(self._link_id_to_name[link_id])
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
-            self._sim_results['link_times'].append(results.time[int(self._wn.sim_time_sec/self._wn.time_options['HYDRAULIC TIMESTEP'])])
+            self._sim_results['link_times'].append(results.time[int(self._wn.sim_time_sec/self._wn.options.hydraulic_timestep)])
             self._sim_results['link_flowrate'].append(flow[link_id])
 
     def update_tank_heads(self, x):
@@ -670,14 +670,14 @@ class ScipyModel(object):
         for tank_name, tank in self._wn.nodes(Tank):
             tank_id = self._node_name_to_id[tank_name]
             q_net = demand[tank_id]
-            delta_h = 4.0*q_net*self._wn.time_options['HYDRAULIC TIMESTEP']/(math.pi*tank.diameter**2)
+            delta_h = 4.0*q_net*self._wn.options.hydraulic_timestep/(math.pi*tank.diameter**2)
             tank.current_level = tank.current_level + delta_h
 
 
     def update_junction_demands(self, demand_dict):
         for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
-            t = self._wn.sim_time_sec/self._wn.time_options['HYDRAULIC TIMESTEP']
+            t = self._wn.sim_time_sec/self._wn.options.hydraulic_timestep
             junction.current_demand = demand_dict[(junction_name,t)]
 
     def get_results(self,results):
