@@ -310,12 +310,12 @@ class WaterNetworkSimulator(object):
         """
         self._check_model_specified()
         try:
-            self._sim_start_sec = self._wn.time_options['START CLOCKTIME']
-            self._sim_duration_sec = self._wn.time_options['DURATION']
-            self._pattern_start_sec = self._wn.time_options['PATTERN START']
-            self._hydraulic_step_sec = self._wn.time_options['HYDRAULIC TIMESTEP']
-            self._pattern_step_sec = self._wn.time_options['PATTERN TIMESTEP']
-            self._report_step_sec = self._wn.time_options['REPORT TIMESTEP']
+            self._sim_start_sec = self._wn.options.start_clocktime
+            self._sim_duration_sec = self._wn.options.duration
+            self._pattern_start_sec = self._wn.options.pattern_start
+            self._hydraulic_step_sec = self._wn.options.hydraulic_timestep
+            self._pattern_step_sec = self._wn.options.pattern_timestep
+            self._report_step_sec = self._wn.options.report_timestep
 
         except KeyError:
             KeyError("Water network model used for simulation should contain time parameters. "
@@ -360,10 +360,10 @@ class WaterNetworkSimulator(object):
         base_demand = node.base_demand
         pattern_name = node.demand_pattern_name
         if pattern_name is None:
-            pattern_name = self._wn.options['PATTERN']
+            pattern_name = self._wn.options.pattern
         pattern_list = self._wn.get_pattern(pattern_name)
         pattern_length = len(pattern_list)
-        offset = self._wn.time_options['PATTERN START']
+        offset = self._wn.options.pattern_start
 
         assert(offset == 0.0), "Only 0.0 Pattern Start time is currently supported. "
 

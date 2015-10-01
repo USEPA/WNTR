@@ -6,9 +6,9 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Modify the water network model
-wn.time_options['DURATION'] = 24*3600
-wn.time_options['HYDRAULIC TIMESTEP'] = 1800
-wn.time_options['REPORT TIMESTEP'] = 1800
+wn.options.duration = 24*3600
+wn.options.hydraulic_timestep = 1800
+wn.options.report_timestep = 1800
 wn.set_nominal_pressures(constant_nominal_pressure = 15) 
 
 # Define pipe leaks

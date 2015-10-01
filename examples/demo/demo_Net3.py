@@ -93,9 +93,9 @@ wntr.network.draw_graph(wn, link_attribute=earthquake.pipe_status, node_size=0, 
 
 # The simulation uses pressure driven hydraulics and leak models to account for loss.
 wn.set_nominal_pressures(constant_nominal_pressure = 15) 
-wn.time_options['DURATION'] = 24*3600
-wn.time_options['HYDRAULIC TIMESTEP'] = 3600
-wn.time_options['REPORT TIMESTEP'] = 3600
+wn.options.duration = 24*3600
+wn.options.hydraulic_timestep = 3600
+wn.options.report_timestep = 3600
 
 time_of_failure = 5 # time of failure
 duration_of_failure = 20 # Select duration of failure     

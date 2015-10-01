@@ -85,7 +85,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             start_solve_step = time.time()
             t = enData.ENrunH()
             end_solve_step = time.time()
-            self.solve_step[t/self._wn.time_options['HYDRAULIC TIMESTEP']] = end_solve_step - start_solve_step
+            self.solve_step[t/self._wn.options.hydraulic_timestep] = end_solve_step - start_solve_step
             timedelta = pd.Timedelta(seconds = t)
             if timedelta in results.time:
                 for name, node in self._wn.nodes():

@@ -6,7 +6,7 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Set the simulation duration to 10 hours
-wn.time_options['DURATION'] = 3600*10
+wn.options.duration = 3600*10
 
 # Add a junction and pipe
 wn.add_junction('new junction', base_demand = 10, demand_pattern_name = '1', 
