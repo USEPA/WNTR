@@ -5,7 +5,7 @@ except ImportError:
                       'Make sure pyepanet is installed and added to path.')
 from WaterNetworkSimulator import *
 import pandas as pd
-from wntr.units import convert
+from wntr.utils import convert
 
 class EpanetSimulator(WaterNetworkSimulator):
     """
@@ -27,18 +27,13 @@ class EpanetSimulator(WaterNetworkSimulator):
         self.prep_time_before_main_loop = 0.0
         self.solve_step = {}
 
-    def run_sim(self, WQ = None, convert_units=True, pandas_result=True, demo=None):
+    def run_sim(self, WQ = None, convert_units=True, pandas_result=True):
         """
         Run water network simulation using epanet.
 
         """
 
         start_run_sim_time = time.time()
-
-        if demo:
-            import pickle
-            results = pickle.load(open(demo, 'rb'))
-            return results
             
         # Create enData
         enData = pyepanet.ENepanet()
@@ -52,10 +47,8 @@ class EpanetSimulator(WaterNetworkSimulator):
         results = NetResults()
         results.network_name = self._wn.name
         results.simulator_options['type'] = 'EPANET'
-        results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration_sec) + ' seconds',
-                                          freq=str(self._hydraulic_step_sec/60) + 'min')
-
+        results.time = np.arange(0, self._sim_duration_sec+self._hydraulic_step_sec, self._hydraulic_step_sec)
+        
         # Load simulator options
         results.simulator_options['start_time'] = self._sim_start_sec
         results.simulator_options['duration'] = self._sim_duration_sec
@@ -86,8 +79,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             t = enData.ENrunH()
             end_solve_step = time.time()
             self.solve_step[t/self._wn.time_options['HYDRAULIC TIMESTEP']] = end_solve_step - start_solve_step
-            timedelta = pd.Timedelta(seconds = t)
-            if timedelta in results.time:
+            if t in results.time:
                 for name, node in self._wn.nodes():
                     nodeindex = enData.ENgetnodeindex(name)
                     head = enData.ENgetnodevalue(nodeindex, pyepanet.EN_HEAD)
@@ -103,7 +95,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                     
                     node_name.append(name)
                     node_type.append(self._get_node_type(name))
-                    node_times.append(timedelta)
+                    node_times.append(t) 
                     node_head.append(head)
                     node_demand.append(demand)
                     node_expected_demand.append(expected_demand)
@@ -121,7 +113,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                     
                     link_name.append(name)
                     link_type.append(self._get_link_type(name))
-                    link_times.append(timedelta)
+                    link_times.append(t) 
                     link_flowrate.append(flow)
                     link_velocity.append(velocity)
 
@@ -199,8 +191,7 @@ class EpanetSimulator(WaterNetworkSimulator):
 
             while True:
                 t = enData.ENrunQ()
-                timedelta = pd.Timedelta(seconds = t)
-                if timedelta in results.time:
+                if t in results.time:
                     for name, node in self._wn.nodes():
                         nodeindex = enData.ENgetnodeindex(name)
                         quality = enData.ENgetnodevalue(nodeindex, pyepanet.EN_QUALITY)

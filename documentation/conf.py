@@ -38,14 +38,26 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'numpydoc',
+#    'sphinxcontrib.napoleon',
 ]
 
 autosummary_generate = True
 viewcode_import = True
 numpydoc_show_class_members = True
-numpydoc_class_members_toctree = True
+numpydoc_class_members_toctree = False
 autodoc_member_order = 'bysource'
 autoclass_content = 'both'
+
+#napoleon_google_docstring = False
+#napoleon_numpy_docstring = True
+#napoleon_include_private_with_doc = False
+#napoleon_include_special_with_doc = True
+#napoleon_use_admonition_for_examples = False
+#napoleon_use_admonition_for_notes = False
+#napoleon_use_admonition_for_references = False
+#napoleon_use_ivar = False
+#napoleon_use_param = True
+#napoleon_use_rtype = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

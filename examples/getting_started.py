@@ -1,5 +1,4 @@
 import wntr
-import pandas as pd
 
 # Create a water network model
 inp_file = 'networks/Net3.inp'
@@ -13,6 +12,7 @@ sim = wntr.sim.EpanetSimulator(wn)
 results = sim.run_sim()
 
 # Plot results on the network
-pressure_at_5hr = results.node.loc[(slice(None), pd.Timedelta(hours = 5)), 'pressure']
+pressure_at_5hr = results.node.loc[(slice(None), 5*3600), 'pressure']
+#pressure_at_5hr = results.node.loc['pressure', :, 5*3600]
 wntr.network.draw_graph(wn, node_attribute=pressure_at_5hr, node_size=30, 
                         title='Pressure at 5 hours')

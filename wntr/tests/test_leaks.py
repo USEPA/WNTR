@@ -9,7 +9,6 @@ resilienceMainDir = os.path.abspath(
     os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
         inspect.currentframe() ) ) ), '..', '..' ))
 import math
-import pandas as pd
 
 class TestLeakAdditionaAndRemoval(unittest.TestCase):
 
@@ -137,12 +136,12 @@ class TestLeakResults(unittest.TestCase):
     def test_leak_demand(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_2.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.add_leak('leak1','pipe2',leak_diameter = 0.01, leak_discharge_coeff = 0.75, start_time = '0 days 04:00:00', fix_time = '0 days 08:00:00')
+        wn.add_leak('leak1','pipe2',leak_diameter = 0.01, leak_discharge_coeff = 0.75, start_time = 4*3600, fix_time = 8*3600)
         sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
         results = sim.run_sim()
 
         for t in results.node.loc['leak1'].index:
-            if t.components.hours < 4 or t.components.hours >= 8:
+            if t < 4*3600 or t >= 8*3600:
                 self.assertAlmostEqual(results.node.at[('leak1',t),'demand'], 0.0)
             else:
                 self.assertAlmostEqual(results.node.at[('leak1',t),'demand'], 0.75*math.pi/4.0*0.01**2.0*math.sqrt(2*9.81*results.node.at[('leak1',t),'pressure']))
@@ -150,7 +149,7 @@ class TestLeakResults(unittest.TestCase):
     def test_leak_against_epanet(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.add_leak('leak1','pipe2', leak_diameter = 0.08, leak_discharge_coeff = 0.75, start_time = '0 days 04:00:00', fix_time = '0 days 12:00:00')
+        wn.add_leak('leak1','pipe2', leak_diameter = 0.08, leak_discharge_coeff = 0.75, start_time = 4*3600, fix_time = 12*3600)
         sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
         pyomo_results = sim.run_sim()
 
@@ -188,7 +187,7 @@ class TestLeakResults(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
         results1 = sim.run_sim()
-        wn.add_leak('leak1','pipe2', leak_diameter = 0.08, leak_discharge_coeff = 0.75, start_time = '0 days 04:00:00', fix_time = '0 days 12:00:00')
+        wn.add_leak('leak1','pipe2', leak_diameter = 0.08, leak_discharge_coeff = 0.75, start_time = 4*3600, fix_time = 12*3600)
         wn.remove_leak('leak1')
         sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
         results2 = sim.run_sim()

@@ -1,11 +1,13 @@
 import pandas as pd
 import numpy as np
-import wntr
-import networkx as nx
 import time
+from memory_profiler import profile
+from nose.tools import *
 
-#@profile 
+@nottest
+@profile 
 def test_pandas_pivottable(nnodes=100, ntimes=50, use_timedelta=True): 
+    
     t0 = time.time()
     
     if use_timedelta:

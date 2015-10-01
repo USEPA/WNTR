@@ -131,13 +131,13 @@ def test_Water_Age():
 
 @nottest        
 def execute_test(typestring, flowunit, data, data_expected):
-    data_convert = wntr.units.convert(typestring, flowunit, data)
+    data_convert = wntr.utils.convert(typestring, flowunit, data)
     data_convert = round(data_convert,3)
     assert_equal(data_convert, data_expected)
 
 @nottest
 def execute_test_list(typestring, flowunit, data, data_expected):
-    data_convert = wntr.units.convert(typestring, flowunit, data)
+    data_convert = wntr.utils.convert(typestring, flowunit, data)
     data_convert = [round(k,3) for k in data_convert]
     assert_list_equal(data_convert, data_expected)
     

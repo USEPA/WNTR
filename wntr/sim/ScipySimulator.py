@@ -11,7 +11,7 @@ TODO
 """
 
 import wntr
-from wntr.units import convert
+from wntr.utils import convert
 import matplotlib.pyplot as plt
 import numpy as np
 np.set_printoptions(threshold='nan', linewidth=300, precision=3, suppress=True)
@@ -143,14 +143,9 @@ class ScipySimulator(WaterNetworkSimulator):
         self.prep_time_before_main_loop = 0.0
         self.solve_step = {}
     
-    def run_sim(self, demo=None):
+    def run_sim(self):
         
         start_run_sim_time = time.time()
-
-        if demo:
-            import pickle
-            results = pickle.load(open(demo, 'rb'))
-            return results
             
         # Number of hydraulic timesteps
         n_timesteps = int(round(self._sim_duration_sec/self._hydraulic_step_sec))+1
@@ -204,11 +199,8 @@ class ScipySimulator(WaterNetworkSimulator):
         self._residual_eval_time = 0.0
 
         # Create Delta time series
-        results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration_sec) + ' seconds',
-                                          freq=str(self._hydraulic_step_sec/60) + 'min')
-
-
+        results.time = np.arange(0, self._sim_duration_sec+self._hydraulic_step_sec, self._hydraulic_step_sec)
+        
         # Assert conditional controls are only provided for Tanks
         self._verify_conditional_controls_for_tank()
 

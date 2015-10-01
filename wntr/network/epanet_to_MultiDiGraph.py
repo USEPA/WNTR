@@ -1,7 +1,7 @@
 import wntr.pyepanet as pyepanet
 import networkx as nx
 import numpy as np
-from wntr.units import convert
+from wntr.utils import convert
 
 def epanet_to_MultiDiGraph(enData, convert_units=True, edge_attribute=None):
     r"""Convert ENepanet instance to networkx MultiDiGraph

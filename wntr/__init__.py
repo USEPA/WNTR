@@ -3,6 +3,6 @@ import network
 import metrics
 import sim
 import scenario
-import units
+import utils
 
 __version__ = '0.1'

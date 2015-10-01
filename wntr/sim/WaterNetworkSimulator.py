@@ -15,11 +15,9 @@ QUESTIONS
 import numpy as np
 import warnings
 from wntr.network.WaterNetworkModel import *
-from wntr.misc import *
 from scipy.optimize import fsolve
 import math
 from NetworkResults import NetResults
-import pandas as pd
 import time
 import copy
 
@@ -136,14 +134,14 @@ class WaterNetworkSimulator(object):
 
         pump_name: String
             Name of the pump.
-        start_time: String
-            Start time of the pump outage. Pandas Timedelta format: e.g. '0 days 00:00:00'
-        end_time: String
-            End time of the pump outage. Pandas Timedelta format: e.g. '0 days 05:00:00'
+        start_time: float
+            Start time of the pump outage in seconds.
+        end_time: float
+            End time of the pump outage in seconds.
 
         Examples
         --------
-        >>> sim.add_pump_outage('PUMP-3845', pd.Timedelta('0 days 11:00:00'), pd.Timedelta('1 days 02:00:00'))
+        >>> sim.add_pump_outage('PUMP-3845', 11*3600, 26*3600)
 
         """
         if self._wn is None:
@@ -159,24 +157,13 @@ class WaterNetworkSimulator(object):
         if not isinstance(pump, Pump):
             raise RuntimeError(pump_name + " is not a valid pump in the network.")
 
-        # Check if start time and end time are valid
-        try:
-            start = pd.Timedelta(start_time)
-            end = pd.Timedelta(end_time)
-        except RuntimeError:
-            raise RuntimeError("The format of start or end time is not valid Pandas Timedelta format.")
-
-        # Convert start time and end time to seconds
-        start_sec = timedelta_to_sec(start)
-        end_sec = timedelta_to_sec(end)
-
         # Add the pump outage information (start time and end time) to the _pump_outage dictionary
         if pump_name in self._pump_outage.keys():
             warnings.warn("Pump name " + pump_name + " already has a pump outage time defined."
                                                      " Old time range is being overridden.")
-            self._pump_outage[pump_name] = (start_sec, end_sec)
+            self._pump_outage[pump_name] = (start_time, end_time)
         else:
-            self._pump_outage[pump_name] = (start_sec, end_sec)
+            self._pump_outage[pump_name] = (start_time, end_time)
 
     def all_pump_outage(self, start_time, end_time):
         """
@@ -184,14 +171,14 @@ class WaterNetworkSimulator(object):
 
         Parameters
         ----------
-        start_time: String
-            Start time of the pump outage. Pandas Timedelta format: e.g. '0 days 00:00:00'
-        end_time: String
-            End time of the pump outage. Pandas Timedelta format: e.g. '0 days 05:00:00'
+        start_time: float
+            Start time of the pump outage in seconds.
+        end_time: float
+            End time of the pump outage in seconds.
 
         Examples
         --------
-        >>> sim.add_pump_outage('PUMP-3845', pd.Timedelta('0 days 11:00:00'), pd.Timedelta('1 days 02:00:00'))
+        >>> sim.add_pump_outage('PUMP-3845', 11*3600, 26*3600)
 
         """
 
@@ -199,25 +186,14 @@ class WaterNetworkSimulator(object):
             raise RuntimeError("All pump outage time cannot be defined before a network object is"
                                "defined in the simulator.")
 
-        # Check if start time and end time are valid
-        try:
-            start = pd.Timedelta(start_time)
-            end = pd.Timedelta(end_time)
-        except RuntimeError:
-            raise RuntimeError("The format of start or end time is not valid Pandas Timedelta format.")
-
-        # Convert start time and end time to seconds
-        start_sec = timedelta_to_sec(start)
-        end_sec = timedelta_to_sec(end)
-
         # Add the pump outage information (start time and end time) to the _pump_outage dictionary
         for pump_name, pump in self._wn.links(Pump):
             if pump_name in self._pump_outage.keys():
                 warnings.warn("Pump name " + pump_name + " already has a pump outage time defined."
                                                          " Old time range is being overridden.")
-                self._pump_outage[pump_name] = (start_sec, end_sec)
+                self._pump_outage[pump_name] = (start_time, end_time)
             else:
-                self._pump_outage[pump_name] = (start_sec, end_sec)
+                self._pump_outage[pump_name] = (start_time, end_time)
 
 
     def add_leak(self, *args, **kwargs):

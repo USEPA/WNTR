@@ -17,7 +17,7 @@ TODO 11. I think start clocktime is broken
 TODO 12. Document Somehow that the only type of curve supported is a head vs. flow curve.
 """
 
-from wntr.units import convert
+from wntr.utils import convert
 import wntr.network
 
 import warnings

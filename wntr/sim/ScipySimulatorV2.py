@@ -117,7 +117,4 @@ class ScipySimulatorV2(WaterNetworkSimulator):
         """
         # Load general results
         results.network_name = self._wn.name
-        results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration_sec) + ' seconds',
-                                          freq=str(self._hydraulic_step_sec/60) + 'min')
-
+        results.time = np.arange(0, self._sim_duration_sec+self._hydraulic_step_sec, self._hydraulic_step_sec)

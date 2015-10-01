@@ -38,7 +38,7 @@ class TestTimeControls(unittest.TestCase):
 
     def test_time_control_open_vs_closed(self):
         for t in self.pyomo_results.link.loc['pipe2'].index:
-            if t.components.hours < 5 or t.components.hours >= 10:
+            if t < 5*3600 or t >= 10*3600:
                 self.assertAlmostEqual(self.pyomo_results.link.at[('pipe2',t),'flowrate'], 150/3600.0)
             else:
                 self.assertAlmostEqual(self.pyomo_results.link.at[('pipe2',t),'flowrate'], 0.0)
@@ -209,7 +209,7 @@ class TestControlCombinations(unittest.TestCase):
         flag1 = False
         flag2 = False
         for t in results.link.loc['pipe1'].index:
-            if t.components.hours == 6:
+            if t == 6*3600:
                 flag1 = True
             if results.node.at[('tank1',t),'head'] <= 30.0:
                 flag1 = False
@@ -232,7 +232,7 @@ class TestControlCombinations(unittest.TestCase):
         flag1 = False
         flag2 = False
         for t in results.link.loc['pipe1'].index:
-            if t.components.hours == 19:
+            if t == 19*3600:
                 flag1 = False
             if results.node.at[('tank1',t),'head'] <= 30.0:
                 flag1 = True

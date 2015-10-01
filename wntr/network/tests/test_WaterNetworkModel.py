@@ -51,7 +51,7 @@ def test_Net1():
                           '32': 710.0, 
                           '31': 700.0, 
                           '2':  850.0}
-    expected_elevation = wntr.units.convert('Elevation', flowunits, expected_elevation)
+    expected_elevation = wntr.utils.convert('Elevation', flowunits, expected_elevation)
     
     expected_base_demand = {'11': 150, 
                             '10':   0, 
@@ -62,7 +62,7 @@ def test_Net1():
                             '23': 150, 
                             '32': 100, 
                             '31': 100}
-    expected_base_demand = wntr.units.convert('Demand', flowunits, expected_base_demand)
+    expected_base_demand = wntr.utils.convert('Demand', flowunits, expected_base_demand)
     
     expected_edge = {'11': {'12': {'11':  {'type': 'pipe'}}, 
                             '21': {'111': {'type': 'pipe'}}}, 
@@ -92,7 +92,7 @@ def test_Net1():
                          '22':  12.0,
                          '31':   6.0,
                          '110': 18.0}
-    expected_diameter = wntr.units.convert('Pipe Diameter', flowunits, expected_diameter)
+    expected_diameter = wntr.utils.convert('Pipe Diameter', flowunits, expected_diameter)
     
     expected_length = {'11':  5280.0, 
                        '111': 5280.0,
@@ -106,7 +106,7 @@ def test_Net1():
                        '22':  5280.0,
                        '31':  5280.0,
                        '110':  200.0}
-    expected_length = wntr.units.convert('Length', flowunits, expected_length)
+    expected_length = wntr.utils.convert('Length', flowunits, expected_length)
             
     assert_dict_equal(node, expected_node)
     assert_dict_equal(elevation, expected_elevation)

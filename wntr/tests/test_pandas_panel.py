@@ -1,8 +1,11 @@
 import pandas as pd
 import numpy as np
 import time
+from memory_profiler import profile
+from nose.tools import *
 
-#@profile 
+@nottest
+@profile 
 def test_pandas_panels(nnodes=100, ntimes=50, use_timedelta=False): 
 
     t0 = time.time()

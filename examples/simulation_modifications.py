@@ -13,17 +13,15 @@ wn.set_nominal_pressures(constant_nominal_pressure = 15)
 
 # Define pipe leaks
 wn.add_leak(leak_name = 'leak1', pipe_name = '123', leak_diameter=0.05, 
-                    start_time = '0 days 05:00:00', fix_time = '0 days 20:00:00')
+                    start_time = 5*3600, fix_time = 20*3600)
 wn.add_leak(leak_name = 'leak2', pipe_name = '225', leak_diameter=0.1, 
-                   start_time = '0 days 07:00:00', fix_time = '0 days 15:00:00')
+                   start_time = 7*3600, fix_time = 15*3600)
 
 # Create simulation object of the PYOMO simulator
 sim = wntr.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
 
 # Define power outage at all pumps
-start_time = '0 days 05:00:00' 
-end_time = '0 days 13:00:00' 
-sim.all_pump_outage(start_time, end_time)
+sim.all_pump_outage(5*3600, 13*3600)
 
 # Simulate hydraulics
 results = sim.run_sim()

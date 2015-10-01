@@ -1,5 +1,4 @@
 import wntr
-import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import animation
 
@@ -16,7 +15,7 @@ sim = wntr.sim.EpanetSimulator(wn)
 results = sim.run_sim(WQ = sceanrio_TRACE)
 
 ### Node Animation ###
-node_values = results.node.loc[(slice(None), pd.Timedelta(hours = 0)), 'quality']
+node_values = results.node.loc[(slice(None), 0), 'quality']
 (nodes, edges) = wntr.network.draw_graph(wn, node_attribute=node_values, figsize=(14, 8), node_range = [0,100], node_size=30, title='Trace at 0 hours')
 fig = plt.gcf()        
 
@@ -24,7 +23,7 @@ def update_nodes(frame_number):
     G = wn._graph
     
     nodelist = G.nodes()
-    node_values = results.node.loc[(slice(None), pd.Timedelta(hours = frame_number)), 'quality']
+    node_values = results.node.loc[(slice(None), frame_number*3600), 'quality']
     node_values = node_values[nodelist].values
     nodes.set_array(node_values)
     
@@ -36,7 +35,7 @@ anim = animation.FuncAnimation(fig, update_nodes, frames=25, interval=400, repea
 # ani.save('node_animation_example.mp4') # movie does not save
 
 ### Link Animation ###
-#link_values = results.link.loc[(slice(None), pd.Timedelta(hours = 0)), 'velocity']
+#link_values = results.link.loc[(slice(None), 0), 'velocity']
 #(nodes, edges) = wntr.network.draw_graph(wn, link_attribute=link_values, figsize=(14, 8), link_range = [0,3], link_width=2, title='Velocity at 0 hours')
 #fig = plt.gcf()
 #
@@ -45,7 +44,7 @@ anim = animation.FuncAnimation(fig, update_nodes, frames=25, interval=400, repea
 #    
 #    linklist = G.edges(keys=True)
 #    linklist = [name for (start_node, end_node, name) in linklist]
-#    link_values = results.link.loc[(slice(None), pd.Timedelta(hours = n)), 'velocity']
+#    link_values = results.link.loc[(slice(None), n*3600), 'velocity']
 #    link_values = link_values[linklist].values
 #    edges.set_array(link_values)
 #    

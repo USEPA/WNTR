@@ -681,6 +681,8 @@ class ScipyModel(object):
             junction.current_demand = demand_dict[(junction_name,t)]
 
     def get_results(self,results):
+        import pandas as pd
+        
         node_data_frame = pd.DataFrame({'time':     self._sim_results['node_times'],
                                         'node':     self._sim_results['node_name'],
                                         'demand':   self._sim_results['node_demand'],

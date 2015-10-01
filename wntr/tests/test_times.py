@@ -89,23 +89,17 @@ class TestNetworkTimeBehavior(unittest.TestCase):
     def test_duration(self):
         results = self.results
         self.assertEqual(len(results.node.loc['junction1'].index), 26)
-        self.assertEqual(results.node.loc['junction1'].index[25].components.days, 1)
-        self.assertEqual(results.node.loc['junction1'].index[25].components.hours, 3)
-        self.assertEqual(results.node.loc['junction1'].index[25].components.minutes, 5)
-        self.assertEqual(results.node.loc['junction1'].index[25].components.seconds, 0)
+        self.assertEqual(results.node.loc['junction1'].index[25], 24*3600+3*3600+5*60)
 
     def test_hydraulic_timestep(self):
         results = self.results
-        self.assertEqual((results.node.loc['junction1'].index[1] - results.node.loc['junction1'].index[0]).components.days, 0) 
-        self.assertEqual((results.node.loc['junction1'].index[1] - results.node.loc['junction1'].index[0]).components.hours, 1) 
-        self.assertEqual((results.node.loc['junction1'].index[1] - results.node.loc['junction1'].index[0]).components.minutes, 5) 
-        self.assertEqual((results.node.loc['junction1'].index[1] - results.node.loc['junction1'].index[0]).components.seconds, 0) 
-
+        self.assertEqual((results.node.loc['junction1'].index[1] - results.node.loc['junction1'].index[0]), 1*3600+5*60)
+        
     def test_pattern_timestep(self):
         results = self.results
         for t in results.node.loc['junction1'].index:
             self.assertEqual(results.node.at[('junction1',t),'demand'], 1.0)
-            total_seconds = t.components.days*3600.0*24.0 + t.components.hours*3600.0 + t.components.minutes*60.0 + t.components.seconds
+            total_seconds = t
             if (total_seconds/3900.0)%8 == 0.0 or ((total_seconds/3900.0)-1)%8 == 0.0:
                 self.assertEqual(results.node.at[('junction2',t),'demand'], 0.5)
             elif (total_seconds/3900.0)%8 == 2.0 or ((total_seconds/3900.0)-1)%8 == 2.0:

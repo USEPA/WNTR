@@ -2,7 +2,6 @@ import wntr
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-import pandas as pd
 
 plt.close('all')
 
@@ -16,18 +15,18 @@ results = sim.run_sim()
 
 # Compute fraction of delivered volume (FDV)
 P_lower = 21.09 # m (30 psi)
-fdv = wntr.metrics.fraction_delivered_volume(results, P_lower, True)                                          
-print "Average FDV: " +str(np.mean(fdv.values()))
-wntr.network.draw_graph(wn, node_attribute = fdv, node_size = 40, title = 'FDV', 
-                      node_range= [0,1])
+#fdv = wntr.metrics.fraction_delivered_volume(results, P_lower, True)                                          
+#print "Average FDV: " +str(np.mean(fdv.values()))
+#wntr.network.draw_graph(wn, node_attribute = fdv, node_size = 40, title = 'FDV', 
+#                      node_range= [0,1])
 
 # Compute fraction of delivered demand (FDD)
 demand_factor = 0.9 # 90% of requested demand
-fdd = wntr.metrics.fraction_delivered_demand(results, P_lower, demand_factor, 
-                                           True)
-print "Average FDD: " +str(np.mean(fdd.values()))
-wntr.network.draw_graph(wn, node_attribute = fdd, node_size = 40, title = 'FDD', 
-                      node_range = [0,1])
+#fdd = wntr.metrics.fraction_delivered_demand(results, P_lower, demand_factor, 
+#                                           True)
+#print "Average FDD: " +str(np.mean(fdd.values()))
+#wntr.network.draw_graph(wn, node_attribute = fdd, node_size = 40, title = 'FDD', 
+#                      node_range = [0,1])
 
 # Create list of node names
 junctions = [node_name for node_name, node in wn.nodes(wntr.network.Junction)]
@@ -64,7 +63,7 @@ print "  Max: " + str(np.max(todini))
 print "  Min: " + str(np.min(todini))
 
 # Create a weighted graph for flowrate at time 36 hours
-t = pd.Timedelta(hours = 36)
+t = 36*3600
 attr = results.link.loc[(slice(None), t), 'flowrate']
 G_flowrate_36hrs = wn.get_weighted_graph_deep_copy(link_attribute=attr)
 
@@ -97,9 +96,8 @@ wntr.network.draw_graph(wn, link_attribute=attr, link_cmap=cmap, link_width=1,
                       node_cmap=plt.cm.gray, node_size=30, title='dk')
 
 # Calculate entropy for 1 day, all nodes
-T = pd.timedelta_range(start=pd.Timedelta(hours = 0), end=pd.Timedelta(hours = 24), freq='H')
 shat = []
-for t in T: 
+for t in np.arange(0, 24*3600+1,3600): 
     attr = results.link.loc[(slice(None), t), 'flowrate']
     G_flowrate_t = wn.get_weighted_graph_deep_copy(link_attribute=attr)
     entropy = wntr.metrics.entropy(G_flowrate_t)

@@ -9,7 +9,6 @@ except ImportError:
                       'Make sure pyomo is installed and added to path.')
 import math
 from WaterNetworkSimulator import *
-from wntr.misc import *
 import pandas as pd
 from six import iteritems
 import warnings
@@ -912,7 +911,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         return model
 
-    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True, demo=None):
+    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True):
 
         """
         Other Parameters
@@ -936,11 +935,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
 
         start_run_sim_time = time.time()
-
-        if demo:
-            import pickle
-            results = pickle.load(open(demo, 'rb'))
-            return results
 
         # Create and initialize dictionaries containing demand values and link statuses
         if fixed_demands is None:
@@ -1672,10 +1666,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
         # Load general results
         results.network_name = self._wn.name
-        results.time = pd.timedelta_range(start='0 minutes',
-                                          end=str(self._sim_duration_sec) + ' seconds',
-                                          freq=str(self._hydraulic_step_sec/60) + 'min')
-
+        results.time = np.arange(0, self._sim_duration_sec+self._hydraulic_step_sec, self._hydraulic_step_sec)
+        
         # Load simulator options
         results.simulator_options['type'] = 'PYOMO'
         results.simulator_options['start_time'] = self._sim_start_sec

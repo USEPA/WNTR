@@ -20,10 +20,8 @@ import copy
 import networkx as nx
 import math
 from scipy.optimize import fsolve
-from wntr.units import convert
-from wntr.misc import *
+from wntr.utils import convert
 import wntr.network
-import pandas as pd
 import numpy as np
 
 class WaterNetworkModel(object):
@@ -216,7 +214,7 @@ class WaterNetworkModel(object):
         self.set_node_type(name, 'reservoir')
         self._num_reservoirs += 1
 
-    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None, control_dest = 'ISOLATE'):
+    def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = 0, fix_time = None, control_dest = 'ISOLATE'):
         """
         Method to add a pipe leak to the network. Leaks are modeled by:
 
@@ -244,12 +242,12 @@ class WaterNetworkModel(object):
            diameter must be specified, but not both.
         leak_discharge_coeff: float
            Leak discharge coefficient; Takes on values between 0 and 1
-        start_time: string
-           Start time of the leak. Pandas Timedelta format: e.g. '0
-           days 00:00:00'. Default is the start of the simulation.
-        fix_time: string
-           Time at which the leak is fixed. Pandas Timedelta format:
-           e.g. '0 days 05:00:00'. Default is that the leak does not
+        start_time: float
+           Start time of the leak in seconds. 
+           Default is the start of the simulation.
+        fix_time: float
+           Time at which the leak is fixed in seconds. 
+           Default is that the leak does not
            get fixed during the simulation.
         control_dest: string
            Control destination. Options are 'REMOVE', 'START_NODE',
@@ -286,18 +284,10 @@ class WaterNetworkModel(object):
         if not isinstance(pipe, Pipe):
             raise RuntimeError(pipe_name + " is not a valid pipe in the network.")
 
-        # Check if start time and end time are valid
-        try:
-            start = pd.Timedelta(start_time)
-            if fix_time is not None:
-                end = pd.Timedelta(fix_time)
-        except RuntimeError:
-            raise RuntimeError("The format of start or fix time is not valid Pandas Timedelta format.")
-
         # Convert start time and end time to seconds
-        start_sec = timedelta_to_sec(start)
+        start_sec = start_time 
         if fix_time is not None:
-            end_sec = timedelta_to_sec(end)
+            end_sec = fix_time 
         else:
             end_sec = self.time_options['DURATION'] + self.time_options['START CLOCKTIME'] + self.time_options['HYDRAULIC TIMESTEP']
 
@@ -1687,7 +1677,7 @@ class Junction(Node):
         self.leak_start_time = 0
         self.leak_fix_time = None
 
-    def add_leak(self, area, discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None):
+    def add_leak(self, area, discharge_coeff = 0.75, start_time = 0, fix_time = None):
         """
         Method to add a leak to a tank. Leaks are modeled by:
 
@@ -1706,12 +1696,12 @@ class Junction(Node):
            Area of the leak in m^2.
         discharge_coeff: float
            Leak discharge coefficient; Takes on values between 0 and 1.
-        start_time: string
-           Start time of the leak. Pandas Timedelta format: e.g. '0
-           days 00:00:00'. Default is the start of the simulation.
-        fix_time: string
-           Time at which the leak is fixed. pandas Timedelta format:
-           e.g. '0 days 05:00:00'. Default is that the leak does not
+        start_time: float
+           Start time of the leak in seconds. 
+           Default is the start of the simulation.
+        fix_time: float
+           Time at which the leak is fixed in seconds. 
+           Default is that the leak does not
            get repaired during the simulation.
         """
 
@@ -1719,11 +1709,9 @@ class Junction(Node):
         self.leak_area = area
         self.leak_discharge_coeff = discharge_coeff
         
-        start = pd.Timedelta(start_time)
-        self.leak_start_time = timedelta_to_sec(start)
+        self.leak_start_time = start_time 
         if fix_time is not None:
-            end = pd.Timedelta(fix_time)
-            self.leak_fix_time = timedelta_to_sec(end)
+            self.leak_fix_time = fix_time 
         else:
             self.leak_fix_time = np.inf
 
@@ -1792,12 +1780,10 @@ class Leak(Node):
 
         Parameters
         ----------
-        start_time: string
-           Start time of the leak. Pandas Timedelta format: e.g. '0
-           days 00:00:00'.
+        start_time: float
+           Start time of the leak in seconds.
         """
-        start = pd.Timedelta(start_time)
-        self.start_sec = timedelta_to_sec(start)
+        self.start_sec = start_time
 
     def set_fix_time(self, fix_time):
         """
@@ -1805,12 +1791,10 @@ class Leak(Node):
 
         Parameters
         ----------
-        fix_time: string
-           Time at which the leak is repaired. Pandas Timedelta
-           format: e.g., '0 days 00:00:00'.
+        fix_time: float
+           Time at which the leak is repaired in seconds.
         """
-        end = pd.Timedelta(fix_time)
-        self.end_sec = timedelta_to_sec(end)
+        self.end_sec = fix_time
 
     def set_area(self, area):
         """
@@ -1897,7 +1881,7 @@ class Tank(Node):
         self.leak_start_time = 0
         self.leak_fix_time = None
 
-    def add_leak(self, area, discharge_coeff = 0.75, start_time = '0 days 00:00:00', fix_time = None):
+    def add_leak(self, area, discharge_coeff = 0.75, start_time = 0, fix_time = None):
         """
         Method to add a leak to a tank. Leaks are modeled by:
 
@@ -1916,12 +1900,12 @@ class Tank(Node):
            Area of the leak in m^2.
         discharge_coeff: float
            Leak discharge coefficient; Takes on values between 0 and 1.
-        start_time: string
-           Start time of the leak. Pandas Timedelta format: e.g. '0
-           days 00:00:00'. Default is the start of the simulation.
-        fix_time: string
-           Time at which the leak is fixed. pandas Timedelta format:
-           e.g. '0 days 05:00:00'. Default is that the leak does not
+        start_time: float
+           Start time of the leak in seconds. 
+           Default is the start of the simulation.
+        fix_time: float
+           Time at which the leak is fixed in seconds. 
+           Default is that the leak does not
            get repaired during the simulation.
         """
 
@@ -1929,11 +1913,9 @@ class Tank(Node):
         self.leak_area = area
         self.leak_discharge_coeff = discharge_coeff
         
-        start = pd.Timedelta(start_time)
-        self.leak_start_time = timedelta_to_sec(start)
+        self.leak_start_time = start_time 
         if fix_time is not None:
-            end = pd.Timedelta(fix_time)
-            self.leak_fix_time = timedelta_to_sec(end)
+            self.leak_fix_time = fix_time
         else:
             self.leak_fix_time = np.inf
 
