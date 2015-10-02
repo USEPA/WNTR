@@ -665,7 +665,7 @@ class WaterNetworkModel(object):
         """
         return copy.deepcopy(self._links)
 
-    def get_links_for_node(self, node_name):
+    def get_links_for_node(self, node_name, flag='ALL'):
         """
         Returns a list of links connected to a node.
 
@@ -673,14 +673,26 @@ class WaterNetworkModel(object):
         ----------
         node_name : string
             Name of the node.
+        flag : string
+            Options are 'ALL','INLET','OUTLET'
+            'ALL' returns all links connected to the node.
+            'INLET' returns links that have the specified node as an end node.
+            'OUTLET' returns links that have the specified node as a start node.
 
         Returns
         -------
         A list of link names connected to the node
         """
-        in_edges = self._graph.in_edges(node_name, data=False, keys=True)
-        out_edges = self._graph.out_edges(node_name, data=False, keys=True)
-        edges = in_edges + out_edges
+        if flag.upper() == 'ALL':
+            in_edges = self._graph.in_edges(node_name, data=False, keys=True)
+            out_edges = self._graph.out_edges(node_name, data=False, keys=True)
+            edges = in_edges + out_edges
+        if flag.upper() == 'INLET':
+            in_edges = self._graph.in_edges(node_name, data=False, keys=True)
+            edges = in_edges
+        if flag.upper() == 'OUTLET':
+            out_edges = self._graph.out_edges(node_name, data=False, keys=True)
+            edges = out_edges
         list_of_links = []
         for edge_tuple in edges:
             list_of_links.append(edge_tuple[2])
