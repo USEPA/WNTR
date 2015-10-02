@@ -127,7 +127,7 @@ class WaterNetworkModel(object):
         self._graph.add_node(name)
         if coordinates is not None:
             self.set_node_coordinates(name, coordinates)
-        self.set_node_type(name, 'junction')
+        nx.set_node_attributes(self._graph, 'type', {name:'junction'})
         self._num_junctions += 1
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
@@ -182,7 +182,7 @@ class WaterNetworkModel(object):
         self._graph.add_node(name)
         if coordinates is not None:
             self.set_node_coordinates(name, coordinates)
-        self.set_node_type(name, 'tank')
+        nx.set_node_attributes(self._graph, 'type', {name:'tank'})
         self._num_tanks += 1
 
     def add_reservoir(self, name, base_head=0.0, head_pattern_name=None, coordinates=None):
@@ -210,7 +210,7 @@ class WaterNetworkModel(object):
         self._graph.add_node(name)
         if coordinates is not None:
             self.set_node_coordinates(name, coordinates)
-        self.set_node_type(name, 'reservoir')
+        nx.set_node_attributes(self._graph, 'type', {name:'reservoir'})
         self._num_reservoirs += 1
 
     def add_leak(self, leak_name, pipe_name, leak_area = None, leak_diameter = None, leak_discharge_coeff = 0.75, start_time = 0, fix_time = None, control_dest = 'ISOLATE'):
@@ -328,7 +328,7 @@ class WaterNetworkModel(object):
         leak = Leak(leak_name, pipe_name, leak_area, leak_discharge_coeff, leak_elevation, start_sec, end_sec, pipe, control_dest)
         self._nodes[leak_name] = leak
         self._graph.add_node(leak_name)
-        self.set_node_type(leak_name, 'leak')
+        nx.set_node_attributes(self._graph, 'type', {leak_name:'leak'})
         leak_coordinates = ((self._graph.node[pipe.start_node()]['pos'][0] + self._graph.node[pipe.end_node()]['pos'][0])/2.0,(self._graph.node[pipe.start_node()]['pos'][1] + self._graph.node[pipe.end_node()]['pos'][1])/2.0)
         self.set_node_coordinates(leak_name, leak_coordinates)
 
@@ -381,7 +381,7 @@ class WaterNetworkModel(object):
             self._check_valves.append(name)
         self._links[name] = pipe
         self._graph.add_edge(start_node_name, end_node_name, key=name)
-        self.set_link_type((start_node_name, end_node_name, name), 'pipe')
+        nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'pipe'})
         self._num_pipes += 1
 
     def add_pump(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0):
@@ -407,7 +407,7 @@ class WaterNetworkModel(object):
         pump = Pump(name, start_node_name, end_node_name, info_type, info_value)
         self._links[name] = pump
         self._graph.add_edge(start_node_name, end_node_name, key=name)
-        self.set_link_type((start_node_name, end_node_name, name), 'pump')
+        nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'pump'})
         self._num_pumps += 1
 
     def add_valve(self, name, start_node_name, end_node_name,
@@ -443,7 +443,7 @@ class WaterNetworkModel(object):
                       diameter, valve_type, minor_loss, setting)
         self._links[name] = valve
         self._graph.add_edge(start_node_name, end_node_name, key=name)
-        self.set_link_type((start_node_name, end_node_name, name), 'valve')
+        nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'valve'})
         self._num_valves += 1
 
     def add_pattern(self, name, pattern_list):
@@ -919,28 +919,6 @@ class WaterNetworkModel(object):
         coordinates : tuple of X-Y coordinates
         """
         nx.set_node_attributes(self._graph, 'pos', {name: coordinates})
-    
-    def set_node_type(self, name, nodetype):
-        """
-        Method to set the node type in the network x graph.
-
-        Parameters
-        ----------
-        name : name of the node
-        nodetype : string
-        """
-        nx.set_node_attributes(self._graph, 'type', {name: nodetype})
-        
-    def set_link_type(self, name, linktype):
-        """
-        Method to set the link type in the network x graph.
-
-        Parameters
-        ----------
-        name : name of the link (u,v,k)
-        linktype : string
-        """
-        nx.set_edge_attributes(self._graph, 'type', {name: linktype})
 
     def set_nominal_pressures(self, res = None, fraction_of_min = 0.8, constant_nominal_pressure = None, units = 'm', minimum_pressure = 0.0):
         """
