@@ -687,6 +687,27 @@ class WaterNetworkModel(object):
 
         return list_of_links
 
+    def get_node_coordinates(self, name=None):
+        """
+        Method to get the coordinates of a node
+
+        Parameters
+        ----------
+        name: string
+            name of the node
+
+        Returns
+        -------
+        A tuple containing the coordinates of the specified node.
+        Note: If name is None, this method will return a dictionary
+              with the coordinates of all nodes keyed by node name.
+        """
+        coordinates_dict = nx.get_node_attributes(self._graph, 'pos')
+        if name is not None:
+            return coordinates_dict[name]
+        else:
+            return coordinates_dict
+
     def get_curve(self, name):
         """
         Returns curve object of a provided name
