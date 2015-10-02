@@ -743,59 +743,7 @@ class WaterNetworkModel(object):
         
         return G
         
-    def get_node_attribute(self, attribute, node_type=None):
-        """ Get node attributes
-
-        Parameters
-        ----------
-        attribute: string
-            Node attribute
-
-        node_type: class
-            options = Node, Junction, Reservoir, Tank, or None, default = None
-            Note: None and Node produce the same results
-
-        Returns
-        -------
-        node_attribute : dictionary of nodes
-            dictionary of node names to attribute
-        """
-        node_attribute = {}
-        for node_name, node in self.nodes(node_type):
-            try:
-                node_attribute[node_name] = getattr(node, attribute)
-            except AttributeError:
-                pass
-            
-        return node_attribute
-    
-    def get_link_attribute(self, attribute, link_type=None):
-        """ Get link attributes
-
-        Parameters
-        ----------
-        attribute: string
-            Link attribute
-
-        node_type: string
-            options = Link, Pipe, Pump, Valve, or None, default = None
-            Note: None and Link produce the same results
-
-        Returns
-        -------
-        link_attribute : dictionary of links
-            dictionary of link names to attribute
-        """
-        link_attribute = {}
-        for link_name, link in self.links(link_type):
-            try:
-               link_attribute[link_name] = getattr(link, attribute)
-            except AttributeError:
-                pass
-            
-        return link_attribute
-        
-    def query_node_attribute(self, attribute, operation, value, node_type=None):
+    def query_node_attribute(self, attribute, operation=None, value=None, node_type=None):
         """ Query node attributes, for example get all nodes with elevation <= threshold
 
         Parameters
@@ -817,18 +765,27 @@ class WaterNetworkModel(object):
         -------
         dictionary
             dictionary of node names to attribute for nodes of node_type satisfying operation threshold
+
+        Notes
+        -----
+        If operation and value are both None, the dictionary being returned will contain the attributes
+        for all nodes with the specified attribute.
+
         """
         node_attribute_dict = {}
         for name, node in self.nodes(node_type):
             try:
-                node_attribute = getattr(node, attribute)
-                if operation(node_attribute, value):
-                    node_attribute_dict[name] = node_attribute
+                if operation == None and value == None:
+                    node_attribute_dict[name] = getattr(node, attribute)
+                else:
+                    node_attribute = getattr(node, attribute)
+                    if operation(node_attribute, value):
+                        node_attribute_dict[name] = node_attribute
             except AttributeError:
                 pass
         return node_attribute_dict
 
-    def query_link_attribute(self, attribute, operation, value, link_type=None):
+    def query_link_attribute(self, attribute, operation=None, value=None, link_type=None):
         """ Query link attributes, for example get all pipe diameters > threshold
 
         Parameters
@@ -850,13 +807,22 @@ class WaterNetworkModel(object):
         -------
         dictionary
             dictionary of link names to attributes for links of link_type  satisfying operation threshold
+
+        Notes
+        -----
+        If operation and value are both None, the dictionary being returned will contain the attributes
+        for all links with the specified attribute.
+
         """
         link_attribute_dict = {}
         for name, link in self.links(link_type):
             try:
-                link_attribute = getattr(link, attribute)
-                if operation(link_attribute, value):
-                    link_attribute_dict[name] = link_attribute
+                if operation == None and value == None:
+                    link_attribute_dict[name] = getattr(link, attribute)
+                else:
+                    link_attribute = getattr(link, attribute)
+                    if operation(link_attribute, value):
+                        link_attribute_dict[name] = link_attribute
             except AttributeError:
                 pass
         return link_attribute_dict

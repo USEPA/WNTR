@@ -20,9 +20,9 @@ wntr.network.draw_graph(wn, title= wn.name)
 print nx.info(G)
 
 # Set node and edge attribute and plot the graph. 
-junction_attr = wn.get_node_attribute('elevation', 
+junction_attr = wn.query_node_attribute('elevation', 
                                       node_type=wntr.network.Junction)
-pipe_attr = wn.get_link_attribute('length', link_type=wntr.network.Pipe)
+pipe_attr = wn.query_link_attribute('length', link_type=wntr.network.Pipe)
 wntr.network.draw_graph(wn, node_attribute=junction_attr, 
                            link_attribute=pipe_attr, 
                            title='Node elevation and pipe length', 

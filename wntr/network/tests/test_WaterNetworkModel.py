@@ -21,11 +21,11 @@ def test_Net1():
     G = wn._graph
     
     node = G.node
-    elevation = wn.get_node_attribute('elevation')
-    base_demand = wn.get_node_attribute('base_demand')
+    elevation = wn.query_node_attribute('elevation')
+    base_demand = wn.query_node_attribute('base_demand')
     edge = G.edge
-    diameter = wn.get_link_attribute('diameter')
-    length = wn.get_link_attribute('length')
+    diameter = wn.query_link_attribute('diameter')
+    length = wn.query_link_attribute('length')
 
     # Data from the INP file, converted using flowunits
     flowunits = epanet_unit_id[wn.options.units]

@@ -18,7 +18,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         (default = None)
         
         - If node_attribute is a string, then the node_attribute dictonary is 
-          populated using node_attribute = wn.get_node_attribute(str)
+          populated using node_attribute = wn.query_node_attribute(str)
         - If node_attribute is a list, then each node is given a value of 1.
         - If node_attribute is a pd.Series, then it shoud be in the format
           {(nodeid,time): x} or {nodeid: x} where nodeid is a string and x is a float. 
@@ -30,7 +30,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         (default = None)
         
         - If link_attribute is a string, then the link_attribute dictonary is 
-          populated using edge_attribute = wn.get_link_attribute(str)
+          populated using edge_attribute = wn.query_link_attribute(str)
         - If link_attribute is a list, then each link is given a value of 1.
         - If link_attribute is a pd.Series, then it shoud be in the format
           {(linkid,time): x} or {linkid: x} where linkid is a string and x is a float. 
@@ -92,7 +92,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     
     # Node attribute
     if isinstance(node_attribute, str):
-        node_attribute = wn.get_node_attribute(node_attribute)
+        node_attribute = wn.query_node_attribute(node_attribute)
     if isinstance(node_attribute, list):
         node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
     if isinstance(node_attribute, pd.Series):
@@ -111,7 +111,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         
     # Link attribute
     if isinstance(link_attribute, str):
-        link_attribute = wn.get_link_attribute(link_attribute)
+        link_attribute = wn.query_link_attribute(link_attribute)
     if isinstance(link_attribute, list):
         link_attribute = dict(zip(link_attribute,[1]*len(link_attribute)))
     if isinstance(link_attribute, pd.Series):
