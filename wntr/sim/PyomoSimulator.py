@@ -301,7 +301,10 @@ class PyomoSimulator(WaterNetworkSimulator):
         for n in instance.leaks:
             if n in self._active_leaks:
                 node = self._wn.get_node(n)
-                instance.leak_demand[n].value = node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(last_instance_results['head'][n]-node.elevation)
+                if last_instance_results['head'][n]-node.elevation >= 0.0:
+                    instance.leak_demand[n].value = node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(last_instance_results['head'][n]-node.elevation)
+                else:
+                    instance.leak_demand[n].value = 0.0
             else:
                 instance.leak_demand[n].value = 0.0
 
