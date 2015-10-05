@@ -2,11 +2,13 @@ import wntr
 import numpy as np 
 import networkx as nx
 import matplotlib.pyplot as plt
+import os
 
 plt.close('all')
 
 # Create a water network model
-inp_file = 'networks/Net3.inp'
+my_path = os.path.abspath(os.path.dirname(__file__))
+inp_file = os.path.join(my_path,'networks','Net3.inp')
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Get a copy of the graph and convert the MultiDiGraph to a MultiGraph

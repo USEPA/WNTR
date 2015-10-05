@@ -1,11 +1,13 @@
 import wntr
 import matplotlib.pyplot as plt
 from matplotlib import animation
+import os
 
 plt.close('all')
 
 # Create a water network model
-inp_file = 'networks/Net3.inp'
+my_path = os.path.abspath(os.path.dirname(__file__))
+inp_file = os.path.join(my_path,'networks','Net3.inp')
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 sceanrio_TRACE = ['TRACE', '111']

@@ -1,8 +1,10 @@
 # Modify Network Stucture/Operations/Controls and simulate hydraulics
 import wntr
+import os
 
 # Create a water network model
-inp_file = 'networks/Net3.inp'
+my_path = os.path.abspath(os.path.dirname(__file__))
+inp_file = os.path.join(my_path,'networks','Net3.inp')
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Set the simulation duration to 10 hours
@@ -61,8 +63,9 @@ junction = wn.get_node('121')
 junction.base_demand = junction.base_demand*2
 
 # Set nominal pressure to 30 meters for all nodes
-wn.set_nominal_pressures(constant_nominal_pressure = 30.0, 
-                         minimum_pressure = 0) 
+for junction_name, junction in wn.nodes(wntr.network.Junction):
+    junction.minimum_pressure = 0.0
+    junction.nominal_pressure = 30.0
 
 # Create a pipe leak
 wn.add_leak(leak_name = 'leak1', pipe_name = '123', leak_diameter=0.05, 
@@ -80,7 +83,7 @@ junction = wn.get_node('173')
 junction.add_leak(leak_area, start_time = 0, fix_time = None)
 
 # Simulate hydraulics
-#sim = wntr.sim.PyomoSimulator(wn,'PRESSURE DRIVEN')
+#sim = wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
 #results = sim.run_sim()
 
 ## Write inp file ##

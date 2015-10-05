@@ -27,9 +27,11 @@ class TestTimeControls(unittest.TestCase):
         self.wn = self.wntr.network.WaterNetworkModel()
         parser = self.wntr.network.ParseWaterNetwork()
         parser.read_inp_file(self.wn, inp_file)
-        self.wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
+        for jname, j in self.wn.nodes(self.wntr.network.Junction):
+            j.minimum_pressure = 0.0
+            j.nominal_pressure = 15.0
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn, 'PRESSURE DRIVEN')
+        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn, pressure_dependent = True)
         self.pyomo_results = pyomo_sim.run_sim()
 
     @classmethod
@@ -60,9 +62,11 @@ class TestConditionalControls(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel()
         parser = self.wntr.network.ParseWaterNetwork()
         parser.read_inp_file(wn, inp_file)
-        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
+        for jname, j in wn.nodes(self.wntr.network.Junction):
+            j.minimum_pressure = 0.0
+            j.nominal_pressure = 15.0
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        pyomo_sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
         results = pyomo_sim.run_sim()
 
         activated_flag = False
@@ -83,9 +87,11 @@ class TestConditionalControls(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel()
         parser = self.wntr.network.ParseWaterNetwork()
         parser.read_inp_file(wn, inp_file)
-        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
+        for jname, j in wn.nodes(self.wntr.network.Junction):
+            j.minimum_pressure = 0.0
+            j.nominal_pressure = 15.0
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        pyomo_sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
         results = pyomo_sim.run_sim()
 
         activated_flag = False
@@ -116,8 +122,10 @@ class TestTankControls(unittest.TestCase):
     def test_pipe_closed_for_low_level(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_test_network1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        for jname, j in wn.nodes(self.wntr.network.Junction):
+            j.minimum_pressure = 0.0
+            j.nominal_pressure = 15.0
+        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
         results = sim.run_sim()
 
         tank_level_dropped_flag = False
@@ -130,8 +138,10 @@ class TestTankControls(unittest.TestCase):
     def test_reopen_pipe_after_tank_fills_back_up(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_test_network2.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        for jname, j in wn.nodes(self.wntr.network.Junction):
+            j.minimum_pressure = 0.0
+            j.nominal_pressure = 15.0
+        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
         results = sim.run_sim()
 
         tank_level_dropped_flag = False
@@ -161,8 +171,10 @@ class TestValveControls(unittest.TestCase):
     def test_check_valve_closed(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve_test_network_1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        for jname, j in wn.nodes(self.wntr.network.Junction):
+            j.minimum_pressure = 0.0
+            j.nominal_pressure = 15.0
+        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
         results = sim.run_sim()
 
         for t in results.link.loc['pipe1'].index:
@@ -171,8 +183,10 @@ class TestValveControls(unittest.TestCase):
     def test_check_valve_opened(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve_test_network_2.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        for jname, j in wn.nodes(self.wntr.network.Junction):
+            j.minimum_pressure = 0.0
+            j.nominal_pressure = 15.0
+        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
         results = sim.run_sim()
 
         flag1 = False
@@ -202,8 +216,10 @@ class TestControlCombinations(unittest.TestCase):
     def test_open_by_time_close_by_condition(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb_1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        for jname, j in wn.nodes(self.wntr.network.Junction):
+            j.minimum_pressure = 0.0
+            j.nominal_pressure = 15.0
+        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
         results = sim.run_sim()
 
         flag1 = False
@@ -225,8 +241,10 @@ class TestControlCombinations(unittest.TestCase):
     def test_close_by_condition_open_by_time_stay(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb_2.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        for jname, j in wn.nodes(self.wntr.network.Junction):
+            j.minimum_pressure = 0.0
+            j.nominal_pressure = 15.0
+        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
         results = sim.run_sim()
 
         flag1 = False
@@ -248,8 +266,10 @@ class TestControlCombinations(unittest.TestCase):
     def test_close_by_condition_open_by_time_reclose(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb_3.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.set_nominal_pressures(constant_nominal_pressure = 15.0)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'PRESSURE DRIVEN')
+        for jname, j in wn.nodes(self.wntr.network.Junction):
+            j.minimum_pressure = 0.0
+            j.nominal_pressure = 15.0
+        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
         results = sim.run_sim()
 
         flag1 = False

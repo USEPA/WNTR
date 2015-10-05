@@ -23,18 +23,20 @@ import copy
 
 
 class WaterNetworkSimulator(object):
-    def __init__(self, water_network=None, PD_or_DD = 'DEMAND DRIVEN'):
+    def __init__(self, water_network=None, pressure_dependent=False):
         """
         Water Network Simulator class.
 
         water_network: WaterNetwork object 
 
-        PD_or_DD: string, specifies whether the simulation will be
-                  demand driven or pressure driven Options are 'DEMAND
-                  DRIVEN' or 'PRESSURE DRIVEN'
+        pressure_dependent: bool 
+            Specifies whether the simulation will be demand-driven or
+            pressure-driven. True means the simulation will be
+            pressure-driven.
 
         """
         self._wn = water_network
+        self.pressure_dependent = False
 
         # Create an internal time controls dictionary. This is needed
         # because the time controls dictionary must be corrected for
@@ -65,12 +67,10 @@ class WaterNetworkSimulator(object):
             self._init_tank_controls()
             self._init_reservoir_links()
             # Pressure driven demand parameters
-            if PD_or_DD == 'PRESSURE DRIVEN':
-                self._pressure_driven = True
-            elif PD_or_DD == 'DEMAND DRIVEN':
-                self._pressure_driven = False
+            if pressure_dependent:
+                self.pressure_dependent = True
             else:
-                raise RuntimeError("Argument for specifying demand driven or pressure driven is not recognized. Please use \'PRESSURE DRIVEN\' or \'DEMAND DRIVEN\'.")
+                self.pressure_dependent = False
 
         else:
             # Time parameters

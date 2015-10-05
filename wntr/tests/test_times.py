@@ -92,7 +92,7 @@ class TestNetworkTimeBehavior(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel()
         parser = self.wntr.network.ParseWaterNetwork()
         parser.read_inp_file(wn, inp_file)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
+        sim = self.wntr.sim.PyomoSimulator(wn)
         self.results = sim.run_sim()
 
     @classmethod

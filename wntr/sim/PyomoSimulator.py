@@ -153,7 +153,7 @@ class PyomoSimulator(WaterNetworkSimulator):
     """
 
 
-    def __init__(self, wn, PD_or_DD='DEMAND DRIVEN'):
+    def __init__(self, wn, pressure_dependent = False):
         """
         Pyomo simulator class.
 
@@ -161,12 +161,13 @@ class PyomoSimulator(WaterNetworkSimulator):
         ----------
         wn : WaterNetwork object
 
-        PD_or_DD: string, specifies whether the simulation will be
-                  demand driven or pressure driven Options are 'DEMAND
-                  DRIVEN' or 'PRESSURE DRIVEN'
+        pressure_dependent: bool 
+            Specifies whether the simulation will be demand-driven or
+            pressure-driven. True means the simulation will be
+            pressure-driven.
 
         """
-        super(PyomoSimulator, self).__init__(wn, PD_or_DD)
+        super(PyomoSimulator, self).__init__(wn, pressure_dependent)
 
         # Global constants
         self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units (it equals 4.727 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
@@ -278,8 +279,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             instance.head[n].value = last_instance_results['head'][n]
             if n in instance.junctions:
                 junction = self._wn.get_node(n)
-                if self._pressure_driven:
-                    if instance.head[n].value - junction.elevation <= junction.P0:
+                if self.pressure_dependent:
+                    if instance.head[n].value - junction.elevation <= junction.minimum_pressure:
                         instance.demand_actual[n] = 100*self._Qtol
                     else:
                         instance.demand_actual[n] = abs(instance.demand_actual[n].value) + self._Qtol
@@ -738,8 +739,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         def init_head_rule(model, n):
             node = wn.get_node(n)
             if n in model.junctions:
-                if self._pressure_driven:
-                    return node.elevation + node.PF
+                if self.pressure_dependent:
+                    return node.elevation + node.nominal_pressure
                 else:
                     return node.elevation
             elif n in model.tanks:
@@ -875,12 +876,12 @@ class PyomoSimulator(WaterNetworkSimulator):
                 #return Constraint.Skip
                 return model.demand_actual[j] == 0.0 # Using this constraint worked better than fixing this variable.
             else:
-                return pressure_dependent_demand_nl(model.demand_required[j], model.head[j]-junction.elevation, junction.PF, junction.P0) == model.demand_actual[j]
+                return pressure_dependent_demand_nl(model.demand_required[j], model.head[j]-junction.elevation, junction.nominal_pressure, junction.minimum_pressure) == model.demand_actual[j]
 
         def demand_driven_rule(model, j):
             return model.demand_actual[j] == model.demand_required[j]
 
-        if self._pressure_driven:
+        if self.pressure_dependent:
             model.pressure_driven_demand = Constraint(model.junctions, rule=pressure_driven_demand_rule)
         else:
             model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)

@@ -22,7 +22,7 @@ class TestWithEpanet(unittest.TestCase):
         epanet_sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.epanet_results = epanet_sim.run_sim()
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn, 'DEMAND DRIVEN')
+        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn)
         self.pyomo_results = pyomo_sim.run_sim(solver_options = {'tol':1e-10}, modified_hazen_williams=False)
 
     @classmethod
@@ -73,7 +73,7 @@ class TestNet1(unittest.TestCase):
         epanet_sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.epanet_results = epanet_sim.run_sim()
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn, 'DEMAND DRIVEN')
+        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn)
         self.pyomo_results = pyomo_sim.run_sim(solver_options = {'hessian_approximation':'exact', 'halt_on_ampl_error':'yes'}, modified_hazen_williams=True)
 
     @classmethod
@@ -119,7 +119,7 @@ class TestNet3(unittest.TestCase):
         epanet_sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.epanet_results = epanet_sim.run_sim()
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn, 'DEMAND DRIVEN')
+        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn)
         self.pyomo_results = pyomo_sim.run_sim(solver_options = {'hessian_approximation':'exact', 'halt_on_ampl_error':'yes'}, modified_hazen_williams=True)
 
     @classmethod
@@ -165,7 +165,7 @@ class TestNet3(unittest.TestCase):
 #        epanet_sim = self.wntr.sim.EpanetSimulator(self.wn)
 #        self.epanet_results = epanet_sim.run_sim()
 #        
-#        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn, 'DEMAND DRIVEN')
+#        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn)
 #        self.pyomo_results = pyomo_sim.run_sim(solver_options = {'hessian_approximation':'exact', 'halt_on_ampl_error':'yes'}, modified_hazen_williams=True)
 #
 #	for node_name in self.pyomo_results.node.index.levels[0]:

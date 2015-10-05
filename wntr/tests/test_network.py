@@ -360,40 +360,5 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l4,['p5'])
         self.assertEqual(l5,[])
 
-    def test_set_nominal_pressures(self):
-        wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        parser.read_inp_file(wn, resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_4.inp')
-
-        wn.set_nominal_pressures(constant_nominal_pressure = 15.0, minimum_pressure = 1.0)
-
-        for name,j in wn.nodes(self.Junction):
-            self.assertAlmostEqual(j.PF, 15.0)
-            self.assertAlmostEqual(j.P0, 1.0)
-
-        wn.set_nominal_pressures(constant_nominal_pressure = 1.421970206324*15.0, units = 'psi', minimum_pressure = 1.421970206324)
-
-        for name,j in wn.nodes(self.Junction):
-            self.assertAlmostEqual(j.PF, 15.0)
-            self.assertAlmostEqual(j.P0, 1.0)
-
-        with self.assertRaises(ValueError):
-            wn.set_nominal_pressures(constant_nominal_pressure = 15.0, units = 'ft')
-
-    def test_set_nominal_pressures_with_results(self):
-        wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        parser.read_inp_file(wn, resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_4.inp')
-
-        pyomo_sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
-        results = pyomo_sim.run_sim()
-
-        wn.set_nominal_pressures(res = results, fraction_of_min = 0.75, units = 'psi', minimum_pressure = 1.421970206324)
-
-        for junction_name, junction in wn.nodes(self.wntr.network.Junction):
-            print junction_name
-            self.assertAlmostEqual(junction.PF, 0.75*results.node.loc[junction_name]['pressure'].min())
-            self.assertAlmostEqual(junction.P0, 1.0)
-
 if __name__ == '__main__':
     unittest.main()

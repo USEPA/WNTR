@@ -932,61 +932,6 @@ class WaterNetworkModel(object):
         """
         nx.set_node_attributes(self._graph, 'pos', {name: coordinates})
 
-    def set_nominal_pressures(self, res = None, fraction_of_min = 0.8, constant_nominal_pressure = None, units = 'm', minimum_pressure = 0.0):
-        """
-        A method for setting nominal pressures (hydraulic head - elevation) for pressure driven simulations.
-
-        Parameters
-        ----------
-        res: results object
-            Use the res parameter if you want to set nominal pressures based on the results of
-            another simulation. For each junction, the nominal pressure will be the product of fraction_of_min
-            and the minimum pressure for that junction in the results. The results object should use
-            internal units (SI units).
-        fraction_of_min: float, 0<=fraction_of_min<=1
-            Specifies the fraction of the minimum pressure for that junction from the results to set the 
-            nominal pressure to. Must be between 0 and 1.
-        constant_nominal_pressure: float
-            Use the constant_nominal pressure parameter if you want all junctions to have the same 
-            nominal pressure.
-        units: string
-            The units parameter is used if you use the constant_nominal_pressure. It specifies
-            the units of the constant_nominal_pressure parameter. Default is meters. Supported units:
-            meters and psi.
-        minimum_pressure: float
-            Value to set the minimum pressure to. Below this pressure, the acual demand will be 0.
-        """
-        if res is not None and constant_nominal_pressure is None:
-            if units.upper() not in ['PSI','M']:
-                raise ValueError('The only units currently supported for the set_nominal_pressures method are \'psi\'(pounds per square inch) and \'m\'(meters).')
-            minimum_pressure = float(minimum_pressure)
-            if units.upper()=='PSI':
-                minimum_pressure = convert('Pressure',0,minimum_pressure)
-            for junction_name,junction in self.nodes(Junction):
-                min_P = res.node['pressure'][junction_name].min()
-                if min_P <= 0.0:
-                    raise RuntimeError('error: Results had negative pressure at a junction')
-                else:
-                    assert fraction_of_min >= 0.0, "fraction_of_min must be between 0 and 1."
-                    assert fraction_of_min <= 1.0, "fraction_of_min must be between 0 and 1."
-                    junction.PF = fraction_of_min*min_P
-                    junction.P0 = minimum_pressure
-                    assert junction.PF >= junction.P0, "Nominal pressure must be greater than minimum pressure."
-        elif constant_nominal_pressure is not None and res is None:
-            if units.upper() not in ['PSI','M']:
-                raise ValueError('The only units currently supported for the set_nominal_pressures method are \'psi\'(pounds per square inch) and \'m\'(meters).')
-            constant_nominal_pressure = float(constant_nominal_pressure)
-            minimum_pressure = float(minimum_pressure)
-            if units.upper()=='PSI':
-                constant_nominal_pressure = convert('Pressure',0,constant_nominal_pressure)
-                minimum_pressure = convert('Pressure',0,minimum_pressure)
-            for junction_name,junction in self.nodes(Junction):
-                junction.PF = constant_nominal_pressure
-                junction.P0 = minimum_pressure
-                assert junction.PF >= junction.P0, "Nominal pressure must be greater than minimum pressure."
-        else:
-            raise RuntimeError('error: either you have not specified any nominal pressure or you have tried to specify the nominal pressure in multiple ways')
-
     def shifted_time_sec(self):
         """ 
         Returns the time in seconds shifted by the
@@ -1694,8 +1639,10 @@ class Junction(Node):
         self.current_demand = base_demand
         self.demand_pattern_name = demand_pattern_name
         self.elevation = elevation
-        self.PF = 20.0
-        self.P0 = 0.0
+        self.nominal_pressure = 20.0
+        "The nominal pressure attribute is used for pressure-dependent demand. This is the lowest pressure at which the customer receives the full requested demand."
+        self.minimum_pressure = 0.0
+        "The minimum pressure attribute is used for pressure-dependent demand simulations. Below this pressure, the customer will not receive any water."
         self.leak = False
         self.leak_area = 0.0
         self.leak_discharge_coeff = 0.0

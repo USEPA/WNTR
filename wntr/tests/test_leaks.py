@@ -137,7 +137,7 @@ class TestLeakResults(unittest.TestCase):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_2.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.add_leak('leak1','pipe2',leak_diameter = 0.01, leak_discharge_coeff = 0.75, start_time = 4*3600, fix_time = 8*3600)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
+        sim = self.wntr.sim.PyomoSimulator(wn)
         results = sim.run_sim()
 
         for t in results.node.loc['leak1'].index:
@@ -150,7 +150,7 @@ class TestLeakResults(unittest.TestCase):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.add_leak('leak1','pipe2', leak_diameter = 0.08, leak_discharge_coeff = 0.75, start_time = 4*3600, fix_time = 12*3600)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
+        sim = self.wntr.sim.PyomoSimulator(wn)
         pyomo_results = sim.run_sim()
 
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13B.inp'
@@ -185,11 +185,11 @@ class TestLeakResults(unittest.TestCase):
     def test_remove_leak_results(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
+        sim = self.wntr.sim.PyomoSimulator(wn)
         results1 = sim.run_sim()
         wn.add_leak('leak1','pipe2', leak_diameter = 0.08, leak_discharge_coeff = 0.75, start_time = 4*3600, fix_time = 12*3600)
         wn.remove_leak('leak1')
-        sim = self.wntr.sim.PyomoSimulator(wn, 'DEMAND DRIVEN')
+        sim = self.wntr.sim.PyomoSimulator(wn)
         results2 = sim.run_sim()
 
         self.assertEqual(True, (results1.node == results2.node)['demand'].all())

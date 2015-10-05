@@ -51,16 +51,21 @@ class ScipySimulator(WaterNetworkSimulator):
     Run simulations using scipy.optimize.
     """
 
-    def __init__(self, wn):
+    def __init__(self, wn, pressure_dependent = False):
         """
         Simulator object to be used for running scipy simulations.
 
         Parameters
         ----------
-        wn : WaterNetworkModel
-            A water network
+        wn : WaterNetworkModel object
+
+        pressure_dependent: bool 
+            Specifies whether the simulation will be demand-driven or
+            pressure-driven. True means the simulation will be
+            pressure-driven.
+
         """
-        super(ScipySimulator, self).__init__(wn)
+        super(ScipySimulator, self).__init__(wn, pressure_dependent)
 
         # Create dictionaries with node and link id's to names
         self._node_id_to_name = {}
@@ -130,14 +135,6 @@ class ScipySimulator(WaterNetworkSimulator):
 
         self._residual_eval_time = 0.0
         self._jacobian_eval_time = 0.0
-
-        # Pressure driven demand parameters
-        if hasattr(self._wn.options, 'nominal_pressure') and hasattr(self._wn.options, 'minimum_pressure'):
-            self._P0 = self._wn.options.minimum_pressure
-            self._PF = self._wn.options.nominal_pressure
-        else:
-            self._P0 = None
-            self._PF = None
 
         # Timing
         self.prep_time_before_main_loop = 0.0
@@ -557,17 +554,17 @@ class ScipySimulator(WaterNetworkSimulator):
             junction_id = self._junction_name_to_id[junction_name]
             node_id = self._node_name_to_id[junction_name]
             node_elevation = junction.elevation
-            if self._P0 is None and self._PF is None:
+            if self.pressure_dependent == False:
                 add_to_triplet(row_counter, junction_offset + junction_id, 1.0)
-            elif head[node_id] - node_elevation <= self._P0:
+            elif head[node_id] - node_elevation <= junction.minimum_pressure:
                 add_to_triplet(row_counter, junction_offset + junction_id, 1.0)
-            elif head[node_id] - node_elevation >= self._PF:
+            elif head[node_id] - node_elevation >= junction.nominal_pressure:
                 add_to_triplet(row_counter, junction_offset + junction_id, 1.0)
             else:
                 p = head[node_id] - node_elevation
                 add_to_triplet(row_counter, junction_offset + junction_id, 1.0)
-                pdd_deriv = 1/(2*(self._PF - self._P0)*math.sqrt((p - self._P0)/(self._PF - self._P0)))
-                add_to_triplet(row_counter, head_offset + node_id, -pdd_deriv)
+                pdd_deriv = -current_demands[node_id]/(2*(junction.nominal_pressure - junction.minimum_pressure)*math.sqrt((p - junction.minimum_pressure)/(junction.nominal_pressure - junction.minimum_pressure)))
+                add_to_triplet(row_counter, head_offset + node_id, pdd_deriv)
             row_counter += 1
 
         jac = sp.csr_matrix((val, (row,col)), shape=shape)
@@ -727,16 +724,16 @@ class ScipySimulator(WaterNetworkSimulator):
             junction_id = self._junction_name_to_id[junction_name]
             node_id = self._node_name_to_id[junction_name]
             node_elevation = junction.elevation
-            if self._P0 is None and self._PF is None:
+            if self.pressure_dependent == False:
                 residual.append(junction_demand[junction_id] - nodal_demands[node_id])
-            elif head[node_id] - node_elevation <= self._P0:
+            elif head[node_id] - node_elevation <= junction.minimum_pressure:
                 residual.append(junction_demand[junction_id])
-            elif head[node_id] - node_elevation >= self._PF:
+            elif head[node_id] - node_elevation >= junction.nominal_pressure:
                 residual.append(junction_demand[junction_id] - nodal_demands[node_id])
             else:
                 p = head[node_id] - node_elevation
                 #lhs = (junction_demand[junction_id]/nodal_demands[node_id])**2
-                pdd = nodal_demands[node_id]*math.sqrt((p - self._P0)/(self._PF - self._P0))
+                pdd = nodal_demands[node_id]*math.sqrt((p - junction.minimum_pressure)/(junction.nominal_pressure - junction.minimum_pressure))
                 residual.append(junction_demand[junction_id] - pdd)
 
         return residual
