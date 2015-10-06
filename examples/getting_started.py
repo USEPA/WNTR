@@ -1,9 +1,7 @@
 import wntr
-import os
 
 # Create a water network model
-my_path = os.path.abspath(os.path.dirname(__file__))
-inp_file = os.path.join(my_path,'networks','Net3.inp')
+inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Graph the network

@@ -2,13 +2,11 @@ import wntr
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
-import os
 
 plt.close('all')
 
 # Create a water network model
-my_path = os.path.abspath(os.path.dirname(__file__))
-inp_file = os.path.join(my_path,'networks','Net3.inp')
+inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Simulate hydraulics
@@ -114,11 +112,11 @@ print "  Max: " + str(np.nanmax(shat))
 print "  Min: " + str(np.nanmin(shat))
 
 # Compute network cost and GHG emissions
-tank_cost = np.loadtxt(os.path.join(my_path,'data','cost_tank.txt'),skiprows=1)
-pipe_cost = np.loadtxt(os.path.join(my_path,'data','cost_pipe.txt'),skiprows=1)
-valve_cost = np.loadtxt(os.path.join(my_path,'data','cost_valve.txt'),skiprows=1)
+tank_cost = np.loadtxt('data/cost_tank.txt',skiprows=1)
+pipe_cost = np.loadtxt('data/cost_pipe.txt',skiprows=1)
+valve_cost = np.loadtxt('data/cost_valve.txt',skiprows=1)
 pump_cost = 3783 # average from BWN-II
-pipe_ghg = np.loadtxt(os.path.join(my_path,'data','ghg_pipe.txt'),skiprows=1)
+pipe_ghg = np.loadtxt('data/ghg_pipe.txt',skiprows=1)
 
 network_cost = wntr.metrics.cost(wn, tank_cost, pipe_cost, valve_cost, pump_cost)
 print "Network cost: $" + str(round(network_cost,2))
