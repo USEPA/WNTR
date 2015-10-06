@@ -140,11 +140,11 @@ class TestLeakResults(unittest.TestCase):
         sim = self.wntr.sim.PyomoSimulator(wn)
         results = sim.run_sim()
 
-        for t in results.node.loc['leak1'].index:
+        for t in results.node.major_axis:
             if t < 4*3600 or t >= 8*3600:
-                self.assertAlmostEqual(results.node.at[('leak1',t),'demand'], 0.0)
+                self.assertAlmostEqual(results.node.at['demand',t,'leak1'], 0.0)
             else:
-                self.assertAlmostEqual(results.node.at[('leak1',t),'demand'], 0.75*math.pi/4.0*0.01**2.0*math.sqrt(2*9.81*results.node.at[('leak1',t),'pressure']))
+                self.assertAlmostEqual(results.node.at['demand',t,'leak1'], 0.75*math.pi/4.0*0.01**2.0*math.sqrt(2*9.81*results.node.at['pressure',t,'leak1']))
 
     def test_leak_against_epanet(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
@@ -159,28 +159,28 @@ class TestLeakResults(unittest.TestCase):
         epanet_results = sim.run_sim()
 
         for link_name, link in wn.links():
-            for t in pyomo_results.link.loc[link_name].index:
-                self.assertLessEqual(abs(pyomo_results.link.at[(link_name,t),'flowrate'] - epanet_results.link.at[(link_name,t),'flowrate']), 0.00001)
+            for t in pyomo_results.link.major_axis:
+                self.assertLessEqual(abs(pyomo_results.link.at['flowrate',t,link_name] - epanet_results.link.at['flowrate',t,link_name]), 0.00001)
 
         for link_name, link in wn.links():
-            for t in pyomo_results.link.loc[link_name].index:
-                self.assertLessEqual(abs(pyomo_results.link.at[(link_name,t),'velocity'] - epanet_results.link.at[(link_name,t),'velocity']), 0.0001)
+            for t in pyomo_results.link.major_axis:
+                self.assertLessEqual(abs(pyomo_results.link.at['velocity',t,link_name] - epanet_results.link.at['velocity',t,link_name]), 0.0001)
 
         for node_name, node in wn.nodes():
-            for t in pyomo_results.node.loc[node_name].index:
-                self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'demand'] - epanet_results.node.at[(node_name,t),'demand']), 0.00001)
+            for t in pyomo_results.node.major_axis:
+                self.assertLessEqual(abs(pyomo_results.node.at['demand',t,node_name] - epanet_results.node.at['demand',t,node_name]), 0.00001)
 
         for node_name, node in wn.nodes():
-            for t in pyomo_results.node.loc[node_name].index:
-                self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'expected_demand'] - epanet_results.node.at[(node_name,t),'expected_demand']), 0.00001)
+            for t in pyomo_results.node.major_axis:
+                self.assertLessEqual(abs(pyomo_results.node.at['expected_demand',t,node_name] - epanet_results.node.at['expected_demand',t,node_name]), 0.00001)
 
         for node_name, node in wn.nodes():
-            for t in pyomo_results.node.loc[node_name].index:
-                self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'head'] - epanet_results.node.at[(node_name,t),'head']), 0.001)
+            for t in pyomo_results.node.major_axis:
+                self.assertLessEqual(abs(pyomo_results.node.at['head',t,node_name] - epanet_results.node.at['head',t,node_name]), 0.001)
 
         for node_name, node in wn.nodes():
-            for t in pyomo_results.node.loc[node_name].index:
-                self.assertLessEqual(abs(pyomo_results.node.at[(node_name,t),'pressure'] - epanet_results.node.at[(node_name,t),'pressure']), 0.001)
+            for t in pyomo_results.node.major_axis:
+                self.assertLessEqual(abs(pyomo_results.node.at['pressure',t,node_name] - epanet_results.node.at['pressure',t,node_name]), 0.001)
 
     def test_remove_leak_results(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
@@ -191,14 +191,14 @@ class TestLeakResults(unittest.TestCase):
         wn.remove_leak('leak1')
         sim = self.wntr.sim.PyomoSimulator(wn)
         results2 = sim.run_sim()
+        
+        self.assertEqual(True, (results1.node == results2.node)['demand'].all().all())
+        self.assertEqual(True, (results1.node == results2.node)['expected_demand'].all().all())
+        self.assertEqual(True, (results1.node == results2.node)['head'].all().all())
+        self.assertEqual(True, (results1.node == results2.node)['pressure'].all().all())
+        self.assertEqual(True, (results1.node == results2.node)['type'].all().all())
 
-        self.assertEqual(True, (results1.node == results2.node)['demand'].all())
-        self.assertEqual(True, (results1.node == results2.node)['expected_demand'].all())
-        self.assertEqual(True, (results1.node == results2.node)['head'].all())
-        self.assertEqual(True, (results1.node == results2.node)['pressure'].all())
-        self.assertEqual(True, (results1.node == results2.node)['type'].all())
-
-        self.assertEqual(True, (results1.link == results2.link)['flowrate'].all())
-        self.assertEqual(True, (results1.link == results2.link)['velocity'].all())
-        self.assertEqual(True, (results1.link == results2.link)['type'].all())
+        self.assertEqual(True, (results1.link == results2.link)['flowrate'].all().all())
+        self.assertEqual(True, (results1.link == results2.link)['velocity'].all().all())
+        self.assertEqual(True, (results1.link == results2.link)['type'].all().all())
 

@@ -66,7 +66,7 @@ class TestPDD(unittest.TestCase):
         results = sim.run_sim()
 
         for t in results.time:
-            self.assertEqual(results.node.at[('junction2',t),'demand'], 150.0/3600.0*math.sqrt((10.0-0.0)/(15.0-0.0)))
+            self.assertEqual(results.node.at['demand',t,'junction2'], 150.0/3600.0*math.sqrt((10.0-0.0)/(15.0-0.0)))
 
     def test_pdd_with_scipy(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_1.inp'
@@ -86,4 +86,4 @@ class TestPDD(unittest.TestCase):
         results = sim.run_sim()
 
         for t in results.time:
-            self.assertEqual(results.node.at[('junction2',t),'demand'], 150.0/3600.0*math.sqrt((10.0-0.0)/(15.0-0.0)))
+            self.assertEqual(results.node.at['demand',t,'junction2'], 150.0/3600.0*math.sqrt((10.0-0.0)/(15.0-0.0)))

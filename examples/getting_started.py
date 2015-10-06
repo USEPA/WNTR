@@ -11,8 +11,10 @@ wntr.network.draw_graph(wn, title=wn.name)
 sim = wntr.sim.EpanetSimulator(wn)
 results = sim.run_sim()
 
+sim = wntr.sim.EpanetSimulator(wn)
+results2 = sim.run_sim()
+
 # Plot results on the network
-pressure_at_5hr = results.node.loc[(slice(None), 5*3600), 'pressure']
-#pressure_at_5hr = results.node.loc['pressure', :, 5*3600]
+pressure_at_5hr = results.node.loc['pressure', 5*3600, :]
 wntr.network.draw_graph(wn, node_attribute=pressure_at_5hr, node_size=30, 
                         title='Pressure at 5 hours')

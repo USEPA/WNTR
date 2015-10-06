@@ -173,31 +173,30 @@ class ScipySimulator(WaterNetworkSimulator):
         num_flows = self._wn.num_links()
         num_heads = self._wn.num_nodes()
 
-        # data for results object
-        node_name = []
-        node_type = []
-        node_times = []
-        node_head = []
-        node_demand = []
-        node_pressure = []
-        link_name = []
-        link_type = []
-        link_times = []
-        link_velocity = []
-        link_flowrate = []
-
         # Create results object
         results = NetResults()
-
-        # Load general simulation options into the results object
-        self._load_general_results(results)
-
-        # reinitialize function evaluation time for multiple calls to run_sim
-        self._residual_eval_time = 0.0
-
         # Create Delta time series
         results.time = np.arange(0, self._sim_duration_sec+self._hydraulic_step_sec, self._hydraulic_step_sec)
         
+        ntimes = len(results.time)
+        nnodes = self._wn.num_nodes()
+        nlinks = self._wn.num_links()
+        node_names = [name for name, node in self._wn.nodes()]
+        link_names = [name for name, link in self._wn.links()]
+        
+        node_dictonary = {'demand': [],
+                          #'expected_demand': [],
+                          'head': [],
+                          'pressure':[],
+                          'type': []}
+                          
+        link_dictonary = {'flowrate': [],
+                          'velocity': [],
+                          'type': []}
+        
+        # reinitialize function evaluation time for multiple calls to run_sim
+        self._residual_eval_time = 0.0
+
         # Assert conditional controls are only provided for Tanks
         self._verify_conditional_controls_for_tank()
 
@@ -315,72 +314,52 @@ class ScipySimulator(WaterNetworkSimulator):
             for n in xrange(self._wn.num_nodes()):
                 name = self._node_id_to_name[n]
                 node = self._wn.get_node(name)
-                node_name.append(name)
-                node_type.append(self._get_node_type(name))
-                node_times.append(timedelta)
-                node_head.append(head[n])
+                
+                node_dictonary['type'].append(self._get_node_type(name))
+                node_dictonary['head'].append(head[n])
+                
                 # Add node demand
                 if isinstance(node, Junction):
                     junction_id = self._junction_name_to_id[name]
-                    #node_id = self._node_name_to_id[name]
-                    node_demand.append(junction_demands[junction_id])
-                    #node_demand.append(current_demands[node_id])
+                    node_dictonary['demand'].append(junction_demands[junction_id])
                 elif isinstance(node, Reservoir):
                     reserv_id = self._node_name_to_reservoir_id[name]
-                    node_demand.append(reservoir_demand[reserv_id])
+                    node_dictonary['demand'].append(reservoir_demand[reserv_id])
                 elif isinstance(node, Tank):
                     tank_id = self._node_name_to_tank_id[name]
-                    node_demand.append(tank_inflow[tank_id])
+                    node_dictonary['demand'].append(tank_inflow[tank_id])
                 else:
-                    node_demand.append(0.0)
+                    pass
+                    node_dictonary['demand'].append(0)
                 # Add pressure
                 if isinstance(node, Reservoir):
                     pressure_n_t = 0.0
                 else:
                     pressure_n_t = head[n] - node.elevation
-                node_pressure.append(pressure_n_t)
+                node_dictonary['pressure'].append(pressure_n_t)
 
             # Load all link results
             for l in xrange(self._wn.num_links()):
                 name = self._link_id_to_name[l]
                 link = self._wn.get_link(name)
-                link_name.append(name)
-                link_type.append(self._get_link_type(name))
-                link_times.append(timedelta)
-                link_flowrate.append(flow[l])
+                link_dictonary['type'].append(self._get_link_type(name))
+                link_dictonary['flowrate'].append(flow[l])
                 if isinstance(link, Pipe):
                     velocity_l_t = 4.0*abs(flow[l])/(math.pi*link.diameter**2)
                 else:
                     velocity_l_t = 0.0
-                link_velocity.append(velocity_l_t)
-
+                link_dictonary['velocity'].append(velocity_l_t)
+                
         # END MAIN SIM LOOP
 
-        # Save results into the results object
-        node_data_frame = pd.DataFrame({'time': node_times,
-                                        'node': node_name,
-                                        'demand': node_demand,
-                                        'head': node_head,
-                                        'pressure': node_pressure,
-                                        'type': node_type})
-
-        node_pivot_table = pd.pivot_table(node_data_frame,
-                                          values=['demand', 'head', 'pressure', 'type'],
-                                          index=['node', 'time'],
-                                          aggfunc= lambda x: x)
-        results.node = node_pivot_table
-
-        link_data_frame = pd.DataFrame({'time': link_times,
-                                        'link': link_name,
-                                        'flowrate': link_flowrate,
-                                        'velocity': link_velocity,
-                                        'type': link_type})
-
-        link_pivot_table = pd.pivot_table(link_data_frame,
-                                              values=['flowrate', 'velocity', 'type'],
-                                              index=['link', 'time'],
-                                              aggfunc= lambda x: x)
-        results.link = link_pivot_table
+        # Create Panel
+        for key, value in node_dictonary.iteritems():
+            node_dictonary[key] = np.array(value).reshape((ntimes, nnodes))
+        results.node = pd.Panel(node_dictonary, major_axis=results.time, minor_axis=node_names)
+        
+        for key, value in link_dictonary.iteritems():
+            link_dictonary[key] = np.array(value).reshape((ntimes, nlinks))
+        results.link = pd.Panel(link_dictonary, major_axis=results.time, minor_axis=link_names)
 
         #print "\tFunction evaluation time: ", self._residual_eval_time + self._jacobian_eval_time
         #print "\tLinear solver time: ", total_linear_solver_time
@@ -737,25 +716,6 @@ class ScipySimulator(WaterNetworkSimulator):
                 residual.append(junction_demand[junction_id] - pdd)
 
         return residual
-
-    def _load_general_results(self, results):
-        """
-        Load general simulation options into the results object.
-
-        Parameters
-        ----------
-        results : NetworkResults object
-        """
-        # Load general results
-        results.network_name = self._wn.name
-
-        # Load simulator options
-        results.simulator_options['type'] = 'SCIPY'
-        results.simulator_options['start_time'] = self._sim_start_sec
-        results.simulator_options['duration'] = self._sim_duration_sec
-        results.simulator_options['pattern_start_time'] = self._pattern_start_sec
-        results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_sec
-        results.simulator_options['pattern_time_step'] = self._pattern_step_sec
 
     def _verify_conditional_controls_for_tank(self):
         for link_name in self._wn.conditional_controls:

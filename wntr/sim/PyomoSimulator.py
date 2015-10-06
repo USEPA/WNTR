@@ -948,7 +948,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         # Create results object and load general simulation options. 
         results = NetResults()
-        self._load_general_results(results)
+        results.time = np.arange(0, self._sim_duration_sec+self._report_step_sec, self._report_step_sec)
 
         # Create sets for storing closed links
         links_closed_by_controls = set([]) # Set of links that are closed by conditional or time controls
@@ -1142,84 +1142,29 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         ######## END OF MAIN SIMULATION LOOP ##########
 
-        # Save results into the results object
-        if pandas_result:
-            node_data_frame = pd.DataFrame({'time':     self._pyomo_sim_results['node_times'],
-                                            'node':     self._pyomo_sim_results['node_name'],
-                                            'demand':   self._pyomo_sim_results['node_demand'],
-                                            'expected_demand':   self._pyomo_sim_results['node_expected_demand'],
-                                            'head':     self._pyomo_sim_results['node_head'],
-                                            'pressure': self._pyomo_sim_results['node_pressure'],
-                                            'leak_flow': self._pyomo_sim_results['leak_flow'],
-                                            'type':     self._pyomo_sim_results['node_type']})
-
-            node_pivot_table = pd.pivot_table(node_data_frame,
-                                              values=['demand', 'expected_demand', 'head', 'pressure', 'leak_flow', 'type'],
-                                              index=['node', 'time'],
-                                              aggfunc= lambda x: x)
-            results.node = node_pivot_table
-
-            link_data_frame = pd.DataFrame({'time':     self._pyomo_sim_results['link_times'],
-                                            'link':     self._pyomo_sim_results['link_name'],
-                                            'flowrate': self._pyomo_sim_results['link_flowrate'],
-                                            'velocity': self._pyomo_sim_results['link_velocity'],
-                                            'type':     self._pyomo_sim_results['link_type']})
-
-            link_pivot_table = pd.pivot_table(link_data_frame,
-                                                  values=['flowrate', 'velocity', 'type'],
-                                                  index=['link', 'time'],
-                                                  aggfunc= lambda x: x)
-            results.link = link_pivot_table
-        else:
-            node_dict = dict()
-            node_types = set(self._pyomo_sim_results['node_type'])
-            map_properties = dict()
-            map_properties['node_demand'] = 'demand'
-            map_properties['node_head'] = 'head'
-            map_properties['node_pressure'] = 'pressure'
-            map_properties['node_expected_demand'] = 'expected_demand'
-            N = len(self._pyomo_sim_results['node_name'])
-            n_nodes = len(self._wn._nodes.keys())
-            hydraulic_time_step = float(self._hydraulic_step_sec)
-            T = N/n_nodes
-            for node_type in node_types:
-                node_dict[node_type] = dict()
-                for prop, prop_name in map_properties.iteritems():
-                    node_dict[node_type][prop_name] = dict()
-                    for i in xrange(n_nodes):
-                        node_name = self._pyomo_sim_results['node_name'][i]
-                        n_type = self._get_node_type(node_name)
-                        if n_type == node_type:
-                            node_dict[node_type][prop_name][node_name] = dict()
-                            for ts in xrange(T):
-                                time_sec = hydraulic_time_step*ts
-                                node_dict[node_type][prop_name][node_name][time_sec] = self._pyomo_sim_results[prop][i+n_nodes*ts]
-
-            results.node = node_dict
-
-            link_dict = dict()
-            link_types = set(self._pyomo_sim_results['link_type'])
-            map_properties = dict()
-            map_properties['link_flowrate'] = 'flowrate'
-            map_properties['link_velocity'] = 'velocity'
-            N = len(self._pyomo_sim_results['link_name'])
-            n_links = len(self._wn._links.keys())
-            T = N/n_links
-            for link_type in link_types:
-                link_dict[link_type] = dict()
-                for prop, prop_name in map_properties.iteritems():
-                    link_dict[link_type][prop_name] = dict()
-                    for i in xrange(n_links):
-                        link_name = self._pyomo_sim_results['link_name'][i]
-                        l_type = self._get_link_type(link_name)
-                        if l_type == link_type:
-                            link_dict[link_type][prop_name][link_name] = dict()
-                            for ts in xrange(T):
-                                time_sec = hydraulic_time_step*ts
-                                link_dict[link_type][prop_name][link_name][time_sec] = self._pyomo_sim_results[prop][i+n_links*ts]
-
-            results.link = link_dict
-
+        ntimes = len(results.time)  
+        nnodes = self._wn.num_nodes()
+        nlinks = self._wn.num_links()
+        node_names = [name for name, node in self._wn.nodes()]
+        link_names = [name for name, link in self._wn.links()]
+        
+        node_dictonary = {'demand':   self._pyomo_sim_results['node_demand'],
+                          'expected_demand':   self._pyomo_sim_results['node_expected_demand'],
+                          'head':     self._pyomo_sim_results['node_head'],
+                          'pressure': self._pyomo_sim_results['node_pressure'],
+                          'leak_flow': self._pyomo_sim_results['leak_flow'],
+                          'type':     self._pyomo_sim_results['node_type']}
+        for key, value in node_dictonary.iteritems():
+            node_dictonary[key] = np.array(value).reshape((ntimes, nnodes))
+        results.node = pd.Panel(node_dictonary, major_axis=results.time, minor_axis=node_names)
+        
+        link_dictonary = {'flowrate': self._pyomo_sim_results['link_flowrate'],
+                          'velocity': self._pyomo_sim_results['link_velocity'],
+                          'type':     self._pyomo_sim_results['link_type']}
+        for key, value in link_dictonary.iteritems():
+            link_dictonary[key] = np.array(value).reshape((ntimes, nlinks))
+        results.link = pd.Panel(link_dictonary, major_axis=results.time, minor_axis=link_names)
+        
         return results
 
     def _fix_instance_variables(self, first_timestep, instance, links_closed):
@@ -1283,11 +1228,9 @@ class PyomoSimulator(WaterNetworkSimulator):
         """
 
         # Load link data
-        for l in instance.links:
-            link = self._wn.get_link(l)
-            link_name = l
-            link_type = self._get_link_type(l)
-            flowrate = instance.flow[l].value
+        for link_name, link in self._wn.links():
+            link_type = self._get_link_type(link_name)
+            flowrate = instance.flow[link_name].value
             if isinstance(link, Pipe):
                 velocity_l = 4.0*abs(flowrate)/(math.pi*link.diameter**2)
             else:
@@ -1299,39 +1242,37 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._pyomo_sim_results['link_flowrate'].append(flowrate)
 
         # Load node data
-        for n in instance.nodes:
-            node = self._wn.get_node(n)
-            node_name = n
-            node_type = self._get_node_type(n)
-            head_n = instance.head[n].value
+        for node_name, node in self._wn.nodes():
+            node_type = self._get_node_type(node_name)
+            head_n = instance.head[node_name].value
             if isinstance(node, Reservoir):
                 pressure_n = 0.0
             else:
                 pressure_n = (head_n - node.elevation)
             if isinstance(node, Junction):
-                demand = instance.demand_actual[n].value
-                expected_demand = instance.demand_required[n]
-                if n in instance.junctions_with_leaks:
-                    leak_flow = instance.junction_leak_demand[n].value
+                demand = instance.demand_actual[node_name].value
+                expected_demand = instance.demand_required[node_name]
+                if node_name in instance.junctions_with_leaks:
+                    leak_flow = instance.junction_leak_demand[node_name].value
                 else:
                     leak_flow = 0.0
                 #if n=='101' or n=='10':
                 #    print n,'  ',head_n, '  ', node.elevation
             elif isinstance(node, Reservoir):
-                demand = instance.reservoir_demand[n].value
-                expected_demand = instance.reservoir_demand[n].value
+                demand = instance.reservoir_demand[node_name].value
+                expected_demand = instance.reservoir_demand[node_name].value
                 leak_flow = 0.0
             elif isinstance(node, Tank):
-                demand = instance.tank_net_inflow[n].value
-                expected_demand = instance.tank_net_inflow[n].value
-                if n in instance.tanks_with_leaks:
-                    leak_flow = instance.tank_leak_demand[n].value
+                demand = instance.tank_net_inflow[node_name].value
+                expected_demand = instance.tank_net_inflow[node_name].value
+                if node_name in instance.tanks_with_leaks:
+                    leak_flow = instance.tank_leak_demand[node_name].value
                 else:
                     leak_flow = 0.0
             elif isinstance(node, Leak):
-                demand = instance.leak_demand[n].value
-                expected_demand = instance.leak_demand[n].value
-                leak_flow = instance.leak_demand[n].value
+                demand = instance.leak_demand[node_name].value
+                expected_demand = instance.leak_demand[node_name].value
+                leak_flow = instance.leak_demand[node_name].value
             else:
                 demand = 0.0
                 expected_demand = 0.0
@@ -1659,26 +1600,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                 pumps_closed_by_low_suction_pressure.discard(pump_name)
         for pump_name in pumps_closed_by_outage:
             pumps_closed_by_low_suction_pressure.discard(pump_name)
-
-    def _load_general_results(self, results):
-        """
-        Load general simulation options into the results object.
-
-        Parameters
-        ----------
-        results : NetworkResults object
-        """
-        # Load general results
-        results.network_name = self._wn.name
-        results.time = np.arange(0, self._sim_duration_sec+self._hydraulic_step_sec, self._hydraulic_step_sec)
-        
-        # Load simulator options
-        results.simulator_options['type'] = 'PYOMO'
-        results.simulator_options['start_time'] = self._sim_start_sec
-        results.simulator_options['duration'] = self._sim_duration_sec
-        results.simulator_options['pattern_start_time'] = self._pattern_start_sec
-        results.simulator_options['hydraulic_time_step'] = self._hydraulic_step_sec
-        results.simulator_options['pattern_time_step'] = self._pattern_step_sec
 
     def _check_constraint_violation(self, instance):
         constraint_names = set([])

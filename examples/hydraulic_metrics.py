@@ -32,26 +32,26 @@ demand_factor = 0.9 # 90% of requested demand
 junctions = [node_name for node_name, node in wn.nodes(wntr.network.Junction)]
 
 # Pressure stats
-pressure = results.node.loc[(junctions, slice(None)), 'pressure']
-pressure_regulation = float(sum(pressure.min(level=0) > P_lower))/len(junctions)
+pressure = results.node.loc['pressure', :, junctions]
+pressure_regulation = float(sum(pressure.min(axis=0) > P_lower))/len(junctions)
 print "Fraction of nodes > 30 psi: " + str(pressure_regulation)
 print "Average node pressure: " +str(pressure.mean()) + " m"
-attr = dict(pressure.min(level=0))
+attr = dict(pressure.min(axis=0))
 wntr.network.draw_graph(wn, node_attribute=attr, node_size=40, 
                       title= 'Min pressure')
 
 # Compute population per node
 # R = average volume of water consumed per capita per day
-R = 0.757 # m3/day (200 gallons/day)
-qbar = wntr.metrics.average_demand_perday(results) 
-pop = wntr.metrics.population(qbar,R)
-total_population = sum(pop.values())
+R = 0.00000876157 # m3/s (200 gallons/day)
+# qbar = average demand per node...this needs to updated to reflect daily average
+qbar = results.node.loc['demand', :, junctions].mean()
+pop = qbar/R
+total_population = pop.sum()
 print "Total population: " + str(total_population)
 wntr.network.draw_graph(wn, node_attribute=pop, node_range = [0,400], node_size=40,
                       title='Population, Total = ' + str(total_population))
               
 # Compute todini index
-#todini = en.metrics.todini(G, pressure_lower_bound)
 todini = wntr.metrics.todini(results,wn, P_lower)
 plt.figure()
 plt.plot(todini)
@@ -64,10 +64,10 @@ print "  Min: " + str(np.min(todini))
 
 # Create a weighted graph for flowrate at time 36 hours
 t = 36*3600
-attr = results.link.loc[(slice(None), t), 'flowrate']
+attr = results.link.loc['flowrate', t, :]
 G_flowrate_36hrs = wn.get_weighted_graph_deep_copy(link_attribute=attr)
 
-node_attr = results.node.loc[(slice(None), t), 'demand']
+node_attr = results.node.loc['demand', t, :]
 G_temp = wn.get_weighted_graph_deep_copy(node_attribute=node_attr)
  
 # Compute betweenness-centrality time 36 hours
@@ -98,7 +98,7 @@ wntr.network.draw_graph(wn, link_attribute=attr, link_cmap=cmap, link_width=1,
 # Calculate entropy for 1 day, all nodes
 shat = []
 for t in np.arange(0, 24*3600+1,3600): 
-    attr = results.link.loc[(slice(None), t), 'flowrate']
+    attr = results.link.loc['flowrate', t, :]
     G_flowrate_t = wn.get_weighted_graph_deep_copy(link_attribute=attr)
     entropy = wntr.metrics.entropy(G_flowrate_t)
     shat.append(entropy[1])

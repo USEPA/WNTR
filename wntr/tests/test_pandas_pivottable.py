@@ -5,7 +5,7 @@ from memory_profiler import profile
 from nose.tools import *
 
 @nottest
-@profile 
+#@profile 
 def test_pandas_pivottable(nnodes=100, ntimes=50, use_timedelta=True): 
     
     t0 = time.time()
@@ -34,12 +34,12 @@ def test_pandas_pivottable(nnodes=100, ntimes=50, use_timedelta=True):
                 
             node_times.append(t)
             node_name.append(n)
-            node_demand.append(np.random.rand())
-            node_expected_demand.append(np.random.rand())
-            node_head.append(np.random.rand())
-            node_pressure.append(np.random.rand())
-            node_quality.append(np.random.rand())
-            node_type.append(np.random.rand())    
+            node_demand.append(1)
+            node_expected_demand.append(2)
+            node_head.append(3)
+            node_pressure.append(4)
+            node_quality.append(5)
+            node_type.append('junction')    
         
     node_dictonary = {'time': node_times,
                        'node': node_name,
@@ -67,9 +67,11 @@ def test_pandas_pivottable(nnodes=100, ntimes=50, use_timedelta=True):
     t1 = time.time()
     print 'pivottable time: ',t1-t0
 
+    return node_pivot_table
+    
 if __name__ == '__main__':
     nnodes = 100
     ntimes = 50
-    use_timedelta = True
+    use_timedelta = False
 
-    test_pandas_pivottable(nnodes, ntimes, use_timedelta)
+    node_pivot_table = test_pandas_pivottable(nnodes, ntimes, use_timedelta)

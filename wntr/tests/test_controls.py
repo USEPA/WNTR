@@ -39,11 +39,11 @@ class TestTimeControls(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_time_control_open_vs_closed(self):
-        for t in self.pyomo_results.link.loc['pipe2'].index:
+        for t in self.pyomo_results.link.major_axis:
             if t < 5*3600 or t >= 10*3600:
-                self.assertAlmostEqual(self.pyomo_results.link.at[('pipe2',t),'flowrate'], 150/3600.0)
+                self.assertAlmostEqual(self.pyomo_results.link.at['flowrate',t,'pipe2'], 150/3600.0)
             else:
-                self.assertAlmostEqual(self.pyomo_results.link.at[('pipe2',t),'flowrate'], 0.0)
+                self.assertAlmostEqual(self.pyomo_results.link.at['flowrate',t,'pipe2'], 0.0)
 
 class TestConditionalControls(unittest.TestCase):
 
@@ -71,14 +71,14 @@ class TestConditionalControls(unittest.TestCase):
 
         activated_flag = False
         count = 0
-        for t in results.link.loc['pump1'].index:
-            if results.node.at[('tank1',t),'pressure'] >= 50.0 and not activated_flag:
+        for t in results.link.major_axis:
+            if results.node.at['pressure',t,'tank1'] >= 50.0 and not activated_flag:
                 activated_flag = True
             if activated_flag:
-                self.assertAlmostEqual(results.link.at[('pump1',t),'flowrate'], 0.0)
+                self.assertAlmostEqual(results.link.at['flowrate',t,'pump1'], 0.0)
                 count += 1
             else:
-                self.assertGreaterEqual(results.link.at[('pump1',t),'flowrate'], 0.0001)
+                self.assertGreaterEqual(results.link.at['flowrate',t,'pump1'], 0.0001)
         self.assertEqual(activated_flag, True)
         self.assertGreaterEqual(count, 2)
 
@@ -96,14 +96,14 @@ class TestConditionalControls(unittest.TestCase):
 
         activated_flag = False
         count = 0 # Used to make sure the link is opened for at least 2 timesteps to make sure the link stays open
-        for t in results.link.loc['pump1'].index:
-            if results.node.at[('tank1',t),'pressure'] >= 300.0 and not activated_flag:
+        for t in results.link.major_axis:
+            if results.node.at['pressure',t,'tank1'] >= 300.0 and not activated_flag:
                 activated_flag = True
             if activated_flag:
-                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.002)
+                self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.002)
                 count +=1
             else:
-                self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
+                self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
         self.assertEqual(activated_flag, True)
         self.assertGreaterEqual(count, 2)
 
@@ -129,9 +129,9 @@ class TestTankControls(unittest.TestCase):
         results = sim.run_sim()
 
         tank_level_dropped_flag = False
-        for t in results.link.loc['pipe1'].index:
-            if results.node.at[('tank1',t),'pressure'] <= 10.0:
-                self.assertLessEqual(results.link.at[('pipe1',t),'flowrate'],0.0)
+        for t in results.link.major_axis:
+            if results.node.at['pressure',t,'tank1'] <= 10.0:
+                self.assertLessEqual(results.link.at['flowrate',t,'pipe1'],0.0)
                 tank_level_dropped_flag = True
         self.assertEqual(tank_level_dropped_flag, True)
 
@@ -146,12 +146,12 @@ class TestTankControls(unittest.TestCase):
 
         tank_level_dropped_flag = False
         tank_refilled_flag = False
-        for t in results.link.loc['pipe1'].index:
-            if results.node.at[('tank1',t),'pressure'] <= 10.0:
-                self.assertLessEqual(results.link.at[('pipe1',t),'flowrate'],0.0)
+        for t in results.link.major_axis:
+            if results.node.at['pressure',t,'tank1'] <= 10.0:
+                self.assertLessEqual(results.link.at['flowrate',t,'pipe1'],0.0)
                 tank_level_dropped_flag = True
-            elif results.node.at[('tank1',t),'pressure'] > 10.0:
-                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'],0.001)
+            elif results.node.at['pressure',t,'tank1'] > 10.0:
+                self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'],0.001)
                 if tank_level_dropped_flag:
                     tank_refilled_flag = True
         self.assertEqual(tank_level_dropped_flag, True)
@@ -177,8 +177,8 @@ class TestValveControls(unittest.TestCase):
         sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
         results = sim.run_sim()
 
-        for t in results.link.loc['pipe1'].index:
-            self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
+        for t in results.link.major_axis:
+            self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
 
     def test_check_valve_opened(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve_test_network_2.inp'
@@ -191,12 +191,12 @@ class TestValveControls(unittest.TestCase):
 
         flag1 = False
         flag2 = False
-        for t in results.link.loc['pipe1'].index:
-            if results.node.at[('tank1',t),'head'] >= results.node.at[('tank2',t),'head']:
-                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.001)
+        for t in results.link.major_axis:
+            if results.node.at['head',t,'tank1'] >= results.node.at['head',t,'tank2']:
+                self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.001)
                 flag1 = True
             else:
-                self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
+                self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
                 flag2 = True
 
         self.assertEqual(flag1, True)
@@ -224,16 +224,16 @@ class TestControlCombinations(unittest.TestCase):
 
         flag1 = False
         flag2 = False
-        for t in results.link.loc['pipe1'].index:
+        for t in results.link.major_axis:
             if t == 6*3600:
                 flag1 = True
-            if results.node.at[('tank1',t),'head'] <= 30.0:
+            if results.node.at['head',t,'tank1'] <= 30.0:
                 flag1 = False
                 flag2 = True
             if flag1 == False:
-                self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
+                self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
             elif flag1 == True:
-                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.001)
+                self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.001)
 
         self.assertEqual(flag1, False)
         self.assertEqual(flag2, True)
@@ -249,16 +249,16 @@ class TestControlCombinations(unittest.TestCase):
 
         flag1 = False
         flag2 = False
-        for t in results.link.loc['pipe1'].index:
+        for t in results.link.major_axis:
             if t == 19*3600:
                 flag1 = False
-            if results.node.at[('tank1',t),'head'] <= 30.0:
+            if results.node.at['head',t,'tank1'] <= 30.0:
                 flag1 = True
                 flag2 = True
             if flag1 == False:
-                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.001)
+                self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.001)
             elif flag1 == True:
-                self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
+                self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
 
         self.assertEqual(flag1, False)
         self.assertEqual(flag2, True)
@@ -273,13 +273,13 @@ class TestControlCombinations(unittest.TestCase):
         results = sim.run_sim()
 
         flag1 = False
-        for t in results.link.loc['pipe1'].index:
-            if results.node.at[('tank1',t),'head'] <= 30.0:
+        for t in results.link.major_axis:
+            if results.node.at['head',t,'tank1'] <= 30.0:
                 flag1 = True
             if flag1 == False:
-                self.assertGreaterEqual(results.link.at[('pipe1',t),'flowrate'], 0.001)
+                self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.001)
             elif flag1 == True:
-                self.assertAlmostEqual(results.link.at[('pipe1',t),'flowrate'], 0.0)
+                self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
 
         self.assertEqual(flag1, True)
 

@@ -31,33 +31,33 @@ class TestWithEpanet(unittest.TestCase):
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
-            for t in self.pyomo_results.link.loc[link_name].index:
-                self.assertAlmostEqual(self.pyomo_results.link.at[(link_name,t),'flowrate'], self.epanet_results.link.at[(link_name,t),'flowrate'], 5)
+            for t in self.pyomo_results.link.major_axis:
+                self.assertAlmostEqual(self.pyomo_results.link.at['flowrate',t,link_name], self.epanet_results.link.at['flowrate',t,link_name], 5)
 
     def test_link_velocity(self):
         for link_name, link in self.wn.links():
-            for t in self.pyomo_results.link.loc[link_name].index:
-                self.assertAlmostEqual(self.pyomo_results.link.at[(link_name,t),'velocity'], self.epanet_results.link.at[(link_name,t),'velocity'], 5)
+            for t in self.pyomo_results.link.major_axis:
+                self.assertAlmostEqual(self.pyomo_results.link.at['velocity',t,link_name], self.epanet_results.link.at['velocity',t,link_name], 5)
 
     def test_node_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertAlmostEqual(self.pyomo_results.node.at[(node_name,t),'demand'], self.epanet_results.node.at[(node_name,t),'demand'], 5)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertAlmostEqual(self.pyomo_results.node.at['demand',t,node_name], self.epanet_results.node.at['demand',t,node_name], 5)
 
     def test_node_expected_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertAlmostEqual(self.pyomo_results.node.at[(node_name,t),'expected_demand'], self.epanet_results.node.at[(node_name,t),'expected_demand'], 5)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertAlmostEqual(self.pyomo_results.node.at['expected_demand',t,node_name], self.epanet_results.node.at['expected_demand',t,node_name], 5)
 
     def test_node_head(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertAlmostEqual(self.pyomo_results.node.at[(node_name,t),'head'], self.epanet_results.node.at[(node_name,t),'head'], 3)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertAlmostEqual(self.pyomo_results.node.at['head',t,node_name], self.epanet_results.node.at['head',t,node_name], 3)
 
     def test_node_pressure(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertAlmostEqual(self.pyomo_results.node.at[(node_name,t),'pressure'], self.epanet_results.node.at[(node_name,t),'pressure'], 3)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertAlmostEqual(self.pyomo_results.node.at['pressure',t,node_name], self.epanet_results.node.at['pressure',t,node_name], 3)
 
 class TestNet1(unittest.TestCase):
 
@@ -82,28 +82,28 @@ class TestNet1(unittest.TestCase):
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
-            for t in self.pyomo_results.link.loc[link_name].index:
-                self.assertLessEqual(abs(self.pyomo_results.link.at[(link_name,t),'flowrate'] - self.epanet_results.link.at[(link_name,t),'flowrate']), 0.001)
+            for t in self.pyomo_results.link.major_axis:
+                self.assertLessEqual(abs(self.pyomo_results.link.at['flowrate',t,link_name] - self.epanet_results.link.at['flowrate',t,link_name]), 0.001)
 
     def test_node_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertAlmostEqual(self.pyomo_results.node.at[(node_name,t),'demand'], self.epanet_results.node.at[(node_name,t),'demand'], 5)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertAlmostEqual(self.pyomo_results.node.at['demand',t,node_name], self.epanet_results.node.at['demand',t,node_name], 5)
 
     def test_node_expected_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertAlmostEqual(self.pyomo_results.node.at[(node_name,t),'expected_demand'], self.epanet_results.node.at[(node_name,t),'expected_demand'], 5)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertAlmostEqual(self.pyomo_results.node.at['expected_demand',t,node_name], self.epanet_results.node.at['expected_demand',t,node_name], 5)
 
     def test_node_head(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertLessEqual(abs(self.pyomo_results.node.at[(node_name,t),'head'] - self.epanet_results.node.at[(node_name,t),'head']), 0.5)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertLessEqual(abs(self.pyomo_results.node.at['head',t,node_name] - self.epanet_results.node.at['head',t,node_name]), 0.5)
 
     def test_node_pressure(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertLessEqual(abs(self.pyomo_results.node.at[(node_name,t),'pressure'] - self.epanet_results.node.at[(node_name,t),'pressure']), 0.5)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertLessEqual(abs(self.pyomo_results.node.at['pressure',t,node_name] - self.epanet_results.node.at['pressure',t,node_name]), 0.5)
 
 class TestNet3(unittest.TestCase):
 
@@ -128,28 +128,28 @@ class TestNet3(unittest.TestCase):
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
-            for t in self.pyomo_results.link.loc[link_name].index:
-                self.assertLessEqual(abs(self.pyomo_results.link.at[(link_name,t),'flowrate'] - self.epanet_results.link.at[(link_name,t),'flowrate']), 0.001)
+            for t in self.pyomo_results.link.major_axis:
+                self.assertLessEqual(abs(self.pyomo_results.link.at['flowrate',t,link_name] - self.epanet_results.link.at['flowrate',t,link_name]), 0.001)
 
     def test_node_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertAlmostEqual(self.pyomo_results.node.at[(node_name,t),'demand'], self.epanet_results.node.at[(node_name,t),'demand'], 3)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertAlmostEqual(self.pyomo_results.node.at['demand',t,node_name], self.epanet_results.node.at['demand',t,node_name], 3)
 
     def test_node_expected_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertAlmostEqual(self.pyomo_results.node.at[(node_name,t),'expected_demand'], self.epanet_results.node.at[(node_name,t),'expected_demand'], 3)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertAlmostEqual(self.pyomo_results.node.at['expected_demand',t,node_name], self.epanet_results.node.at['expected_demand',t,node_name], 3)
 
     def test_node_head(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertLessEqual(abs(self.pyomo_results.node.at[(node_name,t),'head'] - self.epanet_results.node.at[(node_name,t),'head']), 0.1)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertLessEqual(abs(self.pyomo_results.node.at['head',t,node_name] - self.epanet_results.node.at['head',t,node_name]), 0.1)
 
     def test_node_pressure(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.loc[node_name].index:
-                self.assertLessEqual(abs(self.pyomo_results.node.at[(node_name,t),'pressure'] - self.epanet_results.node.at[(node_name,t),'pressure']), 0.1)
+            for t in self.pyomo_results.node.major_axis:
+                self.assertLessEqual(abs(self.pyomo_results.node.at['pressure',t,node_name] - self.epanet_results.node.at['pressure',t,node_name]), 0.1)
 
 #class TestNet6_mod(unittest.TestCase):
 #

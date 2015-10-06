@@ -28,32 +28,26 @@ results_AGE = sim.run_sim(WQ = sceanrio_AGE)
 results_TRACE = sim.run_sim(WQ = sceanrio_TRACE)
 
 # plot chem scenario
-CHEM_at_5hr = results_CHEM.node.loc[(slice(None), 5*3600), 'quality']
-CHEM_at_5hr.reset_index(level=1, drop=True, inplace=True)
-attr = dict(CHEM_at_5hr)
-wntr.network.draw_graph(wn, node_attribute=attr, node_size=20, 
+CHEM_at_5hr = results_CHEM.node.loc['quality', 5*3600, :]
+wntr.network.draw_graph(wn, node_attribute=CHEM_at_5hr, node_size=20, 
                       title='Chemical concentration, time = 5 hours')
-CHEM_at_node = results_CHEM.node.loc[('208', slice(None)), 'quality']
+CHEM_at_node = results_CHEM.node.loc['quality', :, '208']
 plt.figure()
 CHEM_at_node.plot(title='Chemical concentration, node 208')
 
 # Plot age scenario (convert to hours)
-AGE_at_5hr = results_AGE.node.loc[(slice(None), 5*3600), 'quality']/3600
-AGE_at_5hr.reset_index(level=1, drop=True, inplace=True)
-attr = dict(AGE_at_5hr)
-wntr.network.draw_graph(wn, node_attribute=attr, node_size=20, 
+AGE_at_5hr = results_AGE.node.loc['quality', 5*3600, :]/3600.0
+wntr.network.draw_graph(wn, node_attribute=AGE_at_5hr, node_size=20, 
                       title='Water age (hrs), time = 5 hours')
-AGE_at_node = results_AGE.node.loc[('208', slice(None)), 'quality']/3600
+AGE_at_node = results_AGE.node.loc['quality', :, '208']/3600.0
 plt.figure()
 AGE_at_node.plot(title='Water age, node 208')
 
 # Plot trace scenario 
-TRACE_at_5hr = results_TRACE.node.loc[(slice(None), 5*3600), 'quality']
-TRACE_at_5hr.reset_index(level=1, drop=True, inplace=True)
-attr = dict(TRACE_at_5hr)
-wntr.network.draw_graph(wn, node_attribute=attr, node_size=20, 
+TRACE_at_5hr = results_TRACE.node.loc['quality', 5*3600, :]
+wntr.network.draw_graph(wn, node_attribute=TRACE_at_5hr, node_size=20, 
                       title='Trace percent, time = 5 hours')
-TRACE_at_node = results_TRACE.node.loc[('208', slice(None)), 'quality']
+TRACE_at_node = results_TRACE.node.loc['quality', :, '208']
 plt.figure()
 TRACE_at_node.plot(title='Trace percent, node 208')
 

@@ -101,26 +101,26 @@ class TestNetworkTimeBehavior(unittest.TestCase):
 
     def test_duration(self):
         results = self.results
-        self.assertEqual(len(results.node.loc['junction1'].index), 26)
-        self.assertEqual(results.node.loc['junction1'].index[25], 24*3600+3*3600+5*60)
+        self.assertEqual(len(results.node.major_axis), 26)
+        self.assertEqual(results.node.major_axis[25], 24*3600+3*3600+5*60)
 
     def test_hydraulic_timestep(self):
         results = self.results
-        self.assertEqual((results.node.loc['junction1'].index[1] - results.node.loc['junction1'].index[0]), 1*3600+5*60)
+        self.assertEqual((results.node.major_axis[1] - results.node.major_axis[0]), 1*3600+5*60)
         
     def test_pattern_timestep(self):
         results = self.results
-        for t in results.node.loc['junction1'].index:
-            self.assertEqual(results.node.at[('junction1',t),'demand'], 1.0)
+        for t in results.node.major_axis:
+            self.assertEqual(results.node.at['demand', t, 'junction1'], 1.0)
             total_seconds = t
             if (total_seconds/3900.0)%8 == 0.0 or ((total_seconds/3900.0)-1)%8 == 0.0:
-                self.assertEqual(results.node.at[('junction2',t),'demand'], 0.5)
+                self.assertEqual(results.node.at['demand', t, 'junction2'], 0.5)
             elif (total_seconds/3900.0)%8 == 2.0 or ((total_seconds/3900.0)-1)%8 == 2.0:
-                self.assertEqual(results.node.at[('junction2',t),'demand'], 1.0)
+                self.assertEqual(results.node.at['demand', t, 'junction2'], 1.0)
             elif (total_seconds/3900.0)%8 == 4.0 or ((total_seconds/3900.0)-1)%8 == 4.0:
-                self.assertEqual(results.node.at[('junction2',t),'demand'], 1.5)
+                self.assertEqual(results.node.at['demand', t, 'junction2'], 1.5)
             elif (total_seconds/3900.0)%8 == 6.0 or ((total_seconds/3900.0)-1)%8 == 6.0:
-                self.assertEqual(results.node.at[('junction2',t),'demand'], 1.0)
+                self.assertEqual(results.node.at['demand', t, 'junction2'], 1.0)
 
 if __name__ == '__main__':
     unittest.main()

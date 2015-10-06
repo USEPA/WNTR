@@ -12,7 +12,6 @@ class NetResults(object):
         self.time = None
         self.generated_datetime = datetime.datetime
         self.network_name = None
-        self.simulator_options = {}
         self.solver_statistics = {}
         self.link = None
         self.node = None
@@ -42,30 +41,40 @@ class NetResults(object):
         # TODO
         pass
 
-    def plot_node_attribute(self, nodes_to_plot=None, param = 'demand', nodeType = None, legend=''):
-        nodes = self.node.index.get_level_values('node').drop_duplicates()
+    def plot_node_attribute(self, nodes_to_plot=None, param = 'demand', nodeType = None, legend=None):
+        plt.figure()
+        nodes = self.node.minor_axis
         if nodeType is not None:
             nodes = [n for n in nodes if self.node['type'][n][0]==nodeType]
         if nodes_to_plot is not None:
             nodes = set(nodes_to_plot).intersection(nodes)  
         for name in nodes:
             values = [self.node[param][name][t] for t in self.time] 
-            plt.plot(self.time,values,label=name+'_'+legend)
+            if legend:
+                label = name+'_'+legend
+            else:
+                label = name
+            plt.plot(self.time,values,label=label)
         plt.legend()
         plt.xlabel('time')
         plt.ylabel(param)
         plt.title('Node ' +  param)
         #plt.show()
 
-    def plot_link_attribute(self, links_to_plot=None, param = 'flowrate', linkType = None, legend=''):
-        links = self.link.index.get_level_values('link').drop_duplicates()
+    def plot_link_attribute(self, links_to_plot=None, param = 'flowrate', linkType = None, legend=None):
+        plt.figure()
+        links = self.link.minor_axis
         if linkType is not None:
             links = [n for n in links if self.link['type'][n][0]==linkType]
         if links_to_plot is not None:
             links = set(links_to_plot).intersection(links)  
         for name in links:
             values = [self.link[param][name][t] for t in self.time] 
-            plt.plot(self.time,values,label=name+'_'+legend)
+            if legend:
+                label = name+'_'+legend
+            else:
+                label = name
+            plt.plot(self.time,values,label=label)
         plt.legend()
         plt.xlabel('time')
         plt.ylabel(param)
