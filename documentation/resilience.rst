@@ -1,4 +1,4 @@
-Resilience Metrics		
+Resilience metrics		
 ======================================
 
 .. todo:: Add background and examples from the Resilience EPA Report

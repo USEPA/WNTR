@@ -38,7 +38,7 @@ def str_time_to_sec(s):
     Converts epanet time format to seconds.
 
     Parameters
-    --------
+    ----------
     s : string
         EPANET time string. Options are 'HH:MM:SS', 'HH:MM', 'HH'
 

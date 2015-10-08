@@ -38,7 +38,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'numpydoc',
-#    'sphinxcontrib.napoleon',
+    'sphinx.ext.pngmath',
 ]
 
 autosummary_generate = True
@@ -47,17 +47,6 @@ numpydoc_show_class_members = True
 numpydoc_class_members_toctree = False
 autodoc_member_order = 'bysource'
 autoclass_content = 'both'
-
-#napoleon_google_docstring = False
-#napoleon_numpy_docstring = True
-#napoleon_include_private_with_doc = False
-#napoleon_include_special_with_doc = True
-#napoleon_use_admonition_for_examples = False
-#napoleon_use_admonition_for_notes = False
-#napoleon_use_admonition_for_references = False
-#napoleon_use_ivar = False
-#napoleon_use_param = True
-#napoleon_use_rtype = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -102,7 +91,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', '../wntr/network/NetworkControls.py', '../wntr/sim/ScipyModel.py', '../wntr/sim/ScipyModelV2.py']
+exclude_patterns = ['_build'] #, '../wntr/network/NetworkControls.py', '../wntr/sim/ScipyModel.py', '../wntr/sim/ScipyModelV2.py']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -136,8 +125,14 @@ todo_include_todos = True
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'sphinxdoc'
+#html_theme = 'sphinxdoc'
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
+if not on_rtd:  # only import and set the theme if we're building docs locally
+    import sphinx_rtd_theme
+    html_theme = 'sphinx_rtd_theme'
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]     
+  
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
@@ -155,17 +150,22 @@ html_theme = 'sphinxdoc'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'figures/logo.jpg'                                                   
+#html_logo = 'figures/logo.jpg'                                                   
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
 #html_favicon = None
 
+# The style sheet to use for HTML and HTML Help pages. A file of that name
+# must exist either in Sphinx' static/ path, or in one of the custom paths
+# given in html_static_path.
+html_style = 'wntr.css'
+
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ['static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied

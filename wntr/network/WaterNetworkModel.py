@@ -2133,7 +2133,7 @@ class Curve(object):
     def __init__(self, name, curve_type, points):
         """
         Parameters
-        -------
+        ----------
         name : string
              Name of the curve
         curve_type :

@@ -8,8 +8,11 @@ WNTR 0.1 documentation
    installation
    units
    getting_started
+   waternetworkmodel
+   hydraulics
+   waterquality
+   resultsobject
    disaster_models
-   simulation
    resilience
    license
    testing

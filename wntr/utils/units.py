@@ -68,39 +68,39 @@ def convert(paramtype, flowunit, data, MKS = True):
     -----
     Appendix A from EPANET2 user manual
     
-    ======================  ==========================  ========================
-    PARAMETER               US CUSTOMARY                SI METRIC
-    ======================  ==========================  ========================
-    flowunit                0,1,2,3,4                   5,6,7,8,9
-    Concentration           mg/L or mg/L                mg/L or mg/L
-    Demand                  (see Flow units)            (see Flow units)
-    Diameter(Pipes)         inches                      millimeters
-    Diameter(Tanks)         feet                        meters
-    Efficiency              percent                     percent
-    Elevation               feet                        meters
-    Emitter Coefficient     flow units / (psi)1/2       flow units / (meters)1/2
-    Energy                  kilowatt - hours            kilowatt - hours
-    Flow                    CFS (cubic feet / sec)      LPS (liters / sec)
-                            GPM (gallons / min)         LPM (liters / min)
-                            MGD (million gal / day)     MLD (megaliters / day)
-                            IMGD (Imperial MGD)         CMH (cubic meters / hr)
-                            AFD (acre-feet / day)       CMD (cubic meters / day)
-    Friction Factor         unitless                    unitless
-    Hydraulic Head          feet                        meters
-    Length                  feet                        meters
-    Minor Loss Coeff.       unitless                    unitless
-    Power                   horsepower                  kilowatts
-    Pressure                psi                         meters
-    Reaction Coeff. (Bulk)  1/day (1st-order)           1/day (1st-order)
-    Reaction Coeff. (Wall)  mass / L / day (0-order)    mass / L / day (0-order)
-                            ft / day (1st-order)        meters / day (1st-order)
-    Roughness Coefficient   10-3 feet (Darcy-Weisbach)  millimeters (Darcy-Weisbach)
-                            unitless otherwise          unitless otherwise
-    Source Mass Injection   mass / minute               mass / minute
-    Velocity                feet / second               meters / second
-    Volume                  cubic feet                  cubic meters
-    Water Age               hours                       hours
-    ======================  ==========================  ========================
+    ======================  ============================  ===============================
+    PARAMETER               US CUSTOMARY                  SI METRIC
+    ======================  ============================  ===============================
+    flowunit                0,1,2,3,4                     5,6,7,8,9
+    Concentration           mg/L or mg/L                  mg/L or mg/L
+    Demand                  (see Flow units)              (see Flow units)
+    Diameter(Pipes)         inches                        millimeters
+    Diameter(Tanks)         feet                          meters
+    Efficiency              percent                       percent
+    Elevation               feet                          meters
+    Emitter Coefficient     flow units / (psi)1/2         flow units / (meters)1/2
+    Energy                  kilowatt - hours              kilowatt - hours
+    Flow                    - CFS (cubic feet / sec)      - LPS (liters / sec)
+                            - GPM (gallons / min)         - LPM (liters / min)
+                            - MGD (million gal / day)     - MLD (megaliters / day)
+                            - IMGD (Imperial MGD)         - CMH (cubic meters / hr)
+                            - AFD (acre-feet / day)       - CMD (cubic meters / day)
+    Friction Factor         unitless                      unitless
+    Hydraulic Head          feet                          meters
+    Length                  feet                          meters
+    Minor Loss Coeff.       unitless                      unitless
+    Power                   horsepower                    kilowatts
+    Pressure                psi                           meters
+    Reaction Coeff. (Bulk)  1/day (1st-order)             1/day (1st-order)
+    Reaction Coeff. (Wall)  - mass / L / day (0-order)    - mass / L / day (0-order)
+                            - ft / day (1st-order)        - meters / day (1st-order)
+    Roughness Coefficient   - 10-3 feet (Darcy-Weisbach)  - millimeters (Darcy-Weisbach)
+                            - unitless otherwise          - unitless otherwise
+    Source Mass Injection   mass / minute                 mass / minute
+    Velocity                feet / second                 meters / second
+    Volume                  cubic feet                    cubic meters
+    Water Age               hours                         hours
+    ======================  ============================  ===============================
     
     Note: US Customary units apply when CFS, GPM, AFD, or MGD is chosen as flow
     units. SI Metric units apply when flow units are expressed using either 

@@ -35,8 +35,11 @@ class Earthquake(object):
 
     def __init__(self, epicenter, magnitude, depth, correction_factor = [1,1,1,1]):
         self.epicenter = epicenter
+        """ Earthquake epicenter, (x,y) tuple in meters"""
         self.magnitude = magnitude
+        """Earthquake magnitude, Richter scale"""
         self.depth = depth
+        """Earthquake depth, m"""
         self.correction_factor = correction_factor
         
         self.pga = {}
