@@ -23,6 +23,7 @@ from scipy.optimize import fsolve
 from wntr.utils import convert
 import wntr.network
 import numpy as np
+import warnings
 
 class WaterNetworkModel(object):
 
@@ -435,7 +436,7 @@ class WaterNetworkModel(object):
         if status == LinkStatus.cv:
             self._check_valves.remove(name)
             warnings.warn('You are removing a pipe with a check valve.')
-        self._graph.remove_edge(pipe.start_node(), pipe.end_node(), key=name)
+        self._graph.remove_edge(link.start_node(), link.end_node(), key=name)
         self._links.pop(name)
         if isinstance(link, Pipe):
             self._num_pipes -= 1
@@ -455,7 +456,7 @@ class WaterNetworkModel(object):
             self.conditional_controls.pop(name)
             warnings.warn('A conditional control associated with link '+name+' has been removed as well as the link.')
 
-    def split_pipe_with_junction(pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side, junction_name):
+    def split_pipe_with_junction(self, pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side, junction_name):
         """
         Method to "split" a pipe with a junction. This will remove
         pipe_name_to_split, add a junction named junction_name, and
