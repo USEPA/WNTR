@@ -298,23 +298,19 @@ class PyomoSimulator(WaterNetworkSimulator):
             else:
                 instance.tank_net_inflow[t].value = last_instance_results['tank_net_inflow'][t] + self._Qtol
 
-        for n in instance.leaks:
-            if n in self._active_leaks:
-                node = self._wn.get_node(n)
-                if last_instance_results['head'][n]-node.elevation >= 0.0:
-                    instance.leak_demand[n].value = node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(last_instance_results['head'][n]-node.elevation)
-                else:
-                    instance.leak_demand[n].value = 0.0
-            else:
-                instance.leak_demand[n].value = 0.0
-
         for n in instance.tanks_with_leaks:
             node = self._wn.get_node(n)
-            instance.tank_leak_demand[n].value = node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(last_instance_results['head'][n]-node.elevation)
+            if last_instance_results['head'][n]-node.elevation >= 0.0:
+                instance.tank_leak_demand[n].value = node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(last_instance_results['head'][n]-node.elevation)
+            else:
+                instance.tank_leak_demand[n].value = 0.0
 
         for n in instance.junctions_with_leaks:
             node = self._wn.get_node(n)
-            instance.junction_leak_demand[n].value = node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(last_instance_results['head'][n]-node.elevation)
+            if last_instance_results['head'][n]-node.elevation >= 0.0:
+                instance.junction_leak_demand[n].value = node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(last_instance_results['head'][n]-node.elevation)
+            else:
+                instance.junction_leak_demand[n].value = 0.0
 
     def _read_instance_results(self,instance):
         # Initialize dictionary
@@ -683,7 +679,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.nodes = Set(initialize=[name for name, node in wn.nodes()])
         model.tanks = Set(initialize=[n for n, N in wn.nodes(Tank)])
         model.junctions = Set(initialize=[n for n, N in wn.nodes(Junction)])
-        model.leaks = Set(initialize = [n for n, N in wn.nodes(Leak)])
         model.reservoirs = Set(initialize=[n for n, N in wn.nodes(Reservoir)])
 
         # LINKS
@@ -693,10 +688,10 @@ class PyomoSimulator(WaterNetworkSimulator):
         model.pipes = Set(initialize=[l for l, L in wn.links(Pipe)])
 
         # Tanks with leaks
-        model.tanks_with_leaks = Set(initialize=[n for n, N in wn.nodes(Tank) if N.leak==True and current_time_sec >= N.leak_start_time and current_time_sec < N.leak_fix_time])
+        model.tanks_with_leaks = Set(initialize=[n for n, N in wn.nodes(Tank) if N.leak_present()==True and current_time_sec >= N.leak_start_time and current_time_sec < N.leak_end_time])
 
         # Junctions with leaks
-        model.junctions_with_leaks = Set(initialize=[n for n, N in wn.nodes(Junction) if N.leak==True and current_time_sec>=N.leak_start_time and current_time_sec<N.leak_fix_time])
+        model.junctions_with_leaks = Set(initialize=[n for n, N in wn.nodes(Junction) if N.leak_present()==True and current_time_sec>=N.leak_start_time and current_time_sec<N.leak_end_time])
 
         ################### PARAMETERS #######################
         # Params are being created for easy access to results without the need of querying the network.
@@ -748,8 +743,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                     return node.elevation
             elif n in model.tanks:
                 return node.elevation
-            elif n in model.leaks:
-                return node.elevation
             else:
                 return 100.0
         model.head = Var(model.nodes, initialize=init_head_rule)
@@ -762,32 +755,21 @@ class PyomoSimulator(WaterNetworkSimulator):
             return model.demand_required[n]
         model.demand_actual = Var(model.junctions, within=Reals, initialize=init_demand_rule)
 
-        # If the leak is active, initialize the demand to that predicted by the model with the initial head.
-        # If the leak is inactive, initialize the demand to 0.0, which is the solution
-        # The bounds are set to (None, None), but we use a piecewise function for the leak demand so that
-        # the leak demand will not actually go very negative. See the method piecewise_pipe_leak_demand above
-        # for more details.
-        def init_leak_demand_rule(model,n):
-            if n in self._active_leaks:
-                node = wn.get_node(n)
-                return node.leak_discharge_coeff*node.area*math.sqrt(2*self._g)*math.sqrt(value(model.head[n])-node.elevation)
-            else:
-                return 0.0
-        model.leak_demand = Var(model.leaks, within = Reals, initialize=init_leak_demand_rule, bounds = (None, None))
-
-        # Declare variables for leaks in tanks and junctions. These
-        # are separate from the leaks above. The leaks above are
-        # actual nodes in the network. Leaks in tanks and junctions
-        # are associate with the tank or junction rather than an
-        # independent node.
+        # Declare variables for leaks in tanks and junctions.
         def init_tank_leak_rule(model,n):
             node = wn.get_node(n)
-            return node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
+            if model.head[n].value-node.elevation >= 0.0:
+                return node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
+            else:
+                return 0.0
         model.tank_leak_demand = Var(model.tanks_with_leaks, within=Reals, initialize=init_tank_leak_rule, bounds=(None,None))
 
         def init_junction_leak_rule(model,n):
             node = wn.get_node(n)
-            return node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
+            if model.head[n].value-node.elevation >= 0.0:
+                return node.leak_discharge_coeff*node.leak_area*math.sqrt(2*self._g)*math.sqrt(model.head[n]-node.elevation)
+            else:
+                return 0.0
         model.junction_leak_demand = Var(model.junctions_with_leaks, within=Reals, initialize=init_junction_leak_rule, bounds=(None,None))
 
         ############## CONSTRAINTS #####################
@@ -836,14 +818,10 @@ class PyomoSimulator(WaterNetworkSimulator):
         def node_mass_balance_rule(model, n):
             node = wn.get_node(n)
             expr = 0
-            for l in wn.get_links_for_node(n):
-                link = wn.get_link(l)
-                if link.start_node() == n:
-                    expr -= model.flow[l]
-                elif link.end_node() == n:
-                    expr += model.flow[l]
-                else:
-                    raise RuntimeError('Node link is neither start nor end node.')
+            for l in wn.get_links_for_node(n,'INLET'):
+                expr += model.flow[l]
+            for l in wn.get_links_for_node(n,'OUTLET'):
+                expr -= model.flow[l]
             if isinstance(node, Junction):
                 if n in model.junctions_with_leaks:
                     return expr == model.demand_actual[n] + model.junction_leak_demand[n]
@@ -856,8 +834,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                     return expr == model.tank_net_inflow[n]
             elif isinstance(node, Reservoir):
                 return expr == model.reservoir_demand[n]
-            elif isinstance(node, Leak):
-                return expr == model.leak_demand[n]
+            else:
+                raise RuntimeError('Node type not recognized.')
         model.node_mass_balance = Constraint(model.nodes, rule=node_mass_balance_rule)
 
 
@@ -889,18 +867,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         else:
             model.pressure_driven_demand = Constraint(model.junctions, rule=demand_driven_rule)
 
-        # Leak demand constraint
-        def leak_demand_rule(model, n):
-            if n in self._active_leaks:
-                leak = wn.get_node(n)
-                return model.leak_demand[n] == piecewise_pipe_leak_demand(model.head[n]-leak.elevation, leak.leak_discharge_coeff, leak.area)
-                #return model.leak_demand[n]**2 == leak.leak_discharge_coeff**2*leak.area**2*2*self._g*(model.head[n]-leak.elevation)
-            elif n in self._inactive_leaks:
-                return model.leak_demand[n] == 0.0
-            else:
-                raise RuntimeError('There is a bug.')
-        model.leak_demand_con = Constraint(model.leaks, rule=leak_demand_rule)
-
         # Tank leak demand constraint
         def tank_leak_rule(model, n):
             node = wn.get_node(n)
@@ -915,7 +881,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         return model
 
-    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None, pandas_result=True):
+    def run_sim(self, solver='ipopt', solver_options={}, modified_hazen_williams=True, fixed_demands=None):
 
         """
         Other Parameters
@@ -931,8 +897,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         fixed_demands: Dictionary (node_name, time_step): demand value
             An external dictionary of demand values can be provided using this parameter. This option is used in the
             calibration work.
-        pandas_result: bool
-            Indicates whether the results should be stored in a pandas object or not. If not, a dictionary is used.
         demo: string
             Filename of pickled results object. If provided, the simulation is not run. Instead, the pickled results
             object is returned.
@@ -955,11 +919,6 @@ class PyomoSimulator(WaterNetworkSimulator):
         pumps_closed_by_outage = set([]) # Set of pumps closed by pump outage times provided by user
         links_closed_by_tank_controls = set([])  # Set of pipes closed when tank level goes below min
         closed_check_valves = set([]) # Set of closed check valves
-
-        # monitor the status of leaks
-        # This applies to leak nodes added to the network, not leaks associated with tanks or junctions
-        self._active_leaks = set([])
-        self._inactive_leaks = set([leak_name for leak_name,leak in self._wn.nodes(Leak)])
 
         # Create solver instance
         opt = SolverFactory(solver)
@@ -998,9 +957,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Get demands at current timestep
             current_demands = {n_name: self._demand_dict[n_name, t] for n_name, n in self._wn.nodes(Junction)}
 
-            # activate/deactivate leaks
-            self._activate_deactivate_leaks(t)
-
             # Pre-solve controls
             # These controls depend on the results of the previous timestep,
             # and they do not require a resolve if activated
@@ -1025,10 +981,6 @@ class PyomoSimulator(WaterNetworkSimulator):
             links_closed = links_closed_by_controls.union(
                            links_closed_by_tank_controls.union(
                            closed_check_valves))
-
-            # check that links with inactive leaks were opened properly (if they were opened)
-            if not first_timestep:
-                self._fully_open_links_with_inactive_leaks(links_closed_last_step, links_closed)
 
             timedelta = results.time[t]
             if step_iter == 0:
@@ -1072,11 +1024,13 @@ class PyomoSimulator(WaterNetworkSimulator):
             # Add Pressure Reducing Valve (PRV) constraints based on status
             self._add_valve_constraints(instance)
 
-            # Check for isolated junctions. If all links connected to
-            # a junction are closed, then the head is fixed to the
-            # elevation, the demand if fixed to 0, and the mass
-            # balance for that junction is deactivated
-            self._check_for_isolated_junctions(instance, links_closed)
+            # Check for isolated junctions if the simulation is demand
+            # driven. If all links connected to a junction are closed,
+            # then the head is fixed to the elevation and the
+            # constraint requiring the demand to be equal to the
+            # requested demand is deactivated.
+            if not self.pressure_dependent:
+                self._check_for_isolated_junctions(instance, links_closed)
 
             # Solve the instance and load results
             start_solve_step = time.time()
@@ -1130,13 +1084,13 @@ class PyomoSimulator(WaterNetworkSimulator):
                 last_instance_results = self._read_instance_results(instance)
 
             if step_iter == self._max_step_iter:
-                if pyomo_results.solver.status!=SolverStatus.ok or pyomo_results.solver.termination_condition!=TerminationCondition.optimal:
-                    self._check_constraint_violation(instance)
-                    instance.pprint()
-                    for node_name, node in self._wn.nodes():
-                        if not isinstance(node, Reservoir):
-                            print node_name,' pressure: ',instance.head[node_name].value - node.elevation
-                    raise RuntimeError('Solver did not converge.')
+                #if pyomo_results.solver.status!=SolverStatus.ok or pyomo_results.solver.termination_condition!=TerminationCondition.optimal:
+                #    self._check_constraint_violation(instance)
+                #    instance.pprint()
+                #    for node_name, node in self._wn.nodes():
+                #        if not isinstance(node, Reservoir):
+                #            print node_name,' pressure: ',instance.head[node_name].value - node.elevation
+                #    raise RuntimeError('Solver did not converge.')
 
                 raise RuntimeError('Simulation did not converge at timestep ' + str(t) + ' in '+str(self._max_step_iter)+' trials.')
 
@@ -1269,10 +1223,6 @@ class PyomoSimulator(WaterNetworkSimulator):
                     leak_flow = instance.tank_leak_demand[node_name].value
                 else:
                     leak_flow = 0.0
-            elif isinstance(node, Leak):
-                demand = instance.leak_demand[node_name].value
-                expected_demand = instance.leak_demand[node_name].value
-                leak_flow = instance.leak_demand[node_name].value
             else:
                 demand = 0.0
                 expected_demand = 0.0
@@ -1638,50 +1588,19 @@ class PyomoSimulator(WaterNetworkSimulator):
                                   'If you do not want this to happen, consider adding a \n'
                                   'check valve to the pipe connected to the reservoir.')
 
-    def _fully_open_links_with_inactive_leaks(self, links_closed_last_step, links_closed):
-        # I don't think this method is needed any more. I will raise an error if the code attempts to use it.
-        # If a link with a leak got opened while the leak is inactive, we need to make sure both segments get opened.
-        for link_name in links_closed_last_step:
-            if link_name not in links_closed: # Link was closed last step and is open this step
-                link = self._wn.get_link(link_name)
-                start_node_name = link.start_node()
-                end_node_name = link.end_node()
-                if start_node_name in self._inactive_leaks:
-                    leak_links = self._wn.get_links_for_node(start_node_name)
-                    if len(leak_links) != 2:
-                        raise RuntimeError('There is a bug.')
-                    leak_links.remove(link_name)
-                    other_segment = leak_links[0]
-                    raise RuntimeError('There appears to be a bug. Please report this error to the developers.')
-                    links_closed.discard(other_segment)
-                elif end_node_name in self._inactive_leaks:
-                    leak_links = self._wn.get_links_for_node(end_node_name)
-                    if len(leak_links) != 2:
-                        raise RuntimeError('There is a bug.')
-                    leak_links.remove(link_name)
-                    other_segment = leak_links[0]
-                    raise RuntimeError('There appears to be a bug. Please report this error to the developers.')
-                    links_closed.discard(other_segment)
-
     def _check_for_isolated_junctions(self, instance, links_closed):
         """
         Check for isolated junctions. If all links connected to a
-        junction are closed, then the head is fixed to the elevation,
-        the demand if fixed to 0, the mass balance for that junction
-        is deactivated, and the PDD constraint for that junction is
-        deactivated.
+        junction are closed, then the head is fixed to the elevation
+        and the constraint for that junction requiring the demand to
+        be equal to the requested demand is deactivated.
 
         If all of the links connected to a junction are are closed,
         and the simulation is demand driven, then the junction head is
         a variable that does not appear in any constraints and Ipopt
         throws a too few degrees of freedom error. To fix this
         problem, we added the _check_for_isolated_junctions
-        method. This problem does not occur if running a pressure
-        driven simulation. However, the _check_for_isolated_junctions
-        method is used regardless of the type of simulation. Should we
-        just use it for demand driven? Does it matter?
-
-        Do we need to do this for leaks as well?
+        method. 
         """
 
         for junction_name in instance.junctions:
@@ -1694,28 +1613,4 @@ class PyomoSimulator(WaterNetworkSimulator):
             if isolated:
                 instance.head[junction_name] = junction.elevation
                 instance.head[junction_name].fixed = True
-                instance.demand_actual[junction_name] = 0.0
-                instance.demand_actual[junction_name].fixed = True
-                instance.node_mass_balance[junction_name].deactivate()
                 instance.pressure_driven_demand[junction_name].deactivate()
-
-    def _activate_deactivate_leaks(self,t):
-        """
-        Track which leaks are active based on the time. The constraint
-        for active leaks sets the leak demand equal to the leak
-        model. The constraint for inactive leaks sets the leak demand
-        to 0. This way, the water network object does not need to be
-        changed during the simulation.
-        """
-        for leak_name, leak in self._wn.nodes(Leak):
-            current_time_sec = t*self._hydraulic_step_sec
-            leak_start = leak.start_sec
-            leak_end = leak.end_sec
-            if current_time_sec >= leak_start and current_time_sec < leak_end:
-                if leak_name not in self._active_leaks:
-                    self._inactive_leaks.remove(leak_name)
-                    self._active_leaks.add(leak_name)
-            else:
-                if leak_name in self._active_leaks:
-                    self._inactive_leaks.add(leak_name)
-                    self._active_leaks.remove(leak_name)
