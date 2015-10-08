@@ -14,10 +14,12 @@ for junction_name, junction in wn.nodes(wntr.network.Junction):
     junction.nominal_pressure = 15.0
 
 # Define pipe leaks
-wn.add_leak(leak_name = 'leak1', pipe_name = '123', leak_diameter=0.05, 
-                    start_time = 5*3600, fix_time = 20*3600)
-wn.add_leak(leak_name = 'leak2', pipe_name = '225', leak_diameter=0.1, 
-                   start_time = 7*3600, fix_time = 15*3600)
+wn.split_pipe_with_junction('123','123A','123B','leak1')
+leak1 = wn.get_node('leak1')
+leak1.add_leak(area=3.14159/4.0*0.05**2, start_time=5*3600, end_time=20*3600)
+wn.split_pipe_with_junction('225','225A','225B','leak2')
+leak2 = wn.get_node('leak2')
+leak2.add_leak(area=3.14159/4.0*0.1**2, start_time=7*3600, end_time=15*3600)
 
 # Create simulation object of the PYOMO simulator
 sim = wntr.sim.PyomoSimulator(wn, pressure_dependent = True)

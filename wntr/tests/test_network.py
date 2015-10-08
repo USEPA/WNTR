@@ -158,7 +158,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction('j3')
         wn.add_pipe('p2','j1','j3')
         wn.add_pipe('p1','j1','j2', status = 'cv')
-        wn.remove_pipe('p1')
+        wn.remove_link('p1')
         link_list = [link_name for link_name, link in wn.links()]
         self.assertEqual(link_list, ['p2'])
         self.assertEqual(wn._check_valves,[])

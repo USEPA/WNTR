@@ -23,17 +23,23 @@ wn.add_pipe('new_pipe', start_node_name = 'new_junction',
 # Graph the network with new junction and pipe
 wntr.network.draw_graph(wn, title= wn.name)
        
-# Remove a node and pipe
+# Remove a node
 """
 TODO
 """
+
+# Split a pipe into two pipes separated by a junction
+wn.split_pipe_with_junction('123','123A','123B','new_junction2') # split pipe 123 into two pipes named 123A and 123B, separated by a junction named new_junction
+
+# Remove a link
+wn.remove_link('123B')
 
 # Change junction characteristics
 junction = wn.get_node('121')
 junction.elevation = junction.elevation + 0.1
 
 # Change pipe characteristics
-pipe = wn.get_link('123')
+pipe = wn.get_link('122')
 pipe.diameter = pipe.diameter/2
 
 # Change tank capacity
@@ -65,20 +71,16 @@ for junction_name, junction in wn.nodes(wntr.network.Junction):
     junction.minimum_pressure = 0.0
     junction.nominal_pressure = 30.0
 
-# Create a pipe leak
-wn.add_leak(leak_name = 'leak1', pipe_name = '123', leak_diameter=0.05, 
-                    start_time = 0, fix_time = 20*3600)
-
 leak_diameter=0.05
-leak_area = 3.1415*(leak_diameter/2)**2              
+leak_area = 3.14159*(leak_diameter/2)**2              
 
 # Create a tank leak
 tank = wn.get_node('3')         
-tank.add_leak(leak_area, start_time = 0, fix_time = None)
+tank.add_leak(leak_area, start_time = 0, end_time = None)
 
 # Create a junction leak
 junction = wn.get_node('173')         
-junction.add_leak(leak_area, start_time = 0, fix_time = None)
+junction.add_leak(leak_area, start_time = 0, end_time = None)
 
 # Simulate hydraulics
 #sim = wntr.sim.PyomoSimulator(wn, pressure_dependent = True)

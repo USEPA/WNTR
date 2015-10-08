@@ -9,6 +9,7 @@ resilienceMainDir = os.path.abspath(
     os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
         inspect.currentframe() ) ) ), '..', '..' ))
 import math
+import warnings
 
 class TestLeakAdditionaAndRemoval(unittest.TestCase):
 
@@ -26,11 +27,13 @@ class TestLeakAdditionaAndRemoval(unittest.TestCase):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         pipe = wn.get_link('pipe1')
-        wn.add_leak('leak1','pipe1', 0.1)
+        wn.split_pipe_with_junction('pipe1','pipe1__A','pipe1__B','leak1')
+        leak1 = wn.get_node('leak1')
+        leak1.add_leak(3.14159/4.0*0.1**2)
         pipeA = wn.get_link('pipe1__A')
         pipeB = wn.get_link('pipe1__B')
         self.assertEqual(True, 'leak1' in [name for name,n in wn.nodes()])
-        self.assertEqual(True, 'leak1' in [name for name,n in wn.nodes(self.wntr.network.Leak)])
+        self.assertEqual(True, 'leak1' in [name for name,n in wn.nodes(self.wntr.network.Junction)])
         self.assertEqual(True, 'pipe1__A' in [name for name,l in wn.links()])
         self.assertEqual(True, 'pipe1__A' in [name for name,l in wn.links(self.wntr.network.Pipe)])
         self.assertEqual(True, 'pipe1__B' in [name for name,l in wn.links()])
@@ -49,73 +52,29 @@ class TestLeakAdditionaAndRemoval(unittest.TestCase):
         self.assertEqual(pipe.get_base_status(), pipeA.get_base_status())
         self.assertEqual(pipe.get_base_status(), pipeB.get_base_status())
 
-    def test_update_controls_for_leak(self):
+    def test_remove_controls_for_removing_link(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leak_test_network.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         import copy
         time_controls_1 = copy.deepcopy(wn.time_controls)
         conditional_controls_1 = copy.deepcopy(wn.conditional_controls)
-        wn.add_leak('leak21','21',0.02)
-        time_controls_2 = copy.deepcopy(wn.time_controls)
-        conditional_controls_2 = copy.deepcopy(wn.conditional_controls)
-        self.assertEqual(time_controls_1['21'], time_controls_2['21__A'])
-        self.assertEqual(time_controls_1['21'], time_controls_2['21__B'])
-        self.assertEqual(conditional_controls_1['21'], conditional_controls_2['21__A'])
-        self.assertEqual(conditional_controls_1['21'], conditional_controls_2['21__B'])
-        self.assertEqual(True, '21' in time_controls_1.keys())
-        self.assertEqual(False, '21' in time_controls_2.keys())
-        self.assertEqual(True, '21' in conditional_controls_1.keys())
-        self.assertEqual(False, '21' in conditional_controls_2.keys())
 
-    def test_update_controls_for_leak2(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leak_test_network.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
-        import copy
-        time_controls_1 = copy.deepcopy(wn.time_controls)
-        conditional_controls_1 = copy.deepcopy(wn.conditional_controls)
-        wn.add_leak('leak21','21',0.02, control_dest = 'START_NODE')
-        time_controls_2 = copy.deepcopy(wn.time_controls)
-        conditional_controls_2 = copy.deepcopy(wn.conditional_controls)
-        self.assertEqual(time_controls_1['21'], time_controls_2['21__A'])
-        self.assertEqual(False, '21__B' in time_controls_2.keys())
-        self.assertEqual(conditional_controls_1['21'], conditional_controls_2['21__A'])
-        self.assertEqual(False, '21__B' in conditional_controls_2.keys())
-        self.assertEqual(True, '21' in time_controls_1.keys())
-        self.assertEqual(False, '21' in time_controls_2.keys())
-        self.assertEqual(True, '21' in conditional_controls_1.keys())
-        self.assertEqual(False, '21' in conditional_controls_2.keys())
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            wn.remove_link('21')
 
-    def test_update_controls_for_leak3(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leak_test_network.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
-        import copy
-        time_controls_1 = copy.deepcopy(wn.time_controls)
-        conditional_controls_1 = copy.deepcopy(wn.conditional_controls)
-        wn.add_leak('leak21','21',0.02, control_dest = 'END_NODE')
-        time_controls_2 = copy.deepcopy(wn.time_controls)
-        conditional_controls_2 = copy.deepcopy(wn.conditional_controls)
-        self.assertEqual(time_controls_1['21'], time_controls_2['21__B'])
-        self.assertEqual(False, '21__A' in time_controls_2.keys())
-        self.assertEqual(conditional_controls_1['21'], conditional_controls_2['21__B'])
-        self.assertEqual(False, '21__A' in conditional_controls_2.keys())
-        self.assertEqual(True, '21' in time_controls_1.keys())
-        self.assertEqual(False, '21' in time_controls_2.keys())
-        self.assertEqual(True, '21' in conditional_controls_1.keys())
-        self.assertEqual(False, '21' in conditional_controls_2.keys())
+        flag1 = False
+        flag2 = False
+        for message in w:
+            if str(message.message) == 'A time control associated with link 21 has been removed as well as the link.':
+                flag1 = True
+            if str(message.message) == 'A conditional control associated with link 21 has been removed as well as the link.':
+                flag2 = True
+        self.assertEqual(flag1, True)
+        self.assertEqual(flag2, True)
 
-    def test_update_controls_for_leak4(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leak_test_network.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
-        import copy
-        time_controls_1 = copy.deepcopy(wn.time_controls)
-        conditional_controls_1 = copy.deepcopy(wn.conditional_controls)
-        wn.add_leak('leak21', '21', 0.02, control_dest = 'REMOVE')
         time_controls_2 = copy.deepcopy(wn.time_controls)
         conditional_controls_2 = copy.deepcopy(wn.conditional_controls)
-        self.assertEqual(False, '21__A' in time_controls_2.keys())
-        self.assertEqual(False, '21__B' in time_controls_2.keys())
-        self.assertEqual(False, '21__A' in conditional_controls_2.keys())
-        self.assertEqual(False, '21__B' in conditional_controls_2.keys())
         self.assertEqual(True, '21' in time_controls_1.keys())
         self.assertEqual(False, '21' in time_controls_2.keys())
         self.assertEqual(True, '21' in conditional_controls_1.keys())
@@ -136,20 +95,24 @@ class TestLeakResults(unittest.TestCase):
     def test_leak_demand(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_2.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.add_leak('leak1','pipe2',leak_diameter = 0.01, leak_discharge_coeff = 0.75, start_time = 4*3600, fix_time = 8*3600)
+        wn.split_pipe_with_junction('pipe2','pipe2__A','pipe2__B','leak1')
+        leak1 = wn.get_node('leak1')
+        leak1.add_leak(area=math.pi/4.0*0.01**2, discharge_coeff=0.75, start_time=4*3600, end_time=8*3600)
         sim = self.wntr.sim.PyomoSimulator(wn)
         results = sim.run_sim()
 
         for t in results.node.major_axis:
             if t < 4*3600 or t >= 8*3600:
-                self.assertAlmostEqual(results.node.at['demand',t,'leak1'], 0.0)
+                self.assertAlmostEqual(results.node.at['leak_flow',t,'leak1'], 0.0)
             else:
-                self.assertAlmostEqual(results.node.at['demand',t,'leak1'], 0.75*math.pi/4.0*0.01**2.0*math.sqrt(2*9.81*results.node.at['pressure',t,'leak1']))
+                self.assertAlmostEqual(results.node.at['leak_flow',t,'leak1'], 0.75*math.pi/4.0*0.01**2.0*math.sqrt(2*9.81*results.node.at['pressure',t,'leak1']))
 
     def test_leak_against_epanet(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.add_leak('leak1','pipe2', leak_diameter = 0.08, leak_discharge_coeff = 0.75, start_time = 4*3600, fix_time = 12*3600)
+        wn.split_pipe_with_junction('pipe2','pipe2__A','pipe2__B','leak1')
+        leak1 = wn.get_node('leak1')
+        leak1.add_leak(area=math.pi/4.0*0.08**2, discharge_coeff=0.75, start_time=4*3600, end_time=12*3600)
         sim = self.wntr.sim.PyomoSimulator(wn)
         pyomo_results = sim.run_sim()
 
@@ -167,12 +130,17 @@ class TestLeakResults(unittest.TestCase):
                 self.assertLessEqual(abs(pyomo_results.link.at['velocity',t,link_name] - epanet_results.link.at['velocity',t,link_name]), 0.0001)
 
         for node_name, node in wn.nodes():
-            for t in pyomo_results.node.major_axis:
-                self.assertLessEqual(abs(pyomo_results.node.at['demand',t,node_name] - epanet_results.node.at['demand',t,node_name]), 0.00001)
+            if node_name != 'leak1':
+                for t in pyomo_results.node.major_axis:
+                    self.assertLessEqual(abs(pyomo_results.node.at['demand',t,node_name] - epanet_results.node.at['demand',t,node_name]), 0.00001)
+            else:
+                for t in pyomo_results.node.major_axis:
+                    self.assertLessEqual(abs(pyomo_results.node.at['leak_flow',t,node_name] - epanet_results.node.at['demand',t,node_name]), 0.00001)
 
         for node_name, node in wn.nodes():
-            for t in pyomo_results.node.major_axis:
-                self.assertLessEqual(abs(pyomo_results.node.at['expected_demand',t,node_name] - epanet_results.node.at['expected_demand',t,node_name]), 0.00001)
+            if node_name != 'leak1':
+                for t in pyomo_results.node.major_axis:
+                    self.assertLessEqual(abs(pyomo_results.node.at['expected_demand',t,node_name] - epanet_results.node.at['expected_demand',t,node_name]), 0.00001)
 
         for node_name, node in wn.nodes():
             for t in pyomo_results.node.major_axis:
@@ -187,8 +155,9 @@ class TestLeakResults(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.PyomoSimulator(wn)
         results1 = sim.run_sim()
-        wn.add_leak('leak1','pipe2', leak_diameter = 0.08, leak_discharge_coeff = 0.75, start_time = 4*3600, fix_time = 12*3600)
-        wn.remove_leak('leak1')
+        j2 = wn.get_node('junction2')
+        j2.add_leak(math.pi/4.0*0.08**2, 0.75, 4*3600, 12*3600)
+        j2.remove_leak()
         sim = self.wntr.sim.PyomoSimulator(wn)
         results2 = sim.run_sim()
         
