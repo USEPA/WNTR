@@ -661,34 +661,6 @@ class WaterNetworkModel(object):
         Returns a deep copy of the WaterNetworkModel networkx graph.
         """
         return copy.deepcopy(self._graph)
-    
-    def get_weighted_graph_deep_copy(self, node_attribute={}, link_attribute={}):
-        
-        G = copy.deepcopy(self._graph)
-        
-        for index, value in node_attribute.iteritems():
-            if type(index) is tuple:
-                node_name = index[0] # if the index is taken from a pivot table, it's indexed by (node, time)
-            else:
-                node_name = index
-            nx.set_node_attributes(G, 'weight', {node_name: value})
-            
-        for index, value in link_attribute.iteritems():
-            if type(index) is tuple:
-                link_name = index[0] # if the index is taken from a pivot table, it's indexed by (link, time)
-            else:
-                link_name = index
-            link = self.get_link(link_name)
-            if value < 0: # change the direction of the link and value
-                link_type = G[link.start_node()][link.end_node()][link_name]['type'] # 'type' should be the only other attribute on G.edge
-                G.remove_edge(link.start_node(), link.end_node(), link_name)
-                G.add_edge(link.end_node(), link.start_node(), link_name)
-                nx.set_edge_attributes(G, 'type', {(link.end_node(), link.start_node(), link_name): link_type})
-                nx.set_edge_attributes(G, 'weight', {(link.end_node(), link.start_node(), link_name): -value})
-            else:
-                nx.set_edge_attributes(G, 'weight', {(link.start_node(), link.end_node(), link_name): value})
-        
-        return G
         
     def query_node_attribute(self, attribute, operation=None, value=None, node_type=None):
         """ Query node attributes, for example get all nodes with elevation <= threshold

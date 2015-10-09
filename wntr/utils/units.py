@@ -55,13 +55,13 @@ def convert(paramtype, flowunit, data, MKS = True):
     Examples
     --------
     >>> data = np.array([10,20,30])
-    >>> en.units.convert('Length', 1, data)
+    >>> convert('Length', 1, data)
     array([ 3.048,  6.096,  9.144])
     
-    >>> en.units.convert('Pressure', 2, 30)
+    >>> convert('Pressure', 2, 30)
     21.096
 
-    >>> en.units.convert('Pressure', 2, 21.096, MKS=False)
+    >>> convert('Pressure', 2, 21.096, MKS=False)
     29.999
     
     Notes
