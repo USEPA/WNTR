@@ -10,7 +10,7 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Get a copy of the graph and convert the MultiDiGraph to a MultiGraph
-G = wn.get_graph_deep_copy().to_undirected()
+G = wn.get_graph_deep_copy() #.to_undirected()
 
 # Graph the network
 wntr.network.draw_graph(wn, title= wn.name)
@@ -43,7 +43,7 @@ wntr.network.draw_graph(wn, node_attribute=node_degree,
                       title='Node Degree', node_size=40, node_range=[1,5])
 
 # Compute number of terminal nodes (degree = 1)
-terminal_nodes = wntr.network.terminal_nodes(G)
+terminal_nodes = G.terminal_nodes()
 wntr.network.draw_graph(wn, node_attribute=terminal_nodes,
                       title='Terminal nodes', node_size=40, node_range=[0,1])
 print "Number of terminal nodes: " + str(len(terminal_nodes))
@@ -74,20 +74,21 @@ wntr.network.draw_graph(wn, node_attribute=nodes.keys(),
 print "Number of nodes <= 5 ft elevation: " + str(len(nodes))
 print "   " + str(nodes)
 
-if nx.is_connected(G):
+uG = G.to_undirected() # undirected graph
+if nx.is_connected(uG):
     # Compute eccentricity (maximum distance from node to all other nodes in G)
-    ecc = nx.eccentricity(G)
+    ecc = nx.eccentricity(uG)
     wntr.network.draw_graph(wn, node_attribute=ecc, title='Eccentricity', 
                           node_size=40, node_range=[15, 30])
 
     # Compute diameter (maximum eccentricity. The eccentricity of a node v is 
     # the maximum)
     # distance from v to all other nodes in G.
-    print "Diameter: " + str(nx.diameter(G))
+    print "Diameter: " + str(nx.diameter(uG))
 
     # Compute shortest path length and average shortest path length
     #nx.shortest_path_length(G)
-    ASPL = nx.average_shortest_path_length(G)
+    ASPL = nx.average_shortest_path_length(uG)
     print "Average shortest path length: " + str(ASPL)
 else:
     print "Diameter: NaN, network is not connected"
@@ -116,7 +117,7 @@ print "Central point dominance: " + str(central_pt_dom)
 
 # Compute articulation point (any node whose removal (along with all its 
 # incident edges) increases the number of connected components of a graph)
-Nap = list(nx.articulation_points(G))
+Nap = list(nx.articulation_points(uG))
 Nap = list(set(Nap)) # get the unique nodes in Nap
 Nap_density = float(len(Nap))/G.number_of_nodes()
 print "Density of articulation points: " + str(Nap_density)
@@ -125,7 +126,7 @@ wntr.network.draw_graph(wn, node_attribute=Nap, title='Articulation Point',
 
 # Compute bridges (a link is considered a bridge if the removal of that link 
 # increases the number of connected components in the network.)
-bridges = wntr.network.bridges(G)
+bridges = G.bridges()
 wntr.network.draw_graph(wn, link_attribute=bridges, title='Bridges', 
                       link_width=2, link_range=[0,1])
 Nbr_density = float(len(bridges))/G.number_of_edges()
@@ -139,7 +140,7 @@ print "Spectal gap: " + str(spectral_gap.real)
 
 # Compute algebraic connectivity (second smallest eigenvalue of the normalized
 # Laplacian matrix of a network.)
-eig = nx.laplacian_spectrum(G)
+eig = nx.laplacian_spectrum(uG)
 alg_con = eig[-2]
 print "Algebraic connectivity: " + str(alg_con)
 

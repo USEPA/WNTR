@@ -88,7 +88,8 @@ class WaterNetworkModel(object):
         self._check_valves = []
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
-        self._graph = nx.MultiDiGraph(data=None)
+        #self._graph = nx.MultiDiGraph(data=None)
+        self._graph = wntr.network.WntrMultiDiGraph()
 
         if inp_file_name:
             parser = wntr.network.ParseWaterNetwork()

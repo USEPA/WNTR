@@ -24,6 +24,9 @@ import warnings
 import re
 import networkx as nx
 import copy
+import logging
+
+logger = logging.getLogger('wntr.network.ParseWaterNetwork')
 
 def is_number(s):
     try:
@@ -477,7 +480,8 @@ class ParseWaterNetwork(object):
                     warnings.warn('Currently, only the EpanetSimulator supports a non-zero report start time.')
 
                 if wn.options.report_timestep != wn.options.hydraulic_timestep:
-                    warnings.warn('Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.')
+                    logger.warning('Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.')
+                    #warnings.warn('Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.')
 
                 if wn.options.start_clocktime != 0.0:
                     warnings.warn('Currently, only the EpanetSimulator supports a start clocktime other than 12 am.')
@@ -489,7 +493,8 @@ class ParseWaterNetwork(object):
                 current = line.split()
                 if len(current)>0:
                     if not current[0].startswith(';'):
-                        warnings.warn('Currently, only the EpanetSimulator supports the [REPORT] section of the inp file.')
+                        logger.warning('Currently, only the EpanetSimulator supports the [REPORT] section of the inp file.')
+                        #warnings.warn('Currently, only the EpanetSimulator supports the [REPORT] section of the inp file.')
 
             if patterns:
                 # patterns are stored in a pattern dictionary pattern_dict = {'pattern_1': [ 23, 3, 4 ...], ... }

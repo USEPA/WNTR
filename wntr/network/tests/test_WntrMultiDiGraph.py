@@ -13,13 +13,12 @@ def test_terminal_nodes():
     parser = wntr.network.ParseWaterNetwork()
     parser.read_inp_file(wn, inp_file)
 
-    G = wn._graph
-
-    terminal_nodes = wntr.network.terminal_nodes(G)
+    G = wn.get_graph_deep_copy()
+    terminal_nodes = G.terminal_nodes()
     
     expected_nodes = ['2', '9']
     
     assert_list_equal(terminal_nodes, expected_nodes)
 
 if __name__ == '__main__':
-    pass
+    test_terminal_nodes()

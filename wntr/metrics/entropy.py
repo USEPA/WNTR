@@ -1,5 +1,5 @@
 import networkx as nx
-from wntr.network.network_topography import all_simple_paths
+from wntr.network.WntrMultiDiGraph import _all_simple_paths
 import math
 import numpy as np
 from collections import Counter
@@ -25,7 +25,7 @@ def entropy(G, sink = None):
         if G.node[nodej]['type']  == 'junction':
             for source in sources:
                 if nx.has_path(G, source, nodej):
-                    simple_paths = all_simple_paths(G,source,target=nodej)
+                    simple_paths = _all_simple_paths(G,source,target=nodej)
                     sp = sp + ([p for p in simple_paths]) 
                     # all_simple_paths was modified to check 'has_path' in the
                     # loop, but this is still slow for large networks

@@ -1,5 +1,8 @@
 import math
 import numpy as np
+import logging
+
+logger = logging.getLogger('wntr.utils.units')
 
 def convert(paramtype, flowunit, data, MKS = True):
     
@@ -213,7 +216,7 @@ def convert(paramtype, flowunit, data, MKS = True):
         else:   data = data / 3600.0 # s to hr
     
     else:
-        print "Invalid paramtype: " + paramtype + ". No conversion"
+        logger.warning("Invalid paramtype: " + paramtype + ". No conversion")
     
     if data_type is dict:
         data = dict(zip(data_keys, data))
