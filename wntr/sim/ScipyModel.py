@@ -1,4 +1,5 @@
 from wntr import *
+import pandas as pd
 import numpy as np
 import scipy.sparse as sparse
 import math
@@ -643,26 +644,55 @@ class ScipyModel(object):
         head = x[:self.num_nodes]
         demand = x[self.num_nodes:2*self.num_nodes]
         flow = x[2*self.num_nodes:]
-        for node_id in self._node_ids:
-            self._sim_results['node_name'].append(self._node_id_to_name[node_id])
-            self._sim_results['node_type'].append(NodeTypes.node_type_to_str(self.node_types[node_id]))
-            self._sim_results['node_times'].append(results.time[int(self._wn.sim_time_sec/self._wn.options.hydraulic_timestep)])
-            self._sim_results['node_head'].append(head[node_id])
+        for node_id in self._junction_ids:
+            head_n = head[node_id]
+            self._sim_results['node_type'].append('Junction')
+            self._sim_results['node_head'].append(head_n)
             self._sim_results['node_demand'].append(demand[node_id])
-            if self.node_types[node_id] == NodeTypes.junction:
-                self._sim_results['node_expected_demand'].append(self.junction_demand[node_id])
-                self._sim_results['node_pressure'].append(head[node_id] - self.node_elevations[node_id])
-            elif self.node_types[node_id] == NodeTypes.tank:
-                self._sim_results['node_expected_demand'].append(demand[node_id])
-                self._sim_results['node_pressure'].append(head[node_id] - self.node_elevations[node_id])
-            elif self.node_types[node_id] == NodeTypes.reservoir:
-                self._sim_results['node_expected_demand'].append(demand[node_id])
-                self._sim_results['node_pressure'].append(0.0)
+            self._sim_results['node_expected_demand'].append(self.junction_demand[node_id])
+            self._sim_results['node_pressure'].append(head_n - self.node_elevations[node_id])
+        for node_id in self._tank_ids:
+            head_n = head[node_id]
+            demand_n = demand[node_id]
+            self._sim_results['node_type'].append('Tank')
+            self._sim_results['node_head'].append(head_n)
+            self._sim_results['node_demand'].append(demand_n)
+            self._sim_results['node_expected_demand'].append(demand_n)
+            self._sim_results['node_pressure'].append(head_n - self.node_elevations[node_id])
+        for node_id in self._reservoir_ids:
+            demand_n = demand[node_id]
+            self._sim_results['node_type'].append('Reservoir')
+            self._sim_results['node_head'].append(head[node_id])
+            self._sim_results['node_demand'].append(demand_n)
+            self._sim_results['node_expected_demand'].append(demand_n)
+            self._sim_results['node_pressure'].append(0.0)
+
         for link_id in self._link_ids:
-            self._sim_results['link_name'].append(self._link_id_to_name[link_id])
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
-            self._sim_results['link_times'].append(results.time[int(self._wn.sim_time_sec/self._wn.options.hydraulic_timestep)])
             self._sim_results['link_flowrate'].append(flow[link_id])
+
+    def get_results(self,results):
+        ntimes = len(results.time)
+        nnodes = self.num_nodes
+        nlinks = self.num_links
+        tmp_node_names = self._junction_ids+self._tank_ids+self._reservoir_ids
+        node_names = [self._node_id_to_name[i] for i in tmp_node_names]
+        link_names = [self._link_id_to_name[i] for i in self._link_ids]
+
+        node_dictionary = {'demand': self._sim_results['node_demand'],
+                           'expected_demand': self._sim_results['node_expected_demand'],
+                           'head': self._sim_results['node_head'],
+                           'pressure': self._sim_results['node_pressure'],
+                           'type': self._sim_results['node_type']}
+        for key,value in node_dictionary.iteritems():
+            node_dictionary[key] = np.array(value).reshape((ntimes,nnodes))
+        results.node = pd.Panel(node_dictionary, major_axis=results.time, minor_axis=node_names)
+
+        link_dictionary = {'flowrate':self._sim_results['link_flowrate'],
+                           'type':self._sim_results['link_type']}
+        for key, value in link_dictionary.iteritems():
+            link_dictionary[key] = np.array(value).reshape((ntimes, nlinks))
+        results.link = pd.Panel(link_dictionary, major_axis=results.time, minor_axis=link_names)
 
     def update_tank_heads(self, x):
         demand = x[self.num_nodes:2*self.num_nodes]
@@ -679,34 +709,6 @@ class ScipyModel(object):
             junction_id = self._node_name_to_id[junction_name]
             t = self._wn.sim_time_sec/self._wn.options.hydraulic_timestep
             junction.current_demand = demand_dict[(junction_name,t)]
-
-    def get_results(self,results):
-        import pandas as pd
-        
-        node_data_frame = pd.DataFrame({'time':     self._sim_results['node_times'],
-                                        'node':     self._sim_results['node_name'],
-                                        'demand':   self._sim_results['node_demand'],
-                                        'expected_demand':   self._sim_results['node_expected_demand'],
-                                        'head':     self._sim_results['node_head'],
-                                        'pressure': self._sim_results['node_pressure'],
-                                        'type':     self._sim_results['node_type']})
-
-        node_pivot_table = pd.pivot_table(node_data_frame,
-                                          values=['demand', 'expected_demand', 'head', 'pressure', 'type'],
-                                          index=['node', 'time'],
-                                          aggfunc= lambda x: x)
-        results.node = node_pivot_table
-
-        link_data_frame = pd.DataFrame({'time':     self._sim_results['link_times'],
-                                        'link':     self._sim_results['link_name'],
-                                        'flowrate': self._sim_results['link_flowrate'],
-                                        'type':     self._sim_results['link_type']})
-
-        link_pivot_table = pd.pivot_table(link_data_frame,
-                                          values=['flowrate', 'type'],
-                                          index=['link', 'time'],
-                                          aggfunc= lambda x: x)
-        results.link = link_pivot_table
 
     def print_jacobian(self, jacobian):
         #np.set_printoptions(threshold='nan')

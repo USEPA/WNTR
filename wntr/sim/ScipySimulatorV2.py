@@ -45,7 +45,7 @@ class ScipySimulatorV2(WaterNetworkSimulator):
         self.solver = NewtonSolverV2()
 
         results = NetResults()
-        self._load_general_results(results)
+        results.time = np.arange(0, self._sim_duration_sec+self._hydraulic_step_sec, self._hydraulic_step_sec)
 
         # Initialize X
         # Vars will be ordered:
@@ -106,15 +106,3 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             else:
                 for t in range(self._n_timesteps):
                     self._demand_dict[(node_name, t)] = 0.0
-
-    def _load_general_results(self, results):
-        """
-        Load general simulation options into the results object.
-
-        Parameters
-        ----------
-        results : NetworkResults object
-        """
-        # Load general results
-        results.network_name = self._wn.name
-        results.time = np.arange(0, self._sim_duration_sec+self._hydraulic_step_sec, self._hydraulic_step_sec)
