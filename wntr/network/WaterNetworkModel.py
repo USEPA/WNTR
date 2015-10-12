@@ -70,7 +70,6 @@ class WaterNetworkModel(object):
 
         # Initialize options object
         self.options = WaterNetworkOptions()
-        self.reaction_options = {}
 
         # Time controls are saved as a dictionary as follows:
         # {'Link name': {'open_times': [1, 5, ...], 'closed_times': [3, 7, ...], 'active_times':[1,4,7,...]}},
@@ -344,19 +343,6 @@ class WaterNetworkModel(object):
         """
         curve = Curve(name, curve_type, xy_tuples_list)
         self._curves[name] = curve
-
-    def add_reaction_option(self, name, value):
-        """
-        Method to add a reaction option to a water network object.
-
-        Parameters
-        ----------
-        name : string
-            Name of the option.
-        value:
-            Value of the option.
-        """
-        self.reaction_options[name.upper()] = value
 
     def add_time_control(self, link_name, open_times=[], closed_times=[], active_times=[]):
         """
@@ -1051,9 +1037,24 @@ class WaterNetworkModel(object):
 
         # Reaction Options
         print >> f, '[REACTIONS]'
-        text_format_float = '{:20s} {:<10.8f}'
-        for key, val in self.reaction_options.iteritems():
-            print >>f, text_format_float.format(key, val)
+        text_format_float = '{:15s}{:15s}{:<10.8f}'
+        print >>f, text_format_float.format('ORDER','BULK',self.options.bulk_rxn_order)
+        print >>f, text_format_float.format('ORDER','WALL',self.options.wall_rxn_order)
+        print >>f, text_format_float.format('ORDER','TANK',self.options.tank_rxn_order)
+        print >>f, text_format_float.format('GLOBAL','BULK',self.options.bulk_rxn_coeff)
+        print >>f, text_format_float.format('GLOBAL','WALL',self.options.wall_rxn_coeff)
+        if self.options.limiting_potential is not None:
+            print >>f, text_format_float.format('LIMITING','POTENTIAL',self.options.limiting_potential)
+        if self.options.roughness_correlation is not None:
+            print >>f, text_format_float.format('ROUGHNESS','CORRELATION',self.options.roughness_correlation)
+        for tank_name, tank in self.nodes(Tank):
+            if tank.bulk_rxn_coeff is not None:
+                print >>f, text_format_float.format('TANK',tank_name,tank.bulk_rxn_coeff)
+        for pipe_name, pipe in self.links(Pipe):
+            if pipe.bulk_rxn_coeff is not None:
+                print >>f, text_format_float.format('BULK',pipe_name,pipe.bulk_rxn_coeff)
+            if pipe.wall_rxn_coeff is not None:
+                print >>f, text_format_float.format('WALL',pipe_name,pipe.wall_rxn_coeff)
 
         print >> f, ''
 
@@ -1085,7 +1086,7 @@ class WaterNetworkModel(object):
         hrs, mm, sec = self._sec_to_string(self.options.quality_timestep)
         print >>f, time_text_format.format('QUALITY TIMESTEP', hrs, mm, sec)
         hrs, mm, sec = self._sec_to_string(self.options.rule_timestep)
-        print >>f, time_text_format.format('RULE TIMESTEP', hrs, mm, sec)
+        print >>f, time_text_format.format('RULE TIMESTEP', hrs, mm, int(sec))
         print >>f, text_format.format('STATISTIC', self.options.statistic)
 
         print >> f, ''
@@ -1161,6 +1162,15 @@ class WaterNetworkOptions(object):
         self.emitter_exponent = 0.5
         self.tolerance = 0.01
         self.map = None
+
+        # Reaction Options
+        self.bulk_rxn_order = 1.0
+        self.wall_rxn_order = 1.0
+        self.tank_rxn_order = 1.0
+        self.bulk_rxn_coeff = 0.0
+        self.wall_rxn_coeff = 0.0
+        self.limiting_potential = None
+        self.roughness_correlation = None
 
 class NodeTypes(object):
     """
@@ -1535,6 +1545,7 @@ class Tank(Node):
         self.leak_discharge_coeff = 0.0
         self.leak_start_time = 0
         self.leak_end_time = np.inf
+        self.bulk_rxn_coeff = None
 
     def add_leak(self, area, discharge_coeff = 0.75, start_time = 0, end_time = np.inf):
         """
@@ -1659,6 +1670,8 @@ class Pipe(Link):
                 self.current_status = LinkStatus.opened
             else:
                 self.current_status = self._base_status
+        self.bulk_rxn_coeff = None
+        self.wall_rxn_coeff = None
 
 
 class Pump(Link):
