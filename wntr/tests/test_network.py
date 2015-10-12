@@ -165,6 +165,32 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(wn._num_pipes, 1)
         self.assertEqual(wn._graph.edges(), [('j1','j3')])
 
+    def test_remove_node(self):
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_6.inp'
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        self.assertEqual(wn.conditional_controls['PUMP-3829']['open_below'][0][0],'TANK-3326')
+        self.assertAlmostEqual(wn.conditional_controls['PUMP-3829']['open_below'][0][1],5.4864)
+        self.assertEqual(wn.conditional_controls['PUMP-3829']['closed_above'][0][0],'TANK-3326')
+        self.assertAlmostEqual(wn.conditional_controls['PUMP-3829']['closed_above'][0][1],8.9916)
+        wn.remove_node('TANK-3326')
+        for key, val in wn.conditional_controls['PUMP-3829'].iteritems():
+            self.assertEqual(val,[])
+        self.assertNotIn('TANK-3326',wn._nodes.keys())
+        self.assertNotIn('TANK-3326',wn._graph.nodes())
+
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_test_network_1.inp'
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        wn.remove_node('tank1')
+        for key, val in wn.conditional_controls['pump1'].iteritems():
+            self.assertEqual(val,[])
+        self.assertNotIn('tank1',wn._nodes.keys())
+        self.assertNotIn('tank1',wn._graph.nodes())
+        node_list = ['junction1','res1']
+        node_list.sort()
+        node_list_2 = wn._nodes.keys()
+        node_list_2.sort()
+        self.assertEqual(node_list, node_list_2)
+
     def test_nodes(self):
         wn = self.wntr.network.WaterNetworkModel()
         wn.add_junction('j1')
