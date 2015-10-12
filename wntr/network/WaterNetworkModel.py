@@ -424,13 +424,13 @@ class WaterNetworkModel(object):
 
     def remove_link(self, name):
         """
-        Method to remove a pipe from the water network object. Note
-        that any controls associated with this link will be dicarded.
+        Method to remove a link from the water network object. Note
+        that any controls associated with this link will be discarded.
 
         Parameters
         ----------
         name: string
-           Name of the pipe
+           Name of the link to be removed
         """
         link = self.get_link(name)
         status = link.get_base_status()
@@ -456,6 +456,39 @@ class WaterNetworkModel(object):
         if name in self.conditional_controls.keys():
             self.conditional_controls.pop(name)
             warnings.warn('A conditional control associated with link '+name+' has been removed as well as the link.')
+
+    def remove_node(self, name):
+        """
+        Method to remove a node from the water network object. Note
+        that any controls associated with this link will be discarded.
+
+        Parameters
+        ----------
+        name: string
+            Name of the node to be removed
+        """
+        node = self.get_node(name)
+        self._nodes.pop(name)
+        self._graph.remove_node(name)
+        if isinstance(node, Junction):
+            self._num_junctions -= 1
+        elif isinstance(node, Tank):
+            self._num_tanks -= 1
+        elif isinstance(node, Reservoir):
+            self._num_reservoirs -= 1
+        else:
+            raise RuntimeError('Node type is not recognized.')
+
+        # Remove controls associated with the node
+        controls_to_remove = []
+        for key, val in self.conditional_controls.iteritems():
+            for key2, val2 in val.iteritems():
+                for entry in val2:
+                    if entry[0] == name:
+                        controls_to_remove.append((key, key2, entry))
+        for key in controls_to_remove:
+            self.conditional_controls[key[0]][key[1]].remove(key[2])
+            warnings.warn('One or more conditional controls associated with node '+name+' has been removed as well as the node.')
 
     def split_pipe_with_junction(self, pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side, junction_name):
         """
