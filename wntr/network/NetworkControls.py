@@ -186,17 +186,19 @@ class TimeControl(Control):
 
     Parameters
     ----------
-    time_sec : float
+    wnm : WaterNetworkModel object
+
+    fire_time : float
         time (in seconds) when the events should be fired.
 
-    time_flag : string, ('SIM_TIME', 'CLOCK_TIME')
+    time_flag : string, ('SIM_TIME', 'SHIFTED_TIME')
 
-        SIM_TIME: indicates that the value of time_sec is in seconds
+        SIM_TIME: indicates that the value of fire_time is in seconds
             since the start of the simulation
 
-        SHIFTED_TIME: indicates that the value of time_sec is shifted
+        SHIFTED_TIME: indicates that the value of fire_time is shifted
             by the start time set for the simulation. That is,
-            time_sec is in seconds since 12 AM on the first day of the
+            fire_time is in seconds since 12 AM on the first day of the
             simulation.  Therefore, 7200 refers to 2:00 AM regardless
             of the start time in the simulation.
 
@@ -208,8 +210,8 @@ class TimeControl(Control):
        event action that will be fired at the specified time
     """
 
-    def __init__(self, wnm, time_sec, time_flag, daily_flag, control_action):
-        self._time_sec = time_sec
+    def __init__(self, wnm, fire_time, time_flag, daily_flag, control_action):
+        self._fire_time = fire_time
         self._time_flag = time_flag
         if time_flag != 'SIM_TIME' and time_flag != 'SHIFTED_TIME':
             raise ValueError('In TimeControl::__init__, time_flag must be "SIM_TIME" or "SHIFTED_TIME"')
@@ -217,19 +219,20 @@ class TimeControl(Control):
         self._daily_flag = daily_flag
         self._control_action = control_action
 
-        if daily_flag and time_sec > 24*3600:
+        if daily_flag and fire_time > 24*3600:
             raise ValueError('In TimeControl, a daily control was requested, however, the time passed in was not between 0 and 24*3600')
-        
-        if time_flag == 'SIM_TIME' and self._time_sec < wnm.sim_time_sec:
-            self._control_complete = True
+        self._control_complete = False
 
-        if time_flag == 'SHIFTED_TIME' and self._time_sec < wnm.shifted_time_sec():
-            self._time_sec += 24*3600
+        if time_flag == 'SIM_TIME' and self._fire_time < wnm.sim_time:
+            raise RuntimeError('You cannot create a time control that should be activated before the start of the simulation.')
+
+        if time_flag == 'SHIFTED_TIME' and self._fire_time < wnm.shifted_time():
+            self._fire_time += 24*3600
 
     @classmethod
-    def WithTarget(self, time_sec, time_flag, daily_flag, target_obj, attribute, value):
+    def WithTarget(self, fire_time, time_flag, daily_flag, target_obj, attribute, value):
         t = TargetAttributeControlAction(target_obj, attribute, value)
-        return TimeControl(time_sec, time_flag, daily_flag, t)
+        return TimeControl(fire_time, time_flag, daily_flag, t)
     
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
@@ -240,11 +243,11 @@ class TimeControl(Control):
             return (False, None)
 
         if self._time_flag == 'SIM_TIME':
-            if wnm.prev_sim_time_sec < self._time_sec and self._time_sec <= wnm.sim_time_sec:
-                return (True, wnm.sim_time_sec - self._time_sec)
+            if wnm.prev_sim_time < self._fire_time and self._fire_time <= wnm.sim_time:
+                return (True, wnm.sim_time - self._fire_time)
         elif self._time_flag == 'SHIFTED_TIME':
-            if wnm.prev_shifted_time_sec() < self._time_sec and self._time_sec <= wnm.shifted_time_sec():
-                return (True, wnm.shifted_time_sec() - self._time_sec)
+            if wnm.prev_shifted_time() < self._fire_time and self._fire_time <= wnm.shifted_time():
+                return (True, wnm.shifted_time() - self._fire_time)
 
         return (False, None)
 
@@ -258,7 +261,7 @@ class TimeControl(Control):
 
         self._control_action.FireControlAction(wnm)
         if self._daily_flag:
-            self._time_sec += 24*3600
+            self._fire_time += 24*3600
 
 class ConditionalControl(Control):
     """
@@ -318,13 +321,13 @@ class ConditionalControl(Control):
         prev_value = getattr(source_obj, source_attribute_prev)
         if self._operation(value, self._threshold):
             # control action is required
-            if wnm.prev_sim_time_sec is None or prev_value is None:
+            if wnm.prev_sim_time is None or prev_value is None:
                 assert wnm.time_step == 0, 'This should only happen during the first simulation timestep'
                 return (True, 0)
                 
             # let's do linear interpolation to determine the estimated switch time
-            m = (value - prev_value)/(wnm.sim_time_sec - wnm.prev_sim_time_sec)
-            new_time = (self._threshold - prev_value)/m + wnm.prev_sim_time_sec
+            m = (value - prev_value)/(wnm.sim_time - wnm.prev_sim_time)
+            new_time = (self._threshold - prev_value)/m + wnm.prev_sim_time
             return (True, new_time)
         
         return (False, None)

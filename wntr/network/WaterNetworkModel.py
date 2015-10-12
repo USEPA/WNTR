@@ -47,8 +47,9 @@ class WaterNetworkModel(object):
         self.name = None
 
         # Time parameters
-        self.sim_time_sec = 0.0
-        self.start_time_sec = 0.0 # 12 AM for now
+        self.sim_time = 0.0
+        self.prev_sim_time = -np.inf
+        self.start_time = 0.0 # 12 AM for now
 
         # Initialize Network size parameters
         self._num_junctions = 0
@@ -71,17 +72,8 @@ class WaterNetworkModel(object):
         # Initialize options object
         self.options = WaterNetworkOptions()
 
-        # Time controls are saved as a dictionary as follows:
-        # {'Link name': {'open_times': [1, 5, ...], 'closed_times': [3, 7, ...], 'active_times':[1,4,7,...]}},
-        # where times are in seconds
-        self.time_controls = {}
-
-        # Conditional controls are saved as a dictionary as follows:
-        # {'Link name': {'open_below': [('node_name', level_value), ...],
-        #                'open_above': [('node_name', level_value), ...],
-        #                'closed_below': [('node_name', level_value), ...],
-        #                'closed_above': [('node_name', level_value), ...]}}
-        self.conditional_controls = {}
+        # A list of control objects
+        self.controls = set()
 
         # Name of pipes that are check valves
         self._check_valves = []
@@ -344,69 +336,38 @@ class WaterNetworkModel(object):
         curve = Curve(name, curve_type, xy_tuples_list)
         self._curves[name] = curve
 
-    def add_time_control(self, link_name, open_times=[], closed_times=[], active_times=[]):
+    def add_control(self, control_object):
         """
-        Add time controls to the network.
+        Add a control to the network.
 
         Parameters
         ----------
-        link_name : string
-            Name of the link
-        open_times : list of integers
-            List of times (in seconds) when the link is opened
-        closed_times : list of integers
-            List of times (in seconds) when the link is closed
-
+        control_object : An object derived from the Control object
         """
-        #link = self.get_link(link_name)
-        if link_name not in self.time_controls:
-            #self.time_controls[link_name] = {'open_times': [i for i in open_times], 'closed_times': [i for i in closed_times]}
-            self.time_controls[link_name] = {'open_times': [i for i in open_times], 'closed_times': [i for i in closed_times], 'active_times': [i for i in active_times]}
-        else:
-            self.time_controls[link_name]['open_times'] += open_times
-            self.time_controls[link_name]['closed_times'] += closed_times
-            self.time_controls[link_name]['active_times'] += active_times
+        self.controls.add(control_object)
 
-        self.time_controls[link_name]['open_times'].sort()
-        self.time_controls[link_name]['closed_times'].sort()
-        self.time_controls[link_name]['active_times'].sort()
-
-    def add_conditional_controls(self, link_name, node_name, level_value, open_or_closed, above_or_below):
+    def remove_control(self, control_object):
         """
-        Add conditional controls to the network.
-        
+        A method to remove a control from the network. If the control
+        is not present, an exception is raised.
+
         Parameters
         ----------
-        link_name : string
-            Name of the link.
-        node_name : string
-            Name of the node.
-        level_value : string
-             level value in meters for the control to activate.
-        open_or_closed : string
-            Link would open or close. Options are 'OPEN'. 'CLOSED'
-        above_or_below : string
-            Control will activate if head value is below or above. Options are 'ABOVE', 'BELOW'
+        control_object : An object derived from the Control object
         """
-        if link_name not in self.conditional_controls:
-            self.conditional_controls[link_name] = {'open_above':[],
-                                                    'open_below':[],
-                                                    'closed_above':[],
-                                                    'closed_below':[]}
-        # Add conditional control
-        upper_open_or_closed = open_or_closed.upper()
-        upper_above_or_below = above_or_below.upper()
-        if upper_open_or_closed == 'OPEN' and upper_above_or_below == 'ABOVE':
-            self.conditional_controls[link_name]['open_above'].append((node_name, level_value))
-        elif upper_open_or_closed == 'OPEN' and upper_above_or_below == 'BELOW':
-            self.conditional_controls[link_name]['open_below'].append((node_name, level_value))
-        elif upper_open_or_closed == 'CLOSED' and upper_above_or_below == 'ABOVE':
-            self.conditional_controls[link_name]['closed_above'].append((node_name, level_value))
-        elif upper_open_or_closed == 'CLOSED' and upper_above_or_below == 'BELOW':
-            self.conditional_controls[link_name]['closed_below'].append((node_name, level_value))
-        else:
-            raise RuntimeError("String option open_or_closed or above_or_below not recognized: "
-                               + open_or_closed + " " + above_or_below)
+        self.controls.remove(control_object)
+
+    def discard_control(self, control_object):
+        """
+        A method to remove a control from the network if it is
+        present. If the control is not present, an exception is not
+        raised.
+
+        Parameters
+        ----------
+        control_object : An object derived from the Control object
+        """
+        self.controls.discard(control_object)
 
     def remove_link(self, name):
         """
@@ -838,7 +799,7 @@ class WaterNetworkModel(object):
         """
         nx.set_node_attributes(self._graph, 'pos', {name: coordinates})
 
-    def shifted_time_sec(self):
+    def shifted_time(self):
         """ 
         Returns the time in seconds shifted by the
         simulation start time (e.g. as specified in the
@@ -846,8 +807,17 @@ class WaterNetworkModel(object):
         on the first day.
         """
         return self.sim_time_sec + self._start_time_sec
-    
-    def clock_time_sec(self):
+
+    def prev_shifted_time(self):
+        """
+        Returns the time in seconds of the previous solve shifted by
+        the simulation start time. That is, this is the time from 12
+        AM on the first day to the time at the prevous hydraulic
+        timestep.
+        """
+        return self.prev_sim_time_sec + self._start_time_sec
+
+    def clock_time(self):
         """
         Return the current time of day in seconds from 12 AM
         """
@@ -1370,7 +1340,7 @@ class Link(object):
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
         self._base_status = LinkStatus.opened
-        self.current_status = LinkStatus.opened
+        self.status = LinkStatus.opened
 
     def __str__(self):
         """

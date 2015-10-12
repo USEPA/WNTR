@@ -73,23 +73,13 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             X_init = copy.copy(self._X)
             self.solve_step[int(self._wn.sim_time_sec/self._wn.options.hydraulic_timestep)] = end_solve_step - start_solve_step
             model.save_results(self._X, results)
+            self._wn.prev_sim_time_sec = self._wn.sim_time_sec
             self._wn.sim_time_sec += self._wn.options.hydraulic_timestep
             if self._wn.sim_time_sec <= self._wn.options.duration:
                 model.update_tank_heads(self._X)
 
         model.get_results(results)
         return results
-
-    def solve_hydraulics(self, x0, net_status):
-        """
-        Method to solve the hydraulic equations given the network status
-
-        Parameters
-        ----------
-        net_status: a NetworkStatus object
-        """
-
-        self.solver.solve(self._hydraulic_equations, self.get_jacobian, x0)
 
     def _get_demand_dict(self):
 

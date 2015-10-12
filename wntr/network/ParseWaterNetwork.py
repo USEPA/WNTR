@@ -586,8 +586,14 @@ class ParseWaterNetwork(object):
                 else:
                     if len(current) != 6:
                         warnings.warn('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
-
+                        continue
+                    
                     link_name = current[1]
+                    link = wn.get_link(link_name)
+                    status = LinkStatus.str_to_status(current[2])
+                    fire_time = str_time_to_sec(current[5])
+                    action_obj = TargetAttributeControlAction(link, 'status', status)
+                    
                     if link_name not in self._time_controls:
                         if current[2].upper() == 'OPEN':
                             self._time_controls[link_name] = {'open_times': [str_time_to_sec(current[5])], 'closed_times': []}
