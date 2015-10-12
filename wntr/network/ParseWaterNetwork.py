@@ -665,7 +665,31 @@ class ParseWaterNetwork(object):
                 if (current == []) or (current[0].startswith(';')):
                     continue
                 assert len(current) == 3, 'INP file option in [REACTIONS] block not recognized: '+line
-                wn.add_reaction_option(current[0].upper() + ' ' + current[1].upper(), float(current[2])) 
+                if current[0].upper() == 'ORDER' and current[1].upper() == 'BULK':
+                    wn.options.bulk_rxn_order = float(current[2])
+                elif current[0].upper() == 'ORDER' and current[1].upper() == 'WALL':
+                    wn.options.wall_rxn_order = float(current[2])
+                elif current[0].upper() == 'ORDER' and current[1].upper() == 'TANK':
+                    wn.options.tank_rxn_order = float(current[2])
+                elif current[0].upper() == 'GLOBAL' and current[1].upper() == 'BULK':
+                    wn.options.bulk_rxn_coeff = float(current[2])
+                elif current[0].upper() == 'GLOBAL' and current[1].upper() == 'WALL':
+                    wn.options.wall_rxn_coeff = float(current[2])
+                elif current[0].upper() == 'BULK':
+                    pipe = wn.get_link(current[1])
+                    pipe.bulk_rxn_coeff = float(current[2])
+                elif current[0].upper() == 'WALL':
+                    pipe = wn.get_link(current[1])
+                    pipe.wall_rxn_coeff = float(current[2])
+                elif current[0].upper() == 'TANK':
+                    tank = wn.get_node(current[1])
+                    tank.bulk_rxn_coeff = float(current[2])
+                elif current[0].upper() == 'LIMITING':
+                    wn.options.limiting_potential = float(current[2])
+                elif current[0].upper() == 'ROUGHNESS':
+                    wn.options.roughness_correlation = float(current[2])
+                else:
+                    raise RuntimeError('Reaction option not recognized')
             
         f.close()
 
