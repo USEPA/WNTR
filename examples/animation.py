@@ -20,7 +20,7 @@ node_values = results.node.loc['quality', 0, :]
 fig = plt.gcf()        
 
 def update_nodes(frame_number):
-    G = wn._graph
+    G = wn.get_graph_deep_copy()
     
     nodelist = G.nodes()
     node_values = results.node.loc['quality', frame_number*3600, :]
@@ -40,7 +40,7 @@ anim = animation.FuncAnimation(fig, update_nodes, frames=25, interval=400, repea
 #fig = plt.gcf()
 #
 #def update_edges(n):
-#    G = wn._graph
+#    G = wn.get_graph_deep_copy()
 #    
 #    linklist = G.edges(keys=True)
 #    linklist = [name for (start_node, end_node, name) in linklist]

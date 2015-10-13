@@ -31,7 +31,8 @@ converting_units.py             Convert units
 animation.py			Animated network graphics
 ==============================  ======================================================
 
-Several EPANET inp files are included in the examples folder.  These example
-network range from a simple 9 node networks to a 13,000 node network.
+Several EPANET inp files are included in the examples/network folder.  Example
+network range from a simple 9 node network to a 13,000 node network.
 
-More advanced case studies and demos are also included in the examples/case studies and examples/demo folder.  
+More advanced case studies and demos are also included in the examples/case_studies 
+folder and examples/demo folder.  

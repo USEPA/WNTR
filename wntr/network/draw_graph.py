@@ -81,7 +81,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     """
     
     # Graph    
-    G = wn._graph
+    G = wn.get_graph_deep_copy()
     if not directed:
         G = G.to_undirected()
     

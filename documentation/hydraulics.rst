@@ -1,11 +1,29 @@
 Hydraulic simulation
 ====================
    
-WNTR contains 2 or 3 simulators...
+WNTR contains 2 (or 3) simulators...
 
-* Epanet simualtor (Hydraulic and Water quality)
-* Scipy simulator (Hydraulic only)
-* Pyomo simulator (Hydraulic only)
+Epanet simualtor (Hydraulic and Water quality)::
+
+	sim = wntr.sim.EpanetSimulator(wn)
+	results = sim.run_sim()
+
+Scipy simulator (Hydraulic only)::
+
+	sim = wntr.sim.ScipySimulator(wn)
+	results = sim.run_sim()
+	
+Pyomo simulator (Hydraulic only)::
+
+	sim = wntr.sim.PyomoSimulator(wn)
+	results = sim.run_sim()
+	
+More information on the simulators can be found in the API documentation, under
+:doc:`EpanetSimulator</apidoc/wntr.sim.EpanetSimulator>`, 
+:doc:`ScipySimulator</apidoc/wntr.sim.ScipySimulator>`, and 
+:doc:`PyomoSimulator</apidoc/wntr.sim.PyomoSimulator>`.
+
+The following page descibes the hydraulic equations used in WNTR.
 
 Mass balence at nodes
 ----------------------
@@ -35,11 +53,4 @@ Demand-driven analysis
 Pressure-driven analysis
 --------------------------
 
-
-Running a hydraulic simulation
-------------------------------
-The following code can be used to run a hydrulic simulation using EPANET::
-
-	sim = wntr.sim.EpanetSimulator(wn)
-	results = sim.run_sim()
 	

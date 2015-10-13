@@ -11,7 +11,7 @@ def _pipe_center_position(wn, coordinate_scale = 1, correct_length = False):
     """
     Define positions of pipes
     """
-    G = wn._graph
+    G = wn.get_graph_deep_copy()
     pos = nx.get_node_attributes(G,'pos') ##
     
     link_pos = {}

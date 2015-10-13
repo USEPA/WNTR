@@ -1,13 +1,32 @@
 Water network model
 ======================================
 
-Background from the white paper...
+The water network model includes the pipe network, controls, ...
+This is similar to the model components stored in an EPANET inp file.
+Some EPANET features are not supported by WNTR, as described below.
+WNTR also includes features that are not supported by EPANET, 
+including leaks, pressure-driven hydraulic simulation, and 
+more flexible controls.
 
-Same components as EPANET with the addition of Leak and more flexible controls
+WNTR is compatible with EPANET inp files [Rossman2000]_.  
+A water network model can be created directly from an inp file or 
+by adding individual components to generate a network representation::
 
-For each section below, add brief explination of methods and EPANET features not supported
+	wn = wntr.network.WaterNetworkModel(inp_file)
 
-For more information, see the :doc:`WaterNetworkModel</apidoc/wntr.network.WaterNetworkModel>` module documentation.
+The water network model can also be written to inp file.
+Files are written in LPS units.
+The demands associated with pressure-driven simualtion can be stored in the file.
+The inp file writter does not include features not supported by EPANET::
+
+	wn.write_inpfile(inp_file)
+
+For more information on the water network model, see the 
+:doc:`WaterNetworkModel</apidoc/wntr.network.WaterNetworkModel>` 
+module documentation.
+
+The following page describes water network model components.  
+EPANET components that are not supported by WNTR are noted.
 
 Junctions
 ---------
@@ -80,20 +99,5 @@ time, reaction, options
 
 Coordinates
 ------------
+stored in the graph
 
-
-NetworkX Graph
---------------
-
-
-Creating a Water Network Model
-------------------------------
-A water network model can be created from an inp file::
-
-	wn = wntr.network.WaterNetworkModel(inp_file)
-
-Writting an inp file
----------------------
-Writes an inp file in SI (LPS) units.
-Writes demand pattern associated with Pressure driven simulation.
-Does not include features not supported by EPANET.
