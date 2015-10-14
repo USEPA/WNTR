@@ -80,6 +80,9 @@ class TestControlParsing(unittest.TestCase):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_17.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.assertEqual(len(wn.controls), 6)
+        fire_times = [24*3600, 13*3600+30*60, 3*3600, 0, 12*3600, 17*3600+30*60+12]
+        for i in xrange(len(wn.controls)):
+            self.assertEqual(wn.controls[i]._fire_time, fire_times[i])
 
 class TestNetworkMethods(unittest.TestCase):
 

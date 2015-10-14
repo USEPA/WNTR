@@ -72,7 +72,7 @@ class WaterNetworkModel(object):
         self.options = WaterNetworkOptions()
 
         # A list of control objects
-        self.controls = set()
+        self.controls = []
 
         # Name of pipes that are check valves
         self._check_valves = []
@@ -346,7 +346,7 @@ class WaterNetworkModel(object):
         ----------
         control_object : An object derived from the Control object
         """
-        self.controls.add(control_object)
+        self.controls.append(control_object)
 
     def remove_control(self, control_object):
         """
@@ -369,7 +369,10 @@ class WaterNetworkModel(object):
         ----------
         control_object : An object derived from the Control object
         """
-        self.controls.discard(control_object)
+        try:
+            self.controls.remove(control_object)
+        except ValueError:
+            pass
 
     def remove_link(self, name):
         """
