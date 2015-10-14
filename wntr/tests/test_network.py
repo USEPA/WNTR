@@ -64,6 +64,23 @@ class TestNetworkCreation(unittest.TestCase):
         self.assertAlmostEqual(j.base_head, 27.45*0.3048)
         self.assertEqual(j.head_pattern_name, None)
 
+class TestControlParsing(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        sys.path.append(resilienceMainDir)
+        import wntr
+        self.wntr = wntr
+
+    @classmethod
+    def tearDownClass(self):
+        sys.path.remove(resilienceMainDir)
+
+    def test_control_at_time(self):
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_17.inp'
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        self.assertEqual(len(wn.controls), 6)
+
 class TestNetworkMethods(unittest.TestCase):
 
     @classmethod

@@ -49,7 +49,6 @@ class WaterNetworkModel(object):
         # Time parameters
         self.sim_time = 0.0
         self.prev_sim_time = -np.inf
-        self.start_time = 0.0 # 12 AM for now
 
         # Initialize Network size parameters
         self._num_junctions = 0
@@ -63,11 +62,11 @@ class WaterNetworkModel(object):
         # Dictionary of node or link objects indexed by their names
         self._nodes = {}
         self._links = {}
-        self._curves = {}
 
         # Initialize pattern and curve dictionaries
         # Dictionary of pattern or curves indexed by their names
         self._patterns = {}
+        self._curves = {}
 
         # Initialize options object
         self.options = WaterNetworkOptions()
@@ -150,8 +149,8 @@ class WaterNetworkModel(object):
         min_vol : float
             Minimum tank volume.
             Internal units must be cubic meters (m^3)
-        vol_curve_name : string
-            Name of the tank volume curve.
+        vol_curve_name : Curve object
+            Curve object
         coordinates : tuple of floats
             X-Y coordinates of the node location
         """
@@ -203,7 +202,7 @@ class WaterNetworkModel(object):
         self._num_reservoirs += 1
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
-                 diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN'):
+                 diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN', check_valve_flag=False):
         """
         Method to add pipe to a water network object.
 
@@ -229,16 +228,19 @@ class WaterNetworkModel(object):
         minor_loss : float
             Pipe minor loss coefficient
         status : string
-            Pipe status. Options are 'Open', 'Closed', and 'CV'
+            Pipe status. Options are 'Open' or 'Closed'
+        check_valve_flag : bool
+            True if the pipe has a check valve
+            False if the pipe does not have a check valve
         """
         length = float(length)
         diameter = float(diameter)
         roughness = float(roughness)
         minor_loss = float(minor_loss)
         pipe = Pipe(name, start_node_name, end_node_name, length,
-                    diameter, roughness, minor_loss, status)
+                    diameter, roughness, minor_loss, status, check_valve_flag)
         # Add to list of cv
-        if status.upper() == 'CV':
+        if check_valve_flag:
             self._check_valves.append(name)
         self._links[name] = pipe
         self._graph.add_edge(start_node_name, end_node_name, key=name)
@@ -504,8 +506,8 @@ class WaterNetworkModel(object):
 
         self.remove_link(pipe_name_to_split)
         self.add_junction(junction_name, base_demand=0.0, demand_pattern_name=None, elevation=junction_elevation, coordinates=junction_coordinates)
-        self.add_pipe(pipe_name_on_start_node_side, pipe.start_node(), junction_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()))
-        self.add_pipe(pipe_name_on_end_node_side, junction_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()))
+        self.add_pipe(pipe_name_on_start_node_side, pipe.start_node(), junction_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
+        self.add_pipe(pipe_name_on_end_node_side, junction_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
 
         if pipe.get_base_status()==LinkStatus.cv:
             warnings.warn('You are splitting a pipe with a check valve. Both new pipes will have check valves.')
@@ -806,7 +808,7 @@ class WaterNetworkModel(object):
         inp file). This is, this is the time since 12 AM
         on the first day.
         """
-        return self.sim_time_sec + self._start_time_sec
+        return self.sim_time + self.options.start_clocktime
 
     def prev_shifted_time(self):
         """
@@ -815,7 +817,7 @@ class WaterNetworkModel(object):
         AM on the first day to the time at the prevous hydraulic
         timestep.
         """
-        return self.prev_sim_time_sec + self._start_time_sec
+        return self.prev_sim_time + self.options.start_clocktime
 
     def clock_time(self):
         """
@@ -1230,8 +1232,6 @@ class LinkStatus(object):
     "An enum member for open links"
     active = 2
     "An enum member for active valves"
-    cv = 3
-    "An enum member for check valves"
 
     def __init__(self):
         pass
@@ -1244,7 +1244,7 @@ class LinkStatus(object):
         Parameters
         ----------
         value: string
-           Options are 'OPEN', 'CLOSED', 'ACTIVE', or 'CV'.
+           Options are 'OPEN', 'CLOSED', or 'ACTIVE'.
         """
         if type(value) == int:
             return value
@@ -1254,8 +1254,6 @@ class LinkStatus(object):
             return self.closed
         elif value.upper() == 'ACTIVE':
             return self.active
-        elif value.upper() == 'CV':
-            return self.cv
 
     @classmethod
     def status_to_str(self, value):
@@ -1281,8 +1279,6 @@ class LinkStatus(object):
             return 'CLOSED'
         elif value == self.active:
             return 'ACTIVE'
-        elif value == self.cv:
-            return 'CV'
 
 class Node(object):
     """
@@ -1339,7 +1335,6 @@ class Link(object):
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
-        self._base_status = LinkStatus.opened
         self.status = LinkStatus.opened
 
     def __str__(self):
@@ -1359,12 +1354,6 @@ class Link(object):
         Returns name of end node
         """
         return self._end_node_name
-
-    def get_base_status(self):
-        """
-        Returns the base status of the link
-        """
-        return self._base_status
 
     def name(self):
         """
@@ -1498,8 +1487,8 @@ class Tank(Node):
         min_vol : float
             Minimum tank volume.
             Internal units must be cubic meters (m^3)
-        vol_curve : string
-            Name of the tank volume curve.
+        vol_curve : Curve object
+            Curve object
         """
         super(Tank, self).__init__(name)
         self.elevation = elevation
@@ -1603,7 +1592,7 @@ class Pipe(Link):
     Pipe class that is inherited from Link
     """
     def __init__(self, name, start_node_name, end_node_name, length=304.8,
-                 diameter=0.3048, roughness=100, minor_loss=0.00, status='OPEN'):
+                 diameter=0.3048, roughness=100, minor_loss=0.00, status='OPEN', check_valve_flag=False):
         """
         Parameters
         ----------
@@ -1627,19 +1616,19 @@ class Pipe(Link):
         minor_loss : float
             Pipe minor loss coefficient
         status : string
-            Pipe status. Options are 'Open', 'Closed', and 'CV'
+            Pipe status. Options are 'Open' or 'Closed'
+        check_valve_flag : bool
+            True if the pipe has a check valve
+            False if the pipe does not have a check valve
         """
         super(Pipe, self).__init__(name, start_node_name, end_node_name)
         self.length = length
         self.diameter = diameter
         self.roughness = roughness
         self.minor_loss = minor_loss
+        self.cv = check_valve_flag
         if status is not None:
-            self._base_status = LinkStatus.str_to_status(status)
-            if self._base_status == LinkStatus.cv:
-                self.current_status = LinkStatus.opened
-            else:
-                self.current_status = self._base_status
+            self.status = LinkStatus.str_to_status(status)
         self.bulk_rxn_coeff = None
         self.wall_rxn_coeff = None
 
@@ -1667,8 +1656,7 @@ class Pump(Link):
             Where power is a fixed value in KW, while a head curve is a Curve object.
         """
         super(Pump, self).__init__(name, start_node_name, end_node_name)
-        self.base_speed = 1.0
-        self.current_speed = 1.0
+        self.speed = 1.0
         self.curve = None
         self.power = None
         self.info_type = info_type.upper()
@@ -1788,7 +1776,7 @@ class Valve(Link):
         diameter : float
             Diameter of the valve.
             Internal units must be meters (m)
-        valve_type : float
+        valve_type : string
             Type of valve. Options are 'PRV', etc
         minor_loss : float
             Pipe minor loss coefficient
@@ -1799,11 +1787,8 @@ class Valve(Link):
         self.diameter = diameter
         self.valve_type = valve_type
         self.minor_loss = minor_loss
-        self.base_setting = setting
-        self.current_setting = setting
-        self._base_status = LinkStatus.active
-        self.current_status = LinkStatus.active
-
+        self.setting = setting
+        self.status = LinkStatus.active
 
 class Curve(object):
     """
