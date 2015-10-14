@@ -9,6 +9,7 @@ WNTR 0.1 documentation
    units
    getting_started
    waternetworkmodel
+   networkxgraph
    hydraulics
    waterquality
    resultsobject

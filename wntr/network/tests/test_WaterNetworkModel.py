@@ -18,7 +18,7 @@ def test_Net1():
     parser = wntr.network.ParseWaterNetwork()
     parser.read_inp_file(wn, inp_file)
     
-    G = wn._graph
+    G = wn.get_graph_deep_copy()
     
     node = G.node
     elevation = wn.query_node_attribute('elevation')
