@@ -617,13 +617,13 @@ class ScipyModel(object):
             self.junction_demand[junction_id] = junction.current_demand
         links_closed = []
         for link_name, link in self._wn.links():
-            if link.current_status == LinkStatus.closed:
+            if link.status == LinkStatus.closed:
                 link_id = self._link_name_to_id[link_name]
                 self.links_closed.append(link_id)
         for valve_name, valve in self._wn.links(Valve):
             valve_id = self._link_name_to_id[valve_name]
-            self.valve_status[valve_id] = valve.current_status
-            self.valve_settings[valve_id] = valve.current_setting
+            self.valve_status[valve_id] = valve.status
+            self.valve_settings[valve_id] = valve.setting
 
     def initialize_results_dict(self):
         # Data for results object
@@ -707,7 +707,7 @@ class ScipyModel(object):
     def update_junction_demands(self, demand_dict):
         for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
-            t = self._wn.sim_time_sec/self._wn.options.hydraulic_timestep
+            t = self._wn.sim_time/self._wn.options.hydraulic_timestep
             junction.current_demand = demand_dict[(junction_name,t)]
 
     def print_jacobian(self, jacobian):

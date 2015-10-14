@@ -45,7 +45,7 @@ class ScipySimulatorV2(WaterNetworkSimulator):
         self.solver = NewtonSolverV2()
 
         results = NetResults()
-        results.time = np.arange(0, self._sim_duration_sec+self._hydraulic_step_sec, self._hydraulic_step_sec)
+        results.time = np.arange(0, self._wn.options.duration+self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
 
         # Initialize X
         # Vars will be ordered:
@@ -62,8 +62,8 @@ class ScipySimulatorV2(WaterNetworkSimulator):
         start_main_loop_time = time.time()
         self.prep_time_before_main_loop - start_main_loop_time - start_run_sim_time
 
-        while self._wn.sim_time_sec <= self._wn.options.duration:
-            print self._wn.sim_time_sec
+        while self._wn.sim_time <= self._wn.options.duration:
+            print self._wn.sim_time
             model.update_junction_demands(self._demand_dict)
             model.set_network_status_by_id()
             model.set_jacobian_constants()
@@ -71,11 +71,11 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             [self._X,num_iters] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             end_solve_step = time.time()
             X_init = copy.copy(self._X)
-            self.solve_step[int(self._wn.sim_time_sec/self._wn.options.hydraulic_timestep)] = end_solve_step - start_solve_step
+            self.solve_step[int(self._wn.sim_time/self._wn.options.hydraulic_timestep)] = end_solve_step - start_solve_step
             model.save_results(self._X, results)
-            self._wn.prev_sim_time_sec = self._wn.sim_time_sec
-            self._wn.sim_time_sec += self._wn.options.hydraulic_timestep
-            if self._wn.sim_time_sec <= self._wn.options.duration:
+            self._wn.prev_sim_time = self._wn.sim_time
+            self._wn.sim_time += self._wn.options.hydraulic_timestep
+            if self._wn.sim_time <= self._wn.options.duration:
                 model.update_tank_heads(self._X)
 
         model.get_results(results)

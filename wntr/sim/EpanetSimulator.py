@@ -46,7 +46,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         
         # Create results object and load general simulation options. 
         results = NetResults()
-        results.time = np.arange(0, self._sim_duration_sec+self._hydraulic_step_sec, self._hydraulic_step_sec)
+        results.time = np.arange(0, self._wn.options.duration+self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
         results.error_code = 0
         
         ntimes = len(results.time)
