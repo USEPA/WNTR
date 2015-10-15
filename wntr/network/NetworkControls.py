@@ -80,7 +80,7 @@ class TargetAttributeControlAction(ControlAction):
         if not hasattr(target, self._attribute):
             raise ValueError('attribute specified in TargetAttributeControlAction is not valid for targe_obj')
 
-        setattr(target, self._attribute, value)
+        setattr(target, self._attribute, self._value)
 
 class Control(object):
     """
@@ -128,7 +128,7 @@ class Control(object):
             This is true if we are calling before the solve, and false if 
             we are calling after the solve.
         """
-        return _IsControlActionRequiredImpl(self, wnm, presolve_flag)
+        return self._IsControlActionRequiredImpl(wnm, presolve_flag)
 
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
@@ -161,9 +161,9 @@ class Control(object):
             An instance of the current WaterNetworkModel object that
             is being simulated.
         """
-        return _FireControlActionImpl(wnm)
+        self._FireControlActionImpl(wnm)
 
-    def _FireControlActionImpl(wnm):
+    def _FireControlActionImpl(self, wnm):
         """
         This is the method that should be overridden in derived classes
         to implement the action of firing the control.
@@ -251,7 +251,7 @@ class TimeControl(Control):
 
         return (False, None)
 
-    def _FireControlActionImpl(wnm):
+    def _FireControlActionImpl(self, wnm):
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
@@ -259,7 +259,7 @@ class TimeControl(Control):
         if self._control_action is None:
             raise ValueError('_control_action is None inside TimeControl')
 
-        self._control_action.FireControlAction(wnm)
+        self._control_action.FireControlAction()
         if self._daily_flag:
             self._fire_time += 24*3600
 

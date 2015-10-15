@@ -615,7 +615,7 @@ class ScipyModel(object):
         for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
             self.junction_demand[junction_id] = junction.current_demand
-        links_closed = []
+        self.links_closed = []
         for link_name, link in self._wn.links():
             if link.status == LinkStatus.closed:
                 link_id = self._link_name_to_id[link_name]
