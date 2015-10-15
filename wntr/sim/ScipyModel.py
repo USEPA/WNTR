@@ -435,7 +435,7 @@ class ScipyModel(object):
         for link_id in self._link_ids:
             if link_id in self.links_closed:
                 value_ndx += 3
-            elif link_id in self._pipe_ids:
+            elif self.link_types[link_id] == wntr.network.LinkTypes.pipe:
                 value_ndx += 2
                 flow = flows[link_id]
                 pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
@@ -452,7 +452,7 @@ class ScipyModel(object):
                 else:
                     self.jac_values[value_ndx] = 1.852*pipe_resistance_coeff*flow**0.852
                 value_ndx += 1
-            elif link_id in self._pump_ids:
+            elif self.link_types[link_id] == wntr.network.LinkTypes.pump:
                 flow = flows[link_id]
                 if link_id in self.head_curve_coefficients.keys():
                     value_ndx += 2
@@ -476,7 +476,7 @@ class ScipyModel(object):
                         value_ndx += 1
                     self.jac_values[value_ndx] = 1000.0*self._g*x[start_node_id] - 1000.0*self._g*x[end_node_id]
                     value_ndx += 1
-            elif link_id in self._valve_ids:
+            elif self.link_types[link_id] == wntr.network.LinkTypes.valve:
                 if link_id in self._prv_ids:
                     if self.valve_status[link_id] == LinkStatus.active: # active valve
                         value_ndx += 3
@@ -517,73 +517,72 @@ class ScipyModel(object):
 
     def get_headloss_residual(self, head, flow):
 
-        for link_id in xrange(self.num_links):
+        for link_id in self._pipe_ids:
             link_flow = flow[link_id]
             start_node_id = self.link_start_nodes[link_id]
             end_node_id = self.link_end_nodes[link_id]
 
-            if link_id in self.links_closed:
+            pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
+            if link_flow < -self.hw_q2:
+                pipe_headloss = -pipe_resistance_coeff*abs(link_flow)**1.852
+            elif link_flow <= -self.hw_q1:
+                pipe_headloss = -pipe_resistance_coeff*(self.hw_a*abs(link_flow)**3 + self.hw_b*abs(link_flow)**2 + self.hw_c*abs(link_flow) + self.hw_d)
+            elif link_flow <= 0.0:
+                pipe_headloss = -pipe_resistance_coeff*self.hw_m*abs(link_flow)
+            elif link_flow < self.hw_q1:
+                pipe_headloss = pipe_resistance_coeff*self.hw_m*link_flow
+            elif link_flow <= self.hw_q2:
+                pipe_headloss = pipe_resistance_coeff*(self.hw_a*link_flow**3 + self.hw_b*link_flow**2 + self.hw_c*link_flow + self.hw_d)
+            else:
+                pipe_headloss = pipe_resistance_coeff*link_flow**1.852
+            self.headloss_residual[link_id] = pipe_headloss - (head[start_node_id] - head[end_node_id])
+
+        for link_id in self._pump_ids:
+            link_flow = flow[link_id]
+            start_node_id = self.link_start_nodes[link_id]
+            end_node_id = self.link_end_nodes[link_id]
+
+            if link_id in self.head_curve_coefficients.keys():
+                head_curve_tuple = self.head_curve_coefficients[link_id]
+                A = head_curve_tuple[0]
+                B = head_curve_tuple[1]
+                C = head_curve_tuple[2]
+                pump_headgain = 1.0*A - B*abs(link_flow)**C
+                self.headloss_residual[link_id] = pump_headgain - (head[end_node_id] - head[start_node_id])
+            elif link_id in self.pump_powers.keys():
+                self.headloss_residual[link_id] = self.pump_powers[link_id] - (head[end_node_id]-head[start_node_id])*flow[link_id]*self._g*1000.0
+            else:
+                raise RuntimeError('Only power and head pumps are currently supported.')
+                    
+        for link_id in self._prv_ids:
+            link_flow = flow[link_id]
+            start_node_id = self.link_start_nodes[link_id]
+            end_node_id = self.link_end_nodes[link_id]
+
+            if self.valve_status[link_id] == LinkStatus.active:
+                self.headloss_residual[link_id] = head[end_node_id] - (self.valve_settings[link_id]+self.node_elevations[end_node_id])
+            elif self.valve_status[link_id] == LinkStatus.opened:
+                pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
+                pipe_headloss = pipe_resistance_coeff*abs(flow)**2
+                self.headloss_residual[link_id] = pipe_headloss - (head[start_node_id]-head[end_node_id])
+            elif self.valve_status[link_id] == status_opens.closed:
                 self.headloss_residual[link_id] = link_flow
 
-            elif link_id in self._pipe_ids:
-                pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
-                if link_flow < -self.hw_q2:
-                    pipe_headloss = -pipe_resistance_coeff*abs(link_flow)**1.852
-                elif link_flow <= -self.hw_q1:
-                    pipe_headloss = -pipe_resistance_coeff*(self.hw_a*abs(link_flow)**3 + self.hw_b*abs(link_flow)**2 + self.hw_c*abs(link_flow) + self.hw_d)
-                elif link_flow <= 0.0:
-                    pipe_headloss = -pipe_resistance_coeff*self.hw_m*abs(link_flow)
-                elif link_flow < self.hw_q1:
-                    pipe_headloss = pipe_resistance_coeff*self.hw_m*link_flow
-                elif link_flow <= self.hw_q2:
-                    pipe_headloss = pipe_resistance_coeff*(self.hw_a*link_flow**3 + self.hw_b*link_flow**2 + self.hw_c*link_flow + self.hw_d)
-                else:
-                    pipe_headloss = pipe_resistance_coeff*link_flow**1.852
-                self.headloss_residual[link_id] = pipe_headloss - (head[start_node_id] - head[end_node_id])
-
-            elif link_id in self._pump_ids:
-                if link_id in self.head_curve_coefficients.keys():
-                    head_curve_tuple = self.head_curve_coefficients[link_id]
-                    A = head_curve_tuple[0]
-                    B = head_curve_tuple[1]
-                    C = head_curve_tuple[2]
-                    pump_headgain = 1.0*A - B*abs(link_flow)**C
-                    self.headloss_residual[link_id] = pump_headgain - (head[end_node_id] - head[start_node_id])
-                elif link_id in self.pump_powers.keys():
-                    self.headloss_residual[link_id] = self.pump_powers[link_id] - (head[end_node_id]-head[start_node_id])*flow[link_id]*self._g*1000.0
-                else:
-                    raise RuntimeError('Only power and head pumps are currently supported.')
-                    
-
-            elif link_id in self._valve_ids:
-                if link_id in self._prv_ids:
-                    if self.valve_status[link_id] == LinkStatus.active:
-                        self.headloss_residual[link_id] = head[end_node_id] - (self.valve_settings[link_id]+self.node_elevations[end_node_id])
-                    elif self.valve_status[link_id] == LinkStatus.opened:
-                        pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
-                        pipe_headloss = pipe_resistance_coeff*abs(flow)**2
-                        self.headloss_residual[link_id] = pipe_headloss - (head[start_node_id]-head[end_node_id])
-                    elif self.valve_status[link_id] == status_opens.closed:
-                        self.headloss_residual[link_id] = link_flow
-                else:
-                    raise RuntimeError('Only PRV valves are currently supported.')
-
-            else:
-                raise RuntimeError('Type of link is not recognized')
+        for link_id in self.links_closed:
+            self.headloss_residual[link_id] = link_flow
 
     def get_demand_or_head_residual(self, head, demand):
 
-        for node_id in xrange(self.num_nodes):
-            if node_id in self._junction_ids:
-                #if self._pressure_driven:
-                #    node_elevation = self.node_elevations[node_id]
-                #    raise NotImplementedError('PDD is not implemented yet.')
-                #else:
-                self.demand_or_head_residual[node_id] = demand[node_id] - self.junction_demand[node_id]
-            elif node_id in self._tank_ids:
-                self.demand_or_head_residual[node_id] = head[node_id] - self.tank_head[node_id]
-            elif node_id in self._reservoir_ids:
-                self.demand_or_head_residual[node_id] = head[node_id] - self.reservoir_head[node_id]
+        for node_id in self._junction_ids:
+            #if self._pressure_driven:
+            #    node_elevation = self.node_elevations[node_id]
+            #    raise NotImplementedError('PDD is not implemented yet.')
+            #else:
+            self.demand_or_head_residual[node_id] = demand[node_id] - self.junction_demand[node_id]
+        for node_id in self._tank_ids:
+            self.demand_or_head_residual[node_id] = head[node_id] - self.tank_head[node_id]
+        for node_id in self._reservoir_ids:
+            self.demand_or_head_residual[node_id] = head[node_id] - self.reservoir_head[node_id]
 
     def initialize_flow(self):
         flow = np.zeros(self.num_links)
