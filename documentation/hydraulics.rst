@@ -88,45 +88,20 @@ create a piecewise function as presented below.
 
 
 where :math:`m`, :math:`q_{1}`, and :math:`q_{2}` are appropriate constants and
-\begin{align}
-k = 10.667 C^{-1.852} d^{-4.871} L
-\end{align} 
+
+.. math:: 
+
+    k = 10.667 C^{-1.852} d^{-4.871} L
+
 The modeling language internally does another reformulation to handle
 the absolute values. The result is that flow can be in either
 direction and the derivative with respect to :math:`q` is non-zero at all
-values of :math:`q`. Equations \ref{eq:mod_HW2} and \ref{eq:mod_HW5}
-function to smooth the transition from Equation \ref{eq:mod_HW1} to
-\ref{eq:mod_HW3} and from Equation \ref{eq:mod_HW4} to
-\ref{eq:mod_HW6}, with coefficients chosen so that both function and
+values of :math:`q`. The two polynomials function to smooth the transition between the other equations, with coefficients chosen so that both function and
 gradient values are continuous at :math:`-q_{2}`, :math:`-q_{1}`, :math:`q_{1}`, and
-:math:`q_{2}`. Appendix \ref{appendix:smoothing} describes this technique in
-detail. Figures \ref{fig:mod_hw} and \ref{fig:zoomed_mod_hw} compare
-the Hazen-Williams and modified Hazen-Williams curves, with :math:`m = 0.01`
-m:math:`^{2.556}`/s:math:`^{0.852}`, :math:`C = 100`, :math:`d = 0.5` m, and :math:`L = 200` m. The
+:math:`q_{2}`. The section on smoothing describes this technique in
+detail. The two figures below compare
+the Hazen-Williams and modified Hazen-Williams curves, with :math:`m = 0.01 m^{2.556}/s^{0.852}`, :math:`C = 100`, :math:`d = 0.5` m, and :math:`L = 200` m. The
 figures show that the two formulas are essentially indistinguishable.
-
-Other headloss formulas included in EPANET \cite{rossman2000epanet}
-include the Chezy-Manning formula and the Darcy-Weisbach formula. The
-Chezy-Manning formula is not currently supported but can be added
-easily. The Darcy-Weisbach formula computes the friction factor based
-on the flow regime and would take a little more time to implement. It
-would require smoothing between flow regimes.
-
-\begin{figure}[h!]
-  \begin{center}
-    \includegraphics[trim = 0 10 0 20, clip, width=.8\textwidth]{plots/modified_HW.pdf}
-    \caption{A comparison of the Hazen-Williams formula and the Modified Hazen-Williams formula.}
-    \label{fig:mod_hw}
-  \end{center}
-\end{figure}
-\begin{figure}[h!]
-  \begin{center}
-    \includegraphics[trim = 0 10 0 20, clip, width=.8\textwidth]{plots/zoom_modified_HW.pdf}
-    \caption{Enlarged view of Figure \ref{fig:mod_hw}.}
-    \label{fig:zoomed_mod_hw}
-  \end{center}
-\end{figure}
-
 
 Demand-driven analysis
 ----------------------
