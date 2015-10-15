@@ -700,14 +700,14 @@ class ScipyModel(object):
         for tank_name, tank in self._wn.nodes(Tank):
             tank_id = self._node_name_to_id[tank_name]
             q_net = demand[tank_id]
-            delta_h = 4.0*q_net*self._wn.options.hydraulic_timestep/(math.pi*tank.diameter**2)
+            delta_h = 4.0*q_net*(self._wn.sim_time-self._wn.prev_sim_time)/(math.pi*tank.diameter**2)
             tank.current_level = tank.current_level + delta_h
 
 
     def update_junction_demands(self, demand_dict):
         for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
-            t = self._wn.sim_time/self._wn.options.hydraulic_timestep
+            t = math.floor(self._wn.sim_time/self._wn.options.hydraulic_timestep)
             junction.current_demand = demand_dict[(junction_name,t)]
 
     def print_jacobian(self, jacobian):
