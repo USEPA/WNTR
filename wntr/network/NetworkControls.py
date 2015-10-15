@@ -286,26 +286,42 @@ class ConditionalControl(Control):
        less(x1, x2[, out]) Return the truth value of (x1 < x2) element-wise.
        less_equal(x1, x2[, out]) Return the truth value of (x1 =< x2) element-wise.
 
-    threshold : float
-       The threshold value to compare against. In this implementation, this must
-       be a float.
+    threshold : float or tuple 
+       The threshold value to compare against. If a float is passed,
+       this threshold is considered constant. If a tuple is passed, it
+       is taken as (object2, attribute2), and the source_attribute on
+       the source_obj will be compared to attribute2 on object2.
 
     control_action : An object derived from ControlAction 
        This is the event action that will be fired when the condition becomes true
     """
 
-    def __init__(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, control_action):
+    def __init__(self, source_obj, source_attribute, operation, threshold, control_action):
         self._source_obj = source_obj
         self._source_attribute = source_attribute
-        self._prev_source_attribute = prev_source_attribute
+        self._prev_source_attr_value = None
+        self._prev_threshold_attr_value = None
         self._operation = operation
-        self._threshold = threshold
         self._control_action = control_action
+        self._constant_threshold = None
+        self._threshold = None
+        self._threshold_obj = None
+        self._threshold_attr = None
+
+        if type(threshold) == float:
+            self._constant_threshold = True
+            self._threshold = threshold
+        else:
+            self._constant_threshold = False
+            self._threshold_obj = threshold[0]
+            self._threshold_attr = threshold[1]
 
         if source_obj is None:
             raise ValueError('source_obj of None passed to ConditionalControlObject.')
         if not hasattr(source_obj, source_attribute):
             raise ValueError('In ConditionalControlObject, source_obj does not contain the attribute specified by source_attribute.')
+        if not hasattr(self.threshold_obj, self._threshold_attr):
+            raise ValueError('In ConditionalControlObject, the threshold object does not contain the specified attribute.')
 
     @classmethod
     def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
