@@ -351,7 +351,7 @@ class ScipyModel(object):
                 value_ndx += 1
                 self.jac_values[value_ndx] = 1.0 # entry for flow variable
                 value_ndx += 1
-            elif link_id in self._pipe_ids:
+            elif self.link_types[link_id] == wntr.network.LinkTypes.pipe:
                 if start_node_id < end_node_id:
                     self.jac_values[value_ndx] = -1.0 # entry for start node head variable
                     value_ndx += 1
@@ -363,7 +363,7 @@ class ScipyModel(object):
                     self.jac_values[value_ndx] = -1.0 # entry for start node head variable 
                     value_ndx += 1
                 value_ndx += 1 # for the entry on that row for the flow variable
-            elif link_id in self._pump_ids:
+            elif self.link_types[link_id] == wntr.network.LinkTypes.pump:
                 if link_id in self.head_curve_coefficients.keys():
                     if start_node_id < end_node_id:
                         self.jac_values[value_ndx] = 1.0 # entry for start node head variable
@@ -380,7 +380,7 @@ class ScipyModel(object):
                     value_ndx += 3
                 else:
                     raise RuntimeError('Developers missed a type of pump in set_jacobian_constants.')
-            elif link_id in self._valve_ids:
+            elif self.link_types[link_id] == wntr.network.LinkTypes.valve:
                 if link_id in self._prv_ids:
                     if self.valve_status[link_id] == LinkStatus.active: # Active
                         if start_node_id < end_node_id: # start node column comes first
@@ -607,13 +607,13 @@ class ScipyModel(object):
     def set_network_status_by_id(self):
         for tank_name, tank in self._wn.nodes(Tank):
             tank_id = self._node_name_to_id[tank_name]
-            self.tank_head[tank_id] = tank.current_level + tank.elevation
+            self.tank_head[tank_id] = tank.expected_level + tank.elevation
         for reservoir_name, reservoir in self._wn.nodes(Reservoir):
             reservoir_id = self._node_name_to_id[reservoir_name]
-            self.reservoir_head[reservoir_id] = reservoir.current_head
+            self.reservoir_head[reservoir_id] = reservoir.expected_head
         for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
-            self.junction_demand[junction_id] = junction.current_demand
+            self.junction_demand[junction_id] = junction.expected_demand
         self.links_closed = []
         for link_name, link in self._wn.links():
             if link.status == LinkStatus.closed:
@@ -700,14 +700,13 @@ class ScipyModel(object):
             tank_id = self._node_name_to_id[tank_name]
             q_net = demand[tank_id]
             delta_h = 4.0*q_net*(self._wn.sim_time-self._wn.prev_sim_time)/(math.pi*tank.diameter**2)
-            tank.current_level = tank.current_level + delta_h
-
+            tank.expected_level = tank.expected_level + delta_h
 
     def update_junction_demands(self, demand_dict):
         for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
             t = math.floor(self._wn.sim_time/self._wn.options.hydraulic_timestep)
-            junction.current_demand = demand_dict[(junction_name,t)]
+            junction.expected_demand = demand_dict[(junction_name,t)]
 
     def print_jacobian(self, jacobian):
         #np.set_printoptions(threshold='nan')

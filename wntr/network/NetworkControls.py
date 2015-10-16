@@ -79,7 +79,8 @@ class TargetAttributeControlAction(ControlAction):
             raise ValueError('target is None inside TargetAttribureControlAction::_FireControlActionImpl. This may be because a target_obj was added, but later the object itself was deleted.')
         if not hasattr(target, self._attribute):
             raise ValueError('attribute specified in TargetAttributeControlAction is not valid for targe_obj')
-
+        
+        print target.name(),' attribute ',self._attribute,' is being set to ',self._value
         setattr(target, self._attribute, self._value)
 
 class Control(object):
@@ -105,7 +106,7 @@ class Control(object):
     def __init__(self):
         pass
 
-    def IsControlActionRequired(self, wnm, presolve_flag):
+    def IsControlActionRequired(self, wnm):
         """
         This method is called to see if any action is required
         by this control object. This method returns a tuple
@@ -128,9 +129,9 @@ class Control(object):
             This is true if we are calling before the solve, and false if 
             we are calling after the solve.
         """
-        return self._IsControlActionRequiredImpl(wnm, presolve_flag)
+        return self._IsControlActionRequiredImpl(wnm)
 
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
+    def _IsControlActionRequiredImpl(self, wnm):
         """
         This method should be implemented in derived Control classes as 
         the main implementation of IsControlActionRequired.
@@ -221,7 +222,6 @@ class TimeControl(Control):
 
         if daily_flag and fire_time > 24*3600:
             raise ValueError('In TimeControl, a daily control was requested, however, the time passed in was not between 0 and 24*3600')
-        self._control_complete = False
 
         if time_flag == 'SIM_TIME' and self._fire_time < wnm.sim_time:
             raise RuntimeError('You cannot create a time control that should be activated before the start of the simulation.')
@@ -234,20 +234,17 @@ class TimeControl(Control):
         t = TargetAttributeControlAction(target_obj, attribute, value)
         return TimeControl(fire_time, time_flag, daily_flag, t)
     
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
+    def _IsControlActionRequiredImpl(self, wnm):
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
-        if presolve_flag == False:
-            return (False, None)
-
         if self._time_flag == 'SIM_TIME':
             if wnm.prev_sim_time < self._fire_time and self._fire_time <= wnm.sim_time:
-                return (True, wnm.sim_time - self._fire_time)
+                return (True, int(wnm.sim_time - self._fire_time))
         elif self._time_flag == 'SHIFTED_TIME':
             if wnm.prev_shifted_time() < self._fire_time and self._fire_time <= wnm.shifted_time():
-                return (True, wnm.shifted_time() - self._fire_time)
+                return (True, int(wnm.shifted_time() - self._fire_time))
 
         return (False, None)
 

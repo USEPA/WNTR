@@ -62,6 +62,12 @@ class WaterNetworkModel(object):
         # Dictionary of node or link objects indexed by their names
         self._nodes = {}
         self._links = {}
+        self._junctions = {}
+        self._tanks = {}
+        self._reservoirs = {}
+        self._pipes = {}
+        self._pumps = {}
+        self._valves = {}
 
         # Initialize pattern and curve dictionaries
         # Dictionary of pattern or curves indexed by their names
@@ -112,6 +118,7 @@ class WaterNetworkModel(object):
         elevation = float(elevation)
         junction = Junction(name, base_demand, demand_pattern_name, elevation)
         self._nodes[name] = junction
+        self._junctions[name] = junction
         self._graph.add_node(name)
         if coordinates is not None:
             self.set_node_coordinates(name, coordinates)
@@ -167,6 +174,7 @@ class WaterNetworkModel(object):
                  min_level, max_level, diameter,
                  min_vol, vol_curve)
         self._nodes[name] = tank
+        self._tanks[name] = tank
         self._graph.add_node(name)
         if coordinates is not None:
             self.set_node_coordinates(name, coordinates)
@@ -195,6 +203,7 @@ class WaterNetworkModel(object):
         base_head = float(base_head)
         reservoir = Reservoir(name, base_head, head_pattern_name)
         self._nodes[name] = reservoir
+        self._reservoirs[name] = reservoir
         self._graph.add_node(name)
         if coordinates is not None:
             self.set_node_coordinates(name, coordinates)
@@ -243,6 +252,7 @@ class WaterNetworkModel(object):
         if check_valve_flag:
             self._check_valves.append(name)
         self._links[name] = pipe
+        self._pipes[name] = pipe
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'pipe'})
         self._num_pipes += 1
@@ -269,6 +279,7 @@ class WaterNetworkModel(object):
         """
         pump = Pump(name, start_node_name, end_node_name, info_type, info_value)
         self._links[name] = pump
+        self._pumps[name] = pump
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'pump'})
         self._num_pumps += 1
@@ -305,6 +316,7 @@ class WaterNetworkModel(object):
         valve = Valve(name, start_node_name, end_node_name,
                       diameter, valve_type, minor_loss, setting)
         self._links[name] = valve
+        self._valves[name] = valve
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'valve'})
         self._num_valves += 1
@@ -393,10 +405,13 @@ class WaterNetworkModel(object):
         self._links.pop(name)
         if isinstance(link, Pipe):
             self._num_pipes -= 1
+            self._pipes.pop(name)
         elif isinstance(link, Pump):
             self._num_pumps -= 1
+            self._pumps.pop(name)
         elif isinstance(link, Valve):
             self._num_valves -= 1
+            self._valves.pop(name)
         else:
             raise RuntimeError('Link Type not Recognized')
 
@@ -424,10 +439,13 @@ class WaterNetworkModel(object):
         self._graph.remove_node(name)
         if isinstance(node, Junction):
             self._num_junctions -= 1
+            self._junctions.pop(name)
         elif isinstance(node, Tank):
             self._num_tanks -= 1
+            self._tanks.pop(name)
         elif isinstance(node, Reservoir):
             self._num_reservoirs -= 1
+            self._reservoirs.pop(name)
         else:
             raise RuntimeError('Node type is not recognized.')
 
@@ -766,6 +784,18 @@ class WaterNetworkModel(object):
             elif isinstance(node, node_type):
                 yield node_name, node
 
+    def junctions(self):
+        for name, node in self._junctions.iteritems():
+            yield name, node
+
+    def tanks(self):
+        for name, node in self._tanks.iteritems():
+            yield name, node
+
+    def reservoirs(self):
+        for name, node in self._reservoirs.iteritems():
+            yield name, node
+
     def links(self, link_type=None):
         """
         A generator to iterate over all links of link_type.
@@ -781,6 +811,18 @@ class WaterNetworkModel(object):
                 yield link_name, link
             elif isinstance(link, link_type):
                 yield link_name, link
+
+    def pipes(self):
+        for name, link in self._pipes.iteritems():
+            yield name, link
+
+    def pumps(self):
+        for name, link in self._pumps.iteritems():
+            yield name, link
+
+    def valves(self):
+        for name, link in self._valves.iteritems():
+            yield name, link
 
     def curves(self):
         """
@@ -1301,6 +1343,10 @@ class Node(object):
         >>> node2 = Node('North Lake','Reservoir')
         """
         self._name = name
+        self.prev_head = None
+        self.head = None
+        self.prev_demand = None
+        self.demand = None
 
     def __str__(self):
         """
@@ -1338,7 +1384,10 @@ class Link(object):
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
+        self.prev_status = None
         self.status = LinkStatus.opened
+        self.prev_flow = None
+        self.flow = None
 
     def __str__(self):
         """
@@ -1388,7 +1437,8 @@ class Junction(Node):
         """
         super(Junction, self).__init__(name)
         self.base_demand = base_demand
-        self.current_demand = base_demand
+        self.prev_expected_demand = None
+        self.expected_demand = base_demand
         self.demand_pattern_name = demand_pattern_name
         self.elevation = elevation
         self.nominal_pressure = 20.0
@@ -1496,7 +1546,8 @@ class Tank(Node):
         super(Tank, self).__init__(name)
         self.elevation = elevation
         self.init_level = init_level
-        self.current_level = init_level
+        self.prev_expected_level = None
+        self.expected_level = init_level
         self.min_level = min_level
         self.max_level = max_level
         self.diameter = diameter
@@ -1587,7 +1638,8 @@ class Reservoir(Node):
         """
         super(Reservoir, self).__init__(name)
         self.base_head = base_head
-        self.current_head = base_head
+        self.prev_expected_head = None
+        self.expected_head = base_head
         self.head_pattern_name = head_pattern_name
 
 class Pipe(Link):
@@ -1659,6 +1711,7 @@ class Pump(Link):
             Where power is a fixed value in KW, while a head curve is a Curve object.
         """
         super(Pump, self).__init__(name, start_node_name, end_node_name)
+        self.prev_speed = None
         self.speed = 1.0
         self.curve = None
         self.power = None
@@ -1790,6 +1843,7 @@ class Valve(Link):
         self.diameter = diameter
         self.valve_type = valve_type
         self.minor_loss = minor_loss
+        self.prev_setting = None
         self.setting = setting
         self.status = LinkStatus.active
 
