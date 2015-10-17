@@ -4,6 +4,7 @@ import numpy as np
 import scipy.sparse as sparse
 import math
 from wntr.network.WaterNetworkModel import *
+import copy
 
 class ScipyModel(object):
     def __init__(self, wn):
@@ -33,14 +34,20 @@ class ScipyModel(object):
         self._set_node_attributes()
         self._set_link_attributes()
 
-        # network status objects
+        # network input objects
         # these objects use node/link ids rather than names
+        self.prev_tank_head = {}
         self.tank_head = {}
+        self.prev_reservoir_head = {}
         self.reservoir_head = {}
+        self.prev_junction_demand = {}
         self.junction_demand = {}
-        self.links_closed = []
-        self.valve_status = {}
+        self.prev_link_status = {}
+        self.link_status = {}
+        self.prev_valve_settings = {}
         self.valve_settings = {}
+        self.prev_pump_speeds = {}
+        self.pump_speeds = {}
 
         # Initialize Jacobian
         self._set_jacobian_structure()
@@ -344,7 +351,7 @@ class ScipyModel(object):
         for link_id in self._link_ids:
             start_node_id = self.link_start_nodes[link_id]
             end_node_id = self.link_end_nodes[link_id]
-            if link_id in self.links_closed:
+            if self.link_status[link_id] == wntr.network.LinkStatus.closed:
                 self.jac_values[value_ndx] = 0.0 # entry for start node head variable
                 value_ndx += 1
                 self.jac_values[value_ndx] = 0.0 # entry for end node head variable
@@ -382,7 +389,7 @@ class ScipyModel(object):
                     raise RuntimeError('Developers missed a type of pump in set_jacobian_constants.')
             elif self.link_types[link_id] == wntr.network.LinkTypes.valve:
                 if link_id in self._prv_ids:
-                    if self.valve_status[link_id] == LinkStatus.active: # Active
+                    if self.link_status[link_id] == LinkStatus.active: # Active
                         if start_node_id < end_node_id: # start node column comes first
                             self.jac_values[value_ndx] = 0.0
                             value_ndx += 1
@@ -397,7 +404,7 @@ class ScipyModel(object):
                             value_ndx += 1
                             self.jac_values[value_ndx] = 0.0
                             value_ndx += 1
-                    elif self.valve_status[link_id] == LinkStatus.opened:
+                    elif self.link_status[link_id] == LinkStatus.opened:
                         if start_node_id < end_node_id: # start node column comes first
                             self.jac_values[value_ndx] = -1.0
                             value_ndx += 1
@@ -410,7 +417,7 @@ class ScipyModel(object):
                             self.jac_values[value_ndx] = -1.0
                             value_ndx += 1
                             value_ndx += 1
-                    elif self.valve_status[link_id] == LinkStatus.closed:
+                    elif self.link_status[link_id] == LinkStatus.closed:
                         self.jac_values[value_ndx] = 0.0
                         value_ndx += 1
                         self.jac_values[value_ndx] = 0.0
@@ -433,7 +440,7 @@ class ScipyModel(object):
 
         # Set the jacobian entries that depend on variable values
         for link_id in self._link_ids:
-            if link_id in self.links_closed:
+            if self.link_status[link_id] == wntr.network.LinkStatus.closed:
                 value_ndx += 3
             elif self.link_types[link_id] == wntr.network.LinkTypes.pipe:
                 value_ndx += 2
@@ -478,15 +485,15 @@ class ScipyModel(object):
                     value_ndx += 1
             elif self.link_types[link_id] == wntr.network.LinkTypes.valve:
                 if link_id in self._prv_ids:
-                    if self.valve_status[link_id] == LinkStatus.active: # active valve
+                    if self.link_status[link_id] == LinkStatus.active: # active valve
                         value_ndx += 3
-                    elif self.valve_status[link_id] == LinkStatus.opened:
+                    elif self.link_status[link_id] == LinkStatus.opened:
                         value_ndx += 2
                         flow = flows[link_id]
                         pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
                         self.jac_values[value_ndx] = 2.0*pipe_resistance_coeff*abs(flow)
                         value_ndx += 1
-                    elif self.valve_status[link_id] == LinkStatus.closed:
+                    elif self.link_status[link_id] == LinkStatus.closed:
                         value_ndx += 3
 
         self.jacobian.data = self.jac_values
@@ -519,57 +526,60 @@ class ScipyModel(object):
 
         for link_id in self._pipe_ids:
             link_flow = flow[link_id]
-            start_node_id = self.link_start_nodes[link_id]
-            end_node_id = self.link_end_nodes[link_id]
-
-            pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
-            if link_flow < -self.hw_q2:
-                pipe_headloss = -pipe_resistance_coeff*abs(link_flow)**1.852
-            elif link_flow <= -self.hw_q1:
-                pipe_headloss = -pipe_resistance_coeff*(self.hw_a*abs(link_flow)**3 + self.hw_b*abs(link_flow)**2 + self.hw_c*abs(link_flow) + self.hw_d)
-            elif link_flow <= 0.0:
-                pipe_headloss = -pipe_resistance_coeff*self.hw_m*abs(link_flow)
-            elif link_flow < self.hw_q1:
-                pipe_headloss = pipe_resistance_coeff*self.hw_m*link_flow
-            elif link_flow <= self.hw_q2:
-                pipe_headloss = pipe_resistance_coeff*(self.hw_a*link_flow**3 + self.hw_b*link_flow**2 + self.hw_c*link_flow + self.hw_d)
+            if self.link_status[link_id] == wntr.network.LinkStatus.closed:
+                self.headloss_residual[link_id] = link_flow
             else:
-                pipe_headloss = pipe_resistance_coeff*link_flow**1.852
-            self.headloss_residual[link_id] = pipe_headloss - (head[start_node_id] - head[end_node_id])
+                start_node_id = self.link_start_nodes[link_id]
+                end_node_id = self.link_end_nodes[link_id]
+
+                pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
+                if link_flow < -self.hw_q2:
+                    pipe_headloss = -pipe_resistance_coeff*abs(link_flow)**1.852
+                elif link_flow <= -self.hw_q1:
+                    pipe_headloss = -pipe_resistance_coeff*(self.hw_a*abs(link_flow)**3 + self.hw_b*abs(link_flow)**2 + self.hw_c*abs(link_flow) + self.hw_d)
+                elif link_flow <= 0.0:
+                    pipe_headloss = -pipe_resistance_coeff*self.hw_m*abs(link_flow)
+                elif link_flow < self.hw_q1:
+                    pipe_headloss = pipe_resistance_coeff*self.hw_m*link_flow
+                elif link_flow <= self.hw_q2:
+                    pipe_headloss = pipe_resistance_coeff*(self.hw_a*link_flow**3 + self.hw_b*link_flow**2 + self.hw_c*link_flow + self.hw_d)
+                else:
+                    pipe_headloss = pipe_resistance_coeff*link_flow**1.852
+                self.headloss_residual[link_id] = pipe_headloss - (head[start_node_id] - head[end_node_id])
 
         for link_id in self._pump_ids:
             link_flow = flow[link_id]
-            start_node_id = self.link_start_nodes[link_id]
-            end_node_id = self.link_end_nodes[link_id]
-
-            if link_id in self.head_curve_coefficients.keys():
-                head_curve_tuple = self.head_curve_coefficients[link_id]
-                A = head_curve_tuple[0]
-                B = head_curve_tuple[1]
-                C = head_curve_tuple[2]
-                pump_headgain = 1.0*A - B*abs(link_flow)**C
-                self.headloss_residual[link_id] = pump_headgain - (head[end_node_id] - head[start_node_id])
-            elif link_id in self.pump_powers.keys():
-                self.headloss_residual[link_id] = self.pump_powers[link_id] - (head[end_node_id]-head[start_node_id])*flow[link_id]*self._g*1000.0
+            if self.link_status[link_id] == wntr.network.LinkStatus.closed:
+                self.headloss_residual[link_id] = link_flow
             else:
-                raise RuntimeError('Only power and head pumps are currently supported.')
+                start_node_id = self.link_start_nodes[link_id]
+                end_node_id = self.link_end_nodes[link_id]
+
+                if link_id in self.head_curve_coefficients.keys():
+                    head_curve_tuple = self.head_curve_coefficients[link_id]
+                    A = head_curve_tuple[0]
+                    B = head_curve_tuple[1]
+                    C = head_curve_tuple[2]
+                    pump_headgain = 1.0*A - B*abs(link_flow)**C
+                    self.headloss_residual[link_id] = pump_headgain - (head[end_node_id] - head[start_node_id])
+                elif link_id in self.pump_powers.keys():
+                    self.headloss_residual[link_id] = self.pump_powers[link_id] - (head[end_node_id]-head[start_node_id])*flow[link_id]*self._g*1000.0
+                else:
+                    raise RuntimeError('Only power and head pumps are currently supported.')
                     
         for link_id in self._prv_ids:
             link_flow = flow[link_id]
             start_node_id = self.link_start_nodes[link_id]
             end_node_id = self.link_end_nodes[link_id]
 
-            if self.valve_status[link_id] == LinkStatus.active:
+            if self.link_status[link_id] == LinkStatus.active:
                 self.headloss_residual[link_id] = head[end_node_id] - (self.valve_settings[link_id]+self.node_elevations[end_node_id])
-            elif self.valve_status[link_id] == LinkStatus.opened:
+            elif self.link_status[link_id] == LinkStatus.opened:
                 pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
                 pipe_headloss = pipe_resistance_coeff*abs(flow)**2
                 self.headloss_residual[link_id] = pipe_headloss - (head[start_node_id]-head[end_node_id])
-            elif self.valve_status[link_id] == status_opens.closed:
+            elif self.link_status[link_id] == wntr.network.LinkStatus.closed:
                 self.headloss_residual[link_id] = link_flow
-
-        for link_id in self.links_closed:
-            self.headloss_residual[link_id] = link_flow
 
     def get_demand_or_head_residual(self, head, demand):
 
@@ -603,26 +613,6 @@ class ScipyModel(object):
         for junction_id in self._junction_ids:
             demand[junction_id] = self.junction_demand[junction_id]
         return demand
-
-    def set_network_status_by_id(self):
-        for tank_name, tank in self._wn.nodes(Tank):
-            tank_id = self._node_name_to_id[tank_name]
-            self.tank_head[tank_id] = tank.expected_level + tank.elevation
-        for reservoir_name, reservoir in self._wn.nodes(Reservoir):
-            reservoir_id = self._node_name_to_id[reservoir_name]
-            self.reservoir_head[reservoir_id] = reservoir.expected_head
-        for junction_name, junction in self._wn.nodes(Junction):
-            junction_id = self._node_name_to_id[junction_name]
-            self.junction_demand[junction_id] = junction.expected_demand
-        self.links_closed = []
-        for link_name, link in self._wn.links():
-            if link.status == LinkStatus.closed:
-                link_id = self._link_name_to_id[link_name]
-                self.links_closed.append(link_id)
-        for valve_name, valve in self._wn.links(Valve):
-            valve_id = self._link_name_to_id[valve_name]
-            self.valve_status[valve_id] = valve.status
-            self.valve_settings[valve_id] = valve.setting
 
     def initialize_results_dict(self):
         # Data for results object
@@ -693,20 +683,95 @@ class ScipyModel(object):
             link_dictionary[key] = np.array(value).reshape((ntimes, nlinks))
         results.link = pd.Panel(link_dictionary, major_axis=results.time, minor_axis=link_names)
 
-    def update_tank_heads(self, x):
-        demand = x[self.num_nodes:2*self.num_nodes]
-        flow = x[2*self.num_nodes:]
-        for tank_name, tank in self._wn.nodes(Tank):
+    def set_network_inputs_by_id(self):
+        for tank_name, tank in self._wn.tanks():
             tank_id = self._node_name_to_id[tank_name]
-            q_net = demand[tank_id]
+            self.tank_head[tank_id] = tank.head
+        for reservoir_name, reservoir in self._wn.reservoirs():
+            reservoir_id = self._node_name_to_id[reservoir_name]
+            self.reservoir_head[reservoir_id] = reservoir.head
+        for junction_name, junction in self._wn.junctions():
+            junction_id = self._node_name_to_id[junction_name]
+            self.junction_demand[junction_id] = junction.expected_demand
+        for link_name, link in self._wn.links():
+            link_id = self._link_name_to_id[link_name]
+            self.link_status[link_id] = link.status
+        for valve_name, valve in self._wn.valves():
+            valve_id = self._link_name_to_id[valve_name]
+            self.valve_settings[valve_id] = valve.setting
+        for pump_name, pump in self._wn.pumps():
+            pump_id = self._link_name_to_id[pump_name]
+            self.pump_speeds[pump_id] = pump.speed
+
+    def update_tank_heads(self):
+        for tank_name, tank in self._wn.tanks():
+            q_net = tank.prev_demand
             delta_h = 4.0*q_net*(self._wn.sim_time-self._wn.prev_sim_time)/(math.pi*tank.diameter**2)
-            tank.expected_level = tank.expected_level + delta_h
+            tank.head = tank.prev_head + delta_h
 
     def update_junction_demands(self, demand_dict):
-        for junction_name, junction in self._wn.nodes(Junction):
-            junction_id = self._node_name_to_id[junction_name]
+        for junction_name, junction in self._wn.junctions():
             t = math.floor(self._wn.sim_time/self._wn.options.hydraulic_timestep)
             junction.expected_demand = demand_dict[(junction_name,t)]
+
+    def update_network_previous_values(self):
+        self._wn.prev_sim_time = self._wn.sim_time
+        for name, node in self._wn.junctions():
+            node.prev_head = node.head
+            node.prev_demand = node.demand
+            node.prev_expected_demand = node.expected_demand
+        for name, node in self._wn.tanks():
+            node.prev_head = node.head
+            node.prev_demand = node.demand
+        for name, node in self._wn.reservoirs():
+            node.prev_head = node.head
+            node.prev_demand = node.demand
+        for link_name, link in self._wn.pipes():
+            link.prev_status = link.status
+            link.prev_flow = link.flow
+        for link_name, link in self._wn.pumps():
+            link.prev_status = link.status
+            link.prev_flow = link.flow
+            link.prev_speed = link.speed
+        for link_name, link in self._wn.valves():
+            link.prev_status = link.status
+            link.prev_flow = link.flow
+            link.prev_setting = link.setting
+
+    def store_results_in_network(self, x):
+        head = x[:self.num_nodes]
+        demand = x[self.num_nodes:self.num_nodes*2]
+        flow = x[self.num_nodes*2:]
+        for name, node in self._wn.nodes():
+            node_id = self._node_name_to_id[name]
+            node.head = head[node_id]
+            node.demand = demand[node_id]
+        for link_name, link in self._wn.links():
+            link_id = self._link_name_to_id[link_name]
+            link.flow = flow[link_id]
+
+    def update_previous_inputs(self):
+        self.prev_tank_head = copy.copy(self.tank_head)
+        self.prev_reservoir_head = copy.copy(self.reservoir_head)
+        self.prev_junction_demand = copy.copy(self.junction_demand)
+        self.prev_link_status = copy.copy(self.link_status)
+        self.prev_valve_settings = copy.copy(self.valve_settings)
+        self.prev_pump_speeds = copy.copy(self.pump_speeds)
+
+    def check_inputs_changed(self):
+        if self.prev_tank_head != self.tank_head:
+            return True
+        if self.prev_reservoir_head != self.reservoir_head:
+            return True
+        if self.prev_junction_demand != self.junction_demand:
+            return True
+        if self.prev_link_status != self.link_status:
+            return True
+        if self.prev_valve_settings != self.valve_settings:
+            return True
+        if self.prev_pump_speeds != self.pump_speeds:
+            return True
+        return False
 
     def print_jacobian(self, jacobian):
         #np.set_printoptions(threshold='nan')

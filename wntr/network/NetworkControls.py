@@ -80,7 +80,6 @@ class TargetAttributeControlAction(ControlAction):
         if not hasattr(target, self._attribute):
             raise ValueError('attribute specified in TargetAttributeControlAction is not valid for targe_obj')
         
-        print target.name(),' attribute ',self._attribute,' is being set to ',self._value
         setattr(target, self._attribute, self._value)
 
 class Control(object):

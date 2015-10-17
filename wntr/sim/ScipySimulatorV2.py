@@ -52,7 +52,7 @@ class ScipySimulatorV2(WaterNetworkSimulator):
         #    1.) head
         #    2.) demand
         #    3.) flow
-        model.set_network_status_by_id()
+        model.set_network_inputs_by_id()
         head0 = model.initialize_head()
         demand0 = model.initialize_demand()
         flow0 = model.initialize_flow()
@@ -64,15 +64,16 @@ class ScipySimulatorV2(WaterNetworkSimulator):
 
         first_step = True
         trial = 0
+        max_trials = 10
 
         while self._wn.sim_time <= self._wn.options.duration:
             print 'simulation time = ',self._wn.sim_time
 
             # Prepare for solve
             if not first_step:
-                model.update_tank_heads(self._X)
+                model.update_tank_heads()
             model.update_junction_demands(self._demand_dict)
-            model.set_network_status_by_id()
+            model.set_network_inputs_by_id()
             model.set_jacobian_constants()
 
             # Solve
@@ -81,30 +82,34 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             end_solve_step = time.time()
             first_step = False
             X_init = copy.copy(self._X)
-            self.solve_step_time[int(self._wn.sim_time/self._wn.options.hydraulic_timestep)] = end_solve_step - start_solve_step
 
-            # Update previous inputs
-            self._update_previous_inputs()
+            # Enter results in network and update previous inputs
+            model.store_results_in_network(self._X)
+            model.update_previous_inputs()
 
             # Controls
             backup_time, controls_to_activate = self._check_controls()
             self._fire_controls(controls_to_activate)
 
+            model.set_network_inputs_by_id()
+
             # Choose next time and save results if needed
-            if self._check_inputs_changed():
-                print 'inputs changed'
+            if model.check_inputs_changed():
                 if trial == 0:
                     self._wn.sim_time -= backup_time
                 trial += 1
             else:
                 trial = 0
                 if float(self._wn.sim_time)%self._wn.options.hydraulic_timestep == 0:
-                    print 'saving_results at ',self._wn.sim_time
                     model.save_results(self._X, results)
-                self._wn.prev_sim_time = self._wn.sim_time
+                    self.solve_step_time[int(self._wn.sim_time/self._wn.options.hydraulic_timestep)] = end_solve_step - start_solve_step
+                model.update_network_previous_values()
                 self._wn.sim_time += self._wn.options.hydraulic_timestep
                 overstep = float(self._wn.sim_time)%self._wn.options.hydraulic_timestep
                 self._wn.sim_time -= overstep
+
+            if trial > max_trials:
+                raise RuntimeError('Exceeded maximum number of trials!')
 
         model.get_results(results)
         return results
@@ -148,46 +153,3 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             control = self._wn.controls[i]
             control.FireControlAction(self._wn)
 
-    def _check_inputs_changed(self):
-        for junction_name, junction in self._wn.junctions():
-            if junction.prev_expected_demand != junction.expected_demand:
-                return True
-        for tank_name, tank in self._wn.tanks():
-            if tank.prev_expected_level != tank.expected_level:
-                return True
-        for reservoir_name, reservoir in self._wn.reservoirs():
-            if reservoir.prev_expected_head != reservoir.expected_head:
-                return True
-
-        for pipe_name, pipe in self._wn.pipes():
-            if pipe.prev_status != pipe.status:
-                return True
-        for pump_name, pump in self._wn.pumps():
-            if pump.prev_status != pump.status:
-                return True
-            if pump.prev_speed != pump.speed:
-                return True
-        for valve_name, valve in self._wn.valves():
-            if valve.prev_status != valve.status:
-                return True
-            if valve.prev_setting != valve.setting:
-                return True
-
-        return False
-
-    def _update_previous_inputs(self):
-        for junction_name, junction in self._wn.junctions():
-            junction.prev_expected_demand = junction.expected_demand
-        for tank_name, tank in self._wn.tanks():
-            tank.prev_expected_level = tank.expected_level
-        for reservoir_name, reservoir in self._wn.reservoirs():
-            reservoir.prev_expected_head = reservoir.expected_head
-
-        for pipe_name, pipe in self._wn.pipes():
-            pipe.prev_status = pipe.status
-        for pump_name, pump in self._wn.pumps():
-            pump.prev_status = pump.status
-            pump.prev_speed = pump.speed
-        for valve_name, valve in self._wn.valves():
-            valve.prev_status = valve.status
-            valve.prev_setting = valve.setting

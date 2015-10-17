@@ -1546,8 +1546,7 @@ class Tank(Node):
         super(Tank, self).__init__(name)
         self.elevation = elevation
         self.init_level = init_level
-        self.prev_expected_level = None
-        self.expected_level = init_level
+        self.head = init_level+elevation
         self.min_level = min_level
         self.max_level = max_level
         self.diameter = diameter
@@ -1638,8 +1637,7 @@ class Reservoir(Node):
         """
         super(Reservoir, self).__init__(name)
         self.base_head = base_head
-        self.prev_expected_head = None
-        self.expected_head = base_head
+        self.head = base_head
         self.head_pattern_name = head_pattern_name
 
 class Pipe(Link):
