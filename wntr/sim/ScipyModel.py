@@ -5,6 +5,7 @@ import scipy.sparse as sparse
 import math
 from wntr.network.WaterNetworkModel import *
 import copy
+import warnings
 
 class ScipyModel(object):
     def __init__(self, wn):
@@ -66,6 +67,9 @@ class ScipyModel(object):
         self.hw_c = 0.0138413824671
         self.hw_d = 2.45944613543e-6
         self.hw_m = 0.01
+        self.pump_m = -0.00000000001
+        self.pump_q1 = 0.0
+        self.pump_q2 = 1.0e-8
 
     def _initialize_name_id_maps(self):
         # ids are intergers
@@ -185,6 +189,7 @@ class ScipyModel(object):
         self.link_end_nodes = range(self.num_links)
         self.pipe_resistance_coefficients = range(self.num_links)
         self.head_curve_coefficients = {}
+        self.pump_poly_coefficients = {} # {pump_id: (a,b,c,d)} a*x**3 + b*x**2 + c*x + d
         self.pump_powers = {}
 
         for link_name, link in self._wn.links():
@@ -198,13 +203,15 @@ class ScipyModel(object):
             if link_id in self._pipe_ids:
                 self.pipe_resistance_coefficients[link_id] = self._Hw_k*(link.roughness**(-1.852))*(link.diameter**(-4.871))*link.length # Hazen-Williams
             elif link_id in self._valve_ids:
-                self.pipe_resistance_coefficients[link_id] = self._Dw_k*0.02*link.diameter**(-5)*link_diameter*2
+                self.pipe_resistance_coefficients[link_id] = self._Dw_k*0.02*link.diameter**(-5)*link.diameter*2
             else:
                 self.pipe_resistance_coefficients[link_id] = 0
             if link_id in self._pump_ids:
                 if link.info_type == 'HEAD':
                     A, B, C = link.get_head_curve_coefficients()
                     self.head_curve_coefficients[link_id] = (A,B,C)
+                    a,b,c,d = self.get_pump_poly_coefficients(A,B,C)
+                    self.pump_poly_coefficients[link_id] = (a,b,c,d)
                 elif link.info_type == 'POWER':
                     self.pump_powers[link_id] = link.power
 
@@ -463,10 +470,14 @@ class ScipyModel(object):
                 flow = flows[link_id]
                 if link_id in self.head_curve_coefficients.keys():
                     value_ndx += 2
-                    head_curve_tuple = self.head_curve_coefficients[link_id]
-                    B = head_curve_tuple[1]
-                    C = head_curve_tuple[2]
-                    self.jac_values[value_ndx] = -B*C*abs(flow)**(C-1.0)
+                    if flow <= self.pump_q1:
+                        self.jac_values[value_ndx] = self.pump_m
+                    elif flow <= self.pump_q2:
+                        a,b,c,d = self.pump_poly_coefficients[link_id]
+                        self.jac_values[value_ndx] = 3.0*a*flow**2.0 + 2.0*b*flow + c
+                    else:
+                        A,B,C = self.head_curve_coefficients[link_id]
+                        self.jac_values[value_ndx] = -B*C*flow**(C-1.0)
                     value_ndx += 1
                 elif link_id in self.pump_powers.keys():
                     start_node_id = self.link_start_nodes[link_id]
@@ -556,11 +567,15 @@ class ScipyModel(object):
                 end_node_id = self.link_end_nodes[link_id]
 
                 if link_id in self.head_curve_coefficients.keys():
-                    head_curve_tuple = self.head_curve_coefficients[link_id]
-                    A = head_curve_tuple[0]
-                    B = head_curve_tuple[1]
-                    C = head_curve_tuple[2]
-                    pump_headgain = 1.0*A - B*abs(link_flow)**C
+                    if link_flow <= self.pump_q1:
+                        A,B,C = self.head_curve_coefficients[link_id]
+                        pump_headgain = self.pump_m*link_flow + A
+                    elif link_flow <= self.pump_q2:
+                        a,b,c,d = self.pump_poly_coefficients[link_id]
+                        pump_headgain = a*link_flow**3 + b*link_flow**2 + c*link_flow + d
+                    else:
+                        A,B,C = self.head_curve_coefficients[link_id]
+                        pump_headgain = 1.0*A - B*link_flow**C
                     self.headloss_residual[link_id] = pump_headgain - (head[end_node_id] - head[start_node_id])
                 elif link_id in self.pump_powers.keys():
                     self.headloss_residual[link_id] = self.pump_powers[link_id] - (head[end_node_id]-head[start_node_id])*flow[link_id]*self._g*1000.0
@@ -595,7 +610,7 @@ class ScipyModel(object):
             self.demand_or_head_residual[node_id] = head[node_id] - self.reservoir_head[node_id]
 
     def initialize_flow(self):
-        flow = np.zeros(self.num_links)
+        flow = 0.001*np.ones(self.num_links)
         return flow
 
     def initialize_head(self):
@@ -773,6 +788,76 @@ class ScipyModel(object):
             return True
         return False
 
+    def compute_polynomial_coefficients(self, x1, x2, f1, f2, df1, df2):
+        """
+        Method to compute the coefficients of a smoothing polynomial.
+
+        Parameters
+        ----------
+        x1: float
+            point on the x-axis at which the smoothing polynomial begins
+        x2: float
+            point on the x-axis at which the smoothing polynomial ens
+        f1: float
+            function evaluated at x1
+        f2: float
+            function evaluated at x2
+        df1: float
+            derivative evaluated at x1
+        df2: float
+            derivative evaluated at x2
+
+        Returns
+        -------
+        A tuple with the smoothing polynomail coefficients starting with the cubic term.
+        """
+        A = np.matrix([[x1**3.0, x1**2.0, x1, 1.0],
+                       [x2**3.0, x2**2.0, x2, 1.0],
+                       [3.0*x1**2.0, 2.0*x1, 1.0, 0.0],
+                       [3.0*x2**2.0, 2.0*x2, 1.0, 0.0]])
+        rhs = np.matrix([[f1],
+                         [f2],
+                         [df1],
+                         [df2]])
+        x = np.linalg.solve(A,rhs)
+        return (float(x[0][0]), float(x[1][0]), float(x[2][0]), float(x[3][0]))
+
+    def get_pump_poly_coefficients(self, A, B, C):
+        q1 = self.pump_q1
+        q2 = self.pump_q2
+        m = self.pump_m
+
+        f1 = m*q1 + A
+        f2 = A - B*q2**C
+        df1 = m
+        df2 = -B*C*q2**(C-1.0)
+
+        a,b,c,d = self.compute_polynomial_coefficients(q1, q2, f1, f2, df1, df2)
+
+        if a <= 0.0 and b <= 0.0:
+            return (a,b,c,d)
+        elif a > 0.0 and b > 0.0:
+            if df2 < 0.0:
+                return (a,b,c,d)
+            else:
+                warnings.warn('Pump smoothing polynomial is not monotonically decreasing.')
+                return (a,b,c,d)
+        elif a > 0.0 and b <= 0.0:
+            if df2 < 0.0:
+                return (a,b,c,d)
+            else:
+                warnings.warn('Pump smoothing polynomial is not monotonically decreasing.')
+                return (a,b,c,d)
+        elif a <= 0.0 and b > 0.0:
+            if q2 <= -2.0*b/(6.0*a) and df2 < 0.0:
+                return (a,b,c,d)
+            else:
+                warnings.warn('Pump smoothing polynomial is not monotonically decreasing.')
+                return (a,b,c,d)
+        else:
+            warnings.warn('Pump smoothing polynomial is not monotonically decreasing.')
+            return (a,b,c,d)
+
     def print_jacobian(self, jacobian):
         #np.set_printoptions(threshold='nan')
         #print jacobian.toarray()
@@ -802,7 +887,9 @@ class ScipyModel(object):
 
         resids = self.get_hydraulic_equations(x)
 
+        print len(x)
         for i in xrange(len(x)):
+            print i
             x1 = copy.copy(x)
             x2 = copy.copy(x)
             x1[i] = x1[i] + step
@@ -819,8 +906,9 @@ class ScipyModel(object):
 
         success = True
         for i in xrange(len(x)):
+            print i
             for j in xrange(len(x)):
-                if abs(approx_jac[i,j]-self.jacobian[i,j]) > 0.01:
+                if abs(approx_jac[i,j]-self.jacobian[i,j]) > 0.1:
                     equation_type = 'blah'
                     node_or_link = 'blah'
                     node_or_link_name = 'blah'

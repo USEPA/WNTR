@@ -80,7 +80,6 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             start_solve_step = time.time()
             [self._X,num_iters] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             end_solve_step = time.time()
-            first_step = False
             X_init = copy.copy(self._X)
 
             # Enter results in network and update previous inputs
@@ -99,6 +98,7 @@ class ScipySimulatorV2(WaterNetworkSimulator):
                     self._wn.sim_time -= backup_time
                 trial += 1
             else:
+                first_step = False
                 trial = 0
                 if float(self._wn.sim_time)%self._wn.options.hydraulic_timestep == 0:
                     model.save_results(self._X, results)
