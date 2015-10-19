@@ -552,7 +552,6 @@ class ParseWaterNetwork(object):
         # Read file again to get controls
         #
         f = file(inp_file_name, 'r')
-        time_format = ['am', 'AM', 'pm', 'PM']
         controls = False
         for line in f:
             if ']' in line:
@@ -607,7 +606,6 @@ class ParseWaterNetwork(object):
         # Read file again to get coordinates
         #
         f = file(inp_file_name, 'r')
-        time_format = ['am', 'AM', 'pm', 'PM']
         coordinates = False
         for line in f:
             if ']' in line:
@@ -632,7 +630,6 @@ class ParseWaterNetwork(object):
         # Read file again to get status
         #
         f = file(inp_file_name, 'r')
-        time_format = ['am', 'AM', 'pm', 'PM']
         status = False
         for line in f:
             if ']' in line:
@@ -650,9 +647,9 @@ class ParseWaterNetwork(object):
                     continue
                 assert(len(current) == 2), "Error reading [STATUS] block, Check format."
                 link = wn.get_link(current[0])
-                if type(current[1]) == str:
-                    status = wntr.network.LinkStatus.str_to_status(current[1])
-                    link.status = status
+                if current[1].upper() == 'OPEN' or current[1].upper() == 'CLOSED' or current[1].upper() == 'ACTIVE':
+                    new_status = wntr.network.LinkStatus.str_to_status(current[1])
+                    link.status = new_status
                 else:
                     if isinstance(link, wntr.network.Pump):
                         logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
@@ -671,7 +668,6 @@ class ParseWaterNetwork(object):
         # Read file again to get reactions
         #
         f = file(inp_file_name, 'r')
-        time_format = ['am', 'AM', 'pm', 'PM']
         reactions = False
         for line in f:
             if ']' in line:
@@ -720,7 +716,6 @@ class ParseWaterNetwork(object):
         # Read file again to get demands
         #
         f = file(inp_file_name, 'r')
-        time_format = ['am', 'AM', 'pm', 'PM']
         demands = False
         warning_flag = False
         for line in f:
@@ -748,7 +743,6 @@ class ParseWaterNetwork(object):
         # Read file again to get rules
         #
         f = file(inp_file_name, 'r')
-        time_format = ['am', 'AM', 'pm', 'PM']
         rules = False
         warning_flag = False
         for line in f:
@@ -776,7 +770,6 @@ class ParseWaterNetwork(object):
         # Read file again to get energy
         #
         f = file(inp_file_name, 'r')
-        time_format = ['am', 'AM', 'pm', 'PM']
         energy = False
         warning_flag = False
         for line in f:
@@ -804,7 +797,6 @@ class ParseWaterNetwork(object):
         # Read file again to get emitters
         #
         f = file(inp_file_name, 'r')
-        time_format = ['am', 'AM', 'pm', 'PM']
         emitters = False
         warning_flag = False
         for line in f:
@@ -831,7 +823,6 @@ class ParseWaterNetwork(object):
         # Read file again to get report
         #
         f = file(inp_file_name, 'r')
-        time_format = ['am', 'AM', 'pm', 'PM']
         report = False
         warning_flag = False
         for line in f:
