@@ -64,9 +64,13 @@ class ScipySimulatorV2(WaterNetworkSimulator):
 
         first_step = True
         trial = 0
-        max_trials = 10
+        max_trials = self._wn.options.trials
 
         while self._wn.sim_time <= self._wn.options.duration:
+            backup_time, controls_to_activate = self._check_controls()
+            self._fire_controls(controls_to_activate)
+
+            self._wn.sim_time -= backup_time
             print 'simulation time = ',self._wn.sim_time
 
             # Prepare for solve
@@ -85,12 +89,6 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             # Enter results in network and update previous inputs
             model.store_results_in_network(self._X)
             model.update_previous_inputs()
-
-            # Controls
-            backup_time, controls_to_activate = self._check_controls()
-            self._fire_controls(controls_to_activate)
-
-            model.set_network_inputs_by_id()
 
             # Choose next time and save results if needed
             if model.check_inputs_changed():
