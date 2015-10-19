@@ -508,6 +508,8 @@ class ScipyModel(object):
                         value_ndx += 3
 
         self.jacobian.data = self.jac_values
+        #self.check_jac_for_zero_rows()
+        #self.print_jacobian_nonzeros()
         #self.check_jac(x)
         return self.jacobian
 
@@ -879,6 +881,35 @@ class ScipyModel(object):
         for link_id in xrange(self.num_links):
             print construct_string(self._link_id_to_name[link_id], jacobian.getrow(2*self.num_nodes+link_id).toarray()[0])
 
+    def print_jacobian_nonzeros(self):
+        print('{0:<15s}{1:<15s}{2:<25s}{3:<25s}{4:<15s}'.format('row index','col index','eqnuation','variable','value'))
+        for i in xrange(self.jacobian.shape[0]):
+            row_nnz = self.jacobian.indptr[i+1] - self.jacobian.indptr[i]
+            for k in xrange(row_nnz):
+                j = self.jacobian.indices[self.jacobian.indptr[i]+k]
+                if i < self.num_nodes:
+                    equation_type = 'node balance'
+                    node_or_link = 'node'
+                    node_or_link_name = self._node_id_to_name[i]
+                elif i < 2*self.num_nodes:
+                    equation_type = 'demand/head'
+                    node_or_link = 'node'
+                    node_or_link_name = self._node_id_to_name[i - self.num_nodes]
+                else:
+                    equation_type = 'headloss'
+                    node_or_link = 'link'
+                    node_or_link_name = self._link_id_to_name[i - 2*self.num_nodes]
+                if j < self.num_nodes:
+                    wrt = 'head'
+                    wrt_name = self._node_id_to_name[j]
+                elif j< 2*self.num_nodes:
+                    wrt = 'demand'
+                    wrt_name = self._node_id_to_name[j - self.num_nodes]
+                else:
+                    wrt = 'flow'
+                    wrt_name = self._link_id_to_name[j - 2*self.num_nodes]
+                print('{0:<15d}{1:<15d}{2:<25s}{3:<25s}{4:<15.5e}'.format(i,j,equation_type+node_or_link_name,wrt+wrt_name,self.jacobian[i,j]))
+
     def check_jac(self, x):
         import copy
         approx_jac = np.matrix(np.zeros((self.num_nodes*2+self.num_links, self.num_nodes*2+self.num_links)))
@@ -887,9 +918,9 @@ class ScipyModel(object):
 
         resids = self.get_hydraulic_equations(x)
 
-        print len(x)
+        print 'shape = (',len(x),',',len(x),')'
         for i in xrange(len(x)):
-            print i
+            print 'getting approximate derivative of column ',i
             x1 = copy.copy(x)
             x2 = copy.copy(x)
             x1[i] = x1[i] + step
@@ -899,21 +930,17 @@ class ScipyModel(object):
             deriv_column = (-3.0*resids+4.0*resids1-resids2)/(2*step)
             approx_jac[:,i] = np.matrix(deriv_column).transpose()
 
-
         approx_jac = sparse.csr_matrix(approx_jac)
 
         difference = approx_jac - self.jacobian
 
         success = True
-        for i in xrange(len(x)):
-            print i
-            for j in xrange(len(x)):
+        for i in xrange(self.jacobian.shape[0]):
+            print 'comparing values in row ',i,'with non-zeros from self.jacobain'
+            row_nnz = self.jacobian.indptr[i+1] - self.jacobian.indptr[i]
+            for k in xrange(row_nnz):
+                j = self.jacobian.indices[self.jacobian.indptr[i]+k]
                 if abs(approx_jac[i,j]-self.jacobian[i,j]) > 0.1:
-                    equation_type = 'blah'
-                    node_or_link = 'blah'
-                    node_or_link_name = 'blah'
-                    wrt = 'blah'
-                    wrt_name = 'blah'
                     if i < self.num_nodes:
                         equation_type = 'node balance'
                         node_or_link = 'node'
@@ -955,3 +982,30 @@ class ScipyModel(object):
 
             #raise RuntimeError('Jacobian is not correct!')
                 
+
+    def check_jac_for_zero_rows(self):
+        for i in xrange(self.jacobian.shape[0]):
+            all_zero_flag = False
+            row_nnz = self.jacobian.indptr[i+1] - self.jacobian.indptr[i]
+            if row_nnz <= 0:
+                all_zero_flag = True
+            non_zero_flag = False
+            for k in xrange(row_nnz):
+                j = self.jacobian.indices[self.jacobian.indptr[i]+k]
+                if self.jacobian[i,j] != 0:
+                    non_zero_flag = True
+                else:
+                    continue
+            if non_zero_flag == False:
+                all_zero_flag = True
+            if all_zero_flag:
+                if i < self.num_nodes:
+                    equation_type = 'node balance'
+                    node_or_link_name = self._node_id_to_name[i]
+                elif i < 2*self.num_nodes:
+                    equation_type = 'demand/head equation'
+                    node_or_link_name = self._node_id_to_name[i - self.num_nodes]
+                else:
+                    equation_type = 'headloss'
+                    node_or_link_name = self._link_id_to_name[i - 2*self.num_nodes]
+                print 'jacobian row for ',equation_type,' for ',node_or_link_name,' has all zero entries.'
