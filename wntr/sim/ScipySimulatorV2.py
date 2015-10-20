@@ -63,15 +63,40 @@ class ScipySimulatorV2(WaterNetworkSimulator):
         self.prep_time_before_main_loop = start_main_loop_time - start_run_sim_time
 
         first_step = True
-        trial = 0
+        trial = -1
         max_trials = self._wn.options.trials
+        tmp_prev_sim_time = 0
 
-        while self._wn.sim_time <= self._wn.options.duration:
+        while True: #self._wn.sim_time <= self._wn.options.duration:
             backup_time, controls_to_activate = self._check_controls()
             self._fire_controls(controls_to_activate)
 
-            self._wn.sim_time -= backup_time
+            model.set_network_inputs_by_id()
+            if model.check_inputs_changed():
+                if self._wn.sim_time-backup_time == tmp_prev_sim_time:
+                    self._wn.sim_time -= backup_time
+                    trial += 1
+                else:
+                    trial = 0
+                    if float(tmp_prev_sim_time)%self._wn.options.hydraulic_timestep == 0:
+                        model.save_results(self._X, results)
+                        self.solve_step_time[int(self._wn.sim_time/self._wn.options.hydraulic_timestep)] = end_solve_step - start_solve_step
+                    model.update_network_previous_values(tmp_prev_sim_time)
+                    self._wn.sim_time -= backup_time
+            else:
+                trial = 0
+                if float(tmp_prev_sim_time)%self._wn.options.hydraulic_timestep == 0:
+                    model.save_results(self._X, results)
+                    self.solve_step_time[int(self._wn.sim_time/self._wn.options.hydraulic_timestep)] = end_solve_step - start_solve_step
+                model.update_network_previous_values(tmp_prev_sim_time)
+
+            if self._wn.sim_time > self._wn.options.duration:
+                break
+
             print 'simulation time = ',self._wn.sim_time
+
+            if self._wn.sim_time > 0:
+                first_step = False
 
             # Prepare for solve
             if not first_step:
@@ -90,21 +115,10 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             model.store_results_in_network(self._X)
             model.update_previous_inputs()
 
-            # Choose next time and save results if needed
-            if model.check_inputs_changed():
-                if trial == 0:
-                    self._wn.sim_time -= backup_time
-                trial += 1
-            else:
-                first_step = False
-                trial = 0
-                if float(self._wn.sim_time)%self._wn.options.hydraulic_timestep == 0:
-                    model.save_results(self._X, results)
-                    self.solve_step_time[int(self._wn.sim_time/self._wn.options.hydraulic_timestep)] = end_solve_step - start_solve_step
-                model.update_network_previous_values()
-                self._wn.sim_time += self._wn.options.hydraulic_timestep
-                overstep = float(self._wn.sim_time)%self._wn.options.hydraulic_timestep
-                self._wn.sim_time -= overstep
+            tmp_prev_sim_time = self._wn.sim_time
+            self._wn.sim_time += self._wn.options.hydraulic_timestep
+            overstep = float(self._wn.sim_time)%self._wn.options.hydraulic_timestep
+            self._wn.sim_time -= overstep
 
             if trial > max_trials:
                 raise RuntimeError('Exceeded maximum number of trials!')
