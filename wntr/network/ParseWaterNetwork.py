@@ -576,6 +576,8 @@ class ParseWaterNetwork(object):
                     else:
                         raise RuntimeError("The following control is not recognized: " + line)
                 else:
+                    if len(current) != 6:
+                        logger.warning('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
                     link_name = current[1]
                     link = wn.get_link(link_name)
                     if type(current[2]) == str:

@@ -12,73 +12,73 @@ import copy
 import numpy as np
 import warnings
 
-class TestNetworkTimeWarnings(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(self):
-        sys.path.append(resilienceMainDir)
-        import wntr
-        self.wntr = wntr
-
-    @classmethod
-    def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
-
-    def test_pattern_start_time(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_8.inp'
-        wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        
-        flag = False
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            parser.read_inp_file(wn, inp_file)
-        for message in w:
-            if str(message.message) == 'Currently, only the EpanetSimulator supports a non-zero patern start time.':
-                flag = True
-        self.assertEqual(flag, True)
-
-    #def test_report_time_step(self):
-    #    inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_9.inp'
-    #    wn = self.wntr.network.WaterNetworkModel()
-    #    parser = self.wntr.network.ParseWaterNetwork()
-    #
-    #    flag = False
-    #    with warnings.catch_warnings(record=True) as w:
-    #        warnings.simplefilter("always")
-    #        parser.read_inp_file(wn, inp_file)
-    #    for message in w:
-    #        if str(message.message) == 'Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.':
-    #            flag = True
-    #    self.assertEqual(flag, True)
-
-    def test_report_start_time(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_10.inp'
-        wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        
-        flag = False
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            parser.read_inp_file(wn, inp_file)
-        for message in w:
-            if str(message.message) == 'Currently, only the EpanetSimulator supports a non-zero report start time.':
-                flag = True
-        self.assertEqual(flag, True)
-
-    def test_start_clocktime(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_11.inp'
-        wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        
-        flag = False
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            parser.read_inp_file(wn, inp_file)
-        for message in w:
-            if str(message.message) == 'Currently, only the EpanetSimulator supports a start clocktime other than 12 am.':
-                flag = True
-        self.assertEqual(flag, True)
+#class TestNetworkTimeWarnings(unittest.TestCase):
+#
+#    @classmethod
+#    def setUpClass(self):
+#        sys.path.append(resilienceMainDir)
+#        import wntr
+#        self.wntr = wntr
+#
+#    @classmethod
+#    def tearDownClass(self):
+#        sys.path.remove(resilienceMainDir)
+#
+#    def test_pattern_start_time(self):
+#        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_8.inp'
+#        wn = self.wntr.network.WaterNetworkModel()
+#        parser = self.wntr.network.ParseWaterNetwork()
+#        
+#        flag = False
+#        with warnings.catch_warnings(record=True) as w:
+#            warnings.simplefilter("always")
+#            parser.read_inp_file(wn, inp_file)
+#        for message in w:
+#            if str(message.message) == 'Currently, only the EpanetSimulator supports a non-zero patern start time.':
+#                flag = True
+#        self.assertEqual(flag, True)
+#
+#    #def test_report_time_step(self):
+#    #    inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_9.inp'
+#    #    wn = self.wntr.network.WaterNetworkModel()
+#    #    parser = self.wntr.network.ParseWaterNetwork()
+#    #
+#    #    flag = False
+#    #    with warnings.catch_warnings(record=True) as w:
+#    #        warnings.simplefilter("always")
+#    #        parser.read_inp_file(wn, inp_file)
+#    #    for message in w:
+#    #        if str(message.message) == 'Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.':
+#    #            flag = True
+#    #    self.assertEqual(flag, True)
+#
+#    def test_report_start_time(self):
+#        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_10.inp'
+#        wn = self.wntr.network.WaterNetworkModel()
+#        parser = self.wntr.network.ParseWaterNetwork()
+#        
+#        flag = False
+#        with warnings.catch_warnings(record=True) as w:
+#            warnings.simplefilter("always")
+#            parser.read_inp_file(wn, inp_file)
+#        for message in w:
+#            if str(message.message) == 'Currently, only the EpanetSimulator supports a non-zero report start time.':
+#                flag = True
+#        self.assertEqual(flag, True)
+#
+#    def test_start_clocktime(self):
+#        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_11.inp'
+#        wn = self.wntr.network.WaterNetworkModel()
+#        parser = self.wntr.network.ParseWaterNetwork()
+#        
+#        flag = False
+#        with warnings.catch_warnings(record=True) as w:
+#            warnings.simplefilter("always")
+#            parser.read_inp_file(wn, inp_file)
+#        for message in w:
+#            if str(message.message) == 'Currently, only the EpanetSimulator supports a start clocktime other than 12 am.':
+#                flag = True
+#        self.assertEqual(flag, True)
 
 class TestNetworkTimeBehavior(unittest.TestCase):
 
