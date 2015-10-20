@@ -80,6 +80,7 @@ class TargetAttributeControlAction(ControlAction):
         if not hasattr(target, self._attribute):
             raise ValueError('attribute specified in TargetAttributeControlAction is not valid for targe_obj')
         
+        #print 'setting ',target.name(),self._attribute,' to ',self._value
         setattr(target, self._attribute, self._value)
 
 class Control(object):
@@ -239,10 +240,10 @@ class TimeControl(Control):
         the Control class and the documentation for this class.
         """
         if self._time_flag == 'SIM_TIME':
-            if wnm.prev_sim_time < self._fire_time and self._fire_time <= wnm.sim_time:
+            if wnm.last_solve_time < self._fire_time and self._fire_time <= wnm.sim_time:
                 return (True, int(wnm.sim_time - self._fire_time))
         elif self._time_flag == 'SHIFTED_TIME':
-            if wnm.prev_shifted_time() < self._fire_time and self._fire_time <= wnm.shifted_time():
+            if wnm.last_shifted_solve_time() < self._fire_time and self._fire_time <= wnm.shifted_time():
                 return (True, int(wnm.shifted_time() - self._fire_time))
 
         return (False, None)

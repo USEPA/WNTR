@@ -731,8 +731,8 @@ class ScipyModel(object):
             t = math.floor(self._wn.sim_time/self._wn.options.hydraulic_timestep)
             junction.expected_demand = demand_dict[(junction_name,t)]
 
-    def update_network_previous_values(self, prev_sim_time):
-        self._wn.prev_sim_time = prev_sim_time
+    def update_network_previous_values(self):
+        self._wn.prev_sim_time = self._wn.last_solve_time
         for name, node in self._wn.junctions():
             node.prev_head = node.head
             node.prev_demand = node.demand
