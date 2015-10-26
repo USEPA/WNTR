@@ -13,6 +13,13 @@ Created on Sat Sep 26 12:33 AM 2015
 import weakref
 import numpy as np
 
+class ControlPriorities(object):
+    very_low = 0
+    low = 1
+    medium = 2
+    high = 3
+    very_high = 4
+
 class ControlAction(object):
     """ 
     A base class for deriving new control actions.
@@ -28,7 +35,7 @@ class ControlAction(object):
         """ 
         This method is called to fire the corresponding control action.
         """
-        self._FireControlActionImpl()
+        return self._FireControlActionImpl()
 
     def _FireControlActionImpl(self):
         """
@@ -80,8 +87,12 @@ class TargetAttributeControlAction(ControlAction):
         if not hasattr(target, self._attribute):
             raise ValueError('attribute specified in TargetAttributeControlAction is not valid for targe_obj')
         
-        #print 'setting ',target.name(),self._attribute,' to ',self._value
-        setattr(target, self._attribute, self._value)
+        if getattr(target, self._attribute) == self._value:
+            return False
+        else:
+            print 'setting ',target.name(),self._attribute,' to ',self._value
+            setattr(target, self._attribute, self._value)
+            return True
 
 class Control(object):
     """
@@ -106,7 +117,7 @@ class Control(object):
     def __init__(self):
         pass
 
-    def IsControlActionRequired(self, wnm):
+    def IsControlActionRequired(self, wnm, presolve_flag):
         """
         This method is called to see if any action is required
         by this control object. This method returns a tuple
@@ -129,9 +140,9 @@ class Control(object):
             This is true if we are calling before the solve, and false if 
             we are calling after the solve.
         """
-        return self._IsControlActionRequiredImpl(wnm)
+        return self._IsControlActionRequiredImpl(wnm, presolve_flag)
 
-    def _IsControlActionRequiredImpl(self, wnm):
+    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This method should be implemented in derived Control classes as 
         the main implementation of IsControlActionRequired.
@@ -148,7 +159,7 @@ class Control(object):
                                   'This method must be implemented in any '
                                   ' class derived from Control.')  
 
-    def FireControlAction(self, wnm):
+    def FireControlAction(self, wnm, priority):
         """
         This method is called to fire the control action after
         a call to IsControlActionRequired indicates that an action is required.
@@ -162,7 +173,7 @@ class Control(object):
             An instance of the current WaterNetworkModel object that
             is being simulated.
         """
-        self._FireControlActionImpl(wnm)
+        return self._FireControlActionImpl(wnm, priority)
 
     def _FireControlActionImpl(self, wnm):
         """
@@ -211,7 +222,8 @@ class TimeControl(Control):
        event action that will be fired at the specified time
     """
 
-    def __init__(self, wnm, fire_time, time_flag, daily_flag, control_action):
+    def __init__(self, wnm, fire_time, time_flag, daily_flag, control_action, priority):
+        self.priority = priority
         self._fire_time = fire_time
         self._time_flag = time_flag
         if time_flag != 'SIM_TIME' and time_flag != 'SHIFTED_TIME':
@@ -234,21 +246,24 @@ class TimeControl(Control):
         t = TargetAttributeControlAction(target_obj, attribute, value)
         return TimeControl(fire_time, time_flag, daily_flag, t)
     
-    def _IsControlActionRequiredImpl(self, wnm):
+    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
+        if not presolve_flag:
+            return (False, None)
+
         if self._time_flag == 'SIM_TIME':
-            if wnm.last_solve_time < self._fire_time and self._fire_time <= wnm.sim_time:
+            if wnm.prev_sim_time < self._fire_time and self._fire_time <= wnm.sim_time:
                 return (True, int(wnm.sim_time - self._fire_time))
         elif self._time_flag == 'SHIFTED_TIME':
-            if wnm.last_shifted_solve_time() < self._fire_time and self._fire_time <= wnm.shifted_time():
+            if wnm.prev_shifted_time() < self._fire_time and self._fire_time <= wnm.shifted_time():
                 return (True, int(wnm.shifted_time() - self._fire_time))
 
         return (False, None)
 
-    def _FireControlActionImpl(self, wnm):
+    def _FireControlActionImpl(self, wnm, priority):
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
@@ -256,9 +271,13 @@ class TimeControl(Control):
         if self._control_action is None:
             raise ValueError('_control_action is None inside TimeControl')
 
-        self._control_action.FireControlAction()
+        if self.priority != priority:
+            return False
+
+        change_flag = self._control_action.FireControlAction()
         if self._daily_flag:
             self._fire_time += 24*3600
+        return change_flag
 
 class ConditionalControl(Control):
     """
@@ -293,7 +312,8 @@ class ConditionalControl(Control):
        This is the event action that will be fired when the condition becomes true
     """
 
-    def __init__(self, source_obj, source_attribute, operation, threshold, control_action):
+    def __init__(self, source_obj, source_attribute, operation, threshold, control_action, priority):
+        self.priority = priority
         self._source_obj = source_obj
         self._source_attribute = source_attribute
         self._prev_source_attr_value = None
@@ -317,19 +337,22 @@ class ConditionalControl(Control):
             raise ValueError('source_obj of None passed to ConditionalControlObject.')
         if not hasattr(source_obj, source_attribute):
             raise ValueError('In ConditionalControlObject, source_obj does not contain the attribute specified by source_attribute.')
-        if not hasattr(self.threshold_obj, self._threshold_attr):
-            raise ValueError('In ConditionalControlObject, the threshold object does not contain the specified attribute.')
+        if not self._constant_threshold:
+            if not hasattr(self.threshold_obj, self._threshold_attr):
+                raise ValueError('In ConditionalControlObject, the threshold object does not contain the specified attribute.')
 
     @classmethod
     def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
         ca = TargetAttributeControlAction(target_obj, target_attribute, target_value)
         return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
 
-    def _IsControlActionRequiredImpl(self, wnm):
+    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
+        if type(self.source_obj)==wntr.network.Tank and presolve_flag:
+            
         value = getattr(source_obj, source_attribute)
         prev_value = getattr(source_obj, source_attribute_prev)
         if self._operation(value, self._threshold):

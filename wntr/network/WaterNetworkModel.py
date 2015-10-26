@@ -49,7 +49,6 @@ class WaterNetworkModel(object):
         # Time parameters
         self.sim_time = 0.0
         self.prev_sim_time = -np.inf # the last time at which results were accepted
-        self.last_solve_time = -np.inf # the most recent solve time
 
         # Initialize Network size parameters
         self._num_junctions = 0

@@ -56,35 +56,17 @@ class ScipySimulatorV2(WaterNetworkSimulator):
         first_step = True
         trial = -1
         max_trials = self._wn.options.trials
+        resolve = False
 
-        while True: #self._wn.sim_time <= self._wn.options.duration:
-            backup_time, controls_to_activate = self._check_controls()
-            self._fire_controls(controls_to_activate)
-
-            model.set_network_inputs_by_id()
-            if model.check_inputs_changed():
-                if self._wn.sim_time-backup_time == self._wn.last_solve_time:
-                    self._wn.sim_time -= backup_time
-                    trial += 1
-                else:
-                    trial = 0
-                    if float(self._wn.last_solve_time)%self._wn.options.hydraulic_timestep == 0:
-                        model.save_results(self._X, results)
-                    model.update_network_previous_values()
-                    self._wn.sim_time -= backup_time
-            else:
+        while True:
+            if not resolve:
                 trial = 0
-                if float(self._wn.last_solve_time)%self._wn.options.hydraulic_timestep == 0:
-                    model.save_results(self._X, results)
-                model.update_network_previous_values()
+                backup_time, controls_to_activate = self._check_controls(presolve=True)
+                changes_made_flag = self._fire_controls(controls_to_activate)
+                if changes_made_flag:
+                    self._wn.sim_time -= backup_time
 
-            if self._wn.sim_time > self._wn.options.duration:
-                break
-
-            print 'simulation time = ',self._wn.sim_time
-
-            if self._wn.sim_time > 0:
-                first_step = False
+            print 'simulation time = ',self._wn.sim_time,', trial = ',trial
 
             # Prepare for solve
             if not first_step:
@@ -99,12 +81,27 @@ class ScipySimulatorV2(WaterNetworkSimulator):
 
             # Enter results in network and update previous inputs
             model.store_results_in_network(self._X)
-            model.update_previous_inputs()
 
-            self._wn.last_solve_time = self._wn.sim_time
+            resolve, resolve_controls_to_activate = self._check_controls(presolve=False)
+            if resolve:
+                trial += 1
+                all_controls_to_activate = controls_to_activate+resolve_controls_to_activate
+                changes_made_flag = self._fire_controls(all_controls_to_activate)
+                if changes_made_flag:
+                    continue
+                else:
+                    resolve = False
+
+            if self._wn.sim_time%self._wn.options.hydraulic_timestep == 0:
+                model.save_results(self._X, results)
+            model.update_network_previous_values()
+            first_step = False
             self._wn.sim_time += self._wn.options.hydraulic_timestep
             overstep = float(self._wn.sim_time)%self._wn.options.hydraulic_timestep
             self._wn.sim_time -= overstep
+
+            if self._wn.sim_time > self._wn.options.duration:
+                break
 
             if trial > max_trials:
                 raise RuntimeError('Exceeded maximum number of trials!')
@@ -130,24 +127,39 @@ class ScipySimulatorV2(WaterNetworkSimulator):
             for t in range(self._n_timesteps):
                 self._demand_dict[(node_name, t)] = 0.0
 
-    def _check_controls(self):
-        backup_time = 0.0
-        controls_to_activate = []
-        for i in xrange(len(self._wn.controls)):
-            control = self._wn.controls[i]
-            control_tuple = control.IsControlActionRequired(self._wn)
-            assert type(control_tuple[1]) == int or control_tuple[1] == None, 'control backup time should be an int'
-            if control_tuple[0] and control_tuple[1] > backup_time:
-                controls_to_activate = [i]
-                backup_time = control_tuple[1]
-            elif control_tuple[0] and control_tuple[1] == backup_time:
-                controls_to_activate.append(i)
-        assert backup_time <= self._wn.options.hydraulic_timestep, 'Backup time is larger than hydraulic timestep'
+    def _check_controls(self, presolve):
+        if presolve:
+            backup_time = 0.0
+            controls_to_activate = []
+            for i in xrange(len(self._wn.controls)):
+                control = self._wn.controls[i]
+                control_tuple = control.IsControlActionRequired(self._wn, presolve)
+                assert type(control_tuple[1]) == int or control_tuple[1] == None, 'control backup time should be an int'
+                if control_tuple[0] and control_tuple[1] > backup_time:
+                    controls_to_activate = [i]
+                    backup_time = control_tuple[1]
+                elif control_tuple[0] and control_tuple[1] == backup_time:
+                    controls_to_activate.append(i)
+            assert backup_time <= self._wn.options.hydraulic_timestep, 'Backup time is larger than hydraulic timestep'
+            return backup_time, controls_to_activate
 
-        return backup_time, controls_to_activate
+        else:
+            resolve = False
+            resolve_controls_to_activate = []
+            for i in xrange(len(self._wn.controls)):
+                control = self._wn.controls[i]
+                control_tuple = control.IsControlActionRequired(self._wn, presolve)
+                if control_tuple[0]:
+                    resolve = True
+                    resolve_controls_to_activate.append(i)
+            return resolve, resolve_controls_to_activate
 
     def _fire_controls(self, controls_to_activate):
+        changes_made = False
         for i in controls_to_activate:
             control = self._wn.controls[i]
-            control.FireControlAction(self._wn)
+            change_flag = control.FireControlAction(self._wn)
+            if change_flag:
+                changes_made = True
+        return changes_made
 

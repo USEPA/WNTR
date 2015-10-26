@@ -37,17 +37,17 @@ class ScipyModel(object):
 
         # network input objects
         # these objects use node/link ids rather than names
-        self.prev_tank_head = {}
+        #self.prev_tank_head = {}
         self.tank_head = {}
-        self.prev_reservoir_head = {}
+        #self.prev_reservoir_head = {}
         self.reservoir_head = {}
-        self.prev_junction_demand = {}
+        #self.prev_junction_demand = {}
         self.junction_demand = {}
-        self.prev_link_status = {}
+        #self.prev_link_status = {}
         self.link_status = {}
-        self.prev_valve_settings = {}
+        #self.prev_valve_settings = {}
         self.valve_settings = {}
-        self.prev_pump_speeds = {}
+        #self.prev_pump_speeds = {}
         self.pump_speeds = {}
 
         # Initialize Jacobian
@@ -732,7 +732,7 @@ class ScipyModel(object):
             junction.expected_demand = demand_dict[(junction_name,t)]
 
     def update_network_previous_values(self):
-        self._wn.prev_sim_time = self._wn.last_solve_time
+        self._wn.prev_sim_time = self._wn.sim_time
         for name, node in self._wn.junctions():
             node.prev_head = node.head
             node.prev_demand = node.demand
@@ -762,28 +762,28 @@ class ScipyModel(object):
             link_id = self._link_name_to_id[link_name]
             link.flow = flow[link_id]
 
-    def update_previous_inputs(self):
-        self.prev_tank_head = copy.copy(self.tank_head)
-        self.prev_reservoir_head = copy.copy(self.reservoir_head)
-        self.prev_junction_demand = copy.copy(self.junction_demand)
-        self.prev_link_status = copy.copy(self.link_status)
-        self.prev_valve_settings = copy.copy(self.valve_settings)
-        self.prev_pump_speeds = copy.copy(self.pump_speeds)
-
-    def check_inputs_changed(self):
-        if self.prev_tank_head != self.tank_head:
-            return True
-        if self.prev_reservoir_head != self.reservoir_head:
-            return True
-        if self.prev_junction_demand != self.junction_demand:
-            return True
-        if self.prev_link_status != self.link_status:
-            return True
-        if self.prev_valve_settings != self.valve_settings:
-            return True
-        if self.prev_pump_speeds != self.pump_speeds:
-            return True
-        return False
+#    def update_previous_inputs(self):
+#        self.prev_tank_head = copy.copy(self.tank_head)
+#        self.prev_reservoir_head = copy.copy(self.reservoir_head)
+#        self.prev_junction_demand = copy.copy(self.junction_demand)
+#        self.prev_link_status = copy.copy(self.link_status)
+#        self.prev_valve_settings = copy.copy(self.valve_settings)
+#        self.prev_pump_speeds = copy.copy(self.pump_speeds)
+#
+#    def check_inputs_changed(self):
+#        if self.prev_tank_head != self.tank_head:
+#            return True
+#        if self.prev_reservoir_head != self.reservoir_head:
+#            return True
+#        if self.prev_junction_demand != self.junction_demand:
+#            return True
+#        if self.prev_link_status != self.link_status:
+#            return True
+#        if self.prev_valve_settings != self.valve_settings:
+#            return True
+#        if self.prev_pump_speeds != self.pump_speeds:
+#            return True
+#        return False
 
     def compute_polynomial_coefficients(self, x1, x2, f1, f2, df1, df2):
         """
