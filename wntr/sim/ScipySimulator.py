@@ -161,27 +161,22 @@ class ScipySimulator(WaterNetworkSimulator):
         changes_made = False
         for i in controls_to_activate:
             control = self._wn.controls[i]
-            change_flag = control.FireControlAction(self._wn, wntr.network.ControlPriorities.very_low)
+            change_flag = control.FireControlAction(self._wn, 0)
             if change_flag:
                 changes_made = True
         for i in controls_to_activate:
             control = self._wn.controls[i]
-            change_flag = control.FireControlAction(self._wn, wntr.network.ControlPriorities.low)
+            change_flag = control.FireControlAction(self._wn, 1)
             if change_flag:
                 changes_made = True
         for i in controls_to_activate:
             control = self._wn.controls[i]
-            change_flag = control.FireControlAction(self._wn, wntr.network.ControlPriorities.medium)
+            change_flag = control.FireControlAction(self._wn, 2)
             if change_flag:
                 changes_made = True
         for i in controls_to_activate:
             control = self._wn.controls[i]
-            change_flag = control.FireControlAction(self._wn, wntr.network.ControlPriorities.high)
-            if change_flag:
-                changes_made = True
-        for i in controls_to_activate:
-            control = self._wn.controls[i]
-            change_flag = control.FireControlAction(self._wn, wntr.network.ControlPriorities.very_high)
+            change_flag = control.FireControlAction(self._wn, 3)
             if change_flag:
                 changes_made = True
         return changes_made

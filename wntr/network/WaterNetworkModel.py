@@ -87,6 +87,9 @@ class WaterNetworkModel(object):
         #self._graph = nx.MultiDiGraph(data=None)
         self._graph = wntr.network.WntrMultiDiGraph()
 
+        self._Htol = 0.00015 # Head tolerance in meters.
+        self._Qtol = 2.8e-5 # Flow tolerance in m^3/s.
+
         if inp_file_name:
             parser = wntr.network.ParseWaterNetwork()
             parser.read_inp_file(self, inp_file_name)
@@ -251,6 +254,10 @@ class WaterNetworkModel(object):
         # Add to list of cv
         if check_valve_flag:
             self._check_valves.append(name)
+            start_node = self.get_node(start_node_name)
+            end_node = self.get_node(end_node_name)
+            control_action = wntr.network.TargetAttributeControlAction(pipe, 'status', LinkStatus.closed)
+            control = wntr.network.MultiConditionalControl(
         self._links[name] = pipe
         self._pipes[name] = pipe
         self._graph.add_edge(start_node_name, end_node_name, key=name)
