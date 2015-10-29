@@ -25,6 +25,7 @@ import re
 import networkx as nx
 import copy
 import logging
+import numpy as np
 
 logger = logging.getLogger('wntr.network.ParseWaterNetwork')
 
@@ -570,37 +571,54 @@ class ParseWaterNetwork(object):
                 current_copy = current
                 current = [i.upper() for i in current]
                 current[1] = current_copy[1] # don't capitalize the link name
+
+                # Create the control action object
+                link_name = current[1]
+                link = wn.get_link(link_name)
+                if type(current[2]) == str:
+                    status = wntr.network.LinkStatus.str_to_status(current[2])
+                    action_obj = wntr.network.TargetAttributeControlAction(link, 'status', status)
+                elif type(current[2]) == float or type(current[2]) == int:
+                    if isinstance(link, wntr.network.Pump):
+                        logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
+                        continue
+                    elif isinstance(link, wntr.network.Valve):
+                        if link.valve_type != 'PRV':
+                            logger.warning('Currently, valves of type '+link.valve_type+' are only supported in the EpanetSimulator.')
+                            continue
+                        else:
+                            status = convert('Pressure', inp_units, float(current[2]))
+                            action_obj = wntr.network.TargetAttributeControlAction(link, 'setting', status)
+
+                # Create the control object
                 if 'TIME' not in current and 'CLOCKTIME' not in current:
+                    current[5] = current_copy[5]
                     if 'IF' in current:
-                        logger.warning('Conditional controls are not supported yet.')
+                        node_name = current[5]
+                        node = wn.get_node(node_name)
+                        if current[6]=='ABOVE':
+                            oper = np.greater
+                        elif current[6]=='BELOW':
+                            oper = np.less
+                        else:
+                            raise RuntimeError("The following control is not recognized: " + line)
+                        if isinstance(node, wntr.network.Junction):
+                            threshold = convert('Pressure',inp_units,float(current[7]))+node.elevation
+                        elif isinstance(node, wntr.network.Tank):
+                            threshold = convert('Length',inp_units,float(current[7]))+node.elevation
+                        control_obj = wntr.network.ConditionalControl((node,'head'),oper,threshold,action_obj)
                     else:
                         raise RuntimeError("The following control is not recognized: " + line)
                 else:
                     if len(current) != 6:
                         logger.warning('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
-                    link_name = current[1]
-                    link = wn.get_link(link_name)
-                    if type(current[2]) == str:
-                        status = wntr.network.LinkStatus.str_to_status(current[2])
-                        action_obj = wntr.network.TargetAttributeControlAction(link, 'status', status)
-                    elif type(current[2]) == float or type(current[2]) == int:
-                        if isinstance(link, wntr.network.Pump):
-                            logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
-                            continue
-                        elif isinstance(link, wntr.network.Valve):
-                            if link.valve_type != 'PRV':
-                                logger.warning('Currently, valves of type '+link.valve_type+' are only supported in the EpanetSimulator.')
-                                continue
-                            else:
-                                status = convert('Pressure', inp_units, float(current[2]))
-                                action_obj = wntr.network.TargetAttributeControlAction(link, 'setting', status)
                     if len(current) == 6: # at time
                         fire_time = str_time_to_sec(current[5])
                         control_obj = wntr.network.TimeControl(wn, fire_time, 'SIM_TIME', False, action_obj)
                     elif len(current) == 7: # at clocktime
                         fire_time = clock_time_to_sec(current[5], current[6])
                         control_obj = wntr.network.TimeControl(wn, fire_time, 'SHIFTED_TIME', True, action_obj)
-                    wn.add_control(control_obj)
+                wn.add_control(control_obj)
 
         f.close()
 

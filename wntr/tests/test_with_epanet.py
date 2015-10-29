@@ -120,7 +120,7 @@ class TestNet3(unittest.TestCase):
         epanet_sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.epanet_results = epanet_sim.run_sim()
         
-        scipy_sim = self.wntr.sim.ScipySimulatorV2(self.wn)
+        scipy_sim = self.wntr.sim.ScipySimulator(self.wn)
         self.scipy_results = scipy_sim.run_sim()
 
     @classmethod
@@ -130,22 +130,22 @@ class TestNet3(unittest.TestCase):
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
             for t in self.scipy_results.link.major_axis:
-                self.assertLessEqual(abs(self.scipy_results.link.at['flowrate',t,link_name] - self.epanet_results.link.at['flowrate',t,link_name]), 0.001)
+                self.assertLessEqual(abs(self.scipy_results.link.at['flowrate',t,link_name] - self.epanet_results.link.at['flowrate',t,link_name]), 0.0009)
 
     def test_node_demand(self):
         for node_name, node in self.wn.nodes():
             for t in self.scipy_results.node.major_axis:
-                self.assertAlmostEqual(self.scipy_results.node.at['demand',t,node_name], self.epanet_results.node.at['demand',t,node_name], 3)
+                self.assertLessEqual(abs(self.scipy_results.node.at['demand',t,node_name] - self.epanet_results.node.at['demand',t,node_name]), 0.0005)
 
     def test_node_expected_demand(self):
         for node_name, node in self.wn.nodes():
             for t in self.scipy_results.node.major_axis:
-                self.assertAlmostEqual(self.scipy_results.node.at['expected_demand',t,node_name], self.epanet_results.node.at['expected_demand',t,node_name], 3)
+                self.assertLessEqual(abs(self.scipy_results.node.at['expected_demand',t,node_name] - self.epanet_results.node.at['expected_demand',t,node_name]), 0.0005)
 
     def test_node_head(self):
         for node_name, node in self.wn.nodes():
             for t in self.scipy_results.node.major_axis:
-                self.assertLessEqual(abs(self.scipy_results.node.at['head',t,node_name] - self.epanet_results.node.at['head',t,node_name]), 0.1)
+                self.assertLessEqual(abs(self.scipy_results.node.at['head',t,node_name] - self.epanet_results.node.at['head',t,node_name]), 0.05)
 
     def test_node_pressure(self):
         for node_name, node in self.wn.nodes():

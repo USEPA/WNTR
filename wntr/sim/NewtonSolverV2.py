@@ -3,7 +3,7 @@ import scipy.sparse as sp
 import copy
 import time
 
-class NewtonSolverV2(object):
+class NewtonSolver(object):
     def __init__(self, options={}):
         self._options = options
         self._total_linear_solver_time = 0

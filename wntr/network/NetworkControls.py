@@ -10,8 +10,10 @@ Created on Sat Sep 26 12:33 AM 2015
 @author: claird
 """
 
+import wntr
 import weakref
 import numpy as np
+import math
 
 class ControlPriorities(object):
     very_low = 0
@@ -90,7 +92,7 @@ class TargetAttributeControlAction(ControlAction):
         if getattr(target, self._attribute) == self._value:
             return False
         else:
-            print 'setting ',target.name(),self._attribute,' to ',self._value
+            #print 'setting ',target.name(),self._attribute,' to ',self._value
             setattr(target, self._attribute, self._value)
             return True
 
@@ -222,7 +224,7 @@ class TimeControl(Control):
        event action that will be fired at the specified time
     """
 
-    def __init__(self, wnm, fire_time, time_flag, daily_flag, control_action, priority):
+    def __init__(self, wnm, fire_time, time_flag, daily_flag, control_action, priority=ControlPriorities.low):
         self.priority = priority
         self._fire_time = fire_time
         self._time_flag = time_flag
@@ -259,7 +261,7 @@ class TimeControl(Control):
                 return (True, int(wnm.sim_time - self._fire_time))
         elif self._time_flag == 'SHIFTED_TIME':
             if wnm.prev_shifted_time() < self._fire_time and self._fire_time <= wnm.shifted_time():
-                return (True, int(wnm.shifted_time() - self._fire_time))
+                return (True, int(round(wnm.shifted_time() - self._fire_time)))
 
         return (False, None)
 
@@ -280,102 +282,136 @@ class TimeControl(Control):
         return change_flag
 
 class ConditionalControl(Control):
-    """
-    A class for creating conditional controls to fire a control action
-    when a particular object/attribute becomes higher or lower than a 
-    specified value.
 
-    Parameters
-    ----------
-    source_obj : object
-       The source object that contains the attribute being monitored
-
-    source_attribute : string
-       The name of the attribute being monitored
-
-    operation : one the numpy operations listed below
-       The comparison operation to be used. This must be 
-       one of the numpy comparison operations, e.g.:
-
-       greater(x1, x2[, out]) Return the truth value of (x1 > x2) element-wise.
-       greater_equal(x1, x2[, out]) Return the truth value of (x1 >= x2) element-wise.
-       less(x1, x2[, out]) Return the truth value of (x1 < x2) element-wise.
-       less_equal(x1, x2[, out]) Return the truth value of (x1 =< x2) element-wise.
-
-    threshold : float or tuple 
-       The threshold value to compare against. If a float is passed,
-       this threshold is considered constant. If a tuple is passed, it
-       is taken as (object2, attribute2), and the source_attribute on
-       the source_obj will be compared to attribute2 on object2.
-
-    control_action : An object derived from ControlAction 
-       This is the event action that will be fired when the condition becomes true
-    """
-
-    def __init__(self, source_obj, source_attribute, operation, threshold, control_action, priority):
+    def __init__(self, source, operation, threshold, control_action, priority=ControlPriorities.medium):
         self.priority = priority
-        self._source_obj = source_obj
-        self._source_attribute = source_attribute
-        self._prev_source_attr_value = None
-        self._prev_threshold_attr_value = None
+        self._source_obj = source[0]
+        self._source_attr = source[1]
         self._operation = operation
         self._control_action = control_action
-        self._constant_threshold = None
-        self._threshold = None
-        self._threshold_obj = None
-        self._threshold_attr = None
+        self._threshold = threshold
 
-        if type(threshold) == float:
-            self._constant_threshold = True
-            self._threshold = threshold
-        else:
-            self._constant_threshold = False
-            self._threshold_obj = threshold[0]
-            self._threshold_attr = threshold[1]
-
-        if source_obj is None:
-            raise ValueError('source_obj of None passed to ConditionalControlObject.')
-        if not hasattr(source_obj, source_attribute):
-            raise ValueError('In ConditionalControlObject, source_obj does not contain the attribute specified by source_attribute.')
-        if not self._constant_threshold:
-            if not hasattr(self.threshold_obj, self._threshold_attr):
-                raise ValueError('In ConditionalControlObject, the threshold object does not contain the specified attribute.')
+        if not isinstance(source,tuple):
+            raise ValueError('source must be a tuple, (source_object, source_attribute).')
+        if not isinstance(threshold,float):
+            raise ValueError('threshold must be a float.')
 
     @classmethod
-    def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
+    def WithTarget(self, source, operation, threshold, target_obj, target_attribute, target_value):
         ca = TargetAttributeControlAction(target_obj, target_attribute, target_value)
-        return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
+        return ConditionalControl(source, operation, threshold, ca)
 
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
-        if type(self.source_obj)==wntr.network.Tank and presolve_flag:
-            
-        value = getattr(source_obj, source_attribute)
-        prev_value = getattr(source_obj, source_attribute_prev)
-        if self._operation(value, self._threshold):
-            # control action is required
-            if wnm.prev_sim_time is None or prev_value is None:
-                assert wnm.time_step == 0, 'This should only happen during the first simulation timestep'
+        if type(self._source_obj)==wntr.network.Tank and self._source_attr=='head' and presolve_flag and wnm.sim_time!=0:
+            val = getattr(self._source_obj,self._source_attr)
+            q_net = self._source_obj.prev_demand
+            delta_h = 4.0*q_net*(wnm.sim_time-wnm.prev_sim_time)/(math.pi*self._source_obj.diameter**2)
+            next_val = val+delta_h
+            if self._operation(next_val, self._threshold) and self._operation(val, self._threshold):
+                return (True, None)
+            if self._operation(next_val, self._threshold):
+                m = (next_val-val)/(wnm.sim_time-wnm.prev_sim_time)
+                b = next_val - m*wnm.sim_time
+                new_t = (self._threshold - b)/m
+                return (True, int(round(wnm.sim_time-new_t)))
+            else:
+                return (False, None)
+        elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='head' and presolve_flag and wnm.sim_time==0:
+            val = getattr(self._source_obj, self._source_attr)
+            if self._operation(val, self._threshold):
                 return (True, 0)
-                
-            # let's do linear interpolation to determine the estimated switch time
-            m = (value - prev_value)/(wnm.sim_time - wnm.prev_sim_time)
-            new_time = (self._threshold - prev_value)/m + wnm.prev_sim_time
-            return (True, new_time)
-        
-        return (False, None)
-        
+            else:
+                return (False, None)
+        elif presolve_flag:
+            return (False, None)
+        else:
+            val = getattr(self._source_obj, self._source_attr)
+            if self._operation(val, self._threshold):
+                return (True, 0)
+            else:
+                return (False, None)
 
-    def _FireControlActionImpl(wnm):
+    def _FireControlActionImpl(self, wnm, priority):
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
-        assert self._control_action is not None, '_control_action is None inside TimeControl'
-        self._control_action.FireControlAction(wnm)
+        if self.priority!=priority:
+            return False
+
+        change_flag = self._control_action.FireControlAction()
+        return change_flag
+
+#class MultiConditionalControl(Control):
+#
+#    def __init__(self, source, operation, threshold, control_action, priority=ControlPriorities.medium):
+#        self.priority = priority
+#        self._source = source
+#        self._operation = operation
+#        self._control_action = control_action
+#        self._threshold = threshold
+#
+#        if not isinstance(source,list):
+#            raise ValueError('source must be a list of tuples, (source_object, source_attribute).')
+#        if not isinstance(operation,list):
+#            raise ValueError('operation must be a list numpy operations (e.g.,numpy.greater).')
+#        if not isinstance(threshold,list):
+#            raise ValueError('threshold must be a list of floats or tuples (threshold_object, threshold_attribute).')
+#        if len(source)!=len(operation):
+#            raise ValueError('The length of the source list must equal the length of the operation list.')
+#        if len(source)!=len(threshold):
+#            raise ValueError('The length of the source list must equal the length of the threshold list.')
+#
+#    @classmethod
+#    def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
+#        ca = TargetAttributeControlAction(target_obj, target_attribute, target_value)
+#        return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
+#
+#    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
+#        """
+#        This implements the derived method from Control. Please see
+#        the Control class and the documentation for this class.
+#        """
+#        action_required = True
+#        for ndx in xrange(len(source)):
+#            src_obj = self._source[ndx][0]
+#            src_val = self._source[ndx][1]
+#            oper = self._operation[ndx]
+#            if isinstance(self._threshold[ndx],float):
+#                threshold_obj = None
+#                threshold_val = self._threshold[ndx]
+#            else:
+#                threshold_obj = self._threshold[ndx][0]
+#                threshold_val = self._threshold[ndx][1]
+#        if type(self.source_obj)==wntr.network.Tank and presolve_flag:
+#            
+#        value = getattr(source_obj, source_attribute)
+#        prev_value = getattr(source_obj, source_attribute_prev)
+#        if self._operation(value, self._threshold):
+#            # control action is required
+#            if wnm.prev_sim_time is None or prev_value is None:
+#                assert wnm.time_step == 0, 'This should only happen during the first simulation timestep'
+#                return (True, 0)
+#                
+#            # let's do linear interpolation to determine the estimated switch time
+#            m = (value - prev_value)/(wnm.sim_time - wnm.prev_sim_time)
+#            new_time = (self._threshold - prev_value)/m + wnm.prev_sim_time
+#            return (True, new_time)
+#        
+#        return (False, None)
+#        
+#
+#    def _FireControlActionImpl(wnm):
+#        """
+#        This implements the derived method from Control. Please see
+#        the Control class and the documentation for this class.
+#        """
+#        assert self._control_action is not None, '_control_action is None inside TimeControl'
+#        self._control_action.FireControlAction(wnm)
 
 
 
