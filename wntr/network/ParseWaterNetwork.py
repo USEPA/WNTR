@@ -214,6 +214,33 @@ class ParseWaterNetwork(object):
         inp_units = epanet_unit_id[wn.options.units]
 
         #
+        # Read file again to get reservoirs
+        #
+        f = file(inp_file_name, 'r')
+        reservoirs = False
+        for line in f:
+            if ']' in line:
+                # Set all flags to false
+                reservoirs = False
+
+            if '[RESERVOIRS]' in line:
+                reservoirs = True
+                continue
+
+            if reservoirs:
+                line = line.split(';')[0]
+                current = line.split()
+                if current == []:
+                    continue
+                if len(current) == 2:
+                    wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])))
+                else:
+                    logger.warning('Patterns for reservoir heads are currently only supported in the EpanetSimulator.')
+                    wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])), current[2])
+
+        f.close()
+
+        #
         # Read file again to get pipes
         #
         f = file(inp_file_name, 'r')
@@ -434,33 +461,6 @@ class ParseWaterNetwork(object):
                     raise RuntimeError('Tank entry format not recognized.')
 
         logger.warning('Currently, only the EpanetSimulator utilizes maximum levels for tanks. The other simulators do not place an upper limit on tank levels yet.')
-
-        f.close()
-
-        #
-        # Read file again to get reservoirs
-        #
-        f = file(inp_file_name, 'r')
-        reservoirs = False
-        for line in f:
-            if ']' in line:
-                # Set all flags to false
-                reservoirs = False
-
-            if '[RESERVOIRS]' in line:
-                reservoirs = True
-                continue
-
-            if reservoirs:
-                line = line.split(';')[0]
-                current = line.split()
-                if current == []:
-                    continue
-                if len(current) == 2:
-                    wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])))
-                else:
-                    logger.warning('Patterns for reservoir heads are currently only supported in the EpanetSimulator.')
-                    wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])), current[2])
 
         f.close()
 

@@ -184,6 +184,83 @@ class WaterNetworkModel(object):
         nx.set_node_attributes(self._graph, 'type', {name:'tank'})
         self._num_tanks += 1
 
+        # add the tank controls
+        all_links = self.get_links_for_node(name,'ALL')
+
+        # First take care of the min level
+        min_head = min_level+elevation
+        for link_name in all_links:
+            link = self.get_link(link_name)
+            if isinstance(link, Pipe):
+                if link.cv:
+                    if link.end_node()==name:
+                        continue
+            if isinstance(link, Pump):
+                if link.end_node()==name:
+                    continue
+
+            close_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.closed)
+            open_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.opened)
+
+            control = wntr.network.ConditionalControl((tank,'head'),np.greater,min_head+2*self._Htol,open_control_action)
+            control._partial_step_for_tanks = False
+            control._priority = 0
+            self.add_control(control)
+
+            control = wntr.network.ConditionalControl((tank,'head'),np.less,min_head,close_control_action)
+            control._priority = 1
+            self.add_control(control)
+
+            if link.start_node() == name:
+                other_node_name = link.end_node()
+            else:
+                other_node_name = link.start_node()
+            other_node = self.get_node(other_node_name)
+            control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.less,np.greater],[min_head+2*self._Htol,min_head+2*self._Htol],open_control_action)
+            control._priority = 2
+            self.add_control(control)
+
+            control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.less,np.less],[min_head+self._Htol,min_head+self._Htol], close_control_action)
+            control._priority = 2
+            self.add_control(control)
+
+        # Now take care of the max level
+        max_head = max_level+elevation
+        for link_name in all_links:
+            link = self.get_link(link_name)
+            if isinstance(link, Pipe):
+                if link.cv:
+                    if link.start_node()==name:
+                        continue
+            if isinstance(link, Pump):
+                if link.start_node()==name:
+                    continue
+
+            close_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.closed)
+            open_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.opened)
+
+            control = wntr.network.ConditionalControl((tank,'head'),np.less,max_head-2*self._Htol,open_control_action)
+            control._partial_step_for_tanks = False
+            control._priority = 0
+            self.add_control(control)
+
+            control = wntr.network.ConditionalControl((tank,'head'),np.greater,max_head,close_control_action)
+            control._priority = 1
+            self.add_control(control)
+
+            if link.start_node() == name:
+                other_node_name = link.end_node()
+            else:
+                other_node_name = link.start_node()
+            other_node = self.get_node(other_node_name)
+            control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.less],[max_head-2*self._Htol,max_head-2*self._Htol],open_control_action)
+            control._priority = 2
+            self.add_control(control)
+
+            control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
+            control._priority = 2
+            self.add_control(control)
+
     def add_reservoir(self, name, base_head=0.0, head_pattern_name=None, coordinates=None):
         """
         Method to add reservoir to a water network object.
@@ -254,10 +331,22 @@ class WaterNetworkModel(object):
         # Add to list of cv
         if check_valve_flag:
             self._check_valves.append(name)
-            start_node = self.get_node(start_node_name)
-            end_node = self.get_node(end_node_name)
-            control_action = wntr.network.TargetAttributeControlAction(pipe, 'status', LinkStatus.closed)
-            control = wntr.network.MultiConditionalControl(
+
+            close_control_action = wntr.network.TargetAttributeControlAction(pipe, 'status', LinkStatus.closed)
+            open_control_action = wntr.network.TargetAttributeControlAction(pipe, 'status', LinkStatus.opened)
+
+            control = wntr.network._CheckValveHeadControl(self, pipe, np.greater, self._Htol, open_control_action)
+            control._priority = 0
+            self.add_control(control)
+
+            control = wntr.network._CheckValveHeadControl(self, pipe, np.less, -self._Htol, close_control_action)
+            control._priority = 3
+            self.add_control(control)
+
+            control = wntr.network.ConditionalControl((pipe,'flow'),np.less, -self._Qtol, close_control_action)
+            control._priority = 3
+            self.add_control(control)
+
         self._links[name] = pipe
         self._pipes[name] = pipe
         self._graph.add_edge(start_node_name, end_node_name, key=name)
@@ -290,6 +379,21 @@ class WaterNetworkModel(object):
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'pump'})
         self._num_pumps += 1
+
+        close_control_action = wntr.network.TargetAttributeControlAction(pump, 'status', LinkStatus.closed)
+        open_control_action = wntr.network.TargetAttributeControlAction(pump, 'status', LinkStatus.opened)
+
+        control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
+        control._priority = 0
+        self.add_control(control)
+
+        control = wntr.network._CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
+        control._priority = 3
+        self.add_control(control)
+
+        control = wntr.network.ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
+        control._priority = 3
+        self.add_control(control)
 
     def add_valve(self, name, start_node_name, end_node_name,
                  diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):

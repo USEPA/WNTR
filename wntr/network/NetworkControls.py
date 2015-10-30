@@ -113,12 +113,13 @@ class TargetAttributeControlAction(ControlAction):
         if not hasattr(target, self._attribute):
             raise ValueError('attribute specified in TargetAttributeControlAction is not valid for targe_obj')
         
-        if getattr(target, self._attribute) == self._value:
-            return False
+        orig_value = getattr(target, self._attribute)
+        if orig_value == self._value:
+            return False, None, None
         else:
-            #print 'setting ',target.name(),self._attribute,' to ',self._value
+            print 'setting ',target.name(),self._attribute,' to ',self._value
             setattr(target, self._attribute, self._value)
-            return True
+            return True, (target, self._attribute), orig_value
 
 class Control(object):
     """
@@ -250,7 +251,7 @@ class TimeControl(Control):
 
     def __init__(self, wnm, fire_time, time_flag, daily_flag, control_action):
 
-        if isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.open:
+        if isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
             self._priority = 0
         elif isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.closed:
             self._priority = 3
@@ -305,24 +306,25 @@ class TimeControl(Control):
             raise ValueError('_control_action is None inside TimeControl')
 
         if self._priority != priority:
-            return False
+            return False, None, None
 
-        change_flag = self._control_action.FireControlAction()
+        change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
         if self._daily_flag:
             self._fire_time += 24*3600
-        return change_flag
+        return change_flag, change_tuple, orig_value
 
 class ConditionalControl(Control):
 
     def __init__(self, source, operation, threshold, control_action):
 
-        if isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.open:
+        if isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
             self._priority = 0
         elif isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.closed:
             self._priority = 3
         else:
             self._priority = 0
 
+        self._partial_step_for_tanks = True
         self._source_obj = source[0]
         self._source_attr = source[1]
         self._operation = operation
@@ -346,20 +348,25 @@ class ConditionalControl(Control):
         """
         if type(self._source_obj)==wntr.network.Tank and self._source_attr=='head' and presolve_flag and wnm.sim_time!=0:
             val = getattr(self._source_obj,self._source_attr)
+            print 'head for tank ',self._source_obj.name(),' = ',val
             q_net = self._source_obj.prev_demand
             delta_h = 4.0*q_net*(wnm.sim_time-wnm.prev_sim_time)/(math.pi*self._source_obj.diameter**2)
             next_val = val+delta_h
             if self._operation(next_val, self._threshold) and self._operation(val, self._threshold):
                 return (True, None)
             if self._operation(next_val, self._threshold):
-                m = (next_val-val)/(wnm.sim_time-wnm.prev_sim_time)
-                b = next_val - m*wnm.sim_time
-                new_t = (self._threshold - b)/m
-                return (True, int(round(wnm.sim_time-new_t)))
+                if self._partial_step_for_tanks:
+                    m = (next_val-val)/(wnm.sim_time-wnm.prev_sim_time)
+                    b = next_val - m*wnm.sim_time
+                    new_t = (self._threshold - b)/m
+                    return (True, int(round(wnm.sim_time-new_t)))
+                else:
+                    return (True, 0)
             else:
                 return (False, None)
         elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='head' and presolve_flag and wnm.sim_time==0:
             val = getattr(self._source_obj, self._source_attr)
+            print 'head for tank ',self._source_obj.name(),' = ',val
             if self._operation(val, self._threshold):
                 return (True, 0)
             else:
@@ -379,10 +386,10 @@ class ConditionalControl(Control):
         the Control class and the documentation for this class.
         """
         if self._priority!=priority:
-            return False
+            return False, None, None
 
-        change_flag = self._control_action.FireControlAction()
-        return change_flag
+        change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
+        return change_flag, change_tuple, orig_value
 
 class MultiConditionalControl(Control):
 
@@ -418,10 +425,11 @@ class MultiConditionalControl(Control):
             return (False, None)
 
         action_required = True
-        for ndx in xrange(len(source)):
+        for ndx in xrange(len(self._source)):
             src_obj = self._source[ndx][0]
             src_attr = self._source[ndx][1]
             src_val = getattr(src_obj, src_attr)
+            print 'name: ',src_obj.name(),' attr: ',src_attr,' value: ',src_val
             oper = self._operation[ndx]
             if isinstance(self._threshold[ndx],float):
                 threshold_val = self._threshold[ndx]
@@ -444,11 +452,47 @@ class MultiConditionalControl(Control):
         the Control class and the documentation for this class.
         """
         if self._priority!=priority:
-            return False
+            return False, None, None
 
-        chage_flag = self._control_action.FireControlAction()
-        return change_flag
+        change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
+        return change_flag, change_tuple, orig_value
 
+class _CheckValveHeadControl(Control):
+    def __init__(self, wnm, cv, operation, threshold, control_action):
 
+        self._priority = 3
+        self._cv = cv
+        self._operation = operation
+        self._threshold = threshold
+        self._control_action = control_action
+        self._start_node_name = self._cv.start_node()
+        self._end_node_name = self._cv.end_node()
+        self._start_node = wnm.get_node(self._start_node_name)
+        self._end_node = wnm.get_node(self._end_node_name)
+        self._pump_A = None
 
-    
+        if isinstance(self._cv,wntr.network.Pump):
+            if self._cv.info_type == 'HEAD':
+                A,B,C = self._cv.get_head_curve_coefficients()
+                self._pump_A = A
+
+    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
+        if presolve_flag:
+            return (False, None)
+
+        if self._pump_A is not None:
+            headloss = self._start_node.head + self._pump_A - self._end_node.head
+        elif isinstance(self._cv,wntr.network.Pump):
+            headloss = self._end_node.head - self._start_node.head
+        else:
+            headloss = self._start_node.head - self._end_node.head
+        if self._operation(headloss, self._threshold):
+            return (True, 0)
+        return (False, None)
+        
+    def _FireControlActionImpl(self, wnm, priority):
+        if self._priority!=priority:
+            return False, None, None
+
+        change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
+        return change_flag, change_tuple, orig_value

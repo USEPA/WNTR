@@ -88,6 +88,8 @@ class ScipySimulator(WaterNetworkSimulator):
                 all_controls_to_activate = controls_to_activate+resolve_controls_to_activate
                 changes_made_flag = self._fire_controls(all_controls_to_activate)
                 if changes_made_flag:
+                    if trial > max_trials:
+                        raise RuntimeError('Exceeded maximum number of trials!')
                     continue
                 else:
                     resolve = False
@@ -102,9 +104,6 @@ class ScipySimulator(WaterNetworkSimulator):
 
             if self._wn.sim_time > self._wn.options.duration:
                 break
-
-            if trial > max_trials:
-                raise RuntimeError('Exceeded maximum number of trials!')
 
         model.get_results(results)
         return results
@@ -159,25 +158,38 @@ class ScipySimulator(WaterNetworkSimulator):
 
     def _fire_controls(self, controls_to_activate):
         changes_made = False
+        change_dict = {}
         for i in controls_to_activate:
             control = self._wn.controls[i]
-            change_flag = control.FireControlAction(self._wn, 0)
+            change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 0)
             if change_flag:
-                changes_made = True
+                if change_tuple not in change_dict.keys():
+                    change_dict[change_tuple] = orig_value
+
         for i in controls_to_activate:
             control = self._wn.controls[i]
-            change_flag = control.FireControlAction(self._wn, 1)
+            change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 1)
             if change_flag:
-                changes_made = True
+                if change_tuple not in change_dict.keys():
+                    change_dict[change_tuple] = orig_value
+
         for i in controls_to_activate:
             control = self._wn.controls[i]
-            change_flag = control.FireControlAction(self._wn, 2)
+            change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 2)
             if change_flag:
-                changes_made = True
+                if change_tuple not in change_dict.keys():
+                    change_dict[change_tuple] = orig_value
+
         for i in controls_to_activate:
             control = self._wn.controls[i]
-            change_flag = control.FireControlAction(self._wn, 3)
+            change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 3)
             if change_flag:
+                if change_tuple not in change_dict.keys():
+                    change_dict[change_tuple] = orig_value
+
+        for change_tuple, orig_value in change_dict.iteritems():
+            if orig_value!=getattr(change_tuple[0],change_tuple[1]):
                 changes_made = True
+
         return changes_made
 
