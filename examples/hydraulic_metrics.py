@@ -13,46 +13,35 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 sim = wntr.sim.EpanetSimulator(wn)
 results = sim.run_sim()
 
-# Compute fraction of delivered volume (FDV)
-P_lower = 21.09 # m (30 psi)
-#fdv = wntr.metrics.fraction_delivered_volume(results, P_lower, True)                                          
-#print "Average FDV: " +str(np.mean(fdv.values()))
-#wntr.network.draw_graph(wn, node_attribute = fdv, node_size = 40, title = 'FDV', 
-#                      node_range= [0,1])
-
-# Compute fraction of delivered demand (FDD)
-demand_factor = 0.9 # 90% of requested demand
-#fdd = wntr.metrics.fraction_delivered_demand(results, P_lower, demand_factor, 
-#                                           True)
-#print "Average FDD: " +str(np.mean(fdd.values()))
-#wntr.network.draw_graph(wn, node_attribute = fdd, node_size = 40, title = 'FDD', 
-#                      node_range = [0,1])
-
 # Create list of node names
 junctions = [node_name for node_name, node in wn.nodes(wntr.network.Junction)]
 
+# Define pressure lower bound
+P_lower = 21.09 # m (30 psi)
+
 # Pressure stats
 pressure = results.node.loc['pressure', :, junctions]
-pressure_regulation = float(sum(pressure.min(axis=0) > P_lower))/len(junctions)
+mask = wntr.metrics.query(pressure, np.greater, P_lower)
+pressure_regulation = mask.all(axis=0).sum() # True over all time
 print "Fraction of nodes > 30 psi: " + str(pressure_regulation)
-print "Average node pressure: " +str(pressure.mean()) + " m"
-attr = dict(pressure.min(axis=0))
-wntr.network.draw_graph(wn, node_attribute=attr, node_size=40, 
+print "Average node pressure: " +str(pressure.mean().mean()) + " m"
+wntr.network.draw_graph(wn, node_attribute=pressure.min(axis=0), node_size=40, 
                       title= 'Min pressure')
 
 # Compute population per node
 # R = average volume of water consumed per capita per day
 R = 0.00000876157 # m3/s (200 gallons/day)
-# qbar = average demand per node...this needs to updated to reflect daily average
-qbar = results.node.loc['demand', :, junctions].mean()
-pop = qbar/R
+qbar = wntr.metrics.average_water_consumed_perday(wn)
+pop = wntr.metrics.population(wn, R)
 total_population = pop.sum()
 print "Total population: " + str(total_population)
+wntr.network.draw_graph(wn, node_attribute=qbar, node_range = [0,0.03], node_size=40,
+                      title='Average volume of water consumed per day')
 wntr.network.draw_graph(wn, node_attribute=pop, node_range = [0,400], node_size=40,
                       title='Population, Total = ' + str(total_population))
               
 # Compute todini index
-todini = wntr.metrics.todini(results,wn, P_lower)
+todini = wntr.metrics.todini(results.node,results.link,wn, P_lower)
 plt.figure()
 plt.plot(todini)
 plt.ylabel('Todini Index')
@@ -70,29 +59,20 @@ G_flowrate_36hrs.weight_graph(link_attribute=attr)
  
 # Compute betweenness-centrality time 36 hours
 bet_cen = nx.betweenness_centrality(G_flowrate_36hrs)
-bet_cen_trim = dict([(k,v) for k,v in bet_cen.iteritems() if v > 0.001])
 wntr.network.draw_graph(wn, node_attribute=bet_cen, 
                       title='Betweenness Centrality', node_size=40)
-central_pt_dom = sum(max(bet_cen.values()) - np.array(bet_cen.values()))/G_flowrate_36hrs.number_of_nodes()
+central_pt_dom = G_flowrate_36hrs.central_point_dominance()
 print "Central point dominance: " + str(central_pt_dom)
 
-# Compute all paths at time 36, for node 185
-[S, Shat, sp, dk] = wntr.metrics.entropy(G_flowrate_36hrs, sink=['185'])
-attr = dict( (k,1) for u,v,k,d in G_flowrate_36hrs.edges(keys=True,data=True))
-for k in dk.keys():
-    u = k[0]
-    v = k[1]
-    link = G_flowrate_36hrs.edge[u][v].keys()[0]
-    attr[link] = 2 #dk[k]
-cmap = plt.cm.jet
-cmaplist = [cmap(i) for i in range(cmap.N)] # extract all colors from the .jet map
-cmaplist[0] = (.5,.5,.5,1.0) # force the first color entry to be grey
-cmaplist[cmap.N-1] = (1,0,0,1) # force the last color entry to be red
-cmap = cmap.from_list('Custom cmap', cmaplist, cmap.N) # create the new map
-wntr.network.draw_graph(wn, link_attribute=attr, link_cmap=cmap, link_width=1, 
-                      node_attribute = {'River': 1, 'Lake': 1, '185': 1}, 
-                      node_cmap=plt.cm.gray, node_size=30, title='dk')
+# Compute entropy at time 36, for node 185
+[S, Shat] = wntr.metrics.entropy(G_flowrate_36hrs, sources=None, sinks=['185'])
 
+# Plot all simple paths between the Lake/River and node 185
+link_count = G_flowrate_36hrs.links_in_simple_paths(sources=['Lake', 'River'], sinks=['185'])
+wntr.network.draw_graph(wn, link_attribute=link_count, link_width=1, 
+                        node_attribute = {'River': 1, 'Lake': 1, '185': 1}, 
+                        node_size=30, title='Link count in paths')
+        
 # Calculate entropy for 1 day, all nodes
 shat = []
 G_flowrate_t = wn.get_graph_deep_copy()

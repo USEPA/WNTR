@@ -111,7 +111,7 @@ bet_cen_trim = dict([(k,v) for k,v in bet_cen.iteritems() if v > 0.1])
 wntr.network.draw_graph(wn, node_attribute=bet_cen_trim, 
                       title='Betweenness Centrality', node_size=40, 
                       node_range=[0.1, 0.4])
-central_pt_dom = sum(max(bet_cen.values()) - np.array(bet_cen.values()))/G.number_of_nodes()
+central_pt_dom = G.central_point_dominance()
 print "Central point dominance: " + str(central_pt_dom)
 
 
@@ -119,34 +119,28 @@ print "Central point dominance: " + str(central_pt_dom)
 # incident edges) increases the number of connected components of a graph)
 Nap = list(nx.articulation_points(uG))
 Nap = list(set(Nap)) # get the unique nodes in Nap
-Nap_density = float(len(Nap))/G.number_of_nodes()
+Nap_density = float(len(Nap))/uG.number_of_nodes()
 print "Density of articulation points: " + str(Nap_density)
 wntr.network.draw_graph(wn, node_attribute=Nap, title='Articulation Point', 
                       node_size=40, node_range=[0,1])
 
-# Compute bridges (a link is considered a bridge if the removal of that link 
-# increases the number of connected components in the network.)
+# Compute bridges
 bridges = G.bridges()
 wntr.network.draw_graph(wn, link_attribute=bridges, title='Bridges', 
                       link_width=2, link_range=[0,1])
 Nbr_density = float(len(bridges))/G.number_of_edges()
 print "Density of bridges: " + str(Nbr_density)
 
-# Compute spectal gap (difference in the first and second eigenvalue of 
-# the adj matrix)
-eig = nx.adjacency_spectrum(G)
-spectral_gap = eig[0] - eig[1]
+# Compute spectal gap
+spectral_gap = G.spectral_gap()
 print "Spectal gap: " + str(spectral_gap.real)
 
-# Compute algebraic connectivity (second smallest eigenvalue of the normalized
-# Laplacian matrix of a network.)
-eig = nx.laplacian_spectrum(uG)
-alg_con = eig[-2]
+# Compute algebraic connectivity
+alg_con = G.algebraic_connectivity()
 print "Algebraic connectivity: " + str(alg_con)
 
 # Critical ratio of defragmentation
-tmp = np.mean(pow(np.array(node_degree.values()),2))
-fc = 1-(1/((tmp/np.mean(node_degree.values()))-1))
+fc = G.critical_ratio_defrag()
 print "Critical ratio of defragmentation: " + str(fc)
 
 # Compute closeness centrality (inverse of the sum of shortest path from one

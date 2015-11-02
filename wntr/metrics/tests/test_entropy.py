@@ -32,7 +32,7 @@ def test_layout1():
     G_flowrate.weight_graph(link_attribute=attr)    
     #wntr.network.draw_graph(wn, link_attribute=attr) 
     
-    [S, Shat,sp,dk] = wntr.metrics.entropy(G_flowrate)
+    [S, Shat] = wntr.metrics.entropy(G_flowrate)
     
     Saverage = np.mean(S.values())
     Smax = max(S.values())
@@ -86,7 +86,7 @@ def test_layout8():
     G_flowrate.weight_graph(link_attribute=attr)       
     #wntr.network.draw_graph(wn, link_attribute=attr) 
     
-    [S, Shat,sp,dk] = wntr.metrics.entropy(G_flowrate)
+    [S, Shat] = wntr.metrics.entropy(G_flowrate)
     
     Saverage = np.mean(S.values())
     Smax = max(S.values())

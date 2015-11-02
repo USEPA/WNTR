@@ -106,8 +106,13 @@ figures show that the two formulas are essentially indistinguishable.
 Demand-driven analysis
 ----------------------
 
+Mention adjust demand method
+
 
 Pressure-driven analysis
 --------------------------
+
+Leak model
+----------
 
 	

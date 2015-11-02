@@ -1,8 +1,6 @@
 WNTR 0.1 documentation
 =======================
 
-Contents:
-
 .. toctree::
    :maxdepth: 1
 
@@ -10,10 +8,16 @@ Contents:
    installation
    units
    getting_started
+   waternetworkmodel
+   networkxgraph
+   hydraulics
+   waterquality
+   resultsobject
    disaster_models
-   simulation
    resilience
    license
+   testing
+   tracsite
    reference
 
 Indices and tables
@@ -22,4 +26,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
 
