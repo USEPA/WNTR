@@ -380,8 +380,8 @@ class WaterNetworkModel(object):
         nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'pump'})
         self._num_pumps += 1
 
-        close_control_action = wntr.network.TargetAttributeControlAction(pump, 'status', LinkStatus.closed)
-        open_control_action = wntr.network.TargetAttributeControlAction(pump, 'status', LinkStatus.opened)
+        close_control_action = wntr.network.TargetAttributeControlAction(pump, '_cv_status', LinkStatus.closed)
+        open_control_action = wntr.network.TargetAttributeControlAction(pump, '_cv_status', LinkStatus.opened)
 
         control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
         control._priority = 0
@@ -1820,6 +1820,7 @@ class Pump(Link):
             Where power is a fixed value in KW, while a head curve is a Curve object.
         """
         super(Pump, self).__init__(name, start_node_name, end_node_name)
+        self._cv_status = LinkStatus.opened
         self.prev_speed = None
         self.speed = 1.0
         self.curve = None

@@ -241,6 +241,86 @@ class ParseWaterNetwork(object):
         f.close()
 
         #
+        # Read file again to get junctions
+        #
+        f = file(inp_file_name, 'r')
+        junctions = False
+        for line in f:
+            if ']' in line:
+                # Set all flags to false
+                junctions = False
+
+            if '[JUNCTIONS]' in line:
+                junctions = True
+                continue
+
+            if junctions:
+                line = line.split(';')[0]
+                current = line.split()
+                if current == []:
+                    continue
+                if len(current) == 3:
+                    wn.add_junction(current[0], convert('Demand', inp_units, float(current[2])), None, convert('Elevation', inp_units, float(current[1])))
+                else:
+                    wn.add_junction(current[0], convert('Demand', inp_units, float(current[2])), current[3], convert('Elevation', inp_units, float(current[1])))
+
+        f.close()
+
+        #
+        # Read file again to get tanks
+        #
+        f = file(inp_file_name, 'r')
+        tanks = False
+        for line in f:
+            if ']' in line:
+                # Set all flags to false
+                tanks = False
+
+            if '[TANKS]' in line:
+                tanks = True
+                continue
+
+            if tanks:
+                line = line.split(';')[0]
+                current = line.split()
+                if current == []:
+                    continue
+                if len(current) == 8:  # Volume curve provided
+                    if float(current[6]) != 0:
+                        logger.warning('Currently, only the EpanetSimulator utilizes minimum volumes for tanks. The other simulators only use the minimum level and only support cylindrical tanks.')
+                    logger.warning('Currently, only the EpanetSimulator supports volume curves. The other simulators only support cylindrical tanks.')
+                    curve_name = current[7]
+                    curve_points = []
+                    for point in self._curves[curve_name]:
+                        x = convert('Length', inp_units, point[0])
+                        y = convert('Volume', inp_units, point[1])
+                        curve_points.append((x,y))
+                    wn.add_curve(curve_name, 'VOLUME', curve_points)
+                    curve = wn.get_curve(curve_name)
+                    wn.add_tank(current[0], convert('Elevation', inp_units, float(current[1])),
+                                            convert('Length', inp_units, float(current[2])),
+                                            convert('Length', inp_units, float(current[3])),
+                                            convert('Length', inp_units, float(current[4])),
+                                            convert('Tank Diameter', inp_units, float(current[5])),
+                                            convert('Volume', inp_units, float(current[6])),
+                                            curve)
+                elif len(current) == 7:  # No volume curve provided
+                    if float(current[6]) != 0:
+                        logger.warning('Currently, only the EpanetSimulator utilizes minimum volumes for tanks. The other simulators only use the minimum level and only support sylindrical tanks.')
+                    wn.add_tank(current[0], convert('Elevation', inp_units, float(current[1])),
+                                            convert('Length', inp_units, float(current[2])),
+                                            convert('Length', inp_units, float(current[3])),
+                                            convert('Length', inp_units, float(current[4])),
+                                            convert('Tank Diameter', inp_units, float(current[5])),
+                                            convert('Volume', inp_units, float(current[6])))
+                else:
+                    raise RuntimeError('Tank entry format not recognized.')
+
+        logger.warning('Currently, only the EpanetSimulator utilizes maximum levels for tanks. The other simulators do not place an upper limit on tank levels yet.')
+
+        f.close()
+
+        #
         # Read file again to get pipes
         #
         f = file(inp_file_name, 'r')
@@ -280,32 +360,6 @@ class ParseWaterNetwork(object):
                                 float(current[5]), 
                                 float(current[6]), 
                                 current[7].upper())
-
-        f.close()
-
-        #
-        # Read file again to get junctions
-        #
-        f = file(inp_file_name, 'r')
-        junctions = False
-        for line in f:
-            if ']' in line:
-                # Set all flags to false
-                junctions = False
-
-            if '[JUNCTIONS]' in line:
-                junctions = True
-                continue
-
-            if junctions:
-                line = line.split(';')[0]
-                current = line.split()
-                if current == []:
-                    continue
-                if len(current) == 3:
-                    wn.add_junction(current[0], convert('Demand', inp_units, float(current[2])), None, convert('Elevation', inp_units, float(current[1])))
-                else:
-                    wn.add_junction(current[0], convert('Demand', inp_units, float(current[2])), current[3], convert('Elevation', inp_units, float(current[1])))
 
         f.close()
 
@@ -407,60 +461,6 @@ class ParseWaterNetwork(object):
                                 convert('Power', inp_units, float(current[4])))
                 else:
                     raise RuntimeError('Pump keyword in inp file not recognized.')
-
-        f.close()
-
-        #
-        # Read file again to get tanks
-        #
-        f = file(inp_file_name, 'r')
-        tanks = False
-        for line in f:
-            if ']' in line:
-                # Set all flags to false
-                tanks = False
-
-            if '[TANKS]' in line:
-                tanks = True
-                continue
-
-            if tanks:
-                line = line.split(';')[0]
-                current = line.split()
-                if current == []:
-                    continue
-                if len(current) == 8:  # Volume curve provided
-                    if float(current[6]) != 0:
-                        logger.warning('Currently, only the EpanetSimulator utilizes minimum volumes for tanks. The other simulators only use the minimum level and only support cylindrical tanks.')
-                    logger.warning('Currently, only the EpanetSimulator supports volume curves. The other simulators only support cylindrical tanks.')
-                    curve_name = current[7]
-                    curve_points = []
-                    for point in self._curves[curve_name]:
-                        x = convert('Length', inp_units, point[0])
-                        y = convert('Volume', inp_units, point[1])
-                        curve_points.append((x,y))
-                    wn.add_curve(curve_name, 'VOLUME', curve_points)
-                    curve = wn.get_curve(curve_name)
-                    wn.add_tank(current[0], convert('Elevation', inp_units, float(current[1])),
-                                            convert('Length', inp_units, float(current[2])),
-                                            convert('Length', inp_units, float(current[3])),
-                                            convert('Length', inp_units, float(current[4])),
-                                            convert('Tank Diameter', inp_units, float(current[5])),
-                                            convert('Volume', inp_units, float(current[6])),
-                                            curve)
-                elif len(current) == 7:  # No volume curve provided
-                    if float(current[6]) != 0:
-                        logger.warning('Currently, only the EpanetSimulator utilizes minimum volumes for tanks. The other simulators only use the minimum level and only support sylindrical tanks.')
-                    wn.add_tank(current[0], convert('Elevation', inp_units, float(current[1])),
-                                            convert('Length', inp_units, float(current[2])),
-                                            convert('Length', inp_units, float(current[3])),
-                                            convert('Length', inp_units, float(current[4])),
-                                            convert('Tank Diameter', inp_units, float(current[5])),
-                                            convert('Volume', inp_units, float(current[6])))
-                else:
-                    raise RuntimeError('Tank entry format not recognized.')
-
-        logger.warning('Currently, only the EpanetSimulator utilizes maximum levels for tanks. The other simulators do not place an upper limit on tank levels yet.')
 
         f.close()
 

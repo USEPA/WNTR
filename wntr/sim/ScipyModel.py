@@ -719,6 +719,8 @@ class ScipyModel(object):
         for pump_name, pump in self._wn.pumps():
             pump_id = self._link_name_to_id[pump_name]
             self.pump_speeds[pump_id] = pump.speed
+            if pump._cv_status == wntr.network.LinkStatus.closed:
+                self.link_status[pump_id] = pump._cv_status
 
     def update_tank_heads(self):
         for tank_name, tank in self._wn.tanks():
