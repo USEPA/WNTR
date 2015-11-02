@@ -19,7 +19,7 @@ junctions = [node_name for node_name, node in wn.nodes(wntr.network.Junction)]
 # Define pressure lower bound
 P_lower = 21.09 # m (30 psi)
 
-# Pressure stats
+# Query pressure
 pressure = results.node.loc['pressure', :, junctions]
 mask = wntr.metrics.query(pressure, np.greater, P_lower)
 pressure_regulation = mask.all(axis=0).sum() # True over all time
@@ -27,18 +27,6 @@ print "Fraction of nodes > 30 psi: " + str(pressure_regulation)
 print "Average node pressure: " +str(pressure.mean().mean()) + " m"
 wntr.network.draw_graph(wn, node_attribute=pressure.min(axis=0), node_size=40, 
                       title= 'Min pressure')
-
-# Compute population per node
-# R = average volume of water consumed per capita per day
-R = 0.00000876157 # m3/s (200 gallons/day)
-qbar = wntr.metrics.average_water_consumed_perday(wn)
-pop = wntr.metrics.population(wn, R)
-total_population = pop.sum()
-print "Total population: " + str(total_population)
-wntr.network.draw_graph(wn, node_attribute=qbar, node_range = [0,0.03], node_size=40,
-                      title='Average volume of water consumed per day')
-wntr.network.draw_graph(wn, node_attribute=pop, node_range = [0,400], node_size=40,
-                      title='Population, Total = ' + str(total_population))
               
 # Compute todini index
 todini = wntr.metrics.todini(results.node,results.link,wn, P_lower)
@@ -89,16 +77,3 @@ print "Entropy"
 print "  Mean: " + str(np.mean(shat))
 print "  Max: " + str(np.nanmax(shat))
 print "  Min: " + str(np.nanmin(shat))
-
-# Compute network cost and GHG emissions
-tank_cost = np.loadtxt('data/cost_tank.txt',skiprows=1)
-pipe_cost = np.loadtxt('data/cost_pipe.txt',skiprows=1)
-valve_cost = np.loadtxt('data/cost_valve.txt',skiprows=1)
-pump_cost = 3783 # average from BWN-II
-pipe_ghg = np.loadtxt('data/ghg_pipe.txt',skiprows=1)
-
-network_cost = wntr.metrics.cost(wn, tank_cost, pipe_cost, valve_cost, pump_cost)
-print "Network cost: $" + str(round(network_cost,2))
-
-network_ghg = wntr.metrics.ghg_emissions(wn, pipe_ghg)
-print "Network GHG emissions: " + str(round(network_ghg,2))

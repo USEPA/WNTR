@@ -1,1 +1,2 @@
 from Earthquake import Earthquake
+from Waterquality import Waterquality

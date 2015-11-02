@@ -120,8 +120,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         
         eig = nx.adjacency_spectrum(self)
         spectral_gap = eig[0] - eig[1]
-    
-        return spectral_gap
+
+        return spectral_gap.real
 
     def algebraic_connectivity(self):
         """ Algebraic connectivity. Second smallest eigenvalue of the normalized
