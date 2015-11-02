@@ -348,7 +348,6 @@ class ConditionalControl(Control):
         """
         if type(self._source_obj)==wntr.network.Tank and self._source_attr=='head' and presolve_flag and wnm.sim_time!=0:
             val = getattr(self._source_obj,self._source_attr)
-            print 'head for tank ',self._source_obj.name(),' = ',val
             q_net = self._source_obj.prev_demand
             delta_h = 4.0*q_net*(wnm.sim_time-wnm.prev_sim_time)/(math.pi*self._source_obj.diameter**2)
             next_val = val+delta_h
@@ -359,14 +358,13 @@ class ConditionalControl(Control):
                     m = (next_val-val)/(wnm.sim_time-wnm.prev_sim_time)
                     b = next_val - m*wnm.sim_time
                     new_t = (self._threshold - b)/m
-                    return (True, int(round(wnm.sim_time-new_t)))
+                    return (True, int(math.floor(wnm.sim_time-new_t)))
                 else:
                     return (True, 0)
             else:
                 return (False, None)
         elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='head' and presolve_flag and wnm.sim_time==0:
             val = getattr(self._source_obj, self._source_attr)
-            print 'head for tank ',self._source_obj.name(),' = ',val
             if self._operation(val, self._threshold):
                 return (True, 0)
             else:
@@ -429,14 +427,13 @@ class MultiConditionalControl(Control):
             src_obj = self._source[ndx][0]
             src_attr = self._source[ndx][1]
             src_val = getattr(src_obj, src_attr)
-            print 'name: ',src_obj.name(),' attr: ',src_attr,' value: ',src_val
             oper = self._operation[ndx]
             if isinstance(self._threshold[ndx],float):
                 threshold_val = self._threshold[ndx]
             else:
                 threshold_obj = self._threshold[ndx][0]
                 threshold_attr = self._threshold[ndx][1]
-                threshold_val = getattr(threshold_obj, theshold_attr)
+                threshold_val = getattr(threshold_obj, threshold_attr)
             if not oper(src_val, threshold_val):
                 action_required = False
                 break

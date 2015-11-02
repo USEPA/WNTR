@@ -202,12 +202,12 @@ class WaterNetworkModel(object):
             close_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.closed)
             open_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.opened)
 
-            control = wntr.network.ConditionalControl((tank,'head'),np.greater,min_head+2*self._Htol,open_control_action)
+            control = wntr.network.ConditionalControl((tank,'head'),np.greater,min_head+self._Htol,open_control_action)
             control._partial_step_for_tanks = False
             control._priority = 0
             self.add_control(control)
 
-            control = wntr.network.ConditionalControl((tank,'head'),np.less,min_head,close_control_action)
+            control = wntr.network.ConditionalControl((tank,'head'),np.less_equal,min_head,close_control_action)
             control._priority = 1
             self.add_control(control)
 
@@ -216,13 +216,13 @@ class WaterNetworkModel(object):
             else:
                 other_node_name = link.start_node()
             other_node = self.get_node(other_node_name)
-            control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.less,np.greater],[min_head+2*self._Htol,min_head+2*self._Htol],open_control_action)
+            control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.less_equal,np.less],[min_head+self._Htol,(other_node,'head')],open_control_action)
             control._priority = 2
             self.add_control(control)
 
-            control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.less,np.less],[min_head+self._Htol,min_head+self._Htol], close_control_action)
-            control._priority = 2
-            self.add_control(control)
+            #control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.less,np.less],[min_head+self._Htol,min_head+self._Htol], close_control_action)
+            #control._priority = 2
+            #self.add_control(control)
 
         # Now take care of the max level
         max_head = max_level+elevation
@@ -239,12 +239,12 @@ class WaterNetworkModel(object):
             close_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.closed)
             open_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.opened)
 
-            control = wntr.network.ConditionalControl((tank,'head'),np.less,max_head-2*self._Htol,open_control_action)
+            control = wntr.network.ConditionalControl((tank,'head'),np.less,max_head-self._Htol,open_control_action)
             control._partial_step_for_tanks = False
             control._priority = 0
             self.add_control(control)
 
-            control = wntr.network.ConditionalControl((tank,'head'),np.greater,max_head,close_control_action)
+            control = wntr.network.ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
             control._priority = 1
             self.add_control(control)
 
@@ -253,13 +253,13 @@ class WaterNetworkModel(object):
             else:
                 other_node_name = link.start_node()
             other_node = self.get_node(other_node_name)
-            control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.less],[max_head-2*self._Htol,max_head-2*self._Htol],open_control_action)
+            control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater],[max_head-self._Htol,(other_node,'head')],open_control_action)
             control._priority = 2
             self.add_control(control)
 
-            control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
-            control._priority = 2
-            self.add_control(control)
+            #control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
+            #control._priority = 2
+            #self.add_control(control)
 
     def add_reservoir(self, name, base_head=0.0, head_pattern_name=None, coordinates=None):
         """
