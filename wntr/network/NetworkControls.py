@@ -117,7 +117,7 @@ class TargetAttributeControlAction(ControlAction):
         if orig_value == self._value:
             return False, None, None
         else:
-            #print 'setting ',target.name(),self._attribute,' to ',self._value
+            print 'setting ',target.name(),self._attribute,' to ',self._value
             setattr(target, self._attribute, self._value)
             return True, (target, self._attribute), orig_value
 
@@ -493,3 +493,69 @@ class _CheckValveHeadControl(Control):
 
         change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
         return change_flag, change_tuple, orig_value
+
+class _PRVHeadControl(Control):
+
+    def __init__(self, source, operation, threshold, control_action):
+        self._priority = 0
+        self._source = source
+        self._operation = operation
+        self._control_action = control_action
+        self._threshold = threshold
+
+        if not isinstance(source,list):
+            raise ValueError('source must be a list of tuples, (source_object, source_attribute).')
+        if not isinstance(operation,list):
+            raise ValueError('operation must be a list numpy operations (e.g.,numpy.greater).')
+        if not isinstance(threshold,list):
+            raise ValueError('threshold must be a list of floats or tuples (threshold_object, threshold_attribute).')
+        if len(source)!=len(operation):
+            raise ValueError('The length of the source list must equal the length of the operation list.')
+        if len(source)!=len(threshold):
+            raise ValueError('The length of the source list must equal the length of the threshold list.')
+
+    @classmethod
+    def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
+        ca = TargetAttributeControlAction(target_obj, target_attribute, target_value)
+        return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
+
+    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
+        """
+        This implements the derived method from Control. Please see
+        the Control class and the documentation for this class.
+        """
+        if presolve_flag:
+            return (False, None)
+
+        action_required = True
+        for ndx in xrange(len(self._source)):
+            src_obj = self._source[ndx][0]
+            src_attr = self._source[ndx][1]
+            src_val = getattr(src_obj, src_attr)
+            oper = self._operation[ndx]
+            if isinstance(self._threshold[ndx],float):
+                threshold_val = self._threshold[ndx]
+            else:
+                threshold_obj = self._threshold[ndx][0]
+                threshold_attr = self._threshold[ndx][1]
+                threshold_val = getattr(threshold_obj, threshold_attr)
+            if not oper(src_val, threshold_val):
+                action_required = False
+                break
+
+        if action_required:
+            return (True, 0)
+        else:
+            return (False, None)
+
+    def _FireControlActionImpl(self, wnm, priority):
+        """
+        This implements the derived method from Control. Please see
+        the Control class and the documentation for this class.
+        """
+        if self._priority!=priority:
+            return False, None, None
+
+        change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
+        return change_flag, change_tuple, orig_value
+
