@@ -13,7 +13,7 @@ def ghg_emissions(wn, pipe_ghg=None):
         Annual GHG emissions indexed by pipe diameter
         
         =============  ================================
-        Diameter (mm)  Annualised EE (kg-CO2-e/m/year)
+        Diameter (mm)  Annualised EE (kg-CO2-e/m/yr)
         =============  ================================
         102             5.90
         152             9.71
@@ -29,6 +29,11 @@ def ghg_emissions(wn, pipe_ghg=None):
         762             72.58
         =============  ================================
     
+    Returns
+    ----------
+    network_ghg : float
+        Annual greenhouse gas emissions
+        
     References
     ----------
     [1] Salomons E, Ostfeld A, Kapelan Z, Zecchin A, Marchi A, Simpson A. (2012).
@@ -51,3 +56,4 @@ def ghg_emissions(wn, pipe_ghg=None):
         network_ghg = network_ghg + pipe_ghg.iloc[idx]*link.length
        
     return network_ghg    
+    

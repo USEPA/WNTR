@@ -26,62 +26,75 @@ def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
     pipe_cost : pd.Series (optional, default values below, from [1])
         Annual pipe cost per pipe length indexed by diameter
     
-        =============  ================================
-        Diameter (in)  Annual Cost ($/m/yr) 
-        =============  ================================
-        4               8.31
-        6              10.10
-        8              12.10
-        10             12.96
-        12             15.22
-        14             16.62
-        16             19.41
-        18             22.20
-        20             24.66
-        24             35.69
-        28             40.08
-        30             42.60
-        =============  ================================
+        =============  =============  ================================
+        Diameter (in)   Diameter (m)  Annual Cost ($/m/yr) 
+        =============  =============  ================================
+        4              0.102          8.31
+        6              0.152          10.10
+        8              0.203          12.10
+        10             0.254          12.96
+        12             0.305          15.22
+        14             0.356          16.62
+        16             0.406          19.41
+        18             0.457          22.20
+        20             0.508          24.66
+        24             0.610          35.69
+        28             0.711          40.08
+        30             0.762          42.60
+        =============  =============  ================================
         
     prv_cost : pd.Series (optional, default values below, from [1])
         Annual PRV valve cost indexed by diameter 
         
-        =============  ================================
-        Diameter (in)  Annual Cost ($/m/yr) 
-        =============  ================================
-        4              323
-        6              529
-        8              779
-        10             1113
-        12             1892
-        14             2282
-        16             4063
-        18             4452
-        20             4564
-        24             5287
-        28             6122
-        30             6790
-        =============  ================================
-
-    pump_cost : float (optional, default values below, from [1])
-        Average cost per year.  
-        TODO: This should be based on max power or pump curve
+        =============  =============  ================================
+        Diameter (in)   Diameter (m)  Annual Cost ($/m/yr) 
+        =============  =============  ================================
+        4              0.102          323
+        6              0.152          529
+        8              0.203          779
+        10             0.254          1113
+        12             0.305          1892
+        14             0.356          2282
+        16             0.406          4063
+        18             0.457          4452
+        20             0.508          4564
+        24             0.610          5287
+        28             0.711          6122
+        30             0.762          6790
+        =============  =============  ================================
+    
+    pump_cost : pd.Series (optional, default values below, from [1])
+        Annual pump cost indexed by maximum power.  Maximum Power is computed 
+        from the pump curve and pump efficiency as follows:
         
+        .. math:: Pmp = g*rho/eff*exp(ln(A/(B*(C+1)))/C)*(A - B*(exp(ln(A/(B*(C+1)))/C))^C)
+        
+        where 
+        :math:`Pmp` is the maximum power (W), 
+        :math:`g` is acceleration due to gravity (9.81 m/s^2), 
+        :math:`rho` is the density of water (1000 kg/m^3), 
+        :math:`eff` is the overall pump efficiency (0.75), 
+        :math:`A`, :math:`B`, and :math:`C` are the pump curve coefficients.
+
         ==================  ================================
-        Maximum power (kW)  Annual Cost ($/yr) 
+        Maximum power (W)   Annual Cost ($/yr) 
         ==================  ================================
-        45.24               4133
-        31.67               3563
-        49.76               4339
-        22.62               3225
-        22.62               3225
-        24.88               3307
-        11.31               2850
-        54.28               4554
-        38.00               3820
-        59.71               4823
+        11310               2850
+        22620               3225
+        24880               3307
+        31670               3563
+        38000               3820
+        45240               4133
+        49760               4339
+        54280               4554
+        59710               4823
         ==================  ================================
 
+    Returns
+    ----------
+    network_cost : float
+        Annual network cost in dollars
+        
     References
     ----------
     [1] Salomons E, Ostfeld A, Kapelan Z, Zecchin A, Marchi A, Simpson A. (2012).
@@ -110,7 +123,9 @@ def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
         prv_cost = pd.Series(cost, diameter)
 
     if pump_cost is None:
-        pump_cost = 3783
+        Pmp = [11310, 22620, 24880, 31670, 38000, 45240, 49760, 54280, 59710]
+        cost =  [2850, 3225, 3307, 3563, 3820, 4133, 4339, 4554, 4823]
+        pump_cost = pd.Series(cost, Pmp)
         
     # Tank construction cost
     for node_name, node in wn.nodes(Tank):
@@ -124,8 +139,16 @@ def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
         network_cost = network_cost + pipe_cost.iloc[idx]*link.length    
     
     # Pump construction cost
-    for link_name, link in wn.links(Pump):        
-        network_cost = network_cost + pump_cost
+    for link_name, link in wn.links(Pump):      
+        coeff = link.get_head_curve_coefficients()
+        A = coeff[0]
+        B = coeff[1]
+        C = coeff[2]
+        # TODO: efficiency should be read from the inp file
+        eff = 0.75
+        Pmax = 9.81*1000/eff*np.exp(np.log(A/(B*(C+1)))/C)*(A - B*(np.exp(np.log(A/(B*(C+1)))/C))**C)
+        idx = np.argmin(np.abs(pump_cost.index - Pmax))
+        network_cost = network_cost + pump_cost.iloc[idx]
         
     # PRV valve construction cost    
     for link_name, link in wn.links(Valve):        
