@@ -187,9 +187,17 @@ class ScipySimulator(WaterNetworkSimulator):
                 if change_tuple not in change_dict.keys():
                     change_dict[change_tuple] = orig_value
 
+        self._align_valve_statuses()
+
         for change_tuple, orig_value in change_dict.iteritems():
             if orig_value!=getattr(change_tuple[0],change_tuple[1]):
                 changes_made = True
 
         return changes_made
 
+    def _align_valve_statuses(self):
+        for valve_name, valve in self._wn.valves():
+            if valve.status==wntr.network.LinkStatus.opened:
+                valve._status = valve.status
+            elif valve.status==wntr.network.LinkStatus.closed:
+                valve._status = valve.status

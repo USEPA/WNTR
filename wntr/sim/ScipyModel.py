@@ -716,6 +716,7 @@ class ScipyModel(object):
         for valve_name, valve in self._wn.valves():
             valve_id = self._link_name_to_id[valve_name]
             self.valve_settings[valve_id] = valve.setting
+            self.link_status[valve_id] = valve._status
         for pump_name, pump in self._wn.pumps():
             pump_id = self._link_name_to_id[pump_name]
             self.pump_speeds[pump_id] = pump.speed

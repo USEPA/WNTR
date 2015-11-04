@@ -435,19 +435,10 @@ class WaterNetworkModel(object):
         close_control_action = wntr.network.TargetAttributeControlAction(valve, '_status', LinkStatus.closed)
         open_control_action = wntr.network.TargetAttributeControlAction(valve, '_status', LinkStatus.opened)
         active_control_action = wntr.network.TargetAttributeControlAction(valve, '_status', LinkStatus.active)
-
-        control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
-        control._priority = 0
+        
+        control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
         self.add_control(control)
-
-        control = wntr.network._CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
-        control._priority = 3
-        self.add_control(control)
-
-        control = wntr.network.ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
-        control._priority = 3
-        self.add_control(control)
-
+        
     def add_pattern(self, name, pattern_list):
         """
         Method to add pattern to a water network object.

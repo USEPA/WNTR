@@ -494,25 +494,21 @@ class _CheckValveHeadControl(Control):
         change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
         return change_flag, change_tuple, orig_value
 
-class _PRVHeadControl(Control):
+class _PRVControl(Control):
 
-    def __init__(self, source, operation, threshold, control_action):
-        self._priority = 0
-        self._source = source
-        self._operation = operation
-        self._control_action = control_action
-        self._threshold = threshold
-
-        if not isinstance(source,list):
-            raise ValueError('source must be a list of tuples, (source_object, source_attribute).')
-        if not isinstance(operation,list):
-            raise ValueError('operation must be a list numpy operations (e.g.,numpy.greater).')
-        if not isinstance(threshold,list):
-            raise ValueError('threshold must be a list of floats or tuples (threshold_object, threshold_attribute).')
-        if len(source)!=len(operation):
-            raise ValueError('The length of the source list must equal the length of the operation list.')
-        if len(source)!=len(threshold):
-            raise ValueError('The length of the source list must equal the length of the threshold list.')
+    def __init__(self, wnm, valve, Htol, Qtol, close_control_action, open_control_action, active_control_action):
+        self._priority = 3
+        self._valve = valve
+        self._Htol = Htol
+        self._Qtol = Qtol
+        self._close_control_action = close_control_action
+        self._open_control_action = open_control_action
+        self._active_control_action = active_control_action
+        self._action_to_fire = None
+        self._start_node_name = valve.start_node()
+        self._end_node_name = valve.end_node()
+        self._start_node = wnm.get_node(self._start_node_name)
+        self._end_node = wnm.get_node(self._end_node_name)
 
     @classmethod
     def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
@@ -527,25 +523,31 @@ class _PRVHeadControl(Control):
         if presolve_flag:
             return (False, None)
 
-        action_required = True
-        for ndx in xrange(len(self._source)):
-            src_obj = self._source[ndx][0]
-            src_attr = self._source[ndx][1]
-            src_val = getattr(src_obj, src_attr)
-            oper = self._operation[ndx]
-            if isinstance(self._threshold[ndx],float):
-                threshold_val = self._threshold[ndx]
-            else:
-                threshold_obj = self._threshold[ndx][0]
-                threshold_attr = self._threshold[ndx][1]
-                threshold_val = getattr(threshold_obj, threshold_attr)
-            if not oper(src_val, threshold_val):
-                action_required = False
-                break
-
-        if action_required:
-            return (True, 0)
-        else:
+        if self._valve._status == wntr.network.LinkStatus.active:
+            if self._valve.flow < -self._Qtol:
+                self._action_to_fire = self._close_control_action
+                return (True, 0)
+            Hml = self._valve.minor_loss*self._valve.flow**2
+            if self._start_node.head < self._valve.setting + Hml - self._Htol:
+                self._action_to_fire = self._open_control_action
+                return (True, 0)
+            return (False, None)
+        elif self._valve._status == wntr.network.LinkStatus.opened:
+            if self._valve.flow < -self._Qtol:
+                self._action_to_fire = self._close_control_action
+                return (True, 0)
+            Hml = self._valve.minor_loss*self._valve.flow**2
+            if self._start_node.head > self._valve.setting + Hml + self._Htol:
+                self._action_to_fire = self._active_control_action
+                return (True, 0)
+            return (False, None)
+        elif self._valve._status == wntr.network.LinkStatus.closed:
+            if self._start_node.head > self._end_node.head + self._Htol and self._start_node.head < self._valve.setting - self._Htol:
+                self._action_to_fire = self._open_control_action
+                return (True, 0)
+            if self._start_node.head > self._end_node.head + self._Htol and self._end_node.head < self._valve.setting - self._Htol:
+                self._action_to_fire = self._active_control_action
+                return (True, 0)
             return (False, None)
 
     def _FireControlActionImpl(self, wnm, priority):
@@ -556,6 +558,6 @@ class _PRVHeadControl(Control):
         if self._priority!=priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
+        change_flag, change_tuple, orig_value = self._action_to_fire.FireControlAction()
         return change_flag, change_tuple, orig_value
 
