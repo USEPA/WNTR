@@ -16,8 +16,8 @@ by adding individual components to generate a network representation::
 
 The water network model can also be written to inp file.
 Files are written in LPS units.
-The demands associated with pressure-driven simualtion can be stored in the file.
-The inp file writter does not include features not supported by EPANET::
+The demands associated with pressure-driven simulation can be stored in the file.
+The inp file writer does not include features not supported by EPANET::
 
 	wn.write_inpfile(inp_file)
 
@@ -38,7 +38,7 @@ Reservoirs
 
 Tanks
 -----
-WNTR assumes tanks are cylindrical. **Non-clyndrical shapes are currently not supported by WNTR.** 
+WNTR assumes tanks are cylindrical. **Non-cylindrical shapes are currently not supported by WNTR.** 
 
 
 Pipes
@@ -52,7 +52,7 @@ Pumps
 
 Valves
 -------
-WNTR supports check valves (CV)and pressure-reducing valves (PRV).  
+WNTR supports check valves (CV) and pressure-reducing valves (PRV).  
 **Pressure sustaining valvea (PSV), 
 pressure breaker valves (PBV),
 flow control valves (FCV),

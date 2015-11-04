@@ -46,8 +46,8 @@ Node degree				Node degree is the number of links adjacent to a node.  Node degr
 Link density				Link density is the ratio between the total number of links and the maximum 
 					number of links in the network.  If links are allowed to connect a node to 
 					itself, then the maximum number of links is :math:`{n}^{2}`, where :math:`n` is the number of nodes.  
-					Otherwise, the maximum number of nodes is :math:`n(n-1)`.  Link density is a 
-					value between 0 and 1. 
+					Otherwise, the maximum number of nodes is :math:`n(n-1)`.  Link density is 0 for a graph without edges 
+					and 1 for a dense graph. The density of multigraphs can be higher than 1.
 					Link density can be computed using the NetworkX method ``density``.
 
 Eccentricity and diameter		Eccentricity is the maximum number of links between a node and all other nodes 
@@ -95,6 +95,9 @@ Betweeness centrality			Betweeness centrality is the fraction of shortest paths 
 					of the most central point (having the maximum betweenness centrality) 
 					and all other nodes.
 					
+Closeness centrality			Closeness centrality is the inverse of the sum of shortest path from one node to all other nodes.
+					Closeness centrality can be computed using the NetworkX method ``closeness_centrality``.
+
 Articulation points			A node is considered an articulation point if the removal of that node 
 					(along with all its incident edges) increases the number of connected 
 					components of a network.

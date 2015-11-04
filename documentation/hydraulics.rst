@@ -3,7 +3,7 @@ Hydraulic simulation
    
 WNTR contains 2 (or 3) simulators...
 
-Epanet simualtor (Hydraulic and Water quality)::
+Epanet simulator (Hydraulic and Water quality)::
 
 	sim = wntr.sim.EpanetSimulator(wn)
 	results = sim.run_sim()
@@ -23,7 +23,7 @@ More information on the simulators can be found in the API documentation, under
 :doc:`ScipySimulator</apidoc/wntr.sim.ScipySimulator>`, and 
 :doc:`PyomoSimulator</apidoc/wntr.sim.PyomoSimulator>`.
 
-The following page descibes the hydraulic equations used in WNTR.
+The following page describes the hydraulic equations used in WNTR.
 
 Mass balence at nodes
 ----------------------

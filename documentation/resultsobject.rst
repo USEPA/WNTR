@@ -1,7 +1,7 @@
 Simulation results
 ====================
 Simulation results are stored in Pandas Panels.  
-For more infomation on Pandas, see http://pandas.pydata.org/.
+For more information on Pandas, see http://pandas.pydata.org/.
 Results are stored in one Panel for nodes and one Panel for links, accessed using :: 
 
 	results.node
