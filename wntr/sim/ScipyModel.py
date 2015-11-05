@@ -487,9 +487,9 @@ class ScipyModel(object):
             for node_id in self._node_ids:
                 if self.node_types[node_id]==wntr.network.NodeTypes.junction:
                     head = heads[node_id]
-                    Dexp = self.junction_demands[node_id]
+                    Dexp = self.junction_demand[node_id]
                     Pmin = self.minimum_pressures[node_id]
-                    pnom = self.nominal_pressures[node_id]
+                    Pnom = self.nominal_pressures[node_id]
                     elevation = self.node_elevations[node_id]
                     if (head-elevation) <= Pmin:
                         self.jac_values[value_ndx] = -Dexp*self._slope_of_pdd_curve*head
@@ -662,7 +662,7 @@ class ScipyModel(object):
 
     def get_demand_or_head_residual(self, head, demand):
 
-        if self._pressure_driven:
+        if self.pressure_driven:
             m = self._slope_of_pdd_curve
             delta = self._pdd_smoothing_delta
             for node_id in self._junction_ids:
@@ -678,7 +678,7 @@ class ScipyModel(object):
                     a,b,c,d = self.pdd_poly1_coeffs[node_id]
                     self.demand_or_head_residual[node_id] = Dact - Dexp*(a*(head_n-elevation)**3.0+b*(head_n-elevation)**2.0+c*(head_n-elevation)+d)
                 elif (head_n-elevation) <= (Pnom-delta):
-                    self.demand_or_head_residual[node_id] = Dact - Dexp*((head_n-z-Pmin)/(Pnom-Pmin))**0.5
+                    self.demand_or_head_residual[node_id] = Dact - Dexp*((head_n-elevation-Pmin)/(Pnom-Pmin))**0.5
                 elif (head_n-elevation) <= Pnom:
                     a,b,c,d = self.pdd_poly2_coeffs[node_id]
                     self.demand_or_head_residual[node_id] = Dact - Dexp*(a*(head_n-elevation)**3.0+b*(head_n-elevation)**2.0+c*(head_n-elevation)+d)

@@ -23,7 +23,7 @@ import copy
 
 
 class WaterNetworkSimulator(object):
-    def __init__(self, water_network=None, pressure_dependent=False):
+    def __init__(self, water_network=None, pressure_driven=False):
         """
         Water Network Simulator class.
 
@@ -36,10 +36,7 @@ class WaterNetworkSimulator(object):
 
         """
         self._wn = water_network
-        if pressure_dependent:
-            self.pressure_dependent = True
-        else:
-            self.pressure_dependent = False
+        self.pressure_driven = pressure_driven
 
         # A dictionary containing links connected to reservoir
         # 'Pump-2':'Lake-1'

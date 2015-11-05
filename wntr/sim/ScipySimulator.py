@@ -15,7 +15,7 @@ class ScipySimulator(WaterNetworkSimulator):
     Run simulation using custom newton solver and linear solvers from scipy.sparse.
     """
 
-    def __init__(self, wn):
+    def __init__(self, wn, pressure_driven=False):
         """
         Simulator object to be used for running scipy simulations.
 
@@ -25,7 +25,7 @@ class ScipySimulator(WaterNetworkSimulator):
             A water network
         """
 
-        super(ScipySimulator, self).__init__(wn)
+        super(ScipySimulator, self).__init__(wn, pressure_driven)
         self._get_demand_dict()
 
     def run_sim(self):
@@ -33,7 +33,7 @@ class ScipySimulator(WaterNetworkSimulator):
         Method to run an extended period simulation
         """
 
-        model = ScipyModel(self._wn)
+        model = ScipyModel(self._wn, self.pressure_driven)
         model.initialize_results_dict()
 
         self.solver = NewtonSolver()
