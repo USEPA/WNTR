@@ -8,9 +8,10 @@ import copy
 import warnings
 
 class ScipyModel(object):
-    def __init__(self, wn):
+    def __init__(self, wn, pressure_driven=False):
 
         self._wn = wn
+        self.pressure_driven = pressure_driven
 
         # Global constants
         self._initialize_global_constants()
@@ -77,9 +78,15 @@ class ScipyModel(object):
         self.hw_b = b
         self.hw_c = c
         self.hw_d = d
+
+        # Constants for the modified pump curves
         self.pump_m = -0.00000000001
         self.pump_q1 = 0.0
         self.pump_q2 = 1.0e-8
+
+        # constants for the modified pdd function
+        self._pdd_smoothing_delta = 0.2
+        self._slope_of_pdd_curve = 1e-11
 
     def _initialize_name_id_maps(self):
         # ids are intergers
@@ -172,6 +179,10 @@ class ScipyModel(object):
         self.out_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
         self.in_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
         self.node_elevations = range(self.num_nodes)
+        self.nominal_pressures = {} # {junction_id: nominal_pressure}
+        self.minimum_pressures = {} # {junction_id: minimum_pressure}
+        self.pdd_poly1_coeffs = {} # {junction_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to 0th order term; these are the coefficients for the polynomial between Pmin and the normal pdd function
+        self.pdd_poly2_coeffs = {} # {junction_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to 0th order term; these are the coefficients for the polynomial between the normal pdd function and Pmax
 
         for node_name, node in self._wn.nodes():
             node_id = self._node_name_to_id[node_name]
@@ -187,6 +198,10 @@ class ScipyModel(object):
                     raise RuntimeError('Node is neither start nor end node.')
             if node_id in self._junction_ids:
                 self.node_elevations[node_id] = node.elevation
+                self.nominal_pressures[node_id] = node.nominal_pressure
+                self.minimum_pressures[node_id] = node.minimum_pressure
+                self.get_pdd_poly1_coeffs(node, node_id)
+                self.get_pdd_poly2_coeffs(node, node_id)
             elif node_id in self._tank_ids:
                 self.node_elevations[node_id] = node.elevation
             elif node_id in self._reservoir_ids:
@@ -240,7 +255,7 @@ class ScipyModel(object):
         # headloss_l => headloss equation for link id l
         # in link refers to a link that has node_n as an end node
         # out link refers to a link that has node_n as a start node
-        # * means 1 if the node is a tank or reservoir, 0 otherwise
+        # * means 1 if the node is a tank or reservoir, NZ if the node is a junction
         # ** means 1 if the node is a junction, 0 otherwise
         # NZ means could be non-zero, but depends on network status and/or variable values
         #
@@ -267,6 +282,7 @@ class ScipyModel(object):
         self.jac_row = []
         self.jac_col = []
         self.jac_values = []
+        self.jac_ndx_of_first_NZ = 0
         self.jac_ndx_of_first_headloss = 0
 
         value_ndx = 0
@@ -289,6 +305,8 @@ class ScipyModel(object):
                 value_ndx += 1
             row_ndx += 1
 
+        self.jac_ndx_of_first_NZ = value_ndx
+
         # Jacobian entries for demand/head equations
         for node_id in self._node_ids:
             if node_id in self._tank_ids or node_id in self._reservoir_ids:
@@ -297,6 +315,10 @@ class ScipyModel(object):
                 self.jac_values.append(1.0)
                 value_ndx += 1
             elif node_id in self._junction_ids:
+                self.jac_row.append(row_ndx)
+                self.jac_col.append(node_id)
+                self.jac_values.append(0.0)
+                value_ndx += 1
                 self.jac_row.append(row_ndx)
                 self.jac_col.append(node_id + self.num_nodes)
                 self.jac_values.append(1.0)
@@ -452,10 +474,40 @@ class ScipyModel(object):
 
     def get_jacobian(self, x):
 
-        value_ndx = self.jac_ndx_of_first_headloss
+        if self.pressure_driven:
+            value_ndx = self.jac_ndx_of_first_NZ
+            heads = x[:self.num_nodes]
+        else:
+            value_ndx = self.jac_ndx_of_first_headloss
+
         flows = x[self.num_nodes*2:]
 
-        # Set the jacobian entries that depend on variable values
+        if self.pressure_driven:
+            # Set the jacobian entries for pdd equations that depend on variable values
+            for node_id in self._node_ids:
+                if self.node_types[node_id]==wntr.network.NodeTypes.junction:
+                    head = heads[node_id]
+                    Dexp = self.junction_demands[node_id]
+                    Pmin = self.minimum_pressures[node_id]
+                    pnom = self.nominal_pressures[node_id]
+                    elevation = self.node_elevations[node_id]
+                    if (head-elevation) <= Pmin:
+                        self.jac_values[value_ndx] = -Dexp*self._slope_of_pdd_curve*head
+                    elif (head-elevation) <= (Pmin+self._pdd_smoothing_delta):
+                        a,b,c,d = self.pdd_poly1_coeffs[node_id]
+                        self.jac_values[value_ndx] = -Dexp*(3.0*a*(head-elevation)**2.0 + 2.0*b*(head-elevation) + c)
+                    elif (head-elevation) <= (Pnom-self._pdd_smoothing_delta):
+                        self.jac_values[value_ndx] = -0.5*Dexp/(Pnom-Pmin)*((head-elevation-Pmin)/(Pnom-Pmin))**(-0.5)
+                    elif (head-elevation) <= Pnom:
+                        a,b,c,d = self.pdd_poly2_coeffs[node_id]
+                        self.jac_values[value_ndx] = -Dexp*(3.0*a*(head-elevation)**2.0 + 2.0*b*(head-elevation) + c)
+                    else:
+                        self.jac_values[value_ndx] = -Dexp*self._slope_of_pdd_curve*head
+                    value_ndx += 2
+                elif self.node_types[node_id]==wntr.network.NodeTypes.tank or self.node_types[node_id]==wntr.network.NodeTypes.reservoir:
+                    value_ndx += 1
+
+        # Set the jacobian entries for headloss equations that depend on variable values
         for link_id in self._link_ids:
             if self.link_status[link_id] == wntr.network.LinkStatus.closed:
                 value_ndx += 3
@@ -610,12 +662,31 @@ class ScipyModel(object):
 
     def get_demand_or_head_residual(self, head, demand):
 
-        for node_id in self._junction_ids:
-            #if self._pressure_driven:
-            #    node_elevation = self.node_elevations[node_id]
-            #    raise NotImplementedError('PDD is not implemented yet.')
-            #else:
-            self.demand_or_head_residual[node_id] = demand[node_id] - self.junction_demand[node_id]
+        if self._pressure_driven:
+            m = self._slope_of_pdd_curve
+            delta = self._pdd_smoothing_delta
+            for node_id in self._junction_ids:
+                elevation = self.node_elevations[node_id]
+                Dexp = self.junction_demand[node_id]
+                Pmin = self.minimum_pressures[node_id]
+                Pnom = self.nominal_pressures[node_id]
+                head_n = head[node_id]
+                Dact = demand[node_id]
+                if (head_n-elevation) <= Pmin:
+                    self.demand_or_head_residual[node_id] = Dact - Dexp*(m*head_n-m*elevation-m*Pmin)
+                elif (head_n-elevation) <= (Pmin+delta):
+                    a,b,c,d = self.pdd_poly1_coeffs[node_id]
+                    self.demand_or_head_residual[node_id] = Dact - Dexp*(a*(head_n-elevation)**3.0+b*(head_n-elevation)**2.0+c*(head_n-elevation)+d)
+                elif (head_n-elevation) <= (Pnom-delta):
+                    self.demand_or_head_residual[node_id] = Dact - Dexp*((head_n-z-Pmin)/(Pnom-Pmin))**0.5
+                elif (head_n-elevation) <= Pnom:
+                    a,b,c,d = self.pdd_poly2_coeffs[node_id]
+                    self.demand_or_head_residual[node_id] = Dact - Dexp*(a*(head_n-elevation)**3.0+b*(head_n-elevation)**2.0+c*(head_n-elevation)+d)
+                else:
+                    self.demand_or_head_residual[node_id] = Dact - Dexp*(m*head_n-m*elevation-m*Pnom+1.0)
+        else:
+            for node_id in self._junction_ids:
+                self.demand_or_head_residual[node_id] = demand[node_id] - self.junction_demand[node_id]
         for node_id in self._tank_ids:
             self.demand_or_head_residual[node_id] = head[node_id] - self.tank_head[node_id]
         for node_id in self._reservoir_ids:
@@ -831,6 +902,30 @@ class ScipyModel(object):
                          [df2]])
         x = np.linalg.solve(A,rhs)
         return (float(x[0][0]), float(x[1][0]), float(x[2][0]), float(x[3][0]))
+
+    def get_pdd_poly1_coeffs(self, node, node_id):
+        Pmin = self.minimum_pressures[node_id]
+        Pnom = self.nominal_pressures[node_id]
+        x1 = Pmin
+        f1 = 0.0
+        x2 = Pmin+self._pdd_smoothing_delta
+        f2 = ((x2-Pmin)/(Pnom-Pmin))**0.5
+        df1 = self._slope_of_pdd_curve
+        df2 = 0.5*((x2-Pmin)/(Pnom-Pmin))**(-0.5)*1.0/(Pnom-Pmin)
+        a,b,c,d = self.compute_polynomial_coefficients(x1,x2,f1,f2,df1,df2)
+        self.pdd_poly1_coeffs[node_id] = (a,b,c,d)
+
+    def get_pdd_poly2_coeffs(self, node, node_id):
+        Pmin = self.minimum_pressures[node_id]
+        Pnom = self.nominal_pressures[node_id]
+        x1 = Pnom-self._pdd_smoothing_delta
+        f1 = ((x1-Pmin)/(Pnom-Pmin))**0.5
+        x2 = Pnom
+        f2 = 1.0
+        df1 = 0.5*((x1-Pmin)/(Pnom-Pmin))**(-0.5)*1.0/(Pnom-Pmin)
+        df2 = self._slope_of_pdd_curve
+        a,b,c,d = self.compute_polynomial_coefficients(x1,x2,f1,f2,df1,df2)
+        self.pdd_poly2_coeffs[node_id] = (a,b,c,d)
 
     def get_pump_poly_coefficients(self, A, B, C):
         q1 = self.pump_q1
