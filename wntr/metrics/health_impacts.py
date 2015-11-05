@@ -7,7 +7,21 @@ logger = logging.getLogger('wntr.metrics.health_impacts')
 
 def average_water_consumed_perday(wn):
     """
-    Compute average water consumed per day.
+    Compute average water consumed per day at each node, qbar, computed as follows:
+    
+    .. math:: qbar=\dfrac{\sum_{k=1}^{K}\sum_{t=1}^{lcm_n}qbase_n m_n(k,t mod (L(k)))}{lcm_n}
+    
+    where 
+    :math:`K` is the number of demand patterns at node :math:`n`,
+    :math:`L(k)` is the number of time steps in pattern :math:`k`,
+    :math:`lcm_n` is the least common multiple of the demand patterns time steps for node :math:`n`, 
+    :math:`qbase_n` is the base demand at node :math:`n` and 
+    :math:`m_n(k,t mod L(k))` is the demand multiplier specified in pattern :math:`k` for node :math:`n` at time :math:`t mod L(k)`. 
+        
+    For example, if a node has two demand patterns specified in the EPANET input (INP) file, and 
+    one pattern repeats every 6 hours and the other repeats every 12 hours, the first 
+    pattern will be repeated once, making its total duration effectively 12 hours. 
+    If any :math:`m_n(k,t mod L(k))` value is less than 0, then that node's population is 0.  
     
     Parameters
     -----------
@@ -17,6 +31,7 @@ def average_water_consumed_perday(wn):
     -------
     qbar : pd.Series
         A pandas Series that contains average water consumed per day per node
+        
     """
     qbar = pd.Series()
     for name, node in wn.nodes(wntr.network.Junction):
@@ -46,7 +61,8 @@ def average_water_consumed_perday(wn):
 def population(wn, R=0.00000876157):
     """
     Compute population per node, rounded to the nearest integer, equation from [1]
-    Population = (average water consumed per day)/R
+    
+    .. math:: pop=\dfrac{qbar}{R}
     
     Parameters
     -----------
