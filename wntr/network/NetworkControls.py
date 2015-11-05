@@ -117,7 +117,7 @@ class TargetAttributeControlAction(ControlAction):
         if orig_value == self._value:
             return False, None, None
         else:
-            print 'setting ',target.name(),self._attribute,' to ',self._value
+            #print 'setting ',target.name(),self._attribute,' to ',self._value
             setattr(target, self._attribute, self._value)
             return True, (target, self._attribute), orig_value
 

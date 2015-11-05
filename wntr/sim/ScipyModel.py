@@ -60,13 +60,23 @@ class ScipyModel(object):
 
         # Constants for the modified hazen-williams formula
         # The names match the names used in the simulation white paper
-        self.hw_q1 = 0.00349347323944
-        self.hw_q2 = 0.00549347323944
-        self.hw_a = 430.125623753
-        self.hw_b = -2.80374270811
-        self.hw_c = 0.0138413824671
-        self.hw_d = 2.45944613543e-6
-        self.hw_m = 0.01
+        #self.hw_q1 = 0.00349347323944
+        #self.hw_q2 = 0.00549347323944
+        #self.hw_m = 0.01
+        self.hw_q1 = 0.0001
+        self.hw_q2 = 0.0002
+        self.hw_m = 0.001
+        x1 = self.hw_q1
+        x2 = self.hw_q2
+        f1 = self.hw_m*self.hw_q1
+        f2 = self.hw_q2**1.852
+        df1 = self.hw_m
+        df2 = 1.852*self.hw_q2**0.852
+        a,b,c,d = self.compute_polynomial_coefficients(x1, x2, f1, f2, df1, df2)
+        self.hw_a = a
+        self.hw_b = b
+        self.hw_c = c
+        self.hw_d = d
         self.pump_m = -0.00000000001
         self.pump_q1 = 0.0
         self.pump_q2 = 1.0e-8
