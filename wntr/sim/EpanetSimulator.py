@@ -6,6 +6,9 @@ except ImportError:
 from WaterNetworkSimulator import *
 import pandas as pd
 from wntr.utils import convert
+import logging
+
+logger = logging.getLogger('wntr.sim.EpanetSimulator')
 
 class EpanetSimulator(WaterNetworkSimulator):
     """
@@ -140,7 +143,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 elif WQ.source_type == 'SETPOINT':
                     wq_sourceType = pyepanet.EN_SETPOINT
                 else:
-                    print "Invalid Source Type for CHEM scenario"
+                    logger.error('Invalid Source Type for CHEM scenario')
                 enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCETYPE, wq_sourceType)
                 
                 # Set pattern
@@ -170,7 +173,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                     enData.ENsetqualtype(pyepanet.EN_TRACE,0,0,node)   
                 
             else:
-                print "Invalid Quality Type"
+                logger.error('Invalid Quality Type')
             enData.ENopenQ()
             enData.ENinitQ(0)
             

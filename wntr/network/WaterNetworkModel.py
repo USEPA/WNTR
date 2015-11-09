@@ -837,7 +837,21 @@ class WaterNetworkModel(object):
         coordinates : tuple of X-Y coordinates
         """
         nx.set_node_attributes(self._graph, 'pos', {name: coordinates})
-
+    
+    def scale_node_coordinates(self, scale):
+        """
+        Scale node coordinates, using 1:scale.  Scale should be in meters.
+        
+        Parameters
+        -----------
+        scale : float
+            Coordinate scale multiplier
+        """
+        pos = nx.get_node_attributes(self._graph, 'pos')
+        
+        for name, node in self._nodes.iteritems():
+            self.set_node_coordinates(name, (pos[name][0]*scale, pos[name][1]*scale))
+        
     def shifted_time_sec(self):
         """ 
         Returns the time in seconds shifted by the

@@ -7,7 +7,7 @@ import pickle
 import networkx as nx
 from scipy.spatial import distance
 
-def _pipe_center_position(wn, coordinate_scale = 1, correct_length = False):
+def _pipe_center_position(wn):
     """
     Define positions of pipes
     """
@@ -20,10 +20,6 @@ def _pipe_center_position(wn, coordinate_scale = 1, correct_length = False):
         end_point = pos[link.end_node()]
         link_pos[name] = ((end_point[0] + start_point[0])/2, 
                           (end_point[1] + start_point[1])/2)
-        
-        if correct_length == True:                  
-            pipe_length = distance.euclidean(start_point, end_point)
-            link.length = pipe_length*coordinate_scale
     
     return link_pos
         
@@ -197,18 +193,18 @@ class Earthquake(object):
         
         return M
 
-    def generate(self, wn, coordinate_scale = 1, correct_length = False):
+    def generate(self, wn):
         """
         Compute distance, PGA, repair rate, probabiltiy of break and leak,
         and pipe status
         """        
-        link_pos = _pipe_center_position(wn, coordinate_scale, correct_length)
+        link_pos = _pipe_center_position(wn)
         
         dist_to_epicenter = {}
 
         for name, link in wn.links(wntr.network.Pipe):
 
-            dist_to_epicenter[name] = distance.euclidean(self.epicenter, link_pos[name])*coordinate_scale # m
+            dist_to_epicenter[name] = distance.euclidean(self.epicenter, link_pos[name]) # m
                 
             self.pga[name] = self.pga_attenuation_model(dist_to_epicenter[name],4) # m/s2
             

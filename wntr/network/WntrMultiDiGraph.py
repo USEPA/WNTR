@@ -153,8 +153,6 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         
     def links_in_simple_paths(self, sources, sinks):
         """ 
-        .. _linking-pages2:
-        
         Count all links in a simple path between sources and sinks
         
         Parameters

@@ -1,6 +1,9 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import pandas as pd
+import logging
+
+logger = logging.getLogger('wntr.network.draw_graph')
 
 def draw_graph(wn, node_attribute=None, link_attribute=None, title=None, 
                node_size=10, node_range = [None,None], node_cmap=None,
@@ -143,7 +146,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     if type(link_width) is dict:
         linklist2,link_width = zip(*link_width.items())
         if not linklist == linklist2:
-            print "Link color and width do not share the same indexes, link width changed to 1."
+            logger.warning('Link color and width do not share the same indexes, link width changed to 1.')
             link_width = 1
     if link_cmap is None:
         link_cmap=plt.cm.jet
