@@ -382,15 +382,15 @@ class WaterNetworkModel(object):
 
         close_control_action = wntr.network.TargetAttributeControlAction(pump, '_cv_status', LinkStatus.closed)
         open_control_action = wntr.network.TargetAttributeControlAction(pump, '_cv_status', LinkStatus.opened)
-
+        
         control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
         control._priority = 0
         self.add_control(control)
-
+        
         control = wntr.network._CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
         control._priority = 3
         self.add_control(control)
-
+        
         control = wntr.network.ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
         control._priority = 3
         self.add_control(control)
@@ -750,10 +750,10 @@ class WaterNetworkModel(object):
         Note: If name is None, this method will return a dictionary
               with the coordinates of all nodes keyed by node name.
         """
-        coordinates_dict = nx.get_node_attributes(self._graph, 'pos')
         if name is not None:
-            return coordinates_dict[name]
+            return self._graph.node[name]['pos']
         else:
+            coordinates_dict = nx.get_node_attributes(self._graph, 'pos')
             return coordinates_dict
 
     def get_curve(self, name):
