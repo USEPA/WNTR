@@ -9,7 +9,7 @@ class NewtonSolver(object):
         self._total_linear_solver_time = 0
 
         if 'MAXITER' not in self._options:
-            self.maxiter = 1000
+            self.maxiter = 50
         else:
             self.maxiter = self._options['MAXITER']
 
@@ -29,12 +29,12 @@ class NewtonSolver(object):
             self.rho = self._options['BT_C']
 
         if 'BT_MAXITER' not in self._options:
-            self.bt_maxiter = 100
+            self.bt_maxiter = 50
         else:
             self.bt_maxiter = self._options['BT_MAXITER']
 
         if 'BACKTRACKING' not in self._options:
-            self.bt = False
+            self.bt = True
         else:
             self.bt = self._options['BACKTRACKING']
 
@@ -47,16 +47,18 @@ class NewtonSolver(object):
 
         # MAIN NEWTON LOOP
         for iter in xrange(self.maxiter):
+            print iter
             r = Residual(x)
             J = Jacobian(x)
             #J = Jfunc(x)
 
             r_norm = np.max(abs(r))
+            print r_norm
 
             #print iter, r_norm
 
             if r_norm < self.tol:
-                return [x, iter]
+                return [x, iter, 1]
             
             # Call Linear solver
             t0 = time.time()
@@ -68,8 +70,9 @@ class NewtonSolver(object):
             alpha = 1
             if self.bt:
                 for iter_bt in xrange(self.bt_maxiter):
+                    print alpha
                     x_ = x + alpha*d
-                    lhs = np.max(Residual(x_, args))
+                    lhs = np.max(abs(Residual(x_)))
                     #rhs = np.max(r + self.bt_c*alpha*J*d)
                     rhs = r_norm
                     #print "     ", iter, iter_bt, alpha
@@ -79,11 +82,12 @@ class NewtonSolver(object):
                     else:
                         alpha = alpha*self.rho
 
-                if iter_bt+1 >= self.bt_self.maxiter:
+                if iter_bt+1 >= self.bt_maxiter:
                     raise RuntimeError("Backtracking failed. ")
             else:
                 x = x + d
 
+        return [x, iter, 0]
         raise RuntimeError("No solution found.")
 
 

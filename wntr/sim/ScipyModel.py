@@ -570,9 +570,10 @@ class ScipyModel(object):
                         value_ndx += 3
 
         self.jacobian.data = self.jac_values
+        #if self._wn.sim_time == 4591.0:
         #self.check_jac_for_zero_rows()
         #self.print_jacobian_nonzeros()
-        #self.check_jac(x)
+        #    self.check_jac(x)
         return self.jacobian
 
     def get_node_balance_residual(self, flow, demand):

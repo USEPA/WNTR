@@ -33,6 +33,13 @@ class ScipySimulator(WaterNetworkSimulator):
         Method to run an extended period simulation
         """
 
+        tank_controls = self._wn._get_all_tank_controls()
+        cv_controls = self._wn._get_cv_controls()
+        pump_controls = self._wn._get_pump_controls()
+        valve_controls = self._wn._get_valve_controls()
+
+        self._controls = self._wn._controls+tank_controls+cv_controls+pump_controls+valve_controls
+
         model = ScipyModel(self._wn, self.pressure_driven)
         model.initialize_results_dict()
 
@@ -61,12 +68,15 @@ class ScipySimulator(WaterNetworkSimulator):
         while True:
             if not resolve:
                 trial = 0
+                print 'presolve = True'
                 backup_time, controls_to_activate = self._check_controls(presolve=True)
                 changes_made_flag = self._fire_controls(controls_to_activate)
                 if changes_made_flag:
                     self._wn.sim_time -= backup_time
 
             print 'simulation time = ',self._wn.sim_time,', trial = ',trial
+            print ''
+            print ''
 
             # Prepare for solve
             if not first_step:
@@ -76,14 +86,15 @@ class ScipySimulator(WaterNetworkSimulator):
             model.set_jacobian_constants()
 
             # Solve
-            [self._X,num_iters] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             X_init = copy.copy(self._X)
 
             # Enter results in network and update previous inputs
             model.store_results_in_network(self._X)
 
+            print 'presolve = False'
             resolve, resolve_controls_to_activate = self._check_controls(presolve=False)
-            if resolve:
+            if resolve or solver_status==0:
                 trial += 1
                 all_controls_to_activate = controls_to_activate+resolve_controls_to_activate
                 changes_made_flag = self._fire_controls(all_controls_to_activate)
@@ -92,6 +103,8 @@ class ScipySimulator(WaterNetworkSimulator):
                         raise RuntimeError('Exceeded maximum number of trials!')
                     continue
                 else:
+                    if solver_status==0:
+                        raise RuntimeError('failed to converge')
                     resolve = False
 
             if self._wn.sim_time%self._wn.options.hydraulic_timestep == 0:
@@ -131,8 +144,8 @@ class ScipySimulator(WaterNetworkSimulator):
             backup_time = 0.0
             controls_to_activate = []
             controls_to_activate_regardless_of_time = []
-            for i in xrange(len(self._wn.controls)):
-                control = self._wn.controls[i]
+            for i in xrange(len(self._controls)):
+                control = self._controls[i]
                 control_tuple = control.IsControlActionRequired(self._wn, presolve)
                 assert type(control_tuple[1]) == int or control_tuple[1] == None, 'control backup time should be an int. back up time = '+str(control_tuple[1])
                 if control_tuple[0] and control_tuple[1]==None:
@@ -148,8 +161,8 @@ class ScipySimulator(WaterNetworkSimulator):
         else:
             resolve = False
             resolve_controls_to_activate = []
-            for i in xrange(len(self._wn.controls)):
-                control = self._wn.controls[i]
+            for i in xrange(len(self._controls)):
+                control = self._controls[i]
                 control_tuple = control.IsControlActionRequired(self._wn, presolve)
                 if control_tuple[0]:
                     resolve = True
@@ -160,28 +173,28 @@ class ScipySimulator(WaterNetworkSimulator):
         changes_made = False
         change_dict = {}
         for i in controls_to_activate:
-            control = self._wn.controls[i]
+            control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 0)
             if change_flag:
                 if change_tuple not in change_dict.keys():
                     change_dict[change_tuple] = orig_value
 
         for i in controls_to_activate:
-            control = self._wn.controls[i]
+            control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 1)
             if change_flag:
                 if change_tuple not in change_dict.keys():
                     change_dict[change_tuple] = orig_value
 
         for i in controls_to_activate:
-            control = self._wn.controls[i]
+            control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 2)
             if change_flag:
                 if change_tuple not in change_dict.keys():
                     change_dict[change_tuple] = orig_value
 
         for i in controls_to_activate:
-            control = self._wn.controls[i]
+            control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 3)
             if change_flag:
                 if change_tuple not in change_dict.keys():
@@ -199,5 +212,7 @@ class ScipySimulator(WaterNetworkSimulator):
         for valve_name, valve in self._wn.valves():
             if valve.status==wntr.network.LinkStatus.opened:
                 valve._status = valve.status
+                print 'setting ',valve.name(),' _status to ',valve.status
             elif valve.status==wntr.network.LinkStatus.closed:
                 valve._status = valve.status
+                print 'setting ',valve.name(),' _status to ',valve.status

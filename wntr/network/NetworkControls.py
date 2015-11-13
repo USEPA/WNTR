@@ -54,11 +54,11 @@ class ControlAction(object):
     def __init__(self):
         pass
 
-    def FireControlAction(self):
+    def FireControlAction(self, control_name):
         """ 
         This method is called to fire the corresponding control action.
         """
-        return self._FireControlActionImpl()
+        return self._FireControlActionImpl(control_name)
 
     def _FireControlActionImpl(self):
         """
@@ -99,7 +99,7 @@ class TargetAttributeControlAction(ControlAction):
         #if (isinstance(target_obj, wntr.network.Valve) or (isinstance(target_obj, wntr.network.Pipe) and target_obj.cv)) and attribute=='status':
         #    raise ValueError('You may not add controls to valves or pipes with check valves.')
 
-    def _FireControlActionImpl(self):
+    def _FireControlActionImpl(self, control_name):
         """
         This is an overridden method from the ControlAction class. 
         Here, it changes the target_obj's attribute to the provided value.
@@ -117,7 +117,8 @@ class TargetAttributeControlAction(ControlAction):
         if orig_value == self._value:
             return False, None, None
         else:
-            #print 'setting ',target.name(),self._attribute,' to ',self._value
+            print control_name
+            print 'setting ',target.name(),self._attribute,' to ',self._value
             setattr(target, self._attribute, self._value)
             return True, (target, self._attribute), orig_value
 
@@ -250,6 +251,7 @@ class TimeControl(Control):
     """
 
     def __init__(self, wnm, fire_time, time_flag, daily_flag, control_action):
+        self.name = 'blah'
 
         if isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
             self._priority = 0
@@ -308,7 +310,7 @@ class TimeControl(Control):
         if self._priority != priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
+        change_flag, change_tuple, orig_value = self._control_action.FireControlAction(self.name)
         if self._daily_flag:
             self._fire_time += 24*3600
         return change_flag, change_tuple, orig_value
@@ -316,6 +318,7 @@ class TimeControl(Control):
 class ConditionalControl(Control):
 
     def __init__(self, source, operation, threshold, control_action):
+        self.name = 'blah'
 
         if isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
             self._priority = 0
@@ -346,27 +349,30 @@ class ConditionalControl(Control):
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
         """
-        if type(self._source_obj)==wntr.network.Tank and self._source_attr=='head' and presolve_flag and wnm.sim_time!=0:
-            val = getattr(self._source_obj,self._source_attr)
-            q_net = self._source_obj.prev_demand
-            delta_h = 4.0*q_net*(wnm.sim_time-wnm.prev_sim_time)/(math.pi*self._source_obj.diameter**2)
-            next_val = val+delta_h
-            if self._operation(next_val, self._threshold) and self._operation(val, self._threshold):
-                return (True, None)
-            if self._operation(next_val, self._threshold):
-                if self._partial_step_for_tanks:
+        if type(self._source_obj)==wntr.network.Tank and self._source_attr=='head' and wnm.sim_time!=0 and self._partial_step_for_tanks:
+            if presolve_flag:
+                val = getattr(self._source_obj,self._source_attr)
+                q_net = self._source_obj.prev_demand
+                delta_h = 4.0*q_net*(wnm.sim_time-wnm.prev_sim_time)/(math.pi*self._source_obj.diameter**2)
+                next_val = val+delta_h
+                if self._operation(next_val, self._threshold) and self._operation(val, self._threshold):
+                    return (True, None)
+                if self._operation(next_val, self._threshold):
                     m = (next_val-val)/(wnm.sim_time-wnm.prev_sim_time)
                     b = next_val - m*wnm.sim_time
                     new_t = (self._threshold - b)/m
                     return (True, int(math.floor(wnm.sim_time-new_t)))
                 else:
-                    return (True, 0)
+                    return (False, None)
             else:
                 return (False, None)
-        elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='head' and presolve_flag and wnm.sim_time==0:
-            val = getattr(self._source_obj, self._source_attr)
-            if self._operation(val, self._threshold):
-                return (True, 0)
+        elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='head' and wnm.sim_time==0 and self._partial_step_for_tanks:
+            if presolve_flag:
+                val = getattr(self._source_obj, self._source_attr)
+                if self._operation(val, self._threshold):
+                    return (True, 0)
+                else:
+                    return (False, None)
             else:
                 return (False, None)
         elif presolve_flag:
@@ -386,12 +392,13 @@ class ConditionalControl(Control):
         if self._priority!=priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
+        change_flag, change_tuple, orig_value = self._control_action.FireControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
 class MultiConditionalControl(Control):
 
     def __init__(self, source, operation, threshold, control_action):
+        self.name = 'blah'
         self._priority = 0
         self._source = source
         self._operation = operation
@@ -451,12 +458,12 @@ class MultiConditionalControl(Control):
         if self._priority!=priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
+        change_flag, change_tuple, orig_value = self._control_action.FireControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
 class _CheckValveHeadControl(Control):
     def __init__(self, wnm, cv, operation, threshold, control_action):
-
+        self.name = 'blah'
         self._priority = 3
         self._cv = cv
         self._operation = operation
@@ -491,12 +498,13 @@ class _CheckValveHeadControl(Control):
         if self._priority!=priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._control_action.FireControlAction()
+        change_flag, change_tuple, orig_value = self._control_action.FireControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
 class _PRVControl(Control):
 
     def __init__(self, wnm, valve, Htol, Qtol, close_control_action, open_control_action, active_control_action):
+        self.name = 'blah'
         self._priority = 3
         self._valve = valve
         self._Htol = Htol
@@ -558,6 +566,6 @@ class _PRVControl(Control):
         if self._priority!=priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._action_to_fire.FireControlAction()
+        change_flag, change_tuple, orig_value = self._action_to_fire.FireControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
