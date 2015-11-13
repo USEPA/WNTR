@@ -34,7 +34,7 @@ class NewtonSolver(object):
             self.bt_maxiter = self._options['BT_MAXITER']
 
         if 'BACKTRACKING' not in self._options:
-            self.bt = True
+            self.bt = False
         else:
             self.bt = self._options['BACKTRACKING']
 
@@ -47,13 +47,13 @@ class NewtonSolver(object):
 
         # MAIN NEWTON LOOP
         for iter in xrange(self.maxiter):
-            print iter
+            #print iter
             r = Residual(x)
             J = Jacobian(x)
             #J = Jfunc(x)
 
             r_norm = np.max(abs(r))
-            print r_norm
+            #print r_norm
 
             #print iter, r_norm
 
@@ -70,13 +70,13 @@ class NewtonSolver(object):
             alpha = 1
             if self.bt:
                 for iter_bt in xrange(self.bt_maxiter):
-                    print alpha
+                    #print alpha
                     x_ = x + alpha*d
                     lhs = np.max(abs(Residual(x_)))
                     #rhs = np.max(r + self.bt_c*alpha*J*d)
                     rhs = r_norm
                     #print "     ", iter, iter_bt, alpha
-                    if lhs < rhs:
+                    if lhs <= 0.98*rhs:
                         x = x_
                         break
                     else:
@@ -87,7 +87,7 @@ class NewtonSolver(object):
             else:
                 x = x + d
 
-        return [x, iter, 0]
+        #return [x, iter, 0]
         raise RuntimeError("No solution found.")
 
 

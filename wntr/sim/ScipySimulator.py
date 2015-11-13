@@ -28,6 +28,14 @@ class ScipySimulator(WaterNetworkSimulator):
         super(ScipySimulator, self).__init__(wn, pressure_driven)
         self._get_demand_dict()
 
+    def get_time(self):
+        s = int(self._wn.sim_time)
+        h = s/3600
+        s -= h*3600
+        m = s/60
+        s-=m*60
+        return str(h)+':'+str(m)+':'+str(s)
+
     def run_sim(self):
         """
         Method to run an extended period simulation
@@ -69,12 +77,18 @@ class ScipySimulator(WaterNetworkSimulator):
             if not resolve:
                 trial = 0
                 print 'presolve = True'
-                backup_time, controls_to_activate = self._check_controls(presolve=True)
-                changes_made_flag = self._fire_controls(controls_to_activate)
-                if changes_made_flag:
-                    self._wn.sim_time -= backup_time
+                last_backup_time = np.inf
+                while True:
+                    backup_time, controls_to_activate = self._check_controls(presolve=True,last_backup_time=last_backup_time)
+                    changes_made_flag = self._fire_controls(controls_to_activate)
+                    if changes_made_flag:
+                        self._wn.sim_time -= backup_time
+                        break
+                    if backup_time == 0:
+                        break
+                    last_backup_time = backup_time
 
-            print 'simulation time = ',self._wn.sim_time,', trial = ',trial
+            print 'simulation time = ',self.get_time(),', trial = ',trial
             print ''
             print ''
 
@@ -139,8 +153,9 @@ class ScipySimulator(WaterNetworkSimulator):
             for t in range(self._n_timesteps):
                 self._demand_dict[(node_name, t)] = 0.0
 
-    def _check_controls(self, presolve):
+    def _check_controls(self, presolve, last_backup_time=None):
         if presolve:
+            assert last_backup_time is not None
             backup_time = 0.0
             controls_to_activate = []
             controls_to_activate_regardless_of_time = []
@@ -150,7 +165,7 @@ class ScipySimulator(WaterNetworkSimulator):
                 assert type(control_tuple[1]) == int or control_tuple[1] == None, 'control backup time should be an int. back up time = '+str(control_tuple[1])
                 if control_tuple[0] and control_tuple[1]==None:
                     controls_to_activate_regardless_of_time.append(i)
-                elif control_tuple[0] and control_tuple[1] > backup_time:
+                elif control_tuple[0] and control_tuple[1] > backup_time and control_tuple[1]<last_backup_time:
                     controls_to_activate = [i]
                     backup_time = control_tuple[1]
                 elif control_tuple[0] and control_tuple[1] == backup_time:

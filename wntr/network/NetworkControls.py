@@ -117,7 +117,7 @@ class TargetAttributeControlAction(ControlAction):
         if orig_value == self._value:
             return False, None, None
         else:
-            print control_name
+            #print control_name
             print 'setting ',target.name(),self._attribute,' to ',self._value
             setattr(target, self._attribute, self._value)
             return True, (target, self._attribute), orig_value
@@ -358,9 +358,13 @@ class ConditionalControl(Control):
                 if self._operation(next_val, self._threshold) and self._operation(val, self._threshold):
                     return (True, None)
                 if self._operation(next_val, self._threshold):
+                    #if self._source_obj.name()=='TANK-3352':
+                        #print 'threshold for tank 3352 control is ',self._threshold
+
                     m = (next_val-val)/(wnm.sim_time-wnm.prev_sim_time)
                     b = next_val - m*wnm.sim_time
                     new_t = (self._threshold - b)/m
+                    #print 'new time = ',new_t
                     return (True, int(math.floor(wnm.sim_time-new_t)))
                 else:
                     return (False, None)
