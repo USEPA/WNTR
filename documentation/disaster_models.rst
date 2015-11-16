@@ -32,6 +32,19 @@ could take weeks, if not months to fully repair. Earthquakes typically effect
 the system by breaking pipes. There are currently multiple modeling techniques 
 for predicting pipe breakage due to earthquake damage.
 
+PGA = 0.001 g (~0.01 m/s2): perceptible by people
+PGA = 0.02  g (~0.2  m/s2): people lose their balance
+PGA = 0.50  g (~5 m/s2): very high; well-designed buildings can survive if the duration is short
+https://en.wikipedia.org/wiki/Peak_ground_acceleration
+        
+Shallow earthquakes are between 0 and 70 km deep, 
+intermediate earthquakes, 70 - 300 km deep, 
+and deep earthquakes, 300 - 700 km deep
+http://earthquake.usgs.gov/learn/topics/seismology/determining_depth.php
+
+Repair rate of 1/km (0.001/m) has been suggested as an upper bound
+
+
 To model an earthquake in WNTR...
 See scenario class :doc:`Earthquake</apidoc/wntr.scenario.Earthquake>`.
 
