@@ -26,7 +26,7 @@ FC2.add_state('Major', 2, {'Default': lognorm(0.25, loc=1, scale=2)})
 #plt.legend()
     
 def test_get_priority_map():
-    priority_map = FC.get_priority_map()
+    priority_map = FC1.get_priority_map()
     assert_dict_equal(priority_map, {None: 0, 'Minor': 1, 'Major': 2})
 
 def test_cdf_probability():
