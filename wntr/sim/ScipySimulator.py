@@ -76,7 +76,7 @@ class ScipySimulator(WaterNetworkSimulator):
         while True:
             if not resolve:
                 trial = 0
-                print 'presolve = True'
+                #print 'presolve = True'
                 last_backup_time = np.inf
                 while True:
                     backup_time, controls_to_activate = self._check_controls(presolve=True,last_backup_time=last_backup_time)
@@ -89,8 +89,8 @@ class ScipySimulator(WaterNetworkSimulator):
                     last_backup_time = backup_time
 
             print 'simulation time = ',self.get_time(),', trial = ',trial
-            print ''
-            print ''
+            #print ''
+            #print ''
 
             # Prepare for solve
             if not first_step:
@@ -106,7 +106,7 @@ class ScipySimulator(WaterNetworkSimulator):
             # Enter results in network and update previous inputs
             model.store_results_in_network(self._X)
 
-            print 'presolve = False'
+            #print 'presolve = False'
             resolve, resolve_controls_to_activate = self._check_controls(presolve=False)
             if resolve or solver_status==0:
                 trial += 1
@@ -227,7 +227,7 @@ class ScipySimulator(WaterNetworkSimulator):
         for valve_name, valve in self._wn.valves():
             if valve.status==wntr.network.LinkStatus.opened:
                 valve._status = valve.status
-                print 'setting ',valve.name(),' _status to ',valve.status
+                #print 'setting ',valve.name(),' _status to ',valve.status
             elif valve.status==wntr.network.LinkStatus.closed:
                 valve._status = valve.status
-                print 'setting ',valve.name(),' _status to ',valve.status
+                #print 'setting ',valve.name(),' _status to ',valve.status

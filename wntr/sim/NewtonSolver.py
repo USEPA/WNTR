@@ -2,6 +2,9 @@ import numpy as np
 import scipy.sparse as sp
 import copy
 import time
+import warnings
+
+warnings.filterwarnings("error",'Matrix is exactly singular',sp.linalg.MatrixRankWarning)
 
 class NewtonSolver(object):
     def __init__(self, options={}):
@@ -45,24 +48,30 @@ class NewtonSolver(object):
 
         num_vars = len(x)
 
+        I = sp.csr_matrix((np.ones(num_vars),(range(num_vars),range(num_vars))),shape=(num_vars,num_vars))
+        #I = 0.1*I
+
         # MAIN NEWTON LOOP
         for iter in xrange(self.maxiter):
-            #print iter
             r = Residual(x)
             J = Jacobian(x)
             #J = Jfunc(x)
 
             r_norm = np.max(abs(r))
-            #print r_norm
 
-            #print iter, r_norm
+            print iter, r_norm
 
             if r_norm < self.tol:
                 return [x, iter, 1]
             
             # Call Linear solver
             t0 = time.time()
-            d = -sp.linalg.spsolve(J,r)
+            try:
+                d = -sp.linalg.spsolve(J,r)
+            except sp.linalg.MatrixRankWarning:
+                print 'Jacobian is singular. Adding regularization term.'
+                J = J+I
+                d = -sp.linalg.spsolve(J,r)
             #d = -np.linalg.solve(J, r)
             self._total_linear_solver_time += time.time() - t0
 
