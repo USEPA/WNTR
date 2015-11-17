@@ -26,7 +26,7 @@ R = earthquake.distance_to_epicenter(wn, element_type=wntr.network.Pipe)
 pga = earthquake.pga_attenuation_model(R)      
 pipe_FC = wntr.scenario.FragilityCurve()
 pipe_FC.add_state('Minor leak', 1, {'Default': lognorm(0.84,scale=0.85),
-                               '121': lognorm(1.35,loc=np.log(0.65))})
+                                    '121': lognorm(1.35,scale=0.65)})
 pipe_FC.add_state('Major leak', 2, {'Default': lognorm(0.84,scale=1.2)}) 
 plt.figure()
 x = np.linspace(0,1,100)

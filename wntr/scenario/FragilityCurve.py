@@ -76,7 +76,7 @@ class FragilityCurve(object):
         for element in Pr.index:
             for state_name, state in self.states():
                 try:
-                    dist=state.dist[element]
+                    dist=state.distribution[element]
                 except:
                     dist=state.distribution['Default']
                 Pr.loc[element, state_name] = dist.cdf(x[element])
