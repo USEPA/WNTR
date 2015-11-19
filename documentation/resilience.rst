@@ -154,10 +154,9 @@ Entropy 				Entropy [Awumah1990]_ is a measure of uncertainty in a random variab
 					Entropy can be computed using the :doc:`entropy</apidoc/wntr.metrics.entropy>` method.
 
 Fraction of delivered volume		:doc:`fdv</apidoc/wntr.metrics.fraction_delivered>` method
-					When using demand-driven hydraulic simulations, the :doc:`adjust_demand</apidoc/wntr.metrics.adjust_demand>` method should be used before computing this metric.
 
 Fraction of delivered demand		:doc:`fdd</apidoc/wntr.metrics.fraction_delivered>` method
-					When using demand-driven hydraulic simulations, the :doc:`adjust_demand</apidoc/wntr.metrics.adjust_demand>` method should be used before computing this metric.
+					
 =====================================  ================================================================================================================================================
 
 

@@ -15,16 +15,8 @@ WNTR 0.1 documentation
    resultsobject
    disaster_models
    resilience
+   stochastic
    license
    testing
    tracsite
    reference
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-

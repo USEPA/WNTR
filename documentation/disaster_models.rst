@@ -11,7 +11,7 @@ Power outage
 -------------
 Power outages can be small and brief but can also span over several days and 
 effect whole regions as seen in the 2003 Northeast Blackout. While the Northeast 
-Blackout was an extreme case, a 2012 LBNL study [Eto2012]_ showed the frequency 
+Blackout was an extreme case, a 2012 LBNL study (Eto2012) showed the frequency 
 and duration of power outages are increasing by a rate of two percent annually. 
 In water distribution networks, a power outage can cause pump stations to shut 
 down and result in reduced water pressure. This can lead to shortages in some 
