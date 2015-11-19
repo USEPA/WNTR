@@ -1,3 +1,5 @@
+.. _water_quality_simulation:
+
 Water quality simulation
 ========================
 

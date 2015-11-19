@@ -1,3 +1,5 @@
+.. _simulation_results:
+
 Simulation results
 ====================
 Simulation results are stored in Pandas Panels.  

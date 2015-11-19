@@ -19,10 +19,17 @@ areas of the network. There is typically no lasting damage on the network.
 
 To model a power outage in WNTR...
 
+
+* When simulating power outages, consider placing check bypasses around pumps.
+* When simulating power outages, consider placing check valves next to reservoirs.
+
 Pipe leaks
 -----------
 
 To model a pipe leaks in WNTR...
+
+* Pipes with large diameters, large roughness coefficients, and small lengths will have small resistance coefficients. If the resistance coefficient is too small, weird things may happen.
+
 
 Earthquake
 -----------
