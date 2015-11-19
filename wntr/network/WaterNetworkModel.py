@@ -24,6 +24,7 @@ from wntr.utils import convert
 import wntr.network
 import numpy as np
 import warnings
+import sys
 
 class WaterNetworkModel(object):
 
@@ -1027,6 +1028,62 @@ class WaterNetworkModel(object):
         Return the current time of day in seconds from 12 AM
         """
         return self.shifted_time_sec() % (24*3600)
+
+    def _get_isolated_junctions(self):
+        starting_recursion_limit = sys.getrecursionlimit()
+        sys.setrecursionlimit(50000)
+        groups = {}
+        has_tank_or_res = {}
+        G = self.get_graph_deep_copy()
+
+        def grab_group(node_name):
+            groups[grp].add(node_name)
+            if G.node[node_name]['type'] == 'tank' or G.node[node_name]['type']=='reservoir':
+                has_tank_or_res[grp] = True
+            suc = G.successors(node_name)
+            pre = G.predecessors(node_name)
+            for s in suc:
+                if s not in groups[grp]:
+                    grab_group(s)
+            for p in pre:
+                if p not in groups[grp]:
+                    grab_group(p)
+
+        for start_node_name,end_node_name,link_name in G.edges(keys=True):
+            link = self.get_link(link_name)
+            if link.status==LinkStatus.closed:
+                G.remove_edge(start_node_name,end_node_name,key=link_name)
+
+        grp = -1
+        for node_name in G.nodes():
+            already_in_grp = False
+            for key in groups.keys():
+                if node_name in groups[key]:
+                    already_in_grp = True
+            if not already_in_grp:
+                grp += 1
+                groups[grp] = set()
+                has_tank_or_res[grp] = False
+                grab_group(node_name)
+
+        for grp,check in has_tank_or_res.iteritems():
+            if check:
+                del groups[grp]
+
+        isolated_junctions = set()
+        for grp, junctions in groups.iteritems():
+            isolated_junctions = isolated_junctions.union(junctions)
+        isolated_junctions = list(isolated_junctions)
+
+        isolated_links = set()
+        for j in isolated_junctions:
+            connected_links = self.get_links_for_node(j)
+            for l in connected_links:
+                isolated_links.add(l)
+        isolated_links = list(isolated_links)
+
+        sys.setrecursionlimit(starting_recursion_limit)
+        return isolated_junctions, isolated_links
 
     def write_inpfile(self, filename):
         """

@@ -51,6 +51,11 @@ class ScipyModel(object):
         #self.prev_pump_speeds = {}
         self.pump_speeds = {}
 
+        self.isolated_junction_names = []
+        self.isolated_junction_ids = []
+        self.isolated_link_names = []
+        self.isolated_link_ids = []
+
         # Initialize Jacobian
         self._set_jacobian_structure()
 
@@ -380,6 +385,22 @@ class ScipyModel(object):
         # and A.data =>
         #              [0, 3, 6, 1, 4, 7, 2, 5, 8]
 
+        value_ndx = self.jac_ndx_of_first_NZ
+        for node_id in self._node_ids:
+            if self.node_types[node_id]==wntr.network.NodeTypes.junction:
+                if node_id in self.isolated_junction_ids:
+                    self.jac_values[value_ndx] = 1.0
+                    value_ndx += 1
+                    self.jac_values[value_ndx] = 0.0
+                    value_ndx += 1
+                else:
+                    self.jac_values[value_ndx] = 0.0
+                    value_ndx += 1
+                    self.jac_values[value_ndx] = 1.0
+                    value_ndx += 1
+            else:
+                value_ndx += 1
+
         value_ndx = self.jac_ndx_of_first_headloss
 
         # Set jacobian entries for headloss equations
@@ -390,7 +411,7 @@ class ScipyModel(object):
         for link_id in self._link_ids:
             start_node_id = self.link_start_nodes[link_id]
             end_node_id = self.link_end_nodes[link_id]
-            if self.link_status[link_id] == wntr.network.LinkStatus.closed:
+            if self.link_status[link_id] == wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
                 self.jac_values[value_ndx] = 0.0 # entry for start node head variable
                 value_ndx += 1
                 self.jac_values[value_ndx] = 0.0 # entry for end node head variable
@@ -486,30 +507,33 @@ class ScipyModel(object):
             # Set the jacobian entries for pdd equations that depend on variable values
             for node_id in self._node_ids:
                 if self.node_types[node_id]==wntr.network.NodeTypes.junction:
-                    head = heads[node_id]
-                    Dexp = self.junction_demand[node_id]
-                    Pmin = self.minimum_pressures[node_id]
-                    Pnom = self.nominal_pressures[node_id]
-                    elevation = self.node_elevations[node_id]
-                    if (head-elevation) <= Pmin:
-                        self.jac_values[value_ndx] = -Dexp*self._slope_of_pdd_curve*head
-                    elif (head-elevation) <= (Pmin+self._pdd_smoothing_delta):
-                        a,b,c,d = self.pdd_poly1_coeffs[node_id]
-                        self.jac_values[value_ndx] = -Dexp*(3.0*a*(head-elevation)**2.0 + 2.0*b*(head-elevation) + c)
-                    elif (head-elevation) <= (Pnom-self._pdd_smoothing_delta):
-                        self.jac_values[value_ndx] = -0.5*Dexp/(Pnom-Pmin)*((head-elevation-Pmin)/(Pnom-Pmin))**(-0.5)
-                    elif (head-elevation) <= Pnom:
-                        a,b,c,d = self.pdd_poly2_coeffs[node_id]
-                        self.jac_values[value_ndx] = -Dexp*(3.0*a*(head-elevation)**2.0 + 2.0*b*(head-elevation) + c)
+                    if node_id not in self.isolated_junction_ids:
+                        head = heads[node_id]
+                        Dexp = self.junction_demand[node_id]
+                        Pmin = self.minimum_pressures[node_id]
+                        Pnom = self.nominal_pressures[node_id]
+                        elevation = self.node_elevations[node_id]
+                        if (head-elevation) <= Pmin:
+                            self.jac_values[value_ndx] = -Dexp*self._slope_of_pdd_curve*head
+                        elif (head-elevation) <= (Pmin+self._pdd_smoothing_delta):
+                            a,b,c,d = self.pdd_poly1_coeffs[node_id]
+                            self.jac_values[value_ndx] = -Dexp*(3.0*a*(head-elevation)**2.0 + 2.0*b*(head-elevation) + c)
+                        elif (head-elevation) <= (Pnom-self._pdd_smoothing_delta):
+                            self.jac_values[value_ndx] = -0.5*Dexp/(Pnom-Pmin)*((head-elevation-Pmin)/(Pnom-Pmin))**(-0.5)
+                        elif (head-elevation) <= Pnom:
+                            a,b,c,d = self.pdd_poly2_coeffs[node_id]
+                            self.jac_values[value_ndx] = -Dexp*(3.0*a*(head-elevation)**2.0 + 2.0*b*(head-elevation) + c)
+                        else:
+                            self.jac_values[value_ndx] = -Dexp*self._slope_of_pdd_curve*head
+                        value_ndx += 2
                     else:
-                        self.jac_values[value_ndx] = -Dexp*self._slope_of_pdd_curve*head
-                    value_ndx += 2
-                elif self.node_types[node_id]==wntr.network.NodeTypes.tank or self.node_types[node_id]==wntr.network.NodeTypes.reservoir:
+                        value_ndx += 2
+                else:
                     value_ndx += 1
 
         # Set the jacobian entries for headloss equations that depend on variable values
         for link_id in self._link_ids:
-            if self.link_status[link_id] == wntr.network.LinkStatus.closed:
+            if self.link_status[link_id] == wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
                 value_ndx += 3
             elif self.link_types[link_id] == wntr.network.LinkTypes.pipe:
                 value_ndx += 2
@@ -602,7 +626,7 @@ class ScipyModel(object):
 
         for link_id in self._pipe_ids:
             link_flow = flow[link_id]
-            if self.link_status[link_id] == wntr.network.LinkStatus.closed:
+            if self.link_status[link_id] == wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
                 self.headloss_residual[link_id] = link_flow
             else:
                 start_node_id = self.link_start_nodes[link_id]
@@ -625,7 +649,7 @@ class ScipyModel(object):
 
         for link_id in self._pump_ids:
             link_flow = flow[link_id]
-            if self.link_status[link_id] == wntr.network.LinkStatus.closed:
+            if self.link_status[link_id] == wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
                 self.headloss_residual[link_id] = link_flow
             else:
                 start_node_id = self.link_start_nodes[link_id]
@@ -652,14 +676,14 @@ class ScipyModel(object):
             start_node_id = self.link_start_nodes[link_id]
             end_node_id = self.link_end_nodes[link_id]
 
-            if self.link_status[link_id] == LinkStatus.active:
+            if self.link_status[link_id] == wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
+                self.headloss_residual[link_id] = link_flow
+            elif self.link_status[link_id] == LinkStatus.active:
                 self.headloss_residual[link_id] = head[end_node_id] - (self.valve_settings[link_id]+self.node_elevations[end_node_id])
             elif self.link_status[link_id] == LinkStatus.opened:
                 pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
                 pipe_headloss = pipe_resistance_coeff*abs(flow)**2
                 self.headloss_residual[link_id] = pipe_headloss - (head[start_node_id]-head[end_node_id])
-            elif self.link_status[link_id] == wntr.network.LinkStatus.closed:
-                self.headloss_residual[link_id] = link_flow
 
     def get_demand_or_head_residual(self, head, demand):
 
@@ -692,6 +716,8 @@ class ScipyModel(object):
             self.demand_or_head_residual[node_id] = head[node_id] - self.tank_head[node_id]
         for node_id in self._reservoir_ids:
             self.demand_or_head_residual[node_id] = head[node_id] - self.reservoir_head[node_id]
+        for node_id in self.isolated_junction_ids:
+            self.demand_or_head_residual[node_id] = head[node_id] - self.node_elevations[node_id]
 
     def initialize_flow(self):
         flow = 0.001*np.ones(self.num_links)
@@ -783,6 +809,12 @@ class ScipyModel(object):
         results.link = pd.Panel(link_dictionary, major_axis=results.time, minor_axis=link_names)
 
     def set_network_inputs_by_id(self):
+        self.isolated_junction_ids = []
+        self.isolated_link_ids = []
+        for junction_name in self.isolated_junction_names:
+            self.isolated_junction_ids.append(self._node_name_to_id[junction_name])
+        for link_name in self.isolated_link_names:
+            self.isolated_link_ids.append(self._link_name_to_id[link_name])
         for tank_name, tank in self._wn.tanks():
             tank_id = self._node_name_to_id[tank_name]
             self.tank_head[tank_id] = tank.head
@@ -791,7 +823,10 @@ class ScipyModel(object):
             self.reservoir_head[reservoir_id] = reservoir.head
         for junction_name, junction in self._wn.junctions():
             junction_id = self._node_name_to_id[junction_name]
-            self.junction_demand[junction_id] = junction.expected_demand
+            if junction_id in self.isolated_junction_ids:
+                self.junction_demand[junction_id] = 0.0
+            else:
+                self.junction_demand[junction_id] = junction.expected_demand
         for link_name, link in self._wn.links():
             link_id = self._link_name_to_id[link_name]
             self.link_status[link_id] = link.status
@@ -815,6 +850,12 @@ class ScipyModel(object):
         for junction_name, junction in self._wn.junctions():
             t = math.floor(self._wn.sim_time/self._wn.options.hydraulic_timestep)
             junction.expected_demand = demand_dict[(junction_name,t)]
+
+    def identify_isolated_junctions(self):
+        self.isolated_junction_names, self.isolated_link_names = self._wn._get_isolated_junctions()
+        if len(self.isolated_junction_names)>0:
+            print 'We have ',len(self.isolated_junction_names),' isolated junctions.'
+            print 'We have ',len(self.isolated_link_names),' isolated links.'
 
     def update_network_previous_values(self):
         self._wn.prev_sim_time = self._wn.sim_time
@@ -1113,3 +1154,15 @@ class ScipyModel(object):
                     equation_type = 'headloss'
                     node_or_link_name = self._link_id_to_name[i - 2*self.num_nodes]
                 print 'jacobian row for ',equation_type,' for ',node_or_link_name,' has all zero entries.'
+
+    def check_infeasibility(self,x):
+        resid = self.get_hydraulic_equations(x)
+        for i in xrange(len(resid)):
+            r = abs(resid[i])
+            if r > 0.0001:
+                if i >= 2*self.num_nodes:
+                    print 'residual for headloss equation for link ',self._link_id_to_name[i-2*self.num_nodes],' is ',r,'; flow = ',x[i]
+                elif i >= self.num_nodes:
+                    print 'residual for demand/head eqn for node ',self._node_id_to_name[i-self.num_nodes],' is ',r
+                else:
+                    print 'residual for node balance for node ',self._node_id_to_name[i],' is ',r

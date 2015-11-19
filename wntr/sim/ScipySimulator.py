@@ -93,6 +93,7 @@ class ScipySimulator(WaterNetworkSimulator):
             #print ''
 
             # Prepare for solve
+            model.identify_isolated_junctions()
             if not first_step:
                 model.update_tank_heads()
             model.update_junction_demands(self._demand_dict)
@@ -101,6 +102,9 @@ class ScipySimulator(WaterNetworkSimulator):
 
             # Solve
             [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            if solver_status == 0:
+                model.check_infeasibility(self._X)
+                raise RuntimeError('No solution found.')
             X_init = copy.copy(self._X)
 
             # Enter results in network and update previous inputs

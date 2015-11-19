@@ -49,7 +49,7 @@ class NewtonSolver(object):
         num_vars = len(x)
 
         I = sp.csr_matrix((np.ones(num_vars),(range(num_vars),range(num_vars))),shape=(num_vars,num_vars))
-        #I = 0.1*I
+        I = 10*I
 
         # MAIN NEWTON LOOP
         for iter in xrange(self.maxiter):
@@ -96,8 +96,8 @@ class NewtonSolver(object):
             else:
                 x = x + d
 
-        #return [x, iter, 0]
-        raise RuntimeError("No solution found.")
+        return [x, iter, 0]
+        #raise RuntimeError("No solution found.")
 
 
 
