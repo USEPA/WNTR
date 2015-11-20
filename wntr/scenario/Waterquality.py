@@ -12,7 +12,7 @@ class Waterquality(object):
         self.source_type = source_type
         """ Source type, used for CHEM only, options = CONCEN, MASS, FLOWPACED, or SETPOINT"""
         self.source_quality = source_quality
-        """ Source quality, used for CHEM only (kg/m3)"""
+        """ Source quality, used for CHEM only (kg/m3 if source_type = CONCEN, otherwise kg/s)"""
         self.start_time = start_time
         """ Injection start time, used for CHEM only (s)"""
         self.end_time = end_time

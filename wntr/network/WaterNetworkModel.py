@@ -944,7 +944,7 @@ class WaterNetworkModel(object):
         label_format = '{:10s} {:10s} {:10s} {:10s} {:10s} {:10s} {:10s}'
         print >> f, label_format.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss')
         for valve_name, valve in self.links(Valve):
-            print >> f, text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve.setting, valve.minor_loss, ';')
+            print >> f, text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve.current_setting, valve.minor_loss, ';')
 
         # Print status information
         print >> f, '[STATUS]'
