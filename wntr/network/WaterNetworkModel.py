@@ -1034,7 +1034,7 @@ class WaterNetworkModel(object):
         sys.setrecursionlimit(50000)
         groups = {}
         has_tank_or_res = {}
-        G = self.get_graph_deep_copy()
+        G = self._graph
 
         def grab_group(node_name):
             groups[grp].add(node_name)
@@ -1043,16 +1043,25 @@ class WaterNetworkModel(object):
             suc = G.successors(node_name)
             pre = G.predecessors(node_name)
             for s in suc:
-                if s not in groups[grp]:
-                    grab_group(s)
+                connected_to_s = False
+                link_names_list = G.edge[node_name][s].keys()
+                for link_name in link_names_list:
+                    link = self.get_link(link_name)
+                    if link.status!=LinkStatus.closed:
+                        connected_to_s = True
+                if connected_to_s:
+                    if s not in groups[grp]:
+                        grab_group(s)
             for p in pre:
-                if p not in groups[grp]:
-                    grab_group(p)
-
-        for start_node_name,end_node_name,link_name in G.edges(keys=True):
-            link = self.get_link(link_name)
-            if link.status==LinkStatus.closed:
-                G.remove_edge(start_node_name,end_node_name,key=link_name)
+                connected_to_p = False
+                link_names_list = G.edge[p][node_name].keys()
+                for link_name in link_names_list:
+                    link = self.get_link(link_name)
+                    if link.status!=LinkStatus.closed:
+                        connected_to_p = True
+                if connected_to_p:
+                    if p not in groups[grp]:
+                        grab_group(p)
 
         grp = -1
         for node_name in G.nodes():
