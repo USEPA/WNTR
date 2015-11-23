@@ -209,7 +209,7 @@ class WaterNetworkModel(object):
                 close_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.closed)
                 open_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.opened)
             
-                control = wntr.network.ConditionalControl((tank,'head'),np.greater,min_head+self._Htol,open_control_action)
+                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head')],[np.greater,np.less_equal],[min_head+self._Htol,min_head+self._Htol],open_control_action)
                 control._partial_step_for_tanks = False
                 control._priority = 0
                 control.name = tank.name()+link_name+' opened because head is greater than min head'
@@ -249,7 +249,7 @@ class WaterNetworkModel(object):
                 close_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.closed)
                 open_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.opened)
             
-                control = wntr.network.ConditionalControl((tank,'head'),np.less,max_head-self._Htol,open_control_action)
+                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head')],[np.less,np.greater_equal],[max_head-self._Htol,max_head-self._Htol],open_control_action)
                 control._partial_step_for_tanks = False
                 control._priority = 0
                 control.name = tank.name()+link_name+'opened because head is less than max head'

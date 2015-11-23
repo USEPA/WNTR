@@ -118,7 +118,7 @@ class TargetAttributeControlAction(ControlAction):
             return False, None, None
         else:
             #print control_name
-            print 'setting ',target.name(),self._attribute,' to ',self._value
+            #print 'setting ',target.name(),self._attribute,' to ',self._value
             setattr(target, self._attribute, self._value)
             return True, (target, self._attribute), orig_value
 
@@ -535,12 +535,14 @@ class _PRVControl(Control):
         if presolve_flag:
             return (False, None)
 
+        head_setting = self._valve.setting + self._end_node.elevation
+
         if self._valve._status == wntr.network.LinkStatus.active:
             if self._valve.flow < -self._Qtol:
                 self._action_to_fire = self._close_control_action
                 return (True, 0)
             Hml = self._valve.minor_loss*self._valve.flow**2
-            if self._start_node.head < self._valve.setting + Hml - self._Htol:
+            if self._start_node.head < head_setting + Hml - self._Htol:
                 self._action_to_fire = self._open_control_action
                 return (True, 0)
             return (False, None)
@@ -549,15 +551,15 @@ class _PRVControl(Control):
                 self._action_to_fire = self._close_control_action
                 return (True, 0)
             Hml = self._valve.minor_loss*self._valve.flow**2
-            if self._start_node.head > self._valve.setting + Hml + self._Htol:
+            if self._start_node.head > head_setting + Hml + self._Htol:
                 self._action_to_fire = self._active_control_action
                 return (True, 0)
             return (False, None)
         elif self._valve._status == wntr.network.LinkStatus.closed:
-            if self._start_node.head > self._end_node.head + self._Htol and self._start_node.head < self._valve.setting - self._Htol:
+            if self._start_node.head > self._end_node.head + self._Htol and self._start_node.head < head_setting - self._Htol:
                 self._action_to_fire = self._open_control_action
                 return (True, 0)
-            if self._start_node.head > self._end_node.head + self._Htol and self._end_node.head < self._valve.setting - self._Htol:
+            if self._start_node.head > self._end_node.head + self._Htol and self._end_node.head < head_setting - self._Htol:
                 self._action_to_fire = self._active_control_action
                 return (True, 0)
             return (False, None)

@@ -59,7 +59,7 @@ class NewtonSolver(object):
 
             r_norm = np.max(abs(r))
 
-            print iter, r_norm
+            #print iter, r_norm
 
             if r_norm < self.tol:
                 return [x, iter, 1]

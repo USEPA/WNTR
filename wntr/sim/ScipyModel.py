@@ -682,7 +682,7 @@ class ScipyModel(object):
                 self.headloss_residual[link_id] = head[end_node_id] - (self.valve_settings[link_id]+self.node_elevations[end_node_id])
             elif self.link_status[link_id] == LinkStatus.opened:
                 pipe_resistance_coeff = self.pipe_resistance_coefficients[link_id]
-                pipe_headloss = pipe_resistance_coeff*abs(flow)**2
+                pipe_headloss = pipe_resistance_coeff*abs(flow[link_id])**2
                 self.headloss_residual[link_id] = pipe_headloss - (head[start_node_id]-head[end_node_id])
 
     def get_demand_or_head_residual(self, head, demand):

@@ -74,6 +74,10 @@ class ScipySimulator(WaterNetworkSimulator):
         resolve = False
 
         while True:
+
+            #print ''
+            #print ''
+
             if not resolve:
                 trial = 0
                 #print 'presolve = True'
@@ -89,8 +93,6 @@ class ScipySimulator(WaterNetworkSimulator):
                     last_backup_time = backup_time
 
             print 'simulation time = ',self.get_time(),', trial = ',trial
-            #print ''
-            #print ''
 
             # Prepare for solve
             model.identify_isolated_junctions()
@@ -224,6 +226,7 @@ class ScipySimulator(WaterNetworkSimulator):
         for change_tuple, orig_value in change_dict.iteritems():
             if orig_value!=getattr(change_tuple[0],change_tuple[1]):
                 changes_made = True
+                #print 'setting ',change_tuple[0].name(),change_tuple[1],' to ',getattr(change_tuple[0],change_tuple[1])
 
         return changes_made
 
