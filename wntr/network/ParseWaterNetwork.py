@@ -708,6 +708,8 @@ class ParseWaterNetwork(object):
                     self._time_controls[link_name] = {'open_times': [wn.options.start_clocktime], 'closed_times': []}
                 elif status == 'CLOSED':
                     self._time_controls[link_name] = {'open_times': [], 'closed_times': [wn.options.start_clocktime]}
+                elif status == 'ACTIVE':
+                    continue
                 else:
                     raise RuntimeError("Link status format not recognized.")
             else:
@@ -715,6 +717,8 @@ class ParseWaterNetwork(object):
                     self._time_controls[link_name]['open_times'].append(wn.options.start_clocktime)
                 elif status == 'CLOSED':
                     self._time_controls[link_name]['closed_times'].append(wn.options.start_clocktime)
+                elif status == 'ACTIVE':
+                    continue
                 else:
                     raise RuntimeError("Link status format not recognized.")
         # Add time control
