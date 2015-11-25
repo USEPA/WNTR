@@ -108,7 +108,8 @@ class ScipyModel(object):
         self._node_ids = [] 
         self._junction_ids = [] 
         self._tank_ids = [] 
-        self._reservoir_ids = [] 
+        self._reservoir_ids = []
+        self._leak_ids = []
 
         # Lists of types of links
         # self._link_ids is ordered by increasing id. In fact, the index equals the id.
@@ -130,6 +131,8 @@ class ScipyModel(object):
         # found in WaterNetworkModel.py. The index is the node/link id.
         self.node_types = []
         self.link_types = []
+        # list indicating whether or not the node has a leak. 0 means no leak, 1 means leak. Note that this is not indicative of whether the leak is 
+        self.has_leak = []
 
         n = 0
         for node_name, node in self._wn.nodes():
@@ -260,27 +263,53 @@ class ScipyModel(object):
         # headloss_l => headloss equation for link id l
         # in link refers to a link that has node_n as an end node
         # out link refers to a link that has node_n as a start node
-        # * means 1 if the node is a tank or reservoir, NZ if the node is a junction
-        # ** means 1 if the node is a junction, 0 otherwise
-        # NZ means could be non-zero, but depends on network status and/or variable values
         #
-        # Variable          H_1   H_2   H_n   H_(N-1)   H_N   D_1   D_2   D_n   D_(N-1)   D_N   F_1   F_2   F_l   F_(L-1)   F_L
+        # Note that there will only be leak variables and equations for nodes with leaks. Thus some of the rows and columns below may be missing. The leak id is equal to the node id though.
+        #
+        # Variable          H_1   H_2   H_n   H_(N-1)   H_N   D_1   D_2   D_n   D_(N-1)   D_N   F_1   F_2   F_l   F_(L-1)   F_L      Dleak1  Dleak2  Dleakn  Dleak(N-1)  DleakN
         # Equation
-        # node_bal_1         0     0     0     0         0     -1    0     0     0         0    (1 for in link, -1 for out link) 
-        # node_bal_2         0     0     0     0         0     0     -1    0     0         0    (1 for in link, -1 for out link) 
-        # node_bal_n         0     0     0     0         0     0     0     -1    0         0    (1 for in link, -1 for out link) 
-        # node_bal_(N-1)     0     0     0     0         0     0     0     0     -1        0    (1 for in link, -1 for out link) 
-        # node_bal_N         0     0     0     0         0     0     0     0     0         -1   (1 for in link, -1 for out link) 
-        # D/H_1              *     0     0     0         0     **    0     0     0         0     0      0     0    0         0   
-        # D/H_2              0     *     0     0         0     0     **    0     0         0     0      0     0    0         0
-        # D/H_n              0     0     *     0         0     0     0     **    0         0     0      0     0    0         0
-        # D/H_(N-1)          0     0     0     *         0     0     0     0     **        0     0      0     0    0         0
-        # D/H_N              0     0     0     0         *     0     0     0     0         **    0      0     0    0         0
-        # headloss_1         (NZ for start node and end node)  0     0     0     0         0     NZ     0     0    0         0
-        # headloss_2         (NZ for start node and end node)  0     0     0     0         0     0      NZ    0    0         0
-        # headloss_l         (NZ for start node and end node)  0     0     0     0         0     0      0     NZ   0         0
-        # headloss_(L-1)     (NZ for start node and end node)  0     0     0     0         0     0      0     0    NZ        0
-        # headloss_L         (NZ for start node and end node)  0     0     0     0         0     0      0     0    0         NZ
+        # node_bal_1         0     0     0     0         0     -1    0     0     0         0    (1 for in link, -1 for out link)       -1      0        0        0          0
+        # node_bal_2         0     0     0     0         0     0     -1    0     0         0    (1 for in link, -1 for out link)        0     -1        0        0          0
+        # node_bal_n         0     0     0     0         0     0     0     -1    0         0    (1 for in link, -1 for out link)        0      0       -1        0          0
+        # node_bal_(N-1)     0     0     0     0         0     0     0     0     -1        0    (1 for in link, -1 for out link)        0      0        0       -1          0
+        # node_bal_N         0     0     0     0         0     0     0     0     0         -1   (1 for in link, -1 for out link)        0      0        0        0         -1
+        # D/H_1              *1    0     0     0         0     *2    0     0     0         0     0      0     0    0         0          0      0        0        0          0
+        # D/H_2              0     *1    0     0         0     0     *2    0     0         0     0      0     0    0         0          0      0        0        0          0
+        # D/H_n              0     0     *1    0         0     0     0     *2    0         0     0      0     0    0         0          0      0        0        0          0
+        # D/H_(N-1)          0     0     0     *1        0     0     0     0     *2        0     0      0     0    0         0          0      0        0        0          0
+        # D/H_N              0     0     0     0         *1    0     0     0     0         *2    0      0     0    0         0          0      0        0        0          0
+        # headloss_1         (NZ for start/end node *3    )    0     0     0     0         0     *4     0     0    0         0          0      0        0        0          0
+        # headloss_2         (NZ for start/end node *3    )    0     0     0     0         0     0      *4    0    0         0          0      0        0        0          0
+        # headloss_l         (NZ for start/end node *3    )    0     0     0     0         0     0      0     *4   0         0          0      0        0        0          0
+        # headloss_(L-1)     (NZ for start/end node *3    )    0     0     0     0         0     0      0     0    *4        0          0      0        0        0          0
+        # headloss_L         (NZ for start/end node *3    )    0     0     0     0         0     0      0     0    0         *4         0      0        0        0          0
+        # leak flow 1        *5    0     0     0         0     0     0     0     0         0     0      0     0    0         0          1      0        0        0          0
+        # leak flow 2        0     *5    0     0         0     0     0     0     0         0     0      0     0    0         0          0      1        0        0          0
+        # leak flow n        0     0     *5    0         0     0     0     0     0         0     0      0     0    0         0          0      0        1        0          0
+        # leak flow N-1      0     0     0     *5        0     0     0     0     0         0     0      0     0    0         0          0      0        0        1          0
+        # leak flow N        0     0     0     0         *5    0     0     0     0         0     0      0     0    0         0          0      0        0        0          1
+        #
+        #
+        # *1: 1 for tanks and reservoirs
+        #     1 for isolated junctions
+        #     0 for junctions if the simulation is demand-driven and the junction is not isolated
+        #     f(H) for junctions if the simulation is pressure-driven and the junction is not isolated
+        # *2: 0 for tanks and reservoirs
+        #     1 for non-isolated junctions
+        #     0 for isolated junctions
+        # *3: 0 for closed/isolated links
+        #                  pipes   head_pumps  power_pumps  active_PRV   open_prv
+        #     start node    -1        1            f(F)        0             -1
+        #     end node       1       -1            f(F)        1              1
+        # *4: 1 for closed/isolated links
+        #     f(F) for pipes
+        #     f(F) for head pumps
+        #     f(Hstart,Hend) for power pumps
+        #     0 for active PRVs
+        #     f(F) for open PRVs
+        # *5: 0 for inactive leaks
+        #     0 for leaks at isolated junctions
+        #     f(H-z) otherwise
 
 
         num_vars = self.num_nodes*2 + self.num_links
