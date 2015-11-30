@@ -386,5 +386,149 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l4,['p5'])
         self.assertEqual(l5,[])
 
+class TestInpFileWriter(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        sys.path.append(resilienceMainDir)
+        import wntr
+        self.wntr = wntr
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_17.inp'
+        self.wn = wntr.network.WaterNetworkModel(inp_file)
+        self.wn.write_inpfile('tmp.inp')
+        self.wn2 = wntr.network.WaterNetworkModel('tmp.inp')
+
+    @classmethod
+    def tearDownClass(self):
+        sys.path.remove(resilienceMainDir)
+
+    def test_junctions(self):
+        for name, node in self.wn.nodes(self.wntr.network.Junction):
+            node2 = self.wn2.get_node(name)
+            self.assertAlmostEqual(node.elevation, node2.elevation, 5)
+            self.assertAlmostEqual(node.base_demand, node2.base_demand, 5)
+
+    def test_reservoirs(self):
+        for name, node in self.wn.nodes(self.wntr.network.Reservoir):
+            node2 = self.wn2.get_node(name)
+            self.assertAlmostEqual(node.base_head, node2.base_head, 5)
+
+    def test_tanks(self):
+        for name, node in self.wn.nodes(self.wntr.network.Tank):
+            node2 = self.wn2.get_node(name)
+            self.assertAlmostEqual(node.elevation, node2.elevation, 5)
+            self.assertAlmostEqual(node.init_level, node2.init_level, 5)
+            self.assertAlmostEqual(node.min_level, node2.min_level, 5)
+            self.assertAlmostEqual(node.max_level, node2.max_level, 5)
+            self.assertAlmostEqual(node.diameter, node2.diameter, 5)
+
+    def test_pipes(self):
+        for name, link in self.wn.links(self.wntr.network.Pipe):
+            link2 = self.wn2.get_link(name)
+            self.assertEqual(link.start_node(), link2.start_node())
+            self.assertEqual(link.end_node(), link2.end_node())
+            self.assertAlmostEqual(link.length, link2.length, 5)
+            self.assertAlmostEqual(link.diameter, link2.diameter, 5)
+            self.assertAlmostEqual(link.roughness, link2.roughness, 5)
+            self.assertAlmostEqual(link.minor_loss, link2.minor_loss, 5)
+            self.assertEqual(link.get_base_status(), link2.get_base_status())
+
+    def test_pumps(self):
+        for name, link in self.wn.links(self.wntr.network.Pump):
+            link2 = self.wn2.get_link(name)
+            self.assertEqual(link.start_node(), link2.start_node())
+            self.assertEqual(link.end_node(), link2.end_node())
+            self.assertEqual(link.info_type, link2.info_type)
+            if link.info_type=='POWER':
+                self.assertAlmostEqual(link.power, link2.power, 5)
+            elif link.info_type=='HEAD':
+                A,B,C = link.get_head_curve_coefficients()
+                A2,B2,C2 = link2.get_head_curve_coefficients()
+                self.assertAlmostEqual(A,A2,5)
+                self.assertLessEqual(abs(B-B2),6.0)
+                self.assertLessEqual(abs(B-B2)/B,0.00001)
+                self.assertAlmostEqual(C,C2,5)
+
+    def test_valves(self):
+        for name, link in self.wn.links(self.wntr.network.Valve):
+            link2 = self.wn2.get_link(name)
+            self.assertEqual(link.start_node(), link2.start_node())
+            self.assertEqual(link.end_node(), link2.end_node())
+            self.assertEqual(link.valve_type, link2.valve_type)
+            self.assertAlmostEqual(link.diameter, link2.diameter, 5)
+            self.assertAlmostEqual(link.base_setting, link2.base_setting, 5)
+            self.assertAlmostEqual(link.minor_loss, link2.minor_loss, 5)
+
+    def test_controls(self):
+        for key, val in self.wn.conditional_controls.iteritems():
+            for k,v in val.iteritems():
+                for i in xrange(len(v)):
+                    name = self.wn.conditional_controls[key][k][i][0]
+                    threshold = self.wn.conditional_controls[key][k][i][1]
+                    name2 = self.wn2.conditional_controls[key][k][i][0]
+                    threshold2 = self.wn2.conditional_controls[key][k][i][1]
+                    self.assertEqual(name,name2)
+                    self.assertAlmostEqual(threshold, threshold2)
+        for key, val in self.wn2.conditional_controls.iteritems():
+            for k,v in val.iteritems():
+                for i in xrange(len(v)):
+                    name = self.wn.conditional_controls[key][k][i][0]
+                    threshold = self.wn.conditional_controls[key][k][i][1]
+                    name2 = self.wn2.conditional_controls[key][k][i][0]
+                    threshold2 = self.wn2.conditional_controls[key][k][i][1]
+                    self.assertEqual(name,name2)
+                    self.assertAlmostEqual(threshold, threshold2)
+        self.assertEqual(self.wn.time_controls, self.wn2.time_controls)
+
+class TestNet3InpWriterResults(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        sys.path.append(resilienceMainDir)
+        import wntr
+        self.wntr = wntr
+
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_18.inp'
+        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        
+        sim = self.wntr.sim.EpanetSimulator(self.wn)
+        self.results = sim.run_sim()
+        
+        self.wn.write_inpfile('tmp.inp')
+        self.wn2 = self.wntr.network.WaterNetworkModel('tmp.inp')
+
+        sim = self.wntr.sim.EpanetSimulator(self.wn2)
+        self.results2 = sim.run_sim()
+
+    @classmethod
+    def tearDownClass(self):
+        sys.path.remove(resilienceMainDir)
+
+    def test_link_flowrate(self):
+        for link_name, link in self.wn.links():
+            for t in self.results2.link.major_axis:
+                self.assertLessEqual(abs(self.results2.link.at['flowrate',t,link_name] - self.results.link.at['flowrate',t,link_name]), 0.00001)
+
+    def test_node_demand(self):
+        for node_name, node in self.wn.nodes():
+            for t in self.results2.node.major_axis:
+                self.assertAlmostEqual(self.results2.node.at['demand',t,node_name], self.results.node.at['demand',t,node_name], 4)
+
+    def test_node_expected_demand(self):
+        for node_name, node in self.wn.nodes():
+            for t in self.results2.node.major_axis:
+                self.assertAlmostEqual(self.results2.node.at['expected_demand',t,node_name], self.results.node.at['expected_demand',t,node_name], 4)
+
+    def test_node_head(self):
+        for node_name, node in self.wn.nodes():
+            for t in self.results2.node.major_axis:
+                self.assertLessEqual(abs(self.results2.node.at['head',t,node_name] - self.results.node.at['head',t,node_name]), 0.01)
+
+    def test_node_pressure(self):
+        for node_name, node in self.wn.nodes():
+            for t in self.results2.node.major_axis:
+                self.assertLessEqual(abs(self.results2.node.at['pressure',t,node_name] - self.results.node.at['pressure',t,node_name]), 0.05)
+
+
 if __name__ == '__main__':
     unittest.main()
