@@ -701,26 +701,7 @@ class ParseWaterNetwork(object):
         # Add patterns to their set
         for pattern_name, pattern_list in self._patterns.iteritems():
             wn.add_pattern(pattern_name, pattern_list)
-        # Add initial status to link
-        for link_name, status in self._link_status.iteritems():
-            if link_name not in self._time_controls:
-                if status == 'OPEN':
-                    self._time_controls[link_name] = {'open_times': [wn.options.start_clocktime], 'closed_times': []}
-                elif status == 'CLOSED':
-                    self._time_controls[link_name] = {'open_times': [], 'closed_times': [wn.options.start_clocktime]}
-                elif status == 'ACTIVE':
-                    continue
-                else:
-                    raise RuntimeError("Link status format not recognized.")
-            else:
-                if status == 'OPEN':
-                    self._time_controls[link_name]['open_times'].append(wn.options.start_clocktime)
-                elif status == 'CLOSED':
-                    self._time_controls[link_name]['closed_times'].append(wn.options.start_clocktime)
-                elif status == 'ACTIVE':
-                    continue
-                else:
-                    raise RuntimeError("Link status format not recognized.")
+
         # Add time control
         for control_link, control_dict in self._time_controls.iteritems():
             wn.add_time_control(control_link, control_dict['open_times'], control_dict['closed_times'])
@@ -736,6 +717,11 @@ class ParseWaterNetwork(object):
             end_node = pump_info_tuple[1]
             # Add pump
             wn.add_pump(pump_name, start_node, end_node, 'HEAD', curve)
+
+        # Add initial status to link
+        for link_name, status in self._link_status.iteritems():
+            link = wn.get_link(link_name)
+            link._base_status = wntr.network.LinkStatus.str_to_status(status)
 
         # Set node coordinates
         for name, node in wn.nodes():
