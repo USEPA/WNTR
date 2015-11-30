@@ -61,12 +61,14 @@ class ScipySimulator(WaterNetworkSimulator):
         #    1.) head
         #    2.) demand
         #    3.) flow
+        #    4.) leak_demand
         model.set_network_inputs_by_id()
         head0 = model.initialize_head()
         demand0 = model.initialize_demand()
         flow0 = model.initialize_flow()
+        leak_demand0 = model.initialize_leak_demand()
         
-        X_init = np.concatenate((head0, demand0, flow0))
+        X_init = np.concatenate((head0, demand0, flow0,leak_demand0))
 
         first_step = True
         trial = -1

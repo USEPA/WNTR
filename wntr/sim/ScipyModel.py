@@ -22,6 +22,7 @@ class ScipyModel(object):
         # Number of nodes and links
         self.num_nodes = self._wn.num_nodes()
         self.num_links = self._wn.num_links()
+        self.num_leaks = len(self._leak_ids)
 
         # Initialize residuals
         # Equations will be ordered:
@@ -31,6 +32,7 @@ class ScipyModel(object):
         self.node_balance_residual = np.ones(self.num_nodes)
         self.demand_or_head_residual = np.ones(self.num_nodes)
         self.headloss_residual = np.ones(self.num_links)
+        self.leak_demand_residual = np.ones(self.num_leaks)
 
         # Set miscelaneous link and node attributes
         self._set_node_attributes()
@@ -110,6 +112,7 @@ class ScipyModel(object):
         self._tank_ids = [] 
         self._reservoir_ids = []
         self._leak_ids = []
+        self._leak_idx = {} # {node_id: index_of_node_in_leak_ids}; e.g. _leak_ids = [0, 4, 18], _leak_idx = {0:0, 4:1, 18:2}
 
         # Lists of types of links
         # self._link_ids is ordered by increasing id. In fact, the index equals the id.
@@ -131,8 +134,10 @@ class ScipyModel(object):
         # found in WaterNetworkModel.py. The index is the node/link id.
         self.node_types = []
         self.link_types = []
-        # list indicating whether or not the node has a leak. 0 means no leak, 1 means leak. Note that this is not indicative of whether the leak is 
-        self.has_leak = []
+        # Dictionary indicating whether or not the leak is active. False means inactive, True means active. 
+        self.leak_status = {}
+        # Dictionary indicating whether or not the node could have a leak; True if node._leak is True; False if node._leak is False
+        self.could_have_leak = {}
 
         n = 0
         for node_name, node in self._wn.nodes():
@@ -142,12 +147,30 @@ class ScipyModel(object):
             if isinstance(node, Tank):
                 self._tank_ids.append(n)
                 self.node_types.append(NodeTypes.tank)
+                if node._leak:
+                    self._leak_idx[n] = len(self._leak_ids)
+                    self._leak_ids.append(n)
+                    self.leak_status[n] = False
+                    self.could_have_leak[n] = True
+                else:
+                    self.leak_status[n] = False
+                    self.could_have_leak[n] = False
             elif isinstance(node, Reservoir):
                 self._reservoir_ids.append(n)
                 self.node_types.append(NodeTypes.reservoir)
+                self.leak_status[n] = False
+                self.could_have_leak[n] = False
             elif isinstance(node, Junction):
                 self._junction_ids.append(n)
                 self.node_types.append(NodeTypes.junction)
+                if node._leak:
+                    self._leak_idx[n] = len(self._leak_ids)
+                    self._leak_ids.append(n)
+                    self.leak_status[n] = False
+                    self.could_have_leak[n] = True
+                else:
+                    self.leak_status[n] = False
+                    self.could_have_leak[n] = False
             else:
                 raise RuntimeError('Node is not a junction, tank, or reservoir.')
             n += 1
@@ -191,6 +214,9 @@ class ScipyModel(object):
         self.minimum_pressures = {} # {junction_id: minimum_pressure}
         self.pdd_poly1_coeffs = {} # {junction_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to 0th order term; these are the coefficients for the polynomial between Pmin and the normal pdd function
         self.pdd_poly2_coeffs = {} # {junction_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to 0th order term; these are the coefficients for the polynomial between the normal pdd function and Pmax
+        self.leak_Cd = {} # {node_id: leak_discharge_coeff}
+        self.leak_area = {} # {node_id: leak_area}
+        self.leak_poly_coeffs = {} # {node_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to the 0th order term
 
         for node_name, node in self._wn.nodes():
             node_id = self._node_name_to_id[node_name]
@@ -210,8 +236,16 @@ class ScipyModel(object):
                 self.minimum_pressures[node_id] = node.minimum_pressure
                 self.get_pdd_poly1_coeffs(node, node_id)
                 self.get_pdd_poly2_coeffs(node, node_id)
+                if node._leak:
+                    self.leak_Cd[node_id] = node.leak_discharge_coeff
+                    self.leak_area[node_id] = node.leak_area
+                    self.get_leak_poly_coeffs(node, node_id)
             elif node_id in self._tank_ids:
                 self.node_elevations[node_id] = node.elevation
+                if node._leak:
+                    self.leak_Cd[node_id] = node.leak_discharge_coeff
+                    self.leak_area[node_id] = node.leak_area
+                    self.get_leak_poly_coeffs(node, node_id)
             elif node_id in self._reservoir_ids:
                 self.node_elevations[node_id] = 0.0
             else:
@@ -312,7 +346,7 @@ class ScipyModel(object):
         #     f(H-z) otherwise
 
 
-        num_vars = self.num_nodes*2 + self.num_links
+        num_vars = self.num_nodes*2 + self.num_links + self.num_leaks
         self.jac_row = []
         self.jac_col = []
         self.jac_values = []
@@ -335,6 +369,12 @@ class ScipyModel(object):
             for link_id in self.out_link_ids_for_nodes[node_id]:
                 self.jac_row.append(row_ndx)
                 self.jac_col.append(link_id + 2*self.num_nodes)
+                self.jac_values.append(-1.0)
+                value_ndx += 1
+            if self.could_have_leak[node_id]:
+                leak_idx = self._leak_idx[node_id]
+                self.jac_row.append(row_ndx)
+                self.jac_col.append(leak_idx + self.num_links + 2*self.num_nodes)
                 self.jac_values.append(-1.0)
                 value_ndx += 1
             row_ndx += 1
@@ -379,6 +419,18 @@ class ScipyModel(object):
             value_ndx += 1
             row_ndx += 1
 
+        # Jacobian entries for the leak demand equations
+        for node_id in self._leak_ids:
+            self.jac_row.append(row_ndx)
+            self.jac_col.append(node_id)
+            self.jac_values.append(0.0)
+            value_ndx += 1
+            self.jac_row.append(row_ndx)
+            self.jac_col.append(2*self.num_nodes + self.num_links + self._leak_idx[node_id])
+            self.jac_values.append(1.0)
+            value_ndx += 1
+            row_ndx += 1
+
         self.jacobian = sparse.csr_matrix((self.jac_values, (self.jac_row,self.jac_col)),shape=(num_vars,num_vars))
 
         self.jac_values = self.jacobian.data
@@ -386,12 +438,14 @@ class ScipyModel(object):
     def get_hydraulic_equations(self, x):
         head = x[:self.num_nodes]
         demand = x[self.num_nodes:self.num_nodes*2]
-        flow = x[self.num_nodes*2:]
-        self.get_node_balance_residual(flow, demand)
+        flow = x[self.num_nodes*2:(2*self.num_nodes+self.num_links)]
+        leak_demand = x[(2*self.num_nodes+self.num_links):]
+        self.get_node_balance_residual(flow, demand, leak_demand)
         self.get_demand_or_head_residual(head, demand)
         self.get_headloss_residual(head, flow)
+        self.get_leak_demand_residual(head, leak_demand)
 
-        all_residuals = np.concatenate((self.node_balance_residual, self.demand_or_head_residual, self.headloss_residual))
+        all_residuals = np.concatenate((self.node_balance_residual, self.demand_or_head_residual, self.headloss_residual, self.leak_demand_residual))
 
         return all_residuals
 
@@ -629,7 +683,7 @@ class ScipyModel(object):
         #    self.check_jac(x)
         return self.jacobian
 
-    def get_node_balance_residual(self, flow, demand):
+    def get_node_balance_residual(self, flow, demand, leak_demand):
         """
         Mass balance at all the nodes
 
@@ -643,12 +697,14 @@ class ScipyModel(object):
         List of residuals of the node mass balances
         """
 
-        for node_id in xrange(self.num_nodes):
+        for node_id in self._node_ids:
             expr = 0
             for link_id in self.out_link_ids_for_nodes[node_id]:
                 expr -= flow[link_id]
             for link_id in self.in_link_ids_for_nodes[node_id]:
                 expr += flow[link_id]
+            if self.could_have_leak[node_id]:
+                expr -= leak_demand[self._leak_idx[node_id]]
             self.node_balance_residual[node_id] = expr - demand[node_id]
 
     def get_headloss_residual(self, head, flow):
@@ -748,6 +804,22 @@ class ScipyModel(object):
         for node_id in self.isolated_junction_ids:
             self.demand_or_head_residual[node_id] = head[node_id] - self.node_elevations[node_id]
 
+    def get_leak_demand_residual(self, head, leak_demand):
+        m = 1.0e-11
+        for node_id in self._leak_ids:
+            leak_idx = self._leak_idx[node_id]
+            if self.leak_status[node_id]:
+                p = head[node_id] - self.node_elevations[node_id]
+                if p <= 0:
+                    self.leak_demand_residual[leak_idx] = leak_demand[leak_idx] - m*p
+                elif p <= 1.0e-4:
+                    a,b,c,d = self.leak_poly_coeffs[node_id]
+                    self.leak_demand_residual[leak_idx] = leak_demand[leak_idx] - (a*p**3+b*p**2+c*p+d)
+                else:
+                    self.leak_demand_residual[leak_idx] = leak_demand[leak_idx] - self.leak_Cd[node_id]*self.leak_area[node_id]*math.sqrt(2.0*self._g*p)
+            else:
+                self.leak_demand_residual[leak_idx] = leak_demand[leak_idx]
+
     def initialize_flow(self):
         flow = 0.001*np.ones(self.num_links)
         return flow
@@ -768,6 +840,10 @@ class ScipyModel(object):
             demand[junction_id] = self.junction_demand[junction_id]
         return demand
 
+    def initialize_leak_demand(self):
+        leak_demand = np.zeros(len(self._leak_ids))
+        return leak_demand
+
     def initialize_results_dict(self):
         # Data for results object
         self._sim_results = {}
@@ -778,6 +854,7 @@ class ScipyModel(object):
         self._sim_results['node_demand'] = []
         self._sim_results['node_expected_demand'] = []
         self._sim_results['node_pressure'] = []
+        self._sim_results['leak_demand'] = []
         self._sim_results['link_name'] = []
         self._sim_results['link_type'] = []
         self._sim_results['link_times'] = []
@@ -786,7 +863,8 @@ class ScipyModel(object):
     def save_results(self, x, results):
         head = x[:self.num_nodes]
         demand = x[self.num_nodes:2*self.num_nodes]
-        flow = x[2*self.num_nodes:]
+        flow = x[2*self.num_nodes:(2*self.num_nodes+self.num_links)]
+        leak_demand = x[(2*self.num_nodes+self.num_links):]
         for node_id in self._junction_ids:
             head_n = head[node_id]
             self._sim_results['node_type'].append('Junction')
@@ -794,6 +872,12 @@ class ScipyModel(object):
             self._sim_results['node_demand'].append(demand[node_id])
             self._sim_results['node_expected_demand'].append(self.junction_demand[node_id])
             self._sim_results['node_pressure'].append(head_n - self.node_elevations[node_id])
+            if node_id in self._leak_ids:
+                leak_idx = self._leak_ids.index(node_id)
+                leak_demand_n = leak_demand[leak_idx]
+                self._sim_results['leak_demand'].append(leak_demand_n)
+            else:
+                self._sim_results['leak_demand'].append(0.0)
         for node_id in self._tank_ids:
             head_n = head[node_id]
             demand_n = demand[node_id]
@@ -802,6 +886,12 @@ class ScipyModel(object):
             self._sim_results['node_demand'].append(demand_n)
             self._sim_results['node_expected_demand'].append(demand_n)
             self._sim_results['node_pressure'].append(head_n - self.node_elevations[node_id])
+            if node_id in self._leak_ids:
+                leak_idx = self._leak_ids.index(node_id)
+                leak_demand_n = leak_demand[leak_idx]
+                self._sim_results['leak_demand'].append(leak_demand_n)
+            else:
+                self._sim_results['leak_demand'].append(0.0)
         for node_id in self._reservoir_ids:
             demand_n = demand[node_id]
             self._sim_results['node_type'].append('Reservoir')
@@ -809,6 +899,7 @@ class ScipyModel(object):
             self._sim_results['node_demand'].append(demand_n)
             self._sim_results['node_expected_demand'].append(demand_n)
             self._sim_results['node_pressure'].append(0.0)
+            self._sim_results['leak_demand'].append(0.0)
 
         for link_id in self._link_ids:
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
@@ -826,6 +917,7 @@ class ScipyModel(object):
                            'expected_demand': self._sim_results['node_expected_demand'],
                            'head': self._sim_results['node_head'],
                            'pressure': self._sim_results['node_pressure'],
+                           'leak_demand': self._sim_results['leak_demand'],
                            'type': self._sim_results['node_type']}
         for key,value in node_dictionary.iteritems():
             node_dictionary[key] = np.array(value).reshape((ntimes,nnodes))
@@ -847,6 +939,8 @@ class ScipyModel(object):
         for tank_name, tank in self._wn.tanks():
             tank_id = self._node_name_to_id[tank_name]
             self.tank_head[tank_id] = tank.head
+            if tank._leak:
+                self.leak_status[node_id] = tank.leak_status
         for reservoir_name, reservoir in self._wn.reservoirs():
             reservoir_id = self._node_name_to_id[reservoir_name]
             self.reservoir_head[reservoir_id] = reservoir.head
@@ -856,6 +950,8 @@ class ScipyModel(object):
                 self.junction_demand[junction_id] = 0.0
             else:
                 self.junction_demand[junction_id] = junction.expected_demand
+            if junction._leak:
+                self.leak_status[node_id] = junction.leak_status
         for link_name, link in self._wn.links():
             link_id = self._link_name_to_id[link_name]
             self.link_status[link_id] = link.status
@@ -892,9 +988,11 @@ class ScipyModel(object):
             node.prev_head = node.head
             node.prev_demand = node.demand
             node.prev_expected_demand = node.expected_demand
+            node.prev_leak_demand = node.leak_demand
         for name, node in self._wn.tanks():
             node.prev_head = node.head
             node.prev_demand = node.demand
+            node.prev_leak_demand = node.leak_demand
         for name, node in self._wn.reservoirs():
             node.prev_head = node.head
             node.prev_demand = node.demand
@@ -908,11 +1006,31 @@ class ScipyModel(object):
     def store_results_in_network(self, x):
         head = x[:self.num_nodes]
         demand = x[self.num_nodes:self.num_nodes*2]
-        flow = x[self.num_nodes*2:]
-        for name, node in self._wn.nodes():
+        flow = x[self.num_nodes*2:(2*self.num_nodes+self.num_links)]
+        leak_demand = x[(2*self.num_nodes+self.num_links):]        
+        for name, node in self._wn.junctions():
             node_id = self._node_name_to_id[name]
             node.head = head[node_id]
             node.demand = demand[node_id]
+            if node._leak:
+                leak_idx = self._leak_ids.index(node_id)
+                node.leak_demand = leak_demand[leak_idx]
+            else:
+                node.leak_demand = 0.0
+        for name, node in self._wn.tanks():
+            node_id = self._node_name_to_id[name]
+            node.head = head[node_id]
+            node.demand = demand[node_id]
+            if node._leak:
+                leak_idx = self._leak_ids.index(node_id)
+                node.leak_demand = leak_demand[leak_idx]
+            else:
+                node.leak_demand = 0.0
+        for name, node in self._wn.reservoirs():
+            node_id = self._node_name_to_id[name]
+            node.head = head[node_id]
+            node.demand = demand[node_id]
+            node.leak_demand = 0.0
         for link_name, link in self._wn.links():
             link_id = self._link_name_to_id[link_name]
             link.flow = flow[link_id]
@@ -973,6 +1091,16 @@ class ScipyModel(object):
                          [df2]])
         x = np.linalg.solve(A,rhs)
         return (float(x[0][0]), float(x[1][0]), float(x[2][0]), float(x[3][0]))
+
+    def get_leak_poly_coeffs(self, node, node_id):
+        x1 = 0.0
+        f1 = 0.0
+        df1 = 1.0e-11
+        x2 = 1.0e-4
+        f2 = node.leak_discharge_coeff*node.leak_area*math.sqrt(2.0*self._g*x2)
+        df2 = 0.5*node.leak_discharge_coeff*node.leak_area*math.sqrt(2.0*self._g)*(x2)**(-0.5)
+        a,b,c,d = self.compute_polynomial_coefficients(x1,x2,f1,f2,df1,df2)
+        self.leak_poly_coeffs[node_id] = (a,b,c,d)
 
     def get_pdd_poly1_coeffs(self, node, node_id):
         Pmin = self.minimum_pressures[node_id]
@@ -1047,13 +1175,15 @@ class ScipyModel(object):
                     string = string+'{0:<6.2f}'.format(values[i])
             return string
 
-        print construct_string('variable',[node_name for node_name, node in self._wn.nodes()]+[node_name for node_name, node in self._wn.nodes()]+[link_name for link_name, link in self._wn.links()])
+        print construct_string('variable',[node_name for node_name, node in self._wn.nodes()]+[node_name for node_name, node in self._wn.nodes()]+[link_name for link_name, link in self._wn.links()]+[self._node_id_to_name[node_id] for node_id in self._leak_ids])
         for node_id in xrange(self.num_nodes):
             print construct_string(self._node_id_to_name[node_id], jacobian.getrow(node_id).toarray()[0])
         for node_id in xrange(self.num_nodes):
             print construct_string(self._node_id_to_name[node_id], jacobian.getrow(self.num_nodes+node_id).toarray()[0])
         for link_id in xrange(self.num_links):
             print construct_string(self._link_id_to_name[link_id], jacobian.getrow(2*self.num_nodes+link_id).toarray()[0])
+        for node_id in self._leak_ids:
+            print construct_string(self._node_id_to_name[node_id], jacobian.getrow(2*self.num_nodes+self.num_links+self._leak_ids.index(node_id)).toarray()[0])
 
     def print_jacobian_nonzeros(self):
         print('{0:<15s}{1:<15s}{2:<25s}{3:<25s}{4:<15s}'.format('row index','col index','eqnuation','variable','value'))

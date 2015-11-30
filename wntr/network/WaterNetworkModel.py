@@ -1571,6 +1571,8 @@ class Node(object):
         self.head = None
         self.prev_demand = None
         self.demand = None
+        self.leak_demand = None
+        self.prev_leak_demand = None
 
     def __str__(self):
         """
@@ -1670,12 +1672,11 @@ class Junction(Node):
         self.minimum_pressure = 0.0
         "The minimum pressure attribute is used for pressure-dependent demand simulations. Below this pressure, the customer will not receive any water."
         self._leak = False
+        self.leak_status = False
         self.leak_area = 0.0
         self.leak_discharge_coeff = 0.0
-        self.leak_start_time = 0
-        self.leak_end_time = None
 
-    def add_leak(self, area, discharge_coeff = 0.75, start_time = 0, end_time = np.inf):
+    def add_leak(self, area, discharge_coeff = 0.75):
         """
         Method to add a leak to a tank. Leaks are modeled by:
 
@@ -1706,12 +1707,6 @@ class Junction(Node):
         self._leak = True
         self.leak_area = area
         self.leak_discharge_coeff = discharge_coeff
-        
-        self.leak_start_time = start_time 
-        if end_time is not None:
-            self.leak_end_time = end_time 
-        else:
-            self.leak_end_time = np.inf
 
     def remove_leak(self):
         """
@@ -1777,13 +1772,12 @@ class Tank(Node):
         self.min_vol = min_vol
         self.vol_curve = vol_curve
         self._leak = False
+        self.leak_status = False
         self.leak_area = 0.0
         self.leak_discharge_coeff = 0.0
-        self.leak_start_time = 0
-        self.leak_end_time = np.inf
         self.bulk_rxn_coeff = None
 
-    def add_leak(self, area, discharge_coeff = 0.75, start_time = 0, end_time = np.inf):
+    def add_leak(self, area, discharge_coeff = 0.75):
         """
         Method to add a leak to a tank. Leaks are modeled by:
 
@@ -1815,12 +1809,6 @@ class Tank(Node):
         self.leak_area = area
         self.leak_discharge_coeff = discharge_coeff
         
-        self.leak_start_time = start_time 
-        if end_time is not None:
-            self.leak_end_time = end_time
-        else:
-            self.leak_end_time = np.inf
-
     def remove_leak(self):
         """
         Method to remove a leak from a tank.
