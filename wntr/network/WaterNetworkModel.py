@@ -545,6 +545,23 @@ class WaterNetworkModel(object):
         except ValueError:
             pass
 
+    def add_pump_outage(self, pump_name, start_time, end_time):
+        pump = self.get_link(pump_name)
+        opened_action_obj = wntr.network.TargetAttributeControlAction(pump, 'status', LinkStatus.opened)
+        closed_action_obj = wntr.network.TargetAttributeControlAction(pump, 'status', LinkStatus.closed)
+
+        control = wntr.network.TimeControl(self, end_time, 'SIM_TIME', False, opened_action_obj)
+        control._priority = 0
+        self.add_control(control)
+
+        control = wntr.network.TimeControl(self, start_time, 'SIM_TIME', False, closed_action_obj)
+        control._priority = 3
+        self.add_control(control)
+
+    def all_pump_outage(self, start_time, end_time):
+        for pump_name, pump in self.pumps():
+            self.add_pump_outage(pump_name, start_time, end_time)
+
     def remove_link(self, name):
         """
         Method to remove a link from the water network object. Note
