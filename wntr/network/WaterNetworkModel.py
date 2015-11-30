@@ -556,8 +556,7 @@ class WaterNetworkModel(object):
            Name of the link to be removed
         """
         link = self.get_link(name)
-        status = link.get_base_status()
-        if status == LinkStatus.cv:
+        if link.cv:
             self._check_valves.remove(name)
             warnings.warn('You are removing a pipe with a check valve.')
         self._graph.remove_edge(link.start_node(), link.end_node(), key=name)
@@ -574,14 +573,15 @@ class WaterNetworkModel(object):
         else:
             raise RuntimeError('Link Type not Recognized')
 
+        warnings.warn('Michael needs to update the remove_link method')
         # remove controls
-        if name in self.time_controls.keys():
-            self.time_controls.pop(name)
-            warnings.warn('A time control associated with link '+name+' has been removed as well as the link.')
-
-        if name in self.conditional_controls.keys():
-            self.conditional_controls.pop(name)
-            warnings.warn('A conditional control associated with link '+name+' has been removed as well as the link.')
+        #if name in self.time_controls.keys():
+        #    self.time_controls.pop(name)
+        #    warnings.warn('A time control associated with link '+name+' has been removed as well as the link.')
+        #
+        #if name in self.conditional_controls.keys():
+        #    self.conditional_controls.pop(name)
+        #    warnings.warn('A conditional control associated with link '+name+' has been removed as well as the link.')
 
     def remove_node(self, name):
         """
@@ -689,7 +689,7 @@ class WaterNetworkModel(object):
         self.add_pipe(pipe_name_on_start_node_side, pipe.start_node(), junction_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
         self.add_pipe(pipe_name_on_end_node_side, junction_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
 
-        if pipe.get_base_status()==LinkStatus.cv:
+        if pipe.cv:
             warnings.warn('You are splitting a pipe with a check valve. Both new pipes will have check valves.')
 
     def get_node(self, name):

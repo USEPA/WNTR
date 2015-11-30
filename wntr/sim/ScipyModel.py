@@ -574,17 +574,28 @@ class ScipyModel(object):
             else:
                 raise RuntimeError('Developers missed a type of link in set_jacobian_constants')
 
+        for node_id in self._leak_ids:
+            if not self.leak_status[node_id]:
+                self.jac_values[value_ndx] = 0.0
+                value_ndx += 1
+            elif node_id in self.isolated_junction_ids:
+                self.jac_values[value_ndx] = 0.0
+                value_ndx += 1
+            else:
+                value_ndx += 1
+            value_ndx += 1
+
         self.jacobian.data = self.jac_values
 
     def get_jacobian(self, x):
 
         if self.pressure_driven:
             value_ndx = self.jac_ndx_of_first_NZ
-            heads = x[:self.num_nodes]
         else:
             value_ndx = self.jac_ndx_of_first_headloss
 
-        flows = x[self.num_nodes*2:]
+        heads = x[:self.num_nodes]
+        flows = x[self.num_nodes*2:2*self.num_nodes+self.num_links]
 
         if self.pressure_driven:
             # Set the jacobian entries for pdd equations that depend on variable values
@@ -675,6 +686,27 @@ class ScipyModel(object):
                         value_ndx += 1
                     elif self.link_status[link_id] == LinkStatus.closed:
                         value_ndx += 3
+
+        # Jacobian entries for leak demand equations that depend on variables
+        m = 1.0e-11
+        for node_id in self._leak_ids:
+            if not self.leak_status[node_id]:
+                value_ndx += 2
+            elif node_id in self.isolated_junction_ids:
+                value_ndx += 2
+            else:
+                leak_idx = self._leak_idx[node_id]
+                p = heads[node_id] - self.node_elevations[node_id]
+                if p <= 0.0:
+                    self.jac_values[value_ndx] = -m
+                    value_ndx += 2
+                elif p <= 1.0e-4:
+                    a,b,c,d = self.leak_poly_coeffs[node_id]
+                    self.jac_values[value_ndx] = -3.0*a*p**2.0-2.0*b*p-c
+                    value_ndx += 2
+                else:
+                    self.jac_values[value_ndx] = -0.5*self.leak_Cd[node_id]*self.leak_area[node_id]*math.sqrt(2.0*self._g)*p**(-0.5)
+                    value_ndx += 2
 
         self.jacobian.data = self.jac_values
         #if self._wn.sim_time == 4591.0:
@@ -940,7 +972,7 @@ class ScipyModel(object):
             tank_id = self._node_name_to_id[tank_name]
             self.tank_head[tank_id] = tank.head
             if tank._leak:
-                self.leak_status[node_id] = tank.leak_status
+                self.leak_status[tank_id] = tank.leak_status
         for reservoir_name, reservoir in self._wn.reservoirs():
             reservoir_id = self._node_name_to_id[reservoir_name]
             self.reservoir_head[reservoir_id] = reservoir.head
@@ -951,7 +983,7 @@ class ScipyModel(object):
             else:
                 self.junction_demand[junction_id] = junction.expected_demand
             if junction._leak:
-                self.leak_status[node_id] = junction.leak_status
+                self.leak_status[junction_id] = junction.leak_status
         for link_name, link in self._wn.links():
             link_id = self._link_name_to_id[link_name]
             self.link_status[link_id] = link.status
