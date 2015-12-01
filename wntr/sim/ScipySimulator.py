@@ -28,6 +28,8 @@ class ScipySimulator(WaterNetworkSimulator):
         super(ScipySimulator, self).__init__(wn, pressure_driven)
         self._get_demand_dict()
 
+        self.time_per_step = []
+
     def get_time(self):
         s = int(self._wn.sim_time)
         h = s/3600
@@ -77,8 +79,8 @@ class ScipySimulator(WaterNetworkSimulator):
 
         while True:
 
-            #print ''
-            #print ''
+            if not resolve:
+                start_step_time = time.time()
 
             if not resolve:
                 trial = 0
@@ -139,6 +141,9 @@ class ScipySimulator(WaterNetworkSimulator):
 
             if self._wn.sim_time > self._wn.options.duration:
                 break
+
+            if not resolve:
+                self.time_per_step.append(time.time()-start_step_time)
 
         model.get_results(results)
         return results
