@@ -255,6 +255,7 @@ class ScipyModel(object):
         self.link_start_nodes = range(self.num_links)
         self.link_end_nodes = range(self.num_links)
         self.pipe_resistance_coefficients = range(self.num_links)
+        self.pipe_diameters = {}
         self.head_curve_coefficients = {}
         self.pump_poly_coefficients = {} # {pump_id: (a,b,c,d)} a*x**3 + b*x**2 + c*x + d
         self.pump_powers = {}
@@ -269,6 +270,7 @@ class ScipyModel(object):
             self.link_end_nodes[link_id] = end_node_id
             if link_id in self._pipe_ids:
                 self.pipe_resistance_coefficients[link_id] = self._Hw_k*(link.roughness**(-1.852))*(link.diameter**(-4.871))*link.length # Hazen-Williams
+                self.pipe_diameters[link_id] = link.diameter
             elif link_id in self._valve_ids:
                 self.pipe_resistance_coefficients[link_id] = self._Dw_k*0.02*link.diameter**(-5)*link.diameter*2
             else:
@@ -891,6 +893,7 @@ class ScipyModel(object):
         self._sim_results['link_type'] = []
         self._sim_results['link_times'] = []
         self._sim_results['link_flowrate'] = []
+        self._sim_results['link_velocity'] = []
 
     def save_results(self, x, results):
         head = x[:self.num_nodes]
@@ -933,17 +936,27 @@ class ScipyModel(object):
             self._sim_results['node_pressure'].append(0.0)
             self._sim_results['leak_demand'].append(0.0)
 
-        for link_id in self._link_ids:
+        for link_id in self._pipe_ids:
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
+            self._sim_results['link_velocity'].append(abs(flow[link_id])*4.0/(math.pi*self.pipe_diameters[link_id]**2.0))
+        for link_id in self._pump_ids:
+            self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
+            self._sim_results['link_flowrate'].append(flow[link_id])
+            self._sim_results['link_velocity'].append(0.0)
+        for link_id in self._valve_ids:
+            self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
+            self._sim_results['link_flowrate'].append(flow[link_id])
+            self._sim_results['link_velocity'].append(0.0)
 
     def get_results(self,results):
         ntimes = len(results.time)
         nnodes = self.num_nodes
         nlinks = self.num_links
         tmp_node_names = self._junction_ids+self._tank_ids+self._reservoir_ids
+        tmp_link_names = self._pipe_ids+self._pump_ids+self._valve_ids
         node_names = [self._node_id_to_name[i] for i in tmp_node_names]
-        link_names = [self._link_id_to_name[i] for i in self._link_ids]
+        link_names = [self._link_id_to_name[i] for i in tmp_link_names]
 
         node_dictionary = {'demand': self._sim_results['node_demand'],
                            'expected_demand': self._sim_results['node_expected_demand'],
@@ -956,6 +969,7 @@ class ScipyModel(object):
         results.node = pd.Panel(node_dictionary, major_axis=results.time, minor_axis=node_names)
 
         link_dictionary = {'flowrate':self._sim_results['link_flowrate'],
+                           'velocity':self._sim_results['link_velocity'],
                            'type':self._sim_results['link_type']}
         for key, value in link_dictionary.iteritems():
             link_dictionary[key] = np.array(value).reshape((ntimes, nlinks))
