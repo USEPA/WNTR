@@ -1,27 +1,38 @@
 Installation
 ======================================
 
-Requirements for WNTR include Python 2.7 along with several Python packages and 
-Ipopt. WNTR can be installed using git.  More information on installing and 
-using git can be found at http://git-scm.com. 
+WNTR can be installed as a python package using pip or from source using git.  
+More information on installing and using pip can be found at  https://pypi.python.org/pypi/pip.
+More information on installing and using git can be found at http://git-scm.com. 
 
-To clone the WNTR repository, use the following commands::
+To install using pip (**NOT COMPLETE**)::
 
-	git clone https://software.sandia.gov/git/resilience
+	pip install wntr
+	
+To build WNTR from source using an SSH or HTTPS protocol (**NOT COMPLETE. Repository should be hosted at https://github.com/OpenWaterAnalytics and renamed wntr**)::
+
+	git clone https://software.sandia.gov/git/resilience 
 	cd resilience
 	python setup.py install
 
-Developers should use the 'develop' option instead of 'install'.  You can also 
-clone the git repository using ssh instead of https.
+Developers can build WNTR in development mode::
+	
+	git clone https://software.sandia.gov/git/resilience
+	cd resilience
+	python setup.py develop
+	
+Requirements
+-------------
+Requirements for WNTR include Python 2.7 along with several Python packages. 
 
 Python
-------
+^^^^^^^
 Information on installing and using python can be found at 
 https://www.python.org/.  Python distributions can also be used to manage 
 the Python interface.  Python distributions include Python(x,y) (for Windows) 
 and Anaconda (for Windows and Linux). These distributions include most of the 
 Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
-Matplotlib, and Scipy. Pyomo would need to be installed separately.
+Matplotlib, and Sympy. 
 
 Python(x,y) can be downloaded from https://code.google.com/p/pythonxy/.  A 'Full' installation is suggested.
 
@@ -41,49 +52,47 @@ editing code.  SciTE recognizes many languages (including Python and YML) and
 includes syntax highlighting, indentation, and function recognition. 
 
 Python packages
----------------
+^^^^^^^^^^^^^^^^^
 The following python packages are required for WNTR:
 
-* Pyomo version 4.0.9682 [Hart2014]_: optimization modeling language used for hydraulic simulation, 
-  https://software.sandia.gov/trac/pyomo
-* Numpy version X: support large, multi-dimensional arrays and matrices, 
+* Numpy: support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
-* Scipy version X: efficient routines for numerical integration, 
+* Scipy: efficient routines for numerical integration, 
   http://www.scipy.org/
-* NetworkX version X [Hagberg2008]_: create and analyze complex networks, 
+* NetworkX [Hagberg2008]_: create and analyze complex networks, 
   https://networkx.github.io/
-* Pandas version X [McKinney2013]_: analysis and storage of time series data, 
+* Pandas [McKinney2013]_: analysis and storage of time series data, 
   http://pandas.pydata.org/
-* Matplotlib version X: produce figures, 
+* Matplotlib: produce figures, 
   http://matplotlib.org/
 
-The following packages are optional for WNTR:
+Packages can be installed using pip.
 
-* Sympy version X: convert units, 
+Optional dependencies
+-------------------------
+
+The following python packages are optional for WNTR:
+
+* Sympy: convert units, 
   http://www.sympy.org/en/index.html
-* Numpydoc version X: build the user manual,
+* Numpydoc: build the user manual,
   https://github.com/numpy/numpydoc
-  
-Most packages can be installed using pip, which is distributed with 
-standard Python.  
-For additional information on using pip, see https://pypi.python.org/pypi/pip.
 
-IPOPT
------
-Ipopt (Interior Point OPTimizer) is software for large scale non-linear 
-optimization. The Ipopt solver is used in WNTR for hydraulic simulation.  
-The HSL library also needs to be installed.
+WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 
+Pyomo, Interior Point OPTimizer (Ipopt), and HSL.
 
-Download Ipopt from http://www.coin-or.org/download/binary/CoinAll/.  
+* Pyomo [Hart2014]_: optimization modeling language and optimization capabilities, https://software.sandia.gov/trac/pyomo.  
+  Version 4.0.9682 is recommended.
+* Ipopt: large scale non-linear optimization, http://www.coin-or.org/download/binary/CoinAll/.  
 
-* Select COIN-OR-1.7.4-win32-msvc11.exe for Windows 
-* Download and run the executable
+  * Select COIN-OR-1.7.4-win32-msvc11.exe for Windows 
+  * Download and run the executable
 
-Download HSL [HSL2013]_ from http://www.hsl.rl.ac.uk/ipopt/.
+* HSL [HSL2013]_: solvers for Ipopt, http://www.hsl.rl.ac.uk/ipopt/.
 
-* Select Windows or Linux in the COIN-HSL Archive, Personal License box
-* Select Personal License, fill out the form and accept
-* Download the zip file from the link sent via email
-* Extract the zip file and save the files to the bin folder for Ipopt.  For example, if Ipopt was saved 
-  in C:/Program Files/COIN-OR/1.7.4/win32-msvc11, extract the HSL zip file, copy the files from the extracted folder, and paste them in 
-  C:/Program Files/COIN-OR/1.7.4/win32-msvc11/bin.
+  * Select Windows or Linux in the COIN-HSL Archive, Personal License box
+  * Select Personal License, fill out the form and accept
+  * Download the zip file from the link sent via email
+  * Extract the zip file and save the files to the bin folder for Ipopt.  For example, if Ipopt was saved 
+    in C:/Program Files/COIN-OR/1.7.4/win32-msvc11, extract the HSL zip file, copy the files from the extracted folder, and paste them in 
+    C:/Program Files/COIN-OR/1.7.4/win32-msvc11/bin.

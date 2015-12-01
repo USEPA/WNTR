@@ -4,19 +4,71 @@ import math
 import numpy as np
 from collections import Counter
 
-def entropy(G, sink = None):
+def entropy(G, sources=None, sinks=None):
+    """ 
+    Compute entropy, equations from [1].
+    
+    Entropy is a measure of uncertainty in a random variable.  
+    In a water distribution network model, the random variable is 
+    flow in the pipes and entropy can be used to measure alternate flow paths
+    when a network component fails.  A network that carries maximum entropy 
+    flow is considered reliable with multiple alternate paths.  
+
+    Parameters
+    ----------
+    G : NetworkX or WNTR graph
+        Entropy is computed using a directed graph based on pipe flow direction.  
+        The 'weight' of each link is equal to the flow rate.
+    
+    sources : list of strings, optional (default = all reservoirs)
+        List of node names to use as sources.
+        
+    sinks : list of strings, optional (default = all nodes)
+        List of node names to use as sinks.
+        
+    Returns
+    -------
+    S : dict
+        Node entropy, {node name: entropy value}
+        
+    Shat : float
+        System entropy
+
+    Examples
+    --------
+    The following example computes entropy using Net3 flow directions at time 3600 s.
+    
+    >>> inp_file = 'networks/Net3.inp'
+    >>> wn = wntr.network.WaterNetworkModel(inp_file)
+    >>> sim = wntr.sim.EpanetSimulator(wn)
+    >>> results = sim.run_sim()
+    >>> G = wn.get_graph_deep_copy()
+    >>> attr = results.link.loc['flowrate', 3600, :]
+    >>> G.weight_graph(link_attribute=attr) 
+    >>> [S, Shat] = wntr.metrics.entropy(G)
+    >>> wntr.network.draw_graph(wn, node_attribute = S, title = 'Node entropy")
+    >>> Shat
+    4.05
+    
+    References
+    -----------
+    [1] Awumah K, Goulter I, Bhatt SK. (1990). Assessment of reliability in 
+    water distribution networks using entropy based measures. Stochastic 
+    Hydrology and Hydraulics, 4(4), 309-320 
+    """
     
     if G.is_directed() == False:
         return
     
-    sources = [key for key,value in nx.get_node_attributes(G,'type').items() if value == 'reservoir' ]
+    if sources is None:
+        sources = [key for key,value in nx.get_node_attributes(G,'type').items() if value == 'reservoir' ]
     
-    if sink is None:
-        sink = G.nodes()
+    if sinks is None:
+        sinks = G.nodes()
         
     S = {}  
     Q = {}
-    for nodej in sink:
+    for nodej in sinks:
         if nodej in sources:
             S[nodej] = 0 # nodej is the source
             continue 
@@ -83,7 +135,7 @@ def entropy(G, sink = None):
 
     # Equation 3
     Shat = 0
-    for nodej in sink:
+    for nodej in sinks:
         if not np.isnan(S[nodej]):
             if nodej not in sources:
                 if Q[nodej]/Q0 > 0:
@@ -91,4 +143,4 @@ def entropy(G, sink = None):
                         (Q[nodej]*S[nodej])/Q0 - \
                         Q[nodej]/Q0*math.log(Q[nodej]/Q0)
         
-    return [S, Shat, sp, dk] 
+    return [S, Shat] 

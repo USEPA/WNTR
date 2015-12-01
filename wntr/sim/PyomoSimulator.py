@@ -191,6 +191,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         self.prep_time_before_main_loop = 0.0
         self.solve_step = {}
         self.build_model_time = {}
+        self.time_per_step = []
 
     def _initialize_simulation(self, fixed_demands=None):
 
@@ -938,6 +939,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         start_main_loop_time = time.time()
         self.prep_time_before_main_loop = start_main_loop_time - start_run_sim_time
         while t < self._n_timesteps and step_iter < self._max_step_iter:
+            if step_iter == 0:
+                start_step_time = time.time()
 
             # HACK to work around circular references here and the
             # fact that 2.7.10 does not appear to collect memory as
@@ -1093,6 +1096,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                 #    raise RuntimeError('Solver did not converge.')
 
                 raise RuntimeError('Simulation did not converge at timestep ' + str(t) + ' in '+str(self._max_step_iter)+' trials.')
+
+            if step_iter == 0:
+                self.time_per_step.append(time.time()-start_step_time)
 
         ######## END OF MAIN SIMULATION LOOP ##########
 

@@ -1,0 +1,9 @@
+The simulator performance is tested each time Jenkins runs a build. 
+
+total_sim_time is the time to build the water network object, build the simulator object, and run the simulation.
+
+time_per_step is the average time the main simulation loop requires to run for that time step. If that time step requires multiple trials, the time for all of the trials is added together. Another way to think about it is that this is the total time required by the main simulation loop divided by the number of time steps (not trials).
+
+num_steps is the number of time steps (not trials)
+
+the average differences are averaged over all nodes/links and all result times (not necessarily time steps).

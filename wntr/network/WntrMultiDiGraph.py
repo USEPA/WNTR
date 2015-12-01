@@ -1,4 +1,6 @@
 import networkx as nx
+import numpy as np
+import pandas as pd
 
 class WntrMultiDiGraph(nx.MultiDiGraph):
     """
@@ -68,7 +70,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return terminal_nodes
     
     def bridges(self):
-        """ Get bridge links
+        """ Get bridge links. Uses an undirected graph.
         
         Parameters
         ----------
@@ -92,7 +94,96 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         
         return bridges
     
+    def central_point_dominance(self):
+        """ Compute central point dominance.
         
+        Returns
+        -------
+        cpd : float
+            Central point dominance
+        """
+        bet_cen = nx.betweenness_centrality(self)
+        bet_cen = bet_cen.values()
+        cpd = sum(max(bet_cen) - np.array(bet_cen))/len(bet_cen)
+        
+        return cpd
+        
+    def spectral_gap(self):
+        """ Spectral gap. Difference in the first and second eigenvalue of 
+        the adj matrix
+        
+        Returns
+        -------
+        spectral_gap : float
+            Spectral gap
+        """
+        
+        eig = nx.adjacency_spectrum(self)
+        spectral_gap = eig[0] - eig[1]
+
+        return spectral_gap.real
+
+    def algebraic_connectivity(self):
+        """ Algebraic connectivity. Second smallest eigenvalue of the normalized
+        Laplacian matrix of a network. Uses an undirected graph.
+        
+        Returns
+        -------
+        alg_con : float
+            Algebraic connectivity
+        """
+        eig = nx.laplacian_spectrum(self.to_undirected())
+        alg_con = eig[-2]
+        
+        return alg_con
+    
+    def critical_ratio_defrag(self):
+        """ Critical ratio of defragmentation.
+        
+        Returns
+        -------
+        fd : float
+            Critical ratio of defragmentation
+        """
+        node_degree = self.degree()
+        tmp = np.mean(pow(np.array(node_degree.values()),2))
+        fc = 1-(1/((tmp/np.mean(node_degree.values()))-1))
+
+        return fc
+        
+    def links_in_simple_paths(self, sources, sinks):
+        """ 
+        Count all links in a simple path between sources and sinks
+        
+        Parameters
+        -----------
+        sources : list
+            List of source nodes
+            
+        sinks : list
+            List of sink nodes
+        
+        Returns
+        -------
+        link_count : dict
+            A dictonary with the number of times each link is involved in a path
+        """
+        link_names = [name for (node1, node2, name) in self.edges(keys=True)]
+        link_count = pd.Series(data = 0, index=link_names)
+        
+        for sink in sinks:
+            for source in sources:
+                if nx.has_path(self, source, sink):
+                    paths = _all_simple_paths(self,source,target=sink)
+                    for path in paths:
+                        for i in range(len(path)-1):
+                            links = self[path[i]][path[i+1]].keys()
+                            for link in links:
+                                link_count[link] = link_count[link]+1
+        
+        return link_count
+     
+       
 def _all_simple_paths(G, source, target, cutoff=None):
     """Adaptation of nx.all_simple_paths for mutligraphs"""
     

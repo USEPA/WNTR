@@ -8,11 +8,11 @@ plt.close('all')
 inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
-sceanrio_TRACE = ['TRACE', '111']
+WQscenario = wntr.scenario.Waterquality('TRACE', ['111'])
 
 # Simulate hydraulics
 sim = wntr.sim.EpanetSimulator(wn)
-results = sim.run_sim(WQ = sceanrio_TRACE)
+results = sim.run_sim(WQscenario)
 
 ### Node Animation ###
 node_values = results.node.loc['quality', 0, :]

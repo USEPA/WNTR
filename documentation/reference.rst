@@ -1,6 +1,8 @@
 Reference
 ==============
 
+.. [Awumah1990] Awumah K, Goulter I, Bhatt SK. (1990). Assessment of reliability in water distribution networks using entropy based measures. Stochastic Hydrology and Hydraulics, 4(4), 309-320
+
 .. [Barker2013] Barker et al (2013) Resilience-based network component importance measures, Reliability Engineering and System Safety,   117(2013) 89 -- 97
 
 .. [Hagberg2008] Hagberg A.A., Schult D.A, Swart P.J., Exploring network structure, dynamics, and function using NetworkX, in Proceedings of the 7th Python in Science Conference (SciPy2008), Gael Varoquaux, Travis Vaught, and Jarrod Millman (Eds), (Pasadena, CA USA), pp. 11-15, Aug 2008
@@ -50,6 +52,8 @@ Reference
 .. [Su1987] Yu-Chun Su, Larry W. Mays, Ning Duan, and Kevin E. Lansey. Reliability-based optimization model for water distribution systems. Journal of Hydraulic Engineering, 113(12):1539–1556, 1987.
 
 .. [Trifunovic2012] Nemanja Trifunovic. Pattern Recognition for Reliability Assessment of Water Distribution Networks. PhD thesis, University of Belgrade, 2012.
+
+.. [Todini2000] Todini E. Looped water distribution networks design using a resilience index based heuristic approach. Urban Water, 2(2), 115-122.
 
 .. [Wachter2006] A. Wachter and L.T. Biegler. On the Implementation of an Interior-Point Filter Line-Search Algorithm for Large-Scale Nonlinear Programming. Mathematical Programming, 106(1): 25–57, 2006.
 

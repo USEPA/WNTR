@@ -34,7 +34,7 @@ def test_Todini_Fig2_optCost_GPM():
     results = sim.run_sim()
 
     # Compute todini index
-    todini = wntr.metrics.todini(results, wn, 30) # h* = 30 m
+    todini = wntr.metrics.todini(results.node, results.link, wn, 30) # h* = 30 m
     
     print 'Todini: Fig2_optCost'
     print todini[0]
@@ -55,7 +55,7 @@ def test_Todini_Fig2_optCost_CMH():
     results = sim.run_sim()
 
     # Compute todini index
-    todini = wntr.metrics.todini(results, wn, 30) # h* = 30 m
+    todini = wntr.metrics.todini(results.node, results.link, wn, 30) # h* = 30 m
     
     print 'Todini: Fig2_optCost'
     print todini[0]
@@ -76,7 +76,7 @@ def test_Todini_Fig2_solA_GPM():
     results = sim.run_sim()
 
     # Compute todini index
-    todini = wntr.metrics.todini(results, wn, 30) # h* = 30 m
+    todini = wntr.metrics.todini(results.node, results.link, wn, 30) # h* = 30 m
     
     print 'Todini: Fig2_solA'
     print todini[0]
@@ -97,7 +97,7 @@ def test_Todini_Fig2_solA_CMH():
     results = sim.run_sim()
 
     # Compute todini index
-    todini = wntr.metrics.todini(results, wn, 30) # h* = 30 m
+    todini = wntr.metrics.todini(results.node, results.link, wn, 30) # h* = 30 m
     
     print 'Todini: Fig2_solA'
     print todini[0]
@@ -119,7 +119,7 @@ def test_BWSN_Network_2():
     results = sim.run_sim()
 
     # Compute todini index
-    todini = wntr.metrics.todini(results, wn, 21.1)
+    todini = wntr.metrics.todini(results.node, results.link, wn, 21.1)
     # len(time) <> len(todini) becuase the hydrulic simulation ends at 27 hours
     # the system is disconnected at that time
     
@@ -158,7 +158,7 @@ def test_Net6():
     results = sim.run_sim()
 
     # Compute todini index
-    todini = wntr.metrics.todini(results, wn, 21.1)
+    todini = wntr.metrics.todini(results.node, results.link, wn, 21.1)
     
     todini = np.array(todini)
     Tave = np.mean(todini)

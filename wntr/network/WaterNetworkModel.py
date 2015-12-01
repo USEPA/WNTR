@@ -1022,6 +1022,20 @@ class WaterNetworkModel(object):
         """
         nx.set_node_attributes(self._graph, 'pos', {name: coordinates})
 
+    def scale_node_coordinates(self, scale):
+        """
+        Scale node coordinates, using 1:scale.  Scale should be in meters.
+        
+        Parameters
+        -----------
+        scale : float
+            Coordinate scale multiplier
+        """
+        pos = nx.get_node_attributes(self._graph, 'pos')
+        
+        for name, node in self._nodes.iteritems():
+            self.set_node_coordinates(name, (pos[name][0]*scale, pos[name][1]*scale))
+        
     def shifted_time(self):
         """ 
         Returns the time in seconds shifted by the
@@ -1179,7 +1193,7 @@ class WaterNetworkModel(object):
             if pump.info_type == 'HEAD':
                 print >> f, text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, pump.curve.name, ';')
             elif pump.info_type == 'POWER':
-                print >> f, text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, str(pump.power), ';')
+                print >> f, text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, str(pump.power/1000.0), ';')
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
         # Print valve information
@@ -1188,15 +1202,18 @@ class WaterNetworkModel(object):
         label_format = '{:10s} {:10s} {:10s} {:10s} {:10s} {:10s} {:10s}'
         print >> f, label_format.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss')
         for valve_name, valve in self.links(Valve):
-            print >> f, text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve.setting, valve.minor_loss, ';')
+            print >> f, text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve.current_setting, valve.minor_loss, ';')
 
         # Print status information
         print >> f, '[STATUS]'
         text_format = '{:10s} {:10s}'
         label_format = '{:10s} {:10s}'
         print >> f, label_format.format(';ID', 'Setting')
-        for link_name, link in self.links():
-            if link.get_base_status() is not None and link.get_base_status() != LinkStatus.cv:
+        for link_name, link in self.links(Pump):
+            if link.get_base_status() == LinkStatus.closed:
+                print >> f, text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status()))
+        for link_name, link in self.links(Valve):
+            if link.get_base_status() == LinkStatus.closed or link.get_base_status()==LinkStatus.opened:
                 print >> f, text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status()))
 
         # Print pattern information
@@ -1262,6 +1279,11 @@ class WaterNetworkModel(object):
 
             print >> f,''
 
+        # Report
+        print >> f, '[REPORT]'
+        print >> f, 'Status Yes'
+        print >> f, 'Summary yes'
+
         # Options
         print >> f, '[OPTIONS]'
         text_format_string = '{:20s} {:20s}'
@@ -1279,6 +1301,7 @@ class WaterNetworkModel(object):
         print >>f, text_format_float.format('SPECIFIC GRAVITY', self.options.specific_gravity)
         print >>f, text_format_float.format('TRIALS', self.options.trials)
         print >>f, text_format_float.format('ACCURACY', self.options.accuracy)
+        print >>f, text_format_float.format('CHECKFREQ', self.options.checkfreq)
         if self.options.unbalanced_value is None:
             print >>f, text_format_string.format('UNBALANCED', self.options.unbalanced_option)
         else:
@@ -1420,6 +1443,7 @@ class WaterNetworkOptions(object):
         self.emitter_exponent = 0.5
         self.tolerance = 0.01
         self.map = None
+        self.checkfreq = 2
 
         # Reaction Options
         self.bulk_rxn_order = 1.0

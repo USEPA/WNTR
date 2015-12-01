@@ -6,6 +6,9 @@ except ImportError:
 from WaterNetworkSimulator import *
 import pandas as pd
 from wntr.utils import convert
+import logging
+
+logger = logging.getLogger('wntr.sim.EpanetSimulator')
 
 class EpanetSimulator(WaterNetworkSimulator):
     """
@@ -27,7 +30,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         self.prep_time_before_main_loop = 0.0
         self.solve_step = {}
     
-    def run_sim(self, WQ = None, convert_units=True):
+    def run_sim(self, WQ=None, convert_units=True):
         """
         Run water network simulation using epanet.
 
@@ -119,46 +122,40 @@ class EpanetSimulator(WaterNetworkSimulator):
         if WQ:
             node_dictonary['quality'] = []
 
-            wq_type = WQ[0]
-            if wq_type == 'CHEM': 
-                wq_node = WQ[1]
-                wq_sourceType = WQ[2]
-                wq_sourceQual = WQ[3]
-                wq_startTime = WQ[4]
-                wq_endTime = WQ[5]
-                if wq_sourceType == 'CONCEN':
-                    wq_sourceType = pyepanet.EN_CONCEN
-                elif wq_sourceType == 'MASS':
-                    wq_sourceType = pyepanet.EN_MASS
-                elif wq_sourceType == 'FLOWPACED':
-                    wq_sourceType = pyepanet.EN_FLOWPACED
-                elif wq_sourceType == 'SETPOINT':
-                    wq_sourceType = pyepanet.EN_SETPOINT
-                else:
-                    print "Invalid Source Type for CHEM scenario"
+            if WQ.quality_type == 'CHEM': 
                 
-                if wq_endTime == -1:
-                    wq_endTime = enData.ENgettimeparam(pyepanet.EN_DURATION)
-                if wq_startTime > wq_endTime:
-                    raise RuntimeError('Start time is greater than end time')
-                    
                 # Set quality type
                 enData.ENsetqualtype(pyepanet.EN_CHEM, 'Chemical', 'mg/L', '')
                 
                 # Set source quality
-                wq_sourceQual = convert('Concentration', flowunits, wq_sourceQual, MKS = False) # kg/m3 to mg/L
-                nodeid = enData.ENgetnodeindex(wq_node)
-                enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEQUAL, wq_sourceQual)
+                wq_sourceQual = convert('Concentration', flowunits, WQ.source_quality, MKS=False) # kg/m3 to mg/L
+                for node in WQ.nodes:
+                    nodeid = enData.ENgetnodeindex(node)
+                    enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEQUAL, wq_sourceQual)
                 
                 # Set source type
+                if WQ.source_type == 'CONCEN':
+                    wq_sourceType = pyepanet.EN_CONCEN
+                elif WQ.source_type == 'MASS':
+                    wq_sourceType = pyepanet.EN_MASS
+                elif WQ.source_type == 'FLOWPACED':
+                    wq_sourceType = pyepanet.EN_FLOWPACED
+                elif WQ.source_type == 'SETPOINT':
+                    wq_sourceType = pyepanet.EN_SETPOINT
+                else:
+                    logger.error('Invalid Source Type for CHEM scenario')
                 enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCETYPE, wq_sourceType)
                 
                 # Set pattern
+                if WQ.end_time == -1:
+                    WQ.end_time = enData.ENgettimeparam(pyepanet.EN_DURATION)
+                if WQ.start_time > WQ.end_time:
+                    raise RuntimeError('Start time is greater than end time')
                 patternstep = enData.ENgettimeparam(pyepanet.EN_PATTERNSTEP)
                 duration = enData.ENgettimeparam(pyepanet.EN_DURATION)
                 patternlen = duration/patternstep
-                patternstart = wq_startTime/patternstep
-                patternend = wq_endTime/patternstep
+                patternstart = WQ.start_time/patternstep
+                patternend = WQ.end_time/patternstep
                 pattern = [0]*patternlen
                 pattern[patternstart:patternend] = [1]*(patternend-patternstart)
                 enData.ENaddpattern('wq')
@@ -166,17 +163,17 @@ class EpanetSimulator(WaterNetworkSimulator):
                 enData.ENsetpattern(patternid, pattern)  
                 enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEPAT, patternid)
                 
-            elif wq_type == 'AGE':
+            elif WQ.quality_type == 'AGE':
                 # Set quality type
                 enData.ENsetqualtype(pyepanet.EN_AGE,0,0,0)  
                 
-            elif wq_type == 'TRACE':
+            elif WQ.quality_type == 'TRACE':
                 # Set quality type
-                wq_node = WQ[1]
-                enData.ENsetqualtype(pyepanet.EN_TRACE,0,0,wq_node)   
+                for node in WQ.nodes:
+                    enData.ENsetqualtype(pyepanet.EN_TRACE,0,0,node)   
                 
             else:
-                print "Invalid Quality Type"
+                logger.error('Invalid Quality Type')
             enData.ENopenQ()
             enData.ENinitQ(0)
             
@@ -188,9 +185,9 @@ class EpanetSimulator(WaterNetworkSimulator):
                         quality = enData.ENgetnodevalue(nodeindex, pyepanet.EN_QUALITY)
                     
                         if convert_units:
-                            if wq_type == 'CHEM':
+                            if WQ.quality_type == 'CHEM':
                                 quality = convert('Concentration', flowunits, quality) # kg/m3
-                            elif wq_type == 'AGE':
+                            elif WQ.quality_type == 'AGE':
                                 quality = convert('Water Age', flowunits, quality) # s
                         
                         node_dictonary['quality'].append(quality)

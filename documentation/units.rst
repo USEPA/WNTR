@@ -19,20 +19,21 @@ Internally, the water network model is converted to SI units
 All external data used in the code (i.e. user supplied pressure threshold) should also be in 
 SI units. Results are stored in SI units and can be converted to other units if desired.
 
-* Length = m
-* Diameter = m
-* Water pressure = m
-* Elevation = m
-* Mass = kg
-* Time = s
-* Concentration = kg/m3
-* Demand = m3/s
-* Velocity = m/s
-* Energy = J
-* Power = W
-* Pressure = Pa
-* Mass injection = kg/s
-* Volume = m3
+* Length = :math:`m`
+* Diameter = :math:`m`
+* Water pressure = :math:`m`
+* Elevation = :math:`m`
+* Mass = :math:`kg`
+* Time = :math:`s`
+* Concentration = :math:`kg/m^3`
+* Demand = :math:`m^3/s`
+* Velocity = :math:`m/s`
+* Acceleration = :math:`g` (9.81 :math:`m/s^2`)
+* Energy = :math:`J`
+* Power = :math:`W`
+* Pressure = :math:`Pa`
+* Mass injection = :math:`kg/s`
+* Volume = :math:`m^3`
 
 The sympy package can be used to convert between units.  The example converting_units.py
 demonstrates its use.

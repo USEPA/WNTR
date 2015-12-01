@@ -1,6 +1,5 @@
 import numpy as np
 import datetime
-import matplotlib.pylab  as plt
 
 class NetResults(object):
     def __init__(self):
@@ -16,70 +15,38 @@ class NetResults(object):
         self.link = None
         self.node = None
 
-    def export_to_csv(self, csv_file_name):
-        """
-        Write the simulation results to csv file.
-
+    def _adjust_demand(self, Pstar):
+        """        
+        Correction factor when using demand driven simualtion, see [1]
+        
         Parameters
         ----------
-        csv_file_name : string
-            Name of csv file
-        """
-        # TODO
-
-        pass
-
-    def export_to_yml(self, yml_file_name):
-        """
-        Write the simulation results to yml file.
-
-        Parameters
+        Pstar : scalar
+            Pressure threshold
+        
+        Returns
+        -------
+        Ad : results object
+        
+        Examples
+        --------
+        >>> adjusted_demand = wntr.utils.adjust_demand(20, 30, 40)
+        17.32
+        >>> adjusted_demand = wntr.utils.adjust_demand(20, 42, 40)
+        20
+        
+        References
         ----------
-        yml_file_name : string
-            Name of yml file
-        """
-        # TODO
-        pass
-
-    def plot_node_attribute(self, nodes_to_plot=None, param = 'demand', nodeType = None, legend=None):
-        plt.figure()
-        nodes = self.node.minor_axis
-        if nodeType is not None:
-            nodes = [n for n in nodes if self.node['type'][n][0]==nodeType]
-        if nodes_to_plot is not None:
-            nodes = set(nodes_to_plot).intersection(nodes)  
-        for name in nodes:
-            values = [self.node[param][name][t] for t in self.time] 
-            if legend:
-                label = name+'_'+legend
-            else:
-                label = name
-            plt.plot(self.time,values,label=label)
-        plt.legend()
-        plt.xlabel('time')
-        plt.ylabel(param)
-        plt.title('Node ' +  param)
-        #plt.show()
-
-    def plot_link_attribute(self, links_to_plot=None, param = 'flowrate', linkType = None, legend=None):
-        plt.figure()
-        links = self.link.minor_axis
-        if linkType is not None:
-            links = [n for n in links if self.link['type'][n][0]==linkType]
-        if links_to_plot is not None:
-            links = set(links_to_plot).intersection(links)  
-        for name in links:
-            values = [self.link[param][name][t] for t in self.time] 
-            if legend:
-                label = name+'_'+legend
-            else:
-                label = name
-            plt.plot(self.time,values,label=label)
-        plt.legend()
-        plt.xlabel('time')
-        plt.ylabel(param)
-        plt.title('Link ' +  param)
-        #plt.show()
-
-
-
+        Ostfeld A, Kogan D, Shamir U. (2002). Reliability simulation of water
+        distribution systems - single and multiquality, Urban Water, 4, 53-61
+        """        
+        Rd = self.node.loc['demand', :,:]
+        P = self.node.loc['pressure',:,:]
+        
+        Ad = Rd        
+        Ad_temp = (Rd/np.sqrt(Pstar))*np.sqrt(P) 
+            
+        mask = P < Pstar
+        Ad[mask] = Ad_temp[mask]
+            
+        return Ad

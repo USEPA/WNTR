@@ -1,107 +1,291 @@
-import wntr.pyepanet as pyepanet
 import numpy as np
+import wntr.network
+import pandas as pd
+import logging
 
-def average_water_consumed_perday(enData):
-    qbar = {}
-    nNodes = enData.ENgetcount(pyepanet.EN_NODECOUNT) 
-    for nodeindex in range(1,nNodes+1):
-        nodeid = enData.ENgetnodeid(nodeindex)
+logger = logging.getLogger('wntr.metrics.health_impacts')
+
+def average_water_consumed_perday(wn):
+    """
+    Compute average water consumed per day at each node, qbar, computed as follows:
+    
+    .. math:: qbar=\dfrac{\sum_{k=1}^{K}\sum_{t=1}^{lcm_n}qbase_n m_n(k,t mod (L(k)))}{lcm_n}
+    
+    where 
+    :math:`K` is the number of demand patterns at node :math:`n`,
+    :math:`L(k)` is the number of time steps in pattern :math:`k`,
+    :math:`lcm_n` is the least common multiple of the demand patterns time steps for node :math:`n`, 
+    :math:`qbase_n` is the base demand at node :math:`n` and 
+    :math:`m_n(k,t mod L(k))` is the demand multiplier specified in pattern :math:`k` for node :math:`n` at time :math:`t mod L(k)`. 
         
-        numdemands = enData.ENgetnumdemands(nodeindex)
+    For example, if a node has two demand patterns specified in the EPANET input (INP) file, and 
+    one pattern repeats every 6 hours and the other repeats every 12 hours, the first 
+    pattern will be repeated once, making its total duration effectively 12 hours. 
+    If any :math:`m_n(k,t mod L(k))` value is less than 0, then that node's population is 0.  
+    
+    Parameters
+    -----------
+    wn : WaterNetworkModel
+    
+    Returns
+    -------
+    qbar : pd.Series
+        A pandas Series that contains average water consumed per day per node
+        
+    """
+    qbar = pd.Series()
+    for name, node in wn.nodes(wntr.network.Junction):
+        # Future release should support mutliple base demand and demand patterns per node
+        numdemands = 1
+        
         L = {}
-        pattID = {}
-        for k in range(numdemands):
-            pattID[k] = enData.ENgetdemandpattern(nodeindex, k)
-            L[k] = enData.ENgetpatternlen(pattID)
-        lcm_n = lcml(L.values())
+        pattern = {}
+        for i in range(numdemands):
+            pattern_name = node.demand_pattern_name
+            if not pattern_name:
+                pattern_name = wn.options.pattern
+            pattern[i] = wn.get_pattern(pattern_name)
+            L[i] = len(pattern)
+        lcm_n = _lcml(L.values())
         
         qbar_n = 0
-        for k in range(numdemands):    
-            qbase = enData.ENgetbasedemand(nodeindex, k)
+        for i in range(numdemands):    
+            base_demand = node.base_demand
             for t in range(lcm_n):
-                m = enData.ENgetpatternvalue(pattID[k], np.mod(t,L[k]))
-                qbar_n = qbar_n + qbase*m/lcm_n
-        qbar[nodeid] = qbar_n    
+                m = pattern[i][np.mod(t,len(pattern[i]))]
+                qbar_n = qbar_n + base_demand*m/lcm_n
+        qbar[name] = qbar_n    
+           
+    return qbar
+    
+def population(wn, R=0.00000876157):
+    """
+    Compute population per node, rounded to the nearest integer, equation from [1]
+    
+    .. math:: pop=\dfrac{qbar}{R}
+    
+    Parameters
+    -----------
+    wn : WaterNetworkModel
+    
+    R : float (optional, default = 0.00000876157 m3/s = 200 gallons/day)
+        Average volume of water consumed per capita per day in m3/s
         
-    return qbar
+    Returns
+    -------
+    pop : pd.Series
+        A pandas Series that contains population per node
+        
+    References
+    ----------
+    [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
+    Technical report, U.S. Environmental Protection Agency
+    """
+    qbar = average_water_consumed_perday(wn)
+    pop = qbar/R
     
-def average_demand_perday(results):
-    # qbar = average demand per day
+    return pop.round()
+
+
+def population_impacted(pop, arg1, operation=None, arg2=None):
+    """
+    Compute population impacted using using comparison operators.
+    For example, find the population impacted when demand < 90% expected.
     
-    qbar = dict.fromkeys(results.node.index.levels[0])
-    for i in results.node.index.levels[0]:
-        type_temp = results.node.loc[i,'type'] # create temporary list of node types for each time
-        if all(type_temp.str.findall('junction')): # determine if nodes are junctions
-            qbar[i] = np.mean(results.node.loc[i,'demand'])*3600*24 # m3/day
-        else:
-            qbar[i] = 0
-            
-    return qbar
+    Parameters
+    -----------
+    pop : pd.Series (index = node names)
+         A pandas Series that contains population per node
+         
+    arg1 : pd.DataFrame (columns = node names) or pd.Series (index = node names)
+        Argument 1
 
-def population(qbar, R):
-    # pop = population per node
-    pop = np.array(qbar.values())/R
-    pop.astype(int)
-    pop = dict(zip(qbar.keys(), pop.astype(int)))
-    return pop
+    operation : numpy.ufunc
+        Numpy universal comparison function, options = np.greater, 
+        np.greater_equal, np.less, np.less_equal, np.equal, np.not_equal
 
-
-def ingestion_timing_D24(G):
-    pass
-
-def ingestion_timing_F5():
-    pass
-
-def ingestion_timing_P5():
-    pass
-
-def ingestion_volume_M():
-    per_capita_ingestion_volume = 0
-    return per_capita_ingestion_volume
+    arg2 : same size and type as arg1, or a scalar
+        Argument 2
+        
+    Examples
+    ---------
+    >>> temp = pd.Series(data = np.random.rand(len(nzd_junctions)), index=nzd_junctions)
+    >>> pop_impacted1 = wntr.metrics.population_impacted(pop, temp, np.greater, 0.5)
+    >>> pop_impacted2 = wntr.metrics.population_impacted(pop, fdd, np.less, 1)
+    """
+    mask = wntr.metrics.query(arg1, operation, arg2)
+    pop_impacted = mask.multiply(pop)
     
-def ingestion_volumne_P():
-    per_capita_ingestion_volume = 0
-    return per_capita_ingestion_volume
+    return pop_impacted
 
-
-def gcd(x,y):
+def _gcd(x,y):
   while y:
     if y<0:
       x,y=-x,-y
     x,y=y,x % y
     return x
 
-def gcdl(*list):
-  return reduce(gcd, *list)
+def _gcdl(*list):
+  return reduce(_gcd, *list)
 
-def lcm(x,y):
-  return x*y / gcd(x,y)
+def _lcm(x,y):
+  return x*y / _gcd(x,y)
 
-def lcml(*list):
-  return reduce(lcm, *list)
-  
-  
+def _lcml(*list):
+  return reduce(_lcm, *list)
 
-def VC(G):
-    # VC = volume of water consumed
-    VC = dict.fromkeys(G.nodes())
-    for i in G.nodes():
-        if G.node[i]['nodetype']  == pyepanet.EN_JUNCTION:
-            VC[i] = np.sum(G.node[i]['demand'])
-        else:
-            VC[i] = 0
+def mass_contaminant_consumed(node_results):
+    """ Mass of contaminant consumed, equation from [1].
+    
+    Parameters
+    ----------
+    node_results : pd.Panel
+        A pandas Panel containing node results. 
+        Items axis = attributes, Major axis = times, Minor axis = node names
+        Mass of contaminant consumed uses 'demand' and quality' attrbutes.
+    
+     References
+    ----------
+    [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
+    Technical report, U.S. Environmental Protection Agency
+    """
+    MC = node_results['demand']*node_results['quality']
+    
+    return MC
+     
+def volume_contaminant_consumed(node_results, detection_limit):
+    """ Volume of contaminant consumed, equation from [1].
+    
+    Parameters
+    ----------
+    node_results : pd.Panel
+        A pandas Panel containing node results. 
+        Items axis = attributes, Major axis = times, Minor axis = node names
+        Volume of contaminant consumed uses 'demand' and quality' attrbutes.
+    
+    detection_limit : float
+        Contaminant detection limit
+    
+     References
+    ----------
+    [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
+    Technical report, U.S. Environmental Protection Agency
+    """
+    mask = np.greater(node_results['quality'], detection_limit)
+    VC = node_results['demand']*node_results.major_axis[1]*mask
+    
     return VC
     
-def MC(G):
-    # MC = mass of water consumed
-    MC = dict.fromkeys(G.nodes())
-    for i in G.nodes():
-        if G.node[i]['nodetype']  == pyepanet.EN_JUNCTION:
-            MC[i] = np.sum(np.array(G.node[i]['demand'])*np.array(G.node[i]['quality']))
-        else:
-            MC[i] = 0
-    return MC
+def extent_contaminant(node_results, link_results, wn, detection_limit):
+    """ Extent of contaminant in the pipes, equation from [1].
     
+    Parameters
+    ----------
+    node_results : pd.Panel
+        A pandas Panel containing node results. 
+        Items axis = attributes, Major axis = times, Minor axis = node names
+        Extent of contamination uses the 'quality' attribute.
+    
+    detection_limit : float
+        Contaminant detection limit.
+        
+    pipe_length : pd.Series
+        Pipe length associated with each node.
+    
+     References
+    ----------
+    [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
+    Technical report, U.S. Environmental Protection Agency
+    """
+    G = wn.get_graph_deep_copy()
+    EC = pd.DataFrame(index = node_results.major_axis, columns = node_results.minor_axis, data = 0)
+    L = pd.DataFrame(index = node_results.major_axis, columns = node_results.minor_axis, data = 0)
 
+    for t in node_results.major_axis:
+        # Weight the graph
+        attr = link_results.loc['flowrate', t, :]   
+        G.weight_graph(link_attribute=attr)  
+        
+        # Compute pipe_length associated with each node at time t
+        for node_name in G.nodes():
+            for downstream_node in G.successors(node_name):
+                for link_name in G[node_name][downstream_node].keys():
+                    link = wn.get_link(link_name)
+                    if isinstance(link, wntr.network.Pipe):
+                        L.loc[t,node_name] = L.loc[t,node_name] + link.length
+                    
+    mask = np.greater(node_results['quality'], detection_limit)
+    EC = L*mask
+        
+    #total_length = [link.length for link_name, link in wn.links(wntr.network.Pipe)]
+    #sum(total_length)
+    #L.sum(axis=1)
+        
+    return EC
     
-    
+#def cumulative_dose():
+#    """
+#    Compute cumulative dose for person p at node n at time step t
+#    """
+#    d_npt = 0
+#    return d_npt
+#
+#def ingestion_model_timing(node_results, method='D24'):
+#    """
+#    Compute volume of water ingested for each node and timestep, equations from [1]
+#   
+#    Parameters
+#    -----------
+#    wn : WaterNetworkModel
+#    
+#    method : string
+#        Options = D24, F5, and P5
+#        
+#    Returns
+#    -------
+#    Vnpt : pd.Series
+#        A pandas Series that contains the volume of water ingested for each node and timestep
+#        
+#    References
+#    ----------
+#    [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
+#    Technical report, U.S. Environmental Protection Agency
+#    """
+#    if method == 'D24':
+#        Vnpt = 1
+#    elif method == 'F5':
+#        Vnpt = 1
+#    elif method == 'P5':
+#        Vnpt = 1
+#    else:
+#        logger.warning('Invalid ingestion timing model')
+#        return
+#    
+#    return Vnpt
+#    
+#def ingestion_model_volume(method ='M'):
+#    """
+#    Compute per capita ingestion volume in m3/s for each person p at node n.
+#    """
+#    
+#    if method == 'M':
+#        Vnp = 1
+#    elif method == 'P':
+#        Vnp = 1 # draw from a distribution, for each person at each node
+#    else:
+#        logger.warning('Invalid ingestion volume model')
+#        return
+#
+#    return Vnp
+#  
+#def population_dosed(node_results):
+#    PD = 0
+#    return PD
+#
+#def population_exposed(node_results):
+#    PE = 0
+#    return PE
+#
+#def population_killed(node_results):
+#    PK = 0
+#    return PK

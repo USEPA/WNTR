@@ -250,7 +250,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'wntr.tex', u'WNTR Documentation',
+  ('index_latex', 'wntr.tex', u'WNTR Documentation',
    u'', 'manual'),
 ]
 

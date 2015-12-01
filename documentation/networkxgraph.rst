@@ -3,7 +3,7 @@ NetworkX graph
 
 WNTR uses NetworkX data objects to store network connectivity as a graph.  
 NetworkX includes numerous methods to analyse the structure of complex networks.
-For more infomation on NetworkX, see https://networkx.github.io/.
+For more information on NetworkX, see https://networkx.github.io/.
 
 WNTR includes a custom Graph Class, 
 :doc:`WntrMultiDiGraph</apidoc/wntr.network.WntrMultiDiGraph>`. 
@@ -15,7 +15,7 @@ A copy of the graph can an be obtained using the following function::
 
 	>>> G = wn.get_graph_deep_copy()
 	
-The graph is stored as a nested dictonary.  The nodes and edges of the graph 
+The graph is stored as a nested dictionary.  The nodes and edges of the graph 
 can be accessed using the following::
 
 	>>> G.node[name]
