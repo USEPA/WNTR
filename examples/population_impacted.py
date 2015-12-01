@@ -22,7 +22,7 @@ wntr.network.draw_graph(wn, node_attribute=pop, node_range = [0,400], node_size=
 sim = wntr.sim.EpanetSimulator(wn)
 results = sim.run_sim()
 
-junctions = [name for name, node in wn.nodes(wntr.network.Junction)]
+junctions = [name for name, node in wn.junctions()]
 
 # Calculate population impacted
 pop_impacted = wntr.metrics.population_impacted(pop, results.node['pressure',:,junctions], np.less, 40)

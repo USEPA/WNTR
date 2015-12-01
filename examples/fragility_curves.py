@@ -10,10 +10,6 @@ np.random.seed(12345)
 inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
-# Simulate hydraulics
-sim = wntr.sim.EpanetSimulator(wn)
-results = sim.run_sim()
-
 # Define the earthquake
 wn.scale_node_coordinates(1000)
 epicenter = (32000,15000) # x,y location

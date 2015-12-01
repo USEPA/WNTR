@@ -14,7 +14,7 @@ sim = wntr.sim.EpanetSimulator(wn)
 results = sim.run_sim()
 
 # Create list of node names
-junctions = [node_name for node_name, node in wn.nodes(wntr.network.Junction)]
+junctions = [name for name, node in wn.junctions()]
 
 # Define pressure lower bound
 P_lower = 21.09 # m (30 psi)

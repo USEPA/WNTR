@@ -8,9 +8,9 @@ plt.close('all')
 inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 wn.options.duration = 48*3600
-for name, node in wn.nodes(wntr.network.Junction):
+for name, node in wn.junctions():
     node.nominal_pressure = 60
-sim = wntr.sim.PyomoSimulator(wn, pressure_dependent=True)
+sim = wntr.sim.ScipySimulator(wn, pressure_driven=True)
 results = sim.run_sim()
        
 # Isolate node results at consumer nodes (nzd = non-zero demand)

@@ -9,9 +9,9 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 wn.options.duration = 3600*10
 
 # Modifiy conditional/time controls
-wn.conditional_controls
-wn.time_controls
-
+"""
+TODO
+"""
 
 # Add a junction and pipe
 wn.add_junction('new_junction', base_demand = 10, demand_pattern_name = '1', 
@@ -24,15 +24,13 @@ wn.add_pipe('new_pipe', start_node_name = 'new_junction',
 wntr.network.draw_graph(wn, title= wn.name)
        
 # Remove a node
-"""
-TODO
-"""
+#wn.remove_node('225')
 
 # Split a pipe into two pipes separated by a junction
 wn.split_pipe_with_junction('123','123A','123B','new_junction2') # split pipe 123 into two pipes named 123A and 123B, separated by a junction named new_junction
 
 # Remove a link
-wn.remove_link('123B')
+#wn.remove_link('123B')
 
 # Change junction characteristics
 junction = wn.get_node('121')
@@ -51,7 +49,9 @@ tank = wn.get_node('3')
 tank.max_level = tank.max_level*1.1
 
 # Change pump operations, open pump 335 if tank 1 drops below 2 meters
-wn.add_conditional_controls('335','1',2.0,'OPEN','ABOVE') 
+"""
+TODO
+"""
 
 # Change valve setting
 """
@@ -67,24 +67,33 @@ junction = wn.get_node('121')
 junction.base_demand = junction.base_demand*2
 
 # Set nominal pressure to 30 meters for all nodes
-for junction_name, junction in wn.nodes(wntr.network.Junction):
+for junction_name, junction in wn.junctions():
     junction.minimum_pressure = 0.0
     junction.nominal_pressure = 30.0
 
-leak_diameter=0.05
-leak_area = 3.14159*(leak_diameter/2)**2              
-
 # Create a tank leak
-tank = wn.get_node('3')         
-tank.add_leak(leak_area, start_time = 0, end_time = None)
+tank = wn.get_node('3')     
+tank.add_leak(3.14159*(0.05/2)**2)
+active_control_action = wntr.network.TargetAttributeControlAction(tank, 'leak_status', True)
+inactive_control_action = wntr.network.TargetAttributeControlAction(tank, 'leak_status', False)
+control = wntr.network.TimeControl(wn, 4*3600, 'SIM_TIME', False, active_control_action)
+wn.add_control(control)
+control = wntr.network.TimeControl(wn, 8*3600, 'SIM_TIME', False, inactive_control_action)
+wn.add_control(control)
 
 # Create a junction leak
 junction = wn.get_node('173')         
-junction.add_leak(leak_area, start_time = 0, end_time = None)
+junction.add_leak(3.14159*(0.05/2)**2)
+active_control_action = wntr.network.TargetAttributeControlAction(junction, 'leak_status', True)
+inactive_control_action = wntr.network.TargetAttributeControlAction(junction, 'leak_status', False)
+control = wntr.network.TimeControl(wn, 4*3600, 'SIM_TIME', False, active_control_action)
+wn.add_control(control)
+control = wntr.network.TimeControl(wn, 8*3600, 'SIM_TIME', False, inactive_control_action)
+wn.add_control(control)
 
 # Simulate hydraulics
-#sim = wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
+#sim = wntr.sim.ScipySimulator(wn, pressure_driven = True)
 #results = sim.run_sim()
 
-## Write inp file ##
+# Write inp file
 #wn.write_inpfile('ModifiedNet3.inp')
