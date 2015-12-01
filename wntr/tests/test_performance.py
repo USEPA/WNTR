@@ -22,7 +22,7 @@ class TestPerformance(unittest.TestCase):
 
         files = [f for f in os.listdir(os.path.join(resilienceMainDir,'wntr/tests/performance_results'))]
         if 'performance_results.py' in files:
-            past_results = import_file('./performance_results/performance_results.py')
+            past_results = import_file(os.path.join(resilienceMainDir,'wntr/tests/performance_results/performance_results.py'))
 
             self.year = past_results.year
             self.month = past_results.month
@@ -111,7 +111,7 @@ class TestPerformance(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        f = open(os.path.join('wntr/tests/performance_results/performance_results.py'),'w')
+        f = open(os.path.join(resilienceMainDir,'wntr/tests/performance_results/performance_results.py'),'w')
         f.write('year = {0}\n'.format(self.year))
         f.write('month = {0}\n'.format(self.month))
         f.write('day = {0}\n'.format(self.day))
