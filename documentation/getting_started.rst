@@ -23,10 +23,10 @@ Example File                    Description
 ==============================  ======================================================
 hydraulic_simulators.py         Compare EPANET, Pyomo, and Python hydraulic simulators
 water_network_modifications.py  Modify a water network model
-simulation_modifications.py	Modify a water network simulation
 topographic_metrics.py          Compute topographic resilience metrics
 hydrulic_metrics.py             Compute hydraulic resilience metrics
 waterquality_metrics.py         Compute water quality resilience metrics
+watersecurity_metrics.py        Compute water security resilience metrics
 converting_units.py             Convert units
 animation.py			Animated network graphics
 ==============================  ======================================================
