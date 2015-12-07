@@ -1060,6 +1060,57 @@ class WaterNetworkModel(object):
         """
         return self.shifted_time_sec() % (24*3600)
 
+    def reset_initial_values(self):
+        self.sim_time = 0.0
+        self.prev_sim_time = -np.inf
+
+        for name, node in self.junctions():
+            node.prev_head = None
+            node.head = None
+            node.prev_demand = None
+            node.demand = None
+            node.prev_leak_demand = None
+            node.leak_demand = None
+            node.leak_status = False
+            
+        for name, node in self.tanks():
+            node.prev_head = None
+            node.head = node.init_level+node.elevation
+            node.prev_demand = None
+            node.demand = None
+            node.prev_leak_demand = None
+            node.leak_demand = None
+            node.leak_status = False
+
+        for name, node in self.reservoirs():
+            node.prev_head = None
+            node.head = node.base_head
+            node.prev_demand = None
+            node.demand = None
+            node.prev_leak_demand = None
+            node.leak_demand = None
+
+        for name, link in self.pipes():
+            link.status = link._base_status
+            link.prev_status = None
+            link.prev_flow = None
+            link.flow = None
+
+        for name, link in self.pumps():
+            link.status = link._base_status
+            link.prev_status = None
+            link.prev_flow = None
+            link.flow = None
+            link.power = link._base_power
+
+        for name, link in self.valves():
+            link.status = link._base_status
+            link.prev_status = None
+            link.prev_flow = None
+            link.flow = None
+            link.setting = link._base_setting
+            link.prev_setting = None
+
     def _get_isolated_junctions(self):
         starting_recursion_limit = sys.getrecursionlimit()
         sys.setrecursionlimit(50000)
@@ -1652,9 +1703,13 @@ class Link(object):
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
         self.prev_status = None
+        self._base_status = LinkStatus.opened
         self.status = LinkStatus.opened
         self.prev_flow = None
         self.flow = None
+        
+    def get_base_status(self):
+        return self._base_status
 
     def __str__(self):
         """
@@ -1716,7 +1771,10 @@ class Junction(Node):
         self.leak_status = False
         self.leak_area = 0.0
         self.leak_discharge_coeff = 0.0
+        #self._leak_start_control = None
+        #self._leak_end_control = None
 
+    #def add_leak(self, wn, area, discharge_coeff = 0.75):
     def add_leak(self, area, discharge_coeff = 0.75):
         """
         Method to add a leak to a tank. Leaks are modeled by:
@@ -1749,11 +1807,18 @@ class Junction(Node):
         self.leak_area = area
         self.leak_discharge_coeff = discharge_coeff
 
+    #def remove_leak(self, wn):
     def remove_leak(self):
         """
         Method to remove a leak from a tank.
         """
         self._leak = False
+        #if self._leak_start_control is not None:
+        #    wn.remove_control(self._leak_start_control)
+        #    self._leak_start_control = None
+        #if self._leak_end_control is not None:
+        #    wn.remove_control(self._leak_end_control)
+        #    self._leak_end_control = None
 
     def leak_present(self):
         """
@@ -1766,6 +1831,33 @@ class Junction(Node):
         bool: True if a leak is is present, False if a leak is not present
         """
         return self._leak
+
+    #def set_leak_start_TimeControl(self, wn, t):
+    #    # remove old control
+    #    if self._leak_start_control is not None:
+    #        wn.remove_control(self._leak_start_control)
+    #
+    #    # add new control
+    #    start_control_action = self.wntr.network.TargetAttributeControlAction(self, 'leak_status', True)
+    #    control = self.wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
+    #    wn.add_control(control)
+    #    self._leak_start_control = control
+    #
+    #def set_leak_end_time(self, wn, t):
+    #    # remove old control
+    #    if self._leak_end_control is not None:
+    #        wn.remove_control(self._leak_end_control)
+    #
+    #    # add new control
+    #    end_control_action = self.wntr.network.TargetAttributeControlAction(self, 'leak_status', False)
+    #    control = self.wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
+    #    wn.add_control(control)
+    #    self._leak_end_control = control
+    #
+    #def set_leak_start_control(control):
+    #    
+    #
+    #def set_leak_end_control
 
 class Tank(Node):
     """
@@ -1935,6 +2027,7 @@ class Pipe(Link):
         self.cv = check_valve_flag
         if status is not None:
             self.status = LinkStatus.str_to_status(status)
+            self._base_status = self.status
         self.bulk_rxn_coeff = None
         self.wall_rxn_coeff = None
 
@@ -1967,11 +2060,13 @@ class Pump(Link):
         self.speed = 1.0
         self.curve = None
         self.power = None
+        self._base_power = None
         self.info_type = info_type.upper()
         if self.info_type == 'HEAD':
             self.curve = info_value
         elif self.info_type == 'POWER':
             self.power = info_value
+            self._base_power = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
 
@@ -2097,6 +2192,8 @@ class Valve(Link):
         self.minor_loss = minor_loss
         self.prev_setting = None
         self.setting = setting
+        self._base_setting = setting
+        self._base_status = LinkStatus.active
         self.status = LinkStatus.active
         self._status = LinkStatus.active
 

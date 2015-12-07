@@ -670,6 +670,7 @@ class ParseWaterNetwork(object):
                 if current[1].upper() == 'OPEN' or current[1].upper() == 'CLOSED' or current[1].upper() == 'ACTIVE':
                     new_status = wntr.network.LinkStatus.str_to_status(current[1])
                     link.status = new_status
+                    link._base_status = new_status
                 else:
                     if isinstance(link, wntr.network.Pump):
                         logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
@@ -681,6 +682,7 @@ class ParseWaterNetwork(object):
                         else:
                             setting = convert('Pressure', inp_units, float(current[2]))
                             link.setting = setting
+                            link._base_setting = setting
 
         f.close()
 
