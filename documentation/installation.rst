@@ -55,15 +55,15 @@ Python packages
 ^^^^^^^^^^^^^^^^^
 The following python packages are required for WNTR:
 
-* Numpy: support large, multi-dimensional arrays and matrices, 
+* Numpy [vanderWalt2011]_: support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
-* Scipy: efficient routines for numerical integration, 
+* Scipy [vanderWalt2011]_: efficient routines for numerical integration, 
   http://www.scipy.org/
 * NetworkX [Hagberg2008]_: create and analyze complex networks, 
   https://networkx.github.io/
 * Pandas [McKinney2013]_: analysis and storage of time series data, 
   http://pandas.pydata.org/
-* Matplotlib: produce figures, 
+* Matplotlib [Hunter2007]_: produce figures, 
   http://matplotlib.org/
 
 Packages can be installed using pip.
@@ -78,21 +78,22 @@ The following python packages are optional for WNTR:
 * Numpydoc: build the user manual,
   https://github.com/numpy/numpydoc
 
-WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 
-Pyomo, Interior Point OPTimizer (Ipopt), and HSL.
+.. The following is not shown in the UM
+   WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 
+   Pyomo, Interior Point OPTimizer (Ipopt), and HSL.
 
-* Pyomo [Hart2014]_: optimization modeling language and optimization capabilities, https://software.sandia.gov/trac/pyomo.  
-  Version 4.0.9682 is recommended.
-* Ipopt: large scale non-linear optimization, http://www.coin-or.org/download/binary/CoinAll/.  
+   * Pyomo [Hart2014]_: optimization modeling language and optimization capabilities, https://software.sandia.gov/trac/pyomo.  
+     Version 4.0.9682 is recommended.
+   * Ipopt: large scale non-linear optimization, http://www.coin-or.org/download/binary/CoinAll/.  
+   
+	* Select COIN-OR-1.7.4-win32-msvc11.exe for Windows 
+	* Download and run the executable
 
-  * Select COIN-OR-1.7.4-win32-msvc11.exe for Windows 
-  * Download and run the executable
-
-* HSL [HSL2013]_: solvers for Ipopt, http://www.hsl.rl.ac.uk/ipopt/.
-
-  * Select Windows or Linux in the COIN-HSL Archive, Personal License box
-  * Select Personal License, fill out the form and accept
-  * Download the zip file from the link sent via email
-  * Extract the zip file and save the files to the bin folder for Ipopt.  For example, if Ipopt was saved 
-    in C:/Program Files/COIN-OR/1.7.4/win32-msvc11, extract the HSL zip file, copy the files from the extracted folder, and paste them in 
-    C:/Program Files/COIN-OR/1.7.4/win32-msvc11/bin.
+   * HSL [HSL2013]_: solvers for Ipopt, http://www.hsl.rl.ac.uk/ipopt/.
+	
+	* Select Windows or Linux in the COIN-HSL Archive, Personal License box
+	* Select Personal License, fill out the form and accept
+	* Download the zip file from the link sent via email
+	* Extract the zip file and save the files to the bin folder for Ipopt.  For example, if Ipopt was saved 
+	  in C:/Program Files/COIN-OR/1.7.4/win32-msvc11, extract the HSL zip file, copy the files from the extracted folder, and paste them in 
+	  C:/Program Files/COIN-OR/1.7.4/win32-msvc11/bin.

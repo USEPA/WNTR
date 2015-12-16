@@ -14,9 +14,8 @@ WNTR also includes features that are not supported by EPANET,
 including leaks, pressure-driven hydraulic simulation, and 
 more flexible controls.
 
-WNTR is compatible with EPANET inp files.  
-A water network model can be created by explicitly adding network components::
-	
+A water network model can be created by adding network components to the model::
+
 	wn = wntr.network.WaterNetworkModel()
 	wn.add_junction('node1', base_demand=0.01, elevation=100.0, coordinates=(1,2))
 	...

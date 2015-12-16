@@ -28,7 +28,7 @@ SI units. Results are stored in SI units and can be converted to other units if 
 * Concentration = :math:`kg/m^3`
 * Demand = :math:`m^3/s`
 * Velocity = :math:`m/s`
-* Acceleration = :math:`g` (9.81 :math:`m/s^2`)
+* Acceleration = :math:`g` (1 :math:`g` = 9.81 :math:`m/s^2`)
 * Energy = :math:`J`
 * Power = :math:`W`
 * Pressure = :math:`Pa`
