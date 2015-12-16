@@ -124,11 +124,15 @@ class EpanetSimulator(WaterNetworkSimulator):
 
             if WQ.quality_type == 'CHEM': 
                 
-                # Set quality type
-                enData.ENsetqualtype(pyepanet.EN_CHEM, 'Chemical', 'mg/L', '')
+                # Set quality type and convert source qual
+                if WQ.source_type == 'MASS':
+                    enData.ENsetqualtype(pyepanet.EN_CHEM, 'Chemical', 'mg/min', '')
+                    wq_sourceQual = WQ.source_quality*60*1e6 # kg/s to mg/min
+                else:
+                    enData.ENsetqualtype(pyepanet.EN_CHEM, 'Chemical', 'mg/L', '')
+                    wq_sourceQual = convert('Concentration', flowunits, WQ.source_quality, MKS=False) # kg/m3 to mg/L
                 
                 # Set source quality
-                wq_sourceQual = convert('Concentration', flowunits, WQ.source_quality, MKS=False) # kg/m3 to mg/L
                 for node in WQ.nodes:
                     nodeid = enData.ENgetnodeindex(node)
                     enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEQUAL, wq_sourceQual)

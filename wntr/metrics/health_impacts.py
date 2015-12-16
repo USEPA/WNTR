@@ -149,7 +149,9 @@ def mass_contaminant_consumed(node_results):
     [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
     Technical report, U.S. Environmental Protection Agency
     """
-    MC = node_results['demand']*node_results['quality']
+    maskD = np.greater(node_results['demand'], 0) # positive demand
+    deltaT = node_results.major_axis[1] # this assumes constant timedelta
+    MC = node_results['demand']*deltaT*node_results['quality']*maskD # m3/s * s * kg/m3 - > kg
     
     return MC
      
@@ -171,8 +173,10 @@ def volume_contaminant_consumed(node_results, detection_limit):
     [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
     Technical report, U.S. Environmental Protection Agency
     """
-    mask = np.greater(node_results['quality'], detection_limit)
-    VC = node_results['demand']*node_results.major_axis[1]*mask
+    maskQ = np.greater(node_results['quality'], detection_limit)
+    maskD = np.greater(node_results['demand'], 0) # positive demand
+    deltaT = node_results.major_axis[1] # this assumes constant timedelta
+    VC = node_results['demand']*deltaT*maskQ*maskD # m3/s * s * bool - > m3
     
     return VC
     
@@ -186,11 +190,15 @@ def extent_contaminant(node_results, link_results, wn, detection_limit):
         Items axis = attributes, Major axis = times, Minor axis = node names
         Extent of contamination uses the 'quality' attribute.
     
+    link_results : pd.Panel
+        
     detection_limit : float
         Contaminant detection limit.
-        
-    pipe_length : pd.Series
-        Pipe length associated with each node.
+    
+    Returns
+    -------
+    EC : pd.Series
+        Extent of contaminantion (m)
     
      References
     ----------
