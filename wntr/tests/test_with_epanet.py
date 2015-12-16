@@ -22,8 +22,8 @@ class TestWithEpanet(unittest.TestCase):
         epanet_sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.epanet_results = epanet_sim.run_sim()
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn)
-        self.pyomo_results = pyomo_sim.run_sim(solver_options = {'tol':1e-10}, modified_hazen_williams=False)
+        scipy_sim = self.wntr.sim.ScipySimulator(self.wn)
+        self.scipy_results = scipy_sim.run_sim()
 
     @classmethod
     def tearDownClass(self):
@@ -31,33 +31,33 @@ class TestWithEpanet(unittest.TestCase):
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
-            for t in self.pyomo_results.link.major_axis:
-                self.assertAlmostEqual(self.pyomo_results.link.at['flowrate',t,link_name], self.epanet_results.link.at['flowrate',t,link_name], 5)
+            for t in self.scipy_results.link.major_axis:
+                self.assertAlmostEqual(self.scipy_results.link.at['flowrate',t,link_name], self.epanet_results.link.at['flowrate',t,link_name], 5)
 
     def test_link_velocity(self):
         for link_name, link in self.wn.links():
-            for t in self.pyomo_results.link.major_axis:
-                self.assertAlmostEqual(self.pyomo_results.link.at['velocity',t,link_name], self.epanet_results.link.at['velocity',t,link_name], 5)
+            for t in self.scipy_results.link.major_axis:
+                self.assertAlmostEqual(self.scipy_results.link.at['velocity',t,link_name], self.epanet_results.link.at['velocity',t,link_name], 5)
 
     def test_node_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.major_axis:
-                self.assertAlmostEqual(self.pyomo_results.node.at['demand',t,node_name], self.epanet_results.node.at['demand',t,node_name], 5)
+            for t in self.scipy_results.node.major_axis:
+                self.assertAlmostEqual(self.scipy_results.node.at['demand',t,node_name], self.epanet_results.node.at['demand',t,node_name], 5)
 
     def test_node_expected_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.major_axis:
-                self.assertAlmostEqual(self.pyomo_results.node.at['expected_demand',t,node_name], self.epanet_results.node.at['expected_demand',t,node_name], 5)
+            for t in self.scipy_results.node.major_axis:
+                self.assertAlmostEqual(self.scipy_results.node.at['expected_demand',t,node_name], self.epanet_results.node.at['expected_demand',t,node_name], 5)
 
     def test_node_head(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.major_axis:
-                self.assertAlmostEqual(self.pyomo_results.node.at['head',t,node_name], self.epanet_results.node.at['head',t,node_name], 3)
+            for t in self.scipy_results.node.major_axis:
+                self.assertAlmostEqual(self.scipy_results.node.at['head',t,node_name], self.epanet_results.node.at['head',t,node_name], 3)
 
     def test_node_pressure(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.major_axis:
-                self.assertAlmostEqual(self.pyomo_results.node.at['pressure',t,node_name], self.epanet_results.node.at['pressure',t,node_name], 3)
+            for t in self.scipy_results.node.major_axis:
+                self.assertAlmostEqual(self.scipy_results.node.at['pressure',t,node_name], self.epanet_results.node.at['pressure',t,node_name], 3)
 
 class TestNet1(unittest.TestCase):
 
@@ -73,8 +73,8 @@ class TestNet1(unittest.TestCase):
         epanet_sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.epanet_results = epanet_sim.run_sim()
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn)
-        self.pyomo_results = pyomo_sim.run_sim(solver_options = {'hessian_approximation':'exact', 'halt_on_ampl_error':'yes'}, modified_hazen_williams=True)
+        scipy_sim = self.wntr.sim.ScipySimulator(self.wn)
+        self.scipy_results = scipy_sim.run_sim() 
 
     @classmethod
     def tearDownClass(self):
@@ -82,28 +82,28 @@ class TestNet1(unittest.TestCase):
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
-            for t in self.pyomo_results.link.major_axis:
-                self.assertLessEqual(abs(self.pyomo_results.link.at['flowrate',t,link_name] - self.epanet_results.link.at['flowrate',t,link_name]), 0.001)
+            for t in self.scipy_results.link.major_axis:
+                self.assertLessEqual(abs(self.scipy_results.link.at['flowrate',t,link_name] - self.epanet_results.link.at['flowrate',t,link_name]), 0.001)
 
     def test_node_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.major_axis:
-                self.assertAlmostEqual(self.pyomo_results.node.at['demand',t,node_name], self.epanet_results.node.at['demand',t,node_name], 5)
+            for t in self.scipy_results.node.major_axis:
+                self.assertAlmostEqual(self.scipy_results.node.at['demand',t,node_name], self.epanet_results.node.at['demand',t,node_name], 5)
 
     def test_node_expected_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.major_axis:
-                self.assertAlmostEqual(self.pyomo_results.node.at['expected_demand',t,node_name], self.epanet_results.node.at['expected_demand',t,node_name], 5)
+            for t in self.scipy_results.node.major_axis:
+                self.assertAlmostEqual(self.scipy_results.node.at['expected_demand',t,node_name], self.epanet_results.node.at['expected_demand',t,node_name], 5)
 
     def test_node_head(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.major_axis:
-                self.assertLessEqual(abs(self.pyomo_results.node.at['head',t,node_name] - self.epanet_results.node.at['head',t,node_name]), 0.5)
+            for t in self.scipy_results.node.major_axis:
+                self.assertLessEqual(abs(self.scipy_results.node.at['head',t,node_name] - self.epanet_results.node.at['head',t,node_name]), 0.5)
 
     def test_node_pressure(self):
         for node_name, node in self.wn.nodes():
-            for t in self.pyomo_results.node.major_axis:
-                self.assertLessEqual(abs(self.pyomo_results.node.at['pressure',t,node_name] - self.epanet_results.node.at['pressure',t,node_name]), 0.5)
+            for t in self.scipy_results.node.major_axis:
+                self.assertLessEqual(abs(self.scipy_results.node.at['pressure',t,node_name] - self.epanet_results.node.at['pressure',t,node_name]), 0.5)
 
 class TestNet3(unittest.TestCase):
 
