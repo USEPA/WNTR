@@ -590,7 +590,7 @@ class WaterNetworkModel(object):
         else:
             raise RuntimeError('Link Type not Recognized')
 
-        warnings.warn('Michael needs to update the remove_link method')
+        #warnings.warn('Michael needs to update the remove_link method')
         # remove controls
         #if name in self.time_controls.keys():
         #    self.time_controls.pop(name)
