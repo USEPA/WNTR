@@ -316,8 +316,6 @@ class ParseWaterNetwork(object):
                 else:
                     raise RuntimeError('Tank entry format not recognized.')
 
-        logger.warning('Currently, only the EpanetSimulator utilizes maximum levels for tanks. The other simulators do not place an upper limit on tank levels yet.')
-
         f.close()
 
         #
