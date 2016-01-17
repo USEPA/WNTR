@@ -43,7 +43,7 @@ Control Priorities:
    Close pumps without power
 """
 
-class ControlAction(object):
+class BaseControlAction(object):
     """ 
     A base class for deriving new control actions.
     The control action is fired by calling FireAction
@@ -69,7 +69,7 @@ class ControlAction(object):
                                   'This method must be implemented in '
                                   'derived classes of ControlAction.')
 
-class TargetAttributeControlAction(ControlAction):
+class ControlAction(BaseControlAction):
     """
     A general class for specifying an ControlAction that simply
     modifies the attribute of a target.
@@ -88,9 +88,9 @@ class TargetAttributeControlAction(ControlAction):
     """
     def __init__(self, target_obj, attribute, value):
         if target_obj is None:
-            raise ValueError('target_obj is None in TargetAttributeControlAction::__init__. A valid target_obj is needed.')
+            raise ValueError('target_obj is None in ControlAction::__init__. A valid target_obj is needed.')
         if not hasattr(target_obj, attribute):
-            raise ValueError('attribute given in TargetAttributeControlAction::__init__ is not valid for target_obj')
+            raise ValueError('attribute given in ControlAction::__init__ is not valid for target_obj')
 
         self._target_obj_ref = weakref.ref(target_obj)
         self._attribute = attribute
@@ -111,7 +111,7 @@ class TargetAttributeControlAction(ControlAction):
         if target is None:
             raise ValueError('target is None inside TargetAttribureControlAction::_FireControlActionImpl. This may be because a target_obj was added, but later the object itself was deleted.')
         if not hasattr(target, self._attribute):
-            raise ValueError('attribute specified in TargetAttributeControlAction is not valid for targe_obj')
+            raise ValueError('attribute specified in ControlAction is not valid for targe_obj')
         
         orig_value = getattr(target, self._attribute)
         if orig_value == self._value:
@@ -279,7 +279,7 @@ class TimeControl(Control):
 
     @classmethod
     def WithTarget(self, fire_time, time_flag, daily_flag, target_obj, attribute, value):
-        t = TargetAttributeControlAction(target_obj, attribute, value)
+        t = ControlAction(target_obj, attribute, value)
         return TimeControl(fire_time, time_flag, daily_flag, t)
     
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
@@ -341,7 +341,7 @@ class ConditionalControl(Control):
 
     @classmethod
     def WithTarget(self, source, operation, threshold, target_obj, target_attribute, target_value):
-        ca = TargetAttributeControlAction(target_obj, target_attribute, target_value)
+        ca = ControlAction(target_obj, target_attribute, target_value)
         return ConditionalControl(source, operation, threshold, ca)
 
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
@@ -422,7 +422,7 @@ class MultiConditionalControl(Control):
 
     @classmethod
     def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
-        ca = TargetAttributeControlAction(target_obj, target_attribute, target_value)
+        ca = ControlAction(target_obj, target_attribute, target_value)
         return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
 
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
@@ -524,7 +524,7 @@ class _PRVControl(Control):
 
     @classmethod
     def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
-        ca = TargetAttributeControlAction(target_obj, target_attribute, target_value)
+        ca = ControlAction(target_obj, target_attribute, target_value)
         return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
 
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):

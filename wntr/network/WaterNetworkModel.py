@@ -79,7 +79,8 @@ class WaterNetworkModel(object):
         self.options = WaterNetworkOptions()
 
         # A list of control objects
-        self._controls = []
+        #self._controls = []
+        self._control_dict = {}
 
         # Name of pipes that are check valves
         self._check_valves = []
@@ -206,8 +207,8 @@ class WaterNetworkModel(object):
                     if link.end_node()==tank_name:
                         continue
             
-                close_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.closed)
-                open_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.opened)
+                close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
+                open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
             
                 control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head')],[np.greater,np.less_equal],[min_head+self._Htol,min_head+self._Htol],open_control_action)
                 control._partial_step_for_tanks = False
@@ -246,8 +247,8 @@ class WaterNetworkModel(object):
                     if link.start_node()==tank_name:
                         continue
             
-                close_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.closed)
-                open_control_action = wntr.network.TargetAttributeControlAction(link, 'status', LinkStatus.opened)
+                close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
+                open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
             
                 control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head')],[np.less,np.greater_equal],[max_head-self._Htol,max_head-self._Htol],open_control_action)
                 control._partial_step_for_tanks = False
@@ -358,8 +359,8 @@ class WaterNetworkModel(object):
         for pipe_name in self._check_valves:
             pipe = self.get_link(pipe_name)
 
-            close_control_action = wntr.network.TargetAttributeControlAction(pipe, 'status', LinkStatus.closed)
-            open_control_action = wntr.network.TargetAttributeControlAction(pipe, 'status', LinkStatus.opened)
+            close_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.closed)
+            open_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.opened)
             
             control = wntr.network._CheckValveHeadControl(self, pipe, np.greater, self._Htol, open_control_action)
             control._priority = 0
@@ -409,8 +410,8 @@ class WaterNetworkModel(object):
         pump_controls = []
         for pump_name, pump in self.pumps():
 
-            close_control_action = wntr.network.TargetAttributeControlAction(pump, '_cv_status', LinkStatus.closed)
-            open_control_action = wntr.network.TargetAttributeControlAction(pump, '_cv_status', LinkStatus.opened)
+            close_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.closed)
+            open_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.opened)
         
             control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
             control._priority = 0
@@ -470,9 +471,9 @@ class WaterNetworkModel(object):
         valve_controls = []
         for valve_name, valve in self.valves():
 
-            close_control_action = wntr.network.TargetAttributeControlAction(valve, '_status', LinkStatus.closed)
-            open_control_action = wntr.network.TargetAttributeControlAction(valve, '_status', LinkStatus.opened)
-            active_control_action = wntr.network.TargetAttributeControlAction(valve, '_status', LinkStatus.active)
+            close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.closed)
+            open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.opened)
+            active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.active)
         
             control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
             control.name = valve.name()+' prv control'
@@ -509,68 +510,49 @@ class WaterNetworkModel(object):
         curve = Curve(name, curve_type, xy_tuples_list)
         self._curves[name] = curve
 
-    def add_control(self, control_object):
+    def add_control(self, name, control_object):
         """
         Add a control to the network.
 
         Parameters
         ----------
+        name : string
+           The name used to identify the control object
         control_object : An object derived from the Control object
         """
-        self._controls.append(control_object)
-
-    def remove_control(self, control_object):
-        """
-        A method to remove a control from the network. If the control
-        is not present, an exception is raised.
-
-        Parameters
-        ----------
-        control_object : An object derived from the Control object
-        """
-        self._controls.remove(control_object)
-
-    def discard_control(self, control_object):
-        """
-        A method to remove a control from the network if it is
-        present. If the control is not present, an exception is not
-        raised.
-
-        Parameters
-        ----------
-        control_object : An object derived from the Control object
-        """
-        try:
-            self._controls.remove(control_object)
-        except ValueError:
-            pass
+        if name in self._control_dict:
+            raise ValueError('The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control.')
+        else:
+            self._control_dict[name] = control_object
 
     def add_pump_outage(self, pump_name, start_time, end_time):
         pump = self.get_link(pump_name)
-        opened_action_obj = wntr.network.TargetAttributeControlAction(pump, 'status', LinkStatus.opened)
-        closed_action_obj = wntr.network.TargetAttributeControlAction(pump, 'status', LinkStatus.closed)
+        opened_action_obj = wntr.network.ControlAction(pump, 'status', LinkStatus.opened)
+        closed_action_obj = wntr.network.ControlAction(pump, 'status', LinkStatus.closed)
 
         control = wntr.network.TimeControl(self, end_time, 'SIM_TIME', False, opened_action_obj)
         control._priority = 0
-        self.add_control(control)
+        self.add_control(pump_name+'PowerOn'+str(end_time),control)
 
         control = wntr.network.TimeControl(self, start_time, 'SIM_TIME', False, closed_action_obj)
         control._priority = 3
-        self.add_control(control)
+        self.add_control(pump_name+'PowerOff'+str(start_time),control)
 
     def all_pump_outage(self, start_time, end_time):
         for pump_name, pump in self.pumps():
             self.add_pump_outage(pump_name, start_time, end_time)
 
-    def remove_link(self, name):
-        """
-        Method to remove a link from the water network object. Note
-        that any controls associated with this link will be discarded.
+    def remove_link(self, name, with_control=True):
+        """Method to remove a link from the water network object.
 
         Parameters
         ----------
         name: string
            Name of the link to be removed
+        with_control: bool
+           If with_control is True, then any controls that target the
+           link being removed will also be removed. If with_control is
+           False, no controls will be removed.
         """
         link = self.get_link(name)
         if link.cv:
@@ -590,25 +572,37 @@ class WaterNetworkModel(object):
         else:
             raise RuntimeError('Link Type not Recognized')
 
-        #warnings.warn('Michael needs to update the remove_link method')
-        # remove controls
-        #if name in self.time_controls.keys():
-        #    self.time_controls.pop(name)
-        #    warnings.warn('A time control associated with link '+name+' has been removed as well as the link.')
-        #
-        #if name in self.conditional_controls.keys():
-        #    self.conditional_controls.pop(name)
-        #    warnings.warn('A conditional control associated with link '+name+' has been removed as well as the link.')
+        if with_control:
+            for control_name, control in self._control_dict.iteritems():
+                if type(control)==wntr.network._PRVControl:
+                    if link==control._close_control_action._target_obj_ref():
+                        warnings.warn('Control '+control_name+' is being removed along with link '+name)
+                        self.remove_control(control_name)
+                else:
+                    if link == control._control_action._target_obj_ref():
+                        warnings.warn('Control '+control_name+' is being removed along with link '+name)
+                        self.remove_control(control_name)
+        else:
+            for control_name, control in self._control_dict.iteritems():
+                if type(control)==wntr.network._PRVControl:
+                    if link==control._close_control_action._target_obj_ref():
+                        warnings.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
+                else:
+                    if link == control._control_action._target_obj_ref():
+                        warnings.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
 
-    def remove_node(self, name):
+    def remove_node(self, name, with_control=True):
         """
-        Method to remove a node from the water network object. Note
-        that any controls associated with this link will be discarded.
+        Method to remove a node from the water network object.
 
         Parameters
         ----------
         name: string
             Name of the node to be removed
+        with_control: bool
+           If with_control is True, then any controls that target the
+           link being removed will also be removed. If with_control is
+           False, no controls will be removed.
         """
         node = self.get_node(name)
         self._nodes.pop(name)
@@ -625,16 +619,52 @@ class WaterNetworkModel(object):
         else:
             raise RuntimeError('Node type is not recognized.')
 
-        # Remove controls associated with the node
-        controls_to_remove = []
-        for key, val in self.conditional_controls.iteritems():
-            for key2, val2 in val.iteritems():
-                for entry in val2:
-                    if entry[0] == name:
-                        controls_to_remove.append((key, key2, entry))
-        for key in controls_to_remove:
-            self.conditional_controls[key[0]][key[1]].remove(key[2])
-            warnings.warn('One or more conditional controls associated with node '+name+' has been removed as well as the node.')
+        if with_control:
+            for control_name, control in self._control_dict.iteritems():
+                if type(control)==wntr.network._PRVControl:
+                    if node==control._close_control_action._target_obj_ref():
+                        warnings.warn('Control '+control_name+' is being removed along with node '+name)
+                        self.remove_control(control_name)
+                else:
+                    if node == control._control_action._target_obj_ref():
+                        warnings.warn('Control '+control_name+' is being removed along with node '+name)
+                        self.remove_control(control_name)
+        else:
+            for control_name, control in self._control_dict.iteritems():
+                if type(control)==wntr.network._PRVControl:
+                    if node==control._close_control_action._target_obj_ref():
+                        warnings.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
+                else:
+                    if node == control._control_action._target_obj_ref():
+                        warnings.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
+
+    def remove_control(self, name):
+        """
+        A method to remove a control from the network. If the control
+        is not present, an exception is raised.
+
+        Parameters
+        ----------
+        name : string
+           The name of the control object to be removed.
+        """
+        del self._control_dict[name]
+
+    def discard_control(self, name):
+        """
+        A method to remove a control from the network if it is
+        present. If the control is not present, an exception is not
+        raised.
+
+        Parameters
+        ----------
+        name : string
+           The name of the control object to be removed.
+        """
+        try:
+            del self._control_dict[name]
+        except KeyError:
+            pass
 
     def split_pipe_with_junction(self, pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side, junction_name):
         """
@@ -731,6 +761,17 @@ class WaterNetworkModel(object):
         """
         return self._links[name]
 
+    def get_control(self, name):
+        """
+        Returns the control object for the provided name.
+
+        Parameters
+        ----------
+        name: string
+           name of the control
+        """
+        return self._control_dict[name]
+
     def get_all_nodes_deep_copy(self):
         """
         Return a deep copy of the dictionary with all nodes.
@@ -758,6 +799,20 @@ class WaterNetworkModel(object):
             Link name to link.
         """
         return copy.deepcopy(self._links)
+
+    def get_all_controls_deed_copy(self):
+        """
+        Return a deep copy of the dictionary with all controls.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        dictionary
+           Control name to control.
+        """
+        return copy.deepcopy(self._control_dict)
 
     def get_links_for_node(self, node_name, flag='ALL'):
         """
@@ -1838,7 +1893,7 @@ class Junction(Node):
     #        wn.remove_control(self._leak_start_control)
     #
     #    # add new control
-    #    start_control_action = self.wntr.network.TargetAttributeControlAction(self, 'leak_status', True)
+    #    start_control_action = self.wntr.network.ControlAction(self, 'leak_status', True)
     #    control = self.wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
     #    wn.add_control(control)
     #    self._leak_start_control = control
@@ -1849,7 +1904,7 @@ class Junction(Node):
     #        wn.remove_control(self._leak_end_control)
     #
     #    # add new control
-    #    end_control_action = self.wntr.network.TargetAttributeControlAction(self, 'leak_status', False)
+    #    end_control_action = self.wntr.network.ControlAction(self, 'leak_status', False)
     #    control = self.wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
     #    wn.add_control(control)
     #    self._leak_end_control = control

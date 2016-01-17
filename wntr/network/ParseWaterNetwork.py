@@ -575,7 +575,7 @@ class ParseWaterNetwork(object):
                 link = wn.get_link(link_name)
                 if type(current[2]) == str:
                     status = wntr.network.LinkStatus.str_to_status(current[2])
-                    action_obj = wntr.network.TargetAttributeControlAction(link, 'status', status)
+                    action_obj = wntr.network.ControlAction(link, 'status', status)
                 elif type(current[2]) == float or type(current[2]) == int:
                     if isinstance(link, wntr.network.Pump):
                         logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
@@ -586,7 +586,7 @@ class ParseWaterNetwork(object):
                             continue
                         else:
                             status = convert('Pressure', inp_units, float(current[2]))
-                            action_obj = wntr.network.TargetAttributeControlAction(link, 'setting', status)
+                            action_obj = wntr.network.ControlAction(link, 'setting', status)
 
                 # Create the control object
                 if 'TIME' not in current and 'CLOCKTIME' not in current:
@@ -616,7 +616,10 @@ class ParseWaterNetwork(object):
                     elif len(current) == 7: # at clocktime
                         fire_time = clock_time_to_sec(current[5], current[6])
                         control_obj = wntr.network.TimeControl(wn, fire_time, 'SHIFTED_TIME', True, action_obj)
-                wn.add_control(control_obj)
+                control_name = ''
+                for i in current:
+                    control_name = control_name + i
+                wn.add_control(control_name, control_obj)
 
         f.close()
 

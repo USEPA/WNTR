@@ -48,7 +48,7 @@ class ScipySimulator(WaterNetworkSimulator):
         pump_controls = self._wn._get_pump_controls()
         valve_controls = self._wn._get_valve_controls()
 
-        self._controls = self._wn._controls+tank_controls+cv_controls+pump_controls+valve_controls
+        self._controls = self._wn._control_dict.values()+tank_controls+cv_controls+pump_controls+valve_controls
 
         model = ScipyModel(self._wn, self.pressure_driven)
         model.initialize_results_dict()
