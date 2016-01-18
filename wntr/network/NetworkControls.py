@@ -92,7 +92,7 @@ class ControlAction(BaseControlAction):
         if not hasattr(target_obj, attribute):
             raise ValueError('attribute given in ControlAction::__init__ is not valid for target_obj')
 
-        self._target_obj_ref = weakref.ref(target_obj)
+        self._target_obj_ref = target_obj
         self._attribute = attribute
         self._value = value
 
@@ -107,7 +107,7 @@ class ControlAction(BaseControlAction):
         This method should not be called directly. Use FireAction of the 
         ControlAction base class instead.
         """
-        target = self._target_obj_ref()
+        target = self._target_obj_ref
         if target is None:
             raise ValueError('target is None inside TargetAttribureControlAction::_FireControlActionImpl. This may be because a target_obj was added, but later the object itself was deleted.')
         if not hasattr(target, self._attribute):
@@ -253,9 +253,9 @@ class TimeControl(Control):
     def __init__(self, wnm, fire_time, time_flag, daily_flag, control_action):
         self.name = 'blah'
 
-        if isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
+        if isinstance(control_action._target_obj_ref,wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
             self._priority = 0
-        elif isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.closed:
+        elif isinstance(control_action._target_obj_ref,wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.closed:
             self._priority = 3
         else:
             self._priority = 0
@@ -320,9 +320,9 @@ class ConditionalControl(Control):
     def __init__(self, source, operation, threshold, control_action):
         self.name = 'blah'
 
-        if isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
+        if isinstance(control_action._target_obj_ref,wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
             self._priority = 0
-        elif isinstance(control_action._target_obj_ref(),wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.closed:
+        elif isinstance(control_action._target_obj_ref,wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.closed:
             self._priority = 3
         else:
             self._priority = 0

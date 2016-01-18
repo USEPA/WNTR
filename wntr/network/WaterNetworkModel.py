@@ -575,20 +575,20 @@ class WaterNetworkModel(object):
         if with_control:
             for control_name, control in self._control_dict.iteritems():
                 if type(control)==wntr.network._PRVControl:
-                    if link==control._close_control_action._target_obj_ref():
+                    if link==control._close_control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with link '+name)
                         self.remove_control(control_name)
                 else:
-                    if link == control._control_action._target_obj_ref():
+                    if link == control._control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with link '+name)
                         self.remove_control(control_name)
         else:
             for control_name, control in self._control_dict.iteritems():
                 if type(control)==wntr.network._PRVControl:
-                    if link==control._close_control_action._target_obj_ref():
+                    if link==control._close_control_action._target_obj_ref:
                         warnings.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
                 else:
-                    if link == control._control_action._target_obj_ref():
+                    if link == control._control_action._target_obj_ref:
                         warnings.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
 
     def remove_node(self, name, with_control=True):
@@ -622,20 +622,20 @@ class WaterNetworkModel(object):
         if with_control:
             for control_name, control in self._control_dict.iteritems():
                 if type(control)==wntr.network._PRVControl:
-                    if node==control._close_control_action._target_obj_ref():
+                    if node==control._close_control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with node '+name)
                         self.remove_control(control_name)
                 else:
-                    if node == control._control_action._target_obj_ref():
+                    if node == control._control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with node '+name)
                         self.remove_control(control_name)
         else:
             for control_name, control in self._control_dict.iteritems():
                 if type(control)==wntr.network._PRVControl:
-                    if node==control._close_control_action._target_obj_ref():
+                    if node==control._close_control_action._target_obj_ref:
                         warnings.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
                 else:
-                    if node == control._control_action._target_obj_ref():
+                    if node == control._control_action._target_obj_ref:
                         warnings.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
 
     def remove_control(self, name):
