@@ -28,8 +28,6 @@ class ScipySimulator(WaterNetworkSimulator):
         super(ScipySimulator, self).__init__(wn, pressure_driven)
         self._get_demand_dict()
 
-        self.time_per_step = []
-
     def get_time(self):
         s = int(self._wn.sim_time)
         h = s/3600
@@ -42,6 +40,8 @@ class ScipySimulator(WaterNetworkSimulator):
         """
         Method to run an extended period simulation
         """
+
+        self.time_per_step = []
 
         tank_controls = self._wn._get_all_tank_controls()
         cv_controls = self._wn._get_cv_controls()
