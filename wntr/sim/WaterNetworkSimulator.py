@@ -57,8 +57,6 @@ class WaterNetworkSimulator(object):
            A list of demand values at each hydraulic timestep.
         """
 
-        self._check_model_specified()
-
         # Set start and end time for demand values to be returned
         if start_time is None:
             start_time = 0

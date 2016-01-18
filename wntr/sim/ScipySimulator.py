@@ -26,7 +26,6 @@ class ScipySimulator(WaterNetworkSimulator):
         """
 
         super(ScipySimulator, self).__init__(wn, pressure_driven)
-        self._get_demand_dict()
 
     def get_time(self):
         s = int(self._wn.sim_time)
@@ -43,6 +42,8 @@ class ScipySimulator(WaterNetworkSimulator):
 
         self.time_per_step = []
 
+        self._get_demand_dict()
+
         tank_controls = self._wn._get_all_tank_controls()
         cv_controls = self._wn._get_cv_controls()
         pump_controls = self._wn._get_pump_controls()
@@ -56,7 +57,7 @@ class ScipySimulator(WaterNetworkSimulator):
         self.solver = NewtonSolver()
 
         results = NetResults()
-        results.time = np.arange(0, self._wn.options.duration+self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
+        results.time = np.arange(self._wn.sim_time, self._wn.options.duration+self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
 
         # Initialize X
         # Vars will be ordered:
@@ -72,7 +73,10 @@ class ScipySimulator(WaterNetworkSimulator):
         
         X_init = np.concatenate((head0, demand0, flow0,leak_demand0))
 
-        first_step = True
+        if self._wn.sim_time==0:
+            first_step = True
+        else:
+            first_step = False
         trial = -1
         max_trials = self._wn.options.trials
         resolve = False
@@ -159,12 +163,6 @@ class ScipySimulator(WaterNetworkSimulator):
             demand_values = self.get_node_demand(node_name)
             for t in range(self._n_timesteps):
                 self._demand_dict[(node_name, t)] = demand_values[t]
-        for node_name, node in self._wn.tanks():
-            for t in range(self._n_timesteps):
-                self._demand_dict[(node_name, t)] = 0.0
-        for node_name, node in self._wn.reservoirs():
-            for t in range(self._n_timesteps):
-                self._demand_dict[(node_name, t)] = 0.0
 
     def _check_controls(self, presolve, last_backup_time=None):
         if presolve:

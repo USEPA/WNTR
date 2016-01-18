@@ -1018,8 +1018,8 @@ class ScipyModel(object):
             tank.head = tank.prev_head + delta_h
 
     def update_junction_demands(self, demand_dict):
+        t = math.floor(self._wn.sim_time/self._wn.options.hydraulic_timestep)
         for junction_name, junction in self._wn.junctions():
-            t = math.floor(self._wn.sim_time/self._wn.options.hydraulic_timestep)
             junction.expected_demand = demand_dict[(junction_name,t)]
 
     def identify_isolated_junctions(self):
