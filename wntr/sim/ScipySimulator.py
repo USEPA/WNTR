@@ -35,7 +35,7 @@ class ScipySimulator(WaterNetworkSimulator):
         s-=m*60
         return str(h)+':'+str(m)+':'+str(s)
 
-    def run_sim(self):
+    def run_sim(self,solver_options={}):
         """
         Method to run an extended period simulation
         """
@@ -54,7 +54,7 @@ class ScipySimulator(WaterNetworkSimulator):
         model = ScipyModel(self._wn, self.pressure_driven)
         model.initialize_results_dict()
 
-        self.solver = NewtonSolver()
+        self.solver = NewtonSolver(options=solver_options)
 
         results = NetResults()
         if self._wn.sim_time%self._wn.options.hydraulic_timestep!=0:
