@@ -1866,13 +1866,13 @@ class Junction(Node):
         self.leak_discharge_coeff = discharge_coeff
 
         if start_time is not None:
-            start_control_action = self.wntr.network.ControlAction(self, 'leak_status', True)
-            control = self.wntr.network.TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
+            start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
+            control = wntr.network.TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
             wn.add_control(self._leak_start_control_name, control)
 
         if end_time is not None:
-            end_control_action = self.wntr.network.ControlAction(self, 'leak_status', False)
-            control = self.wntr.network.TimeControl(wn, end_time, 'SIM_TIME', False, end_control_action)
+            end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
+            control = wntr.network.TimeControl(wn, end_time, 'SIM_TIME', False, end_control_action)
             wn.add_control(self._leak_end_control_name, control)
 
     def remove_leak(self,wn):
@@ -1918,8 +1918,8 @@ class Junction(Node):
         wn.discard_control(self._leak_start_control_name)
 
         # add new control
-        start_control_action = self.wntr.network.ControlAction(self, 'leak_status', True)
-        control = self.wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
+        start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
+        control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
         wn.add_control(self._leak_start_control_name, control)
     
     def set_leak_end_time(self, wn, t):
@@ -1941,8 +1941,8 @@ class Junction(Node):
         wn.discard_control(self._leak_end_control_name)
     
         # add new control
-        end_control_action = self.wntr.network.ControlAction(self, 'leak_status', False)
-        control = self.wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
+        end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
+        control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
     
     def use_external_leak_control(self, wn):
@@ -2052,13 +2052,13 @@ class Tank(Node):
         self.leak_discharge_coeff = discharge_coeff
         
         if start_time is not None:
-            start_control_action = self.wntr.network.ControlAction(self, 'leak_status', True)
-            control = self.wntr.network.TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
+            start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
+            control = wntr.network.TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
             wn.add_control(self._leak_start_control_name, control)
 
         if end_time is not None:
-            end_control_action = self.wntr.network.ControlAction(self, 'leak_status', False)
-            control = self.wntr.network.TimeControl(wn, end_time, 'SIM_TIME', False, end_control_action)
+            end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
+            control = wntr.network.TimeControl(wn, end_time, 'SIM_TIME', False, end_control_action)
             wn.add_control(self._leak_end_control_name, control)
 
     def remove_leak(self,wn):
@@ -2104,8 +2104,8 @@ class Tank(Node):
         wn.discard_control(self._leak_start_control_name)
 
         # add new control
-        start_control_action = self.wntr.network.ControlAction(self, 'leak_status', True)
-        control = self.wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
+        start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
+        control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
         wn.add_control(self._leak_start_control_name, control)
     
     def set_leak_end_time(self, wn, t):
@@ -2127,8 +2127,8 @@ class Tank(Node):
         wn.discard_control(self._leak_end_control_name)
     
         # add new control
-        end_control_action = self.wntr.network.ControlAction(self, 'leak_status', False)
-        control = self.wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
+        end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
+        control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
     
     def use_external_leak_control(self, wn):
