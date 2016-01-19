@@ -57,7 +57,11 @@ class ScipySimulator(WaterNetworkSimulator):
         self.solver = NewtonSolver()
 
         results = NetResults()
-        results.time = np.arange(self._wn.sim_time, self._wn.options.duration+self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
+        if self._wn.sim_time%self._wn.options.hydraulic_timestep!=0:
+            results_start_time = int(round((self._wn.options.hydraulic_timestep-(self._wn.sim_time%self._wn.options.hydraulic_timestep))+self._wn.sim_time))
+        else:
+            results_start_time = int(round(self._wn.sim_time))
+        results.time = np.arange(results_start_time, self._wn.options.duration+self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
 
         # Initialize X
         # Vars will be ordered:
