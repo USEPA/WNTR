@@ -1945,7 +1945,7 @@ class Junction(Node):
         control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
     
-    def use_external_leak_control(self, wn):
+    def discard_leak_controls(self, wn):
         """
         Method to specify that user-defined controls will be used to
         start and stop the leak. This will remove any controls set up
