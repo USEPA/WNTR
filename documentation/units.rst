@@ -1,7 +1,7 @@
 Units
 ======================================
 
-WNTR accepts EPANET inp files using the following unit conventions [Rossman2000]_:
+WNTR is compatible with EPANET inp files using the following unit conventions [Rossman2000]_:
 
 * CFS = cubic feet per second
 * GPM = gallons per minute
@@ -35,7 +35,7 @@ SI units. Results are stored in SI units and can be converted to other units if 
 * Mass injection = :math:`kg/s`
 * Volume = :math:`m^3`
 
-The sympy package can be used to convert between units.  The example converting_units.py
+The sympy package can be used to convert between units.  The example **converting_units.py**
 demonstrates its use.
 
 .. literalinclude:: ../examples/converting_units.py

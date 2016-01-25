@@ -11,22 +11,20 @@ This class inherits from NetworkX MulitDigraph and includes additional methods
 that are specific to WNTR. The graph stores the start 
 and end node of each link, node coordinates, and node and link types. 
 WNTR updates the graph as elements are added and removed from the water network model.  
-A copy of the graph can an be obtained using the following function::
+The example **networkx_graph.py** can be used to generate a graph from a water network model.
 
-	>>> G = wn.get_graph_deep_copy()
+A copy of the graph can an be obtained using the following function.
+
+.. literalinclude:: ../examples/networkx_graph.py
+   :lines: 6
 	
 The graph is stored as a nested dictionary.  The nodes and edges of the graph 
-can be accessed using the following::
+can be accessed using the following.
 
-	>>> G.node[name]
-	{'type': 'junction', 'pos': (42.11, 8.67)}
-	>>> G.edge[name]
-	{'225': {'257': {'type': 'pipe'}}, '219': {'251': {'type': 'pipe'}}}
+.. literalinclude:: ../examples/networkx_graph.py
+   :lines: 8-10
 
-where 'name' is a node name.
+The graph can be used to access NetworkX methods.
 
-The graph can be used to access NetworkX methods, for example::
-
-	>>> import networkx as nx
-	>>> node_degree = G.degree()
-	>>> bet_cen = nx.betweenness_centrality(G)
+.. literalinclude:: ../examples/networkx_graph.py
+   :lines: 2,12-14

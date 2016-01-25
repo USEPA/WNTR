@@ -1,27 +1,28 @@
 Hydraulic simulation
 ====================
    
-WNTR contains two hydraulic simulators:  the EPANET simulator and the Scipy simulator.
+WNTR contains two hydraulic simulators:  the EPANET simulator and the WNTR simulator.
+The example **hydraulic_simulation.py** can be used to compare the simulators.
 
 The EPANET simulator uses the EPANET toolkit and dll.  The simualtor can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
-Hydraulic simulation using the EPANET simulator is run using the following code::
+Hydraulic simulation using the EPANET simulator is run using the following code.
 
-	sim = wntr.sim.EpanetSimulator(wn)
-	results = sim.run_sim()
+.. literalinclude:: ../examples/hydraulic_simulation.py
+   :lines: 8-9
 
-The Scipy simulator is a pure python simulation engine based on the same equaitons
-as EPANET.  The Scipy simulator does not include equations to run water quality 
-simulations.  The Scipy simulator includes the option to run hydrulic simulation
+The WNTR simulator is a pure python simulation engine based on the same equaitons
+as EPANET.  The WNTR simulator does not include equations to run water quality 
+simulations.  The WNTR simulator includes the option to run hydrulic simulation
 in pressure-driven mode. 
-Hydraulic simulation using the the Scipy simulator is run using the following code::
+Hydraulic simulation using the the WNTR simulator is run using the following code.
 
-	sim = wntr.sim.ScipySimulator(wn)
-	results = sim.run_sim()
+.. literalinclude:: ../examples/hydraulic_simulation.py
+   :lines: 12-13
 	
 More information on the simulators can be found in the API documentation, under
 :doc:`EpanetSimulator</apidoc/wntr.sim.EpanetSimulator>` and 
-:doc:`ScipySimulator</apidoc/wntr.sim.ScipySimulator>`.
+:doc:`WntrSimulator</apidoc/wntr.sim.WntrSimulator>`.
 
 The following page describes the hydraulic equations used in WNTR.
 

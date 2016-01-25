@@ -20,22 +20,69 @@ more resilient over time [USEPA2014]_.
 
 The Water Network Tool for Resilience (WNTR, pronounced *winter*) is a python 
 package designed to simulate and analyze resilience of 
-water distribution networks.  The software includes:
-
-* Pressure-driven and demand-driven hydraulic simulation
-* Water quality simulation
-* Capabilities to simulate pipe breaks and power outages
-* Flexible controls
-* Resilience metrics 
-* Analysis and visualization tools
-
+water distribution networks.  
 The API is flexible and allows for changes to the network structure and operations, 
 along with simulation of disruptive events and recovery actions.  
+The software includes capability to:
 
-A flowchart of features is shown below. 
+.. sidebar:: Example graphics
 
-.. todo:: Add additional background from the Roadmap
+   .. figure:: figures/overview.png
+	   :scale: 100 %
+	   :alt: Example graphics
+   
+* Generate water network models 
 
-.. figure:: figures/roadmap_flowchart.png
-   :scale: 100 %
-   :alt: Flowchart of WNTR capabilities
+  * Compatible with EPANET inp files
+  
+* Modify network structure
+
+  * Add/remove nodes and links
+  * Modify node and link characteristics
+
+* Modify network operation
+
+  * Change initial conditions
+  * Change tank, pump, and valve settings
+  * Add/remove time-based and conditional controls
+  * Add controls based on node and link attributes
+  
+* Add disruptive events
+
+  * Pipe leak
+  * Power outage
+  * Contaminant injection
+  * Changes to supply and demand
+
+* Add response/repair strategies
+
+  * Fix leaks
+  * Restore power
+  * Add backup generation
+  
+* Simulate network hydraulics and water quality
+
+  * Pressure-driven or demand-driven hydraulic equations
+  * Track concentration, water age, or percent tracer
+  * Ability to pause hydraulic simulations, update network operations, and then restart
+  
+* Run probabilistic simulations
+
+  * Monte Carlo simulations
+  * Fragility curves to define component failure
+  
+* Compute resilience 
+
+  * Topographic, hydraulic metrics, water quality, and water security metrics
+
+* Analyze results and generate graphics
+
+  * State transition plots
+  * Network graphics and animation
+
+
+..
+	Additional Features (**NOT COMPLETE**)
+	* Loss of access (event)
+	* Cascading failure (event)
+	* Detect contaminant (response/repair strategy)
