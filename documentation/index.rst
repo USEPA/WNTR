@@ -14,6 +14,7 @@ WNTR 0.1 documentation
    waterquality
    resultsobject
    disaster_models
+   fragility_curves
    resilience
    stochastic
    license
