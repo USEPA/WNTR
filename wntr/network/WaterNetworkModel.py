@@ -1231,7 +1231,7 @@ class WaterNetworkModel(object):
         sys.setrecursionlimit(starting_recursion_limit)
         return isolated_junctions, isolated_links
 
-    def write_inpfile(self, filename):
+    def write_inpfile(self, filename, units='CMS'):
         """
          Write the current network into an EPANET inp file.
 
@@ -1245,18 +1245,18 @@ class WaterNetworkModel(object):
         f = open(filename, 'w')
 
         # Print title
-        print >> f, '[TITLE]'
+        f.write('[TITLE]\n')
         if self.name is not None:
-            print >> f, self.name
+            f.write('{0}\n'.format(self.name))
 
         # Print junctions information
-        print >> f, '[JUNCTIONS]'
-        text_format = '{:10s} {:15f} {:15f} {:>10s} {:>3s}'
-        label_format = '{:10s} {:>15s} {:>15s} {:>10s}'
-        print >> f, label_format.format(';ID', 'Elevation', 'Demand', 'Pattern')
+        f.write('[JUNCTIONS]\n')
+        text_format = '{:10s} {:15f} {:15f} {:>10s} {:>3s}\n'
+        label_format = '{:10s} {:>15s} {:>15s} {:>10s}\n'
+        f.write(label_format.format(';ID', 'Elevation', 'Demand', 'Pattern'))
         for junction_name, junction in self.nodes(Junction):
             if junction.demand_pattern_name is not None:
-                print >> f, text_format.format(junction_name, junction.elevation, junction.base_demand*1000.0, junction.demand_pattern_name, ';')
+                f.write(text_format.format(junction_name, junction.elevation, junction.base_demand*1000.0, junction.demand_pattern_name, ';'))
             else:
                 print >> f, text_format.format(junction_name, junction.elevation, junction.base_demand*1000.0, '', ';')
 
