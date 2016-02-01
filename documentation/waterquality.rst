@@ -8,13 +8,13 @@ A water quality scenario can be defined using the scenario class :doc:`Waterqual
 This class stores information on the water quality type and injection.  
 EPANET supports water quality simulation to track chemical concentration, 
 water age, and tracer percent.
+The example **water_quality_simulation.py** can be used to run water quality simualtions are plot results.
 
 The following code can be used to run a hydrulic and water quality simulation, 
-in this case, to compute water age::
+in this case, to compute water age.
 
-	WQscenario = wntr.scenario.Waterquality('AGE')
-	sim = wntr.sim.EpanetSimulator(wn)
-	results = sim.run_sim(WQscenario)
+.. literalinclude:: ../examples/water_quality_simulation.py
+   :lines: 6, 19-20
 
 Concentration
 -------------

@@ -12,29 +12,29 @@ This is similar to the model components stored in an EPANET inp file.
 Some EPANET [Rossman2000]_ features are not supported by WNTR, as described below.
 WNTR also includes features that are not supported by EPANET, 
 including leaks, pressure-driven hydraulic simulation, and 
-more flexible controls.
+more flexible controls.  
+The example **water_network_model.py** can be used to generate, save, and modify water networks.
 
-A water network model can be created by adding network components to the model::
+A water network model can be created by adding network components to the model.
 
-	wn = wntr.network.WaterNetworkModel()
-	wn.add_junction('node1', base_demand=0.01, elevation=100.0, coordinates=(1,2))
-	...
+.. literalinclude:: ../examples/water_network_model.py
+   :lines: 4-14
 
 A water network model can also be created directly from an EPANET inp file.
-EPANET features not supported by WNTR will be printed to the screen::
-	
-	wn = wntr.network.WaterNetworkModel('Net3.inp')
-	
+EPANET features not supported by WNTR will be printed to the screen.
+
+.. literalinclude:: ../examples/water_network_model.py
+   :lines: 24
+   
 The water network model can be written to a file in EPANET inp file format.
 Files are written in LPS units.  
-The inp file will not include features not supported by EPANET::
+The inp file will not include features not supported by EPANET.
 
-	wn.write_inpfile('filename.inp')
+.. literalinclude:: ../examples/water_network_model.py
+   :lines: 21
 	
 The demands associated with pressure-driven simulation can be stored as
-demands in the inp file (**NOT COMPLETE**).  See :ref:`simulation_results` for more information on data stored in ``results.node``::
-
-	wn.write_inpfile('filename.inp', results.node['demand'])
+demands in the inp file (**NOT COMPLETE**).  See :ref:`simulation_results` for more information on data stored in ``results.node``.
 
 The following table describes water network model components.  
 EPANET components that are not supported by WNTR are noted.

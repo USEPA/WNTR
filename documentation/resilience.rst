@@ -30,6 +30,7 @@ between a regular lattice and a random lattice in terms of structure and reliabi
 NetworkX includes a wide range of topographic metrics that can be computed using 
 the WntrMutliDiGraph.  WNTR includes additional methods/metrics to help compute 
 resilience.  These methods are in the :doc:`WntrMultiDiGraph Class</apidoc/wntr.network.WntrMultiDiGraph>`.
+The example **topographic_metrics.py** demonstrates some of these methods.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
@@ -132,6 +133,7 @@ Hydraulic metrics
 Hydraulic metrics are based upon spatially and temporally variable flows and/or
 pressure; calculation of these metrics require simulation of WDS hydraulics that reflect how the
 system operates under normal or abnormal conditions.
+The example **hydraulic_metrics.py** demonstrates these methods.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
@@ -162,6 +164,7 @@ Fraction of delivered demand		:doc:`fdd</apidoc/wntr.metrics.fraction_delivered>
 
 Water quality metrics
 ---------------------
+The example **water_quality_metrics.py** demonstrates these methods.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
@@ -177,6 +180,7 @@ Average water consumed per day		:doc:`average_water_consumed_perday</apidoc/wntr
 
 Water security metrics
 -----------------------
+The example **water_security_metrics.py** demonstrates these methods.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
@@ -204,6 +208,7 @@ Extent of contamination			:doc:`extent_contaminant</apidoc/wntr.metrics.health_i
 
 Other metrics
 -------------
+The example **other_metrics.py** demonstrates these methods.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description

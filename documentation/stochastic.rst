@@ -18,7 +18,5 @@ Likewise, the number of pipes to fail and the start and end time of the failure 
 These selections can be used within loop to run an ensemble of simulations.
 
 WNTR includes several case study examples that demonstrate stochastic simulation
-and analysis.  The following example, from power_outage_simulation.py, 
-runs multiple realizations of a power outage:
-
-.. literalinclude:: ../examples/case_studies/power_outage/power_outage_simulation.py
+and analysis.  The example **stochastic_simulation.py** runs multiple realizations 
+of a power outage and creates graphics of the results.

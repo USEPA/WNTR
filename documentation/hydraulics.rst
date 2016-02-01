@@ -1,32 +1,41 @@
 Hydraulic simulation
 ====================
    
-WNTR contains two hydraulic simulators:  the EPANET simulator and the Scipy simulator.
+WNTR contains two hydraulic simulators:  the EPANET simulator and the WNTR simulator.
+The example **hydraulic_simulation.py** can be used to compare the simulators.
 
 The EPANET simulator uses the EPANET toolkit and dll.  The simualtor can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
-Hydraulic simulation using the EPANET simulator is run using the following code::
+Hydraulic simulation using the EPANET simulator is run using the following code.
 
-	sim = wntr.sim.EpanetSimulator(wn)
-	results = sim.run_sim()
+.. literalinclude:: ../examples/hydraulic_simulation.py
+   :lines: 8-9
 
-The Scipy simulator is a pure python simulation engine based on the same equaitons
-as EPANET.  The Scipy simulator does not include equations to run water quality 
-simulations.  The Scipy simulator includes the option to run hydrulic simulation
+The WNTR simulator is a pure python simulation engine based on the same equaitons
+as EPANET.  The WNTR simulator does not include equations to run water quality 
+simulations.  The WNTR simulator includes the option to run hydrulic simulation
 in pressure-driven mode. 
-Hydraulic simulation using the the Scipy simulator is run using the following code::
+Hydraulic simulation using the the WNTR simulator is run using the following code.
 
-	sim = wntr.sim.ScipySimulator(wn)
-	results = sim.run_sim()
-	
+.. literalinclude:: ../examples/hydraulic_simulation.py
+   :lines: 12-13
+
 More information on the simulators can be found in the API documentation, under
 :doc:`EpanetSimulator</apidoc/wntr.sim.EpanetSimulator>` and 
-:doc:`ScipySimulator</apidoc/wntr.sim.ScipySimulator>`.
+:doc:`WntrSimulator</apidoc/wntr.sim.WntrSimulator>`.
 
-The following page describes the hydraulic equations used in WNTR.
+Pause and restart 
+------------------
+
+WNTR includes the ability to pause a hydraulic simulation, change network
+operations, and then restart the simualtion.  
+The example **multiple_simulations.py** includes methods to start and stop 
+a simulation and methods to pickle a water network model for later use.
+This feature is helpful when evalutating various response action plans and when 
+simulating long periods of time with different resolution.
 
 Mass balence at nodes
-----------------------
+-------------------------
 WNTR uses the same mass balance equations as EPANET [Rossman2000]_. 
 Conservation of mass (and the assumption of constant density) requires
 
@@ -43,7 +52,7 @@ If water is flowing out of node :math:`n` and into pipe :math:`p`, then
 :math:`q_{p,n}` is negative. Otherwise, it is positive.
 
 Headloss in pipes
----------------------
+-------------------------
 The headloss formula used in WNTR is the Hazen-Williams
 formula [Rossman2000]_:
 
@@ -104,12 +113,12 @@ the Hazen-Williams and modified Hazen-Williams curves, with :math:`m = 0.01 m^{2
 figures show that the two formulas are essentially indistinguishable.
 
 Demand-driven analysis
-----------------------
+-------------------------
 
 Pressure-driven analysis
---------------------------
+-------------------------
 
 Leak model
-----------
+-------------------------
 
 	
