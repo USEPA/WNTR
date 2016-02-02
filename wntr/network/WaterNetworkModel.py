@@ -1231,7 +1231,7 @@ class WaterNetworkModel(object):
         sys.setrecursionlimit(starting_recursion_limit)
         return isolated_junctions, isolated_links
 
-    def write_inpfile(self, filename, units='CMS'):
+    def write_inpfile(self, filename, units='LPS'):
         """
          Write the current network into an EPANET inp file.
 
@@ -1241,6 +1241,30 @@ class WaterNetworkModel(object):
             Name of the inp file. example - Net3_adjusted_demands.inp
         """
         # TODO: This is still a very alpha version with hard coded unit conversions to LPS (among other things).
+
+        units=units.upper()
+        if units=='CFS':
+            flowunit = 0
+        elif units=='GPM':
+            flowunit = 1
+        elif units=='MGD':
+            flowunit = 2
+        elif units=='IMGD':
+            flowunit = 3
+        elif units=='AFD':
+            flowunit = 4
+        elif units=='LPS':
+            flowunit = 5
+        elif units=='LPM':
+            flowunit = 6
+        elif units=='MLD':
+            flowunit = 7
+        elif units=='CMH':
+            flowunit = 8
+        elif units=='CMD':
+            flowunit = 9
+        else:
+            raise ValueError('units not recognized')
 
         f = open(filename, 'w')
 
@@ -1254,41 +1278,41 @@ class WaterNetworkModel(object):
         text_format = '{:10s} {:15f} {:15f} {:>10s} {:>3s}\n'
         label_format = '{:10s} {:>15s} {:>15s} {:>10s}\n'
         f.write(label_format.format(';ID', 'Elevation', 'Demand', 'Pattern'))
-        for junction_name, junction in self.nodes(Junction):
+        for junction_name, junction in self.junctions():
             if junction.demand_pattern_name is not None:
-                f.write(text_format.format(junction_name, junction.elevation, junction.base_demand*1000.0, junction.demand_pattern_name, ';'))
+                f.write(text_format.format(junction_name, convert('Elevation',flowunit,junction.elevation,MKS=False), convert('Demand',flowunit,junction.base_demand,False), junction.demand_pattern_name, ';'))
             else:
-                print >> f, text_format.format(junction_name, junction.elevation, junction.base_demand*1000.0, '', ';')
+                f.write(text_format.format(junction_name, convert('Elevation',flowunit,junction.elevation,False), convert('Demand',flowunit,junction.base_demand,False), '', ';'))
 
         # Print reservoir information
-        print >> f, '[RESERVOIRS]'
-        text_format = '{:10s} {:15f} {:>10s} {:>3s}'
-        label_format = '{:10s} {:>15s} {:>10s}'
-        print >> f, label_format.format(';ID', 'Head', 'Pattern')
-        for reservoir_name, reservoir in self.nodes(Reservoir):
+        f.write('[RESERVOIRS]\n')
+        text_format = '{:10s} {:15f} {:>10s} {:>3s}\n'
+        label_format = '{:10s} {:>15s} {:>10s}\n'
+        f.write(label_format.format(';ID', 'Head', 'Pattern'))
+        for reservoir_name, reservoir in self.reservoirs():
             if reservoir.head_pattern_name is not None:
-                print >> f, text_format.format(reservoir_name, reservoir.base_head, reservoir.head_pattern_name, ';')
+                f.write(text_format.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), reservoir.head_pattern_name, ';'))
             else:
-                print >> f, text_format.format(reservoir_name, reservoir.base_head, '', ';')
+                f.write(text_format.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), '', ';'))
 
         # Print tank information
-        print >> f, '[TANKS]'
-        text_format = '{:10s} {:15f} {:15f} {:15f} {:15f} {:15f} {:15f} {:>10s} {:>3s}'
-        label_format = '{:10s} {:>15s} {:>15s} {:>15s} {:>15s} {:>15s} {:>15s} {:>10s}'
-        print >> f, label_format.format(';ID', 'Elevation', 'Initial Level', 'Minimum Level', 'Maximum Level', 'Diameter', 'Minimum Volume', 'Volume Curve')
-        for tank_name, tank in self.nodes(Tank):
+        f.write('[TANKS]\n')
+        text_format = '{:10s} {:15f} {:15f} {:15f} {:15f} {:15f} {:15f} {:>10s} {:>3s}\n'
+        label_format = '{:10s} {:>15s} {:>15s} {:>15s} {:>15s} {:>15s} {:>15s} {:>10s}\n'
+        f.write(label_format.format(';ID', 'Elevation', 'Initial Level', 'Minimum Level', 'Maximum Level', 'Diameter', 'Minimum Volume', 'Volume Curve'))
+        for tank_name, tank in self.tanks():
             if tank.vol_curve is not None:
-                print >> f, text_format.format(tank_name, tank.elevation, tank.init_level, tank.min_level, tank.max_level, tank.diameter, tank.min_vol, tank.vol_curve, ';')
+                f.write(text_format.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), tank.vol_curve, ';'))
             else:
-                print >> f, text_format.format(tank_name, tank.elevation, tank.init_level, tank.min_level, tank.max_level, tank.diameter, tank.min_vol, '', ';')
+                f.write(text_format.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), '', ';'))
 
         # Print pipe information
-        print >> f, '[PIPES]'
-        text_format = '{:10s} {:10s} {:10s} {:15f} {:15f} {:15f} {:15f} {:>10s} {:>3s}'
-        label_format = '{:10s} {:>10s} {:>10s} {:>15s} {:>15s} {:>15s} {:>15s} {:>10s}'
-        print >> f, label_format.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status')
-        for pipe_name, pipe in self.links(Pipe):
-            print >> f, text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), pipe.length, pipe.diameter*1000, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';')
+        f.write('[PIPES]\n')
+        text_format = '{:10s} {:10s} {:10s} {:15f} {:15f} {:15f} {:15f} {:>10s} {:>3s}\n'
+        label_format = '{:10s} {:>10s} {:>10s} {:>15s} {:>15s} {:>15s} {:>15s} {:>10s}\n'
+        f.write(label_format.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status'))
+        for pipe_name, pipe in self.pipes():
+            f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';')
 
         # Print pump information
         print >> f, '[PUMPS]'
