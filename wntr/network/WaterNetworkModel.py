@@ -1167,12 +1167,44 @@ class WaterNetworkModel(object):
             link.prev_setting = None
 
     def _get_isolated_junctions(self):
+        #udG = self._graph.to_undirected()
+        #for link_name, link in self.pipes():
+        #    if link.status==LinkStatus.closed:
+        #        udG.remove_edge(link.start_node(), link.end_node(), key=link_name)
+        #for link_name, link in self.pumps():
+        #    if link.status==LinkStatus.closed:
+        #        udG.remove_edge(link.start_node(), link.end_node(), key=link_name)
+        #for link_name, link in self.valves():
+        #    if link.status==LinkStatus.closed:
+        #        udG.remove_edge(link.start_node(), link.end_node(), key=link_name)
+        #        
+        #if nx.is_connected(udG):
+        #    return set(),set()
+        #else:
+        #    isolated_junctions = set()
+        #    isolated_links = set()
+        #    for subG in nx.connected_component_subgraphs(udG):
+        #        has_tank_or_res = False
+        #        for node_name in subG.nodes_iter():
+        #            node_type = subG.node[node_name]['type']
+        #            if node_type == 'tank' or node_type == 'reservoir':
+        #                has_tank_or_res = True
+        #                break
+        #        if has_tank_or_res:
+        #            continue
+        #        else:
+        #            isolated_junctions = isolated_junctions.union(set(subG.nodes()))
+        #            for edge in subG.edges_iter():
+        #                for link_name in subG.edge[edge[0]][edge[1]].keys():
+        #                    isolated_links.add(link_name)
+        #    return isolated_junctions, isolated_links
+                    
         starting_recursion_limit = sys.getrecursionlimit()
         sys.setrecursionlimit(50000)
         groups = {}
         has_tank_or_res = {}
         G = self._graph
-
+        
         def grab_group(node_name):
             groups[grp].add(node_name)
             if G.node[node_name]['type'] == 'tank' or G.node[node_name]['type']=='reservoir':
@@ -1199,7 +1231,7 @@ class WaterNetworkModel(object):
                 if connected_to_p:
                     if p not in groups[grp]:
                         grab_group(p)
-
+        
         grp = -1
         for node_name in G.nodes():
             already_in_grp = False
@@ -1211,23 +1243,23 @@ class WaterNetworkModel(object):
                 groups[grp] = set()
                 has_tank_or_res[grp] = False
                 grab_group(node_name)
-
+        
         for grp,check in has_tank_or_res.iteritems():
             if check:
                 del groups[grp]
-
+        
         isolated_junctions = set()
         for grp, junctions in groups.iteritems():
             isolated_junctions = isolated_junctions.union(junctions)
         isolated_junctions = list(isolated_junctions)
-
+        
         isolated_links = set()
         for j in isolated_junctions:
             connected_links = self.get_links_for_node(j)
             for l in connected_links:
                 isolated_links.add(l)
         isolated_links = list(isolated_links)
-
+        
         sys.setrecursionlimit(starting_recursion_limit)
         return isolated_junctions, isolated_links
 
