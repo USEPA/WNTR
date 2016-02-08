@@ -1,6 +1,5 @@
 from EpanetSimulator import EpanetSimulator
 from ScipySimulator import ScipySimulator
-from PyomoSimulator import PyomoSimulator
 from NetworkResults import NetResults
 from NewtonSolver import NewtonSolver
 from WaterNetworkSimulator import WaterNetworkSimulator
