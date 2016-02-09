@@ -714,7 +714,7 @@ class ScipyModel(object):
         #if self._wn.sim_time == 4591.0:
         #self.check_jac_for_zero_rows()
         #self.print_jacobian_nonzeros()
-        #    self.check_jac(x)
+        #self.check_jac(x)
         return self.jacobian
 
     def get_node_balance_residual(self, flow, demand, leak_demand):
@@ -1265,23 +1265,25 @@ class ScipyModel(object):
 
     def check_jac(self, x):
         import copy
-        approx_jac = np.matrix(np.zeros((self.num_nodes*2+self.num_links, self.num_nodes*2+self.num_links)))
+        approx_jac = np.matrix(np.zeros((self.num_nodes*2+self.num_links+self.num_leaks, self.num_nodes*2+self.num_links+self.num_leaks)))
 
-        step = 0.0001
+        step = 0.00001
 
         resids = self.get_hydraulic_equations(x)
 
+        x1 = copy.copy(x)
+        x2 = copy.copy(x)
         print 'shape = (',len(x),',',len(x),')'
         for i in xrange(len(x)):
             print 'getting approximate derivative of column ',i
-            x1 = copy.copy(x)
-            x2 = copy.copy(x)
             x1[i] = x1[i] + step
             x2[i] = x2[i] + 2*step
             resids1 = self.get_hydraulic_equations(x1)
             resids2 = self.get_hydraulic_equations(x2)
             deriv_column = (-3.0*resids+4.0*resids1-resids2)/(2*step)
             approx_jac[:,i] = np.matrix(deriv_column).transpose()
+            x1[i] = x1[i] - step
+            x2[i] = x2[i] - 2*step
 
         approx_jac = sparse.csr_matrix(approx_jac)
 
