@@ -12,7 +12,7 @@ class NewtonSolver(object):
         self._total_linear_solver_time = 0
 
         if 'MAXITER' not in self._options:
-            self.maxiter = 50
+            self.maxiter = 100
         else:
             self.maxiter = self._options['MAXITER']
 
@@ -37,7 +37,7 @@ class NewtonSolver(object):
             self.bt_maxiter = self._options['BT_MAXITER']
 
         if 'BACKTRACKING' not in self._options:
-            self.bt = False
+            self.bt = True
         else:
             self.bt = self._options['BACKTRACKING']
 
@@ -50,14 +50,18 @@ class NewtonSolver(object):
 
         I = sp.csr_matrix((np.ones(num_vars),(range(num_vars),range(num_vars))),shape=(num_vars,num_vars))
         I = 10*I
+        use_r_ = False
 
         # MAIN NEWTON LOOP
         for iter in xrange(self.maxiter):
-            r = Residual(x)
-            J = Jacobian(x)
-            #J = Jfunc(x)
+            if use_r_:
+                r = r_
+                r_norm = lhs
+            else:
+                r = Residual(x)
+                r_norm = np.max(abs(r))
 
-            r_norm = np.max(abs(r))
+            J = Jacobian(x)
 
             #print iter, r_norm
 
@@ -65,7 +69,7 @@ class NewtonSolver(object):
                 return [x, iter, 1]
             
             # Call Linear solver
-            t0 = time.time()
+            #t0 = time.time()
             try:
                 d = -sp.linalg.spsolve(J,r)
             except sp.linalg.MatrixRankWarning:
@@ -73,19 +77,26 @@ class NewtonSolver(object):
                 J = J+I
                 d = -sp.linalg.spsolve(J,r)
             #d = -np.linalg.solve(J, r)
-            self._total_linear_solver_time += time.time() - t0
+            #self._total_linear_solver_time += time.time() - t0
 
             # Backtracking
-            alpha = 1
-            if self.bt:
+            alpha = 1.0
+            if self.bt and iter>=10:
+                use_r_ = True
                 for iter_bt in xrange(self.bt_maxiter):
                     #print alpha
                     x_ = x + alpha*d
-                    lhs = np.max(abs(Residual(x_)))
+                    r_ = Residual(x_)
+                    if iter_bt > 0:
+                        last_lhs = lhs
+                        lhs = np.max(abs(r_))
+                    else:
+                        lhs = np.max(abs(r_))
+                        last_lhs = lhs + 1.0
                     #rhs = np.max(r + self.bt_c*alpha*J*d)
                     rhs = r_norm
                     #print "     ", iter, iter_bt, alpha
-                    if lhs <= 0.98*rhs:
+                    if lhs <= 0.95*rhs or lhs>last_lhs:
                         x = x_
                         break
                     else:
@@ -95,6 +106,7 @@ class NewtonSolver(object):
                     raise RuntimeError("Backtracking failed. ")
             else:
                 x = x + d
+            #print 'alpha = ',alpha
 
         return [x, iter, 0]
         #raise RuntimeError("No solution found.")
