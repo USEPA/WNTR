@@ -836,7 +836,7 @@ class ScipyModel(object):
         for node_id in self._reservoir_ids:
             self.demand_or_head_residual[node_id] = head[node_id] - self.reservoir_head[node_id]
         for node_id in self.isolated_junction_ids:
-            self.demand_or_head_residual[node_id] = head[node_id] - self.node_elevations[node_id]
+            self.demand_or_head_residual[node_id] = head[node_id]# - self.node_elevations[node_id]
 
     def get_leak_demand_residual(self, head, leak_demand):
         m = 1.0e-11
@@ -906,7 +906,10 @@ class ScipyModel(object):
             self._sim_results['node_head'].append(head_n)
             self._sim_results['node_demand'].append(demand[node_id])
             self._sim_results['node_expected_demand'].append(self.junction_demand[node_id])
-            self._sim_results['node_pressure'].append(head_n - self.node_elevations[node_id])
+            if node_id in self.isolated_junction_ids:
+                self._sim_results['node_pressure'].append(0.0)
+            else:
+                self._sim_results['node_pressure'].append(head_n - self.node_elevations[node_id])
             if node_id in self._leak_ids:
                 leak_idx = self._leak_ids.index(node_id)
                 leak_demand_n = leak_demand[leak_idx]
