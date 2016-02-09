@@ -37,7 +37,7 @@ class NewtonSolver(object):
             self.bt_maxiter = self._options['BT_MAXITER']
 
         if 'BACKTRACKING' not in self._options:
-            self.bt = True
+            self.bt = False
         else:
             self.bt = self._options['BACKTRACKING']
 
