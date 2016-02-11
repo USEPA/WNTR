@@ -8,7 +8,7 @@ logger = logging.getLogger('wntr.network.draw_graph')
 def draw_graph(wn, node_attribute=None, link_attribute=None, title=None, 
                node_size=10, node_range = [None,None], node_cmap=None,
                link_width=1, link_range = [None,None], link_cmap=None, 
-               add_colorbar=True, figsize=None, dpi=None, directed=False):
+               add_colorbar=True, figsize=None, dpi=None, directed=False, node_labels=False):
 
     r"""Draw a WaterNetworkModel networkx graph
     
@@ -155,10 +155,15 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     plt.figure(facecolor='w', edgecolor='k', figsize=figsize, dpi=dpi)
     if title is not None:
         plt.title(title)
-    nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
-              nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1],linewidths=0)
+
+    if node_labels:
+        nodes = nx.draw_networkx_labels(G, pos,
+                                       nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1],linewidths=0)
+    else:
+        nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
+                                       nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1],linewidths=0)
     edges = nx.draw_networkx_edges(G, pos, 
-            edgelist=linklist, edge_color=linkcolor, width=link_width, edge_cmap=link_cmap, edge_vmin = link_range[0], edge_vmax = link_range[1])
+                                   edgelist=linklist, edge_color=linkcolor, width=link_width, edge_cmap=link_cmap, edge_vmin = link_range[0], edge_vmax = link_range[1])
     if add_colorbar and node_attribute:
         plt.colorbar(nodes, shrink=0.5, pad = 0)
     if add_colorbar and link_attribute:
