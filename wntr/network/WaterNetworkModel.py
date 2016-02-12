@@ -991,6 +991,36 @@ class WaterNetworkModel(object):
         """
         return len(self._nodes)
 
+    def num_junctions(self):
+        """
+        Number of junctions.
+
+        Returns
+        -------
+        Number of junctions.
+        """
+        return self._num_junctions
+    
+    def num_tanks(self):
+        """
+        Number of tanks.
+
+        Returns
+        -------
+        Number of tanks.
+        """
+        return self._num_tanks
+    
+    def num_reservoirs(self):
+        """
+        Number of reservoirs.
+
+        Returns
+        -------
+        Number of reservoirs.
+        """
+        return self._num_reservoirs
+    
     def num_links(self):
         """
         Number of links.
@@ -1000,6 +1030,36 @@ class WaterNetworkModel(object):
         """
         return len(self._links)
 
+    def num_pipes(self):
+        """
+        Number of pipes.
+
+        Returns
+        -------
+        Number of pipes.
+        """
+        return self._num_pipes
+    
+    def num_pumps(self):
+        """
+        Number of pumps.
+
+        Returns
+        -------
+        Number of pumps.
+        """
+        return self._num_pumps
+    
+    def num_valves(self):
+        """
+        Number of valves.
+
+        Returns
+        -------
+        Number of valves.
+        """
+        return self._num_valves
+    
     def nodes(self, node_type=None):
         """
         A generator to iterate over all nodes of node_type.
@@ -1055,6 +1115,30 @@ class WaterNetworkModel(object):
         for name, link in self._valves.iteritems():
             yield name, link
 
+    def node_name_list(self):
+        return self._nodes.keys()
+
+    def junction_name_list(self):
+        return self._junctions.keys()
+
+    def tank_name_list(self):
+        return self._tanks.keys()
+
+    def reservoir_name_list(self):
+        return self._reservoirs.keys()
+
+    def link_name_list(self):
+        return self._links.keys()
+
+    def pipe_name_list(self):
+        return self._pipes.keys()
+
+    def pump_name_list(self):
+        return self._pumps.keys()
+
+    def valve_name_list(self):
+        return self._valves.keys()
+            
     def curves(self):
         """
         A generator to iterate over all curves
