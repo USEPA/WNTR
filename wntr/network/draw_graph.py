@@ -67,6 +67,10 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     
     directed : bool, optional 
         (default = False)
+
+    node_labels: bool, optional
+        If True, the graph will have each node labeled with its name.
+        (default = False)
         
     Returns
     -------

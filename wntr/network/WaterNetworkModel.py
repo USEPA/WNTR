@@ -1174,6 +1174,10 @@ class WaterNetworkModel(object):
         
         for name, node in self._nodes.iteritems():
             self.set_node_coordinates(name, (pos[name][0]*scale, pos[name][1]*scale))
+
+    def set_edge_attribute_on_graph(self, link_name, attr_name, value):
+        link = self.get_link(link_name)
+        self._graph.edge[link.start_node()][link.end_node()][link_name][attr_name] = value
         
     def shifted_time(self):
         """ 
