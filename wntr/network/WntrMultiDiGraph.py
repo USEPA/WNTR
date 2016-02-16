@@ -102,9 +102,9 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         cpd : float
             Central point dominance
         """
-        bet_cen = nx.betweenness_centrality(self)
+        bet_cen = nx.betweenness_centrality(self.to_undirected())
         bet_cen = bet_cen.values()
-        cpd = sum(max(bet_cen) - np.array(bet_cen))/len(bet_cen)
+        cpd = sum(max(bet_cen) - np.array(bet_cen))/(len(bet_cen)-1)
         
         return cpd
         
