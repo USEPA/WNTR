@@ -133,7 +133,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
             Algebraic connectivity
         """
         eig = nx.laplacian_spectrum(self.to_undirected())
-        alg_con = eig[-2]
+        eig = np.sort(eig)
+        alg_con = eig[1]
         
         return alg_con
     

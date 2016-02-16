@@ -62,15 +62,25 @@ def test_algebraic_connectivity():
 
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)
-            
     G = wn.get_graph_deep_copy()
-    udG = G.to_undirected()
-    
-    AC = nx.algebraic_connectivity(udG)
+    AC = G.algebraic_connectivity()
 
     print 'AC = ',AC
     print 'expected AC = ',0.56
     error = abs(0.56-AC)
+    assert_less(error, 0.01)
+
+def test_crit_ratio_defrag():
+    inp_file = join(datadir,'Anytown.inp') 
+
+    # Create a water network model for results object
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    G = wn.get_graph_deep_copy()
+    CRD = G.critical_ratio_defrag()
+
+    print 'CRD = ',CRD
+    print 'expected CRD = ',0.63
+    error = abs(0.63-CRD)
     assert_less(error, 0.01)
 
 
