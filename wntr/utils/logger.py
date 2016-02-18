@@ -1,4 +1,5 @@
 import logging
+logging.getLogger('wntr').addHandler(logging.NullHandler())
 
 class _LogWrapper(object):
     initialized = None
@@ -19,6 +20,7 @@ class _LogWrapper(object):
             ch.setFormatter(formatter)
             logger.addHandler(fh)
             logger.addHandler(ch)
-     
-if _LogWrapper.initialized is None:
-    _LogWrapper.initialized = _LogWrapper()
+
+def start_logging():
+    if _LogWrapper.initialized is None:
+        _LogWrapper.initialized = _LogWrapper()

@@ -1,0 +1,3 @@
+*.pyc
+wntr.egg-info/
+build/
