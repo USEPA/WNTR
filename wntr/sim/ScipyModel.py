@@ -205,7 +205,9 @@ class ScipyModel(object):
                 raise RuntimeError('Link is not a pipe, pump, or valve.')
             l += 1
 
-
+        #print self._node_id_to_name
+        #print self._link_id_to_name
+            
     def _set_node_attributes(self):
         self.out_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
         self.in_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
@@ -1027,9 +1029,11 @@ class ScipyModel(object):
 
     def identify_isolated_junctions(self):
         self.isolated_junction_names, self.isolated_link_names = self._wn._get_isolated_junctions()
-        if len(self.isolated_junction_names)>0:
-            print 'We have ',len(self.isolated_junction_names),' isolated junctions.'
-            print 'We have ',len(self.isolated_link_names),' isolated links.'
+        #if len(self.isolated_junction_names)>0:
+        #    print 'We have ',len(self.isolated_junction_names),' isolated junctions.'
+        #    print self.isolated_junction_names
+        #    print 'We have ',len(self.isolated_link_names),' isolated links.'
+        #    print self.isolated_link_names
 
     def update_network_previous_values(self):
         self._wn.prev_sim_time = self._wn.sim_time

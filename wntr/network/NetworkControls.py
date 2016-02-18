@@ -117,7 +117,7 @@ class ControlAction(BaseControlAction):
         if orig_value == self._value:
             return False, None, None
         else:
-            #print control_name
+            #print 'control name: ',control_name
             #print 'setting ',target.name(),self._attribute,' to ',self._value
             setattr(target, self._attribute, self._value)
             return True, (target, self._attribute), orig_value

@@ -226,7 +226,7 @@ class WaterNetworkModel(object):
                 else:
                     other_node_name = link.start_node()
                 other_node = self.get_node(other_node_name)
-                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.less_equal,np.less],[min_head+self._Htol,(other_node,'head')],open_control_action)
+                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.less_equal,np.less_equal],[min_head+self._Htol,(other_node,'head')],open_control_action)
                 control._priority = 2
                 control.name = tank.name()+link_name+' opened because tank head is below min head but flow should be in'
                 tank_controls.append(control)
@@ -266,7 +266,7 @@ class WaterNetworkModel(object):
                 else:
                     other_node_name = link.start_node()
                 other_node = self.get_node(other_node_name)
-                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater],[max_head-self._Htol,(other_node,'head')],open_control_action)
+                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater_equal],[max_head-self._Htol,(other_node,'head')],open_control_action)
                 control._priority = 2
                 control.name = tank.name()+link_name+' opened because head above max head but flow should be out'
                 tank_controls.append(control)

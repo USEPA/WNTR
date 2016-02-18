@@ -87,6 +87,9 @@ class ScipySimulator(WaterNetworkSimulator):
 
         while True:
 
+            #print ' '
+            #print ' '
+            
             if not resolve:
                 start_step_time = time.time()
 
