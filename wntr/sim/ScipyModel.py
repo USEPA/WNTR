@@ -259,6 +259,7 @@ class ScipyModel(object):
         self.pipe_resistance_coefficients = range(self.num_links)
         self.pipe_diameters = {}
         self.head_curve_coefficients = {}
+        self.max_pump_flows = {}
         self.pump_poly_coefficients = {} # {pump_id: (a,b,c,d)} a*x**3 + b*x**2 + c*x + d
         self.pump_powers = {}
 
@@ -281,6 +282,7 @@ class ScipyModel(object):
                 if link.info_type == 'HEAD':
                     A, B, C = link.get_head_curve_coefficients()
                     self.head_curve_coefficients[link_id] = (A,B,C)
+                    self.max_pump_flows[link_id] = (A/B)**(1.0/C)
                     a,b,c,d = self.get_pump_poly_coefficients(A,B,C)
                     self.pump_poly_coefficients[link_id] = (a,b,c,d)
                 elif link.info_type == 'POWER':
@@ -949,6 +951,9 @@ class ScipyModel(object):
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
             self._sim_results['link_velocity'].append(0.0)
+            if flow[link_id]>self.max_pump_flows[link_id]:
+                link_name = self._link_id_to_name[link_id]
+                warnings.warn('Pump '+link_name+' has exceeded its maximum flow.')
         for link_id in self._valve_ids:
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
