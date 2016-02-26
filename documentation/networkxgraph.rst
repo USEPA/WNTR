@@ -24,7 +24,7 @@ can be accessed using the following.
 .. literalinclude:: ../examples/networkx_graph.py
    :lines: 8-10
 
-The graph can be used to access NetworkX methods.
+The graph can be used to access NetworkX methods, for example
 
 .. literalinclude:: ../examples/networkx_graph.py
    :lines: 2,12-14

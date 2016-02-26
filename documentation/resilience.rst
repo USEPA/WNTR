@@ -5,23 +5,30 @@ Resilience of water distribution systems refers to the
 design, maintenance, and operations of that system.  
 All these aspects must work together to limit the effects of disasters and 
 enables rapid return to normal delivery of safe water to customers.
+Numerous resilience metrics have been suggested [USEPA2014]_.  
+These metrics generally fall into three categories: topographic, hydraulic, and water quality/security.
+While some metrics define resilience as a single network-wide quantity, other metrics define 
+quantities that are a function of time, space, or both. 
+For this reason, state transition plots [Barker2013]_  and network graphics
+are useful ways to visualize resilience and compare metrics, as shown in the figure below.
+When quantifying resilience, 
+it is important to understand which metric best defines system resilience for 
+a particular scenario.  WNTR includes many metrics to help 
+researchers compare resilience using different methods.
 
-State transition plots
-----------------------
-
-State transition plot [Barker2013]_ ...
-
-.. figure:: figures/state_trans_plot.png
+.. figure:: figures/resilience_metrics.png
    :scale: 100 %
-   :alt: State transition plot
-   
+   :alt: Resilience metrics
+
+The example **resilience_metrics.py** demonstrates how to compute these metrics.
+
 Topographic metrics
 ---------------------
 
 Topographic metrics, based on graph theory, can be used to assess the connectivity 
 of water distribution networks.
-These metrics rely on the physical layout of the network system components and can be used to
-understand how the underlying structure and connectivity constrains network reliability. For
+These metrics rely on the physical layout of the network components and can be used to
+understand how the underlying structure and connectivity constrains resilience. For
 example, a regular lattice, where each node has the same number of edges, is considered to be
 the most reliable graph structure. On the other hand, a random lattice has nodes and edges
 that are placed according to a random process. A real world WDS probably lies somewhere in
@@ -30,7 +37,6 @@ between a regular lattice and a random lattice in terms of structure and reliabi
 NetworkX includes a wide range of topographic metrics that can be computed using 
 the WntrMutliDiGraph.  WNTR includes additional methods/metrics to help compute 
 resilience.  These methods are in the :doc:`WntrMultiDiGraph Class</apidoc/wntr.network.WntrMultiDiGraph>`.
-The example **topographic_metrics.py** demonstrates some of these methods.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
@@ -67,11 +73,6 @@ Simple paths				A simple path is a path between two nodes that does not repeat a
 					can be used to extract all links in a simple path along with the number of times each link was used in the paths. 
 					Paths can be time dependent, if related to simulated flow direction.  The method :doc:`weight_graph</apidoc/wntr.network.WntrMultiDiGraph>` can be used 
 					to weight the graph by a specified attribute.
-
-Node-pair reliability			Node-pair reliability (NPR) is the probability that any two nodes are connected in a network.  
-					NPR is computed using ...
-					Connectivity will change at each time step, depending on the flow direction.  
-					The method :doc:`weight_graph</apidoc/wntr.network.WntrMultiDiGraph>` method can be used to weight the graph by a specified attribute. 
 
 Shortest path lengths			Shortest path lengths is the minimum number of links between a source node and all 
 					other nodes in the network.  Shortest path length is a value between 0 and 
@@ -124,21 +125,28 @@ Critical ratio of defragmentation	The threshold where the network loses its larg
 					The method :doc:`critical_ratio_defrag</apidoc/wntr.network.WntrMultiDiGraph>` can be used to compute the critical ratio of defragmentation of the network.
 =====================================  ================================================================================================================================================
 
+..
+	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
+	are connected in a network.  NPR is computed using ...
+	Connectivity will change at each time step, depending on the flow direction.  
+	The method :doc:`weight_graph</apidoc/wntr.network.WntrMultiDiGraph>` method 
+	can be used to weight the graph by a specified attribute. 
+	
 Information on additional topographic metrics supported by NetworkX can be found 
 at https://networkx.github.io/.
 
 Hydraulic metrics
 ---------------------
 
-Hydraulic metrics are based upon spatially and temporally variable flows and/or
-pressure; calculation of these metrics require simulation of WDS hydraulics that reflect how the
+Hydraulic metrics are based upon variable flows and/or pressure; 
+calculation of these metrics require simulation of network hydraulics that reflect how the
 system operates under normal or abnormal conditions.
-The example **hydraulic_metrics.py** demonstrates these methods.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
 =====================================  ================================================================================================================================================
-Pressure				Use the :doc:`query</apidoc/wntr.metrics.query>` method on results.node['pressure'].  Fire conditions bounds can be used.
+Pressure				To determine the number of node-time pairs above or below a specified pressure treshold, 
+					use the :doc:`query</apidoc/wntr.metrics.query>` method on results.node['pressure'].  
 
 Todini index 				The Todini index [Todini2000]_ is related to the capability of a system to overcome 
 					failures while still meeting demands and pressures at the nodes. The 
@@ -155,70 +163,73 @@ Entropy 				Entropy [Awumah1990]_ is a measure of uncertainty in a random variab
 					The method :doc:`weight_graph</apidoc/wntr.network.WntrMultiDiGraph>` method can be used to weight the graph by a specified attribute. 
 					Entropy can be computed using the :doc:`entropy</apidoc/wntr.metrics.entropy>` method.
 
-Fraction of delivered volume		:doc:`fdv</apidoc/wntr.metrics.fraction_delivered>` method
+Fraction of delivered volume		Fraction of delivered volume (FDV) is the ratio of total volume delivered to the total volume requested [Ostfeld2002]_.  
+					This metric can be computed as a function of time or space using the :doc:`fdv</apidoc/wntr.metrics.fraction_delivered>` method.
 
-Fraction of delivered demand		:doc:`fdd</apidoc/wntr.metrics.fraction_delivered>` method
-					
+Fraction of delivered demand		Fraction of delivered demand (FDD) is the fraction of time periods where demand is met [Ostfeld2002]_.
+					This metric can be computed as a function of time or space using the :doc:`fdd</apidoc/wntr.metrics.fraction_delivered>` method
 =====================================  ================================================================================================================================================
 
 
 Water quality metrics
 ---------------------
-The example **water_quality_metrics.py** demonstrates these methods.
+Water quality metrics are based on concentration or water age; 
+calculation of these metrics require water quality simulation.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
 =====================================  ================================================================================================================================================
-Water age				Use the :doc:`query</apidoc/wntr.metrics.query>` method on results.node['quality'] after a simualtion using AGE.
+Water age				To determine the number of node-time pairs above or below a specified water age threshold, 
+					use the :doc:`query</apidoc/wntr.metrics.query>` method on results.node['quality'] after a simulation using AGE.
 
-Concentration				Use the :doc:`query</apidoc/wntr.metrics.query>` method on results.node['quality'] after a simualtion using CONC or TRACE.
+Concentration				To determine the number of node-time pairs above or below a specified concentration threshold, 
+					use the :doc:`query</apidoc/wntr.metrics.query>` method on results.node['quality'] after a simulation using CONC or TRACE.
 
-Fraction of delivered quality		:doc:`fdq</apidoc/wntr.metrics.fraction_delivered>` method
+Fraction of delivered quality		Fraction of delivered quality (FDQ) is the fraction of time periods where water quality standards are met [Ostfeld2002]_.
+					This metric can be computed as a function of time or space using the :doc:`fdq</apidoc/wntr.metrics.fraction_delivered>` method
 
-Average water consumed per day		:doc:`average_water_consumed_perday</apidoc/wntr.metrics.health_impacts>` method
+Average water consumed per day		Average water consumed per day is computed at each node, based on node demand and demand patterns [USEPA2014b]_.
+					The metric can be computed using the :doc:`average_water_consumed_perday</apidoc/wntr.metrics.health_impacts>` method.
 =====================================  ================================================================================================================================================
 
 Water security metrics
 -----------------------
-The example **water_security_metrics.py** demonstrates these methods.
+Water security metrics quality potential consequences of contamination scenarios.  These metrics are documented in [USEPA2014b]_.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
 =====================================  ================================================================================================================================================
-Mass of contaminated water consumed	:doc:`mass_contaminant_consumed</apidoc/wntr.metrics.health_impacts>` method
+Mass consumed				Mass consumed is the mass of contaminant the exists the network via node demand at each node-time pair [USEPA2014b]_.  
+					The metric can be computed using the :doc:`mass_contaminant_consumed</apidoc/wntr.metrics.health_impacts>` method
 
-Volume of contaminated water consumed	:doc:`volume_contaminant_consumed</apidoc/wntr.metrics.health_impacts>` method
+Volume consumed				Volume consumed is the volume of contaminant that exists the network via node demand at each node-time pair [USEPA2014b]_.   
+					A detection limit may be specified.
+					The metric can be computed using the :doc:`volume_contaminant_consumed</apidoc/wntr.metrics.health_impacts>` method
 
-Extent of contamination			:doc:`extent_contaminant</apidoc/wntr.metrics.health_impacts>` method
+Extent of contamination			Extent of contamination is the length of contaminated pipe at each node-time pair [USEPA2014b]_.  
+					A detection limit may be specified.
+					The metric can be computed using the :doc:`extent_contaminant</apidoc/wntr.metrics.health_impacts>` method.
 =====================================  ================================================================================================================================================
 ..
 	Contaminate ingested
-	*********************
-
 	Population dosed
-	*****************
-
-
 	Population exposed
-	*********************
-
-
 	Population killed
-	*******************
 
 Other metrics
 -------------
-The example **other_metrics.py** demonstrates these methods.
+Additional metrics include network cost, greenhouse gas emissions, and population impacted metrics.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
 =====================================  ================================================================================================================================================
-Population impacted			:doc:`population_impacted</apidoc/wntr.metrics.health_impacts>` method
-					Can be used for pressure, contaminants, ...
+Population impacted			Population that is impacted by a specific quantity can be computed using the 
+					:doc:`population_impacted</apidoc/wntr.metrics.health_impacts>` method.  For example, this method can be used to compute the population
+					impacted by pressure below a specified threshold.
 
-Network Cost				:doc:`cost</apidoc/wntr.metrics.cost>` method
+Network Cost				Network cost can be computed based on equations from the Battle of Water Networks II [Salomons2012]_
+					using the :doc:`cost</apidoc/wntr.metrics.cost>` method.
 
-Greenhouse gas emissions		:doc:`ghg_emissions</apidoc/wntr.metrics.ghg_emissions>` method
+Greenhouse gas emissions		Greenhouse gas emissions can be computed based on equations from the Battle of Water Networks II [Salomons2012]_ 
+					using the :doc:`ghg_emissions</apidoc/wntr.metrics.ghg_emissions>` method.
 =====================================  ================================================================================================================================================
-
-

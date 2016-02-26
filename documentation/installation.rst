@@ -2,14 +2,14 @@ Installation
 ======================================
 
 WNTR can be installed as a python package using pip or from source using git.  
-More information on pip can be found at  https://pypi.python.org/pypi/pip.
+More information on pip can be found at https://pypi.python.org/pypi/pip.
 More information on git can be found at http://git-scm.com. 
 
 To install using pip (**NOT COMPLETE**)::
 
 	pip install wntr
 	
-To build WNTR from source using an SSH or HTTPS protocol (**Repository should eventually be hosted at https://github.com/OpenWaterAnalytics and renamed wntr**)::
+To build WNTR from source using an SSH or HTTPS protocol (**NOT COMPLETE** Repository should eventually be hosted at https://github.com/OpenWaterAnalytics and renamed wntr)::
 
 	git clone https://software.sandia.gov/git/resilience 
 	cd resilience
@@ -34,20 +34,19 @@ and Anaconda (for Windows and Linux). These distributions include most of the
 Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
 Matplotlib, and Sympy. 
 
-Python(x,y) can be downloaded from http://python-xy.github.io/.  A 'Full' installation is suggested.
+Python(x,y) can be downloaded from http://python-xy.github.io/.  
 
 Anaconda can be downloaded from https://store.continuum.io/cshop/anaconda/.
 
-These Python distributions include tools for code development, numerical 
-computations, data analysis and visualization. Python(x,y) is distributed with 
-the Spyder IDE (interactive development environment) which includes enhanced 
-editing and debug features.  The Spyder IDE includes an editor window, 
-console window, and object inspection window in a layout that is very similar 
+Python distributions include several tools for code development (i.e. Spyder, SciTE), 
+numerical computations, data analysis and visualization. 
+Spyder is an interactive development environment that includes enhanced 
+editing and debug features along with a layout that is very similar 
 to using MATLAB. Debugging features are also available from the toolbar.  
 Code documentation is displayed in the object inspection 
 window, pop-up information on class structure and functions is displayed in the 
 editor and console windows.  
-Python(x,y) also comes with SciTE, a cross platform text editor designed for 
+SciTE is a cross platform text editor designed for 
 editing code.  SciTE recognizes many languages (including Python and YML) and 
 includes syntax highlighting, indentation, and function recognition. 
 
@@ -55,15 +54,15 @@ Python packages
 ^^^^^^^^^^^^^^^^^
 The following python packages are required for WNTR:
 
-* Numpy [vanderWalt2011]_: support large, multi-dimensional arrays and matrices, 
+* Numpy [vanderWalt2011]_: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
-* Scipy [vanderWalt2011]_: support efficient routines for numerical integration, 
+* Scipy [vanderWalt2011]_: used to support efficient routines for numerical integration, 
   http://www.scipy.org/
-* NetworkX [Hagberg2008]_: create and analyze complex networks, 
+* NetworkX [Hagberg2008]_: used to create and analyze complex networks, 
   https://networkx.github.io/
-* Pandas [McKinney2013]_: analyze and store time series data, 
+* Pandas [McKinney2013]_: used to analyze and store time series data, 
   http://pandas.pydata.org/
-* Matplotlib [Hunter2007]_: produce figures, 
+* Matplotlib [Hunter2007]_: used to produce figures, 
   http://matplotlib.org/
 
 Packages can be installed using pip.
@@ -73,9 +72,9 @@ Optional dependencies
 
 The following python packages are optional for WNTR:
 
-* Sympy: convert units, 
+* Sympy: used to convert units, 
   http://www.sympy.org/en/index.html
-* Numpydoc [vanderWalt2011]_: build the user manual,
+* Numpydoc [vanderWalt2011]_: used to build the user manual,
   https://github.com/numpy/numpydoc
 
 .. The following is not shown in the UM

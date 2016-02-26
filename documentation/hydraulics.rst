@@ -2,19 +2,20 @@ Hydraulic simulation
 ====================
    
 WNTR contains two hydraulic simulators:  the EPANET simulator and the WNTR simulator.
-The example **hydraulic_simulation.py** can be used to compare the simulators.
+The example **hydraulic_simulation.py** can be used to run both simulators and 
+pause/restart simulation.
 
-The EPANET simulator uses the EPANET toolkit and dll.  The simualtor can also be 
+The EPANET simulator uses the EPANET toolkit and dll.  The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
 Hydraulic simulation using the EPANET simulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
    :lines: 8-9
 
-The WNTR simulator is a pure python simulation engine based on the same equaitons
+The WNTR simulator is a pure python simulation engine based on the same equations
 as EPANET.  The WNTR simulator does not include equations to run water quality 
-simulations.  The WNTR simulator includes the option to run hydrulic simulation
-in pressure-driven mode. 
+simulations.  The WNTR simulator includes the option to run hydraulic simulation
+in demand-driven and pressure-driven mode. 
 Hydraulic simulation using the the WNTR simulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
@@ -27,14 +28,19 @@ More information on the simulators can be found in the API documentation, under
 Pause and restart 
 ------------------
 
-WNTR includes the ability to pause a hydraulic simulation, change network
-operations, and then restart the simualtion.  
-The example **multiple_simulations.py** includes methods to start and stop 
-a simulation and methods to pickle a water network model for later use.
-This feature is helpful when evalutating various response action plans and when 
-simulating long periods of time with different resolution.
+The WntrSimulator includes the ability to 
 
-Mass balence at nodes
+* Reset initial values and re-simulate using the same water network model
+
+* Pause a hydraulic simulation, change network operations, and then restart the simulation
+
+* Save the water network model and results to files and reload for future analysis 
+
+These features are helpful when evaluating various response action plans and when 
+simulating long periods of time with different resolution.
+The file **hydraulic_simulation.py** includes examples of these features.
+
+Mass balance at nodes
 -------------------------
 WNTR uses the same mass balance equations as EPANET [Rossman2000]_. 
 Conservation of mass (and the assumption of constant density) requires
@@ -115,10 +121,16 @@ figures show that the two formulas are essentially indistinguishable.
 Demand-driven analysis
 -------------------------
 
+**NOT COMPLETE**
+
 Pressure-driven analysis
 -------------------------
 
+**NOT COMPLETE**
+
 Leak model
 -------------------------
+
+**NOT COMPLETE**
 
 	

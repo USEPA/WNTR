@@ -251,7 +251,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index_latex', 'wntr.tex', u'WNTR Documentation',
-   u'', 'manual'),
+   u'', 'howto', 'True'), #u'', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -272,7 +272,7 @@ latex_documents = [
 #latex_appendices = []
 
 # If false, no module index is generated.
-latex_domain_indices = True
+latex_domain_indices = False
 
 
 # -- Options for manual page output ---------------------------------------

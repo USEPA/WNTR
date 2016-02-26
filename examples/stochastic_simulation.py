@@ -1,6 +1,7 @@
 import wntr
 import numpy as np
 import matplotlib.pyplot as plt
+import pickle
 
 # Create a water network model
 inp_file = 'networks/Net3.inp'
@@ -8,7 +9,7 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 
 ### SIMULATION ###
 # Modify the water network model
-wn.options.duration = 24*3600
+wn.options.duration = 48*3600
 wn.options.hydraulic_timestep = 1800
 wn.options.report_timestep = 1800
 
@@ -16,9 +17,17 @@ wn.options.report_timestep = 1800
 for name, node in wn.junctions():
     node.nominal_pressure = 15
 
-# Define set of pumps
-pump_names = [pump_name for pump_name, pump in wn.pumps()]
-
+# Define failure probability for each pipe, based on pipe diameter. Failure 
+# probability must sum to 1.  Net3 has a few pipes with diameter = 99 inches,
+# to exclude these from the set of feasible leak locations, use 
+# query_link_attribute
+pipe_diameters = wn.query_link_attribute('diameter', np.less_equal, 
+                                         0.9144,  # 36 inches = 0.9144 m
+                                         link_type=wntr.network.Pipe)
+failure_probability = {}
+for k,v in pipe_diameters.iteritems():
+    failure_probability[k] = v/sum(pipe_diameters.values())
+    
 # Define maximum iterations
 Imax = 5
 
@@ -28,35 +37,51 @@ results = {}
 # Set random seed
 np.random.seed(67823)
 
+f=open('wn.pickle','w')
+pickle.dump(wn,f)
+f.close()
+
 for i in range(Imax):
     
-    # Select a pump to fail, random selection
-    pump_to_fail = np.random.choice(pump_names)
-    pump = wn.get_link(pump_to_fail)
+    # Select the number of leaks, random value between 1 and 5
+    N = np.random.random_integers(1,5,1)
     
-    # Select time of failure, normal dist, mean = 4 hours, stdev = 1 hour
-    time_of_failure = np.round(np.random.normal(4,1,1), 2) 
+    # Select N unique pipes based on failure probability
+    pipes_to_fail = np.random.choice(failure_probability.keys(), 5, 
+                                     replace=False, 
+                                     p=failure_probability.values())
     
-    # Select duration of failure, normal dist, mean = 15 hours, stdev = 5 hours
-    duration_of_failure = np.round(np.random.normal(15,5,1), 2) 
+    # Select time of failure, uniform dist, between 1 and 10 hours
+    time_of_failure = np.round(np.random.uniform(1,10,1)[0], 2) 
     
-    # Add power outage
-    wn.add_pump_outage(pump_to_fail, time_of_failure[0]*3600, 
-                       (time_of_failure[0] + duration_of_failure[0])*3600)
-            
+    # Select duration of failure, uniform dist, between 12 and 24 hours
+    duration_of_failure = np.round(np.random.uniform(12,24,1)[0], 2) 
+    
+    for pipe_to_fail in pipes_to_fail:
+        pipe = wn.get_link(pipe_to_fail)
+        leak_diameter = pipe.diameter*0.3
+        leak_area=3.14159*(leak_diameter/2)**2
+        wn.split_pipe_with_junction(pipe_to_fail, pipe_to_fail + '_A', pipe_to_fail + '_B',
+                      pipe_to_fail+'leak_node')
+        leak_node = wn.get_node(pipe_to_fail+'leak_node')           
+        leak_node.add_leak(wn, area=leak_area, 
+                          start_time=time_of_failure*3600, 
+                          end_time=(time_of_failure + duration_of_failure)*3600)
+    
     # Create simulation object of the PYOMO simulator
     sim = wntr.sim.ScipySimulator(wn, pressure_driven=True)
     
     # Simulate hydraulics
-    sim_name = pump_to_fail + '_' + \
-                str(time_of_failure[0]) + '_' + \
-                str(duration_of_failure[0])
+    sim_name = 'Pipe Breaks: ' + str(pipes_to_fail) + ', Start Time: ' + \
+                str(time_of_failure) + ', End Time: ' + \
+                str(time_of_failure+duration_of_failure)
                 
     print sim_name
     results[sim_name] = sim.run_sim()
     
-    wn.reset_initial_values()
-    
+    f=open('wn.pickle','r')
+    wn = pickle.load(f)
+    f.close()
     
 ### ANALYSIS ###
 nzd_junctions = wn.query_node_attribute('base_demand', np.greater, 0, 
@@ -66,8 +91,9 @@ result_names = results.keys()
 for name in result_names:
     
     # Print power outage description for each iteration
-    print 'Power outage iteration'
     print name
+    
+    results[name].node.major_axis = results[name].node.major_axis/3600.0
     
     # Isolate node results at consumer nodes
     node_results = results[name].node.loc[:,:,nzd_junctions]
@@ -81,14 +107,13 @@ for name in result_names:
     # Plot
     plt.figure()
     plt.subplot(2,1,1)
-    plt.title('Power outage\n' + str(name))
+    plt.title(str(name))
     
     for node_name in nzd_junctions:
         pressure = FDV_knt.loc[:,node_name] 
         pressure.plot()
         plt.hold(True)
     
-    FDV_knt = FDV_knt.unstack().T 
     FDV_knt.plot(ax=plt.gca(), legend=False)
     plt.hold(True)
     FDV_kt.plot(ax=plt.gca(), label='Average', color='k', linewidth=3.0, legend=False)
@@ -100,7 +125,6 @@ for name in result_names:
     
     for tank_name, tank in wn.tanks():
         tank_pressure = results[name].node['pressure'][tank_name]
-        tank_pressure.index = tank_pressure.index.format() 
         tank_pressure.plot(ax=plt.gca(),label=tank_name)
         plt.hold(True)
     

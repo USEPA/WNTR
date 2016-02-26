@@ -17,6 +17,5 @@ WNTR 0.1 documentation
    resilience
    stochastic
    license
-   testing
-   tracsite
+   developers
    reference

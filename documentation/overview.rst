@@ -1,7 +1,7 @@
 Overview
 ======================================
 
-Water distribution systems face multiple challenges, including: 
+Water distribution systems face multiple challenges, including 
 aging infrastructure, 
 water quality concerns, 
 pipe breaks, 
@@ -64,12 +64,13 @@ The software includes capability to:
 
   * Pressure-driven or demand-driven hydraulic equations
   * Track concentration, water age, or percent tracer
-  * Ability to pause hydraulic simulations, update network operations, and then restart
+  * Pause hydraulic simulations, update network operations, and then restart
+  * Run simulations in parallel
   
 * Run probabilistic simulations
 
-  * Monte Carlo simulations
-  * Fragility curves to define component failure
+  * Define fragility curves for component failure
+  * Run Monte Carlo simulations
   
 * Compute resilience 
 

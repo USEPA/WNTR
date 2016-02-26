@@ -4,7 +4,7 @@ Simulation results
 ====================
 Simulation results are stored in Pandas Panels.  
 For more information on Pandas, see http://pandas.pydata.org/.
-The example **simulation_results.py** includes examples using simualtion results.
+The example **simulation_results.py** demonstrates use cases of simulation results.
 Results are stored in one Panel for nodes and one Panel for links, accessed using:
 
 .. literalinclude:: ../examples/simulation_results.py
@@ -16,10 +16,10 @@ Each Panel is indexed by item, major_axis, and minor_axis.
     For node panels: 
 	* demand
 	* expected_demand
-	* leak_demand (only when the ScipySimulator is used)
+	* leak_demand (only when the WntrSimulator is used)
 	* pressure
 	* head
-	* quality (only when the EpanetSimulator is used for a water quality simuation)
+	* quality (only when the EpanetSimulator is used for a water quality simulation)
 	* type
     
     For link panels: 
@@ -37,27 +37,27 @@ Each Panel is indexed by item, major_axis, and minor_axis.
     For link panels: 
 	* link name
 
-For example, to access the pressure and demand at node '123' at 1 hour, use the following code:
+For example, to access the pressure and demand at node '123' at 1 hour:
 
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 16
 	
-To access the pressure for all nodes and times, use the following code:
+To access the pressure for all nodes and times:
 
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 19
 
-Attributes can be plotted on the water network model using:
-	
-.. literalinclude:: ../examples/simulation_results.py
-   :lines: 22-24
-
 Attributes can be plotted as a time-series using:
 	
 .. literalinclude:: ../examples/simulation_results.py
-   :lines: 27-28
+   :lines: 22-23
 
-Panels can be saved to excel files using the following code:
+Attributes can be plotted on the water network model using:
+	
+.. literalinclude:: ../examples/simulation_results.py
+   :lines: 26-28
+
+Panels can be saved to excel files using:
 
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 31-32
