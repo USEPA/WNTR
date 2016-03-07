@@ -32,5 +32,5 @@ class TestExamples(unittest.TestCase):
         example_files = [f for f in listdir(os.path.join(resilienceMainDir,'examples')) if isfile(os.path.join(resilienceMainDir,'examples',f)) and f.endswith('.py') and not f.startswith('test')]
         flag = 1
         for f in example_files:
-            flag = call(['sys.executable', os.path.join(resilienceMainDir,'examples',f)])
+            flag = call([sys.executable, os.path.join(resilienceMainDir,'examples',f)])
             self.assertEqual(flag,0)
