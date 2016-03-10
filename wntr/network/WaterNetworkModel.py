@@ -31,7 +31,7 @@ class WaterNetworkModel(object):
     """
     The base water network model class.
     """
-    def __init__(self, inp_file_name = None):
+    def __init__(self, inp_file_name = None, h5_file_name = None):
         """
         Examples
         ---------
@@ -46,6 +46,7 @@ class WaterNetworkModel(object):
 
         # Network name
         self.name = None
+        self.h5file = None
 
         # Time parameters
         self.sim_time = 0.0
@@ -95,6 +96,8 @@ class WaterNetworkModel(object):
         if inp_file_name:
             parser = wntr.network.ParseWaterNetwork()
             parser.read_inp_file(self, inp_file_name)
+        if h5_file_name:
+            pass
 
     def add_junction(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0, coordinates=None):
         """
@@ -1435,79 +1438,79 @@ class WaterNetworkModel(object):
             f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';'))
 
         # Print pump information
-        print >> f, '[PUMPS]'
-        text_format = '{:10s} {:10s} {:10s} {:10s} {:10s} {:>3s}'
-        label_format = '{:10s} {:>10s} {:>10s} {:>10s}'
-        print >> f, label_format.format(';ID', 'Node1', 'Node2', 'Parameters')
+        f.write('[PUMPS]\n')
+        text_format = '{:10s} {:10s} {:10s} {:10s} {:10s} {:>3s}\n'
+        label_format = '{:10s} {:>10s} {:>10s} {:>10s}\n'
+        f.write(label_format.format(';ID', 'Node1', 'Node2', 'Parameters'))
         for pump_name, pump in self.links(Pump):
             if pump.info_type == 'HEAD':
-                print >> f, text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, pump.curve.name, ';')
+                f.write(text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, pump.curve.name, ';'))
             elif pump.info_type == 'POWER':
-                print >> f, text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, str(pump.power/1000.0), ';')
+                f.write(text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, str(pump.power/1000.0), ';'))
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
         # Print valve information
-        print >> f, '[VALVES]'
-        text_format = '{:10s} {:10s} {:10s} {:10f} {:10s} {:10f} {:10f} {:>3s}'
-        label_format = '{:10s} {:10s} {:10s} {:10s} {:10s} {:10s} {:10s}'
-        print >> f, label_format.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss')
+        f.write('[VALVES]\n')
+        text_format = '{:10s} {:10s} {:10s} {:10f} {:10s} {:10f} {:10f} {:>3s}\n'
+        label_format = '{:10s} {:10s} {:10s} {:10s} {:10s} {:10s} {:10s}\n'
+        f.write(label_format.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss'))
         for valve_name, valve in self.links(Valve):
-            print >> f, text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve.current_setting, valve.minor_loss, ';')
+            f.write(text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve.current_setting, valve.minor_loss, ';'))
 
         # Print status information
-        print >> f, '[STATUS]'
-        text_format = '{:10s} {:10s}'
-        label_format = '{:10s} {:10s}'
-        print >> f, label_format.format(';ID', 'Setting')
+        f.write('[STATUS]\n')
+        text_format = '{:10s} {:10s}\n'
+        label_format = '{:10s} {:10s}\n'
+        f.write( label_format.format(';ID', 'Setting'))
         for link_name, link in self.links(Pump):
             if link.get_base_status() == LinkStatus.closed:
-                print >> f, text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status()))
+                f.write(text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status())))
         for link_name, link in self.links(Valve):
             if link.get_base_status() == LinkStatus.closed or link.get_base_status()==LinkStatus.opened:
-                print >> f, text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status()))
+                f.write(text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status())))
 
         # Print pattern information
         num_columns = 8
-        print >> f, '[PATTERNS]'
-        label_format = '{:10s} {:10s}'
-        print >> f, label_format.format(';ID', 'Multipliers')
+        f.write('[PATTERNS]\n')
+        label_format = '{:10s} {:10s}\n'
+        f.write(label_format.format(';ID', 'Multipliers'))
         for pattern_name, pattern in self._patterns.iteritems():
             count = 0
             for i in pattern:
                 if count%8 == 0:
-                    print >>f, '\n', pattern_name, i,
+                    f.write('\n%s %d'%(pattern_name, i,))
                 else:
-                    print >>f, i,
+                    f.write(' %d'%(i,))
                 count += 1
-            print >>f, ''
+            f.write('\n')
 
         # Print curves
-        print >> f, '[CURVES]'
-        text_format = '{:10s} {:10f} {:10f} {:>3s}'
-        label_format = '{:10s} {:10s} {:10s}'
-        print >> f, label_format.format(';ID', 'X-Value', 'Y-Value')
+        f.write('[CURVES]\n')
+        text_format = '{:10s} {:10f} {:10f} {:>3s}\n'
+        label_format = '{:10s} {:10s} {:10s}\n'
+        f.write(label_format.format(';ID', 'X-Value', 'Y-Value'))
         for pump_name, pump in self.links(Pump):
             if pump.info_type == 'HEAD':
                 curve = pump.curve
                 curve_name = curve.name
                 for i in curve.points:
-                    print >>f, text_format.format(curve_name, 1000*i[0], i[1], ';')
-                print >>f, ''
+                    f.write( text_format.format(curve_name, 1000*i[0], i[1], ';'))
+                f.write('\n')
 
         # Print Controls
-        print >> f, '[CONTROLS]'
+        f.write( '[CONTROLS]\n')
         # Time controls
         for link_name, all_control in self.time_controls.iteritems():
             open_times = all_control.get('open_times')
             closed_times = all_control.get('closed_times')
             if open_times is not None:
                 for i in open_times:
-                    print >> f, 'Link', link_name, 'OPEN AT TIME', int(i/3600.0)
+                    f.write('Link %s %s %d\n'%(link_name, 'OPEN AT TIME', int(i/3600.0)))
             if closed_times is not None:
                 for i in closed_times:
-                    print >> f, 'Link', link_name, 'CLOSED AT TIME', int(i/3600.0)
+                    f.write('Link %s %s %d\n'%(link_name, 'CLOSED AT TIME', int(i/3600.0)))
 
-        print >> f, ''
+        f.write('\n')
         # Conditional controls
         for link_name, all_control in self.conditional_controls.iteritems():
             open_below = all_control.get('open_below')
@@ -1516,95 +1519,95 @@ class WaterNetworkModel(object):
             closed_below = all_control.get('closed_below')
             if open_below is not None:
                 for i in open_below:
-                    print >> f, 'Link', link_name, 'OPEN IF Node', i[0], 'BELOW', i[1]
+                    f.write('Link %s %s %s %s %s\n'%(link_name, 'OPEN IF Node', i[0], 'BELOW', i[1]))
             if closed_above is not None:
                 for i in closed_above:
-                    print >> f, 'Link', link_name, 'CLOSED IF Node', i[0], 'ABOVE', i[1]
+                    f.write('Link %s %s %s %s %s\n'%(link_name, 'CLOSED IF Node', i[0], 'ABOVE', i[1]))
             if open_above is not None:
                 for i in open_above:
-                    print >> f, 'Link', link_name, 'OPEN IF Node', i[0], 'ABOVE', i[1]
+                    f.write('Link %s %s %s %s %s\n'%(link_name, 'OPEN IF Node', i[0], 'ABOVE', i[1]))
             if closed_below is not None:
                 for i in closed_below:
-                    print >> f, 'Link', link_name, 'CLOSED IF Node', i[0], 'BELOW', i[1]
+                    f.write('Link %s %s %s %s %s\n'%(link_name, 'CLOSED IF Node', i[0], 'BELOW', i[1]))
 
-            print >> f,''
+            f.write('\n')
 
         # Report
-        print >> f, '[REPORT]'
-        print >> f, 'Status Yes'
-        print >> f, 'Summary yes'
+        f.write('[REPORT]\n')
+        f.write('Status Yes\n')
+        f.write('Summary yes\n')
 
         # Options
-        print >> f, '[OPTIONS]'
-        text_format_string = '{:20s} {:20s}'
-        text_format_float = '{:20s} {:<20.8f}'
-        print >>f, text_format_string.format('UNITS', 'LPS')
-        print >>f, text_format_string.format('HEADLOSS', self.options.headloss)
+        f.write('[OPTIONS]\n')
+        text_format_string = '{:20s} {:20s}\n'
+        text_format_float = '{:20s} {:<20.8f}\n'
+        f.write(text_format_string.format('UNITS', 'LPS'))
+        f.write(text_format_string.format('HEADLOSS', self.options.headloss))
         if self.options.hydraulics_option is not None:
-            print >>f, '{:20s} {:20s} {:<30s}'.format('HYDRAULICS', self.options.hydraulics_option, self.options.hydraulics_filename)
+            f.write('{:20s} {:20s} {:<30s}\n'.format('HYDRAULICS', self.options.hydraulics_option, self.options.hydraulics_filename))
         if self.options.quality_value is None:
-            print >>f, text_format_string.format('QUALITY', self.options.quality_option)
+            f.write(text_format_string.format('QUALITY', self.options.quality_option))
         else:
-            print >>f, '{:20s} {:20s} {:20s}'.format('QUALITY', self.options.quality_option, self.options.quality_value)
-        print >>f, text_format_float.format('VISCOSITY', self.options.viscosity)
-        print >>f, text_format_float.format('DIFFUSIVITY', self.options.diffusivity)
-        print >>f, text_format_float.format('SPECIFIC GRAVITY', self.options.specific_gravity)
-        print >>f, text_format_float.format('TRIALS', self.options.trials)
-        print >>f, text_format_float.format('ACCURACY', self.options.accuracy)
-        print >>f, text_format_float.format('CHECKFREQ', self.options.checkfreq)
+            f.write('{:20s} {:20s} {:20s}]n'.format('QUALITY', self.options.quality_option, self.options.quality_value))
+        f.write(text_format_float.format('VISCOSITY', self.options.viscosity))
+        f.write(text_format_float.format('DIFFUSIVITY', self.options.diffusivity))
+        f.write(text_format_float.format('SPECIFIC GRAVITY', self.options.specific_gravity))
+        f.write(text_format_float.format('TRIALS', self.options.trials))
+        f.write(text_format_float.format('ACCURACY', self.options.accuracy))
+        f.write(text_format_float.format('CHECKFREQ', self.options.checkfreq))
         if self.options.unbalanced_value is None:
-            print >>f, text_format_string.format('UNBALANCED', self.options.unbalanced_option)
+            f.write(text_format_string.format('UNBALANCED', self.options.unbalanced_option))
         else:
-            print >>f, '{:20s} {:20s} {:20d}'.format('UNBALANCED', self.options.unbalanced_option, self.options.unbalanced_value)
+            f.write('{:20s} {:20s} {:20d}\n'.format('UNBALANCED', self.options.unbalanced_option, self.options.unbalanced_value))
         if self.options.pattern is not None:
-            print >>f, text_format_string.format('PATTERN', self.options.pattern)
-        print >>f, text_format_float.format('DEMAND MULTIPLIER', self.options.demand_multiplier)
-        print >>f, text_format_float.format('EMITTER EXPONENT', self.options.emitter_exponent)
-        print >>f, text_format_float.format('TOLERANCE', self.options.tolerance)
+            f.write(text_format_string.format('PATTERN', self.options.pattern))
+        f.write(text_format_float.format('DEMAND MULTIPLIER', self.options.demand_multiplier))
+        f.write(text_format_float.format('EMITTER EXPONENT', self.options.emitter_exponent))
+        f.write(text_format_float.format('TOLERANCE', self.options.tolerance))
         if self.options.map is not None:
-            print >>f, text_format_string.format('MAP', self.options.map)
+            f.write(text_format_string.format('MAP', self.options.map))
 
-        print >> f, ''
+        f.write('\n')
 
         # Reaction Options
-        print >> f, '[REACTIONS]'
-        text_format_float = '{:15s}{:15s}{:<10.8f}'
-        print >>f, text_format_float.format('ORDER','BULK',self.options.bulk_rxn_order)
-        print >>f, text_format_float.format('ORDER','WALL',self.options.wall_rxn_order)
-        print >>f, text_format_float.format('ORDER','TANK',self.options.tank_rxn_order)
-        print >>f, text_format_float.format('GLOBAL','BULK',self.options.bulk_rxn_coeff)
-        print >>f, text_format_float.format('GLOBAL','WALL',self.options.wall_rxn_coeff)
+        f.write( '[REACTIONS]\n')
+        text_format_float = '{:15s}{:15s}{:<10.8f}\n'
+        f.write(text_format_float.format('ORDER','BULK',self.options.bulk_rxn_order))
+        f.write(text_format_float.format('ORDER','WALL',self.options.wall_rxn_order))
+        f.write(text_format_float.format('ORDER','TANK',self.options.tank_rxn_order))
+        f.write(text_format_float.format('GLOBAL','BULK',self.options.bulk_rxn_coeff))
+        f.write(text_format_float.format('GLOBAL','WALL',self.options.wall_rxn_coeff))
         if self.options.limiting_potential is not None:
-            print >>f, text_format_float.format('LIMITING','POTENTIAL',self.options.limiting_potential)
+            f.write(text_format_float.format('LIMITING','POTENTIAL',self.options.limiting_potential))
         if self.options.roughness_correlation is not None:
-            print >>f, text_format_float.format('ROUGHNESS','CORRELATION',self.options.roughness_correlation)
+            f.write(text_format_float.format('ROUGHNESS','CORRELATION',self.options.roughness_correlation))
         for tank_name, tank in self.nodes(Tank):
             if tank.bulk_rxn_coeff is not None:
-                print >>f, text_format_float.format('TANK',tank_name,tank.bulk_rxn_coeff)
+                f.write(text_format_float.format('TANK',tank_name,tank.bulk_rxn_coeff))
         for pipe_name, pipe in self.links(Pipe):
             if pipe.bulk_rxn_coeff is not None:
-                print >>f, text_format_float.format('BULK',pipe_name,pipe.bulk_rxn_coeff)
+                f.write(text_format_float.format('BULK',pipe_name,pipe.bulk_rxn_coeff))
             if pipe.wall_rxn_coeff is not None:
-                print >>f, text_format_float.format('WALL',pipe_name,pipe.wall_rxn_coeff)
+                f.write(text_format_float.format('WALL',pipe_name,pipe.wall_rxn_coeff))
 
-        print >> f, ''
+        f.write('\n')
 
         # Time options
-        print >> f, '[TIMES]'
-        text_format = '{:20s} {:10s}'
-        time_text_format = '{:20s} {:d}:{:d}:{:d}'
+        f.write('[TIMES]\n')
+        text_format = '{:20s} {:10s}\n'
+        time_text_format = '{:20s} {:d}:{:d}:{:d}\n'
         hrs, mm, sec = self._sec_to_string(self.options.duration)
-        print >>f, time_text_format.format('DURATION', hrs, mm, sec)
+        f.write(time_text_format.format('DURATION', hrs, mm, sec))
         hrs, mm, sec = self._sec_to_string(self.options.hydraulic_timestep)
-        print >>f, time_text_format.format('HYDRAULIC TIMESTEP', hrs, mm, sec)
+        f.write(time_text_format.format('HYDRAULIC TIMESTEP', hrs, mm, sec))
         hrs, mm, sec = self._sec_to_string(self.options.pattern_timestep)
-        print >>f, time_text_format.format('PATTERN TIMESTEP', hrs, mm, sec)
+        f.write(time_text_format.format('PATTERN TIMESTEP', hrs, mm, sec))
         hrs, mm, sec = self._sec_to_string(self.options.pattern_start)
-        print >>f, time_text_format.format('PATTERN START', hrs, mm, sec)
+        f.write(time_text_format.format('PATTERN START', hrs, mm, sec))
         hrs, mm, sec = self._sec_to_string(self.options.report_timestep)
-        print >>f, time_text_format.format('REPORT TIMESTEP', hrs, mm, sec)
+        f.write(time_text_format.format('REPORT TIMESTEP', hrs, mm, sec))
         hrs, mm, sec = self._sec_to_string(self.options.report_start)
-        print >>f, time_text_format.format('REPORT START', hrs, mm, sec)
+        f.write(time_text_format.format('REPORT START', hrs, mm, sec))
 
         hrs, mm, sec = self._sec_to_string(self.options.start_clocktime)
         if hrs < 12:
@@ -1612,24 +1615,24 @@ class WaterNetworkModel(object):
         else:
             hrs -= 12
             time_format = ' PM'
-        print >>f, '{:20s} {:d}:{:d}:{:d}{:s}'.format('START CLOCKTIME', hrs, mm, sec, time_format)
+        f.write('{:20s} {:d}:{:d}:{:d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format))
 
         hrs, mm, sec = self._sec_to_string(self.options.quality_timestep)
-        print >>f, time_text_format.format('QUALITY TIMESTEP', hrs, mm, sec)
+        f.write(time_text_format.format('QUALITY TIMESTEP', hrs, mm, sec))
         hrs, mm, sec = self._sec_to_string(self.options.rule_timestep)
-        print >>f, time_text_format.format('RULE TIMESTEP', hrs, mm, int(sec))
-        print >>f, text_format.format('STATISTIC', self.options.statistic)
+        f.write(time_text_format.format('RULE TIMESTEP', hrs, mm, int(sec)))
+        f.write(text_format.format('STATISTIC', self.options.statistic))
 
-        print >> f, ''
+        f.write('\n')
 
         # Coordinates
-        print >> f, '[COORDINATES]'
-        text_format = '{:10s} {:<10.2f} {:<10.2f}'
-        label_format = '{:10s} {:10s} {:10s}'
-        print >>f, label_format.format(';Node', 'X-Coord', 'Y-Coord')
+        f.write('[COORDINATES]\n')
+        text_format = '{:10s} {:<10.2f} {:<10.2f}\n'
+        label_format = '{:10s} {:10s} {:10s}\n'
+        f.write(label_format.format(';Node', 'X-Coord', 'Y-Coord'))
         coord = nx.get_node_attributes(self._graph, 'pos')
         for key, val in coord.iteritems():
-            print >>f, text_format.format(key, val[0], val[1])
+            f.write(text_format.format(key, val[0], val[1]))
 
         f.close()
 
