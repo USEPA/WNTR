@@ -177,15 +177,15 @@ class ParseWaterNetwork(object):
                     continue
                 if current[0].upper() == 'HEADLOSS':
                     if current[1].upper() != 'H-W':
-                        logger.warning('WNTR currently only supports the '+current[1]+' headloss formula in the EpanetSimulator.')
+                        warnings.warn('WNTR currently only supports the '+current[1]+' headloss formula in the EpanetSimulator.')
                 if current[0].upper() == 'QUALITY':
                     if current[1].upper() != 'NONE':
-                        logger.warning('WNTR only supports water quality analysis in the EpanetSimulator.')
+                        warnings.warn('WNTR only supports water quality analysis in the EpanetSimulator.')
                 if current[0].upper() == 'HYDRAULICS' or current[0].upper() == 'MAP':
-                    logger.warning('The '+current[0]+' option in the inp file is currently only supported in the EpanetSimulator.')
+                    warnings.warn('The '+current[0]+' option in the inp file is currently only supported in the EpanetSimulator.')
                 if current[0].upper() == 'DEMAND':
                     if float(current[2]) != 1.0:
-                        logger.warning('The '+current[0]+' '+current[1]+' option in the inp file is currently only supported in the EpanetSimulator.')
+                        warnings.warn('The '+current[0]+' '+current[1]+' option in the inp file is currently only supported in the EpanetSimulator.')
                 if len(current) == 2:
                     if current[0].upper() == 'PATTERN' or current[0].upper() == 'MAP':
                         setattr(wn.options, current[0].lower(), current[1])
@@ -235,7 +235,7 @@ class ParseWaterNetwork(object):
                 if len(current) == 2:
                     wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])))
                 else:
-                    logger.warning('Patterns for reservoir heads are currently only supported in the EpanetSimulator.')
+                    warnings.warn('Patterns for reservoir heads are currently only supported in the EpanetSimulator.')
                     wn.add_reservoir(current[0], convert('Hydraulic Head', inp_units, float(current[1])), current[2])
 
         f.close()
@@ -287,8 +287,8 @@ class ParseWaterNetwork(object):
                     continue
                 if len(current) == 8:  # Volume curve provided
                     if float(current[6]) != 0:
-                        logger.warning('Currently, only the EpanetSimulator utilizes minimum volumes for tanks. The other simulators only use the minimum level and only support cylindrical tanks.')
-                    logger.warning('Currently, only the EpanetSimulator supports volume curves. The other simulators only support cylindrical tanks.')
+                        warnings.warn('Currently, only the EpanetSimulator utilizes minimum volumes for tanks. The other simulators only use the minimum level and only support cylindrical tanks.')
+                    warnings.warn('Currently, only the EpanetSimulator supports volume curves. The other simulators only support cylindrical tanks.')
                     curve_name = current[7]
                     curve_points = []
                     for point in self._curves[curve_name]:
@@ -306,7 +306,7 @@ class ParseWaterNetwork(object):
                                             curve)
                 elif len(current) == 7:  # No volume curve provided
                     if float(current[6]) != 0:
-                        logger.warning('Currently, only the EpanetSimulator utilizes minimum volumes for tanks. The other simulators only use the minimum level and only support sylindrical tanks.')
+                        warnings.warn('Currently, only the EpanetSimulator utilizes minimum volumes for tanks. The other simulators only use the minimum level and only support sylindrical tanks.')
                     wn.add_tank(current[0], convert('Elevation', inp_units, float(current[1])),
                                             convert('Length', inp_units, float(current[2])),
                                             convert('Length', inp_units, float(current[3])),
@@ -338,7 +338,7 @@ class ParseWaterNetwork(object):
                 if current == []:
                     continue
                 if float(current[6]) != 0:
-                    logger.warning('Currently, only the EpanetSimulator supports non-zero minor losses in pipes.')
+                    warnings.warn('Currently, only the EpanetSimulator supports non-zero minor losses in pipes.')
                 if current[7].upper() == 'CV':
                     wn.add_pipe(current[0], 
                                 current[1], 
@@ -382,10 +382,10 @@ class ParseWaterNetwork(object):
                     continue
                 valve_type = current[4].upper()
                 if valve_type != 'PRV':
-                    logger.warning("Only PRV valves are currently supported. ")
+                    warnings.warn("Only PRV valves are currently supported. ")
                     continue
                 if float(current[6]) != 0:
-                    logger.warning('Currently, only the EpanetSimulator supports non-zero minor losses in valves.')
+                    warnings.warn('Currently, only the EpanetSimulator supports non-zero minor losses in valves.')
                 wn.add_valve(current[0], current[1], current[2], convert('Pipe Diameter', inp_units, float(current[3])),
                                                                  current[4].upper(), float(current[6]),
                                                                  convert('Pressure', inp_units, float(current[5].upper())))
@@ -439,10 +439,10 @@ class ParseWaterNetwork(object):
                     continue
                 # Only add head curves for pumps
                 if current[3].upper() == 'SPEED':
-                    logger.warning('Speed settings for pumps are currently only supported in the EpanetSimulator.')
+                    warnings.warn('Speed settings for pumps are currently only supported in the EpanetSimulator.')
                     continue
                 elif current[3].upper() == 'PATTERN':
-                    logger.warning('Speed patterns for pumps are currently only supported in the EpanetSimulator.')
+                    warnings.warn('Speed patterns for pumps are currently only supported in the EpanetSimulator.')
                     continue
                 elif current[3].upper() == 'HEAD':
                     curve_name = current[4]
@@ -531,19 +531,19 @@ class ParseWaterNetwork(object):
                     setattr(wn.options, key_string.lower(), str_time_to_sec(current[2]))
 
         if wn.options.pattern_start != 0.0:
-            logger.warning('Currently, only the EpanetSimulator supports a non-zero patern start time.')
+            warnings.warn('Currently, only the EpanetSimulator supports a non-zero patern start time.')
 
         if wn.options.report_start != 0.0:
-            logger.warning('Currently, only the EpanetSimulator supports a non-zero report start time.')
+            warnings.warn('Currently, only the EpanetSimulator supports a non-zero report start time.')
 
         if wn.options.report_timestep != wn.options.hydraulic_timestep:
-            logger.warning('Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.')
+            warnings.warn('Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.')
             
         if wn.options.start_clocktime != 0.0:
-            logger.warning('Currently, only the EpanetSimulator supports a start clocktime other than 12 am.')
+            warnings.warn('Currently, only the EpanetSimulator supports a start clocktime other than 12 am.')
                         
         if wn.options.statistic != 'NONE':
-            logger.warning('Currently, only the EpanetSimulator supports the STATISTIC option in the inp file.')
+            warnings.warn('Currently, only the EpanetSimulator supports the STATISTIC option in the inp file.')
 
         f.close()
 
@@ -578,11 +578,11 @@ class ParseWaterNetwork(object):
                     action_obj = wntr.network.ControlAction(link, 'status', status)
                 elif type(current[2]) == float or type(current[2]) == int:
                     if isinstance(link, wntr.network.Pump):
-                        logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
+                        warnings.warn('Currently, pump speed settings are only supported in the EpanetSimulator.')
                         continue
                     elif isinstance(link, wntr.network.Valve):
                         if link.valve_type != 'PRV':
-                            logger.warning('Currently, valves of type '+link.valve_type+' are only supported in the EpanetSimulator.')
+                            warnings.warn('Currently, valves of type '+link.valve_type+' are only supported in the EpanetSimulator.')
                             continue
                         else:
                             status = convert('Pressure', inp_units, float(current[2]))
@@ -609,7 +609,7 @@ class ParseWaterNetwork(object):
                         raise RuntimeError("The following control is not recognized: " + line)
                 else:
                     if len(current) != 6:
-                        logger.warning('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
+                        warnings.warn('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
                     if len(current) == 6: # at time
                         fire_time = str_time_to_sec(current[5])
                         control_obj = wntr.network.TimeControl(wn, fire_time, 'SIM_TIME', False, action_obj)
@@ -674,11 +674,11 @@ class ParseWaterNetwork(object):
                     link._base_status = new_status
                 else:
                     if isinstance(link, wntr.network.Pump):
-                        logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
+                        warnings.warn('Currently, pump speed settings are only supported in the EpanetSimulator.')
                         continue
                     elif isinstance(link, wntr.network.Valve):
                         if link.valve_type != 'PRV':
-                            logger.warning('Currently, valves of type '+link.valve_type+' are only supported in the EpanetSimulator.')
+                            warnings.warn('Currently, valves of type '+link.valve_type+' are only supported in the EpanetSimulator.')
                             continue
                         else:
                             setting = convert('Pressure', inp_units, float(current[2]))
@@ -758,7 +758,7 @@ class ParseWaterNetwork(object):
                 else:
                     warning_flag = True
         if warning_flag:
-            logger.warning('Multiple demands per junction are currently only supported by the EpanetSimulator. Please check the [DEMANDS] section of your inp file.')
+            warnings.warn('Multiple demands per junction are currently only supported by the EpanetSimulator. Please check the [DEMANDS] section of your inp file.')
 
         f.close()
 
@@ -785,7 +785,7 @@ class ParseWaterNetwork(object):
                 else:
                     warning_flag = True
         if warning_flag:
-            logger.warning('Rules are currently only supported in the EpanetSimulator.')
+            warnings.warn('Rules are currently only supported in the EpanetSimulator.')
 
         f.close()
 
@@ -812,7 +812,7 @@ class ParseWaterNetwork(object):
                 else:
                     warning_flag = True
         if warning_flag:
-            logger.warning('Energy analyses are currently only performed by the EpanetSimulator.')
+            warnings.warn('Energy analyses are currently only performed by the EpanetSimulator.')
 
         f.close()
 
@@ -839,7 +839,7 @@ class ParseWaterNetwork(object):
                 else:
                     warning_flag = True
         if warning_flag:
-            logger.warning('Emitters are currently only supported by the EpanetSimulator.')
+            warnings.warn('Emitters are currently only supported by the EpanetSimulator.')
         f.close()
 
         #
@@ -865,6 +865,6 @@ class ParseWaterNetwork(object):
                 else:
                     warning_flag = True
         if warning_flag:
-            logger.warning('Currently, only the EpanetSimulator supports the [REPORT] section of the inp file.')
+            warnings.warn('Currently, only the EpanetSimulator supports the [REPORT] section of the inp file.')
 
         f.close()
