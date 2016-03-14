@@ -530,16 +530,29 @@ class WaterNetworkModel(object):
 
     def add_pump_outage(self, pump_name, start_time, end_time):
         pump = self.get_link(pump_name)
-        opened_action_obj = wntr.network.ControlAction(pump, 'status', LinkStatus.opened)
-        closed_action_obj = wntr.network.ControlAction(pump, 'status', LinkStatus.closed)
 
-        control = wntr.network.TimeControl(self, end_time, 'SIM_TIME', False, opened_action_obj)
+        end_power_outage_action = wntr.network.ControlAction(pump, '_power_outage', False)
+        start_power_outage_action = wntr.network.ControlAction(pump, '_power_outage', True)
+
+        control = wntr.network.TimeControl(self, end_time, 'SIM_TIME', False, end_power_outage_action)
         control._priority = 0
         self.add_control(pump_name+'PowerOn'+str(end_time),control)
 
-        control = wntr.network.TimeControl(self, start_time, 'SIM_TIME', False, closed_action_obj)
+        control = wntr.network.TimeControl(self, start_time, 'SIM_TIME', False, start_power_outage_action)
         control._priority = 3
         self.add_control(pump_name+'PowerOff'+str(start_time),control)
+
+
+        opened_action_obj = wntr.network.ControlAction(pump, 'status', LinkStatus.opened)
+        closed_action_obj = wntr.network.ControlAction(pump, 'status', LinkStatus.closed)
+
+        control = wntr.network.MultiConditionalControl([(pump,'_power_outage')],[np.equal],[True], closed_action_obj)
+        control._priority = 3
+        self.add_control(pump_name+'PowerOffStatus'+str(end_time),control)
+
+        control = wntr.network.MultiConditionalControl([(pump,'_prev_power_outage'),(pump,'_power_outage')],[np.equal,np.equal],[True,False],opened_action_obj)
+        control._priority = 0
+        self.add_control(pump_name+'PowerOnStatus'+str(start_time),control)
 
     def all_pump_outage(self, start_time, end_time):
         for pump_name, pump in self.pumps():
@@ -1248,6 +1261,8 @@ class WaterNetworkModel(object):
             link.prev_flow = None
             link.flow = None
             link.power = link._base_power
+            link._power_outage = False
+            link._prev_power_outage = False
 
         for name, link in self.valves():
             link.status = link._base_status
@@ -2391,6 +2406,8 @@ class Pump(Link):
         self.speed = 1.0
         self.curve = None
         self.power = None
+        self._power_outage = False
+        self._prev_power_outage = False
         self._base_power = None
         self.info_type = info_type.upper()
         if self.info_type == 'HEAD':
