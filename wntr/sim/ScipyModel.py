@@ -1004,10 +1004,10 @@ class ScipyModel(object):
             self.reservoir_head[reservoir_id] = reservoir.head
         for junction_name, junction in self._wn.junctions():
             junction_id = self._node_name_to_id[junction_name]
-            if junction_id in self.isolated_junction_ids:
-                self.junction_demand[junction_id] = 0.0
-            else:
-                self.junction_demand[junction_id] = junction.expected_demand
+            #if junction_id in self.isolated_junction_ids:
+            #    self.junction_demand[junction_id] = 0.0
+            #else:
+            self.junction_demand[junction_id] = junction.expected_demand
             if junction._leak:
                 self.leak_status[junction_id] = junction.leak_status
         for link_name, link in self._wn.links():
@@ -1060,6 +1060,7 @@ class ScipyModel(object):
             link.prev_flow = link.flow
         for link_name, link in self._wn.pumps():
             link.prev_flow = link.flow
+            link._prev_power_outage = link._power_outage
         for link_name, link in self._wn.valves():
             link.prev_flow = link.flow
 
