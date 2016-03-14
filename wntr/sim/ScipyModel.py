@@ -287,6 +287,7 @@ class ScipyModel(object):
                     self.pump_poly_coefficients[link_id] = (a,b,c,d)
                 elif link.info_type == 'POWER':
                     self.pump_powers[link_id] = link.power
+                    self.max_pump_flows[link_id] = None
 
 
     def _set_jacobian_structure(self):
@@ -951,9 +952,10 @@ class ScipyModel(object):
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
             self._sim_results['link_velocity'].append(0.0)
-            if flow[link_id]>self.max_pump_flows[link_id]:
-                link_name = self._link_id_to_name[link_id]
-                warnings.warn('Pump '+link_name+' has exceeded its maximum flow.')
+            if self.max_pump_flows[link_id] is not None:
+                if flow[link_id]>self.max_pump_flows[link_id]:
+                    link_name = self._link_id_to_name[link_id]
+                    warnings.warn('Pump '+link_name+' has exceeded its maximum flow.')
         for link_id in self._valve_ids:
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
