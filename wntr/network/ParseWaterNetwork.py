@@ -383,7 +383,7 @@ class ParseWaterNetwork(object):
                 valve_type = current[4].upper()
                 if valve_type != 'PRV':
                     warnings.warn("Only PRV valves are currently supported. ")
-                    continue
+                    #continue
                 if float(current[6]) != 0:
                     warnings.warn('Currently, only the EpanetSimulator supports non-zero minor losses in valves.')
                 wn.add_valve(current[0], current[1], current[2], convert('Pipe Diameter', inp_units, float(current[3])),
@@ -572,6 +572,7 @@ class ParseWaterNetwork(object):
 
                 # Create the control action object
                 link_name = current[1]
+                #print (link_name in wn._links.keys())
                 link = wn.get_link(link_name)
                 if type(current[2]) == str:
                     status = wntr.network.LinkStatus.str_to_status(current[2])
@@ -600,6 +601,7 @@ class ParseWaterNetwork(object):
                             oper = np.less
                         else:
                             raise RuntimeError("The following control is not recognized: " + line)
+                        ### OKAY - we are adding in the elevation. This is A PROBLEM IN THE INP WRITER. Now that we know, we can fix it, but if this changes, it will affect multiple pieces, just an FYI.
                         if isinstance(node, wntr.network.Junction):
                             threshold = convert('Pressure',inp_units,float(current[7]))+node.elevation
                         elif isinstance(node, wntr.network.Tank):

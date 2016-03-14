@@ -1413,19 +1413,15 @@ class WaterNetworkModel(object):
 
         # Print junctions information
         f.write('[JUNCTIONS]\n')
-        text_format = '{:10s} {:15f} {:15f} {:>10s} {:>3s}\n'
-        label_format = '{:10s} {:>15s} {:>15s} {:>10s}\n'
+        label_format = '{:20} {:>12s} {:>12s} {:24}\n'
         f.write(label_format.format(';ID', 'Elevation', 'Demand', 'Pattern'))
         for junction_name, junction in self.junctions():
-            if junction.demand_pattern_name is not None:
-                f.write(text_format.format(junction_name, convert('Elevation',flowunit,junction.elevation,MKS=False), convert('Demand',flowunit,junction.base_demand,False), junction.demand_pattern_name, ';'))
-            else:
-                f.write(text_format.format(junction_name, convert('Elevation',flowunit,junction.elevation,False), convert('Demand',flowunit,junction.base_demand,False), '', ';'))
+            f.write('%s\n'%junction.to_inp_string(flowunit))
 
         # Print reservoir information
         f.write('[RESERVOIRS]\n')
-        text_format = '{:10s} {:15f} {:>10s} {:>3s}\n'
-        label_format = '{:10s} {:>15s} {:>10s}\n'
+        text_format = '{:20s} {:12f} {:>12s} {:>3s}\n'
+        label_format = '{:20s} {:>12s} {:>12s}\n'
         f.write(label_format.format(';ID', 'Head', 'Pattern'))
         for reservoir_name, reservoir in self.reservoirs():
             if reservoir.head_pattern_name is not None:
@@ -1435,9 +1431,9 @@ class WaterNetworkModel(object):
 
         # Print tank information
         f.write('[TANKS]\n')
-        text_format = '{:10s} {:15f} {:15f} {:15f} {:15f} {:15f} {:15f} {:>10s} {:>3s}\n'
-        label_format = '{:10s} {:>15s} {:>15s} {:>15s} {:>15s} {:>15s} {:>15s} {:>10s}\n'
-        f.write(label_format.format(';ID', 'Elevation', 'Initial Level', 'Minimum Level', 'Maximum Level', 'Diameter', 'Minimum Volume', 'Volume Curve'))
+        text_format = '{:20s} {:12f} {:12f} {:12f} {:12f} {:12f} {:12f} {:20s} {:>3s}\n'
+        label_format = '{:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
+        f.write(label_format.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level', 'Diameter', 'Min Volume', 'Volume Curve'))
         for tank_name, tank in self.tanks():
             if tank.vol_curve is not None:
                 f.write(text_format.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), tank.vol_curve, ';'))
@@ -1446,16 +1442,19 @@ class WaterNetworkModel(object):
 
         # Print pipe information
         f.write('[PIPES]\n')
-        text_format = '{:10s} {:10s} {:10s} {:15f} {:15f} {:15f} {:15f} {:>10s} {:>3s}\n'
-        label_format = '{:10s} {:>10s} {:>10s} {:>15s} {:>15s} {:>15s} {:>15s} {:>10s}\n'
+        text_format = '{:20s} {:20s} {:20s} {:12f} {:12f} {:12f} {:12f} {:>20s} {:>3s}\n'
+        label_format = '{:20s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
         f.write(label_format.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status'))
         for pipe_name, pipe in self.pipes():
-            f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';'))
+            if pipe.cv:
+                f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, 'CV', ';'))                
+            else:
+                f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';'))
 
         # Print pump information
         f.write('[PUMPS]\n')
-        text_format = '{:10s} {:10s} {:10s} {:10s} {:10s} {:>3s}\n'
-        label_format = '{:10s} {:>10s} {:>10s} {:>10s}\n'
+        text_format = '{:20s} {:20s} {:20s} {:8s} {:20s} {:>3s}\n'
+        label_format = '{:20s} {:20s} {:20s} {:20s}\n'
         f.write(label_format.format(';ID', 'Node1', 'Node2', 'Parameters'))
         for pump_name, pump in self.links(Pump):
             if pump.info_type == 'HEAD':
@@ -1466,11 +1465,11 @@ class WaterNetworkModel(object):
                 raise RuntimeError('Only head or power info is supported of pumps.')
         # Print valve information
         f.write('[VALVES]\n')
-        text_format = '{:10s} {:10s} {:10s} {:10f} {:10s} {:10f} {:10f} {:>3s}\n'
-        label_format = '{:10s} {:10s} {:10s} {:10s} {:10s} {:10s} {:10s}\n'
+        text_format = '{:20s} {:20s} {:20s} {:12f} {:4s} {:12f} {:12f} {:>3s}\n'
+        label_format = '{:20s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
         f.write(label_format.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss'))
         for valve_name, valve in self.links(Valve):
-            f.write(text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve.current_setting, valve.minor_loss, ';'))
+            f.write(text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve._base_setting, valve.minor_loss, ';'))
 
         # Print status information
         f.write('[STATUS]\n')
@@ -1493,9 +1492,9 @@ class WaterNetworkModel(object):
             count = 0
             for i in pattern:
                 if count%8 == 0:
-                    f.write('\n%s %d'%(pattern_name, i,))
+                    f.write('\n%s %f'%(pattern_name, i,))
                 else:
-                    f.write(' %d'%(i,))
+                    f.write(' %f'%(i,))
                 count += 1
             f.write('\n')
 
@@ -1514,38 +1513,13 @@ class WaterNetworkModel(object):
 
         # Print Controls
         f.write( '[CONTROLS]\n')
-        # Time controls
-        for link_name, all_control in self.time_controls.iteritems():
-            open_times = all_control.get('open_times')
-            closed_times = all_control.get('closed_times')
-            if open_times is not None:
-                for i in open_times:
-                    f.write('Link %s %s %d\n'%(link_name, 'OPEN AT TIME', int(i/3600.0)))
-            if closed_times is not None:
-                for i in closed_times:
-                    f.write('Link %s %s %d\n'%(link_name, 'CLOSED AT TIME', int(i/3600.0)))
-
+        # Time controls and conditional controls only
+        for text, all_control in self._control_dict.items():
+            if isinstance(all_control,wntr.network.TimeControl):
+                f.write('%s\n'%all_control.to_inp_string())
+            elif isinstance(all_control,wntr.network.ConditionalControl):
+                f.write('%s\n'%all_control.to_inp_string(flowunit))
         f.write('\n')
-        # Conditional controls
-        for link_name, all_control in self.conditional_controls.iteritems():
-            open_below = all_control.get('open_below')
-            closed_above = all_control.get('closed_above')
-            open_above = all_control.get('open_above')
-            closed_below = all_control.get('closed_below')
-            if open_below is not None:
-                for i in open_below:
-                    f.write('Link %s %s %s %s %s\n'%(link_name, 'OPEN IF Node', i[0], 'BELOW', i[1]))
-            if closed_above is not None:
-                for i in closed_above:
-                    f.write('Link %s %s %s %s %s\n'%(link_name, 'CLOSED IF Node', i[0], 'ABOVE', i[1]))
-            if open_above is not None:
-                for i in open_above:
-                    f.write('Link %s %s %s %s %s\n'%(link_name, 'OPEN IF Node', i[0], 'ABOVE', i[1]))
-            if closed_below is not None:
-                for i in closed_below:
-                    f.write('Link %s %s %s %s %s\n'%(link_name, 'CLOSED IF Node', i[0], 'BELOW', i[1]))
-
-            f.write('\n')
 
         # Report
         f.write('[REPORT]\n')
@@ -1990,6 +1964,17 @@ class Junction(Node):
         self.leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
+
+
+    def to_inp_string(self, flowunit):
+        text_format = '{:20} {:12f} {:12f} {:24} {:>3s}'
+        if self.base_demand == 0.0:
+            return '{:20} {:12f} {:12s} {:24} {:>3s}'.format(self._name, convert('Elevation',flowunit,self.elevation,False), '', '', ';')
+        elif self.demand_pattern_name is not None:
+            return text_format.format(self._name, convert('Elevation',flowunit,self.elevation,MKS=False), convert('Demand',flowunit,self.base_demand,False), self.demand_pattern_name, ';')
+        else:
+            return text_format.format(self._name, convert('Elevation',flowunit,self.elevation,False), convert('Demand',flowunit,self.base_demand,False), '', ';')
+        
 
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """Method to add a leak to a junction. Leaks are modeled by:

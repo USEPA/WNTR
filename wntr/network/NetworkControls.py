@@ -14,6 +14,7 @@ import wntr
 import weakref
 import numpy as np
 import math
+from wntr.utils import convert
 
 """
 Control Priorities:
@@ -277,6 +278,21 @@ class TimeControl(Control):
         if time_flag == 'SHIFTED_TIME' and self._fire_time < wnm.shifted_time():
             self._fire_time += 24*3600
 
+    def to_inp_string(self):
+        link_name = self._control_action._target_obj_ref.name()
+        action = 'OPEN'
+        if self._control_action._attribute == 'status':
+            if self._control_action._value == 1:
+                action = 'OPEN'
+            else:
+                action = 'CLOSED'
+        else:
+            action = str(self._control_action._value)
+        compare = 'TIME'
+        if self._daily_flag:
+            compare = 'CLOCKTIME'
+        return 'Link %s %s AT %s %s'%(link_name, action, compare, self._fire_time)
+
     @classmethod
     def WithTarget(self, fire_time, time_flag, daily_flag, target_obj, attribute, value):
         t = ControlAction(target_obj, attribute, value)
@@ -338,6 +354,24 @@ class ConditionalControl(Control):
             raise ValueError('source must be a tuple, (source_object, source_attribute).')
         if not isinstance(threshold,float):
             raise ValueError('threshold must be a float.')
+
+    def to_inp_string(self, flowunit):
+        link_name = self._control_action._target_obj_ref.name()
+        action = 'OPEN'
+        if self._control_action._attribute == 'status':
+            if self._control_action._value == 1:
+                action = 'OPEN'
+            else:
+                action = 'CLOSED'
+        else:
+            action = str(self._control_action._value)
+        target_name = self._source_obj.name()
+        compare = 'ABOVE'
+        if self._operation is np.less:
+            compare = 'BELOW'
+        threshold = convert('Hydraulic Head',flowunit,self._threshold-self._source_obj.elevation,False)
+        return 'Link %s %s IF Node %s %s %s'%(link_name, action, target_name, compare, threshold)
+
 
     @classmethod
     def WithTarget(self, source, operation, threshold, target_obj, target_attribute, target_value):
