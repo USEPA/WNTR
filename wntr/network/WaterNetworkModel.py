@@ -1503,7 +1503,7 @@ class WaterNetworkModel(object):
         text_format = '{:10s} {:10f} {:10f} {:>3s}\n'
         label_format = '{:10s} {:10s} {:10s}\n'
         f.write(label_format.format(';ID', 'X-Value', 'Y-Value'))
-        for curve_name, curve in self._curves:
+        for curve_name, curve in self._curves.items():
             for i in curve.points:
                 f.write( text_format.format(curve_name, 1000*i[0], i[1], ';'))
             f.write('\n')
