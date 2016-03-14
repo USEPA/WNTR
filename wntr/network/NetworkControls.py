@@ -439,7 +439,7 @@ class MultiConditionalControl(Control):
             src_attr = self._source[ndx][1]
             src_val = getattr(src_obj, src_attr)
             oper = self._operation[ndx]
-            if isinstance(self._threshold[ndx],float):
+            if not isinstance(self._threshold[ndx],tuple):
                 threshold_val = self._threshold[ndx]
             else:
                 threshold_obj = self._threshold[ndx][0]

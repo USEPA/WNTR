@@ -287,6 +287,7 @@ class ScipyModel(object):
                     self.pump_poly_coefficients[link_id] = (a,b,c,d)
                 elif link.info_type == 'POWER':
                     self.pump_powers[link_id] = link.power
+                    self.max_pump_flows[link_id] = None
 
 
     def _set_jacobian_structure(self):
@@ -951,9 +952,10 @@ class ScipyModel(object):
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
             self._sim_results['link_velocity'].append(0.0)
-            if flow[link_id]>self.max_pump_flows[link_id]:
-                link_name = self._link_id_to_name[link_id]
-                warnings.warn('Pump '+link_name+' has exceeded its maximum flow.')
+            if self.max_pump_flows[link_id] is not None:
+                if flow[link_id]>self.max_pump_flows[link_id]:
+                    link_name = self._link_id_to_name[link_id]
+                    warnings.warn('Pump '+link_name+' has exceeded its maximum flow.')
         for link_id in self._valve_ids:
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
@@ -1002,10 +1004,10 @@ class ScipyModel(object):
             self.reservoir_head[reservoir_id] = reservoir.head
         for junction_name, junction in self._wn.junctions():
             junction_id = self._node_name_to_id[junction_name]
-            if junction_id in self.isolated_junction_ids:
-                self.junction_demand[junction_id] = 0.0
-            else:
-                self.junction_demand[junction_id] = junction.expected_demand
+            #if junction_id in self.isolated_junction_ids:
+            #    self.junction_demand[junction_id] = 0.0
+            #else:
+            self.junction_demand[junction_id] = junction.expected_demand
             if junction._leak:
                 self.leak_status[junction_id] = junction.leak_status
         for link_name, link in self._wn.links():
@@ -1058,6 +1060,7 @@ class ScipyModel(object):
             link.prev_flow = link.flow
         for link_name, link in self._wn.pumps():
             link.prev_flow = link.flow
+            link._prev_power_outage = link._power_outage
         for link_name, link in self._wn.valves():
             link.prev_flow = link.flow
 
