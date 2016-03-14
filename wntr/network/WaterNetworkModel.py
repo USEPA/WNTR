@@ -25,9 +25,6 @@ import wntr.network
 import numpy as np
 import warnings
 import sys
-import logging
-import wntr.network.hdf5_utils
-logger = logging.getLogger(__name__)
 
 class WaterNetworkModel(object):
 
@@ -533,29 +530,16 @@ class WaterNetworkModel(object):
 
     def add_pump_outage(self, pump_name, start_time, end_time):
         pump = self.get_link(pump_name)
-
-        end_power_outage_action = wntr.network.ControlAction(pump, '_power_outage', False)
-        start_power_outage_action = wntr.network.ControlAction(pump, '_power_outage', True)
-
-        control = wntr.network.TimeControl(self, end_time, 'SIM_TIME', False, end_power_outage_action)
-        control._priority = 0
-        self.add_control(pump_name+'PowerOn'+str(end_time),control)
-
-        control = wntr.network.TimeControl(self, start_time, 'SIM_TIME', False, start_power_outage_action)
-        control._priority = 3
-        self.add_control(pump_name+'PowerOff'+str(start_time),control)
-
-
         opened_action_obj = wntr.network.ControlAction(pump, 'status', LinkStatus.opened)
         closed_action_obj = wntr.network.ControlAction(pump, 'status', LinkStatus.closed)
 
-        control = wntr.network.MultiConditionalControl([(pump,'_power_outage')],[np.equal],[True], closed_action_obj)
-        control._priority = 3
-        self.add_control(pump_name+'PowerOffStatus'+str(end_time),control)
-
-        control = wntr.network.MultiConditionalControl([(pump,'_prev_power_outage'),(pump,'_power_outage')],[np.equal,np.equal],[True,False],opened_action_obj)
+        control = wntr.network.TimeControl(self, end_time, 'SIM_TIME', False, opened_action_obj)
         control._priority = 0
-        self.add_control(pump_name+'PowerOnStatus'+str(start_time),control)
+        self.add_control(pump_name+'PowerOn'+str(end_time),control)
+
+        control = wntr.network.TimeControl(self, start_time, 'SIM_TIME', False, closed_action_obj)
+        control._priority = 3
+        self.add_control(pump_name+'PowerOff'+str(start_time),control)
 
     def all_pump_outage(self, start_time, end_time):
         for pump_name, pump in self.pumps():
@@ -1264,8 +1248,6 @@ class WaterNetworkModel(object):
             link.prev_flow = None
             link.flow = None
             link.power = link._base_power
-            link._power_outage = False
-            link._prev_power_outage = False
 
         for name, link in self.valves():
             link.status = link._base_status
@@ -1660,21 +1642,6 @@ class WaterNetworkModel(object):
         mm = int(sec/60.)
         sec -= mm*60
         return (hours, mm, sec)
-        
-    # 
-    # The following WaterNetworkModel functions relate to reading/writing HDF5
-    # data files (a compressed binary format). You probably should not use them
-    # until your network is actually complete (or before you do anything), as,
-    # at the moment, you would have to completely erase the file and regenerate
-    # it to save your changes.
-    #
-    #
-    def write_hdf5_model(self, filename, mode='w-'):
-        if not wntr.network.hdf5_utils.have_h5py:
-            logger.error('The h5py module is not installed - using HDF5 files is not possible')
-            raise IOError('Attempt to write "%s"using uninstalled HDF5 drivers',filename)
-        wntr.network.hdf5_utils.write_hdf5_model(filename, self, mode)
-    
  
 class WaterNetworkOptions(object):
     """
@@ -1912,13 +1879,6 @@ class Node(object):
         Returns the name of the node.
         """
         return self._name
-        
-    def __repr__(self):
-        """
-        Return an object representation.
-        """
-        vals = '"%s"'%self._name
-        return 'Node(%s)'%vals
 
 class Link(object):
     """
@@ -1949,11 +1909,7 @@ class Link(object):
         self.status = LinkStatus.opened
         self.prev_flow = None
         self.flow = None
-    
-    def __repr__(self):
-        vals = '"%s", "%s", "%s"'%(self._link_name, self._start_node_name, self._end_node_name)
-        return 'Link(%s)'%vals
-    
+        
     def get_base_status(self):
         return self._base_status
 
@@ -2019,13 +1975,6 @@ class Junction(Node):
         self.leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
-
-    def __repr__(self):
-        vals = '"%s"'%self._name
-        if self.elevation != 0.0: vals += ', elevation=%s'%self.elevation
-        if self.base_demand != 0.0: vals += ', base_demand=%s'%self.base_demand
-        if self.demand_pattern_name is not None: vals += ', demand_pattern_name=%s'%self.demand_pattern_name
-        return 'Junction(%s)'%vals
 
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """Method to add a leak to a junction. Leaks are modeled by:
@@ -2210,18 +2159,6 @@ class Tank(Node):
         self._leak_end_control_name = 'tank'+self._name+'end_leak_control'
         self.bulk_rxn_coeff = None
 
-    def __repr__(self):
-        vals = '"%s"'%self._name
-        if self.elevation != 0.0: vals += ', elevation=%s'%self.elevation
-        if self.init_level != 3.048: vals += ', init_level=%s'%self.init_level
-        if self.min_level != 0.0: vals += ', min_level=%s'%self.min_level
-        if self.max_level != 6.096: vals += ', max_level=%s'%self.max_level
-        if self.diameter != 15.24: vals += ', diameter=%s'%self.diameter
-        if self.min_vol is not None and self.min_vol != 0.0: vals += ', min_vol=%s'%self.min_vol
-        if self.vol_curve is not None: vals += ', vol_curve="%s"'%self.vol_curve._name
-        return 'Tank(%s)'%vals
-
-
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
         Method to add a leak to a tank. Leaks are modeled by:
@@ -2378,13 +2315,6 @@ class Reservoir(Node):
         self.base_head = base_head
         self.head = base_head
         self.head_pattern_name = head_pattern_name
-    
-    def __repr__(self):
-        vals = '"%s"'%self._name
-        if self.base_head != 0.0: vals += ', base_head=%s'%self.base_head
-        if self.head_pattern_name is not None: vals += ', head_pattern_name="%s"'%self.head_pattern_name
-        return 'Reservoir(%s)'%(vals)
-
 
 class Pipe(Link):
     """
@@ -2433,18 +2363,6 @@ class Pipe(Link):
         self.wall_rxn_coeff = None
 
 
-    def __repr__(self):
-        vals = '"%s", "%s", "%s"'%(self._link_name, self._start_node_name, self._end_node_name)
-        # length=304.8,  diameter=0.3048, roughness=100, minor_loss=0.00, status='OPEN', check_valve_flag=False
-        if self.length != 304.8: vals+= ', length=%s'%self.length
-        if self.diameter != 0.3048: vals += ', diameter=%s'%self.diameter
-        if self.roughness != 100: vals += ', roughness=%s'%self.roughness
-        if self.minor_loss != 0.00: vals += ', minor_loss=0.00'%self.minor_loss
-        if self.status != 'OPEN': vals += ', status=%s'%self.status
-        if self.cv is not False: vals += ', check_valve_flag=%s'%self.cv
-        return 'Pipe(%s)'%vals
-
-
 class Pump(Link):
     """
     Pump class that is inherited from Link
@@ -2473,8 +2391,6 @@ class Pump(Link):
         self.speed = 1.0
         self.curve = None
         self.power = None
-        self._power_outage = False
-        self._prev_power_outage = False
         self._base_power = None
         self.info_type = info_type.upper()
         if self.info_type == 'HEAD':
@@ -2484,16 +2400,6 @@ class Pump(Link):
             self._base_power = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
-
-    def __repr__(self):
-        vals = '"%s", "%s", "%s"'%(self._link_name, self._start_node_name, self._end_node_name)
-        # info_type='POWER', info_value=50.0
-        if self.info_type == 'POWER': 
-            vals += ', info_type="%s", info_value=%s'%(self.info_type,self._base_power)
-        elif self.info_type == 'HEAD': 
-            vals += ', info_type="%s", info_value="%s"'%(self.info_type,self.curve)
-        return 'Pump(%s)'%vals
-
 
     def get_head_curve_coefficients(self):
         """
@@ -2622,16 +2528,6 @@ class Valve(Link):
         self.status = LinkStatus.active
         self._status = LinkStatus.active
 
-
-    def __repr__(self):
-        vals = '"%s", "%s", "%s"'%(self._link_name, self._start_node_name, self._end_node_name)
-        #diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0
-        vals += ', valve_type="%s"'%self.valve_type
-        if self.diameter != 0.3048: vals += ', diameter=%s'%self.diameter
-        if self.minor_loss != 0.0: vals += ', minor_loss=%s'%self.minor_loss
-        if self.setting != 0.0: vals += ', setting=%s'%self.setting
-        return 'Valve(%s)'%vals
-
 class Curve(object):
     """
     Curve class.
@@ -2651,6 +2547,3 @@ class Curve(object):
         self.curve_type = curve_type
         self.points = points
         self.num_points = len(points)
-
-    def __repr__(self):
-        return 'Curve("%s", curve_type="%s", points=[...])'%(self.name, self.curve_type)
