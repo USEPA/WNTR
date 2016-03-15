@@ -1534,7 +1534,7 @@ class WaterNetworkModel(object):
         if self.options.quality_value is None:
             f.write(text_format_string.format('QUALITY', self.options.quality_option))
         else:
-            f.write('{:20s} {:20s} {:20s}]n'.format('QUALITY', self.options.quality_option, self.options.quality_value))
+            f.write('{:20s} {:20s} {:20s}\n'.format('QUALITY', self.options.quality_option, self.options.quality_value))
         f.write(text_format_float.format('VISCOSITY', self.options.viscosity))
         f.write(text_format_float.format('DIFFUSIVITY', self.options.diffusivity))
         f.write(text_format_float.format('SPECIFIC GRAVITY', self.options.specific_gravity))
