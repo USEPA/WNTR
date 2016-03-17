@@ -1,17 +1,65 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Mar 11 11:19:42 2016
+Export model, simulation parameters, and results as an HDF5/PyTables file.
 
-@author: dbhart
+The HDF5 data format was developed for high-density large datasets used in
+astrophysics. It has become the base format for many other types of files, 
+such as the newer MATLAB .mat files and the NetCDF files used by large climate
+models. The format is described below.
+
+The file structure::
+
+    \\-- model
+        +-- <option>: <type>
+        \\-- patterns
+            \\-- patterns:       <struct>[+]
+            \\-- pattern_points: <'label':str, 'mult':float>[+]
+            \\-- curves:         <struct>[+]
+            \\-- curve_points:   <'label':str, 'x':float, 'y':float>[+]
+        \\-- network
+            +-- num_nodes: <int>
+            +-- num_junctions: <int>
+            +-- num_reservoirs: <int>
+            +-- num_tanks: <int>
+            +-- num_links: <int>
+            +-- num_pipes: <int>
+            +-- num_pumps: <int>
+            +-- num_valves: <int>
+            \\-- nodes:      <struct>[+]
+            \\-- junctions:  <struct>[+]
+            \\-- tanks:      <struct>[+]
+            \\-- reservoirs: <struct>[+]
+            \\-- links:      <struct>[+]
+            \\-- pipes:      <struct>[+]
+            \\-- pumps:      <struct>[+]
+            \\-- valves:     <struct>[+]
+        \\-- hydraulics
+            \\-- controls:   <struct>[+]
+            \\-- status:     <struct>[+]
+        \\-- quality
+            \\-- quality:    <struct>[+]
+    \\-- (scenarios)
+    \\-- (results)
+        +-- scenarios: <int>[Nscen]
+        \\-- (node_demand):   <float>[Nscen][Nnode][Ntime]
+        \\-- (node_head):     <float>[Nscen][Nnode][Ntime]
+        \\-- (node_pressure): <float>[Nscen][Nnode][Ntime]
+        \\-- (node_quality):  <float>[Nscen][Nnode][Ntime]
+        \\-- (link_flow):     <float>[Nscen][Nnode][Ntime]
+        \\-- (link_velocity): <float>[Nscen][Nnode][Ntime]
+
+
+This concludes the file description.
 """
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('wntr_uq')
 import warnings
+import time
 
 try: 
     import tables
-except e:
+except Exception as e:
     warnings.warn('PyTables is not installed. HDF5 formatting will not work.')
     raise e
 
@@ -199,7 +247,7 @@ class InitialQualityTable(IsDescription):
 
 class WNMTablesFile(object):
     
-    def __init__(self, filename=None):
+    def __init__(self, filename):
         self._filename = filename
         self._network = None
         self.num_links = 0
@@ -207,21 +255,139 @@ class WNMTablesFile(object):
         self.num_times = 0
         self.times = None
         self.scenarios = []
+        self._checked = False
+        self._created_model = False
+        self._created_results = False
+    
+    def get_filename(self):
+        return self._filename
         
-    def write_model(self, network, filename=None):
+    def set_filename(self, filename):
+        self._filename = filename
+        self._network = None
+        self.num_links = 0
+        self.num_nodes = 0
+        self.num_times = 0
+        self.times = None
+        self.scenarios = []
+        self._checked = False
+        self._created_model = False
+        self._created_results = False
+
+    def get_network(self):
+        return self._network
+        
+    def set_network(self, network):
+        self._network = network
+        self.num_links = 0
+        self.num_nodes = 0
+        self.num_times = 0
+        self.times = None
+        self.scenarios = []
+        self._checked = False
+        self._created_model = False
+        self._created_results = False        
+    
+    def check_file(self, overwrite=False):
         """
-        Write all the network-topology and options data to the file.
+        Create a file and/or check for existing model/results.
         """
-        if filename is not None:
-            self._filename = filename
         if self._filename is None:
-            raise IOError('No filename supplied in WNMTablesFile.write_model()')
-        h5file = tables.open_file(self._filename, mode='w', title='WNTR File')
-        model = h5file.create_group(h5file.root,'model',network.name,filters=filters)
+            raise IOError('No filename supplied in WNMTablesFile')
+        try:
+            h5file = tables.open_file(self._filename, mode='r', title='WNTR File')
+            h5file.close()
+            if overwrite is True:
+                logger.warning('File %s exists ... will overwrite file in 5 seconds', self._filename)
+                time.sleep(5)
+                try:
+                    h5file = tables.open_file(self._filename, mode='w', title='WNTR File')
+                    logger.info('File %s created',self._filename)
+                except IOError as err:
+                    logger.exception('File creation failed for %s: %s',self._filename,err)
+                    raise err
+            else:
+                logger.warning('File %s exists ... data will be appended.',self._filename)
+                h5file = tables.open_file(self._filename, mode='r', title='WNTR File')
+        except IOError:
+            h5file = tables.open_file(self._filename, mode='w', title='WNTR File')
+            logger.info('File %s created',self._filename)
+        except Exception as e:
+            logger.exception('Unknown error writing file %s. %s',self._filename,e)
+            return False
+        try:
+            model = h5file.get_node('/model')
+            if model is not None:
+                self._created_model = True
+        except:
+            self._created_model = False
+        try:
+            results = h5file.get_node('/results')
+            if results is not None:
+                self._created_results = True
+        except:
+            self._created_results = False
+        h5file.close()
+        self._checked = True
+        return True
+    
+    def create_model_tables(self):
+        """
+        Create the tables for storing the model information.
+        """
+        if self._filename is None:
+            raise IOError('No filename supplied in WNMTablesFile()')
+        if not self._checked: 
+            self.check_file()
+        if self._created_model: 
+            logger.error('Model tables already exist ... cowardly refusing to overwrite them.')
+            return
+        h5file = tables.open_file(self._filename, mode='r+', title='WNTR File')
+        model = h5file.create_group(h5file.root,'model',filters=filters)
         netgrp = h5file.create_group(model,'network','Network Description Model',filters=filters)
         hydgrp = h5file.create_group(model,'hydraulics','Hydraulics Operations Model',filters=filters)
         qualgrp = h5file.create_group(model,'quality','Water Quality Model',filters=filters)
         patgrp = h5file.create_group(model,'patterns','Patterns and Curves',filters=filters)
+        h5file.create_table(netgrp,'nodes',NodeTable,'Node IDs, Classes and Class-Table Indices',filters=filters)
+        h5file.create_table(netgrp,'links',LinkTable,'Link IDs, Classes and Class-Table Indices',filters=filters)
+        h5file.create_table(netgrp,'junctions',JunctionTable,'Junction information',filters=filters)
+        h5file.create_table(netgrp, 'reservoirs', ReservoirTable, 'Reservoir information',filters=filters)
+        h5file.create_table(netgrp,'tanks',TankTable,'Tank information',filters=filters)
+        h5file.create_table(netgrp,'emitters',EmitterTable,'Emitter information',filters=filters)
+        h5file.create_table(netgrp,'pipes',PipeTable,'Pipe information',filters=filters)
+        h5file.create_table(netgrp,'pumps',PumpTable,'Pump information',filters=filters)
+        h5file.create_table(netgrp,'valves',ValveTable,'Valve information',filters=filters)
+        h5file.create_table(netgrp,'tags',TagTable,'Tags',filters=filters)
+        h5file.create_table(patgrp, 'patterns',PatternTable,'Multiplier patterns',filters=filters)
+        h5file.create_table(patgrp, 'pattern_points',PatternPointsTable,'Multiplier values',filters=filters)
+        h5file.create_table(patgrp, 'curve_points',CurvePointsTable,'Curve values',filters=filters)
+        h5file.create_table(patgrp, 'curves', CurveTable,'Curves',filters=filters)
+        h5file.create_table(hydgrp,'demands',DemandTable,'Other demands',filters=filters)
+        h5file.create_table(hydgrp,'controls',ControlTable,'Simple controls',filters=filters)
+        h5file.create_table(hydgrp,'rules',RuleTable,'Complex rules',filters=filters)
+        h5file.create_table(hydgrp,'status',InitialStatusTable,'Initial pipe, pump and valve statuses',filters=filters)
+        h5file.create_table(qualgrp,'reactions',ReactionTable,'Reaction definitions for specific pipes and tanks',filters=filters)
+        h5file.create_table(qualgrp,'mixing',MixingTable,'Mixing rules for individual tanks',filters=filters)
+        h5file.create_table(qualgrp,'sources',SourcesTable,'Chemical source points',filters=filters)
+        h5file.create_table(qualgrp,'quality',InitialQualityTable,'Initial water quality',filters=filters)
+        h5file.close()
+        self._created_model = True
+        
+        
+    def write_model(self, network):
+        """
+        Write all the network-topology and options data to the file.
+        """
+        if self._filename is None:
+            raise IOError('No filename supplied in WNMTablesFile()')
+        if not self._created_model:
+            self.create_model_tables()
+        h5file = tables.open_file(self._filename, mode='r+', title='WNTR File')
+        model = h5file.get_node(h5file.root,'model')
+        netgrp = h5file.get_node(model,'network')
+        hydgrp = h5file.get_node(model,'hydraulics')
+        qualgrp = h5file.get_node(model,'quality')
+        patgrp = h5file.get_node(model,'patterns')
         netattrs = model._v_attrs
         for k,v in network.options.__dict__.items():
             setattr(netattrs,k,v)
@@ -237,28 +403,28 @@ class WNMTablesFile(object):
         netattrs.num_reservoirs = network.num_reservoirs()
         netattrs.num_links = network.num_links()
         netattrs.num_nodes = network.num_nodes()
-        tblNodes = h5file.create_table(netgrp,'nodes',NodeTable,'Node IDs, Classes and Class-Table Indices',filters=filters)
-        tblLinks = h5file.create_table(netgrp,'links',LinkTable,'Link IDs, Classes and Class-Table Indices',filters=filters)
-        tblJunctions = h5file.create_table(netgrp,'junctions',JunctionTable,'Junction information',filters=filters)
-        tblReservoirs = h5file.create_table(netgrp, 'reservoirs', ReservoirTable, 'Reservoir information',filters=filters)
-        tblTanks = h5file.create_table(netgrp,'tanks',TankTable,'Tank information',filters=filters)
-        #tblEmitters = h5file.create_table(netgrp,'emitters',EmitterTable,'Emitter information',filters=filters)
-        tblPipes = h5file.create_table(netgrp,'pipes',PipeTable,'Pipe information',filters=filters)
-        tblPumps = h5file.create_table(netgrp,'pumps',PumpTable,'Pump information',filters=filters)
-        tblValves = h5file.create_table(netgrp,'valves',ValveTable,'Valve information',filters=filters)
-        #tblTags = h5file.create_table(netgrp,'tags',TagTable,'Tags',filters=filters)
-        tblPatterns = h5file.create_table(patgrp, 'patterns',PatternTable,'Multiplier patterns',filters=filters)
-        tblPatternPoints = h5file.create_table(patgrp, 'pattern_points',PatternPointsTable,'Multiplier values',filters=filters)
-        tblCurvePoints = h5file.create_table(patgrp, 'curve_points',CurvePointsTable,'Curve values',filters=filters)
-        tblCurves = h5file.create_table(patgrp, 'curves', CurveTable,'Curves',filters=filters)
-        #tblDemands = h5file.create_table(hydgrp,'demands',DemandTable,'Other demands',filters=filters)
-        tblControls = h5file.create_table(hydgrp,'controls',ControlTable,'Simple controls',filters=filters)
-        #tblRules = h5file.create_table(hydgrp,'rules',RuleTable,'Complex rules',filters=filters)
-        tblInitStatus = h5file.create_table(hydgrp,'status',InitialStatusTable,'Initial pipe, pump and valve statuses',filters=filters)
-        #tblReactions = h5file.create_table(qualgrp,'reactions',ReactionTable,'Reaction definitions for specific pipes and tanks',filters=filters)
-        #tblMixing = h5file.create_table(qualgrp,'mixing',MixingTable,'Mixing rules for individual tanks',filters=filters)
-        #tblSources = h5file.create_table(qualgrp,'sources',SourcesTable,'Chemical source points',filters=filters)
-        tblInitQuality = h5file.create_table(qualgrp,'quality',InitialQualityTable,'Initial water quality',filters=filters)
+        tblNodes = h5file.get_node(netgrp,'nodes')
+        tblLinks = h5file.get_node(netgrp,'links')
+        tblJunctions = h5file.get_node(netgrp,'junctions')
+        tblReservoirs = h5file.get_node(netgrp, 'reservoirs')
+        tblTanks = h5file.get_node(netgrp,'tanks')
+        #tblEmitters = h5file.get_node(netgrp,'emitters')
+        tblPipes = h5file.get_node(netgrp,'pipes')
+        tblPumps = h5file.get_node(netgrp,'pumps')
+        tblValves = h5file.get_node(netgrp,'valves')
+        #tblTags = h5file.get_node(netgrp,'tags')
+        tblPatterns = h5file.get_node(patgrp, 'patterns')
+        tblPatternPoints = h5file.get_node(patgrp, 'pattern_points')
+        tblCurvePoints = h5file.get_node(patgrp, 'curve_points')
+        tblCurves = h5file.get_node(patgrp, 'curves')
+        #tblDemands = h5file.get_node(hydgrp,'demands')
+        tblControls = h5file.get_node(hydgrp,'controls')
+        #tblRules = h5file.get_node(hydgrp,'rules')
+        tblInitStatus = h5file.get_node(hydgrp,'status')
+        #tblReactions = h5file.get_node(qualgrp,'reactions')
+        #tblMixing = h5file.get_node(qualgrp,'mixing')
+        #tblSources = h5file.get_node(qualgrp,'sources')
+        tblInitQuality = h5file.get_node(qualgrp,'quality')
         
         # Load in the patterns
         pattern = tblPatterns.row
@@ -454,10 +620,16 @@ class WNMTablesFile(object):
         h5file.close()
         
         
-    def create_results_tables(self, mode='r+'):
+    def create_results_tables(self):
+        """
+        Create the tables for results storage.
+        """
         if self._filename is None:
-            raise IOError('No filename supplied in WNMTablesFile.write_model()')
-        h5file = tables.open_file(self._filename, mode=mode)
+            raise IOError('No filename supplied in WNMTablesFile()')
+        if self._created_results:
+            logger.warning('Results tables already exist ... cowardly refusing to remove data.')
+            return
+        h5file = tables.open_file(self._filename, mode='r+')
         rgrp = h5file.create_group(h5file.root,'results',"Simulation Results",filters=filters)
         h5file.create_earray(rgrp, 'node_head', Float32Atom(), (0,self.num_nodes,self.num_times),
                              "Junction, tank and res head", filters=filters)
@@ -472,12 +644,18 @@ class WNMTablesFile(object):
         h5file.create_earray(rgrp, 'link_velocity', Float32Atom(), (0,self.num_links,self.num_times),
                              "Pipe, valve and pump velocity", filters=filters)
         h5file.close()
+        self._created_results = True
         
         
     def write_results(self, results, scenario_id, demand=True, head=True,
                         pressure=True, flow=True, velocity=True, quality=True):
+        """
+        Write results to the file.
+        """
         if self._filename is None:
-            raise IOError('No filename supplied in WNMTablesFile.write_model()')
+            raise IOError('No filename supplied in WNMTablesFile()')
+        if not self._created_results:
+            self.create_results_tables()
         h5file = tables.open_file(self._filename, mode='r+')
         grp_results = h5file.get_node('/','results')
         self.scenarios.append(scenario_id)
@@ -488,6 +666,15 @@ class WNMTablesFile(object):
         tbl_quality =  h5file.get_node('/results','node_quality')
         tbl_flow =  h5file.get_node('/results','link_flow')
         tbl_velocity =  h5file.get_node('/results','link_velocity')
+        juncs = np.array(results.node['demand'].columns)
+        juncs.sort()
+        #grp_results._v_attrs['nodes'] = juncs
+        links = np.array(results.link['velocity'].columns)
+        links.sort()
+        #grp_results._v_attrs['links'] = links
+        times = np.array(results.node['demand'].index)
+        times.sort()
+        #grp_results._v_attrs['times'] = times
         if demand:
             tbl_demands.append([np.array(results.node['demand'].sort_index(1)).T])
         if head:

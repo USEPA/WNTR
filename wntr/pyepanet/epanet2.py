@@ -19,8 +19,40 @@ from pkg_resources import resource_filename
 import platform
 pyepanet_package = 'wntr.pyepanet'
 
-class EPANETException(Exception):
-    pass
+import logging
+logger = logging.getLogger(__name__)
+
+import warnings
+
+class EpanetException(Exception):
+    pass        
+
+
+def ENgetwarning(code, sec=-1):
+    if sec >= 0:
+        hours = int(sec/3600.)
+        sec -= hours*3600
+        mm = int(sec/60.)
+        sec -= mm*60
+        header = 'At %3d:%.2d:%.2d, '%(hours,mm,sec)
+    else:
+        header = ''
+    if code == 1:
+        return header+'System hydraulically unbalanced - convergence to a hydraulic solution was not achieved in the allowed number of trials'
+    elif code == 2:
+        return header+'System may be hydraulically unstable - hydraulic convergence was only achieved after the status of all links was held fixed'
+    elif code == 3:
+        return header+'System disconnected - one or more nodes with positive demands were disconnected for all supply sources'
+    elif code == 4:
+        return header+'Pumps cannot deliver enough flow or head - one or more pumps were forced to either shut down (due to insufficient head) or operate beyond the maximum rated flow'
+    elif code == 5:
+        return header+'Vavles cannot deliver enough flow - one or more flow control valves could not deliver the required flow even when fully open'
+    elif code == 6:
+        return header+'System has negative pressures - negative pressures occurred at one or more junctions with positive demand'
+    else:
+        return header+'Unknown warning: %d'%code
+
+
 
 class ENepanet():
     """Wrapper class to load the EPANET DLL object, then perform operations on
@@ -33,6 +65,9 @@ class ENepanet():
     
     errcode = 0
     """Return code from the EPANET library functions"""
+    
+    errcodelist = []
+    cur_time = 0
     
     Warnflag = False
     """A warning ocurred at some point during EPANET execution"""
@@ -87,12 +122,15 @@ class ENepanet():
         """Print the error text the corresponds to the error code returned"""
         if not self.errcode: return
         #errtxt = self.ENlib.ENgeterror(self.errcode)
-        sys.stderr.write("Error Number "+str(self.errcode)+"\n")
+        logger.error("EPANET error: %d",self.errcode)
         if self.errcode >= 100:
             self.Errflag = True
-            raise(EPANETException('Fatal error occured'))
+            self.errcodelist.append(self.errcode)
+            raise(EpanetException(self.ENgeterror(self.errcode)))
         else:
             self.Warnflag = True
+            warnings.warn(ENgetwarning(self.errcode))
+            self.errcodelist.append(ENgetwarning(self.errcode,self.cur_time))
         return
 
     def epanetExec(self, inpfile=None, rptfile=None, binfile=None):
@@ -108,7 +146,7 @@ class ENepanet():
         if inpfile is None: inpfile = self.inpfile
         if rptfile is None: rptfile = self.rptfile
         if binfile is None: binfile = self.binfile
-        sys.stdout.write("\n... EPANET Version 2.0\n")
+        logger.info("EPANET Version 2.0")
         try:
             self.ENopen(inpfile, rptfile, binfile)
             self.ENsolveH()
@@ -121,11 +159,11 @@ class ENepanet():
         except:
             pass
         if self.Errflag: 
-            sys.stdout.write("\n\n... EPANET completed. There are errors.\n")
+            logger.error("EPANET completed. There are errors.")
         elif self.Warnflag:
-            sys.stdout.write("\n\n... EPANET completed. There are warnings.\n")
+            logger.warning("EPANET completed. There are warnings.")
         else:
-            sys.stdout.write("\n\n... EPANET completed.\n")
+            logger.info("EPANET completed.")
         return
     
     def ENopen(self, inpfile=None, rptfile=None, binfile=None):
@@ -217,6 +255,7 @@ class ENepanet():
         lT = ctypes.c_long()
         self.errcode = self.ENlib.ENrunH(byref(lT))
         self._error()
+        self.cur_time = lT.value
         return lT.value
         
     def ENnextH(self):
