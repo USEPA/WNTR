@@ -1,5 +1,9 @@
 import networkx as nx
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import LinearSegmentedColormap
+except:
+    pass
 import pandas as pd
 import logging
 
@@ -182,9 +186,6 @@ def custom_colormap(numcolors=11, colors=['blue','white','red']):
     Default is blue to white to red with 11 colors.  
     Colors can be specified in any way understandable by matplotlib.colors.ColorConverter.to_rgb()
     """
-
-    from matplotlib.colors import LinearSegmentedColormap 
-    
     cmap = LinearSegmentedColormap.from_list(name='custom', 
                                              colors = colors,
                                              N=numcolors)
