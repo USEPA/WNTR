@@ -20,7 +20,7 @@ tookit ENmethodname functions.
 
 from toolkit import *
 from future import *
-from epanet2 import ENepanet
+from epanet2 import ENepanet, EpanetException, ENgetwarning
 
 
 import os, sys

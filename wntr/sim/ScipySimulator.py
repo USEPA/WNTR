@@ -10,6 +10,9 @@ from NetworkResults import *
 import time
 import copy
 
+import logging
+logger = logging.getLogger(__name__)
+
 class ScipySimulator(WaterNetworkSimulator):
     """
     Run simulation using custom newton solver and linear solvers from scipy.sparse.
@@ -107,7 +110,7 @@ class ScipySimulator(WaterNetworkSimulator):
                         break
                     last_backup_time = backup_time
 
-            print 'simulation time = ',self.get_time(),', trial = ',trial
+            logger.info('simulation time = %s, trial = %d',self.get_time(),trial)
 
             # Prepare for solve
             model.identify_isolated_junctions()
