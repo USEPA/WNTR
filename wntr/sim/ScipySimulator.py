@@ -169,7 +169,7 @@ class ScipySimulator(WaterNetworkSimulator):
 
         # Get all demand for complete time interval
         self._demand_dict = {}
-        for node_name, node in self._wn.junctions():
+        for node_name, node in self._wn.nodes(Junction):
             demand_values = self.get_node_demand(node_name)
             for t in range(self._n_timesteps):
                 self._demand_dict[(node_name, t)] = demand_values[t]
@@ -246,7 +246,7 @@ class ScipySimulator(WaterNetworkSimulator):
         return changes_made
 
     def _align_valve_statuses(self):
-        for valve_name, valve in self._wn.valves():
+        for valve_name, valve in self._wn.links(Valve):
             if valve.status==wntr.network.LinkStatus.opened:
                 valve._status = valve.status
                 #print 'setting ',valve.name(),' _status to ',valve.status

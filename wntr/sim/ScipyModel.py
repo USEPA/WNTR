@@ -994,15 +994,15 @@ class ScipyModel(object):
             self.isolated_junction_ids.append(self._node_name_to_id[junction_name])
         for link_name in self.isolated_link_names:
             self.isolated_link_ids.append(self._link_name_to_id[link_name])
-        for tank_name, tank in self._wn.tanks():
+        for tank_name, tank in self._wn.nodes(Tank):
             tank_id = self._node_name_to_id[tank_name]
             self.tank_head[tank_id] = tank.head
             if tank._leak:
                 self.leak_status[tank_id] = tank.leak_status
-        for reservoir_name, reservoir in self._wn.reservoirs():
+        for reservoir_name, reservoir in self._wn.nodes(Reservoir):
             reservoir_id = self._node_name_to_id[reservoir_name]
             self.reservoir_head[reservoir_id] = reservoir.head
-        for junction_name, junction in self._wn.junctions():
+        for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
             #if junction_id in self.isolated_junction_ids:
             #    self.junction_demand[junction_id] = 0.0
@@ -1013,25 +1013,25 @@ class ScipyModel(object):
         for link_name, link in self._wn.links():
             link_id = self._link_name_to_id[link_name]
             self.link_status[link_id] = link.status
-        for valve_name, valve in self._wn.valves():
+        for valve_name, valve in self._wn.links(Valve):
             valve_id = self._link_name_to_id[valve_name]
             self.valve_settings[valve_id] = valve.setting
             self.link_status[valve_id] = valve._status
-        for pump_name, pump in self._wn.pumps():
+        for pump_name, pump in self._wn.links(Pump):
             pump_id = self._link_name_to_id[pump_name]
             self.pump_speeds[pump_id] = pump.speed
             if pump._cv_status == wntr.network.LinkStatus.closed:
                 self.link_status[pump_id] = pump._cv_status
 
     def update_tank_heads(self):
-        for tank_name, tank in self._wn.tanks():
+        for tank_name, tank in self._wn.nodes(Tank):
             q_net = tank.prev_demand
             delta_h = 4.0*q_net*(self._wn.sim_time-self._wn.prev_sim_time)/(math.pi*tank.diameter**2)
             tank.head = tank.prev_head + delta_h
 
     def update_junction_demands(self, demand_dict):
         t = math.floor(self._wn.sim_time/self._wn.options.hydraulic_timestep)
-        for junction_name, junction in self._wn.junctions():
+        for junction_name, junction in self._wn.nodes(Junction):
             junction.expected_demand = demand_dict[(junction_name,t)]
 
     def identify_isolated_junctions(self):
@@ -1044,24 +1044,24 @@ class ScipyModel(object):
 
     def update_network_previous_values(self):
         self._wn.prev_sim_time = self._wn.sim_time
-        for name, node in self._wn.junctions():
+        for name, node in self._wn.nodes(Junction):
             node.prev_head = node.head
             node.prev_demand = node.demand
             node.prev_expected_demand = node.expected_demand
             node.prev_leak_demand = node.leak_demand
-        for name, node in self._wn.tanks():
+        for name, node in self._wn.nodes(Tank):
             node.prev_head = node.head
             node.prev_demand = node.demand
             node.prev_leak_demand = node.leak_demand
-        for name, node in self._wn.reservoirs():
+        for name, node in self._wn.nodes(Reservoir):
             node.prev_head = node.head
             node.prev_demand = node.demand
-        for link_name, link in self._wn.pipes():
+        for link_name, link in self._wn.links(Pipe):
             link.prev_flow = link.flow
-        for link_name, link in self._wn.pumps():
+        for link_name, link in self._wn.links(Pump):
             link.prev_flow = link.flow
             link._prev_power_outage = link._power_outage
-        for link_name, link in self._wn.valves():
+        for link_name, link in self._wn.links(Valve):
             link.prev_flow = link.flow
 
     def store_results_in_network(self, x):
@@ -1069,7 +1069,7 @@ class ScipyModel(object):
         demand = x[self.num_nodes:self.num_nodes*2]
         flow = x[self.num_nodes*2:(2*self.num_nodes+self.num_links)]
         leak_demand = x[(2*self.num_nodes+self.num_links):]        
-        for name, node in self._wn.junctions():
+        for name, node in self._wn.nodes(Junction):
             node_id = self._node_name_to_id[name]
             node.head = head[node_id]
             node.demand = demand[node_id]
@@ -1078,7 +1078,7 @@ class ScipyModel(object):
                 node.leak_demand = leak_demand[leak_idx]
             else:
                 node.leak_demand = 0.0
-        for name, node in self._wn.tanks():
+        for name, node in self._wn.nodes(Tank):
             node_id = self._node_name_to_id[name]
             node.head = head[node_id]
             node.demand = demand[node_id]
@@ -1087,7 +1087,7 @@ class ScipyModel(object):
                 node.leak_demand = leak_demand[leak_idx]
             else:
                 node.leak_demand = 0.0
-        for name, node in self._wn.reservoirs():
+        for name, node in self._wn.nodes(Reservoir):
             node_id = self._node_name_to_id[name]
             node.head = head[node_id]
             node.demand = demand[node_id]

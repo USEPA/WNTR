@@ -25,6 +25,9 @@ import wntr.network
 import numpy as np
 import warnings
 import sys
+import logging
+
+logger = logging.getLogger('wntr.network.WaterNetworkModel')
 
 class WaterNetworkModel(object):
 
@@ -193,7 +196,7 @@ class WaterNetworkModel(object):
 
         tank_controls = []
 
-        for tank_name, tank in self.tanks():
+        for tank_name, tank in self.nodes(Tank):
 
             # add the tank controls
             all_links = self.get_links_for_node(tank_name,'ALL')
@@ -411,7 +414,7 @@ class WaterNetworkModel(object):
 
     def _get_pump_controls(self):
         pump_controls = []
-        for pump_name, pump in self.pumps():
+        for pump_name, pump in self.links(Pump):
 
             close_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.closed)
             open_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.opened)
@@ -472,7 +475,7 @@ class WaterNetworkModel(object):
 
     def _get_valve_controls(self):
         valve_controls = []
-        for valve_name, valve in self.valves():
+        for valve_name, valve in self.links(Valve):
 
             close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.closed)
             open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.opened)
@@ -555,7 +558,7 @@ class WaterNetworkModel(object):
         self.add_control(pump_name+'PowerOnStatus'+str(start_time),control)
 
     def all_pump_outage(self, start_time, end_time):
-        for pump_name, pump in self.pumps():
+        for pump_name, pump in self.links(Pump):
             self.add_pump_outage(pump_name, start_time, end_time)
 
     def remove_link(self, name, with_control=True):
@@ -1085,21 +1088,33 @@ class WaterNetworkModel(object):
         -------
         node_name, node
         """
-        for node_name, node in self._nodes.iteritems():
-            if node_type is None:
+        if node_type==None:
+            for node_name, node in self._nodes.iteritems():
                 yield node_name, node
-            elif isinstance(node, node_type):
+        elif node_type==Junction:
+            for node_name, node in self._junctions.iteritems():
                 yield node_name, node
+        elif node_type==Tank:
+            for node_name, node in self._tanks.iteritems():
+                yield node_name, node
+        elif node_type==Reservoir:
+            for node_name, node in self._reservoirs.iteritems():
+                yield node_name, node
+        else:
+            raise RuntimeError('node_type, '+str(node_type)+', not recognized.')
 
     def junctions(self):
+        warnings.warn('WaterNetworkModel.junctions() is deprecated. Please use WaterNetworkModel.nodes(wntr.network.Junction).')
         for name, node in self._junctions.iteritems():
             yield name, node
 
     def tanks(self):
+        warnings.warn('WaterNetworkModel.tanks() is deprecated. Please use WaterNetworkModel.nodes(wntr.network.Tank).')
         for name, node in self._tanks.iteritems():
             yield name, node
 
     def reservoirs(self):
+        warnings.warn('WaterNetworkModel.reservoirs() is deprecated. Please use WaterNetworkModel.nodes(wntr.network.Reservoir).')
         for name, node in self._reservoirs.iteritems():
             yield name, node
 
@@ -1113,21 +1128,33 @@ class WaterNetworkModel(object):
         -------
         link_name, link
         """
-        for link_name, link in self._links.iteritems():
-            if link_type is None:
+        if link_type==None:
+            for link_name, link in self._links.iteritems():
                 yield link_name, link
-            elif isinstance(link, link_type):
+        elif link_type==Pipe:
+            for link_name, link in self._pipes.iteritems():
                 yield link_name, link
+        elif link_type==Pump:
+            for link_name, link in self._pumps.iteritems():
+                yield link_name, link
+        elif link_type==Valve:
+            for link_name, link in self._valves.iteritems():
+                yield link_name, link
+        else:
+            raise RuntimeError('link_type, '+str(link_type)+', not recognized.')
 
     def pipes(self):
+        warnings.warn('WaterNetworkModel.pipes() is deprecated. Please use WaterNetworkModel.links(wntr.network.Pipe).')
         for name, link in self._pipes.iteritems():
             yield name, link
 
     def pumps(self):
+        warnings.warn('WaterNetworkModel.pumps() is deprecated. Please use WaterNetworkModel.links(wntr.network.Pump).')
         for name, link in self._pumps.iteritems():
             yield name, link
 
     def valves(self):
+        warnings.warn('WaterNetworkModel.valves() is deprecated. Please use WaterNetworkModel.links(wntr.network.Valve).')
         for name, link in self._valves.iteritems():
             yield name, link
 
@@ -1223,7 +1250,7 @@ class WaterNetworkModel(object):
         self.sim_time = 0.0
         self.prev_sim_time = -np.inf
 
-        for name, node in self.junctions():
+        for name, node in self.nodes(Junction):
             node.prev_head = None
             node.head = None
             node.prev_demand = None
@@ -1232,7 +1259,7 @@ class WaterNetworkModel(object):
             node.leak_demand = None
             node.leak_status = False
             
-        for name, node in self.tanks():
+        for name, node in self.nodes(Tank):
             node.prev_head = None
             node.head = node.init_level+node.elevation
             node.prev_demand = None
@@ -1241,7 +1268,7 @@ class WaterNetworkModel(object):
             node.leak_demand = None
             node.leak_status = False
 
-        for name, node in self.reservoirs():
+        for name, node in self.nodes(Reservoir):
             node.prev_head = None
             node.head = node.base_head
             node.prev_demand = None
@@ -1249,13 +1276,13 @@ class WaterNetworkModel(object):
             node.prev_leak_demand = None
             node.leak_demand = None
 
-        for name, link in self.pipes():
+        for name, link in self.links(Pipe):
             link.status = link._base_status
             link.prev_status = None
             link.prev_flow = None
             link.flow = None
 
-        for name, link in self.pumps():
+        for name, link in self.links(Pump):
             link.status = link._base_status
             link.prev_status = None
             link.prev_flow = None
@@ -1264,7 +1291,7 @@ class WaterNetworkModel(object):
             link._power_outage = False
             link._prev_power_outage = False
 
-        for name, link in self.valves():
+        for name, link in self.links(Valve):
             link.status = link._base_status
             link.prev_status = None
             link.prev_flow = None
@@ -1415,7 +1442,7 @@ class WaterNetworkModel(object):
         f.write('[JUNCTIONS]\n')
         label_format = '{:20} {:>12s} {:>12s} {:24}\n'
         f.write(label_format.format(';ID', 'Elevation', 'Demand', 'Pattern'))
-        for junction_name, junction in self.junctions():
+        for junction_name, junction in self.nodes(Junction):
             f.write('%s\n'%junction.to_inp_string(flowunit))
 
         # Print reservoir information
@@ -1423,7 +1450,7 @@ class WaterNetworkModel(object):
         text_format = '{:20s} {:12f} {:>12s} {:>3s}\n'
         label_format = '{:20s} {:>12s} {:>12s}\n'
         f.write(label_format.format(';ID', 'Head', 'Pattern'))
-        for reservoir_name, reservoir in self.reservoirs():
+        for reservoir_name, reservoir in self.nodes(Reservoir):
             if reservoir.head_pattern_name is not None:
                 f.write(text_format.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), reservoir.head_pattern_name, ';'))
             else:
@@ -1434,7 +1461,7 @@ class WaterNetworkModel(object):
         text_format = '{:20s} {:12f} {:12f} {:12f} {:12f} {:12f} {:12f} {:20s} {:>3s}\n'
         label_format = '{:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
         f.write(label_format.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level', 'Diameter', 'Min Volume', 'Volume Curve'))
-        for tank_name, tank in self.tanks():
+        for tank_name, tank in self.nodes(Tank):
             if tank.vol_curve is not None:
                 f.write(text_format.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), tank.vol_curve, ';'))
             else:
@@ -1445,7 +1472,7 @@ class WaterNetworkModel(object):
         text_format = '{:20s} {:20s} {:20s} {:12f} {:12f} {:12f} {:12f} {:>20s} {:>3s}\n'
         label_format = '{:20s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
         f.write(label_format.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status'))
-        for pipe_name, pipe in self.pipes():
+        for pipe_name, pipe in self.links(Pipe):
             if pipe.cv:
                 f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, 'CV', ';'))                
             else:

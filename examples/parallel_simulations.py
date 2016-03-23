@@ -16,9 +16,6 @@ def run_scenario(pipe_to_break):
     results = sim.run_sim()
     return results
 
-#logging.basicConfig(level=logging.INFO)
-#wntr.utils.logger.start_logging()
-
 np.random.seed(0)
 
 inp_file = 'networks/Net3.inp'
