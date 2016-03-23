@@ -82,7 +82,7 @@ class TestPDD(unittest.TestCase):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
 
-        sim = self.wntr.sim.ScipySimulator(wn, True)
+        sim = self.wntr.sim.WNTRSimulator(wn, True)
         results = sim.run_sim()
 
         for t in results.time:

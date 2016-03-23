@@ -128,7 +128,7 @@ def hydraulic_metrics(wn):
         node.nominal_pressure = 15
     
     # Simulate hydraulics
-    sim = wntr.sim.ScipySimulator(wn, pressure_driven=True)
+    sim = wntr.sim.WNTRSimulator(wn, pressure_driven=True)
     results = sim.run_sim()
 
     # Create list of node names

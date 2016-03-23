@@ -21,7 +21,7 @@ class TestResetInitialValues(unittest.TestCase):
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
         
-        sim = self.wntr.sim.ScipySimulator(self.wn)
+        sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
         self.wn.reset_initial_values()
@@ -74,13 +74,13 @@ class TestStopStartSim(unittest.TestCase):
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
-        sim = self.wntr.sim.ScipySimulator(self.wn)
+        sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 10*3600
-        sim = self.wntr.sim.ScipySimulator(self.wn)
+        sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res2 = sim.run_sim(solver_options={'TOL':1e-8})
         self.wn.options.duration = 24*3600
         self.res3 = sim.run_sim(solver_options={'TOL':1e-8})
@@ -137,13 +137,13 @@ class TestPickle(unittest.TestCase):
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
-        sim = self.wntr.sim.ScipySimulator(self.wn)
+        sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 10*3600
-        sim = self.wntr.sim.ScipySimulator(self.wn)
+        sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res2 = sim.run_sim(solver_options={'TOL':1e-8})
         f=open('pickle_test.pickle','w')
         pickle.dump(self.wn,f)
@@ -152,7 +152,7 @@ class TestPickle(unittest.TestCase):
         wn2 = pickle.load(f)
         f.close()
         wn2.options.duration = 24*3600
-        sim = self.wntr.sim.ScipySimulator(wn2)
+        sim = self.wntr.sim.WNTRSimulator(wn2)
         self.res3 = sim.run_sim(solver_options={'TOL':1e-8})
 
         node_res = pd.concat([self.res2.node,self.res3.node],axis=1)

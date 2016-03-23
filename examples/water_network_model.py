@@ -14,7 +14,7 @@ wn.options.hydraulic_timestep = 15*60
 wn.options.pattern_timestep = 60*60
 
 # Simulate hydraulics
-sim = wntr.sim.ScipySimulator(wn)
+sim = wntr.sim.WNTRSimulator(wn)
 results = sim.run_sim()
 
 # Save the water network to an inp file
@@ -73,7 +73,7 @@ junction = wn.get_node('173')
 junction.add_leak(wn, area=3.14159*(0.001/2)**2, start_time=4*3600, end_time=8*3600)
 
 # Simulate hydraulics
-sim = wntr.sim.ScipySimulator(wn, pressure_driven = True)
+sim = wntr.sim.WNTRSimulator(wn, pressure_driven = True)
 results = sim.run_sim(solver_options={'MAXITER':300,'BACKTRACKING':True})
 
 # Write inp file

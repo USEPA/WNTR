@@ -104,7 +104,7 @@ class TestLeakResults(unittest.TestCase):
         wn.add_control(control)
         control = self.wntr.network.TimeControl(wn, 8*3600, 'SIM_TIME', False, inactive_control_action)
         wn.add_control(control)
-        sim = self.wntr.sim.ScipySimulator(wn)
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         for t in results.node.major_axis:
@@ -125,7 +125,7 @@ class TestLeakResults(unittest.TestCase):
         wn.add_control(control)
         control = self.wntr.network.TimeControl(wn, 12*3600, 'SIM_TIME', False, inactive_control_action)
         wn.add_control(control)
-        sim = self.wntr.sim.ScipySimulator(wn)
+        sim = self.wntr.sim.WNTRSimulator(wn)
         pyomo_results = sim.run_sim()
 
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13B.inp'

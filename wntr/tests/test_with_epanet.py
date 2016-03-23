@@ -22,7 +22,7 @@ class TestWithEpanet(unittest.TestCase):
         epanet_sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.epanet_results = epanet_sim.run_sim()
         
-        scipy_sim = self.wntr.sim.ScipySimulator(self.wn)
+        scipy_sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.scipy_results = scipy_sim.run_sim()
 
     @classmethod
@@ -73,7 +73,7 @@ class TestNet1(unittest.TestCase):
         epanet_sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.epanet_results = epanet_sim.run_sim()
         
-        scipy_sim = self.wntr.sim.ScipySimulator(self.wn)
+        scipy_sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.scipy_results = scipy_sim.run_sim() 
 
     @classmethod
@@ -120,7 +120,7 @@ class TestNet3(unittest.TestCase):
         epanet_sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.epanet_results = epanet_sim.run_sim()
         
-        scipy_sim = self.wntr.sim.ScipySimulator(self.wn)
+        scipy_sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.scipy_results = scipy_sim.run_sim()
 
     @classmethod

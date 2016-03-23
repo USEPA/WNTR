@@ -7,7 +7,7 @@ from wntr.network.WaterNetworkModel import *
 import copy
 import warnings
 
-class ScipyModel(object):
+class HydraulicModel(object):
     def __init__(self, wn, pressure_driven=False):
 
         self._wn = wn

@@ -12,7 +12,7 @@ def run_scenario(pipe_to_break):
     wn.split_pipe_with_junction(pipe_to_break, pipe_to_break+'__A', pipe_to_break+'__B', 'leak_'+pipe_to_break)
     leak = wn.get_node('leak_'+pipe_to_break)
     leak.add_leak(wn, 0.01, 0.75, 3600, 5*3600)
-    sim = wntr.sim.ScipySimulator(wn, pressure_driven=True)
+    sim = wntr.sim.WNTRSimulator(wn, pressure_driven=True)
     results = sim.run_sim()
     return results
 

@@ -3,7 +3,7 @@ import numpy as np
 import scipy.sparse as sparse
 import warnings
 from WaterNetworkSimulator import *
-from ScipyModel import *
+from HydraulicModel import *
 from wntr.network.WaterNetworkModel import *
 from NewtonSolver import *
 from NetworkResults import *
@@ -13,7 +13,7 @@ import copy
 import logging
 logger = logging.getLogger(__name__)
 
-class ScipySimulator(WaterNetworkSimulator):
+class WNTRSimulator(WaterNetworkSimulator):
     """
     Run simulation using custom newton solver and linear solvers from scipy.sparse.
     """
@@ -28,7 +28,7 @@ class ScipySimulator(WaterNetworkSimulator):
             A water network
         """
 
-        super(ScipySimulator, self).__init__(wn, pressure_driven)
+        super(WNTRSimulator, self).__init__(wn, pressure_driven)
 
     def get_time(self):
         s = int(self._wn.sim_time)
@@ -54,7 +54,7 @@ class ScipySimulator(WaterNetworkSimulator):
 
         self._controls = self._wn._control_dict.values()+tank_controls+cv_controls+pump_controls+valve_controls
 
-        model = ScipyModel(self._wn, self.pressure_driven)
+        model = HydraulicModel(self._wn, self.pressure_driven)
         model.initialize_results_dict()
 
         self.solver = NewtonSolver(options=solver_options)

@@ -49,5 +49,5 @@ for junction_name, junction in wn.junctions():
     junction.base_demand = junction.base_demand*1.15
     
 # Simulate 
-sim = wntr.sim.ScipySimulator(wn, pressure_driven=True)
+sim = wntr.sim.WNTRSimulator(wn, pressure_driven=True)
 sim.run_sim()

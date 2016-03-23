@@ -12,7 +12,7 @@ epanet_sim = wntr.sim.EpanetSimulator(wn)
 epanet_results = epanet_sim.run_sim()
 
 # Simulate using Scipy
-scipy_sim = wntr.sim.ScipySimulator(wn)
+scipy_sim = wntr.sim.WNTRSimulator(wn)
 scipy_results = scipy_sim.run_sim()
 
 # Compare link flowrate results
@@ -26,7 +26,7 @@ plt.title('EPANET - SCIPY, Link Flowrate')
 
 # Reset the water network and run again
 wn = wntr.network.WaterNetworkModel(inp_file)
-sim = wntr.sim.ScipySimulator(wn)
+sim = wntr.sim.WNTRSimulator(wn)
 res1 = sim.run_sim()
 wn.reset_initial_values()
 res2 = sim.run_sim()
@@ -36,7 +36,7 @@ res2 = sim.run_sim()
 wn = wntr.network.WaterNetworkModel(inp_file)
 wn.options.duration = 10*3600
 wn.options.hydraulic_timestep = 3600
-sim = wntr.sim.ScipySimulator(wn)
+sim = wntr.sim.WNTRSimulator(wn)
 first_10_hours_of_results = sim.run_sim()
 wn.options.duration = 24*3600
 print 'running last 14 hours'
@@ -51,7 +51,7 @@ link_results = pd.concat([first_10_hours_of_results.link,last_14_hours_of_result
 wn = wntr.network.WaterNetworkModel(inp_file)
 wn.options.duration = 10*3600
 wn.options.hydraulic_timestep = 3600
-sim = wntr.sim.ScipySimulator(wn)
+sim = wntr.sim.WNTRSimulator(wn)
 first_10_hours_of_results = sim.run_sim()
 f=open('pickle_example.pickle','w')
 pickle.dump(wn,f)
@@ -60,7 +60,7 @@ f=open('pickle_example.pickle','r')
 new_wn = pickle.load(f)
 f.close()
 new_wn.options.duration = 24*3600
-sim = wntr.sim.ScipySimulator(new_wn)
+sim = wntr.sim.WNTRSimulator(new_wn)
 print 'running last 14 hours'
 last_14_hours_of_results = sim.run_sim()
 node_results = pd.concat([first_10_hours_of_results.node,last_14_hours_of_results.node],axis=1)
