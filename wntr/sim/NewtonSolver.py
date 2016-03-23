@@ -3,8 +3,12 @@ import scipy.sparse as sp
 import copy
 import time
 import warnings
+import logging
 
 warnings.filterwarnings("error",'Matrix is exactly singular',sp.linalg.MatrixRankWarning)
+np.set_printoptions(precision=3, threshold=10000, linewidth=300)
+
+logger = logging.getLogger('wntr.sim.NewtonSolver')
 
 class NewtonSolver(object):
     def __init__(self, options={}):
@@ -63,7 +67,8 @@ class NewtonSolver(object):
 
             J = Jacobian(x)
 
-            #print iter, r_norm
+            logger.debug('iter: {0:<10d} inf norm: {1:<16.8f}'.format(iter, r_norm))
+            logger.debug('x = {0}'.format(x))
 
             if r_norm < self.tol:
                 return [x, iter, 1]
@@ -76,6 +81,7 @@ class NewtonSolver(object):
                 print 'Jacobian is singular. Adding regularization term.'
                 J = J+I
                 d = -sp.linalg.spsolve(J,r)
+            logger.debug('step = {0}'.format(d))
             #d = -np.linalg.solve(J, r)
             #self._total_linear_solver_time += time.time() - t0
 
