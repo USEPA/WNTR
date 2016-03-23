@@ -1,7 +1,6 @@
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
-import matplotlib.pyplot as plt
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
