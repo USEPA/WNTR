@@ -27,7 +27,7 @@ class NewtonSolver(object):
         self.flow_filter[self.num_nodes*2:(2*self.num_nodes+self.num_links)] = np.zeros(self.num_links)
 
         if 'MAXITER' not in self._options:
-            self.maxiter = 40
+            self.maxiter = 300
         else:
             self.maxiter = self._options['MAXITER']
 
