@@ -5,18 +5,29 @@ import time
 import warnings
 import logging
 
+# Ideas:
+#    scale variables
+#    fraction to the boundary rule
+#    better line search
+#    Incorrect jacobian
+
 warnings.filterwarnings("error",'Matrix is exactly singular',sp.linalg.MatrixRankWarning)
 np.set_printoptions(precision=3, threshold=10000, linewidth=300)
 
 logger = logging.getLogger('wntr.sim.NewtonSolver')
 
 class NewtonSolver(object):
-    def __init__(self, options={}):
+    def __init__(self, num_nodes, num_links, num_leaks, options={}):
         self._options = options
-        self._total_linear_solver_time = 0
+        self.num_nodes = num_nodes
+        self.num_links = num_links
+        self.num_leaks = num_leaks
+
+        self.flow_filter = np.ones(self.num_nodes*2+self.num_links+self.num_leaks)
+        self.flow_filter[self.num_nodes*2:(2*self.num_nodes+self.num_links)] = np.zeros(self.num_links)
 
         if 'MAXITER' not in self._options:
-            self.maxiter = 100
+            self.maxiter = 40
         else:
             self.maxiter = self._options['MAXITER']
 
@@ -36,24 +47,24 @@ class NewtonSolver(object):
             self.rho = self._options['BT_C']
 
         if 'BT_MAXITER' not in self._options:
-            self.bt_maxiter = 50
+            self.bt_maxiter = 30
         else:
             self.bt_maxiter = self._options['BT_MAXITER']
 
         if 'BACKTRACKING' not in self._options:
-            self.bt = False
+            self.bt = True
         else:
             self.bt = self._options['BACKTRACKING']
 
 
     def solve(self, Residual, Jacobian, x0):
 
-        x = copy.copy(x0)
+        x = np.array(x0)
 
         num_vars = len(x)
 
-        I = sp.csr_matrix((np.ones(num_vars),(range(num_vars),range(num_vars))),shape=(num_vars,num_vars))
-        I = 10*I
+        #I = sp.csr_matrix((np.ones(num_vars),(range(num_vars),range(num_vars))),shape=(num_vars,num_vars))
+        #I = 10*I
         use_r_ = False
 
         # MAIN NEWTON LOOP
@@ -65,53 +76,57 @@ class NewtonSolver(object):
                 r = Residual(x)
                 r_norm = np.max(abs(r))
 
-            J = Jacobian(x)
-
-            logger.debug('iter: {0:<10d} inf norm: {1:<16.8f}'.format(iter, r_norm))
-            logger.debug('x = {0}'.format(x))
+            #logger.debug('iter: {0:<10d} inf norm: {1:<16.8f}'.format(iter, r_norm))
+            #logger.debug('x = {0}'.format(x))
 
             if r_norm < self.tol:
                 return [x, iter, 1]
+
+            J = Jacobian(x)
             
             # Call Linear solver
             #t0 = time.time()
             try:
                 d = -sp.linalg.spsolve(J,r)
             except sp.linalg.MatrixRankWarning:
-                print 'Jacobian is singular. Adding regularization term.'
-                J = J+I
-                d = -sp.linalg.spsolve(J,r)
-            logger.debug('step = {0}'.format(d))
+                print 'Jacobian is singular.'
+                return [x, iter, 0]
+                #print 'Jacobian is singular. Adding regularization term.'
+                #J = J+I
+                #d = -sp.linalg.spsolve(J,r)
+            #logger.debug('step = {0}'.format(d))
             #d = -np.linalg.solve(J, r)
             #self._total_linear_solver_time += time.time() - t0
 
             # Backtracking
             alpha = 1.0
-            if self.bt and iter>=10:
+            if self.bt:
                 use_r_ = True
                 for iter_bt in xrange(self.bt_maxiter):
                     #print alpha
+                    rhs = r_norm
                     x_ = x + alpha*d
                     r_ = Residual(x_)
-                    if iter_bt > 0:
-                        last_lhs = lhs
-                        lhs = np.max(abs(r_))
-                    else:
-                        lhs = np.max(abs(r_))
-                        last_lhs = lhs + 1.0
+                    #if iter_bt > 0:
+                    #    last_lhs = lhs
+                    #    lhs = np.max(abs(r_))
+                    #else:
+                    lhs = np.max(abs(r_))
+                    #    last_lhs = lhs + 1.0
                     #rhs = np.max(r + self.bt_c*alpha*J*d)
-                    rhs = r_norm
                     #print "     ", iter, iter_bt, alpha
-                    if lhs <= 0.95*rhs or lhs>last_lhs:
+                    if lhs < (1.0-0.0001*alpha)*rhs:
+                        #x_ -= self.flow_filter*(x_<=-100.0)*x_*0.01
                         x = x_
                         break
                     else:
                         alpha = alpha*self.rho
 
                 if iter_bt+1 >= self.bt_maxiter:
-                    raise RuntimeError("Backtracking failed. ")
+                    return [x,iter,0]
+                    #raise RuntimeError("Backtracking failed. ")
             else:
-                x = x + d
+                x += d
             #print 'alpha = ',alpha
 
         return [x, iter, 0]

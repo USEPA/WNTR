@@ -57,7 +57,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         model = HydraulicModel(self._wn, self.pressure_driven)
         model.initialize_results_dict()
 
-        self.solver = NewtonSolver(options=solver_options)
+        self.solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, options=solver_options)
 
         results = NetResults()
         if self._wn.sim_time%self._wn.options.hydraulic_timestep!=0:
@@ -113,7 +113,8 @@ class WNTRSimulator(WaterNetworkSimulator):
             logger.info('simulation time = %s, trial = %d',self.get_time(),trial)
 
             # Prepare for solve
-            model.identify_isolated_junctions()
+            model.reset_isolated_junctions()
+            #model.identify_isolated_junctions()
             if not first_step:
                 model.update_tank_heads()
             model.update_junction_demands(self._demand_dict)
@@ -121,11 +122,17 @@ class WNTRSimulator(WaterNetworkSimulator):
             model.set_jacobian_constants()
 
             # Solve
+            X_init = model.update_initializations(X_init)
             [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             if solver_status == 0:
-                model.check_infeasibility(self._X)
+                model.identify_isolated_junctions()
+                model.set_network_inputs_by_id()
+                model.set_jacobian_constants()
+                [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            if solver_status == 0:
+                #model.check_infeasibility(self._X)
                 raise RuntimeError('No solution found.')
-            X_init = copy.copy(self._X)
+            X_init = np.array(self._X)
 
             # Enter results in network and update previous inputs
             model.store_results_in_network(self._X)
@@ -241,7 +248,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         for change_tuple, orig_value in change_dict.iteritems():
             if orig_value!=getattr(change_tuple[0],change_tuple[1]):
                 changes_made = True
-                #print 'setting ',change_tuple[0].name(),change_tuple[1],' to ',getattr(change_tuple[0],change_tuple[1])
+                #logger.debug('setting {0} {1} to {2}'.format(change_tuple[0].name(),change_tuple[1],getattr(change_tuple[0],change_tuple[1])))
 
         return changes_made
 
