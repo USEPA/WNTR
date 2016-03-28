@@ -68,8 +68,8 @@ class HydraulicModel(object):
         self._set_jacobian_structure()
 
     def _initialize_global_constants(self):
-        self._Hw_k = 10.666829500036352/(1000.0**1.852) # Hazen-Williams resistance coefficient in SI units (it equals 4.727 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
-        self._Dw_k = 0.0826/(1000.0**2.0) # Darcy-Weisbach constant in SI units (it equals 0.0252 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
+        self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units (it equals 4.727 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
+        self._Dw_k = 0.0826 # Darcy-Weisbach constant in SI units (it equals 0.0252 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
         self._g = 9.81 # Acceleration due to gravity
 
         # Constants for the modified hazen-williams formula
@@ -77,9 +77,9 @@ class HydraulicModel(object):
         #self.hw_q1 = 0.00349347323944
         #self.hw_q2 = 0.00549347323944
         #self.hw_m = 0.01
-        self.hw_q1 = 0.1
-        self.hw_q2 = 0.2
-        self.hw_m = 0.001*1000.0**0.852
+        self.hw_q1 = 0.0001
+        self.hw_q2 = 0.0002
+        self.hw_m = 0.001
         x1 = self.hw_q1
         x2 = self.hw_q2
         f1 = self.hw_m*self.hw_q1
@@ -95,7 +95,7 @@ class HydraulicModel(object):
         # Constants for the modified pump curves
         self.pump_m = -0.00000000001
         self.pump_q1 = 0.0
-        self.pump_q2 = 1.0e-5
+        self.pump_q2 = 1.0e-8
 
         # constants for the modified pdd function
         self._pdd_smoothing_delta = 0.2
@@ -245,13 +245,13 @@ class HydraulicModel(object):
                 self.get_pdd_poly1_coeffs(node, node_id)
                 self.get_pdd_poly2_coeffs(node, node_id)
                 if node._leak:
-                    self.leak_Cd[node_id] = node.leak_discharge_coeff*1000.0
+                    self.leak_Cd[node_id] = node.leak_discharge_coeff
                     self.leak_area[node_id] = node.leak_area
                     self.get_leak_poly_coeffs(node, node_id)
             elif node_id in self._tank_ids:
                 self.node_elevations[node_id] = node.elevation
                 if node._leak:
-                    self.leak_Cd[node_id] = node.leak_discharge_coeff*1000.0
+                    self.leak_Cd[node_id] = node.leak_discharge_coeff
                     self.leak_area[node_id] = node.leak_area
                     self.get_leak_poly_coeffs(node, node_id)
             elif node_id in self._reservoir_ids:
@@ -287,7 +287,6 @@ class HydraulicModel(object):
             if link_id in self._pump_ids:
                 if link.info_type == 'HEAD':
                     A, B, C = link.get_head_curve_coefficients()
-                    B = B/(1000.0**C)
                     self.head_curve_coefficients[link_id] = (A,B,C)
                     self.max_pump_flows[link_id] = (A/B)**(1.0/C)
                     a,b,c,d = self.get_pump_poly_coefficients(A,B,C)
@@ -693,16 +692,16 @@ class HydraulicModel(object):
                     start_node_id = self.link_start_nodes[link_id]
                     end_node_id = self.link_end_nodes[link_id]
                     if start_node_id < end_node_id: # start node head comes first
-                        self.jac_values[value_ndx] = 1.0*self._g*flow
+                        self.jac_values[value_ndx] = 1000.0*self._g*flow
                         value_ndx += 1
-                        self.jac_values[value_ndx] = -1.0*self._g*flow
+                        self.jac_values[value_ndx] = -1000.0*self._g*flow
                         value_ndx += 1
                     else:
-                        self.jac_values[value_ndx] = -1.0*self._g*flow
+                        self.jac_values[value_ndx] = -1000.0*self._g*flow
                         value_ndx += 1
-                        self.jac_values[value_ndx] = 1.0*self._g*flow
+                        self.jac_values[value_ndx] = 1000.0*self._g*flow
                         value_ndx += 1
-                    self.jac_values[value_ndx] = 1.0*self._g*x[start_node_id] - 1.0*self._g*x[end_node_id]
+                    self.jac_values[value_ndx] = 1000.0*self._g*x[start_node_id] - 1000.0*self._g*x[end_node_id]
                     value_ndx += 1
             elif self.link_types[link_id] == wntr.network.LinkTypes.valve:
                 if link_id in self._prv_ids:
@@ -819,7 +818,7 @@ class HydraulicModel(object):
         	            pump_headgain = 1.0*A - B*link_flow**C
         	        self.headloss_residual[link_id] = pump_headgain - (head[end_node_id] - head[start_node_id])
         	    elif link_id in self.pump_powers.keys():
-        	        self.headloss_residual[link_id] = self.pump_powers[link_id] + (head_diff_vector[link_id])*flow[link_id]*self._g*1.0
+        	        self.headloss_residual[link_id] = self.pump_powers[link_id] + (head_diff_vector[link_id])*flow[link_id]*self._g*1000.0
         	    else:
         	        raise RuntimeError('Only power and head pumps are currently supported.')
         get_pump_headloss_residual()
@@ -891,7 +890,7 @@ class HydraulicModel(object):
                 self.leak_demand_residual[leak_idx] = leak_demand[leak_idx]
 
     def initialize_flow(self):
-        flow = 1.0*np.ones(self.num_links)
+        flow = 0.001*np.ones(self.num_links)
         return flow
 
     def initialize_head(self):
@@ -957,15 +956,15 @@ class HydraulicModel(object):
 
     def save_results(self, x, results):
         head = x[:self.num_nodes]
-        demand = x[self.num_nodes:2*self.num_nodes]/1000.0
-        flow = x[2*self.num_nodes:(2*self.num_nodes+self.num_links)]/1000.0
-        leak_demand = x[(2*self.num_nodes+self.num_links):]/1000.0
+        demand = x[self.num_nodes:2*self.num_nodes]
+        flow = x[2*self.num_nodes:(2*self.num_nodes+self.num_links)]
+        leak_demand = x[(2*self.num_nodes+self.num_links):]
         for node_id in self._junction_ids:
             head_n = head[node_id]
             self._sim_results['node_type'].append('Junction')
             self._sim_results['node_head'].append(head_n)
             self._sim_results['node_demand'].append(demand[node_id])
-            self._sim_results['node_expected_demand'].append(self.junction_demand[node_id]/1000.0)
+            self._sim_results['node_expected_demand'].append(self.junction_demand[node_id])
             if node_id in self.isolated_junction_ids:
                 self._sim_results['node_pressure'].append(0.0)
             else:
@@ -1063,7 +1062,7 @@ class HydraulicModel(object):
             #if junction_id in self.isolated_junction_ids:
             #    self.junction_demand[junction_id] = 0.0
             #else:
-            self.junction_demand[junction_id] = junction.expected_demand*1000.0
+            self.junction_demand[junction_id] = junction.expected_demand
             if junction._leak:
                 self.leak_status[junction_id] = junction.leak_status
         for link_name, link in self._wn.links():
@@ -1129,9 +1128,9 @@ class HydraulicModel(object):
 
     def store_results_in_network(self, x):
         head = x[:self.num_nodes]
-        demand = x[self.num_nodes:self.num_nodes*2]/1000.0
-        flow = x[self.num_nodes*2:(2*self.num_nodes+self.num_links)]/1000.0
-        leak_demand = x[(2*self.num_nodes+self.num_links):]/1000.0        
+        demand = x[self.num_nodes:self.num_nodes*2]
+        flow = x[self.num_nodes*2:(2*self.num_nodes+self.num_links)]
+        leak_demand = x[(2*self.num_nodes+self.num_links):]
         for name, node in self._wn.nodes(Junction):
             node_id = self._node_name_to_id[name]
             node.head = head[node_id]
@@ -1221,8 +1220,8 @@ class HydraulicModel(object):
         f1 = 0.0
         df1 = 1.0e-11
         x2 = 1.0e-4
-        f2 = node.leak_discharge_coeff*1000.0*node.leak_area*math.sqrt(2.0*self._g*x2)
-        df2 = 0.5*node.leak_discharge_coeff*1000.0*node.leak_area*math.sqrt(2.0*self._g)*(x2)**(-0.5)
+        f2 = node.leak_discharge_coeff*node.leak_area*math.sqrt(2.0*self._g*x2)
+        df2 = 0.5*node.leak_discharge_coeff*node.leak_area*math.sqrt(2.0*self._g)*(x2)**(-0.5)
         a,b,c,d = self.compute_polynomial_coefficients(x1,x2,f1,f2,df1,df2)
         self.leak_poly_coeffs[node_id] = (a,b,c,d)
 
