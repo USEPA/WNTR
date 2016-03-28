@@ -1345,22 +1345,34 @@ class WaterNetworkModel(object):
             suc = G.successors(node_name)
             pre = G.predecessors(node_name)
             for s in suc:
-                connected_to_s = False
+                connected_to_s = True
                 link_names_list = G.edge[node_name][s].keys()
                 for link_name in link_names_list:
                     link = self.get_link(link_name)
-                    if link.status!=LinkStatus.closed:
-                        connected_to_s = True
+                    if link.status==LinkStatus.closed:
+                        connected_to_s = False
+                    elif type(link)==Pump:
+                        if link._cv_status == LinkStatus.closed:
+                            connected_to_s = False
+                    elif type(link)==Valve:
+                        if link._status == LinkStatus.closed:
+                            connected_to_s = False
                 if connected_to_s:
                     if s not in groups[grp]:
                         grab_group(s)
             for p in pre:
-                connected_to_p = False
+                connected_to_p = True
                 link_names_list = G.edge[p][node_name].keys()
                 for link_name in link_names_list:
                     link = self.get_link(link_name)
-                    if link.status!=LinkStatus.closed:
-                        connected_to_p = True
+                    if link.status==LinkStatus.closed:
+                        connected_to_p = False
+                    elif type(link)==Pump:
+                        if link._cv_status == LinkStatus.closed:
+                            connected_to_p = False
+                    elif type(link)==Valve:
+                        if link._status == LinkStatus.closed:
+                            connected_to_p = False
                 if connected_to_p:
                     if p not in groups[grp]:
                         grab_group(p)
@@ -1377,6 +1389,25 @@ class WaterNetworkModel(object):
                 has_tank_or_res[grp] = False
                 grab_group(node_name)
         
+        #for grp, nodes in groups.iteritems():
+        #    logger.debug('group: {0}'.format(grp))
+        #    logger.debug('nodes[{0}]: {1}'.format(grp, nodes))
+        #    logger.debug('has_tank_or_res[{0}]: {1}'.format(grp,has_tank_or_res[grp]))
+
+        #all_nodes_check = set()
+        #for grp, nodes in groups.iteritems():
+        #    all_nodes_check = all_nodes_check.union(nodes)
+        #if all_nodes_check!=set(self.node_name_list()):
+        #    raise RuntimeError('_get_isolated_junctions() did not find all of the nodes!')
+
+        #for grp1, nodes1 in groups.iteritems():
+        #    for grp2, nodes2 in groups.iteritems():
+        #        if grp1==grp2:
+        #            pass
+        #        elif len(nodes1.intersection(nodes2))>0:
+        #            logger.debug('intersection of group {0} and gropup {1}: {2}'.format(grp1,grp2,nodes1.intersection(nodes2)))
+        #            raise RuntimeError('The intersection of two groups is not empty!')
+
         for grp,check in has_tank_or_res.iteritems():
             if check:
                 del groups[grp]

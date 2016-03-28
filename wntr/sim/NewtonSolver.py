@@ -19,15 +19,15 @@ logger = logging.getLogger('wntr.sim.NewtonSolver')
 class NewtonSolver(object):
     def __init__(self, num_nodes, num_links, num_leaks, options={}):
         self._options = options
-        self.num_nodes = num_nodes
-        self.num_links = num_links
-        self.num_leaks = num_leaks
+        #self.num_nodes = num_nodes
+        #self.num_links = num_links
+        #self.num_leaks = num_leaks
 
-        self.flow_filter = np.ones(self.num_nodes*2+self.num_links+self.num_leaks)
-        self.flow_filter[self.num_nodes*2:(2*self.num_nodes+self.num_links)] = np.zeros(self.num_links)
+        #self.flow_filter = np.ones(self.num_nodes*2+self.num_links+self.num_leaks)
+        #self.flow_filter[self.num_nodes*2:(2*self.num_nodes+self.num_links)] = np.zeros(self.num_links)
 
         if 'MAXITER' not in self._options:
-            self.maxiter = 300
+            self.maxiter = 100
         else:
             self.maxiter = self._options['MAXITER']
 
@@ -47,7 +47,7 @@ class NewtonSolver(object):
             self.rho = self._options['BT_C']
 
         if 'BT_MAXITER' not in self._options:
-            self.bt_maxiter = 30
+            self.bt_maxiter = 20
         else:
             self.bt_maxiter = self._options['BT_MAXITER']
 
@@ -61,8 +61,7 @@ class NewtonSolver(object):
 
         x = np.array(x0)
 
-        num_vars = len(x)
-
+        #num_vars = len(x)
         #I = sp.csr_matrix((np.ones(num_vars),(range(num_vars),range(num_vars))),shape=(num_vars,num_vars))
         #I = 10*I
         use_r_ = False
@@ -76,7 +75,8 @@ class NewtonSolver(object):
                 r = Residual(x)
                 r_norm = np.max(abs(r))
 
-            #logger.debug('iter: {0:<10d} inf norm: {1:<16.8f}'.format(iter, r_norm))
+            #if iter<2:
+            #    logger.debug('iter: {0:<4d} norm: {1:<10.2e} min_h: {2:<10.2e} max_h: {3:<10.2e} min_d: {4:<10.2e} max_d: {5:<10.2e} min_q: {6:<10.2e} max_q: {7:<10.2e}'.format(iter, r_norm, np.min(x[:self.num_nodes]), np.max(x[:self.num_nodes]), np.min(x[self.num_nodes:2*self.num_nodes]), np.max(x[self.num_nodes:2*self.num_nodes]), np.min(x[2*self.num_nodes:(2*self.num_nodes+self.num_links)]), np.max(x[2*self.num_nodes:(2*self.num_nodes+self.num_links)])))
             #logger.debug('x = {0}'.format(x))
 
             if r_norm < self.tol:
@@ -89,7 +89,7 @@ class NewtonSolver(object):
             try:
                 d = -sp.linalg.spsolve(J,r)
             except sp.linalg.MatrixRankWarning:
-                print 'Jacobian is singular.'
+                #logger.debug('Jacobian is singular.')
                 return [x, iter, 0]
                 #print 'Jacobian is singular. Adding regularization term.'
                 #J = J+I
@@ -100,7 +100,7 @@ class NewtonSolver(object):
 
             # Backtracking
             alpha = 1.0
-            if self.bt:
+            if self.bt and iter>=2:
                 use_r_ = True
                 for iter_bt in xrange(self.bt_maxiter):
                     #print alpha
@@ -123,12 +123,16 @@ class NewtonSolver(object):
                         alpha = alpha*self.rho
 
                 if iter_bt+1 >= self.bt_maxiter:
+                    #logger.debug('Backtracking failed.')
                     return [x,iter,0]
                     #raise RuntimeError("Backtracking failed. ")
+                #logger.debug('iter: {0:<4d} norm: {1:<10.2e} min_h: {2:<10.2e} max_h: {3:<10.2e} min_d: {4:<10.2e} max_d: {5:<10.2e} min_q: {6:<10.2e} max_q: {7:<10.2e} min_step: {8:<10.2e} max_step: {9:<10.2e} alpha: {10:<10.2e}'.format(iter+1, lhs, np.min(x[:self.num_nodes]), np.max(x[:self.num_nodes]), np.min(x[self.num_nodes:2*self.num_nodes]), np.max(x[self.num_nodes:2*self.num_nodes]), np.min(x[2*self.num_nodes:(2*self.num_nodes+self.num_links)]), np.max(x[2*self.num_nodes:(2*self.num_nodes+self.num_links)]), np.min(d), np.max(d), alpha))
             else:
                 x += d
             #print 'alpha = ',alpha
+            
 
+        #logger.debug('Reached maximum number of iterations.')
         return [x, iter, 0]
         #raise RuntimeError("No solution found.")
 

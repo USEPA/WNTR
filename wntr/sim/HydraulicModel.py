@@ -6,6 +6,9 @@ import math
 from wntr.network.WaterNetworkModel import *
 import copy
 import warnings
+import logging
+
+logger = logging.getLogger('wntr.sim.HydraulicModel')
 
 class HydraulicModel(object):
     def __init__(self, wn, pressure_driven=False):
@@ -1096,10 +1099,10 @@ class HydraulicModel(object):
 
     def identify_isolated_junctions(self):
         self.isolated_junction_names, self.isolated_link_names = self._wn._get_isolated_junctions()
-        #if len(self.isolated_junction_names)>0:
-        #    print 'We have ',len(self.isolated_junction_names),' isolated junctions.'
-        #    print self.isolated_junction_names
-        #    print 'We have ',len(self.isolated_link_names),' isolated links.'
+        if len(self.isolated_junction_names)>0:
+            logger.warning('There are {0} isolated junctions.'.format(len(self.isolated_junction_names)))
+        #    logger.debug('{0}'.format(self.isolated_junction_names))
+            logger.warning('There are {0} isolated links.'.format(len(self.isolated_link_names)))
         #    print self.isolated_link_names
 
     def update_network_previous_values(self):

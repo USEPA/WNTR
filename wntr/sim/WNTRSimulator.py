@@ -90,8 +90,8 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         while True:
 
-            #print ' '
-            #print ' '
+            #logger.debug(' ')
+            #logger.debug(' ')
             
             if not resolve:
                 start_step_time = time.time()
@@ -122,7 +122,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             model.set_jacobian_constants()
 
             # Solve
-            X_init = model.update_initializations(X_init)
+            #X_init = model.update_initializations(X_init)
             [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             if solver_status == 0:
                 model.identify_isolated_junctions()
