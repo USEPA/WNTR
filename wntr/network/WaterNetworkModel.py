@@ -1181,6 +1181,9 @@ class WaterNetworkModel(object):
 
     def valve_name_list(self):
         return self._valves.keys()
+
+    def control_name_list(self):
+        return self._control_dict.keys()
             
     def curves(self):
         """
