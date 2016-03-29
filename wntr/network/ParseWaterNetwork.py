@@ -208,6 +208,11 @@ class ParseWaterNetwork(object):
                     else:
                         setattr(wn.options, current[0].lower()+'_'+current[1].lower(), float(current[2]) if is_number(current[2]) else current[2].upper())
 
+        if type(wn.options.report_timestep)==float or type(wn.options.report_timestep)==int:
+            if wn.options.report_timestep<=wn.options.hydraulic_timestep:
+                raise RuntimeError('wn.options.report_timestep must be greater than or equal to wn.options.hydraulic_timestep.')
+            if wn.options.report_timestep%wn.options.hydraulic_timestep != 0:
+                raise RuntimeError('wn.options.report_timestep must be a multiple of wn.options.hydraulic_timestep')
         f.close()
 
         # INP file units to convert from

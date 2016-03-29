@@ -152,7 +152,10 @@ class WNTRSimulator(WaterNetworkSimulator):
                         raise RuntimeError('failed to converge')
                     resolve = False
 
-            if self._wn.sim_time%self._wn.options.hydraulic_timestep == 0:
+            if type(self._wn.options.report_timestep)==float or type(self._wn.options.report_timestep)==int:
+                if self._wn.sim_time%self._wn.options.report_timestep == 0:
+                    model.save_results(self._X, results)
+            elif self._wn.options.report_timestep.upper()=='ALL':
                 model.save_results(self._X, results)
             model.update_network_previous_values()
             first_step = False
