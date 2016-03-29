@@ -953,6 +953,7 @@ class HydraulicModel(object):
         self._sim_results['link_times'] = []
         self._sim_results['link_flowrate'] = []
         self._sim_results['link_velocity'] = []
+        self._sim_results['link_status'] = []
 
     def save_results(self, x, results):
         head = x[:self.num_nodes]
@@ -1002,10 +1003,12 @@ class HydraulicModel(object):
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
             self._sim_results['link_velocity'].append(abs(flow[link_id])*4.0/(math.pi*self.pipe_diameters[link_id]**2.0))
+            self._sim_results['link_status'].append(self.link_status[link_id])
         for link_id in self._pump_ids:
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
             self._sim_results['link_velocity'].append(0.0)
+            self._sim_results['link_status'].append(self.link_status[link_id])
             if self.max_pump_flows[link_id] is not None:
                 if flow[link_id]>self.max_pump_flows[link_id]:
                     link_name = self._link_id_to_name[link_id]
@@ -1014,6 +1017,7 @@ class HydraulicModel(object):
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
             self._sim_results['link_velocity'].append(0.0)
+            self._sim_results['link_status'].append(self.link_status[link_id])
 
     def get_results(self,results):
         ntimes = len(results.time)
@@ -1036,7 +1040,8 @@ class HydraulicModel(object):
 
         link_dictionary = {'flowrate':self._sim_results['link_flowrate'],
                            'velocity':self._sim_results['link_velocity'],
-                           'type':self._sim_results['link_type']}
+                           'type':self._sim_results['link_type'],
+                           'status':self._sim_results['link_status']}
         for key, value in link_dictionary.iteritems():
             link_dictionary[key] = np.array(value).reshape((ntimes, nlinks))
         results.link = pd.Panel(link_dictionary, major_axis=results.time, minor_axis=link_names)
