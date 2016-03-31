@@ -60,11 +60,12 @@ class WNTRSimulator(WaterNetworkSimulator):
         self.solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, options=solver_options)
 
         results = NetResults()
-        if self._wn.sim_time%self._wn.options.hydraulic_timestep!=0:
-            results_start_time = int(round((self._wn.options.hydraulic_timestep-(self._wn.sim_time%self._wn.options.hydraulic_timestep))+self._wn.sim_time))
-        else:
-            results_start_time = int(round(self._wn.sim_time))
-        results.time = np.arange(results_start_time, self._wn.options.duration+self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
+        results.time = []
+        # if self._wn.sim_time%self._wn.options.hydraulic_timestep!=0:
+        #     results_start_time = int(round((self._wn.options.hydraulic_timestep-(self._wn.sim_time%self._wn.options.hydraulic_timestep))+self._wn.sim_time))
+        # else:
+        #     results_start_time = int(round(self._wn.sim_time))
+        # results.time = np.arange(results_start_time, self._wn.options.duration+self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
 
         # Initialize X
         # Vars will be ordered:
@@ -158,8 +159,10 @@ class WNTRSimulator(WaterNetworkSimulator):
             if type(self._wn.options.report_timestep)==float or type(self._wn.options.report_timestep)==int:
                 if self._wn.sim_time%self._wn.options.report_timestep == 0:
                     model.save_results(self._X, results)
+                    results.time.append(self._wn.sim_time)
             elif self._wn.options.report_timestep.upper()=='ALL':
                 model.save_results(self._X, results)
+                results.time.append(self._wn.sim_time)
             model.update_network_previous_values()
             first_step = False
             self._wn.sim_time += self._wn.options.hydraulic_timestep

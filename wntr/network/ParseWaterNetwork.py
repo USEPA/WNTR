@@ -618,7 +618,10 @@ class ParseWaterNetwork(object):
                     if len(current) != 6:
                         warnings.warn('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
                     if len(current) == 6: # at time
-                        fire_time = str_time_to_sec(current[5])
+                        if ':' in current[5]:
+                            fire_time = str_time_to_sec(current[5])
+                        else:
+                            fire_time = int(float(current[5])*3600)
                         control_obj = wntr.network.TimeControl(wn, fire_time, 'SIM_TIME', False, action_obj)
                     elif len(current) == 7: # at clocktime
                         fire_time = clock_time_to_sec(current[5], current[6])
