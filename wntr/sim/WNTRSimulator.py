@@ -131,7 +131,10 @@ class WNTRSimulator(WaterNetworkSimulator):
                 [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             if solver_status == 0:
                 #model.check_infeasibility(self._X)
-                raise RuntimeError('No solution found.')
+                #raise RuntimeError('No solution found.')
+                warnings.warn('Simulation did not converge!')
+                model.get_results(results)
+                return results
             X_init = np.array(self._X)
 
             # Enter results in network and update previous inputs

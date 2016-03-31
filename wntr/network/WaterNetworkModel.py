@@ -530,6 +530,7 @@ class WaterNetworkModel(object):
             raise ValueError('The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control.')
         else:
             self._control_dict[name] = control_object
+            control_object.name = name
 
     def add_pump_outage(self, pump_name, start_time, end_time):
         pump = self.get_link(pump_name)
