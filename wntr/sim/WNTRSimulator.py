@@ -90,8 +90,8 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         while True:
 
-            #logger.debug(' ')
-            #logger.debug(' ')
+            logger.debug(' ')
+            logger.debug(' ')
             
             if not resolve:
                 start_step_time = time.time()
@@ -251,7 +251,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         for change_tuple, orig_value in change_dict.iteritems():
             if orig_value!=getattr(change_tuple[0],change_tuple[1]):
                 changes_made = True
-                #logger.debug('setting {0} {1} to {2}'.format(change_tuple[0].name(),change_tuple[1],getattr(change_tuple[0],change_tuple[1])))
+                logger.debug('setting {0} {1} to {2}'.format(change_tuple[0].name(),change_tuple[1],getattr(change_tuple[0],change_tuple[1])))
 
         return changes_made
 
