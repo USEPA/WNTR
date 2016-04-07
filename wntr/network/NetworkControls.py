@@ -390,7 +390,7 @@ class ConditionalControl(Control):
                 delta_h = 4.0*q_net*(wnm.sim_time-wnm.prev_sim_time)/(math.pi*self._source_obj.diameter**2)
                 next_val = val+delta_h
                 if self._operation(next_val, self._threshold) and self._operation(val, self._threshold):
-                    return (True, None)
+                    return (False, None)
                 if self._operation(next_val, self._threshold):
                     #if self._source_obj.name()=='TANK-3352':
                         #print 'threshold for tank 3352 control is ',self._threshold
@@ -403,7 +403,11 @@ class ConditionalControl(Control):
                 else:
                     return (False, None)
             else:
-                return (False, None)
+                val = getattr(self._source_obj,self._source_attr)
+                if self._operation(val, self._threshold):
+                    return (True, 0)
+                else:
+                    return (False, None)
         elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='head' and wnm.sim_time==0 and self._partial_step_for_tanks:
             if presolve_flag:
                 val = getattr(self._source_obj, self._source_attr)
