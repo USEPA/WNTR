@@ -214,8 +214,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         else:
             resolve = False
             resolve_controls_to_activate = []
-            for i in xrange(len(self._controls)):
-                control = self._controls[i]
+            for i, control in enumerate(self._controls):
                 control_tuple = control.IsControlActionRequired(self._wn, presolve)
                 if control_tuple[0]:
                     resolve = True
@@ -230,35 +229,37 @@ class WNTRSimulator(WaterNetworkSimulator):
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 0)
             if change_flag:
                 if change_tuple not in change_dict.keys():
-                    change_dict[change_tuple] = orig_value
+                    change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 1)
             if change_flag:
                 if change_tuple not in change_dict.keys():
-                    change_dict[change_tuple] = orig_value
+                    change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 2)
             if change_flag:
                 if change_tuple not in change_dict.keys():
-                    change_dict[change_tuple] = orig_value
+                    change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 3)
             if change_flag:
                 if change_tuple not in change_dict.keys():
-                    change_dict[change_tuple] = orig_value
+                    change_dict[change_tuple] = (orig_value, control.name)
 
         self._align_valve_statuses()
 
-        for change_tuple, orig_value in change_dict.iteritems():
+        for change_tuple, orig_value_control_name in change_dict.iteritems():
+            orig_value = orig_value_control_name[0]
+            control_name = orig_value_control_name[1]
             if orig_value!=getattr(change_tuple[0],change_tuple[1]):
                 changes_made = True
-                logger.debug('setting {0} {1} to {2}'.format(change_tuple[0].name(),change_tuple[1],getattr(change_tuple[0],change_tuple[1])))
+                logger.debug('setting {0} {1} to {2} because of control {3}'.format(change_tuple[0].name(),change_tuple[1],getattr(change_tuple[0],change_tuple[1]),control_name))
 
         return changes_made
 

@@ -216,15 +216,15 @@ class WaterNetworkModel(object):
                 close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
                 open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
             
-                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head')],[np.greater,np.less_equal],[min_head+self._Htol,min_head+self._Htol],open_control_action)
+                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.greater,np.less_equal,np.greater],[min_head+self._Htol,min_head+self._Htol,0.0],open_control_action)
                 control._partial_step_for_tanks = False
                 control._priority = 0
-                control.name = tank.name()+link_name+' opened because head is greater than min head'
+                control.name = link_name+' opened because tank '+tank.name()+' head is greater than min head'
                 tank_controls.append(control)
             
                 control = wntr.network.ConditionalControl((tank,'head'),np.less_equal,min_head,close_control_action)
                 control._priority = 1
-                control.name = tank.name()+link_name+' closed because head is less than min head'
+                control.name = link_name+' closed because tank '+tank.name()+' head is less than min head'
                 tank_controls.append(control)
             
                 if link.start_node() == tank_name:
@@ -234,7 +234,7 @@ class WaterNetworkModel(object):
                 other_node = self.get_node(other_node_name)
                 control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.less_equal,np.less_equal],[min_head+self._Htol,(other_node,'head')],open_control_action)
                 control._priority = 2
-                control.name = tank.name()+link_name+' opened because tank head is below min head but flow should be in'
+                control.name = link_name+' opened because tank '+tank.name()+' head is below min head but flow should be in'
                 tank_controls.append(control)
             
                 #control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.less,np.less],[min_head+self._Htol,min_head+self._Htol], close_control_action)
@@ -256,15 +256,15 @@ class WaterNetworkModel(object):
                 close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
                 open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
             
-                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head')],[np.less,np.greater_equal],[max_head-self._Htol,max_head-self._Htol],open_control_action)
+                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
                 control._partial_step_for_tanks = False
                 control._priority = 0
-                control.name = tank.name()+link_name+'opened because head is less than max head'
+                control.name = link_name+'opened because tank '+tank.name()+' head is less than max head'
                 tank_controls.append(control)
             
                 control = wntr.network.ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
                 control._priority = 1
-                control.name = tank.name()+link_name+' closed because head is greater than max head'
+                control.name = link_name+' closed because tank '+tank.name()+' head is greater than max head'
                 tank_controls.append(control)
             
                 if link.start_node() == tank_name:
@@ -274,7 +274,7 @@ class WaterNetworkModel(object):
                 other_node = self.get_node(other_node_name)
                 control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater_equal],[max_head-self._Htol,(other_node,'head')],open_control_action)
                 control._priority = 2
-                control.name = tank.name()+link_name+' opened because head above max head but flow should be out'
+                control.name = link_name+' opened because tank '+tank.name()+' head above max head but flow should be out'
                 tank_controls.append(control)
             
                 #control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
@@ -528,9 +528,21 @@ class WaterNetworkModel(object):
         """
         if name in self._control_dict:
             raise ValueError('The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control.')
-        else:
-            self._control_dict[name] = control_object
-            control_object.name = name
+
+        target = control_object._control_action._target_obj_ref
+        target_type = type(target)
+        if target_type == wntr.network.Valve:
+            warnings.warn('Controls should not be added to valves! Note that this will become an error in the next release.')
+        if target_type == wntr.network.Link:
+            start_node_name = target_obj.start_node()
+            end_node_name = target_obj.end_node()
+            start_node = self.get_node(start_node_name)
+            end_node = self.get_node(end_node_name)
+            if type(start_node)==Tank or type(end_node)==Tank:
+                warnings.warn('Controls should not be added to links that are connected to tanks. Consider adding an additional link and using the control on it. Note that this will become an error in the next release.')
+
+        self._control_dict[name] = control_object
+        control_object.name = name
 
     def add_pump_outage(self, pump_name, start_time, end_time):
         pump = self.get_link(pump_name)

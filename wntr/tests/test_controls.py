@@ -1,12 +1,7 @@
-"""
-TODO
-1. Modify conditional controls tests to match epanet (resolve timestep is control is activated)
-"""
-
 # These tests test controls
 import unittest
 import sys
-# HACK until resilience is a proper module
+# HACK until wntr is a proper module
 # __file__ fails if script is called in different ways on Windows
 # __file__ fails if someone does os.chdir() before
 # sys.argv[0] also fails because it doesn't not always contains the path
@@ -24,26 +19,27 @@ class TestTimeControls(unittest.TestCase):
         self.wntr = wntr
 
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/time_controls_test_network.inp'
-        self.wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        parser.read_inp_file(self.wn, inp_file)
+        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        self.wn.options.report_timestep = 'all'
         for jname, j in self.wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(self.wn, pressure_dependent = True)
-        self.pyomo_results = pyomo_sim.run_sim()
+        sim = self.wntr.sim.WNTRSimulator(self.wn, pressure_driven=True)
+        self.results = sim.run_sim()
 
     @classmethod
     def tearDownClass(self):
         sys.path.remove(resilienceMainDir)
 
     def test_time_control_open_vs_closed(self):
-        for t in self.pyomo_results.link.major_axis:
+        res = self.results
+        link_res = res.link
+        for t in res.time:
             if t < 5*3600 or t >= 10*3600:
-                self.assertAlmostEqual(self.pyomo_results.link.at['flowrate',t,'pipe2'], 150/3600.0)
+                self.assertAlmostEqual(link_res.at['flowrate',t,'pipe2'], 150/3600.0)
             else:
-                self.assertAlmostEqual(self.pyomo_results.link.at['flowrate',t,'pipe2'], 0.0)
+                self.assertAlmostEqual(link_res.at['flowrate',t,'pipe2'], 0.0)
 
 class TestConditionalControls(unittest.TestCase):
 
@@ -52,60 +48,64 @@ class TestConditionalControls(unittest.TestCase):
         sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
+
     @classmethod
     def tearDownClass(self):
         sys.path.remove(resilienceMainDir)
 
-
     def test_close_link_by_tank_level(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_test_network_1.inp'
-        wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        parser.read_inp_file(wn, inp_file)
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        wn.options.report_timestep = 'all'
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
-        results = pyomo_sim.run_sim()
+        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven=True)
+        results = sim.run_sim()
 
         activated_flag = False
         count = 0
-        for t in results.link.major_axis:
-            if results.node.at['pressure',t,'tank1'] >= 50.0 and not activated_flag:
+        node_res = results.node
+        link_res = results.link
+        for t in results.time:
+            if node_res.at['pressure',t,'tank1'] >= 50.0 and not activated_flag:
                 activated_flag = True
             if activated_flag:
-                self.assertAlmostEqual(results.link.at['flowrate',t,'pump1'], 0.0)
+                self.assertAlmostEqual(link_res.at['flowrate',t,'pump1'], 0.0)
                 count += 1
             else:
-                self.assertGreaterEqual(results.link.at['flowrate',t,'pump1'], 0.0001)
+                self.assertGreaterEqual(link_res.at['flowrate',t,'pump1'], 0.0001)
         self.assertEqual(activated_flag, True)
         self.assertGreaterEqual(count, 2)
 
     def test_open_link_by_tank_level(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_test_network_2.inp'
-        wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        parser.read_inp_file(wn, inp_file)
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        wn.options.report_timestep = 'all'
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
         
-        pyomo_sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
-        results = pyomo_sim.run_sim()
+        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
+        results = sim.run_sim()
 
         activated_flag = False
         count = 0 # Used to make sure the link is opened for at least 2 timesteps to make sure the link stays open
-        for t in results.link.major_axis:
+        for t in results.time:
             if results.node.at['pressure',t,'tank1'] >= 300.0 and not activated_flag:
                 activated_flag = True
             if activated_flag:
                 self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.002)
+                self.assertEqual(results.link.at['status',t,'pipe1'], 1)
                 count +=1
             else:
                 self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
+                self.assertEqual(results.link.at['status',t,'pipe1'], 0)
         self.assertEqual(activated_flag, True)
         self.assertGreaterEqual(count, 2)
+        self.assertEqual(results.link.at['status',results.time[0],'pipe1'], 0) # make sure the pipe starts closed
+        self.assertLessEqual(results.node.at['pressure',results.time[0],'tank1'],300.0) # make sure the pipe starts closed
 
 class TestTankControls(unittest.TestCase):
 
