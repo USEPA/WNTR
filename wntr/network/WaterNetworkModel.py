@@ -205,37 +205,43 @@ class WaterNetworkModel(object):
             min_head = tank.min_level+tank.elevation
             for link_name in all_links:
                 link = self.get_link(link_name)
+                link_has_cv = False
                 if isinstance(link, Pipe):
                     if link.cv:
                         if link.end_node()==tank_name:
                             continue
+                        else:
+                            link_has_cv = True
                 if isinstance(link, Pump):
                     if link.end_node()==tank_name:
                         continue
+                    else:
+                        link_has_cv = True
             
                 close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
                 open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
-            
-                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.greater,np.less_equal,np.greater],[min_head+self._Htol,min_head+self._Htol,0.0],open_control_action)
-                control._partial_step_for_tanks = False
-                control._priority = 0
-                control.name = link_name+' opened because tank '+tank.name()+' head is greater than min head'
-                tank_controls.append(control)
-            
+
                 control = wntr.network.ConditionalControl((tank,'head'),np.less_equal,min_head,close_control_action)
                 control._priority = 1
                 control.name = link_name+' closed because tank '+tank.name()+' head is less than min head'
                 tank_controls.append(control)
-            
-                if link.start_node() == tank_name:
-                    other_node_name = link.end_node()
-                else:
-                    other_node_name = link.start_node()
-                other_node = self.get_node(other_node_name)
-                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.less_equal,np.less_equal],[min_head+self._Htol,(other_node,'head')],open_control_action)
-                control._priority = 2
-                control.name = link_name+' opened because tank '+tank.name()+' head is below min head but flow should be in'
-                tank_controls.append(control)
+
+                if not link_has_cv:
+                    control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.greater,np.less_equal,np.greater],[min_head+self._Htol,min_head+self._Htol,0.0],open_control_action)
+                    control._partial_step_for_tanks = False
+                    control._priority = 0
+                    control.name = link_name+' opened because tank '+tank.name()+' head is greater than min head'
+                    tank_controls.append(control)
+
+                    if link.start_node() == tank_name:
+                        other_node_name = link.end_node()
+                    else:
+                        other_node_name = link.start_node()
+                    other_node = self.get_node(other_node_name)
+                    control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.less_equal,np.less_equal],[min_head+self._Htol,(other_node,'head')],open_control_action)
+                    control._priority = 2
+                    control.name = link_name+' opened because tank '+tank.name()+' head is below min head but flow should be in'
+                    tank_controls.append(control)
             
                 #control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.less,np.less],[min_head+self._Htol,min_head+self._Htol], close_control_action)
                 #control._priority = 2
@@ -245,37 +251,43 @@ class WaterNetworkModel(object):
             max_head = tank.max_level+tank.elevation
             for link_name in all_links:
                 link = self.get_link(link_name)
+                link_has_cv = False
                 if isinstance(link, Pipe):
                     if link.cv:
                         if link.start_node()==tank_name:
                             continue
+                        else:
+                            link_has_cv = True
                 if isinstance(link, Pump):
                     if link.start_node()==tank_name:
                         continue
+                    else:
+                        link_has_cv = True
             
                 close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
                 open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
-            
-                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
-                control._partial_step_for_tanks = False
-                control._priority = 0
-                control.name = link_name+'opened because tank '+tank.name()+' head is less than max head'
-                tank_controls.append(control)
             
                 control = wntr.network.ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
                 control._priority = 1
                 control.name = link_name+' closed because tank '+tank.name()+' head is greater than max head'
                 tank_controls.append(control)
+
+                if not link_has_cv:
+                    control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
+                    control._partial_step_for_tanks = False
+                    control._priority = 0
+                    control.name = link_name+'opened because tank '+tank.name()+' head is less than max head'
+                    tank_controls.append(control)
             
-                if link.start_node() == tank_name:
-                    other_node_name = link.end_node()
-                else:
-                    other_node_name = link.start_node()
-                other_node = self.get_node(other_node_name)
-                control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater_equal],[max_head-self._Htol,(other_node,'head')],open_control_action)
-                control._priority = 2
-                control.name = link_name+' opened because tank '+tank.name()+' head above max head but flow should be out'
-                tank_controls.append(control)
+                    if link.start_node() == tank_name:
+                        other_node_name = link.end_node()
+                    else:
+                        other_node_name = link.start_node()
+                    other_node = self.get_node(other_node_name)
+                    control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater_equal],[max_head-self._Htol,(other_node,'head')],open_control_action)
+                    control._priority = 2
+                    control.name = link_name+' opened because tank '+tank.name()+' head above max head but flow should be out'
+                    tank_controls.append(control)
             
                 #control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
                 #control._priority = 2
@@ -465,6 +477,11 @@ class WaterNetworkModel(object):
             loss coefficient for TCV
             name of headloss curve for GPV
         """
+        start_node = self.get_node(start_node_name)
+        end_node = self.get_node(end_node_name)
+        if type(start_node)==Tank or type(end_node)==Tank:
+            warnings.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
+
         valve = Valve(name, start_node_name, end_node_name,
                       diameter, valve_type, minor_loss, setting)
         self._links[name] = valve

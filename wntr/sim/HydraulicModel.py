@@ -1136,8 +1136,10 @@ class HydraulicModel(object):
         demand = x[self.num_nodes:self.num_nodes*2]
         flow = x[self.num_nodes*2:(2*self.num_nodes+self.num_links)]
         leak_demand = x[(2*self.num_nodes+self.num_links):]
+        node_name_to_id = self._node_name_to_id
+        link_name_to_id = self._link_name_to_id
         for name, node in self._wn.nodes(Junction):
-            node_id = self._node_name_to_id[name]
+            node_id = node_name_to_id[name]
             node.head = head[node_id]
             node.demand = demand[node_id]
             if node._leak:
@@ -1146,7 +1148,7 @@ class HydraulicModel(object):
             else:
                 node.leak_demand = 0.0
         for name, node in self._wn.nodes(Tank):
-            node_id = self._node_name_to_id[name]
+            node_id = node_name_to_id[name]
             node.head = head[node_id]
             node.demand = demand[node_id]
             if node._leak:
@@ -1155,36 +1157,13 @@ class HydraulicModel(object):
             else:
                 node.leak_demand = 0.0
         for name, node in self._wn.nodes(Reservoir):
-            node_id = self._node_name_to_id[name]
+            node_id = node_name_to_id[name]
             node.head = head[node_id]
             node.demand = demand[node_id]
             node.leak_demand = 0.0
         for link_name, link in self._wn.links():
-            link_id = self._link_name_to_id[link_name]
+            link_id = link_name_to_id[link_name]
             link.flow = flow[link_id]
-
-#    def update_previous_inputs(self):
-#        self.prev_tank_head = copy.copy(self.tank_head)
-#        self.prev_reservoir_head = copy.copy(self.reservoir_head)
-#        self.prev_junction_demand = copy.copy(self.junction_demand)
-#        self.prev_link_status = copy.copy(self.link_status)
-#        self.prev_valve_settings = copy.copy(self.valve_settings)
-#        self.prev_pump_speeds = copy.copy(self.pump_speeds)
-#
-#    def check_inputs_changed(self):
-#        if self.prev_tank_head != self.tank_head:
-#            return True
-#        if self.prev_reservoir_head != self.reservoir_head:
-#            return True
-#        if self.prev_junction_demand != self.junction_demand:
-#            return True
-#        if self.prev_link_status != self.link_status:
-#            return True
-#        if self.prev_valve_settings != self.valve_settings:
-#            return True
-#        if self.prev_pump_speeds != self.pump_speeds:
-#            return True
-#        return False
 
     def compute_polynomial_coefficients(self, x1, x2, f1, f2, df1, df2):
         """

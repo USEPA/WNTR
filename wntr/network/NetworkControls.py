@@ -15,6 +15,9 @@ import weakref
 import numpy as np
 import math
 from wntr.utils import convert
+import logging
+
+logger = logging.getLogger('wntr.network.NetworkControls')
 
 """
 Control Priorities:
@@ -118,8 +121,7 @@ class ControlAction(BaseControlAction):
         if orig_value == self._value:
             return False, None, None
         else:
-            #print 'control name: ',control_name
-            #print 'setting ',target.name(),self._attribute,' to ',self._value
+            #logger.debug('control {0} setting {1} {2} to {3}'.format(control_name, target.name(),self._attribute,self._value))
             setattr(target, self._attribute, self._value)
             return True, (target, self._attribute), orig_value
 
