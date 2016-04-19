@@ -114,8 +114,8 @@ class WNTRSimulator(WaterNetworkSimulator):
             logger.info('simulation time = %s, trial = %d',self.get_time(),trial)
 
             # Prepare for solve
-            model.reset_isolated_junctions()
-            #model.identify_isolated_junctions()
+            #model.reset_isolated_junctions()
+            model.identify_isolated_junctions()
             if not first_step:
                 model.update_tank_heads()
             model.update_junction_demands(self._demand_dict)
@@ -125,11 +125,11 @@ class WNTRSimulator(WaterNetworkSimulator):
             # Solve
             #X_init = model.update_initializations(X_init)
             [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
-            if solver_status == 0:
-                model.identify_isolated_junctions()
-                model.set_network_inputs_by_id()
-                model.set_jacobian_constants()
-                [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            #if solver_status == 0:
+            #    model.identify_isolated_junctions()
+            #    model.set_network_inputs_by_id()
+            #    model.set_jacobian_constants()
+            #    [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             if solver_status == 0:
                 #model.check_infeasibility(self._X)
                 #raise RuntimeError('No solution found.')
