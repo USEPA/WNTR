@@ -60,6 +60,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         self.solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, options=solver_options)
 
         results = NetResults()
+        results.error_code = 0
         results.time = []
         # if self._wn.sim_time%self._wn.options.hydraulic_timestep!=0:
         #     results_start_time = int(round((self._wn.options.hydraulic_timestep-(self._wn.sim_time%self._wn.options.hydraulic_timestep))+self._wn.sim_time))
@@ -136,6 +137,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                 warnings.warn('Simulation did not converge!')
                 logger.warning('Simulation did not converge at time %s',self.get_time())
                 model.get_results(results)
+                results.error_code = 2
                 return results
             X_init = np.array(self._X)
 
@@ -150,7 +152,10 @@ class WNTRSimulator(WaterNetworkSimulator):
                 changes_made_flag = self._fire_controls(all_controls_to_activate)
                 if changes_made_flag:
                     if trial > max_trials:
-                        raise RuntimeError('Exceeded maximum number of trials!')
+                        results.error_code = 2
+                        model.get_results(results)
+                        return results
+                        #raise RuntimeError('Exceeded maximum number of trials!')
                     continue
                 else:
                     if solver_status==0:
