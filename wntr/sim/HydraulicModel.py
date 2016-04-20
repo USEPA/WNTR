@@ -1013,6 +1013,7 @@ class HydraulicModel(object):
                 if flow[link_id]>self.max_pump_flows[link_id]:
                     link_name = self._link_id_to_name[link_id]
                     warnings.warn('Pump '+link_name+' has exceeded its maximum flow.')
+                    logger.warning('Pump {0} has exceeded its maximum flow'.format(link_name))
         for link_id in self._valve_ids:
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
