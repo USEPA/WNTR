@@ -891,26 +891,61 @@ class HydraulicModel(object):
 
     def initialize_flow(self):
         flow = 0.001*np.ones(self.num_links)
+        for name, link in self._wn.links():
+            if link.flow is None:
+                continue
+            else:
+                link_id = self._link_name_to_id[name]
+                flow[link_id] = link.flow
         return flow
 
     def initialize_head(self):
         head = np.zeros(self.num_nodes)
-        for junction_id in self._junction_ids:
-            head[junction_id] = self.node_elevations[junction_id]
-        for tank_id in self._tank_ids:
-            head[tank_id] = self.tank_head[tank_id]
-        for reservoir_id in self._reservoir_ids:
-            head[reservoir_id] = self.reservoir_head[reservoir_id]
+        for name, node in self._wn.nodes(Junction):
+            node_id = self._node_name_to_id[name]
+            if node.head is None:
+                head[node_id] = self.node_elevations[node_id]
+            else:
+                head[node_id] = node.head
+        for name, node in self._wn.nodes(Tank):
+            node_id = self._node_name_to_id[name]
+            head[node_id] = node.head
+        for name, node in self._wn.nodes(Reservoir):
+            node_id = self._node_name_to_id[name]
+            head[node_id] = node.head
         return head
 
     def initialize_demand(self):
         demand = np.zeros(self.num_nodes)
-        for junction_id in self._junction_ids:
-            demand[junction_id] = self.junction_demand[junction_id]
+        for name, node in self._wn.nodes(Junction):
+            node_id = self._node_name_to_id[name]
+            if node.demand is None:
+                demand[node_id] = self.junction_demand[node_id]
+            else:
+                demand[node_id] = node.demand
+        for name, node in self._wn.nodes(Tank):
+            if node.demand is None:
+                continue
+            else:
+                node_id = self._node_name_to_id[name]
+                demand[node_id] = node.demand
+        for name, node in self._wn.nodes(Reservoir):
+            if node.demand is None:
+                continue
+            else:
+                node_id = self._node_name_to_id[name]
+                demand[node_id] = node.demand
         return demand
 
     def initialize_leak_demand(self):
-        leak_demand = np.zeros(len(self._leak_ids))
+        leak_demand = np.zeros(self.num_leaks)
+        for node_id in self._leak_ids:
+            name = self._node_id_to_name[node_id]
+            node = self._wn.get_node(name)
+            if node.leak_demand is None:
+                continue
+            else:
+                leak_demand[self._leak_idx[node_id]] = node.leak_demand
         return leak_demand
 
     def update_initializations(self, x):
@@ -1012,8 +1047,15 @@ class HydraulicModel(object):
             if self.max_pump_flows[link_id] is not None:
                 if flow[link_id]>self.max_pump_flows[link_id]:
                     link_name = self._link_id_to_name[link_id]
+                    link = self._wn.get_link(link_name)
+                    start_node_name = link.start_node()
+                    end_node_name = link.end_node()
+                    start_node_id = self._node_name_to_id[start_node_name]
+                    end_node_id = self._node_name_to_id[end_node_name]
+                    start_head = head[start_node_id]
+                    end_head = head[end_node_id]
                     warnings.warn('Pump '+link_name+' has exceeded its maximum flow.')
-                    logger.warning('Pump {0} has exceeded its maximum flow'.format(link_name))
+                    logger.warning('Pump {0} has exceeded its maximum flow. Pump head: {1}; Pump flow: {2}; Max pump flow: {3}'.format(link_name,end_head-start_head, flow[link_id], self.max_pump_flows[link_id]))
         for link_id in self._valve_ids:
             self._sim_results['link_type'].append(LinkTypes.link_type_to_str(self.link_types[link_id]))
             self._sim_results['link_flowrate'].append(flow[link_id])
