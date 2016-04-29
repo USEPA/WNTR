@@ -1378,34 +1378,40 @@ class WaterNetworkModel(object):
             suc = G.successors(node_name)
             pre = G.predecessors(node_name)
             for s in suc:
-                connected_to_s = True
+                connected_to_s = False
                 link_names_list = G.edge[node_name][s].keys()
                 for link_name in link_names_list:
                     link = self.get_link(link_name)
-                    if link.status==LinkStatus.closed:
-                        connected_to_s = False
-                    elif type(link)==Pump:
-                        if link._cv_status == LinkStatus.closed:
-                            connected_to_s = False
-                    elif type(link)==Valve:
-                        if link._status == LinkStatus.closed:
-                            connected_to_s = False
+                    if link.status!=LinkStatus.closed:
+                        if type(link)==Pipe:
+                            connected_to_s = True
+                        elif type(link)==Pump:
+                            if link._cv_status != LinkStatus.closed:
+                                connected_to_s = True
+                        elif type(link)==Valve:
+                            if link._status != LinkStatus.closed:
+                                connected_to_s = True
+                        else:
+                            raise RuntimeError('Link type not recognized!')
                 if connected_to_s:
                     if s not in groups[grp]:
                         grab_group(s)
             for p in pre:
-                connected_to_p = True
+                connected_to_p = False
                 link_names_list = G.edge[p][node_name].keys()
                 for link_name in link_names_list:
                     link = self.get_link(link_name)
-                    if link.status==LinkStatus.closed:
-                        connected_to_p = False
-                    elif type(link)==Pump:
-                        if link._cv_status == LinkStatus.closed:
-                            connected_to_p = False
-                    elif type(link)==Valve:
-                        if link._status == LinkStatus.closed:
-                            connected_to_p = False
+                    if link.status!=LinkStatus.closed:
+                        if type(link)==Pipe:
+                            connected_to_p = True
+                        elif type(link)==Pump:
+                            if link._cv_status != LinkStatus.closed:
+                                connected_to_p = True
+                        elif type(link)==Valve:
+                            if link._status != LinkStatus.closed:
+                                connected_to_p = True
+                        else:
+                            raise RuntimeError('Link type not recognized!')
                 if connected_to_p:
                     if p not in groups[grp]:
                         grab_group(p)
