@@ -561,6 +561,7 @@ class _PRVControl(Control):
         self._end_node_name = valve.end_node()
         self._start_node = wnm.get_node(self._start_node_name)
         self._end_node = wnm.get_node(self._end_node_name)
+        self._resistance_coefficient = 0.0826*0.02*self._valve.diameter**(-5)*self._valve.diameter*2.0
 
     @classmethod
     def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
@@ -581,8 +582,8 @@ class _PRVControl(Control):
             if self._valve.flow < -self._Qtol:
                 self._action_to_fire = self._close_control_action
                 return (True, 0)
-            Hml = self._valve.minor_loss*self._valve.flow**2
-            if self._start_node.head < head_setting + Hml - self._Htol:
+            Hl = self._resistance_coefficient*abs(self._valve.flow)**2
+            if self._start_node.head < head_setting + Hl - self._Htol:
                 self._action_to_fire = self._open_control_action
                 return (True, 0)
             return (False, None)
@@ -590,8 +591,8 @@ class _PRVControl(Control):
             if self._valve.flow < -self._Qtol:
                 self._action_to_fire = self._close_control_action
                 return (True, 0)
-            Hml = self._valve.minor_loss*self._valve.flow**2
-            if self._start_node.head > head_setting + Hml + self._Htol:
+            Hl = self._resistance_coefficient*abs(self._valve.flow)**2
+            if self._start_node.head > head_setting + Hl + self._Htol:
                 self._action_to_fire = self._active_control_action
                 return (True, 0)
             return (False, None)
