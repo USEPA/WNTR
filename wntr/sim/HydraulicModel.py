@@ -26,6 +26,12 @@ class HydraulicModel(object):
         self.num_nodes = self._wn.num_nodes()
         self.num_links = self._wn.num_links()
         self.num_leaks = len(self._leak_ids)
+        self.num_junctions = self._wn.num_junctions()
+        self.num_tanks = self._wn.num_tanks()
+        self.num_reservoirs = self._wn.num_reservoirs()
+        self.num_pipes = self._wn.num_pipes()
+        self.num_pumps = self._wn.num_pumps()
+        self.num_valves = self._wn.num_valves()
 
         # Initialize residuals
         # Equations will be ordered:
@@ -113,7 +119,7 @@ class HydraulicModel(object):
         # The ordering of the other lists is not significant.
         # Each node has only one id. For example, if 'Tank-5' has id 8, then 8 will be used
         # for 'Tank-5' in self._node_ids and self._tank_ids.
-        self._node_ids = [] 
+        self._node_ids = [] # ordering is vital! Must be junctions then tanks then reservoirs
         self._junction_ids = [] 
         self._tank_ids = [] 
         self._reservoir_ids = []
@@ -125,7 +131,7 @@ class HydraulicModel(object):
         # The ordering of the other lists is not significant.
         # Each link has only one id. For example, if 'Pump-5' has id 8, then 8 will be used
         # for 'Pump-5' in self._link_ids and self._pump_ids.
-        self._link_ids = [] 
+        self._link_ids = [] # ordering is viatl! Must be pipes the pumps then valves
         self._pipe_ids = []
         self._pump_ids = []
         self._valve_ids = []
@@ -146,74 +152,85 @@ class HydraulicModel(object):
         self.could_have_leak = {}
 
         n = 0
-        for node_name, node in self._wn.nodes():
+        for node_name, node in self._wn.nodes(Junction):
             self._node_id_to_name[n] = node_name
             self._node_name_to_id[node_name] = n
             self._node_ids.append(n)
-            if isinstance(node, Tank):
-                self._tank_ids.append(n)
-                self.node_types.append(NodeTypes.tank)
-                if node._leak:
-                    self._leak_idx[n] = len(self._leak_ids)
-                    self._leak_ids.append(n)
-                    self.leak_status[n] = False
-                    self.could_have_leak[n] = True
-                else:
-                    self.leak_status[n] = False
-                    self.could_have_leak[n] = False
-            elif isinstance(node, Reservoir):
-                self._reservoir_ids.append(n)
-                self.node_types.append(NodeTypes.reservoir)
+            self._junction_ids.append(n)
+            self.node_types.append(NodeTypes.junction)
+            if node._leak:
+                self._leak_idx[n] = len(self._leak_ids)
+                self._leak_ids.append(n)
+                self.leak_status[n] = False
+                self.could_have_leak[n] = True
+            else:
                 self.leak_status[n] = False
                 self.could_have_leak[n] = False
-            elif isinstance(node, Junction):
-                self._junction_ids.append(n)
-                self.node_types.append(NodeTypes.junction)
-                if node._leak:
-                    self._leak_idx[n] = len(self._leak_ids)
-                    self._leak_ids.append(n)
-                    self.leak_status[n] = False
-                    self.could_have_leak[n] = True
-                else:
-                    self.leak_status[n] = False
-                    self.could_have_leak[n] = False
+            n += 1
+
+        for node_name, node in self._wn.nodes(Tank):
+            self._node_id_to_name[n] = node_name
+            self._node_name_to_id[node_name] = n
+            self._node_ids.append(n)
+            self._tank_ids.append(n)
+            self.node_types.append(NodeTypes.tank)
+            if node._leak:
+                self._leak_idx[n] = len(self._leak_ids)
+                self._leak_ids.append(n)
+                self.leak_status[n] = False
+                self.could_have_leak[n] = True
             else:
-                raise RuntimeError('Node is not a junction, tank, or reservoir.')
+                self.leak_status[n] = False
+                self.could_have_leak[n] = False
+            n += 1
+
+        for node_name, node in self._wn.nodes(Reservoir):
+            self._node_id_to_name[n] = node_name
+            self._node_name_to_id[node_name] = n
+            self._node_ids.append(n)
+            self._reservoir_ids.append(n)
+            self.node_types.append(NodeTypes.reservoir)
+            self.leak_status[n] = False
+            self.could_have_leak[n] = False
             n += 1
 
         l = 0
-        for link_name, link in self._wn.links():
+        for link_name, link in self._wn.links(Pipe):
             self._link_id_to_name[l] = link_name
             self._link_name_to_id[link_name] = l
             self._link_ids.append(l)
-            if isinstance(link, Pipe):
-                self._pipe_ids.append(l)
-                self.link_types.append(LinkTypes.pipe)
-            elif isinstance(link, Pump):
-                self._pump_ids.append(l)
-                self.link_types.append(LinkTypes.pump)
-            elif isinstance(link, Valve):
-                self._valve_ids.append(l)
-                self.link_types.append(LinkTypes.valve)
-                if link.valve_type == 'PRV':
-                    self._prv_ids.append(l)
-                elif link.valve_type == 'PSV':
-                    self._psv_ids.append(l)
-                elif link.valve_type == 'PBV':
-                    self._pbv_ids.append(l)
-                elif link.valve_type == 'FCV':
-                    self._fcv_ids.append(l)
-                elif link.valve_type == 'TCV':
-                    self._tcv_ids.append(l)
-                else:
-                    raise RuntimeError('Valve type not recognized: '+link.valve_type)
-            else:
-                raise RuntimeError('Link is not a pipe, pump, or valve.')
+            self._pipe_ids.append(l)
+            self.link_types.append(LinkTypes.pipe)
             l += 1
 
-        #print self._node_id_to_name
-        #print self._link_id_to_name
-            
+        for link_name, link in self._wn.links(Pump):
+            self._link_id_to_name[l] = link_name
+            self._link_name_to_id[link_name] = l
+            self._link_ids.append(l)
+            self._pump_ids.append(l)
+            self.link_types.append(LinkTypes.pump)
+            l += 1
+
+        for link_name, link in self._wn.links(Valve):
+            self._link_id_to_name[l] = link_name
+            self._link_name_to_id[link_name] = l
+            self._link_ids.append(l)
+            self._valve_ids.append(l)
+            self.link_types.append(LinkTypes.valve)
+            if link.valve_type == 'PRV':
+                self._prv_ids.append(l)
+            elif link.valve_type == 'PSV':
+                self._psv_ids.append(l)
+            elif link.valve_type == 'PBV':
+                self._pbv_ids.append(l)
+            elif link.valve_type == 'FCV':
+                self._fcv_ids.append(l)
+            elif link.valve_type == 'TCV':
+                self._tcv_ids.append(l)
+            else:
+                raise RuntimeError('Valve type not recognized: '+link.valve_type)
+            l += 1
+
     def _set_node_attributes(self):
         self.out_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
         self.in_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
@@ -297,13 +314,20 @@ class HydraulicModel(object):
 
 
     def _form_node_balance_matrix(self):
-        A = np.matrix(np.zeros((self.num_nodes,self.num_links)))
+        # The node balance matrix should never be modified! It is also used in the jacobian!
+        values = []
+        rows = []
+        cols = []
         for node_id in self._node_ids:
             for out_link_id in self.out_link_ids_for_nodes[node_id]:
-                A[node_id,out_link_id] = -1.0
+                values.append(-1.0)
+                rows.append(node_id)
+                cols.append(out_link_id)
             for in_link_id in self.in_link_ids_for_nodes[node_id]:
-                A[node_id,in_link_id] = 1.0
-        self.node_balance_matrix = sparse.csr_matrix(A)
+                values.append(1.0)
+                rows.append(node_id)
+                cols.append(in_link_id)
+        self.node_balance_matrix = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_links))
 
     def _form_link_headloss_matrix(self):
         A = np.matrix(np.zeros((self.num_links,self.num_nodes)))
@@ -374,6 +398,34 @@ class HydraulicModel(object):
         #     0 for leaks at isolated junctions
         #     f(H-z) otherwise
 
+
+        values = -1.0*np.ones(self.num_nodes)
+        rows = range(self.num_nodes)
+        cols = range(self.num_nodes)
+        self.jac_A = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
+
+        self.jac_B = self.node_balance_matrix # This object is used for things other than the jacobian; Don't modify it!
+
+        values = -1.0*np.ones(self.num_leaks)
+        rows = list(self._leak_ids)
+        cols = range(self.num_leaks)
+        self.jac_C = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_leaks))
+
+        values = [0.0 for i in self._junction_ids]+[1.0 for i in self._tank_ids]+[1.0 for i in self._reservoir_ids]
+        rows = range(self.num_nodes)
+        cols = range(self.num_nodes)
+        self.jac_D = sparse.csr_matrix((values,(rows,cols)),shapde=(self.num_nodes,self.num_nodes))
+
+        values = [1.0 for i in self._junction_ids]+[0.0 for i in self._tank_ids]+[0.0 for i in self._reservoir_ids]
+        rows = range(self.num_nodes)
+        cols = range(self.num_nodes)
+        self.jac_E_inv = sparse.csr_matrix((values,(rows,cols)),shapde=(self.num_nodes,self.num_nodes))
+
+        values = []
+        rows = []
+        cols = []
+        for link_id in self._pipe_ids:
+            
 
         num_vars = self.num_nodes*2 + self.num_links + self.num_leaks
         self.jac_row = []
