@@ -1,7 +1,6 @@
 """
-Future python extensions for the EPANET Programmers Toolkit
+WNTR python extensions for the EPANET Programmers Toolkit
 """
-
 import string
 
 def ENgetcoordinates(inp_file_name=None):
