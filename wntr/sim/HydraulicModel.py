@@ -414,107 +414,53 @@ class HydraulicModel(object):
         values = [0.0 for i in self._junction_ids]+[1.0 for i in self._tank_ids]+[1.0 for i in self._reservoir_ids]
         rows = range(self.num_nodes)
         cols = range(self.num_nodes)
-        self.jac_D = sparse.csr_matrix((values,(rows,cols)),shapde=(self.num_nodes,self.num_nodes))
+        self.jac_D = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
 
         values = [1.0 for i in self._junction_ids]+[0.0 for i in self._tank_ids]+[0.0 for i in self._reservoir_ids]
         rows = range(self.num_nodes)
         cols = range(self.num_nodes)
-        self.jac_E_inv = sparse.csr_matrix((values,(rows,cols)),shapde=(self.num_nodes,self.num_nodes))
+        self.jac_E_inv = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
 
         values = []
         rows = []
         cols = []
         for link_id in self._pipe_ids:
-            
+            values.append(-1.0)
+            rows.append(link_id)
+            cols.append(self.link_start_nodes[link_id])
+            values.append(1.0)
+            rows.append(link_id)
+            cols.append(self.link_end_nodes[link_id])
+        for link_id in self._pump_ids:
+            values.append(1.0)
+            rows.append(link_id)
+            cols.append(self.link_start_nodes[link_id])
+            values.append(-1.0)
+            rows.append(link_id)
+            cols.append(self.link_end_nodes[link_id])
+        for link_id in self._valve_ids:
+            values.append(-1.0)
+            rows.append(link_id)
+            cols.append(self.link_start_nodes[link_id])
+            values.append(1.0)
+            rows.append(link_id)
+            cols.append(self.link_end_nodes[link_id])
+        self.jac_F = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_links,self.num_nodes))
 
-        num_vars = self.num_nodes*2 + self.num_links + self.num_leaks
-        self.jac_row = []
-        self.jac_col = []
-        self.jac_values = []
-        self.jac_ndx_of_first_NZ = 0
-        self.jac_ndx_of_first_headloss = 0
+        values = np.ones(self.num_links)
+        rows = range(self.num_links)
+        cols = range(self.num_links)
+        self.jac_G = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_links,self.num_links))
 
-        value_ndx = 0
-        row_ndx = 0
-        # Jacobian entries for the node balance equations
-        for node_id in self._node_ids:
-            self.jac_row.append(row_ndx)
-            self.jac_col.append(self.num_nodes + node_id)
-            self.jac_values.append(-1.0)
-            value_ndx += 1
-            for link_id in self.in_link_ids_for_nodes[node_id]:
-                self.jac_row.append(row_ndx)
-                self.jac_col.append(link_id + 2*self.num_nodes)
-                self.jac_values.append(1.0)
-                value_ndx += 1
-            for link_id in self.out_link_ids_for_nodes[node_id]:
-                self.jac_row.append(row_ndx)
-                self.jac_col.append(link_id + 2*self.num_nodes)
-                self.jac_values.append(-1.0)
-                value_ndx += 1
-            if self.could_have_leak[node_id]:
-                leak_idx = self._leak_idx[node_id]
-                self.jac_row.append(row_ndx)
-                self.jac_col.append(leak_idx + self.num_links + 2*self.num_nodes)
-                self.jac_values.append(-1.0)
-                value_ndx += 1
-            row_ndx += 1
+        values = np.zeros(self.num_leaks)
+        rows = range(self.num_leaks)
+        cols = list(self._leak_ids)
+        self.jac_H = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_leaks,self.num_nodes))
 
-        self.jac_ndx_of_first_NZ = value_ndx
-
-        # Jacobian entries for demand/head equations
-        for node_id in self._node_ids:
-            if node_id in self._tank_ids or node_id in self._reservoir_ids:
-                self.jac_row.append(row_ndx)
-                self.jac_col.append(node_id)
-                self.jac_values.append(1.0)
-                value_ndx += 1
-            elif node_id in self._junction_ids:
-                self.jac_row.append(row_ndx)
-                self.jac_col.append(node_id)
-                self.jac_values.append(0.0)
-                value_ndx += 1
-                self.jac_row.append(row_ndx)
-                self.jac_col.append(node_id + self.num_nodes)
-                self.jac_values.append(1.0)
-                value_ndx += 1
-            row_ndx += 1
-
-        self.jac_ndx_of_first_headloss = value_ndx
-
-        # Jacobian entries for the headloss equations
-        for link_id in self._link_ids:
-            start_node_id = self.link_start_nodes[link_id]
-            end_node_id = self.link_end_nodes[link_id]
-            self.jac_row.append(row_ndx)
-            self.jac_col.append(start_node_id)
-            self.jac_values.append(0.0)
-            value_ndx += 1
-            self.jac_row.append(row_ndx)
-            self.jac_col.append(end_node_id)
-            self.jac_values.append(0.0)
-            value_ndx += 1
-            self.jac_row.append(row_ndx)
-            self.jac_col.append(link_id + 2*self.num_nodes)
-            self.jac_values.append(0.0)
-            value_ndx += 1
-            row_ndx += 1
-
-        # Jacobian entries for the leak demand equations
-        for node_id in self._leak_ids:
-            self.jac_row.append(row_ndx)
-            self.jac_col.append(node_id)
-            self.jac_values.append(0.0)
-            value_ndx += 1
-            self.jac_row.append(row_ndx)
-            self.jac_col.append(2*self.num_nodes + self.num_links + self._leak_idx[node_id])
-            self.jac_values.append(1.0)
-            value_ndx += 1
-            row_ndx += 1
-
-        self.jacobian = sparse.csr_matrix((self.jac_values, (self.jac_row,self.jac_col)),shape=(num_vars,num_vars))
-
-        self.jac_values = self.jacobian.data
+        values = np.ones(self.num_leaks)
+        rows = range(self.num_leaks)
+        cols = range(self.num_leaks)
+        self.jac_I = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_leaks,self.num_leaks))        
 
     def get_hydraulic_equations(self, x):
         head = x[:self.num_nodes]
@@ -548,6 +494,10 @@ class HydraulicModel(object):
         #          2   5  8
         # and A.data =>
         #              [0, 3, 6, 1, 4, 7, 2, 5, 8]
+
+        self.jac_D.data[:self.num_junctions] = self.isolated_junction_array
+            
+
 
         value_ndx = self.jac_ndx_of_first_NZ
         for node_id in self._node_ids:
@@ -669,6 +619,9 @@ class HydraulicModel(object):
         self.jacobian.data = self.jac_values
 
     def get_jacobian(self, x):
+
+        if self.pressure_driven:
+            
 
         if self.pressure_driven:
             value_ndx = self.jac_ndx_of_first_NZ
@@ -1142,6 +1095,15 @@ class HydraulicModel(object):
         results.link = pd.Panel(link_dictionary, major_axis=results.time, minor_axis=link_names)
 
     def set_network_inputs_by_id(self):
+        self.isolated_junction_array = np.zeros(self.num_junctions) # 1 if it is isolated, 0 if it is not isolated
+        self.isolated_link_array = np.zeros(self.num_links) # 1 if it is isolated, 0 if it is not isolated
+        self.closed_link_array = np.ones(self.num_links) # 0 if it is closed, 1 if it is open
+        for junction_name in self.isolated_junction_names:
+            self.isolated_junction_array[self._node_name_to_id[junction_name]] = 1.0
+        for link_name in self.isolated_link_names:
+            self.isolated_link_array[self._link_name_to_id[link_name]] = 1.0
+
+
         self.isolated_junction_ids = []
         self.isolated_link_ids = []
         self.closed_links = set()
