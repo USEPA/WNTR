@@ -56,7 +56,7 @@ class HydraulicModel(object):
         #self.prev_reservoir_head = {}
         self.reservoir_head = {}
         #self.prev_junction_demand = {}
-        self.junction_demand = {}
+        self.junction_demand = np.zeros(self.num_junctions)
         #self.prev_link_status = {}
         self.link_status = {}
         self.closed_links = set()
@@ -234,11 +234,19 @@ class HydraulicModel(object):
     def _set_node_attributes(self):
         self.out_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
         self.in_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
-        self.node_elevations = range(self.num_nodes)
-        self.nominal_pressures = {} # {junction_id: nominal_pressure}
-        self.minimum_pressures = {} # {junction_id: minimum_pressure}
+        self.node_elevations = np.zeros(self.num_nodes)
+        self.nominal_pressures = np.ones(self.num_junctions)
+        self.minimum_pressures = np.zeros(self.num_junctions)
         self.pdd_poly1_coeffs = {} # {junction_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to 0th order term; these are the coefficients for the polynomial between Pmin and the normal pdd function
         self.pdd_poly2_coeffs = {} # {junction_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to 0th order term; these are the coefficients for the polynomial between the normal pdd function and Pmax
+        self.pdd_poly1_coeffs_a = np.zeros(self.num_junctions)
+        self.pdd_poly1_coeffs_b = np.zeros(self.num_junctions)
+        self.pdd_poly1_coeffs_c = np.zeros(self.num_junctions)
+        self.pdd_poly1_coeffs_d = np.zeros(self.num_junctions)
+        self.pdd_poly2_coeffs_a = np.zeros(self.num_junctions)
+        self.pdd_poly2_coeffs_b = np.zeros(self.num_junctions)
+        self.pdd_poly2_coeffs_c = np.zeros(self.num_junctions)
+        self.pdd_poly2_coeffs_d = np.zeros(self.num_junctions)
         self.leak_Cd = {} # {node_id: leak_discharge_coeff}
         self.leak_area = {} # {node_id: leak_area}
         self.leak_poly_coeffs = {} # {node_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to the 0th order term
@@ -620,8 +628,17 @@ class HydraulicModel(object):
 
     def get_jacobian(self, x):
 
+        heads = x[:self.num_nodes]
+        flows = x[self.num_nodes*2:2*self.num_nodes+self.num_links]
+
         if self.pressure_driven:
-            
+            junction_pressures = heads[:self.num_junctions]-self.node_elevations[:self.num_junctions]
+            self.jac_D.data[:self.num_junctions] = self.jac_D.data[:self.num_junctions] + (1.0-self.isolated_junction_array)*(((junction_pressures<=self.minimum_pressures)+(junction_pressures>self.nominal_pressures))*(-self._slope_of_pdd_curve)*self.junction_demand*heads[:self.num_junctions] + ((junctions_pressures>self.minimum_pressures)*(junction_pressures<=(self.minimum_pressures+self._pdd_smoothing_delta)))*(-self.junction_demand)*(3.0*self.pdd_poly1_coeffs_a*junction_pressures**2+2.0*self.pdd_poly1_coeffs_b*junction_pressures+self.pdd_poly1_coeffs_c) + (junction_pressures>(self.nominal_pressures-self._pdd_smoothing_delta))*(junction_pressures<=self.nominal_pressures)*(-self.junction_demand)*(3.0*self.pdd_poly2_coeffs_a*junction_pressures**2+2.0*self.pdd_poly2_coeffs_b*junction_pressures+self.pdd_poly2_coeffs_c) + (junction_pressures>(self.minimum_pressures+self._pdd_smoothing_delta))*(junction_pressures<=(self.nominal_pressures-self._pdd_smoothing_delta)))
+
+
+
+
+
 
         if self.pressure_driven:
             value_ndx = self.jac_ndx_of_first_NZ
@@ -1277,6 +1294,10 @@ class HydraulicModel(object):
         df2 = 0.5*((x2-Pmin)/(Pnom-Pmin))**(-0.5)*1.0/(Pnom-Pmin)
         a,b,c,d = self.compute_polynomial_coefficients(x1,x2,f1,f2,df1,df2)
         self.pdd_poly1_coeffs[node_id] = (a,b,c,d)
+        self.pdd_poly1_coeffs_a[node_id] = a
+        self.pdd_poly1_coeffs_b[node_id] = b
+        self.pdd_poly1_coeffs_c[node_id] = c
+        self.pdd_poly1_coeffs_d[node_id] = d
 
     def get_pdd_poly2_coeffs(self, node, node_id):
         Pmin = self.minimum_pressures[node_id]
@@ -1289,6 +1310,10 @@ class HydraulicModel(object):
         df2 = self._slope_of_pdd_curve
         a,b,c,d = self.compute_polynomial_coefficients(x1,x2,f1,f2,df1,df2)
         self.pdd_poly2_coeffs[node_id] = (a,b,c,d)
+        self.pdd_poly2_coeffs_a[node_id] = a
+        self.pdd_poly2_coeffs_b[node_id] = b
+        self.pdd_poly2_coeffs_c[node_id] = c
+        self.pdd_poly2_coeffs_d[node_id] = d
 
     def get_pump_poly_coefficients(self, A, B, C):
         q1 = self.pump_q1
