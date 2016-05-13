@@ -17,8 +17,12 @@ np.set_printoptions(precision=3, threshold=10000, linewidth=300)
 logger = logging.getLogger('wntr.sim.NewtonSolver')
 
 class NewtonSolver(object):
-    def __init__(self, num_nodes, num_links, num_leaks, options={}):
+    def __init__(self, num_nodes, num_links, num_leaks, model, options={}):
         self._options = options
+        self.num_nodes = num_nodes
+        self.num_links = num_links
+        self.num_leaks = num_leaks
+        self.model = model
 
         if 'MAXITER' not in self._options:
             self.maxiter = 100
@@ -63,7 +67,7 @@ class NewtonSolver(object):
                 r = r_
                 r_norm = new_norm
             else:
-                r = Residual(x)
+                r,b1,b2,b3,b4 = Residual(x)
                 r_norm = np.max(abs(r))
 
             #if iter<self.bt_start_iter:
@@ -72,14 +76,22 @@ class NewtonSolver(object):
             if r_norm < self.tol:
                 return [x, iter, 1]
 
-            J = Jacobian(x)
+            A,B,C,D,E,F,G_inv,H,I,AinvB,AinvC = Jacobian(x)
+            big_matrix = E*AinvC*H + D + E*AinvB*G_inv*F
+            big_rhs = E*AinvC*b4 + b2 + E*AinvB*G_inv*b3 - b1
             
             # Call Linear solver
             try:
-                d = -sp.linalg.spsolve(J,r)
+                d_head = -sp.linalg.spsolve(big_matrix,big_rhs)
             except sp.linalg.MatrixRankWarning:
                 logger.warning('Jacobian is singular.')
                 return [x, iter, 0]
+
+            d_flow = G_inv*b3-G_inv*F*d_head
+            d_leak = b4 - H*d_head
+            d_demand = E*b2 - E*D*d_head
+            d_head, d_demand, d_flow, d_leak = self.model.correct_step(d_head,d_demand,d_flow,d_leak,x)
+            d = np.concatenate((d_head,d_demand,d_flow,d_leak))
 
             # Backtracking
             alpha = 1.0
@@ -87,7 +99,7 @@ class NewtonSolver(object):
                 use_r_ = True
                 for iter_bt in xrange(self.bt_maxiter):
                     x_ = x + alpha*d
-                    r_ = Residual(x_)
+                    r_,b1,b2,b3,b4 = Residual(x_)
                     new_norm = np.max(abs(r_))
                     if new_norm < (1.0-0.0001*alpha)*r_norm:
                         x = x_

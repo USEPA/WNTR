@@ -57,7 +57,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         model = HydraulicModel(self._wn, self.pressure_driven)
         model.initialize_results_dict()
 
-        self.solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, options=solver_options)
+        self.solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, model, options=solver_options)
 
         results = NetResults()
         results.error_code = 0
