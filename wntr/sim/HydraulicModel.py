@@ -606,8 +606,8 @@ class HydraulicModel(object):
         coeff = self.pipe_resistance_coefficients[:self.num_pipes]
         self.jac_G.data[:self.num_pipes] = ((self.isolated_link_array[:self.num_pipes] +
                                             (1.0 - self.closed_link_array[:self.num_pipes]) -
-                                            (self.isolated_link_array[self.num_pipes] *
-                                             (1.0 - self.closed_link_array[self.num_pipes])
+                                            (self.isolated_link_array[:self.num_pipes] *
+                                             (1.0 - self.closed_link_array[:self.num_pipes])
                                              )
                                              ) +
                                             (1.0-self.isolated_link_array[:self.num_pipes])*
