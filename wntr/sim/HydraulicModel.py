@@ -592,11 +592,12 @@ class HydraulicModel(object):
                                             3.0*self.pdd_poly2_coeffs_a*P**2 +
                                             2.0*self.pdd_poly2_coeffs_b*P +
                                             self.pdd_poly2_coeffs_c
-                                        ) +
-                                        (P > (minP+delta))*(P <= (nomP-delta))*(
-                                            (-0.5)*j_d/(nomP-minP)*((P-minP)/(nomP-minP))**(-0.5)
                                         )
                                     )
+            # for the last segment, assignment is required because 0*np.nan does not equal 0 (same with np.inf)
+            last_segment = (-0.5)*j_d/(nomP-minP)*((P-minP)/(nomP-minP))**(-0.5)
+            last_segment[np.bitwise_not((P > (minP+delta))*(P <= (nomP-delta)))] = 0.0
+            self.jac_D.data[:n_j] = self.jac_D.data[:n_j] + last_segment*(1-self.isolated_junction_array)
 
         for link_id in self.power_pump_ids:
             self.jac_F.data[link_id] = 1000.0*self._g*flows[link_id]
@@ -678,9 +679,10 @@ class HydraulicModel(object):
         # print 'D: ',self.jac_D.toarray()
         # print 'E: ',self.jac_E.toarray()
         # print 'F: ',self.jac_F.toarray()
-        # print 'G_inv: ',self.jac_G_inv.toarray()
+        # print 'G: ',self.jac_G.toarray()
         # print 'H: ',self.jac_H.toarray()
         # print 'I: ',self.jac_I.toarray()
+        # print self.jacobian.toarray()
         # raise RuntimeError('just stopping')
         # return (self.jac_A, self.jac_B, self.jac_C, self.jac_D, self.jac_E, self.jac_F, self.jac_G_inv, self.jac_H,
         #         self.jac_I, self.jac_AinvB, self.jac_AinvC)
