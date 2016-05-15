@@ -67,31 +67,39 @@ class NewtonSolver(object):
                 r = r_
                 r_norm = new_norm
             else:
-                r,b1,b2,b3,b4 = Residual(x)
+                r = Residual(x)
                 r_norm = np.max(abs(r))
 
-            #if iter<self.bt_start_iter:
+            # if iter<self.bt_start_iter:
             #    logger.debug('iter: {0:<4d} norm: {1:<10.2e}'.format(iter, r_norm))
 
             if r_norm < self.tol:
                 return [x, iter, 1]
 
-            A,B,C,D,E,F,G_inv,H,I,AinvB,AinvC = Jacobian(x)
-            big_matrix = E*AinvC*H + D + E*AinvB*G_inv*F
-            big_rhs = E*AinvC*b4 + b2 + E*AinvB*G_inv*b3 - b1
-            
+            J = Jacobian(x).tocsr()
+            # A,B,C,D,E,F,G_inv,H,I,AinvB,AinvC = Jacobian(x)
+            # big_matrix = E*AinvC*H + D + E*AinvB*G_inv*F
+            # big_rhs = E*AinvC*b4 + b2 + E*AinvB*G_inv*b3 - b1
+
             # Call Linear solver
             try:
-                d_head = -sp.linalg.spsolve(big_matrix,big_rhs)
+                d = -sp.linalg.spsolve(J,r)
+                # print d[:self.num_nodes]
+                # print d[self.num_nodes:2*self.num_nodes]
+                # print d[2*self.num_nodes:2*self.num_nodes+self.num_links]
+                # raise RuntimeError('just stopping')
             except sp.linalg.MatrixRankWarning:
                 logger.warning('Jacobian is singular.')
                 return [x, iter, 0]
 
-            d_flow = G_inv*b3-G_inv*F*d_head
-            d_leak = b4 - H*d_head
-            d_demand = E*b2 - E*D*d_head
-            d_head, d_demand, d_flow, d_leak = self.model.correct_step(d_head,d_demand,d_flow,d_leak,x)
-            d = np.concatenate((d_head,d_demand,d_flow,d_leak))
+            # logger.debug('iter: {0:<4d} x: {1}'.format(iter,x))
+            # logger.debug('iter: {0:<4d} d: {1}'.format(iter,d))
+
+            # d_flow = G_inv*b3-G_inv*F*d_head
+            # d_leak = b4 - H*d_head
+            # d_demand = E*b2 - E*D*d_head
+            # d_head, d_demand, d_flow, d_leak = self.model.correct_step(d_head,d_demand,d_flow,d_leak,x)
+            # d = np.concatenate((d_head,d_demand,d_flow,d_leak))
 
             # Backtracking
             alpha = 1.0
@@ -99,7 +107,7 @@ class NewtonSolver(object):
                 use_r_ = True
                 for iter_bt in xrange(self.bt_maxiter):
                     x_ = x + alpha*d
-                    r_,b1,b2,b3,b4 = Residual(x_)
+                    r_ = Residual(x_)
                     new_norm = np.max(abs(r_))
                     if new_norm < (1.0-0.0001*alpha)*r_norm:
                         x = x_
@@ -110,7 +118,7 @@ class NewtonSolver(object):
                 if iter_bt+1 >= self.bt_maxiter:
                     logger.debug('Backtracking failed.')
                     return [x,iter,0]
-                #logger.debug('iter: {0:<4d} norm: {1:<10.2e} alpha: {2:<10.2e}'.format(iter, new_norm, alpha))
+                # logger.debug('iter: {0:<4d} norm: {1:<10.2e} alpha: {2:<10.2e}'.format(iter, new_norm, alpha))
             else:
                 x += d
             

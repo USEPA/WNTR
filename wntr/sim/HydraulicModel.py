@@ -343,14 +343,14 @@ class HydraulicModel(object):
                 values.append(1.0)
                 rows.append(node_id)
                 cols.append(in_link_id)
-        self.node_balance_matrix = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_links))
+        self.node_balance_matrix = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_links))
 
     def _form_link_headloss_matrix(self):
         A = np.matrix(np.zeros((self.num_links,self.num_nodes)))
         for link_id in self._link_ids:
             A[link_id,self.link_start_nodes[link_id]] = 1.0
             A[link_id,self.link_end_nodes[link_id]] = -1.0
-        self.link_headloss_matrix = sparse.csr_matrix(A)
+        self.link_headloss_matrix = sparse.coo_matrix(A)
 
     def _set_jacobian_structure(self):
         # Create the jacobian as a scipy.sparse.csr_matrix
@@ -414,28 +414,47 @@ class HydraulicModel(object):
         #     0 for leaks at isolated junctions
         #     f(H-z) otherwise
 
+        big_jac_values = np.array([])
+        big_jac_rows = np.array([])
+        big_jac_cols = np.array([])
 
         values = -1.0*np.ones(self.num_nodes)
         rows = range(self.num_nodes)
         cols = range(self.num_nodes)
-        self.jac_A = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
+        self.jac_A = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
+        big_jac_values = np.concatenate((big_jac_values,self.jac_A.data))
+        big_jac_rows = np.concatenate((big_jac_rows,self.jac_A.row))
+        big_jac_cols = np.concatenate((big_jac_cols,self.jac_A.col+self.num_nodes))
+
 
         self.jac_B = self.node_balance_matrix # This object is used for things other than the jacobian; Don't modify it!
+        big_jac_values = np.concatenate((big_jac_values,self.jac_B.data))
+        big_jac_rows = np.concatenate((big_jac_rows,self.jac_B.row))
+        big_jac_cols = np.concatenate((big_jac_cols,self.jac_B.col+2*self.num_nodes))
 
         values = -1.0*np.ones(self.num_leaks)
         rows = list(self._leak_ids)
         cols = range(self.num_leaks)
-        self.jac_C = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_leaks))
+        self.jac_C = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_leaks))
+        big_jac_values = np.concatenate((big_jac_values,self.jac_C.data))
+        big_jac_rows = np.concatenate((big_jac_rows,self.jac_C.row))
+        big_jac_cols = np.concatenate((big_jac_cols,self.jac_C.col+(2*self.num_nodes+self.num_links)))
 
         values = [0.0 for i in self._junction_ids]+[1.0 for i in self._tank_ids]+[1.0 for i in self._reservoir_ids]
         rows = range(self.num_nodes)
         cols = range(self.num_nodes)
-        self.jac_D = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
+        self.jac_D = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
+        big_jac_values = np.concatenate((big_jac_values,self.jac_D.data))
+        big_jac_rows = np.concatenate((big_jac_rows,self.jac_D.row+(self.num_nodes)))
+        big_jac_cols = np.concatenate((big_jac_cols,self.jac_D.col))
 
         values = [1.0 for i in self._junction_ids]+[0.0 for i in self._tank_ids]+[0.0 for i in self._reservoir_ids]
         rows = range(self.num_nodes)
         cols = range(self.num_nodes)
-        self.jac_E = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
+        self.jac_E = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
+        big_jac_values = np.concatenate((big_jac_values,self.jac_E.data))
+        big_jac_rows = np.concatenate((big_jac_rows,self.jac_E.row+(self.num_nodes)))
+        big_jac_cols = np.concatenate((big_jac_cols,self.jac_E.col+(self.num_nodes)))
 
         # jac_F will be a coo_matrix for easy updating.
         # Note that it might need to be converted to csr before doing arithmetic
@@ -468,24 +487,38 @@ class HydraulicModel(object):
             cols.append(self.link_end_nodes[link_id])
         self.jac_F = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_links,self.num_nodes))
         self.standard_jac_F_data = np.array(values)
+        big_jac_values = np.concatenate((big_jac_values,self.jac_F.data))
+        big_jac_rows = np.concatenate((big_jac_rows,self.jac_F.row+(2*self.num_nodes)))
+        big_jac_cols = np.concatenate((big_jac_cols,self.jac_F.col))
 
         values = np.ones(self.num_links)
         rows = range(self.num_links)
         cols = range(self.num_links)
-        self.jac_G_inv = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_links,self.num_links))
+        self.jac_G = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_links,self.num_links))
+        big_jac_values = np.concatenate((big_jac_values,self.jac_G.data))
+        big_jac_rows = np.concatenate((big_jac_rows,self.jac_G.row+(2*self.num_nodes)))
+        big_jac_cols = np.concatenate((big_jac_cols,self.jac_G.col+(2*self.num_nodes)))
 
         values = np.zeros(self.num_leaks)
         rows = range(self.num_leaks)
         cols = list(self._leak_ids)
-        self.jac_H = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_leaks,self.num_nodes))
+        self.jac_H = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_leaks,self.num_nodes))
+        big_jac_values = np.concatenate((big_jac_values,self.jac_H.data))
+        big_jac_rows = np.concatenate((big_jac_rows,self.jac_H.row+(2*self.num_nodes+self.num_links)))
+        big_jac_cols = np.concatenate((big_jac_cols,self.jac_H.col))
 
         values = np.ones(self.num_leaks)
         rows = range(self.num_leaks)
         cols = range(self.num_leaks)
-        self.jac_I = sparse.csr_matrix((values,(rows,cols)),shape=(self.num_leaks,self.num_leaks))
+        self.jac_I = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_leaks,self.num_leaks))
+        big_jac_values = np.concatenate((big_jac_values,self.jac_I.data))
+        big_jac_rows = np.concatenate((big_jac_rows,self.jac_I.row+(2*self.num_nodes+self.num_links)))
+        big_jac_cols = np.concatenate((big_jac_cols,self.jac_I.col+(2*self.num_nodes+self.num_links)))
 
-        self.jac_AinvB = self.jac_A*self.jac_B
-        self.jac_AinvC = self.jac_A*self.jac_C
+        self.jacobian = sparse.coo_matrix((big_jac_values,(big_jac_rows,big_jac_cols)),shape=(2*self.num_nodes+self.num_links+self.num_leaks,2*self.num_nodes+self.num_links+self.num_leaks))
+
+        # self.jac_AinvB = self.jac_A*self.jac_B
+        # self.jac_AinvC = self.jac_A*self.jac_C
 
     def get_hydraulic_equations(self, x):
         head = x[:self.num_nodes]
@@ -499,7 +532,7 @@ class HydraulicModel(object):
 
         all_residuals = np.concatenate((self.node_balance_residual, self.demand_or_head_residual, self.headloss_residual, self.leak_demand_residual))
 
-        return all_residuals,self.node_balance_residual,self.demand_or_head_residual,self.headloss_residual,self.leak_demand_residual
+        return all_residuals#,self.node_balance_residual,self.demand_or_head_residual,self.headloss_residual,self.leak_demand_residual
 
     def set_jacobian_constants(self):
         # set the jacobian entries that depend on the network status
@@ -531,8 +564,8 @@ class HydraulicModel(object):
             if self.link_status[link_id] == LinkStatus.active:
                 self.jac_F.data[link_id] = 0
 
-        self.jac_G_inv.data = (self.isolated_link_array + (1.0 - self.closed_link_array) -
-                               self.isolated_link_array * (1.0 - self.closed_link_array))
+        # self.jac_G.data = (self.isolated_link_array + (1.0 - self.closed_link_array) -
+        #                        self.isolated_link_array * (1.0 - self.closed_link_array))
 
     def get_jacobian(self, x):
 
@@ -571,42 +604,51 @@ class HydraulicModel(object):
 
         pf = abs(flows[:self.num_pipes])
         coeff = self.pipe_resistance_coefficients[:self.num_pipes]
-        self.jac_G_inv.data[:self.num_pipes] = 1.0/(self.jac_G_inv.data[:self.num_pipes] +
-                                                    (1.0-self.isolated_link_array[:self.num_pipes])*
-                                                    self.closed_link_array[:self.num_pipes]*(
-                                                        (pf > self.hw_q2)*1.852*coeff*pf**0.852 +
-                                                        (pf <= self.hw_q2)*(pf >= self.hw_q1)*coeff*(
-                                                            3.0*self.hw_a*pf**2 + 2.0*self.hw_b*pf + self.hw_c
-                                                        ) +
-                                                        (pf < self.hw_q1)*coeff*self.hw_m
-                                                    )
-                                                    )
+        self.jac_G.data[:self.num_pipes] = ((self.isolated_link_array[:self.num_pipes] +
+                                            (1.0 - self.closed_link_array[:self.num_pipes]) -
+                                            (self.isolated_link_array[self.num_pipes] *
+                                             (1.0 - self.closed_link_array[self.num_pipes])
+                                             )
+                                             ) +
+                                            (1.0-self.isolated_link_array[:self.num_pipes])*
+                                            self.closed_link_array[:self.num_pipes]*(
+                                                (pf > self.hw_q2)*1.852*coeff*pf**0.852 +
+                                                (pf <= self.hw_q2)*(pf >= self.hw_q1)*coeff*(
+                                                    3.0*self.hw_a*pf**2 + 2.0*self.hw_b*pf + self.hw_c
+                                                ) +
+                                                (pf < self.hw_q1)*coeff*self.hw_m
+                                            )
+                                            )
 
         for link_id in self.head_pump_ids:
-            if flows[link_id] <= self.pump_q1:
-                self.jac_G_inv.data[link_id] += (1.0 - self.isolated_link_array[link_id]) * \
-                                            self.closed_link_array[link_id] * self.pump_m
-            elif flows[link_id] <= self.pump_q2:
-                a,b,c,d = self.pump_poly_coefficients[link_id]
-                self.jac_G_inv.data[link_id] += (1.0 - self.isolated_link_array[link_id]) * \
-                                            self.closed_link_array[link_id] * \
-                                            (3.0 * a * flows[link_id] ** 2 + 2.0 * b * flows[link_id] + c)
+            if self.isolated_link_array[link_id] == 1 or self.closed_link_array[link_id] == 0:
+                self.jac_G.data[link_id] = 1.0
             else:
-                A,B,C = self.head_curve_coefficients[link_id]
-                self.jac_G_inv.data[link_id] += (1.0 - self.isolated_link_array[link_id]) * \
-                                            self.closed_link_array[link_id] * (-B * C * flows[link_id] ** (C - 1.0))
-            self.jac_G_inv.data[link_id] = 1.0 / self.jac_G_inv.data[link_id]
+                if flows[link_id] <= self.pump_q1:
+                    self.jac_G.data[link_id] = self.pump_m
+                elif flows[link_id] <= self.pump_q2:
+                    a,b,c,d = self.pump_poly_coefficients[link_id]
+                    self.jac_G.data[link_id] = (3.0 * a * flows[link_id] ** 2 + 2.0 * b * flows[link_id] + c)
+                else:
+                    A,B,C = self.head_curve_coefficients[link_id]
+                    self.jac_G.data[link_id] = (-B * C * flows[link_id] ** (C - 1.0))
+                # self.jac_G_inv.data[link_id] = 1.0 / self.jac_G_inv.data[link_id]
         for link_id in self.power_pump_ids:
-            start_node_id = self.link_start_nodes[link_id]
-            end_node_id = self.link_end_nodes[link_id]
-            self.jac_G_inv.data[link_id] += (1.0 - self.isolated_link_array[link_id]) * \
-                                        self.closed_link_array[link_id] * \
-                                        (1000.0*self._g*heads[start_node_id] - 1000.0*self._g*heads[end_node_id])
-            self.jac_G_inv.data[link_id] = 1.0 / self.jac_G_inv.data[link_id]
+            if self.isolated_link_array[link_id] == 1 or self.closed_link_array[link_id] == 0:
+                self.jac_G.data[link_id] = 1.0
+            else:
+                start_node_id = self.link_start_nodes[link_id]
+                end_node_id = self.link_end_nodes[link_id]
+                self.jac_G.data[link_id] = (1000.0*self._g*heads[start_node_id] - 1000.0*self._g*heads[end_node_id])
+                # self.jac_G_inv.data[link_id] = 1.0 / self.jac_G_inv.data[link_id]
         for link_id in self._prv_ids:
-            if self.link_status[link_id] == LinkStatus.opened:
-                self.jac_G_inv.data[link_id] = 2.0*self.pipe_resistance_coefficients[link_id]*abs(flows[link_id])
-                self.jac_G_inv.data[link_id] = 1.0 / self.jac_G_inv.data[link_id]
+            if self.isolated_link_array[link_id] ==1 or self.closed_link_array[link_id] == 0:
+                self.jac_G.data[link_id] = 1.0
+            elif self.link_status[link_id] == LinkStatus.opened:
+                self.jac_G.data[link_id] = 2.0*self.pipe_resistance_coefficients[link_id]*abs(flows[link_id])
+                # self.jac_G_inv.data[link_id] = 1.0 / self.jac_G_inv.data[link_id]
+            elif self.link_status[link_id] == LinkStatus.active:
+                self.jac_G.data[link_id] = 0.0
 
         for ndx, node_id in enumerate(self._leak_ids):
             if not self.leak_status[node_id]:
@@ -626,8 +668,24 @@ class HydraulicModel(object):
                     self.jac_H.data[ndx] = -0.5*self.leak_Cd[node_id]*self.leak_area[node_id]*\
                                            math.sqrt(2.0*self._g)*P**(-0.5)
 
-        return (self.jac_A, self.jac_B, self.jac_C, self.jac_D, self.jac_E, self.jac_F, self.jac_G_inv, self.jac_H,
-                self.jac_I, self.jac_AinvB, self.jac_AinvC)
+        self.jacobian.data = np.concatenate((self.jac_A.data,self.jac_B.data,self.jac_C.data,self.jac_D.data,
+                                             self.jac_E.data,self.jac_F.data,self.jac_G.data,self.jac_H.data,
+                                             self.jac_I.data))
+
+        # print 'A: ',self.jac_A.toarray()
+        # print 'B: ',self.jac_B.toarray()
+        # print 'C: ',self.jac_C.toarray()
+        # print 'D: ',self.jac_D.toarray()
+        # print 'E: ',self.jac_E.toarray()
+        # print 'F: ',self.jac_F.toarray()
+        # print 'G_inv: ',self.jac_G_inv.toarray()
+        # print 'H: ',self.jac_H.toarray()
+        # print 'I: ',self.jac_I.toarray()
+        # raise RuntimeError('just stopping')
+        # return (self.jac_A, self.jac_B, self.jac_C, self.jac_D, self.jac_E, self.jac_F, self.jac_G_inv, self.jac_H,
+        #         self.jac_I, self.jac_AinvB, self.jac_AinvC)
+        # self.check_jac(x)
+        return self.jacobian
 
     def get_node_balance_residual(self, flow, demand, leak_demand):
         """
@@ -685,27 +743,27 @@ class HydraulicModel(object):
         def get_pump_headloss_residual():
             for link_id in self._pump_ids:
                 link_flow = flow[link_id]
-            if self.link_status[link_id] == wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
-                self.headloss_residual[link_id] = link_flow
-            else:
-                start_node_id = self.link_start_nodes[link_id]
-                end_node_id = self.link_end_nodes[link_id]
-
-                if link_id in self.head_curve_coefficients.keys():
-                    if link_flow <= self.pump_q1:
-                        A,B,C = self.head_curve_coefficients[link_id]
-                        pump_headgain = self.pump_m*link_flow + A
-                    elif link_flow <= self.pump_q2:
-                        a,b,c,d = self.pump_poly_coefficients[link_id]
-                        pump_headgain = a*link_flow**3 + b*link_flow**2 + c*link_flow + d
-                    else:
-                        A,B,C = self.head_curve_coefficients[link_id]
-                        pump_headgain = 1.0*A - B*link_flow**C
-                    self.headloss_residual[link_id] = pump_headgain - (head[end_node_id] - head[start_node_id])
-                elif link_id in self.pump_powers.keys():
-                    self.headloss_residual[link_id] = self.pump_powers[link_id] + (head_diff_vector[link_id])*flow[link_id]*self._g*1000.0
+                if self.link_status[link_id] == wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
+                    self.headloss_residual[link_id] = link_flow
                 else:
-                    raise RuntimeError('Only power and head pumps are currently supported.')
+                    start_node_id = self.link_start_nodes[link_id]
+                    end_node_id = self.link_end_nodes[link_id]
+
+                    if link_id in self.head_curve_coefficients.keys():
+                        if link_flow <= self.pump_q1:
+                            A,B,C = self.head_curve_coefficients[link_id]
+                            pump_headgain = self.pump_m*link_flow + A
+                        elif link_flow <= self.pump_q2:
+                            a, b, c, d = self.pump_poly_coefficients[link_id]
+                            pump_headgain = a*link_flow**3 + b*link_flow**2 + c*link_flow + d
+                        else:
+                            A, B, C = self.head_curve_coefficients[link_id]
+                            pump_headgain = 1.0*A - B*link_flow**C
+                        self.headloss_residual[link_id] = pump_headgain - (head[end_node_id] - head[start_node_id])
+                    elif link_id in self.pump_powers.keys():
+                        self.headloss_residual[link_id] = self.pump_powers[link_id] + (head_diff_vector[link_id])*flow[link_id]*self._g*1000.0
+                    else:
+                        raise RuntimeError('Only power and head pumps are currently supported.')
         get_pump_headloss_residual()
 
         def get_valve_headloss_residual():
@@ -723,6 +781,8 @@ class HydraulicModel(object):
                     pipe_headloss = pipe_resistance_coeff*abs(flow[link_id])**2
                     self.headloss_residual[link_id] = pipe_headloss - (head_diff_vector[link_id])
         get_valve_headloss_residual()
+        # print self.headloss_residual
+        # raise RuntimeError('just stopping')
 
     def get_demand_or_head_residual(self, head, demand):
 
@@ -1013,12 +1073,17 @@ class HydraulicModel(object):
         results.link = pd.Panel(link_dictionary, major_axis=results.time, minor_axis=link_names)
 
     def set_network_inputs_by_id(self):
+        self.isolated_junction_ids = []
+        self.isolated_link_ids = []
+        self.closed_links = set()
         self.isolated_junction_array = np.zeros(self.num_junctions) # 1 if it is isolated, 0 if it is not isolated
         self.isolated_link_array = np.zeros(self.num_links) # 1 if it is isolated, 0 if it is not isolated
         self.closed_link_array = np.ones(self.num_links) # 0 if it is closed, 1 if it is open/active
         for junction_name in self.isolated_junction_names:
+            self.isolated_junction_ids.append(self._node_name_to_id[junction_name])
             self.isolated_junction_array[self._node_name_to_id[junction_name]] = 1.0
         for link_name in self.isolated_link_names:
+            self.isolated_link_ids.append(self._link_name_to_id[link_name])
             self.isolated_link_array[self._link_name_to_id[link_name]] = 1.0
 
         for tank_name, tank in self._wn.nodes(Tank):
@@ -1051,6 +1116,7 @@ class HydraulicModel(object):
                 self.link_status[pump_id] = pump._cv_status
         for link_id in self._link_ids:
             if self.link_status[link_id] == wntr.network.LinkStatus.closed:
+                self.closed_links.add(link_id)
                 self.closed_link_array[link_id] = 0.0
 
     def update_tank_heads(self):
@@ -1325,16 +1391,18 @@ class HydraulicModel(object):
         #print 'converting approx_jac to csr matrix'
         #approx_jac = sparse.csr_matrix(approx_jac)
 
+        jac = self.jacobian.tocsr()
+
         print 'computing difference between jac and approx_jac'
-        difference = approx_jac - self.jacobian
+        difference = approx_jac - jac
 
         success = True
-        for i in xrange(self.jacobian.shape[0]):
+        for i in xrange(jac.shape[0]):
             print 'comparing values in row ',i,'with non-zeros from self.jacobain'
-            row_nnz = self.jacobian.indptr[i+1] - self.jacobian.indptr[i]
+            row_nnz = jac.indptr[i+1] - jac.indptr[i]
             for k in xrange(row_nnz):
-                j = self.jacobian.indices[self.jacobian.indptr[i]+k]
-                if abs(approx_jac[i,j]-self.jacobian[i,j]) > 0.1:
+                j = jac.indices[jac.indptr[i]+k]
+                if abs(approx_jac[i,j]-jac[i,j]) > 0.1:
                     if i < self.num_nodes:
                         equation_type = 'node balance'
                         node_or_link = 'node'
@@ -1358,9 +1426,9 @@ class HydraulicModel(object):
                         wrt = 'flow'
                         wrt_name = self._link_id_to_name[j - 2*self.num_nodes]
                     print 'jacobian entry for ',equation_type,' for ',node_or_link,' ',node_or_link_name,' with respect to ',wrt,wrt_name,' is incorrect.'
-                    print 'error = ',abs(approx_jac[i,j]-self.jacobian[i,j])
+                    print 'error = ',abs(approx_jac[i,j]-jac[i,j])
                     print 'approximation = ',approx_jac[i,j]
-                    print 'exact = ',self.jacobian[i,j]
+                    print 'exact = ',jac[i,j]
                     success = False
 
         #if not success:
