@@ -673,17 +673,6 @@ class HydraulicModel(object):
                                              self.jac_E.data,self.jac_F.data,self.jac_G.data,self.jac_H.data,
                                              self.jac_I.data))
 
-        # print 'A: ',self.jac_A.toarray()
-        # print 'B: ',self.jac_B.toarray()
-        # print 'C: ',self.jac_C.toarray()
-        # print 'D: ',self.jac_D.toarray()
-        # print 'E: ',self.jac_E.toarray()
-        # print 'F: ',self.jac_F.toarray()
-        # print 'G: ',self.jac_G.toarray()
-        # print 'H: ',self.jac_H.toarray()
-        # print 'I: ',self.jac_I.toarray()
-        # print self.jacobian.toarray()
-        # raise RuntimeError('just stopping')
         # return (self.jac_A, self.jac_B, self.jac_C, self.jac_D, self.jac_E, self.jac_F, self.jac_G_inv, self.jac_H,
         #         self.jac_I, self.jac_AinvB, self.jac_AinvC)
         # self.check_jac(x)
@@ -1138,11 +1127,13 @@ class HydraulicModel(object):
 
     def identify_isolated_junctions(self):
         self.isolated_junction_names, self.isolated_link_names = self._wn._get_isolated_junctions()
+        # self.isolated_junction_names = isolated_junction_names
+        # self.isolated_link_names = isolated_link_names
         if len(self.isolated_junction_names)>0:
             logger.warning('There are {0} isolated junctions.'.format(len(self.isolated_junction_names)))
-        #    logger.debug('{0}'.format(self.isolated_junction_names))
+            # logger.debug('{0}'.format(self.isolated_junction_names))
             logger.warning('There are {0} isolated links.'.format(len(self.isolated_link_names)))
-        #    print self.isolated_link_names
+            # logger.debug('{0}'.format(self.isolated_link_names))
 
     def update_network_previous_values(self):
         self._wn.prev_sim_time = self._wn.sim_time
