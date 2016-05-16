@@ -701,33 +701,28 @@ class HydraulicModel(object):
         head_diff_vector = self.link_headloss_matrix*head
 
         def get_pipe_headloss_residual():
-            #def compute_all_headlosses():
-            #    abs_flow = abs(flow)
-            #    return abs_flow, np.sign(flow)*self.pipe_resistance_coefficients*abs_flow**1.852
-            #abs_flow, headlosses = compute_all_headlosses()
-            abs_flow = abs(flow)
-            sign_flow_pipe_r_coeff = np.sign(flow)*self.pipe_resistance_coefficients
-            self.headloss_residual = (abs_flow>=self.hw_q2)*sign_flow_pipe_r_coeff*abs_flow**1.852 - head_diff_vector
-            #self.headloss_residual += (abs_flow<=self.hw_q1)*sign_flow_pipe_r_coeff*self.hw_m*abs_flow
-            #self.headloss_residual += (abs_flow<self.hw_q2)*(abs_flow>self.hw_q1)*sign_flow_pipe_r_coeff*(self.hw_a*abs_flow**3 + self.hw_b*abs_flow**2 + self.hw_c*abs_flow + self.hw_d)
-            #self.headloss_residual -= head_diff_vector
 
-            def pipe_headloss_lookups(link_id):
-                return self.link_start_nodes[link_id], self.link_end_nodes[link_id], abs_flow[link_id]
-
-            for link_id in self._pipe_ids:
-                abs_link_flow = abs_flow[link_id]
-                if abs_link_flow >= self.hw_q2:
-                    pass
-                elif abs_link_flow <= self.hw_q1:
-                    self.headloss_residual[link_id] = sign_flow_pipe_r_coeff[link_id]*self.hw_m*abs_link_flow - head_diff_vector[link_id]
-                else:
-                    self.headloss_residual[link_id] = sign_flow_pipe_r_coeff[link_id]*(self.hw_a*abs_link_flow**3 + self.hw_b*abs_link_flow**2 + self.hw_c*abs_link_flow + self.hw_d) - head_diff_vector[link_id]
-
-            for link_id in self.closed_links:
-                self.headloss_residual[link_id] = flow[link_id]
-            for link_id in self.isolated_link_ids:
-                self.headloss_residual[link_id] = flow[link_id]
+            n_p = self.num_pipes
+            pf = flow[:n_p]
+            abs_f = abs(pf)
+            sign_coeff = np.sign(pf)*self.pipe_resistance_coefficients[:n_p]
+            self.headloss_residual[:n_p] = (
+                (
+                    self.isolated_link_array[:n_p] + (1.0 - self.closed_link_array[:n_p]) -
+                    self.isolated_link_array[:n_p] * (1.0 - self.closed_link_array[:n_p])
+                ) * pf +
+                (
+                    (1.0 - self.isolated_link_array[:n_p]) * self.closed_link_array[:n_p]
+                ) *
+                (
+                    (abs_f > self.hw_q2) * (sign_coeff * abs_f**1.852 - head_diff_vector[:n_p]) +
+                    (abs_f <= self.hw_q2) * (abs_f >= self.hw_q1) * (sign_coeff *
+                                                                     (self.hw_a*abs_f**3 + self.hw_b*abs_f**2 +
+                                                                      self.hw_c*abs_f + self.hw_d) -
+                                                                     head_diff_vector[:n_p]) +
+                    (abs_f < self.hw_q1) * (sign_coeff * self.hw_m*abs_f - head_diff_vector[:n_p])
+                )
+            )
 
         get_pipe_headloss_residual()
 
@@ -800,8 +795,7 @@ class HydraulicModel(object):
                 else:
                     self.demand_or_head_residual[node_id] = Dact - Dexp*(m*head_n-m*elevation-m*Pnom+1.0)
         else:
-            for node_id in self._junction_ids:
-                self.demand_or_head_residual[node_id] = demand[node_id] - self.junction_demand[node_id]
+            self.demand_or_head_residual[:self.num_junctions] = demand[:self.num_junctions] - self.junction_demand
         for node_id in self._tank_ids:
             self.demand_or_head_residual[node_id] = head[node_id] - self.tank_head[node_id]
         for node_id in self._reservoir_ids:
