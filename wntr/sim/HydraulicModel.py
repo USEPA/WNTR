@@ -773,35 +773,48 @@ class HydraulicModel(object):
     def get_demand_or_head_residual(self, head, demand):
 
         if self.pressure_driven:
+            minP = self.minimum_pressures
+            nomP = self.nominal_pressures
+            j_d = self.junction_demand
             m = self._slope_of_pdd_curve
             delta = self._pdd_smoothing_delta
-            for node_id in self._junction_ids:
-                elevation = self.node_elevations[node_id]
-                Dexp = self.junction_demand[node_id]
-                Pmin = self.minimum_pressures[node_id]
-                Pnom = self.nominal_pressures[node_id]
-                head_n = head[node_id]
-                Dact = demand[node_id]
-                if (head_n-elevation) <= Pmin:
-                    self.demand_or_head_residual[node_id] = Dact - Dexp*(m*head_n-m*elevation-m*Pmin)
-                elif (head_n-elevation) <= (Pmin+delta):
-                    a,b,c,d = self.pdd_poly1_coeffs[node_id]
-                    self.demand_or_head_residual[node_id] = Dact - Dexp*(a*(head_n-elevation)**3.0+b*(head_n-elevation)**2.0+c*(head_n-elevation)+d)
-                elif (head_n-elevation) <= (Pnom-delta):
-                    self.demand_or_head_residual[node_id] = Dact - Dexp*((head_n-elevation-Pmin)/(Pnom-Pmin))**0.5
-                elif (head_n-elevation) <= Pnom:
-                    a,b,c,d = self.pdd_poly2_coeffs[node_id]
-                    self.demand_or_head_residual[node_id] = Dact - Dexp*(a*(head_n-elevation)**3.0+b*(head_n-elevation)**2.0+c*(head_n-elevation)+d)
-                else:
-                    self.demand_or_head_residual[node_id] = Dact - Dexp*(m*head_n-m*elevation-m*Pnom+1.0)
+            n_j = self.num_junctions
+            P = head[:n_j] - self.node_elevations[:n_j]
+            H = head[:n_j]
+            Dact = demand[:n_j]
+
+            self.demand_or_head_residual[:n_j] = (
+                self.isolated_junction_array * H + (1.0 - self.isolated_junction_array)*(
+                    (P <= minP) * (Dact - j_d*m*(P-minP)) +
+                    (P > minP) * (P <= (minP + delta)) * (
+                        Dact - j_d*(
+                            self.pdd_poly1_coeffs_a*P**3 +
+                            self.pdd_poly1_coeffs_b*P**2 +
+                            self.pdd_poly1_coeffs_c*P +
+                            self.pdd_poly1_coeffs_d
+                        )
+                    ) +
+                    (P > (minP + delta)) * (P <= (nomP - delta)) * (Dact - j_d*((P-minP)/(nomP-minP))**0.5) +
+                    (P > (nomP - delta)) * (P <= nomP) * (
+                        Dact - j_d*(
+                            self.pdd_poly2_coeffs_a*P**3 +
+                            self.pdd_poly2_coeffs_b*P**2 +
+                            self.pdd_poly2_coeffs_c*P +
+                            self.pdd_poly2_coeffs_d
+                        )
+                    ) +
+                    (P > nomP) * (Dact - j_d * (m*(P-nomP) + 1.0))
+                )
+            )
         else:
-            self.demand_or_head_residual[:self.num_junctions] = demand[:self.num_junctions] - self.junction_demand
+            self.demand_or_head_residual[:self.num_junctions] = (
+                self.isolated_junction_array * head[:self.num_junctions] +
+                (1.0 - self.isolated_junction_array) * (demand[:self.num_junctions] - self.junction_demand)
+            )
         for node_id in self._tank_ids:
             self.demand_or_head_residual[node_id] = head[node_id] - self.tank_head[node_id]
         for node_id in self._reservoir_ids:
             self.demand_or_head_residual[node_id] = head[node_id] - self.reservoir_head[node_id]
-        for node_id in self.isolated_junction_ids:
-            self.demand_or_head_residual[node_id] = head[node_id]# - self.node_elevations[node_id]
 
     def get_leak_demand_residual(self, head, leak_demand):
         m = 1.0e-11
