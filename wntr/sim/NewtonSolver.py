@@ -83,7 +83,7 @@ class NewtonSolver(object):
 
             # Call Linear solver
             try:
-                d = -sp.linalg.spsolve(J,r)
+                d = -sp.linalg.spsolve(J,r,permc_spec='COLAMD',use_umfpack=False)
                 # print d[:self.num_nodes]
                 # print d[self.num_nodes:2*self.num_nodes]
                 # print d[2*self.num_nodes:2*self.num_nodes+self.num_links]
