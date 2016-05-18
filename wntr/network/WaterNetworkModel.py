@@ -1724,7 +1724,7 @@ class WaterNetworkModel(object):
         sec -= hours*3600
         mm = int(sec/60.)
         sec -= mm*60
-        return (hours, mm, sec)
+        return (hours, mm, int(sec))
  
 class WaterNetworkOptions(object):
     """

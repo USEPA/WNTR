@@ -1,18 +1,8 @@
 """
-Python extensions for the EPANET 2.0 Programmers Toolkit
+Python extensions for the EPANET Programmers Toolkit DLLs.
 
-Copyright 2011 Sandia Corporation Under the terms of Contract DE-AC04-94AL85000
-there is a non-exclusive license for use of this work by or on behalf of the 
-U.S. Government. Export of this program may require a license from the United 
-States Government.
-
-This software is licensed under the BSD license. See README.txt for details.
+EPANET toolkit constants.
 """
-
-# Define the EPANET toolkit constants
-# last modified:
-#  - January, 2011, David Hart, SNL
-
 optNodeParams = ['EN_ELEVATION', 'EN_BASEDEMAND', 'EN_PATTERN', 'EN_EMITTER',
                 'EN_INITQUAL', 'EN_SOURCEQUAL', 'EN_SOURCEPAT', 'EN_SOURCETYPE',
                 'EN_TANKLEVEL', 'EN_DEMAND', 'EN_HEAD', 'EN_PRESSURE',

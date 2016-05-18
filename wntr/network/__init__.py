@@ -4,7 +4,3 @@ from NetworkControls import ControlAction, TimeControl, ConditionalControl, _Che
 from ControlLogger import ControlLogger
 from draw_graph import draw_graph, custom_colormap
 from WntrMultiDiGraph import WntrMultiDiGraph
-try:
-    from WaterNetworkTables import WNMTablesFile
-except:
-    pass
