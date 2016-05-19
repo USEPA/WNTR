@@ -10,6 +10,7 @@ import logging
 
 logger = logging.getLogger('wntr.sim.HydraulicModel')
 
+
 class HydraulicModel(object):
     def __init__(self, wn, pressure_driven=False):
 
@@ -51,18 +52,18 @@ class HydraulicModel(object):
 
         # network input objects
         # these objects use node/link ids rather than names
-        #self.prev_tank_head = {}
+        # self.prev_tank_head = {}
         self.tank_head = {}
-        #self.prev_reservoir_head = {}
+        # self.prev_reservoir_head = {}
         self.reservoir_head = {}
-        #self.prev_junction_demand = {}
+        # self.prev_junction_demand = {}
         self.junction_demand = np.zeros(self.num_junctions)
-        #self.prev_link_status = {}
+        # self.prev_link_status = {}
         self.link_status = {}
         self.closed_links = set()
-        #self.prev_valve_settings = {}
+        # self.prev_valve_settings = {}
         self.valve_settings = {}
-        #self.prev_pump_speeds = {}
+        # self.prev_pump_speeds = {}
         self.pump_speeds = {}
 
         self.isolated_junction_names = []
@@ -74,15 +75,19 @@ class HydraulicModel(object):
         self._set_jacobian_structure()
 
     def _initialize_global_constants(self):
-        self._Hw_k = 10.666829500036352 # Hazen-Williams resistance coefficient in SI units (it equals 4.727 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
-        self._Dw_k = 0.0826 # Darcy-Weisbach constant in SI units (it equals 0.0252 in EPANET GPM units). See Table 3.1 in EPANET 2 User manual.
-        self._g = 9.81 # Acceleration due to gravity
+        # Hazen-Williams resistance coefficient in SI units (it equals 4.727 in EPANET GPM units).
+        # See Table 3.1 in EPANET 2 User manual.
+        self._Hw_k = 10.666829500036352
+        # Darcy-Weisbach constant in SI units (it equals 0.0252 in EPANET GPM units).
+        # See Table 3.1 in EPANET 2 User manual.
+        self._Dw_k = 0.0826
+        self._g = 9.81  # Acceleration due to gravity
 
         # Constants for the modified hazen-williams formula
         # The names match the names used in the simulation white paper
-        #self.hw_q1 = 0.00349347323944
-        #self.hw_q2 = 0.00549347323944
-        #self.hw_m = 0.01
+        # self.hw_q1 = 0.00349347323944
+        # self.hw_q2 = 0.00549347323944
+        # self.hw_m = 0.01
         self.hw_q1 = 0.0001
         self.hw_q2 = 0.0002
         self.hw_m = 0.001
@@ -92,7 +97,7 @@ class HydraulicModel(object):
         f2 = self.hw_q2**1.852
         df1 = self.hw_m
         df2 = 1.852*self.hw_q2**0.852
-        a,b,c,d = self.compute_polynomial_coefficients(x1, x2, f1, f2, df1, df2)
+        a, b, c, d = self.compute_polynomial_coefficients(x1, x2, f1, f2, df1, df2)
         self.hw_a = a
         self.hw_b = b
         self.hw_c = c
@@ -109,29 +114,30 @@ class HydraulicModel(object):
 
     def _initialize_name_id_maps(self):
         # ids are intergers
-        self._node_id_to_name = {} # {id1: name1, id2: name2, etc.}
-        self._node_name_to_id = {} # {name1: id1, name2: id2, etc.}
-        self._link_id_to_name = {} # {id1: name1, id2: name2, etc.}
-        self._link_name_to_id = {} # {name1: id1, name2: id2, etc.}
+        self._node_id_to_name = {}  # {id1: name1, id2: name2, etc.}
+        self._node_name_to_id = {}  # {name1: id1, name2: id2, etc.}
+        self._link_id_to_name = {}  # {id1: name1, id2: name2, etc.}
+        self._link_name_to_id = {}  # {name1: id1, name2: id2, etc.}
 
         # Lists of types of nodes
         # self._node_ids is ordered by increasing id. In fact, the index equals the id.
         # The ordering of the other lists is not significant.
         # Each node has only one id. For example, if 'Tank-5' has id 8, then 8 will be used
         # for 'Tank-5' in self._node_ids and self._tank_ids.
-        self._node_ids = [] # ordering is vital! Must be junctions then tanks then reservoirs
+        self._node_ids = []  # ordering is vital! Must be junctions then tanks then reservoirs
         self._junction_ids = []
         self._tank_ids = []
         self._reservoir_ids = []
         self._leak_ids = []
-        self._leak_idx = {} # {node_id: index_of_node_in_leak_ids}; e.g. _leak_ids = [0, 4, 18], _leak_idx = {0:0, 4:1, 18:2}
+        # {node_id: index_of_node_in_leak_ids}; e.g. _leak_ids = [0, 4, 18], _leak_idx = {0:0, 4:1, 18:2}
+        self._leak_idx = {}
 
         # Lists of types of links
         # self._link_ids is ordered by increasing id. In fact, the index equals the id.
         # The ordering of the other lists is not significant.
         # Each link has only one id. For example, if 'Pump-5' has id 8, then 8 will be used
         # for 'Pump-5' in self._link_ids and self._pump_ids.
-        self._link_ids = [] # ordering is viatl! Must be pipes the pumps then valves
+        self._link_ids = []  # ordering is viatl! Must be pipes the pumps then valves
         self._pipe_ids = []
         self._pump_ids = []
         self.power_pump_ids = []
@@ -150,7 +156,8 @@ class HydraulicModel(object):
         self.link_types = []
         # Dictionary indicating whether or not the leak is active. False means inactive, True means active. 
         self.leak_status = {}
-        # Dictionary indicating whether or not the node could have a leak; True if node._leak is True; False if node._leak is False
+        # Dictionary indicating whether or not the node could have a leak; True if node._leak is True;
+        # False if node._leak is False
         self.could_have_leak = {}
 
         n = 0
@@ -245,8 +252,12 @@ class HydraulicModel(object):
         self.node_elevations = np.zeros(self.num_nodes)
         self.nominal_pressures = np.ones(self.num_junctions)
         self.minimum_pressures = np.zeros(self.num_junctions)
-        self.pdd_poly1_coeffs = {} # {junction_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to 0th order term; these are the coefficients for the polynomial between Pmin and the normal pdd function
-        self.pdd_poly2_coeffs = {} # {junction_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to 0th order term; these are the coefficients for the polynomial between the normal pdd function and Pmax
+        # {junction_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to 0th
+        # order term; these are the coefficients for the polynomial between Pmin and the normal pdd function
+        self.pdd_poly1_coeffs = {}
+        # {junction_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to 0th
+        # order term; these are the coefficients for the polynomial between the normal pdd function and Pmax
+        self.pdd_poly2_coeffs = {}
         self.pdd_poly1_coeffs_a = np.zeros(self.num_junctions)
         self.pdd_poly1_coeffs_b = np.zeros(self.num_junctions)
         self.pdd_poly1_coeffs_c = np.zeros(self.num_junctions)
@@ -255,9 +266,10 @@ class HydraulicModel(object):
         self.pdd_poly2_coeffs_b = np.zeros(self.num_junctions)
         self.pdd_poly2_coeffs_c = np.zeros(self.num_junctions)
         self.pdd_poly2_coeffs_d = np.zeros(self.num_junctions)
-        self.leak_Cd = {} # {node_id: leak_discharge_coeff}
-        self.leak_area = {} # {node_id: leak_area}
-        self.leak_poly_coeffs = {} # {node_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to the 0th order term
+        self.leak_Cd = {}  # {node_id: leak_discharge_coeff}
+        self.leak_area = {}  # {node_id: leak_area}
+        # {node_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to the 0th order term
+        self.leak_poly_coeffs = {}
 
         for node_name, node in self._wn.nodes():
             node_id = self._node_name_to_id[node_name]
@@ -299,7 +311,7 @@ class HydraulicModel(object):
         self.pipe_diameters = {}
         self.head_curve_coefficients = {}
         self.max_pump_flows = {}
-        self.pump_poly_coefficients = {} # {pump_id: (a,b,c,d)} a*x**3 + b*x**2 + c*x + d
+        self.pump_poly_coefficients = {}  # {pump_id: (a,b,c,d)} a*x**3 + b*x**2 + c*x + d
         self.pump_powers = {}
 
         for link_name, link in self._wn.links():
@@ -311,7 +323,8 @@ class HydraulicModel(object):
             self.link_start_nodes[link_id] = start_node_id
             self.link_end_nodes[link_id] = end_node_id
             if link_id in self._pipe_ids:
-                self.pipe_resistance_coefficients[link_id] = self._Hw_k*(link.roughness**(-1.852))*(link.diameter**(-4.871))*link.length # Hazen-Williams
+                self.pipe_resistance_coefficients[link_id] = (self._Hw_k*(link.roughness**(-1.852)) *
+                                                              (link.diameter**(-4.871))*link.length)  # Hazen-Williams
                 self.pipe_diameters[link_id] = link.diameter
             elif link_id in self._valve_ids:
                 self.pipe_resistance_coefficients[link_id] = self._Dw_k*0.02*link.diameter**(-5)*link.diameter*2
@@ -320,14 +333,13 @@ class HydraulicModel(object):
             if link_id in self._pump_ids:
                 if link.info_type == 'HEAD':
                     A, B, C = link.get_head_curve_coefficients()
-                    self.head_curve_coefficients[link_id] = (A,B,C)
+                    self.head_curve_coefficients[link_id] = (A, B, C)
                     self.max_pump_flows[link_id] = (A/B)**(1.0/C)
-                    a,b,c,d = self.get_pump_poly_coefficients(A,B,C)
-                    self.pump_poly_coefficients[link_id] = (a,b,c,d)
+                    a, b, c, d = self.get_pump_poly_coefficients(A, B, C)
+                    self.pump_poly_coefficients[link_id] = (a, b, c, d)
                 elif link.info_type == 'POWER':
                     self.pump_powers[link_id] = link.power
                     self.max_pump_flows[link_id] = None
-
 
     def _form_node_balance_matrix(self):
         # The node balance matrix should never be modified! It is also used in the jacobian!
@@ -343,76 +355,78 @@ class HydraulicModel(object):
                 values.append(1.0)
                 rows.append(node_id)
                 cols.append(in_link_id)
-        self.node_balance_matrix = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_links))
+        self.node_balance_matrix = sparse.coo_matrix((values, (rows, cols)), shape=(self.num_nodes, self.num_links))
 
     def _form_link_headloss_matrix(self):
-        A = np.matrix(np.zeros((self.num_links,self.num_nodes)))
+        headloss_matrix = np.matrix(np.zeros((self.num_links, self.num_nodes)))
         for link_id in self._link_ids:
-            A[link_id,self.link_start_nodes[link_id]] = 1.0
-            A[link_id,self.link_end_nodes[link_id]] = -1.0
-        self.link_headloss_matrix = sparse.coo_matrix(A)
+            headloss_matrix[link_id, self.link_start_nodes[link_id]] = 1.0
+            headloss_matrix[link_id, self.link_end_nodes[link_id]] = -1.0
+        self.link_headloss_matrix = sparse.coo_matrix(headloss_matrix)
 
     def _set_jacobian_structure(self):
-        # Create the jacobian as a scipy.sparse.csr_matrix
-        # Initialize all jacobian entries that have the possibility to be non-zero
+        """
+        Create the jacobian as a scipy.sparse.csr_matrix
+        Initialize all jacobian entries that have the possibility to be non-zero
 
-        # Structure of jacobian:
-        #
-        # H_n => Head for node id n
-        # D_n => Demand for node id n
-        # F_l => Flow for link id l
-        # node_bal_n => node balance for node id n
-        # D/H_n      => demand/head equation for node id n
-        # headloss_l => headloss equation for link id l
-        # in link refers to a link that has node_n as an end node
-        # out link refers to a link that has node_n as a start node
-        #
-        # Note that there will only be leak variables and equations for nodes with leaks. Thus some of the rows and columns below may be missing. The leak id is equal to the node id though.
-        #
-        # Variable          H_1   H_2   H_n   H_(N-1)   H_N   D_1   D_2   D_n   D_(N-1)   D_N   F_1   F_2   F_l   F_(L-1)   F_L      Dleak1  Dleak2  Dleakn  Dleak(N-1)  DleakN
-        # Equation
-        # node_bal_1         0     0     0     0         0     -1    0     0     0         0    (1 for in link, -1 for out link)       -1      0        0        0          0
-        # node_bal_2         0     0     0     0         0     0     -1    0     0         0    (1 for in link, -1 for out link)        0     -1        0        0          0
-        # node_bal_n         0     0     0     0         0     0     0     -1    0         0    (1 for in link, -1 for out link)        0      0       -1        0          0
-        # node_bal_(N-1)     0     0     0     0         0     0     0     0     -1        0    (1 for in link, -1 for out link)        0      0        0       -1          0
-        # node_bal_N         0     0     0     0         0     0     0     0     0         -1   (1 for in link, -1 for out link)        0      0        0        0         -1
-        # D/H_1              *1    0     0     0         0     *2    0     0     0         0     0      0     0    0         0          0      0        0        0          0
-        # D/H_2              0     *1    0     0         0     0     *2    0     0         0     0      0     0    0         0          0      0        0        0          0
-        # D/H_n              0     0     *1    0         0     0     0     *2    0         0     0      0     0    0         0          0      0        0        0          0
-        # D/H_(N-1)          0     0     0     *1        0     0     0     0     *2        0     0      0     0    0         0          0      0        0        0          0
-        # D/H_N              0     0     0     0         *1    0     0     0     0         *2    0      0     0    0         0          0      0        0        0          0
-        # headloss_1         (NZ for start/end node *3    )    0     0     0     0         0     *4     0     0    0         0          0      0        0        0          0
-        # headloss_2         (NZ for start/end node *3    )    0     0     0     0         0     0      *4    0    0         0          0      0        0        0          0
-        # headloss_l         (NZ for start/end node *3    )    0     0     0     0         0     0      0     *4   0         0          0      0        0        0          0
-        # headloss_(L-1)     (NZ for start/end node *3    )    0     0     0     0         0     0      0     0    *4        0          0      0        0        0          0
-        # headloss_L         (NZ for start/end node *3    )    0     0     0     0         0     0      0     0    0         *4         0      0        0        0          0
-        # leak flow 1        *5    0     0     0         0     0     0     0     0         0     0      0     0    0         0          1      0        0        0          0
-        # leak flow 2        0     *5    0     0         0     0     0     0     0         0     0      0     0    0         0          0      1        0        0          0
-        # leak flow n        0     0     *5    0         0     0     0     0     0         0     0      0     0    0         0          0      0        1        0          0
-        # leak flow N-1      0     0     0     *5        0     0     0     0     0         0     0      0     0    0         0          0      0        0        1          0
-        # leak flow N        0     0     0     0         *5    0     0     0     0         0     0      0     0    0         0          0      0        0        0          1
-        #
-        #
-        # *1: 1 for tanks and reservoirs
-        #     1 for isolated junctions
-        #     0 for junctions if the simulation is demand-driven and the junction is not isolated
-        #     f(H) for junctions if the simulation is pressure-driven and the junction is not isolated
-        # *2: 0 for tanks and reservoirs
-        #     1 for non-isolated junctions
-        #     0 for isolated junctions
-        # *3: 0 for closed/isolated links
-        #                  pipes   head_pumps  power_pumps  active_PRV   open_prv
-        #     start node    -1        1            f(F)        0             -1
-        #     end node       1       -1            f(F)        1              1
-        # *4: 1 for closed/isolated links
-        #     f(F) for pipes
-        #     f(F) for head pumps
-        #     f(Hstart,Hend) for power pumps
-        #     0 for active PRVs
-        #     f(F) for open PRVs
-        # *5: 0 for inactive leaks
-        #     0 for leaks at isolated junctions
-        #     f(H-z) otherwise
+        Structure of jacobian:
+
+        H_n => Head for node id n
+        D_n => Demand for node id n
+        F_l => Flow for link id l
+        node_bal_n => node balance for node id n
+        D/H_n      => demand/head equation for node id n
+        headloss_l => headloss equation for link id l
+        in link refers to a link that has node_n as an end node
+        out link refers to a link that has node_n as a start node
+
+        Note that there will only be leak variables and equations for nodes with leaks. Thus some of the rows and columns below may be missing. The leak id is equal to the node id though.
+
+        Variable          H_1   H_2   H_n   H_(N-1)   H_N   D_1   D_2   D_n   D_(N-1)   D_N   F_1   F_2   F_l   F_(L-1)   F_L      Dleak1  Dleak2  Dleakn  Dleak(N-1)  DleakN
+        Equation
+        node_bal_1         0     0     0     0         0     -1    0     0     0         0    (1 for in link, -1 for out link)       -1      0        0        0          0
+        node_bal_2         0     0     0     0         0     0     -1    0     0         0    (1 for in link, -1 for out link)        0     -1        0        0          0
+        node_bal_n         0     0     0     0         0     0     0     -1    0         0    (1 for in link, -1 for out link)        0      0       -1        0          0
+        node_bal_(N-1)     0     0     0     0         0     0     0     0     -1        0    (1 for in link, -1 for out link)        0      0        0       -1          0
+        node_bal_N         0     0     0     0         0     0     0     0     0         -1   (1 for in link, -1 for out link)        0      0        0        0         -1
+        D/H_1              *1    0     0     0         0     *2    0     0     0         0     0      0     0    0         0          0      0        0        0          0
+        D/H_2              0     *1    0     0         0     0     *2    0     0         0     0      0     0    0         0          0      0        0        0          0
+        D/H_n              0     0     *1    0         0     0     0     *2    0         0     0      0     0    0         0          0      0        0        0          0
+        D/H_(N-1)          0     0     0     *1        0     0     0     0     *2        0     0      0     0    0         0          0      0        0        0          0
+        D/H_N              0     0     0     0         *1    0     0     0     0         *2    0      0     0    0         0          0      0        0        0          0
+        headloss_1         (NZ for start/end node *3    )    0     0     0     0         0     *4     0     0    0         0          0      0        0        0          0
+        headloss_2         (NZ for start/end node *3    )    0     0     0     0         0     0      *4    0    0         0          0      0        0        0          0
+        headloss_l         (NZ for start/end node *3    )    0     0     0     0         0     0      0     *4   0         0          0      0        0        0          0
+        headloss_(L-1)     (NZ for start/end node *3    )    0     0     0     0         0     0      0     0    *4        0          0      0        0        0          0
+        headloss_L         (NZ for start/end node *3    )    0     0     0     0         0     0      0     0    0         *4         0      0        0        0          0
+        leak flow 1        *5    0     0     0         0     0     0     0     0         0     0      0     0    0         0          1      0        0        0          0
+        leak flow 2        0     *5    0     0         0     0     0     0     0         0     0      0     0    0         0          0      1        0        0          0
+        leak flow n        0     0     *5    0         0     0     0     0     0         0     0      0     0    0         0          0      0        1        0          0
+        leak flow N-1      0     0     0     *5        0     0     0     0     0         0     0      0     0    0         0          0      0        0        1          0
+        leak flow N        0     0     0     0         *5    0     0     0     0         0     0      0     0    0         0          0      0        0        0          1
+
+
+        *1: 1 for tanks and reservoirs
+            1 for isolated junctions
+            0 for junctions if the simulation is demand-driven and the junction is not isolated
+            f(H) for junctions if the simulation is pressure-driven and the junction is not isolated
+        *2: 0 for tanks and reservoirs
+            1 for non-isolated junctions
+            0 for isolated junctions
+        *3: 0 for closed/isolated links
+                         pipes   head_pumps  power_pumps  active_PRV   open_prv
+            start node    -1        1            f(F)        0             -1
+            end node       1       -1            f(F)        1              1
+        *4: 1 for closed/isolated links
+            f(F) for pipes
+            f(F) for head pumps
+            f(Hstart,Hend) for power pumps
+            0 for active PRVs
+            f(F) for open PRVs
+        *5: 0 for inactive leaks
+            0 for leaks at isolated junctions
+            f(H-z) otherwise
+        """
 
         big_jac_values = np.array([])
         big_jac_rows = np.array([])
@@ -421,40 +435,40 @@ class HydraulicModel(object):
         values = -1.0*np.ones(self.num_nodes)
         rows = range(self.num_nodes)
         cols = range(self.num_nodes)
-        self.jac_A = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
-        big_jac_values = np.concatenate((big_jac_values,self.jac_A.data))
-        big_jac_rows = np.concatenate((big_jac_rows,self.jac_A.row))
-        big_jac_cols = np.concatenate((big_jac_cols,self.jac_A.col+self.num_nodes))
+        self.jac_A = sparse.coo_matrix((values, (rows, cols)), shape=(self.num_nodes, self.num_nodes))
+        big_jac_values = np.concatenate((big_jac_values, self.jac_A.data))
+        big_jac_rows = np.concatenate((big_jac_rows, self.jac_A.row))
+        big_jac_cols = np.concatenate((big_jac_cols, self.jac_A.col+self.num_nodes))
 
-
-        self.jac_B = self.node_balance_matrix # This object is used for things other than the jacobian; Don't modify it!
-        big_jac_values = np.concatenate((big_jac_values,self.jac_B.data))
-        big_jac_rows = np.concatenate((big_jac_rows,self.jac_B.row))
-        big_jac_cols = np.concatenate((big_jac_cols,self.jac_B.col+2*self.num_nodes))
+        # This object is used for things other than the jacobian; Don't modify it!
+        self.jac_B = self.node_balance_matrix
+        big_jac_values = np.concatenate((big_jac_values, self.jac_B.data))
+        big_jac_rows = np.concatenate((big_jac_rows, self.jac_B.row))
+        big_jac_cols = np.concatenate((big_jac_cols, self.jac_B.col+2*self.num_nodes))
 
         values = -1.0*np.ones(self.num_leaks)
         rows = list(self._leak_ids)
         cols = range(self.num_leaks)
-        self.jac_C = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_leaks))
-        big_jac_values = np.concatenate((big_jac_values,self.jac_C.data))
-        big_jac_rows = np.concatenate((big_jac_rows,self.jac_C.row))
-        big_jac_cols = np.concatenate((big_jac_cols,self.jac_C.col+(2*self.num_nodes+self.num_links)))
+        self.jac_C = sparse.coo_matrix((values, (rows, cols)), shape=(self.num_nodes, self.num_leaks))
+        big_jac_values = np.concatenate((big_jac_values, self.jac_C.data))
+        big_jac_rows = np.concatenate((big_jac_rows, self.jac_C.row))
+        big_jac_cols = np.concatenate((big_jac_cols, self.jac_C.col+(2*self.num_nodes+self.num_links)))
 
         values = [0.0 for i in self._junction_ids]+[1.0 for i in self._tank_ids]+[1.0 for i in self._reservoir_ids]
         rows = range(self.num_nodes)
         cols = range(self.num_nodes)
-        self.jac_D = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
-        big_jac_values = np.concatenate((big_jac_values,self.jac_D.data))
-        big_jac_rows = np.concatenate((big_jac_rows,self.jac_D.row+(self.num_nodes)))
-        big_jac_cols = np.concatenate((big_jac_cols,self.jac_D.col))
+        self.jac_D = sparse.coo_matrix((values, (rows, cols)), shape=(self.num_nodes, self.num_nodes))
+        big_jac_values = np.concatenate((big_jac_values, self.jac_D.data))
+        big_jac_rows = np.concatenate((big_jac_rows, self.jac_D.row+self.num_nodes))
+        big_jac_cols = np.concatenate((big_jac_cols, self.jac_D.col))
 
         values = [1.0 for i in self._junction_ids]+[0.0 for i in self._tank_ids]+[0.0 for i in self._reservoir_ids]
         rows = range(self.num_nodes)
         cols = range(self.num_nodes)
-        self.jac_E = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_nodes,self.num_nodes))
-        big_jac_values = np.concatenate((big_jac_values,self.jac_E.data))
-        big_jac_rows = np.concatenate((big_jac_rows,self.jac_E.row+(self.num_nodes)))
-        big_jac_cols = np.concatenate((big_jac_cols,self.jac_E.col+(self.num_nodes)))
+        self.jac_E = sparse.coo_matrix((values, (rows, cols)), shape=(self.num_nodes, self.num_nodes))
+        big_jac_values = np.concatenate((big_jac_values, self.jac_E.data))
+        big_jac_rows = np.concatenate((big_jac_rows, self.jac_E.row+self.num_nodes))
+        big_jac_cols = np.concatenate((big_jac_cols, self.jac_E.col+self.num_nodes))
 
         # jac_F will be a coo_matrix for easy updating.
         # Note that it might need to be converted to csr before doing arithmetic
@@ -485,37 +499,39 @@ class HydraulicModel(object):
             values.append(1.0)
             rows.append(link_id)
             cols.append(self.link_end_nodes[link_id])
-        self.jac_F = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_links,self.num_nodes))
+        self.jac_F = sparse.coo_matrix((values, (rows, cols)), shape=(self.num_links, self.num_nodes))
         self.standard_jac_F_data = np.array(values)
-        big_jac_values = np.concatenate((big_jac_values,self.jac_F.data))
-        big_jac_rows = np.concatenate((big_jac_rows,self.jac_F.row+(2*self.num_nodes)))
-        big_jac_cols = np.concatenate((big_jac_cols,self.jac_F.col))
+        big_jac_values = np.concatenate((big_jac_values, self.jac_F.data))
+        big_jac_rows = np.concatenate((big_jac_rows, self.jac_F.row+(2*self.num_nodes)))
+        big_jac_cols = np.concatenate((big_jac_cols, self.jac_F.col))
 
         values = np.ones(self.num_links)
         rows = range(self.num_links)
         cols = range(self.num_links)
-        self.jac_G = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_links,self.num_links))
-        big_jac_values = np.concatenate((big_jac_values,self.jac_G.data))
-        big_jac_rows = np.concatenate((big_jac_rows,self.jac_G.row+(2*self.num_nodes)))
-        big_jac_cols = np.concatenate((big_jac_cols,self.jac_G.col+(2*self.num_nodes)))
+        self.jac_G = sparse.coo_matrix((values, (rows, cols)), shape=(self.num_links, self.num_links))
+        big_jac_values = np.concatenate((big_jac_values, self.jac_G.data))
+        big_jac_rows = np.concatenate((big_jac_rows, self.jac_G.row+(2*self.num_nodes)))
+        big_jac_cols = np.concatenate((big_jac_cols, self.jac_G.col+(2*self.num_nodes)))
 
         values = np.zeros(self.num_leaks)
         rows = range(self.num_leaks)
         cols = list(self._leak_ids)
-        self.jac_H = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_leaks,self.num_nodes))
-        big_jac_values = np.concatenate((big_jac_values,self.jac_H.data))
-        big_jac_rows = np.concatenate((big_jac_rows,self.jac_H.row+(2*self.num_nodes+self.num_links)))
-        big_jac_cols = np.concatenate((big_jac_cols,self.jac_H.col))
+        self.jac_H = sparse.coo_matrix((values, (rows, cols)), shape=(self.num_leaks, self.num_nodes))
+        big_jac_values = np.concatenate((big_jac_values, self.jac_H.data))
+        big_jac_rows = np.concatenate((big_jac_rows, self.jac_H.row+(2*self.num_nodes+self.num_links)))
+        big_jac_cols = np.concatenate((big_jac_cols, self.jac_H.col))
 
         values = np.ones(self.num_leaks)
         rows = range(self.num_leaks)
         cols = range(self.num_leaks)
-        self.jac_I = sparse.coo_matrix((values,(rows,cols)),shape=(self.num_leaks,self.num_leaks))
-        big_jac_values = np.concatenate((big_jac_values,self.jac_I.data))
-        big_jac_rows = np.concatenate((big_jac_rows,self.jac_I.row+(2*self.num_nodes+self.num_links)))
-        big_jac_cols = np.concatenate((big_jac_cols,self.jac_I.col+(2*self.num_nodes+self.num_links)))
+        self.jac_I = sparse.coo_matrix((values, (rows, cols)), shape=(self.num_leaks, self.num_leaks))
+        big_jac_values = np.concatenate((big_jac_values, self.jac_I.data))
+        big_jac_rows = np.concatenate((big_jac_rows, self.jac_I.row+(2*self.num_nodes+self.num_links)))
+        big_jac_cols = np.concatenate((big_jac_cols, self.jac_I.col+(2*self.num_nodes+self.num_links)))
 
-        self.jacobian = sparse.coo_matrix((big_jac_values,(big_jac_rows,big_jac_cols)),shape=(2*self.num_nodes+self.num_links+self.num_leaks,2*self.num_nodes+self.num_links+self.num_leaks))
+        self.jacobian = sparse.coo_matrix((big_jac_values, (big_jac_rows, big_jac_cols)),
+                                          shape=(2*self.num_nodes+self.num_links+self.num_leaks,
+                                                 2*self.num_nodes+self.num_links+self.num_leaks))
 
         # self.jac_AinvB = self.jac_A*self.jac_B
         # self.jac_AinvC = self.jac_A*self.jac_C
@@ -530,36 +546,42 @@ class HydraulicModel(object):
         self.get_headloss_residual(head, flow)
         self.get_leak_demand_residual(head, leak_demand)
 
-        all_residuals = np.concatenate((self.node_balance_residual, self.demand_or_head_residual, self.headloss_residual, self.leak_demand_residual))
+        all_residuals = np.concatenate((self.node_balance_residual, self.demand_or_head_residual,
+                                        self.headloss_residual, self.leak_demand_residual))
 
-        return all_residuals#,self.node_balance_residual,self.demand_or_head_residual,self.headloss_residual,self.leak_demand_residual
+        return all_residuals
 
     def set_jacobian_constants(self):
-        # set the jacobian entries that depend on the network status
-        # but do not depend on the value of any variable.
+        """
+        set the jacobian entries that depend on the network status
+        but do not depend on the value of any variable.
 
-        # ordering is very important here
-        # the csr_matrix data is stored by going though all columns of the first row, then all columns of the second row, etc
-        # ex:
-        # row = [0,1,2,0,1,2,0,1,2]
-        # col = [0,0,0,1,1,1,2,2,2]
-        # value = [0,1,2,3,4,5,6,7,8]
-        # A = sparse.csr_matrix((value,(row,col)),shape=(3,3))
-        #
-        # then A=>
-        #          0   3  6
-        #          1   4  7
-        #          2   5  8
-        # and A.data =>
-        #              [0, 3, 6, 1, 4, 7, 2, 5, 8]
+        ordering is very important here
+        the csr_matrix data is stored by going though all columns of the first row,
+        then all columns of the second row, etc
+        ex:
+        row = [0,1,2,0,1,2,0,1,2]
+        col = [0,0,0,1,1,1,2,2,2]
+        value = [0,1,2,3,4,5,6,7,8]
+        A = sparse.csr_matrix((value,(row,col)),shape=(3,3))
+
+        then A=>
+                 0   3  6
+                 1   4  7
+                 2   5  8
+        and A.data =>
+                     [0, 3, 6, 1, 4, 7, 2, 5, 8]
+        """
 
         if not self.pressure_driven:
             self.jac_D.data[:self.num_junctions] = self.isolated_junction_array
 
         self.jac_E.data[:self.num_junctions] = 1.0-self.isolated_junction_array
 
-        self.jac_F.data[:self.num_links] = (1.0-self.isolated_link_array)*self.closed_link_array*self.standard_jac_F_data[:self.num_links]
-        self.jac_F.data[self.num_links:] = (1.0-self.isolated_link_array)*self.closed_link_array*self.standard_jac_F_data[self.num_links:]
+        self.jac_F.data[:self.num_links] = ((1.0-self.isolated_link_array)*self.closed_link_array *
+                                            self.standard_jac_F_data[:self.num_links])
+        self.jac_F.data[self.num_links:] = ((1.0-self.isolated_link_array)*self.closed_link_array *
+                                            self.standard_jac_F_data[self.num_links:])
         for link_id in self._prv_ids:
             if self.link_status[link_id] == LinkStatus.active:
                 self.jac_F.data[link_id] = 0
@@ -794,7 +816,6 @@ class HydraulicModel(object):
                             self.pdd_poly1_coeffs_d
                         )
                     ) +
-                    (P > (minP + delta)) * (P <= (nomP - delta)) * (Dact - j_d*((P-minP)/(nomP-minP))**0.5) +
                     (P > (nomP - delta)) * (P <= nomP) * (
                         Dact - j_d*(
                             self.pdd_poly2_coeffs_a*P**3 +
@@ -806,6 +827,11 @@ class HydraulicModel(object):
                     (P > nomP) * (Dact - j_d * (m*(P-nomP) + 1.0))
                 )
             )
+            # for the last segment, assignment is required because 0*np.nan does not equal 0 (same with np.inf)
+            last_segment = (Dact - j_d*((P-minP)/(nomP-minP))**0.5)
+            last_segment[np.bitwise_not((P > (minP + delta))*(P <= (nomP - delta)))] = 0.0
+            self.demand_or_head_residual[:n_j] = (self.demand_or_head_residual[:n_j] +
+                                                  last_segment*(1.0-self.isolated_junction_array))
         else:
             self.demand_or_head_residual[:self.num_junctions] = (
                 self.isolated_junction_array * head[:self.num_junctions] +
@@ -853,7 +879,7 @@ class HydraulicModel(object):
                                   flows[link_id]
             if end_node_id in self._leak_ids:
                 raise RuntimeError('Leaks at the end nodes of PRVs is not allowed.')
-                #d_flow[link_id] += leaks[end_node_id]
+                # d_flow[link_id] += leaks[end_node_id]
         for node_id in self._tank_ids:
             in_links = self.in_link_ids_for_nodes[node_id]
             out_links = self.out_link_ids_for_nodes[node_id]
