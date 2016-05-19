@@ -271,7 +271,7 @@ class HydraulicModel(object):
         # {node_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to the 0th order term
         self.leak_poly_coeffs = {}
 
-        for node_name, node in self._wn.nodes():
+        for node_name, node in self._wn.nodes(wntr.network.Junction):
             node_id = self._node_name_to_id[node_name]
             connected_links = self._wn.get_links_for_node(node_name)
             for link_name in connected_links:
@@ -283,26 +283,47 @@ class HydraulicModel(object):
                     self.in_link_ids_for_nodes[node_id].append(link_id)
                 else:
                     raise RuntimeError('Node is neither start nor end node.')
-            if node_id in self._junction_ids:
-                self.node_elevations[node_id] = node.elevation
-                self.nominal_pressures[node_id] = node.nominal_pressure
-                self.minimum_pressures[node_id] = node.minimum_pressure
-                self.get_pdd_poly1_coeffs(node, node_id)
-                self.get_pdd_poly2_coeffs(node, node_id)
-                if node._leak:
-                    self.leak_Cd[node_id] = node.leak_discharge_coeff
-                    self.leak_area[node_id] = node.leak_area
-                    self.get_leak_poly_coeffs(node, node_id)
-            elif node_id in self._tank_ids:
-                self.node_elevations[node_id] = node.elevation
-                if node._leak:
-                    self.leak_Cd[node_id] = node.leak_discharge_coeff
-                    self.leak_area[node_id] = node.leak_area
-                    self.get_leak_poly_coeffs(node, node_id)
-            elif node_id in self._reservoir_ids:
-                self.node_elevations[node_id] = 0.0
-            else:
-                raise RuntimeError('Node type not recognized.')
+            self.node_elevations[node_id] = node.elevation
+            self.nominal_pressures[node_id] = node.nominal_pressure
+            self.minimum_pressures[node_id] = node.minimum_pressure
+            self.get_pdd_poly1_coeffs(node, node_id)
+            self.get_pdd_poly2_coeffs(node, node_id)
+            if node._leak:
+                self.leak_Cd[node_id] = node.leak_discharge_coeff
+                self.leak_area[node_id] = node.leak_area
+                self.get_leak_poly_coeffs(node, node_id)
+
+        for node_name, node in self._wn.nodes(wntr.network.Tank):
+            node_id = self._node_name_to_id[node_name]
+            connected_links = self._wn.get_links_for_node(node_name)
+            for link_name in connected_links:
+                link = self._wn.get_link(link_name)
+                link_id = self._link_name_to_id[link_name]
+                if link.start_node() == node_name:
+                    self.out_link_ids_for_nodes[node_id].append(link_id)
+                elif link.end_node() == node_name:
+                    self.in_link_ids_for_nodes[node_id].append(link_id)
+                else:
+                    raise RuntimeError('Node is neither start nor end node.')
+            self.node_elevations[node_id] = node.elevation
+            if node._leak:
+                self.leak_Cd[node_id] = node.leak_discharge_coeff
+                self.leak_area[node_id] = node.leak_area
+                self.get_leak_poly_coeffs(node, node_id)
+
+        for node_name, node in self._wn.nodes(wntr.network.Reservoir):
+            node_id = self._node_name_to_id[node_name]
+            connected_links = self._wn.get_links_for_node(node_name)
+            for link_name in connected_links:
+                link = self._wn.get_link(link_name)
+                link_id = self._link_name_to_id[link_name]
+                if link.start_node() == node_name:
+                    self.out_link_ids_for_nodes[node_id].append(link_id)
+                elif link.end_node() == node_name:
+                    self.in_link_ids_for_nodes[node_id].append(link_id)
+                else:
+                    raise RuntimeError('Node is neither start nor end node.')
+            self.node_elevations[node_id] = 0.0
 
     def _set_link_attributes(self):
         self.link_start_nodes = range(self.num_links)
@@ -1247,16 +1268,29 @@ class HydraulicModel(object):
         -------
         A tuple with the smoothing polynomail coefficients starting with the cubic term.
         """
-        A = np.matrix([[x1**3.0, x1**2.0, x1, 1.0],
-                       [x2**3.0, x2**2.0, x2, 1.0],
-                       [3.0*x1**2.0, 2.0*x1, 1.0, 0.0],
-                       [3.0*x2**2.0, 2.0*x2, 1.0, 0.0]])
-        rhs = np.matrix([[f1],
-                         [f2],
-                         [df1],
-                         [df2]])
-        x = np.linalg.solve(A,rhs)
-        return (float(x[0][0]), float(x[1][0]), float(x[2][0]), float(x[3][0]))
+        # A = np.matrix([[x1**3.0, x1**2.0, x1, 1.0],
+        #                [x2**3.0, x2**2.0, x2, 1.0],
+        #                [3.0*x1**2.0, 2.0*x1, 1.0, 0.0],
+        #                [3.0*x2**2.0, 2.0*x2, 1.0, 0.0]])
+        # rhs = np.matrix([[f1],
+        #                  [f2],
+        #                  [df1],
+        #                  [df2]])
+        # x = np.linalg.solve(A,rhs)
+        a = (2*(f1-f2) - (x1-x2)*(df2+df1))/(x2**3-x1**3+3*x1*x2*(x1-x2))
+        b = (df1 - df2 + 3*(x2**2-x1**2)*a)/(2*(x1-x2))
+        c = df2 - 3*x2**2*a - 2*x2*b
+        d = f2 - x2**3*a - x2**2*b - x2*c
+        # print 'a: ',a,float(x[0][0])
+        # print 'b: ',b,float(x[1][0])
+        # print 'c: ',c,float(x[2][0])
+        # print 'd: ',d,float(x[3][0])
+        # assert (abs(a-float(x[0][0])) <= 1e-2)
+        # assert (abs(b-float(x[1][0])) <= 1e-3)
+        # assert (abs(c-float(x[2][0])) <= 1e-5)
+        # assert (abs(d-float(x[3][0])) <= 1e-6)
+        # return (float(x[0][0]), float(x[1][0]), float(x[2][0]), float(x[3][0]))
+        return a, b, c, d
 
     def get_leak_poly_coeffs(self, node, node_id):
         x1 = 0.0
