@@ -168,6 +168,15 @@ class Control(object):
 
         This method should not be called directly. Use IsControlActionRequired instead. For more details see
         documentation for IsControlActionRequired.
+
+        Parameters
+        ----------
+        wnm : WaterNetworkModel
+            An instance of the current WaterNetworkModel object that is being simulated.
+
+        presolve_flag : bool
+            This is true if we are calling before the solve, and false if we are calling after the solve (within the
+            current timestep).
         """
         raise NotImplementedError('_IsControlActionRequiredImpl is not implemented. '
                                   'This method must be implemented in any '
@@ -207,33 +216,41 @@ class Control(object):
 
 class TimeControl(Control):
     """
-    A class for creating time controls to fire a control action at a
-    particular time.
+    A class for creating time controls to fire a control action at a particular time. At the specified time,
+    control_action will be fired/activated.
 
     Parameters
     ----------
-    wnm : WaterNetworkModel object
+    wnm : WaterNetworkModel
+        The instance of the WaterNetworkModel class that is being simulated/modified.
 
-    fire_time : float
-        time (in seconds) when the events should be fired.
+    fire_time : int
+        time (in seconds) when the control_action should be fired.
 
     time_flag : string, ('SIM_TIME', 'SHIFTED_TIME')
 
-        SIM_TIME: indicates that the value of fire_time is in seconds
-            since the start of the simulation
+        SIM_TIME: indicates that the value of fire_time is in seconds since the start of the simulation
 
-        SHIFTED_TIME: indicates that the value of fire_time is shifted
-            by the start time set for the simulation. That is,
-            fire_time is in seconds since 12 AM on the first day of the
-            simulation.  Therefore, 7200 refers to 2:00 AM regardless
-            of the start time in the simulation.
+        SHIFTED_TIME: indicates that the value of fire_time is shifted by the start time of the simulations. That is,
+            fire_time is in seconds since 12 AM on the first day of the simulation. Therefore, 7200 refers to 2:00 AM
+            regardless of the start time of the simulation.
 
     daily_flag : bool
         False : control will execute once when time is first encountered
         True : control will execute at the same time daily
 
-    control_action : An object derived from ControlAction This is the
-       event action that will be fired at the specified time
+    control_action : An object derived from BaseControlAction
+        Examples: ControlAction
+        This is the actual change that will occur at the specified time.
+
+    Examples
+    --------
+    >>> pipe = wn.get_link('pipe8')
+    >>> action = ControlAction(pipe, 'status', wntr.network.LinkStatus.opened)
+    >>> control = TimeControl(wn, 3652, 'SIM_TIME', False, action)
+    >>> wn.add_control('control_name', control)
+
+    In this case, pipe8 will be opened 1 hour and 52 seconds after the start of the simulation.
     """
 
     def __init__(self, wnm, fire_time, time_flag, daily_flag, control_action):
@@ -285,8 +302,16 @@ class TimeControl(Control):
     
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
+        This implements the derived method from Control.
+
+        Parameters
+        ----------
+        wnm : WaterNetworkModel
+            An instance of the current WaterNetworkModel object that is being simulated.
+
+        presolve_flag : bool
+            This is true if we are calling before the solve, and false if we are calling after the solve (within the
+            current timestep).
         """
         if not presolve_flag:
             return (False, None)
@@ -302,8 +327,14 @@ class TimeControl(Control):
 
     def _FireControlActionImpl(self, wnm, priority):
         """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
+        This implements the derived method from Control.
+
+        Parameters
+        ----------
+        wnm : WaterNetworkModel
+            An instance of the current WaterNetworkModel object that is being simulated/modified.
+        priority : int
+            A priority value. The action is only fired if priority == self._priority.
         """
         if self._control_action is None:
             raise ValueError('_control_action is None inside TimeControl')
@@ -318,6 +349,37 @@ class TimeControl(Control):
 
 
 class ConditionalControl(Control):
+    """
+    A class for creating controls that fire when a specified condition is satisfied. The control_action is
+    fired/activated when the operation evaluated on the source object/attribute and the threshold is True.
+
+    Parameters
+    ----------
+    source : tuple
+        A two-tuple. The first value should be an object (such as a Junction, Tank, Reservoir, Pipe, Pump, Valve,
+        WaterNetworkModel, etc.). The second value should be an attribute of the object.
+
+    operation : numpy comparison method
+        Examples: numpy.greater, numpy.less_equal
+
+    threshold : float
+        A value to compare the source object attribute against
+
+    control_action : An object derived from BaseControlAction
+        Examples: ControlAction
+        This object defines the actual change that will occur when the specified condition is satisfied.
+
+    Examples
+    --------
+    >>> pipe = wn.get_link('pipe8')
+    >>> tank = wn.get_node('tank3')
+    >>> action = ControlAction(pipe, 'status', wntr.network.LinkStatus.closed)
+    >>> control = ConditionalControl((tank, 'head'), numpy.greater_equal, 13.5, action)
+    >>> wn.add_control('control_name', control)
+
+    In this case, pipe8 will be closed if the head in tank3 becomes greater than or equal to 13.5 meters.
+
+    """
 
     def __init__(self, source, operation, threshold, control_action):
         self.name = 'blah'
@@ -366,8 +428,16 @@ class ConditionalControl(Control):
 
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
+        This implements the derived method from Control.
+
+        Parameters
+        ----------
+        wnm : WaterNetworkModel
+            An instance of the current WaterNetworkModel object that is being simulated.
+
+        presolve_flag : bool
+            This is true if we are calling before the solve, and false if we are calling after the solve (within the
+            current timestep).
         """
         if type(self._source_obj)==wntr.network.Tank and self._source_attr=='head' and wnm.sim_time!=0 and self._partial_step_for_tanks:
             if presolve_flag:
@@ -414,8 +484,14 @@ class ConditionalControl(Control):
 
     def _FireControlActionImpl(self, wnm, priority):
         """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
+        This implements the derived method from Control.
+
+        Parameters
+        ----------
+        wnm : WaterNetworkModel
+            An instance of the current WaterNetworkModel object that is being simulated/modified.
+        priority : int
+            A priority value. The action is only fired if priority == self._priority.
         """
         if self._priority!=priority:
             return False, None, None
@@ -424,6 +500,45 @@ class ConditionalControl(Control):
         return change_flag, change_tuple, orig_value
 
 class MultiConditionalControl(Control):
+    """
+    A class for creating controls that fire only when a set of specified conditions are all satisfied.
+
+    Parameters
+    ----------
+    source : list of two-tuples
+        A list of two-tuples. The first value of each tuple should be an object (e.g., Junction, Tank, Reservoir,
+        Pipe, Pump, Valve, WaterNetworkModel, etc.). The second value of each tuple should be an attribute of the
+        object.
+
+    operation : list of numpy comparison methods
+        Examples: [numpy.greater, numpy.greater, numpy.less_equal]
+
+    threshold : list of floats or two-tuples
+        Examples: [3.8, (junction1,'head'), (tank3,'head'), 0.5]
+
+    control_action : An object derived from BaseControlAction
+        Examples: ControlAction
+        This object defines the actual change that will occur when all specified conditions are satisfied.
+
+    Examples
+    --------
+    >>> pump = wn.get_link('pump1')
+    >>> pipe = wn.get_link('pipe8')
+    >>> tank = wn.get_node('tank3')
+    >>> junction = wn.get_node('junction15')
+    >>>
+    >>> action = ControlAction(pump, 'status', wntr.network.LinkStatus.closed)
+    >>>
+    >>> sources = [(pipe,'flow'),(tank,'head')]
+    >>> operations = [numpy.greater_equal, numpy.less_equal]
+    >>> thresholds = [0.01, (junction,'head')]
+    >>> control = MultiConditionalControl(sources, operations, thresholds, action)
+    >>> wn.add_control('control_name', control)
+
+    In this case, pump1 will be closed if the flowrate in pipe8 is greater than or equal to 0.01 cubic meters per
+    second and the head in tank3 is less than or equal to the head in junction 15.
+
+    """
 
     def __init__(self, source, operation, threshold, control_action):
         self.name = 'blah'
@@ -444,15 +559,23 @@ class MultiConditionalControl(Control):
         if len(source)!=len(threshold):
             raise ValueError('The length of the source list must equal the length of the threshold list.')
 
-    @classmethod
-    def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
-        ca = ControlAction(target_obj, target_attribute, target_value)
-        return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
+    # @classmethod
+    # def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
+    #     ca = ControlAction(target_obj, target_attribute, target_value)
+    #     return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
 
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
+        This implements the derived method from Control.
+
+        Parameters
+        ----------
+        wnm : WaterNetworkModel
+            An instance of the current WaterNetworkModel object that is being simulated.
+
+        presolve_flag : bool
+            This is true if we are calling before the solve, and false if we are calling after the solve (within the
+            current timestep).
         """
         if presolve_flag:
             return (False, None)
@@ -480,8 +603,14 @@ class MultiConditionalControl(Control):
 
     def _FireControlActionImpl(self, wnm, priority):
         """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
+        This implements the derived method from Control.
+
+        Parameters
+        ----------
+        wnm : WaterNetworkModel
+            An instance of the current WaterNetworkModel object that is being simulated/modified.
+        priority : int
+            A priority value. The action is only fired if priority == self._priority.
         """
         if self._priority!=priority:
             return False, None, None
