@@ -7,7 +7,7 @@ that may modify parameters in the network during simulation.
 """
 Created on Sat Sep 26 12:33 AM 2015
 
-@author: claird
+@author: claird, mbynum
 """
 
 import wntr
@@ -33,8 +33,10 @@ Control Priorities:
    Open pumps if power comes back up
    Start/stop leaks
 1:
-   Close links connected to tanks if the tank head is less than the minimum head (except check valves and pumps than only allow flow in).
-   Close links connected to tanks if the tank head is larger than the maximum head (exept check valves and pumps that only allow flow out).
+   Close links connected to tanks if the tank head is less than the minimum head (except check valves and pumps than
+   only allow flow in).
+   Close links connected to tanks if the tank head is larger than the maximum head (exept check valves and pumps that
+   only allow flow out).
 2:
    Open links connected to tanks if the level is low but flow would be in
    Open links connected to tanks if the level is high but flow would be out
@@ -49,11 +51,9 @@ Control Priorities:
 
 class BaseControlAction(object):
     """ 
-    A base class for deriving new control actions.
-    The control action is fired by calling FireAction
+    A base class for deriving new control actions. The control action is fired by calling FireControlAction
 
-    This class is not meant to be used directly. Derived classes
-    must implement the FireActionImpl method.
+    This class is not meant to be used directly. Derived classes must implement the FireControlActionImpl method.
     """
     def __init__(self):
         pass
@@ -66,8 +66,8 @@ class BaseControlAction(object):
 
     def _FireControlActionImpl(self):
         """
-        Implements the specific action that will be fired when FireAction
-        is called. This method should be overridded in derived classes
+        Implements the specific action that will be fired when FireControlAction is called. This method should be
+        overridden in derived classes.
         """
         raise NotImplementedError('_FireActionImpl is not implemented. '
                                   'This method must be implemented in '
@@ -75,20 +75,18 @@ class BaseControlAction(object):
 
 class ControlAction(BaseControlAction):
     """
-    A general class for specifying an ControlAction that simply
-    modifies the attribute of a target.
+    A general class for specifying a control action that simply modifies the attribute of an object (target).
 
     Parameters
     ----------
     target_obj : object
-        object that will be changed when the event is fired
+        The object whose attribute will be changed when the control fires.
 
     attribute : string
-        the attribute that will be changed on the object when
-        the event is fired
+        The attribute that will be changed on the target_obj when the control fires.
 
     value : any
-        the new value for the attribute when the event is fired
+        The new value for target_obj.attribute when the control fires.
     """
     def __init__(self, target_obj, attribute, value):
         if target_obj is None:
@@ -105,15 +103,15 @@ class ControlAction(BaseControlAction):
 
     def _FireControlActionImpl(self, control_name):
         """
-        This is an overridden method from the ControlAction class. 
-        Here, it changes the target_obj's attribute to the provided value.
+        This method overrides the corresponding method from the BaseControlAction class. Here, it changes
+        target_obj.attribute to the provided value.
 
-        This method should not be called directly. Use FireAction of the 
-        ControlAction base class instead.
+        This method should not be called directly. Use FireControlAction of the ControlAction base class instead.
         """
         target = self._target_obj_ref
         if target is None:
-            raise ValueError('target is None inside TargetAttribureControlAction::_FireControlActionImpl. This may be because a target_obj was added, but later the object itself was deleted.')
+            raise ValueError('target is None inside TargetAttribureControlAction::_FireControlActionImpl.' +
+                             'This may be because a target_obj was added, but later the object itself was deleted.')
         if not hasattr(target, self._attribute):
             raise ValueError('attribute specified in ControlAction is not valid for targe_obj')
         
@@ -127,64 +125,49 @@ class ControlAction(BaseControlAction):
 
 class Control(object):
     """
-    This is the base class for all control objects.
-    Control objects are used to modify a model based on current
-    state in the simulation. For example, if a pump is supposed 
-    to be turned on when the simulation time reaches 6 AM, or a
-    pipe is supposed to be closed when a tank reaches a minimum
-    height.
+    This is the base class for all control objects. Control objects are used to check the conditions under which a
+    ControlAction should be fired. For example, if a pump is supposed to be turned on when the simulation time
+    reaches 6 AM, the ControlAction would be "turn the pump on", and the Control would be "when the simulation
+    reaches 6 AM".
 
-    From an implementation standpoint, derived Control classes
-    implement a particular mechanism for monitoring state (e.g.
-    checking the simulation time to see if a change should be
-    made). Then, they typically call FireAction on a derived
-    ControlAction class.
+    From an implementation standpoint, derived Control classes implement a particular mechanism for monitoring state
+    (e.g. checking the simulation time to see if a change should be made). Then, they typically call FireControlAction
+    on a derived ControlAction class.
 
-    New control classes (classes derived from Control) must implement
-    the following methods:
-       _IsControlActionRequired(self, wnm)
-       _FireControlAction(self, wnm)
+    New control classes (classes derived from Control) must implement the following methods:
+       _IsControlActionRequired(self, wnm, presolve_flag)
+       _FireControlAction(self, wnm, priority)
     """
     def __init__(self):
         pass
 
     def IsControlActionRequired(self, wnm, presolve_flag):
         """
-        This method is called to see if any action is required
-        by this control object. This method returns a tuple
-        that indicates if action is required and a recommended
-        time for the simulation to backup (in seconds as a positive
-        number) before firing the control action.
-
-        Note: The control action will actually be fired when 
-        _IsActionRequiredImpl returns (True, t) with a t that is 
-        lower than a simulator tolerance - indicating that
-        action is required and no additional time backup is required.
+        This method is called to see if any action is required by this control object. This method returns a tuple
+        that indicates if action is required (a bool) and a recommended time for the simulation to backup (in seconds
+        as a positive int).
 
         Parameters
         ----------
         wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that
-            is being simulated.
+            An instance of the current WaterNetworkModel object that is being simulated.
 
         presolve_flag : bool
-            This is true if we are calling before the solve, and false if 
-            we are calling after the solve.
+            This is true if we are calling before the solve, and false if we are calling after the solve (within the
+            current timestep).
         """
         return self._IsControlActionRequiredImpl(wnm, presolve_flag)
 
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
-        This method should be implemented in derived Control classes as 
-        the main implementation of IsControlActionRequired.
+        This method should be implemented in derived Control classes as the main implementation of
+        IsControlActionRequired.
 
-        The derived classes that override this method should return 
-        a tuple that indicates if action is required and a recommended
-        time for the simulation to backup before firing the control 
-        action.
+        The derived classes that override this method should return a tuple that indicates if action is required (a
+        bool) and a recommended time for the simulation to backup (in seconds as a positive int).
 
-        This method should not be called directly. Use IsControlActionRequired
-        instead. For more details see documentation for IsControlActionRequired
+        This method should not be called directly. Use IsControlActionRequired instead. For more details see
+        documentation for IsControlActionRequired.
         """
         raise NotImplementedError('_IsControlActionRequiredImpl is not implemented. '
                                   'This method must be implemented in any '
@@ -192,30 +175,30 @@ class Control(object):
 
     def FireControlAction(self, wnm, priority):
         """
-        This method is called to fire the control action after
-        a call to IsControlActionRequired indicates that an action is required.
+        This method is called to fire the control action after a call to IsControlActionRequired indicates that an
+        action is required.
 
-        Note: Derived classes should not override this method, but should
-        override _FireControlActionImpl instead.
+        Note: Derived classes should not override this method, but should override _FireControlActionImpl instead.
 
         Parameters
         ----------
         wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that
-            is being simulated.
+            An instance of the current WaterNetworkModel object that is being simulated/modified.
+        priority : int
+            A priority value. The action is only fired if priority == self._priority.
         """
         return self._FireControlActionImpl(wnm, priority)
 
-    def _FireControlActionImpl(self, wnm):
+    def _FireControlActionImpl(self, wnm, priority):
         """
-        This is the method that should be overridden in derived classes
-        to implement the action of firing the control.
+        This is the method that should be overridden in derived classes to implement the action of firing the control.
 
         Parameters
         ----------
         wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that
-            is being simulated.
+            An instance of the current WaterNetworkModel object that is being simulated/modified.
+        priority : int
+            A priority value. The action is only fired if priority == self._priority.
         """
         raise NotImplementedError('_FireControlActionImpl is not implemented. '
                                   'This method must be implemented in '
@@ -295,10 +278,10 @@ class TimeControl(Control):
             compare = 'CLOCKTIME'
         return 'Link %s %s AT %s %s'%(link_name, action, compare, self._fire_time)
 
-    @classmethod
-    def WithTarget(self, fire_time, time_flag, daily_flag, target_obj, attribute, value):
-        t = ControlAction(target_obj, attribute, value)
-        return TimeControl(fire_time, time_flag, daily_flag, t)
+    # @classmethod
+    # def WithTarget(self, fire_time, time_flag, daily_flag, target_obj, attribute, value):
+    #     t = ControlAction(target_obj, attribute, value)
+    #     return TimeControl(fire_time, time_flag, daily_flag, t)
     
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
@@ -332,6 +315,7 @@ class TimeControl(Control):
         if self._daily_flag:
             self._fire_time += 24*3600
         return change_flag, change_tuple, orig_value
+
 
 class ConditionalControl(Control):
 
@@ -375,10 +359,10 @@ class ConditionalControl(Control):
         return 'Link %s %s IF Node %s %s %s'%(link_name, action, target_name, compare, threshold)
 
 
-    @classmethod
-    def WithTarget(self, source, operation, threshold, target_obj, target_attribute, target_value):
-        ca = ControlAction(target_obj, target_attribute, target_value)
-        return ConditionalControl(source, operation, threshold, ca)
+    # @classmethod
+    # def WithTarget(self, source, operation, threshold, target_obj, target_attribute, target_value):
+    #     ca = ControlAction(target_obj, target_attribute, target_value)
+    #     return ConditionalControl(source, operation, threshold, ca)
 
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
