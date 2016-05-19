@@ -19,35 +19,34 @@ import logging
 
 logger = logging.getLogger('wntr.network.NetworkControls')
 
-"""
-Control Priorities:
-0 is the lowest
-3 is the highest
+# Control Priorities:
+# 0 is the lowest
+# 3 is the highest
+#
+# 0:
+#    Open check valves/pumps if flow would be forward
+#    Open links for time controls
+#    Open links for conditional controls
+#    Open links connected to tanks if the tank head is larger than the minimum head plus a tolerance
+#    Open links connected to tanks if the tank head is smaller than the maximum head minus a tolerance
+#    Open pumps if power comes back up
+#    Start/stop leaks
+# 1:
+#    Close links connected to tanks if the tank head is less than the minimum head (except check valves and pumps than
+#    only allow flow in).
+#    Close links connected to tanks if the tank head is larger than the maximum head (exept check valves and pumps that
+#    only allow flow out).
+# 2:
+#    Open links connected to tanks if the level is low but flow would be in
+#    Open links connected to tanks if the level is high but flow would be out
+#    Close links connected to tanks if the level is low and flow would be out
+#    Close links connected to tanks if the level is high and flow would be in
+# 3:
+#    Close links for time controls
+#    Close links for conditional controls
+#    Close check valves/pumps for negative flow
+#    Close pumps without power
 
-0:
-   Open check valves/pumps if flow would be forward
-   Open links for time controls
-   Open links for conditional controls
-   Open links connected to tanks if the tank head is larger than the minimum head plus a tolerance
-   Open links connected to tanks if the tank head is smaller than the maximum head minus a tolerance
-   Open pumps if power comes back up
-   Start/stop leaks
-1:
-   Close links connected to tanks if the tank head is less than the minimum head (except check valves and pumps than
-   only allow flow in).
-   Close links connected to tanks if the tank head is larger than the maximum head (exept check valves and pumps that
-   only allow flow out).
-2:
-   Open links connected to tanks if the level is low but flow would be in
-   Open links connected to tanks if the level is high but flow would be out
-   Close links connected to tanks if the level is low and flow would be out
-   Close links connected to tanks if the level is high and flow would be in
-3:
-   Close links for time controls
-   Close links for conditional controls
-   Close check valves/pumps for negative flow
-   Close pumps without power
-"""
 
 class BaseControlAction(object):
     """ 
@@ -134,9 +133,11 @@ class Control(object):
     (e.g. checking the simulation time to see if a change should be made). Then, they typically call FireControlAction
     on a derived ControlAction class.
 
-    New control classes (classes derived from Control) must implement the following methods:
-       _IsControlActionRequired(self, wnm, presolve_flag)
-       _FireControlAction(self, wnm, priority)
+    New Control classes (classes derived from Control) must implement the following methods:
+
+    - _IsControlActionRequiredImpl(self, wnm, presolve_flag)
+    - _FireControlActionImpl(self, wnm, priority)
+
     """
     def __init__(self):
         pass
