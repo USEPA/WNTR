@@ -76,7 +76,7 @@ class NewtonSolver(object):
             
             # Call Linear solver
             try:
-                d = -sp.linalg.spsolve(J,r)
+                d = -sp.linalg.spsolve(J,r,permc_spec='COLAMD',use_umfpack=False)
             except sp.linalg.MatrixRankWarning:
                 logger.warning('Jacobian is singular.')
                 return [x, iter, 0]
