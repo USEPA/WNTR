@@ -77,29 +77,13 @@ class NewtonSolver(object):
                 return [x, iter, 1]
 
             J = Jacobian(x).tocsr()
-            # A,B,C,D,E,F,G_inv,H,I,AinvB,AinvC = Jacobian(x)
-            # big_matrix = E*AinvC*H + D + E*AinvB*G_inv*F
-            # big_rhs = E*AinvC*b4 + b2 + E*AinvB*G_inv*b3 - b1
 
             # Call Linear solver
             try:
                 d = -sp.linalg.spsolve(J,r,permc_spec='COLAMD',use_umfpack=False)
-                # print d[:self.num_nodes]
-                # print d[self.num_nodes:2*self.num_nodes]
-                # print d[2*self.num_nodes:2*self.num_nodes+self.num_links]
-                # raise RuntimeError('just stopping')
             except sp.linalg.MatrixRankWarning:
                 logger.warning('Jacobian is singular.')
                 return [x, iter, 0]
-
-            # logger.debug('iter: {0:<4d} x: {1}'.format(iter,x))
-            # logger.debug('iter: {0:<4d} d: {1}'.format(iter,d))
-
-            # d_flow = G_inv*b3-G_inv*F*d_head
-            # d_leak = b4 - H*d_head
-            # d_demand = E*b2 - E*D*d_head
-            # d_head, d_demand, d_flow, d_leak = self.model.correct_step(d_head,d_demand,d_flow,d_leak,x)
-            # d = np.concatenate((d_head,d_demand,d_flow,d_leak))
 
             # Backtracking
             alpha = 1.0
