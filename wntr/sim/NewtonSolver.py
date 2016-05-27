@@ -17,8 +17,12 @@ np.set_printoptions(precision=3, threshold=10000, linewidth=300)
 logger = logging.getLogger('wntr.sim.NewtonSolver')
 
 class NewtonSolver(object):
-    def __init__(self, num_nodes, num_links, num_leaks, options={}):
+    def __init__(self, num_nodes, num_links, num_leaks, model, options={}):
         self._options = options
+        self.num_nodes = num_nodes
+        self.num_links = num_links
+        self.num_leaks = num_leaks
+        self.model = model
 
         if 'MAXITER' not in self._options:
             self.maxiter = 100
@@ -66,17 +70,17 @@ class NewtonSolver(object):
                 r = Residual(x)
                 r_norm = np.max(abs(r))
 
-            #if iter<self.bt_start_iter:
+            # if iter<self.bt_start_iter:
             #    logger.debug('iter: {0:<4d} norm: {1:<10.2e}'.format(iter, r_norm))
 
             if r_norm < self.tol:
                 return [x, iter, 1]
 
-            J = Jacobian(x)
-            
+            J = Jacobian(x).tocsr()
+
             # Call Linear solver
             try:
-                d = -sp.linalg.spsolve(J,r)
+                d = -sp.linalg.spsolve(J,r,permc_spec='COLAMD',use_umfpack=False)
             except sp.linalg.MatrixRankWarning:
                 logger.warning('Jacobian is singular.')
                 return [x, iter, 0]
@@ -98,7 +102,7 @@ class NewtonSolver(object):
                 if iter_bt+1 >= self.bt_maxiter:
                     logger.debug('Backtracking failed.')
                     return [x,iter,0]
-                #logger.debug('iter: {0:<4d} norm: {1:<10.2e} alpha: {2:<10.2e}'.format(iter, new_norm, alpha))
+                # logger.debug('iter: {0:<4d} norm: {1:<10.2e} alpha: {2:<10.2e}'.format(iter, new_norm, alpha))
             else:
                 x += d
             

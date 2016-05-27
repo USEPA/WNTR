@@ -9,6 +9,8 @@ from NewtonSolver import *
 from NetworkResults import *
 import time
 import copy
+import networkx as nx
+import sys
 
 import logging
 logger = logging.getLogger(__name__)
@@ -29,6 +31,8 @@ class WNTRSimulator(WaterNetworkSimulator):
         """
 
         super(WNTRSimulator, self).__init__(wn, pressure_driven)
+        self._internal_graph = None
+        self._control_log = None
 
     def get_time(self):
         s = int(self._wn.sim_time)
@@ -57,7 +61,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         model = HydraulicModel(self._wn, self.pressure_driven)
         model.initialize_results_dict()
 
-        self.solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, options=solver_options)
+        self.solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, model, options=solver_options)
 
         results = NetResults()
         results.error_code = 0
@@ -79,8 +83,12 @@ class WNTRSimulator(WaterNetworkSimulator):
         demand0 = model.initialize_demand()
         flow0 = model.initialize_flow()
         leak_demand0 = model.initialize_leak_demand()
-        
+
         X_init = np.concatenate((head0, demand0, flow0,leak_demand0))
+
+        self._internal_graph = self._wn.get_graph_deep_copy()
+        self._initialize_internal_graph()
+        self._control_log = wntr.network.ControlLogger()
 
         if self._wn.sim_time==0:
             first_step = True
@@ -94,7 +102,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             logger.debug(' ')
             logger.debug(' ')
-            
+
             if not resolve:
                 start_step_time = time.time()
 
@@ -116,7 +124,9 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             # Prepare for solve
             #model.reset_isolated_junctions()
-            model.identify_isolated_junctions()
+            isolated_junctions, isolated_links = self._get_isolated_junctions_and_links()
+            model.identify_isolated_junctions(isolated_junctions, isolated_links)
+            # model.identify_isolated_junctions()
             if not first_step:
                 model.update_tank_heads()
             model.update_junction_demands(self._demand_dict)
@@ -257,6 +267,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                 if change_tuple not in change_dict.keys():
                     change_dict[change_tuple] = (orig_value, control.name)
 
+        self._control_log.reset()
+
         self._align_valve_statuses()
 
         for change_tuple, orig_value_control_name in change_dict.iteritems():
@@ -264,7 +276,10 @@ class WNTRSimulator(WaterNetworkSimulator):
             control_name = orig_value_control_name[1]
             if orig_value!=getattr(change_tuple[0],change_tuple[1]):
                 changes_made = True
+                self._control_log.add(change_tuple[0],change_tuple[1])
                 logger.debug('setting {0} {1} to {2} because of control {3}'.format(change_tuple[0].name(),change_tuple[1],getattr(change_tuple[0],change_tuple[1]),control_name))
+
+        self._update_internal_graph()
 
         return changes_made
 
@@ -276,3 +291,116 @@ class WNTRSimulator(WaterNetworkSimulator):
             elif valve.status==wntr.network.LinkStatus.closed:
                 valve._status = valve.status
                 #print 'setting ',valve.name(),' _status to ',valve.status
+
+    def _initialize_internal_graph(self):
+        for link_name, link in self._wn.links(wntr.network.Pipe):
+            if link.status == wntr.network.LinkStatus.closed:
+                self._internal_graph.remove_edge(link.start_node(), link.end_node(), key=link_name)
+        for link_name, link in self._wn.links(wntr.network.Pump):
+            if link.status == wntr.network.LinkStatus.closed or link._cv_status == wntr.network.LinkStatus.closed:
+                self._internal_graph.remove_edge(link.start_node(), link.end_node(), key=link_name)
+        for link_name, link in self._wn.links(wntr.network.Valve):
+            if link.status == wntr.network.LinkStatus.closed or link._status == wntr.network.LinkStatus.closed:
+                self._internal_graph.remove_edge(link.start_node(), link.end_node(), key=link_name)
+
+    def _update_internal_graph(self):
+        for obj_name, obj in self._control_log.changed_objects.iteritems():
+            changed_attrs = self._control_log.changed_attributes[obj_name]
+            if type(obj) == wntr.network.Pipe:
+                if 'status' in changed_attrs:
+                    if getattr(obj, 'status') == wntr.network.LinkStatus.opened:
+                        self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                    elif getattr(obj, 'status') == wntr.network.LinkStatus.closed:
+                        self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                    else:
+                        raise RuntimeError('Pipe status not recognized.')
+            elif type(obj) == wntr.network.Pump:
+                if 'status' in changed_attrs and '_cv_status' in changed_attrs:
+                    if obj.status == wntr.network.LinkStatus.closed and obj._status == wntr.network.LinkStatus.closed:
+                        self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                    elif obj.status == wntr.network.LinkStatus.opened and obj._status == wntr.network.LinkStatus.opened:
+                        self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                    else:
+                        pass
+                elif 'status' in changed_attrs:
+                    if obj.status == wntr.network.LinkStatus.closed:
+                        if obj._cv_status == wntr.network.LinkStatus.opened:
+                            self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                    elif obj.status == wntr.network.LinkStatus.opened:
+                        if obj._cv_status == wntr.network.LinkStatus.opened:
+                            self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                elif '_cv_status' in changed_attrs:
+                    if obj._cv_status == wntr.network.LinkStatus.closed:
+                        if obj.status == wntr.network.LinkStatus.opened:
+                            self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                    elif obj._cv_status == wntr.network.LinkStatus.opened:
+                        if obj.status == wntr.network.LinkStatus.opened:
+                            self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
+            elif type(obj) == wntr.network.Valve:
+                if ((obj.status == wntr.network.LinkStatus.opened or
+                             obj.status == wntr.network.LinkStatus.active) and
+                        (obj._status == wntr.network.LinkStatus.opened or
+                                 obj._status == wntr.network.LinkStatus.active)):
+                    self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                elif obj.status == wntr.network.LinkStatus.closed:
+                    if obj_name in [k for i,j,k in self._internal_graph.edges_iter(keys=True)]:
+                        self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                elif obj.status == wntr.network.LinkStatus.active and obj._status == wntr.network.LinkStatus.closed:
+                    if obj_name in [k for i, j, k in self._internal_graph.edges_iter(keys=True)]:
+                        self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+
+    def _get_isolated_junctions_and_links(self):
+
+        # isolated_junctions = set()
+        # isolated_links = set()
+        # n = 1
+        # for subG in nx.connected_component_subgraphs(self._internal_graph):
+        #     print 'subgraph ',n
+        #     n += 1
+        #     # print subG.nodes()
+        #     type_list = [i[1]['type'] for i in subG.nodes_iter(data=True)]
+        #     if 'tank' in type_list or 'reservoir' in type_list:
+        #         continue
+        #     else:
+        #         isolated_junctions = isolated_junctions.union(set(subG.nodes()))
+        #         for start_node, end_node, key in subG.edges_iter(keys=True):
+        #             isolated_links.add(key)
+        # return isolated_junctions, isolated_links
+
+        starting_recursion_limit = sys.getrecursionlimit()
+        sys.setrecursionlimit(50000)
+        G = self._internal_graph
+        node_set = set(self._wn.node_name_list())
+
+        def grab_group(node_name):
+            node_set.remove(node_name)
+            suc = G.successors(node_name)
+            pre = G.predecessors(node_name)
+            for s in suc:
+                if s in node_set:
+                    grab_group(s)
+            for p in pre:
+                if p in node_set:
+                    grab_group(p)
+
+        for tank_name, tank in self._wn.nodes(wntr.network.Tank):
+            if tank_name in node_set:
+                grab_group(tank_name)
+            else:
+                continue
+        for reservoir_name, reservoir in self._wn.nodes(wntr.network.Reservoir):
+            if reservoir_name in node_set:
+                grab_group(reservoir_name)
+            else:
+                continue
+
+        isolated_junctions = list(node_set)
+        isolated_links = set()
+        for j in isolated_junctions:
+            connected_links = self._wn.get_links_for_node(j)
+            for l in connected_links:
+                isolated_links.add(l)
+        isolated_links = list(isolated_links)
+
+        sys.setrecursionlimit(starting_recursion_limit)
+        return isolated_junctions, isolated_links

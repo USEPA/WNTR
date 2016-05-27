@@ -10,6 +10,7 @@ resilienceMainDir = os.path.abspath(
     os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
         inspect.currentframe() ) ) ), '..', '..' ))
 
+
 class TestTimeControls(unittest.TestCase):
 
     @classmethod
@@ -38,8 +39,11 @@ class TestTimeControls(unittest.TestCase):
         for t in res.time:
             if t < 5*3600 or t >= 10*3600:
                 self.assertAlmostEqual(link_res.at['flowrate',t,'pipe2'], 150/3600.0)
+                self.assertEqual(link_res.at['status',t,'pipe2'], 1)
             else:
                 self.assertAlmostEqual(link_res.at['flowrate',t,'pipe2'], 0.0)
+                self.assertEqual(link_res.at['status',t,'pipe2'], 0)
+
 
 class TestConditionalControls(unittest.TestCase):
 
@@ -73,9 +77,11 @@ class TestConditionalControls(unittest.TestCase):
                 activated_flag = True
             if activated_flag:
                 self.assertAlmostEqual(link_res.at['flowrate',t,'pump1'], 0.0)
+                self.assertEqual(link_res.at['status',t,'pump1'], 0)
                 count += 1
             else:
                 self.assertGreaterEqual(link_res.at['flowrate',t,'pump1'], 0.0001)
+                self.assertEqual(link_res.at['status',t,'pump1'], 1)
         self.assertEqual(activated_flag, True)
         self.assertGreaterEqual(count, 2)
 
@@ -125,13 +131,14 @@ class TestTankControls(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven=True)
         results = sim.run_sim()
 
         tank_level_dropped_flag = False
-        for t in results.link.major_axis:
+        for t in results.time:
             if results.node.at['pressure',t,'tank1'] <= 10.0:
                 self.assertLessEqual(results.link.at['flowrate',t,'pipe1'],0.0)
+                self.assertEqual(results.link.at['status',t,'pipe1'],0)
                 tank_level_dropped_flag = True
         self.assertEqual(tank_level_dropped_flag, True)
 
@@ -141,12 +148,12 @@ class TestTankControls(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven=True)
         results = sim.run_sim()
 
         tank_level_dropped_flag = False
         tank_refilled_flag = False
-        for t in results.link.major_axis:
+        for t in results.time:
             if results.node.at['pressure',t,'tank1'] <= 10.0:
                 self.assertLessEqual(results.link.at['flowrate',t,'pipe1'],0.0)
                 tank_level_dropped_flag = True
