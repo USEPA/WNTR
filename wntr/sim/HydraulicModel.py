@@ -12,7 +12,16 @@ logger = logging.getLogger('wntr.sim.HydraulicModel')
 
 class HydraulicModel(object):
     def __init__(self, wn, pressure_driven=False):
+        """
+        Class to create hyrdaulic models.
 
+        Parameters
+        ----------
+        wn : class
+            water network model class
+        pressure_driven : bool
+            Determines if the network will be pressure driven or demand driven.
+        """
         self._wn = wn
         self.pressure_driven = pressure_driven
 
@@ -465,6 +474,16 @@ class HydraulicModel(object):
         self.jac_values = self.jacobian.data
 
     def get_hydraulic_equations(self, x):
+        """
+        Parameters
+        ----------
+        x : numpy array
+            values of heads, demands, flows, and leak flowrates
+        Returns
+        -------
+        residuals: numpy array
+            Returns residuals for hyrdaulic equations.
+        """
         head = x[:self.num_nodes]
         demand = x[self.num_nodes:self.num_nodes*2]
         flow = x[self.num_nodes*2:(2*self.num_nodes+self.num_links)]
@@ -617,6 +636,16 @@ class HydraulicModel(object):
         self.jacobian.data = self.jac_values
 
     def get_jacobian(self, x):
+        """
+        Parameters
+        ----------
+        x : numpy array
+            values of heads, demands, flows, and leak flowrates
+        Returns
+        -------
+        jacobian: scipy.sparse.coo_matrix
+            Returns the jacobian headloss equations.
+        """
 
         if self.pressure_driven:
             value_ndx = self.jac_ndx_of_first_NZ

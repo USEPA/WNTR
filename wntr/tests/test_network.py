@@ -168,7 +168,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel()
         wn.add_junction('j1')
         wn.add_junction('j2')
-        wn.add_pipe('p1', 'j1', 'j2', 1000, 1, 100, 0, 'cv')
+        wn.add_pipe('p1', 'j1', 'j2', 1000, 1, 100, 0, 'OPEN', True)
         self.assertEqual(wn._check_valves, ['p1'])
 
     def test_remove_pipe(self):
@@ -246,7 +246,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_pipe('p2','j1','t1')
         wn.add_pipe('p3','r1','j1')
         wn.add_pump('pump1','r2','t2')
-        wn.add_valve('v1','t2','j2')
+        wn.add_valve('v1','t1','j2')
         link_list = [name for name,link in wn.links()]
         link_list.sort()
         self.assertEqual(link_list,['p1','p2','p3','pump1','v1'])
@@ -476,29 +476,12 @@ class TestInpFileWriter(unittest.TestCase):
             self.assertEqual(link.end_node(), link2.end_node())
             self.assertEqual(link.valve_type, link2.valve_type)
             self.assertAlmostEqual(link.diameter, link2.diameter, 5)
-            self.assertAlmostEqual(link.base_setting, link2.base_setting, 5)
+            self.assertAlmostEqual(link.setting, link2.setting, 5)
             self.assertAlmostEqual(link.minor_loss, link2.minor_loss, 5)
 
-    def test_controls(self):
-        for key, val in self.wn.conditional_controls.iteritems():
-            for k,v in val.iteritems():
-                for i in xrange(len(v)):
-                    name = self.wn.conditional_controls[key][k][i][0]
-                    threshold = self.wn.conditional_controls[key][k][i][1]
-                    name2 = self.wn2.conditional_controls[key][k][i][0]
-                    threshold2 = self.wn2.conditional_controls[key][k][i][1]
-                    self.assertEqual(name,name2)
-                    self.assertAlmostEqual(threshold, threshold2)
-        for key, val in self.wn2.conditional_controls.iteritems():
-            for k,v in val.iteritems():
-                for i in xrange(len(v)):
-                    name = self.wn.conditional_controls[key][k][i][0]
-                    threshold = self.wn.conditional_controls[key][k][i][1]
-                    name2 = self.wn2.conditional_controls[key][k][i][0]
-                    threshold2 = self.wn2.conditional_controls[key][k][i][1]
-                    self.assertEqual(name,name2)
-                    self.assertAlmostEqual(threshold, threshold2)
-        self.assertEqual(self.wn.time_controls, self.wn2.time_controls)
+    def test_user_controls(self):
+        self.assertEqual(True, False)
+        #for key, val in self.wn._control_dict.iteritems():
 
 class TestNet3InpWriterResults(unittest.TestCase):
 

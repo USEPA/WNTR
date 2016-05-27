@@ -620,6 +620,9 @@ class MultiConditionalControl(Control):
         return change_flag, change_tuple, orig_value
 
 class _CheckValveHeadControl(Control):
+    """
+    
+    """
     def __init__(self, wnm, cv, operation, threshold, control_action):
         self.name = 'blah'
         self._priority = 3
@@ -660,7 +663,9 @@ class _CheckValveHeadControl(Control):
         return change_flag, change_tuple, orig_value
 
 class _PRVControl(Control):
+    """
 
+    """
     def __init__(self, wnm, valve, Htol, Qtol, close_control_action, open_control_action, active_control_action):
         self.name = 'blah'
         self._priority = 3

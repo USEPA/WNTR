@@ -30,6 +30,14 @@ import numpy as np
 logger = logging.getLogger('wntr.network.ParseWaterNetwork')
 
 def is_number(s):
+    """
+    Checks if imput is a number
+    
+    Parameters
+    ----------
+    s : anything
+    """
+
     try:
         float(s)
         return True
@@ -143,7 +151,9 @@ class ParseWaterNetwork(object):
         """
         Method to read EPANET INP file and load data into a
         water network object.
-
+        
+        Parameters
+        ----------
         wn : WaterNetwork object
             A water network object
         inp_file_name: string

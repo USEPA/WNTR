@@ -288,7 +288,7 @@ class WaterNetworkModel(object):
                     control._priority = 2
                     control.name = link_name+' opened because tank '+tank.name()+' head above max head but flow should be out'
                     tank_controls.append(control)
-            
+        
                 #control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
                 #control._priority = 2
                 #self.add_control(control)
@@ -562,6 +562,20 @@ class WaterNetworkModel(object):
         control_object.name = name
 
     def add_pump_outage(self, pump_name, start_time, end_time):
+        """
+        Add a pump outage to the network.
+
+        Parameters
+        ----------
+        pump_name : string
+           The name of the pump to be affected by an outage
+        start_time : int
+           The time at which the outage starts.
+           Internal units must be in seconds (s)
+        end_time : int
+           The time at which the outage stops.
+           Internal units must be in seconds (s)
+        """
         pump = self.get_link(pump_name)
 
         end_power_outage_action = wntr.network.ControlAction(pump, '_power_outage', False)
@@ -588,6 +602,17 @@ class WaterNetworkModel(object):
         self.add_control(pump_name+'PowerOnStatus'+str(start_time),control)
 
     def all_pump_outage(self, start_time, end_time):
+        """
+        Add a pump outage to the network that affects all pumps.
+
+        Parameters
+        ----------
+        start_time : int
+           The time at which the outage starts
+        end_time : int
+           The time at which the outage stops.
+           Internal units must be in seconds (s)
+        """
         for pump_name, pump in self.links(Pump):
             self.add_pump_outage(pump_name, start_time, end_time)
 
@@ -1114,6 +1139,11 @@ class WaterNetworkModel(object):
         A generator to iterate over all nodes of node_type.
         If no node_type is passed, this method iterates over all nodes.
 
+        Parameters
+        ----------
+        node_type : Junction, Tank, Reservoir, or None (default: None)
+           The type of node that will be iterated over.
+
         Returns
         -------
         node_name, node
@@ -1134,16 +1164,37 @@ class WaterNetworkModel(object):
             raise RuntimeError('node_type, '+str(node_type)+', not recognized.')
 
     def junctions(self):
+        """
+        A generator  to iterate over all junctions.
+
+        Returns
+        -------
+        name, node
+        """
         warnings.warn('WaterNetworkModel.junctions() is deprecated. Please use WaterNetworkModel.nodes(wntr.network.Junction).')
         for name, node in self._junctions.iteritems():
             yield name, node
 
     def tanks(self):
+        """
+        A generator  to iterate over all tanks.
+        
+        Returns
+        -------
+        name, node
+        """
         warnings.warn('WaterNetworkModel.tanks() is deprecated. Please use WaterNetworkModel.nodes(wntr.network.Tank).')
         for name, node in self._tanks.iteritems():
             yield name, node
 
     def reservoirs(self):
+        """
+        A generator to iterate over all reservoirs.
+
+        Returns
+        -------
+        name, node
+        """
         warnings.warn('WaterNetworkModel.reservoirs() is deprecated. Please use WaterNetworkModel.nodes(wntr.network.Reservoir).')
         for name, node in self._reservoirs.iteritems():
             yield name, node
@@ -1174,45 +1225,93 @@ class WaterNetworkModel(object):
             raise RuntimeError('link_type, '+str(link_type)+', not recognized.')
 
     def pipes(self):
+        """
+        A generator to iterate over all pipes.
+
+        Returns
+        -------
+        name, link
+        """
         warnings.warn('WaterNetworkModel.pipes() is deprecated. Please use WaterNetworkModel.links(wntr.network.Pipe).')
         for name, link in self._pipes.iteritems():
             yield name, link
 
     def pumps(self):
+        """
+        A generator to iterate over all pumps.
+
+        Returns
+        -------
+        name, link
+        """
         warnings.warn('WaterNetworkModel.pumps() is deprecated. Please use WaterNetworkModel.links(wntr.network.Pump).')
         for name, link in self._pumps.iteritems():
             yield name, link
 
     def valves(self):
+        """
+        A generator to iterate over all valves.
+
+        Returns
+        -------
+        name, link
+        """
         warnings.warn('WaterNetworkModel.valves() is deprecated. Please use WaterNetworkModel.links(wntr.network.Valve).')
         for name, link in self._valves.iteritems():
             yield name, link
 
     def node_name_list(self):
+        """
+        Returns a list of the names of all nodes.
+        """
         return self._nodes.keys()
 
     def junction_name_list(self):
+        """
+        Returns a list of the names of all junctions.
+        """
         return self._junctions.keys()
 
     def tank_name_list(self):
+        """
+        Returns a list of the names of all tanks.
+        """
         return self._tanks.keys()
 
     def reservoir_name_list(self):
+        """
+        Returns a list of the names of all reservoirs.
+        """
         return self._reservoirs.keys()
 
     def link_name_list(self):
+        """
+        Returns a list of the names of all links.
+        """
         return self._links.keys()
 
     def pipe_name_list(self):
+        """
+        Returns a list of the names of all pipes.
+        """
         return self._pipes.keys()
 
     def pump_name_list(self):
+        """
+        Returns a list of the names of all pumps.
+        """
         return self._pumps.keys()
 
     def valve_name_list(self):
+        """
+        Returns a list of the names of all valves.
+        """
         return self._valves.keys()
 
     def control_name_list(self):
+        """
+        Returns a list of the names of all controls.
+        """
         return self._control_dict.keys()
             
     def curves(self):
@@ -1252,6 +1351,14 @@ class WaterNetworkModel(object):
             self.set_node_coordinates(name, (pos[name][0]*scale, pos[name][1]*scale))
 
     def set_edge_attribute_on_graph(self, link_name, attr_name, value):
+        """
+        Set edge attribute on graph.
+
+        Parameters
+        ----------
+        link_name: string
+            Name of the link used.
+        """
         link = self.get_link(link_name)
         self._graph.edge[link.start_node()][link.end_node()][link_name][attr_name] = value
         
@@ -1280,6 +1387,9 @@ class WaterNetworkModel(object):
         return self.shifted_time_sec() % (24*3600)
 
     def reset_initial_values(self):
+        """
+        Resets all initial values in the network.
+        """
         self.sim_time = 0.0
         self.prev_sim_time = -np.inf
 
@@ -1472,8 +1582,10 @@ class WaterNetworkModel(object):
 
          Parameters
          ----------
-         filename : String
+         filename : string
             Name of the inp file. example - Net3_adjusted_demands.inp
+         units : string
+            Name of the units being written to the inp file
         """
         # TODO: This is still a very alpha version with hard coded unit conversions to LPS (among other things).
 
@@ -1994,6 +2106,9 @@ class Link(object):
         self.flow = None
         
     def get_base_status(self):
+        """
+        Returns the base status.
+        """
         return self._base_status
 
     def __str__(self):
