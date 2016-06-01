@@ -100,6 +100,23 @@ class ControlAction(BaseControlAction):
         #if (isinstance(target_obj, wntr.network.Valve) or (isinstance(target_obj, wntr.network.Pipe) and target_obj.cv)) and attribute=='status':
         #    raise ValueError('You may not add controls to valves or pipes with check valves.')
 
+    def __eq__(self, other):
+        if self._target_obj_ref == other._target_obj_ref and \
+           self._attribute      == other._attribute:
+            if type(self._value) == float:
+                if abs(self._value - other._value)<1e-10:
+                    return True
+                return False
+            else:
+                if self._value == other._value:
+                    return True
+                return False
+        else:
+            return False
+                    
+                
+           
+
     def _FireControlActionImpl(self, control_name):
         """
         This method overrides the corresponding method from the BaseControlAction class. Here, it changes
@@ -281,6 +298,16 @@ class TimeControl(Control):
         if time_flag == 'SHIFTED_TIME' and self._fire_time < wnm.shifted_time():
             self._fire_time += 24*3600
 
+    def __eq__(self, other):
+        if self._fire_time      == other._fire_time      and \
+           self.name            == other.name            and \
+           self._time_flag      == other._time_flag      and \
+           self._daily_flag     == other._daily_flag     and \
+           self._priority       == other._priority       and \
+           self._control_action == other._control_action:
+            return True
+        return False
+
     def to_inp_string(self):
         link_name = self._control_action._target_obj_ref.name()
         action = 'OPEN'
@@ -403,6 +430,19 @@ class ConditionalControl(Control):
             raise ValueError('source must be a tuple, (source_object, source_attribute).')
         if not isinstance(threshold,float):
             raise ValueError('threshold must be a float.')
+
+    def __eq__(self, other):
+        if self._priority               == other._priority               and \
+           self.name                    == other.name                    and \
+           self._partial_step_for_tanks == other._partial_step_for_tanks and \
+           self._source_obj             == other._source_obj             and \
+           self._source_attr            == other._source_attr            and \
+           self._operation              == other._operation              and \
+           self._control_action         == other._control_action         and \
+           abs(self._threshold           - other._threshold)<1e-10:
+            return True
+        return False
+        
 
     def to_inp_string(self, flowunit):
         link_name = self._control_action._target_obj_ref.name()
@@ -559,6 +599,21 @@ class MultiConditionalControl(Control):
             raise ValueError('The length of the source list must equal the length of the operation list.')
         if len(source)!=len(threshold):
             raise ValueError('The length of the source list must equal the length of the threshold list.')
+
+    def __eq__(self, other):
+        if self._control_action == other._control_action and \
+           self.name            == other.name            and \
+           self._priority       == other._priority       and \
+           self._operation      == other._operation:
+            for point1, point2 in zip(self._threshold, other._threshold):
+                if type(point1) == tuple:
+                    if not point1 == point2:
+                        return False
+                elif not abs(point1-point2)<1e-8:
+                    return False
+            return True
+        else:
+            return False
 
     # @classmethod
     # def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):

@@ -624,6 +624,10 @@ class ParseWaterNetwork(object):
                         control_obj = wntr.network.ConditionalControl((node,'head'),oper,threshold,action_obj)
                     else:
                         raise RuntimeError("The following control is not recognized: " + line)
+                    control_name = ''
+                    for i in xrange(len(current)-1):
+                        control_name = control_name + current[i]
+                    control_name = control_name + str(round(threshold,2))
                 else:
                     if len(current) != 6:
                         warnings.warn('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
@@ -633,12 +637,13 @@ class ParseWaterNetwork(object):
                         else:
                             fire_time = int(float(current[5])*3600)
                         control_obj = wntr.network.TimeControl(wn, fire_time, 'SIM_TIME', False, action_obj)
+                        control_name = ''
+                        for i in xrange(len(current)-1):
+                            control_name = control_name + current[i]
+                        control_name = control_name + str(fire_time)
                     elif len(current) == 7: # at clocktime
                         fire_time = clock_time_to_sec(current[5], current[6])
                         control_obj = wntr.network.TimeControl(wn, fire_time, 'SHIFTED_TIME', True, action_obj)
-                control_name = ''
-                for i in current:
-                    control_name = control_name + i
                 wn.add_control(control_name, control_obj)
 
         f.close()

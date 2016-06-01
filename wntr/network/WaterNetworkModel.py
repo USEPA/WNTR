@@ -421,7 +421,6 @@ class WaterNetworkModel(object):
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'pump'})
         self._num_pumps += 1
-
     def _get_pump_controls(self):
         pump_controls = []
         for pump_name, pump in self.links(Pump):
@@ -2061,6 +2060,13 @@ class Node(object):
         self.leak_demand = None
         self.prev_leak_demand = None
 
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        elif self._name == other._name:
+            return True
+        return False
+        
     def __str__(self):
         """
         Returns the name of the node when printing to a stream.
@@ -2103,7 +2109,16 @@ class Link(object):
         self.status = LinkStatus.opened
         self.prev_flow = None
         self.flow = None
-        
+
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        elif self._link_name       == other._link_name       and \
+           self._start_node_name   == other._start_node_name and \
+           self._end_node_name     == other._end_node_name:
+            return True
+        return False
+
     def get_base_status(self):
         """
         Returns the base status.
@@ -2173,6 +2188,16 @@ class Junction(Node):
         self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
 
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Junction, self).__eq__(other):
+            return False
+        if abs(self.elevation - other.elevation)<1e-10 and \
+           abs(self.nominal_pressure - other.nominal_pressure)<1e-10 and \
+           abs(self.minimum_pressure - other.minimum_pressure)<1e-10:
+            return True
+        return False
 
     def to_inp_string(self, flowunit):
         text_format = '{:20} {:12f} {:12f} {:24} {:>3s}'
@@ -2232,7 +2257,7 @@ class Junction(Node):
 
     def remove_leak(self,wn):
         """
-        Method to remove a leak from a junction.
+        Method to remove a leak from a junction
 
         Parameters
         ----------
@@ -2367,6 +2392,21 @@ class Tank(Node):
         self._leak_end_control_name = 'tank'+self._name+'end_leak_control'
         self.bulk_rxn_coeff = None
 
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Tank, self).__eq__(other):
+            return False
+        if abs(self.elevation   - other.elevation)<1e-10 and \
+           abs(self.min_vol     - other.min_vol)<1e-10   and \
+           abs(self.diameter    - other.diameter)<1e-10  and \
+           abs(self.min_level   - other.min_level)<1e-10 and \
+           abs(self.max_level   - other.max_level)<1e-10 and \
+           self.bulk_rxn_coeff == other.bulk_rxn_coeff   and \
+           self.vol_curve      == other.vol_curve:
+            return True
+        return False    
+        
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
         Method to add a leak to a tank. Leaks are modeled by:
@@ -2524,6 +2564,13 @@ class Reservoir(Node):
         self.head = base_head
         self.head_pattern_name = head_pattern_name
 
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Reservoir, self).__eq__(other):
+            return False
+        return True
+
 class Pipe(Link):
     """
     Pipe class that is inherited from Link
@@ -2570,7 +2617,21 @@ class Pipe(Link):
         self.bulk_rxn_coeff = None
         self.wall_rxn_coeff = None
 
-
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Pipe, self).__eq__(other):
+            return False
+        if abs(self.length        - other.length)<1e-10     and \
+           abs(self.diameter      - other.diameter)<1e-10   and \
+           abs(self.roughness     - other.roughness)<1e-10  and \
+           abs(self.minor_loss    - other.minor_loss)<1e-10 and \
+           self.cv               == other.cv                and \
+           self.bulk_rxn_coeff   == other.bulk_rxn_coeff    and \
+           self.wall_rxn_coeff   == other.wall_rxn_coeff:
+            return True
+        return False
+    
 class Pump(Link):
     """
     Pump class that is inherited from Link
@@ -2611,6 +2672,16 @@ class Pump(Link):
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
 
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Pump, self).__eq__(other):
+            return False
+        if self.info_type == other.info_type and \
+           self.curve == other.curve:
+            return True
+        return False
+        
     def get_head_curve_coefficients(self):
         """
         Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
@@ -2738,6 +2809,17 @@ class Valve(Link):
         self.status = LinkStatus.active
         self._status = LinkStatus.active
 
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Valve, self).__eq__(other):
+            return False
+        if abs(self.diameter   - other.diameter)<1e-10 and \
+           self.valve_type    == other.valve_type      and \
+           abs(self.minor_loss - other.minor_loss)<1e-10:
+            return True
+        return False
+
 class Curve(object):
     """
     Curve class.
@@ -2757,3 +2839,16 @@ class Curve(object):
         self.curve_type = curve_type
         self.points = points
         self.num_points = len(points)
+
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if self.name == other.name and \
+           self.curve_type == other.curve_type and \
+           self.num_points == other.num_points:
+            for point1, point2 in zip(self.points, other.points):
+                for value1, value2 in zip(point1, point2):
+                    if not abs(value1 - value2)<1e-8:
+                        return False
+            return True
+        return False

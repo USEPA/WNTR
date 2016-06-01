@@ -89,10 +89,8 @@ class TestNetworkTimeBehavior(unittest.TestCase):
         self.wntr = wntr
 
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_12.inp'
-        wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        parser.read_inp_file(wn, inp_file)
-        sim = self.wntr.sim.PyomoSimulator(wn)
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        sim = self.wntr.sim.WNTRSimulator(wn)
         self.results = sim.run_sim()
 
     @classmethod
@@ -104,7 +102,7 @@ class TestNetworkTimeBehavior(unittest.TestCase):
         self.assertEqual(len(results.node.major_axis), 26)
         self.assertEqual(results.node.major_axis[25], 24*3600+3*3600+5*60)
 
-    def test_hydraulic_timestep(self):
+    def test_report_timestep(self):
         results = self.results
         self.assertEqual((results.node.major_axis[1] - results.node.major_axis[0]), 1*3600+5*60)
         
