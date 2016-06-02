@@ -50,7 +50,7 @@ class WaterNetworkModel(object):
 
         # Network name
         self.name = None
-
+        
         # Time parameters
         self.sim_time = 0.0
         self.prev_sim_time = -np.inf  # the last time at which results were accepted
@@ -98,6 +98,28 @@ class WaterNetworkModel(object):
             parser = wntr.network.ParseWaterNetwork()
             parser.read_inp_file(self, inp_file_name)
 
+    def __eq__(self, other):
+        if self._num_junctions  == other._num_junctions  and \
+           self._num_reservoirs == other._num_reservoirs and \
+           self._num_tanks      == other._num_tanks      and \
+           self._num_pipes      == other._num_pipes      and \
+           self._num_pumps      == other._num_pumps      and \
+           self._num_valves     == other._num_valves     and \
+           self._nodes          == other._nodes          and \
+           self._links          == other._links          and \
+           self._junctions      == other._junctions      and \
+           self._tanks          == other._tanks          and \
+           self._reservoirs     == other._reservoirs     and \
+           self._pipes          == other._pipes          and \
+           self._pumps          == other._pumps          and \
+           self._valves         == other._valves         and \
+           self._patterns       == other._patterns       and \
+           self._curves         == other._curves         and \
+           self._control_dict   == other._control_dict   and \
+           self._check_valves   == other._check_valves:
+            return True
+        return False
+        
     def add_junction(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0, coordinates=None):
         """
         Add a junction to the network.
@@ -644,15 +666,18 @@ class WaterNetworkModel(object):
             raise RuntimeError('Link Type not Recognized')
 
         if with_control:
+            x=[]
             for control_name, control in self._control_dict.iteritems():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with link '+name)
-                        self.remove_control(control_name)
+                        x.append(control_name)
                 else:
                     if link == control._control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with link '+name)
-                        self.remove_control(control_name)
+                        x.append(control_name)
+            for i in x:
+                self.remove_control(i)
         else:
             for control_name, control in self._control_dict.iteritems():
                 if type(control)==wntr.network._PRVControl:
@@ -691,15 +716,18 @@ class WaterNetworkModel(object):
             raise RuntimeError('Node type is not recognized.')
 
         if with_control:
+            x = []
             for control_name, control in self._control_dict.iteritems():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with node '+name)
-                        self.remove_control(control_name)
+                        x.append(control_name)
                 else:
                     if node == control._control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with node '+name)
-                        self.remove_control(control_name)
+                        x.append(control_name)
+            for i in x:
+                self.remove_control(i)
         else:
             for control_name, control in self._control_dict.iteritems():
                 if type(control)==wntr.network._PRVControl:

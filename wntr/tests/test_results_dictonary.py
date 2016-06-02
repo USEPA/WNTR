@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import time
-from memory_profiler import profile
+#from memory_profiler import profile
 from nose.tools import *
 
 @nottest

@@ -9,20 +9,21 @@ resilienceMainDir = os.path.abspath(
     os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
         inspect.currentframe() ) ) ), '..', '..' ))
 import time
-from pyutilib.misc import import_file
 import numpy as np
+print resilienceMainDir
 
 class TestPerformance(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
         sys.path.append(resilienceMainDir)
+        sys.path.append(resilienceMainDir+'/wntr/tests/performance_results')
         import wntr
         self.wntr = wntr
 
         files = [f for f in os.listdir(os.path.join(resilienceMainDir,'wntr/tests/performance_results'))]
         if 'performance_results.py' in files:
-            past_results = import_file(os.path.join(resilienceMainDir,'wntr/tests/performance_results/performance_results.py'))
+            import performance_results as past_results
 
             self.year = past_results.year
             self.month = past_results.month
@@ -193,7 +194,7 @@ class TestPerformance(unittest.TestCase):
         self.Net1_total_sim_time.append(t1-t0)
         self.Net1_time_per_step.append(np.average(sim.time_per_step))
         self.Net1_num_steps.append(len(sim.time_per_step))
-
+        
     def test_Net3_performance(self):
         t0 = time.time()
 

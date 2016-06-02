@@ -52,34 +52,6 @@ class TestLeakAdditionaAndRemoval(unittest.TestCase):
         self.assertEqual(pipe.get_base_status(), pipeA.get_base_status())
         self.assertEqual(pipe.get_base_status(), pipeB.get_base_status())
 
-    def test_remove_controls_for_removing_link(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leak_test_network.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
-        import copy
-        time_controls_1 = copy.deepcopy(wn.time_controls)
-        conditional_controls_1 = copy.deepcopy(wn.conditional_controls)
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            wn.remove_link('21')
-
-        flag1 = False
-        flag2 = False
-        for message in w:
-            if str(message.message) == 'A time control associated with link 21 has been removed as well as the link.':
-                flag1 = True
-            if str(message.message) == 'A conditional control associated with link 21 has been removed as well as the link.':
-                flag2 = True
-        self.assertEqual(flag1, True)
-        self.assertEqual(flag2, True)
-
-        time_controls_2 = copy.deepcopy(wn.time_controls)
-        conditional_controls_2 = copy.deepcopy(wn.conditional_controls)
-        self.assertEqual(True, '21' in time_controls_1.keys())
-        self.assertEqual(False, '21' in time_controls_2.keys())
-        self.assertEqual(True, '21' in conditional_controls_1.keys())
-        self.assertEqual(False, '21' in conditional_controls_2.keys())
-
 class TestLeakResults(unittest.TestCase):
 
     @classmethod
@@ -101,9 +73,9 @@ class TestLeakResults(unittest.TestCase):
         active_control_action = self.wntr.network.ControlAction(leak1, 'leak_status', True)
         inactive_control_action = self.wntr.network.ControlAction(leak1, 'leak_status', False)
         control = self.wntr.network.TimeControl(wn, 4*3600, 'SIM_TIME', False, active_control_action)
-        wn.add_control(control)
+        wn.add_control('control1',control)
         control = self.wntr.network.TimeControl(wn, 8*3600, 'SIM_TIME', False, inactive_control_action)
-        wn.add_control(control)
+        wn.add_control('control2',control)
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
@@ -122,9 +94,9 @@ class TestLeakResults(unittest.TestCase):
         active_control_action = self.wntr.network.ControlAction(leak1, 'leak_status', True)
         inactive_control_action = self.wntr.network.ControlAction(leak1, 'leak_status', False)
         control = self.wntr.network.TimeControl(wn, 4*3600, 'SIM_TIME', False, active_control_action)
-        wn.add_control(control)
+        wn.add_control('control1',control)
         control = self.wntr.network.TimeControl(wn, 12*3600, 'SIM_TIME', False, inactive_control_action)
-        wn.add_control(control)
+        wn.add_control('control2',control)
         sim = self.wntr.sim.WNTRSimulator(wn)
         pyomo_results = sim.run_sim()
 

@@ -143,6 +143,7 @@ class TestTankControls(unittest.TestCase):
         self.assertEqual(tank_level_dropped_flag, True)
 
     def test_reopen_pipe_after_tank_fills_back_up(self):
+        """
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_test_network2.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
@@ -163,7 +164,9 @@ class TestTankControls(unittest.TestCase):
                     tank_refilled_flag = True
         self.assertEqual(tank_level_dropped_flag, True)
         self.assertEqual(tank_refilled_flag, True)
-
+        """
+        self.assertEqual(True, False)
+        
 class TestValveControls(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -181,7 +184,7 @@ class TestValveControls(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
         results = sim.run_sim()
 
         for t in results.link.major_axis:
@@ -193,7 +196,7 @@ class TestValveControls(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
         results = sim.run_sim()
 
         flag1 = False
@@ -226,12 +229,13 @@ class TestControlCombinations(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
         results = sim.run_sim()
 
         flag1 = False
         flag2 = False
         for t in results.link.major_axis:
+            #print t, results.link.at['status',t,'pipe1'], results.node.at['head',t,'tank1'], results.node.at['pressure',t,'tank1']
             if t == 6*3600:
                 flag1 = True
             if results.node.at['head',t,'tank1'] <= 30.0:
@@ -240,6 +244,7 @@ class TestControlCombinations(unittest.TestCase):
             if flag1 == False:
                 self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
             elif flag1 == True:
+                #print results.link.at['flowrate',t,'pipe1']
                 self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.001)
 
         self.assertEqual(flag1, False)
@@ -251,7 +256,7 @@ class TestControlCombinations(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
         results = sim.run_sim()
 
         flag1 = False
@@ -265,6 +270,7 @@ class TestControlCombinations(unittest.TestCase):
             if flag1 == False:
                 self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.001)
             elif flag1 == True:
+                
                 self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
 
         self.assertEqual(flag1, False)
@@ -276,7 +282,7 @@ class TestControlCombinations(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.PyomoSimulator(wn, pressure_dependent = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
         results = sim.run_sim()
 
         flag1 = False

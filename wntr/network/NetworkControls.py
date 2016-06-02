@@ -321,7 +321,8 @@ class TimeControl(Control):
         compare = 'TIME'
         if self._daily_flag:
             compare = 'CLOCKTIME'
-        return 'Link %s %s AT %s %s'%(link_name, action, compare, self._fire_time)
+        fire_time_hours=self._fire_time / 3600.0
+        return 'Link %s %s AT %s %s'%(link_name, action, compare, fire_time_hours)
 
     # @classmethod
     # def WithTarget(self, fire_time, time_flag, daily_flag, target_obj, attribute, value):
