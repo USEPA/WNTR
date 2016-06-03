@@ -729,6 +729,17 @@ class HydraulicModel(object):
             elif self.node_types[node_id] == NodeTypes.junction:
                 if self.isolated_junction_array[node_id] == 1:
                     self.jac_H.data[ndx] = 0.0
+                else:
+                    m = 1.0e-11
+                    P = heads[node_id] - self.node_elevations[node_id]
+                    if P <= 0.0:
+                        self.jac_H.data[ndx] = -m
+                    elif P <= 1.0e-4:
+                        a,b,c,d = self.leak_poly_coeffs[node_id]
+                        self.jac_H.data[ndx] = -3.0*a*P**2 - 2.0*b*P - c
+                    else:
+                        self.jac_H.data[ndx] = -0.5*self.leak_Cd[node_id]*self.leak_area[node_id]*\
+                                               math.sqrt(2.0*self._g)*P**(-0.5)
             else:
                 m = 1.0e-11
                 P = heads[node_id] - self.node_elevations[node_id]
@@ -1491,7 +1502,7 @@ class HydraulicModel(object):
             row_nnz = jac.indptr[i+1] - jac.indptr[i]
             for k in xrange(row_nnz):
                 j = jac.indices[jac.indptr[i]+k]
-                if abs(approx_jac[i,j]-jac[i,j]) > 0.1:
+                if abs(approx_jac[i,j]-jac[i,j]) > 0.0001:
                     if i < self.num_nodes:
                         equation_type = 'node balance'
                         node_or_link = 'node'
@@ -1500,20 +1511,27 @@ class HydraulicModel(object):
                         equation_type = 'demand/head equation'
                         node_or_link = 'node'
                         node_or_link_name = self._node_id_to_name[i - self.num_nodes]
-                    else:
+                    elif i < 2*self.num_nodes + self.num_links:
                         equation_type = 'headloss'
                         node_or_link = 'link'
                         node_or_link_name = self._link_id_to_name[i - 2*self.num_nodes]
                         print 'flow for link ',node_or_link_name,' = ',x[i]
+                    else:
+                        equation_type = 'leak demand'
+                        node_or_link = 'node'
+                        node_or_link_name = self._node_id_to_name[self._leak_ids[i - 2*self.num_nodes - self.num_links]]
                     if j < self.num_nodes:
                         wrt = 'head'
                         wrt_name = self._node_id_to_name[j]
                     elif j< 2*self.num_nodes:
                         wrt = 'demand'
                         wrt_name = self._node_id_to_name[j - self.num_nodes]
-                    else:
+                    elif j < 2*self.num_nodes+self.num_links:
                         wrt = 'flow'
                         wrt_name = self._link_id_to_name[j - 2*self.num_nodes]
+                    else:
+                        wrt = 'leak_demand'
+                        wrt_name = self._node_id_to_name[self._leak_ids[j - 2*self.num-nodes - self.num_links]]
                     print 'jacobian entry for ',equation_type,' for ',node_or_link,' ',node_or_link_name,' with respect to ',wrt,wrt_name,' is incorrect.'
                     print 'error = ',abs(approx_jac[i,j]-jac[i,j])
                     print 'approximation = ',approx_jac[i,j]
