@@ -42,9 +42,23 @@ class WNTRSimulator(WaterNetworkSimulator):
         s-=m*60
         return str(h)+':'+str(m)+':'+str(s)
 
-    def run_sim(self,solver_options={}):
+    def run_sim(self,solver_options={}, convergence_error=True):
         """
         Method to run an extended period simulation
+
+        Parameters
+        ----------
+        solver_options: dict
+            solver options:
+                MAXITER: the maximum number of iterations for each hydraulic solve (each timestep and trial) (default = 100)
+                TOL: tolerance for the hydraulic equations (default = 1e-6)
+                BT_RHO: the fraction by which the step length is reduced at each iteration of the line search (default = 0.5)
+                BT_MAXITER: the maximum number of iterations for each line search (default = 20)
+                BACKTRACKING: wheter or not to use a line search (default = True)
+                BT_START_ITER: the newton iteration at which a line search should start being used (default = 2)
+        convergence_error: bool
+            If convergence_error is True, an error will be raised if the simulation does not converge. If convergence_error is False, 
+            a warning will be issued and results.error_code will be set to 2 if the simulation does not converge. 
         """
 
         self.time_per_step = []
@@ -144,6 +158,8 @@ class WNTRSimulator(WaterNetworkSimulator):
             if solver_status == 0:
                 #model.check_infeasibility(self._X)
                 #raise RuntimeError('No solution found.')
+                if convergence_error:
+                    raise RuntimeError('Simulatin did not converge!')
                 warnings.warn('Simulation did not converge!')
                 logger.warning('Simulation did not converge at time %s',self.get_time())
                 model.get_results(results)
@@ -162,6 +178,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                 changes_made_flag = self._fire_controls(all_controls_to_activate)
                 if changes_made_flag:
                     if trial > max_trials:
+                        if convergence_error:
+                            raise RuntimeError('Exceeded maximum number of trials.')
                         results.error_code = 2
                         warnings.warn('Exceeded maximum number of trials.')
                         logger.warning('Exceeded maximum number of trials at time %s',self.get_time())
