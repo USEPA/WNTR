@@ -29,8 +29,14 @@ class TestExamples(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_that_examples_run(self):
-        example_files = [f for f in listdir(os.path.join(resilienceMainDir,'examples')) if isfile(os.path.join(resilienceMainDir,'examples',f)) and f.endswith('.py') and not f.startswith('test')]
-        flag = 1
+        examples_dir = os.path.join(resilienceMainDir,'examples')
+        cwd = os.getcwd()
+        os.chdir(examples_dir)
+        example_files = [f for f in listdir(examples_dir) if isfile(os.path.join(examples_dir,f)) and f.endswith('.py') and not f.startswith('test')]
+        flag = 0
         for f in example_files:
-            flag = call([sys.executable, os.path.join(resilienceMainDir,'examples',f)])
-            self.assertEqual(flag,0)
+            tmp_flag = call([sys.executable, os.path.join(resilienceMainDir,'examples',f)])
+            if tmp_flag == 1:
+                flag = 1
+        os.chdir(cwd)
+        self.assertEqual(flag,0)
