@@ -163,12 +163,14 @@ class WNTRSimulator(WaterNetworkSimulator):
                 if changes_made_flag:
                     if trial > max_trials:
                         results.error_code = 2
+                        warnings.warn('Exceeded maximum number of trials.')
+                        logger.warning('Exceeded maximum number of trials at time %s',self.get_time())
                         model.get_results(results)
                         return results
-                        #raise RuntimeError('Exceeded maximum number of trials!')
                     continue
                 else:
                     if solver_status==0:
+                        results.error_code = 2
                         raise RuntimeError('failed to converge')
                     resolve = False
 
