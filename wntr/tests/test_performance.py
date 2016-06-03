@@ -194,6 +194,17 @@ class TestPerformance(unittest.TestCase):
         self.Net1_total_sim_time.append(t1-t0)
         self.Net1_time_per_step.append(np.average(sim.time_per_step))
         self.Net1_num_steps.append(len(sim.time_per_step))
+
+
+        self.assertLess(np.average(head_diff_list), 6e-5)
+        self.assertLess(np.average(demand_diff_list), 2.3e-8)
+        self.assertLess(np.average(flow_diff_list), 5e-8)
+        self.assertLess(np.std(head_diff_list), .00015)
+        self.assertLess(np.std(demand_diff_list), 1.1e-7)
+        self.assertLess(np.std(flow_diff_list), 1.3e-7)
+        self.assertLess(t1-t0, .17)
+        self.assertLess(np.average(sim.time_per_step), .004)
+        self.assertLessEqual(len(sim.time_per_step), 26)
         
     def test_Net3_performance(self):
         t0 = time.time()
@@ -234,6 +245,16 @@ class TestPerformance(unittest.TestCase):
         self.Net3_time_per_step.append(np.average(sim.time_per_step))
         self.Net3_num_steps.append(len(sim.time_per_step))
 
+        self.assertLess(np.average(head_diff_list), 3e-5)
+        self.assertLess(np.average(demand_diff_list), 1.4e-8)
+        self.assertLess(np.average(flow_diff_list), 1.8e-7)
+        self.assertLess(np.std(head_diff_list), 3e-5)
+        self.assertLess(np.std(demand_diff_list), 1.1e-7)
+        self.assertLess(np.std(flow_diff_list), 1.2e-6)
+        self.assertLess(t1-t0, 5)
+        self.assertLess(np.average(sim.time_per_step), .006)
+        self.assertLessEqual(len(sim.time_per_step), 686)
+
     def test_Net6_mod_performance(self):
         t0 = time.time()
 
@@ -273,3 +294,12 @@ class TestPerformance(unittest.TestCase):
         self.Net6_mod_time_per_step.append(np.average(sim.time_per_step))
         self.Net6_mod_num_steps.append(len(sim.time_per_step))
 
+        self.assertLess(np.average(head_diff_list), .006)
+        self.assertLess(np.average(demand_diff_list), 9e-6)
+        self.assertLess(np.average(flow_diff_list), 9e-5)
+        self.assertLess(np.std(head_diff_list), .07)
+        self.assertLess(np.std(demand_diff_list), .0009)
+        self.assertLess(np.std(flow_diff_list), .003)
+        self.assertLess(t1-t0, 48)
+        self.assertLess(np.average(sim.time_per_step), .27)
+        self.assertLessEqual(len(sim.time_per_step), 177)

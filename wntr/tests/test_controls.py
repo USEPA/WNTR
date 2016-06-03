@@ -235,16 +235,14 @@ class TestControlCombinations(unittest.TestCase):
         flag1 = False
         flag2 = False
         for t in results.link.major_axis:
-            #print t, results.link.at['status',t,'pipe1'], results.node.at['head',t,'tank1'], results.node.at['pressure',t,'tank1']
             if t == 6*3600:
                 flag1 = True
-            if results.node.at['head',t,'tank1'] <= 30.0:
+            if t > 0 and (results.node.at['head',t-3600,'tank1'] + (results.node.at['demand',t-3600,'tank1']*3600 * 4 / (3.14159 * wn._tanks['tank1'].diameter**2))) <= 30:
                 flag1 = False
                 flag2 = True
             if flag1 == False:
                 self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
             elif flag1 == True:
-                #print results.link.at['flowrate',t,'pipe1']
                 self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.001)
 
         self.assertEqual(flag1, False)
@@ -264,13 +262,12 @@ class TestControlCombinations(unittest.TestCase):
         for t in results.link.major_axis:
             if t == 19*3600:
                 flag1 = False
-            if results.node.at['head',t,'tank1'] <= 30.0:
+            if t > 0 and (results.node.at['head',t-3600,'tank1'] + (results.node.at['demand',t-3600,'tank1']*3600 * 4 / (3.14159 * wn._tanks['tank1'].diameter**2))) <= 30:
                 flag1 = True
                 flag2 = True
             if flag1 == False:
                 self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.001)
             elif flag1 == True:
-                
                 self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
 
         self.assertEqual(flag1, False)
@@ -287,8 +284,10 @@ class TestControlCombinations(unittest.TestCase):
 
         flag1 = False
         for t in results.link.major_axis:
-            if results.node.at['head',t,'tank1'] <= 30.0:
+            if t > 0 and (results.node.at['head',t-3600,'tank1'] + (results.node.at['demand',t-3600,'tank1']*3600 * 4 / (3.14159 * wn._tanks['tank1'].diameter**2))) <= 30.0:
                 flag1 = True
+            if t==5*3600:
+                flag1=False
             if flag1 == False:
                 self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.001)
             elif flag1 == True:
