@@ -130,12 +130,12 @@ def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
     # Tank construction cost
     for node_name, node in wn.nodes(Tank):
         tank_volume = (node.diameter/2)**2*(node.max_level-node.min_level)
-        idx = np.argmin(np.abs(tank_cost.index - tank_volume))
+        idx = np.argmin([np.abs(tank_cost.index - tank_volume)])
         network_cost = network_cost + tank_cost.iloc[idx]
     
     # Pipe construction cost
     for link_name, link in wn.links(Pipe):
-        idx = np.argmin(np.abs(pipe_cost.index - link.diameter))
+        idx = np.argmin([np.abs(pipe_cost.index - link.diameter)])
         network_cost = network_cost + pipe_cost.iloc[idx]*link.length    
     
     # Pump construction cost
@@ -147,13 +147,13 @@ def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
         # TODO: efficiency should be read from the inp file
         eff = 0.75
         Pmax = 9.81*1000/eff*np.exp(np.log(A/(B*(C+1)))/C)*(A - B*(np.exp(np.log(A/(B*(C+1)))/C))**C)
-        idx = np.argmin(np.abs(pump_cost.index - Pmax))
+        idx = np.argmin([np.abs(pump_cost.index - Pmax)])
         network_cost = network_cost + pump_cost.iloc[idx]
         
     # PRV valve construction cost    
     for link_name, link in wn.links(Valve):        
         if link.valve_type == 'PRV':
-            idx = np.argmin(np.abs(prv_cost.index - link.diameter))
+            idx = np.argmin([np.abs(prv_cost.index - link.diameter)])
             network_cost = network_cost + prv_cost.iloc[idx]  
     
     return network_cost

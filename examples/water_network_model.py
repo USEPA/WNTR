@@ -21,7 +21,8 @@ results = sim.run_sim()
 wn.write_inpfile('filename.inp')
 
 ### Generate another water network model from an inp file
-wn = wntr.network.WaterNetworkModel('networks/Net3.inp')
+inp_file = 'networks/Net3.inp'
+wn = wntr.network.WaterNetworkModel(inp_file)
 
 ### Modify the network model
 wn.options.duration = 3600*10

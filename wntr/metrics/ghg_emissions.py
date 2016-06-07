@@ -52,7 +52,7 @@ def ghg_emissions(wn, pipe_ghg=None):
         
     # GHG emissions from pipes
     for link_name, link in wn.links(Pipe):
-        idx = np.argmin(np.abs(pipe_ghg.index - link.diameter))
+        idx = np.argmin([np.abs(pipe_ghg.index - link.diameter)])
         network_ghg = network_ghg + pipe_ghg.iloc[idx]*link.length
        
     return network_ghg    

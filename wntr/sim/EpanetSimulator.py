@@ -8,7 +8,7 @@ import pandas as pd
 from wntr.utils import convert
 import logging
 
-logger = logging.getLogger('wntr_uq')
+logger = logging.getLogger(__name__)
 from wntr.pyepanet.epanet2 import EpanetException, ENgetwarning
 
 class EpanetSimulator(WaterNetworkSimulator):
