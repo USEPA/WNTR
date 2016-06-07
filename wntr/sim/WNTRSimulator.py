@@ -1,3 +1,14 @@
+"""
+TODO: More tests
+TODO: Add more epanet features
+TODO: Address smoothing
+TODO: Performance
+TODO: Enhance pipe leak/break modeling capabilities
+TODO: Optionally add weights to nodes when evaluating metrics (e.g., a node with a hospital or power plant may be more important)
+TODO: Valves should not be placed anywhere such that controls are added that act on the internal status? For example, valves should not be placed next to tanks?
+TODO: What happens if, for example, someone adds a pipe with the same name as a pump?
+"""
+
 from wntr import *
 import numpy as np
 import scipy.sparse as sparse
