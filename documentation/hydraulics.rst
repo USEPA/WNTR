@@ -1,5 +1,5 @@
-Hydraulic simulation
-====================
+Hydraulic simulation (*DRAFT*)
+==============================
    
 WNTR contains two hydraulic simulators:  the EPANET simulator and the WNTR simulator.
 The example **hydraulic_simulation.py** can be used to run both simulators and 
@@ -19,11 +19,11 @@ in demand-driven and pressure-driven mode.
 Hydraulic simulation using the the WNTR simulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
-   :lines: 12-13
+   :lines: 15-16
 
 More information on the simulators can be found in the API documentation, under
 :doc:`EpanetSimulator</apidoc/wntr.sim.EpanetSimulator>` and 
-:doc:`WntrSimulator</apidoc/wntr.sim.WntrSimulator>`.
+:doc:`WNTRSimulator</apidoc/wntr.sim.WNTRSimulator>`.
 
 Pause and restart 
 ------------------

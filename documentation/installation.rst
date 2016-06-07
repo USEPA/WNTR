@@ -1,4 +1,4 @@
-Installation
+Installation (*DRAFT*)
 ======================================
 
 WNTR can be installed as a python package using pip or from source using git.  
@@ -9,15 +9,15 @@ To install using pip (**NOT COMPLETE**)::
 
 	pip install wntr
 	
-To build WNTR from source using an SSH or HTTPS protocol (**NOT COMPLETE** Repository should eventually be hosted at https://github.com/OpenWaterAnalytics and renamed wntr)::
+To build WNTR from source using an SSH or HTTPS protocol (**NOT COMPLETE**)::
 
-	git clone https://software.sandia.gov/git/resilience 
+	git clone https://github.com/usepa/wntr
 	cd resilience
 	python setup.py install
 
 Developers can build WNTR in development mode::
 	
-	git clone https://software.sandia.gov/git/resilience
+	git clone https://github.com/usepa/wntr
 	cd resilience
 	python setup.py develop
 	

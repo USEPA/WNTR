@@ -27,9 +27,6 @@ Directories
   * documentation - user manual
   * examples - examples and network files
 
-Documentation and Bug Tracking
-  * Trac wiki: https://software.sandia.gov/trac/wntr
-
 Project Managers
    * Katherine Klise, Sandia National Laboratories
    * Regan Murray, US Environmental Protection Agency

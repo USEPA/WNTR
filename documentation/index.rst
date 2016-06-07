@@ -1,5 +1,5 @@
-WNTR 0.1 documentation
-=======================
+WNTR 0.1 documentation (*DRAFT*)
+================================
 
 .. toctree::
    :maxdepth: 1
@@ -18,7 +18,7 @@ WNTR 0.1 documentation
    stochastic
    license
    developers
-   API Documentation <apidoc/wntr>
+   API Documentation (DRAFT) <apidoc/wntr>
    reference
 
 Indices and tables

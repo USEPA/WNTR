@@ -1,17 +1,16 @@
-Developers
-==========
+Developers (*DRAFT*)
+====================
 
-WNTR is hosted on github at the Open Water Analytics site, https://github.com/OpenWaterAnalytics/WNTR.
-Bug reports can be submitted to https://github.com/OpenWaterAnalytics/WNTR/issues.
+..
+	WNTR is hosted on usepa github organization, https://github.com/usepa/wntr
+	Bug reports and feature requests can be submitted to https://github.com/usepa/wntr/issues.
 
-WNTR includes automated tests run using nosetests.  Test are
-run nightly using the Jenkins continuous build and test server 
-at Sandia National Laboratories. 
+	WNTR includes automated tests run using nosetests.  Test are
+	run using TravisCI.
+
 Tests can be run locally using nosetests in the WNTR directory::
 
 	nosetests -v --with-coverage --cover-package=wntr wntr
-
-.. http://jenkins.sandia.gov/view/TEVA/job/resilience_trunk_python2.7
 
 WNTR was developed as part of a collaboration between the United States 
 Environmental Protection Agency National Homeland Security Research Center, 
@@ -26,6 +25,7 @@ The development team includes:
 * Regan Murray (EPA)
 * Arpan Seth (Purdue)
 
-To cite WNTR, use the following report:
+.. 
+	To cite WNTR, use the following report:
 
-* U.S. EPA, 2016, Water Network Tool for Resilience (WNTR) User Manual, REPORT #, U.S. Environmental Protection Agency. (**NOT COMPLETE.  This will be the pdf version of the html pages**)
+	* U.S. EPA, 2016, Water Network Tool for Resilience (WNTR) User Manual, REPORT #, U.S. Environmental Protection Agency. (**NOT COMPLETE.  This will be the pdf version of the html pages**)

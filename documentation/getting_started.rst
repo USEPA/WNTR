@@ -1,4 +1,4 @@
-Getting started
+Getting started (*DRAFT*)
 ======================================
 
 To use WNTR, import the package from within a python console::
@@ -30,7 +30,8 @@ simulation_results.py		Extract information from simulation results
 disaster_scenarios.py		Define disaster scenarios, including power outage, pipe leak, and changes to supply and demand
 resilience_metrics.py           Compute resilience metrics, including topographic, hydraulic, water quality and water security metrics
 stochastic_simulation.py	Run a stochastic simulation
-fragility_curves.py		Define fragility curves 
+fragility_curves.py		Define fragility curves
+parallel_simulations.py		Run simulations in parallel
 animation.py			Animate network graphics
 ==============================  =========================================================================================================
 
