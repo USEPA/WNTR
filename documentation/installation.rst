@@ -1,57 +1,61 @@
 Installation (*DRAFT*)
 ======================================
 
-WNTR can be installed as a python package using pip or from source using git.  
-More information on pip can be found at https://pypi.python.org/pypi/pip.
-More information on git can be found at http://git-scm.com. 
+WNTR can be installed as a python package using standard open source software tools.
 
-To install using pip (**NOT COMPLETE**)::
+**Step 1**: Setup your Python environment
 
-	pip install wntr
+	WNTR requires Python 2.7 along with several python package dependencies.
+	Python distributions, such as Anaconda, are recommended to manage 
+	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
+	General information on Python can be found at https://www.python.org/.
 	
-To build WNTR from source using an SSH or HTTPS protocol (**NOT COMPLETE**)::
-
-	git clone https://github.com/usepa/wntr
-	cd resilience
-	python setup.py install
-
-Developers can build WNTR in development mode::
+	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
+	Matplotlib, and Sympy.  For more information on python package dependencies, see :ref:`requirements`.
 	
-	git clone https://github.com/usepa/wntr
-	cd resilience
-	python setup.py develop
+	Anaconda also comes with Spyder, an interactive development environment, that includes enhanced 
+	editing and debug features along with a layout that is very similar 
+	to using MATLAB. Debugging options are also available from the toolbar.  
+	Code documentation is displayed in the object inspection 
+	window, pop-up information on class structure and functions is displayed in the 
+	editor and console windows.  
+
+**Step 2**: Install WNTR
+
+	**For users**: 	Users can install WNTR using pip.  
+	pip is a command line software tool used to install and manage python 
+	packages.  The software tool can be downloaded from https://pypi.python.org/pypi/pip.
 	
+	To install using pip, run::
+
+		pip install wntr
+	
+	This will install the latest stable version of WNTR from https://pypi.python.org/pypi/wntr.  
+
+	**For developers**: Developers can install and build WNTR from source using git.
+	git is a command line software tool for version control and software development.
+	The software tool can be downloaded from http://git-scm.com. 
+		
+	To build WNTR from source using git, run::
+
+		git clone https://github.com/usepa/wntr
+		cd resilience
+		python setup.py develop
+	
+	This will install the development branch of WNTR from https://github.com/uspea/wntr.
+	More information for developers can be found in the :ref:`developers` section.
+
+**Step 3**: Test installation
+
+	To test that WNTR is installed, open Python and run::
+	
+		import wntr
+
+.. _requirements:
+
 Requirements
 -------------
 Requirements for WNTR include Python 2.7 along with several Python packages. 
-
-Python
-^^^^^^^
-Information on installing and using python can be found at 
-https://www.python.org/.  Python distributions can also be used to manage 
-the Python interface.  Python distributions include Python(x,y) (for Windows) 
-and Anaconda (for Windows and Linux). These distributions include most of the 
-Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
-Matplotlib, and Sympy. 
-
-Python(x,y) can be downloaded from http://python-xy.github.io/.  
-
-Anaconda can be downloaded from https://store.continuum.io/cshop/anaconda/.
-
-Python distributions include several tools for code development (i.e. Spyder, SciTE), 
-numerical computations, data analysis and visualization. 
-Spyder is an interactive development environment that includes enhanced 
-editing and debug features along with a layout that is very similar 
-to using MATLAB. Debugging features are also available from the toolbar.  
-Code documentation is displayed in the object inspection 
-window, pop-up information on class structure and functions is displayed in the 
-editor and console windows.  
-SciTE is a cross platform text editor designed for 
-editing code.  SciTE recognizes many languages (including Python and YML) and 
-includes syntax highlighting, indentation, and function recognition. 
-
-Python packages
-^^^^^^^^^^^^^^^^^
 The following python packages are required for WNTR:
 
 * Numpy [vanderWalt2011]_: used to support large, multi-dimensional arrays and matrices, 
@@ -64,8 +68,6 @@ The following python packages are required for WNTR:
   http://pandas.pydata.org/
 * Matplotlib [Hunter2007]_: used to produce figures, 
   http://matplotlib.org/
-
-Packages can be installed using pip.
 
 Optional dependencies
 -------------------------

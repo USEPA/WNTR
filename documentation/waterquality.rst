@@ -14,7 +14,7 @@ The following code can be used to run a hydraulic and water quality simulation,
 in this case, to compute water age.
 
 .. literalinclude:: ../examples/water_quality_simulation.py
-   :lines: 6, 19-20
+   :lines: 7, 20-21
 
 Concentration
 -------------

@@ -16,15 +16,15 @@ The example **networkx_graph.py** can be used to generate a graph from a water n
 A copy of the graph can an be obtained using the following function.
 
 .. literalinclude:: ../examples/networkx_graph.py
-   :lines: 6
+   :lines: 7
 	
 The graph is stored as a nested dictionary.  The nodes and edges of the graph 
 can be accessed using the following.
 
 .. literalinclude:: ../examples/networkx_graph.py
-   :lines: 8-10
+   :lines: 9-11
 
 The graph can be used to access NetworkX methods, for example
 
 .. literalinclude:: ../examples/networkx_graph.py
-   :lines: 2,12-14
+   :lines: 2,13-15

@@ -34,8 +34,9 @@ The inp file will not include features not supported by EPANET.
 .. literalinclude:: ../examples/water_network_model.py
    :lines: 21
 	
-Demands associated with pressure-driven simulation can be stored as
-demands in the inp file (**NOT COMPLETE**).  See :ref:`simulation_results` for more information on data stored in ``results.node``.
+.. 
+	Demands associated with pressure-driven simulation can be stored as
+	demands in the inp file (**NOT COMPLETE**).  See :ref:`simulation_results` for more information on data stored in ``results.node``.
 
 The following table describes water network model components.  
 EPANET components that are not supported by WNTR are noted.

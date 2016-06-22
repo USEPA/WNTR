@@ -1,4 +1,4 @@
-Copyright and License (*DRAFT*)
+Copyright and license (*DRAFT*)
 ================================
 
 Copyright 2015 Sandia Corporation. 

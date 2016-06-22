@@ -1,29 +1,53 @@
+.. _developers:
+
 Developers (*DRAFT*)
 ====================
 
-..
-	WNTR is hosted on usepa github organization, https://github.com/usepa/wntr
-	Bug reports and feature requests can be submitted to https://github.com/usepa/wntr/issues.
+The following section includes information about 
+the software repository, 
+software tests and documentation, and 
+ways to contribute and request new features.
 
-	WNTR includes automated tests run using nosetests.  Test are
-	run using TravisCI.
+GitHub repository
+---------------------
+WNTR is hosted on USEPA GitHub organization at https://github.com/usepa/wntr.
 
-Tests can be run locally using nosetests in the WNTR directory::
+Software tests
+--------------------
+WNTR includes automated software tests run using TravisCI at https://travis-ci.org/usepa/wntr.
+Tests can also be run locally using nosetests in the WNTR directory::
 
 	nosetests -v --with-coverage --cover-package=wntr wntr
 
+Documentation
+---------------------
+WNTR includes API documentation and an online user manual at http://wntr.readthedocs.io/
+
+Bug reports and feature requests
+----------------------------------
+Bug reports and feature requests can be submitted to https://github.com/usepa/wntr/issues.
+
+Contributing
+---------------------
+Software developers interested in contributing to the project are encouraged to 
+create a `Fork` of the project and submit a `Pull Request` using GitHub.
+New code is expected to be documented using readthedocs and tested using TravisCI. 
+Pull Requests will be reviewed by the maintainers of the software. 
+
+Development team
+-------------------
 WNTR was developed as part of a collaboration between the United States 
 Environmental Protection Agency National Homeland Security Research Center, 
 Sandia National Laboratories, and Purdue University.  
 The development team includes:
 
-* Michael Bynum (Purdue)
-* Terra Haxton (EPA)
-* Katherine Klise (SNL)
-* Carl Laird (Purdue)
-* Dylan Moriarty (SNL)
-* Regan Murray (EPA)
-* Arpan Seth (Purdue)
+* Michael Bynum 
+* Terra Haxton 
+* Katherine Klise 
+* Carl Laird 
+* Dylan Moriarty 
+* Regan Murray 
+* Arpan Seth 
 
 .. 
 	To cite WNTR, use the following report:
