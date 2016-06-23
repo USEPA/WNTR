@@ -8,6 +8,7 @@ TODO: Optionally add weights to nodes when evaluating metrics (e.g., a node with
 TODO: Valves should not be placed anywhere such that controls are added that act on the internal status? For example, valves should not be placed next to tanks?
 TODO: What happens if, for example, someone adds a pipe with the same name as a pump?
 TODO: Remove deep copy methods from WaterNetworkModel object
+TODO: Do a single smoothing for all leaks similar to what is done for Hazen-Williams.
 """
 
 from wntr import *

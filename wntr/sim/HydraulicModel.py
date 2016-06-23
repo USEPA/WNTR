@@ -118,6 +118,9 @@ class HydraulicModel(object):
         self.pump_q2 = 1.0e-8
 
         # constants for the modified pdd function
+        # I have created plots of the PDD function with these
+        # parameters, and they look pretty good. Additionally,
+        # the smoothing is not very sensitive to Pmin or Pnom.
         self._pdd_smoothing_delta = 0.2
         self._slope_of_pdd_curve = 1e-11
 
