@@ -1,7 +1,7 @@
 .. _water_quality_simulation:
 
-Water quality simulation
-========================
+Water quality simulation (*DRAFT*)
+==================================
 
 Water quality simulation can be run using the EpanetSimulator.  
 Water quality scenarios are defined using the class :doc:`Waterquality</apidoc/wntr.scenario.Waterquality>`.
@@ -14,7 +14,7 @@ The following code can be used to run a hydraulic and water quality simulation,
 in this case, to compute water age.
 
 .. literalinclude:: ../examples/water_quality_simulation.py
-   :lines: 6, 19-20
+   :lines: 7, 20-21
 
 Concentration
 -------------

@@ -12,7 +12,7 @@ logger = logging.getLogger('wntr.network.draw_graph')
 def draw_graph(wn, node_attribute=None, link_attribute=None, title=None, 
                node_size=10, node_range = [None,None], node_cmap=None,
                link_width=1, link_range = [None,None], link_cmap=None, 
-               add_colorbar=True, figsize=None, dpi=None, directed=False, node_labels=False):
+               add_colorbar=True, figsize=None, dpi=None, directed=False, node_labels=False,plt_fig=None):
 
     r"""Draw a WaterNetworkModel networkx graph
     
@@ -90,7 +90,9 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     For more network draw options, see nx.draw_networkx
     
     """
-    
+    if plt_fig is None:
+        plt.figure(facecolor='w', edgecolor='k')
+        
     # Graph    
     G = wn.get_graph_deep_copy()
     if not directed:
@@ -160,7 +162,8 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         link_cmap=plt.cm.jet
         
     # Plot
-    plt.figure(facecolor='w', edgecolor='k', figsize=figsize, dpi=dpi)
+    #plt.figure(facecolor='w', edgecolor='k', figsize=figsize, dpi=dpi)
+    
     if title is not None:
         plt.title(title)
 

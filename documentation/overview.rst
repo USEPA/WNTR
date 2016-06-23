@@ -1,4 +1,4 @@
-Overview
+Overview (*DRAFT*)
 ======================================
 
 Water distribution systems face multiple challenges, including 
@@ -74,7 +74,7 @@ The software includes capability to:
   
 * Compute resilience 
 
-  * Topographic, hydraulic metrics, water quality, and water security metrics
+  * Topographic, hydraulic metrics, water quality/security, and economic metrics
 
 * Analyze results and generate graphics
 

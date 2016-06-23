@@ -83,10 +83,9 @@ def topographic_metrics(wn):
     
     # Compute betweenness centrality
     bet_cen = nx.betweenness_centrality(G)
-    bet_cen_trim = dict([(k,v) for k,v in bet_cen.iteritems() if v > 0.1])
-    wntr.network.draw_graph(wn, node_attribute=bet_cen_trim, 
+    wntr.network.draw_graph(wn, node_attribute=bet_cen, 
                           title='Betweenness Centrality', node_size=40, 
-                          node_range=[0.1, 0.4])
+                          node_range=[0, 0.4])
     central_pt_dom = G.central_point_dominance()
     print "Central point dominance: " + str(central_pt_dom)
     
@@ -163,7 +162,7 @@ def hydraulic_metrics(wn):
     G_flowrate_36hrs = wn.get_graph_deep_copy()
     G_flowrate_36hrs.weight_graph(link_attribute=attr)     
      
-    # Compute betweenness-centrality time 36 hours
+    # Compute betweenness-centrality at time 36 hours
     bet_cen = nx.betweenness_centrality(G_flowrate_36hrs)
     wntr.network.draw_graph(wn, node_attribute=bet_cen, 
                           title='Betweenness Centrality', node_size=40)
@@ -328,9 +327,9 @@ if __name__ == '__main__':
     wn = wntr.network.WaterNetworkModel(inp_file)
     
     # Compute resilience metrics
-    #topographic_metrics(wn)
+    topographic_metrics(wn)
     hydraulic_metrics(wn)
-    #water_quality_metrics(wn)
-    #water_security_metrics(wn)
-    #population_impacted_metrics(wn)
-    #cost_ghg_metrics(wn)
+    water_quality_metrics(wn)
+    water_security_metrics(wn)
+    population_impacted_metrics(wn)
+    cost_ghg_metrics(wn)

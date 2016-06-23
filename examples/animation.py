@@ -32,7 +32,7 @@ def update_nodes(frame_number):
     return nodes, edges
     
 anim = animation.FuncAnimation(fig, update_nodes, frames=25, interval=400, repeat_delay = 1200, blit=True) # the movie flickers
-# ani.save('node_animation_example.mp4') # movie does not save
+#anim.save('node_animation_example.mp4') # movie does not save
 
 ### Link Animation ###
 #link_values = results.link.loc['velocity',0,:]

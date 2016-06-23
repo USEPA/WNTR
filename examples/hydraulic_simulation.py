@@ -9,19 +9,19 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Simulate using EPANET
 epanet_sim = wntr.sim.EpanetSimulator(wn)
-epanet_results = epanet_sim.run_sim()
+epanet_sim_results = epanet_sim.run_sim()
 
 # Simulate using Scipy
-scipy_sim = wntr.sim.WNTRSimulator(wn)
-scipy_results = scipy_sim.run_sim()
+wntr_sim = wntr.sim.WNTRSimulator(wn)
+wntr_sim_results = wntr_sim.run_sim()
 
 # Compare link flowrate results
 plt.figure(figsize=(6,10))
 plt.subplot(2,1,1)
-plt.plot(epanet_results.link['flowrate'])
+plt.plot(epanet_sim_results.link['flowrate'])
 plt.title('EPANET, Link Flowrate')
 plt.subplot(2,1,2)
-plt.plot(epanet_results.link['flowrate'] - scipy_results.link['flowrate'])
+plt.plot(epanet_sim_results.link['flowrate'] - wntr_sim_results.link['flowrate'])
 plt.title('EPANET - SCIPY, Link Flowrate')
 
 # Reset the water network and run again

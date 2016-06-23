@@ -1,7 +1,8 @@
 import wntr
 import networkx as nx
 
-wn = wntr.network.WaterNetworkModel('networks/Net3.inp')
+inp_file = 'networks/Net3.inp'
+wn = wntr.network.WaterNetworkModel(inp_file)
 
 G = wn.get_graph_deep_copy()
 

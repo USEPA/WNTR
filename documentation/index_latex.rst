@@ -1,5 +1,5 @@
-WNTR 0.1 documentation
-=======================
+WNTR 0.1 documentation (*DRAFT*)
+==================================
 
 .. toctree::
    :maxdepth: 1

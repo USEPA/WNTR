@@ -1,4 +1,4 @@
-Water network model
+Water network model (*DRAFT*)
 ======================================
 
 The water network model includes 
@@ -34,8 +34,9 @@ The inp file will not include features not supported by EPANET.
 .. literalinclude:: ../examples/water_network_model.py
    :lines: 21
 	
-Demands associated with pressure-driven simulation can be stored as
-demands in the inp file (**NOT COMPLETE**).  See :ref:`simulation_results` for more information on data stored in ``results.node``.
+.. 
+	Demands associated with pressure-driven simulation can be stored as
+	demands in the inp file (**NOT COMPLETE**).  See :ref:`simulation_results` for more information on data stored in ``results.node``.
 
 The following table describes water network model components.  
 EPANET components that are not supported by WNTR are noted.
@@ -43,9 +44,9 @@ For more information on the water network model, see the
 :doc:`WaterNetworkModel</apidoc/wntr.network.WaterNetworkModel>` 
 module documentation.
 
-==============================  ================================================================================================================================================
+==============================  ====================================================================================================================================================
 Component			Description
-==============================  ================================================================================================================================================
+==============================  ====================================================================================================================================================
 Junctions			Junctions are nodes where links connect. 
 				Water can enter or leave the network at a junction.
 				Junction attributes include the junction name, base demand, elevation, and demand pattern name.
@@ -121,4 +122,4 @@ Options				Options are defined in the class :doc:`WaterNetworkOptions</apidoc/wn
 Coordinates			Coordinates are the x,y location of each node.  WNTR stores node coordinates in a NetworkX graph.
 				The method :doc:`set_node_coordinate</apidoc/wntr.network.WaterNetworkModel>` can be used to set a node coordinate.
 				Node coordinates can be added using the [COORDINATES] section of an EPANET inp file.
-==============================  ================================================================================================================================================
+==============================  ====================================================================================================================================================

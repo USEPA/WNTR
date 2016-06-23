@@ -2,7 +2,8 @@ import wntr
 import matplotlib.pyplot as plt
 
 # Create a water network model and setup simulation
-wn = wntr.network.WaterNetworkModel('networks/Net3.inp')
+inp_file = 'networks/Net3.inp'
+wn = wntr.network.WaterNetworkModel(inp_file)
 sim = wntr.sim.EpanetSimulator(wn)
 
 # Run chemical concentration scenario and plot results

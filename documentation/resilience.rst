@@ -1,4 +1,4 @@
-Resilience metrics		
+Resilience metrics (*DRAFT*)	
 ======================================
 
 Resilience of water distribution systems refers to the 
@@ -6,7 +6,7 @@ design, maintenance, and operations of that system.
 All these aspects must work together to limit the effects of disasters and 
 enables rapid return to normal delivery of safe water to customers.
 Numerous resilience metrics have been suggested [USEPA2014]_.  
-These metrics generally fall into three categories: topographic, hydraulic, and water quality/security.
+These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic.
 While some metrics define resilience as a single network-wide quantity, other metrics define 
 quantities that are a function of time, space, or both. 
 For this reason, state transition plots [Barker2013]_  and network graphics
@@ -168,6 +168,10 @@ Fraction of delivered volume		Fraction of delivered volume (FDV) is the ratio of
 
 Fraction of delivered demand		Fraction of delivered demand (FDD) is the fraction of time periods where demand is met [Ostfeld2002]_.
 					This metric can be computed as a function of time or space using the :doc:`fdd</apidoc/wntr.metrics.fraction_delivered>` method
+
+Population impacted			Population that is impacted by a specific quantity can be computed using the 
+					:doc:`population_impacted</apidoc/wntr.metrics.health_impacts>` method.  For example, this method can be used to compute the population
+					impacted by pressure below a specified threshold.
 =====================================  ================================================================================================================================================
 
 
@@ -190,6 +194,9 @@ Fraction of delivered quality		Fraction of delivered quality (FDQ) is the fracti
 
 Average water consumed per day		Average water consumed per day is computed at each node, based on node demand and demand patterns [USEPA2014b]_.
 					The metric can be computed using the :doc:`average_water_consumed_perday</apidoc/wntr.metrics.health_impacts>` method.
+
+Population impacted			As stated above, population that is impacted by a specific quantity can be computed using the 
+					:doc:`population_impacted</apidoc/wntr.metrics.health_impacts>` method.  This can be applied to water quality metrics.
 =====================================  ================================================================================================================================================
 
 Water security metrics
@@ -209,6 +216,9 @@ Volume consumed				Volume consumed is the volume of contaminant that exists the 
 Extent of contamination			Extent of contamination is the length of contaminated pipe at each node-time pair [USEPA2014b]_.  
 					A detection limit may be specified.
 					The metric can be computed using the :doc:`extent_contaminant</apidoc/wntr.metrics.health_impacts>` method.
+
+Population impacted			As stated above, population that is impacted by a specific quantity can be computed using the 
+					:doc:`population_impacted</apidoc/wntr.metrics.health_impacts>` method.  This can be applied to water security metrics.
 =====================================  ================================================================================================================================================
 ..
 	Contaminate ingested
@@ -216,17 +226,13 @@ Extent of contamination			Extent of contamination is the length of contaminated 
 	Population exposed
 	Population killed
 
-Other metrics
--------------
-Additional metrics include network cost, greenhouse gas emissions, and population impacted metrics.
+Economic metrics
+------------------
+Economic metrics include network cost and greenhouse gas emissions.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
 =====================================  ================================================================================================================================================
-Population impacted			Population that is impacted by a specific quantity can be computed using the 
-					:doc:`population_impacted</apidoc/wntr.metrics.health_impacts>` method.  For example, this method can be used to compute the population
-					impacted by pressure below a specified threshold.
-
 Network Cost				Network cost can be computed based on equations from the Battle of Water Networks II [Salomons2012]_
 					using the :doc:`cost</apidoc/wntr.metrics.cost>` method.
 
