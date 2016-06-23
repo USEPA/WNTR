@@ -2782,8 +2782,10 @@ class Pump(Link):
 
         # Multi-point curve
         else:
-            raise RuntimeError("Coefficient for Multipoint pump curves cannot be generated. ")
+            raise RuntimeError('Coefficient for Multipoint pump curves cannot be generated. ')
 
+        if A<=0 or B<0 or C<=0:
+            raise RuntimeError('Value of pump head curve coefficient is negative, which is not allowed. \nPump: {0} \nA: {1} \nB: {2} \nC:{3}'.format(self.name(),A,B,C))
         return (A, B, C)
 
     def get_design_flow(self):
