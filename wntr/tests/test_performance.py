@@ -247,10 +247,10 @@ class TestPerformance(unittest.TestCase):
 
         self.assertLess(np.average(head_diff_list), 3e-5)
         self.assertLess(np.average(demand_diff_list), 1.4e-8)
-        self.assertLess(np.average(flow_diff_list), 1.8e-7)
+        self.assertLess(np.average(flow_diff_list), 2.0e-7)
         self.assertLess(np.std(head_diff_list), 3e-5)
         self.assertLess(np.std(demand_diff_list), 1.1e-7)
-        self.assertLess(np.std(flow_diff_list), 1.2e-6)
+        self.assertLess(np.std(flow_diff_list), 1.3e-6)
         self.assertLess(t1-t0, 5)
         self.assertLess(np.average(sim.time_per_step), .006)
         self.assertLessEqual(len(sim.time_per_step), 686)

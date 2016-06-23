@@ -97,8 +97,8 @@ class HydraulicModel(object):
         # self.hw_q1 = 0.00349347323944
         # self.hw_q2 = 0.00549347323944
         # self.hw_m = 0.01
-        self.hw_q1 = 0.0001
-        self.hw_q2 = 0.0002
+        self.hw_q1 = 0.0002
+        self.hw_q2 = 0.0004
         self.hw_m = 0.001
         x1 = self.hw_q1
         x2 = self.hw_q2
