@@ -1196,7 +1196,6 @@ class WaterNetworkModel(object):
         -------
         name, node
         """
-        warnings.warn('WaterNetworkModel.junctions() is deprecated. Please use WaterNetworkModel.nodes(wntr.network.Junction).')
         for name, node in self._junctions.iteritems():
             yield name, node
 
@@ -1208,7 +1207,6 @@ class WaterNetworkModel(object):
         -------
         name, node
         """
-        warnings.warn('WaterNetworkModel.tanks() is deprecated. Please use WaterNetworkModel.nodes(wntr.network.Tank).')
         for name, node in self._tanks.iteritems():
             yield name, node
 
@@ -1220,7 +1218,6 @@ class WaterNetworkModel(object):
         -------
         name, node
         """
-        warnings.warn('WaterNetworkModel.reservoirs() is deprecated. Please use WaterNetworkModel.nodes(wntr.network.Reservoir).')
         for name, node in self._reservoirs.iteritems():
             yield name, node
 
@@ -1257,7 +1254,6 @@ class WaterNetworkModel(object):
         -------
         name, link
         """
-        warnings.warn('WaterNetworkModel.pipes() is deprecated. Please use WaterNetworkModel.links(wntr.network.Pipe).')
         for name, link in self._pipes.iteritems():
             yield name, link
 
@@ -1269,7 +1265,6 @@ class WaterNetworkModel(object):
         -------
         name, link
         """
-        warnings.warn('WaterNetworkModel.pumps() is deprecated. Please use WaterNetworkModel.links(wntr.network.Pump).')
         for name, link in self._pumps.iteritems():
             yield name, link
 
@@ -1281,7 +1276,6 @@ class WaterNetworkModel(object):
         -------
         name, link
         """
-        warnings.warn('WaterNetworkModel.valves() is deprecated. Please use WaterNetworkModel.links(wntr.network.Valve).')
         for name, link in self._valves.iteritems():
             yield name, link
 
