@@ -26,6 +26,7 @@ Each Panel is indexed by item, major_axis, and minor_axis.
 	* velocity
 	* flowrate
 	* type
+	* status
 	
 * major_axis
 	Time in seconds from the start of the simulation
