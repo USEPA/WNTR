@@ -1,15 +1,19 @@
 WNTR: Water Network Tool for Resilience
 =======================================
 
-WNTR is a python package designed to simulate and analyse resilience of 
-water distribution networks.  The software includes:
+WNTR is a python package designed to simulate and analyze resilience of 
+water distribution networks.  The software includes capability to:
 
-* Pressure driven and demand driven hydraulic simulation
-* Water quality simulation to track concentration, trace, and water age.
-* Conditional controls to simulate power outages
-* Models to simulate pipe breaks
+* Generate water network models
+* Modify network structure and operations
+* Add disruptive events including pipe leaks
+* Add response/repair strategies
+* Simulate pressure driven demand and demand driven hydraulics
+* Simulate water quality to track concentration, trace, and water age
 * A wide range of resilience metrics 
 * Analysis and visualization tools
+
+For more information, go to http://wntr.readthedocs.io
 
 License
 ------------
@@ -27,9 +31,11 @@ Directories
   * documentation - user manual
   * examples - examples and network files
 
-Project Managers
-   * Katherine Klise, Sandia National Laboratories
-   * Regan Murray, US Environmental Protection Agency
+Contact
+--------
+
+   * Katherine Klise, Sandia National Laboratories, kaklise@sandia.gov
+   * Regan Murray, US Environmental Protection Agency, Murray.Regan@epa.gov
 
 
 
