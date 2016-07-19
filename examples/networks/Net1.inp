@@ -1,0 +1,180 @@
+[TITLE]
+ EPANET Example Network 1
+A simple example of modeling chlorine decay. Both bulk and
+wall reactions are included. 
+
+[JUNCTIONS]
+;ID              	Elev        	Demand      	Pattern         
+ 10              	710         	0           	                	;
+ 11              	710         	150         	                	;
+ 12              	700         	150         	                	;
+ 13              	695         	100         	                	;
+ 21              	700         	150         	                	;
+ 22              	695         	200         	                	;
+ 23              	690         	150         	                	;
+ 31              	700         	100         	                	;
+ 32              	710         	100         	                	;
+
+[RESERVOIRS]
+;ID              	Head        	Pattern         
+ 9               	800         	                	;
+
+[TANKS]
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
+ 2               	850         	120         	100         	150         	50.5        	0           	                	;
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ 10              	10              	11              	10530       	18          	100         	0           	Open  	;
+ 11              	11              	12              	5280        	14          	100         	0           	Open  	;
+ 12              	12              	13              	5280        	10          	100         	0           	Open  	;
+ 21              	21              	22              	5280        	10          	100         	0           	Open  	;
+ 22              	22              	23              	5280        	12          	100         	0           	Open  	;
+ 31              	31              	32              	5280        	6           	100         	0           	Open  	;
+ 110             	2               	12              	200         	18          	100         	0           	Open  	;
+ 111             	11              	21              	5280        	10          	100         	0           	Open  	;
+ 112             	12              	22              	5280        	12          	100         	0           	Open  	;
+ 113             	13              	23              	5280        	8           	100         	0           	Open  	;
+ 121             	21              	31              	5280        	8           	100         	0           	Open  	;
+ 122             	22              	32              	5280        	6           	100         	0           	Open  	;
+
+[PUMPS]
+;ID              	Node1           	Node2           	Parameters
+ 9               	9               	10              	HEAD 1	;
+
+[VALVES]
+;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss   
+
+[TAGS]
+
+[DEMANDS]
+;Junction        	Demand      	Pattern         	Category
+
+[STATUS]
+;ID              	Status/Setting
+
+[PATTERNS]
+;ID              	Multipliers
+;Demand Pattern
+ 1               	1.0         	1.2         	1.4         	1.6         	1.4         	1.2         
+ 1               	1.0         	0.8         	0.6         	0.4         	0.6         	0.8         
+
+[CURVES]
+;ID              	X-Value     	Y-Value
+;PUMP: PUMP: Pump Curve for Pump 9
+ 1               	1500        	250         
+
+[CONTROLS]
+ LINK 9 OPEN IF NODE 2 BELOW 110
+ LINK 9 CLOSED IF NODE 2 ABOVE 140
+
+
+
+[RULES]
+
+
+[ENERGY]
+ Global Efficiency  	75
+ Global Price       	0.0
+ Demand Charge      	0.0
+
+[EMITTERS]
+;Junction        	Coefficient
+
+[QUALITY]
+;Node            	InitQual
+ 10              	0.5
+ 11              	0.5
+ 12              	0.5
+ 13              	0.5
+ 21              	0.5
+ 22              	0.5
+ 23              	0.5
+ 31              	0.5
+ 32              	0.5
+ 9               	1.0
+ 2               	1.0
+
+[SOURCES]
+;Node            	Type        	Quality     	Pattern
+
+[REACTIONS]
+;Type     	Pipe/Tank       	Coefficient
+
+
+[REACTIONS]
+ Order Bulk            	1
+ Order Tank            	1
+ Order Wall            	1
+ Global Bulk           	-.5
+ Global Wall           	-1
+ Limiting Potential    	0.0
+ Roughness Correlation 	0.0
+
+[MIXING]
+;Tank            	Model
+
+[TIMES]
+ Duration           	24:00 
+ Hydraulic Timestep 	1:00 
+ Quality Timestep   	0:05 
+ Pattern Timestep   	2:00 
+ Pattern Start      	0:00 
+ Report Timestep    	1:00 
+ Report Start       	0:00 
+ Start ClockTime    	12 am
+ Statistic          	NONE
+
+[REPORT]
+ Status             	Yes
+ Summary            	No
+ Page               	0
+
+[OPTIONS]
+ Units              	GPM
+ Headloss           	H-W
+ Specific Gravity   	1.0
+ Viscosity          	1.0
+ Trials             	40
+ Accuracy           	0.001
+ CHECKFREQ          	2
+ MAXCHECK           	10
+ DAMPLIMIT          	0
+ Unbalanced         	Continue 10
+ Pattern            	1
+ Demand Multiplier  	1.0
+ Emitter Exponent   	0.5
+ Quality            	Chlorine mg/L
+ Diffusivity        	1.0
+ Tolerance          	0.01
+
+[COORDINATES]
+;Node            	X-Coord         	Y-Coord
+ 10              	20.00           	70.00           
+ 11              	30.00           	70.00           
+ 12              	50.00           	70.00           
+ 13              	70.00           	70.00           
+ 21              	30.00           	40.00           
+ 22              	50.00           	40.00           
+ 23              	70.00           	40.00           
+ 31              	30.00           	10.00           
+ 32              	50.00           	10.00           
+ 9               	10.00           	70.00           
+ 2               	50.00           	90.00           
+
+[VERTICES]
+;Link            	X-Coord         	Y-Coord
+
+[LABELS]
+;X-Coord           Y-Coord          Label & Anchor Node
+ 6.99             73.63            "Source"                 
+ 13.48            68.13            "Pump"                 
+ 43.85            91.21            "Tank"                 
+
+[BACKDROP]
+ DIMENSIONS     	7.00            	6.00            	73.00           	94.00           
+ UNITS          	None
+ FILE           	
+ OFFSET         	0.00            	0.00            
+
+[END]
