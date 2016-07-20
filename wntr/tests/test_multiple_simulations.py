@@ -16,7 +16,7 @@ class TestResetInitialValues(unittest.TestCase):
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_18.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
@@ -69,7 +69,7 @@ class TestStopStartSim(unittest.TestCase):
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_18.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
 
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic_timestep = 3600
@@ -132,7 +132,7 @@ class TestPickle(unittest.TestCase):
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_18.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
 
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic_timestep = 3600

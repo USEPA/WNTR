@@ -20,7 +20,7 @@ class TestNetworkCreation(unittest.TestCase):
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_6.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
         self.wn = self.wntr.network.WaterNetworkModel()
         parser = self.wntr.network.ParseWaterNetwork()
         parser.read_inp_file(self.wn, inp_file)
@@ -169,7 +169,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(wn._graph.edges(), [('j1','j3')])
 
     def test_remove_node(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_6.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         wn.remove_node('TANK-3326')
@@ -178,7 +178,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertNotIn('TANK-3326',wn._graph.nodes())
 
         
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_test_network_1.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         tank1 = wn.get_node('tank1')
@@ -204,16 +204,21 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(node_list, node_list_2)
 
     def test_remove_controls_for_removing_link(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leak_test_network.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
+        
+        control_action = self.wntr.network.ControlAction(wn.get_link('21'), 'status', self.wntr.network.LinkStatus.opened)
+        control = self.wntr.network.ConditionalControl((wn.get_node('2'),'head'), np.greater, 10.0, control_action)
+        wn.add_control('control_1',control)
+        
         import copy
         controls_1 = copy.deepcopy(wn._control_dict)
         
         wn.remove_link('21')
 
         controls_2 = copy.deepcopy(wn._control_dict)
-        self.assertEqual(True, 'LINK21OPENIFNODE2ABOVE300.23' in controls_1.keys())
-        self.assertEqual(False, 'LINK21OPENIFNODE2ABOVE300.23' in controls_2.keys())
+        self.assertEqual(True, 'control_1' in controls_1.keys())
+        self.assertEqual(False, 'control_1' in controls_2.keys())
 
     def test_nodes(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -417,7 +422,7 @@ class TestInpFileWriter(unittest.TestCase):
         sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_17.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
         self.wn = wntr.network.WaterNetworkModel(inp_file)
         self.wn.write_inpfile('tmp.inp')
         self.wn2 = wntr.network.WaterNetworkModel('tmp.inp')
@@ -486,7 +491,7 @@ class TestNet3InpWriterResults(unittest.TestCase):
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_18.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         
         sim = self.wntr.sim.EpanetSimulator(self.wn)
