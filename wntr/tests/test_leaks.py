@@ -11,7 +11,7 @@ resilienceMainDir = os.path.abspath(
 import math
 import warnings
 
-class TestLeakAdditionaAndRemoval(unittest.TestCase):
+class TestLeakAdditionAndRemoval(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
@@ -24,7 +24,7 @@ class TestLeakAdditionaAndRemoval(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_add_leak(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_1.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leaks.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         pipe = wn.get_link('pipe1')
         wn.split_pipe_with_junction('pipe1','pipe1__A','pipe1__B','leak1')
@@ -65,7 +65,7 @@ class TestLeakResults(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_leak_demand(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_2.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leaks.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.split_pipe_with_junction('pipe2','pipe2__A','pipe2__B','leak1')
         leak1 = wn.get_node('leak1')
@@ -86,49 +86,43 @@ class TestLeakResults(unittest.TestCase):
                 self.assertAlmostEqual(results.node.at['leak_demand',t,'leak1'], 0.75*math.pi/4.0*0.01**2.0*math.sqrt(2*9.81*results.node.at['pressure',t,'leak1']))
 
     def test_leak_against_epanet(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leaks.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.split_pipe_with_junction('pipe2','pipe2__A','pipe2__B','leak1')
         leak1 = wn.get_node('leak1')
-        leak1.add_leak(wn, area=math.pi/4.0*0.08**2, discharge_coeff=0.75)#, start_time=4*3600, end_time=12*3600)
-        active_control_action = self.wntr.network.ControlAction(leak1, 'leak_status', True)
-        inactive_control_action = self.wntr.network.ControlAction(leak1, 'leak_status', False)
-        control = self.wntr.network.TimeControl(wn, 4*3600, 'SIM_TIME', False, active_control_action)
-        wn.add_control('control1',control)
-        control = self.wntr.network.TimeControl(wn, 12*3600, 'SIM_TIME', False, inactive_control_action)
-        wn.add_control('control2',control)
+        leak1.add_leak(wn, area=math.pi/4.0*0.08**2, discharge_coeff=0.75, start_time=0, end_time=None)
         sim = self.wntr.sim.WNTRSimulator(wn)
-        pyomo_results = sim.run_sim()
+        results = sim.run_sim()
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13B.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/epanet_leaks.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.EpanetSimulator(wn)
         epanet_results = sim.run_sim()
 
         for link_name, link in wn.links():
-            for t in pyomo_results.link.major_axis:
-                self.assertLessEqual(abs(pyomo_results.link.at['flowrate',t,link_name] - epanet_results.link.at['flowrate',t,link_name]), 0.00001)
+            for t in results.link.major_axis:
+                self.assertLessEqual(abs(results.link.at['flowrate',t,link_name] - epanet_results.link.at['flowrate',t,link_name]), 0.00001)
 
         for node_name, node in wn.nodes():
             if node_name != 'leak1':
-                for t in pyomo_results.node.major_axis:
-                    self.assertLessEqual(abs(pyomo_results.node.at['demand',t,node_name] - epanet_results.node.at['demand',t,node_name]), 0.00001)
+                for t in results.node.major_axis:
+                    self.assertLessEqual(abs(results.node.at['demand',t,node_name] - epanet_results.node.at['demand',t,node_name]), 0.00001)
             else:
-                for t in pyomo_results.node.major_axis:
-                    self.assertLessEqual(abs(pyomo_results.node.at['leak_demand',t,node_name] - epanet_results.node.at['demand',t,node_name]), 0.00001)
+                for t in results.node.major_axis:
+                    self.assertLessEqual(abs(results.node.at['leak_demand',t,node_name] - epanet_results.node.at['demand',t,node_name]), 0.00001)
 
         for node_name, node in wn.nodes():
             if node_name != 'leak1':
-                for t in pyomo_results.node.major_axis:
-                    self.assertLessEqual(abs(pyomo_results.node.at['expected_demand',t,node_name] - epanet_results.node.at['expected_demand',t,node_name]), 0.00001)
+                for t in results.node.major_axis:
+                    self.assertLessEqual(abs(results.node.at['expected_demand',t,node_name] - epanet_results.node.at['expected_demand',t,node_name]), 0.00001)
 
         for node_name, node in wn.nodes():
-            for t in pyomo_results.node.major_axis:
-                self.assertLessEqual(abs(pyomo_results.node.at['head',t,node_name] - epanet_results.node.at['head',t,node_name]), 0.001)
+            for t in results.node.major_axis:
+                self.assertLessEqual(abs(results.node.at['head',t,node_name] - epanet_results.node.at['head',t,node_name]), 0.001)
 
         for node_name, node in wn.nodes():
-            for t in pyomo_results.node.major_axis:
-                self.assertLessEqual(abs(pyomo_results.node.at['pressure',t,node_name] - epanet_results.node.at['pressure',t,node_name]), 0.001)
+            for t in results.node.major_axis:
+                self.assertLessEqual(abs(results.node.at['pressure',t,node_name] - epanet_results.node.at['pressure',t,node_name]), 0.001)
 
     #def test_remove_leak_results(self):
     #    inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'

@@ -179,7 +179,7 @@ class TestValveControls(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_check_valve_closed(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/cv_controls.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
@@ -191,7 +191,7 @@ class TestValveControls(unittest.TestCase):
             self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
 
     def test_check_valve_opened(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/cv_controls.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         tank1 = wn.get_node('tank1')
         tank2 = wn.get_node('tank2')

@@ -12,6 +12,7 @@ TODO: Do a single smoothing for all leaks similar to what is done for Hazen-Will
 TODO: Bug - when the initial level of a tank is such that a conditional control would activate at time zero,
       the control does not activate, time 0 is solved, results are saved at time 0, the control is activate, and time
       zero is resolved, resulting in 2 sets of results for time 0.
+TODO: Remove __eq__ methods
 """
 
 from wntr import *
