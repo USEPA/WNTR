@@ -3,7 +3,7 @@ import wntr
 from os.path import abspath, dirname, join
 
 testdir = dirname(abspath(__file__))
-datadir = join(testdir,'..','..','tests','networks_for_testing')
+datadir = join(testdir,'..','..','..','examples','networks')
 
 def test_isOpen():
     enData = wntr.pyepanet.ENepanet()

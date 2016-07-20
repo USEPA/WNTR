@@ -6,13 +6,14 @@ import wntr
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','tests','networks_for_testing')
+net1dir = join(testdir,'..','..','..','examples','networks')
 packdir = join(testdir,'..','..','..')
 
 epanet_unit_id = {'CFS': 0, 'GPM': 1, 'MGD': 2, 'IMGD': 3, 'AFD': 4,
                   'LPS': 5, 'LPM': 6, 'MLD': 7, 'CMH':  8, 'CMD': 9}
                   
 def test_Net1():
-    inp_file = join(datadir,'Net1.inp') 
+    inp_file = join(net1dir,'Net1.inp') 
     
     wn = wntr.network.WaterNetworkModel()
     parser = wntr.network.ParseWaterNetwork()
@@ -117,7 +118,7 @@ def test_Net1():
     assert_dict_equal(length, expected_length)
     
 def test_query_node_attribute():
-    inp_file = join(datadir,'Net1.inp') 
+    inp_file = join(net1dir,'Net1.inp') 
     
     wn = wntr.network.WaterNetworkModel()
     parser = wntr.network.ParseWaterNetwork()
@@ -131,7 +132,7 @@ def test_query_node_attribute():
     assert_list_equal(nodes.keys(), expected_nodes)
 
 def test_query_pipe_attribute():
-    inp_file = join(datadir,'Net1.inp') 
+    inp_file = join(net1dir,'Net1.inp') 
     
     wn = wntr.network.WaterNetworkModel()
     parser = wntr.network.ParseWaterNetwork()
@@ -145,7 +146,7 @@ def test_query_pipe_attribute():
     assert_list_equal(pipes.keys(), expected_pipes)
 
 def test_nzd_nodes():
-    inp_file = join(datadir,'Net1.inp') 
+    inp_file = join(net1dir,'Net1.inp') 
     
     wn = wntr.network.WaterNetworkModel()
     parser = wntr.network.ParseWaterNetwork()

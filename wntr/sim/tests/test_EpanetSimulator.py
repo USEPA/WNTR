@@ -3,7 +3,7 @@ from os.path import abspath, dirname, join
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','tests','networks_for_testing')
+datadir = join(testdir,'..','..','..','examples','networks')
 packdir = join(testdir,'..','..','..')
 
 """
@@ -15,7 +15,7 @@ River        CONCEN        100000   mg/L
 """
 
 def test_setpoint_waterquality_simulation():
-    inp_file = join(datadir,'net_test_18.inp') 
+    inp_file = join(datadir,'Net3.inp') 
     
     wn = wntr.network.WaterNetworkModel(inp_file)
     
@@ -29,7 +29,7 @@ def test_setpoint_waterquality_simulation():
     assert_less(error, 0.0001) # 0.01% error
 
 def test_flowpaced_waterquality_simulation():
-    inp_file = join(datadir,'net_test_18.inp') 
+    inp_file = join(datadir,'Net3.inp') 
     
     wn = wntr.network.WaterNetworkModel(inp_file)
     
@@ -43,7 +43,7 @@ def test_flowpaced_waterquality_simulation():
     assert_less(error, 0.0001) # 0.01% error
         
 def test_mass_waterquality_simulation():
-    inp_file = join(datadir,'net_test_18.inp') 
+    inp_file = join(datadir,'Net3.inp') 
     
     wn = wntr.network.WaterNetworkModel(inp_file)
     
@@ -57,7 +57,7 @@ def test_mass_waterquality_simulation():
     assert_less(error, 0.0001) # 0.01% error
         
 def test_conc_waterquality_simulation():
-    inp_file = join(datadir,'net_test_18.inp') 
+    inp_file = join(datadir,'Net3.inp') 
     
     wn = wntr.network.WaterNetworkModel(inp_file)
     
@@ -71,7 +71,7 @@ def test_conc_waterquality_simulation():
     assert_less(error, 0.0001) # 0.01% error
     
 def test_age_waterquality_simulation():
-    inp_file = join(datadir,'net_test_18.inp') 
+    inp_file = join(datadir,'Net3.inp') 
     
     wn = wntr.network.WaterNetworkModel(inp_file)
     
@@ -86,7 +86,7 @@ def test_age_waterquality_simulation():
     assert_less(error, 0.0001) # 0.01% error
 
 def test_trace_waterquality_simulation():
-    inp_file = join(datadir,'net_test_18.inp') 
+    inp_file = join(datadir,'Net3.inp') 
     
     wn = wntr.network.WaterNetworkModel(inp_file)
     

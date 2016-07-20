@@ -4,6 +4,7 @@ import wntr
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','tests','networks_for_testing')
+net3dir = join(testdir,'..','..','..','examples','networks')
 packdir = join(testdir,'..','..','..')
 
 """
@@ -12,7 +13,7 @@ Compare results to WST impact files using TSG file
 """
 
 def test_mass_consumed():
-    inp_file = join(datadir,'net_test_18.inp') 
+    inp_file = join(net3dir,'Net3.inp') 
     
     wn = wntr.network.WaterNetworkModel(inp_file)
         
@@ -40,7 +41,7 @@ def test_mass_consumed():
     assert_less(error, 0.01) # 1% error
     
 def test_volume_consumed():
-    inp_file = join(datadir,'net_test_18.inp') 
+    inp_file = join(net3dir,'Net3.inp')  
     
     wn = wntr.network.WaterNetworkModel(inp_file)
         
@@ -68,7 +69,7 @@ def test_volume_consumed():
     assert_less(error, 0.01) # 1% error
     
 def test_extent_contaminated():
-    inp_file = join(datadir,'net_test_18.inp') 
+    inp_file = join(net3dir,'Net3.inp')  
 
     wn = wntr.network.WaterNetworkModel(inp_file)
     

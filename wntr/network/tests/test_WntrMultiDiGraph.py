@@ -5,10 +5,11 @@ import wntr
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','tests','networks_for_testing')
+net1dir = join(testdir,'..','..','..','examples','networks')
 packdir = join(testdir,'..','..','..')
 
 def test_terminal_nodes():
-    inp_file = join(datadir,'Net1.inp')
+    inp_file = join(net1dir,'Net1.inp')
     wn = wntr.network.WaterNetworkModel()
     parser = wntr.network.ParseWaterNetwork()
     parser.read_inp_file(wn, inp_file)
@@ -21,7 +22,7 @@ def test_terminal_nodes():
     assert_list_equal(terminal_nodes, expected_nodes)
 
 def test_Net1_MultiDiGraph():
-    inp_file = join(datadir,'Net1.inp') 
+    inp_file = join(net1dir,'Net1.inp') 
     wn = wntr.network.WaterNetworkModel(inp_file)
     G = wn.get_graph_deep_copy()
 

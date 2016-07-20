@@ -5,6 +5,7 @@ import wntr
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','tests','networks_for_testing')
+net6dir = join(testdir,'..','..','..','examples','networks')
 packdir = join(testdir,'..','..','..')
 
 import functools
@@ -105,48 +106,10 @@ def test_Todini_Fig2_solA_CMH():
     error = abs((todini[0] - expected)/expected)
     assert_less(error, 0.1) # 10% error
 
-@expected_failure
-def test_BWSN_Network_2():
-    inp_file = join(datadir,'BWSN_Network_2.inp') 
-
-    # Create a water network model for results object
-    wn = wntr.network.WaterNetworkModel()
-    parser = wntr.network.ParseWaterNetwork()
-    parser.read_inp_file(wn, inp_file)
-    
-    sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim()
-
-    # Compute todini index
-    todini = wntr.metrics.todini(results.node, results.link, wn, 21.1)
-    # len(time) <> len(todini) becuase the hydrulic simulation ends at 27 hours
-    # the system is disconnected at that time
-    
-    todini = np.array(todini)
-    Tave = np.mean(todini)
-    Tmax = max(todini)
-    Tmin = min(todini)
-    
-    print 'Todini: BWSN_Network_2'
-    print "  average index: " + str(Tave)
-    print "  max index: " + str(Tmax)
-    print "  min index: " + str(Tmin)
-    
-    expected_Taverage = 0.836
-    error = abs((Tave - expected_Taverage)/expected_Taverage)
-    assert_less(error, 0.1) # 10% error
-    
-    expected_Tmax = 0.930
-    error = abs((Tmax - expected_Tmax)/expected_Tmax)
-    assert_less(error, 0.1) # 10% error
-    
-    expected_Tmin = 0.644
-    error = abs((Tmin - expected_Tmin)/expected_Tmin)
-    assert_less(error, 0.1) # 10% error
     
 @expected_failure
 def test_Net6():
-    inp_file = join(datadir,'Net6_mod.inp') 
+    inp_file = join(net6dir,'Net6.inp') 
 
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel()
