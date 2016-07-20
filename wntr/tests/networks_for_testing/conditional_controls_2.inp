@@ -1,0 +1,127 @@
+[TITLE]
+ Small network for testing conditional controls
+
+[JUNCTIONS]
+;ID           	              	Elev        	Demand      	Pattern         
+ junction1              	0         	0           	pattern1                	;
+ junction2              	0         	10         	pattern1                	;
+ junction3			0		0		pattern1			;
+
+[RESERVOIRS]
+;ID              	Head        	Pattern         
+ res1			10		pattern1	;
+
+[TANKS]
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
+ tank1			0		275		0		5000		1.128379167	0		                ;
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ pipe1              	tank1              	junction1             	1000       	457.2          	100         	0           	Closed 	;
+ pipe2              	junction1              	junction2      		1000        	457.2          	100         	0           	Open  	;
+ pipe3			junction3		tank1			1000		457.2		1000		0		Open	;
+
+[PUMPS]
+;PumpID	StartNodeID	EndNodeID	KeywordAndValue
+ pump1	res1		junction3	HEAD curve1 ;
+
+[VALVES]
+;	ValveID StartNodeID EndNodeID Diameter ValveType ValveSetting MinorLossCoefficient
+
+[TAGS]
+;	NODE/LINK NodeID/LinkID TagLabelTextNoSpaces
+
+[DEMANDS]
+;	JunctionID BaseDemand DemandPatternID ;DemandCategoryName
+
+[STATUS]
+;	LinkID Status/Setting
+
+[PATTERNS]
+;	PatternID Multiplier1 Multiplier2 ...
+ pattern1			1.0	1.0	1.0	1.0	1.0
+ pattern1	               	1.0	1.0	1.0	1.0	1.0
+
+[CURVES]
+;	CurveID	x-value	y-value
+ curve1 5.0 290 ;
+
+[CONTROLS]
+;Possible formats (Note: all caps words are keywords that should not be changed):
+;	  LINK linkID status IF NODE nodeID ABOVE/BELOW value
+;	  LINK linkID status AT TIME time
+;	  LINK linkID status AT CLOCKTIME clocktime AM/PM
+ LINK pipe1 OPEN IF NODE tank1 ABOVE 300.0 ;
+
+[RULES]
+
+[ENERGY]
+;Possible formats (Note: all caps words are keywords that should not be changed):
+;	  GLOBAL PRICE/PATTERN/EFFIC value
+;	  PUMP PumpID PRICE/PATTERN/EFFIC value
+;	  DEMAND CHARGE value
+
+[EMITTERS]
+;	JunctionID FlowCoefficient
+
+[QUALITY]
+;	NodeID InitialQuality
+
+[SOURCES]
+;	NodeID SourceType BaselineSourceStrength PatternID
+
+[REACTIONS]
+;Format:
+;	ORDER BULK/WALL/TANK value
+;	GLOBAL BULK/WALL value
+;	BULK/WALL/TANK PipeID value
+;	LIMITING POTENTIAL value
+;	ROUGHNESS CORRELATION value
+
+[MIXING]
+;	TankID MixingModel CompartmentVolumeFraction
+
+[TIMES]
+ Duration           	10:00 
+ Hydraulic Timestep 	1:00 
+ Quality Timestep   	1:00 
+ Rule Timestep		1:00
+ Pattern Timestep   	6:00 
+ Pattern Start      	0:00 
+ Report Timestep    	1:00 
+ Report Start       	0:00 
+ Start ClockTime    	12 am
+ Statistic          	NONE
+
+[REPORT]
+ Status             	Yes
+ Summary            	No
+ Energy			No
+
+[OPTIONS]
+ Units              	CMH
+ Headloss           	H-W
+ Quality		None
+ Specific Gravity   	1.0
+ Viscosity          	1.0
+ Trials             	50
+ Accuracy           	0.000001
+ Unbalanced         	Stop
+ Pattern            	pattern1
+ Demand Multiplier  	1.0
+ Tolerance          	0.01
+
+[COORDINATES]
+ res1   		       	1.00           		0.00
+ junction3			20.0			0.00           
+ tank1				26.00           	0.00           
+ junction1              	51.00           	0.00           
+ junction2			76.00			0.00
+
+[VERTICES]
+
+[LABELS]
+
+[BACKDROP]
+
+[END]

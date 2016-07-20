@@ -19,7 +19,7 @@ class TestTimeControls(unittest.TestCase):
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/time_controls_test_network.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/time_controls.inp'
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.report_timestep = 'all'
         for jname, j in self.wn.nodes(self.wntr.network.Junction):
@@ -58,7 +58,7 @@ class TestConditionalControls(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_close_link_by_tank_level(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_test_network_1.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.options.report_timestep = 'all'
         for jname, j in wn.nodes(self.wntr.network.Junction):
@@ -86,7 +86,7 @@ class TestConditionalControls(unittest.TestCase):
         self.assertGreaterEqual(count, 2)
 
     def test_open_link_by_tank_level(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_test_network_2.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_2.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.options.report_timestep = 'all'
         for jname, j in wn.nodes(self.wntr.network.Junction):
@@ -126,7 +126,7 @@ class TestTankControls(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_pipe_closed_for_low_level(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_test_network1.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
@@ -144,7 +144,7 @@ class TestTankControls(unittest.TestCase):
 
     def test_reopen_pipe_after_tank_fills_back_up(self):
         """
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_test_network2.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_2.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
@@ -179,7 +179,7 @@ class TestValveControls(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_check_valve_closed(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve_test_network_1.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
@@ -191,8 +191,15 @@ class TestValveControls(unittest.TestCase):
             self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
 
     def test_check_valve_opened(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve_test_network_2.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/check_valve.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
+        tank1 = wn.get_node('tank1')
+        tank2 = wn.get_node('tank2')
+        tank1_init_level = tank1.init_level
+        tank1.init_level = tank2.init_level
+        tank2.init_level = tank1_init_level
+        tank1.head = tank1.init_level + tank1.elevation
+        tank2.head = tank2.init_level + tank2.elevation
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
@@ -224,8 +231,11 @@ class TestControlCombinations(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_open_by_time_close_by_condition(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb_1.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
+        control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
+        control = self.wntr.network.TimeControl(wn, 6*3600, 'SIM_TIME', False, control_action)
+        wn.add_control('open_time_6',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
@@ -249,8 +259,16 @@ class TestControlCombinations(unittest.TestCase):
         self.assertEqual(flag2, True)
 
     def test_close_by_condition_open_by_time_stay(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb_2.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
+        tank1 = wn.get_node('tank1')
+        tank1.init_level = 40.0
+        tank1.head = tank1.elevation + 40.0
+        pipe1 = wn.get_link('pipe1')
+        pipe1.status = self.wntr.network.LinkStatus.opened
+        control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
+        control = self.wntr.network.TimeControl(wn, 19*3600, 'SIM_TIME', False, control_action)
+        wn.add_control('open_time_19',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
@@ -274,8 +292,16 @@ class TestControlCombinations(unittest.TestCase):
         self.assertEqual(flag2, True)
 
     def test_close_by_condition_open_by_time_reclose(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb_3.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
+        tank1 = wn.get_node('tank1')
+        tank1.init_level = 40.0
+        tank1.head = tank1.elevation + 40.0
+        pipe1 = wn.get_link('pipe1')
+        pipe1.status = self.wntr.network.LinkStatus.opened
+        control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
+        control = self.wntr.network.TimeControl(wn, 5*3600, 'SIM_TIME', False, control_action)
+        wn.add_control('open_time_5',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0

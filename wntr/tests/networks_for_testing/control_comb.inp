@@ -1,0 +1,226 @@
+[TITLE]
+
+[JUNCTIONS]
+;ID           	            	Elev        	Demand      	Pattern         
+ j1				0		15		pattern1		;
+
+[RESERVOIRS]
+;ID          	           	Head        	Pattern         
+ r1				20		pattern1	;
+
+[TANKS]
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
+ tank1			0		30		0		1000		2		0		    ;
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ pipe1              	tank1     		j1              	1000       	457.2          	100         	0           	CLOSED  	;
+
+[PUMPS]
+;Format (one line for each pump):
+;	PumpID StartNodeID EndNodeID KeywordAndValue
+	pump1  r1	   tank1     HEAD	headcurve1	;
+
+[VALVES]
+;Format (one line for each valve):
+;	ValveID StartNodeID EndNodeID Diameter ValveType ValveSetting MinorLossCoefficient
+
+[TAGS]
+
+[DEMANDS]
+
+[STATUS]
+
+[PATTERNS]
+;ID       	         	Multipliers
+ pattern1			1.0	1.0	1.0	1.0
+ pattern2               	1.0	1.25	1.5	1.25
+
+[CURVES]
+;Format:
+;	CurveID	x-value	y-value
+	headcurve1	4	30
+
+[CONTROLS]
+ LINK pipe1 CLOSED IF NODE tank1 BELOW 30
+
+[RULES]
+
+[ENERGY]
+
+[EMITTERS]
+
+[QUALITY]
+
+[SOURCES]
+
+[REACTIONS]
+
+[MIXING]
+
+[TIMES]
+;Format:
+;	Duration           	value
+;	Hydraulic Timestep 	value
+;	Quality Timestep   	value
+;	Rule Timestep		value
+;	Pattern Timestep   	value
+;	Pattern Start      	value
+;	Report Timestep    	value
+;	Report Start       	value
+;	Start ClockTime    	value
+;	Statistic          	value
+;where:
+;	Duration is the simulation duration
+;	Hydraulic Timestep determines how often a new hydraulic state of the network is computed. Default is 1 hour
+;	Quality Timestep is the time step used to track changes in water quality. The default is 1/10 of the hydraulic time step
+;	Rule Timestep is the time step used to check for changes in system status due to activation of rule-based controls between hydraulic time steps. The default is 1/10 of the hydraulic time step.
+;	Pattern Timestep is the interval between time periods in all time patterns. The default is 1 hour.
+;	Pattern Start is the time offset at which all patterns will start. E.g., a value of 6 hours would start the simulation with each pattern in the time period that corresponds to hour 6. the default is 0.
+;	Report Timestep sets the time interval between which output results are reported. The default is 1 hour.
+;	Report Start is the length of time into the simulation at which output results begin to be reported. The default is 0.
+;	Start Clocktime is the time of day at which the simulation begins. The default is 12:00 AM.
+;	Statistic determines what kind of statistical post-processing should be done on the time series of simulation results. Options include AVERAGED, MINIMUM, MAXIMUM, RANGE, and NONE. NONE reports the full time
+;		  series for all quantities for all nodes and links and is the default.
+;Units can be SEC, MIN, HOURS, or DAYS. The default is hours. If units are not supplied, then time values can be entered as decimal hours or in hours:minuts format.
+ Duration           	24:00 
+ Hydraulic Timestep 	1:00  
+ Quality Timestep   	1:00
+ Rule Timestep		1:00  
+ Pattern Timestep   	6:00  
+ Pattern Start      	0:00  
+ Report Timestep    	1:00  
+ Report Start       	0:00  
+ Start ClockTime    	12 am 
+ Statistic          	NONE
+
+
+
+
+
+
+[REPORT]
+;Format:
+;	PAGESIZE value
+;	FILE filename
+;	STATUS YES/NO/FULL
+;	SUMMARY YES/NO
+;	ENERGY YES/NO
+;	NODES NONE/ALL/node1 node2 ...
+;	LINKS NONE/ALL/link1 link2 ...
+;	parameter YES/NO
+;	parameter BELOW/ABOVE/PRECISION value
+;where:
+;	Pagesize sets the number of lines written per page of the output report. The default is 0, meaning that no line limit per page is in effect.
+;	File supplies the name of a file to which the output report will be written
+;	Status determines whether a hydraulic status report should be generated. Full will also include information from each trial.
+;	Summary determines wheter a summary table is generated
+;	Energy determines if a table reporting average energy usage and cost for each pump is provided.
+;	Nodes identifies which nodes will be reported on
+;	Links identifies which links will be reported on
+;	The parameter option is used to identify which quantities are reported on, how many decimal places are displayed, and what kind of filtering should be used to limit output. 
+;	Node parameters that can be reported: elevation, demand, head, pressure, quality. 
+;	Link parameters that can be reported: Length, diameter, flow, velocity, headloss, position, setting, reaction, f-factor
+ Status             	Yes
+ Summary            	No
+ Energy			No
+
+
+
+
+
+[OPTIONS]
+;UNITS CFS/GPM/MGD/IMGD/AFD/LPS/LPM/MLD/CMH/CMD
+;HEADLOSS H-W/D-W/C-M
+;HYDRAULICS USE/SAVE filename
+;QUALITY NONE/CHEMICAL/AGE/TRACE id
+;VISCOSITY value
+;DIFFUSIVITY value
+;SPECIFIC GRAVITY value
+;TRIALS value
+;ACCURACY value
+;UNBALANCED STOP/CONTINUE/CONTINUE n
+;PATTERN id
+;DEMAND MULTIPLIER value
+;EMITTER EXPONENT value
+;TOLERANCE value
+;MAP filename
+;
+;UNITS: units of flow rate. For CFS, GPM, MGD, IMGD, and AFD, other input quantities must be in US Customary Units. If flow units are in liters or cubic meters, then Metric Units must be used for all other input quantities.
+;HEADLOSS: Method for calculating head loss for flow through a pipe
+;HYDRAULICS: either saves the current hydraulics solution or uses a previously saved hydraulics solution.
+;QUALITY: Type of water quality analysis to perform. In place of CHEMICAL, the actual name of the chemical can be used followed by it's concentration units. If TRACE is used, it must be followed by the ID of the node being traced.
+;VISCOSITY: The kinematic viscosity of the fluid being modeled relative to that of water at 20 ded C.
+;DIFFUSIVITY: Molecular diffusivity of the chemical being analyzed relative to that of chlorine in water. It is only used when mass transfer limitations are considered in pipe wall reactions. A value of 0 will cause 
+;	      EPANET to ignore mass transfer limitations
+;SPECIFIC GRAVITY: The ratio of the density of the fluid being modeled to that of water at 4 deg C
+;TRIALS: The maximum number of trials used to solve the network hydraulics at each hydraulic time step of a simulation
+;Accuracy: Convergence criteria for hydraulic solution. The sum of all flow changes from the previous solution divided by the total flow in all links
+;UNBALANCED: Specifies what to do if a hydraulic solution cannot be reached in the specified number of trials. 
+;PATTERN: Default demand pattern for all junctions where no demand pattern was specified.
+;DEMAND MULTIPLIER: Used to adjust the values of baseline demands for all junctions and all demand categories.
+;EMITTER EXPONENT: Specifies the power to which the pressure at a junction is raised when computing the flow issuing from an emitter.
+;MAP: Used to supply the name of a file containing coordinates of the network's nodes so that a map of the network can be drawn. 
+;TOLERANCE: The difference in water quality level below which one can say that one parcel of water is essentially the same as another.
+ Units              	CMH
+ Headloss           	H-W
+ Quality		None
+ Specific Gravity   	1.0
+ Viscosity          	1.0
+ Trials             	50
+ Accuracy           	0.00001
+ Unbalanced         	Stop
+ Pattern            	pattern1
+ Demand Multiplier  	1.0
+ Tolerance          	0.01
+
+
+
+
+
+
+[COORDINATES]
+;Not used in simulation (only for producing a map)
+;Coordinates are distances from arbitrary origin at lower left of map
+;Possible formats:
+;	  NodeID X-Coordinate Y-Coordinate
+;Node     	         	X-Coord         	Y-Coord
+ r1				0.00           		0.00           
+ tank1				25.00           	0.00           
+ j1				50.00			0.00
+
+
+
+
+[VERTICES]
+;Not used in simulation
+;Assigns interior vertex points to network links - allows links to be drawn as polylines instead of simple straight-lines between their end nodes
+;Format:
+;	LinkID x-coordinate y-coordinate
+
+
+
+
+
+
+[LABELS]
+;Not used in simulation
+;Assigns coordinates to map labels
+;Format (One line for each label):
+;	x-coordinate y-coordinate "LabelText" AnchorNodeIDLabel
+;Coordinates refer to upper left corner of label
+;Optional anchor node anchors the label to the node when the map is re-scaled during zooming
+
+
+
+
+
+
+[BACKDROP]
+
+
+
+
+
+
+[END]
