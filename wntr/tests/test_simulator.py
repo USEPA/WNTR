@@ -19,7 +19,7 @@ class TestPDD(unittest.TestCase):
         sys.path.remove(resilienceMainDir)
 
     def test_pdd_with_wntr(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_1.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/simulator.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         res1 = wn.get_node('reservoir1')
         res1.head = 10.0

@@ -88,7 +88,7 @@ class TestNetworkTimeBehavior(unittest.TestCase):
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_12.inp'
+        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/times.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.WNTRSimulator(wn)
         self.results = sim.run_sim()

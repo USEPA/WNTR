@@ -159,7 +159,7 @@ class TestPerformance(unittest.TestCase):
     def test_Net1_performance(self):
         t0 = time.time()
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_19.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
@@ -209,7 +209,7 @@ class TestPerformance(unittest.TestCase):
     def test_Net3_performance(self):
         t0 = time.time()
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_18.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
@@ -258,8 +258,9 @@ class TestPerformance(unittest.TestCase):
     def test_Net6_mod_performance(self):
         t0 = time.time()
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_17.inp'
+        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
+        wn.options.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
