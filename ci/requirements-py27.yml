@@ -1,0 +1,14 @@
+name: test_env
+channels:
+    - defaults
+dependencies:
+    - python=2.7 
+    - numpy
+    - scipy
+    - networkx
+    - pandas
+    - matplotlib
+    - nose
+    - sympy
+    - pip:
+        - coveralls
