@@ -1,4 +1,5 @@
 from nose.tools import *
+from nose import SkipTest
 from os.path import abspath, dirname, join
 import numpy as np
 import wntr
@@ -9,6 +10,13 @@ datadir = join(testdir,'..','..','tests','networks_for_testing')
 packdir = join(testdir,'..','..','..')
 
 def test_central_point_dominance():
+    """
+    Pandit, Arka, and John C. Crittenden. "Index of network resilience
+    (INR) for urban water distribution systems." Nature (2012).
+    """
+
+    raise SkipTest
+    
     inp_file = join(datadir,'Anytown.inp') 
 
     # Create a water network model for results object
@@ -28,6 +36,13 @@ def test_central_point_dominance():
     assert_equal(wn.num_nodes(),22)
 
 def test_diameter():
+    """
+    Pandit, Arka, and John C. Crittenden. "Index of network resilience
+    (INR) for urban water distribution systems." Nature (2012).
+    """
+
+    raise SkipTest
+    
     inp_file = join(datadir,'Anytown.inp') 
 
     # Create a water network model for results object
@@ -42,6 +57,13 @@ def test_diameter():
     assert_less(error, 0.01)
 
 def test_characteristic_path_length():
+    """
+    Pandit, Arka, and John C. Crittenden. "Index of network resilience
+    (INR) for urban water distribution systems." Nature (2012).
+    """
+
+    raise SkipTest
+    
     inp_file = join(datadir,'Anytown.inp') 
 
     # Create a water network model for results object
@@ -58,6 +80,13 @@ def test_characteristic_path_length():
     assert_less(error, 0.01)
 
 def test_algebraic_connectivity():
+    """
+    Pandit, Arka, and John C. Crittenden. "Index of network resilience
+    (INR) for urban water distribution systems." Nature (2012).
+    """
+
+    raise SkipTest
+    
     inp_file = join(datadir,'Anytown.inp') 
 
     # Create a water network model for results object
@@ -71,6 +100,13 @@ def test_algebraic_connectivity():
     assert_less(error, 0.01)
 
 def test_crit_ratio_defrag():
+    """
+    Pandit, Arka, and John C. Crittenden. "Index of network resilience
+    (INR) for urban water distribution systems." Nature (2012).
+    """
+
+    raise SkipTest
+    
     inp_file = join(datadir,'Anytown.inp') 
 
     # Create a water network model for results object
