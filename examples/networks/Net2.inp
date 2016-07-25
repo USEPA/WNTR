@@ -1,0 +1,311 @@
+[TITLE]
+EPANET Example Network 2
+Example of modeling a 55-hour fluoride tracer study.
+Measured fluoride data is contained in the file Net2-FL.dat
+and should be registered with the project to produce a
+Calibration Report (select Calibration Data from the Project
+menu).
+
+[JUNCTIONS]
+;ID              	Elev        	Demand      	Pattern         
+ 1               	50          	-694.4      	2               	;
+ 2               	100         	8           	                	;
+ 3               	60          	14          	                	;
+ 4               	60          	8           	                	;
+ 5               	100         	8           	                	;
+ 6               	125         	5           	                	;
+ 7               	160         	4           	                	;
+ 8               	110         	9           	                	;
+ 9               	180         	14          	                	;
+ 10              	130         	5           	                	;
+ 11              	185         	34.78       	                	;
+ 12              	210         	16          	                	;
+ 13              	210         	2           	                	;
+ 14              	200         	2           	                	;
+ 15              	190         	2           	                	;
+ 16              	150         	20          	                	;
+ 17              	180         	20          	                	;
+ 18              	100         	20          	                	;
+ 19              	150         	5           	                	;
+ 20              	170         	19          	                	;
+ 21              	150         	16          	                	;
+ 22              	200         	10          	                	;
+ 23              	230         	8           	                	;
+ 24              	190         	11          	                	;
+ 25              	230         	6           	                	;
+ 27              	130         	8           	                	;
+ 28              	110         	0           	                	;
+ 29              	110         	7           	                	;
+ 30              	130         	3           	                	;
+ 31              	190         	17          	                	;
+ 32              	110         	17          	                	;
+ 33              	180         	1.5         	                	;
+ 34              	190         	1.5         	                	;
+ 35              	110         	0           	                	;
+ 36              	110         	1           	                	;
+
+[RESERVOIRS]
+;ID              	Head        	Pattern         
+
+[TANKS]
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
+ 26              	235         	56.7        	50          	70          	50          	0           	                	;
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ 1               	1               	2               	2400        	12          	100         	0           	Open  	;
+ 2               	2               	5               	800         	12          	100         	0           	Open  	;
+ 3               	2               	3               	1300        	8           	100         	0           	Open  	;
+ 4               	3               	4               	1200        	8           	100         	0           	Open  	;
+ 5               	4               	5               	1000        	12          	100         	0           	Open  	;
+ 6               	5               	6               	1200        	12          	100         	0           	Open  	;
+ 7               	6               	7               	2700        	12          	100         	0           	Open  	;
+ 8               	7               	8               	1200        	12          	140         	0           	Open  	;
+ 9               	7               	9               	400         	12          	100         	0           	Open  	;
+ 10              	8               	10              	1000        	8           	140         	0           	Open  	;
+ 11              	9               	11              	700         	12          	100         	0           	Open  	;
+ 12              	11              	12              	1900        	12          	100         	0           	Open  	;
+ 13              	12              	13              	600         	12          	100         	0           	Open  	;
+ 14              	13              	14              	400         	12          	100         	0           	Open  	;
+ 15              	14              	15              	300         	12          	100         	0           	Open  	;
+ 16              	13              	16              	1500        	8           	100         	0           	Open  	;
+ 17              	15              	17              	1500        	8           	100         	0           	Open  	;
+ 18              	16              	17              	600         	8           	100         	0           	Open  	;
+ 19              	17              	18              	700         	12          	100         	0           	Open  	;
+ 20              	18              	32              	350         	12          	100         	0           	Open  	;
+ 21              	16              	19              	1400        	8           	100         	0           	Open  	;
+ 22              	14              	20              	1100        	12          	100         	0           	Open  	;
+ 23              	20              	21              	1300        	8           	100         	0           	Open  	;
+ 24              	21              	22              	1300        	8           	100         	0           	Open  	;
+ 25              	20              	22              	1300        	8           	100         	0           	Open  	;
+ 26              	24              	23              	600         	12          	100         	0           	Open  	;
+ 27              	15              	24              	250         	12          	100         	0           	Open  	;
+ 28              	23              	25              	300         	12          	100         	0           	Open  	;
+ 29              	25              	26              	200         	12          	100         	0           	Open  	;
+ 30              	25              	31              	600         	12          	100         	0           	Open  	;
+ 31              	31              	27              	400         	8           	100         	0           	Open  	;
+ 32              	27              	29              	400         	8           	100         	0           	Open  	;
+ 34              	29              	28              	700         	8           	100         	0           	Open  	;
+ 35              	22              	33              	1000        	8           	100         	0           	Open  	;
+ 36              	33              	34              	400         	8           	100         	0           	Open  	;
+ 37              	32              	19              	500         	8           	100         	0           	Open  	;
+ 38              	29              	35              	500         	8           	100         	0           	Open  	;
+ 39              	35              	30              	1000        	8           	100         	0           	Open  	;
+ 40              	28              	35              	700         	8           	100         	0           	Open  	;
+ 41              	28              	36              	300         	8           	100         	0           	Open  	;
+
+[PUMPS]
+;ID              	Node1           	Node2           	Parameters
+
+[VALVES]
+;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss   
+
+[TAGS]
+
+[DEMANDS]
+;Junction        	Demand      	Pattern         	Category
+
+[STATUS]
+;ID              	Status/Setting
+
+[PATTERNS]
+;ID              	Multipliers
+;Demand Pattern
+ 1               	1.26        	1.04        	.97         	.97         	.89         	1.19        
+ 1               	1.28        	.67         	.67         	1.34        	2.46        	.97         
+ 1               	.92         	.68         	1.43        	.61         	.31         	.78         
+ 1               	.37         	.67         	1.26        	1.56        	1.19        	1.26        
+ 1               	.6          	1.1         	1.03        	.73         	.88         	1.06        
+ 1               	.99         	1.72        	1.12        	1.34        	1.12        	.97         
+ 1               	1.04        	1.15        	.91         	.61         	.68         	.46         
+ 1               	.51         	.74         	1.12        	1.34        	1.26        	.97         
+ 1               	.82         	1.37        	1.03        	.81         	.88         	.81         
+ 1               	.81         
+;Pump Station Outflow Pattern
+ 2               	.96         	.96         	.96         	.96         	.96         	.96         
+ 2               	.62         	0           	0           	0           	0           	0           
+ 2               	.8          	1           	1           	1           	1           	.15         
+ 2               	0           	0           	0           	0           	0           	0           
+ 2               	.55         	.92         	.92         	.92         	.92         	.9          
+ 2               	.9          	.45         	0           	0           	0           	0           
+ 2               	0           	.7          	1           	1           	1           	1           
+ 2               	.2          	0           	0           	0           	0           	0           
+ 2               	0           	.74         	.92         	.92         	.92         	.92         
+ 2               	.92         
+;Pump Station Fluoride Pattern 
+ 3               	.98         	1.02        	1.05        	.99         	.64         	.46         
+ 3               	.35         	.35         	.35         	.35         	.35         	.35         
+ 3               	.17         	.17         	.13         	.13         	.13         	.15         
+ 3               	.15         	.15         	.15         	.15         	.15         	.15         
+ 3               	.15         	.12         	.1          	.08         	.11         	.09         
+ 3               	.09         	.08         	.08         	.08         	.08         	.08         
+ 3               	.08         	.09         	.07         	.07         	.09         	.09         
+ 3               	.09         	.09         	.09         	.09         	.09         	.09         
+ 3               	.09         	.08         	.35         	.72         	.82         	.92         
+ 3               	1           
+
+[CURVES]
+;ID              	X-Value     	Y-Value
+
+[CONTROLS]
+
+
+[RULES]
+
+
+[ENERGY]
+ Global Efficiency  	75
+ Global Price       	0.0
+ Demand Charge      	0.0
+
+[EMITTERS]
+;Junction        	Coefficient
+
+[QUALITY]
+;Node            	InitQual
+ 1               	1.0
+ 2               	1.0
+ 3               	1.0
+ 4               	1.0
+ 5               	1.0
+ 6               	1.0
+ 7               	1.0
+ 8               	1.0
+ 9               	1.0
+ 10              	1.0
+ 11              	1.0
+ 12              	1.0
+ 13              	1.0
+ 14              	1.0
+ 15              	1.0
+ 16              	1.0
+ 17              	1.0
+ 18              	1.0
+ 19              	1.0
+ 20              	1.0
+ 21              	1.0
+ 22              	1.0
+ 23              	1.0
+ 24              	1.0
+ 25              	1.0
+ 27              	1.0
+ 28              	1.0
+ 29              	1.0
+ 30              	1.0
+ 31              	1.0
+ 32              	1.0
+ 33              	1.0
+ 34              	1.0
+ 35              	1.0
+ 36              	1.0
+ 26              	1.0
+
+[SOURCES]
+;Node            	Type        	Quality     	Pattern
+ 1               	CONCEN      	1.0         	3
+
+[REACTIONS]
+;Type     	Pipe/Tank       	Coefficient
+
+
+[REACTIONS]
+ Order Bulk            	1
+ Order Tank            	1
+ Order Wall            	1
+ Global Bulk           	0.0
+ Global Wall           	0.0
+ Limiting Potential    	0.0
+ Roughness Correlation 	0.0
+
+[MIXING]
+;Tank            	Model
+
+[TIMES]
+ Duration           	55:00 
+ Hydraulic Timestep 	1:00 
+ Quality Timestep   	0:05 
+ Pattern Timestep   	1:00 
+ Pattern Start      	0:00 
+ Report Timestep    	1:00 
+ Report Start       	0:00 
+ Start ClockTime    	8 am
+ Statistic          	NONE
+
+[REPORT]
+ Status             	No
+ Summary            	No
+ Page               	0
+
+[OPTIONS]
+ Units              	GPM
+ Headloss           	H-W
+ Specific Gravity   	1.0
+ Viscosity          	1.0
+ Trials             	40
+ Accuracy           	0.001
+ CHECKFREQ          	2
+ MAXCHECK           	10
+ DAMPLIMIT          	0
+ Unbalanced         	Continue 10
+ Pattern            	1
+ Demand Multiplier  	1.0
+ Emitter Exponent   	0.5
+ Quality            	Fluoride mg/L
+ Diffusivity        	1.0
+ Tolerance          	0.01
+
+[COORDINATES]
+;Node            	X-Coord         	Y-Coord
+ 1               	21.00           	4.00            
+ 2               	19.00           	20.00           
+ 3               	11.00           	21.00           
+ 4               	14.00           	28.00           
+ 5               	19.00           	25.00           
+ 6               	28.00           	23.00           
+ 7               	36.00           	39.00           
+ 8               	38.00           	30.00           
+ 9               	36.00           	42.00           
+ 10              	37.00           	23.00           
+ 11              	37.00           	49.00           
+ 12              	39.00           	60.00           
+ 13              	38.00           	64.00           
+ 14              	38.00           	66.00           
+ 15              	37.00           	69.00           
+ 16              	27.00           	65.00           
+ 17              	27.00           	69.00           
+ 18              	23.00           	68.00           
+ 19              	21.00           	59.00           
+ 20              	45.00           	68.00           
+ 21              	51.00           	62.00           
+ 22              	54.00           	69.00           
+ 23              	35.00           	74.00           
+ 24              	37.00           	71.00           
+ 25              	35.00           	76.00           
+ 27              	39.00           	87.00           
+ 28              	49.00           	85.00           
+ 29              	42.00           	86.00           
+ 30              	47.00           	80.00           
+ 31              	37.00           	80.00           
+ 32              	23.00           	64.00           
+ 33              	56.00           	73.00           
+ 34              	56.00           	77.00           
+ 35              	43.00           	81.00           
+ 36              	53.00           	87.00           
+ 26              	33.00           	76.00           
+
+[VERTICES]
+;Link            	X-Coord         	Y-Coord
+
+[LABELS]
+;X-Coord           Y-Coord          Label & Anchor Node
+ 24.00            7.00             "Pump"                 
+ 24.00            4.00             "Station"                 
+ 26.76            77.42            "Tank"                 
+
+[BACKDROP]
+ DIMENSIONS     	8.75            	-0.15           	58.25           	91.15           
+ UNITS          	None
+ FILE           	
+ OFFSET         	0.00            	0.00            
+
+[END]

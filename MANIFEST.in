@@ -1,0 +1,3 @@
+include wntr/pyepanet/data/Darwin/*
+include wntr/pyepanet/data/Linux/*
+include wntr/pyepanet/data/Windows/*

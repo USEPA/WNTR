@@ -1,0 +1,462 @@
+[TITLE]
+ A small network for testing time controls
+
+
+
+
+
+
+
+[JUNCTIONS]
+;Format (One line for each junction):
+;	JunctionID Elevation BaseDemandFlow DemandPatternID
+;If no demand pattern is specified, then the junction demand follows the default pattern specified in the OPTIONS section or Pattern 1 if no default pattern is specified.
+;ID           	            	Elev        	Demand      	Pattern         
+ junction1              	0         	0           	pattern1                	;
+ junction2              	0         	150         	pattern1                	;
+
+
+
+
+
+
+[RESERVOIRS]
+;Format:
+;	ReservoirID Head HeadPatternID
+;	head is the hydraulic head (elevation+pressure)
+;ID          	           	Head        	Pattern         
+ reservoir1               	50         	pattern1                	;
+
+
+
+
+
+
+[TANKS]
+;Format:
+;	TankID BottomElevation InitalWaterLevel MinimumWaterLevel MaximumWaterLevel NominalDiameter MinimumVolume VolumeCurveID
+;where
+;	VolumeCurveID if for volume vs. water depth curves for non-cylindrical tanks
+;	If a volume curve is specified, the diameter can be any non-zero number
+;	MinimumVolume is the tank volume at minimum water level. It can be zero for a cylindrical tank or if a volume curve is supplied
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
+
+
+
+
+
+
+[PIPES]
+;Format (one line for each pipe):
+;	PipeID StartNodeID EndNodeID Length Diameter RoughnessCoefficient MinorLossCoefficient Status
+;Status can be OPEN, CLOSED, or CV (pipe contains check valve)
+;If minor loss coefficient is 0 and the pipe is open, then the last two columns can be left out.
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ pipe1              	reservoir1     		junction1              	1000       	457.2          	100         	0           	Open  	;
+ pipe2              	junction1              	junction2      		1000        	457.2          	100         	0           	Open  	;
+
+
+
+
+
+
+[PUMPS]
+;Format (one line for each pump):
+;	PumpID StartNodeID EndNodeID KeywordAndValue
+;Keywords:
+;	POWER - power for constant energy pump
+;	HEAD - ID of curve that describes head vs flow for the pump
+;	SPEED - relative speed setting (normal speed is 1.0, 0 means pump is off)
+;	PATTERN - ID of time pattern that describes how speed setting varies with time
+;Keyword/Value pairs can be repeated
+;Either POWER or HEAD must be supplied for each pump. Other keywords are optional
+
+
+
+
+
+
+[VALVES]
+;Format (one line for each valve):
+;	ValveID StartNodeID EndNodeID Diameter ValveType ValveSetting MinorLossCoefficient
+;Valve Types and Settings:
+;      Type					Setting
+;      PRV (pressure reducing valve)		Pressure
+;      PSV (pressure sustaining valve)		Pressure
+;      PBV (pressure breaker valve)		Pressure
+;      FCV (flow control valve)			Flow
+;      TCV (throttle control valve)		Loss Coefficient
+;      GPV (general purpose valve)		ID of head loss curve
+;Note: Shutoff valves and check valves are considered to be a part of a pipe, not a separate control valve component
+
+
+
+
+
+
+[TAGS]
+;Not used in hydraulic or water quality simulation
+;Associates category labels with specific nodes and links
+;Format (one line for each node and link with a tag):
+;	NODE/LINK NodeID/LinkID TagLabelTextNoSpaces
+
+
+
+
+
+
+[DEMANDS]
+;Supplement to JUNCTIONS section for defining multiple water demands at junction nodes
+;Format (one line for each category of demand at a junction):
+;	JunctionID BaseDemand DemandPatternID ;DemandCategoryName
+
+
+
+
+
+
+[STATUS]
+;Defines the initial status of selected links at the start of a simulation
+;Format (one line per link being controlled):
+;	LinkID Status/Setting
+;Links not listed default to OPEN or ACTIVE
+
+
+
+
+
+
+[PATTERNS]
+;Format:
+;	PatternID Multiplier1 Multiplier2 ...
+;All patterns share the same time period interval, but they can have different numbers of time periods.
+;Patterns wrap around back to first multiplier
+;Multiple lines can be used for a single pattern
+;ID       	         	Multipliers
+;Demand Pattern
+ pattern1			1.0	1.0	1.0	1.0
+ pattern2               	1.0	1.25	1.5	1.25
+
+
+
+
+
+
+[CURVES]
+;One line needed for each x,y point on each curve
+;Points must be entered in order of increasing x-values
+;Format:
+;	CurveID	x-value	y-value
+;Place a comment with the curve type followed by a colon and then a description on line directly above first point for that curve:
+;      PUMP: Head vs flow curve for pump xxx
+;Curve types are: PUMP, EFFICIENCY, VOLUME, AND HEADLOSS
+
+
+
+
+
+
+[CONTROLS]
+;Possible formats (Note: all caps words are keywords that should not be changed):
+;	  LINK linkID status IF NODE nodeID ABOVE/BELOW value
+;	  LINK linkID status AT TIME time
+;	  LINK linkID status AT CLOCKTIME clocktime AM/PM
+;where:
+;	linkID = a link ID label
+;	status = OPEN or CLOSED, a pump speed setting, or a control valve setting
+;	nodeID = a node ID label
+;	value = a pressure for a junction or a water level for a tank
+;	time = a time since the start of the simulation in decimal hours or in hours:minutes format
+;	clocktime = a 24-hour clock time (hours:minutes)
+LINK pipe2 CLOSED AT TIME 5:00
+LINK pipe2 OPEN AT TIME 10:00
+
+
+
+
+
+[RULES]
+;Format (each rule is a series of statements):
+;	RULE RuleID
+;	IF condition_1
+;	AND condition_2
+;	OR condition_3
+;	AND condition_4
+;	etc.
+;	THEN action_1
+;	AND action_2
+;	etc.
+;	ELSE action_3
+;	AND action_4
+;	etc.
+;	PRIORITY value
+;	See epanet manual for more details
+
+
+
+
+
+
+[ENERGY]
+;Defines parameters used to compute pumping energy and cost
+;Possible formats (Note: all caps words are keywords that should not be changed):
+;	  GLOBAL PRICE/PATTERN/EFFIC value
+;	  PUMP PumpID PRICE/PATTERN/EFFIC value
+;	  DEMAND CHARGE value
+;PUMP overrides GLOBAL for specified pump
+;Price: average cost per kWh
+;Pattern: pattern ID  describing how energy price varies with time
+;Efficiency: single percent efficiency for GLOBAL or efficiency curve ID for PUMP
+;DEMAND CHARGE: ?
+;Default global pump efficiency = 75
+;Default global energy price = 0
+
+
+
+
+
+
+[EMITTERS]
+;Defines junctions modeled as emitters (sprinklers or orifices)
+;Format:
+;	JunctionID FlowCoefficient
+
+
+
+
+
+
+[QUALITY]
+;Define inital water quality at nodes
+;Format (one line per node):
+;	NodeID InitialQuality
+;Quality is 0 for nodes not listed
+;Quality represents concentration for chemicals, hours for water age, or percent for source tracing
+
+
+
+
+
+
+[SOURCES]
+;Defines locations of water quality sources
+;Format (one line for each source):
+;	NodeID SourceType BaselineSourceStrength PatternID
+;where
+;	SourceType can be CONCEN, MASS, FLOWPACED, OR SETPOINT
+;	BaselineSourceStrength is the water quality (e.g., concentration of the source or flow rate of the source)
+;	MASS type sources measure strength in mass flow per minute. All other source types measure strength in concentration.
+;	CONCEN type sources represent the concentration of any external source inflow to the node
+;	A MASS, FLOWPACED, OR SETPOINT type source represents a booster source, where the substance is injected directly into the network regardless of what the demand at the node is. See epanet manual for more details
+;Node            	Type        	Quality     	Pattern
+
+
+
+
+
+
+[REACTIONS]
+;Format:
+;	ORDER BULK/WALL/TANK value
+;	GLOBAL BULK/WALL value
+;	BULK/WALL/TANK PipeID value
+;	LIMITING POTENTIAL value
+;	ROUGHNESS CORRELATION value
+;where:
+;	Order is the order of the reaction. Values for wall reactions must be either 0 or 1. Default is 1.0.
+;	Global is used to set a global value for all bulk reaction coefficients (pipes and tanks) or for all pipe wall coefficients. Default value is 0.
+;	Bulk, wall, and tank are used to override the global reaction coefficients for specific pipes and tanks
+;	Limiting potential specifies that reaction rates are proportional to the difference between the current concentration and some limiting potential value.
+;	Roughness correlation will make all default pipe wall reaction coefficients be related to pipe roughness (see epanet manual page 159 for details).
+;Remember: positive coefficients for products and negative coefficients for reactants
+
+
+
+
+
+
+[MIXING]
+;Identify the model that governs mixing in storage tanks
+;Format (one line per tank):
+;	TankID MixingModel CompartmentVolumeFraction
+;Possible mixing models:
+;	  MIXED: completely mixed
+;	  2COMP: two-compartment mixing
+;	  FIFO: plug flow
+;	  LIFO: stacked plug flow
+;CompartmentVolumeFraction only applies to 2COMP and represents the fraction of the total tank volume devoted to the inlet/outlet compartment
+;Default is MIXED
+
+
+
+
+
+
+[TIMES]
+;Format:
+;	Duration           	value
+;	Hydraulic Timestep 	value
+;	Quality Timestep   	value
+;	Rule Timestep		value
+;	Pattern Timestep   	value
+;	Pattern Start      	value
+;	Report Timestep    	value
+;	Report Start       	value
+;	Start ClockTime    	value
+;	Statistic          	value
+;where:
+;	Duration is the simulation duration
+;	Hydraulic Timestep determines how often a new hydraulic state of the network is computed. Default is 1 hour
+;	Quality Timestep is the time step used to track changes in water quality. The default is 1/10 of the hydraulic time step
+;	Rule Timestep is the time step used to check for changes in system status due to activation of rule-based controls between hydraulic time steps. The default is 1/10 of the hydraulic time step.
+;	Pattern Timestep is the interval between time periods in all time patterns. The default is 1 hour.
+;	Pattern Start is the time offset at which all patterns will start. E.g., a value of 6 hours would start the simulation with each pattern in the time period that corresponds to hour 6. the default is 0.
+;	Report Timestep sets the time interval between which output results are reported. The default is 1 hour.
+;	Report Start is the length of time into the simulation at which output results begin to be reported. The default is 0.
+;	Start Clocktime is the time of day at which the simulation begins. The default is 12:00 AM.
+;	Statistic determines what kind of statistical post-processing should be done on the time series of simulation results. Options include AVERAGED, MINIMUM, MAXIMUM, RANGE, and NONE. NONE reports the full time
+;		  series for all quantities for all nodes and links and is the default.
+;Units can be SEC, MIN, HOURS, or DAYS. The default is hours. If units are not supplied, then time values can be entered as decimal hours or in hours:minuts format.
+ Duration           	15:00 
+ Hydraulic Timestep 	1:00  
+ Quality Timestep   	1:00
+ Rule Timestep		1:00  
+ Pattern Timestep   	6:00  
+ Pattern Start      	0:00  
+ Report Timestep    	1:00  
+ Report Start       	0:00  
+ Start ClockTime    	12 am 
+ Statistic          	NONE
+
+
+
+
+
+
+[REPORT]
+;Format:
+;	PAGESIZE value
+;	FILE filename
+;	STATUS YES/NO/FULL
+;	SUMMARY YES/NO
+;	ENERGY YES/NO
+;	NODES NONE/ALL/node1 node2 ...
+;	LINKS NONE/ALL/link1 link2 ...
+;	parameter YES/NO
+;	parameter BELOW/ABOVE/PRECISION value
+;where:
+;	Pagesize sets the number of lines written per page of the output report. The default is 0, meaning that no line limit per page is in effect.
+;	File supplies the name of a file to which the output report will be written
+;	Status determines whether a hydraulic status report should be generated. Full will also include information from each trial.
+;	Summary determines wheter a summary table is generated
+;	Energy determines if a table reporting average energy usage and cost for each pump is provided.
+;	Nodes identifies which nodes will be reported on
+;	Links identifies which links will be reported on
+;	The parameter option is used to identify which quantities are reported on, how many decimal places are displayed, and what kind of filtering should be used to limit output. 
+;	Node parameters that can be reported: elevation, demand, head, pressure, quality. 
+;	Link parameters that can be reported: Length, diameter, flow, velocity, headloss, position, setting, reaction, f-factor
+ Status             	Yes
+ Summary            	No
+ Energy			No
+
+
+
+
+
+[OPTIONS]
+;UNITS CFS/GPM/MGD/IMGD/AFD/LPS/LPM/MLD/CMH/CMD
+;HEADLOSS H-W/D-W/C-M
+;HYDRAULICS USE/SAVE filename
+;QUALITY NONE/CHEMICAL/AGE/TRACE id
+;VISCOSITY value
+;DIFFUSIVITY value
+;SPECIFIC GRAVITY value
+;TRIALS value
+;ACCURACY value
+;UNBALANCED STOP/CONTINUE/CONTINUE n
+;PATTERN id
+;DEMAND MULTIPLIER value
+;EMITTER EXPONENT value
+;TOLERANCE value
+;MAP filename
+;
+;UNITS: units of flow rate. For CFS, GPM, MGD, IMGD, and AFD, other input quantities must be in US Customary Units. If flow units are in liters or cubic meters, then Metric Units must be used for all other input quantities.
+;HEADLOSS: Method for calculating head loss for flow through a pipe
+;HYDRAULICS: either saves the current hydraulics solution or uses a previously saved hydraulics solution.
+;QUALITY: Type of water quality analysis to perform. In place of CHEMICAL, the actual name of the chemical can be used followed by it's concentration units. If TRACE is used, it must be followed by the ID of the node being traced.
+;VISCOSITY: The kinematic viscosity of the fluid being modeled relative to that of water at 20 ded C.
+;DIFFUSIVITY: Molecular diffusivity of the chemical being analyzed relative to that of chlorine in water. It is only used when mass transfer limitations are considered in pipe wall reactions. A value of 0 will cause 
+;	      EPANET to ignore mass transfer limitations
+;SPECIFIC GRAVITY: The ratio of the density of the fluid being modeled to that of water at 4 deg C
+;TRIALS: The maximum number of trials used to solve the network hydraulics at each hydraulic time step of a simulation
+;Accuracy: Convergence criteria for hydraulic solution. The sum of all flow changes from the previous solution divided by the total flow in all links
+;UNBALANCED: Specifies what to do if a hydraulic solution cannot be reached in the specified number of trials. 
+;PATTERN: Default demand pattern for all junctions where no demand pattern was specified.
+;DEMAND MULTIPLIER: Used to adjust the values of baseline demands for all junctions and all demand categories.
+;EMITTER EXPONENT: Specifies the power to which the pressure at a junction is raised when computing the flow issuing from an emitter.
+;MAP: Used to supply the name of a file containing coordinates of the network's nodes so that a map of the network can be drawn. 
+;TOLERANCE: The difference in water quality level below which one can say that one parcel of water is essentially the same as another.
+ Units              	CMH
+ Headloss           	H-W
+ Quality		None
+ Specific Gravity   	1.0
+ Viscosity          	1.0
+ Trials             	50
+ Accuracy           	0.000000001
+ Unbalanced         	Stop
+ Pattern            	pattern1
+ Demand Multiplier  	1.0
+ Tolerance          	0.01
+
+
+
+
+
+
+[COORDINATES]
+;Not used in simulation (only for producing a map)
+;Coordinates are distances from arbitrary origin at lower left of map
+;Possible formats:
+;	  NodeID X-Coordinate Y-Coordinate
+;Node     	         	X-Coord         	Y-Coord
+ reservoir1              	0.00           		0.00           
+ junction1              	25.00           	0.00           
+ junction2              	50.00           	0.00           
+
+
+
+
+
+
+[VERTICES]
+;Not used in simulation
+;Assigns interior vertex points to network links - allows links to be drawn as polylines instead of simple straight-lines between their end nodes
+;Format:
+;	LinkID x-coordinate y-coordinate
+
+
+
+
+
+
+[LABELS]
+;Not used in simulation
+;Assigns coordinates to map labels
+;Format (One line for each label):
+;	x-coordinate y-coordinate "LabelText" AnchorNodeIDLabel
+;Coordinates refer to upper left corner of label
+;Optional anchor node anchors the label to the node when the map is re-scaled during zooming
+
+
+
+
+
+
+[BACKDROP]
+
+
+
+
+
+
+[END]

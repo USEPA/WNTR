@@ -17,6 +17,8 @@ water distribution networks.  The software includes capability to:
 * Evaluate resilience 
 * Visualize results
 
+For more information, go to http://wntr.readthedocs.io
+
 License
 ------------
 
