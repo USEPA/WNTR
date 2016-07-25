@@ -36,5 +36,8 @@ animation.py			Animate network graphics
 ==============================  =========================================================================================================
 
 Several EPANET inp files are included in the examples/network folder.  Example
-network range from a simple 9 node network to a 13,000 node network.
-Ipython demos are included in the examples/demo folder.  
+network range from a simple 9 node network to a 3,000 node network.
+Ipython demos are included in the examples/demo folder. 
+Additional network models can be downloaded from the University of Kentucky 
+Water Distribution System Research Database at
+http://www.uky.edu/WDST/database.html.
