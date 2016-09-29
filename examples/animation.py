@@ -28,10 +28,9 @@ def update_nodes(frame_number):
     nodes.set_array(node_values)
     
     plt.title('Trace at ' + str(frame_number) +' hours')
-    
     return nodes, edges
     
-anim = animation.FuncAnimation(fig, update_nodes, frames=25, interval=400, repeat_delay = 1200, blit=True) # the movie flickers
+anim = animation.FuncAnimation(fig, update_nodes, frames=25, interval=400, repeat_delay = 1200, blit=True, repeat=False) # the movie flickers
 #anim.save('node_animation_example.mp4') # movie does not save
 
 ### Link Animation ###
