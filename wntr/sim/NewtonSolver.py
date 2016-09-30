@@ -5,12 +5,6 @@ import time
 import warnings
 import logging
 
-# Ideas:
-#    scale variables
-#    fraction to the boundary rule
-#    better line search
-#    Incorrect jacobian
-
 warnings.filterwarnings("error",'Matrix is exactly singular',sp.linalg.MatrixRankWarning)
 np.set_printoptions(precision=3, threshold=10000, linewidth=300)
 

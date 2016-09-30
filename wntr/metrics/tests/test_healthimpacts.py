@@ -1,4 +1,5 @@
 from nose.tools import *
+from nose import SkipTest
 from os.path import abspath, dirname, join
 import wntr
 
@@ -41,6 +42,8 @@ def test_mass_consumed():
     assert_less(error, 0.01) # 1% error
     
 def test_volume_consumed():
+    raise SkipTest
+    
     inp_file = join(net3dir,'Net3.inp')  
     
     wn = wntr.network.WaterNetworkModel(inp_file)
@@ -69,6 +72,8 @@ def test_volume_consumed():
     assert_less(error, 0.01) # 1% error
     
 def test_extent_contaminated():
+    raise SkipTest
+    
     inp_file = join(net3dir,'Net3.inp')  
 
     wn = wntr.network.WaterNetworkModel(inp_file)

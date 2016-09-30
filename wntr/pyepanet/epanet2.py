@@ -1,6 +1,5 @@
 """
 Python extensions for the EPANET Programmers Toolkit DLLs.
-
 EPANET toolkit functions.
 """
 from toolkit import *

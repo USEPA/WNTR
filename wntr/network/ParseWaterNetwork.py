@@ -1,22 +1,3 @@
-"""
-QUESTIONS
-"""
-
-"""
-TODO 1. Only pump head curves are being assigned to pumps. Other curves are stored but not assigned. Unit conversion in curves.
-TODO 2. Test to see if add_junction, add_pipe, etc methods can be called with keys. Change all of them for clarity.
-TODO 3. [STATUS] block from Net3.
-TODO 4. Pipes that have status CV.
-TODO 5. What if '[' or ']' is in comments of inp file?
-TODO 6. Add error or something if user tries to specify Hydraulics or Quality in inp file. I don't think the parser will even handle these correctly right now.
-TODO 7. What if an inp file is parsed after a water network has been populated? What if an inp file is parsed twice?
-TODO 8. Document somehow that [TAGS], [DEMANDS], [RULES], [ENERGY], [EMITTERS], [QUALITY], [SOURCES], [REACTIONS], [MIXING], [REPORT], [VERTICES], [LABELS], [BACKDROP] in an inp file is not used/supported.
-TODO 9. Add pump is only used for power pumps?
-TODO 10. What if a comment is left at the end of a line that has junction/tank/etc. info?
-TODO 11. I think start clocktime is broken
-TODO 12. Document Somehow that the only type of curve supported is a head vs. flow curve.
-"""
-
 from wntr.utils import convert
 import wntr.network
 

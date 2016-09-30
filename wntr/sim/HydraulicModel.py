@@ -10,34 +10,6 @@ import logging
 
 logger = logging.getLogger('wntr.sim.HydraulicModel')
 
-"""
-Smoothing is used for:
-    1.) Hazen-Williams Headloss formula
-    2.) Pumps
-    3.) PDD
-    4.) Leaks
-1.) Hazen-Williams headloss formula:
-    This smoothing looks good. 
-2.) Pumps:
-    Smoothing is needed here in case the flowrate goes negative. If C is greater than 1,
-    then no polynomial is needed. Instead, the flowrate at which the derivative of the 
-    curve equals the slope of the line used for negative flow is computed. Then the line
-    is simply connected to the curve at that point. The case in which C is less than or
-    equal to 1 still needs work. There is not guarantee the polynomial will be 
-    monotonically decreasing. However, I do have some checks in place to raise a 
-    warning if the polynomial is not monotonically decreasing.
-3.) PDD:
-    The smoothing for the PDD equation looks good. I did some analysis, and, with the 
-    current PDD slopd and delta, the smoothing polynomial looks good. Additionally, the
-    smoothing does not seem to be very sensitive to Pmin or Pnom.
-4.) Leaks:
-    Smoothing is needed here in case the pressure goes negative. The smoothing for leaks
-    really needs some work. It should be easy though, because the leak equation is very
-    similar to the PDD equation. Also, I believe we can come up with a single smoothing
-    polynomial for all leaks, similar to how smoothing is done for the Hazen-Williams
-    headloss formula.
-"""
-
 class HydraulicModel(object):
     def __init__(self, wn, pressure_driven=False):
         """
@@ -594,9 +566,12 @@ class HydraulicModel(object):
         big_jac_rows = np.concatenate((big_jac_rows, self.jac_I.row+(2*self.num_nodes+self.num_links)))
         big_jac_cols = np.concatenate((big_jac_cols, self.jac_I.col+(2*self.num_nodes+self.num_links)))
 
-        self.jacobian = sparse.coo_matrix((big_jac_values, (big_jac_rows, big_jac_cols)),
-                                          shape=(2*self.num_nodes+self.num_links+self.num_leaks,
-                                                 2*self.num_nodes+self.num_links+self.num_leaks))
+        self.jacobian_values = big_jac_values
+        self.jacobian_rows = big_jac_rows
+        self.jacobian_cols = big_jac_cols
+        self.jacobian_shape = (2*self.num_nodes+self.num_links+self.num_leaks, 2*self.num_nodes+self.num_links+self.num_leaks)
+        self.jacobian = sparse.coo_matrix((self.jacobian_values, (self.jacobian_rows, self.jacobian_cols)),
+                                          shape=self.jacobian_shape)
 
         # self.jac_AinvB = self.jac_A*self.jac_B
         # self.jac_AinvC = self.jac_A*self.jac_C
@@ -794,9 +769,13 @@ class HydraulicModel(object):
                     self.jac_H.data[ndx] = -0.5*self.leak_Cd[node_id]*self.leak_area[node_id]*\
                                            math.sqrt(2.0*self._g)*P**(-0.5)
 
-        self.jacobian.data = np.concatenate((self.jac_A.data,self.jac_B.data,self.jac_C.data,self.jac_D.data,
+        self.jacobian_values = np.concatenate((self.jac_A.data,self.jac_B.data,self.jac_C.data,self.jac_D.data,
                                              self.jac_E.data,self.jac_F.data,self.jac_G.data,self.jac_H.data,
                                              self.jac_I.data))
+
+        self.jacobian = sparse.coo_matrix((self.jacobian_values, (self.jacobian_rows, self.jacobian_cols)),
+                                          shape=self.jacobian_shape)
+
 
         # return (self.jac_A, self.jac_B, self.jac_C, self.jac_D, self.jac_E, self.jac_F, self.jac_G_inv, self.jac_H,
         #         self.jac_I, self.jac_AinvB, self.jac_AinvC)

@@ -1,17 +1,3 @@
-#-*- coding: utf-8 -*-
-"""
-Created on Fri Jan 23 10:07:42 2015
-
-@author: aseth
-"""
-
-"""
-QUESTIONS
-- Should WaterNetworkSimulator base class be abstract?
-- Should a WNM be a required attribute for derived classes?
-- Requirements on a WNM for being able to simulate.
-"""
-
 import numpy as np
 import warnings
 from wntr.network.WaterNetworkModel import *
@@ -20,7 +6,6 @@ import math
 from NetworkResults import NetResults
 import time
 import copy
-
 
 class WaterNetworkSimulator(object):
     def __init__(self, water_network=None, pressure_driven=False):
