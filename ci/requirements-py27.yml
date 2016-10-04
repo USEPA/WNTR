@@ -10,5 +10,6 @@ dependencies:
     - matplotlib
     - nose
     - sympy
+    - xlwt
     - pip:
         - coveralls

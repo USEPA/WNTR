@@ -22,7 +22,7 @@ plt.plot(epanet_sim_results.link['flowrate'])
 plt.title('EPANET, Link Flowrate')
 plt.subplot(2,1,2)
 plt.plot(epanet_sim_results.link['flowrate'] - wntr_sim_results.link['flowrate'])
-plt.title('EPANET - SCIPY, Link Flowrate')
+plt.title('EPANET - WNTR, Link Flowrate')
 
 # Reset the water network and run again
 wn = wntr.network.WaterNetworkModel(inp_file)

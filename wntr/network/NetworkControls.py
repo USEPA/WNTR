@@ -1,15 +1,7 @@
-# -*- coding: utf-8 -*-
 """
 Classes and methods used for specifying controls and control actions
 that may modify parameters in the network during simulation.
 """
-
-"""
-Created on Sat Sep 26 12:33 AM 2015
-
-@author: claird, mbynum
-"""
-
 import wntr
 import weakref
 import numpy as np

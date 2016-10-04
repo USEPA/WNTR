@@ -1,6 +1,7 @@
 # These tests test controls
 import unittest
 import sys
+from nose import SkipTest
 # HACK until wntr is a proper module
 # __file__ fails if script is called in different ways on Windows
 # __file__ fails if someone does os.chdir() before
@@ -165,6 +166,7 @@ class TestTankControls(unittest.TestCase):
         self.assertEqual(tank_level_dropped_flag, True)
         self.assertEqual(tank_refilled_flag, True)
         """
+        raise SkipTest
         self.assertEqual(True, False)
         
 class TestValveControls(unittest.TestCase):

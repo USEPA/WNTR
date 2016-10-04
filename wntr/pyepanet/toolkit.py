@@ -1,6 +1,5 @@
 """
 Python extensions for the EPANET Programmers Toolkit DLLs.
-
 EPANET toolkit constants.
 """
 optNodeParams = ['EN_ELEVATION', 'EN_BASEDEMAND', 'EN_PATTERN', 'EN_EMITTER',

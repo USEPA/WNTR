@@ -1,29 +1,29 @@
 Installation (*DRAFT*)
 ======================================
 
-WNTR can be installed as a python package using standard open source software tools.
+WNTR can be installed as a Python package using standard open source software tools.
 
 **Step 1**: Setup your Python environment
 
-	WNTR requires Python 2.7 along with several python package dependencies.
+	WNTR requires Python 2.7 along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
 	General information on Python can be found at https://www.python.org/.
 	
 	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
-	Matplotlib, and Sympy.  For more information on python package dependencies, see :ref:`requirements`.
+	Matplotlib, and Sympy.  For more information on Python package dependencies, see :ref:`requirements`.
 	
 	Anaconda also comes with Spyder, an interactive development environment, that includes enhanced 
-	editing and debug features along with a layout that is very similar 
-	to using MATLAB. Debugging options are also available from the toolbar.  
+	editing and debug features along with a graphical user interface that is very similar 
+	to MATLAB. Debugging options are available from the toolbar.  
 	Code documentation is displayed in the object inspection 
-	window, pop-up information on class structure and functions is displayed in the 
+	window.  Pop-up information on class structure and functions is displayed in the 
 	editor and console windows.  
 
 **Step 2**: Install WNTR
 
 	**For users**: 	Users can install WNTR using pip.  
-	pip is a command line software tool used to install and manage python 
+	pip is a command line software tool used to install and manage Python 
 	packages.  The software tool can be downloaded from https://pypi.python.org/pypi/pip.
 	
 	To install using pip, run::
@@ -39,7 +39,7 @@ WNTR can be installed as a python package using standard open source software to
 	To build WNTR from source using git, run::
 
 		git clone https://github.com/usepa/wntr
-		cd resilience
+		cd wntr
 		python setup.py develop
 	
 	This will install the development branch of WNTR from https://github.com/uspea/wntr.
@@ -56,7 +56,7 @@ WNTR can be installed as a python package using standard open source software to
 Requirements
 -------------
 Requirements for WNTR include Python 2.7 along with several Python packages. 
-The following python packages are required for WNTR:
+The following Python packages are required for WNTR:
 
 * Numpy [vanderWalt2011]_: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
@@ -72,10 +72,12 @@ The following python packages are required for WNTR:
 Optional dependencies
 -------------------------
 
-The following python packages are optional for WNTR:
+The following Python packages are optional for WNTR:
 
 * Sympy: used to convert units, 
   http://www.sympy.org/en/index.html
+* xlwt: used to read/write to Excel spreadsheets,
+  http://xlwt.readthedocs.io
 * Numpydoc [vanderWalt2011]_: used to build the user manual,
   https://github.com/numpy/numpydoc
 

@@ -1,3 +1,6 @@
+"""
+Classes and methods used for specifying a water network model.
+"""
 import copy
 import networkx as nx
 import math
@@ -9,31 +12,12 @@ import warnings
 import sys
 import logging
 
-# -*- coding: utf-8 -*-
-"""
-Classes and methods used for specifying a water network model.
-"""
-
-"""
-Created on Fri Jan 23 10:07:42 2015
-
-@author: aseth
-"""
-
-"""
-QUESTIONS
-1. Are the start end node attributes of a link only stored in the networkx graph?
-2. Node coordinates are only stored in the graph. Therefore, set_node_coordinates is a method on the WaterNetworkModel.
-3. Getting connectivity for a node using get_links_for_node. Okay name?
-"""
-
 logger = logging.getLogger('wntr.network.WaterNetworkModel')
-
 
 class WaterNetworkModel(object):
 
     """
-    The base water network model class.
+    Base water network model class.
     """
     def __init__(self, inp_file_name=None):
         """

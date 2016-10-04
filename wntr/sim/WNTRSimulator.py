@@ -1,21 +1,3 @@
-"""
-TODO: More tests
-TODO: Add more epanet features
-TODO: Address smoothing
-TODO: Performance improvements
-TODO: Enhance pipe leak/break modeling capabilities
-TODO: Optionally add weights to nodes when evaluating metrics (e.g., a node with a hospital or power plant may be more important)
-TODO: Valves should not be placed anywhere such that controls are added that act on the internal status? For example, valves should not be placed next to tanks?
-TODO: What happens if, for example, someone adds a pipe with the same name as a pump?
-TODO: Remove deep copy methods from WaterNetworkModel object
-TODO: Do a single smoothing for all leaks similar to what is done for Hazen-Williams.
-TODO: Bug - when the initial level of a tank is such that a conditional control would activate at time zero,
-      the control does not activate, time 0 is solved, results are saved at time 0, the control is activate, and time
-      zero is resolved, resulting in 2 sets of results for time 0.
-TODO: Remove __eq__ methods
-TODO: fix broken tests
-"""
-
 from wntr import *
 import numpy as np
 import scipy.sparse as sparse
