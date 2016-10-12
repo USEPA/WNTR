@@ -159,7 +159,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                 #model.check_infeasibility(self._X)
                 #raise RuntimeError('No solution found.')
                 if convergence_error:
-                    raise RuntimeError('Simulatin did not converge!')
+                    raise RuntimeError('Simulation did not converge!')
                 warnings.warn('Simulation did not converge!')
                 logger.warning('Simulation did not converge at time %s',self.get_time())
                 model.get_results(results)
