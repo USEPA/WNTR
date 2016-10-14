@@ -1,4 +1,4 @@
-Water network model (*DRAFT*)
+Water network model
 ======================================
 
 The water network model includes 
@@ -19,20 +19,20 @@ The example **water_network_model.py** can be used to generate, save, and modify
 A water network model can be created by adding components to an empty model.
 
 .. literalinclude:: ../examples/water_network_model.py
-   :lines: 4-14
+   :lines: 4-18
 
 A water network model can also be created directly from an EPANET inp file.
 EPANET features not supported by WNTR are printed to the screen.
 
 .. literalinclude:: ../examples/water_network_model.py
-   :lines: 24
+   :lines: 28
    
 The water network model can be written to a file in EPANET inp file format.
 By default, files are written in LPS units.  
 The inp file will not include features not supported by EPANET.
 
 .. literalinclude:: ../examples/water_network_model.py
-   :lines: 21
+   :lines: 25
 	
 .. 
 	Demands associated with pressure-driven simulation can be stored as
@@ -113,8 +113,7 @@ Conditional controls		Conditional controls define actions that starts or stops b
 				
 Energy				**WNTR does not support the energy report options in the [ENERGY] section of an EPANET inp file.**
 
-Water quality			**WNTR does not support the water quality options, this includes the [QUALITY], [SOURCES], and [REACTIONS] sections of an EPANET inp file.  
-				These options will be used when simulating water quality with the EpanetSimulator.**
+Water quality			The [QUALITY], [SOURCES], and [REACTIONS] options of the EPANET inp file are used when simulating water quality with the EpanetSimulator.
 
 Options				Options are defined in the class :doc:`WaterNetworkOptions</apidoc/wntr.network.WaterNetworkModel>`. 
 				These options include input in the [OPTIONS] and [TIME] section of the EPANET inp file.

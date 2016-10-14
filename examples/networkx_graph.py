@@ -12,4 +12,5 @@ print G.edge[node_name]
 
 node_degree = G.degree()
 bet_cen = nx.betweenness_centrality(G)
-wntr.network.draw_graph(wn, node_attribute=bet_cen, node_size=30, title='Betweenness Centrality')
+wntr.network.draw_graph(wn, node_attribute=bet_cen, node_size=30, 
+                        title='Betweenness Centrality')

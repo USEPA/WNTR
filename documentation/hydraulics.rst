@@ -1,4 +1,4 @@
-Hydraulic simulation (*DRAFT*)
+Hydraulic simulation
 ==============================
 
 WNTR contains two hydraulic simulators:  the EPANET simulator and the WNTR simulator.
