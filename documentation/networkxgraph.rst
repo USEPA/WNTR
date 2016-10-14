@@ -1,8 +1,8 @@
-NetworkX graph (*DRAFT*)
+NetworkX graph
 ======================================
 
 WNTR uses NetworkX data objects to store network connectivity as a graph.  
-NetworkX includes numerous methods to analyse the structure of complex networks.
+NetworkX includes numerous methods to analyze the structure of complex networks.
 For more information on NetworkX, see https://networkx.github.io/.
 
 WNTR includes a custom Graph Class, 
@@ -27,4 +27,4 @@ can be accessed using the following.
 The graph can be used to access NetworkX methods, for example
 
 .. literalinclude:: ../examples/networkx_graph.py
-   :lines: 2,13-15
+   :lines: 2,13-16
