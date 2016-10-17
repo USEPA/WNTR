@@ -336,9 +336,9 @@ class WNTRSimulator(WaterNetworkSimulator):
                         raise RuntimeError('Pipe status not recognized.')
             elif type(obj) == wntr.network.Pump:
                 if 'status' in changed_attrs and '_cv_status' in changed_attrs:
-                    if obj.status == wntr.network.LinkStatus.closed and obj._status == wntr.network.LinkStatus.closed:
+                    if obj.status == wntr.network.LinkStatus.closed and obj._cv_status == wntr.network.LinkStatus.closed:
                         self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
-                    elif obj.status == wntr.network.LinkStatus.opened and obj._status == wntr.network.LinkStatus.opened:
+                    elif obj.status == wntr.network.LinkStatus.opened and obj._cv_status == wntr.network.LinkStatus.opened:
                         self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
                     else:
                         pass
