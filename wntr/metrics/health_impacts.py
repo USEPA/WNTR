@@ -5,9 +5,9 @@ import logging
 
 logger = logging.getLogger('wntr.metrics.health_impacts')
 
-def average_water_consumed_perday(wn):
+def average_water_consumed(wn):
     """
-    Compute average water consumed per day at each node, qbar, computed as follows:
+    Compute average water consumed at each node, qbar, computed as follows:
     
     .. math:: qbar=\dfrac{\sum_{k=1}^{K}\sum_{t=1}^{lcm_n}qbase_n m_n(k,t mod (L(k)))}{lcm_n}
     
@@ -30,7 +30,7 @@ def average_water_consumed_perday(wn):
     Returns
     -------
     qbar : pd.Series
-        A pandas Series that contains average water consumed per day per node
+        A pandas Series that contains average water consumed per node, in m3/s
         
     """
     qbar = pd.Series()
@@ -45,7 +45,7 @@ def average_water_consumed_perday(wn):
             if not pattern_name:
                 pattern_name = wn.options.pattern
             pattern[i] = wn.get_pattern(pattern_name)
-            L[i] = len(pattern)
+            L[i] = len(pattern[i])
         lcm_n = _lcml(L.values())
         
         qbar_n = 0
@@ -81,7 +81,7 @@ def population(wn, R=0.00000876157):
     [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
     Technical report, U.S. Environmental Protection Agency
     """
-    qbar = average_water_consumed_perday(wn)
+    qbar = average_water_consumed(wn)
     pop = qbar/R
     
     return pop.round()

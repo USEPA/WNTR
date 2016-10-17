@@ -1,4 +1,8 @@
-Copyright and license (*DRAFT*)
+.. raw:: latex
+
+    \newpage
+    
+Copyright and license
 ================================
 
 Copyright 2015 Sandia Corporation. 

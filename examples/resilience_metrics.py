@@ -77,10 +77,6 @@ def topographic_metrics(wn):
     wntr.network.draw_graph(wn, node_attribute=clust_coefficients,
                           title='Clustering Coefficient', node_size=40)
     
-    # Compute meshedness coefficient
-    meshedness = float(G.number_of_edges() - G.number_of_nodes() + 1)/(2*G.number_of_nodes()-5)
-    print "Meshedness coefficient: " + str(meshedness)
-    
     # Compute betweenness centrality
     bet_cen = nx.betweenness_centrality(G)
     wntr.network.draw_graph(wn, node_attribute=bet_cen, 

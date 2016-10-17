@@ -1,10 +1,10 @@
-Disaster scenarios (*DRAFT*)
+Disaster scenarios
 ======================================
 
 There are many different disaster scenarios that utility companies may be interested 
 in examining. They could be acute like power outages and earthquakes 
 or they could examine long term issues like the effect of persistent pipe 
-leaks, population increase, and climate change. The following section 
+leaks, population increase, and climate change. The following section describes
 disaster scenarios that can be modeled in WNTR.  
 The example **disaster_scenarios.py** demonstrates methods to define disaster scenarios.
 

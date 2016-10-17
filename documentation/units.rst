@@ -1,4 +1,4 @@
-Units (*DRAFT*)
+Units
 ======================================
 
 WNTR is compatible with EPANET inp files using the following unit conventions [Rossman2000]_:
