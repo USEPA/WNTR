@@ -1,13 +1,14 @@
 @import url('css/theme.css');
 
+/*
 .wy-nav-content {
     padding: 1.618em 3.236em;
     height: 100%;
-	max-width: 85%;
+	max-width: 50%;
     /* max-width: 800px; */
-    margin: auto;
+/*    margin: auto;
 }
-
+*/
 .wy-table-responsive table td, .wy-table-responsive table th {
     white-space: normal;
 }

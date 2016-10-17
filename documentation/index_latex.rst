@@ -1,4 +1,4 @@
-WNTR 0.1 documentation (*DRAFT*)
+WNTR 0.1 documentation
 ==================================
 
 .. toctree::

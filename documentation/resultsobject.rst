@@ -1,6 +1,6 @@
 .. _simulation_results:
 
-Simulation results (*DRAFT*)
+Simulation results
 =============================
 Simulation results are stored in Pandas Panels.  
 For more information on Pandas, see http://pandas.pydata.org/.
@@ -56,9 +56,9 @@ Attributes can be plotted as a time-series using:
 Attributes can be plotted on the water network model using:
 	
 .. literalinclude:: ../examples/simulation_results.py
-   :lines: 26-28
+   :lines: 26-29
 
 Panels can be saved to excel files using:
 
 .. literalinclude:: ../examples/simulation_results.py
-   :lines: 31-32
+   :lines: 32-33

@@ -1,4 +1,4 @@
-Installation (*DRAFT*)
+Installation
 ======================================
 
 WNTR can be installed as a Python package using standard open source software tools.
@@ -13,7 +13,7 @@ WNTR can be installed as a Python package using standard open source software to
 	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
 	Matplotlib, and Sympy.  For more information on Python package dependencies, see :ref:`requirements`.
 	
-	Anaconda also comes with Spyder, an interactive development environment, that includes enhanced 
+	Anaconda also comes with Spyder, an interactive development environment (IDE), that includes enhanced 
 	editing and debug features along with a graphical user interface that is very similar 
 	to MATLAB. Debugging options are available from the toolbar.  
 	Code documentation is displayed in the object inspection 
@@ -26,7 +26,7 @@ WNTR can be installed as a Python package using standard open source software to
 	pip is a command line software tool used to install and manage Python 
 	packages.  The software tool can be downloaded from https://pypi.python.org/pypi/pip.
 	
-	To install using pip, run::
+	To install WNTR using pip, run::
 
 		pip install wntr
 	
@@ -47,7 +47,7 @@ WNTR can be installed as a Python package using standard open source software to
 
 **Step 3**: Test installation
 
-	To test that WNTR is installed, open Python and run::
+	To test that WNTR is installed, open Python within a command prompt (cmd.exe on Windows) or by starting an IDE like Spyder, and run::
 	
 		import wntr
 
@@ -56,7 +56,7 @@ WNTR can be installed as a Python package using standard open source software to
 Requirements
 -------------
 Requirements for WNTR include Python 2.7 along with several Python packages. 
-The following Python packages are required for WNTR:
+The following Python packages are required:
 
 * Numpy [vanderWalt2011]_: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
@@ -72,7 +72,7 @@ The following Python packages are required for WNTR:
 Optional dependencies
 -------------------------
 
-The following Python packages are optional for WNTR:
+The following Python packages are optional:
 
 * Sympy: used to convert units, 
   http://www.sympy.org/en/index.html

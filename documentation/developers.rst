@@ -1,10 +1,10 @@
 .. _developers:
 
-Software Quality Assurance (*DRAFT*)
+Software Quality Assurance
 =======================================
 
 The following section includes information about 
-the software repository, 
+the WNTR software repository, 
 software tests and documentation, and 
 ways to contribute and request new features.
 
@@ -74,8 +74,3 @@ Environmental Protection Agency National Homeland Security Research Center,
 Sandia National Laboratories, and Purdue University.  
 
 See https://github.com/USEPA/WNTR/graphs/contributors for a list of contributors.
-
-.. 
-	To cite WNTR, use the following report:
-
-	* U.S. EPA, 2016, Water Network Tool for Resilience (WNTR) User Manual, REPORT #, U.S. Environmental Protection Agency. (**NOT COMPLETE.  This will be the pdf version of the html pages**)
