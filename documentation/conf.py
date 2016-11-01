@@ -38,7 +38,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'numpydoc',
-    'sphinx.ext.pngmath',
 ]
 
 autosummary_generate = True
@@ -160,12 +159,12 @@ html_logo = 'figures/wntr.png'
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
 # given in html_static_path.
-html_style = 'wntr.css'
+html_style = 'static/wntr.css'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['static']
+html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
