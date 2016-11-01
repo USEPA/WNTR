@@ -17,6 +17,7 @@ WNTR 0.1 documentation (**DRAFT**)
    resilience
    stochastic
    license
+   whatsnew
    developers
    API Documentation <apidoc/wntr>
    reference
