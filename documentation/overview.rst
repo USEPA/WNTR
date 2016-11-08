@@ -27,6 +27,8 @@ package designed to simulate and analyze resilience of
 water distribution networks.  
 The API is flexible and allows for changes to the network structure and operations, 
 along with simulation of disruptive events and recovery actions.  
+WNTR can be installed through the U.S. Environmental Protection Agency GitHub organization at https://github.com/uspea/wntr.  
+Interactive development enviroments, like Spyder, are recommeded for code development.
 
 .. figure:: figures/overview2.png
    :scale: 100 %

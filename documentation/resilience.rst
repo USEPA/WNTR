@@ -221,6 +221,7 @@ Extent of contamination			Extent of contamination is the length of contaminated 
 Population impacted			As stated above, population that is impacted by a specific quantity can be computed using the 
 					:doc:`population_impacted</apidoc/wntr.metrics.health_impacts>` method.  This can be applied to water security metrics.
 =====================================  ================================================================================================================================================
+
 ..
 	Contaminate ingested
 	Population dosed
