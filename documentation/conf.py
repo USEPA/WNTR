@@ -34,11 +34,10 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
-    'sphinx.ext.pngmath',
+    'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'numpydoc',
-    'sphinx.ext.pngmath',
 ]
 
 autosummary_generate = True
@@ -91,7 +90,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build'] #, '../wntr/network/NetworkControls.py', '../wntr/sim/ScipyModel.py', '../wntr/sim/ScipyModelV2.py']
+exclude_patterns = ['_build'] 
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -160,12 +159,12 @@ html_logo = 'figures/wntr.png'
 # The style sheet to use for HTML and HTML Help pages. A file of that name
 # must exist either in Sphinx' static/ path, or in one of the custom paths
 # given in html_static_path.
-html_style = 'wntr.css'
+#html_style = 'static/wntr.css'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['static']
+#html_static_path = ['static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
@@ -240,7 +239,10 @@ latex_elements = {
 #'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-#'preamble': '',
+'preamble':  '''%
+  \pagestyle{plain}
+  \pagenumbering{arabic}
+''',
 
 # Latex figure (float) alignment
 #'figure_align': 'htbp',
