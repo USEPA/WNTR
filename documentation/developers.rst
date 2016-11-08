@@ -19,7 +19,6 @@ WNTR includes continuous integration software tests that are run each time
 changes are made to the repository.  The tests cover a wide range of unit and 
 integration tests designed to ensure that the code is performing as expected.  
 New tests are developed each time new functionality is added to the code.   
-Testing results are publicly available at https://travis-ci.org/usepa/wntr.  
 Testing status (passing/failed) and code coverage statistics are posted on 
 the README section at https://github.com/usepa/wntr.
 	
