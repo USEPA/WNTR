@@ -21,7 +21,7 @@ Reference
 
 .. [Rossman2000] Rossman LA. (2000). EPANET 2 Users Manual. [Technical report] Cincinnati, OH: U. S. Environmental Protection Agency. EPA/600/R--00/057
 
-.. [Salomons2012] Salomons E, Ostfeld A, Kapelan Z, Zecchin A, Marchi A, Simpson A. (2012). The battle of the water networks II – Adelaide 2012 (BWN-II). In: Proceedings of the 2012 Water Distribution Systems Analysis Conference, September 24-27, Adelaide, South Australia, Australia.
+.. [Salomons2012] Salomons E, Ostfeld A, Kapelan Z, Zecchin A, Marchi A, Simpson A. (2012). The battle of the water networks II - Adelaide 2012 (BWN-II). In: Proceedings of the 2012 Water Distribution Systems Analysis Conference, September 24-27, Adelaide, South Australia, Australia.
 
 .. [Todini2000] Todini E. Looped water distribution networks design using a resilience index based heuristic approach. Urban Water, 2(2), 115-122.
 
