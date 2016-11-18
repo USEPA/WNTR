@@ -19,7 +19,7 @@ WNTR 0.1 documentation (**DRAFT**)
    license
    whatsnew
    developers
-   API Documentation <apidoc/wntr>
+   API documentation <apidoc/wntr>
    acronyms
    reference
 

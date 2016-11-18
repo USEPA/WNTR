@@ -1,4 +1,4 @@
-List of Acronyms
+List of acronyms
 ======================================
 
 **API**: Application Program Interface
