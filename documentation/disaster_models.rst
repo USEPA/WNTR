@@ -13,13 +13,13 @@ Earthquake
 Earthquakes can be some of the most sudden and impactful disasters that a 
 water network experiences. An earthquake can cause lasting damage to the network that 
 could take weeks, if not months to fully repair. Earthquakes can cause 
-damage to pipes, tanks, and pumps.  
+damage to pipes, tanks, pumps, and other infrastructure.
 Additionally, earthquakes can cause power outages and fires. WNTR includes methods 
 to add leaks to pipes and tanks, 
 shut off power to pumps, 
-and change demand for fire conditions, as described in the sections below.
+and change demands for fire conditions, as described in the sections below.
 The :doc:`Earthquake</apidoc/wntr.scenario.Earthquake>` class includes methods 
-to compute PGA, PGV, and repair rate based on the earthquake
+to compute peak ground acceleration, peak ground velocity, and repair rate based on the earthquake
 location and magnitude.  Since the properties are a function of distance to the epicenter, the 
 node coordinates must be scaled properly in units of meters.  
 To change the node coordinate scale by a factor of 1000, for example, use the following code:
@@ -27,17 +27,16 @@ To change the node coordinate scale by a factor of 1000, for example, use the fo
 .. literalinclude:: ../examples/disaster_scenarios.py
    :lines: 9
 
-The following code can be used to compute PGA, PGV, and repair rate:
+The following code can be used to compute peak ground acceleration, peak ground velocity, and repair rate:
 
 .. literalinclude:: ../examples/disaster_scenarios.py
    :lines: 10-17
 
 Fragility curves are commonly used to define the probability that a component is 
 damaged with respect to 
-peak ground acceleration (PGA), 
-peak ground velocity (PGV), 
+peak ground acceleration, peak ground velocity, 
 or repair rate.
-The American Lifelines Alliance report [ALA2001]_ includes seismic fragility curves 
+The American Lifelines Alliance report [ALA01]_ includes seismic fragility curves 
 for water system components.
 See :ref:`stochastic_simulation` for more information on fragility curves.
 
@@ -61,7 +60,7 @@ Power outage
 -------------
 Power outages can be small and brief but can also span over several days and 
 effect whole regions as seen in the 2003 Northeast Blackout. 
-While the Northeast Blackout was an extreme case, a 2012 LBNL study [Eto2012]_ 
+While the Northeast Blackout was an extreme case, a 2012 Lawrence Berkeley National Laboratory study [ELLT12]_ 
 showed the frequency and duration of power outages are increasing by a 
 rate of two percent annually. In water distribution networks, 
 a power outage can cause pump stations to shut down and result in 

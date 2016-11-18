@@ -1,6 +1,6 @@
 .. _developers:
 
-Software Quality Assurance
+Software quality assurance
 =======================================
 
 The following section includes information about 
@@ -26,20 +26,22 @@ Tests can also be run locally using nosetests in the WNTR directory using the fo
 
 	nosetests -v --with-coverage --cover-package=wntr wntr
 
+For more information on nosetests, see  http://nose.readthedocs.io/.
+
 Documentation
 ---------------------
 WNTR includes a user manual that is built using Read the Docs.
 Using this service, the user manual is rebuilt each time changes are made to the code.
-The documentation is publicly available at http://wntr.readthedocs.io/ 
+The documentation is publicly available at http://wntr.readthedocs.io/.
 The user manual includes an overview, installation instructions, simple examples, 
 and information on the code structure and functions.  
-WNTR includes documentation on the application program interface (API) for all 
+WNTR includes documentation on the API for all 
 public functions, methods, and classes.
 New content is marked `Draft`.
 
 Examples
 ---------------------
-WNTR includes examples to help get new users started.  
+WNTR includes examples to help new users get started.  
 These examples are intended to demonstrate high level features and use cases for WNTR.  
 The examples are tested to ensure they stay current with the software project.
 
@@ -50,7 +52,7 @@ The core development team will prioritize and assign bug reports and feature req
 
 Contributing
 ---------------------
-Software developers, within the core development team or external collaborators, 
+Software developers, within the core development team and external collaborators, 
 are expected to follow standard practices to document and test new code.  
 Software developers interested in contributing to the project are encouraged to 
 create a `Fork` of the project and submit a `Pull Request` using GitHub.  
@@ -71,5 +73,4 @@ Development team
 WNTR was developed as part of a collaboration between the United States 
 Environmental Protection Agency National Homeland Security Research Center, 
 Sandia National Laboratories, and Purdue University.  
-
 See https://github.com/USEPA/WNTR/graphs/contributors for a list of contributors.

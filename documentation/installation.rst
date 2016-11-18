@@ -11,9 +11,9 @@ WNTR can be installed as a Python package using standard open source software to
 	General information on Python can be found at https://www.python.org/.
 	
 	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
-	Matplotlib, and Sympy.  For more information on Python package dependencies, see :ref:`requirements`.
+	Matplotlib, and SymPy.  For more information on Python package dependencies, see :ref:`requirements`.
 	
-	Anaconda also comes with Spyder, an interactive development environment (IDE), that includes enhanced 
+	Anaconda also comes with Spyder, an IDE, that includes enhanced 
 	editing and debug features along with a graphical user interface that is very similar 
 	to MATLAB. Debugging options are available from the toolbar.  
 	Code documentation is displayed in the object inspection 
@@ -24,7 +24,7 @@ WNTR can be installed as a Python package using standard open source software to
 
 	**For users**: 	Users can install WNTR using pip.  
 	pip is a command line software tool used to install and manage Python 
-	packages.  The software tool can be downloaded from https://pypi.python.org/pypi/pip.
+	packages.  pip can be downloaded from https://pypi.python.org/pypi/pip.
 	
 	To install WNTR using pip, run::
 
@@ -34,7 +34,7 @@ WNTR can be installed as a Python package using standard open source software to
 
 	**For developers**: Developers can install and build WNTR from source using git.
 	git is a command line software tool for version control and software development.
-	The software tool can be downloaded from http://git-scm.com. 
+	git can be downloaded from http://git-scm.com. 
 		
 	To build WNTR from source using git, run::
 
@@ -58,15 +58,15 @@ Requirements
 Requirements for WNTR include Python 2.7 along with several Python packages. 
 The following Python packages are required:
 
-* Numpy [vanderWalt2011]_: used to support large, multi-dimensional arrays and matrices, 
+* Numpy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
-* Scipy [vanderWalt2011]_: used to support efficient routines for numerical integration, 
+* Scipy [VaCV11]_: used to support efficient routines for numerical integration, 
   http://www.scipy.org/
-* NetworkX [Hagberg2008]_: used to create and analyze complex networks, 
+* NetworkX [HaSS08]_: used to create and analyze complex networks, 
   https://networkx.github.io/
-* Pandas [McKinney2013]_: used to analyze and store time series data, 
+* Pandas [Mcki13]_: used to analyze and store time series data, 
   http://pandas.pydata.org/
-* Matplotlib [Hunter2007]_: used to produce figures, 
+* Matplotlib [Hunt07]_: used to produce figures, 
   http://matplotlib.org/
 
 Optional dependencies
@@ -74,11 +74,11 @@ Optional dependencies
 
 The following Python packages are optional:
 
-* Sympy: used to convert units, 
+* SymPy [JCMG11]_: used to convert units, 
   http://www.sympy.org/en/index.html
-* xlwt: used to read/write to Excel spreadsheets,
+* xlwt [Xlwt16]_: used to read/write to Excel spreadsheets,
   http://xlwt.readthedocs.io
-* Numpydoc [vanderWalt2011]_: used to build the user manual,
+* Numpydoc [VaCV11]_: used to build the user manual,
   https://github.com/numpy/numpydoc
 
 .. The following is not shown in the UM

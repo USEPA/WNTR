@@ -1,7 +1,7 @@
 Units
 ======================================
 
-WNTR is compatible with EPANET inp files using the following unit conventions [Rossman2000]_:
+WNTR is compatible with EPANET formatted water network model input files using the following unit conventions [Ross00]_:
 
 * CFS = cubic feet per second
 * GPM = gallons per minute
@@ -14,9 +14,9 @@ WNTR is compatible with EPANET inp files using the following unit conventions [R
 * CMH = cubic meters per hour
 * CMD = cubic meters per day
 
-Internally, the water network model is converted to SI units 
-(Length = m, Mass = kg, Time = s).  
-All external data used in the code (i.e. user supplied pressure threshold) should also be in 
+Internally, the water network model is converted to SI (International System) units
+(Length = :math:`m`, Mass = :math:`kg`, Time = :math:`s`).  
+All external data used in the code (i.e., user supplied pressure threshold) should also be in 
 SI units. Results are stored in SI units and can be converted to other units if desired.
 
 * Length = :math:`m`
@@ -35,7 +35,7 @@ SI units. Results are stored in SI units and can be converted to other units if 
 * Mass injection = :math:`kg/s`
 * Volume = :math:`m^3`
 
-The sympy package can be used to convert between units.  The example **converting_units.py**
+The SymPy package can be used to convert between units.  The example **converting_units.py**
 demonstrates its use.
 
 .. literalinclude:: ../examples/converting_units.py
