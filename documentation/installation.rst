@@ -38,11 +38,11 @@ WNTR can be installed as a Python package using standard open source software to
 		
 	To build WNTR from source using git, run::
 
-		git clone https://github.com/usepa/wntr
+		git clone https://github.com/USEPA/WNTR
 		cd wntr
 		python setup.py develop
 	
-	This will install the development branch of WNTR from https://github.com/uspea/wntr.
+	This will install the development branch of WNTR from https://github.com/USEPA/WNTR.
 	More information for developers can be found in the :ref:`developers` section.
 
 **Step 3**: Test installation

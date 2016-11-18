@@ -11,7 +11,7 @@ ways to contribute and request new features.
 GitHub repository
 ---------------------
 WNTR is maintained in a version controlled repository.  
-WNTR is hosted on USEPA GitHub organization at https://github.com/usepa/wntr.
+WNTR is hosted on USEPA GitHub organization at https://github.com/USEPA/WNTR.
 
 Software tests
 --------------------
@@ -20,7 +20,7 @@ changes are made to the repository.  The tests cover a wide range of unit and
 integration tests designed to ensure that the code is performing as expected.  
 New tests are developed each time new functionality is added to the code.   
 Testing status (passing/failed) and code coverage statistics are posted on 
-the README section at https://github.com/usepa/wntr.
+the README section at https://github.com/USEPA/WNTR.
 	
 Tests can also be run locally using nosetests in the WNTR directory using the following command::
 
@@ -47,7 +47,7 @@ The examples are tested to ensure they stay current with the software project.
 
 Bug reports and feature requests
 ----------------------------------
-Bug reports and feature requests can be submitted to https://github.com/usepa/wntr/issues.  
+Bug reports and feature requests can be submitted to https://github.com/USEPA/WNTR/issues.  
 The core development team will prioritize and assign bug reports and feature requests to team members.
 
 Contributing
