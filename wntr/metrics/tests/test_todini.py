@@ -1,3 +1,4 @@
+from __future__ import print_function
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
@@ -36,8 +37,8 @@ def test_Todini_Fig2_optCost_GPM():
     # Compute todini index
     todini = wntr.metrics.todini(results.node, results.link, wn, 30) # h* = 30 m
     
-    print 'Todini: Fig2_optCost'
-    print todini[0]
+    print('Todini: Fig2_optCost')
+    print(todini[0])
     
     expected = 0.22
     error = abs((todini[0] - expected)/expected)
@@ -57,8 +58,8 @@ def test_Todini_Fig2_optCost_CMH():
     # Compute todini index
     todini = wntr.metrics.todini(results.node, results.link, wn, 30) # h* = 30 m
     
-    print 'Todini: Fig2_optCost'
-    print todini[0]
+    print('Todini: Fig2_optCost')
+    print(todini[0])
     
     expected = 0.22
     error = abs((todini[0] - expected)/expected)
@@ -78,8 +79,8 @@ def test_Todini_Fig2_solA_GPM():
     # Compute todini index
     todini = wntr.metrics.todini(results.node, results.link, wn, 30) # h* = 30 m
     
-    print 'Todini: Fig2_solA'
-    print todini[0]
+    print('Todini: Fig2_solA')
+    print(todini[0])
     
     expected = 0.41
     error = abs((todini[0] - expected)/expected)
@@ -99,8 +100,8 @@ def test_Todini_Fig2_solA_CMH():
     # Compute todini index
     todini = wntr.metrics.todini(results.node, results.link, wn, 30) # h* = 30 m
     
-    print 'Todini: Fig2_solA'
-    print todini[0]
+    print('Todini: Fig2_solA')
+    print(todini[0])
     
     expected = 0.41
     error = abs((todini[0] - expected)/expected)
@@ -127,10 +128,10 @@ def test_Net6():
     Tmax = max(todini)
     Tmin = min(todini)
     
-    print 'Todini: Net6'
-    print "  average index: " + str(Tave)
-    print "  max index: " + str(Tmax)
-    print "  min index: " + str(Tmin)
+    print('Todini: Net6')
+    print("  average index: " + str(Tave))
+    print("  max index: " + str(Tmax))
+    print("  min index: " + str(Tmin))
     
     expected_Taverage = 0.267
     error = abs((Tave - expected_Taverage)/expected_Taverage)

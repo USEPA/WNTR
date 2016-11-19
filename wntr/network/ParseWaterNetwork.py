@@ -143,7 +143,7 @@ class ParseWaterNetwork(object):
 
         # First read inp file to get options, specifically units
 
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
 
         # Set name of water network
         wn.name = inp_file_name
@@ -212,7 +212,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get reservoirs
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         reservoirs = False
         for line in f:
             if ']' in line:
@@ -239,7 +239,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get junctions
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         junctions = False
         for line in f:
             if ']' in line:
@@ -265,7 +265,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get tanks
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         tanks = False
         for line in f:
             if ']' in line:
@@ -317,7 +317,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get pipes
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         pipes = False
         for line in f:
             if ']' in line:
@@ -360,7 +360,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get valves
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         valves = False
         for line in f:
             if ']' in line:
@@ -391,7 +391,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get curves
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         curves = False
         for line in f:
             if ']' in line:
@@ -417,7 +417,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get pumps
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         pumps = False
         for line in f:
             if ']' in line:
@@ -461,7 +461,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get patterns
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         patterns = False
         for line in f:
             if ']' in line:
@@ -486,7 +486,7 @@ class ParseWaterNetwork(object):
                     for i in current[1:]:
                         self._patterns[pattern_name].append(float(i))
 
-        for pattern_name, pattern_list in self._patterns.iteritems():
+        for pattern_name, pattern_list in self._patterns.items():
             wn.add_pattern(pattern_name, pattern_list)
 
         f.close()
@@ -494,7 +494,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get times
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         time_format = ['am', 'AM', 'pm', 'PM']
         times = False
         for line in f:
@@ -546,7 +546,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get controls
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         controls = False
         for line in f:
             if ']' in line:
@@ -606,7 +606,7 @@ class ParseWaterNetwork(object):
                     else:
                         raise RuntimeError("The following control is not recognized: " + line)
                     control_name = ''
-                    for i in xrange(len(current)-1):
+                    for i in range(len(current)-1):
                         control_name = control_name + current[i]
                     control_name = control_name + str(round(threshold,2))
                 else:
@@ -619,7 +619,7 @@ class ParseWaterNetwork(object):
                             fire_time = int(float(current[5])*3600)
                         control_obj = wntr.network.TimeControl(wn, fire_time, 'SIM_TIME', False, action_obj)
                         control_name = ''
-                        for i in xrange(len(current)-1):
+                        for i in range(len(current)-1):
                             control_name = control_name + current[i]
                         control_name = control_name + str(fire_time)
                     elif len(current) == 7: # at clocktime
@@ -632,7 +632,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get coordinates
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         coordinates = False
         for line in f:
             if ']' in line:
@@ -656,7 +656,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get status
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         status = False
         for line in f:
             if ']' in line:
@@ -696,7 +696,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get reactions
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         reactions = False
         for line in f:
             if ']' in line:
@@ -744,7 +744,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get demands
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         demands = False
         warning_flag = False
         for line in f:
@@ -771,7 +771,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get rules
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         rules = False
         warning_flag = False
         for line in f:
@@ -798,7 +798,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get energy
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         energy = False
         warning_flag = False
         for line in f:
@@ -825,7 +825,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get emitters
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         emitters = False
         warning_flag = False
         for line in f:
@@ -851,7 +851,7 @@ class ParseWaterNetwork(object):
         #
         # Read file again to get report
         #
-        f = file(inp_file_name, 'r')
+        f = open(inp_file_name, 'r')
         report = False
         warning_flag = False
         for line in f:

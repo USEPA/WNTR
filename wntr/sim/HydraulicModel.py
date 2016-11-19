@@ -259,8 +259,8 @@ class HydraulicModel(object):
             l += 1
 
     def _set_node_attributes(self):
-        self.out_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
-        self.in_link_ids_for_nodes = [[] for i in xrange(self.num_nodes)]
+        self.out_link_ids_for_nodes = [[] for i in range(self.num_nodes)]
+        self.in_link_ids_for_nodes = [[] for i in range(self.num_nodes)]
         self.node_elevations = np.zeros(self.num_nodes)
         self.nominal_pressures = np.ones(self.num_junctions)
         self.minimum_pressures = np.zeros(self.num_junctions)
@@ -338,8 +338,8 @@ class HydraulicModel(object):
             self.node_elevations[node_id] = 0.0
 
     def _set_link_attributes(self):
-        self.link_start_nodes = range(self.num_links)
-        self.link_end_nodes = range(self.num_links)
+        self.link_start_nodes = list(range(self.num_links))
+        self.link_end_nodes = list(range(self.num_links))
         self.pipe_resistance_coefficients = np.zeros(self.num_links)
         self.pipe_diameters = {}
         self.head_curve_coefficients = {}
@@ -1173,7 +1173,7 @@ class HydraulicModel(object):
                            'pressure': self._sim_results['node_pressure'],
                            'leak_demand': self._sim_results['leak_demand'],
                            'type': self._sim_results['node_type']}
-        for key,value in node_dictionary.iteritems():
+        for key,value in node_dictionary.items():
             node_dictionary[key] = np.array(value).reshape((ntimes,nnodes))
         results.node = pd.Panel(node_dictionary, major_axis=results.time, minor_axis=node_names)
 
@@ -1181,7 +1181,7 @@ class HydraulicModel(object):
                            'velocity':self._sim_results['link_velocity'],
                            'type':self._sim_results['link_type'],
                            'status':self._sim_results['link_status']}
-        for key, value in link_dictionary.iteritems():
+        for key, value in link_dictionary.items():
             link_dictionary[key] = np.array(value).reshape((ntimes, nlinks))
         results.link = pd.Panel(link_dictionary, major_axis=results.time, minor_axis=link_names)
 
@@ -1449,7 +1449,7 @@ class HydraulicModel(object):
 
         def construct_string(name, values):
             string = '{0:<10s}'.format(name)
-            for i in xrange(len(values)):
+            for i in range(len(values)):
                 if type(values[i]) == str:
                     string = string+'{0:<6s}'.format(values[i])
                 else:
@@ -1457,20 +1457,20 @@ class HydraulicModel(object):
             return string
 
         print(construct_string('variable',[node_name for node_name, node in self._wn.nodes()]+[node_name for node_name, node in self._wn.nodes()]+[link_name for link_name, link in self._wn.links()]+[self._node_id_to_name[node_id] for node_id in self._leak_ids]))
-        for node_id in xrange(self.num_nodes):
+        for node_id in range(self.num_nodes):
             print(construct_string(self._node_id_to_name[node_id], jacobian.getrow(node_id).toarray()[0]))
-        for node_id in xrange(self.num_nodes):
+        for node_id in range(self.num_nodes):
             print(construct_string(self._node_id_to_name[node_id], jacobian.getrow(self.num_nodes+node_id).toarray()[0]))
-        for link_id in xrange(self.num_links):
+        for link_id in range(self.num_links):
             print(construct_string(self._link_id_to_name[link_id], jacobian.getrow(2*self.num_nodes+link_id).toarray()[0]))
         for node_id in self._leak_ids:
             print(construct_string(self._node_id_to_name[node_id], jacobian.getrow(2*self.num_nodes+self.num_links+self._leak_ids.index(node_id)).toarray()[0]))
 
     def print_jacobian_nonzeros(self):
         print('{0:<15s}{1:<15s}{2:<25s}{3:<25s}{4:<15s}'.format('row index','col index','eqnuation','variable','value'))
-        for i in xrange(self.jacobian.shape[0]):
+        for i in range(self.jacobian.shape[0]):
             row_nnz = self.jacobian.indptr[i+1] - self.jacobian.indptr[i]
-            for k in xrange(row_nnz):
+            for k in range(row_nnz):
                 j = self.jacobian.indices[self.jacobian.indptr[i]+k]
                 if i < self.num_nodes:
                     equation_type = 'node balance'
@@ -1506,7 +1506,7 @@ class HydraulicModel(object):
         x1 = copy.copy(x)
         x2 = copy.copy(x)
         print('shape = (',len(x),',',len(x),')')
-        for i in xrange(len(x)):
+        for i in range(len(x)):
             print('getting approximate derivative of column ',i)
             x1[i] = x1[i] + step
             x2[i] = x2[i] + 2*step
@@ -1530,10 +1530,10 @@ class HydraulicModel(object):
         difference = approx_jac - jac
 
         success = True
-        for i in xrange(jac.shape[0]):
+        for i in range(jac.shape[0]):
             print('comparing values in row ',i,'with non-zeros from self.jacobain')
             row_nnz = jac.indptr[i+1] - jac.indptr[i]
-            for k in xrange(row_nnz):
+            for k in range(row_nnz):
                 j = jac.indices[jac.indptr[i]+k]
                 if abs(approx_jac[i,j]-jac[i,j]) > 0.0001:
                     if i < self.num_nodes:
@@ -1586,13 +1586,13 @@ class HydraulicModel(object):
 
 
     def check_jac_for_zero_rows(self):
-        for i in xrange(self.jacobian.shape[0]):
+        for i in range(self.jacobian.shape[0]):
             all_zero_flag = False
             row_nnz = self.jacobian.indptr[i+1] - self.jacobian.indptr[i]
             if row_nnz <= 0:
                 all_zero_flag = True
             non_zero_flag = False
-            for k in xrange(row_nnz):
+            for k in range(row_nnz):
                 j = self.jacobian.indices[self.jacobian.indptr[i]+k]
                 if self.jacobian[i,j] != 0:
                     non_zero_flag = True
@@ -1614,7 +1614,7 @@ class HydraulicModel(object):
 
     def check_infeasibility(self,x):
         resid = self.get_hydraulic_equations(x)
-        for i in xrange(len(resid)):
+        for i in range(len(resid)):
             r = abs(resid[i])
             if r > 0.0001:
                 if i >= 2*self.num_nodes:
