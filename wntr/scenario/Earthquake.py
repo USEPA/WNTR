@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import object
 import wntr
 import numpy as np
 import networkx as nx
@@ -195,7 +197,7 @@ class Earthquake(object):
             # Power model
             RR = C*0.00108*np.power(PGV, 1.173)
         else:
-            print "invalid method"
+            print("invalid method")
             
         RR = RR*(3.28/1000) # convert 1/1000ft to 1/m
 

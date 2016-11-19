@@ -1,3 +1,4 @@
+from builtins import object
 import logging
 logging.getLogger('wntr').addHandler(logging.NullHandler())
 

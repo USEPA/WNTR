@@ -1,3 +1,4 @@
+from __future__ import print_function
 import wntr
 
 # Create a water network model
@@ -9,14 +10,14 @@ sim = wntr.sim.EpanetSimulator(wn)
 results = sim.run_sim()
 
 # Access node and link panels
-print results.node
-print results.link
+print(results.node)
+print(results.link)
 
 # Access the pressure and demand at node '123' at 1 hour
-print results.node.loc[['pressure', 'demand'], 3600, '123']
+print(results.node.loc[['pressure', 'demand'], 3600, '123'])
 
 # Access the pressure for all nodes and times
-print results.node.loc['pressure', :, :]
+print(results.node.loc['pressure', :, :])
 
 # Plot time-series
 pressure_at_node123 = results.node.loc['pressure', :, '123']

@@ -1,3 +1,4 @@
+from builtins import zip
 import networkx as nx
 try:
     import matplotlib.pyplot as plt
@@ -107,7 +108,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     if isinstance(node_attribute, str):
         node_attribute = wn.query_node_attribute(node_attribute)
     if isinstance(node_attribute, list):
-        node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
+        node_attribute = dict(list(zip(node_attribute,[1]*len(node_attribute))))
     if isinstance(node_attribute, pd.Series):
         if node_attribute.index.nlevels == 2: # (nodeid, time) index
             node_attribute.reset_index(level=1, drop=True, inplace=True) # drop time
@@ -118,7 +119,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         nodelist = None
         nodecolor = 'k'
     else:
-        nodelist,nodecolor = zip(*node_attribute.items())
+        nodelist,nodecolor = list(zip(*list(node_attribute.items())))
     if node_cmap is None:
         node_cmap=plt.cm.jet
         
@@ -126,7 +127,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     if isinstance(link_attribute, str):
         link_attribute = wn.query_link_attribute(link_attribute)
     if isinstance(link_attribute, list):
-        link_attribute = dict(zip(link_attribute,[1]*len(link_attribute)))
+        link_attribute = dict(list(zip(link_attribute,[1]*len(link_attribute))))
     if isinstance(link_attribute, pd.Series):
         if link_attribute.index.nlevels == 2: # (linkid, time) index
             link_attribute.reset_index(level=1, drop=True, inplace=True) # drop time
@@ -136,13 +137,13 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     # {link_name: attr} with {(start_node, end_node, link_name): attr}
     if link_attribute is not None:  
         attr = {}
-        for link_name, value in link_attribute.iteritems():
+        for link_name, value in link_attribute.items():
             link = wn.get_link(link_name)
             attr[(link.start_node(), link.end_node(), link_name)] = value
         link_attribute = attr
     if type(link_width) is dict:
         attr = {}
-        for link_name, value in link_width.iteritems():
+        for link_name, value in link_width.items():
             link = wn.get_link(link_name)
             attr[(link.start_node(), link.end_node(), link_name)] = value
         link_width = attr
@@ -152,9 +153,9 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         linklist = None
         linkcolor = 'k'
     else:
-        linklist,linkcolor = zip(*link_attribute.items())
+        linklist,linkcolor = list(zip(*list(link_attribute.items())))
     if type(link_width) is dict:
-        linklist2,link_width = zip(*link_width.items())
+        linklist2,link_width = list(zip(*list(link_width.items())))
         if not linklist == linklist2:
             logger.warning('Link color and width do not share the same indexes, link width changed to 1.')
             link_width = 1
