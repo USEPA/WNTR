@@ -1,3 +1,4 @@
+from __future__ import division
 import wntr
 import matplotlib.pyplot as plt
 
@@ -33,7 +34,7 @@ wn.add_pump_outage('335', 5*3600, 10*3600)
 fire_flow_demand = 0.252 # 4000 gal/min = 0.252 m3/s
 time_of_fire = 10
 duration_of_fire = 4
-remainder = wn.options.duration/3600-time_of_fire-duration_of_fire
+remainder = wn.options.duration/3600 - time_of_fire-duration_of_fire
 fire_flow_pattern = [0]*time_of_fire + [1]*duration_of_fire + [0]*remainder
 wn.add_pattern('fire_flow', fire_flow_pattern)
 node = wn.get_node('197')

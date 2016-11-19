@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 from nose.tools import *
 from nose import SkipTest
 from os.path import abspath, dirname, join
@@ -84,7 +86,7 @@ def test_age_waterquality_simulation():
     results = sim.run_sim(WQ)
     
     expected = 3.65*3600 # Node '159' at hour 6
-    print results.node.loc['quality', 6*3600, '159']
+    print(results.node.loc['quality', 6*3600, '159'])
     error = abs((results.node.loc['quality', 6*3600, '159'] - expected)/expected)
     assert_less(error, 0.0001) # 0.01% error
 

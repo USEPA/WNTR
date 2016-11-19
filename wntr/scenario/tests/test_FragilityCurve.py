@@ -1,3 +1,4 @@
+from builtins import str
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np

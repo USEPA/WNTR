@@ -174,7 +174,7 @@ class TestNetworkMethods(unittest.TestCase):
 
         wn.remove_node('TANK-3326')
         
-        self.assertNotIn('TANK-3326',wn._nodes.keys())
+        self.assertNotIn('TANK-3326',list(wn._nodes.keys()))
         self.assertNotIn('TANK-3326',wn._graph.nodes())
 
         
@@ -192,14 +192,14 @@ class TestNetworkMethods(unittest.TestCase):
 
         controls_2 = copy.deepcopy(wn._control_dict)
 
-        self.assertEqual(True, 'tank_control' in controls_1.keys())
-        self.assertEqual(False, 'tank_control' in controls_2.keys())
+        self.assertEqual(True, 'tank_control' in list(controls_1.keys()))
+        self.assertEqual(False, 'tank_control' in list(controls_2.keys()))
         
-        self.assertNotIn('tank1',wn._nodes.keys())
+        self.assertNotIn('tank1',list(wn._nodes.keys()))
         self.assertNotIn('tank1',wn._graph.nodes())
         node_list = ['junction1','res1']
         node_list.sort()
-        node_list_2 = wn._nodes.keys()
+        node_list_2 = list(wn._nodes.keys())
         node_list_2.sort()
         self.assertEqual(node_list, node_list_2)
 
@@ -217,8 +217,8 @@ class TestNetworkMethods(unittest.TestCase):
         wn.remove_link('21')
 
         controls_2 = copy.deepcopy(wn._control_dict)
-        self.assertEqual(True, 'control_1' in controls_1.keys())
-        self.assertEqual(False, 'control_1' in controls_2.keys())
+        self.assertEqual(True, 'control_1' in list(controls_1.keys()))
+        self.assertEqual(False, 'control_1' in list(controls_2.keys()))
 
     def test_nodes(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -479,7 +479,7 @@ class TestInpFileWriter(unittest.TestCase):
             self.assertAlmostEqual(link.setting, link2.setting, 5)
 
     def test_user_controls(self):
-        for name1, control1 in self.wn._control_dict.iteritems():
+        for name1, control1 in self.wn._control_dict.items():
             control2 = self.wn2._control_dict[name1]
             self.assertEqual(control1==control2, True)
 

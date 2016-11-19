@@ -1,3 +1,4 @@
+from builtins import range
 import numpy as np
 import wntr.network
 import pandas as pd
@@ -46,7 +47,7 @@ def average_water_consumed(wn):
                 pattern_name = wn.options.pattern
             pattern[i] = wn.get_pattern(pattern_name)
             L[i] = len(pattern[i])
-        lcm_n = _lcml(L.values())
+        lcm_n = _lcml(list(L.values()))
         
         qbar_n = 0
         for i in range(numdemands):    
@@ -217,7 +218,7 @@ def extent_contaminant(node_results, link_results, wn, detection_limit):
         # Compute pipe_length associated with each node at time t
         for node_name in G.nodes():
             for downstream_node in G.successors(node_name):
-                for link_name in G[node_name][downstream_node].keys():
+                for link_name in list(G[node_name][downstream_node].keys()):
                     link = wn.get_link(link_name)
                     if isinstance(link, wntr.network.Pipe):
                         L.loc[t,node_name] = L.loc[t,node_name] + link.length

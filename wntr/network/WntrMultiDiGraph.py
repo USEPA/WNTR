@@ -1,3 +1,5 @@
+from builtins import next
+from builtins import range
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -65,7 +67,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         """
         
         node_degree = self.degree() 
-        terminal_nodes = [k for k,v in node_degree.iteritems() if v == 1]
+        terminal_nodes = [k for k,v in node_degree.items() if v == 1]
         
         return terminal_nodes
     
@@ -103,7 +105,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
             Central point dominance
         """
         bet_cen = nx.betweenness_centrality(self.to_undirected())
-        bet_cen = bet_cen.values()
+        bet_cen = list(bet_cen.values())
         cpd = sum(max(bet_cen) - np.array(bet_cen))/(len(bet_cen)-1)
         
         return cpd
@@ -147,8 +149,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
             Critical ratio of defragmentation
         """
         node_degree = self.degree()
-        tmp = np.mean(pow(np.array(node_degree.values()),2))
-        fc = 1-(1/((tmp/np.mean(node_degree.values()))-1))
+        tmp = np.mean(pow(np.array(list(node_degree.values())),2))
+        fc = 1-(1/((tmp/np.mean(list(node_degree.values())))-1))
 
         return fc
         
@@ -178,7 +180,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
                     paths = _all_simple_paths(self,source,target=sink)
                     for path in paths:
                         for i in range(len(path)-1):
-                            links = self[path[i]][path[i+1]].keys()
+                            links = list(self[path[i]][path[i+1]].keys())
                             for link in links:
                                 link_count[link] = link_count[link]+1
         

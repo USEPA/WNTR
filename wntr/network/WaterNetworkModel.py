@@ -1,6 +1,9 @@
 """
 Classes and methods used for specifying a water network model.
 """
+from builtins import zip
+from builtins import str
+from builtins import object
 import copy
 import networkx as nx
 import math
@@ -645,7 +648,7 @@ class WaterNetworkModel(object):
 
         if with_control:
             x=[]
-            for control_name, control in self._control_dict.iteritems():
+            for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with link '+name)
@@ -657,7 +660,7 @@ class WaterNetworkModel(object):
             for i in x:
                 self.remove_control(i)
         else:
-            for control_name, control in self._control_dict.iteritems():
+            for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
                         warnings.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
@@ -695,7 +698,7 @@ class WaterNetworkModel(object):
 
         if with_control:
             x = []
-            for control_name, control in self._control_dict.iteritems():
+            for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with node '+name)
@@ -707,7 +710,7 @@ class WaterNetworkModel(object):
             for i in x:
                 self.remove_control(i)
         else:
-            for control_name, control in self._control_dict.iteritems():
+            for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
                         warnings.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
@@ -1152,16 +1155,16 @@ class WaterNetworkModel(object):
         node_name, node
         """
         if node_type==None:
-            for node_name, node in self._nodes.iteritems():
+            for node_name, node in self._nodes.items():
                 yield node_name, node
         elif node_type==Junction:
-            for node_name, node in self._junctions.iteritems():
+            for node_name, node in self._junctions.items():
                 yield node_name, node
         elif node_type==Tank:
-            for node_name, node in self._tanks.iteritems():
+            for node_name, node in self._tanks.items():
                 yield node_name, node
         elif node_type==Reservoir:
-            for node_name, node in self._reservoirs.iteritems():
+            for node_name, node in self._reservoirs.items():
                 yield node_name, node
         else:
             raise RuntimeError('node_type, '+str(node_type)+', not recognized.')
@@ -1174,7 +1177,7 @@ class WaterNetworkModel(object):
         -------
         name, node
         """
-        for name, node in self._junctions.iteritems():
+        for name, node in self._junctions.items():
             yield name, node
 
     def tanks(self):
@@ -1185,7 +1188,7 @@ class WaterNetworkModel(object):
         -------
         name, node
         """
-        for name, node in self._tanks.iteritems():
+        for name, node in self._tanks.items():
             yield name, node
 
     def reservoirs(self):
@@ -1196,7 +1199,7 @@ class WaterNetworkModel(object):
         -------
         name, node
         """
-        for name, node in self._reservoirs.iteritems():
+        for name, node in self._reservoirs.items():
             yield name, node
 
     def links(self, link_type=None):
@@ -1210,16 +1213,16 @@ class WaterNetworkModel(object):
         link_name, link
         """
         if link_type==None:
-            for link_name, link in self._links.iteritems():
+            for link_name, link in self._links.items():
                 yield link_name, link
         elif link_type==Pipe:
-            for link_name, link in self._pipes.iteritems():
+            for link_name, link in self._pipes.items():
                 yield link_name, link
         elif link_type==Pump:
-            for link_name, link in self._pumps.iteritems():
+            for link_name, link in self._pumps.items():
                 yield link_name, link
         elif link_type==Valve:
-            for link_name, link in self._valves.iteritems():
+            for link_name, link in self._valves.items():
                 yield link_name, link
         else:
             raise RuntimeError('link_type, '+str(link_type)+', not recognized.')
@@ -1232,7 +1235,7 @@ class WaterNetworkModel(object):
         -------
         name, link
         """
-        for name, link in self._pipes.iteritems():
+        for name, link in self._pipes.items():
             yield name, link
 
     def pumps(self):
@@ -1243,7 +1246,7 @@ class WaterNetworkModel(object):
         -------
         name, link
         """
-        for name, link in self._pumps.iteritems():
+        for name, link in self._pumps.items():
             yield name, link
 
     def valves(self):
@@ -1254,62 +1257,62 @@ class WaterNetworkModel(object):
         -------
         name, link
         """
-        for name, link in self._valves.iteritems():
+        for name, link in self._valves.items():
             yield name, link
 
     def node_name_list(self):
         """
         Returns a list of the names of all nodes.
         """
-        return self._nodes.keys()
+        return list(self._nodes.keys())
 
     def junction_name_list(self):
         """
         Returns a list of the names of all junctions.
         """
-        return self._junctions.keys()
+        return list(self._junctions.keys())
 
     def tank_name_list(self):
         """
         Returns a list of the names of all tanks.
         """
-        return self._tanks.keys()
+        return list(self._tanks.keys())
 
     def reservoir_name_list(self):
         """
         Returns a list of the names of all reservoirs.
         """
-        return self._reservoirs.keys()
+        return list(self._reservoirs.keys())
 
     def link_name_list(self):
         """
         Returns a list of the names of all links.
         """
-        return self._links.keys()
+        return list(self._links.keys())
 
     def pipe_name_list(self):
         """
         Returns a list of the names of all pipes.
         """
-        return self._pipes.keys()
+        return list(self._pipes.keys())
 
     def pump_name_list(self):
         """
         Returns a list of the names of all pumps.
         """
-        return self._pumps.keys()
+        return list(self._pumps.keys())
 
     def valve_name_list(self):
         """
         Returns a list of the names of all valves.
         """
-        return self._valves.keys()
+        return list(self._valves.keys())
 
     def control_name_list(self):
         """
         Returns a list of the names of all controls.
         """
-        return self._control_dict.keys()
+        return list(self._control_dict.keys())
             
     def curves(self):
         """
@@ -1319,7 +1322,7 @@ class WaterNetworkModel(object):
         -------
         curve_name, curve
         """
-        for curve_name, curve in self._curves.iteritems():
+        for curve_name, curve in self._curves.items():
             yield curve_name, curve
 
     def set_node_coordinates(self, name, coordinates):
@@ -1344,7 +1347,7 @@ class WaterNetworkModel(object):
         """
         pos = nx.get_node_attributes(self._graph, 'pos')
         
-        for name, node in self._nodes.iteritems():
+        for name, node in self._nodes.items():
             self.set_node_coordinates(name, (pos[name][0]*scale, pos[name][1]*scale))
 
     def set_edge_attribute_on_graph(self, link_name, attr_name, value):
@@ -1486,7 +1489,7 @@ class WaterNetworkModel(object):
             pre = G.predecessors(node_name)
             for s in suc:
                 connected_to_s = False
-                link_names_list = G.edge[node_name][s].keys()
+                link_names_list = list(G.edge[node_name][s].keys())
                 for link_name in link_names_list:
                     link = self.get_link(link_name)
                     if link.status!=LinkStatus.closed:
@@ -1505,7 +1508,7 @@ class WaterNetworkModel(object):
                         grab_group(s)
             for p in pre:
                 connected_to_p = False
-                link_names_list = G.edge[p][node_name].keys()
+                link_names_list = list(G.edge[p][node_name].keys())
                 for link_name in link_names_list:
                     link = self.get_link(link_name)
                     if link.status!=LinkStatus.closed:
@@ -1526,7 +1529,7 @@ class WaterNetworkModel(object):
         grp = -1
         for node_name in G.nodes():
             already_in_grp = False
-            for key in groups.keys():
+            for key in list(groups.keys()):
                 if node_name in groups[key]:
                     already_in_grp = True
             if not already_in_grp:
@@ -1554,12 +1557,12 @@ class WaterNetworkModel(object):
         #            logger.debug('intersection of group {0} and gropup {1}: {2}'.format(grp1,grp2,nodes1.intersection(nodes2)))
         #            raise RuntimeError('The intersection of two groups is not empty!')
 
-        for grp,check in has_tank_or_res.iteritems():
+        for grp,check in has_tank_or_res.items():
             if check:
                 del groups[grp]
         
         isolated_junctions = set()
-        for grp, junctions in groups.iteritems():
+        for grp, junctions in groups.items():
             isolated_junctions = isolated_junctions.union(junctions)
         isolated_junctions = list(isolated_junctions)
         
@@ -1694,7 +1697,7 @@ class WaterNetworkModel(object):
         f.write('[PATTERNS]\n')
         label_format = '{:10s} {:10s}\n'
         f.write(label_format.format(';ID', 'Multipliers'))
-        for pattern_name, pattern in self._patterns.iteritems():
+        for pattern_name, pattern in self._patterns.items():
             count = 0
             for i in pattern:
                 if count%8 == 0:
@@ -1709,7 +1712,7 @@ class WaterNetworkModel(object):
         text_format = '{:10s} {:10f} {:10f} {:>3s}\n'
         label_format = '{:10s} {:10s} {:10s}\n'
         f.write(label_format.format(';ID', 'X-Value', 'Y-Value'))
-        for curve_name, curve in self._curves.items():
+        for curve_name, curve in list(self._curves.items()):
             for i in curve.points:
                 f.write( text_format.format(curve_name, 1000*i[0], i[1], ';'))
             f.write('\n')
@@ -1717,7 +1720,7 @@ class WaterNetworkModel(object):
         # Print Controls
         f.write( '[CONTROLS]\n')
         # Time controls and conditional controls only
-        for text, all_control in self._control_dict.items():
+        for text, all_control in list(self._control_dict.items()):
             if isinstance(all_control,wntr.network.TimeControl):
                 f.write('%s\n'%all_control.to_inp_string())
             elif isinstance(all_control,wntr.network.ConditionalControl):
@@ -1823,7 +1826,7 @@ class WaterNetworkModel(object):
         label_format = '{:10s} {:10s} {:10s}\n'
         f.write(label_format.format(';Node', 'X-Coord', 'Y-Coord'))
         coord = nx.get_node_attributes(self._graph, 'pos')
-        for key, val in coord.iteritems():
+        for key, val in coord.items():
             f.write(text_format.format(key, val[0], val[1]))
 
         f.close()

@@ -1,3 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from builtins import object
 try:
     from pyomo.environ import *
     from pyomo.core import *
@@ -8,12 +15,12 @@ except ImportError:
     raise ImportError('Error importing pyomo while running pyomo simulator.'
                       'Make sure pyomo is installed and added to path.')
 import math
-from WaterNetworkSimulator import *
+from .WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
 import warnings
 
-import cProfile, pstats, StringIO
+import cProfile, pstats, io
 import gc
 
 def do_cprofile(func):
@@ -105,7 +112,7 @@ Class for keeping approximation functions in a single place
 and avoid code duplications. Should be located in a better place
 This is just a temporal implementation
 """
-class ApproxFunctions():
+class ApproxFunctions(object):
 
     def __init__(self):
         self.q1 = 0.00349347323944
@@ -213,7 +220,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                     for t in range(self._n_timesteps):
                         self._demand_dict[(node_name, t)] = 0.0
         else:
-            nodes_to_fix = fixed_demands.keys()
+            nodes_to_fix = list(fixed_demands.keys())
             for node_name, node in self._wn.nodes():
                 if isinstance(node, Junction):
                     demand_values = self.get_node_demand(node_name)
@@ -237,7 +244,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         self._correct_time_controls_for_timestep() # should only be used until the simulator can take partial timesteps
         for l, link in self._wn.links():
             status_l = []
-            for t in xrange(self._n_timesteps):
+            for t in range(self._n_timesteps):
                 time_sec = t * self._hydraulic_step_sec
                 status_l_t = self.link_action(l, time_sec)
                 status_l.append(status_l_t)
@@ -924,7 +931,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Create solver instance
         opt = SolverFactory(solver)
         # Set solver options
-        for key, val in solver_options.iteritems():
+        for key, val in solver_options.items():
             opt.options[key]=val
         opt.options['bound_relax_factor'] = 0.0 # This is necessary to prevent pump flow from becoming slightly -ve.
                                                 # Since it is raised to a fractional power.
@@ -988,10 +995,10 @@ class PyomoSimulator(WaterNetworkSimulator):
             timedelta = results.time[t]
             if step_iter == 0:
                 #pass
-                print "Running Hydraulic Simulation at time", timedelta, " ... "
+                print("Running Hydraulic Simulation at time", timedelta, " ... ")
             else:
                 #pass
-                print "\t Trial", str(step_iter+1), "Running Hydraulic Simulation at time", timedelta, " ..."
+                print("\t Trial", str(step_iter+1), "Running Hydraulic Simulation at time", timedelta, " ...")
 
             # Build the hydraulic constraints at current timestep
             # These constraints do not include valve flow constraints
@@ -1114,14 +1121,14 @@ class PyomoSimulator(WaterNetworkSimulator):
                           'pressure': self._pyomo_sim_results['node_pressure'],
                           'leak_flow': self._pyomo_sim_results['leak_flow'],
                           'type':     self._pyomo_sim_results['node_type']}
-        for key, value in node_dictonary.iteritems():
+        for key, value in node_dictonary.items():
             node_dictonary[key] = np.array(value).reshape((ntimes, nnodes))
         results.node = pd.Panel(node_dictonary, major_axis=results.time, minor_axis=node_names)
         
         link_dictonary = {'flowrate': self._pyomo_sim_results['link_flowrate'],
                           'velocity': self._pyomo_sim_results['link_velocity'],
                           'type':     self._pyomo_sim_results['link_type']}
-        for key, value in link_dictonary.iteritems():
+        for key, value in link_dictonary.items():
             link_dictonary[key] = np.array(value).reshape((ntimes, nlinks))
         results.link = pd.Panel(link_dictonary, major_axis=results.time, minor_axis=link_names)
         
@@ -1253,7 +1260,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         #     0 means close the link
         #     1 means open the link
         #     2 means take no action
-        for link_name, status in self._link_status.iteritems():
+        for link_name, status in self._link_status.items():
             if status[t] == 0:
                 links_closed_by_controls.add(link_name)
             elif status[t] == 1:
@@ -1270,7 +1277,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Conditional controls are based on the results from the previous
         # timestep, so they are not applied during the first timestep.
         if not first_timestep:
-            for link_name_k, value in self._wn.conditional_controls.iteritems():
+            for link_name_k, value in self._wn.conditional_controls.items():
                 open_above = value['open_above']
 	        open_below = value['open_below']
 	        closed_above = value['closed_above']
@@ -1339,7 +1346,7 @@ class PyomoSimulator(WaterNetworkSimulator):
     def _override_tank_controls(self, links_closed_by_tank_controls, pumps_closed_by_outage):
         #links_closed_by_tank_controls.clear()
         for pump_name, pump in self._wn.links(Pump):
-            if pump_name in pumps_closed_by_outage and pump_name in self._wn.conditional_controls.keys():
+            if pump_name in pumps_closed_by_outage and pump_name in list(self._wn.conditional_controls.keys()):
                 #print pump_name , "opened, tanks filled by this pump are: ",  self._wn.conditional_controls[pump_name]['open_below']
                 tank_filled_by_pump = self._wn.conditional_controls[pump_name]['open_below'][0][0]
                 #print "\t", "Opening link next to tank: ", tank_filled_by_pump
@@ -1354,7 +1361,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         time_t = self._hydraulic_step_sec*t
 
-        for pump_name, time_tuple in self._pump_outage.iteritems():
+        for pump_name, time_tuple in self._pump_outage.items():
             if time_t >= time_tuple[0] and time_t <= time_tuple[1]:
                 pumps_closed_by_outage.add(pump_name)
             else:
@@ -1374,7 +1381,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         next timestep.
         """
  
-        for tank_name, control_info in self._tank_controls.iteritems():
+        for tank_name, control_info in self._tank_controls.items():
             head_in_tank = instance['head'][tank_name]
             next_head_in_tank = self.predict_next_tank_head(tank_name, instance)
             min_tank_head = control_info['min_head']
@@ -1413,7 +1420,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         allowing water to flow out of a tank below its minimum level,
         then that link is closed.
         """
-        for tank_name, control_info in self._tank_controls.iteritems():
+        for tank_name, control_info in self._tank_controls.items():
             head_in_tank = instance.head[tank_name].value
             min_tank_head = control_info['min_head']
             if head_in_tank <= min_tank_head:
@@ -1563,14 +1570,14 @@ class PyomoSimulator(WaterNetworkSimulator):
             constraint_names.add(constraint_name)
         for constraint_name in constraint_names:
             con = getattr(instance, constraint_name)
-            for constraint_key in con.keys():
+            for constraint_key in list(con.keys()):
                 con_value = value(con[constraint_key].body)
                 con_lower = value(con[constraint_key].lower)
                 con_upper = value(con[constraint_key].upper)
                 if (con_lower - con_value) >= 1.0e-5 or (con_value - con_upper) >= 1.0e-5:
-                    print constraint_name,'[',constraint_key,']',' is not satisfied:'
-                    print 'lower: ',con_lower, '\t body: ',con_value,'\t upper: ',con_upper 
-                    print 'lower: ',con[constraint_key].lower, '\t body: ',con[constraint_key].body,'\t upper: ',con[constraint_key].upper 
+                    print(constraint_name,'[',constraint_key,']',' is not satisfied:')
+                    print('lower: ',con_lower, '\t body: ',con_value,'\t upper: ',con_upper) 
+                    print('lower: ',con[constraint_key].lower, '\t body: ',con[constraint_key].body,'\t upper: ',con[constraint_key].upper) 
 
     def _raise_warning_for_drain_to_reservoir(self, instance):
         """
@@ -1578,7 +1585,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         the use of a check valve.
         """
 
-        for link_name, reservoir_name in self._reservoir_links.iteritems():
+        for link_name, reservoir_name in self._reservoir_links.items():
             link = self._wn.get_link(link_name)
             start_node_name = link.start_node()
             end_node_name = link.end_node()

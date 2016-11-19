@@ -1,12 +1,15 @@
+from __future__ import absolute_import
+from builtins import str
+from builtins import range
 from wntr import *
 import numpy as np
 import scipy.sparse as sparse
 import warnings
-from WaterNetworkSimulator import *
-from HydraulicModel import *
+from .WaterNetworkSimulator import *
+from .HydraulicModel import *
 from wntr.network.WaterNetworkModel import *
-from NewtonSolver import *
-from NetworkResults import *
+from .NewtonSolver import *
+from .NetworkResults import *
 import time
 import copy
 import networkx as nx
@@ -70,7 +73,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         pump_controls = self._wn._get_pump_controls()
         valve_controls = self._wn._get_valve_controls()
 
-        self._controls = self._wn._control_dict.values()+tank_controls+cv_controls+pump_controls+valve_controls
+        self._controls = list(self._wn._control_dict.values())+tank_controls+cv_controls+pump_controls+valve_controls
 
         model = HydraulicModel(self._wn, self.pressure_driven)
         model.initialize_results_dict()
@@ -232,7 +235,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             backup_time = 0.0
             controls_to_activate = []
             controls_to_activate_regardless_of_time = []
-            for i in xrange(len(self._controls)):
+            for i in range(len(self._controls)):
                 control = self._controls[i]
                 control_tuple = control.IsControlActionRequired(self._wn, presolve)
                 assert type(control_tuple[1]) == int or control_tuple[1] == None, 'control backup time should be an int. back up time = '+str(control_tuple[1])
@@ -263,35 +266,35 @@ class WNTRSimulator(WaterNetworkSimulator):
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 0)
             if change_flag:
-                if change_tuple not in change_dict.keys():
+                if change_tuple not in list(change_dict.keys()):
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 1)
             if change_flag:
-                if change_tuple not in change_dict.keys():
+                if change_tuple not in list(change_dict.keys()):
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 2)
             if change_flag:
-                if change_tuple not in change_dict.keys():
+                if change_tuple not in list(change_dict.keys()):
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 3)
             if change_flag:
-                if change_tuple not in change_dict.keys():
+                if change_tuple not in list(change_dict.keys()):
                     change_dict[change_tuple] = (orig_value, control.name)
 
         self._control_log.reset()
 
         self._align_valve_statuses()
 
-        for change_tuple, orig_value_control_name in change_dict.iteritems():
+        for change_tuple, orig_value_control_name in change_dict.items():
             orig_value = orig_value_control_name[0]
             control_name = orig_value_control_name[1]
             if orig_value!=getattr(change_tuple[0],change_tuple[1]):
@@ -324,7 +327,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                 self._internal_graph.remove_edge(link.start_node(), link.end_node(), key=link_name)
 
     def _update_internal_graph(self):
-        for obj_name, obj in self._control_log.changed_objects.iteritems():
+        for obj_name, obj in self._control_log.changed_objects.items():
             changed_attrs = self._control_log.changed_attributes[obj_name]
             if type(obj) == wntr.network.Pipe:
                 if 'status' in changed_attrs:

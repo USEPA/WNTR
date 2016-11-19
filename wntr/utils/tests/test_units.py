@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import range
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np

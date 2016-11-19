@@ -2,6 +2,10 @@
 Classes and methods used for specifying controls and control actions
 that may modify parameters in the network during simulation.
 """
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
 import wntr
 import weakref
 import numpy as np
@@ -630,7 +634,7 @@ class MultiConditionalControl(Control):
             return (False, None)
 
         action_required = True
-        for ndx in xrange(len(self._source)):
+        for ndx in range(len(self._source)):
             src_obj = self._source[ndx][0]
             src_attr = self._source[ndx][1]
             src_val = getattr(src_obj, src_attr)

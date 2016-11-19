@@ -1,3 +1,4 @@
+from builtins import zip
 import math
 import numpy as np
 import logging
@@ -113,8 +114,8 @@ def convert(paramtype, flowunit, data, MKS = True):
     
     data_type = type(data)
     if data_type is dict:
-        data_keys = data.keys()
-        data = np.array(data.values())
+        data_keys = list(data.keys())
+        data = np.array(list(data.values()))
     elif data_type is list:
         data = np.array(data)
         
@@ -219,7 +220,7 @@ def convert(paramtype, flowunit, data, MKS = True):
         logger.warning("Invalid paramtype: " + paramtype + ". No conversion")
     
     if data_type is dict:
-        data = dict(zip(data_keys, data))
+        data = dict(list(zip(data_keys, data)))
     elif data_type is list:
         data = list(data)
         

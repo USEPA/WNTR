@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 try:
     from wntr import pyepanet
 except ImportError:
     raise ImportError('Error importing pyepanet while running epanet simulator.'
                       'Make sure pyepanet is installed and added to path.')
-from WaterNetworkSimulator import *
+from .WaterNetworkSimulator import *
 import pandas as pd
 from wntr.utils import convert
 import logging
@@ -214,11 +215,11 @@ class EpanetSimulator(WaterNetworkSimulator):
         enData.ENclose()
         
         # Create Panel
-        for key, value in node_dictonary.iteritems():
+        for key, value in node_dictonary.items():
             node_dictonary[key] = np.array(value).reshape((ntimes, nnodes))
         results.node = pd.Panel(node_dictonary, major_axis=results.time, minor_axis=node_names)
         
-        for key, value in link_dictonary.iteritems():
+        for key, value in link_dictonary.items():
             link_dictonary[key] = np.array(value).reshape((ntimes, nlinks))
         results.link = pd.Panel(link_dictonary, major_axis=results.time, minor_axis=link_names)
         
