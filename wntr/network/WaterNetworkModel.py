@@ -41,7 +41,7 @@ class WaterNetworkModel(object):
         ---------
         >>> wn = WaterNetworkModel()
         
-        Optional Parameters
+        Parameters
         -------------------
         inp_file_name: string
            directory and filename of inp file to load into the WaterNetworkModel object.
@@ -124,13 +124,10 @@ class WaterNetworkModel(object):
         """
         Add a junction to the network.
         
-        Required Parameters
+        Parameters
         -------------------
         name : string
             Name of the junction.
-
-        Optional Parameters
-        -------------------
         base_demand : float
             Base demand at the junction.
             Internal units must be cubic meters per second (m^3/s).
@@ -160,13 +157,10 @@ class WaterNetworkModel(object):
         """
         Method to add tank to a water network object.
 
-        Required Parameters
+        Parameters
         -------------------
         name : string
             Name of the tank.
-
-        Optional Parameters
-        -------------------
         elevation : float
             Elevation at the Tank.
             Internal units must be meters (m).

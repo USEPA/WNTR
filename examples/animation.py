@@ -1,3 +1,4 @@
+from builtins import str
 import wntr
 import matplotlib.pyplot as plt
 from matplotlib import animation

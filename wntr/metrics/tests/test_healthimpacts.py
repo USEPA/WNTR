@@ -7,11 +7,26 @@ datadir = join(testdir,'..','..','tests','networks_for_testing')
 net3dir = join(testdir,'..','..','..','examples','networks')
 packdir = join(testdir,'..','..','..')
 
+def test_average_water_consumed_net3_node101():
+    inp_file = join(net3dir,'Net3.inp') 
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    qbar = wntr.metrics.average_water_consumed(wn)
+    expected = 0.012813608
+    error = abs((qbar['101'] - expected)/expected)
+    assert_less(error, 0.01) # 1% error
+
+def test_population_net6():
+    inp_file = join(net3dir,'Net6.inp') 
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    pop = wntr.metrics.population(wn)
+    expected = 152000
+    error = abs((pop.sum() - expected)/expected)
+    assert_less(error, 0.01) # 1% error
+    
 """
-Compare results to WST impact files using TSG file
+Compare the following results to WST impact files using TSG file
 121          SETPOINT      100000          0                86400
 """
-
 def test_mass_consumed():
     inp_file = join(net3dir,'Net3.inp') 
     

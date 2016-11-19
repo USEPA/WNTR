@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 import wntr
 import matplotlib.pyplot as plt
 
@@ -19,10 +21,10 @@ CHEM_at_node.plot(title='Chemical concentration, node 208')
 # Run age scenario and plot results
 WQscenario = wntr.scenario.Waterquality('AGE')
 results = sim.run_sim(WQscenario)
-AGE_at_5hr = results.node.loc['quality', 5*3600, :]/3600.0 # convert to hours
+AGE_at_5hr = old_div(results.node.loc['quality', 5*3600, :],3600.0) # convert to hours
 wntr.network.draw_graph(wn, node_attribute=AGE_at_5hr, node_size=20, 
                       title='Water age (hrs), time = 5 hours')
-AGE_at_node = results.node.loc['quality', :, '208']/3600.0
+AGE_at_node = old_div(results.node.loc['quality', :, '208'],3600.0)
 plt.figure()
 AGE_at_node.plot(title='Water age, node 208')
 

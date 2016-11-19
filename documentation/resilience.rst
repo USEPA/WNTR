@@ -1,4 +1,4 @@
-Resilience metrics (*DRAFT*)	
+Resilience metrics
 ======================================
 
 Resilience of water distribution systems refers to the 
@@ -19,6 +19,8 @@ researchers compare resilience using different methods.
 .. figure:: figures/resilience_metrics.png
    :scale: 100 %
    :alt: Resilience metrics
+
+   Example state transition plot and network graphic used to visualize resilience.
 
 The example **resilience_metrics.py** demonstrates how to compute these metrics.
 
@@ -87,15 +89,11 @@ Clustering coefficient			Clustering coefficient is the ratio between the total n
 					between 0 and 1.
 					Clustering coefficient can be computed using the NetworkX method ``clustering``.
 
-Meshedness coefficient			Meshedness coefficient is the ratio of the actual number of cycles in the 
-					network to the maximum possible number of cycles in the network.  Meshedness 
-					coefficient is a value between 0 and 1.
-
-Betweeness centrality			Betweeness centrality is the fraction of shortest paths that pass through each 
+Betweenness centrality			Betweenness centrality is the fraction of shortest paths that pass through each 
 					node.  Betweenness coefficient is a value between 0 and 1.
 					Central point dominance is the average difference in betweenness centrality 
 					of the most central point (having the maximum betweenness centrality) 
-					and all other nodes.
+					and all other nodes. These metrics can be computed using the NetworkX methods ``betweenness_centrality`` and the method :doc:`central_point_dominance</apidoc/wntr.network.WntrMultiDiGraph>`
 					
 Closeness centrality			Closeness centrality is the inverse of the sum of shortest path from one node to all other nodes.
 					Closeness centrality can be computed using the NetworkX method ``closeness_centrality``.
@@ -112,12 +110,6 @@ Bridges					A link is considered a bridge if the removal of that link increases 
 					The ratio of the number of bridges and the total number of links in the network.  Density of bridges is a value between 0 and 1.
 					The method :doc:`bridges</apidoc/wntr.network.WntrMultiDiGraph>` can be used to find bridges in a network.
 					
-Spectral gap				The difference between the first and second eigenvalue of the networks adjacency matrix.
-					The method :doc:`spectral_gap</apidoc/wntr.network.WntrMultiDiGraph>` can be used to find the spectral gap of the network.
-
-Algebraic connectivity			The second smallest eigenvalue of the normalized Laplacian matrix of a network.
-					The method :doc:`algebraic_connectivity</apidoc/wntr.network.WntrMultiDiGraph>` can be used to find the algebraic connectivity of the network.
-
 Critical ratio of defragmentation	The threshold where the network loses its large-scale connectivity and 
 					defragments, as a function of the node degree.  The critical ratio of 
 					defragmentation is related to percolation theory. The ratio is equal 
@@ -126,6 +118,15 @@ Critical ratio of defragmentation	The threshold where the network loses its larg
 =====================================  ================================================================================================================================================
 
 ..
+	Meshedness coefficient: Meshedness coefficient is the ratio of the actual number of cycles in the 
+      network to the maximum possible number of cycles in the network.  Meshedness coefficient is a value between 0 and 1.
+
+      Spectral gap: The difference between the first and second eigenvalue of the networks adjacency matrix.
+	The method :doc:`spectral_gap</apidoc/wntr.network.WntrMultiDiGraph>` can be used to find the spectral gap of the network.
+	
+	Algebraic connectivity	: The second smallest eigenvalue of the normalized Laplacian matrix of a network.
+	The method :doc:`algebraic_connectivity</apidoc/wntr.network.WntrMultiDiGraph>` can be used to find the algebraic connectivity of the network.
+	
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
 	are connected in a network.  NPR is computed using ...
 	Connectivity will change at each time step, depending on the flow direction.  
@@ -145,14 +146,14 @@ system operates under normal or abnormal conditions.
 =====================================  ================================================================================================================================================
 Metric                                 Description
 =====================================  ================================================================================================================================================
-Pressure				To determine the number of node-time pairs above or below a specified pressure treshold, 
+Pressure				To determine the number of node-time pairs above or below a specified pressure threshold, 
 					use the :doc:`query</apidoc/wntr.metrics.query>` method on results.node['pressure'].  
 
 Todini index 				The Todini index [Todini2000]_ is related to the capability of a system to overcome 
 					failures while still meeting demands and pressures at the nodes. The 
 					Todini index defines resilience at a specific time as a measure of surplus 
 					power at each node and measures relative energy redundancy. 
-					The todini index can be computed using the :doc:`todini</apidoc/wntr.metrics.todini>` method.
+					The Todini index can be computed using the :doc:`todini</apidoc/wntr.metrics.todini>` method.
 
 Entropy 				Entropy [Awumah1990]_ is a measure of uncertainty in a random variable.  
 					In a water distribution network model, the random variable is 
@@ -192,8 +193,8 @@ Concentration				To determine the number of node-time pairs above or below a spe
 Fraction of delivered quality		Fraction of delivered quality (FDQ) is the fraction of time periods where water quality standards are met [Ostfeld2002]_.
 					This metric can be computed as a function of time or space using the :doc:`fdq</apidoc/wntr.metrics.fraction_delivered>` method
 
-Average water consumed per day		Average water consumed per day is computed at each node, based on node demand and demand patterns [USEPA2014b]_.
-					The metric can be computed using the :doc:`average_water_consumed_perday</apidoc/wntr.metrics.health_impacts>` method.
+Average water consumed			Average water consumed is computed at each node, based on node demand and demand patterns [USEPA2015]_.
+					The metric can be computed using the :doc:`average_water_consumed</apidoc/wntr.metrics.health_impacts>` method.
 
 Population impacted			As stated above, population that is impacted by a specific quantity can be computed using the 
 					:doc:`population_impacted</apidoc/wntr.metrics.health_impacts>` method.  This can be applied to water quality metrics.
@@ -201,25 +202,26 @@ Population impacted			As stated above, population that is impacted by a specific
 
 Water security metrics
 -----------------------
-Water security metrics quality potential consequences of contamination scenarios.  These metrics are documented in [USEPA2014b]_.
+Water security metrics quality potential consequences of contamination scenarios.  These metrics are documented in [USEPA2015]_.
 
 =====================================  ================================================================================================================================================
 Metric                                 Description
 =====================================  ================================================================================================================================================
-Mass consumed				Mass consumed is the mass of contaminant the exists the network via node demand at each node-time pair [USEPA2014b]_.  
+Mass consumed				Mass consumed is the mass of contaminant the exists the network via node demand at each node-time pair [USEPA2015]_.  
 					The metric can be computed using the :doc:`mass_contaminant_consumed</apidoc/wntr.metrics.health_impacts>` method
 
-Volume consumed				Volume consumed is the volume of contaminant that exists the network via node demand at each node-time pair [USEPA2014b]_.   
+Volume consumed				Volume consumed is the volume of contaminant that exists the network via node demand at each node-time pair [USEPA2015]_.   
 					A detection limit may be specified.
 					The metric can be computed using the :doc:`volume_contaminant_consumed</apidoc/wntr.metrics.health_impacts>` method
 
-Extent of contamination			Extent of contamination is the length of contaminated pipe at each node-time pair [USEPA2014b]_.  
+Extent of contamination			Extent of contamination is the length of contaminated pipe at each node-time pair [USEPA2015]_.  
 					A detection limit may be specified.
 					The metric can be computed using the :doc:`extent_contaminant</apidoc/wntr.metrics.health_impacts>` method.
 
 Population impacted			As stated above, population that is impacted by a specific quantity can be computed using the 
 					:doc:`population_impacted</apidoc/wntr.metrics.health_impacts>` method.  This can be applied to water security metrics.
 =====================================  ================================================================================================================================================
+
 ..
 	Contaminate ingested
 	Population dosed
@@ -233,7 +235,7 @@ Economic metrics include network cost and greenhouse gas emissions.
 =====================================  ================================================================================================================================================
 Metric                                 Description
 =====================================  ================================================================================================================================================
-Network Cost				Network cost can be computed based on equations from the Battle of Water Networks II [Salomons2012]_
+Network cost				Network cost can be computed based on equations from the Battle of Water Networks II [Salomons2012]_
 					using the :doc:`cost</apidoc/wntr.metrics.cost>` method.
 
 Greenhouse gas emissions		Greenhouse gas emissions can be computed based on equations from the Battle of Water Networks II [Salomons2012]_ 

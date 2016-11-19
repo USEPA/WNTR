@@ -1,0 +1,6 @@
+.. _whatsnew_0100:
+
+v0.1.0 (October 17, 2016)
+-------------------------------
+
+This is the first official release of WNTR.  

@@ -1,4 +1,4 @@
-Hydraulic simulation (*DRAFT*)
+Hydraulic simulation
 ==============================
 
 WNTR contains two hydraulic simulators:  the EPANET simulator and the WNTR simulator.
@@ -6,7 +6,7 @@ The example **hydraulic_simulation.py** can be used to run both simulators and
 pause/restart simulation.
 
 The EPANET simulator can be used to run demand-driven simulations.  
-The simulator uses the EPANET toolkit and dll .  The simulator can also be 
+The simulator uses the EPANET toolkit and dll.  The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
 Hydraulic simulation using the EPANET simulator is run using the following code.
 

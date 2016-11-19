@@ -1,6 +1,6 @@
 .. _water_quality_simulation:
 
-Water quality simulation (*DRAFT*)
+Water quality simulation
 ==================================
 
 Water quality simulation can be run using the EpanetSimulator.  
