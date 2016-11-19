@@ -1,3 +1,4 @@
+from __future__ import print_function
 import wntr
 import numpy as np
 import matplotlib.pyplot as plt
@@ -76,7 +77,7 @@ for i in range(Imax):
                 str(time_of_failure) + ', End Time: ' + \
                 str(time_of_failure+duration_of_failure)
                 
-    print sim_name
+    print(sim_name)
     results[sim_name] = sim.run_sim()
     
     f=open('wn.pickle','r')
@@ -91,7 +92,7 @@ result_names = results.keys()
 for name in result_names:
     
     # Print power outage description for each iteration
-    print name
+    print(name)
     
     results[name].node.major_axis = results[name].node.major_axis/3600.0
     
