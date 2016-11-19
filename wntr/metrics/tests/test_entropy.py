@@ -1,3 +1,4 @@
+from __future__ import print_function
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
@@ -37,11 +38,11 @@ def test_layout1():
     Saverage = np.mean(S.values())
     Smax = max(S.values())
     Smin = min(S.values())
-    print 'Entropy: Layout 1'
-    print '  S mean: ' + repr(Saverage)
-    print '  S max: ' + repr(Smax)
-    print '  S min: ' + repr(Smin)
-    print '  Shat: ' + repr(Shat)
+    print('Entropy: Layout 1')
+    print('  S mean: ' + repr(Saverage))
+    print('  S max: ' + repr(Smax))
+    print('  S min: ' + repr(Smin))
+    print('  Shat: ' + repr(Shat))
     
     # The values in the paper are different, perhaps due to significant figure
     # rounding during the calculation
@@ -91,11 +92,11 @@ def test_layout8():
     Saverage = np.mean(S.values())
     Smax = max(S.values())
     Smin = min(S.values())
-    print 'Entropy: Layout 8'
-    print '  S mean: ' + repr(Saverage)
-    print '  S max: ' + repr(Smax)
-    print '  S min: ' + repr(Smin)
-    print '  Shat: ' + repr(Shat)
+    print('Entropy: Layout 8')
+    print('  S mean: ' + repr(Saverage))
+    print('  S max: ' + repr(Smax))
+    print('  S min: ' + repr(Smin))
+    print('  Shat: ' + repr(Shat))
     
     # The values in the paper are different, perhaps due to significant figure
     # rounding during the calculation

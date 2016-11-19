@@ -26,7 +26,7 @@ pipe_diameters = wn.query_link_attribute('diameter', np.less_equal,
                                          0.9144,  # 36 inches = 0.9144 m
                                          link_type=wntr.network.Pipe)
 failure_probability = {}
-for k,v in pipe_diameters.iteritems():
+for k,v in pipe_diameters.items():
     failure_probability[k] = v/sum(pipe_diameters.values())
     
 # Define maximum iterations

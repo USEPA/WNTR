@@ -630,7 +630,7 @@ class MultiConditionalControl(Control):
             return (False, None)
 
         action_required = True
-        for ndx in xrange(len(self._source)):
+        for ndx in range(len(self._source)):
             src_obj = self._source[ndx][0]
             src_attr = self._source[ndx][1]
             src_val = getattr(src_obj, src_attr)

@@ -136,13 +136,13 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     # {link_name: attr} with {(start_node, end_node, link_name): attr}
     if link_attribute is not None:  
         attr = {}
-        for link_name, value in link_attribute.iteritems():
+        for link_name, value in link_attribute.items():
             link = wn.get_link(link_name)
             attr[(link.start_node(), link.end_node(), link_name)] = value
         link_attribute = attr
     if type(link_width) is dict:
         attr = {}
-        for link_name, value in link_width.iteritems():
+        for link_name, value in link_width.items():
             link = wn.get_link(link_name)
             attr[(link.start_node(), link.end_node(), link_name)] = value
         link_width = attr
