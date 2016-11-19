@@ -1,3 +1,4 @@
+from builtins import range
 import networkx as nx
 from wntr.network.WntrMultiDiGraph import _all_simple_paths
 import math
@@ -61,7 +62,7 @@ def entropy(G, sources=None, sinks=None):
         return
     
     if sources is None:
-        sources = [key for key,value in nx.get_node_attributes(G,'type').items() if value == 'reservoir' ]
+        sources = [key for key,value in list(nx.get_node_attributes(G,'type').items()) if value == 'reservoir' ]
     
     if sinks is None:
         sinks = G.nodes()
@@ -109,7 +110,7 @@ def entropy(G, sources=None, sinks=None):
             MDij = [(t[idx],t[idx+1]) for t in temp for idx in range(len(t)-1)] 
         
             flow = 0
-            for link in G[nodei][nodej].keys():
+            for link in list(G[nodei][nodej].keys()):
                 flow = flow + G[nodei][nodej][link]['weight']
             qij.append(flow)
             
@@ -117,9 +118,9 @@ def entropy(G, sources=None, sinks=None):
             dk = Counter() 
             for elem in MDij:
                 # divide by the numnber of links between two nodes
-                dk[elem] += 1/len(G[elem[0]][elem[1]].keys()) 
+                dk[elem] += 1/len(list(G[elem[0]][elem[1]].keys())) 
             
-            aij.append(NDij*(1-float(sum(np.array(dk.values()) - 1))/sum(dk.values())))
+            aij.append(NDij*(1-float(sum(np.array(list(dk.values())) - 1))/sum(dk.values())))
             
         Q[nodej] = sum(qij) # Total flow into node j
         

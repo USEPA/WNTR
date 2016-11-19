@@ -1,3 +1,4 @@
+from builtins import str
 import datetime
 
 def sec_to_timedelta_str(seconds):

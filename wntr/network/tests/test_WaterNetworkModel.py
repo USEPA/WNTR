@@ -1,3 +1,4 @@
+from builtins import str
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
@@ -129,7 +130,7 @@ def test_query_node_attribute():
     
     expected_nodes = ['13', '22', '23']
     
-    assert_list_equal(nodes.keys(), expected_nodes)
+    assert_list_equal(list(nodes.keys()), expected_nodes)
 
 def test_query_pipe_attribute():
     inp_file = join(net1dir,'Net1.inp') 
@@ -143,7 +144,7 @@ def test_query_pipe_attribute():
     
     expected_pipes = ['10']
     
-    assert_list_equal(pipes.keys(), expected_pipes)
+    assert_list_equal(list(pipes.keys()), expected_pipes)
 
 def test_nzd_nodes():
     inp_file = join(net1dir,'Net1.inp') 
@@ -156,7 +157,7 @@ def test_nzd_nodes():
     
     expected_nodes = ['11', '13', '12', '21', '22', '23', '32', '31']
     
-    assert_list_equal(nzd_nodes.keys(), expected_nodes)
+    assert_list_equal(list(nzd_nodes.keys()), expected_nodes)
     
 if __name__ == '__main__':
     test_Net1()

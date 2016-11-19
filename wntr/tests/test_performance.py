@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import sys
 # HACK until resilience is a proper module
@@ -10,7 +11,7 @@ resilienceMainDir = os.path.abspath(
         inspect.currentframe() ) ) ), '..', '..' ))
 import time
 import numpy as np
-print resilienceMainDir
+print(resilienceMainDir)
 
 class TestPerformance(unittest.TestCase):
 

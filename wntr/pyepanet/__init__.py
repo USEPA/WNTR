@@ -15,10 +15,11 @@ in pyepanet.epanet2 and instantiating an object of this class loads the
 library and then provides pythonic functions equivalent to the EPANET 
 tookit ENmethodname functions.
 """
+from __future__ import absolute_import
 
-from toolkit import *
-from future import *
-from epanet2 import ENepanet, EpanetException, ENgetwarning
+from .toolkit import *
+from .future import *
+from .epanet2 import ENepanet, EpanetException, ENgetwarning
 import os, sys
 from pkg_resources import Requirement, resource_filename
 

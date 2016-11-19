@@ -1,9 +1,12 @@
+from __future__ import absolute_import
+from builtins import range
+from builtins import object
 import numpy as np
 import warnings
 from wntr.network.WaterNetworkModel import *
 from scipy.optimize import fsolve
 import math
-from NetworkResults import NetResults
+from .NetworkResults import NetResults
 import time
 import copy
 
@@ -66,7 +69,7 @@ class WaterNetworkSimulator(object):
 
         assert(offset == 0.0), "Only 0.0 Pattern Start time is currently supported. "
 
-        demand_times_minutes = range(start_time, end_time + self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
+        demand_times_minutes = list(range(start_time, end_time + self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep))
         demand_pattern_values = [base_demand*i for i in pattern_list]
 
         demand_values = []
