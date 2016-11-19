@@ -2,7 +2,9 @@
 Python extensions for the EPANET Programmers Toolkit DLLs.
 EPANET toolkit functions.
 """
-from toolkit import *
+from __future__ import print_function
+from __future__ import absolute_import
+from .toolkit import *
 import ctypes, os, sys
 from ctypes import byref
 from pkg_resources import resource_filename
@@ -116,7 +118,7 @@ class ENepanet():
         if self.errcode >= 100:
             self.Errflag = True
             self.errcodelist.append(self.errcode)
-            raise(EpanetException(self.ENgeterror(self.errcode)))
+            raise EpanetException
         else:
             self.Warnflag = True
             warnings.warn(ENgetwarning(self.errcode))
@@ -168,7 +170,7 @@ class ENepanet():
         """
         if self.fileLoaded: self.ENclose()
         if self.fileLoaded: 
-            raise(EPANETException('Fatal error closing previously opened file'))
+            raise EPANETException
         if inpfile is None: inpfile = self.inpfile
         if rptfile is None: rptfile = self.rptfile
         if binfile is None: binfile = self.binfile
@@ -987,6 +989,6 @@ def main(argv=sys.argv):
         A.epanetExec()
         return A.errcode
     except Exception as E:
-        print "EPANET Failed to launch"
-        print E
+        print("EPANET Failed to launch")
+        print(E)
         return 1

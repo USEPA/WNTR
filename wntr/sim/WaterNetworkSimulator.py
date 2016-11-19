@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 import numpy as np
 import warnings
 from wntr.network.WaterNetworkModel import *
 from scipy.optimize import fsolve
 import math
-from NetworkResults import NetResults
+from .NetworkResults import NetResults
 import time
 import copy
 

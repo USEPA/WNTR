@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import absolute_import
 try:
     from pyomo.environ import *
     from pyomo.core import *
@@ -8,7 +10,7 @@ except ImportError:
     raise ImportError('Error importing pyomo while running pyomo simulator.'
                       'Make sure pyomo is installed and added to path.')
 import math
-from WaterNetworkSimulator import *
+from .WaterNetworkSimulator import *
 import pandas as pd
 from six import iteritems
 import warnings
@@ -988,10 +990,10 @@ class PyomoSimulator(WaterNetworkSimulator):
             timedelta = results.time[t]
             if step_iter == 0:
                 #pass
-                print "Running Hydraulic Simulation at time", timedelta, " ... "
+                print("Running Hydraulic Simulation at time", timedelta, " ... ")
             else:
                 #pass
-                print "\t Trial", str(step_iter+1), "Running Hydraulic Simulation at time", timedelta, " ..."
+                print("\t Trial", str(step_iter+1), "Running Hydraulic Simulation at time", timedelta, " ...")
 
             # Build the hydraulic constraints at current timestep
             # These constraints do not include valve flow constraints
@@ -1568,9 +1570,9 @@ class PyomoSimulator(WaterNetworkSimulator):
                 con_lower = value(con[constraint_key].lower)
                 con_upper = value(con[constraint_key].upper)
                 if (con_lower - con_value) >= 1.0e-5 or (con_value - con_upper) >= 1.0e-5:
-                    print constraint_name,'[',constraint_key,']',' is not satisfied:'
-                    print 'lower: ',con_lower, '\t body: ',con_value,'\t upper: ',con_upper 
-                    print 'lower: ',con[constraint_key].lower, '\t body: ',con[constraint_key].body,'\t upper: ',con[constraint_key].upper 
+                    print(constraint_name,'[',constraint_key,']',' is not satisfied:')
+                    print('lower: ',con_lower, '\t body: ',con_value,'\t upper: ',con_upper) 
+                    print('lower: ',con[constraint_key].lower, '\t body: ',con[constraint_key].body,'\t upper: ',con[constraint_key].upper) 
 
     def _raise_warning_for_drain_to_reservoir(self, instance):
         """

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from wntr import *
 import pandas as pd
 import numpy as np
@@ -1455,15 +1456,15 @@ class HydraulicModel(object):
                     string = string+'{0:<6.2f}'.format(values[i])
             return string
 
-        print construct_string('variable',[node_name for node_name, node in self._wn.nodes()]+[node_name for node_name, node in self._wn.nodes()]+[link_name for link_name, link in self._wn.links()]+[self._node_id_to_name[node_id] for node_id in self._leak_ids])
+        print(construct_string('variable',[node_name for node_name, node in self._wn.nodes()]+[node_name for node_name, node in self._wn.nodes()]+[link_name for link_name, link in self._wn.links()]+[self._node_id_to_name[node_id] for node_id in self._leak_ids]))
         for node_id in xrange(self.num_nodes):
-            print construct_string(self._node_id_to_name[node_id], jacobian.getrow(node_id).toarray()[0])
+            print(construct_string(self._node_id_to_name[node_id], jacobian.getrow(node_id).toarray()[0]))
         for node_id in xrange(self.num_nodes):
-            print construct_string(self._node_id_to_name[node_id], jacobian.getrow(self.num_nodes+node_id).toarray()[0])
+            print(construct_string(self._node_id_to_name[node_id], jacobian.getrow(self.num_nodes+node_id).toarray()[0]))
         for link_id in xrange(self.num_links):
-            print construct_string(self._link_id_to_name[link_id], jacobian.getrow(2*self.num_nodes+link_id).toarray()[0])
+            print(construct_string(self._link_id_to_name[link_id], jacobian.getrow(2*self.num_nodes+link_id).toarray()[0]))
         for node_id in self._leak_ids:
-            print construct_string(self._node_id_to_name[node_id], jacobian.getrow(2*self.num_nodes+self.num_links+self._leak_ids.index(node_id)).toarray()[0])
+            print(construct_string(self._node_id_to_name[node_id], jacobian.getrow(2*self.num_nodes+self.num_links+self._leak_ids.index(node_id)).toarray()[0]))
 
     def print_jacobian_nonzeros(self):
         print('{0:<15s}{1:<15s}{2:<25s}{3:<25s}{4:<15s}'.format('row index','col index','eqnuation','variable','value'))
@@ -1504,9 +1505,9 @@ class HydraulicModel(object):
 
         x1 = copy.copy(x)
         x2 = copy.copy(x)
-        print 'shape = (',len(x),',',len(x),')'
+        print('shape = (',len(x),',',len(x),')')
         for i in xrange(len(x)):
-            print 'getting approximate derivative of column ',i
+            print('getting approximate derivative of column ',i)
             x1[i] = x1[i] + step
             x2[i] = x2[i] + 2*step
             resids1 = self.get_hydraulic_equations(x1)
@@ -1525,12 +1526,12 @@ class HydraulicModel(object):
 
         jac = self.jacobian.tocsr()
 
-        print 'computing difference between jac and approx_jac'
+        print('computing difference between jac and approx_jac')
         difference = approx_jac - jac
 
         success = True
         for i in xrange(jac.shape[0]):
-            print 'comparing values in row ',i,'with non-zeros from self.jacobain'
+            print('comparing values in row ',i,'with non-zeros from self.jacobain')
             row_nnz = jac.indptr[i+1] - jac.indptr[i]
             for k in xrange(row_nnz):
                 j = jac.indices[jac.indptr[i]+k]
@@ -1547,7 +1548,7 @@ class HydraulicModel(object):
                         equation_type = 'headloss'
                         node_or_link = 'link'
                         node_or_link_name = self._link_id_to_name[i - 2*self.num_nodes]
-                        print 'flow for link ',node_or_link_name,' = ',x[i]
+                        print('flow for link ',node_or_link_name,' = ',x[i])
                     else:
                         equation_type = 'leak demand'
                         node_or_link = 'node'
@@ -1564,10 +1565,10 @@ class HydraulicModel(object):
                     else:
                         wrt = 'leak_demand'
                         wrt_name = self._node_id_to_name[self._leak_ids[j - 2*self.num-nodes - self.num_links]]
-                    print 'jacobian entry for ',equation_type,' for ',node_or_link,' ',node_or_link_name,' with respect to ',wrt,wrt_name,' is incorrect.'
-                    print 'error = ',abs(approx_jac[i,j]-jac[i,j])
-                    print 'approximation = ',approx_jac[i,j]
-                    print 'exact = ',jac[i,j]
+                    print('jacobian entry for ',equation_type,' for ',node_or_link,' ',node_or_link_name,' with respect to ',wrt,wrt_name,' is incorrect.')
+                    print('error = ',abs(approx_jac[i,j]-jac[i,j]))
+                    print('approximation = ',approx_jac[i,j])
+                    print('exact = ',jac[i,j])
                     success = False
 
         #if not success:
@@ -1609,7 +1610,7 @@ class HydraulicModel(object):
                 else:
                     equation_type = 'headloss'
                     node_or_link_name = self._link_id_to_name[i - 2*self.num_nodes]
-                print 'jacobian row for ',equation_type,' for ',node_or_link_name,' has all zero entries.'
+                print('jacobian row for ',equation_type,' for ',node_or_link_name,' has all zero entries.')
 
     def check_infeasibility(self,x):
         resid = self.get_hydraulic_equations(x)
@@ -1617,8 +1618,8 @@ class HydraulicModel(object):
             r = abs(resid[i])
             if r > 0.0001:
                 if i >= 2*self.num_nodes:
-                    print 'residual for headloss equation for link ',self._link_id_to_name[i-2*self.num_nodes],' is ',r,'; flow = ',x[i]
+                    print('residual for headloss equation for link ',self._link_id_to_name[i-2*self.num_nodes],' is ',r,'; flow = ',x[i])
                 elif i >= self.num_nodes:
-                    print 'residual for demand/head eqn for node ',self._node_id_to_name[i-self.num_nodes],' is ',r
+                    print('residual for demand/head eqn for node ',self._node_id_to_name[i-self.num_nodes],' is ',r)
                 else:
-                    print 'residual for node balance for node ',self._node_id_to_name[i],' is ',r
+                    print('residual for node balance for node ',self._node_id_to_name[i],' is ',r)
