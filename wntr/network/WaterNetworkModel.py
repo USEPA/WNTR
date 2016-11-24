@@ -103,6 +103,9 @@ class WaterNetworkModel(object):
            self._check_valves   == other._check_valves:
             return True
         return False
+
+    def __hash__(self):
+        return id(self)
         
     def add_junction(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0, coordinates=None):
         """
@@ -2073,6 +2076,9 @@ class Node(object):
         """
         return self._name
 
+    def __hash__(self):
+        return id(self)
+
     def name(self):
         """
         Returns the name of the node.
@@ -2118,6 +2124,9 @@ class Link(object):
            self._end_node_name     == other._end_node_name:
             return True
         return False
+
+    def __hash__(self):
+        return id(self)
 
     def get_base_status(self):
         """
@@ -2198,6 +2207,9 @@ class Junction(Node):
            abs(self.minimum_pressure - other.minimum_pressure)<1e-10:
             return True
         return False
+
+    def __hash__(self):
+        return id(self)
 
     def to_inp_string(self, flowunit):
         text_format = '{:20} {:12f} {:12f} {:24} {:>3s}'
@@ -2405,7 +2417,10 @@ class Tank(Node):
            self.bulk_rxn_coeff == other.bulk_rxn_coeff   and \
            self.vol_curve      == other.vol_curve:
             return True
-        return False    
+        return False
+
+    def __hash__(self):
+        return id(self)
         
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
@@ -2571,6 +2586,9 @@ class Reservoir(Node):
             return False
         return True
 
+    def __hash__(self):
+        return id(self)
+
 class Pipe(Link):
     """
     Pipe class that is inherited from Link
@@ -2631,6 +2649,9 @@ class Pipe(Link):
            self.wall_rxn_coeff   == other.wall_rxn_coeff:
             return True
         return False
+
+    def __hash__(self):
+        return id(self)
     
 class Pump(Link):
     """
@@ -2681,6 +2702,9 @@ class Pump(Link):
            self.curve == other.curve:
             return True
         return False
+
+    def __hash__(self):
+        return id(self)
         
     def get_head_curve_coefficients(self):
         """
@@ -2822,6 +2846,9 @@ class Valve(Link):
             return True
         return False
 
+    def __hash__(self):
+        return id(self)
+
 class Curve(object):
     """
     Curve class.
@@ -2854,3 +2881,8 @@ class Curve(object):
                         return False
             return True
         return False
+
+    def __hash__(self):
+        return id(self)
+
+

@@ -264,28 +264,28 @@ class WNTRSimulator(WaterNetworkSimulator):
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 0)
             if change_flag:
-                if change_tuple not in change_dict.keys():
+                if change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 1)
             if change_flag:
-                if change_tuple not in change_dict.keys():
+                if change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 2)
             if change_flag:
-                if change_tuple not in change_dict.keys():
+                if change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 3)
             if change_flag:
-                if change_tuple not in change_dict.keys():
+                if change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         self._control_log.reset()

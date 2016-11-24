@@ -105,9 +105,9 @@ class ControlAction(BaseControlAction):
                 return False
         else:
             return False
-                    
-                
-           
+
+    def __hash__(self):
+        return id(self)
 
     def _FireControlActionImpl(self, control_name):
         """
@@ -300,6 +300,9 @@ class TimeControl(Control):
             return True
         return False
 
+    def __hash__(self):
+        return id(self)
+
     def to_inp_string(self):
         link_name = self._control_action._target_obj_ref.name()
         action = 'OPEN'
@@ -435,6 +438,9 @@ class ConditionalControl(Control):
            abs(self._threshold           - other._threshold)<1e-10:
             return True
         return False
+
+    def __hash__(self):
+        return id(self)
         
 
     def to_inp_string(self, flowunit):
@@ -607,6 +613,9 @@ class MultiConditionalControl(Control):
             return True
         else:
             return False
+
+    def __hash__(self):
+        return id(self)
 
     # @classmethod
     # def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
