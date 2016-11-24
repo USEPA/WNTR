@@ -118,7 +118,7 @@ class ENepanet():
         if self.errcode >= 100:
             self.Errflag = True
             self.errcodelist.append(self.errcode)
-            raise EpanetException
+            raise EpanetException("Error code {}".format(self.errcode))
         else:
             self.Warnflag = True
             warnings.warn(ENgetwarning(self.errcode))
@@ -169,8 +169,8 @@ class ENepanet():
         
         """
         if self.fileLoaded: self.ENclose()
-        if self.fileLoaded: 
-            raise EPANETException
+        if self.fileLoaded:
+            raise EPANETException("File is loaded and cannot be closed")
         if inpfile is None: inpfile = self.inpfile
         if rptfile is None: rptfile = self.rptfile
         if binfile is None: binfile = self.binfile
