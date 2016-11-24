@@ -48,7 +48,7 @@ for i in range(Imax):
     N = np.random.random_integers(1,5,1)
     
     # Select N unique pipes based on failure probability
-    pipes_to_fail = np.random.choice(failure_probability.keys(), 5, 
+    pipes_to_fail = np.random.choice(list(failure_probability.keys()), 5,
                                      replace=False, 
                                      p=failure_probability.values())
     

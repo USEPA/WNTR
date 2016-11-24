@@ -2,7 +2,11 @@ import numpy as np
 import wntr.network
 import pandas as pd
 import logging
+import sys
 
+if sys.version_info >= (3,0):
+    from functools import reduce
+    
 logger = logging.getLogger('wntr.metrics.health_impacts')
 
 def average_water_consumed(wn):
