@@ -1,3 +1,5 @@
+from __future__ import division
+from past.utils import old_div
 import wntr
 
 # Generate a water network model
@@ -75,7 +77,7 @@ for junction_name, junction in wn.junctions():
 
 # Create a junction leak
 junction = wn.get_node('173')         
-junction.add_leak(wn, area=3.14159*(0.001/2)**2, start_time=4*3600, end_time=8*3600)
+junction.add_leak(wn, area=3.14159*(old_div(0.001,2))**2, start_time=4*3600, end_time=8*3600)
 
 # Simulate hydraulics
 sim = wntr.sim.WNTRSimulator(wn, pressure_driven = True)

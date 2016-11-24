@@ -1,3 +1,8 @@
+from __future__ import division
+from __future__ import print_function
+from builtins import str
+from builtins import range
+from past.utils import old_div
 import wntr
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,8 +30,8 @@ pipe_diameters = wn.query_link_attribute('diameter', np.less_equal,
                                          0.9144,  # 36 inches = 0.9144 m
                                          link_type=wntr.network.Pipe)
 failure_probability = {}
-for k,v in pipe_diameters.iteritems():
-    failure_probability[k] = v/sum(pipe_diameters.values())
+for k,v in pipe_diameters.items():
+    failure_probability[k] = old_div(v,sum(pipe_diameters.values()))
     
 # Define maximum iterations
 Imax = 5
@@ -47,9 +52,9 @@ for i in range(Imax):
     N = np.random.random_integers(1,5,1)
     
     # Select N unique pipes based on failure probability
-    pipes_to_fail = np.random.choice(failure_probability.keys(), 5, 
+    pipes_to_fail = np.random.choice(list(failure_probability.keys()), 5, 
                                      replace=False, 
-                                     p=failure_probability.values())
+                                     p=list(failure_probability.values()))
     
     # Select time of failure, uniform dist, between 1 and 10 hours
     time_of_failure = np.round(np.random.uniform(1,10,1)[0], 2) 
@@ -60,7 +65,7 @@ for i in range(Imax):
     for pipe_to_fail in pipes_to_fail:
         pipe = wn.get_link(pipe_to_fail)
         leak_diameter = pipe.diameter*0.3
-        leak_area=3.14159*(leak_diameter/2)**2
+        leak_area=3.14159*(old_div(leak_diameter,2))**2
         wn.split_pipe_with_junction(pipe_to_fail, pipe_to_fail + '_A', pipe_to_fail + '_B',
                       pipe_to_fail+'leak_node')
         leak_node = wn.get_node(pipe_to_fail+'leak_node')           
@@ -76,7 +81,7 @@ for i in range(Imax):
                 str(time_of_failure) + ', End Time: ' + \
                 str(time_of_failure+duration_of_failure)
                 
-    print sim_name
+    print(sim_name)
     results[sim_name] = sim.run_sim()
     
     f=open('wn.pickle','r')
@@ -84,16 +89,16 @@ for i in range(Imax):
     f.close()
     
 ### ANALYSIS ###
-nzd_junctions = wn.query_node_attribute('base_demand', np.greater, 0, 
-                                        node_type=wntr.network.Junction).keys()
+nzd_junctions = list(wn.query_node_attribute('base_demand', np.greater, 0, 
+                                        node_type=wntr.network.Junction).keys())
 
-result_names = results.keys()
+result_names = list(results.keys())
 for name in result_names:
     
     # Print power outage description for each iteration
-    print name
+    print(name)
     
-    results[name].node.major_axis = results[name].node.major_axis/3600.0
+    results[name].node.major_axis = old_div(results[name].node.major_axis,3600.0)
     
     # Isolate node results at consumer nodes
     node_results = results[name].node.loc[:,:,nzd_junctions]
