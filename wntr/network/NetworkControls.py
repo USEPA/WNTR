@@ -634,6 +634,7 @@ class MultiConditionalControl(Control):
             src_obj = self._source[ndx][0]
             src_attr = self._source[ndx][1]
             src_val = getattr(src_obj, src_attr)
+            print(src_obj, src_attr, src_val, "111")
             oper = self._operation[ndx]
             if not isinstance(self._threshold[ndx],tuple):
                 threshold_val = self._threshold[ndx]
@@ -641,6 +642,7 @@ class MultiConditionalControl(Control):
                 threshold_obj = self._threshold[ndx][0]
                 threshold_attr = self._threshold[ndx][1]
                 threshold_val = getattr(threshold_obj, threshold_attr)
+            print(oper, "xxxxxxxxxxxxx", src_val, threshold_val)
             if not oper(src_val, threshold_val):
                 action_required = False
                 break

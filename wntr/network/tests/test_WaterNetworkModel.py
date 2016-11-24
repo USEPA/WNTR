@@ -127,9 +127,9 @@ def test_query_node_attribute():
     elevation = 213.36 #700*float(units.ft/units.m) # ft to m
     nodes = wn.query_node_attribute('elevation', np.less, elevation)
     
-    expected_nodes = ['13', '22', '23']
+    expected_nodes = set(['13', '22', '23'])
     
-    assert_list_equal(list(nodes.keys()), expected_nodes)
+    assert_set_equal(set(nodes.keys()), expected_nodes)
 
 def test_query_pipe_attribute():
     inp_file = join(net1dir,'Net1.inp') 
@@ -141,9 +141,9 @@ def test_query_pipe_attribute():
     length = 1609.344 #5280*float(units.ft/units.m) # ft to m
     pipes = wn.query_link_attribute('length', np.greater, length)
     
-    expected_pipes = ['10']
+    expected_pipes = set(['10'])
     
-    assert_list_equal(list(pipes.keys()), expected_pipes)
+    assert_set_equal(set(pipes.keys()), expected_pipes)
 
 def test_nzd_nodes():
     inp_file = join(net1dir,'Net1.inp') 
@@ -154,9 +154,9 @@ def test_nzd_nodes():
     
     nzd_nodes = wn.query_node_attribute('base_demand', np.greater, 0.0)
     
-    expected_nodes = ['11', '13', '12', '21', '22', '23', '32', '31']
+    expected_nodes = set(['11', '13', '12', '21', '22', '23', '32', '31'])
     
-    assert_list_equal(list(nzd_nodes.keys()), expected_nodes)
+    assert_set_equal(set(nzd_nodes.keys()), expected_nodes)
     
 if __name__ == '__main__':
     test_Net1()
