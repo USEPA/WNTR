@@ -1401,7 +1401,7 @@ class WaterNetworkModel(object):
             node.prev_leak_demand = None
             node.leak_demand = None
             node.leak_status = False
-            
+
         for name, node in self.nodes(Tank):
             node.prev_head = None
             node.head = node.init_level+node.elevation
