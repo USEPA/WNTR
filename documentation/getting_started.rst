@@ -1,7 +1,7 @@
 Getting started
 ======================================
 
-WNTR can be run from a Python console, or using an Interactive Development Environment (IDE), like Spyder.
+WNTR can be run from a Python console, or using an IDE, like Spyder.
 To start using WNTR, import the package ::
 
 	import wntr	
@@ -16,28 +16,30 @@ folder.  This example demonstrates how to:
 
 .. literalinclude:: ../examples/getting_started.py
 
-Additional examples are included in the examples folder.  These examples
-include:
+Additional examples, listed in :numref:`table-example`, are included in the examples folder.  
 
-==============================  =========================================================================================================
-Example File                    Description
-==============================  =========================================================================================================
-converting_units.py             Convert units
-water_network_model.py  	Generate and modify water network models
-networkx_graph.py			Generate a NetworkX graph from a water network model 
-hydraulic_simulation.py		Simulate hydraulics using the EPANET and WNTR simulators
-water_quality_simulation.py	Simulate water quality using EPANET
-simulation_results.py		Extract information from simulation results
-disaster_scenarios.py		Define disaster scenarios, including power outage, pipe leak, and changes to supply and demand
-resilience_metrics.py           Compute resilience metrics, including topographic, hydraulic, water quality and water security metrics
-stochastic_simulation.py	Run a stochastic simulation
-fragility_curves.py		Define fragility curves
-parallel_simulations.py		Run simulations in parallel
-animation.py			Animate network graphics
-==============================  =========================================================================================================
+.. _table-example:
+.. table:: Description of WNTR example files.
 
-Several EPANET inp files are included in the examples/network folder.  Example
-network range from a simple 9 node network to a 3,000 node network.
+   ==============================  =========================================================================================================
+   Example File                    Description
+   ==============================  =========================================================================================================
+   converting_units.py             Convert units
+   water_network_model.py          Generate and modify water network models
+   networkx_graph.py               Generate a NetworkX graph from a water network model 
+   hydraulic_simulation.py         Simulate hydraulics using the EPANET and WNTR simulators
+   water_quality_simulation.py     Simulate water quality using EPANET
+   simulation_results.py           Extract information from simulation results
+   disaster_scenarios.py           Define disaster scenarios, including power outage, pipe leak, and changes to supply and demand
+   resilience_metrics.py           Compute resilience metrics, including topographic, hydraulic, water quality and water security metrics
+   stochastic_simulation.py        Run a stochastic simulation
+   fragility_curves.py             Define fragility curves
+   parallel_simulations.py         Run simulations in parallel
+   animation.py                    Animate network graphics
+   ==============================  =========================================================================================================
+
+Several EPANET formatted water network model input files are included in the examples/network folder.  Example
+networks range from a simple 9 node network to a 3,000 node network.
 Ipython demos are included in the examples/demo folder. 
 Additional network models can be downloaded from the University of Kentucky 
 Water Distribution System Research Database at

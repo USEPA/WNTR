@@ -6,7 +6,7 @@ Stochastic simulation
 Stochastic simulation can be used to evaluate an ensemble of hydraulic and/or water quality 
 scenarios.  For disaster scenarios, the location, duration, and severity of different types of events
 can be drawn from distributions and included in the simulation.  
-Distributions can be a function of component properties (i.e. age, material) or 
+Distributions can be a function of component properties (i.e., age, material) or 
 based on engineering standards.
 Numpy includes many distributions and random selection methods that can be used for stochastic
 simulation.  For example, the following code can be used to select N unique pipes 
@@ -26,10 +26,10 @@ Fragility curves are commonly used in disaster models to define the probability
 of exceeding a given damage state as a function environmental change.
 Fragility curves are closely related to survival curves, which are used to define the probability of component failure due to age.  
 To estimate earthquake damage, fragility curves are defined as a function of peak
-ground acceleration (PGA), peak ground velocity (PGV), or repair rate.  Fragility curves can also
+ground acceleration, peak ground velocity, or repair rate.  Fragility curves can also
 be defined as a function of flood stage, wind speed, and temperature for other
 types of disasters.  
-The American Lifelines Alliance report [ALA2001]_
+The American Lifelines Alliance report [ALA01]_
 includes seismic fragility curves for water system components.
 
 Fragility curves can have multiple damage states.  
@@ -43,9 +43,10 @@ Each fragility curve includes a "No damage" state with priority 0 (lowest priori
 .. literalinclude:: ../examples/fragility_curves.py
    :lines: 2, 25-27
 
-The following figure illustrates a fragility curve based on PGA with
+:numref:`fig-fragility` illustrates a fragility curve based on peak ground acceleration with
 three damage states: No damage, minor damage, and major damage.  
 
+.. _fig-fragility:
 .. figure:: figures/fragility_curve.png
    :scale: 100 %
    :alt: Fragility curve

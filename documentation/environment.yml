@@ -1,0 +1,8 @@
+name: wntr
+dependencies:
+    - python=2.7
+    - numpy
+    - pandas
+    - sphinx
+    - numpydoc
+    - matplotlib

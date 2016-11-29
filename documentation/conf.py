@@ -34,11 +34,10 @@ extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
-    'sphinx.ext.pngmath',
+    'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
     'numpydoc',
-    'sphinx.ext.pngmath',
 ]
 
 autosummary_generate = True
@@ -47,6 +46,8 @@ numpydoc_show_class_members = True
 numpydoc_class_members_toctree = False
 autodoc_member_order = 'bysource'
 autoclass_content = 'both'
+numfig=True
+numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Listing %s'} 
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -91,7 +92,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build'] #, '../wntr/network/NetworkControls.py', '../wntr/sim/ScipyModel.py', '../wntr/sim/ScipyModelV2.py']
+exclude_patterns = ['_build'] 
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -240,7 +241,10 @@ latex_elements = {
 #'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-#'preamble': '',
+'preamble':  '''%
+  \pagestyle{plain}
+  \pagenumbering{arabic}
+''',
 
 # Latex figure (float) alignment
 #'figure_align': 'htbp',
