@@ -1,9 +1,10 @@
-import pyepanet
-import network
-import metrics
-import sim
-import scenario
-import utils
+from __future__ import absolute_import
+from . import pyepanet
+from . import network
+from . import metrics
+from . import sim
+from . import scenario
+from . import utils
 
 __version__ = '0.1'
 
@@ -13,4 +14,4 @@ the U.S. Government retains certain rights in this software."""
 
 __license__ = "Revised BSD License"
 
-from utils.logger import start_logging
+from .utils.logger import start_logging

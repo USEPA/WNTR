@@ -37,7 +37,7 @@ class FragilityCurve(object):
         -------
         state_name, state
         """
-        sorted_list = [x for x in self._states.iteritems()] 
+        sorted_list = [x for x in self._states.items()] 
         sorted_list.sort(key=lambda x: x[1].priority) 
         
         for state_name, state in sorted_list:

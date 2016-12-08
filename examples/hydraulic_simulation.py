@@ -1,3 +1,4 @@
+from __future__ import print_function
 import wntr
 import pandas as pd
 import pickle
@@ -39,7 +40,7 @@ wn.options.hydraulic_timestep = 3600
 sim = wntr.sim.WNTRSimulator(wn)
 first_10_hours_of_results = sim.run_sim()
 wn.options.duration = 24*3600
-print 'running last 14 hours'
+print('running last 14 hours')
 last_14_hours_of_results = sim.run_sim()
 node_results = pd.concat([first_10_hours_of_results.node,last_14_hours_of_results.node],axis=1)
 link_results = pd.concat([first_10_hours_of_results.link,last_14_hours_of_results.link],axis=1)
@@ -61,7 +62,7 @@ new_wn = pickle.load(f)
 f.close()
 new_wn.options.duration = 24*3600
 sim = wntr.sim.WNTRSimulator(new_wn)
-print 'running last 14 hours'
+print('running last 14 hours')
 last_14_hours_of_results = sim.run_sim()
 node_results = pd.concat([first_10_hours_of_results.node,last_14_hours_of_results.node],axis=1)
 link_results = pd.concat([first_10_hours_of_results.link,last_14_hours_of_results.link],axis=1)

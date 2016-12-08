@@ -56,7 +56,7 @@ class NewtonSolver(object):
         use_r_ = False
 
         # MAIN NEWTON LOOP
-        for iter in xrange(self.maxiter):
+        for iter in range(self.maxiter):
             if use_r_:
                 r = r_
                 r_norm = new_norm
@@ -83,7 +83,7 @@ class NewtonSolver(object):
             alpha = 1.0
             if self.bt and iter>=self.bt_start_iter:
                 use_r_ = True
-                for iter_bt in xrange(self.bt_maxiter):
+                for iter_bt in range(self.bt_maxiter):
                     x_ = x + alpha*d
                     r_ = Residual(x_)
                     new_norm = np.max(abs(r_))
