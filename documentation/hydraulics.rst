@@ -2,9 +2,6 @@ Hydraulic simulation
 ==============================
 
 WNTR contains two hydraulic simulators:  the EPANET simulator and the WNTR simulator.
-The example **hydraulic_simulation.py** can be used to run both simulators and 
-pause/restart simulation.
-
 The EPANET simulator can be used to run demand-driven simulations.  
 The simulator uses the EPANET toolkit and dll.  The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
@@ -13,7 +10,7 @@ Hydraulic simulation using the EPANET simulator is run using the following code.
 .. literalinclude:: ../examples/hydraulic_simulation.py
    :lines: 11-12
 
-The WNTR simulator is a pure python simulation engine based on the same equations
+The WNTR simulator is a pure Python simulation engine based on the same equations
 as EPANET.  The WNTR simulator does not include equations to run water quality 
 simulations.  The WNTR simulator includes the option to run hydraulic simulation
 in demand-driven and pressure-driven demand mode. 
@@ -21,6 +18,9 @@ Hydraulic simulation using the WNTR simulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
    :lines: 15-16
+
+The example **hydraulic_simulation.py** can be used to run both simulators and 
+pause/restart simulation.
 
 More information on the simulators can be found in the API documentation, under
 :doc:`EpanetSimulator</apidoc/wntr.sim.EpanetSimulator>` and 
@@ -43,7 +43,7 @@ The file **hydraulic_simulation.py** includes examples of these features.
 
 Mass balance at nodes
 -------------------------
-WNTR uses the same mass balance equations as EPANET [Rossman2000]_. 
+WNTR uses the same mass balance equations as EPANET [Ross00]_. 
 Conservation of mass (and the assumption of constant density) requires
 
 .. math::
@@ -61,15 +61,15 @@ If water is flowing out of node :math:`n` and into pipe :math:`p`, then
 Headloss in pipes
 -------------------------
 The headloss formula used in WNTR is the Hazen-Williams
-formula [Rossman2000]_:
+formula [Ross00]_:
 
 .. math:: H_{n_{j}} - H_{n_{i}} = h_{L} = 10.667 C^{-1.852} d^{-4.871} L q^{1.852}
 
 where :math:`h_{L}` is the headloss in the pipe in meters, :math:`C` is the
 Hazen-Williams roughness coefficient (unitless), :math:`d` is the pipe diameter in
 meters, :math:`L` is the pipe length in meters, and :math:`q` is the flow rate of
-water in the pipe in cubic meters per second. :math:`H_{n_{j}}` is the head
-(meters) at the starting node, and :math:`H_{n_{i}}` is the head (meters) at the ending node.
+water in the pipe in cubic meters per second. :math:`H_{n_{j}}` is the head in 
+meters at the starting node and :math:`H_{n_{i}}` is the head in meters at the ending node.
 
 The flow rate in a pipe is positive if water is flowing from
 the starting node to the ending node and negative if water is flowing
@@ -115,9 +115,12 @@ direction and the derivative with respect to :math:`q` is non-zero at all
 values of :math:`q`. The two polynomials function to smooth the transition between the other equations, with coefficients chosen so that both function and
 gradient values are continuous at :math:`-q_{2}`, :math:`-q_{1}`, :math:`q_{1}`, and
 :math:`q_{2}`. The section on smoothing describes this technique in
-detail. The two figures below compare
-the Hazen-Williams and modified Hazen-Williams curves, with :math:`m = 0.01 m^{2.556}/s^{0.852}`, :math:`C = 100`, :math:`d = 0.5` m, and :math:`L = 200` m. The
-figures show that the two formulas are essentially indistinguishable.
+detail. 
+
+.. 
+	The two figures below compare
+	the Hazen-Williams and modified Hazen-Williams curves, with :math:`m = 0.01 m^{2.556}/s^{0.852}`, :math:`C = 100`, :math:`d = 0.5` m, and :math:`L = 200` m. The
+	figures show that the two formulas are essentially indistinguishable.
 
 Demand-driven simulation
 -------------------------
@@ -130,13 +133,13 @@ This assumption is reasonable under normal operating conditions and for use in n
 Pressure-driven demand simulation
 ----------------------------------
 
-In situations that lead to low pressure conditions (i.e. fire fighting, 
+In situations that lead to low pressure conditions (i.e., fire fighting, 
 power outages, pipe leaks), consumers do not always receive their requested 
 demand and pressure-driven demand simulation is recommended.
 In pressure-driven demand simulation, the delivered demand depends on pressure.  
 The mass balance and headloss equations described above are solved by 
 simultaneously determining demand along with the network pressures and flow rates.  
-WNTR uses the following pressure-demand relationship [Wagner1988]_.
+WNTR uses the following pressure-demand relationship [WaSM88]_.
 
 .. math::
 
@@ -162,7 +165,7 @@ Leak model
 
 Leaks can significantly change network hydraulics.  
 In WNTR, a leak is modeled with a general form of the equation proposed by 
-[Crowl2002]_ where the mass flow rate of fluid through the hole is expressed as
+[CrLo02]_ where the mass flow rate of fluid through the hole is expressed as
 
 .. math::
 
@@ -171,12 +174,12 @@ In WNTR, a leak is modeled with a general form of the equation proposed by
 where 
 :math:`d_{leak}` is the leak demand,
 :math:`C_d` is the discharge coefficient, 
-:math:`A` is area of the hole, 
+:math:`A` is the area of the hole, 
 :math:`p` is the gauge pressure inside the pipe, 
 :math:`\alpha` is the discharge coefficient, and 
 :math:`\rho` is the density of the fluid.
 The default discharge coefficient is 0.75 (assuming turbulent flow), but 
-the user may specify other values if needed.  
+the user can specify other values if needed.  
 The value of :math:`\rho` is set to 0.5 (assuming large leaks out of steel pipes).  
 Leaks can be added to junctions and tanks.  
 A pipe break is modeled using a leak area large enough to drain the pipe.  

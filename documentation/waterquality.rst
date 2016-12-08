@@ -20,17 +20,17 @@ Concentration
 -------------
 If water quality type is set to 'CHEM', then the EpanetSimulator computes chemical concentration.
 The user must supply the injection node(s), source type, quality, start and end time.
-Concentration is stored in ``results.node['quality']``.
+Simulated concentration values at each node are stored in the `quality` section of the node results, described in :ref:`simulation_results`.  
 
 Water age
 ---------
 If water quality type is set to 'AGE', then the EpanetSimulator computes water age.  No other 
 input parameters are needed.
-Water age is stored in ``results.node['quality']``.
+Simulated water age values at each node are stored in the `quality` section of the node results, described in :ref:`simulation_results`.  
 
 Tracer
 ------
 If water quality type is set to 'TRACE', then the EpanetSimulator tracks the chemical as a tracer and 
 reports the percent of flow originating from a specific location.
 The user must supply the injection node(s).
-Tracer percent is stored in ``results.node['quality']``.
+Simulated tracer percent values at each node are stored in the `quality` section of the node results, described in :ref:`simulation_results`.  

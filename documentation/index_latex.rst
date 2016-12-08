@@ -4,6 +4,8 @@ WNTR 0.1 documentation
 .. toctree::
    :maxdepth: 1
 
+   acknowledgements
+   acronyms
    overview
    installation
    units

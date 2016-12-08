@@ -43,7 +43,7 @@ For example, to access the pressure and demand at node '123' at 1 hour:
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 16
 	
-To access the pressure for all nodes and times:
+To access the pressure for all nodes and times (the ":" notation returns all variables along the specified axis):  
 
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 19
