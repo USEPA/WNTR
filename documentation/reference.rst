@@ -40,9 +40,9 @@ Reference
 
 .. [Todi00] Todini, E. (2000). Looped water distribution networks design using a resilience index based heuristic approach. Urban Water, 2(2), 115-122.
 
-.. [USEPA14] United States Environmental Protection Agency (2014), Systems Measures of Water Distribution System Resilience, U. S. Environmental Protection Agency Technical Report, EPA 600/R--14/383, 58p.
+.. [USEPA14] United States Environmental Protection Agency. (2014). Systems Measures of Water Distribution System Resilience, U. S. Environmental Protection Agency Technical Report, EPA 600/R--14/383, 58p.
 
-.. [USEPA15] United States Environmental Protection Agency (2015), Water Security Toolkit User Manual, U. S. Environmental Protection Agency Technical Report, EPA/600/R-14/338, 187p.
+.. [USEPA15] United States Environmental Protection Agency. (2015). Water Security Toolkit User Manual, U. S. Environmental Protection Agency Technical Report, EPA/600/R-14/338, 187p.
 
 .. [VaCV11] van der Walt, S., Colbert, S.C., & Varoquaux, G. (2011). The NumPy array: A structure for efficient numerical computation. Computing in Science & Engineering, 13, 22-30.
 
