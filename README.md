@@ -1,8 +1,8 @@
 WNTR: Water Network Tool for Resilience
 =======================================
 
-[![TravisCI](https://travis-ci.org/kaklise/WNTR.svg?branch=master)](https://travis-ci.org/kaklise/WNTR)
-[![Coverage Status](https://coveralls.io/repos/github/kaklise/WNTR/badge.svg?branch=master)](https://coveralls.io/github/kaklise/WNTR?branch=master)
+[![TravisCI](https://travis-ci.org/sandialabs/WNTR.svg?branch=master)](https://travis-ci.org/sandialabs/WNTR)
+[![Coverage Status](https://coveralls.io/repos/github/sandialabs/WNTR/badge.svg?branch=master)](https://coveralls.io/github/sandialabs/WNTR?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/wntr/badge/?version=latest)](http://wntr.readthedocs.io/en/latest/?badge=latest)
 
 WNTR is a python package designed to simulate and analyze resilience of 
