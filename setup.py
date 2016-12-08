@@ -14,12 +14,7 @@ URL = 'https://github.com/USEPA/WNTR'
 
 setuptools_kwargs = {
     'zip_safe': False,
-    'install_requires': ['numpy >= 1.10.4',
-			 'scipy',
-			 'networkx',
-                         'pandas >= 0.18.0',
-                         'matplotlib',
-                         ],
+    'install_requires': [],
     'scripts': [],
     'include_package_data': True
 }
