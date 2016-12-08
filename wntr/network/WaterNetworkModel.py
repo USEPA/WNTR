@@ -301,15 +301,12 @@ class WaterNetworkModel(object):
         ----------
         name : string
             Name of the reservoir.
-
-        Other Parameters
-        -------------------
-        base_head : float
+        base_head : float, optional
             Base head at the reservoir.
             Internal units must be meters (m).
-        head_pattern_name : string
+        head_pattern_name : string, optional
             Name of the head pattern.
-        coordinates : tuple of floats
+        coordinates : tuple of floats, optional
             X-Y coordinates of the node location
         """
         base_head = float(base_head)
@@ -335,22 +332,19 @@ class WaterNetworkModel(object):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        -------------------
-        length : float
+        length : float, optional
             Length of the pipe.
             Internal units must be meters (m)
-        diameter : float
+        diameter : float, optional
             Diameter of the pipe.
             Internal units must be meters (m)
-        roughness : float
+        roughness : float, optional
             Pipe roughness coefficient
-        minor_loss : float
+        minor_loss : float, optional
             Pipe minor loss coefficient
-        status : string
+        status : string, optional
             Pipe status. Options are 'Open' or 'Closed'
-        check_valve_flag : bool
+        check_valve_flag : bool, optional
             True if the pipe has a check valve
             False if the pipe does not have a check valve
         """
@@ -407,12 +401,9 @@ class WaterNetworkModel(object):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        -------------------
-        info_type : string
+        info_type : string, optional
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
-        info_value : float or Curve object
+        info_value : float or Curve object, optional
             Float value of power in KW. Head curve object.
         """
         pump = Pump(name, start_node_name, end_node_name, info_type, info_value)
@@ -458,17 +449,14 @@ class WaterNetworkModel(object):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        -------------------
-        diameter : float
+        diameter : float, optional
             Diameter of the valve.
             Internal units must be meters (m)
-        valve_type : string
+        valve_type : string, optional
             Type of valve. Options are 'PRV', etc
-        minor_loss : float
+        minor_loss : float, optional
             Pipe minor loss coefficient
-        setting : float or string
+        setting : float or string, optional
             pressure setting for PRV, PSV, or PBV
             flow setting for FCV
             loss coefficient for TCV
@@ -2159,15 +2147,12 @@ class Junction(Node):
         ----------
         name : string
             Name of the junction.
-
-        Other Parameters
-        ----------------
-        base_demand : float
+        base_demand : float, optional
             Base demand at the junction.
             Internal units must be cubic meters per second (m^3/s).
-        demand_pattern_name : string
+        demand_pattern_name : string, optional
             Name of the demand pattern.
-        elevation : float
+        elevation : float, optional
             Elevation of the junction.
             Internal units must be meters (m).
         """
@@ -2351,28 +2336,25 @@ class Tank(Node):
         ----------
         name : string
             Name of the tank.
-
-        Other Parameters
-        ----------------
-        elevation : float
+        elevation : float, optional
             Elevation at the Tank.
             Internal units must be meters (m).
-        init_level : float
+        init_level : float, optional
             Initial tank level.
             Internal units must be meters (m).
-        min_level : float
+        min_level : float, optional
             Minimum tank level.
             Internal units must be meters (m)
-        max_level : float
+        max_level : float, optional
             Maximum tank level.
             Internal units must be meters (m)
-        diameter : float
+        diameter : float, optional
             Tank diameter.
             Internal units must be meters (m)
-        min_vol : float
+        min_vol : float, optional
             Minimum tank volume.
             Internal units must be cubic meters (m^3)
-        vol_curve : Curve object
+        vol_curve : Curve object, optional
             Curve object
         """
         super(Tank, self).__init__(name)
@@ -2550,13 +2532,10 @@ class Reservoir(Node):
         ----------
         name : string
             Name of the reservoir.
-
-        Other Parameters
-        ----------------
-        base_head : float
+        base_head : float, optional
             Base head at the reservoir.
             Internal units must be meters (m).
-        head_pattern_name : string
+        head_pattern_name : string, optional
             Name of the head pattern.
         """
         super(Reservoir, self).__init__(name)
@@ -2586,22 +2565,19 @@ class Pipe(Link):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        ----------------
-        length : float
+        length : float, optional
             Length of the pipe.
             Internal units must be meters (m)
-        diameter : float
+        diameter : float, optional
             Diameter of the pipe.
             Internal units must be meters (m)
-        roughness : float
+        roughness : float, optional
             Pipe roughness coefficient
-        minor_loss : float
+        minor_loss : float, optional
             Pipe minor loss coefficient
-        status : string
+        status : string, optional
             Pipe status. Options are 'Open' or 'Closed'
-        check_valve_flag : bool
+        check_valve_flag : bool, optional
             True if the pipe has a check valve
             False if the pipe does not have a check valve
         """
@@ -2646,12 +2622,9 @@ class Pump(Link):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        ----------------
-        info_type : string
+        info_type : string, optional
             Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
-        info_value : float or curve type
+        info_value : float or curve type, optional
             Where power is a fixed value in KW, while a head curve is a Curve object.
         """
         super(Pump, self).__init__(name, start_node_name, end_node_name)
@@ -2787,17 +2760,14 @@ class Valve(Link):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        ----------------
-        diameter : float
+        diameter : float, optional
             Diameter of the valve.
             Internal units must be meters (m)
-        valve_type : string
+        valve_type : string, optional
             Type of valve. Options are 'PRV', etc
-        minor_loss : float
+        minor_loss : float, optional
             Pipe minor loss coefficient
-        setting : float or string
+        setting : float or string, optional
             Valve setting or name of headloss curve for GPV
         """
         super(Valve, self).__init__(name, start_node_name, end_node_name)

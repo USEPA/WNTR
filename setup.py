@@ -3,7 +3,7 @@ from distutils.core import Extension
 
 DISTNAME = 'wntr'
 VERSION = '0.1'
-PACKAGES = ['wntr']
+PACKAGES = find_packages()
 EXTENSIONS = []
 DESCRIPTION = 'Water Network Tool for Resilience'
 LONG_DESCRIPTION = open('README.md').read()
