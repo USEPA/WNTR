@@ -24,7 +24,7 @@ class WaterNetworkModel(object):
         Examples
         ---------
         >>> wn = WaterNetworkModel()
-        
+
         Parameters
         -------------------
         inp_file_name: string
@@ -34,7 +34,7 @@ class WaterNetworkModel(object):
 
         # Network name
         self.name = None
-        
+
         # Time parameters
         self.sim_time = 0.0
         self.prev_sim_time = -np.inf  # the last time at which results were accepted
@@ -103,11 +103,11 @@ class WaterNetworkModel(object):
            self._check_valves   == other._check_valves:
             return True
         return False
-        
+
     def add_junction(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0, coordinates=None):
         """
         Add a junction to the network.
-        
+
         Parameters
         -------------------
         name : string
@@ -211,7 +211,7 @@ class WaterNetworkModel(object):
                         continue
                     else:
                         link_has_cv = True
-            
+
                 close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
                 open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
 
@@ -244,7 +244,7 @@ class WaterNetworkModel(object):
                     control.name = (link_name+' opened because tank '+tank.name()+
                                     ' head is below min head but flow should be in')
                     tank_controls.append(control)
-            
+
             # Now take care of the max level
             max_head = tank.max_level+tank.elevation
             for link_name in all_links:
@@ -261,10 +261,10 @@ class WaterNetworkModel(object):
                         continue
                     else:
                         link_has_cv = True
-            
+
                 close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
                 open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
-            
+
                 control = wntr.network.ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
                 control._priority = 1
                 control.name = link_name+' closed because tank '+tank.name()+' head is greater than max head'
@@ -276,7 +276,7 @@ class WaterNetworkModel(object):
                     control._priority = 0
                     control.name = link_name+'opened because tank '+tank.name()+' head is less than max head'
                     tank_controls.append(control)
-            
+
                     if link.start_node() == tank_name:
                         other_node_name = link.end_node()
                     else:
@@ -286,7 +286,7 @@ class WaterNetworkModel(object):
                     control._priority = 2
                     control.name = link_name+' opened because tank '+tank.name()+' head above max head but flow should be out'
                     tank_controls.append(control)
-        
+
                 #control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
                 #control._priority = 2
                 #self.add_control(control)
@@ -377,7 +377,7 @@ class WaterNetworkModel(object):
 
             close_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.closed)
             open_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.opened)
-            
+
             control = wntr.network._CheckValveHeadControl(self, pipe, np.greater, self._Htol, open_control_action)
             control._priority = 0
             control.name = pipe.name()+'opened because of cv head control'
@@ -427,17 +427,17 @@ class WaterNetworkModel(object):
 
             close_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.closed)
             open_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.opened)
-        
+
             control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
             control._priority = 0
             control.name = pump.name()+' opened because of cv head control'
             pump_controls.append(control)
-        
+
             control = wntr.network._CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
             control._priority = 3
             control.name = pump.name()+' closed because of cv head control'
             pump_controls.append(control)
-        
+
             control = wntr.network.ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
             control._priority = 3
             control.name = pump.name()+' closed because negative flow in pump'
@@ -494,13 +494,13 @@ class WaterNetworkModel(object):
             close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.closed)
             open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.opened)
             active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.active)
-        
+
             control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
             control.name = valve.name()+' prv control'
             valve_controls.append(control)
 
         return valve_controls
-        
+
     def add_pattern(self, name, pattern_list):
         """
         Method to add pattern to a water network object.
@@ -775,7 +775,7 @@ class WaterNetworkModel(object):
             The name of the pipe to split. This pipe will be removed.
 
         pipe_name_on_start_node_side: string
-            The name of the new pipe to be located between the start node of the original pipe and the new junction. 
+            The name of the new pipe to be located between the start node of the original pipe and the new junction.
 
         pipe_name_on_end_node_side: string
             The name of the new pipe to be located between the new junction and the end node of the original pipe.
@@ -805,7 +805,7 @@ class WaterNetworkModel(object):
             junction_elevation = start_node.elevation
         else:
             junction_elevation = (start_node.elevation + end_node.elevation)/2.0
-        
+
         junction_coordinates = ((self._graph.node[pipe.start_node()]['pos'][0] + self._graph.node[pipe.end_node()]['pos'][0])/2.0,(self._graph.node[pipe.start_node()]['pos'][1] + self._graph.node[pipe.end_node()]['pos'][1])/2.0)
 
         self.remove_link(pipe_name_to_split)
@@ -973,7 +973,7 @@ class WaterNetworkModel(object):
         Returns a deep copy of the WaterNetworkModel networkx graph.
         """
         return copy.deepcopy(self._graph)
-        
+
     def query_node_attribute(self, attribute, operation=None, value=None, node_type=None):
         """ Query node attributes, for example get all nodes with elevation <= threshold
 
@@ -1077,7 +1077,7 @@ class WaterNetworkModel(object):
         Number of junctions.
         """
         return self._num_junctions
-    
+
     def num_tanks(self):
         """
         Number of tanks.
@@ -1087,7 +1087,7 @@ class WaterNetworkModel(object):
         Number of tanks.
         """
         return self._num_tanks
-    
+
     def num_reservoirs(self):
         """
         Number of reservoirs.
@@ -1097,7 +1097,7 @@ class WaterNetworkModel(object):
         Number of reservoirs.
         """
         return self._num_reservoirs
-    
+
     def num_links(self):
         """
         Number of links.
@@ -1116,7 +1116,7 @@ class WaterNetworkModel(object):
         Number of pipes.
         """
         return self._num_pipes
-    
+
     def num_pumps(self):
         """
         Number of pumps.
@@ -1126,7 +1126,7 @@ class WaterNetworkModel(object):
         Number of pumps.
         """
         return self._num_pumps
-    
+
     def num_valves(self):
         """
         Number of valves.
@@ -1136,7 +1136,7 @@ class WaterNetworkModel(object):
         Number of valves.
         """
         return self._num_valves
-    
+
     def nodes(self, node_type=None):
         """
         A generator to iterate over all nodes of node_type.
@@ -1180,7 +1180,7 @@ class WaterNetworkModel(object):
     def tanks(self):
         """
         A generator  to iterate over all tanks.
-        
+
         Returns
         -------
         name, node
@@ -1310,7 +1310,7 @@ class WaterNetworkModel(object):
         Returns a list of the names of all controls.
         """
         return self._control_dict.keys()
-            
+
     def curves(self):
         """
         A generator to iterate over all curves
@@ -1336,14 +1336,14 @@ class WaterNetworkModel(object):
     def scale_node_coordinates(self, scale):
         """
         Scale node coordinates, using 1:scale.  Scale should be in meters.
-        
+
         Parameters
         -----------
         scale : float
             Coordinate scale multiplier
         """
         pos = nx.get_node_attributes(self._graph, 'pos')
-        
+
         for name, node in self._nodes.iteritems():
             self.set_node_coordinates(name, (pos[name][0]*scale, pos[name][1]*scale))
 
@@ -1358,9 +1358,9 @@ class WaterNetworkModel(object):
         """
         link = self.get_link(link_name)
         self._graph.edge[link.start_node()][link.end_node()][link_name][attr_name] = value
-        
+
     def shifted_time(self):
-        """ 
+        """
         Returns the time in seconds shifted by the
         simulation start time (e.g. as specified in the
         inp file). This is, this is the time since 12 AM
@@ -1398,7 +1398,7 @@ class WaterNetworkModel(object):
             node.prev_leak_demand = None
             node.leak_demand = None
             node.leak_status = False
-            
+
         for name, node in self.nodes(Tank):
             node.prev_head = None
             node.head = node.init_level+node.elevation
@@ -1450,7 +1450,7 @@ class WaterNetworkModel(object):
         #for link_name, link in self.valves():
         #    if link.status==LinkStatus.closed:
         #        udG.remove_edge(link.start_node(), link.end_node(), key=link_name)
-        #        
+        #
         #if nx.is_connected(udG):
         #    return set(),set()
         #else:
@@ -1471,13 +1471,13 @@ class WaterNetworkModel(object):
         #                for link_name in subG.edge[edge[0]][edge[1]].keys():
         #                    isolated_links.add(link_name)
         #    return isolated_junctions, isolated_links
-                    
+
         starting_recursion_limit = sys.getrecursionlimit()
         sys.setrecursionlimit(50000)
         groups = {}
         has_tank_or_res = {}
         G = self._graph
-        
+
         def grab_group(node_name):
             groups[grp].add(node_name)
             if G.node[node_name]['type'] == 'tank' or G.node[node_name]['type']=='reservoir':
@@ -1522,7 +1522,7 @@ class WaterNetworkModel(object):
                 if connected_to_p:
                     if p not in groups[grp]:
                         grab_group(p)
-        
+
         grp = -1
         for node_name in G.nodes():
             already_in_grp = False
@@ -1534,7 +1534,7 @@ class WaterNetworkModel(object):
                 groups[grp] = set()
                 has_tank_or_res[grp] = False
                 grab_group(node_name)
-        
+
         #for grp, nodes in groups.iteritems():
         #    logger.debug('group: {0}'.format(grp))
         #    logger.debug('nodes[{0}]: {1}'.format(grp, nodes))
@@ -1557,19 +1557,19 @@ class WaterNetworkModel(object):
         for grp,check in has_tank_or_res.iteritems():
             if check:
                 del groups[grp]
-        
+
         isolated_junctions = set()
         for grp, junctions in groups.iteritems():
             isolated_junctions = isolated_junctions.union(junctions)
         isolated_junctions = list(isolated_junctions)
-        
+
         isolated_links = set()
         for j in isolated_junctions:
             connected_links = self.get_links_for_node(j)
             for l in connected_links:
                 isolated_links.add(l)
         isolated_links = list(isolated_links)
-        
+
         sys.setrecursionlimit(starting_recursion_limit)
         return isolated_junctions, isolated_links
 
@@ -1653,7 +1653,7 @@ class WaterNetworkModel(object):
         f.write(label_format.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status'))
         for pipe_name, pipe in self.links(Pipe):
             if pipe.cv:
-                f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, 'CV', ';'))                
+                f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, 'CV', ';'))
             else:
                 f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';'))
 
@@ -1834,7 +1834,7 @@ class WaterNetworkModel(object):
         mm = int(sec/60.)
         sec -= mm*60
         return (hours, mm, int(sec))
- 
+
 class WaterNetworkOptions(object):
     """
     A class to manage options.
@@ -1870,10 +1870,10 @@ class WaterNetworkOptions(object):
         # general options
         self.pattern = None
         "Name of the default pattern for junction demands. If None, the junctions without patterns will be held constant."
-       
+
         self.units = 'GPM'
         self.headloss = 'H-W'
-        self.hydraulics_option = None #string 
+        self.hydraulics_option = None #string
         self.hydraulics_filename = None #string
         self.quality_option = 'NONE'
         self.quality_value = None #string
@@ -1964,7 +1964,7 @@ class LinkTypes(object):
         Returns
         -------
         A string corresponding to the enum member
-        
+
         Examples
         --------
         >>> Linktypes.link_type_to_str(LinkTypes.pump)
@@ -2066,7 +2066,7 @@ class Node(object):
         elif self._name == other._name:
             return True
         return False
-        
+
     def __str__(self):
         """
         Returns the name of the node when printing to a stream.
@@ -2207,7 +2207,7 @@ class Junction(Node):
             return text_format.format(self._name, convert('Elevation',flowunit,self.elevation,MKS=False), convert('Demand',flowunit,self.base_demand,False), self.demand_pattern_name, ';')
         else:
             return text_format.format(self._name, convert('Elevation',flowunit,self.elevation,False), convert('Demand',flowunit,self.base_demand,False), '', ';')
-        
+
 
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """Method to add a leak to a junction. Leaks are modeled by:
@@ -2301,7 +2301,7 @@ class Junction(Node):
         start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
         control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
         wn.add_control(self._leak_start_control_name, control)
-    
+
     def set_leak_end_time(self, wn, t):
         """
         Method to set an end time for the leak. This internally creates a
@@ -2319,12 +2319,12 @@ class Junction(Node):
         """
         # remove old control
         wn.discard_control(self._leak_end_control_name)
-    
+
         # add new control
         end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
         control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
-    
+
     def discard_leak_controls(self, wn):
         """
         Method to specify that user-defined controls will be used to
@@ -2405,8 +2405,8 @@ class Tank(Node):
            self.bulk_rxn_coeff == other.bulk_rxn_coeff   and \
            self.vol_curve      == other.vol_curve:
             return True
-        return False    
-        
+        return False
+
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
         Method to add a leak to a tank. Leaks are modeled by:
@@ -2445,7 +2445,7 @@ class Tank(Node):
         self._leak = True
         self.leak_area = area
         self.leak_discharge_coeff = discharge_coeff
-        
+
         if start_time is not None:
             start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
             control = wntr.network.TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
@@ -2502,7 +2502,7 @@ class Tank(Node):
         start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
         control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
         wn.add_control(self._leak_start_control_name, control)
-    
+
     def set_leak_end_time(self, wn, t):
         """
         Method to set an end time for the leak. This internally creates a
@@ -2520,12 +2520,12 @@ class Tank(Node):
         """
         # remove old control
         wn.discard_control(self._leak_end_control_name)
-    
+
         # add new control
         end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
         control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
-    
+
     def use_external_leak_control(self, wn):
         """
         Method to specify that user-defined controls will be used to
@@ -2631,7 +2631,7 @@ class Pipe(Link):
            self.wall_rxn_coeff   == other.wall_rxn_coeff:
             return True
         return False
-    
+
 class Pump(Link):
     """
     Pump class that is inherited from Link
@@ -2681,7 +2681,7 @@ class Pump(Link):
            self.curve == other.curve:
             return True
         return False
-        
+
     def get_head_curve_coefficients(self):
         """
         Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
