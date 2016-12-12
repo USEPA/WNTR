@@ -524,7 +524,8 @@ def convert(paramtype, flowunit, data, MKS=True):
         - Water Age
 
     flowunit : int
-        The flowunit from the inp file, found using enData.ENgetflowunits(), options include:
+        The flowunit from the inp file, found using enData.ENgetflowunits(),
+        options include:
 
         - 0 = cubic feet per second, pyepanet.EN_CFS
         - 1 = gallons per minute, pyepanet.EN_GPM
@@ -626,9 +627,8 @@ def convert(paramtype, flowunit, data, MKS=True):
             if MKS: data = data * (1e6*0.003785411784/86400.0) # million gall/d to m3/s
             else:   data = data / (1e6*0.003785411784/86400.0) # m3/s to million gall/d
         elif flowunit == 3:
-            # FIXME: THIS IS WRONG!?!?!?!?!
-            if MKS: data = data * (1e6*0.00454609)/86400.0 # million imperial gall/d to m3/s
-            else:   data = data / (1e6*0.00454609)/86400.0 # m3/s to million imperial gall/d
+            if MKS: data = data * (1e6*0.00454609/86400.0) # million imperial gall/d to m3/s
+            else:   data = data / (1e6*0.00454609/86400.0) # m3/s to million imperial gall/d
         elif flowunit == 4:
             if MKS: data = data * (1233.48184/86400.0) # acre-feet/day to m3/s
             else:   data = data / (1233.48184/86400.0) # m3/s to acre-feet/day
@@ -639,9 +639,8 @@ def convert(paramtype, flowunit, data, MKS=True):
             if MKS: data = data * (0.001/60.0) # L/min to m3/s
             else:   data = data / (0.001/60.0) # m3/s to L/min
         elif flowunit == 7:
-            # FIXME: THIS IS WRONG!?!?!?!
-            if MKS: data = data * (1e6*0.001)/86400.0 # million L/day to m3/s
-            else:   data = data / (1e6*0.001)/86400.0 # m3/s to million L/day
+            if MKS: data = data * (1e6*0.001/86400.0) # million L/day to m3/s
+            else:   data = data / (1e6*0.001/86400.0) # m3/s to million L/day
         elif flowunit == 8:
             if MKS: data = data / 3600.0 # m3/hour to m3/s
             else:   data = data * 3600.0 # m3/s to m3/hour
