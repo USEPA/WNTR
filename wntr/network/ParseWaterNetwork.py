@@ -1,5 +1,6 @@
-from wntr.utils import convert
+from wntr.utils.units import convert, FlowUnits, MassUnits, QualParam, HydParam
 import wntr.network
+from wntr.network import WaterNetworkModel
 
 import warnings
 import re
@@ -10,10 +11,19 @@ import numpy as np
 
 logger = logging.getLogger('wntr.network.ParseWaterNetwork')
 
+_INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
+                 '[TANKS]', '[PIPES]', '[PUMPS]', '[VALVES]', '[EMITTERS]',
+                 '[CURVES]', '[PATTERNS]', '[ENERGY]', '[STATUS]',
+                 '[CONTROLS]', '[RULES]', '[DEMANDS]', '[QUALITY]',
+                 '[REACTIONS]', '[SOURCES]', '[MIXING]',
+                 '[TIMES]', '[REPORT]', '[COORDINATES]', '[VERTICES]',
+                 '[LABELS]', '[BACKDROP]', '[TAGS]']
+
+
 def is_number(s):
     """
     Checks if imput is a number
-    
+
     Parameters
     ----------
     s : anything
@@ -126,13 +136,625 @@ class ParseWaterNetwork(object):
         self._curves = {}
         self._time_controls = {}
         self._conditional_controls = {}
-        self._link_status = {} # Map from link name to the initial status
+        self._link_status = {}  # Map from link name to the initial status
+        self._top_comments = []
+        self._sections = {}
+        self._mass_units = None
+        self._flow_units = None
+        for sec in _INP_SECTIONS:
+            self._sections[sec] = []
+
+    def parse(self, filename, wn=None):
+        """Method to read EPANET INP file and load data into a water network
+        object."""
+        if wn is None:
+            wn = WaterNetworkModel()
+        wn.name = filename
+
+        def split_line(line):
+            _vc = line.split(';', 1)
+            _cmnt = None
+            _vals = None
+            if len(_vc) == 0:
+                pass
+            elif len(_vc) == 1:
+                _vals = _vc[0].split()
+            elif _vc[0] == '':
+                _cmnt = _vc[1]
+            else:
+                _vals = _vc[0].split()
+                _cmnt = _vc[1]
+            return _vals, _cmnt
+
+        section = None
+        with open(filename, 'r') as f:
+            for line in f:
+                line.strip()
+                if len(line) == 0:
+                    # Blank line
+                    continue
+                elif line.startswith('['):
+                    vals = line.split(None, maxsplit=1)
+                    sec = vals[0].upper()
+                    if sec in _INP_SECTIONS:
+                        section = sec
+                        continue
+                    else:
+                        raise RuntimeError('''Invalid section in EPANET'''
+                                           '''INP file: %s''' % sec)
+                elif section is None and line.startswith(';'):
+                    self._top_comments.append(line[1:])
+                    continue
+                elif section is None:
+                    raise RuntimeError('No section declared before text!')
+                # We have text, and we are in a section
+                self._sections[section].append(line)
+
+        # Parse each of the sections
+        for line in self._sections['[OPTIONS]']:
+            words, comments = split_line(line)
+            if words is not None and len(words) > 0:
+                if len(words) < 2:
+                    raise RuntimeError('No value provided for OPTION: '
+                                       '%s' % words[0])
+                key = words[0].upper()
+                if key == 'UNITS':
+                    self._flow_units = FlowUnits[words[1].upper()]
+                    wn.options.units = words[1].upper()
+                elif key == 'HEADLOSS':
+                    wn.options.headloss = words[1].upper()
+                elif key == 'HYDRAULICS':
+                    wn.options.hydraulics_option = words[1].upper()
+                    wn.options.hydraulics_filename = words[2]
+                elif key == 'QUALITY':
+                    wn.options.quality_option = words[1].upper()
+                    if len(words) > 2:
+                        wn.options.quality_value = words[2]
+                        if 'ug' in words[2]:
+                            self._mass_units = MassUnits.mg
+                        else:
+                            self._mass_units = MassUnits.ug
+                    else:
+                        self._mass_units = MassUnits.kg
+                        wn.options.quality_value = 'kg/m3'
+                elif key == 'VISCOSITY':
+                    wn.options.viscosity = float(words[1])
+                elif key == 'DIFFUSIVITY':
+                    wn.options.diffusivity = float(words[1])
+                elif key == 'SPECIFIC':
+                    wn.options.specific_gravity = float(words[2])
+                elif key == 'TRIALS':
+                    wn.options.specific_gravity = int(words[1])
+                elif key == 'ACCURACY':
+                    wn.options.accuracy = float(words[1])
+                elif key == 'UNBALANCED':
+                    wn.options.unbalanced_option = words[1].upper()
+                    if len(words) > 2:
+                        wn.options.unbalanced_value = int(words[2])
+                elif key == 'PATTERN':
+                    wn.options.pattern = words[1]
+                elif key == 'DEMAND':
+                    if len(words) > 2:
+                        wn.options.demand_multiplier = float(words[2])
+                    else:
+                        raise RuntimeError('Incomplete DEMAND MULTIPLIER line')
+                elif key == 'EMITTER':
+                    if len(words) > 2:
+                        wn.options.emitter_exponent = float(words[2])
+                    else:
+                        raise RuntimeError('Incomplete EMITTER EXPONENT line')
+                elif key == 'TOLERANCE':
+                    wn.options.tolerance = float(words[1])
+                elif key == 'MAP':
+                    wn.options.map = words[1]
+                else:
+                    raise RuntimeError('Invalid key word in [OPTIONS] '
+                                       'section: %s' % key)
+        inp_units = self._flow_units
+        mass_units = self._mass_units
+        if (type(wn.options.report_timestep) == float or
+                type(wn.options.report_timestep) == int):
+            if wn.options.report_timestep < wn.options.hydraulic_timestep:
+                raise RuntimeError('wn.options.report_timestep must be '
+                                   'greater than or equal to '
+                                   'wn.options.hydraulic_timestep.')
+            if wn.options.report_timestep % wn.options.hydraulic_timestep != 0:
+                raise RuntimeError('wn.options.report_timestep must be a '
+                                   'multiple of wn.options.hydraulic_timestep')
+
+        if len(self._sections['[TITLE]']) > 0:
+            wn._en_title = '\n'.join(self._sections['[TITLE]'])
+        else:
+            wn._en_title = None
+
+        for line in self._sections['[CURVES]']:
+            # It should be noted carefully that these lines are never directly
+            # applied to the WaterNetworkModel object. Because different curve
+            # types are treated differently, each of the curves are converted
+            # the first time they are used, and this is used to build up a
+            # dictionary for those conversions to take place.
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            curve_name = current[0]
+            if curve_name not in self._curves:
+                self._curves[curve_name] = []
+            self._curves[curve_name].append((float(current[1]),
+                                             float(current[2])))
+
+        for line in self._sections['[PATTERNS]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            pattern_name = current[0]
+            if pattern_name not in self._patterns:
+                self._patterns[pattern_name] = []
+                for i in current[1:]:
+                    self._patterns[pattern_name].append(float(i))
+            else:
+                for i in current[1:]:
+                    self._patterns[pattern_name].append(float(i))
+
+        for pattern_name, pattern_list in self._patterns.iteritems():
+            wn.add_pattern(pattern_name, pattern_list)
+
+        for line in self._sections['[JUNCTIONS]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            if len(current) == 3:
+                wn.add_junction(current[0],
+                                HydParam.Demand.to_si(inp_units,
+                                                      float(current[2])),
+                                None,
+                                HydParam.Elevation.to_si(inp_units,
+                                                         float(current[1])))
+            else:
+                wn.add_junction(current[0],
+                                HydParam.Demand.to_si(inp_units,
+                                                      float(current[2])),
+                                current[3],
+                                HydParam.Elevation.to_si(inp_units,
+                                                         float(current[1])))
+
+        for line in self._sections['[RESERVOIRS]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            if len(current) == 2:
+                wn.add_reservoir(current[0],
+                                 HydParam.HydraulicHead.to_si(inp_units,
+                                                        float(current[1])))
+            else:
+                wn.add_reservoir(current[0],
+                                 HydParam.HydraulicHead.to_si(inp_units,
+                                                        float(current[1])),
+                                 current[2])
+                logger.warning('Patterns for reservoir heads are currently '
+                               'only supported in the EpanetSimulator')
+
+        for line in self._sections['[TANKS]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            if len(current) == 8:  # Volume curve provided
+                if float(current[6]) != 0:
+                    logger.warning('Currently, only the EpanetSimulator '
+                                   'utilizes minimum volumes for tanks. The '
+                                   'other simulators only use the minimum '
+                                   'level and only support cylindrical '
+                                   'tanks.')
+                logger.warning('Currently, only the EpanetSimulator supports '
+                               'volume curves. The other simulators only '
+                               'support cylindrical tanks.')
+                curve_name = current[7]
+                curve_points = []
+                for point in self._curves[curve_name]:
+                    x = HydParam.Length.to_si(inp_units, point[0])
+                    y = HydParam.Volume.to_si(inp_units, point[1])
+                    curve_points.append((x, y))
+                wn.add_curve(curve_name, 'VOLUME', curve_points)
+                curve = wn.get_curve(curve_name)
+                wn.add_tank(current[0],
+                            HydParam.Elevation.to_si(inp_units,
+                                                     float(current[1])),
+                            HydParam.Length.to_si(inp_units,
+                                                  float(current[2])),
+                            HydParam.Length.to_si(inp_units,
+                                                  float(current[3])),
+                            HydParam.Length.to_si(inp_units,
+                                                  float(current[4])),
+                            HydParam.TankDiameter.to_si(inp_units,
+                                                        float(current[5])),
+                            HydParam.Volume.to_si(inp_units,
+                                                  float(current[6])),
+                            curve)
+            elif len(current) == 7:  # No volume curve provided
+                if float(current[6]) != 0:
+                    logger.warning('Currently, only the EpanetSimulator '
+                                   'utilizes minimum volumes for tanks. The '
+                                   'other simulators only use the minimum '
+                                   'level and only support sylindrical '
+                                   'tanks.')
+                wn.add_tank(current[0],
+                            HydParam.Elevation.to_si(inp_units,
+                                                     float(current[1])),
+                            HydParam.Length.to_si(inp_units,
+                                                  float(current[2])),
+                            HydParam.Length.to_si(inp_units,
+                                                  float(current[3])),
+                            HydParam.Length.to_si(inp_units,
+                                                  float(current[4])),
+                            HydParam.TankDiameter.to_si(inp_units,
+                                                        float(current[5])),
+                            HydParam.Volume.to_si(inp_units,
+                                                  float(current[6])))
+            else:
+                raise RuntimeError('Tank entry format not recognized.')
+
+        for line in self._sections['[PIPES]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            if float(current[6]) != 0:
+                logger.warning('Currently, only the EpanetSimulator supports '
+                               'non-zero minor losses in pipes.')
+            if current[7].upper() == 'CV':
+                wn.add_pipe(current[0],
+                            current[1],
+                            current[2],
+                            HydParam.Length.to_si(inp_units,
+                                                  float(current[3])),
+                            HydParam.PipeDiameter.to_si(inp_units,
+                                                        float(current[4])),
+                            float(current[5]),
+                            float(current[6]),
+                            'OPEN',
+                            True)
+            else:
+                wn.add_pipe(current[0],
+                            current[1],
+                            current[2],
+                            HydParam.Length.to_si(inp_units,
+                                                  float(current[3])),
+                            HydParam.PipeDiameter.to_si(inp_units,
+                                                        float(current[4])),
+                            float(current[5]),
+                            float(current[6]),
+                            current[7].upper())
+
+        for line in self._sections['[PUMPS]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            # Only add head curves for pumps
+            if current[3].upper() == 'SPEED':
+                logger.warning('Speed settings for pumps are currently only '
+                               'supported in the EpanetSimulator.')
+                continue
+            elif current[3].upper() == 'PATTERN':
+                logger.warning('Speed patterns for pumps are currently only '
+                               'supported in the EpanetSimulator.')
+                continue
+            elif current[3].upper() == 'HEAD':
+                curve_name = current[4]
+                curve_points = []
+                for point in self._curves[curve_name]:
+                    x = HydParam.Flow.to_si(inp_units, point[0])
+                    y = HydParam.HydraulicHead.to_si(inp_units, point[1])
+                    curve_points.append((x, y))
+                wn.add_curve(curve_name, 'HEAD', curve_points)
+                curve = wn.get_curve(curve_name)
+                wn.add_pump(current[0], current[1], current[2], 'HEAD', curve)
+            elif current[3].upper() == 'POWER':
+                wn.add_pump(current[0], current[1], current[2],
+                            current[3].upper(),
+                            HydParam.Power.to_si(inp_units, float(current[4])))
+            else:
+                raise RuntimeError('Pump keyword in inp file not recognized.')
+
+        for line in self._sections['[VALVES]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            if len(current) < 7:
+                current[6] = 0
+            valve_type = current[4].upper()
+            if valve_type != 'PRV':
+                logger.warning("Only PRV valves are currently supported.")
+            if float(current[6]) != 0:
+                logger.warning('Currently, only the EpanetSimulator '
+                               'supports non-zero minor losses in valves.')
+            if valve_type in ['PRV', 'PSV', 'PBV']:
+                valve_set = HydParam.Pressure.to_si(inp_units,
+                                                    float(current[5]))
+            elif valve_type == 'FCV':
+                valve_set = HydParam.Flow.to_si(inp_units, float(current[5]))
+            elif valve_type == 'TCV':
+                valve_set = float(current[5])
+            elif valve_type == 'GPV':
+                valve_set = current[5]
+            else:
+                raise RuntimeError('VALVE type "%s" unrecognized' %
+                                   valve_type)
+            wn.add_valve(current[0], current[1], current[2],
+                         HydParam.PipeDiameter.to_si(inp_units,
+                                                     float(current[3])),
+                         current[4].upper(), float(current[6]),
+                         valve_set)
+
+        for line in self._sections['[COORDINATES]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            assert(len(current) == 3), ("Error reading node coordinates. "
+                                        "Check format.")
+            wn.set_node_coordinates(current[0],
+                                    (float(current[1]), float(current[2])))
+
+        time_format = ['am', 'AM', 'pm', 'PM']
+        for line in self._sections['[TIMES]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            if (current[0].upper() == 'DURATION'):
+                wn.options.duration = str_time_to_sec(current[1])
+            elif (current[0].upper() == 'HYDRAULIC'):
+                wn.options.hydraulic_timestep = str_time_to_sec(current[2])
+            elif (current[0].upper() == 'QUALITY'):
+                wn.options.quality_timestep = str_time_to_sec(current[2])
+            elif (current[1].upper() == 'CLOCKTIME'):
+                [time, time_format] = [current[2], current[3].upper()]
+                wn.options.start_clocktime = clock_time_to_sec(time,
+                                                               time_format)
+            elif (current[0].upper() == 'STATISTIC'):
+                wn.options.statistic = current[1].upper()
+            else:  # Other time options
+                key_string = current[0] + '_' + current[1]
+                setattr(wn.options, key_string.lower(),
+                        str_time_to_sec(current[2]))
+
+        if wn.options.pattern_start != 0.0:
+            logger.warning('Currently, only the EpanetSimulator supports a '
+                           'non-zero patern start time.')
+
+        if wn.options.report_start != 0.0:
+            logger.warning('Currently, only the EpanetSimulator supports a '
+                           'non-zero report start time.')
+
+        if wn.options.report_timestep != wn.options.hydraulic_timestep:
+            logger.warning('Currently, only a the EpanetSimulator supports a '
+                           'report timestep that is not equal to the '
+                           'hydraulic timestep.')
+
+        if wn.options.start_clocktime != 0.0:
+            logger.warning('Currently, only the EpanetSimulator supports a '
+                           'start clocktime other than 12 am.')
+
+        if wn.options.statistic != 'NONE':
+            logger.warning('Currently, only the EpanetSimulator supports the '
+                           'STATISTIC option in the inp file.')
+
+        for line in self._sections['[STATUS]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            assert(len(current) == 2), ("Error reading [STATUS] block, Check "
+                                        " format.")
+            link = wn.get_link(current[0])
+            if (current[1].upper() == 'OPEN' or
+                    current[1].upper() == 'CLOSED' or
+                    current[1].upper() == 'ACTIVE'):
+                new_status = wntr.network.LinkStatus.str_to_status(current[1])
+                link.status = new_status
+                link._base_status = new_status
+            else:
+                if isinstance(link, wntr.network.Pump):
+                    logger.warning('Currently, pump speed settings are only '
+                                   'supported in the EpanetSimulator.')
+                    continue
+                elif isinstance(link, wntr.network.Valve):
+                    if link.valve_type != 'PRV':
+                        logger.warning('Currently, valves of type ' +
+                                       link.valve_type +
+                                       ' are only supported in the '
+                                       'EpanetSimulator.')
+                        continue
+                    else:
+                        setting = HydParam.Pressure.to_si(inp_units,
+                                                          float(current[2]))
+                        link.setting = setting
+                        link._base_setting = setting
+
+        for line in self._sections['[CONTROLS]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            current_copy = current
+            current = [i.upper() for i in current]
+            current[1] = current_copy[1]  # don't capitalize the link name
+
+            # Create the control action object
+            link_name = current[1]
+            # print (link_name in wn._links.keys())
+            link = wn.get_link(link_name)
+            if type(current[2]) == str:
+                status = wntr.network.LinkStatus.str_to_status(current[2])
+                action_obj = wntr.network.ControlAction(link, 'status', status)
+            elif type(current[2]) == float or type(current[2]) == int:
+                if isinstance(link, wntr.network.Pump):
+                    logger.warning('Currently, pump speed settings are only '
+                                   'supported in the EpanetSimulator.')
+                    continue
+                elif isinstance(link, wntr.network.Valve):
+                    if link.valve_type != 'PRV':
+                        logger.warning('Currently, valves of type ' +
+                                       link.valve_type +
+                                       ' are only supported in the '
+                                       'EpanetSimulator.')
+                        continue
+                    else:
+                        status = HydParam.Pressure.to_si(inp_units,
+                                                         float(current[2]))
+                        action_obj = wntr.network.ControlAction(link,
+                                                                'setting',
+                                                                status)
+
+            # Create the control object
+            if 'TIME' not in current and 'CLOCKTIME' not in current:
+                current[5] = current_copy[5]
+                if 'IF' in current:
+                    node_name = current[5]
+                    node = wn.get_node(node_name)
+                    if current[6] == 'ABOVE':
+                        oper = np.greater
+                    elif current[6] == 'BELOW':
+                        oper = np.less
+                    else:
+                        raise RuntimeError("The following control is not "
+                                           "recognized: " + line)
+                    ### OKAY - we are adding in the elevation. This is A PROBLEM IN THE INP WRITER. Now that we know, we can fix it, but if this changes, it will affect multiple pieces, just an FYI.
+                    if isinstance(node, wntr.network.Junction):
+                        threshold = HydParam.Pressure.to_si(inp_units,
+                                        float(current[7])) + node.elevation
+                    elif isinstance(node, wntr.network.Tank):
+                        threshold = HydParam.Length.to_si(inp_units,
+                                        float(current[7])) + node.elevation
+                    control_obj = wntr.network.ConditionalControl((node,
+                                                                   'head'),
+                                        oper, threshold, action_obj)
+                else:
+                    raise RuntimeError("The following control is not "
+                                       "recognized: " + line)
+                control_name = ''
+                for i in xrange(len(current)-1):
+                    control_name = control_name + current[i]
+                control_name = control_name + str(round(threshold, 2))
+            else:
+                if len(current) != 6:
+                    logger.warning('Using CLOCKTIME in time controls is '
+                                   'currently only supported by the '
+                                   'EpanetSimulator.')
+                if len(current) == 6:  # at time
+                    if ':' in current[5]:
+                        fire_time = str_time_to_sec(current[5])
+                    else:
+                        fire_time = int(float(current[5])*3600)
+                    control_obj = wntr.network.TimeControl(wn, fire_time,
+                                                           'SIM_TIME', False,
+                                                           action_obj)
+                    control_name = ''
+                    for i in xrange(len(current)-1):
+                        control_name = control_name + current[i]
+                    control_name = control_name + str(fire_time)
+                elif len(current) == 7:  # at clocktime
+                    fire_time = clock_time_to_sec(current[5], current[6])
+                    control_obj = wntr.network.TimeControl(wn, fire_time,
+                                                           'SHIFTED_TIME',
+                                                           True, action_obj)
+            wn.add_control(control_name, control_obj)
+
+        for line in self._sections['[REACTIONS]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            assert len(current) == 3, ('INP file option in [REACTIONS] block '
+                                       'not recognized: ' + line)
+            key1 = current[0].upper()
+            key2 = current[1].upper()
+            val3 = float(current[2])
+            if key1 == 'ORDER':
+                if key2 == 'BULK':
+                    wn.options.bulk_rxn_order = int(current[2])
+                elif key2 == 'WALL':
+                    wn.options.wall_rxn_order = int(current[2])
+                elif key2 == 'TANK':
+                    wn.options.tank_rxn_order = int(current[2])
+            elif key1 == 'GLOBAL':
+                if key2 == 'BULK':
+                    wn.options.bulk_rxn_coeff = QualParam.BulkReactionCoeff.to_si(inp_units, val3, mass_units, wn.options.bulk_rxn_order)
+                elif key2 == 'WALL':
+                    wn.options.wall_rxn_coeff = QualParam.WallReactionCoeff.to_si(inp_units, val3, mass_units, wn.options.wall_rxn_order)
+            elif key1 == 'BULK':
+                pipe = wn.get_link(current[1])
+                pipe.bulk_rxn_coeff = QualParam.BulkReactionCoeff.to_si(inp_units, val3, mass_units, wn.options.bulk_rxn_order)
+            elif key1 == 'WALL':
+                pipe = wn.get_link(current[1])
+                pipe.wall_rxn_coeff = QualParam.WallReactionCoeff.to_si(inp_units, val3, mass_units, wn.options.wall_rxn_order)
+            elif key1 == 'TANK':
+                tank = wn.get_node(current[1])
+                tank.bulk_rxn_coeff = QualParam.BulkReactionCoeff(inp_units, val3, mass_units, wn.options.bulk_rxn_order)
+            elif key1 == 'LIMITING':
+                wn.options.limiting_potential = float(current[2])
+            elif key1 == 'ROUGHNESS':
+                wn.options.roughness_correlation = float(current[2])
+            else:
+                raise RuntimeError('Reaction option not recognized')
+
+        if len(self._sections['[ENERGY]']) > 0:
+            wn._en_energy = '\n'.join(self._sections['[ENERGY]'])
+            logger.warning('ENERGY section is reapplied directly to an '
+                           'Epanet INP file on write; otherwise unsupported.')
+
+        if len(self._sections['[RULES]']) > 0:
+            wn._en_rules = '\n'.join(self._sections['[RULES]'])
+            logger.warning('RULES are reapplied directly to an '
+                           'Epanet INP file on write; otherwise unsupported.')
+
+        if len(self._sections['[DEMANDS]']) > 0:
+            wn._en_demands = '\n'.join(self._sections['[DEMANDS]'])
+            logger.warning('Multiple DEMANDS are reapplied directly to an '
+                           'Epanet INP file on write; otherwise unsupported.')
+
+        if len(self._sections['[QUALITY]']) > 0:
+            wn._en_quality = '\n'.join(self._sections['[QUALITY]'])
+            logger.warning('QUALITY section is reapplied directly to an '
+                           'Epanet INP file on write; otherwise unsupported.')
+
+        if len(self._sections['[EMITTERS]']) > 0:
+            wn._en_emitters = '\n'.join(self._sections['[EMITTERS]'])
+            logger.warning('Emitters are currently reapplied directly to an '
+                           'Epanet INP file on write; otherwise unsupported.')
+
+        for line in self._sections['[SOURCES]']:
+            pass
+
+        for line in self._sections['[MIXING]']:
+            pass
+
+        for line in self._sections['[REPORT]']:
+            pass
+
+        for line in self._sections['[VERTICES]']:
+            pass
+
+        for line in self._sections['[LABELS]']:
+            pass
+
+        for line in self._sections['[BACKDROP]']:
+            pass
+
+        for line in self._sections['[TAGS]']:
+            pass
 
     def read_inp_file(self, wn, inp_file_name):
         """
         Method to read EPANET INP file and load data into a
         water network object.
-        
+
         Parameters
         ----------
         wn : WaterNetwork object
@@ -336,23 +958,23 @@ class ParseWaterNetwork(object):
                 if float(current[6]) != 0:
                     logger.warning('Currently, only the EpanetSimulator supports non-zero minor losses in pipes.')
                 if current[7].upper() == 'CV':
-                    wn.add_pipe(current[0], 
-                                current[1], 
-                                current[2], 
+                    wn.add_pipe(current[0],
+                                current[1],
+                                current[2],
                                 convert('Length', inp_units, float(current[3])),
                                 convert('Pipe Diameter', inp_units, float(current[4])),
-                                float(current[5]), 
-                                float(current[6]), 
-                                'OPEN', 
+                                float(current[5]),
+                                float(current[6]),
+                                'OPEN',
                                 True)
                 else:
-                    wn.add_pipe(current[0], 
-                                current[1], 
-                                current[2], 
+                    wn.add_pipe(current[0],
+                                current[1],
+                                current[2],
                                 convert('Length', inp_units, float(current[3])),
                                 convert('Pipe Diameter', inp_units, float(current[4])),
-                                float(current[5]), 
-                                float(current[6]), 
+                                float(current[5]),
+                                float(current[6]),
                                 current[7].upper())
 
         f.close()
@@ -534,10 +1156,10 @@ class ParseWaterNetwork(object):
 
         if wn.options.report_timestep != wn.options.hydraulic_timestep:
             logger.warning('Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.')
-            
+
         if wn.options.start_clocktime != 0.0:
             logger.warning('Currently, only the EpanetSimulator supports a start clocktime other than 12 am.')
-                        
+
         if wn.options.statistic != 'NONE':
             logger.warning('Currently, only the EpanetSimulator supports the STATISTIC option in the inp file.')
 
