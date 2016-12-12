@@ -4,11 +4,13 @@ Created on Mon Dec 12 10:00:59 2016
 
 @author: dbhart
 """
-from wntr.utils.units import FlowUnits, MassUnits, QualParam, HydParam
+from wntr.utils.units import FlowUnits, MassUnits, QualParam, HydParam, convert
 import wntr.network
 from wntr.network import WaterNetworkModel, Node, Link, Junction, Reservoir, Tank, Pipe, Pump, Valve, Curve, LinkStatus, WaterNetworkOptions, LinkTypes, NodeTypes
+import wntr
 
 import warnings
+import datetime
 import networkx as nx
 import re
 import logging
@@ -144,6 +146,7 @@ class EN2InpFile(object):
         self.mass_units = None
         self.flow_units = None
         self.top_comments = []
+        self.curves = {}
 
     def parse(self, filename, wn=None):
         """Method to read EPANET INP file and load data into a water network object."""
@@ -153,7 +156,7 @@ class EN2InpFile(object):
         opts = wn.options
 
         _patterns = {}
-        _curves = {}
+        self.curves = {}
         _time_controls = {}
         _conditional_controls = {}
         _link_status = {}  # Map from link name to the initial status
@@ -186,7 +189,7 @@ class EN2InpFile(object):
             for line in f:
                 lnum += 1
                 edata['lnum'] = lnum
-                line.strip()
+                line = line.strip()
                 nwords = len(line.split())
                 if len(line) == 0 or nwords == 0:
                     # Blank line
@@ -241,8 +244,8 @@ class EN2InpFile(object):
                         else:
                             self.mass_units = MassUnits.ug
                     else:
-                        self.mass_units = MassUnits.kg
-                        opts.quality_value = 'kg/m3'
+                        self.mass_units = MassUnits.mg
+                        opts.quality_value = 'mg/L'
                 elif key == 'VISCOSITY':
                     opts.viscosity = float(words[1])
                 elif key == 'DIFFUSIVITY':
@@ -314,9 +317,9 @@ class EN2InpFile(object):
             if current == []:
                 continue
             curve_name = current[0]
-            if curve_name not in _curves:
-                _curves[curve_name] = []
-            _curves[curve_name].append((float(current[1]),
+            if curve_name not in self.curves:
+                self.curves[curve_name] = []
+            self.curves[curve_name].append((float(current[1]),
                                              float(current[2])))
 
         for lnum, line in self.sections['[PATTERNS]']:
@@ -385,7 +388,7 @@ class EN2InpFile(object):
                 logger.warn('<%(fname)s:%(sec)s:%(line)d> tank volume curves only supported in EpanetSimulator', edata)
                 curve_name = current[7]
                 curve_points = []
-                for point in _curves[curve_name]:
+                for point in self.curves[curve_name]:
                     x = HydParam.Length.to_si(inp_units, point[0])
                     y = HydParam.Volume.to_si(inp_units, point[1])
                     curve_points.append((x, y))
@@ -461,7 +464,7 @@ class EN2InpFile(object):
             elif current[3].upper() == 'HEAD':
                 curve_name = current[4]
                 curve_points = []
-                for point in _curves[curve_name]:
+                for point in self.curves[curve_name]:
                     x = HydParam.Flow.to_si(inp_units, point[0])
                     y = HydParam.HydraulicHead.to_si(inp_units, point[1])
                     curve_points.append((x, y))
@@ -777,93 +780,113 @@ class EN2InpFile(object):
 
         units=units.upper()
         inp_units = FlowUnits[units]
+        flowunit = int(inp_units)
 
         f = open(filename, 'w')
 
         # Print title
         if wn.name is not None:
-            f.write('{0}\n'.format(wn.name))
+            f.write('; Filename: {0}\n'.format(wn.name))
+            f.write('; WNTR: {}\n; Created: {:%Y-%m-%d %H:%M:%S}\n'.format(wntr.__version__, datetime.datetime.now()))
         f.write('[TITLE]\n')
-        if wn.name is not None:
-            f.write('{0}\n'.format(wn.name))
+        for lnum, line in self.sections['[TITLE]']:
+            f.write('{}\n'.format(line))
+        f.write('\n')
 
         # Print junctions information
         f.write('[JUNCTIONS]\n')
-        label_format = '{:20} {:>12s} {:>12s} {:24}\n'
-        f.write(label_format.format(';ID', 'Elevation', 'Demand', 'Pattern'))
+        entry = '{name:20} {elev:12.6g} {dem:12.6g} {pat:24} {com:>3s}\n'
+        label = '{:20} {:>12s} {:>12s} {:24}\n'
+        f.write(label.format(';ID', 'Elevation', 'Demand', 'Pattern'))
         for junction_name, junction in wn.nodes(Junction):
-            f.write('%s\n'%junction.to_inp_string(flowunit))
+            E = {'name': junction_name,
+                 'elev': HydParam.Elevation.from_si(inp_units, junction.elevation),
+                 'dem': HydParam.Demand.from_si(inp_units, junction.base_demand),
+                 'com': ';'}
+            if junction.demand_pattern_name is None:
+                E['pat'] = ''
+            else:
+                E['pat'] = junction.demand_pattern_name
+            f.write(entry.format(**E))
+        f.write('\n')
 
         # Print reservoir information
         f.write('[RESERVOIRS]\n')
-        text_format = '{:20s} {:12f} {:>12s} {:>3s}\n'
-        label_format = '{:20s} {:>12s} {:>12s}\n'
-        f.write(label_format.format(';ID', 'Head', 'Pattern'))
+        entry = '{:20s} {:12f} {:>12s} {:>3s}\n'
+        label = '{:20s} {:>12s} {:>12s}\n'
+        f.write(label.format(';ID', 'Head', 'Pattern'))
         for reservoir_name, reservoir in wn.nodes(Reservoir):
             if reservoir.head_pattern_name is not None:
-                f.write(text_format.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), reservoir.head_pattern_name, ';'))
+                f.write(entry.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), reservoir.head_pattern_name, ';'))
             else:
-                f.write(text_format.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), '', ';'))
+                f.write(entry.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), '', ';'))
+        f.write('\n')
 
         # Print tank information
         f.write('[TANKS]\n')
-        text_format = '{:20s} {:12f} {:12f} {:12f} {:12f} {:12f} {:12f} {:20s} {:>3s}\n'
-        label_format = '{:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
-        f.write(label_format.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level', 'Diameter', 'Min Volume', 'Volume Curve'))
+        entry = '{:20s} {:12f} {:12f} {:12f} {:12f} {:12f} {:12f} {:20s} {:>3s}\n'
+        label = '{:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
+        f.write(label.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level', 'Diameter', 'Min Volume', 'Volume Curve'))
         for tank_name, tank in wn.nodes(Tank):
             if tank.vol_curve is not None:
-                f.write(text_format.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), tank.vol_curve, ';'))
+                f.write(entry.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), tank.vol_curve, ';'))
             else:
-                f.write(text_format.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), '', ';'))
+                f.write(entry.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), '', ';'))
+        f.write('\n')
 
         # Print pipe information
         f.write('[PIPES]\n')
-        text_format = '{:20s} {:20s} {:20s} {:12f} {:12f} {:12f} {:12f} {:>20s} {:>3s}\n'
-        label_format = '{:20s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
-        f.write(label_format.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status'))
+        entry = '{:20s} {:20s} {:20s} {:12f} {:12f} {:12f} {:12f} {:>20s} {:>3s}\n'
+        label = '{:20s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
+        f.write(label.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status'))
         for pipe_name, pipe in wn.links(Pipe):
             if pipe.cv:
-                f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, 'CV', ';'))
+                f.write(entry.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, 'CV', ';'))
             else:
-                f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';'))
+                f.write(entry.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';'))
+        f.write('\n')
 
         # Print pump information
         f.write('[PUMPS]\n')
-        text_format = '{:20s} {:20s} {:20s} {:8s} {:20s} {:>3s}\n'
-        label_format = '{:20s} {:20s} {:20s} {:20s}\n'
-        f.write(label_format.format(';ID', 'Node1', 'Node2', 'Parameters'))
+        entry = '{:20s} {:20s} {:20s} {:8s} {:20s} {:>3s}\n'
+        label = '{:20s} {:20s} {:20s} {:20s}\n'
+        f.write(label.format(';ID', 'Node1', 'Node2', 'Parameters'))
         for pump_name, pump in wn.links(Pump):
             if pump.info_type == 'HEAD':
-                f.write(text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, pump.curve.name, ';'))
+                f.write(entry.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, pump.curve.name, ';'))
             elif pump.info_type == 'POWER':
-                f.write(text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, str(pump.power/1000.0), ';'))
+                f.write(entry.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, str(pump.power/1000.0), ';'))
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
+        f.write('\n')
+
         # Print valve information
         f.write('[VALVES]\n')
-        text_format = '{:20s} {:20s} {:20s} {:12f} {:4s} {:12f} {:12f} {:>3s}\n'
-        label_format = '{:20s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
-        f.write(label_format.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss'))
+        entry = '{:20s} {:20s} {:20s} {:12f} {:4s} {:12f} {:12f} {:>3s}\n'
+        label = '{:20s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
+        f.write(label.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss'))
         for valve_name, valve in wn.links(Valve):
-            f.write(text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve._base_setting, valve.minor_loss, ';'))
+            f.write(entry.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve._base_setting, valve.minor_loss, ';'))
+        f.write('\n')
 
         # Print status information
         f.write('[STATUS]\n')
-        text_format = '{:10s} {:10s}\n'
-        label_format = '{:10s} {:10s}\n'
-        f.write( label_format.format(';ID', 'Setting'))
+        entry = '{:10s} {:10s}\n'
+        label = '{:10s} {:10s}\n'
+        f.write( label.format(';ID', 'Setting'))
         for link_name, link in wn.links(Pump):
             if link.get_base_status() == LinkStatus.closed:
-                f.write(text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status())))
+                f.write(entry.format(link_name, LinkStatus.status_to_str(link.get_base_status())))
         for link_name, link in wn.links(Valve):
             if link.get_base_status() == LinkStatus.closed or link.get_base_status()==LinkStatus.opened:
-                f.write(text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status())))
+                f.write(entry.format(link_name, LinkStatus.status_to_str(link.get_base_status())))
+        f.write('\n')
 
         # Print pattern information
         num_columns = 8
         f.write('[PATTERNS]\n')
-        label_format = '{:10s} {:10s}\n'
-        f.write(label_format.format(';ID', 'Multipliers'))
+        label = '{:10s} {:10s}\n'
+        f.write(label.format(';ID', 'Multipliers'))
         for pattern_name, pattern in wn._patterns.iteritems():
             count = 0
             for i in pattern:
@@ -873,16 +896,33 @@ class EN2InpFile(object):
                     f.write(' %f'%(i,))
                 count += 1
             f.write('\n')
+        f.write('\n')
 
         # Print curves
         f.write('[CURVES]\n')
-        text_format = '{:10s} {:10f} {:10f} {:>3s}\n'
-        label_format = '{:10s} {:10s} {:10s}\n'
-        f.write(label_format.format(';ID', 'X-Value', 'Y-Value'))
+        entry = '{:10s} {:10f} {:10f} {:>3s}\n'
+        label = '{:10s} {:10s} {:10s}\n'
+        f.write(label.format(';ID', 'X-Value', 'Y-Value'))
         for curve_name, curve in wn._curves.items():
-            for i in curve.points:
-                f.write( text_format.format(curve_name, 1000*i[0], i[1], ';'))
+            if curve.curve_type == 'VOLUME':
+                f.write(';VOLUME: {}\n'.format(curve_name))
+                for point in curve.points:
+                    x = HydParam.Length.from_si(inp_units, point[0])
+                    y = HydParam.Volume.from_si(inp_units, point[1])
+                    f.write( entry.format(curve_name, x, y, ';'))
+            elif curve.curve_type == 'HEAD':
+                f.write(';HEAD: {}\n'.format(curve_name))
+                for point in curve.points:
+                    x = HydParam.Flow.from_si(inp_units, point[0])
+                    y = HydParam.HydraulicHead.from_si(inp_units, point[1])
+                    f.write( entry.format(curve_name, x, y, ';'))
             f.write('\n')
+        for curve_name, curve in self.curves.items():
+            if curve_name not in wn._curves.keys():
+                for point in curve:
+                    f.write(entry.format(curve_name, point[0], point[1], ';'))
+                f.write('\n')
+        f.write('\n')
 
         # Print Controls
         f.write( '[CONTROLS]\n')
@@ -896,80 +936,104 @@ class EN2InpFile(object):
 
         # Report
         f.write('[REPORT]\n')
-        f.write('Status Yes\n')
-        f.write('Summary yes\n')
+        if len(self.sections['[REPORT]']) > 0:
+            for lnum, line in self.sections['[REPORT]']:
+                f.write('{}\n'.format(line))
+        else:
+            f.write('Status Yes\n')
+            f.write('Summary yes\n')
+        f.write('\n')
 
         # Options
         f.write('[OPTIONS]\n')
-        text_format_string = '{:20s} {:20s}\n'
-        text_format_float = '{:20s} {:<20.8f}\n'
-        f.write(text_format_string.format('UNITS', 'LPS'))
-        f.write(text_format_string.format('HEADLOSS', wn.options.headloss))
+        entry_string = '{:20s} {:20s}\n'
+        entry_float = '{:20s} {:g}\n'
+        f.write(entry_string.format('UNITS', 'LPS'))
+        f.write(entry_string.format('HEADLOSS', wn.options.headloss))
         if wn.options.hydraulics_option is not None:
-            f.write('{:20s} {:20s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulics_option, wn.options.hydraulics_filename))
+            f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulics_option, wn.options.hydraulics_filename))
         if wn.options.quality_value is None:
-            f.write(text_format_string.format('QUALITY', wn.options.quality_option))
+            f.write(entry_string.format('QUALITY', wn.options.quality_option))
         else:
-            f.write('{:20s} {:20s} {:20s}\n'.format('QUALITY', wn.options.quality_option, wn.options.quality_value))
-        f.write(text_format_float.format('VISCOSITY', wn.options.viscosity))
-        f.write(text_format_float.format('DIFFUSIVITY', wn.options.diffusivity))
-        f.write(text_format_float.format('SPECIFIC GRAVITY', wn.options.specific_gravity))
-        f.write(text_format_float.format('TRIALS', wn.options.trials))
-        f.write(text_format_float.format('ACCURACY', wn.options.accuracy))
-        f.write(text_format_float.format('CHECKFREQ', wn.options.checkfreq))
+            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality_option, wn.options.quality_value))
+        f.write(entry_float.format('VISCOSITY', wn.options.viscosity))
+        f.write(entry_float.format('DIFFUSIVITY', wn.options.diffusivity))
+        f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.specific_gravity))
+        f.write(entry_float.format('TRIALS', wn.options.trials))
+        f.write(entry_float.format('ACCURACY', wn.options.accuracy))
+        f.write(entry_float.format('CHECKFREQ', wn.options.checkfreq))
         if wn.options.unbalanced_value is None:
-            f.write(text_format_string.format('UNBALANCED', wn.options.unbalanced_option))
+            f.write(entry_string.format('UNBALANCED', wn.options.unbalanced_option))
         else:
-            f.write('{:20s} {:20s} {:20d}\n'.format('UNBALANCED', wn.options.unbalanced_option, wn.options.unbalanced_value))
+            f.write('{:20s} {:s} {:d}\n'.format('UNBALANCED', wn.options.unbalanced_option, wn.options.unbalanced_value))
         if wn.options.pattern is not None:
-            f.write(text_format_string.format('PATTERN', wn.options.pattern))
-        f.write(text_format_float.format('DEMAND MULTIPLIER', wn.options.demand_multiplier))
-        f.write(text_format_float.format('EMITTER EXPONENT', wn.options.emitter_exponent))
-        f.write(text_format_float.format('TOLERANCE', wn.options.tolerance))
+            f.write(entry_string.format('PATTERN', wn.options.pattern))
+        f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.demand_multiplier))
+        f.write(entry_float.format('EMITTER EXPONENT', wn.options.emitter_exponent))
+        f.write(entry_float.format('TOLERANCE', wn.options.tolerance))
         if wn.options.map is not None:
-            f.write(text_format_string.format('MAP', wn.options.map))
+            f.write(entry_string.format('MAP', wn.options.map))
 
         f.write('\n')
 
         # Reaction Options
         f.write( '[REACTIONS]\n')
-        text_format_float = '{:15s}{:15s}{:<10.8f}\n'
-        f.write(text_format_float.format('ORDER','BULK',wn.options.bulk_rxn_order))
-        f.write(text_format_float.format('ORDER','WALL',wn.options.wall_rxn_order))
-        f.write(text_format_float.format('ORDER','TANK',wn.options.tank_rxn_order))
-        f.write(text_format_float.format('GLOBAL','BULK',wn.options.bulk_rxn_coeff))
-        f.write(text_format_float.format('GLOBAL','WALL',wn.options.wall_rxn_coeff))
+        entry_float = '{:15s}{:15s}{:<10.8f}\n'
+        f.write(entry_float.format('ORDER','BULK',wn.options.bulk_rxn_order))
+        f.write(entry_float.format('ORDER','WALL',wn.options.wall_rxn_order))
+        f.write(entry_float.format('ORDER','TANK',wn.options.tank_rxn_order))
+        f.write(entry_float.format('GLOBAL','BULK',
+                                   QualParam.BulkReactionCoeff.from_si(inp_units,
+                                                                       wn.options.bulk_rxn_coeff,
+                                                                       self.mass_units,
+                                                                       wn.options.bulk_rxn_order)))
+        f.write(entry_float.format('GLOBAL','WALL',
+                                   QualParam.WallReactionCoeff.from_si(inp_units,
+                                                                       wn.options.wall_rxn_coeff,
+                                                                       self.mass_units,
+                                                                       wn.options.wall_rxn_order)))
         if wn.options.limiting_potential is not None:
-            f.write(text_format_float.format('LIMITING','POTENTIAL',wn.options.limiting_potential))
+            f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.limiting_potential))
         if wn.options.roughness_correlation is not None:
-            f.write(text_format_float.format('ROUGHNESS','CORRELATION',wn.options.roughness_correlation))
+            f.write(entry_float.format('ROUGHNESS','CORRELATION',wn.options.roughness_correlation))
         for tank_name, tank in wn.nodes(Tank):
             if tank.bulk_rxn_coeff is not None:
-                f.write(text_format_float.format('TANK',tank_name,tank.bulk_rxn_coeff))
+                f.write(entry_float.format('TANK',tank_name,
+                                           QualParam.BulkReactionCoeff.from_si(inp_units,
+                                                                       tank.bulk_rxn_coeff,
+                                                                       self.mass_units,
+                                                                       wn.options.bulk_rxn_order)))
         for pipe_name, pipe in wn.links(Pipe):
             if pipe.bulk_rxn_coeff is not None:
-                f.write(text_format_float.format('BULK',pipe_name,pipe.bulk_rxn_coeff))
+                f.write(entry_float.format('BULK',pipe_name,
+                                           QualParam.BulkReactionCoeff.from_si(inp_units,
+                                                                       pipe.bulk_rxn_coeff,
+                                                                       self.mass_units,
+                                                                       wn.options.bulk_rxn_order)))
             if pipe.wall_rxn_coeff is not None:
-                f.write(text_format_float.format('WALL',pipe_name,pipe.wall_rxn_coeff))
-
+                f.write(entry_float.format('WALL',pipe_name,
+                                           QualParam.WallReactionCoeff.from_si(inp_units,
+                                                                       pipe.wall_rxn_coeff,
+                                                                       self.mass_units,
+                                                                       wn.options.wall_rxn_order)))
         f.write('\n')
 
         # Time options
         f.write('[TIMES]\n')
-        text_format = '{:20s} {:10s}\n'
-        time_text_format = '{:20s} {:d}:{:d}:{:d}\n'
+        entry = '{:20s} {:10s}\n'
+        time_entry = '{:20s} {:d}:{:d}:{:d}\n'
         hrs, mm, sec = wn._sec_to_string(wn.options.duration)
-        f.write(time_text_format.format('DURATION', hrs, mm, sec))
+        f.write(time_entry.format('DURATION', hrs, mm, sec))
         hrs, mm, sec = wn._sec_to_string(wn.options.hydraulic_timestep)
-        f.write(time_text_format.format('HYDRAULIC TIMESTEP', hrs, mm, sec))
+        f.write(time_entry.format('HYDRAULIC TIMESTEP', hrs, mm, sec))
         hrs, mm, sec = wn._sec_to_string(wn.options.pattern_timestep)
-        f.write(time_text_format.format('PATTERN TIMESTEP', hrs, mm, sec))
+        f.write(time_entry.format('PATTERN TIMESTEP', hrs, mm, sec))
         hrs, mm, sec = wn._sec_to_string(wn.options.pattern_start)
-        f.write(time_text_format.format('PATTERN START', hrs, mm, sec))
+        f.write(time_entry.format('PATTERN START', hrs, mm, sec))
         hrs, mm, sec = wn._sec_to_string(wn.options.report_timestep)
-        f.write(time_text_format.format('REPORT TIMESTEP', hrs, mm, sec))
+        f.write(time_entry.format('REPORT TIMESTEP', hrs, mm, sec))
         hrs, mm, sec = wn._sec_to_string(wn.options.report_start)
-        f.write(time_text_format.format('REPORT START', hrs, mm, sec))
+        f.write(time_entry.format('REPORT START', hrs, mm, sec))
 
         hrs, mm, sec = wn._sec_to_string(wn.options.start_clocktime)
         if hrs < 12:
@@ -980,22 +1044,33 @@ class EN2InpFile(object):
         f.write('{:20s} {:d}:{:d}:{:d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format))
 
         hrs, mm, sec = wn._sec_to_string(wn.options.quality_timestep)
-        f.write(time_text_format.format('QUALITY TIMESTEP', hrs, mm, sec))
+        f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec))
         hrs, mm, sec = wn._sec_to_string(wn.options.rule_timestep)
-        f.write(time_text_format.format('RULE TIMESTEP', hrs, mm, int(sec)))
-        f.write(text_format.format('STATISTIC', wn.options.statistic))
-
+        f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)))
+        f.write(entry.format('STATISTIC', wn.options.statistic))
         f.write('\n')
 
         # Coordinates
         f.write('[COORDINATES]\n')
-        text_format = '{:10s} {:<10.2f} {:<10.2f}\n'
-        label_format = '{:10s} {:10s} {:10s}\n'
-        f.write(label_format.format(';Node', 'X-Coord', 'Y-Coord'))
+        entry = '{:10s} {:<10.2f} {:<10.2f}\n'
+        label = '{:10s} {:10s} {:10s}\n'
+        f.write(label.format(';Node', 'X-Coord', 'Y-Coord'))
         coord = nx.get_node_attributes(wn._graph, 'pos')
         for key, val in coord.iteritems():
-            f.write(text_format.format(key, val[0], val[1]))
+            f.write(entry.format(key, val[0], val[1]))
+        f.write('\n')
 
+        unmodified = ['[ENERGY]', '[RULES]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]', '[SOURCES]',
+                      '[MIXING]', '[VERTICES]', '[LABELS]', '[BACKDROP]', '[TAGS]']
+
+        for section in unmodified:
+            if len(self.sections[section]) > 0:
+                f.write('{}\n'.format(section))
+                for lnum, line in self.sections[section]:
+                    f.write('{}\n'.format(line))
+                f.write('\n')
+
+        f.write('[END]\n')
         f.close()
 
     def _sec_to_string(self, sec):
