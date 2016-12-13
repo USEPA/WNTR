@@ -1,9 +1,3 @@
 /.project
 *.pyc
-_build//wntr.egg-info
-
-*.txt
-
-wntr.egg-info/not-zip-safe
-
-wntr.egg-info/PKG-INFO
+_build/
