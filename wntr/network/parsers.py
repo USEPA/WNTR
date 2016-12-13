@@ -4,19 +4,18 @@ Created on Mon Dec 12 10:00:59 2016
 
 @author: dbhart
 """
-from wntr.utils.units import FlowUnits, MassUnits, QualParam, HydParam, convert
+from wntr.utils.units import FlowUnits, MassUnits, QualParam, HydParam
 import wntr.network
-from wntr.network import WaterNetworkModel, Node, Link, Junction, Reservoir, Tank, Pipe, Pump, Valve, Curve, LinkStatus, WaterNetworkOptions, LinkTypes, NodeTypes
+from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve, LinkStatus
 import wntr
 
-import warnings
 import datetime
 import networkx as nx
 import re
 import logging
 import numpy as np
 
-logger = logging.getLogger('wntr.network.parsers')
+logger = logging.getLogger(__name__)
 
 _INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
                  '[TANKS]', '[PIPES]', '[PUMPS]', '[VALVES]', '[EMITTERS]',
@@ -26,6 +25,26 @@ _INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
                  '[TIMES]', '[REPORT]', '[COORDINATES]', '[VERTICES]',
                  '[LABELS]', '[BACKDROP]', '[TAGS]']
 
+_JUNC_ENTRY = ' {name:20} {elev:12f} {dem:12f} {pat:24} {com:>3s}\n'
+_JUNC_LABEL = '{:21} {:>12s} {:>12s} {:24}\n'
+
+_RES_ENTRY = ' {name:20s} {head:12f} {pat:>24s} {com:>3s}\n'
+_RES_LABEL = '{:21s} {:>12s} {:>24s}\n'
+
+_TANK_ENTRY = ' {name:20s} {elev:12f} {initlev:12f} {minlev:12f} {maxlev:12f} {diam:12f} {minvol:12f} {curve:20s} {com:>3s}\n'
+_TANK_LABEL = '{:21s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
+
+_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:12f} {diam:12f} {rough:12f} {mloss:12f} {status:>20s} {com:>3s}\n'
+_PIPE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
+
+_PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:>3s}\n'
+_PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
+
+_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:12f} {vtype:4s} {set:12f} {mloss:12f} {com:>3s}\n'
+_VALVE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
+
+_CURVE_ENTRY = '{name:10s} {x:12f} {y:12f} {com:>3s}\n'
+_CURVE_LABEL = '{:10s} {:12s} {:12s}\n'
 
 def is_number(s):
     """
@@ -157,9 +176,6 @@ class EN2InpFile(object):
 
         _patterns = {}
         self.curves = {}
-        _time_controls = {}
-        _conditional_controls = {}
-        _link_status = {}  # Map from link name to the initial status
         self.top_comments = []
         self.sections = {}
         for sec in _INP_SECTIONS:
@@ -764,7 +780,7 @@ class EN2InpFile(object):
         wn._en2data = self
         return wn
 
-    def dump(self, filename, wn, units='LPS'):
+    def dump(self, filename, wn, units='GPM'):
         """Write the current network into an EPANET inp file.
         Parameters
         ----------
@@ -795,102 +811,125 @@ class EN2InpFile(object):
 
         # Print junctions information
         f.write('[JUNCTIONS]\n')
-        entry = '{name:20} {elev:12.6g} {dem:12.6g} {pat:24} {com:>3s}\n'
-        label = '{:20} {:>12s} {:>12s} {:24}\n'
-        f.write(label.format(';ID', 'Elevation', 'Demand', 'Pattern'))
+        f.write(_JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern'))
         for junction_name, junction in wn.nodes(Junction):
             E = {'name': junction_name,
                  'elev': HydParam.Elevation.from_si(inp_units, junction.elevation),
                  'dem': HydParam.Demand.from_si(inp_units, junction.base_demand),
+                 'pat': '',
                  'com': ';'}
-            if junction.demand_pattern_name is None:
-                E['pat'] = ''
-            else:
+            if junction.demand_pattern_name is not None:
                 E['pat'] = junction.demand_pattern_name
-            f.write(entry.format(**E))
+            f.write(_JUNC_ENTRY.format(**E))
         f.write('\n')
 
         # Print reservoir information
         f.write('[RESERVOIRS]\n')
-        entry = '{:20s} {:12f} {:>12s} {:>3s}\n'
-        label = '{:20s} {:>12s} {:>12s}\n'
-        f.write(label.format(';ID', 'Head', 'Pattern'))
+        f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern'))
         for reservoir_name, reservoir in wn.nodes(Reservoir):
-            if reservoir.head_pattern_name is not None:
-                f.write(entry.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), reservoir.head_pattern_name, ';'))
+            E = {'name': reservoir_name,
+                 'head': HydParam.HydraulicHead.from_si(inp_units, reservoir.base_head),
+                 'com': ';'}
+            if reservoir.head_pattern_name is None:
+                E['pat'] = ''
             else:
-                f.write(entry.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), '', ';'))
+                E['pat'] = reservoir.head_pattern_name
+            f.write(_RES_ENTRY.format(**E))
         f.write('\n')
 
         # Print tank information
         f.write('[TANKS]\n')
-        entry = '{:20s} {:12f} {:12f} {:12f} {:12f} {:12f} {:12f} {:20s} {:>3s}\n'
-        label = '{:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
-        f.write(label.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level', 'Diameter', 'Min Volume', 'Volume Curve'))
+        f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
+                                   'Diameter', 'Min Volume', 'Volume Curve'))
         for tank_name, tank in wn.nodes(Tank):
+            E = {'name': tank_name,
+                 'elev': HydParam.Elevation.from_si(inp_units, tank.elevation),
+                 'initlev': HydParam.HydraulicHead.from_si(inp_units, tank.init_level),
+                 'minlev': HydParam.HydraulicHead.from_si(inp_units, tank.min_level),
+                 'maxlev': HydParam.HydraulicHead.from_si(inp_units, tank.max_level),
+                 'diam': HydParam.TankDiameter.from_si(inp_units, tank.diameter),
+                 'minvol': HydParam.Volume.from_si(inp_units, tank.min_vol),
+                 'curve': '',
+                 'com': ';'}
             if tank.vol_curve is not None:
-                f.write(entry.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), tank.vol_curve, ';'))
-            else:
-                f.write(entry.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), '', ';'))
+                E['curve'] = tank.vol_curve
+            f.write(_TANK_ENTRY.format(**E))
         f.write('\n')
 
         # Print pipe information
         f.write('[PIPES]\n')
-        entry = '{:20s} {:20s} {:20s} {:12f} {:12f} {:12f} {:12f} {:>20s} {:>3s}\n'
-        label = '{:20s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
-        f.write(label.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status'))
+        f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
+                                   'Roughness', 'Minor Loss', 'Status'))
         for pipe_name, pipe in wn.links(Pipe):
+            E = {'name': pipe_name,
+                 'node1': pipe.start_node(),
+                 'node2': pipe.end_node(),
+                 'len': HydParam.Length.from_si(inp_units, pipe.length),
+                 'diam': HydParam.PipeDiameter.from_si(inp_units, pipe.diameter),
+                 'rough': pipe.roughness,
+                 'mloss': pipe.minor_loss,
+                 'status': LinkStatus.status_to_str(pipe.get_base_status()),
+                 'com': ';'}
             if pipe.cv:
-                f.write(entry.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, 'CV', ';'))
-            else:
-                f.write(entry.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';'))
+                E['status'] = 'CV'
+            f.write(_PIPE_ENTRY.format(**E))
         f.write('\n')
 
         # Print pump information
         f.write('[PUMPS]\n')
-        entry = '{:20s} {:20s} {:20s} {:8s} {:20s} {:>3s}\n'
-        label = '{:20s} {:20s} {:20s} {:20s}\n'
-        f.write(label.format(';ID', 'Node1', 'Node2', 'Parameters'))
+        f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Parameters'))
         for pump_name, pump in wn.links(Pump):
+            E = {'name': pump_name,
+                 'node1': pump.start_node(),
+                 'node2': pump.end_node(),
+                 'ptype': pump.info_type,
+                 'params': '',
+                 'com': ';'}
             if pump.info_type == 'HEAD':
-                f.write(entry.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, pump.curve.name, ';'))
+                E['params'] = pump.curve.name
             elif pump.info_type == 'POWER':
-                f.write(entry.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, str(pump.power/1000.0), ';'))
+                E['params'] = str(HydParam.Power.from_si(inp_units, pump.power))
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
+            f.write(_PUMP_ENTRY.format(**E))
         f.write('\n')
 
         # Print valve information
         f.write('[VALVES]\n')
-        entry = '{:20s} {:20s} {:20s} {:12f} {:4s} {:12f} {:12f} {:>3s}\n'
-        label = '{:20s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
-        f.write(label.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss'))
+        f.write(_VALVE_LABEL.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss'))
         for valve_name, valve in wn.links(Valve):
-            f.write(entry.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve._base_setting, valve.minor_loss, ';'))
+            E = {'name': valve_name,
+                 'node1': valve.start_node(),
+                 'node2': valve.end_node(),
+                 'diam': HydParam.PipeDiameter.from_si(inp_units, valve.diameter),
+                 'vtype': valve.valve_type,
+                 'set': valve._base_setting,
+                 'mloss': valve.minor_loss,
+                 'com': ';'}
+            f.write(_VALVE_ENTRY.format(**E))
         f.write('\n')
 
         # Print status information
         f.write('[STATUS]\n')
-        entry = '{:10s} {:10s}\n'
-        label = '{:10s} {:10s}\n'
-        f.write( label.format(';ID', 'Setting'))
+        f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting'))
         for link_name, link in wn.links(Pump):
             if link.get_base_status() == LinkStatus.closed:
-                f.write(entry.format(link_name, LinkStatus.status_to_str(link.get_base_status())))
+                f.write('{:10s} {:10s}\n'.format(link_name,
+                        LinkStatus.status_to_str(link.get_base_status())))
         for link_name, link in wn.links(Valve):
-            if link.get_base_status() == LinkStatus.closed or link.get_base_status()==LinkStatus.opened:
-                f.write(entry.format(link_name, LinkStatus.status_to_str(link.get_base_status())))
+            if link.get_base_status() == LinkStatus.closed or link.get_base_status() == LinkStatus.opened:
+                f.write('{:10s} {:10s}\n'.format(link_name,
+                        LinkStatus.status_to_str(link.get_base_status())))
         f.write('\n')
 
         # Print pattern information
         num_columns = 8
         f.write('[PATTERNS]\n')
-        label = '{:10s} {:10s}\n'
-        f.write(label.format(';ID', 'Multipliers'))
+        f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers'))
         for pattern_name, pattern in wn._patterns.iteritems():
             count = 0
             for i in pattern:
-                if count%8 == 0:
+                if count % num_columns == 0:
                     f.write('\n%s %f'%(pattern_name, i,))
                 else:
                     f.write(' %f'%(i,))
@@ -900,27 +939,25 @@ class EN2InpFile(object):
 
         # Print curves
         f.write('[CURVES]\n')
-        entry = '{:10s} {:10f} {:10f} {:>3s}\n'
-        label = '{:10s} {:10s} {:10s}\n'
-        f.write(label.format(';ID', 'X-Value', 'Y-Value'))
+        f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value'))
         for curve_name, curve in wn._curves.items():
             if curve.curve_type == 'VOLUME':
                 f.write(';VOLUME: {}\n'.format(curve_name))
                 for point in curve.points:
                     x = HydParam.Length.from_si(inp_units, point[0])
                     y = HydParam.Volume.from_si(inp_units, point[1])
-                    f.write( entry.format(curve_name, x, y, ';'))
+                    f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';'))
             elif curve.curve_type == 'HEAD':
                 f.write(';HEAD: {}\n'.format(curve_name))
                 for point in curve.points:
                     x = HydParam.Flow.from_si(inp_units, point[0])
                     y = HydParam.HydraulicHead.from_si(inp_units, point[1])
-                    f.write( entry.format(curve_name, x, y, ';'))
+                    f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';'))
             f.write('\n')
         for curve_name, curve in self.curves.items():
             if curve_name not in wn._curves.keys():
                 for point in curve:
-                    f.write(entry.format(curve_name, point[0], point[1], ';'))
+                    f.write(_CURVE_ENTRY.format(name=curve_name, x=point[0], y=point[1], com=';'))
                 f.write('\n')
         f.write('\n')
 
@@ -948,7 +985,7 @@ class EN2InpFile(object):
         f.write('[OPTIONS]\n')
         entry_string = '{:20s} {:20s}\n'
         entry_float = '{:20s} {:g}\n'
-        f.write(entry_string.format('UNITS', 'LPS'))
+        f.write(entry_string.format('UNITS', inp_units.name))
         f.write(entry_string.format('HEADLOSS', wn.options.headloss))
         if wn.options.hydraulics_option is not None:
             f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulics_option, wn.options.hydraulics_filename))
@@ -978,7 +1015,7 @@ class EN2InpFile(object):
 
         # Reaction Options
         f.write( '[REACTIONS]\n')
-        entry_float = '{:15s}{:15s}{:<10.8f}\n'
+        entry_float = ' {:s} {:s} {:<10.8f}\n'
         f.write(entry_float.format('ORDER','BULK',wn.options.bulk_rxn_order))
         f.write(entry_float.format('ORDER','WALL',wn.options.wall_rxn_order))
         f.write(entry_float.format('ORDER','TANK',wn.options.tank_rxn_order))
@@ -1065,9 +1102,10 @@ class EN2InpFile(object):
 
         for section in unmodified:
             if len(self.sections[section]) > 0:
-                f.write('{}\n'.format(section))
+                logger.debug('Writting data from original epanet file: %s', section)
+                f.write('{0}\n'.format(section))
                 for lnum, line in self.sections[section]:
-                    f.write('{}\n'.format(line))
+                    f.write('{0}\n'.format(line))
                 f.write('\n')
 
         f.write('[END]\n')
