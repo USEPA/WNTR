@@ -1,5 +1,6 @@
-from wntr.utils import convert
+from wntr.utils.units import convert
 import wntr.network
+from wntr.network import WaterNetworkModel
 
 import warnings
 import re
@@ -10,10 +11,19 @@ import numpy as np
 
 logger = logging.getLogger('wntr.network.ParseWaterNetwork')
 
+_INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
+                 '[TANKS]', '[PIPES]', '[PUMPS]', '[VALVES]', '[EMITTERS]',
+                 '[CURVES]', '[PATTERNS]', '[ENERGY]', '[STATUS]',
+                 '[CONTROLS]', '[RULES]', '[DEMANDS]', '[QUALITY]',
+                 '[REACTIONS]', '[SOURCES]', '[MIXING]',
+                 '[TIMES]', '[REPORT]', '[COORDINATES]', '[VERTICES]',
+                 '[LABELS]', '[BACKDROP]', '[TAGS]']
+
+
 def is_number(s):
     """
     Checks if imput is a number
-    
+
     Parameters
     ----------
     s : anything
@@ -126,13 +136,20 @@ class ParseWaterNetwork(object):
         self._curves = {}
         self._time_controls = {}
         self._conditional_controls = {}
-        self._link_status = {} # Map from link name to the initial status
+        self._link_status = {}  # Map from link name to the initial status
+        self._top_comments = []
+        self._sections = {}
+        self._mass_units = None
+        self._flow_units = None
+        for sec in _INP_SECTIONS:
+            self._sections[sec] = []
+
 
     def read_inp_file(self, wn, inp_file_name):
         """
         Method to read EPANET INP file and load data into a
         water network object.
-        
+
         Parameters
         ----------
         wn : WaterNetwork object
@@ -336,23 +353,23 @@ class ParseWaterNetwork(object):
                 if float(current[6]) != 0:
                     logger.warning('Currently, only the EpanetSimulator supports non-zero minor losses in pipes.')
                 if current[7].upper() == 'CV':
-                    wn.add_pipe(current[0], 
-                                current[1], 
-                                current[2], 
+                    wn.add_pipe(current[0],
+                                current[1],
+                                current[2],
                                 convert('Length', inp_units, float(current[3])),
                                 convert('Pipe Diameter', inp_units, float(current[4])),
-                                float(current[5]), 
-                                float(current[6]), 
-                                'OPEN', 
+                                float(current[5]),
+                                float(current[6]),
+                                'OPEN',
                                 True)
                 else:
-                    wn.add_pipe(current[0], 
-                                current[1], 
-                                current[2], 
+                    wn.add_pipe(current[0],
+                                current[1],
+                                current[2],
                                 convert('Length', inp_units, float(current[3])),
                                 convert('Pipe Diameter', inp_units, float(current[4])),
-                                float(current[5]), 
-                                float(current[6]), 
+                                float(current[5]),
+                                float(current[6]),
                                 current[7].upper())
 
         f.close()
@@ -534,10 +551,10 @@ class ParseWaterNetwork(object):
 
         if wn.options.report_timestep != wn.options.hydraulic_timestep:
             logger.warning('Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.')
-            
+
         if wn.options.start_clocktime != 0.0:
             logger.warning('Currently, only the EpanetSimulator supports a start clocktime other than 12 am.')
-                        
+
         if wn.options.statistic != 'NONE':
             logger.warning('Currently, only the EpanetSimulator supports the STATISTIC option in the inp file.')
 

@@ -1,3 +1,5 @@
 /.project
 *.pyc
 _build/
+
+*.swp
