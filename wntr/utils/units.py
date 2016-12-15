@@ -310,7 +310,7 @@ class HydParam(Enum):
     liters or cubic meters.
 
     """
-    Demand = 1
+    Demand = 1 #: Demand
     Flow = 2
     EmitterCoeff = 3
     PipeDiameter = 4
