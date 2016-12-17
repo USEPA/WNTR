@@ -11,6 +11,7 @@ Subpackages
 
 .. toctree::
 
+    wntr.epanet
     wntr.metrics
     wntr.network
     wntr.pyepanet

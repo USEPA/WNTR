@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 12 10:00:59 2016
-
-@author: dbhart
+Provides classes for reading/writing EPANET input and output files.
 """
-from wntr.utils.units import FlowUnits, MassUnits, QualParam, HydParam
 import wntr.network
-from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve, LinkStatus
+from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
 import wntr
+
+from .util import FlowUnits, MassUnits, HydParam, QualParam
+from .util import _LinkStatus as LinkStatus
 
 import datetime
 import networkx as nx
@@ -25,34 +25,38 @@ _INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
                  '[TIMES]', '[REPORT]', '[COORDINATES]', '[VERTICES]',
                  '[LABELS]', '[BACKDROP]', '[TAGS]']
 
-_JUNC_ENTRY = ' {name:20} {elev:12f} {dem:12f} {pat:24} {com:>3s}\n'
+_JUNC_ENTRY = ' {name:20} {elev:12.6g} {dem:12.6g} {pat:24} {com:>3s}\n'
 _JUNC_LABEL = '{:21} {:>12s} {:>12s} {:24}\n'
 
-_RES_ENTRY = ' {name:20s} {head:12f} {pat:>24s} {com:>3s}\n'
+_RES_ENTRY = ' {name:20s} {head:12.6g} {pat:>24s} {com:>3s}\n'
 _RES_LABEL = '{:21s} {:>12s} {:>24s}\n'
 
-_TANK_ENTRY = ' {name:20s} {elev:12f} {initlev:12f} {minlev:12f} {maxlev:12f} {diam:12f} {minvol:12f} {curve:20s} {com:>3s}\n'
+_TANK_ENTRY = ' {name:20s} {elev:12.6g} {initlev:12.6g} {minlev:12.6g} {maxlev:12.6g} {diam:12.6g} {minvol:12.6g} {curve:20s} {com:>3s}\n'
 _TANK_LABEL = '{:21s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
 
-_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:12f} {diam:12f} {rough:12f} {mloss:12f} {status:>20s} {com:>3s}\n'
+_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:12.6g} {diam:12.6g} {rough:12.6g} {mloss:12.6g} {status:>20s} {com:>3s}\n'
 _PIPE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
 
 _PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:>3s}\n'
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
-_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:12f} {vtype:4s} {set:12f} {mloss:12f} {com:>3s}\n'
+_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:12.6g} {vtype:4s} {set:12.6g} {mloss:12.6g} {com:>3s}\n'
 _VALVE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
 
-_CURVE_ENTRY = '{name:10s} {x:12f} {y:12f} {com:>3s}\n'
-_CURVE_LABEL = '{:10s} {:12s} {:12s}\n'
+_CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
+_CURVE_LABEL = '{:11s} {:12s} {:12s}\n'
 
-def is_number(s):
+
+
+def _is_number(s):
     """
     Checks if imput is a number
+
 
     Parameters
     ----------
     s : anything
+
     """
 
     try:
@@ -62,14 +66,16 @@ def is_number(s):
         return False
 
 
-def str_time_to_sec(s):
+def _str_time_to_sec(s):
     """
     Converts epanet time format to seconds.
+
 
     Parameters
     ----------
     s : string
         EPANET time string. Options are 'HH:MM:SS', 'HH:MM', 'HH'
+
 
     Returns
     -------
@@ -97,9 +103,10 @@ def str_time_to_sec(s):
                                    "INP file not recognized. ")
 
 
-def clock_time_to_sec(s, am_pm):
+def _clock_time_to_sec(s, am_pm):
     """
     Converts epanet clocktime format to seconds.
+
 
     Parameters
     ----------
@@ -109,9 +116,11 @@ def clock_time_to_sec(s, am_pm):
     am : string
         options are AM or PM
 
+
     Returns
     -------
     Integer value of time in seconds
+
     """
     if am_pm.upper() == 'AM':
         am = True
@@ -157,7 +166,53 @@ def clock_time_to_sec(s, am_pm):
                                    "INP file not recognized. ")
 
 
-class EN2InpFile(object):
+def _sec_to_string(sec):
+    hours = int(sec/3600.)
+    sec -= hours*3600
+    mm = int(sec/60.)
+    sec -= mm*60
+    return (hours, mm, int(sec))
+
+
+
+class InpFile(object):
+    """An EPANET input (.inp) file reader and writer.
+
+    EPANET has two possible formats for its input files. The first, a NET file, is binary
+    formatted, and cannot be used from the command line. The second, the INP file,
+    is text formatted and easily human (and machine) readable. This class provides read
+    and write functionality for INP files within WNTR.
+
+    There are numerous sections of the INP file that are not used by WNTR. For example,
+    WNTR does not perform energy calculations. Sections that are not used by WNTR are
+    stored within this object as unmodified text strings. In order to ensure that a new
+    INP file has all options that were read in, the user must use the same object for both
+    reading and writing an INP file; if, of course, the INP file was used to create the
+    network in the first place. If a new object is used solely to provide a writer for INP files,
+    the INP file created will still be a valid EPANET input file, but will not have any sections
+    that are not used by WNTR.
+
+    The sections that are currently not modified by WNTR are
+
+    * *ENERGY*
+    * *RULES*
+    * *DEMANDS*
+    * *QUALITY*
+    * *EMITTERS*
+    * *SOURCES*
+    * *MIXING*
+    * *VERTICES*
+    * *LABELS*
+    * *BACKDROP*
+    * *TAGS*
+
+    In addition to storing these lines, the top-of-file comments are stored, and the original
+    flow units and mass units are stored for easy conversion back to the same units that were
+    read in. The output EPANET units can be changed during the ``write`` function call.
+
+    The EPANET Users Manual provides full documentation for the INP file format in its Appendix C.
+
+    """
     def __init__(self):
         self.sections = {}
         for sec in _INP_SECTIONS:
@@ -167,10 +222,22 @@ class EN2InpFile(object):
         self.top_comments = []
         self.curves = {}
 
-    def parse(self, filename, wn=None):
-        """Method to read EPANET INP file and load data into a water network object."""
-        if wn is None:
-            wn = WaterNetworkModel()
+    def read(self, filename):
+        """Method to read EPANET INP file and load data into a water network object.
+
+        Parameters
+        ----------
+        filename : str
+            An EPANET INP input file.
+
+
+        Returns
+        -------
+        :class:`wntr.network.WaterNetworkModel.WaterNetworkModel`
+            A WNTR network model object
+
+        """
+        wn = WaterNetworkModel()
         wn.name = filename
         opts = wn.options
 
@@ -554,19 +621,19 @@ class EN2InpFile(object):
             if current == []:
                 continue
             if (current[0].upper() == 'DURATION'):
-                opts.duration = str_time_to_sec(current[1])
+                opts.duration = _str_time_to_sec(current[1])
             elif (current[0].upper() == 'HYDRAULIC'):
-                opts.hydraulic_timestep = str_time_to_sec(current[2])
+                opts.hydraulic_timestep = _str_time_to_sec(current[2])
             elif (current[0].upper() == 'QUALITY'):
-                opts.quality_timestep = str_time_to_sec(current[2])
+                opts.quality_timestep = _str_time_to_sec(current[2])
             elif (current[1].upper() == 'CLOCKTIME'):
                 [time, time_format] = [current[2], current[3].upper()]
-                opts.start_clocktime = clock_time_to_sec(time, time_format)
+                opts.start_clocktime = _clock_time_to_sec(time, time_format)
             elif (current[0].upper() == 'STATISTIC'):
                 opts.statistic = current[1].upper()
             else:  # Other time options
                 key_string = current[0] + '_' + current[1]
-                setattr(opts, key_string.lower(), str_time_to_sec(current[2]))
+                setattr(opts, key_string.lower(), _str_time_to_sec(current[2]))
 
         if opts.pattern_start != 0.0:
             logger.warning('Currently, only the EpanetSimulator supports a non-zero patern start time.')
@@ -595,7 +662,7 @@ class EN2InpFile(object):
             if (current[1].upper() == 'OPEN' or
                     current[1].upper() == 'CLOSED' or
                     current[1].upper() == 'ACTIVE'):
-                new_status = wntr.network.LinkStatus.str_to_status(current[1])
+                new_status = LinkStatus[current[1].lower()].value
                 link.status = new_status
                 link._base_status = new_status
             else:
@@ -607,8 +674,7 @@ class EN2InpFile(object):
                         logger.warning('Currently, valves of type ' + link.valve_type + ' are only supported in the EpanetSimulator.')
                         continue
                     else:
-                        setting = HydParam.Pressure.to_si(inp_units,
-                                                          float(current[2]))
+                        setting = HydParam.Pressure.to_si(inp_units, float(current[2]))
                         link.setting = setting
                         link._base_setting = setting
 
@@ -628,7 +694,7 @@ class EN2InpFile(object):
             # print (link_name in wn._links.keys())
             link = wn.get_link(link_name)
             if type(current[2]) == str:
-                status = wntr.network.LinkStatus.str_to_status(current[2])
+                status = LinkStatus[current[2].lower()].value
                 action_obj = wntr.network.ControlAction(link, 'status', status)
             elif type(current[2]) == float or type(current[2]) == int:
                 if isinstance(link, wntr.network.Pump):
@@ -675,7 +741,7 @@ class EN2InpFile(object):
                     logger.warning('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
                 if len(current) == 6:  # at time
                     if ':' in current[5]:
-                        fire_time = str_time_to_sec(current[5])
+                        fire_time = _str_time_to_sec(current[5])
                     else:
                         fire_time = int(float(current[5])*3600)
                     control_obj = wntr.network.TimeControl(wn, fire_time, 'SIM_TIME', False, action_obj)
@@ -684,7 +750,7 @@ class EN2InpFile(object):
                         control_name = control_name + current[i]
                     control_name = control_name + str(fire_time)
                 elif len(current) == 7:  # at clocktime
-                    fire_time = clock_time_to_sec(current[5], current[6])
+                    fire_time = _clock_time_to_sec(current[5], current[6])
                     control_obj = wntr.network.TimeControl(wn, fire_time, 'SHIFTED_TIME', True, action_obj)
             wn.add_control(control_name, control_obj)
 
@@ -780,15 +846,14 @@ class EN2InpFile(object):
         wn._en2data = self
         return wn
 
-    def dump(self, filename, wn, units='GPM'):
+    def write(self, filename, wn, units='GPM'):
         """Write the current network into an EPANET inp file.
+
         Parameters
         ----------
-        filename : string
+        filename : str
             Name of the inp file. example - Net3_adjusted_demands.inp
-        wn : WaterNetworkModel
-            The water network model to dump
-        units : string
+        units : str
             Name of the units being written to the inp file
 
         """
@@ -868,7 +933,7 @@ class EN2InpFile(object):
                  'diam': HydParam.PipeDiameter.from_si(inp_units, pipe.diameter),
                  'rough': pipe.roughness,
                  'mloss': pipe.minor_loss,
-                 'status': LinkStatus.status_to_str(pipe.get_base_status()),
+                 'status': LinkStatus(pipe.get_base_status()).name,
                  'com': ';'}
             if pipe.cv:
                 E['status'] = 'CV'
@@ -913,13 +978,13 @@ class EN2InpFile(object):
         f.write('[STATUS]\n')
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting'))
         for link_name, link in wn.links(Pump):
-            if link.get_base_status() == LinkStatus.closed:
+            if link.get_base_status() == LinkStatus.closed.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus.status_to_str(link.get_base_status())))
+                        LinkStatus(link.get_base_status()).name))
         for link_name, link in wn.links(Valve):
-            if link.get_base_status() == LinkStatus.closed or link.get_base_status() == LinkStatus.opened:
+            if link.get_base_status() == LinkStatus.closed.value or link.get_base_status() == LinkStatus.opened.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus.status_to_str(link.get_base_status())))
+                        LinkStatus(link.get_base_status()).name))
         f.write('\n')
 
         # Print pattern information
@@ -966,9 +1031,36 @@ class EN2InpFile(object):
         # Time controls and conditional controls only
         for text, all_control in wn._control_dict.items():
             if isinstance(all_control,wntr.network.TimeControl):
-                f.write('%s\n'%all_control.to_inp_string())
+                entry = 'Link {link} {setting} AT {compare} {time}\n'
+                vals = {'link': all_control._control_action._target_obj_ref.name(),
+                        'setting': 'open',
+                        'compare': 'TIME',
+                        'time': all_control._fire_time / 3600.0}
+                if all_control._control_action._attribute.lower() == 'status':
+                    vals['setting'] = LinkStatus(all_control._control_action._value).name
+                else:
+                    vals['setting'] = str(float(all_control._control_action._value))
+                if all_control._daily_flag:
+                    vals['compare'] = 'CLOCKTIME'
+                f.write(entry.format(**vals))
             elif isinstance(all_control,wntr.network.ConditionalControl):
-                f.write('%s\n'%all_control.to_inp_string(flowunit))
+                entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
+                vals = {'link': all_control._control_action._target_obj_ref.name(),
+                        'setting': 'open',
+                        'node': all_control._source_obj.name(),
+                        'compare': 'above',
+                        'thresh': 0.0}
+                if all_control._control_action._attribute.lower() == 'status':
+                    vals['setting'] = LinkStatus(all_control._control_action._value).name
+                else:
+                    vals['setting'] = str(float(all_control._control_action._value))
+                if all_control._operation is np.less:
+                    vals['compare'] = 'below'
+                threshold = all_control._threshold - all_control._source_obj.elevation
+                vals['thresh'] = HydParam.HydraulicHead.from_si(inp_units, threshold)
+                f.write(entry.format(**vals))
+            else:
+                raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
         f.write('\n')
 
         # Report
@@ -1015,10 +1107,11 @@ class EN2InpFile(object):
 
         # Reaction Options
         f.write( '[REACTIONS]\n')
-        entry_float = ' {:s} {:s} {:<10.8f}\n'
-        f.write(entry_float.format('ORDER','BULK',wn.options.bulk_rxn_order))
-        f.write(entry_float.format('ORDER','WALL',wn.options.wall_rxn_order))
-        f.write(entry_float.format('ORDER','TANK',wn.options.tank_rxn_order))
+        entry_int = ' {:s} {:s} {:d}\n'
+        entry_float = ' {:s} {:s} {:<10.4f}\n'
+        f.write(entry_int.format('ORDER', 'BULK', int(wn.options.bulk_rxn_order)))
+        f.write(entry_int.format('ORDER', 'WALL', int(wn.options.wall_rxn_order)))
+        f.write(entry_int.format('ORDER', 'TANK', int(wn.options.tank_rxn_order)))
         f.write(entry_float.format('GLOBAL','BULK',
                                    QualParam.BulkReactionCoeff.from_si(inp_units,
                                                                        wn.options.bulk_rxn_coeff,
@@ -1058,38 +1151,38 @@ class EN2InpFile(object):
         # Time options
         f.write('[TIMES]\n')
         entry = '{:20s} {:10s}\n'
-        time_entry = '{:20s} {:d}:{:d}:{:d}\n'
-        hrs, mm, sec = wn._sec_to_string(wn.options.duration)
+        time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
+        hrs, mm, sec = _sec_to_string(wn.options.duration)
         f.write(time_entry.format('DURATION', hrs, mm, sec))
-        hrs, mm, sec = wn._sec_to_string(wn.options.hydraulic_timestep)
+        hrs, mm, sec = _sec_to_string(wn.options.hydraulic_timestep)
         f.write(time_entry.format('HYDRAULIC TIMESTEP', hrs, mm, sec))
-        hrs, mm, sec = wn._sec_to_string(wn.options.pattern_timestep)
+        hrs, mm, sec = _sec_to_string(wn.options.pattern_timestep)
         f.write(time_entry.format('PATTERN TIMESTEP', hrs, mm, sec))
-        hrs, mm, sec = wn._sec_to_string(wn.options.pattern_start)
+        hrs, mm, sec = _sec_to_string(wn.options.pattern_start)
         f.write(time_entry.format('PATTERN START', hrs, mm, sec))
-        hrs, mm, sec = wn._sec_to_string(wn.options.report_timestep)
+        hrs, mm, sec = _sec_to_string(wn.options.report_timestep)
         f.write(time_entry.format('REPORT TIMESTEP', hrs, mm, sec))
-        hrs, mm, sec = wn._sec_to_string(wn.options.report_start)
+        hrs, mm, sec = _sec_to_string(wn.options.report_start)
         f.write(time_entry.format('REPORT START', hrs, mm, sec))
 
-        hrs, mm, sec = wn._sec_to_string(wn.options.start_clocktime)
+        hrs, mm, sec = _sec_to_string(wn.options.start_clocktime)
         if hrs < 12:
             time_format = ' AM'
         else:
             hrs -= 12
             time_format = ' PM'
-        f.write('{:20s} {:d}:{:d}:{:d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format))
+        f.write('{:20s} {:02d}:{:02d}:{:02d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format))
 
-        hrs, mm, sec = wn._sec_to_string(wn.options.quality_timestep)
+        hrs, mm, sec = _sec_to_string(wn.options.quality_timestep)
         f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec))
-        hrs, mm, sec = wn._sec_to_string(wn.options.rule_timestep)
+        hrs, mm, sec = _sec_to_string(wn.options.rule_timestep)
         f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)))
         f.write(entry.format('STATISTIC', wn.options.statistic))
         f.write('\n')
 
         # Coordinates
         f.write('[COORDINATES]\n')
-        entry = '{:10s} {:<10.2f} {:<10.2f}\n'
+        entry = '{:10s} {:10g} {:10g}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'X-Coord', 'Y-Coord'))
         coord = nx.get_node_attributes(wn._graph, 'pos')
@@ -1111,11 +1204,18 @@ class EN2InpFile(object):
         f.write('[END]\n')
         f.close()
 
-    def _sec_to_string(self, sec):
-        hours = int(sec/3600.)
-        sec -= hours*3600
-        mm = int(sec/60.)
-        sec -= mm*60
-        return (hours, mm, int(sec))
 
+class HydFile(object):
+    """An EPANET hydraulics file (binary) reader/writer."""
+    pass
+
+
+class BinFile(object):
+    """An EPANET ressults file (binray) reader."""
+    pass
+
+
+class RptFile(object):
+    """An EPANET report file (text) reader."""
+    pass
 

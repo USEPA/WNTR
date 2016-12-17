@@ -2199,16 +2199,6 @@ class Junction(Node):
             return True
         return False
 
-    def to_inp_string(self, flowunit):
-        text_format = '{:20} {:12f} {:12f} {:24} {:>3s}'
-        if self.base_demand == 0.0:
-            return '{:20} {:12f} {:12s} {:24} {:>3s}'.format(self._name, convert('Elevation',flowunit,self.elevation,False), '0.0', '', ';')
-        elif self.demand_pattern_name is not None:
-            return text_format.format(self._name, convert('Elevation',flowunit,self.elevation,MKS=False), convert('Demand',flowunit,self.base_demand,False), self.demand_pattern_name, ';')
-        else:
-            return text_format.format(self._name, convert('Elevation',flowunit,self.elevation,False), convert('Demand',flowunit,self.base_demand,False), '', ';')
-
-
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """Method to add a leak to a junction. Leaks are modeled by:
 
