@@ -3,3 +3,9 @@
 _build/
 
 *.swp
+
+wntr/tests/tmp.rpt
+
+wntr/tests/tmp.inp
+
+wntr.egg-info/
