@@ -9,3 +9,6 @@ wntr/tests/tmp.rpt
 wntr/tests/tmp.inp
 
 wntr.egg-info/
+tmp.rpt
+
+tmp.inp
