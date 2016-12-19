@@ -481,6 +481,8 @@ class TestInpFileWriter(unittest.TestCase):
             control2 = self.wn2._control_dict[name1]
             self.assertEqual(control1==control2, True)
 
+
+
 class TestNet3InpWriterResults(unittest.TestCase):
 
     @classmethod
@@ -495,7 +497,7 @@ class TestNet3InpWriterResults(unittest.TestCase):
         sim = self.wntr.epanet.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
 
-        self.wn.write_inpfile('tmp.inp', units='LPS')
+        self.wn.write_inpfile('tmp.inp')
         self.wn2 = self.wntr.network.WaterNetworkModel('tmp.inp')
 
         sim = self.wntr.epanet.EpanetSimulator(self.wn2)
@@ -529,6 +531,36 @@ class TestNet3InpWriterResults(unittest.TestCase):
         for node_name, node in self.wn.nodes():
             for t in self.results2.node.major_axis:
                 self.assertLessEqual(abs(self.results2.node.at['pressure',t,node_name] - self.results.node.at['pressure',t,node_name]), 0.05)
+
+
+class TestNet3InpUnitsResults(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        sys.path.append(resilienceMainDir)
+        import wntr
+        self.wntr = wntr
+
+        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
+        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+
+        sim = self.wntr.epanet.EpanetSimulator(self.wn)
+        self.results = sim.run_sim()
+
+        self.wn.write_inpfile('tmp_units.inp', units='CMH')
+        self.wn2 = self.wntr.network.WaterNetworkModel('tmp_units.inp')
+
+        sim = self.wntr.epanet.EpanetSimulator(self.wn2)
+        self.results2 = sim.run_sim()
+
+    @classmethod
+    def tearDownClass(self):
+        sys.path.remove(resilienceMainDir)
+
+    def test_link_flowrate_units_convert(self):
+        for link_name, link in self.wn.links():
+            for t in self.results2.link.major_axis:
+                self.assertLessEqual(abs(self.results2.link.at['flowrate',t,link_name] - self.results.link.at['flowrate',t,link_name]), 0.00001)
 
 
 if __name__ == '__main__':

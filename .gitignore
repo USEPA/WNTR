@@ -12,3 +12,5 @@ wntr.egg-info/
 tmp.rpt
 
 tmp.inp
+
+wntr/tests/tmp_units.inp
