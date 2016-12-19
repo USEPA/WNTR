@@ -5,8 +5,8 @@ import sys
 # __file__ fails if someone does os.chdir() before
 # sys.argv[0] also fails because it doesn't not always contains the path
 import os, inspect
-resilienceMainDir = os.path.abspath( 
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
+resilienceMainDir = os.path.abspath(
+    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile(
         inspect.currentframe() ) ) ), '..', '..' ))
 import copy
 import numpy as np
@@ -21,9 +21,7 @@ class TestNetworkCreation(unittest.TestCase):
         self.wntr = wntr
 
         inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
-        self.wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        parser.read_inp_file(self.wn, inp_file)
+        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
 
     @classmethod
     def tearDownClass(self):
@@ -173,11 +171,11 @@ class TestNetworkMethods(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         wn.remove_node('TANK-3326')
-        
+
         self.assertNotIn('TANK-3326',wn._nodes.keys())
         self.assertNotIn('TANK-3326',wn._graph.nodes())
 
-        
+
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
@@ -187,14 +185,14 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_control('tank_control', control)
 
         controls_1 = copy.deepcopy(wn._control_dict)
-        
+
         wn.remove_node('tank1')
 
         controls_2 = copy.deepcopy(wn._control_dict)
 
         self.assertEqual(True, 'tank_control' in controls_1.keys())
         self.assertEqual(False, 'tank_control' in controls_2.keys())
-        
+
         self.assertNotIn('tank1',wn._nodes.keys())
         self.assertNotIn('tank1',wn._graph.nodes())
         node_list = ['junction1','res1']
@@ -206,14 +204,14 @@ class TestNetworkMethods(unittest.TestCase):
     def test_remove_controls_for_removing_link(self):
         inp_file = resilienceMainDir+'/examples/networks/Net1.inp'
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        
+
         control_action = self.wntr.network.ControlAction(wn.get_link('21'), 'status', self.wntr.network.LinkStatus.opened)
         control = self.wntr.network.ConditionalControl((wn.get_node('2'),'head'), np.greater, 10.0, control_action)
         wn.add_control('control_1',control)
-        
+
         import copy
         controls_1 = copy.deepcopy(wn._control_dict)
-        
+
         wn.remove_link('21')
 
         controls_2 = copy.deepcopy(wn._control_dict)
@@ -423,9 +421,9 @@ class TestInpFileWriter(unittest.TestCase):
         import wntr
         self.wntr = wntr
         inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
-        self.wn = wntr.network.WaterNetworkModel(inp_file)
+        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.write_inpfile('tmp.inp')
-        self.wn2 = wntr.network.WaterNetworkModel('tmp.inp')
+        self.wn2 = self.wntr.network.WaterNetworkModel(inp_file)
 
     @classmethod
     def tearDownClass(self):
@@ -493,14 +491,14 @@ class TestNet3InpWriterResults(unittest.TestCase):
 
         inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
-        
-        sim = self.wntr.sim.EpanetSimulator(self.wn)
+
+        sim = self.wntr.epanet.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
-        
-        self.wn.write_inpfile('tmp.inp')
+
+        self.wn.write_inpfile('tmp.inp', units='LPS')
         self.wn2 = self.wntr.network.WaterNetworkModel('tmp.inp')
 
-        sim = self.wntr.sim.EpanetSimulator(self.wn2)
+        sim = self.wntr.epanet.EpanetSimulator(self.wn2)
         self.results2 = sim.run_sim()
 
     @classmethod

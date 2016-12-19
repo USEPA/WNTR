@@ -1,0 +1,86 @@
+[TITLE]
+
+[JUNCTIONS]
+;ID                      Elevation       Demand Pattern                 
+ node1                     328.084      158.503 pat1                       ;
+ node2                     164.042      317.006 pat2                       ;
+
+[RESERVOIRS]
+;ID                           Head                  Pattern
+ res                       410.105                     pat1   ;
+
+[TANKS]
+;ID                      Elevation   Init Level    Min Level    Max Level     Diameter   Min Volume Volume Curve        
+
+[PIPES]
+;ID                   Node1                Node2                      Length     Diameter    Roughness   Minor Loss               Status
+ pipe1                node1                node2                        1000           12          100            0                 Open   ;
+ pipe2                node1                res                       328.084           12          100            0                 Open   ;
+
+[PUMPS]
+;ID                   Node1                Node2                Parameters          
+
+[VALVES]
+;ID                   Node1                Node2                    Diameter Type      Setting   Minor Loss
+
+[STATUS]
+;ID        Setting   
+
+[PATTERNS]
+;ID        Multipliers
+
+pat1 1.000000
+
+pat2 1.000000 2.000000 3.000000 4.000000 5.000000 6.000000 7.000000 8.000000
+pat2 9.000000 10.000000
+
+[CURVES]
+;ID         X-Value      Y-Value     
+
+[CONTROLS]
+
+[REPORT]
+Status Yes
+Summary yes
+
+[OPTIONS]
+UNITS                GPM                 
+HEADLOSS             H-W                 
+QUALITY              NONE                
+VISCOSITY            1
+DIFFUSIVITY          1
+SPECIFIC GRAVITY     1
+TRIALS               40
+ACCURACY             0.001
+CHECKFREQ            2
+UNBALANCED           STOP                
+DEMAND MULTIPLIER    1
+EMITTER EXPONENT     0.5
+TOLERANCE            0.01
+
+[REACTIONS]
+ ORDER BULK 1
+ ORDER WALL 1
+ ORDER TANK 1
+ GLOBAL BULK 0.0000    
+ GLOBAL WALL 0.0000    
+
+[TIMES]
+DURATION             24:00:00
+HYDRAULIC TIMESTEP   00:15:00
+PATTERN TIMESTEP     01:00:00
+PATTERN START        00:00:00
+REPORT TIMESTEP      01:00:00
+REPORT START         00:00:00
+START CLOCKTIME      00:00:00 AM
+QUALITY TIMESTEP     00:06:00
+RULE TIMESTEP        00:06:00
+STATISTIC            NONE      
+
+[COORDINATES]
+;Node      X-Coord    Y-Coord   
+node1               1          2
+res                 0          2
+node2               1          3
+
+[END]

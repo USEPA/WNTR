@@ -7,8 +7,8 @@ from nose import SkipTest
 # __file__ fails if someone does os.chdir() before
 # sys.argv[0] also fails because it doesn't not always contains the path
 import os, inspect
-resilienceMainDir = os.path.abspath( 
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
+resilienceMainDir = os.path.abspath(
+    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile(
         inspect.currentframe() ) ) ), '..', '..' ))
 
 
@@ -21,12 +21,13 @@ class TestTimeControls(unittest.TestCase):
         self.wntr = wntr
 
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/time_controls.inp'
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.report_timestep = 'all'
         for jname, j in self.wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        
+
         sim = self.wntr.sim.WNTRSimulator(self.wn, pressure_driven=True)
         self.results = sim.run_sim()
 
@@ -60,12 +61,13 @@ class TestConditionalControls(unittest.TestCase):
 
     def test_close_link_by_tank_level(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_1.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         wn.options.report_timestep = 'all'
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        
+
         sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven=True)
         results = sim.run_sim()
 
@@ -88,12 +90,13 @@ class TestConditionalControls(unittest.TestCase):
 
     def test_open_link_by_tank_level(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_2.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         wn.options.report_timestep = 'all'
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        
+
         sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
         results = sim.run_sim()
 
@@ -128,7 +131,8 @@ class TestTankControls(unittest.TestCase):
 
     def test_pipe_closed_for_low_level(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_1.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
@@ -168,7 +172,7 @@ class TestTankControls(unittest.TestCase):
         """
         raise SkipTest
         self.assertEqual(True, False)
-        
+
 class TestValveControls(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -182,7 +186,8 @@ class TestValveControls(unittest.TestCase):
 
     def test_check_valve_closed(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/cv_controls.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
@@ -194,7 +199,8 @@ class TestValveControls(unittest.TestCase):
 
     def test_check_valve_opened(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/cv_controls.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         tank1 = wn.get_node('tank1')
         tank2 = wn.get_node('tank2')
         tank1_init_level = tank1.init_level
@@ -234,7 +240,8 @@ class TestControlCombinations(unittest.TestCase):
 
     def test_open_by_time_close_by_condition(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
         control = self.wntr.network.TimeControl(wn, 6*3600, 'SIM_TIME', False, control_action)
         wn.add_control('open_time_6',control)
@@ -262,7 +269,8 @@ class TestControlCombinations(unittest.TestCase):
 
     def test_close_by_condition_open_by_time_stay(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         tank1 = wn.get_node('tank1')
         tank1.init_level = 40.0
         tank1.head = tank1.elevation + 40.0
@@ -295,7 +303,8 @@ class TestControlCombinations(unittest.TestCase):
 
     def test_close_by_condition_open_by_time_reclose(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/control_comb.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         tank1 = wn.get_node('tank1')
         tank1.init_level = 40.0
         tank1.head = tank1.elevation + 40.0

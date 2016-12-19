@@ -8,7 +8,7 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 wntr.network.draw_graph(wn, title=wn.name)
 
 # Simulate hydraulics
-sim = wntr.sim.EpanetSimulator(wn)
+sim = wntr.epanet.EpanetSimulator(wn)
 results = sim.run_sim()
 
 # Plot results on the network

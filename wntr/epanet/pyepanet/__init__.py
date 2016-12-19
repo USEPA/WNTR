@@ -1,18 +1,18 @@
 """
 Python extensions for the EPANET Programmers Toolkit DLLs
 
-Copyright 2011 Sandia Corporation Under the terms of Contract 
-DE-AC04-94AL85000 there is a non-exclusive license for use of this 
+Copyright 2011 Sandia Corporation Under the terms of Contract
+DE-AC04-94AL85000 there is a non-exclusive license for use of this
 work by or on behalf of the U.S. Government. Export of this program
 may require a license from the United States Government.
 
-This software is licensed under the BSD license. 
+This software is licensed under the BSD license.
 
-The PyEPANET module provides a wrapper around the EPANET programmer's 
-tookit. The EN_XXX constants are defined in pyepanet.toolkit, but are 
+The PyEPANET module provides a wrapper around the EPANET programmer's
+tookit. The EN_XXX constants are defined in pyepanet.toolkit, but are
 imported by default as members of pyepanet. The ENepanet class is defined
-in pyepanet.epanet2 and instantiating an object of this class loads the 
-library and then provides pythonic functions equivalent to the EPANET 
+in pyepanet.epanet2 and instantiating an object of this class loads the
+library and then provides pythonic functions equivalent to the EPANET
 tookit ENmethodname functions.
 """
 

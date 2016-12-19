@@ -8,7 +8,7 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Simulate using EPANET
-epanet_sim = wntr.sim.EpanetSimulator(wn)
+epanet_sim = wntr.epanet.EpanetSimulator(wn)
 epanet_sim_results = epanet_sim.run_sim()
 
 # Simulate using Scipy

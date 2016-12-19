@@ -1,14 +1,18 @@
-try:
-    import pyepanet
-except ImportError:
-    raise ImportError('Error importing pyepanet while running epanet simulator.'
-                      'Make sure pyepanet is installed and added to path.')
 from wntr.sim.WaterNetworkSimulator import *
 import pandas as pd
-from wntr.utils import convert
+import numpy as np
+from .util import FlowUnits, MassUnits, HydParam, QualParam
 import logging
 
 logger = logging.getLogger(__name__)
+
+try:
+    import wntr.epanet.pyepanet
+except ImportError as e:
+    logger.critical('%s',e)
+    raise ImportError('Error importing pyepanet while running epanet simulator. '
+                      'Make sure pyepanet is installed and added to path.')
+
 from wntr.epanet.pyepanet.epanet2 import EpanetException, ENgetwarning
 
 class EpanetSimulator(WaterNetworkSimulator):
@@ -41,10 +45,14 @@ class EpanetSimulator(WaterNetworkSimulator):
         start_run_sim_time = time.time()
         logger.debug('Starting run')
         # Create enData
-        enData = pyepanet.ENepanet()
+        enData = wntr.epanet.pyepanet.ENepanet()
         enData.inpfile = self._wn.name
         enData.ENopen(enData.inpfile, 'tmp.rpt')
-        flowunits = enData.ENgetflowunits()
+        flowunits = FlowUnits(enData.ENgetflowunits())
+        if self._wn._inpfile is not None:
+            mass_units = self._wn._inpfile.mass_units
+        else:
+            mass_units = MassUnits.mg
 
         enData.ENopenH()
         enData.ENinitH(1)
@@ -80,16 +88,16 @@ class EpanetSimulator(WaterNetworkSimulator):
             if t in results.time:
                 for name in node_names:
                     nodeindex = enData.ENgetnodeindex(name)
-                    head = enData.ENgetnodevalue(nodeindex, pyepanet.EN_HEAD)
-                    demand = enData.ENgetnodevalue(nodeindex, pyepanet.EN_DEMAND)
+                    head = enData.ENgetnodevalue(nodeindex, wntr.epanet.pyepanet.EN_HEAD)
+                    demand = enData.ENgetnodevalue(nodeindex, wntr.epanet.pyepanet.EN_DEMAND)
                     expected_demand = demand
-                    pressure = enData.ENgetnodevalue(nodeindex, pyepanet.EN_PRESSURE)
+                    pressure = enData.ENgetnodevalue(nodeindex, wntr.epanet.pyepanet.EN_PRESSURE)
 
                     if convert_units: # expected demand is already converted
-                        head = convert('Hydraulic Head', flowunits, head) # m
-                        demand = convert('Demand', flowunits, demand) # m3/s
-                        expected_demand = convert('Demand', flowunits, expected_demand) # m3/s
-                        pressure = convert('Pressure', flowunits, pressure) # Pa
+                        head = HydParam.HydraulicHead.to_si(flowunits, head)
+                        demand = HydParam.Demand.to_si(flowunits, demand)
+                        expected_demand = HydParam.Demand.to_si(flowunits, expected_demand)
+                        pressure = HydParam.Pressure.to_si(flowunits, pressure) # Pa
 
                     node_dictonary['demand'].append(demand)
                     node_dictonary['expected_demand'].append(expected_demand)
@@ -100,12 +108,12 @@ class EpanetSimulator(WaterNetworkSimulator):
                 for name in link_names:
                     linkindex = enData.ENgetlinkindex(name)
 
-                    flow = enData.ENgetlinkvalue(linkindex, pyepanet.EN_FLOW)
-                    velocity = enData.ENgetlinkvalue(linkindex, pyepanet.EN_VELOCITY)
+                    flow = enData.ENgetlinkvalue(linkindex, wntr.epanet.pyepanet.EN_FLOW)
+                    velocity = enData.ENgetlinkvalue(linkindex, wntr.epanet.pyepanet.EN_VELOCITY)
 
                     if convert_units:
-                        flow = convert('Flow', flowunits, flow) # m3/s
-                        velocity = convert('Velocity', flowunits, velocity) # m/s
+                        flow = HydParam.Flow.to_si(flowunits, flow)
+                        velocity = HydParam.Velocity.to_si(flowunits, flow)
 
                     link_dictonary['flowrate'].append(flow)
                     link_dictonary['velocity'].append(velocity)
@@ -134,37 +142,37 @@ class EpanetSimulator(WaterNetworkSimulator):
 
                     # Set quality type and convert source qual
                     if WQ.source_type == 'MASS':
-                        enData.ENsetqualtype(pyepanet.EN_CHEM, 'Chemical', 'mg/min', '')
+                        enData.ENsetqualtype(wntr.epanet.pyepanet.EN_CHEM, 'Chemical', 'mg/min', '')
+                        wq_sourceQual = QualParam.SourceMassInject.from_si(flowunits, WQ.source_quality, mass_units)
                         wq_sourceQual = WQ.source_quality*60*1e6 # kg/s to mg/min
                     else:
-                        enData.ENsetqualtype(pyepanet.EN_CHEM, 'Chemical', 'mg/L', '')
-                        wq_sourceQual = convert('Concentration', flowunits, WQ.source_quality, MKS=False) # kg/m3 to mg/L
-
+                        enData.ENsetqualtype(wntr.epanet.pyepanet.EN_CHEM, 'Chemical', 'mg/L', '')
+                        wq_sourceQual = QualParam.Concentration.from_si(flowunits, WQ.source_quality, mass_units)
                     # Set source quality
                     for node in WQ.nodes:
                         nodeid = enData.ENgetnodeindex(node)
-                        enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEQUAL, wq_sourceQual)
+                        enData.ENsetnodevalue(nodeid, wntr.epanet.pyepanet.EN_SOURCEQUAL, wq_sourceQual)
 
                     # Set source type
                     if WQ.source_type == 'CONCEN':
-                        wq_sourceType = pyepanet.EN_CONCEN
+                        wq_sourceType = wntr.epanet.pyepanet.EN_CONCEN
                     elif WQ.source_type == 'MASS':
-                        wq_sourceType = pyepanet.EN_MASS
+                        wq_sourceType = wntr.epanet.pyepanet.EN_MASS
                     elif WQ.source_type == 'FLOWPACED':
-                        wq_sourceType = pyepanet.EN_FLOWPACED
+                        wq_sourceType = wntr.epanet.pyepanet.EN_FLOWPACED
                     elif WQ.source_type == 'SETPOINT':
-                        wq_sourceType = pyepanet.EN_SETPOINT
+                        wq_sourceType = wntr.epanet.pyepanet.EN_SETPOINT
                     else:
                         logger.error('Invalid Source Type for CHEM scenario')
-                    enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCETYPE, wq_sourceType)
+                    enData.ENsetnodevalue(nodeid, wntr.epanet.pyepanet.EN_SOURCETYPE, wq_sourceType)
 
                     # Set pattern
                     if WQ.end_time == -1:
-                        WQ.end_time = enData.ENgettimeparam(pyepanet.EN_DURATION)
+                        WQ.end_time = enData.ENgettimeparam(wntr.epanet.pyepanet.EN_DURATION)
                     if WQ.start_time > WQ.end_time:
                         raise RuntimeError('Start time is greater than end time')
-                    patternstep = enData.ENgettimeparam(pyepanet.EN_PATTERNSTEP)
-                    duration = enData.ENgettimeparam(pyepanet.EN_DURATION)
+                    patternstep = enData.ENgettimeparam(wntr.epanet.pyepanet.EN_PATTERNSTEP)
+                    duration = enData.ENgettimeparam(wntr.epanet.pyepanet.EN_DURATION)
                     patternlen = duration/patternstep
                     patternstart = WQ.start_time/patternstep
                     patternend = WQ.end_time/patternstep
@@ -173,16 +181,16 @@ class EpanetSimulator(WaterNetworkSimulator):
                     enData.ENaddpattern('wq')
                     patternid = enData.ENgetpatternindex('wq')
                     enData.ENsetpattern(patternid, pattern)
-                    enData.ENsetnodevalue(nodeid, pyepanet.EN_SOURCEPAT, patternid)
+                    enData.ENsetnodevalue(nodeid, wntr.epanet.pyepanet.EN_SOURCEPAT, patternid)
 
                 elif WQ.quality_type == 'AGE':
                     # Set quality type
-                    enData.ENsetqualtype(pyepanet.EN_AGE,0,0,0)
+                    enData.ENsetqualtype(wntr.epanet.pyepanet.EN_AGE,0,0,0)
 
                 elif WQ.quality_type == 'TRACE':
                     # Set quality type
                     for node in WQ.nodes:
-                        enData.ENsetqualtype(pyepanet.EN_TRACE,0,0,node)
+                        enData.ENsetqualtype(wntr.epanet.pyepanet.EN_TRACE,0,0,node)
 
                 else:
                     logger.error('Invalid Quality Type')
@@ -194,13 +202,13 @@ class EpanetSimulator(WaterNetworkSimulator):
                 if t in results.time:
                     for name in node_names:
                         nodeindex = enData.ENgetnodeindex(name)
-                        quality = enData.ENgetnodevalue(nodeindex, pyepanet.EN_QUALITY)
+                        quality = enData.ENgetnodevalue(nodeindex, wntr.epanet.pyepanet.EN_QUALITY)
 
                         if convert_units:
                             if WQ.quality_type == 'CHEM':
-                                quality = convert('Concentration', flowunits, quality) # kg/m3
+                                quality = QualParam.Concentration.to_si(flowunits, quality, mass_units)
                             elif WQ.quality_type == 'AGE':
-                                quality = convert('Water Age', flowunits, quality) # s
+                                quality = QualParam.WaterAge.to_si(flowunits, quality)
 
                         node_dictonary['quality'].append(quality)
 

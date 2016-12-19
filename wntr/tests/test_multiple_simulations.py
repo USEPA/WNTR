@@ -4,8 +4,8 @@ import sys
 import os, inspect
 import pandas as pd
 import pickle
-resilienceMainDir = os.path.abspath( 
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
+resilienceMainDir = os.path.abspath(
+    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile(
         inspect.currentframe() ) ) ), '..', '..' ))
 
 class TestResetInitialValues(unittest.TestCase):
@@ -17,10 +17,11 @@ class TestResetInitialValues(unittest.TestCase):
         self.wntr = wntr
 
         inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
-        
+
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
@@ -71,13 +72,15 @@ class TestStopStartSim(unittest.TestCase):
 
         inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 10*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
@@ -134,13 +137,15 @@ class TestPickle(unittest.TestCase):
 
         inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 10*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)

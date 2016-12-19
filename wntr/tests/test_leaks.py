@@ -5,8 +5,8 @@ import sys
 # __file__ fails if someone does os.chdir() before
 # sys.argv[0] also fails because it doesn't not always contains the path
 import os, inspect
-resilienceMainDir = os.path.abspath( 
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
+resilienceMainDir = os.path.abspath(
+    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile(
         inspect.currentframe() ) ) ), '..', '..' ))
 import math
 import warnings
@@ -95,8 +95,9 @@ class TestLeakResults(unittest.TestCase):
         results = sim.run_sim()
 
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/epanet_leaks.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
-        sim = self.wntr.sim.EpanetSimulator(wn)
+        inp = self.wntr.epanet.InpFile()
+        wn = inp.read(inp_file)
+        sim = self.wntr.epanet.EpanetSimulator(wn)
         epanet_results = sim.run_sim()
 
         for link_name, link in wn.links():
@@ -134,7 +135,7 @@ class TestLeakResults(unittest.TestCase):
     #    j2.remove_leak()
     #    sim = self.wntr.sim.PyomoSimulator(wn)
     #    results2 = sim.run_sim()
-    #    
+    #
     #    self.assertEqual(True, (results1.node == results2.node)['demand'].all().all())
     #    self.assertEqual(True, (results1.node == results2.node)['expected_demand'].all().all())
     #    self.assertEqual(True, (results1.node == results2.node)['head'].all().all())

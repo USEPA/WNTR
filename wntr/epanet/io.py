@@ -222,7 +222,7 @@ class InpFile(object):
         self.top_comments = []
         self.curves = {}
 
-    def read(self, filename):
+    def read(self, filename, wn=None):
         """Method to read EPANET INP file and load data into a water network object.
 
         Parameters
@@ -237,7 +237,8 @@ class InpFile(object):
             A WNTR network model object
 
         """
-        wn = WaterNetworkModel()
+        if wn is None:
+            wn = WaterNetworkModel()
         wn.name = filename
         opts = wn.options
 
@@ -336,7 +337,7 @@ class InpFile(object):
                 elif key == 'SPECIFIC':
                     opts.specific_gravity = float(words[2])
                 elif key == 'TRIALS':
-                    opts.specific_gravity = int(words[1])
+                    opts.trials = int(words[1])
                 elif key == 'ACCURACY':
                     opts.accuracy = float(words[1])
                 elif key == 'UNBALANCED':
@@ -843,25 +844,37 @@ class InpFile(object):
         if len(self.sections['[TAGS]']) > 0:
             logger.warning('TAGS are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
-        wn._en2data = self
+        # Set the _inpfile io data inside the water network, so it is saved somewhere
+        wn._inpfile = self
         return wn
 
-    def write(self, filename, wn, units='GPM'):
+    def write(self, filename, wn, units=None):
         """Write the current network into an EPANET inp file.
 
         Parameters
         ----------
         filename : str
             Name of the inp file. example - Net3_adjusted_demands.inp
-        units : str
-            Name of the units being written to the inp file
+        units : str, int or FlowUnits
+            Name of the units being written to the inp file.
 
         """
-        # TODO: This is still a very alpha version with hard coded unit conversions to LPS (among other things).
 
-        units=units.upper()
-        inp_units = FlowUnits[units]
-        flowunit = int(inp_units)
+        if units is not None and isinstance(units, str):
+            units=units.upper()
+            inp_units = FlowUnits[units]
+        elif units is not None and isinstance(units, FlowUnits):
+            inp_units = units
+        elif units is not None and isinstance(units, int):
+            inp_units = FlowUnits(units)
+        elif self.flow_units is not None:
+            inp_units = self.flow_units
+        else:
+            inp_units = FlowUnits.GPM
+        if self.mass_units is not None:
+            mass_units = self.mass_units
+        else:
+            mass_units = MassUnits.mg
 
         f = open(filename, 'w')
 
@@ -877,7 +890,10 @@ class InpFile(object):
         # Print junctions information
         f.write('[JUNCTIONS]\n')
         f.write(_JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern'))
-        for junction_name, junction in wn.nodes(Junction):
+        nnames = wn._junctions.keys()
+        nnames.sort()
+        for junction_name in nnames:
+            junction = wn._junctions[junction_name]
             E = {'name': junction_name,
                  'elev': HydParam.Elevation.from_si(inp_units, junction.elevation),
                  'dem': HydParam.Demand.from_si(inp_units, junction.base_demand),
@@ -891,7 +907,10 @@ class InpFile(object):
         # Print reservoir information
         f.write('[RESERVOIRS]\n')
         f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern'))
-        for reservoir_name, reservoir in wn.nodes(Reservoir):
+        nnames = wn._reservoirs.keys()
+        nnames.sort()
+        for reservoir_name in nnames:
+            reservoir = wn._reservoirs[reservoir_name]
             E = {'name': reservoir_name,
                  'head': HydParam.HydraulicHead.from_si(inp_units, reservoir.base_head),
                  'com': ';'}
@@ -906,7 +925,10 @@ class InpFile(object):
         f.write('[TANKS]\n')
         f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
                                    'Diameter', 'Min Volume', 'Volume Curve'))
-        for tank_name, tank in wn.nodes(Tank):
+        nnames = wn._tanks.keys()
+        nnames.sort()
+        for tank_name in nnames:
+            tank = wn._tanks[tank_name]
             E = {'name': tank_name,
                  'elev': HydParam.Elevation.from_si(inp_units, tank.elevation),
                  'initlev': HydParam.HydraulicHead.from_si(inp_units, tank.init_level),
@@ -925,7 +947,10 @@ class InpFile(object):
         f.write('[PIPES]\n')
         f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
                                    'Roughness', 'Minor Loss', 'Status'))
-        for pipe_name, pipe in wn.links(Pipe):
+        lnames = wn._pipes.keys()
+        lnames.sort()
+        for pipe_name in lnames:
+            pipe = wn._pipes[pipe_name]
             E = {'name': pipe_name,
                  'node1': pipe.start_node(),
                  'node2': pipe.end_node(),
@@ -943,7 +968,10 @@ class InpFile(object):
         # Print pump information
         f.write('[PUMPS]\n')
         f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Parameters'))
-        for pump_name, pump in wn.links(Pump):
+        lnames = wn._pumps.keys()
+        lnames.sort()
+        for pump_name in lnames:
+            pump = wn._pumps[pump_name]
             E = {'name': pump_name,
                  'node1': pump.start_node(),
                  'node2': pump.end_node(),
@@ -962,7 +990,10 @@ class InpFile(object):
         # Print valve information
         f.write('[VALVES]\n')
         f.write(_VALVE_LABEL.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss'))
-        for valve_name, valve in wn.links(Valve):
+        lnames = wn._valves.keys()
+        lnames.sort()
+        for valve_name in lnames:
+            valve = wn._valves[valve_name]
             E = {'name': valve_name,
                  'node1': valve.start_node(),
                  'node2': valve.end_node(),
@@ -982,7 +1013,7 @@ class InpFile(object):
                 f.write('{:10s} {:10s}\n'.format(link_name,
                         LinkStatus(link.get_base_status()).name))
         for link_name, link in wn.links(Valve):
-            if link.get_base_status() == LinkStatus.closed.value or link.get_base_status() == LinkStatus.opened.value:
+            if link.get_base_status() == LinkStatus.Closed.value or link.get_base_status() == LinkStatus.Open.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
                         LinkStatus(link.get_base_status()).name))
         f.write('\n')
@@ -1031,11 +1062,11 @@ class InpFile(object):
         # Time controls and conditional controls only
         for text, all_control in wn._control_dict.items():
             if isinstance(all_control,wntr.network.TimeControl):
-                entry = 'Link {link} {setting} AT {compare} {time}\n'
+                entry = 'Link {link} {setting} AT {compare} {time:g}\n'
                 vals = {'link': all_control._control_action._target_obj_ref.name(),
                         'setting': 'open',
                         'compare': 'TIME',
-                        'time': all_control._fire_time / 3600.0}
+                        'time': int(all_control._fire_time / 3600.0)}
                 if all_control._control_action._attribute.lower() == 'status':
                     vals['setting'] = LinkStatus(all_control._control_action._value).name
                 else:
@@ -1115,12 +1146,12 @@ class InpFile(object):
         f.write(entry_float.format('GLOBAL','BULK',
                                    QualParam.BulkReactionCoeff.from_si(inp_units,
                                                                        wn.options.bulk_rxn_coeff,
-                                                                       self.mass_units,
+                                                                       mass_units,
                                                                        wn.options.bulk_rxn_order)))
         f.write(entry_float.format('GLOBAL','WALL',
                                    QualParam.WallReactionCoeff.from_si(inp_units,
                                                                        wn.options.wall_rxn_coeff,
-                                                                       self.mass_units,
+                                                                       mass_units,
                                                                        wn.options.wall_rxn_order)))
         if wn.options.limiting_potential is not None:
             f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.limiting_potential))
@@ -1131,20 +1162,20 @@ class InpFile(object):
                 f.write(entry_float.format('TANK',tank_name,
                                            QualParam.BulkReactionCoeff.from_si(inp_units,
                                                                        tank.bulk_rxn_coeff,
-                                                                       self.mass_units,
+                                                                       mass_units,
                                                                        wn.options.bulk_rxn_order)))
         for pipe_name, pipe in wn.links(Pipe):
             if pipe.bulk_rxn_coeff is not None:
                 f.write(entry_float.format('BULK',pipe_name,
                                            QualParam.BulkReactionCoeff.from_si(inp_units,
                                                                        pipe.bulk_rxn_coeff,
-                                                                       self.mass_units,
+                                                                       mass_units,
                                                                        wn.options.bulk_rxn_order)))
             if pipe.wall_rxn_coeff is not None:
                 f.write(entry_float.format('WALL',pipe_name,
                                            QualParam.WallReactionCoeff.from_si(inp_units,
                                                                        pipe.wall_rxn_coeff,
-                                                                       self.mass_units,
+                                                                       mass_units,
                                                                        wn.options.wall_rxn_order)))
         f.write('\n')
 

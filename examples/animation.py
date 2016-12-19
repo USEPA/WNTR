@@ -11,7 +11,7 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 WQscenario = wntr.scenario.Waterquality('TRACE', ['111'])
 
 # Simulate hydraulics
-sim = wntr.sim.EpanetSimulator(wn)
+sim = wntr.epanet.EpanetSimulator(wn)
 results = sim.run_sim(WQscenario)
 
 ### Node Animation ###

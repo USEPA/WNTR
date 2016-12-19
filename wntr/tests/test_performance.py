@@ -5,8 +5,8 @@ import sys
 # __file__ fails if someone does os.chdir() before
 # sys.argv[0] also fails because it doesn't not always contains the path
 import os, inspect
-resilienceMainDir = os.path.abspath( 
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
+resilienceMainDir = os.path.abspath(
+    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile(
         inspect.currentframe() ) ) ), '..', '..' ))
 import time
 import numpy as np
@@ -160,13 +160,14 @@ class TestPerformance(unittest.TestCase):
         t0 = time.time()
 
         inp_file = resilienceMainDir+'/examples/networks/Net1.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         t1 = time.time()
 
-        epa_sim = self.wntr.sim.EpanetSimulator(wn)
+        epa_sim = self.wntr.epanet.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
         head_diff_list = []
@@ -202,18 +203,19 @@ class TestPerformance(unittest.TestCase):
         self.assertLess(np.std(head_diff_list), .00015)
         self.assertLess(np.std(demand_diff_list), 1.1e-7)
         self.assertLess(np.std(flow_diff_list), 1.3e-7)
-        
+
     def test_Net3_performance(self):
         t0 = time.time()
 
         inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         t1 = time.time()
 
-        epa_sim = self.wntr.sim.EpanetSimulator(wn)
+        epa_sim = self.wntr.epanet.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
         head_diff_list = []
@@ -253,14 +255,15 @@ class TestPerformance(unittest.TestCase):
         t0 = time.time()
 
         inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         wn.options.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         t1 = time.time()
 
-        epa_sim = self.wntr.sim.EpanetSimulator(wn)
+        epa_sim = self.wntr.epanet.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
         head_diff_list = []

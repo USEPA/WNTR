@@ -20,7 +20,8 @@ class TestPDD(unittest.TestCase):
 
     def test_pdd_with_wntr(self):
         inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/simulator.inp'
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        wn = parser.read(inp_file)
         res1 = wn.get_node('reservoir1')
         res1.head = 10.0
         p1 = wn.get_link('pipe1')
