@@ -65,7 +65,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         """
         
         node_degree = self.degree() 
-        terminal_nodes = [k for k,v in node_degree.iteritems() if v == 1]
+        terminal_nodes = [k for k,v in node_degree.items() if v == 1]
         
         return terminal_nodes
     

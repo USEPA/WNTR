@@ -1,3 +1,4 @@
+from __future__ import print_function
 import wntr
 import numpy as np
 import networkx as nx
@@ -8,7 +9,7 @@ def topographic_metrics(wn):
     G = wn.get_graph_deep_copy()
             
     # Print general topographic information
-    print nx.info(G)
+    print(nx.info(G))
     
     # Plot node and edge attributes.
     junction_attr = wn.query_node_attribute('elevation', 
@@ -20,7 +21,7 @@ def topographic_metrics(wn):
                                node_size=40, link_width=2)
     
     # Compute link density
-    print "Link density: " + str(nx.density(G))
+    print("Link density: " + str(nx.density(G)))
     
     # Compute node degree
     node_degree = G.degree()
@@ -31,15 +32,15 @@ def topographic_metrics(wn):
     terminal_nodes = G.terminal_nodes()
     wntr.network.draw_graph(wn, node_attribute=terminal_nodes,
                           title='Terminal nodes', node_size=40, node_range=[0,1])
-    print "Number of terminal nodes: " + str(len(terminal_nodes))
-    print "   " + str(terminal_nodes)
+    print("Number of terminal nodes: " + str(len(terminal_nodes)))
+    print("   " + str(terminal_nodes))
     
     # Compute number of non-zero demand (NZD) nodes
     nzd_nodes = wn.query_node_attribute('base_demand', np.greater, 0.0)
     wntr.network.draw_graph(wn, node_attribute=nzd_nodes.keys(),
                           title='NZD nodes', node_size=40, node_range=[0,1])
-    print "Number of NZD nodes: " + str(len(nzd_nodes))
-    print "   " + str(nzd_nodes.keys())
+    print("Number of NZD nodes: " + str(len(nzd_nodes)))
+    print("   " + str(nzd_nodes.keys()))
     
     # Compute pipes with diameter > threshold
     diameter = 0.508 # m (20 inches)
@@ -47,8 +48,8 @@ def topographic_metrics(wn):
     wntr.network.draw_graph(wn, link_attribute=pipes.keys(), 
                           title='Pipes > 20 inches', link_width=2, 
                           link_range=[0,1])
-    print "Number of pipes > 20 inches: " + str(len(pipes))
-    print "   " + str(pipes)
+    print("Number of pipes > 20 inches: " + str(len(pipes)))
+    print("   " + str(pipes))
     
     # Compute nodes with elevation <= treshold
     elevation = 1.524 # m (5 feet)
@@ -56,8 +57,8 @@ def topographic_metrics(wn):
     wntr.network.draw_graph(wn, node_attribute=nodes.keys(), 
                           title='Nodes <= 5 ft elevation', node_size=40, 
                           node_range=[0,1])
-    print "Number of nodes <= 5 ft elevation: " + str(len(nodes))
-    print "   " + str(nodes)
+    print("Number of nodes <= 5 ft elevation: " + str(len(nodes)))
+    print("   " + str(nodes))
     
     # Compute eccentricity, diameter, and average shortest path length
     # These all use an undirected graph
@@ -67,10 +68,10 @@ def topographic_metrics(wn):
         wntr.network.draw_graph(wn, node_attribute=ecc, title='Eccentricity', 
                               node_size=40, node_range=[15, 30])
     
-        print "Diameter: " + str(nx.diameter(uG))
+        print("Diameter: " + str(nx.diameter(uG)))
     
         ASPL = nx.average_shortest_path_length(uG)
-        print "Average shortest path length: " + str(ASPL)
+        print("Average shortest path length: " + str(ASPL))
     
     # Compute cluster coefficient
     clust_coefficients = nx.clustering(nx.Graph(G))
@@ -83,13 +84,13 @@ def topographic_metrics(wn):
                           title='Betweenness Centrality', node_size=40, 
                           node_range=[0, 0.4])
     central_pt_dom = G.central_point_dominance()
-    print "Central point dominance: " + str(central_pt_dom)
+    print("Central point dominance: " + str(central_pt_dom))
     
     # Compute articulation points
     Nap = list(nx.articulation_points(uG))
     Nap = list(set(Nap)) # get the unique nodes in Nap
     Nap_density = float(len(Nap))/uG.number_of_nodes()
-    print "Density of articulation points: " + str(Nap_density)
+    print("Density of articulation points: " + str(Nap_density))
     wntr.network.draw_graph(wn, node_attribute=Nap, title='Articulation Point', 
                           node_size=40, node_range=[0,1])
     
@@ -98,19 +99,19 @@ def topographic_metrics(wn):
     wntr.network.draw_graph(wn, link_attribute=bridges, title='Bridges', 
                           link_width=2, link_range=[0,1])
     Nbr_density = float(len(bridges))/G.number_of_edges()
-    print "Density of bridges: " + str(Nbr_density)
+    print("Density of bridges: " + str(Nbr_density))
     
     # Compute spectal gap
     spectral_gap = G.spectral_gap()
-    print "Spectal gap: " + str(spectral_gap)
+    print("Spectal gap: " + str(spectral_gap))
     
     # Compute algebraic connectivity
     alg_con = G.algebraic_connectivity()
-    print "Algebraic connectivity: " + str(alg_con)
+    print("Algebraic connectivity: " + str(alg_con))
     
     # Critical ratio of defragmentation
     fc = G.critical_ratio_defrag()
-    print "Critical ratio of defragmentation: " + str(fc)
+    print("Critical ratio of defragmentation: " + str(fc))
     
     # Compute closeness centrality
     clo_cen = nx.closeness_centrality(G)
@@ -136,8 +137,8 @@ def hydraulic_metrics(wn):
     pressure = results.node.loc['pressure', :, junctions]
     mask = wntr.metrics.query(pressure, np.greater, P_lower)
     pressure_regulation = mask.all(axis=0).sum() # True over all time
-    print "Fraction of nodes > 30 psi: " + str(pressure_regulation)
-    print "Average node pressure: " +str(pressure.mean().mean()) + " m"
+    print("Fraction of nodes > 30 psi: " + str(pressure_regulation))
+    print("Average node pressure: " +str(pressure.mean().mean()) + " m")
     wntr.network.draw_graph(wn, node_attribute=pressure.min(axis=0), node_size=40, 
                           title= 'Min pressure')
                   
@@ -147,10 +148,10 @@ def hydraulic_metrics(wn):
     plt.plot(todini)
     plt.ylabel('Todini Index')
     plt.xlabel('Time, hr')
-    print "Todini Index"
-    print "  Mean: " + str(np.mean(todini))
-    print "  Max: " + str(np.max(todini))
-    print "  Min: " + str(np.min(todini))
+    print("Todini Index")
+    print("  Mean: " + str(np.mean(todini)))
+    print("  Max: " + str(np.max(todini)))
+    print("  Min: " + str(np.min(todini)))
     
     # Create a weighted graph for flowrate at time 36 hours
     t = 36*3600
@@ -163,7 +164,7 @@ def hydraulic_metrics(wn):
     wntr.network.draw_graph(wn, node_attribute=bet_cen, 
                           title='Betweenness Centrality', node_size=40)
     central_pt_dom = G_flowrate_36hrs.central_point_dominance()
-    print "Central point dominance: " + str(central_pt_dom)
+    print("Central point dominance: " + str(central_pt_dom))
     
     # Compute entropy at time 36, for node 185
     [S, Shat] = wntr.metrics.entropy(G_flowrate_36hrs, sources=None, sinks=['185'])
@@ -186,10 +187,10 @@ def hydraulic_metrics(wn):
     plt.plot(shat)   
     plt.ylabel('System Entropy')
     plt.xlabel('Time, hr') 
-    print "Entropy"
-    print "  Mean: " + str(np.mean(shat))
-    print "  Max: " + str(np.nanmax(shat))
-    print "  Min: " + str(np.nanmin(shat))
+    print("Entropy")
+    print("  Mean: " + str(np.mean(shat)))
+    print("  Max: " + str(np.nanmax(shat)))
+    print("  Min: " + str(np.nanmin(shat)))
     
     # Compute fraction delivered volume and fraction delivered demand
     demand_factor = 0.9
@@ -248,7 +249,7 @@ def water_quality_metrics(wn):
     plt.xlabel('Time (h)')
     wntr.network.draw_graph(wn, node_attribute=age_last_48h.mean(), 
                           title='Average water age (last 48 hours)', node_size=40)
-    print "Average water age (last 48 hours): " +str(age_last_48h.mean().mean()) + " hr"
+    print("Average water age (last 48 hours): " +str(age_last_48h.mean().mean()) + " hr")
     
     # Query concentration
     chem_upper_bound = 750 
@@ -259,8 +260,8 @@ def water_quality_metrics(wn):
                           title= 'Nodes with conc > upper bound')
     wntr.network.draw_graph(wn, node_attribute=chem.max(axis=0), node_size=40, 
                           title= 'Max concentration')
-    print "Fraction of nodes > chem upper bound: " + str(chem_regulation.sum())
-    print "Average node concentration: " +str(chem.mean().mean())
+    print("Fraction of nodes > chem upper bound: " + str(chem_regulation.sum()))
+    print("Average node concentration: " +str(chem.mean().mean()))
 
     quality_upper_bound = 0.0035 # kg/m3 (3.5 mg/L)                   
     average_times = True
@@ -292,7 +293,7 @@ def population_impacted_metrics(wn):
     # Compute population per node
     pop = wntr.metrics.population(wn)
     total_population = pop.sum()
-    print "Total population: " + str(total_population)
+    print("Total population: " + str(total_population))
     wntr.network.draw_graph(wn, node_attribute=pop, node_range = [0,400], node_size=40,
                           title='Population, Total = ' + str(total_population))
                           
@@ -310,11 +311,11 @@ def population_impacted_metrics(wn):
 def cost_ghg_metrics(wn):  
     # Copute network cost
     network_cost = wntr.metrics.cost(wn)
-    print "Network cost: $" + str(round(network_cost,2))
+    print("Network cost: $" + str(round(network_cost,2)))
     
     # COmpute green house gas emissions
     network_ghg = wntr.metrics.ghg_emissions(wn)
-    print "Network GHG emissions: " + str(round(network_ghg,2))
+    print("Network GHG emissions: " + str(round(network_ghg,2)))
     
 
 if __name__ == '__main__':

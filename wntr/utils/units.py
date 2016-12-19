@@ -114,7 +114,7 @@ def convert(paramtype, flowunit, data, MKS = True):
     data_type = type(data)
     if data_type is dict:
         data_keys = data.keys()
-        data = np.array(data.values())
+        data = np.array(list(data.values()))  # For Python 3 compatibility, first convert to list
     elif data_type is list:
         data = np.array(data)
         
