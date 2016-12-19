@@ -13,5 +13,4 @@ Submodules
 
    wntr.utils.logger
    wntr.utils.timedelta
-   wntr.utils.units
 

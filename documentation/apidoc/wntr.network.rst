@@ -13,7 +13,6 @@ Submodules
 
    wntr.network.ControlLogger
    wntr.network.NetworkControls
-   wntr.network.ParseWaterNetwork
    wntr.network.WaterNetworkModel
    wntr.network.WntrMultiDiGraph
    wntr.network.draw_graph
