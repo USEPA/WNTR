@@ -11,6 +11,7 @@ import numpy as np
 import warnings
 import sys
 import logging
+from os.path import abspath
 
 logger = logging.getLogger('wntr.network.WaterNetworkModel')
 
@@ -80,7 +81,7 @@ class WaterNetworkModel(object):
 
         if inp_file_name:
             parser = wntr.network.ParseWaterNetwork()
-            parser.read_inp_file(self, inp_file_name)
+            parser.read_inp_file(self, abspath(inp_file_name))
 
     def __eq__(self, other):
         if self._num_junctions  == other._num_junctions  and \
