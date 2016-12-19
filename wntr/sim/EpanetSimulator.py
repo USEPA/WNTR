@@ -45,6 +45,8 @@ class EpanetSimulator(WaterNetworkSimulator):
         enData = pyepanet.ENepanet()
         enData.inpfile = self._wn.name
         print(enData.inpfile)
+        import os.path
+        print(os.path.isfile(enData.inpfile))
         enData.ENopen(enData.inpfile, 'tmp.rpt')
         flowunits = enData.ENgetflowunits()
         
