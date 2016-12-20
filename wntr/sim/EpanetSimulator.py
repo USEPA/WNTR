@@ -165,7 +165,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                         raise RuntimeError('Start time is greater than end time')
                     patternstep = enData.ENgettimeparam(pyepanet.EN_PATTERNSTEP)
                     duration = enData.ENgettimeparam(pyepanet.EN_DURATION)
-                    patternlen = duration/patternstep
+                    patternlen = int(duration/patternstep)
                     patternstart = WQ.start_time/patternstep
                     patternend = WQ.end_time/patternstep
                     pattern = [0]*patternlen
