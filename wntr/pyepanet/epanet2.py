@@ -117,7 +117,7 @@ class ENepanet():
         if self.errcode >= 100:
             self.Errflag = True
             self.errcodelist.append(self.errcode)
-            raise EpanetException("Error code {}".format(self.ENgeterror(self.errcode)))
+            raise EpanetException(self.ENgeterror(self.errcode))
         else:
             self.Warnflag = True
             warnings.warn(ENgetwarning(self.errcode))
@@ -173,6 +173,9 @@ class ENepanet():
         if inpfile is None: inpfile = self.inpfile
         if rptfile is None: rptfile = self.rptfile
         if binfile is None: binfile = self.binfile
+        inpfile = inpfile.encode('ascii')
+        rptfile = rptfile.encode('ascii')
+        binfile = binfile.encode('ascii')
         self.errcode = self.ENlib.ENopen(inpfile, rptfile, binfile)
         self._error()
         if self.errcode < 100:
