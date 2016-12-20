@@ -1289,13 +1289,13 @@ class WaterNetworkModel(object):
         """
         Returns a list of the names of all pumps.
         """
-        return list(self._pumps.keys()))
+        return list(self._pumps.keys())
 
     def valve_name_list(self):
         """
         Returns a list of the names of all valves.
         """
-        return list(self._valves.keys()
+        return list(self._valves.keys())
 
     def control_name_list(self):
         """
