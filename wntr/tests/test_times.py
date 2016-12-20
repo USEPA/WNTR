@@ -1,16 +1,9 @@
 import unittest
-import sys
-# HACK until resilience is a proper module
-# __file__ fails if script is called in different ways on Windows
-# __file__ fails if someone does os.chdir() before
-# sys.argv[0] also fails because it doesn't not always contains the path
-import os, inspect
-resilienceMainDir = os.path.abspath( 
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
-        inspect.currentframe() ) ) ), '..', '..' ))
-import copy
-import numpy as np
-import warnings
+from os.path import abspath, dirname, join
+
+testdir = dirname(abspath(str(__file__)))
+test_datadir = join(testdir,'networks_for_testing')
+ex_datadir = join(testdir,'..','..','examples','networks')
 
 #class TestNetworkTimeWarnings(unittest.TestCase):
 #
@@ -84,18 +77,17 @@ class TestNetworkTimeBehavior(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/times.inp'
+        inp_file = join(test_datadir, 'times.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.WNTRSimulator(wn)
         self.results = sim.run_sim()
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_duration(self):
         results = self.results
