@@ -1253,55 +1253,55 @@ class WaterNetworkModel(object):
         """
         Returns a list of the names of all nodes.
         """
-        return self._nodes.keys()
+        return list(self._nodes.keys())
 
     def junction_name_list(self):
         """
         Returns a list of the names of all junctions.
         """
-        return self._junctions.keys()
+        return list(self._junctions.keys())
 
     def tank_name_list(self):
         """
         Returns a list of the names of all tanks.
         """
-        return self._tanks.keys()
+        return list(self._tanks.keys())
 
     def reservoir_name_list(self):
         """
         Returns a list of the names of all reservoirs.
         """
-        return self._reservoirs.keys()
+        return list(self._reservoirs.keys())
 
     def link_name_list(self):
         """
         Returns a list of the names of all links.
         """
-        return self._links.keys()
+        return list(self._links.keys())
 
     def pipe_name_list(self):
         """
         Returns a list of the names of all pipes.
         """
-        return self._pipes.keys()
+        return list(self._pipes.keys())
 
     def pump_name_list(self):
         """
         Returns a list of the names of all pumps.
         """
-        return self._pumps.keys()
+        return list(self._pumps.keys()))
 
     def valve_name_list(self):
         """
         Returns a list of the names of all valves.
         """
-        return self._valves.keys()
+        return list(self._valves.keys()
 
     def control_name_list(self):
         """
         Returns a list of the names of all controls.
         """
-        return self._control_dict.keys()
+        return list(self._control_dict.keys())
             
     def curves(self):
         """
@@ -1478,8 +1478,7 @@ class WaterNetworkModel(object):
             pre = G.predecessors(node_name)
             for s in suc:
                 connected_to_s = False
-                link_names_list = G.edge[node_name][s].keys()
-                for link_name in link_names_list:
+                for link_name in G.edge[node_name][s].keys():
                     link = self.get_link(link_name)
                     if link.status!=LinkStatus.closed:
                         if type(link)==Pipe:
@@ -1497,8 +1496,7 @@ class WaterNetworkModel(object):
                         grab_group(s)
             for p in pre:
                 connected_to_p = False
-                link_names_list = G.edge[p][node_name].keys()
-                for link_name in link_names_list:
+                for link_name in G.edge[p][node_name].keys():
                     link = self.get_link(link_name)
                     if link.status!=LinkStatus.closed:
                         if type(link)==Pipe:
