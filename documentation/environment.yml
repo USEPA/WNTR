@@ -2,6 +2,8 @@ name: wntr
 dependencies:
     - python=2.7
     - numpy
+    - scipy
+    - networkx
     - pandas
     - sphinx
     - numpydoc

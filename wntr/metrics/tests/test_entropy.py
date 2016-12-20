@@ -1,3 +1,4 @@
+from __future__ import print_function
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
@@ -33,16 +34,16 @@ def test_layout1():
     #wntr.network.draw_graph(wn, link_attribute=attr)
 
     [S, Shat] = wntr.metrics.entropy(G_flowrate)
-
-    Saverage = np.mean(S.values())
-    Smax = max(S.values())
-    Smin = min(S.values())
-    print 'Entropy: Layout 1'
-    print '  S mean: ' + repr(Saverage)
-    print '  S max: ' + repr(Smax)
-    print '  S min: ' + repr(Smin)
-    print '  Shat: ' + repr(Shat)
-
+    
+    Saverage = np.mean(list(S.values()))
+    Smax = max(list(S.values()))
+    Smin = min(list(S.values()))
+    print('Entropy: Layout 1')
+    print('  S mean: ' + repr(Saverage))
+    print('  S max: ' + repr(Smax))
+    print('  S min: ' + repr(Smin))
+    print('  Shat: ' + repr(Shat))
+    
     # The values in the paper are different, perhaps due to significant figure
     # rounding during the calculation
     expected_Saverage = 0.0805 # 0.088
@@ -87,16 +88,16 @@ def test_layout8():
     #wntr.network.draw_graph(wn, link_attribute=attr)
 
     [S, Shat] = wntr.metrics.entropy(G_flowrate)
-
-    Saverage = np.mean(S.values())
-    Smax = max(S.values())
-    Smin = min(S.values())
-    print 'Entropy: Layout 8'
-    print '  S mean: ' + repr(Saverage)
-    print '  S max: ' + repr(Smax)
-    print '  S min: ' + repr(Smin)
-    print '  Shat: ' + repr(Shat)
-
+    
+    Saverage = np.mean(list(S.values()))
+    Smax = max(list(S.values()))
+    Smin = min(list(S.values()))
+    print('Entropy: Layout 8')
+    print('  S mean: ' + repr(Saverage))
+    print('  S max: ' + repr(Smax))
+    print('  S min: ' + repr(Smin))
+    print('  Shat: ' + repr(Shat))
+    
     # The values in the paper are different, perhaps due to significant figure
     # rounding during the calculation
     expected_Saverage = 0.4391 # 0.3860

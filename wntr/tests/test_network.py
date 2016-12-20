@@ -477,7 +477,7 @@ class TestInpFileWriter(unittest.TestCase):
             self.assertAlmostEqual(link.setting, link2.setting, 5)
 
     def test_user_controls(self):
-        for name1, control1 in self.wn._control_dict.iteritems():
+        for name1, control1 in self.wn._control_dict.items():
             control2 = self.wn2._control_dict[name1]
             self.assertEqual(control1==control2, True)
 
