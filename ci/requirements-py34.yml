@@ -11,6 +11,5 @@ dependencies:
     - nose
     - sympy
     - xlwt
-    - enum34
     - pip:
         - coveralls
