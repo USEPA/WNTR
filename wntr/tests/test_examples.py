@@ -1,4 +1,5 @@
 # This is a test to ensure all of the examples run.
+from __future__ import print_function
 import unittest
 import sys
 import os
@@ -28,6 +29,7 @@ class TestExamples(unittest.TestCase):
         flag = 0
         for f in example_files:
             tmp_flag = call([sys.executable, join(packdir,'examples',f)])
+            print(f, tmp_flag)
             if tmp_flag == 1:
                 flag = 1
         os.chdir(cwd)
