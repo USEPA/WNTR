@@ -1,10 +1,9 @@
-from __future__ import absolute_import
 try:
     from wntr import pyepanet
 except ImportError:
     raise ImportError('Error importing pyepanet while running epanet simulator.'
                       'Make sure pyepanet is installed and added to path.')
-from .WaterNetworkSimulator import *
+from wntr.sim.WaterNetworkSimulator import *
 import pandas as pd
 from wntr.utils import convert
 import logging

@@ -3,8 +3,7 @@ Python extensions for the EPANET Programmers Toolkit DLLs.
 EPANET toolkit functions.
 """
 from __future__ import print_function
-from __future__ import absolute_import
-from .toolkit import *
+from wntr.pyepanet.toolkit import *
 import ctypes, os, sys
 from ctypes import byref
 from pkg_resources import resource_filename

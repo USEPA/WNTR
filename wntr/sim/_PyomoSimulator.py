@@ -1,6 +1,4 @@
 from __future__ import print_function
-from __future__ import absolute_import
-
 try:
     from pyomo.environ import *
     from pyomo.core import *
@@ -11,7 +9,7 @@ except ImportError:
     raise ImportError('Error importing pyomo while running pyomo simulator.'
                       'Make sure pyomo is installed and added to path.')
 import math
-from .WaterNetworkSimulator import *
+from wntr.sim.WaterNetworkSimulator import *
 import pandas as pd
 from six import items
 import warnings

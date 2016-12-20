@@ -1,13 +1,12 @@
-from __future__ import absolute_import
 from wntr import *
 import numpy as np
 import scipy.sparse as sparse
 import warnings
-from .WaterNetworkSimulator import *
-from .HydraulicModel import *
+from wntr.sim.WaterNetworkSimulator import *
+from wntr.sim.HydraulicModel import *
 from wntr.network.WaterNetworkModel import *
-from .NewtonSolver import *
-from .NetworkResults import *
+from wntr.sim.NewtonSolver import *
+from wntr.sim.NetworkResults import *
 import time
 import copy
 import networkx as nx

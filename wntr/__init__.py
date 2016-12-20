@@ -1,10 +1,9 @@
-from __future__ import absolute_import
-from . import pyepanet
-from . import network
-from . import metrics
-from . import sim
-from . import scenario
-from . import utils
+from wntr import pyepanet
+from wntr import network
+from wntr import metrics
+from wntr import sim
+from wntr import scenario
+from wntr import utils
 
 __version__ = '0.1'
 
