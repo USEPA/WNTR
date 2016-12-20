@@ -172,6 +172,9 @@ class ENepanet():
         if inpfile is None: inpfile = self.inpfile
         if rptfile is None: rptfile = self.rptfile
         if binfile is None: binfile = self.binfile
+        inpfile = inpfile.encode('ascii')
+        rptfile = rptfile.encode('ascii')
+        binfile = binfile.encode('ascii')
         self.errcode = self.ENlib.ENopen(inpfile, rptfile, binfile)
         self._error()
         if self.errcode < 100:
