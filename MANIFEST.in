@@ -1,4 +1,4 @@
-include wntr/pyepanet/data/Darwin/*
-include wntr/pyepanet/data/Linux/*
-include wntr/pyepanet/data/Windows/*
+include wntr/epanet/pyepanet/data/Darwin/*
+include wntr/epanet/pyepanet/data/Linux/*
+include wntr/epanet/pyepanet/data/Windows/*
 include wntr/tests/networks_for_testing/*

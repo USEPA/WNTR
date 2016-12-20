@@ -422,7 +422,7 @@ class InpFile(object):
                 for i in current[1:]:
                     _patterns[pattern_name].append(float(i))
 
-        for pattern_name, pattern_list in _patterns.iteritems():
+        for pattern_name, pattern_list in _patterns.items():
             wn.add_pattern(pattern_name, pattern_list)
 
         for lnum, line in self.sections['[JUNCTIONS]']:
@@ -734,7 +734,7 @@ class InpFile(object):
                 else:
                     raise RuntimeError("The following control is not recognized: " + line)
                 control_name = ''
-                for i in xrange(len(current)-1):
+                for i in range(len(current)-1):
                     control_name = control_name + current[i]
                 control_name = control_name + str(round(threshold, 2))
             else:
@@ -747,7 +747,7 @@ class InpFile(object):
                         fire_time = int(float(current[5])*3600)
                     control_obj = wntr.network.TimeControl(wn, fire_time, 'SIM_TIME', False, action_obj)
                     control_name = ''
-                    for i in xrange(len(current)-1):
+                    for i in range(len(current)-1):
                         control_name = control_name + current[i]
                     control_name = control_name + str(fire_time)
                 elif len(current) == 7:  # at clocktime
@@ -1022,7 +1022,7 @@ class InpFile(object):
         num_columns = 8
         f.write('[PATTERNS]\n')
         f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers'))
-        for pattern_name, pattern in wn._patterns.iteritems():
+        for pattern_name, pattern in wn._patterns.items():
             count = 0
             for i in pattern:
                 if count % num_columns == 0:
@@ -1217,7 +1217,7 @@ class InpFile(object):
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'X-Coord', 'Y-Coord'))
         coord = nx.get_node_attributes(wn._graph, 'pos')
-        for key, val in coord.iteritems():
+        for key, val in coord.items():
             f.write(entry.format(key, val[0], val[1]))
         f.write('\n')
 
