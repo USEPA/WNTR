@@ -1,8 +1,3 @@
-try:
-    from wntr import pyepanet
-except ImportError:
-    raise ImportError('Error importing pyepanet while running epanet simulator.'
-                      'Make sure pyepanet is installed and added to path.')
 from wntr.sim.WaterNetworkSimulator import *
 import pandas as pd
 import numpy as np
@@ -14,6 +9,7 @@ logger = logging.getLogger(__name__)
 try:
     import wntr.epanet.pyepanet
 except ImportError as e:
+    print('{}'.format(e))
     logger.critical('%s',e)
     raise ImportError('Error importing pyepanet while running epanet simulator. '
                       'Make sure pyepanet is installed and added to path.')

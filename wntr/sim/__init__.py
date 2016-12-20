@@ -1,4 +1,3 @@
-from wntr.epanet.sim.EpanetSimulator import EpanetSimulator
 from wntr.sim.WNTRSimulator import WNTRSimulator
 from wntr.sim.NetworkResults import NetResults
 from wntr.sim.NewtonSolver import NewtonSolver
