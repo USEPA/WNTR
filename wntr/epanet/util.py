@@ -404,7 +404,7 @@ class HydParam(enum.Enum):
                 data = data * 0.001  # mm to m
 
         elif self in [HydParam.TankDiameter, HydParam.Elevation, HydParam.HydraulicHead,
-                      self.Length]:
+                      HydParam.Length]:
             if flow_units.is_traditional:
                 data = data * 0.3048  # ft to m
 
