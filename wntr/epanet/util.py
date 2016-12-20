@@ -366,7 +366,7 @@ class HydParam(enum.Enum):
             data = np.array(data)
 
         # Do conversions
-        if self in [self.Demand, self.Flow, self.EmitterCoeff]:
+        if self.name in ["Demand", "Flow", "EmitterCoeff"]:
             if flow_units is FlowUnits.CFS:
                 data = data * 0.0283168466  # ft3/s to m3/s
             elif flow_units is FlowUnits.GPM:

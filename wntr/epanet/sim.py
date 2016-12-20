@@ -174,9 +174,9 @@ class EpanetSimulator(WaterNetworkSimulator):
                         raise RuntimeError('Start time is greater than end time')
                     patternstep = enData.ENgettimeparam(wntr.epanet.pyepanet.EN_PATTERNSTEP)
                     duration = enData.ENgettimeparam(wntr.epanet.pyepanet.EN_DURATION)
-                    patternlen = duration/patternstep
-                    patternstart = WQ.start_time/patternstep
-                    patternend = WQ.end_time/patternstep
+                    patternlen = int(duration/patternstep)
+                    patternstart = int(WQ.start_time/patternstep)
+                    patternend = int(WQ.end_time/patternstep)
                     pattern = [0]*patternlen
                     pattern[patternstart:patternend] = [1]*(patternend-patternstart)
                     enData.ENaddpattern('wq')
@@ -191,7 +191,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 elif WQ.quality_type == 'TRACE':
                     # Set quality type
                     for node in WQ.nodes:
-                        enData.ENsetqualtype(wntr.epanet.pyepanet.EN_TRACE,0,0,node)
+                        enData.ENsetqualtype(wntr.epanet.pyepanet.EN_TRACE,0,0,node.encode('ascii'))
 
                 else:
                     logger.error('Invalid Quality Type')

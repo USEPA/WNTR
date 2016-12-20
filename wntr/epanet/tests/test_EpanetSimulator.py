@@ -85,7 +85,6 @@ def test_age_waterquality_simulation():
     results = sim.run_sim(WQ)
 
     expected = 3.65*3600 # Node '159' at hour 6
-    print(results.node.loc['quality', 6*3600, '159'])
     error = abs((results.node.loc['quality', 6*3600, '159'] - expected)/expected)
     assert_less(error, 0.0001) # 0.01% error
 
@@ -100,7 +99,8 @@ def test_trace_waterquality_simulation():
     results = sim.run_sim(WQ)
 
     expected = 91.66 # Node '159' at hour 6
-    error = abs((results.node.loc['quality', 6*3600, '159'] - expected)/expected)
+    print(results.node.loc['quality',:,'159'])
+    error = abs(float(results.node.loc['quality', 6*3600, '159'] - expected)/float(expected))
     assert_less(error, 0.0001) # 0.01% error
 
 if __name__ == '__main__':
@@ -108,5 +108,5 @@ if __name__ == '__main__':
     #test_flowpaced_waterquality_simulation()
     #test_mass_waterquality_simulation()
     #test_conc_waterquality_simulation()
-    test_age_waterquality_simulation()
-    #test_trace_waterquality_simulation()
+    #test_age_waterquality_simulation()
+    test_trace_waterquality_simulation()
