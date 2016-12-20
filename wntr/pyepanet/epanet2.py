@@ -66,9 +66,9 @@ class ENepanet():
     Errflag = False
     """A fatal error ocurred at some point during EPANET execution"""
     
-    inpfile = ''
-    rptfile = ''
-    binfile = ''
+    inpfile = 'temp.inp'
+    rptfile = 'temp.rpt'
+    binfile = 'temp.bin'
     
     fileLoaded = False
     
