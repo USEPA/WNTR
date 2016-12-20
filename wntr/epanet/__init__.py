@@ -109,5 +109,5 @@ below.
 from .io import InpFile, BinFile, HydFile, RptFile
 from .util import FlowUnits, MassUnits, HydParam, QualParam
 from .sim import EpanetSimulator
-import pyepanet
+import wntr.epanet.pyepanet
 
