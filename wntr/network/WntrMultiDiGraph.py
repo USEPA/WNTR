@@ -103,7 +103,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
             Central point dominance
         """
         bet_cen = nx.betweenness_centrality(self.to_undirected())
-        bet_cen = bet_cen.values()
+        bet_cen = list(bet_cen.values())
         cpd = sum(max(bet_cen) - np.array(bet_cen))/(len(bet_cen)-1)
         
         return cpd
@@ -178,8 +178,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
                     paths = _all_simple_paths(self,source,target=sink)
                     for path in paths:
                         for i in range(len(path)-1):
-                            links = self[path[i]][path[i+1]].keys()
-                            for link in links:
+                            for link in self[path[i]][path[i+1]].keys():
                                 link_count[link] = link_count[link]+1
         
         return link_count
