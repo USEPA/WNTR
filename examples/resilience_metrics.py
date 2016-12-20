@@ -37,15 +37,15 @@ def topographic_metrics(wn):
     
     # Compute number of non-zero demand (NZD) nodes
     nzd_nodes = wn.query_node_attribute('base_demand', np.greater, 0.0)
-    wntr.network.draw_graph(wn, node_attribute=nzd_nodes.keys(),
+    wntr.network.draw_graph(wn, node_attribute=list(nzd_nodes.keys()),
                           title='NZD nodes', node_size=40, node_range=[0,1])
     print("Number of NZD nodes: " + str(len(nzd_nodes)))
-    print("   " + str(nzd_nodes.keys()))
+    print("   " + str(list(nzd_nodes.keys())))
     
     # Compute pipes with diameter > threshold
     diameter = 0.508 # m (20 inches)
     pipes = wn.query_link_attribute('diameter', np.greater, diameter)
-    wntr.network.draw_graph(wn, link_attribute=pipes.keys(), 
+    wntr.network.draw_graph(wn, link_attribute=list(pipes.keys()), 
                           title='Pipes > 20 inches', link_width=2, 
                           link_range=[0,1])
     print("Number of pipes > 20 inches: " + str(len(pipes)))
@@ -54,7 +54,7 @@ def topographic_metrics(wn):
     # Compute nodes with elevation <= treshold
     elevation = 1.524 # m (5 feet)
     nodes = wn.query_node_attribute('elevation', np.less_equal, elevation)
-    wntr.network.draw_graph(wn, node_attribute=nodes.keys(), 
+    wntr.network.draw_graph(wn, node_attribute=list(nodes.keys()), 
                           title='Nodes <= 5 ft elevation', node_size=40, 
                           node_range=[0,1])
     print("Number of nodes <= 5 ft elevation: " + str(len(nodes)))
