@@ -6,10 +6,12 @@ import networkx as nx
 import math
 from scipy.optimize import fsolve
 import wntr.network
+import wntr.epanet
 import numpy as np
 import warnings
 import sys
 import logging
+from os.path import abspath
 
 logger = logging.getLogger('wntr.network.WaterNetworkModel')
 
@@ -81,7 +83,6 @@ class WaterNetworkModel(object):
         if inp_file_name:
             self.read_inpfile(inp_file_name)
 
-
     def __eq__(self, other):
         if self._num_junctions  == other._num_junctions  and \
            self._num_reservoirs == other._num_reservoirs and \
@@ -104,6 +105,9 @@ class WaterNetworkModel(object):
             return True
         return False
 
+    def __hash__(self):
+        return id(self)
+        
     def add_junction(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0, coordinates=None):
         """
         Add a junction to the network.
@@ -301,15 +305,12 @@ class WaterNetworkModel(object):
         ----------
         name : string
             Name of the reservoir.
-
-        Other Parameters
-        -------------------
-        base_head : float
+        base_head : float, optional
             Base head at the reservoir.
             Internal units must be meters (m).
-        head_pattern_name : string
+        head_pattern_name : string, optional
             Name of the head pattern.
-        coordinates : tuple of floats
+        coordinates : tuple of floats, optional
             X-Y coordinates of the node location
         """
         base_head = float(base_head)
@@ -335,22 +336,19 @@ class WaterNetworkModel(object):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        -------------------
-        length : float
+        length : float, optional
             Length of the pipe.
             Internal units must be meters (m)
-        diameter : float
+        diameter : float, optional
             Diameter of the pipe.
             Internal units must be meters (m)
-        roughness : float
+        roughness : float, optional
             Pipe roughness coefficient
-        minor_loss : float
+        minor_loss : float, optional
             Pipe minor loss coefficient
-        status : string
+        status : string, optional
             Pipe status. Options are 'Open' or 'Closed'
-        check_valve_flag : bool
+        check_valve_flag : bool, optional
             True if the pipe has a check valve
             False if the pipe does not have a check valve
         """
@@ -407,12 +405,9 @@ class WaterNetworkModel(object):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        -------------------
-        info_type : string
+        info_type : string, optional
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
-        info_value : float or Curve object
+        info_value : float or Curve object, optional
             Float value of power in KW. Head curve object.
         """
         pump = Pump(name, start_node_name, end_node_name, info_type, info_value)
@@ -458,17 +453,14 @@ class WaterNetworkModel(object):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        -------------------
-        diameter : float
+        diameter : float, optional
             Diameter of the valve.
             Internal units must be meters (m)
-        valve_type : string
+        valve_type : string, optional
             Type of valve. Options are 'PRV', etc
-        minor_loss : float
+        minor_loss : float, optional
             Pipe minor loss coefficient
-        setting : float or string
+        setting : float or string, optional
             pressure setting for PRV, PSV, or PBV
             flow setting for FCV
             loss coefficient for TCV
@@ -645,7 +637,7 @@ class WaterNetworkModel(object):
 
         if with_control:
             x=[]
-            for control_name, control in self._control_dict.iteritems():
+            for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with link '+name)
@@ -657,7 +649,7 @@ class WaterNetworkModel(object):
             for i in x:
                 self.remove_control(i)
         else:
-            for control_name, control in self._control_dict.iteritems():
+            for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
                         warnings.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
@@ -695,7 +687,7 @@ class WaterNetworkModel(object):
 
         if with_control:
             x = []
-            for control_name, control in self._control_dict.iteritems():
+            for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
                         warnings.warn('Control '+control_name+' is being removed along with node '+name)
@@ -707,7 +699,7 @@ class WaterNetworkModel(object):
             for i in x:
                 self.remove_control(i)
         else:
-            for control_name, control in self._control_dict.iteritems():
+            for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
                         warnings.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
@@ -1152,16 +1144,16 @@ class WaterNetworkModel(object):
         node_name, node
         """
         if node_type==None:
-            for node_name, node in self._nodes.iteritems():
+            for node_name, node in self._nodes.items():
                 yield node_name, node
         elif node_type==Junction:
-            for node_name, node in self._junctions.iteritems():
+            for node_name, node in self._junctions.items():
                 yield node_name, node
         elif node_type==Tank:
-            for node_name, node in self._tanks.iteritems():
+            for node_name, node in self._tanks.items():
                 yield node_name, node
         elif node_type==Reservoir:
-            for node_name, node in self._reservoirs.iteritems():
+            for node_name, node in self._reservoirs.items():
                 yield node_name, node
         else:
             raise RuntimeError('node_type, '+str(node_type)+', not recognized.')
@@ -1174,7 +1166,7 @@ class WaterNetworkModel(object):
         -------
         name, node
         """
-        for name, node in self._junctions.iteritems():
+        for name, node in self._junctions.items():
             yield name, node
 
     def tanks(self):
@@ -1185,7 +1177,7 @@ class WaterNetworkModel(object):
         -------
         name, node
         """
-        for name, node in self._tanks.iteritems():
+        for name, node in self._tanks.items():
             yield name, node
 
     def reservoirs(self):
@@ -1196,7 +1188,7 @@ class WaterNetworkModel(object):
         -------
         name, node
         """
-        for name, node in self._reservoirs.iteritems():
+        for name, node in self._reservoirs.items():
             yield name, node
 
     def links(self, link_type=None):
@@ -1210,16 +1202,16 @@ class WaterNetworkModel(object):
         link_name, link
         """
         if link_type==None:
-            for link_name, link in self._links.iteritems():
+            for link_name, link in self._links.items():
                 yield link_name, link
         elif link_type==Pipe:
-            for link_name, link in self._pipes.iteritems():
+            for link_name, link in self._pipes.items():
                 yield link_name, link
         elif link_type==Pump:
-            for link_name, link in self._pumps.iteritems():
+            for link_name, link in self._pumps.items():
                 yield link_name, link
         elif link_type==Valve:
-            for link_name, link in self._valves.iteritems():
+            for link_name, link in self._valves.items():
                 yield link_name, link
         else:
             raise RuntimeError('link_type, '+str(link_type)+', not recognized.')
@@ -1232,7 +1224,7 @@ class WaterNetworkModel(object):
         -------
         name, link
         """
-        for name, link in self._pipes.iteritems():
+        for name, link in self._pipes.items():
             yield name, link
 
     def pumps(self):
@@ -1243,7 +1235,7 @@ class WaterNetworkModel(object):
         -------
         name, link
         """
-        for name, link in self._pumps.iteritems():
+        for name, link in self._pumps.items():
             yield name, link
 
     def valves(self):
@@ -1254,7 +1246,7 @@ class WaterNetworkModel(object):
         -------
         name, link
         """
-        for name, link in self._valves.iteritems():
+        for name, link in self._valves.items():
             yield name, link
 
     def node_name_list(self):
@@ -1319,7 +1311,7 @@ class WaterNetworkModel(object):
         -------
         curve_name, curve
         """
-        for curve_name, curve in self._curves.iteritems():
+        for curve_name, curve in self._curves.items():
             yield curve_name, curve
 
     def set_node_coordinates(self, name, coordinates):
@@ -1343,8 +1335,8 @@ class WaterNetworkModel(object):
             Coordinate scale multiplier
         """
         pos = nx.get_node_attributes(self._graph, 'pos')
-
-        for name, node in self._nodes.iteritems():
+        
+        for name, node in self._nodes.items():
             self.set_node_coordinates(name, (pos[name][0]*scale, pos[name][1]*scale))
 
     def set_edge_attribute_on_graph(self, link_name, attr_name, value):
@@ -1535,31 +1527,31 @@ class WaterNetworkModel(object):
                 has_tank_or_res[grp] = False
                 grab_group(node_name)
 
-        #for grp, nodes in groups.iteritems():
+        #for grp, nodes in groups.items():
         #    logger.debug('group: {0}'.format(grp))
         #    logger.debug('nodes[{0}]: {1}'.format(grp, nodes))
         #    logger.debug('has_tank_or_res[{0}]: {1}'.format(grp,has_tank_or_res[grp]))
 
         #all_nodes_check = set()
-        #for grp, nodes in groups.iteritems():
+        #for grp, nodes in groups.items():
         #    all_nodes_check = all_nodes_check.union(nodes)
         #if all_nodes_check!=set(self.node_name_list()):
         #    raise RuntimeError('_get_isolated_junctions() did not find all of the nodes!')
 
-        #for grp1, nodes1 in groups.iteritems():
-        #    for grp2, nodes2 in groups.iteritems():
+        #for grp1, nodes1 in groups.items():
+        #    for grp2, nodes2 in groups.items():
         #        if grp1==grp2:
         #            pass
         #        elif len(nodes1.intersection(nodes2))>0:
         #            logger.debug('intersection of group {0} and gropup {1}: {2}'.format(grp1,grp2,nodes1.intersection(nodes2)))
         #            raise RuntimeError('The intersection of two groups is not empty!')
 
-        for grp,check in has_tank_or_res.iteritems():
+        for grp,check in has_tank_or_res.items():
             if check:
                 del groups[grp]
 
         isolated_junctions = set()
-        for grp, junctions in groups.iteritems():
+        for grp, junctions in groups.items():
             isolated_junctions = isolated_junctions.union(junctions)
         isolated_junctions = list(isolated_junctions)
 
@@ -1588,7 +1580,6 @@ class WaterNetworkModel(object):
         inpfile.read(filename, wn=self)
         self._inpfile = inpfile
 
-
     def write_inpfile(self, filename, units=None):
         """
         Write the current network into an EPANET inp file.
@@ -1606,7 +1597,6 @@ class WaterNetworkModel(object):
             logger.warning('Writing a minimal INP file without saved non-WNTR options (energy, etc.)')
             self._inpfile = wntr.epanet.InpFile()
         self._inpfile.write(filename, self, units=units)
-
 
     def _sec_to_string(self, sec):
         hours = int(sec/3600.)
@@ -1853,6 +1843,9 @@ class Node(object):
         """
         return self._name
 
+    def __hash__(self):
+        return id(self)
+
     def name(self):
         """
         Returns the name of the node.
@@ -1899,6 +1892,9 @@ class Link(object):
             return True
         return False
 
+    def __hash__(self):
+        return id(self)
+
     def get_base_status(self):
         """
         Returns the base status.
@@ -1939,15 +1935,12 @@ class Junction(Node):
         ----------
         name : string
             Name of the junction.
-
-        Other Parameters
-        ----------------
-        base_demand : float
+        base_demand : float, optional
             Base demand at the junction.
             Internal units must be cubic meters per second (m^3/s).
-        demand_pattern_name : string
+        demand_pattern_name : string, optional
             Name of the demand pattern.
-        elevation : float
+        elevation : float, optional
             Elevation of the junction.
             Internal units must be meters (m).
         """
@@ -1978,6 +1971,9 @@ class Junction(Node):
            abs(self.minimum_pressure - other.minimum_pressure)<1e-10:
             return True
         return False
+
+    def __hash__(self):
+        return id(self)
 
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """Method to add a leak to a junction. Leaks are modeled by:
@@ -2121,28 +2117,25 @@ class Tank(Node):
         ----------
         name : string
             Name of the tank.
-
-        Other Parameters
-        ----------------
-        elevation : float
+        elevation : float, optional
             Elevation at the Tank.
             Internal units must be meters (m).
-        init_level : float
+        init_level : float, optional
             Initial tank level.
             Internal units must be meters (m).
-        min_level : float
+        min_level : float, optional
             Minimum tank level.
             Internal units must be meters (m)
-        max_level : float
+        max_level : float, optional
             Maximum tank level.
             Internal units must be meters (m)
-        diameter : float
+        diameter : float, optional
             Tank diameter.
             Internal units must be meters (m)
-        min_vol : float
+        min_vol : float, optional
             Minimum tank volume.
             Internal units must be cubic meters (m^3)
-        vol_curve : Curve object
+        vol_curve : Curve object, optional
             Curve object
         """
         super(Tank, self).__init__(name)
@@ -2177,6 +2170,9 @@ class Tank(Node):
             return True
         return False
 
+    def __hash__(self):
+        return id(self)
+        
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
         Method to add a leak to a tank. Leaks are modeled by:
@@ -2320,13 +2316,10 @@ class Reservoir(Node):
         ----------
         name : string
             Name of the reservoir.
-
-        Other Parameters
-        ----------------
-        base_head : float
+        base_head : float, optional
             Base head at the reservoir.
             Internal units must be meters (m).
-        head_pattern_name : string
+        head_pattern_name : string, optional
             Name of the head pattern.
         """
         super(Reservoir, self).__init__(name)
@@ -2340,6 +2333,9 @@ class Reservoir(Node):
         if not super(Reservoir, self).__eq__(other):
             return False
         return True
+
+    def __hash__(self):
+        return id(self)
 
 class Pipe(Link):
     """
@@ -2356,22 +2352,19 @@ class Pipe(Link):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        ----------------
-        length : float
+        length : float, optional
             Length of the pipe.
             Internal units must be meters (m)
-        diameter : float
+        diameter : float, optional
             Diameter of the pipe.
             Internal units must be meters (m)
-        roughness : float
+        roughness : float, optional
             Pipe roughness coefficient
-        minor_loss : float
+        minor_loss : float, optional
             Pipe minor loss coefficient
-        status : string
+        status : string, optional
             Pipe status. Options are 'Open' or 'Closed'
-        check_valve_flag : bool
+        check_valve_flag : bool, optional
             True if the pipe has a check valve
             False if the pipe does not have a check valve
         """
@@ -2402,6 +2395,9 @@ class Pipe(Link):
             return True
         return False
 
+    def __hash__(self):
+        return id(self)
+    
 class Pump(Link):
     """
     Pump class that is inherited from Link
@@ -2416,12 +2412,9 @@ class Pump(Link):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        ----------------
-        info_type : string
+        info_type : string, optional
             Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
-        info_value : float or curve type
+        info_value : float or curve type, optional
             Where power is a fixed value in KW, while a head curve is a Curve object.
         """
         super(Pump, self).__init__(name, start_node_name, end_node_name)
@@ -2452,6 +2445,9 @@ class Pump(Link):
             return True
         return False
 
+    def __hash__(self):
+        return id(self)
+        
     def get_head_curve_coefficients(self):
         """
         Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
@@ -2557,17 +2553,14 @@ class Valve(Link):
              Name of the start node
         end_node_name : string
              Name of the end node
-
-        Other Parameters
-        ----------------
-        diameter : float
+        diameter : float, optional
             Diameter of the valve.
             Internal units must be meters (m)
-        valve_type : string
+        valve_type : string, optional
             Type of valve. Options are 'PRV', etc
-        minor_loss : float
+        minor_loss : float, optional
             Pipe minor loss coefficient
-        setting : float or string
+        setting : float or string, optional
             Valve setting or name of headloss curve for GPV
         """
         super(Valve, self).__init__(name, start_node_name, end_node_name)
@@ -2591,6 +2584,9 @@ class Valve(Link):
            abs(self.minor_loss - other.minor_loss)<1e-10:
             return True
         return False
+
+    def __hash__(self):
+        return id(self)
 
 class Curve(object):
     """
@@ -2624,3 +2620,8 @@ class Curve(object):
                         return False
             return True
         return False
+
+    def __hash__(self):
+        return id(self)
+
+

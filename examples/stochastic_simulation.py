@@ -1,3 +1,4 @@
+from __future__ import print_function
 import wntr
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,7 +26,7 @@ pipe_diameters = wn.query_link_attribute('diameter', np.less_equal,
                                          0.9144,  # 36 inches = 0.9144 m
                                          link_type=wntr.network.Pipe)
 failure_probability = {}
-for k,v in pipe_diameters.iteritems():
+for k,v in pipe_diameters.items():
     failure_probability[k] = v/sum(pipe_diameters.values())
     
 # Define maximum iterations
@@ -47,7 +48,7 @@ for i in range(Imax):
     N = np.random.random_integers(1,5,1)
     
     # Select N unique pipes based on failure probability
-    pipes_to_fail = np.random.choice(failure_probability.keys(), 5, 
+    pipes_to_fail = np.random.choice(list(failure_probability.keys()), 5,
                                      replace=False, 
                                      p=failure_probability.values())
     
@@ -76,7 +77,7 @@ for i in range(Imax):
                 str(time_of_failure) + ', End Time: ' + \
                 str(time_of_failure+duration_of_failure)
                 
-    print sim_name
+    print(sim_name)
     results[sim_name] = sim.run_sim()
     
     f=open('wn.pickle','r')
@@ -91,7 +92,7 @@ result_names = results.keys()
 for name in result_names:
     
     # Print power outage description for each iteration
-    print name
+    print(name)
     
     results[name].node.major_axis = results[name].node.major_axis/3600.0
     

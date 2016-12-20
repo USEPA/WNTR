@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 try:
     import wntr.epanet.pyepanet
 except ImportError as e:
+    print('{}'.format(e))
     logger.critical('%s',e)
     raise ImportError('Error importing pyepanet while running epanet simulator. '
                       'Make sure pyepanet is installed and added to path.')
@@ -222,11 +223,11 @@ class EpanetSimulator(WaterNetworkSimulator):
         enData.ENclose()
 
         # Create Panel
-        for key, value in node_dictonary.iteritems():
+        for key, value in node_dictonary.items():
             node_dictonary[key] = np.array(value).reshape((ntimes, nnodes))
         results.node = pd.Panel(node_dictonary, major_axis=results.time, minor_axis=node_names)
 
-        for key, value in link_dictonary.iteritems():
+        for key, value in link_dictonary.items():
             link_dictonary[key] = np.array(value).reshape((ntimes, nlinks))
         results.link = pd.Panel(link_dictonary, major_axis=results.time, minor_axis=link_names)
 

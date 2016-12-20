@@ -105,8 +105,8 @@ class ControlAction(BaseControlAction):
         else:
             return False
 
-
-
+    def __hash__(self):
+        return id(self)
 
     def _FireControlActionImpl(self, control_name):
         """
@@ -299,6 +299,9 @@ class TimeControl(Control):
             return True
         return False
 
+    def __hash__(self):
+        return id(self)
+
     def to_inp_string(self):
         link_name = self._control_action._target_obj_ref.name()
         action = 'OPEN'
@@ -435,6 +438,9 @@ class ConditionalControl(Control):
             return True
         return False
 
+    def __hash__(self):
+        return id(self)
+        
 
 #    def to_inp_string(self, flowunit):
 #        link_name = self._control_action._target_obj_ref.name()
@@ -607,6 +613,9 @@ class MultiConditionalControl(Control):
         else:
             return False
 
+    def __hash__(self):
+        return id(self)
+
     # @classmethod
     # def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
     #     ca = ControlAction(target_obj, target_attribute, target_value)
@@ -629,7 +638,7 @@ class MultiConditionalControl(Control):
             return (False, None)
 
         action_required = True
-        for ndx in xrange(len(self._source)):
+        for ndx in range(len(self._source)):
             src_obj = self._source[ndx][0]
             src_attr = self._source[ndx][1]
             src_val = getattr(src_obj, src_attr)
@@ -640,7 +649,8 @@ class MultiConditionalControl(Control):
                 threshold_obj = self._threshold[ndx][0]
                 threshold_attr = self._threshold[ndx][1]
                 threshold_val = getattr(threshold_obj, threshold_attr)
-            if not oper(src_val, threshold_val):
+
+            if src_val is None or not oper(src_val, threshold_val):
                 action_required = False
                 break
 

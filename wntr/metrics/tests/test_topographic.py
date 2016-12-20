@@ -1,3 +1,4 @@
+from __future__ import print_function
 from nose.tools import *
 from nose import SkipTest
 from os.path import abspath, dirname, join
@@ -26,10 +27,10 @@ def test_central_point_dominance():
     
     CPD = G.central_point_dominance()
 
-    print 'num_links = ',wn.num_links()
-    print 'num_nodes = ',wn.num_nodes()
-    print 'CPD = ',CPD
-    print 'expected CPD = ',0.28
+    print('num_links = ',wn.num_links())
+    print('num_nodes = ',wn.num_nodes())
+    print('CPD = ',CPD)
+    print('expected CPD = ',0.28)
     error = abs(0.28-CPD)
     assert_less(error, 0.01)
     assert_equal(wn.num_links(),41)
@@ -74,8 +75,8 @@ def test_characteristic_path_length():
     
     CPL = nx.average_shortest_path_length(udG)
     
-    print 'CPL = ',CPL
-    print 'expected CPL = ',1.24
+    print('CPL = ',CPL)
+    print('expected CPL = ',1.24)
     error = abs(1.24-CPL)
     assert_less(error, 0.01)
 
@@ -94,8 +95,8 @@ def test_algebraic_connectivity():
     G = wn.get_graph_deep_copy()
     AC = G.algebraic_connectivity()
 
-    print 'AC = ',AC
-    print 'expected AC = ',0.56
+    print('AC = ',AC)
+    print('expected AC = ',0.56)
     error = abs(0.56-AC)
     assert_less(error, 0.01)
 
@@ -114,8 +115,8 @@ def test_crit_ratio_defrag():
     G = wn.get_graph_deep_copy()
     CRD = G.critical_ratio_defrag()
 
-    print 'CRD = ',CRD
-    print 'expected CRD = ',0.63
+    print('CRD = ',CRD)
+    print('expected CRD = ',0.63)
     error = abs(0.63-CRD)
     assert_less(error, 0.01)
 
