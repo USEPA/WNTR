@@ -387,7 +387,7 @@ class HydParam(enum.Enum):
                 data = data * (1.0/3600.0)  # m3/hour to m3/s
             elif flow_units is FlowUnits.CMD:
                 data = data * (1.0/86400.0)  # m3/day to m3/s
-            if self is self.EmitterCoeff:
+            if self is HydParam.EmitterCoeff:
                 if flow_units.is_traditional:
                     data = data / 0.7032  # flowunit/psi0.5 to flowunit/m0.5
 
@@ -473,7 +473,7 @@ class HydParam(enum.Enum):
                 data = data / (1.0/3600.0)  # m3/hour from m3/s
             elif flow_units is FlowUnits.CMD:
                 data = data / (1.0/86400.0)  # m3/day from m3/s
-            if self is self.EmitterCoeff:
+            if self is HydParam.EmitterCoeff:
                 if flow_units.is_traditional:
                     data = data / 0.7032  # flowunit/psi0.5 from flowunit/m0.5
 
