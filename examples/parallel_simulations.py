@@ -4,7 +4,6 @@ import numpy as np
 from multiprocessing import Pool
 import time
 import pickle
-import logging
 
 def run_scenario(pipe_to_break):
     f = open('wn.pickle', 'rb')
