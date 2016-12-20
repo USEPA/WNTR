@@ -1,10 +1,12 @@
-# -*- coding: utf-8 -*-
+# -*- coding: latin-1 -*-
 """
 Provides classes for reading/writing EPANET input and output files.
 """
+from __future__ import absolute_import
 import wntr.network
 from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
 import wntr
+import io
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam
 from .util import _LinkStatus as LinkStatus
@@ -269,7 +271,7 @@ class InpFile(object):
         section = None
         lnum = 0
         edata = {'fname': filename}
-        with open(filename, 'r') as f:
+        with io.open(filename, 'r', encoding='utf-8') as f:
             for line in f:
                 lnum += 1
                 edata['lnum'] = lnum
@@ -692,12 +694,10 @@ class InpFile(object):
 
             # Create the control action object
             link_name = current[1]
+
             # print (link_name in wn._links.keys())
             link = wn.get_link(link_name)
-            if type(current[2]) == str:
-                status = LinkStatus[current[2].lower()].value
-                action_obj = wntr.network.ControlAction(link, 'status', status)
-            elif type(current[2]) == float or type(current[2]) == int:
+            if type(current[2]) == float or type(current[2]) == int:
                 if isinstance(link, wntr.network.Pump):
                     logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
                     continue
@@ -709,6 +709,9 @@ class InpFile(object):
                         status = HydParam.Pressure.to_si(inp_units,
                                                          float(current[2]))
                         action_obj = wntr.network.ControlAction(link, 'setting', status)
+            else:
+                status = LinkStatus[current[2].lower()].value
+                action_obj = wntr.network.ControlAction(link, 'status', status)
 
             # Create the control object
             if 'TIME' not in current and 'CLOCKTIME' not in current:
@@ -876,7 +879,7 @@ class InpFile(object):
         else:
             mass_units = MassUnits.mg
 
-        f = open(filename, 'w')
+        f = io.open(filename, 'wb')
 
         # Print title
         if wn.name is not None:

@@ -68,7 +68,7 @@ class ENepanet():
     inpfile = 'temp.inp'
     rptfile = 'temp.rpt'
     binfile = 'temp.bin'
-    
+
     fileLoaded = False
 
     def __init__(self, inpfile='', rptfile='', binfile=''):
@@ -183,7 +183,7 @@ class ENepanet():
 
     def ENsaveinpfile(self, filename):
         """saves current data base to file"""
-        self.errcode = self.ENlib.ENsaveinpfile(filename)
+        self.errcode = self.ENlib.ENsaveinpfile(filename.encode('ascii'))
         self._error()
         return
 
@@ -413,7 +413,7 @@ class ENepanet():
          * sFmt    = report format command
 
         """
-        self.errcode = self.ENlib.ENsetreport(sFmt)
+        self.errcode = self.ENlib.ENsetreport(sFmt.encode('ascii'))
         self._error()
         return
 
@@ -517,7 +517,7 @@ class ENepanet():
 
         """
         iIndex = ctypes.c_int()
-        self.errcode = self.ENlib.ENgetpatternindex(sId, byref(iIndex))
+        self.errcode = self.ENlib.ENgetpatternindex(sId.encode('ascii'), byref(iIndex))
         self._error()
         return iIndex.value
 
@@ -615,7 +615,7 @@ class ENepanet():
 
         """
         iIndex = ctypes.c_int()
-        self.errcode = self.ENlib.ENgetnodeindex(sId, byref(iIndex))
+        self.errcode = self.ENlib.ENgetnodeindex(sId.encode('ascii'), byref(iIndex))
         self._error()
         return iIndex.value
 
@@ -739,7 +739,7 @@ class ENepanet():
 
         """
         iIndex = ctypes.c_int()
-        self.errcode = self.ENlib.ENgetlinkindex(sId, byref(iIndex))
+        self.errcode = self.ENlib.ENgetlinkindex(sId.encode('ascii'), byref(iIndex))
         self._error()
         return iIndex.value
 
@@ -884,7 +884,7 @@ class ENepanet():
          * sId     = ID name of the new pattern
 
         """
-        self.errcode = self.ENlib.ENaddpattern(sId)
+        self.errcode = self.ENlib.ENaddpattern(sId.encode('ascii'))
         self._error()
         return
 
