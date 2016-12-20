@@ -745,7 +745,7 @@ class InpFile(object):
                     logger.warning('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
                 if len(current) == 6:  # at time
                     if ':' in current[5]:
-                        fire_time = _str_time_to_sec(current[5])
+                        fire_time = int(_str_time_to_sec(current[5]))
                     else:
                         fire_time = int(float(current[5])*3600)
                     control_obj = wntr.network.TimeControl(wn, fire_time, 'SIM_TIME', False, action_obj)
@@ -754,7 +754,7 @@ class InpFile(object):
                         control_name = control_name + current[i]
                     control_name = control_name + str(fire_time)
                 elif len(current) == 7:  # at clocktime
-                    fire_time = _clock_time_to_sec(current[5], current[6])
+                    fire_time = int(_clock_time_to_sec(current[5], current[6]))
                     control_obj = wntr.network.TimeControl(wn, fire_time, 'SHIFTED_TIME', True, action_obj)
             wn.add_control(control_name, control_obj)
 
@@ -883,17 +883,17 @@ class InpFile(object):
 
         # Print title
         if wn.name is not None:
-            f.write('; Filename: {0}\n'.format(wn.name))
-            f.write('; WNTR: {}\n; Created: {:%Y-%m-%d %H:%M:%S}\n'.format(wntr.__version__, datetime.datetime.now()))
-        f.write('[TITLE]\n')
+            f.write('; Filename: {0}\n'.format(wn.name).encode('ascii'))
+            f.write('; WNTR: {}\n; Created: {:%Y-%m-%d %H:%M:%S}\n'.format(wntr.__version__, datetime.datetime.now()).encode('ascii'))
+        f.write('[TITLE]\n'.encode('ascii'))
         for lnum, line in self.sections['[TITLE]']:
-            f.write('{}\n'.format(line))
-        f.write('\n')
+            f.write('{}\n'.format(line).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Print junctions information
-        f.write('[JUNCTIONS]\n')
-        f.write(_JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern'))
-        nnames = wn._junctions.keys()
+        f.write('[JUNCTIONS]\n'.encode('ascii'))
+        f.write(_JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern').encode('ascii'))
+        nnames = list(wn._junctions.keys())
         nnames.sort()
         for junction_name in nnames:
             junction = wn._junctions[junction_name]
@@ -904,13 +904,13 @@ class InpFile(object):
                  'com': ';'}
             if junction.demand_pattern_name is not None:
                 E['pat'] = junction.demand_pattern_name
-            f.write(_JUNC_ENTRY.format(**E))
-        f.write('\n')
+            f.write(_JUNC_ENTRY.format(**E).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Print reservoir information
-        f.write('[RESERVOIRS]\n')
-        f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern'))
-        nnames = wn._reservoirs.keys()
+        f.write('[RESERVOIRS]\n'.encode('ascii'))
+        f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern').encode('ascii'))
+        nnames = list(wn._reservoirs.keys())
         nnames.sort()
         for reservoir_name in nnames:
             reservoir = wn._reservoirs[reservoir_name]
@@ -921,14 +921,14 @@ class InpFile(object):
                 E['pat'] = ''
             else:
                 E['pat'] = reservoir.head_pattern_name
-            f.write(_RES_ENTRY.format(**E))
-        f.write('\n')
+            f.write(_RES_ENTRY.format(**E).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Print tank information
-        f.write('[TANKS]\n')
+        f.write('[TANKS]\n'.encode('ascii'))
         f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
-                                   'Diameter', 'Min Volume', 'Volume Curve'))
-        nnames = wn._tanks.keys()
+                                   'Diameter', 'Min Volume', 'Volume Curve').encode('ascii'))
+        nnames = list(wn._tanks.keys())
         nnames.sort()
         for tank_name in nnames:
             tank = wn._tanks[tank_name]
@@ -943,14 +943,14 @@ class InpFile(object):
                  'com': ';'}
             if tank.vol_curve is not None:
                 E['curve'] = tank.vol_curve
-            f.write(_TANK_ENTRY.format(**E))
-        f.write('\n')
+            f.write(_TANK_ENTRY.format(**E).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Print pipe information
-        f.write('[PIPES]\n')
+        f.write('[PIPES]\n'.encode('ascii'))
         f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
-                                   'Roughness', 'Minor Loss', 'Status'))
-        lnames = wn._pipes.keys()
+                                   'Roughness', 'Minor Loss', 'Status').encode('ascii'))
+        lnames = list(wn._pipes.keys())
         lnames.sort()
         for pipe_name in lnames:
             pipe = wn._pipes[pipe_name]
@@ -965,13 +965,13 @@ class InpFile(object):
                  'com': ';'}
             if pipe.cv:
                 E['status'] = 'CV'
-            f.write(_PIPE_ENTRY.format(**E))
-        f.write('\n')
+            f.write(_PIPE_ENTRY.format(**E).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Print pump information
-        f.write('[PUMPS]\n')
-        f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Parameters'))
-        lnames = wn._pumps.keys()
+        f.write('[PUMPS]\n'.encode('ascii'))
+        f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Parameters').encode('ascii'))
+        lnames = list(wn._pumps.keys())
         lnames.sort()
         for pump_name in lnames:
             pump = wn._pumps[pump_name]
@@ -987,13 +987,13 @@ class InpFile(object):
                 E['params'] = str(HydParam.Power.from_si(inp_units, pump.power))
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
-            f.write(_PUMP_ENTRY.format(**E))
-        f.write('\n')
+            f.write(_PUMP_ENTRY.format(**E).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Print valve information
-        f.write('[VALVES]\n')
-        f.write(_VALVE_LABEL.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss'))
-        lnames = wn._valves.keys()
+        f.write('[VALVES]\n'.encode('ascii'))
+        f.write(_VALVE_LABEL.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss').encode('ascii'))
+        lnames = list(wn._valves.keys())
         lnames.sort()
         for valve_name in lnames:
             valve = wn._valves[valve_name]
@@ -1005,63 +1005,63 @@ class InpFile(object):
                  'set': valve._base_setting,
                  'mloss': valve.minor_loss,
                  'com': ';'}
-            f.write(_VALVE_ENTRY.format(**E))
-        f.write('\n')
+            f.write(_VALVE_ENTRY.format(**E).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Print status information
-        f.write('[STATUS]\n')
-        f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting'))
+        f.write('[STATUS]\n'.encode('ascii'))
+        f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
         for link_name, link in wn.links(Pump):
             if link.get_base_status() == LinkStatus.closed.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.get_base_status()).name))
+                        LinkStatus(link.get_base_status()).name).encode('ascii'))
         for link_name, link in wn.links(Valve):
             if link.get_base_status() == LinkStatus.Closed.value or link.get_base_status() == LinkStatus.Open.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.get_base_status()).name))
-        f.write('\n')
+                        LinkStatus(link.get_base_status()).name).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Print pattern information
         num_columns = 8
-        f.write('[PATTERNS]\n')
-        f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers'))
+        f.write('[PATTERNS]\n'.encode('ascii'))
+        f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers').encode('ascii'))
         for pattern_name, pattern in wn._patterns.items():
             count = 0
             for i in pattern:
                 if count % num_columns == 0:
-                    f.write('\n%s %f'%(pattern_name, i,))
+                    f.write('\n{:s} {:f}'.format(pattern_name, i).encode('ascii'))
                 else:
-                    f.write(' %f'%(i,))
+                    f.write(' {:f}'.format(i).encode('ascii'))
                 count += 1
-            f.write('\n')
-        f.write('\n')
+            f.write('\n'.encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Print curves
-        f.write('[CURVES]\n')
-        f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value'))
+        f.write('[CURVES]\n'.encode('ascii'))
+        f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value').encode('ascii'))
         for curve_name, curve in wn._curves.items():
             if curve.curve_type == 'VOLUME':
-                f.write(';VOLUME: {}\n'.format(curve_name))
+                f.write(';VOLUME: {}\n'.format(curve_name).encode('ascii'))
                 for point in curve.points:
                     x = HydParam.Length.from_si(inp_units, point[0])
                     y = HydParam.Volume.from_si(inp_units, point[1])
-                    f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';'))
+                    f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
             elif curve.curve_type == 'HEAD':
-                f.write(';HEAD: {}\n'.format(curve_name))
+                f.write(';HEAD: {}\n'.format(curve_name).encode('ascii'))
                 for point in curve.points:
                     x = HydParam.Flow.from_si(inp_units, point[0])
                     y = HydParam.HydraulicHead.from_si(inp_units, point[1])
-                    f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';'))
-            f.write('\n')
+                    f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
+            f.write('\n'.encode('ascii'))
         for curve_name, curve in self.curves.items():
             if curve_name not in wn._curves.keys():
                 for point in curve:
-                    f.write(_CURVE_ENTRY.format(name=curve_name, x=point[0], y=point[1], com=';'))
-                f.write('\n')
-        f.write('\n')
+                    f.write(_CURVE_ENTRY.format(name=curve_name, x=point[0], y=point[1], com=';').encode('ascii'))
+                f.write('\n'.encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Print Controls
-        f.write( '[CONTROLS]\n')
+        f.write( '[CONTROLS]\n'.encode('ascii'))
         # Time controls and conditional controls only
         for text, all_control in wn._control_dict.items():
             if isinstance(all_control,wntr.network.TimeControl):
@@ -1076,7 +1076,7 @@ class InpFile(object):
                     vals['setting'] = str(float(all_control._control_action._value))
                 if all_control._daily_flag:
                     vals['compare'] = 'CLOCKTIME'
-                f.write(entry.format(**vals))
+                f.write(entry.format(**vals).encode('ascii'))
             elif isinstance(all_control,wntr.network.ConditionalControl):
                 entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
                 vals = {'link': all_control._control_action._target_obj_ref.name(),
@@ -1092,112 +1092,112 @@ class InpFile(object):
                     vals['compare'] = 'below'
                 threshold = all_control._threshold - all_control._source_obj.elevation
                 vals['thresh'] = HydParam.HydraulicHead.from_si(inp_units, threshold)
-                f.write(entry.format(**vals))
+                f.write(entry.format(**vals).encode('ascii'))
             else:
                 raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
-        f.write('\n')
+        f.write('\n'.encode('ascii'))
 
         # Report
-        f.write('[REPORT]\n')
+        f.write('[REPORT]\n'.encode('ascii'))
         if len(self.sections['[REPORT]']) > 0:
             for lnum, line in self.sections['[REPORT]']:
-                f.write('{}\n'.format(line))
+                f.write('{}\n'.format(line).encode('ascii'))
         else:
-            f.write('Status Yes\n')
-            f.write('Summary yes\n')
-        f.write('\n')
+            f.write('Status Yes\n'.encode('ascii'))
+            f.write('Summary yes\n'.encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Options
-        f.write('[OPTIONS]\n')
+        f.write('[OPTIONS]\n'.encode('ascii'))
         entry_string = '{:20s} {:20s}\n'
         entry_float = '{:20s} {:g}\n'
-        f.write(entry_string.format('UNITS', inp_units.name))
-        f.write(entry_string.format('HEADLOSS', wn.options.headloss))
+        f.write(entry_string.format('UNITS', inp_units.name).encode('ascii'))
+        f.write(entry_string.format('HEADLOSS', wn.options.headloss).encode('ascii'))
         if wn.options.hydraulics_option is not None:
-            f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulics_option, wn.options.hydraulics_filename))
+            f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulics_option, wn.options.hydraulics_filename).encode('ascii'))
         if wn.options.quality_value is None:
-            f.write(entry_string.format('QUALITY', wn.options.quality_option))
+            f.write(entry_string.format('QUALITY', wn.options.quality_option).encode('ascii'))
         else:
-            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality_option, wn.options.quality_value))
-        f.write(entry_float.format('VISCOSITY', wn.options.viscosity))
-        f.write(entry_float.format('DIFFUSIVITY', wn.options.diffusivity))
-        f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.specific_gravity))
-        f.write(entry_float.format('TRIALS', wn.options.trials))
-        f.write(entry_float.format('ACCURACY', wn.options.accuracy))
-        f.write(entry_float.format('CHECKFREQ', wn.options.checkfreq))
+            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality_option, wn.options.quality_value).encode('ascii'))
+        f.write(entry_float.format('VISCOSITY', wn.options.viscosity).encode('ascii'))
+        f.write(entry_float.format('DIFFUSIVITY', wn.options.diffusivity).encode('ascii'))
+        f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.specific_gravity).encode('ascii'))
+        f.write(entry_float.format('TRIALS', wn.options.trials).encode('ascii'))
+        f.write(entry_float.format('ACCURACY', wn.options.accuracy).encode('ascii'))
+        f.write(entry_float.format('CHECKFREQ', wn.options.checkfreq).encode('ascii'))
         if wn.options.unbalanced_value is None:
-            f.write(entry_string.format('UNBALANCED', wn.options.unbalanced_option))
+            f.write(entry_string.format('UNBALANCED', wn.options.unbalanced_option).encode('ascii'))
         else:
-            f.write('{:20s} {:s} {:d}\n'.format('UNBALANCED', wn.options.unbalanced_option, wn.options.unbalanced_value))
+            f.write('{:20s} {:s} {:d}\n'.format('UNBALANCED', wn.options.unbalanced_option, wn.options.unbalanced_value).encode('ascii'))
         if wn.options.pattern is not None:
-            f.write(entry_string.format('PATTERN', wn.options.pattern))
-        f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.demand_multiplier))
-        f.write(entry_float.format('EMITTER EXPONENT', wn.options.emitter_exponent))
-        f.write(entry_float.format('TOLERANCE', wn.options.tolerance))
+            f.write(entry_string.format('PATTERN', wn.options.pattern).encode('ascii'))
+        f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.demand_multiplier).encode('ascii'))
+        f.write(entry_float.format('EMITTER EXPONENT', wn.options.emitter_exponent).encode('ascii'))
+        f.write(entry_float.format('TOLERANCE', wn.options.tolerance).encode('ascii'))
         if wn.options.map is not None:
-            f.write(entry_string.format('MAP', wn.options.map))
+            f.write(entry_string.format('MAP', wn.options.map).encode('ascii'))
 
-        f.write('\n')
+        f.write('\n'.encode('ascii'))
 
         # Reaction Options
-        f.write( '[REACTIONS]\n')
+        f.write( '[REACTIONS]\n'.encode('ascii'))
         entry_int = ' {:s} {:s} {:d}\n'
         entry_float = ' {:s} {:s} {:<10.4f}\n'
-        f.write(entry_int.format('ORDER', 'BULK', int(wn.options.bulk_rxn_order)))
-        f.write(entry_int.format('ORDER', 'WALL', int(wn.options.wall_rxn_order)))
-        f.write(entry_int.format('ORDER', 'TANK', int(wn.options.tank_rxn_order)))
+        f.write(entry_int.format('ORDER', 'BULK', int(wn.options.bulk_rxn_order)).encode('ascii'))
+        f.write(entry_int.format('ORDER', 'WALL', int(wn.options.wall_rxn_order)).encode('ascii'))
+        f.write(entry_int.format('ORDER', 'TANK', int(wn.options.tank_rxn_order)).encode('ascii'))
         f.write(entry_float.format('GLOBAL','BULK',
                                    QualParam.BulkReactionCoeff.from_si(inp_units,
                                                                        wn.options.bulk_rxn_coeff,
                                                                        mass_units,
-                                                                       wn.options.bulk_rxn_order)))
+                                                                       wn.options.bulk_rxn_order)).encode('ascii'))
         f.write(entry_float.format('GLOBAL','WALL',
                                    QualParam.WallReactionCoeff.from_si(inp_units,
                                                                        wn.options.wall_rxn_coeff,
                                                                        mass_units,
-                                                                       wn.options.wall_rxn_order)))
+                                                                       wn.options.wall_rxn_order)).encode('ascii'))
         if wn.options.limiting_potential is not None:
-            f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.limiting_potential))
+            f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.limiting_potential).encode('ascii'))
         if wn.options.roughness_correlation is not None:
-            f.write(entry_float.format('ROUGHNESS','CORRELATION',wn.options.roughness_correlation))
+            f.write(entry_float.format('ROUGHNESS','CORRELATION',wn.options.roughness_correlation).encode('ascii'))
         for tank_name, tank in wn.nodes(Tank):
             if tank.bulk_rxn_coeff is not None:
                 f.write(entry_float.format('TANK',tank_name,
                                            QualParam.BulkReactionCoeff.from_si(inp_units,
                                                                        tank.bulk_rxn_coeff,
                                                                        mass_units,
-                                                                       wn.options.bulk_rxn_order)))
+                                                                       wn.options.bulk_rxn_order)).encode('ascii'))
         for pipe_name, pipe in wn.links(Pipe):
             if pipe.bulk_rxn_coeff is not None:
                 f.write(entry_float.format('BULK',pipe_name,
                                            QualParam.BulkReactionCoeff.from_si(inp_units,
                                                                        pipe.bulk_rxn_coeff,
                                                                        mass_units,
-                                                                       wn.options.bulk_rxn_order)))
+                                                                       wn.options.bulk_rxn_order)).encode('ascii'))
             if pipe.wall_rxn_coeff is not None:
                 f.write(entry_float.format('WALL',pipe_name,
                                            QualParam.WallReactionCoeff.from_si(inp_units,
                                                                        pipe.wall_rxn_coeff,
                                                                        mass_units,
-                                                                       wn.options.wall_rxn_order)))
-        f.write('\n')
+                                                                       wn.options.wall_rxn_order)).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Time options
-        f.write('[TIMES]\n')
+        f.write('[TIMES]\n'.encode('ascii'))
         entry = '{:20s} {:10s}\n'
         time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
         hrs, mm, sec = _sec_to_string(wn.options.duration)
-        f.write(time_entry.format('DURATION', hrs, mm, sec))
+        f.write(time_entry.format('DURATION', hrs, mm, sec).encode('ascii'))
         hrs, mm, sec = _sec_to_string(wn.options.hydraulic_timestep)
-        f.write(time_entry.format('HYDRAULIC TIMESTEP', hrs, mm, sec))
+        f.write(time_entry.format('HYDRAULIC TIMESTEP', hrs, mm, sec).encode('ascii'))
         hrs, mm, sec = _sec_to_string(wn.options.pattern_timestep)
-        f.write(time_entry.format('PATTERN TIMESTEP', hrs, mm, sec))
+        f.write(time_entry.format('PATTERN TIMESTEP', hrs, mm, sec).encode('ascii'))
         hrs, mm, sec = _sec_to_string(wn.options.pattern_start)
-        f.write(time_entry.format('PATTERN START', hrs, mm, sec))
+        f.write(time_entry.format('PATTERN START', hrs, mm, sec).encode('ascii'))
         hrs, mm, sec = _sec_to_string(wn.options.report_timestep)
-        f.write(time_entry.format('REPORT TIMESTEP', hrs, mm, sec))
+        f.write(time_entry.format('REPORT TIMESTEP', hrs, mm, sec).encode('ascii'))
         hrs, mm, sec = _sec_to_string(wn.options.report_start)
-        f.write(time_entry.format('REPORT START', hrs, mm, sec))
+        f.write(time_entry.format('REPORT START', hrs, mm, sec).encode('ascii'))
 
         hrs, mm, sec = _sec_to_string(wn.options.start_clocktime)
         if hrs < 12:
@@ -1205,24 +1205,24 @@ class InpFile(object):
         else:
             hrs -= 12
             time_format = ' PM'
-        f.write('{:20s} {:02d}:{:02d}:{:02d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format))
+        f.write('{:20s} {:02d}:{:02d}:{:02d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format).encode('ascii'))
 
         hrs, mm, sec = _sec_to_string(wn.options.quality_timestep)
-        f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec))
+        f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec).encode('ascii'))
         hrs, mm, sec = _sec_to_string(wn.options.rule_timestep)
-        f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)))
-        f.write(entry.format('STATISTIC', wn.options.statistic))
-        f.write('\n')
+        f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
+        f.write(entry.format('STATISTIC', wn.options.statistic).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         # Coordinates
-        f.write('[COORDINATES]\n')
+        f.write('[COORDINATES]\n'.encode('ascii'))
         entry = '{:10s} {:10g} {:10g}\n'
         label = '{:10s} {:10s} {:10s}\n'
-        f.write(label.format(';Node', 'X-Coord', 'Y-Coord'))
+        f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
         coord = nx.get_node_attributes(wn._graph, 'pos')
         for key, val in coord.items():
-            f.write(entry.format(key, val[0], val[1]))
-        f.write('\n')
+            f.write(entry.format(key, val[0], val[1]).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
         unmodified = ['[ENERGY]', '[RULES]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]', '[SOURCES]',
                       '[MIXING]', '[VERTICES]', '[LABELS]', '[BACKDROP]', '[TAGS]']
@@ -1230,12 +1230,12 @@ class InpFile(object):
         for section in unmodified:
             if len(self.sections[section]) > 0:
                 logger.debug('Writting data from original epanet file: %s', section)
-                f.write('{0}\n'.format(section))
+                f.write('{0}\n'.format(section).encode('ascii'))
                 for lnum, line in self.sections[section]:
-                    f.write('{0}\n'.format(line))
-                f.write('\n')
+                    f.write('{0}\n'.format(line).encode('ascii'))
+                f.write('\n'.encode('ascii'))
 
-        f.write('[END]\n')
+        f.write('[END]\n'.encode('ascii'))
         f.close()
 
 

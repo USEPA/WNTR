@@ -195,11 +195,9 @@ class TestNetworkMethods(unittest.TestCase):
 
         self.assertNotIn('tank1',wn._nodes.keys())
         self.assertNotIn('tank1',wn._graph.nodes())
-        node_list = ['junction1','res1']
-        node_list.sort()
-        node_list_2 = wn._nodes.keys()
-        node_list_2.sort()
-        self.assertEqual(node_list, node_list_2)
+        node_list = set(['junction1','res1'])
+        node_list_2 = set(wn._nodes.keys())
+        self.assertSetEqual(node_list, node_list_2)
 
     def test_remove_controls_for_removing_link(self):
         inp_file = resilienceMainDir+'/examples/networks/Net1.inp'

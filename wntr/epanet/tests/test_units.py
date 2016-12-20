@@ -158,4 +158,4 @@ def execute_test_qual_list(typestring, flowunit, data, data_expected):
     assert_list_equal(data_convert, data_expected)
 
 if __name__ == '__main__':
-    test_Source_Mass_Injection()
+    test_Demand()

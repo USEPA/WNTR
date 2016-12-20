@@ -361,12 +361,12 @@ class HydParam(enum.Enum):
         data_type = type(data)
         if data_type is dict:
             data_keys = data.keys()
-            data = np.array(data.values())
+            data = np.array(list(data.values()))
         elif data_type is list:
             data = np.array(data)
 
         # Do conversions
-        if self.name in ["Demand", "Flow", "EmitterCoeff"]:
+        if self in [HydParam.Demand, HydParam.Flow, HydParam.EmitterCoeff]:
             if flow_units is FlowUnits.CFS:
                 data = data * 0.0283168466  # ft3/s to m3/s
             elif flow_units is FlowUnits.GPM:
@@ -447,7 +447,7 @@ class HydParam(enum.Enum):
         data_type = type(data)
         if data_type is dict:
             data_keys = data.keys()
-            data = np.array(data.values())
+            data = np.array(list(data.values()))
         elif data_type is list:
             data = np.array(data)
 

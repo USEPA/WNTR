@@ -54,10 +54,10 @@ wn.options.duration = 10*3600
 wn.options.hydraulic_timestep = 3600
 sim = wntr.sim.WNTRSimulator(wn)
 first_10_hours_of_results = sim.run_sim()
-f=open('pickle_example.pickle','w')
+f=open('pickle_example.pickle','wb')
 pickle.dump(wn,f)
 f.close()
-f=open('pickle_example.pickle','r')
+f=open('pickle_example.pickle','rb')
 new_wn = pickle.load(f)
 f.close()
 new_wn.options.duration = 24*3600

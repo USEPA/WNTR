@@ -7,7 +7,7 @@ import pickle
 import logging
 
 def run_scenario(pipe_to_break):
-    f = open('wn.pickle', 'r')
+    f = open('wn.pickle', 'rb')
     wn = pickle.load(f)
     f.close()
     wn.split_pipe_with_junction(pipe_to_break, pipe_to_break+'__A', pipe_to_break+'__B', 'leak_'+pipe_to_break)
@@ -24,7 +24,7 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 wn.options.duration = 72*3600
 wn.options.hydraulic_timestep = 3600
 pipes_to_break = list(np.random.choice(wn.pipe_name_list(), size=10, replace=False))
-f=open('wn.pickle','w')
+f=open('wn.pickle','wb')
 pickle.dump(wn,f)
 f.close()
 
