@@ -166,8 +166,8 @@ class EpanetSimulator(WaterNetworkSimulator):
                     patternstep = enData.ENgettimeparam(pyepanet.EN_PATTERNSTEP)
                     duration = enData.ENgettimeparam(pyepanet.EN_DURATION)
                     patternlen = int(duration/patternstep)
-                    patternstart = WQ.start_time/patternstep
-                    patternend = WQ.end_time/patternstep
+                    patternstart = int(WQ.start_time/patternstep)
+                    patternend = int(WQ.end_time/patternstep)
                     pattern = [0]*patternlen
                     pattern[patternstart:patternend] = [1]*(patternend-patternstart)
                     enData.ENaddpattern('wq')
