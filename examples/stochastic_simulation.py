@@ -38,7 +38,7 @@ results = {}
 # Set random seed
 np.random.seed(67823)
 
-f=open('wn.pickle','w')
+f=open('wn.pickle','wb')
 pickle.dump(wn,f)
 f.close()
 
@@ -80,7 +80,7 @@ for i in range(Imax):
     print(sim_name)
     results[sim_name] = sim.run_sim()
     
-    f=open('wn.pickle','r')
+    f=open('wn.pickle','rb')
     wn = pickle.load(f)
     f.close()
     
