@@ -118,7 +118,7 @@ class TestLeakResults(unittest.TestCase):
                 self.assertLessEqual(abs(results.node.at['pressure',t,node_name] - epanet_results.node.at['pressure',t,node_name]), 0.001)
 
     #def test_remove_leak_results(self):
-    #    inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
+    #    inp_file = join(test_datadir. 'net_test_13.inp')
     #    wn = self.wntr.network.WaterNetworkModel(inp_file)
     #    sim = self.wntr.sim.PyomoSimulator(wn)
     #    results1 = sim.run_sim()

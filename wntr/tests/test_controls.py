@@ -137,7 +137,7 @@ class TestTankControls(unittest.TestCase):
 
     def test_reopen_pipe_after_tank_fills_back_up(self):
         """
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/tank_controls_2.inp'
+        inp_file = join(test_datadir, 'tank_controls_2.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0

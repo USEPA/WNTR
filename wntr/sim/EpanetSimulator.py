@@ -182,7 +182,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 elif WQ.quality_type == 'TRACE':
                     # Set quality type
                     for node in WQ.nodes:
-                        enData.ENsetqualtype(pyepanet.EN_TRACE,0,0,node)   
+                        enData.ENsetqualtype(pyepanet.EN_TRACE,0,0,node.encode('ascii'))   
                     
                 else:
                     logger.error('Invalid Quality Type')

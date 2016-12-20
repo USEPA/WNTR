@@ -9,16 +9,15 @@ ex_datadir = join(testdir,'..','..','examples','networks')
 #
 #    @classmethod
 #    def setUpClass(self):
-#        sys.path.append(resilienceMainDir)
 #        import wntr
 #        self.wntr = wntr
 #
 #    @classmethod
 #    def tearDownClass(self):
-#        sys.path.remove(resilienceMainDir)
+#        pass
 #
 #    def test_pattern_start_time(self):
-#        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_8.inp'
+#        inp_file = join(test_datadir, 'net_test_8.inp')
 #        wn = self.wntr.network.WaterNetworkModel()
 #        parser = self.wntr.network.ParseWaterNetwork()
 #        
@@ -32,7 +31,7 @@ ex_datadir = join(testdir,'..','..','examples','networks')
 #        self.assertEqual(flag, True)
 #
 #    #def test_report_time_step(self):
-#    #    inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_9.inp'
+#    #    inp_file = join(test_datadir, 'net_test_9.inp')
 #    #    wn = self.wntr.network.WaterNetworkModel()
 #    #    parser = self.wntr.network.ParseWaterNetwork()
 #    #
@@ -46,7 +45,7 @@ ex_datadir = join(testdir,'..','..','examples','networks')
 #    #    self.assertEqual(flag, True)
 #
 #    def test_report_start_time(self):
-#        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_10.inp'
+#        inp_file = join(test_datadir, 'net_test_10.inp')
 #        wn = self.wntr.network.WaterNetworkModel()
 #        parser = self.wntr.network.ParseWaterNetwork()
 #        
@@ -60,7 +59,7 @@ ex_datadir = join(testdir,'..','..','examples','networks')
 #        self.assertEqual(flag, True)
 #
 #    def test_start_clocktime(self):
-#        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_11.inp'
+#        inp_file = join(test_datadir, 'net_test_11.inp')
 #        wn = self.wntr.network.WaterNetworkModel()
 #        parser = self.wntr.network.ParseWaterNetwork()
 #        
