@@ -55,6 +55,7 @@ def test_mass_waterquality_simulation():
     results = sim.run_sim(WQ)
 
     expected = 217903.60*(1e-6/0.001) # Node '159' at hour 6
+    print(expected, results.node.loc['quality', 6*3600, '159'])
     error = abs((results.node.loc['quality', 6*3600, '159'] - expected)/expected)
     assert_less(error, 0.0001) # 0.01% error
 

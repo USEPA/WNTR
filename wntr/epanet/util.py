@@ -576,3 +576,41 @@ class _OuputLinkStatus(enum.Enum):
     Open_FlowSettingNotMet = 6
     Open_PressureSettingNotMet = 7
 
+
+class ResultType(enum.Enum):
+    demand = 1
+    head = 2
+    pressure = 3
+    quality = 4
+    flowrate = 5
+    velocity = 6
+    headloss = 7
+    linkquality = 8
+    status = 9
+    setting = 10
+    rxnrate = 11
+    frictionfact = 12
+
+    @property
+    def is_node(self):
+        if self.value < 5:
+            return True
+        return False
+
+    @property
+    def is_link(self):
+        if self.value > 4:
+            return True
+        return False
+
+    @property
+    def is_qual(self):
+        if self.value in [4, 8, 11]:
+            return True
+        return False
+
+    @property
+    def is_hyd(self):
+        if self.value in [1,2,3,5,6,7,12]:
+            return True
+        return False

@@ -5,19 +5,22 @@ Provides classes for reading/writing EPANET input and output files.
 from __future__ import absolute_import
 import wntr.network
 from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
+from wntr.sim import NetResults
 import wntr
 import io
 
-from .util import FlowUnits, MassUnits, HydParam, QualParam
-from .util import _LinkStatus as LinkStatus
+from .util import FlowUnits, MassUnits, HydParam, QualParam, _LinkStatus, ResultType
+from .util import _StatisticsType, _QualityType, _PressureUnits, _LinkType, _OuputLinkStatus
 
 import datetime
 import networkx as nx
 import re
 import logging
 import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
+
 
 _INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
                  '[TANKS]', '[PIPES]', '[PUMPS]', '[VALVES]', '[EMITTERS]',
@@ -665,7 +668,7 @@ class InpFile(object):
             if (current[1].upper() == 'OPEN' or
                     current[1].upper() == 'CLOSED' or
                     current[1].upper() == 'ACTIVE'):
-                new_status = LinkStatus[current[1].lower()].value
+                new_status = _LinkStatus[current[1].lower()].value
                 link.status = new_status
                 link._base_status = new_status
             else:
@@ -710,7 +713,7 @@ class InpFile(object):
                                                          float(current[2]))
                         action_obj = wntr.network.ControlAction(link, 'setting', status)
             else:
-                status = LinkStatus[current[2].lower()].value
+                status = _LinkStatus[current[2].lower()].value
                 action_obj = wntr.network.ControlAction(link, 'status', status)
 
             # Create the control object
@@ -961,7 +964,7 @@ class InpFile(object):
                  'diam': HydParam.PipeDiameter.from_si(inp_units, pipe.diameter),
                  'rough': pipe.roughness,
                  'mloss': pipe.minor_loss,
-                 'status': LinkStatus(pipe.get_base_status()).name,
+                 'status': _LinkStatus(pipe.get_base_status()).name,
                  'com': ';'}
             if pipe.cv:
                 E['status'] = 'CV'
@@ -1012,13 +1015,13 @@ class InpFile(object):
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
         for link_name, link in wn.links(Pump):
-            if link.get_base_status() == LinkStatus.closed.value:
+            if link.get_base_status() == _LinkStatus.closed.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.get_base_status()).name).encode('ascii'))
+                        _LinkStatus(link.get_base_status()).name).encode('ascii'))
         for link_name, link in wn.links(Valve):
-            if link.get_base_status() == LinkStatus.Closed.value or link.get_base_status() == LinkStatus.Open.value:
+            if link.get_base_status() == _LinkStatus.Closed.value or link.get_base_status() == _LinkStatus.Open.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.get_base_status()).name).encode('ascii'))
+                        _LinkStatus(link.get_base_status()).name).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
         # Print pattern information
@@ -1071,7 +1074,7 @@ class InpFile(object):
                         'compare': 'TIME',
                         'time': int(all_control._fire_time / 3600.0)}
                 if all_control._control_action._attribute.lower() == 'status':
-                    vals['setting'] = LinkStatus(all_control._control_action._value).name
+                    vals['setting'] = _LinkStatus(all_control._control_action._value).name
                 else:
                     vals['setting'] = str(float(all_control._control_action._value))
                 if all_control._daily_flag:
@@ -1085,7 +1088,7 @@ class InpFile(object):
                         'compare': 'above',
                         'thresh': 0.0}
                 if all_control._control_action._attribute.lower() == 'status':
-                    vals['setting'] = LinkStatus(all_control._control_action._value).name
+                    vals['setting'] = _LinkStatus(all_control._control_action._value).name
                 else:
                     vals['setting'] = str(float(all_control._control_action._value))
                 if all_control._operation is np.less:
@@ -1244,12 +1247,322 @@ class HydFile(object):
     pass
 
 
-class BinFile(object):
-    """An EPANET ressults file (binray) reader."""
-    pass
-
-
 class RptFile(object):
     """An EPANET report file (text) reader."""
     pass
 
+
+class BinFile(object):
+    # __metaclass__ = ABCMeta
+
+    def __init__(self, result_types=None, network=False, energy=False, statistics=False):
+        """
+        Read an EPANET 2.x binary output file.
+
+        Abstract class, does not save any of the data read, simply calls the
+        abstract functions at the appropriate times.
+
+        Parameters
+        ----------
+        results_type : list of wntr.epanet.util.ResultType
+            If ``None``, then all results will be saved (node quality, demand, link flow, etc.).
+            Otherwise, a list of result types can be passed to limit the memory used. This can
+            also be specified in a save_results_line call, but will default to this list.
+        network : bool
+            Save a new WaterNetworkModel from the description in the output binary file. Certain
+            elements may be missing, such as patterns and curves, if this is done.
+        energy : bool
+            Save the pump energy results.
+        statistics : bool
+            Save the statistics lines (different from the stats flag in the inp file) that are
+            automatically calculated regarding hydraulic conditions.
+
+        """
+        self.ftype = '=f4'
+        self.idlen = 32
+        self.hydraulic_id = None
+        self.quality_id = None
+        self.node_names = None
+        self.link_names = None
+        self.report_times = None
+        self.flow_units = None
+        self.pres_units = None
+        self.mass_units = None
+        self.quality_type = None
+        self.num_nodes = None
+        self.num_tanks = None
+        self.num_links = None
+        self.num_pumps = None
+        self.num_valves = None
+        self.report_start = None
+        self.report_step = None
+        self.duration = None
+        self.chemical = None
+        self.chem_units = None
+        self.inp_file = None
+        self.rpt_file = None
+        self.results = NetResults()
+        if result_types is None:
+            self.items = [ member for name, member in ResultType.__members__.items() ]
+        else:
+            self.items = result_types
+        self.create_network = network
+        self.keep_energy = energy
+        self.keep_statistics = statistics
+
+    def setup_ep_results(self, times, nodes, links, result_types=None):
+        """Set up the results object (or file, etc.) for save_ep_line() calls to use.
+
+        The basic implementation sets up a dictionary of pandas DataFrames with the keys
+        being member names of the ResultsType class. If the items parameter is left blank,
+        the function will use the items that were specified during object creation.
+        If this too, was blank, then all results parameters will be saved.
+
+        """
+        if result_types is None:
+            result_types = self.items
+        link_items = [ member.name for member in result_types if member.is_link ]
+        node_items = [ member.name for member in result_types if member.is_node ]
+        self.results.node = pd.Panel(items=node_items, major_axis=times, minor_axis=nodes)
+        self.results.link = pd.Panel(items=link_items, major_axis=times, minor_axis=links)
+        self.results.time = times
+        self.results.network_name = self.inp_file
+
+    def save_ep_line(self, period, result_type, values):
+        """
+        Save an extended period set of values.
+
+        Each report period contains all the hydraulics and quality values for
+        the nodes and links. Nodes and link values are provided in the same
+        order as the names are specified in the prolog.
+
+        The result types for node data are: ``demand``, ``head``,
+        ``pressure`` and ``node_quality``.
+
+        The result types are
+
+
+        Parameters
+        ----------
+        period : int
+            the report period
+        result_type : str
+            one of the type strings listed above
+        values : numpy.array
+            the values to save, in the node or link order specified earlier in the file
+
+        """
+        if result_type in [ResultType.quality, ResultType.linkquality]:
+            values = QualParam.Concentration.to_si(self.flow_units, values, mass_units=self.mass_units)
+        elif result_type == ResultType.demand:
+            values = HydParam.Demand.to_si(self.flow_units, values)
+        elif result_type == ResultType.flowrate:
+            values = HydParam.Flow.to_si(self.flow_units, values)
+        elif result_type in [ResultType.head, ResultType.headloss]:
+            values = HydParam.HydraulicHead.to_si(self.flow_units, values)
+        elif result_type == ResultType.pressure:
+            values = HydParam.Pressure.to_si(self.flow_units, values)
+        elif result_type == ResultType.velocity:
+            values = HydParam.Velocity.to_si(self.flow_units, values)
+        if result_type in self.items:
+            if result_type.is_node:
+                self.results.node[result_type.name].iloc[period] = values
+            else:
+                self.results.link[result_type.name].iloc[period] = values
+
+    def save_network_desc_line(self, element, values):
+        """
+        Save network description meta-data and element characteristics.
+
+        Parameters
+        ----------
+        element : str
+            the information being saved
+        values : numpy.array
+            the values that go with the information
+
+        .. warning::
+            This method, by default, does nothing. It is available to be overloaded, but the
+            core implementation assumes that an INP file exists that will have a better,
+            human readable network description.
+
+        """
+        pass
+
+    def save_energy_line(self, pump_idx, pump_name, values):
+        """
+        Save pump energy from the output file.
+
+        Parameters
+        ----------
+        pump_idx : int
+            the pump index
+        pump_name : str
+            the pump name
+        values : numpy.array
+            the values to save
+
+        """
+        pass
+
+    def finalize_save(self, good_read, sim_warnings):
+        """
+        Do any final post-read saves, writes, or processing.
+
+        Parameters
+        ----------
+        good_read : bool
+            was the full file read correctly
+        sim_warnings : int
+            were there warnings issued during the simulation
+
+
+        """
+        pass
+
+    def read(self, filename):
+        logger.debug('Read binary EPANET data from %s',filename)
+        fin = open(filename,'rb')
+        ftype = self.ftype
+        idlen = self.idlen
+        logger.debug('... read prolog information ...')
+        prolog = np.fromfile(fin, dtype=np.int32, count=15)
+        magic1 = prolog[0]
+        version = prolog[1]
+        nnodes = prolog[2]
+        ntanks = prolog[3]
+        nlinks = prolog[4]
+        npumps = prolog[5]
+        nvalve = prolog[6]
+        wqopt = _QualityType(prolog[7])
+        srctrace = prolog[8]
+        flowunits = FlowUnits(prolog[9])
+        presunits = _PressureUnits(prolog[10])
+        statsflag = _StatisticsType(prolog[11])
+        reportstart = prolog[12]
+        reportstep = prolog[13]
+        duration = prolog[14]
+        logger.debug('EPANET/Toolkit version %d',version)
+        logger.debug('Nodes: %d; Tanks/Resrv: %d Links: %d; Pumps: %d; Valves: %d', nnodes, ntanks, nlinks, npumps, nvalve)
+        logger.debug('WQ opt: %s; Trace Node: %s; Flow Units %s; Pressure Units %s', wqopt, srctrace, flowunits, presunits)
+        logger.debug('Statistics: %s; Report Start %d, step %d; Duration=%d sec', statsflag, reportstart, reportstep, duration)
+
+        # Ignore the title lines
+        np.fromfile(fin, dtype=np.uint8, count=240)
+        inpfile = np.fromfile(fin, dtype=np.uint8, count=260)
+        rptfile = np.fromfile(fin, dtype=np.uint8, count=260)
+        chemical = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
+        wqunits = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
+        mass = wqunits.split('/',1)[0]
+        if mass in ['mg', 'ug']:
+            massunits = MassUnits[mass]
+        else:
+            massunits = MassUnits.mg
+        self.flow_units = flowunits
+        self.pres_units = presunits
+        self.quality_type = wqopt
+        self.mass_units = massunits
+        self.num_nodes = nnodes
+        self.num_tanks = ntanks
+        self.num_links = nlinks
+        self.num_pumps = npumps
+        self.num_valves = nvalve
+        self.report_start = reportstart
+        self.report_step = reportstep
+        self.duration = duration
+        self.chemical = chemical
+        self.chem_units = wqunits
+        self.inp_file = inpfile
+        self.rpt_file = rptfile
+        nodenames = []
+        linknames = []
+        for i in xrange(nnodes):
+            name = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
+            nodenames.append(name)
+        for i in xrange(nlinks):
+            name = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
+            linknames.append(name)
+        self.node_names = nodenames
+        self.link_names = linknames
+        linkstart = np.fromfile(fin, dtype=np.int32, count=nlinks)
+        linkend = np.fromfile(fin, dtype=np.int32, count=nlinks)
+        linktype = np.fromfile(fin, dtype=np.int32, count=nlinks)
+        tankidxs = np.fromfile(fin, dtype=np.int32, count=ntanks)
+        tankarea = np.fromfile(fin, dtype=np.dtype(ftype), count=ntanks)
+        elevation = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
+        linklen = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+        diameter = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+
+        self.save_network_desc_line('link_start', linkstart)
+        self.save_network_desc_line('link_end', linkend)
+        self.save_network_desc_line('link_type', linktype)
+        self.save_network_desc_line('tank_node_index', tankidxs)
+        self.save_network_desc_line('tank_area', tankarea)
+        self.save_network_desc_line('node_elevation', elevation)
+        self.save_network_desc_line('link_length', linklen)
+        self.save_network_desc_line('link_diameter', diameter)
+
+        logger.debug('... read energy data ...')
+        for i in xrange(npumps):
+            pidx = int(np.fromfile(fin,dtype=np.int32, count=1))
+            energy = np.fromfile(fin, dtype=np.dtype(ftype), count=6)
+            #self.save_energy_line(pidx, linknames[pidx], energy)
+        peakenergy = np.fromfile(fin, dtype=np.dtype(ftype), count=1)
+        self.peak_energy = peakenergy
+
+        logger.debug('... read EP simulation data ...')
+        reporttimes = np.arange(reportstart, duration+reportstep, reportstep)
+        nrptsteps = len(reporttimes)
+        if statsflag in [_StatisticsType.Maximum, _StatisticsType.Minimum, _StatisticsType.Range]:
+            nrptsteps = 1
+            reporttimes = [reportstart + reportstep]
+        self.num_periods = nrptsteps
+        self.report_times = reporttimes
+
+        logger.debug('... set up results object ...')
+        self.setup_ep_results(reporttimes, nodenames, linknames)
+
+        for ts in xrange(nrptsteps):
+            try:
+                demand = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
+                head = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
+                pressure = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
+                quality = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
+                flow = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+                velocity = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+                headloss = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+                linkquality = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+                linkstatus = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+                linksetting = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+                reactionrate = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+                frictionfactor = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+                self.save_ep_line(ts, ResultType.demand, demand)
+                self.save_ep_line(ts, ResultType.head, head)
+                self.save_ep_line(ts, ResultType.pressure, pressure)
+                self.save_ep_line(ts, ResultType.quality, quality)
+                self.save_ep_line(ts, ResultType.flowrate, flow)
+                self.save_ep_line(ts, ResultType.velocity, velocity)
+                self.save_ep_line(ts, ResultType.headloss, headloss)
+                self.save_ep_line(ts, ResultType.linkquality, linkquality)
+                self.save_ep_line(ts, ResultType.status, linkstatus)
+                self.save_ep_line(ts, ResultType.setting, linksetting)
+                self.save_ep_line(ts, ResultType.rxnrate, reactionrate)
+                self.save_ep_line(ts, ResultType.frictionfact, frictionfactor)
+            except Exception as e:
+                logger.exception('Error reading or writing EP line: %s', e)
+                logger.warning('Missing results from report period %d',ts)
+
+        logger.debug('... read epilog ...')
+        # Read the averages and then the number of periods for checks
+        averages = np.fromfile(fin, dtype=np.dtype(ftype), count=4)
+        self.averages = averages
+        np.fromfile(fin, dtype=np.int32, count=1)
+        warnflag = np.fromfile(fin, dtype=np.int32, count=1)
+        magic2 = np.fromfile(fin, dtype=np.int32, count=1)
+        if magic1 != magic2:
+            logger.critical('The magic number did not match -- binary incomplete or incorrectly read. If you believe this file IS complete, please try a different float type. Current type is "%s"',ftype)
+        #print numperiods, warnflag, magic
+        if warnflag != 0:
+            logger.warning('Warnings were issued during simulation')
+        fin.close()
+        self.finalize_save(magic1==magic2, warnflag)
