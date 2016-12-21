@@ -55,7 +55,7 @@ WNTR can be installed as a Python package using standard open source software to
 
 Requirements
 -------------
-Requirements for WNTR include Python 2.7 along with several Python packages. 
+Requirements for WNTR include Python (2.7, 3.4, or 3.5) along with several Python packages. 
 The following Python packages are required:
 
 * Numpy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 

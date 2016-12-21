@@ -1,24 +1,22 @@
 # These tests run a demand driven simulation with both Pyomo and Epanet and compare the results for the example networks
 import unittest
-import sys
-import os, inspect
+from os.path import abspath, dirname, join
 import pandas as pd
 import pickle
-resilienceMainDir = os.path.abspath(
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile(
-        inspect.currentframe() ) ) ), '..', '..' ))
+
+testdir = dirname(abspath(str(__file__)))
+test_datadir = join(testdir,'networks_for_testing')
+ex_datadir = join(testdir,'..','..','examples','networks')
 
 class TestResetInitialValues(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
-        parser = self.wntr.epanet.InpFile()
-        self.wn = parser.read(inp_file)
+        inp_file = join(ex_datadir, 'Net3.inp')
+        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
 
@@ -30,7 +28,7 @@ class TestResetInitialValues(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
@@ -66,11 +64,10 @@ class TestStopStartSim(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
+        inp_file = join(ex_datadir, 'Net3.inp')
 
         parser = self.wntr.epanet.InpFile()
         self.wn = parser.read(inp_file)
@@ -95,8 +92,8 @@ class TestStopStartSim(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
-
+        pass
+    
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
             for t in self.res1.link.major_axis:
@@ -131,11 +128,10 @@ class TestPickle(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
+        inp_file = join(ex_datadir, 'Net3.inp')
 
         parser = self.wntr.epanet.InpFile()
         self.wn = parser.read(inp_file)
@@ -167,8 +163,9 @@ class TestPickle(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
+        
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
             for t in self.res1.link.major_axis:

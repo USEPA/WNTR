@@ -1,31 +1,25 @@
 import unittest
-import sys
-# HACK until resilience is a proper module
-# __file__ fails if script is called in different ways on Windows
-# __file__ fails if someone does os.chdir() before
-# sys.argv[0] also fails because it doesn't not always contains the path
-import os, inspect
-resilienceMainDir = os.path.abspath(
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile(
-        inspect.currentframe() ) ) ), '..', '..' ))
+from os.path import abspath, dirname, join
 import copy
 import numpy as np
-from scipy.optimize import fsolve
+
+testdir = dirname(abspath(str(__file__)))
+test_datadir = join(testdir,'networks_for_testing')
+ex_datadir = join(testdir,'..','..','examples','networks')
 
 class TestNetworkCreation(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
+        inp_file = join(ex_datadir,'Net6.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_num_junctions(self):
         self.assertEqual(self.wn._num_junctions, 3323)
@@ -66,7 +60,6 @@ class TestNetworkMethods(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         from wntr.network.WaterNetworkModel import Junction, Tank, Reservoir, Pipe, Pump, Valve
         from wntr.network.NetworkControls import ControlAction, TimeControl
@@ -82,7 +75,7 @@ class TestNetworkMethods(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_add_junction(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -167,7 +160,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(wn._graph.edges(), [('j1','j3')])
 
     def test_remove_node(self):
-        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
+        inp_file = join(ex_datadir,'Net6.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         wn.remove_node('TANK-3326')
@@ -175,8 +168,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertNotIn('TANK-3326',wn._nodes.keys())
         self.assertNotIn('TANK-3326',wn._graph.nodes())
 
-
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_1.inp'
+        inp_file = join(test_datadir,'conditional_controls_1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         tank1 = wn.get_node('tank1')
@@ -195,12 +187,11 @@ class TestNetworkMethods(unittest.TestCase):
 
         self.assertNotIn('tank1',wn._nodes.keys())
         self.assertNotIn('tank1',wn._graph.nodes())
-        node_list = set(['junction1','res1'])
-        node_list_2 = set(wn._nodes.keys())
-        self.assertSetEqual(node_list, node_list_2)
+        expected_nodes = set(['junction1','res1'])
+        self.assertSetEqual(set(wn._nodes.keys()), expected_nodes)
 
     def test_remove_controls_for_removing_link(self):
-        inp_file = resilienceMainDir+'/examples/networks/Net1.inp'
+        inp_file = join(ex_datadir, 'Net1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         control_action = self.wntr.network.ControlAction(wn.get_link('21'), 'status', self.wntr.network.LinkStatus.opened)
@@ -415,17 +406,16 @@ class TestInpFileWriter(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
-        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        inp_file = join(ex_datadir, 'Net6.inp')
+        self.wn = wntr.network.WaterNetworkModel(inp_file)
         self.wn.write_inpfile('tmp.inp')
         self.wn2 = self.wntr.network.WaterNetworkModel(inp_file)
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_wn(self):
         self.assertEqual(self.wn == self.wn2, True)
@@ -485,11 +475,10 @@ class TestNet3InpWriterResults(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
+        inp_file = join(ex_datadir, 'Net3.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         sim = self.wntr.epanet.EpanetSimulator(self.wn)
@@ -503,8 +492,8 @@ class TestNet3InpWriterResults(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
-
+        pass
+    
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
             for t in self.results2.link.major_axis:
@@ -535,11 +524,10 @@ class TestNet3InpUnitsResults(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
+        inp_file = join(ex_datadir, 'Net3.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         sim = self.wntr.epanet.EpanetSimulator(self.wn)
@@ -553,7 +541,7 @@ class TestNet3InpUnitsResults(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_link_flowrate_units_convert(self):
         for link_name, link in self.wn.links():

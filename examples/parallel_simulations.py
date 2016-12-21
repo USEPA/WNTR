@@ -4,7 +4,6 @@ import numpy as np
 from multiprocessing import Pool
 import time
 import pickle
-import logging
 
 def run_scenario(pipe_to_break):
     f = open('wn.pickle', 'rb')
@@ -23,7 +22,7 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 wn.options.duration = 72*3600
 wn.options.hydraulic_timestep = 3600
-pipes_to_break = list(np.random.choice(list(wn.pipe_name_list()), size=10, replace=False))
+pipes_to_break = list(np.random.choice(wn.pipe_name_list(), size=10, replace=False))
 f=open('wn.pickle','wb')
 pickle.dump(wn,f)
 f.close()

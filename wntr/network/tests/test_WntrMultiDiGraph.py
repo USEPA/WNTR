@@ -16,7 +16,6 @@ def test_terminal_nodes():
     G = wn.get_graph_deep_copy()
     terminal_nodes = G.terminal_nodes()
     expected_nodes = set(['2', '9'])
-    
     assert_set_equal(set(terminal_nodes), expected_nodes)
 
 def test_Net1_MultiDiGraph():

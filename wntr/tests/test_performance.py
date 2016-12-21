@@ -1,28 +1,25 @@
 from __future__ import print_function
 import unittest
 import sys
-# HACK until resilience is a proper module
-# __file__ fails if script is called in different ways on Windows
-# __file__ fails if someone does os.chdir() before
-# sys.argv[0] also fails because it doesn't not always contains the path
-import os, inspect
-resilienceMainDir = os.path.abspath(
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile(
-        inspect.currentframe() ) ) ), '..', '..' ))
+import os
 import time
 import numpy as np
-print(resilienceMainDir)
+from os.path import abspath, dirname, join
+
+testdir = dirname(abspath(str(__file__)))
+test_datadir = join(testdir,'networks_for_testing')
+ex_datadir = join(testdir,'..','..','examples','networks')
+results_dir = join(testdir,'performance_results')
 
 class TestPerformance(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
-        sys.path.append(resilienceMainDir+'/wntr/tests/performance_results')
+        sys.path.append(results_dir)
         import wntr
         self.wntr = wntr
 
-        files = [f for f in os.listdir(os.path.join(resilienceMainDir,'wntr/tests/performance_results'))]
+        files = [f for f in os.listdir(results_dir)]
         if 'performance_results.py' in files:
             import performance_results as past_results
 
@@ -113,7 +110,7 @@ class TestPerformance(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        f = open(os.path.join(resilienceMainDir,'wntr/tests/performance_results/performance_results.py'),'w')
+        f = open(os.path.join(results_dir, 'performance_results.py'),'w')
         f.write('year = {0}\n'.format(self.year))
         f.write('month = {0}\n'.format(self.month))
         f.write('day = {0}\n'.format(self.day))
@@ -155,14 +152,11 @@ class TestPerformance(unittest.TestCase):
         f.write('Net6_mod_flow_diff_std_dev = {0}\n'.format(self.Net6_mod_flow_diff_std_dev))
 
         f.close()
-        sys.path.remove(resilienceMainDir)
 
     def test_Net1_performance(self):
         t0 = time.time()
-
-        inp_file = resilienceMainDir+'/examples/networks/Net1.inp'
-        parser = self.wntr.epanet.InpFile()
-        wn = parser.read(inp_file)
+        inp_file = join(ex_datadir, 'Net1.inp')
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
@@ -208,9 +202,8 @@ class TestPerformance(unittest.TestCase):
     def test_Net3_performance(self):
         t0 = time.time()
 
-        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
-        parser = self.wntr.epanet.InpFile()
-        wn = parser.read(inp_file)
+        inp_file = join(ex_datadir, 'Net3.inp')
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
@@ -255,9 +248,8 @@ class TestPerformance(unittest.TestCase):
     def test_Net6_mod_performance(self):
         t0 = time.time()
 
-        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
-        parser = self.wntr.epanet.InpFile()
-        wn = parser.read(inp_file)
+        inp_file = join(ex_datadir,'Net6.inp')
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.options.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
@@ -299,3 +291,6 @@ class TestPerformance(unittest.TestCase):
         self.assertLess(np.std(head_diff_list), .07)
         self.assertLess(np.std(demand_diff_list), .0009)
         self.assertLess(np.std(flow_diff_list), .003)
+
+if __name__ == '__main__':
+    unittest.main()

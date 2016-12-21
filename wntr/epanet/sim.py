@@ -192,7 +192,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                     # Set quality type
                     for node in WQ.nodes:
                         enData.ENsetqualtype(wntr.epanet.pyepanet.EN_TRACE,0,0,node.encode('ascii'))
-
+                            
                 else:
                     logger.error('Invalid Quality Type')
             enData.ENopenQ()
@@ -226,7 +226,6 @@ class EpanetSimulator(WaterNetworkSimulator):
         for key, value in node_dictonary.items():
             node_dictonary[key] = np.array(value).reshape((ntimes, nnodes))
         results.node = pd.Panel(node_dictonary, major_axis=results.time, minor_axis=node_names)
-
         for key, value in link_dictonary.items():
             link_dictonary[key] = np.array(value).reshape((ntimes, nlinks))
         results.link = pd.Panel(link_dictonary, major_axis=results.time, minor_axis=link_names)

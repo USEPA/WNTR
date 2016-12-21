@@ -10,17 +10,15 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
     def weight_graph(self, node_attribute={}, link_attribute={}):
         """ Return a weighted graph based on node and link attributes.
         The weighted graph changes the direction of the original link if the weight is negative.
-
         Parameters
         ----------
         G : graph
             A networkx graph
-
         node_attribute :  dict or pandas Series
             node attributes
-
         link_attribues : dict or pandas Series
             link attributes
+
 
         Returns
         -------
@@ -58,6 +56,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         G : graph
             A networkx graph
 
+
         Returns
         -------
         terminal_nodes : list
@@ -71,11 +70,11 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
     def bridges(self):
         """ Get bridge links. Uses an undirected graph.
-
         Parameters
         ----------
         G : graph
             A networkx graph
+
 
         Returns
         -------
@@ -96,7 +95,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
     def central_point_dominance(self):
         """ Compute central point dominance.
-
+            
         Returns
         -------
         cpd : float
@@ -160,9 +159,11 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         -----------
         sources : list
             List of source nodes
-
         sinks : list
             List of sink nodes
+        sinks : list
+            List of sink nodes
+
 
         Returns
         -------

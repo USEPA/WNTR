@@ -99,7 +99,6 @@ def test_trace_waterquality_simulation():
     results = sim.run_sim(WQ)
 
     expected = 91.66 # Node '159' at hour 6
-    print(results.node.loc['quality',:,'159'])
     error = abs(float(results.node.loc['quality', 6*3600, '159'] - expected)/float(expected))
     assert_less(error, 0.0001) # 0.01% error
 

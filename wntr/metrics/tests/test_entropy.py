@@ -38,11 +38,11 @@ def test_layout1():
     Saverage = np.mean(list(S.values()))
     Smax = max(list(S.values()))
     Smin = min(list(S.values()))
-    print('Entropy: Layout 1')
-    print('  S mean: ' + repr(Saverage))
-    print('  S max: ' + repr(Smax))
-    print('  S min: ' + repr(Smin))
-    print('  Shat: ' + repr(Shat))
+    # print('Entropy: Layout 1')
+    # print('  S mean: ' + repr(Saverage))
+    # print('  S max: ' + repr(Smax))
+    # print('  S min: ' + repr(Smin))
+    # print('  Shat: ' + repr(Shat))
     
     # The values in the paper are different, perhaps due to significant figure
     # rounding during the calculation
@@ -92,11 +92,11 @@ def test_layout8():
     Saverage = np.mean(list(S.values()))
     Smax = max(list(S.values()))
     Smin = min(list(S.values()))
-    print('Entropy: Layout 8')
-    print('  S mean: ' + repr(Saverage))
-    print('  S max: ' + repr(Smax))
-    print('  S min: ' + repr(Smin))
-    print('  Shat: ' + repr(Shat))
+    # print('Entropy: Layout 8')
+    # print('  S mean: ' + repr(Saverage))
+    # print('  S max: ' + repr(Smax))
+    # print('  S min: ' + repr(Smin))
+    # print('  Shat: ' + repr(Shat))
     
     # The values in the paper are different, perhaps due to significant figure
     # rounding during the calculation
