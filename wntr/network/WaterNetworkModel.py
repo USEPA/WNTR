@@ -8,7 +8,6 @@ from scipy.optimize import fsolve
 import wntr.network
 import wntr.epanet
 import numpy as np
-import warnings
 import sys
 import logging
 from os.path import abspath
@@ -107,7 +106,7 @@ class WaterNetworkModel(object):
 
     def __hash__(self):
         return id(self)
-        
+
     def add_junction(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0, coordinates=None):
         """
         Add a junction to the network.
@@ -469,7 +468,7 @@ class WaterNetworkModel(object):
         start_node = self.get_node(start_node_name)
         end_node = self.get_node(end_node_name)
         if type(start_node)==Tank or type(end_node)==Tank:
-            warnings.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
+            logger.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
 
         valve = Valve(name, start_node_name, end_node_name,
                       diameter, valve_type, minor_loss, setting)
@@ -538,14 +537,14 @@ class WaterNetworkModel(object):
         target = control_object._control_action._target_obj_ref
         target_type = type(target)
         if target_type == wntr.network.Valve:
-            warnings.warn('Controls should not be added to valves! Note that this will become an error in the next release.')
+            logger.warn('Controls should not be added to valves! Note that this will become an error in the next release.')
         if target_type == wntr.network.Link:
-            start_node_name = target_obj.start_node()
-            end_node_name = target_obj.end_node()
+            start_node_name = target.start_node()
+            end_node_name = target.end_node()
             start_node = self.get_node(start_node_name)
             end_node = self.get_node(end_node_name)
             if type(start_node)==Tank or type(end_node)==Tank:
-                warnings.warn('Controls should not be added to links that are connected to tanks. Consider adding an additional link and using the control on it. Note that this will become an error in the next release.')
+                logger.warn('Controls should not be added to links that are connected to tanks. Consider adding an additional link and using the control on it. Note that this will become an error in the next release.')
 
         self._control_dict[name] = control_object
         control_object.name = name
@@ -620,7 +619,7 @@ class WaterNetworkModel(object):
         link = self.get_link(name)
         if link.cv:
             self._check_valves.remove(name)
-            warnings.warn('You are removing a pipe with a check valve.')
+            logger.warn('You are removing a pipe with a check valve.')
         self._graph.remove_edge(link.start_node(), link.end_node(), key=name)
         self._links.pop(name)
         if isinstance(link, Pipe):
@@ -640,11 +639,11 @@ class WaterNetworkModel(object):
             for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
-                        warnings.warn('Control '+control_name+' is being removed along with link '+name)
+                        logger.warn('Control '+control_name+' is being removed along with link '+name)
                         x.append(control_name)
                 else:
                     if link == control._control_action._target_obj_ref:
-                        warnings.warn('Control '+control_name+' is being removed along with link '+name)
+                        logger.warn('Control '+control_name+' is being removed along with link '+name)
                         x.append(control_name)
             for i in x:
                 self.remove_control(i)
@@ -652,10 +651,10 @@ class WaterNetworkModel(object):
             for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
-                        warnings.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
+                        logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
                 else:
                     if link == control._control_action._target_obj_ref:
-                        warnings.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
+                        logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
 
     def remove_node(self, name, with_control=True):
         """
@@ -690,11 +689,11 @@ class WaterNetworkModel(object):
             for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
-                        warnings.warn('Control '+control_name+' is being removed along with node '+name)
+                        logger.warn('Control '+control_name+' is being removed along with node '+name)
                         x.append(control_name)
                 else:
                     if node == control._control_action._target_obj_ref:
-                        warnings.warn('Control '+control_name+' is being removed along with node '+name)
+                        logger.warn('Control '+control_name+' is being removed along with node '+name)
                         x.append(control_name)
             for i in x:
                 self.remove_control(i)
@@ -702,10 +701,10 @@ class WaterNetworkModel(object):
             for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
-                        warnings.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
+                        logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
                 else:
                     if node == control._control_action._target_obj_ref:
-                        warnings.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
+                        logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
 
     def remove_control(self, name):
         """
@@ -806,7 +805,7 @@ class WaterNetworkModel(object):
         self.add_pipe(pipe_name_on_end_node_side, junction_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
 
         if pipe.cv:
-            warnings.warn('You are splitting a pipe with a check valve. Both new pipes will have check valves.')
+            logger.warn('You are splitting a pipe with a check valve. Both new pipes will have check valves.')
 
     def get_node(self, name):
         """
@@ -1302,7 +1301,7 @@ class WaterNetworkModel(object):
         Returns a list of the names of all controls.
         """
         return list(self._control_dict.keys())
-            
+
     def curves(self):
         """
         A generator to iterate over all curves
@@ -1335,7 +1334,7 @@ class WaterNetworkModel(object):
             Coordinate scale multiplier
         """
         pos = nx.get_node_attributes(self._graph, 'pos')
-        
+
         for name, node in self._nodes.items():
             self.set_node_coordinates(name, (pos[name][0]*scale, pos[name][1]*scale))
 
@@ -1524,7 +1523,7 @@ class WaterNetworkModel(object):
                 groups[grp] = set()
                 has_tank_or_res[grp] = False
                 grab_group(node_name)
-        
+
         #for grp, nodes in groups.items():
         #    logger.debug('group: {0}'.format(grp))
         #    logger.debug('nodes[{0}]: {1}'.format(grp, nodes))
@@ -2168,7 +2167,7 @@ class Tank(Node):
 
     def __hash__(self):
         return id(self)
-        
+
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
         Method to add a leak to a tank. Leaks are modeled by:
@@ -2393,7 +2392,7 @@ class Pipe(Link):
 
     def __hash__(self):
         return id(self)
-    
+
 class Pump(Link):
     """
     Pump class that is inherited from Link
@@ -2443,7 +2442,7 @@ class Pump(Link):
 
     def __hash__(self):
         return id(self)
-        
+
     def get_head_curve_coefficients(self):
         """
         Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.

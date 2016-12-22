@@ -13,7 +13,7 @@ pyepanet_package = 'wntr.epanet.pyepanet'
 import logging
 logger = logging.getLogger(__name__)
 
-import warnings
+# import warnings
 
 class EpanetException(Exception):
     pass
@@ -119,7 +119,7 @@ class ENepanet():
             raise EpanetException(self.ENgeterror(self.errcode))
         else:
             self.Warnflag = True
-            warnings.warn(ENgetwarning(self.errcode))
+            # warnings.warn(ENgetwarning(self.errcode))
             self.errcodelist.append(ENgetwarning(self.errcode,self.cur_time))
         return
 
