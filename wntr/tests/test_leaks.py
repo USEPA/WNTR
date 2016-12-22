@@ -1,30 +1,24 @@
 import unittest
-import sys
-# HACK until resilience is a proper module
-# __file__ fails if script is called in different ways on Windows
-# __file__ fails if someone does os.chdir() before
-# sys.argv[0] also fails because it doesn't not always contains the path
-import os, inspect
-resilienceMainDir = os.path.abspath( 
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
-        inspect.currentframe() ) ) ), '..', '..' ))
 import math
-import warnings
+from os.path import abspath, dirname, join
+
+testdir = dirname(abspath(str(__file__)))
+test_datadir = join(testdir,'networks_for_testing')
+ex_datadir = join(testdir,'..','..','examples','networks')
 
 class TestLeakAdditionAndRemoval(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_add_leak(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leaks.inp'
+        inp_file = join(test_datadir, 'leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         pipe = wn.get_link('pipe1')
         wn.split_pipe_with_junction('pipe1','pipe1__A','pipe1__B','leak1')
@@ -56,16 +50,15 @@ class TestLeakResults(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_leak_demand(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leaks.inp'
+        inp_file = join(test_datadir, 'leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.split_pipe_with_junction('pipe2','pipe2__A','pipe2__B','leak1')
         leak1 = wn.get_node('leak1')
@@ -86,7 +79,7 @@ class TestLeakResults(unittest.TestCase):
                 self.assertAlmostEqual(results.node.at['leak_demand',t,'leak1'], 0.75*math.pi/4.0*0.01**2.0*math.sqrt(2*9.81*results.node.at['pressure',t,'leak1']))
 
     def test_leak_against_epanet(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/leaks.inp'
+        inp_file = join(test_datadir, 'leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.split_pipe_with_junction('pipe2','pipe2__A','pipe2__B','leak1')
         leak1 = wn.get_node('leak1')
@@ -94,7 +87,7 @@ class TestLeakResults(unittest.TestCase):
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/epanet_leaks.inp'
+        inp_file = join(test_datadir, 'epanet_leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.EpanetSimulator(wn)
         epanet_results = sim.run_sim()
@@ -125,7 +118,7 @@ class TestLeakResults(unittest.TestCase):
                 self.assertLessEqual(abs(results.node.at['pressure',t,node_name] - epanet_results.node.at['pressure',t,node_name]), 0.001)
 
     #def test_remove_leak_results(self):
-    #    inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_13.inp'
+    #    inp_file = join(test_datadir. 'net_test_13.inp')
     #    wn = self.wntr.network.WaterNetworkModel(inp_file)
     #    sim = self.wntr.sim.PyomoSimulator(wn)
     #    results1 = sim.run_sim()
@@ -144,4 +137,7 @@ class TestLeakResults(unittest.TestCase):
     #    self.assertEqual(True, (results1.link == results2.link)['flowrate'].all().all())
     #    self.assertEqual(True, (results1.link == results2.link)['velocity'].all().all())
     #    self.assertEqual(True, (results1.link == results2.link)['type'].all().all())
+
+if __name__ == '__main__':
+    unittest.main()
 

@@ -3,7 +3,7 @@ try:
 except ImportError:
     raise ImportError('Error importing pyepanet while running epanet simulator.'
                       'Make sure pyepanet is installed and added to path.')
-from WaterNetworkSimulator import *
+from wntr.sim.WaterNetworkSimulator import *
 import pandas as pd
 from wntr.utils import convert
 import logging
@@ -165,9 +165,9 @@ class EpanetSimulator(WaterNetworkSimulator):
                         raise RuntimeError('Start time is greater than end time')
                     patternstep = enData.ENgettimeparam(pyepanet.EN_PATTERNSTEP)
                     duration = enData.ENgettimeparam(pyepanet.EN_DURATION)
-                    patternlen = duration/patternstep
-                    patternstart = WQ.start_time/patternstep
-                    patternend = WQ.end_time/patternstep
+                    patternlen = int(duration/patternstep)
+                    patternstart = int(WQ.start_time/patternstep)
+                    patternend = int(WQ.end_time/patternstep)
                     pattern = [0]*patternlen
                     pattern[patternstart:patternend] = [1]*(patternend-patternstart)
                     enData.ENaddpattern('wq')
@@ -182,7 +182,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 elif WQ.quality_type == 'TRACE':
                     # Set quality type
                     for node in WQ.nodes:
-                        enData.ENsetqualtype(pyepanet.EN_TRACE,0,0,node)   
+                        enData.ENsetqualtype(pyepanet.EN_TRACE,0,0,node.encode('ascii'))   
                     
                 else:
                     logger.error('Invalid Quality Type')
@@ -214,11 +214,11 @@ class EpanetSimulator(WaterNetworkSimulator):
         enData.ENclose()
         
         # Create Panel
-        for key, value in node_dictonary.iteritems():
+        for key, value in node_dictonary.items():
             node_dictonary[key] = np.array(value).reshape((ntimes, nnodes))
         results.node = pd.Panel(node_dictonary, major_axis=results.time, minor_axis=node_names)
         
-        for key, value in link_dictonary.iteritems():
+        for key, value in link_dictonary.items():
             link_dictonary[key] = np.array(value).reshape((ntimes, nlinks))
         results.link = pd.Panel(link_dictonary, major_axis=results.time, minor_axis=link_names)
         

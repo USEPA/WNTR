@@ -1,3 +1,4 @@
+from __future__ import print_function
 from nose.tools import *
 from nose import SkipTest
 from os.path import abspath, dirname, join
@@ -48,12 +49,12 @@ def test_mass_consumed():
 
     expected = float(39069900000/1000000) # hour 2
     error = abs((MC_cumsum[2*3600] - expected)/expected)
-    print MC_cumsum[2*3600], expected, error
+    print(MC_cumsum[2*3600], expected, error)
     assert_less(error, 0.01) # 1% error
     
     expected = float(1509440000000/1000000) # hour 12
     error = abs((MC_cumsum[12*3600] - expected)/expected)
-    print MC_cumsum[12*3600], expected, error
+    print(MC_cumsum[12*3600], expected, error)
     assert_less(error, 0.01) # 1% error
     
 def test_volume_consumed():
@@ -78,12 +79,12 @@ def test_volume_consumed():
     
     expected = float(156760/35.3147) # hour 2
     error = abs((VC_cumsum[2*3600] - expected)/expected)
-    print VC_cumsum[2*3600], expected, error
+    print(VC_cumsum[2*3600], expected, error)
     assert_less(error, 0.01) # 1% error
     
     expected = float(4867920/35.3147) # hour 12
     error = abs((VC_cumsum[12*3600] - expected)/expected)
-    print VC_cumsum[12*3600], expected, error
+    print(VC_cumsum[12*3600], expected, error)
     assert_less(error, 0.01) # 1% error
     
 def test_extent_contaminated():
@@ -108,12 +109,12 @@ def test_extent_contaminated():
     
     expected = float(80749.9*0.3048) # hour 2
     error = abs((EC_cummax[2*3600] - expected)/expected)
-    print EC_cummax[2*3600], expected, error
+    print(EC_cummax[2*3600], expected, error)
     assert_less(error, 0.01) # 1% error
     
     expected = float(135554*0.3048) # hour 12
     error = abs((EC_cummax[12*3600] - expected)/expected)
-    print EC_cummax[12*3600], expected, error
+    print(EC_cummax[12*3600], expected, error)
     assert_less(error, 0.01) # 1% error
         
 if __name__ == '__main__':

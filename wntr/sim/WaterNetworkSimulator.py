@@ -3,7 +3,7 @@ import warnings
 from wntr.network.WaterNetworkModel import *
 from scipy.optimize import fsolve
 import math
-from NetworkResults import NetResults
+from wntr.sim.NetworkResults import NetResults
 import time
 import copy
 
@@ -75,7 +75,7 @@ class WaterNetworkSimulator(object):
             pattern_index = t / self._wn.options.pattern_timestep
             # Modulus with the pattern time step to get the pattern index
             pattern_index = pattern_index % pattern_length
-            demand_values.append(demand_pattern_values[pattern_index])
+            demand_values.append(demand_pattern_values[int(pattern_index)])
 
         return demand_values
 

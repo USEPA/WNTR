@@ -1,25 +1,24 @@
 import unittest
-import sys
-import os, inspect
-resilienceMainDir = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.abspath(inspect.getfile(
-                    inspect.currentframe()))),'..','..'))
 import math
+from os.path import abspath, dirname, join
+
+testdir = dirname(abspath(str(__file__)))
+test_datadir = join(testdir,'networks_for_testing')
+ex_datadir = join(testdir,'..','..','examples','networks')
 
 class TestPDD(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_pdd_with_wntr(self):
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/simulator.inp'
+        inp_file = join(test_datadir, 'simulator.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         res1 = wn.get_node('reservoir1')
         res1.head = 10.0
@@ -38,3 +37,5 @@ class TestPDD(unittest.TestCase):
         for t in results.time:
             self.assertEqual(results.node.at['demand',t,'junction2'], 150.0/3600.0*math.sqrt((10.0-0.0)/(15.0-0.0)))
 
+if __name__ == '__main__':
+    unittest.main()

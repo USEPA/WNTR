@@ -1,31 +1,23 @@
 import unittest
-import sys
-# HACK until resilience is a proper module
-# __file__ fails if script is called in different ways on Windows
-# __file__ fails if someone does os.chdir() before
-# sys.argv[0] also fails because it doesn't not always contains the path
-import os, inspect
-resilienceMainDir = os.path.abspath( 
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
-        inspect.currentframe() ) ) ), '..', '..' ))
-import copy
-import numpy as np
-import warnings
+from os.path import abspath, dirname, join
+
+testdir = dirname(abspath(str(__file__)))
+test_datadir = join(testdir,'networks_for_testing')
+ex_datadir = join(testdir,'..','..','examples','networks')
 
 #class TestNetworkTimeWarnings(unittest.TestCase):
 #
 #    @classmethod
 #    def setUpClass(self):
-#        sys.path.append(resilienceMainDir)
 #        import wntr
 #        self.wntr = wntr
 #
 #    @classmethod
 #    def tearDownClass(self):
-#        sys.path.remove(resilienceMainDir)
+#        pass
 #
 #    def test_pattern_start_time(self):
-#        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_8.inp'
+#        inp_file = join(test_datadir, 'net_test_8.inp')
 #        wn = self.wntr.network.WaterNetworkModel()
 #        parser = self.wntr.network.ParseWaterNetwork()
 #        
@@ -39,7 +31,7 @@ import warnings
 #        self.assertEqual(flag, True)
 #
 #    #def test_report_time_step(self):
-#    #    inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_9.inp'
+#    #    inp_file = join(test_datadir, 'net_test_9.inp')
 #    #    wn = self.wntr.network.WaterNetworkModel()
 #    #    parser = self.wntr.network.ParseWaterNetwork()
 #    #
@@ -53,7 +45,7 @@ import warnings
 #    #    self.assertEqual(flag, True)
 #
 #    def test_report_start_time(self):
-#        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_10.inp'
+#        inp_file = join(test_datadir, 'net_test_10.inp')
 #        wn = self.wntr.network.WaterNetworkModel()
 #        parser = self.wntr.network.ParseWaterNetwork()
 #        
@@ -67,7 +59,7 @@ import warnings
 #        self.assertEqual(flag, True)
 #
 #    def test_start_clocktime(self):
-#        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/net_test_11.inp'
+#        inp_file = join(test_datadir, 'net_test_11.inp')
 #        wn = self.wntr.network.WaterNetworkModel()
 #        parser = self.wntr.network.ParseWaterNetwork()
 #        
@@ -84,18 +76,17 @@ class TestNetworkTimeBehavior(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/times.inp'
+        inp_file = join(test_datadir, 'times.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.WNTRSimulator(wn)
         self.results = sim.run_sim()
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_duration(self):
         results = self.results
