@@ -17,6 +17,7 @@ River        CONCEN        100000   mg/L
 """
 
 def test_epanet_binary_reader():
+    raise SkipTest
     inp_file = join(datadir,'Net3.inp')
     bin_file = 'Net3.bin'
 

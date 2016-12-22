@@ -1476,10 +1476,10 @@ class BinFile(object):
         self.rpt_file = rptfile
         nodenames = []
         linknames = []
-        for i in xrange(nnodes):
+        for i in range(nnodes):
             name = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
             nodenames.append(name)
-        for i in xrange(nlinks):
+        for i in range(nlinks):
             name = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
             linknames.append(name)
         self.node_names = nodenames
@@ -1503,7 +1503,7 @@ class BinFile(object):
         self.save_network_desc_line('link_diameter', diameter)
 
         logger.debug('... read energy data ...')
-        for i in xrange(npumps):
+        for i in range(npumps):
             pidx = int(np.fromfile(fin,dtype=np.int32, count=1))
             energy = np.fromfile(fin, dtype=np.dtype(ftype), count=6)
             #self.save_energy_line(pidx, linknames[pidx], energy)
@@ -1522,7 +1522,7 @@ class BinFile(object):
         logger.debug('... set up results object ...')
         self.setup_ep_results(reporttimes, nodenames, linknames)
 
-        for ts in xrange(nrptsteps):
+        for ts in range(nrptsteps):
             try:
                 demand = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
                 head = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
