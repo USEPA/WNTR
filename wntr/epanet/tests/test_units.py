@@ -2,6 +2,7 @@ from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
 import wntr
+import unittest
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','..','networks')
@@ -14,8 +15,21 @@ def test_Concentration():
     for flowunit in range(10):
         execute_test_qual(typestring, flowunit, data, data_expected)
 
+def test_EN_Enum():
+    assert_equal(int(wntr.epanet.FlowUnits.AFD), wntr.epanet.pyepanet.EN_AFD)
+    assert_equal(int(wntr.epanet.FlowUnits.CFS), wntr.epanet.pyepanet.EN_CFS)
+    assert_equal(int(wntr.epanet.FlowUnits.CMD), wntr.epanet.pyepanet.EN_CMD)
+    assert_equal(int(wntr.epanet.FlowUnits.CMH), wntr.epanet.pyepanet.EN_CMH)
+    assert_equal(int(wntr.epanet.FlowUnits.GPM), wntr.epanet.pyepanet.EN_GPM)
+    assert_equal(int(wntr.epanet.FlowUnits.IMGD), wntr.epanet.pyepanet.EN_IMGD)
+    assert_equal(int(wntr.epanet.FlowUnits.LPM), wntr.epanet.pyepanet.EN_LPM)
+    assert_equal(int(wntr.epanet.FlowUnits.LPS), wntr.epanet.pyepanet.EN_LPS)
+    assert_equal(int(wntr.epanet.FlowUnits.MGD), wntr.epanet.pyepanet.EN_MGD)
+    assert_equal(int(wntr.epanet.FlowUnits.MLD), wntr.epanet.pyepanet.EN_MLD)
+
+
 def test_Demand():
-    data_expected = 1 # m/s
+    data_expected = 1.0 # m/s
     for typestring in ['Demand', 'Flow']:
         for flowunit in range(10):
             if flowunit == 0:
@@ -25,19 +39,19 @@ def test_Demand():
             elif flowunit == 2:
                 data = 22.8244653 # million gall/d
             elif flowunit == 3:
-                data = 19 # million imperial gall/d
+                data = 19. # million imperial gall/d
             elif flowunit == 4:
                 data = 70.0456199 # acre-feet/day
             elif flowunit == 5:
-                data = 1000 # L/s
+                data = 1000. # L/s
             elif flowunit == 6:
-                data = 60000 # L/min
+                data = 60000. # L/min
             elif flowunit == 7:
                 data = 86.4 # million L/d
             elif flowunit == 8:
-                data = 3600 # m3/h
+                data = 3600. # m3/h
             elif flowunit == 9:
-                data = 86400 # m3/d
+                data = 86400. # m3/d
             execute_test(typestring, flowunit, data, data_expected)
 
 def test_Emitter_Coefficient():
@@ -45,7 +59,7 @@ def test_Emitter_Coefficient():
 
 def test_Pipe_Diameter():
     typestring = 'PipeDiameter'
-    data_expected = 1 # m
+    data_expected = 1.0 # m
     for flowunit in range(10):
         if flowunit in [0,1,2,3,4]:
             data = 39.3701 # in
@@ -54,7 +68,7 @@ def test_Pipe_Diameter():
         execute_test(typestring, flowunit, data, data_expected)
 
 def test_Length():
-    data_expected = 1 # m
+    data_expected = 1.0 # m
     for typestring in ['TankDiameter', 'Elevation', 'HydraulicHead', 'Length']:
         for flowunit in range(10):
             if flowunit in [0,1,2,3,4]:
@@ -65,7 +79,7 @@ def test_Length():
 
 def test_Velocity():
     typestring = 'Velocity'
-    data_expected = 1 # m/s
+    data_expected = 1.0 # m/s
     for flowunit in range(10):
         if flowunit in [0,1,2,3,4]:
             data = 3.28084 # ft/s
@@ -133,8 +147,9 @@ def test_Water_Age():
 def execute_test(typestring, flowunit, data, data_expected):
 #    data_convert = wntr.utils.convert(typestring, flowunit, data)
     data_convert = wntr.epanet.util.HydParam[typestring].to_si(wntr.epanet.util.FlowUnits(flowunit), data)
-    data_convert = round(data_convert,3)
-    assert_equal(data_convert, data_expected)
+    assert_less(abs((data_convert - data_expected)/float(data_expected)), 0.001)
+    data_convert = wntr.epanet.util.HydParam[typestring].from_si(wntr.epanet.util.FlowUnits(flowunit), data_expected)
+    assert_less(abs((data_convert - data)/data), 0.001)
 
 @nottest
 def execute_test_list(typestring, flowunit, data, data_expected):
@@ -159,3 +174,4 @@ def execute_test_qual_list(typestring, flowunit, data, data_expected):
 
 if __name__ == '__main__':
     test_Demand()
+    test_EN_Enum()

@@ -89,7 +89,7 @@ class TestLeakResults(unittest.TestCase):
 
         inp_file = join(test_datadir, 'epanet_leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        sim = self.wntr.epanet.sim.EpanetSimulator(wn)
+        sim = self.wntr.sim.EpanetSimulator(wn)
         epanet_results = sim.run_sim()
 
         for link_name, link in wn.links():

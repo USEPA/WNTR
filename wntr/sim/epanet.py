@@ -1,7 +1,7 @@
-from wntr.sim.WaterNetworkSimulator import *
+from .WaterNetworkSimulator import *
 import pandas as pd
 import numpy as np
-from .util import FlowUnits, MassUnits, HydParam, QualParam
+from wntr.epanet.util import FlowUnits, MassUnits, HydParam, QualParam
 import logging
 
 logger = logging.getLogger(__name__)
@@ -192,7 +192,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                     # Set quality type
                     for node in WQ.nodes:
                         enData.ENsetqualtype(wntr.epanet.pyepanet.EN_TRACE,0,0,node.encode('ascii'))
-                            
+
                 else:
                     logger.error('Invalid Quality Type')
             enData.ENopenQ()

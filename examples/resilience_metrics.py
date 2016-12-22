@@ -211,7 +211,7 @@ def water_quality_metrics(wn):
     WQscenario3 = wntr.scenario.Waterquality('TRACE', ['111'])
 
     # Simulate hydraulics and water quality for each scenario
-    sim = wntr.epanet.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results_CHEM = sim.run_sim(WQscenario1)
     results_AGE = sim.run_sim(WQscenario2)
     results_TRACE = sim.run_sim(WQscenario3)
@@ -275,7 +275,7 @@ def water_security_metrics(wn):
     WQscenario = wntr.scenario.Waterquality('CHEM', '121', 'SETPOINT', 1000, 2*3600, 15*3600)
 
     # Simulate hydraulics and water quality for each scenario
-    sim = wntr.epanet.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results_CHEM = sim.run_sim(WQscenario)
 
     MC = wntr.metrics.mass_contaminant_consumed(results_CHEM.node)
@@ -298,7 +298,7 @@ def population_impacted_metrics(wn):
                           title='Population, Total = ' + str(total_population))
 
     # Find population and nodes impacted by pressure less than 40 m
-    sim = wntr.epanet.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
     junctions = [name for name, node in wn.junctions()]
     pop_impacted = wntr.metrics.population_impacted(pop, results.node['pressure',:,junctions], np.less, 40)

@@ -162,7 +162,7 @@ class TestPerformance(unittest.TestCase):
 
         t1 = time.time()
 
-        epa_sim = self.wntr.epanet.sim.EpanetSimulator(wn)
+        epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
         head_diff_list = []
@@ -209,7 +209,7 @@ class TestPerformance(unittest.TestCase):
 
         t1 = time.time()
 
-        epa_sim = self.wntr.epanet.sim.EpanetSimulator(wn)
+        epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
         head_diff_list = []
@@ -256,7 +256,7 @@ class TestPerformance(unittest.TestCase):
 
         t1 = time.time()
 
-        epa_sim = self.wntr.epanet.sim.EpanetSimulator(wn)
+        epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
         head_diff_list = []

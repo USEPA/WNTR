@@ -481,13 +481,13 @@ class TestNet3InpWriterResults(unittest.TestCase):
         inp_file = join(ex_datadir, 'Net3.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
 
-        sim = self.wntr.epanet.EpanetSimulator(self.wn)
+        sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
 
         self.wn.write_inpfile('tmp.inp')
         self.wn2 = self.wntr.network.WaterNetworkModel('tmp.inp')
 
-        sim = self.wntr.epanet.EpanetSimulator(self.wn2)
+        sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.results2 = sim.run_sim()
 
     @classmethod
@@ -530,13 +530,13 @@ class TestNet3InpUnitsResults(unittest.TestCase):
         inp_file = join(ex_datadir, 'Net3.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
 
-        sim = self.wntr.epanet.EpanetSimulator(self.wn)
+        sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
 
         self.wn.write_inpfile('tmp_units.inp', units='CMH')
         self.wn2 = self.wntr.network.WaterNetworkModel('tmp_units.inp')
 
-        sim = self.wntr.epanet.EpanetSimulator(self.wn2)
+        sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.results2 = sim.run_sim()
 
     @classmethod

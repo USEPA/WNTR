@@ -1239,17 +1239,17 @@ class InpFile(object):
         f.close()
 
 
-class HydFile(object):
-    """An EPANET hydraulics file (binary) reader/writer."""
-    pass
-
-
-class BinFile(object):
-    """An EPANET ressults file (binray) reader."""
-    pass
-
-
-class RptFile(object):
-    """An EPANET report file (text) reader."""
-    pass
-
+#class HydFile(object):
+#    """An EPANET hydraulics file (binary) reader/writer."""
+#    pass
+#
+#
+#class BinFile(object):
+#    """An EPANET ressults file (binray) reader."""
+#    pass
+#
+#
+#class RptFile(object):
+#    """An EPANET report file (text) reader."""
+#    pass
+#

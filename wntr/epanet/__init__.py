@@ -106,8 +106,7 @@ below.
 """
 
 
-from .io import InpFile, BinFile, HydFile, RptFile
+from .io import InpFile  #, BinFile, HydFile, RptFile
 from .util import FlowUnits, MassUnits, HydParam, QualParam
-from .sim import EpanetSimulator
 import wntr.epanet.pyepanet
 
