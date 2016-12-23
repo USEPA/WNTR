@@ -1,2 +1,6 @@
+"""
+The wntr.utils package contains helper functions.
+"""
 from wntr.utils import logger
-from wntr.utils.timedelta import sec_to_timedelta_str
+from wntr.utils.color import custom_colormap
+

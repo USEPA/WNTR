@@ -22,5 +22,8 @@ class _LogWrapper(object):
             logger.addHandler(ch)
 
 def start_logging():
+    """
+    Start the wntr logger.
+    """
     if _LogWrapper.initialized is None:
         _LogWrapper.initialized = _LogWrapper()
