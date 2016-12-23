@@ -1,5 +1,6 @@
 """
-Classes and methods used for specifying a water network model.
+The wntr.network.model module includes methods to define a water network 
+model.
 """
 import copy
 import networkx as nx
@@ -10,28 +11,27 @@ import wntr.epanet
 import numpy as np
 import sys
 import logging
-from os.path import abspath
 
-logger = logging.getLogger('wntr.network.WaterNetworkModel')
+logger = logging.getLogger(__name__)
 
 class WaterNetworkModel(object):
 
     """
     Base water network model class.
+    
+    Parameters
+    -------------------
+    inp_file_name: string (optional)
+        Directory and filename of EPANET inp file to load into the 
+        WaterNetworkModel object.
+    
+    Examples
+    ---------
+    >>> wn = WaterNetworkModel()
     """
+        
     def __init__(self, inp_file_name=None):
-        """
-        Examples
-        ---------
-        >>> wn = WaterNetworkModel()
-
-        Parameters
-        -------------------
-        inp_file_name: string
-           directory and filename of inp file to load into the WaterNetworkModel object.
-
-        """
-
+    
         # Network name
         self.name = None
 
@@ -1803,20 +1803,20 @@ class LinkStatus(object):
 class Node(object):
     """
     The base node class.
+    
+    Parameters
+    -----------
+    name : string
+        Name of the node
+    node_type : string
+        Type of the node. Options are 'Junction', 'Tank', or 'Reservoir'
+
+    Examples
+    ---------
+    >>> node2 = Node('North Lake','Reservoir')
     """
     def __init__(self, name):
-        """
-        Parameters
-        -----------
-        name : string
-            Name of the node
-        node_type : string
-            Type of the node. Options are 'Junction', 'Tank', or 'Reservoir'
 
-        Examples
-        ---------
-        >>> node2 = Node('North Lake','Reservoir')
-        """
         self._name = name
         self.prev_head = None
         self.head = None
@@ -1851,24 +1851,25 @@ class Node(object):
 class Link(object):
     """
     The base link class.
-    """
-    def __init__(self, link_name, start_node_name, end_node_name):
-        """
-        Parameters
-        ----------
-        link_name : string
-            Name of the link
-        link_type : string
-            Type of the link. Options are 'Pipe', 'Valve', or 'Pump'
-        start_node_name : string
-             Name of the start node
-        end_node_name : string
-             Name of the end node
+    
+    Parameters
+    ----------
+    link_name : string
+        Name of the link
+    link_type : string
+        Type of the link. Options are 'Pipe', 'Valve', or 'Pump'
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
 
-        Examples
-        ---------
-        >>> link1 = Link('Pipe 1','Pipe', 'Node 153', 'Node 159')
-        """
+    Examples
+    ---------
+    >>> link1 = Link('Pipe 1','Pipe', 'Node 153', 'Node 159')
+    """
+        
+    def __init__(self, link_name, start_node_name, end_node_name):
+       
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
@@ -1923,22 +1924,23 @@ class Link(object):
 class Junction(Node):
     """
     Junction class that is inherited from Node
+
+    Parameters
+    ----------
+    name : string
+        Name of the junction.
+    base_demand : float, optional
+        Base demand at the junction.
+        Internal units must be cubic meters per second (m^3/s).
+    demand_pattern_name : string, optional
+        Name of the demand pattern.
+    elevation : float, optional
+        Elevation of the junction.
+        Internal units must be meters (m).
     """
+        
     def __init__(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0):
-        """
-        Parameters
-        ----------
-        name : string
-            Name of the junction.
-        base_demand : float, optional
-            Base demand at the junction.
-            Internal units must be cubic meters per second (m^3/s).
-        demand_pattern_name : string, optional
-            Name of the demand pattern.
-        elevation : float, optional
-            Elevation of the junction.
-            Internal units must be meters (m).
-        """
+        
         super(Junction, self).__init__(name)
         self.base_demand = base_demand
         self.prev_expected_demand = None
@@ -2103,36 +2105,37 @@ class Junction(Node):
 class Tank(Node):
     """
     Tank class that is inherited from Node
+    
+    Parameters
+    ----------
+    name : string
+        Name of the tank.
+    elevation : float, optional
+        Elevation at the Tank.
+        Internal units must be meters (m).
+    init_level : float, optional
+        Initial tank level.
+        Internal units must be meters (m).
+    min_level : float, optional
+        Minimum tank level.
+        Internal units must be meters (m)
+    max_level : float, optional
+        Maximum tank level.
+        Internal units must be meters (m)
+    diameter : float, optional
+        Tank diameter.
+        Internal units must be meters (m)
+    min_vol : float, optional
+        Minimum tank volume.
+        Internal units must be cubic meters (m^3)
+    vol_curve : Curve object, optional
+        Curve object
     """
+        
     def __init__(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
                  min_vol=None, vol_curve=None):
-        """
-        Parameters
-        ----------
-        name : string
-            Name of the tank.
-        elevation : float, optional
-            Elevation at the Tank.
-            Internal units must be meters (m).
-        init_level : float, optional
-            Initial tank level.
-            Internal units must be meters (m).
-        min_level : float, optional
-            Minimum tank level.
-            Internal units must be meters (m)
-        max_level : float, optional
-            Maximum tank level.
-            Internal units must be meters (m)
-        diameter : float, optional
-            Tank diameter.
-            Internal units must be meters (m)
-        min_vol : float, optional
-            Minimum tank volume.
-            Internal units must be cubic meters (m^3)
-        vol_curve : Curve object, optional
-            Curve object
-        """
+        
         super(Tank, self).__init__(name)
         self.elevation = elevation
         self.init_level = init_level
@@ -2304,19 +2307,19 @@ class Tank(Node):
 class Reservoir(Node):
     """
     Reservoir class that is inherited from Node
+   
+    Parameters
+    ----------
+    name : string
+        Name of the reservoir.
+    base_head : float, optional
+        Base head at the reservoir.
+        Internal units must be meters (m).
+    head_pattern_name : string, optional
+        Name of the head pattern.
     """
     def __init__(self, name, base_head=0.0, head_pattern_name=None):
-        """
-        Parameters
-        ----------
-        name : string
-            Name of the reservoir.
-        base_head : float, optional
-            Base head at the reservoir.
-            Internal units must be meters (m).
-        head_pattern_name : string, optional
-            Name of the head pattern.
-        """
+        
         super(Reservoir, self).__init__(name)
         self.base_head = base_head
         self.head = base_head
@@ -2335,34 +2338,35 @@ class Reservoir(Node):
 class Pipe(Link):
     """
     Pipe class that is inherited from Link
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pipe
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    length : float, optional
+        Length of the pipe.
+        Internal units must be meters (m)
+    diameter : float, optional
+        Diameter of the pipe.
+        Internal units must be meters (m)
+    roughness : float, optional
+        Pipe roughness coefficient
+    minor_loss : float, optional
+        Pipe minor loss coefficient
+    status : string, optional
+        Pipe status. Options are 'Open' or 'Closed'
+    check_valve_flag : bool, optional
+        True if the pipe has a check valve
+        False if the pipe does not have a check valve
     """
+        
     def __init__(self, name, start_node_name, end_node_name, length=304.8,
                  diameter=0.3048, roughness=100, minor_loss=0.00, status='OPEN', check_valve_flag=False):
-        """
-        Parameters
-        ----------
-        name : string
-            Name of the pipe
-        start_node_name : string
-             Name of the start node
-        end_node_name : string
-             Name of the end node
-        length : float, optional
-            Length of the pipe.
-            Internal units must be meters (m)
-        diameter : float, optional
-            Diameter of the pipe.
-            Internal units must be meters (m)
-        roughness : float, optional
-            Pipe roughness coefficient
-        minor_loss : float, optional
-            Pipe minor loss coefficient
-        status : string, optional
-            Pipe status. Options are 'Open' or 'Closed'
-        check_valve_flag : bool, optional
-            True if the pipe has a check valve
-            False if the pipe does not have a check valve
-        """
+        
         super(Pipe, self).__init__(name, start_node_name, end_node_name)
         self.length = length
         self.diameter = diameter
@@ -2396,22 +2400,23 @@ class Pipe(Link):
 class Pump(Link):
     """
     Pump class that is inherited from Link
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pump
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    info_type : string, optional
+        Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
+    info_value : float or curve type, optional
+        Where power is a fixed value in KW, while a head curve is a Curve object.
     """
+        
     def __init__(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0):
-        """
-        Parameters
-        ----------
-        name : string
-            Name of the pump
-        start_node_name : string
-             Name of the start node
-        end_node_name : string
-             Name of the end node
-        info_type : string, optional
-            Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
-        info_value : float or curve type, optional
-            Where power is a fixed value in KW, while a head curve is a Curve object.
-        """
+        
         super(Pump, self).__init__(name, start_node_name, end_node_name)
         self._cv_status = LinkStatus.opened
         self.prev_speed = None
@@ -2536,28 +2541,28 @@ class Pump(Link):
 class Valve(Link):
     """
     Valve class that is inherited from Link
+    
+    Parameters
+    ----------
+    name : string
+        Name of the valve
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    diameter : float, optional
+        Diameter of the valve.
+        Internal units must be meters (m)
+    valve_type : string, optional
+        Type of valve. Options are 'PRV', etc
+    minor_loss : float, optional
+        Pipe minor loss coefficient
+    setting : float or string, optional
+        Valve setting or name of headloss curve for GPV
     """
     def __init__(self, name, start_node_name, end_node_name,
                  diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
-        """
-        Parameters
-        ----------
-        name : string
-            Name of the valve
-        start_node_name : string
-             Name of the start node
-        end_node_name : string
-             Name of the end node
-        diameter : float, optional
-            Diameter of the valve.
-            Internal units must be meters (m)
-        valve_type : string, optional
-            Type of valve. Options are 'PRV', etc
-        minor_loss : float, optional
-            Pipe minor loss coefficient
-        setting : float or string, optional
-            Valve setting or name of headloss curve for GPV
-        """
+        
         super(Valve, self).__init__(name, start_node_name, end_node_name)
         self.diameter = diameter
         self.valve_type = valve_type
@@ -2586,18 +2591,19 @@ class Valve(Link):
 class Curve(object):
     """
     Curve class.
+    
+    Parameters
+    ----------
+    name : string
+         Name of the curve
+    curve_type :
+         Type of curve. Options are Volume, Pump, Efficiency, Headloss.
+    points :
+         List of tuples with X-Y points.
     """
+        
     def __init__(self, name, curve_type, points):
-        """
-        Parameters
-        ----------
-        name : string
-             Name of the curve
-        curve_type :
-             Type of curve. Options are Volume, Pump, Efficiency, Headloss.
-        points :
-             List of tuples with X-Y points.
-        """
+        
         self.name = name
         self.curve_type = curve_type
         self.points = points

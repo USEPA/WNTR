@@ -1,7 +1,7 @@
-wntr.network.NetworkControls module
+wntr.network.controls module
 ===================================
 
-.. automodule:: wntr.network.NetworkControls
+.. automodule:: wntr.network.controls
     :members:
     :no-undoc-members:
     :show-inheritance:

@@ -1,7 +1,7 @@
-wntr.network.WaterNetworkModel module
+wntr.network.model module
 =====================================
 
-.. automodule:: wntr.network.WaterNetworkModel
+.. automodule:: wntr.network.model
     :members:
     :no-undoc-members:
     :show-inheritance:

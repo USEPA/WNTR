@@ -11,9 +11,7 @@ Submodules
 
 .. toctree::
 
-   wntr.network.ControlLogger
-   wntr.network.NetworkControls
-   wntr.network.WaterNetworkModel
-   wntr.network.WntrMultiDiGraph
-   wntr.network.draw_graph
+   wntr.network.controls
+   wntr.network.model
+   wntr.network.graph
 

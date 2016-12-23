@@ -1,5 +1,5 @@
-wntr package
-============
+API documentation
+================
 
 .. automodule:: wntr
     :members:
@@ -10,7 +10,8 @@ Subpackages
 -----------
 
 .. toctree::
-
+    :maxdepth: 1
+    
     wntr.epanet
     wntr.metrics
     wntr.network

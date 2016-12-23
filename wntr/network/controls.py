@@ -1,14 +1,13 @@
 """
-Classes and methods used for specifying controls and control actions
-that may modify parameters in the network during simulation.
+The wntr.network.controls module includes methods to define network controls 
+and control actions.  These controls modify parameters in the network during 
+simulation.
 """
 import wntr
-import weakref
-import numpy as np
 import math
 import logging
 
-logger = logging.getLogger('wntr.network.NetworkControls')
+logger = logging.getLogger(__name__)
 
 # Control Priorities:
 # 0 is the lowest
@@ -792,3 +791,18 @@ class _PRVControl(Control):
         change_flag, change_tuple, orig_value = self._action_to_fire.FireControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
+class ControlLogger(object):
+    def __init__(self):
+        self.changed_objects = {}  # obj_name: object
+        self.changed_attributes = {}  # obj_name: attribute
+
+    def add(self, obj, attr):
+        if obj.name() in self.changed_objects:
+            self.changed_attributes[obj.name()].append(attr)
+        else:
+            self.changed_objects[obj.name()] = obj
+            self.changed_attributes[obj.name()] = [attr]
+
+    def reset(self):
+        self.changed_objects = {}
+        self.changed_attributes = {}
