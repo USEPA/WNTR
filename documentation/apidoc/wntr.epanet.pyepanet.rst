@@ -3,7 +3,7 @@ wntr.epanet.pyepanet package
 
 .. automodule:: wntr.epanet.pyepanet
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
 
 Submodules

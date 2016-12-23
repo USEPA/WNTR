@@ -24,6 +24,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         """ 
         Return a weighted graph based on node and link attributes.
         The weighted graph changes the direction of the original link if the weight is negative.
+        
         Parameters
         ----------
         G : graph
@@ -64,13 +65,13 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
                     pass
 
     def terminal_nodes(self):
-        """ Get all nodes with degree 1
+        """ 
+        Get all nodes with degree 1
 
         Parameters
         ----------
         G : graph
             A networkx graph
-
 
         Returns
         -------
@@ -84,12 +85,13 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return terminal_nodes
 
     def bridges(self):
-        """ Get bridge links. Uses an undirected graph.
+        """ 
+        Get bridge links. Uses an undirected graph.
+        
         Parameters
         ----------
         G : graph
             A networkx graph
-
 
         Returns
         -------
@@ -109,7 +111,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return bridges
 
     def central_point_dominance(self):
-        """ Compute central point dominance.
+        """ 
+        Compute central point dominance.
             
         Returns
         -------
@@ -123,7 +126,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return cpd
 
     def spectral_gap(self):
-        """ Spectral gap. Difference in the first and second eigenvalue of
+        """ 
+        Spectral gap. Difference in the first and second eigenvalue of
         the adj matrix
 
         Returns
@@ -138,7 +142,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return spectral_gap.real
 
     def algebraic_connectivity(self):
-        """ Algebraic connectivity. Second smallest eigenvalue of the normalized
+        """ 
+        Algebraic connectivity. Second smallest eigenvalue of the normalized
         Laplacian matrix of a network. Uses an undirected graph.
 
         Returns
@@ -153,7 +158,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return alg_con
 
     def critical_ratio_defrag(self):
-        """ Critical ratio of defragmentation.
+        """ 
+        Critical ratio of defragmentation.
 
         Returns
         -------
@@ -179,7 +185,6 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         sinks : list
             List of sink nodes
 
-
         Returns
         -------
         link_count : dict
@@ -202,7 +207,9 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
 
 def _all_simple_paths(G, source, target, cutoff=None):
-    """Adaptation of nx.all_simple_paths for mutligraphs"""
+    """
+    Adaptation of nx.all_simple_paths for mutligraphs
+    """
 
     if source not in G:
         raise nx.NetworkXError('source node %s not in graph'%source)
@@ -246,7 +253,6 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=10, node_range = [None,None], node_cmap=None,
                link_width=1, link_range = [None,None], link_cmap=None,
                add_colorbar=True, figsize=None, dpi=None, directed=False, node_labels=False,plt_fig=None):
-
     """
     Draw a WaterNetworkModel networkx graph
 
