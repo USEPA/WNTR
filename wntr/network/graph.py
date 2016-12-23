@@ -21,7 +21,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
     """
 
     def weight_graph(self, node_attribute={}, link_attribute={}):
-        """ Return a weighted graph based on node and link attributes.
+        """ 
+        Return a weighted graph based on node and link attributes.
         The weighted graph changes the direction of the original link if the weight is negative.
         Parameters
         ----------
@@ -38,6 +39,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         G : weighted graph
             A networkx weighted graph
         """
+        
         for node_name in self.nodes():
             try:
                 value = node_attribute[node_name]
@@ -245,7 +247,8 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
                link_width=1, link_range = [None,None], link_cmap=None,
                add_colorbar=True, figsize=None, dpi=None, directed=False, node_labels=False,plt_fig=None):
 
-    r"""Draw a WaterNetworkModel networkx graph
+    """
+    Draw a WaterNetworkModel networkx graph
 
     Parameters
     ----------
@@ -319,8 +322,8 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     Notes
     -----
     For more network draw options, see nx.draw_networkx
-
     """
+    
     if plt_fig is None:
         plt.figure(facecolor='w', edgecolor='k')
 

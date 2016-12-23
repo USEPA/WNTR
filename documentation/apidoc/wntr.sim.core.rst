@@ -1,7 +1,7 @@
-wntr.sim.WNTRSimulator module
+wntr.sim.core module
 =============================
 
-.. automodule:: wntr.sim.WNTRSimulator
+.. automodule:: wntr.sim.core
     :members:
     :no-undoc-members:
     :show-inheritance:

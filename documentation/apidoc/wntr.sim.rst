@@ -11,10 +11,9 @@ Submodules
 
 .. toctree::
 
-   wntr.sim.HydraulicModel
-   wntr.sim.NetworkResults
-   wntr.sim.NewtonSolver
-   wntr.sim.WNTRSimulator
-   wntr.sim.WaterNetworkSimulator
+   wntr.sim.core
    wntr.sim.epanet
+   wntr.sim.hydraulics
+   wntr.sim.results
+   wntr.sim.solvers
 

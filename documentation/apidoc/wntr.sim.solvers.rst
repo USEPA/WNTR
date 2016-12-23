@@ -1,7 +1,7 @@
-wntr.sim.NewtonSolver module
+wntr.sim.solvers module
 ============================
 
-.. automodule:: wntr.sim.NewtonSolver
+.. automodule:: wntr.sim.solvers
     :members:
     :no-undoc-members:
     :show-inheritance:

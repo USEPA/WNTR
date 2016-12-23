@@ -1,7 +1,7 @@
-wntr.sim.WaterNetworkSimulator module
+wntr.scenario.fragility_curve module
 =====================================
 
-.. automodule:: wntr.sim.WaterNetworkSimulator
+.. automodule:: wntr.scenario.fragility_curve
     :members:
     :no-undoc-members:
     :show-inheritance:

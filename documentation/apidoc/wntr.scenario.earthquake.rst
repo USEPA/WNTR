@@ -1,7 +1,7 @@
-wntr.scenario.Earthquake module
+wntr.scenario.earthquake module
 ===============================
 
-.. automodule:: wntr.scenario.Earthquake
+.. automodule:: wntr.scenario.earthquake
     :members:
     :no-undoc-members:
     :show-inheritance:

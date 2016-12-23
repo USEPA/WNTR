@@ -1,14 +1,12 @@
 import numpy as np
 import scipy.sparse as sp
-import copy
-import time
 import warnings
 import logging
 
 warnings.filterwarnings("error",'Matrix is exactly singular',sp.linalg.MatrixRankWarning)
 np.set_printoptions(precision=3, threshold=10000, linewidth=300)
 
-logger = logging.getLogger('wntr.sim.NewtonSolver')
+logger = logging.getLogger(__name__)
 
 class NewtonSolver(object):
     def __init__(self, num_nodes, num_links, num_leaks, model, options={}):

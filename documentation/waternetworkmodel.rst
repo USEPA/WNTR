@@ -41,7 +41,7 @@ The inp file will not include features not supported by EPANET.
 :numref:`table-epanet-features` describes water network model components.  
 EPANET components that are not supported by WNTR are noted.
 For more information on the water network model, see the 
-:doc:`WaterNetworkModel</apidoc/wntr.network.WaterNetworkModel>` 
+:doc:`WaterNetworkModel</apidoc/wntr.network.model>` 
 module documentation.
 
 .. _table-epanet-features:
@@ -53,18 +53,18 @@ module documentation.
    Junctions                       Junctions are nodes where links connect. 
                                    Water can enter or leave the network at a junction.
                                    Junction attributes include the junction name, base demand, elevation, and demand pattern name.
-                                   The method :doc:`add_junction</apidoc/wntr.network.WaterNetworkModel>` can be used to add a junction to the network.
+                                   The method :doc:`add_junction</apidoc/wntr.network.model>` can be used to add a junction to the network.
                                    Junctions can also be added using the [JUNCTIONS] section of an EPANET input file.
    
    Reservoirs                      Reservoirs are nodes with an infinite external source or sink.
                                    Reservoir attributes include reservoir name, base head, and head pattern name.
-                                   The method :doc:`add_reservoir</apidoc/wntr.network.WaterNetworkModel>` can be used to add a reservoir to the network.
+                                   The method :doc:`add_reservoir</apidoc/wntr.network.model>` can be used to add a reservoir to the network.
                                    Reservoirs can also be added using the [RESERVOIRS] section of an EPANET input file.
   
    Tanks                           Tanks are nodes with storage capacity. 
                                    Tank attributes include tank name, elevation, initial level, minimum level, maximum level, 
                                    diameter, minimum volume, and volume curve.
-                                   The method :doc:`add_tank</apidoc/wntr.network.WaterNetworkModel>` can be used to add a tank to the network.
+                                   The method :doc:`add_tank</apidoc/wntr.network.model>` can be used to add a tank to the network.
                                    Tanks can also be added using the [TANKS] section of an EPANET input file.
                                    **WNTR does not support non-cylindrical shape tanks.**
  
@@ -75,17 +75,17 @@ module documentation.
    Pipes                           Pipes are links that transport water.
                                    Pipe attributes include pipe name, start node name, end node name, length, diameter, roughness, 
                                    minor loss, and status.
-                                   The method :doc:`add_pipe</apidoc/wntr.network.WaterNetworkModel>` can be used to add a pipe to the network.
+                                   The method :doc:`add_pipe</apidoc/wntr.network.model>` can be used to add a pipe to the network.
                                    Pipes can also be added using the [PIPES] section of an EPANET input file.
  
    Pumps                           Pumps are links that increase hydraulic head.
                                    Pump attributes include pump name, start node name, end node name, type, and value.
-                                   The method :doc:`add_pump</apidoc/wntr.network.WaterNetworkModel>` can be used to add a pump to the network.
+                                   The method :doc:`add_pump</apidoc/wntr.network.model>` can be used to add a pump to the network.
                                    Pumps can also be added using the [PUMPS] section of an EPANET input file.
  
    Valves                          Valves are links that limit pressure or flow.
                                    Valve attributes include valve name, start node name, end node name, diameter, type, minor loss, and setting.
-                                   The method :doc:`add_valve</apidoc/wntr.network.WaterNetworkModel>` can be used to add a valve to the network.
+                                   The method :doc:`add_valve</apidoc/wntr.network.model>` can be used to add a valve to the network.
                                    Valves can also be added using the [VALVES] section of an EPANET input file.
                                    WNTR supports check valves and pressure-reducing valves.  
                                    **WNTR does not support pressure sustaining valves, 
@@ -96,32 +96,32 @@ module documentation.
 
    Curves                          Curves contain data pairs representing a relationship between two quantities. 
                                    Curve attributes include curve name, type, and data points. 
-                                   The method :doc:`add_curve</apidoc/wntr.network.WaterNetworkModel>` can be used to add a curve to the network.
+                                   The method :doc:`add_curve</apidoc/wntr.network.model>` can be used to add a curve to the network.
                                    Curves can also be added using the [CURVES] section of an EPANET input file.
                                    Curves are used to define pump curves.  WNTR supports single point pump curves.
                                    **WNTR does not support efficiency curves, shape curves, or head loss curves.**
 
    Patterns                        Patterns contain data points representing a time-series.
-                                   The method :doc:`add_pattern</apidoc/wntr.network.WaterNetworkModel>` can be used to add a pattern to the network.
+                                   The method :doc:`add_pattern</apidoc/wntr.network.model>` can be used to add a pattern to the network.
                                    Patterns are used to define demand and injection patterns.  
                                    Patterns can also be added using the [PATTERNS] section of an EPANET input file.
 
    Time controls                   Time controls define actions that start or stop at a particular time.
-                                   The class :doc:`TimeControl</apidoc/wntr.network.NetworkControls>` can be used to add a time control to the network.
+                                   The class :doc:`TimeControl</apidoc/wntr.network.controls>` can be used to add a time control to the network.
                                    Time controls can also be added using the [RULES] section of an EPANET input file.
  
    Conditional controls            Conditional controls define actions that start or stop based on a particular condition in the network. 
-                                   The method :doc:`ConditionalControl</apidoc/wntr.network.NetworkControls>` can be used to add a conditional control to the network.
+                                   The method :doc:`ConditionalControl</apidoc/wntr.network.controls>` can be used to add a conditional control to the network.
                                    Conditional controls can also be added using the [CONTROLS] section of an EPANET input file.
 
    Energy                          **WNTR does not support the energy report options in the [ENERGY] section of an EPANET input file.**
 
    Water quality                   The [QUALITY], [SOURCES], and [REACTIONS] options of the EPANET input file are used when simulating water quality with the EpanetSimulator.
 
-   Options                         Options are defined in the class :doc:`WaterNetworkOptions</apidoc/wntr.network.WaterNetworkModel>`. 
+   Options                         Options are defined in the class :doc:`WaterNetworkOptions</apidoc/wntr.network.model>`. 
                                    These options include input in the [OPTIONS] and [TIME] section of the EPANET input file.
 
    Coordinates                     Coordinates are the x,y location of each node.  WNTR stores node coordinates in a NetworkX graph.
-                                   The method :doc:`set_node_coordinate</apidoc/wntr.network.WaterNetworkModel>` can be used to set a node coordinate.
+                                   The method :doc:`set_node_coordinate</apidoc/wntr.network.model>` can be used to set a node coordinate.
                                    Node coordinates can be added using the [COORDINATES] section of an EPANET input file.
    ==============================  ====================================================================================================================================================

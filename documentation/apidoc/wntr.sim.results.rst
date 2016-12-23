@@ -1,7 +1,7 @@
-wntr.sim.HydraulicModel module
+wntr.sim.results module
 ==============================
 
-.. automodule:: wntr.sim.HydraulicModel
+.. automodule:: wntr.sim.results
     :members:
     :no-undoc-members:
     :show-inheritance:

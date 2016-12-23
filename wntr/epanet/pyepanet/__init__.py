@@ -16,7 +16,6 @@ library and then provides pythonic functions equivalent to the EPANET
 tookit ENmethodname functions.
 """
 from wntr.epanet.pyepanet.toolkit import *
-from wntr.epanet.pyepanet.future import *
 from wntr.epanet.pyepanet.epanet2 import ENepanet, EpanetException, ENgetwarning
 import os, sys
 from pkg_resources import Requirement, resource_filename

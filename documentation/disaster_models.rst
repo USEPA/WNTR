@@ -18,7 +18,7 @@ Additionally, earthquakes can cause power outages and fires. WNTR includes metho
 to add leaks to pipes and tanks, 
 shut off power to pumps, 
 and change demands for fire conditions, as described in the sections below.
-The :doc:`Earthquake</apidoc/wntr.scenario.Earthquake>` class includes methods 
+The :doc:`Earthquake</apidoc/wntr.scenario.earthquake>` class includes methods 
 to compute peak ground acceleration, peak ground velocity, and repair rate based on the earthquake
 location and magnitude.  Since the properties are a function of distance to the epicenter, the 
 node coordinates must be scaled properly in units of meters.  

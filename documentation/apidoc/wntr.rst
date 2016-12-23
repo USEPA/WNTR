@@ -1,5 +1,5 @@
 API documentation
-================
+===================
 
 .. automodule:: wntr
     :members:

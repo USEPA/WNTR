@@ -5,11 +5,10 @@ import numpy as np
 import scipy.sparse as sparse
 import math
 from wntr.network.model import *
-import copy
 import warnings
 import logging
 
-logger = logging.getLogger('wntr.sim.HydraulicModel')
+logger = logging.getLogger(__name__)
 
 class HydraulicModel(object):
     def __init__(self, wn, pressure_driven=False):

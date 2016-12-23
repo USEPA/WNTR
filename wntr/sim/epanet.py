@@ -1,4 +1,4 @@
-from .WaterNetworkSimulator import *
+from wntr.sim.core import *
 import pandas as pd
 import numpy as np
 from wntr.epanet.util import FlowUnits, MassUnits, HydParam, QualParam
@@ -37,18 +37,32 @@ class EpanetSimulator(WaterNetworkSimulator):
         self.solve_step = {}
         self.warning_list = None
 
-    def run_sim(self, WQ=None, convert_units=True):
+    def run_sim(self, WQ=None, convert_units=True, inp_file_prefix='temp'):
         """
-        Run water network simulation using epanet.
+        Run water network simulation using EPANET.  
+        The EpanetSimulator uses an INP file written from the water network model.
+        
+        Parameters
+        ----------
+        WQ : wntr.scenario.Waterquality object (optional)
+            Water quality scenario object, default = None (hydraulic simulation only)
 
+        convert_units : bool (optional)
+            Convert results to SI units, default = True
+            
+        inp_file_prefix : string (optional)
+            INP file prefix, default = 'tmp'
         """
-
+        # Write a new inp file from the water network model
+        self._wn.write_inpfile(inp_file_prefix + '.inp')
+        self._wn.name = inp_file_prefix + '.inp'
+        
         start_run_sim_time = time.time()
         logger.debug('Starting run')
         # Create enData
         enData = wntr.epanet.pyepanet.ENepanet()
         enData.inpfile = self._wn.name
-        enData.ENopen(enData.inpfile, 'tmp.rpt')
+        enData.ENopen(enData.inpfile, inp_file_prefix + '.rpt')
         flowunits = FlowUnits(enData.ENgetflowunits())
         if self._wn._inpfile is not None:
             mass_units = self._wn._inpfile.mass_units

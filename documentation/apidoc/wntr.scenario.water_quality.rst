@@ -1,7 +1,7 @@
-wntr.scenario.FragilityCurve module
+wntr.scenario.water_quality module
 ===================================
 
-.. automodule:: wntr.scenario.FragilityCurve
+.. automodule:: wntr.scenario.water_quality
     :members:
     :no-undoc-members:
     :show-inheritance:
