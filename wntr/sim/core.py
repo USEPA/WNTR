@@ -170,7 +170,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         self.solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, model, options=solver_options)
 
-        results = NetworkResults()
+        results = NetResults()
         results.error_code = 0
         results.time = []
         # if self._wn.sim_time%self._wn.options.hydraulic_timestep!=0:
