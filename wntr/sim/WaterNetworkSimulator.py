@@ -1,6 +1,6 @@
 import numpy as np
 import warnings
-from wntr.network.WaterNetworkModel import *
+from wntr.network.model import *
 from scipy.optimize import fsolve
 import math
 from wntr.sim.NetworkResults import NetResults

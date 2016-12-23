@@ -4,7 +4,7 @@ import scipy.sparse as sparse
 import warnings
 from wntr.sim.WaterNetworkSimulator import *
 from wntr.sim.HydraulicModel import *
-from wntr.network.WaterNetworkModel import *
+from wntr.network.model import *
 from wntr.sim.NewtonSolver import *
 from wntr.sim.NetworkResults import *
 import time

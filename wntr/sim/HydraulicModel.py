@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import scipy.sparse as sparse
 import math
-from wntr.network.WaterNetworkModel import *
+from wntr.network.model import *
 import copy
 import warnings
 import logging
