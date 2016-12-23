@@ -3,7 +3,7 @@ wntr.epanet package
 
 .. automodule:: wntr.epanet
     :members:
-    :no-undoc-members:
+    :undoc-members:
     :show-inheritance:
 
 Subpackages

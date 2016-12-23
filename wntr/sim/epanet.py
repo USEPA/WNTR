@@ -54,8 +54,8 @@ class EpanetSimulator(WaterNetworkSimulator):
             INP file prefix, default = 'tmp'
         """
         # Write a new inp file from the water network model
-        self._wn.write_inpfile(inp_file_prefix + '.inp')
-        self._wn.name = inp_file_prefix + '.inp'
+        #self._wn.write_inpfile(inp_file_prefix + '.inp')
+        #self._wn.name = inp_file_prefix + '.inp'
         
         start_run_sim_time = time.time()
         logger.debug('Starting run')
