@@ -9,7 +9,7 @@ import wntr
 import io
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam
-from .util import _LinkStatus as LinkStatus
+from .util import LinkBaseStatus
 
 import datetime
 import networkx as nx
@@ -665,7 +665,7 @@ class InpFile(object):
             if (current[1].upper() == 'OPEN' or
                     current[1].upper() == 'CLOSED' or
                     current[1].upper() == 'ACTIVE'):
-                new_status = LinkStatus[current[1].lower()].value
+                new_status = LinkBaseStatus[current[1].upper()].value
                 link.status = new_status
                 link._base_status = new_status
             else:
@@ -710,7 +710,7 @@ class InpFile(object):
                                                          float(current[2]))
                         action_obj = wntr.network.ControlAction(link, 'setting', status)
             else:
-                status = LinkStatus[current[2].lower()].value
+                status = LinkBaseStatus[current[2].upper()].value
                 action_obj = wntr.network.ControlAction(link, 'status', status)
 
             # Create the control object
@@ -961,7 +961,7 @@ class InpFile(object):
                  'diam': HydParam.PipeDiameter.from_si(inp_units, pipe.diameter),
                  'rough': pipe.roughness,
                  'mloss': pipe.minor_loss,
-                 'status': LinkStatus(pipe.get_base_status()).name,
+                 'status': LinkBaseStatus(pipe.get_base_status()).name,
                  'com': ';'}
             if pipe.cv:
                 E['status'] = 'CV'
@@ -1012,13 +1012,13 @@ class InpFile(object):
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
         for link_name, link in wn.links(Pump):
-            if link.get_base_status() == LinkStatus.closed.value:
+            if link.get_base_status() == LinkBaseStatus.CLOSED.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.get_base_status()).name).encode('ascii'))
+                        LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
         for link_name, link in wn.links(Valve):
-            if link.get_base_status() == LinkStatus.Closed.value or link.get_base_status() == LinkStatus.Open.value:
+            if link.get_base_status() == LinkBaseStatus.CLOSED.value or link.get_base_status() == LinkBaseStatus.OPEN.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.get_base_status()).name).encode('ascii'))
+                        LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
         # Print pattern information
@@ -1067,11 +1067,11 @@ class InpFile(object):
             if isinstance(all_control,wntr.network.TimeControl):
                 entry = 'Link {link} {setting} AT {compare} {time:g}\n'
                 vals = {'link': all_control._control_action._target_obj_ref.name(),
-                        'setting': 'open',
+                        'setting': 'OPEN',
                         'compare': 'TIME',
                         'time': int(all_control._fire_time / 3600.0)}
                 if all_control._control_action._attribute.lower() == 'status':
-                    vals['setting'] = LinkStatus(all_control._control_action._value).name
+                    vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
                 else:
                     vals['setting'] = str(float(all_control._control_action._value))
                 if all_control._daily_flag:
@@ -1080,12 +1080,12 @@ class InpFile(object):
             elif isinstance(all_control,wntr.network.ConditionalControl):
                 entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
                 vals = {'link': all_control._control_action._target_obj_ref.name(),
-                        'setting': 'open',
+                        'setting': 'OPEN',
                         'node': all_control._source_obj.name(),
                         'compare': 'above',
                         'thresh': 0.0}
                 if all_control._control_action._attribute.lower() == 'status':
-                    vals['setting'] = LinkStatus(all_control._control_action._value).name
+                    vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
                 else:
                     vals['setting'] = str(float(all_control._control_action._value))
                 if all_control._operation is np.less:

@@ -3,5 +3,5 @@ wntr.epanet.pyepanet.future module
 
 .. automodule:: wntr.epanet.pyepanet.future
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

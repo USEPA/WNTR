@@ -3,7 +3,7 @@ wntr.network package
 
 .. automodule:: wntr.network
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
 
 Submodules

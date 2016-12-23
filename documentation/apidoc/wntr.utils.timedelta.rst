@@ -3,5 +3,5 @@ wntr.utils.timedelta module
 
 .. automodule:: wntr.utils.timedelta
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

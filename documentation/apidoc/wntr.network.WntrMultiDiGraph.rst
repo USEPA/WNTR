@@ -3,5 +3,5 @@ wntr.network.WntrMultiDiGraph module
 
 .. automodule:: wntr.network.WntrMultiDiGraph
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

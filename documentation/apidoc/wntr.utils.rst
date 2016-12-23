@@ -3,7 +3,7 @@ wntr.utils package
 
 .. automodule:: wntr.utils
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
 
 Submodules

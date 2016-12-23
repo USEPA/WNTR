@@ -3,5 +3,5 @@ wntr.scenario.Earthquake module
 
 .. automodule:: wntr.scenario.Earthquake
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

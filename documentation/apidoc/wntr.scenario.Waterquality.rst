@@ -3,5 +3,5 @@ wntr.scenario.Waterquality module
 
 .. automodule:: wntr.scenario.Waterquality
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

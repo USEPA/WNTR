@@ -3,5 +3,5 @@ wntr.sim.WNTRSimulator module
 
 .. automodule:: wntr.sim.WNTRSimulator
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
