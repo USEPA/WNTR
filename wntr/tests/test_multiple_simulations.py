@@ -19,7 +19,7 @@ class TestResetInitialValues(unittest.TestCase):
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
-        
+
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
@@ -69,13 +69,15 @@ class TestStopStartSim(unittest.TestCase):
 
         inp_file = join(ex_datadir, 'Net3.inp')
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 10*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
@@ -131,13 +133,15 @@ class TestPickle(unittest.TestCase):
 
         inp_file = join(ex_datadir, 'Net3.inp')
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 10*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)

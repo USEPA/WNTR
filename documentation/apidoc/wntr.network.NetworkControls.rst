@@ -3,5 +3,5 @@ wntr.network.NetworkControls module
 
 .. automodule:: wntr.network.NetworkControls
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

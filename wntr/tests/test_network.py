@@ -14,10 +14,8 @@ class TestNetworkCreation(unittest.TestCase):
         import wntr
         self.wntr = wntr
 
-        inp_file = join(ex_datadir,'Net6.inp') 
-        self.wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        parser.read_inp_file(self.wn, inp_file)
+        inp_file = join(ex_datadir,'Net6.inp')
+        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
 
     @classmethod
     def tearDownClass(self):
@@ -166,11 +164,10 @@ class TestNetworkMethods(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         wn.remove_node('TANK-3326')
-        
+
         self.assertNotIn('TANK-3326',wn._nodes.keys())
         self.assertNotIn('TANK-3326',wn._graph.nodes())
 
-        
         inp_file = join(test_datadir,'conditional_controls_1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
@@ -180,31 +177,30 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_control('tank_control', control)
 
         controls_1 = copy.deepcopy(wn._control_dict)
-        
+
         wn.remove_node('tank1')
 
         controls_2 = copy.deepcopy(wn._control_dict)
 
         self.assertEqual(True, 'tank_control' in controls_1.keys())
         self.assertEqual(False, 'tank_control' in controls_2.keys())
-        
+
         self.assertNotIn('tank1',wn._nodes.keys())
         self.assertNotIn('tank1',wn._graph.nodes())
-        
         expected_nodes = set(['junction1','res1'])
         self.assertSetEqual(set(wn._nodes.keys()), expected_nodes)
 
     def test_remove_controls_for_removing_link(self):
         inp_file = join(ex_datadir, 'Net1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        
+
         control_action = self.wntr.network.ControlAction(wn.get_link('21'), 'status', self.wntr.network.LinkStatus.opened)
         control = self.wntr.network.ConditionalControl((wn.get_node('2'),'head'), np.greater, 10.0, control_action)
         wn.add_control('control_1',control)
-        
+
         import copy
         controls_1 = copy.deepcopy(wn._control_dict)
-        
+
         wn.remove_link('21')
 
         controls_2 = copy.deepcopy(wn._control_dict)
@@ -415,7 +411,7 @@ class TestInpFileWriter(unittest.TestCase):
         inp_file = join(ex_datadir, 'Net6.inp')
         self.wn = wntr.network.WaterNetworkModel(inp_file)
         self.wn.write_inpfile('tmp.inp')
-        self.wn2 = wntr.network.WaterNetworkModel('tmp.inp')
+        self.wn2 = self.wntr.network.WaterNetworkModel(inp_file)
 
     @classmethod
     def tearDownClass(self):
@@ -473,6 +469,8 @@ class TestInpFileWriter(unittest.TestCase):
             control2 = self.wn2._control_dict[name1]
             self.assertEqual(control1==control2, True)
 
+
+
 class TestNet3InpWriterResults(unittest.TestCase):
 
     @classmethod
@@ -482,10 +480,10 @@ class TestNet3InpWriterResults(unittest.TestCase):
 
         inp_file = join(ex_datadir, 'Net3.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
-        
+
         sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
-        
+
         self.wn.write_inpfile('tmp.inp')
         self.wn2 = self.wntr.network.WaterNetworkModel('tmp.inp')
 
@@ -520,6 +518,35 @@ class TestNet3InpWriterResults(unittest.TestCase):
         for node_name, node in self.wn.nodes():
             for t in self.results2.node.major_axis:
                 self.assertLessEqual(abs(self.results2.node.at['pressure',t,node_name] - self.results.node.at['pressure',t,node_name]), 0.05)
+
+
+class TestNet3InpUnitsResults(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        import wntr
+        self.wntr = wntr
+
+        inp_file = join(ex_datadir, 'Net3.inp')
+        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+
+        sim = self.wntr.sim.EpanetSimulator(self.wn)
+        self.results = sim.run_sim()
+
+        self.wn.write_inpfile('tmp_units.inp', units='CMH')
+        self.wn2 = self.wntr.network.WaterNetworkModel('tmp_units.inp')
+
+        sim = self.wntr.sim.EpanetSimulator(self.wn2)
+        self.results2 = sim.run_sim()
+
+    @classmethod
+    def tearDownClass(self):
+        pass
+
+    def test_link_flowrate_units_convert(self):
+        for link_name, link in self.wn.links():
+            for t in self.results2.link.major_axis:
+                self.assertLessEqual(abs(self.results2.link.at['flowrate',t,link_name] - self.results.link.at['flowrate',t,link_name]), 0.00001)
 
 
 if __name__ == '__main__':

@@ -3,5 +3,5 @@ wntr.network.ControlLogger module
 
 .. automodule:: wntr.network.ControlLogger
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

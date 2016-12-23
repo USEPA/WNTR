@@ -20,7 +20,7 @@ class TestTimeControls(unittest.TestCase):
         for jname, j in self.wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        
+
         sim = self.wntr.sim.WNTRSimulator(self.wn, pressure_driven=True)
         self.results = sim.run_sim()
 
@@ -58,7 +58,7 @@ class TestConditionalControls(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        
+
         sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven=True)
         results = sim.run_sim()
 
@@ -86,7 +86,7 @@ class TestConditionalControls(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        
+
         sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
         results = sim.run_sim()
 
@@ -160,7 +160,7 @@ class TestTankControls(unittest.TestCase):
         """
         raise SkipTest
         self.assertEqual(True, False)
-        
+
 class TestValveControls(unittest.TestCase):
     @classmethod
     def setUpClass(self):

@@ -18,6 +18,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
             node attributes
         link_attribues : dict or pandas Series
             link attributes
+
+
         Returns
         -------
         G : weighted graph
@@ -48,10 +50,13 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
     def terminal_nodes(self):
         """ Get all nodes with degree 1
+
         Parameters
         ----------
         G : graph
             A networkx graph
+
+
         Returns
         -------
         terminal_nodes : list
@@ -69,6 +74,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         ----------
         G : graph
             A networkx graph
+
+
         Returns
         -------
         bridges : list
@@ -88,6 +95,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
     def central_point_dominance(self):
         """ Compute central point dominance.
+            
         Returns
         -------
         cpd : float
@@ -102,6 +110,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
     def spectral_gap(self):
         """ Spectral gap. Difference in the first and second eigenvalue of
         the adj matrix
+
         Returns
         -------
         spectral_gap : float
@@ -116,6 +125,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
     def algebraic_connectivity(self):
         """ Algebraic connectivity. Second smallest eigenvalue of the normalized
         Laplacian matrix of a network. Uses an undirected graph.
+
         Returns
         -------
         alg_con : float
@@ -129,6 +139,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
     def critical_ratio_defrag(self):
         """ Critical ratio of defragmentation.
+
         Returns
         -------
         fd : float
@@ -143,12 +154,17 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
     def links_in_simple_paths(self, sources, sinks):
         """
         Count all links in a simple path between sources and sinks
+
         Parameters
         -----------
         sources : list
             List of source nodes
         sinks : list
             List of sink nodes
+        sinks : list
+            List of sink nodes
+
+
         Returns
         -------
         link_count : dict

@@ -3,5 +3,5 @@ wntr.sim.WaterNetworkSimulator module
 
 .. automodule:: wntr.sim.WaterNetworkSimulator
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

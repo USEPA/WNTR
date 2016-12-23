@@ -127,7 +127,7 @@ class TestLeakResults(unittest.TestCase):
     #    j2.remove_leak()
     #    sim = self.wntr.sim.PyomoSimulator(wn)
     #    results2 = sim.run_sim()
-    #    
+    #
     #    self.assertEqual(True, (results1.node == results2.node)['demand'].all().all())
     #    self.assertEqual(True, (results1.node == results2.node)['expected_demand'].all().all())
     #    self.assertEqual(True, (results1.node == results2.node)['head'].all().all())

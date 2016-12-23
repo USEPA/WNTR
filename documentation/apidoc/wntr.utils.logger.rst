@@ -3,5 +3,5 @@ wntr.utils.logger module
 
 .. automodule:: wntr.utils.logger
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

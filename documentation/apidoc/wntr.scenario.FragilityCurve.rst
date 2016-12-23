@@ -3,5 +3,5 @@ wntr.scenario.FragilityCurve module
 
 .. automodule:: wntr.scenario.FragilityCurve
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

@@ -3,7 +3,7 @@ wntr.scenario package
 
 .. automodule:: wntr.scenario
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
 
 Submodules

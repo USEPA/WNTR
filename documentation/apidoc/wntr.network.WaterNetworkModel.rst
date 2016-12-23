@@ -3,5 +3,5 @@ wntr.network.WaterNetworkModel module
 
 .. automodule:: wntr.network.WaterNetworkModel
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

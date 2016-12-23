@@ -3,5 +3,5 @@ wntr.sim.NetworkResults module
 
 .. automodule:: wntr.sim.NetworkResults
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

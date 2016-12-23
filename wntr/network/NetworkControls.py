@@ -6,7 +6,6 @@ import wntr
 import weakref
 import numpy as np
 import math
-from wntr.utils import convert
 import logging
 
 logger = logging.getLogger('wntr.network.NetworkControls')
@@ -41,7 +40,7 @@ logger = logging.getLogger('wntr.network.NetworkControls')
 
 
 class BaseControlAction(object):
-    """ 
+    """
     A base class for deriving new control actions. The control action is fired by calling FireControlAction
 
     This class is not meant to be used directly. Derived classes must implement the FireControlActionImpl method.
@@ -50,7 +49,7 @@ class BaseControlAction(object):
         pass
 
     def FireControlAction(self, control_name):
-        """ 
+        """
         This method is called to fire the corresponding control action.
         """
         return self._FireControlActionImpl(control_name)
@@ -122,7 +121,7 @@ class ControlAction(BaseControlAction):
                              'This may be because a target_obj was added, but later the object itself was deleted.')
         if not hasattr(target, self._attribute):
             raise ValueError('attribute specified in ControlAction is not valid for targe_obj')
-        
+
         orig_value = getattr(target, self._attribute)
         if orig_value == self._value:
             return False, None, None
@@ -190,7 +189,7 @@ class Control(object):
         """
         raise NotImplementedError('_IsControlActionRequiredImpl is not implemented. '
                                   'This method must be implemented in any '
-                                  ' class derived from Control.')  
+                                  ' class derived from Control.')
 
     def FireControlAction(self, wnm, priority):
         """
@@ -323,7 +322,7 @@ class TimeControl(Control):
     # def WithTarget(self, fire_time, time_flag, daily_flag, target_obj, attribute, value):
     #     t = ControlAction(target_obj, attribute, value)
     #     return TimeControl(fire_time, time_flag, daily_flag, t)
-    
+
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control.
@@ -443,22 +442,22 @@ class ConditionalControl(Control):
         return id(self)
         
 
-    def to_inp_string(self, flowunit):
-        link_name = self._control_action._target_obj_ref.name()
-        action = 'OPEN'
-        if self._control_action._attribute == 'status':
-            if self._control_action._value == 1:
-                action = 'OPEN'
-            else:
-                action = 'CLOSED'
-        else:
-            action = str(self._control_action._value)
-        target_name = self._source_obj.name()
-        compare = 'ABOVE'
-        if self._operation is np.less:
-            compare = 'BELOW'
-        threshold = convert('Hydraulic Head',flowunit,self._threshold-self._source_obj.elevation,False)
-        return 'Link %s %s IF Node %s %s %s'%(link_name, action, target_name, compare, threshold)
+#    def to_inp_string(self, flowunit):
+#        link_name = self._control_action._target_obj_ref.name()
+#        action = 'OPEN'
+#        if self._control_action._attribute == 'status':
+#            if self._control_action._value == 1:
+#                action = 'OPEN'
+#            else:
+#                action = 'CLOSED'
+#        else:
+#            action = str(self._control_action._value)
+#        target_name = self._source_obj.name()
+#        compare = 'ABOVE'
+#        if self._operation is np.less:
+#            compare = 'BELOW'
+#        threshold = convert('Hydraulic Head',flowunit,self._threshold-self._source_obj.elevation,False)
+#        return 'Link %s %s IF Node %s %s %s'%(link_name, action, target_name, compare, threshold)
 
 
     # @classmethod
@@ -679,7 +678,7 @@ class MultiConditionalControl(Control):
 
 class _CheckValveHeadControl(Control):
     """
-    
+
     """
     def __init__(self, wnm, cv, operation, threshold, control_action):
         self.name = 'blah'
@@ -712,7 +711,7 @@ class _CheckValveHeadControl(Control):
         if self._operation(headloss, self._threshold):
             return (True, 0)
         return (False, None)
-        
+
     def _FireControlActionImpl(self, wnm, priority):
         if self._priority!=priority:
             return False, None, None

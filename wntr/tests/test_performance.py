@@ -1,3 +1,4 @@
+from __future__ import print_function
 import unittest
 import sys
 import os
@@ -154,7 +155,6 @@ class TestPerformance(unittest.TestCase):
 
     def test_Net1_performance(self):
         t0 = time.time()
-
         inp_file = join(ex_datadir, 'Net1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         sim = self.wntr.sim.WNTRSimulator(wn)
@@ -198,7 +198,7 @@ class TestPerformance(unittest.TestCase):
         self.assertLess(np.std(head_diff_list), .00015)
         self.assertLess(np.std(demand_diff_list), 1.1e-7)
         self.assertLess(np.std(flow_diff_list), 1.3e-7)
-        
+
     def test_Net3_performance(self):
         t0 = time.time()
 

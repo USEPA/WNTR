@@ -5,10 +5,9 @@ import copy
 import networkx as nx
 import math
 from scipy.optimize import fsolve
-from wntr.utils import convert
 import wntr.network
+import wntr.epanet
 import numpy as np
-import warnings
 import sys
 import logging
 from os.path import abspath
@@ -25,7 +24,7 @@ class WaterNetworkModel(object):
         Examples
         ---------
         >>> wn = WaterNetworkModel()
-        
+
         Parameters
         -------------------
         inp_file_name: string
@@ -35,7 +34,7 @@ class WaterNetworkModel(object):
 
         # Network name
         self.name = None
-        
+
         # Time parameters
         self.sim_time = 0.0
         self.prev_sim_time = -np.inf  # the last time at which results were accepted
@@ -79,9 +78,9 @@ class WaterNetworkModel(object):
         self._Htol = 0.00015  # Head tolerance in meters.
         self._Qtol = 2.8e-5  # Flow tolerance in m^3/s.
 
+        self._inpfile = None
         if inp_file_name:
-            parser = wntr.network.ParseWaterNetwork()
-            parser.read_inp_file(self, abspath(inp_file_name))
+            self.read_inpfile(inp_file_name)
 
     def __eq__(self, other):
         if self._num_junctions  == other._num_junctions  and \
@@ -107,11 +106,11 @@ class WaterNetworkModel(object):
 
     def __hash__(self):
         return id(self)
-        
+
     def add_junction(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0, coordinates=None):
         """
         Add a junction to the network.
-        
+
         Parameters
         -------------------
         name : string
@@ -215,7 +214,7 @@ class WaterNetworkModel(object):
                         continue
                     else:
                         link_has_cv = True
-            
+
                 close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
                 open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
 
@@ -248,7 +247,7 @@ class WaterNetworkModel(object):
                     control.name = (link_name+' opened because tank '+tank.name()+
                                     ' head is below min head but flow should be in')
                     tank_controls.append(control)
-            
+
             # Now take care of the max level
             max_head = tank.max_level+tank.elevation
             for link_name in all_links:
@@ -265,10 +264,10 @@ class WaterNetworkModel(object):
                         continue
                     else:
                         link_has_cv = True
-            
+
                 close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
                 open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
-            
+
                 control = wntr.network.ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
                 control._priority = 1
                 control.name = link_name+' closed because tank '+tank.name()+' head is greater than max head'
@@ -280,7 +279,7 @@ class WaterNetworkModel(object):
                     control._priority = 0
                     control.name = link_name+'opened because tank '+tank.name()+' head is less than max head'
                     tank_controls.append(control)
-            
+
                     if link.start_node() == tank_name:
                         other_node_name = link.end_node()
                     else:
@@ -290,7 +289,7 @@ class WaterNetworkModel(object):
                     control._priority = 2
                     control.name = link_name+' opened because tank '+tank.name()+' head above max head but flow should be out'
                     tank_controls.append(control)
-        
+
                 #control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
                 #control._priority = 2
                 #self.add_control(control)
@@ -375,7 +374,7 @@ class WaterNetworkModel(object):
 
             close_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.closed)
             open_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.opened)
-            
+
             control = wntr.network._CheckValveHeadControl(self, pipe, np.greater, self._Htol, open_control_action)
             control._priority = 0
             control.name = pipe.name()+'opened because of cv head control'
@@ -422,17 +421,17 @@ class WaterNetworkModel(object):
 
             close_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.closed)
             open_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.opened)
-        
+
             control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
             control._priority = 0
             control.name = pump.name()+' opened because of cv head control'
             pump_controls.append(control)
-        
+
             control = wntr.network._CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
             control._priority = 3
             control.name = pump.name()+' closed because of cv head control'
             pump_controls.append(control)
-        
+
             control = wntr.network.ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
             control._priority = 3
             control.name = pump.name()+' closed because negative flow in pump'
@@ -469,7 +468,7 @@ class WaterNetworkModel(object):
         start_node = self.get_node(start_node_name)
         end_node = self.get_node(end_node_name)
         if type(start_node)==Tank or type(end_node)==Tank:
-            warnings.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
+            logger.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
 
         valve = Valve(name, start_node_name, end_node_name,
                       diameter, valve_type, minor_loss, setting)
@@ -486,13 +485,13 @@ class WaterNetworkModel(object):
             close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.closed)
             open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.opened)
             active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.active)
-        
+
             control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
             control.name = valve.name()+' prv control'
             valve_controls.append(control)
 
         return valve_controls
-        
+
     def add_pattern(self, name, pattern_list):
         """
         Method to add pattern to a water network object.
@@ -538,14 +537,14 @@ class WaterNetworkModel(object):
         target = control_object._control_action._target_obj_ref
         target_type = type(target)
         if target_type == wntr.network.Valve:
-            warnings.warn('Controls should not be added to valves! Note that this will become an error in the next release.')
+            logger.warn('Controls should not be added to valves! Note that this will become an error in the next release.')
         if target_type == wntr.network.Link:
-            start_node_name = target_obj.start_node()
-            end_node_name = target_obj.end_node()
+            start_node_name = target.start_node()
+            end_node_name = target.end_node()
             start_node = self.get_node(start_node_name)
             end_node = self.get_node(end_node_name)
             if type(start_node)==Tank or type(end_node)==Tank:
-                warnings.warn('Controls should not be added to links that are connected to tanks. Consider adding an additional link and using the control on it. Note that this will become an error in the next release.')
+                logger.warn('Controls should not be added to links that are connected to tanks. Consider adding an additional link and using the control on it. Note that this will become an error in the next release.')
 
         self._control_dict[name] = control_object
         control_object.name = name
@@ -620,7 +619,7 @@ class WaterNetworkModel(object):
         link = self.get_link(name)
         if link.cv:
             self._check_valves.remove(name)
-            warnings.warn('You are removing a pipe with a check valve.')
+            logger.warn('You are removing a pipe with a check valve.')
         self._graph.remove_edge(link.start_node(), link.end_node(), key=name)
         self._links.pop(name)
         if isinstance(link, Pipe):
@@ -640,11 +639,11 @@ class WaterNetworkModel(object):
             for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
-                        warnings.warn('Control '+control_name+' is being removed along with link '+name)
+                        logger.warn('Control '+control_name+' is being removed along with link '+name)
                         x.append(control_name)
                 else:
                     if link == control._control_action._target_obj_ref:
-                        warnings.warn('Control '+control_name+' is being removed along with link '+name)
+                        logger.warn('Control '+control_name+' is being removed along with link '+name)
                         x.append(control_name)
             for i in x:
                 self.remove_control(i)
@@ -652,10 +651,10 @@ class WaterNetworkModel(object):
             for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
-                        warnings.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
+                        logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
                 else:
                     if link == control._control_action._target_obj_ref:
-                        warnings.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
+                        logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
 
     def remove_node(self, name, with_control=True):
         """
@@ -690,11 +689,11 @@ class WaterNetworkModel(object):
             for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
-                        warnings.warn('Control '+control_name+' is being removed along with node '+name)
+                        logger.warn('Control '+control_name+' is being removed along with node '+name)
                         x.append(control_name)
                 else:
                     if node == control._control_action._target_obj_ref:
-                        warnings.warn('Control '+control_name+' is being removed along with node '+name)
+                        logger.warn('Control '+control_name+' is being removed along with node '+name)
                         x.append(control_name)
             for i in x:
                 self.remove_control(i)
@@ -702,10 +701,10 @@ class WaterNetworkModel(object):
             for control_name, control in self._control_dict.items():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
-                        warnings.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
+                        logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
                 else:
                     if node == control._control_action._target_obj_ref:
-                        warnings.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
+                        logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
 
     def remove_control(self, name):
         """
@@ -767,7 +766,7 @@ class WaterNetworkModel(object):
             The name of the pipe to split. This pipe will be removed.
 
         pipe_name_on_start_node_side: string
-            The name of the new pipe to be located between the start node of the original pipe and the new junction. 
+            The name of the new pipe to be located between the start node of the original pipe and the new junction.
 
         pipe_name_on_end_node_side: string
             The name of the new pipe to be located between the new junction and the end node of the original pipe.
@@ -797,7 +796,7 @@ class WaterNetworkModel(object):
             junction_elevation = start_node.elevation
         else:
             junction_elevation = (start_node.elevation + end_node.elevation)/2.0
-        
+
         junction_coordinates = ((self._graph.node[pipe.start_node()]['pos'][0] + self._graph.node[pipe.end_node()]['pos'][0])/2.0,(self._graph.node[pipe.start_node()]['pos'][1] + self._graph.node[pipe.end_node()]['pos'][1])/2.0)
 
         self.remove_link(pipe_name_to_split)
@@ -806,7 +805,7 @@ class WaterNetworkModel(object):
         self.add_pipe(pipe_name_on_end_node_side, junction_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
 
         if pipe.cv:
-            warnings.warn('You are splitting a pipe with a check valve. Both new pipes will have check valves.')
+            logger.warn('You are splitting a pipe with a check valve. Both new pipes will have check valves.')
 
     def get_node(self, name):
         """
@@ -965,7 +964,7 @@ class WaterNetworkModel(object):
         Returns a deep copy of the WaterNetworkModel networkx graph.
         """
         return copy.deepcopy(self._graph)
-        
+
     def query_node_attribute(self, attribute, operation=None, value=None, node_type=None):
         """ Query node attributes, for example get all nodes with elevation <= threshold
 
@@ -1069,7 +1068,7 @@ class WaterNetworkModel(object):
         Number of junctions.
         """
         return self._num_junctions
-    
+
     def num_tanks(self):
         """
         Number of tanks.
@@ -1079,7 +1078,7 @@ class WaterNetworkModel(object):
         Number of tanks.
         """
         return self._num_tanks
-    
+
     def num_reservoirs(self):
         """
         Number of reservoirs.
@@ -1089,7 +1088,7 @@ class WaterNetworkModel(object):
         Number of reservoirs.
         """
         return self._num_reservoirs
-    
+
     def num_links(self):
         """
         Number of links.
@@ -1108,7 +1107,7 @@ class WaterNetworkModel(object):
         Number of pipes.
         """
         return self._num_pipes
-    
+
     def num_pumps(self):
         """
         Number of pumps.
@@ -1118,7 +1117,7 @@ class WaterNetworkModel(object):
         Number of pumps.
         """
         return self._num_pumps
-    
+
     def num_valves(self):
         """
         Number of valves.
@@ -1128,7 +1127,7 @@ class WaterNetworkModel(object):
         Number of valves.
         """
         return self._num_valves
-    
+
     def nodes(self, node_type=None):
         """
         A generator to iterate over all nodes of node_type.
@@ -1172,7 +1171,7 @@ class WaterNetworkModel(object):
     def tanks(self):
         """
         A generator  to iterate over all tanks.
-        
+
         Returns
         -------
         name, node
@@ -1302,7 +1301,7 @@ class WaterNetworkModel(object):
         Returns a list of the names of all controls.
         """
         return list(self._control_dict.keys())
-            
+
     def curves(self):
         """
         A generator to iterate over all curves
@@ -1328,14 +1327,14 @@ class WaterNetworkModel(object):
     def scale_node_coordinates(self, scale):
         """
         Scale node coordinates, using 1:scale.  Scale should be in meters.
-        
+
         Parameters
         -----------
         scale : float
             Coordinate scale multiplier
         """
         pos = nx.get_node_attributes(self._graph, 'pos')
-        
+
         for name, node in self._nodes.items():
             self.set_node_coordinates(name, (pos[name][0]*scale, pos[name][1]*scale))
 
@@ -1350,9 +1349,9 @@ class WaterNetworkModel(object):
         """
         link = self.get_link(link_name)
         self._graph.edge[link.start_node()][link.end_node()][link_name][attr_name] = value
-        
+
     def shifted_time(self):
-        """ 
+        """
         Returns the time in seconds shifted by the
         simulation start time (e.g. as specified in the
         inp file). This is, this is the time since 12 AM
@@ -1442,7 +1441,7 @@ class WaterNetworkModel(object):
         #for link_name, link in self.valves():
         #    if link.status==LinkStatus.closed:
         #        udG.remove_edge(link.start_node(), link.end_node(), key=link_name)
-        #        
+        #
         #if nx.is_connected(udG):
         #    return set(),set()
         #else:
@@ -1463,13 +1462,13 @@ class WaterNetworkModel(object):
         #                for link_name in subG.edge[edge[0]][edge[1]].keys():
         #                    isolated_links.add(link_name)
         #    return isolated_junctions, isolated_links
-                    
+
         starting_recursion_limit = sys.getrecursionlimit()
         sys.setrecursionlimit(50000)
         groups = {}
         has_tank_or_res = {}
         G = self._graph
-        
+
         def grab_group(node_name):
             groups[grp].add(node_name)
             if G.node[node_name]['type'] == 'tank' or G.node[node_name]['type']=='reservoir':
@@ -1512,7 +1511,7 @@ class WaterNetworkModel(object):
                 if connected_to_p:
                     if p not in groups[grp]:
                         grab_group(p)
-        
+
         grp = -1
         for node_name in G.nodes():
             already_in_grp = False
@@ -1524,7 +1523,7 @@ class WaterNetworkModel(object):
                 groups[grp] = set()
                 has_tank_or_res[grp] = False
                 grab_group(node_name)
-        
+
         #for grp, nodes in groups.items():
         #    logger.debug('group: {0}'.format(grp))
         #    logger.debug('nodes[{0}]: {1}'.format(grp, nodes))
@@ -1547,276 +1546,52 @@ class WaterNetworkModel(object):
         for grp,check in has_tank_or_res.items():
             if check:
                 del groups[grp]
-        
+
         isolated_junctions = set()
         for grp, junctions in groups.items():
             isolated_junctions = isolated_junctions.union(junctions)
         isolated_junctions = list(isolated_junctions)
-        
+
         isolated_links = set()
         for j in isolated_junctions:
             connected_links = self.get_links_for_node(j)
             for l in connected_links:
                 isolated_links.add(l)
         isolated_links = list(isolated_links)
-        
+
         sys.setrecursionlimit(starting_recursion_limit)
         return isolated_junctions, isolated_links
 
-    def write_inpfile(self, filename, units='LPS'):
-        """
-         Write the current network into an EPANET inp file.
 
-         Parameters
-         ----------
-         filename : string
+    def read_inpfile(self, filename):
+        """Read an EPANET formatted INP file.
+
+        Parameters
+        ----------
+        filename : string
+            Name of the INP file. E.g., `Net3_adjusted_demands.inp`
+
+        """
+        inpfile = wntr.epanet.InpFile()
+        inpfile.read(filename, wn=self)
+        self._inpfile = inpfile
+
+    def write_inpfile(self, filename, units=None):
+        """
+        Write the current network into an EPANET inp file.
+
+        Parameters
+        ----------
+        filename : string
             Name of the inp file. example - Net3_adjusted_demands.inp
-         units : string
+        units : str, int or FlowUnits
             Name of the units being written to the inp file
+
         """
-        # TODO: This is still a very alpha version with hard coded unit conversions to LPS (among other things).
-
-        units=units.upper()
-        if units=='CFS':
-            flowunit = 0
-        elif units=='GPM':
-            flowunit = 1
-        elif units=='MGD':
-            flowunit = 2
-        elif units=='IMGD':
-            flowunit = 3
-        elif units=='AFD':
-            flowunit = 4
-        elif units=='LPS':
-            flowunit = 5
-        elif units=='LPM':
-            flowunit = 6
-        elif units=='MLD':
-            flowunit = 7
-        elif units=='CMH':
-            flowunit = 8
-        elif units=='CMD':
-            flowunit = 9
-        else:
-            raise ValueError('units not recognized')
-
-        f = open(filename, 'w')
-
-        # Print title
-        f.write('[TITLE]\n')
-        if self.name is not None:
-            f.write('{0}\n'.format(self.name))
-
-        # Print junctions information
-        f.write('[JUNCTIONS]\n')
-        label_format = '{:20} {:>12s} {:>12s} {:24}\n'
-        f.write(label_format.format(';ID', 'Elevation', 'Demand', 'Pattern'))
-        for junction_name, junction in self.nodes(Junction):
-            f.write('%s\n'%junction.to_inp_string(flowunit))
-
-        # Print reservoir information
-        f.write('[RESERVOIRS]\n')
-        text_format = '{:20s} {:12f} {:>12s} {:>3s}\n'
-        label_format = '{:20s} {:>12s} {:>12s}\n'
-        f.write(label_format.format(';ID', 'Head', 'Pattern'))
-        for reservoir_name, reservoir in self.nodes(Reservoir):
-            if reservoir.head_pattern_name is not None:
-                f.write(text_format.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), reservoir.head_pattern_name, ';'))
-            else:
-                f.write(text_format.format(reservoir_name, convert('Hydraulic Head',flowunit,reservoir.base_head,False), '', ';'))
-
-        # Print tank information
-        f.write('[TANKS]\n')
-        text_format = '{:20s} {:12f} {:12f} {:12f} {:12f} {:12f} {:12f} {:20s} {:>3s}\n'
-        label_format = '{:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
-        f.write(label_format.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level', 'Diameter', 'Min Volume', 'Volume Curve'))
-        for tank_name, tank in self.nodes(Tank):
-            if tank.vol_curve is not None:
-                f.write(text_format.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), tank.vol_curve, ';'))
-            else:
-                f.write(text_format.format(tank_name, convert('Elevation',flowunit,tank.elevation,False), convert('Hydraulic Head',flowunit,tank.init_level,False), convert('Hydraulic Head',flowunit,tank.min_level,False), convert('Hydraulic Head',flowunit,tank.max_level,False), convert('Tank Diameter',flowunit,tank.diameter,False), convert('Volume',flowunit,tank.min_vol,False), '', ';'))
-
-        # Print pipe information
-        f.write('[PIPES]\n')
-        text_format = '{:20s} {:20s} {:20s} {:12f} {:12f} {:12f} {:12f} {:>20s} {:>3s}\n'
-        label_format = '{:20s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
-        f.write(label_format.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter', 'Roughness', 'Minor Loss', 'Status'))
-        for pipe_name, pipe in self.links(Pipe):
-            if pipe.cv:
-                f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, 'CV', ';'))                
-            else:
-                f.write(text_format.format(pipe_name, pipe.start_node(), pipe.end_node(), convert('Length',flowunit,pipe.length,False), convert('Pipe Diameter',flowunit,pipe.diameter,False), pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.get_base_status()), ';'))
-
-        # Print pump information
-        f.write('[PUMPS]\n')
-        text_format = '{:20s} {:20s} {:20s} {:8s} {:20s} {:>3s}\n'
-        label_format = '{:20s} {:20s} {:20s} {:20s}\n'
-        f.write(label_format.format(';ID', 'Node1', 'Node2', 'Parameters'))
-        for pump_name, pump in self.links(Pump):
-            if pump.info_type == 'HEAD':
-                f.write(text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, pump.curve.name, ';'))
-            elif pump.info_type == 'POWER':
-                f.write(text_format.format(pump_name, pump.start_node(), pump.end_node(), pump.info_type, str(pump.power/1000.0), ';'))
-            else:
-                raise RuntimeError('Only head or power info is supported of pumps.')
-        # Print valve information
-        f.write('[VALVES]\n')
-        text_format = '{:20s} {:20s} {:20s} {:12f} {:4s} {:12f} {:12f} {:>3s}\n'
-        label_format = '{:20s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
-        f.write(label_format.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss'))
-        for valve_name, valve in self.links(Valve):
-            f.write(text_format.format(valve_name, valve.start_node(), valve.end_node(), valve.diameter*1000, valve.valve_type, valve._base_setting, valve.minor_loss, ';'))
-
-        # Print status information
-        f.write('[STATUS]\n')
-        text_format = '{:10s} {:10s}\n'
-        label_format = '{:10s} {:10s}\n'
-        f.write( label_format.format(';ID', 'Setting'))
-        for link_name, link in self.links(Pump):
-            if link.get_base_status() == LinkStatus.closed:
-                f.write(text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status())))
-        for link_name, link in self.links(Valve):
-            if link.get_base_status() == LinkStatus.closed or link.get_base_status()==LinkStatus.opened:
-                f.write(text_format.format(link_name, LinkStatus.status_to_str(link.get_base_status())))
-
-        # Print pattern information
-        num_columns = 8
-        f.write('[PATTERNS]\n')
-        label_format = '{:10s} {:10s}\n'
-        f.write(label_format.format(';ID', 'Multipliers'))
-        for pattern_name, pattern in self._patterns.items():
-            count = 0
-            for i in pattern:
-                if count%8 == 0:
-                    f.write('\n%s %f'%(pattern_name, i,))
-                else:
-                    f.write(' %f'%(i,))
-                count += 1
-            f.write('\n')
-
-        # Print curves
-        f.write('[CURVES]\n')
-        text_format = '{:10s} {:10f} {:10f} {:>3s}\n'
-        label_format = '{:10s} {:10s} {:10s}\n'
-        f.write(label_format.format(';ID', 'X-Value', 'Y-Value'))
-        for curve_name, curve in self._curves.items():
-            for i in curve.points:
-                f.write( text_format.format(curve_name, 1000*i[0], i[1], ';'))
-            f.write('\n')
-
-        # Print Controls
-        f.write( '[CONTROLS]\n')
-        # Time controls and conditional controls only
-        for text, all_control in self._control_dict.items():
-            if isinstance(all_control,wntr.network.TimeControl):
-                f.write('%s\n'%all_control.to_inp_string())
-            elif isinstance(all_control,wntr.network.ConditionalControl):
-                f.write('%s\n'%all_control.to_inp_string(flowunit))
-        f.write('\n')
-
-        # Report
-        f.write('[REPORT]\n')
-        f.write('Status Yes\n')
-        f.write('Summary yes\n')
-
-        # Options
-        f.write('[OPTIONS]\n')
-        text_format_string = '{:20s} {:20s}\n'
-        text_format_float = '{:20s} {:<20.8f}\n'
-        f.write(text_format_string.format('UNITS', 'LPS'))
-        f.write(text_format_string.format('HEADLOSS', self.options.headloss))
-        if self.options.hydraulics_option is not None:
-            f.write('{:20s} {:20s} {:<30s}\n'.format('HYDRAULICS', self.options.hydraulics_option, self.options.hydraulics_filename))
-        if self.options.quality_value is None:
-            f.write(text_format_string.format('QUALITY', self.options.quality_option))
-        else:
-            f.write('{:20s} {:20s} {:20s}\n'.format('QUALITY', self.options.quality_option, self.options.quality_value))
-        f.write(text_format_float.format('VISCOSITY', self.options.viscosity))
-        f.write(text_format_float.format('DIFFUSIVITY', self.options.diffusivity))
-        f.write(text_format_float.format('SPECIFIC GRAVITY', self.options.specific_gravity))
-        f.write(text_format_float.format('TRIALS', self.options.trials))
-        f.write(text_format_float.format('ACCURACY', self.options.accuracy))
-        f.write(text_format_float.format('CHECKFREQ', self.options.checkfreq))
-        if self.options.unbalanced_value is None:
-            f.write(text_format_string.format('UNBALANCED', self.options.unbalanced_option))
-        else:
-            f.write('{:20s} {:20s} {:20d}\n'.format('UNBALANCED', self.options.unbalanced_option, self.options.unbalanced_value))
-        if self.options.pattern is not None:
-            f.write(text_format_string.format('PATTERN', self.options.pattern))
-        f.write(text_format_float.format('DEMAND MULTIPLIER', self.options.demand_multiplier))
-        f.write(text_format_float.format('EMITTER EXPONENT', self.options.emitter_exponent))
-        f.write(text_format_float.format('TOLERANCE', self.options.tolerance))
-        if self.options.map is not None:
-            f.write(text_format_string.format('MAP', self.options.map))
-
-        f.write('\n')
-
-        # Reaction Options
-        f.write( '[REACTIONS]\n')
-        text_format_float = '{:15s}{:15s}{:<10.8f}\n'
-        f.write(text_format_float.format('ORDER','BULK',self.options.bulk_rxn_order))
-        f.write(text_format_float.format('ORDER','WALL',self.options.wall_rxn_order))
-        f.write(text_format_float.format('ORDER','TANK',self.options.tank_rxn_order))
-        f.write(text_format_float.format('GLOBAL','BULK',self.options.bulk_rxn_coeff))
-        f.write(text_format_float.format('GLOBAL','WALL',self.options.wall_rxn_coeff))
-        if self.options.limiting_potential is not None:
-            f.write(text_format_float.format('LIMITING','POTENTIAL',self.options.limiting_potential))
-        if self.options.roughness_correlation is not None:
-            f.write(text_format_float.format('ROUGHNESS','CORRELATION',self.options.roughness_correlation))
-        for tank_name, tank in self.nodes(Tank):
-            if tank.bulk_rxn_coeff is not None:
-                f.write(text_format_float.format('TANK',tank_name,tank.bulk_rxn_coeff))
-        for pipe_name, pipe in self.links(Pipe):
-            if pipe.bulk_rxn_coeff is not None:
-                f.write(text_format_float.format('BULK',pipe_name,pipe.bulk_rxn_coeff))
-            if pipe.wall_rxn_coeff is not None:
-                f.write(text_format_float.format('WALL',pipe_name,pipe.wall_rxn_coeff))
-
-        f.write('\n')
-
-        # Time options
-        f.write('[TIMES]\n')
-        text_format = '{:20s} {:10s}\n'
-        time_text_format = '{:20s} {:d}:{:d}:{:d}\n'
-        hrs, mm, sec = self._sec_to_string(self.options.duration)
-        f.write(time_text_format.format('DURATION', hrs, mm, sec))
-        hrs, mm, sec = self._sec_to_string(self.options.hydraulic_timestep)
-        f.write(time_text_format.format('HYDRAULIC TIMESTEP', hrs, mm, sec))
-        hrs, mm, sec = self._sec_to_string(self.options.pattern_timestep)
-        f.write(time_text_format.format('PATTERN TIMESTEP', hrs, mm, sec))
-        hrs, mm, sec = self._sec_to_string(self.options.pattern_start)
-        f.write(time_text_format.format('PATTERN START', hrs, mm, sec))
-        hrs, mm, sec = self._sec_to_string(self.options.report_timestep)
-        f.write(time_text_format.format('REPORT TIMESTEP', hrs, mm, sec))
-        hrs, mm, sec = self._sec_to_string(self.options.report_start)
-        f.write(time_text_format.format('REPORT START', hrs, mm, sec))
-
-        hrs, mm, sec = self._sec_to_string(self.options.start_clocktime)
-        if hrs < 12:
-            time_format = ' AM'
-        else:
-            hrs -= 12
-            time_format = ' PM'
-        f.write('{:20s} {:d}:{:d}:{:d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format))
-
-        hrs, mm, sec = self._sec_to_string(self.options.quality_timestep)
-        f.write(time_text_format.format('QUALITY TIMESTEP', hrs, mm, sec))
-        hrs, mm, sec = self._sec_to_string(self.options.rule_timestep)
-        f.write(time_text_format.format('RULE TIMESTEP', hrs, mm, int(sec)))
-        f.write(text_format.format('STATISTIC', self.options.statistic))
-
-        f.write('\n')
-
-        # Coordinates
-        f.write('[COORDINATES]\n')
-        text_format = '{:10s} {:<10.2f} {:<10.2f}\n'
-        label_format = '{:10s} {:10s} {:10s}\n'
-        f.write(label_format.format(';Node', 'X-Coord', 'Y-Coord'))
-        coord = nx.get_node_attributes(self._graph, 'pos')
-        for key, val in coord.items():
-            f.write(text_format.format(key, val[0], val[1]))
-
-        f.close()
+        if self._inpfile is None:
+            logger.warning('Writing a minimal INP file without saved non-WNTR options (energy, etc.)')
+            self._inpfile = wntr.epanet.InpFile()
+        self._inpfile.write(filename, self, units=units)
 
     def _sec_to_string(self, sec):
         hours = int(sec/3600.)
@@ -1824,7 +1599,7 @@ class WaterNetworkModel(object):
         mm = int(sec/60.)
         sec -= mm*60
         return (hours, mm, int(sec))
- 
+
 class WaterNetworkOptions(object):
     """
     A class to manage options.
@@ -1860,10 +1635,10 @@ class WaterNetworkOptions(object):
         # general options
         self.pattern = None
         "Name of the default pattern for junction demands. If None, the junctions without patterns will be held constant."
-       
+
         self.units = 'GPM'
         self.headloss = 'H-W'
-        self.hydraulics_option = None #string 
+        self.hydraulics_option = None #string
         self.hydraulics_filename = None #string
         self.quality_option = 'NONE'
         self.quality_value = None #string
@@ -1954,7 +1729,7 @@ class LinkTypes(object):
         Returns
         -------
         A string corresponding to the enum member
-        
+
         Examples
         --------
         >>> Linktypes.link_type_to_str(LinkTypes.pump)
@@ -2056,7 +1831,7 @@ class Node(object):
         elif self._name == other._name:
             return True
         return False
-        
+
     def __str__(self):
         """
         Returns the name of the node when printing to a stream.
@@ -2195,16 +1970,6 @@ class Junction(Node):
     def __hash__(self):
         return id(self)
 
-    def to_inp_string(self, flowunit):
-        text_format = '{:20} {:12f} {:12f} {:24} {:>3s}'
-        if self.base_demand == 0.0:
-            return '{:20} {:12f} {:12s} {:24} {:>3s}'.format(self._name, convert('Elevation',flowunit,self.elevation,False), '0.0', '', ';')
-        elif self.demand_pattern_name is not None:
-            return text_format.format(self._name, convert('Elevation',flowunit,self.elevation,MKS=False), convert('Demand',flowunit,self.base_demand,False), self.demand_pattern_name, ';')
-        else:
-            return text_format.format(self._name, convert('Elevation',flowunit,self.elevation,False), convert('Demand',flowunit,self.base_demand,False), '', ';')
-        
-
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """Method to add a leak to a junction. Leaks are modeled by:
 
@@ -2297,7 +2062,7 @@ class Junction(Node):
         start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
         control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
         wn.add_control(self._leak_start_control_name, control)
-    
+
     def set_leak_end_time(self, wn, t):
         """
         Method to set an end time for the leak. This internally creates a
@@ -2315,12 +2080,12 @@ class Junction(Node):
         """
         # remove old control
         wn.discard_control(self._leak_end_control_name)
-    
+
         # add new control
         end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
         control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
-    
+
     def discard_leak_controls(self, wn):
         """
         Method to specify that user-defined controls will be used to
@@ -2402,7 +2167,7 @@ class Tank(Node):
 
     def __hash__(self):
         return id(self)
-        
+
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
         Method to add a leak to a tank. Leaks are modeled by:
@@ -2441,7 +2206,7 @@ class Tank(Node):
         self._leak = True
         self.leak_area = area
         self.leak_discharge_coeff = discharge_coeff
-        
+
         if start_time is not None:
             start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
             control = wntr.network.TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
@@ -2498,7 +2263,7 @@ class Tank(Node):
         start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
         control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
         wn.add_control(self._leak_start_control_name, control)
-    
+
     def set_leak_end_time(self, wn, t):
         """
         Method to set an end time for the leak. This internally creates a
@@ -2516,12 +2281,12 @@ class Tank(Node):
         """
         # remove old control
         wn.discard_control(self._leak_end_control_name)
-    
+
         # add new control
         end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
         control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
-    
+
     def use_external_leak_control(self, wn):
         """
         Method to specify that user-defined controls will be used to
@@ -2627,7 +2392,7 @@ class Pipe(Link):
 
     def __hash__(self):
         return id(self)
-    
+
 class Pump(Link):
     """
     Pump class that is inherited from Link
@@ -2677,7 +2442,7 @@ class Pump(Link):
 
     def __hash__(self):
         return id(self)
-        
+
     def get_head_curve_coefficients(self):
         """
         Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
