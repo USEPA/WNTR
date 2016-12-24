@@ -9,7 +9,7 @@ import wntr
 import io
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam
-from .util import LinkBaseStatus
+from .util import LinkBaseStatus, to_si, from_si
 
 import datetime
 import networkx as nx
@@ -436,14 +436,14 @@ class InpFile(object):
                 continue
             if len(current) == 3:
                 wn.add_junction(current[0],
-                                HydParam.Demand.to_si(inp_units, float(current[2])),
+                                to_si(inp_units, float(current[2]), HydParam.Demand),
                                 None,
-                                HydParam.Elevation.to_si(inp_units, float(current[1])))
+                                to_si(inp_units, float(current[1]), HydParam.Elevation))
             else:
                 wn.add_junction(current[0],
-                                HydParam.Demand.to_si(inp_units, float(current[2])),
+                                to_si(inp_units, float(current[2]), HydParam.Demand),
                                 current[3],
-                                HydParam.Elevation.to_si(inp_units, float(current[1])))
+                                to_si(inp_units, float(current[1]), HydParam.Elevation))
 
         for lnum, line in self.sections['[RESERVOIRS]']:
             edata['lnum'] = lnum
@@ -454,10 +454,10 @@ class InpFile(object):
                 continue
             if len(current) == 2:
                 wn.add_reservoir(current[0],
-                                 HydParam.HydraulicHead.to_si(inp_units, float(current[1])))
+                                 to_si(inp_units, float(current[1]), HydParam.HydraulicHead))
             else:
                 wn.add_reservoir(current[0],
-                                 HydParam.HydraulicHead.to_si(inp_units, float(current[1])),
+                                 to_si(inp_units, float(current[1]), HydParam.HydraulicHead),
                                  current[2])
                 logger.warn('%(fname)s:%(lnum)-6d %(sec)13s reservoir head patterns only supported in EpanetSimulator', edata)
 
@@ -475,29 +475,29 @@ class InpFile(object):
                 curve_name = current[7]
                 curve_points = []
                 for point in self.curves[curve_name]:
-                    x = HydParam.Length.to_si(inp_units, point[0])
-                    y = HydParam.Volume.to_si(inp_units, point[1])
+                    x = to_si(inp_units, point[0], HydParam.Length)
+                    y = to_si(inp_units, point[1], HydParam.Volume)
                     curve_points.append((x, y))
                 wn.add_curve(curve_name, 'VOLUME', curve_points)
                 curve = wn.get_curve(curve_name)
                 wn.add_tank(current[0],
-                            HydParam.Elevation.to_si(inp_units, float(current[1])),
-                            HydParam.Length.to_si(inp_units, float(current[2])),
-                            HydParam.Length.to_si(inp_units, float(current[3])),
-                            HydParam.Length.to_si(inp_units, float(current[4])),
-                            HydParam.TankDiameter.to_si(inp_units, float(current[5])),
-                            HydParam.Volume.to_si(inp_units, float(current[6])),
+                            to_si(inp_units, float(current[1]), HydParam.Elevation),
+                            to_si(inp_units, float(current[2]), HydParam.Length),
+                            to_si(inp_units, float(current[3]), HydParam.Length),
+                            to_si(inp_units, float(current[4]), HydParam.Length),
+                            to_si(inp_units, float(current[5]), HydParam.TankDiameter),
+                            to_si(inp_units, float(current[6]), HydParam.Volume),
                             curve)
             elif len(current) == 7:  # No volume curve provided
                 if float(current[6]) != 0:
                     logger.warn('%(fname)s:%(lnum)-6d %(sec)13s minimum tank volume is only available using EpanetSimulator; others use minimum level and cylindrical tanks.', edata)
                 wn.add_tank(current[0],
-                            HydParam.Elevation.to_si(inp_units, float(current[1])),
-                            HydParam.Length.to_si(inp_units, float(current[2])),
-                            HydParam.Length.to_si(inp_units, float(current[3])),
-                            HydParam.Length.to_si(inp_units, float(current[4])),
-                            HydParam.TankDiameter.to_si(inp_units, float(current[5])),
-                            HydParam.Volume.to_si(inp_units, float(current[6])))
+                            to_si(inp_units, float(current[1]), HydParam.Elevation),
+                            to_si(inp_units, float(current[2]), HydParam.Length),
+                            to_si(inp_units, float(current[3]), HydParam.Length),
+                            to_si(inp_units, float(current[4]), HydParam.Length),
+                            to_si(inp_units, float(current[5]), HydParam.TankDiameter),
+                            to_si(inp_units, float(current[6]), HydParam.Volume))
             else:
                 edata['line'] = line
                 logger.error('%(fname)s:%(lnum)-6d %(sec)13s tank entry format not recognized: "%(line)s"', edata)
@@ -516,8 +516,8 @@ class InpFile(object):
                 wn.add_pipe(current[0],
                             current[1],
                             current[2],
-                            HydParam.Length.to_si(inp_units, float(current[3])),
-                            HydParam.PipeDiameter.to_si(inp_units, float(current[4])),
+                            to_si(inp_units, float(current[3]), HydParam.Length),
+                            to_si(inp_units, float(current[4]), HydParam.PipeDiameter),
                             float(current[5]),
                             float(current[6]),
                             'OPEN',
@@ -526,8 +526,8 @@ class InpFile(object):
                 wn.add_pipe(current[0],
                             current[1],
                             current[2],
-                            HydParam.Length.to_si(inp_units, float(current[3])),
-                            HydParam.PipeDiameter.to_si(inp_units, float(current[4])),
+                            to_si(inp_units, float(current[3]), HydParam.Length),
+                            to_si(inp_units, float(current[4]), HydParam.PipeDiameter),
                             float(current[5]),
                             float(current[6]),
                             current[7].upper())
@@ -551,8 +551,8 @@ class InpFile(object):
                 curve_name = current[4]
                 curve_points = []
                 for point in self.curves[curve_name]:
-                    x = HydParam.Flow.to_si(inp_units, point[0])
-                    y = HydParam.HydraulicHead.to_si(inp_units, point[1])
+                    x = to_si(inp_units, point[0], HydParam.Flow)
+                    y = to_si(inp_units, point[1], HydParam.HydraulicHead)
                     curve_points.append((x, y))
                 wn.add_curve(curve_name, 'HEAD', curve_points)
                 curve = wn.get_curve(curve_name)
@@ -566,7 +566,7 @@ class InpFile(object):
                             current[1],
                             current[2],
                             current[3].upper(),
-                            HydParam.Power.to_si(inp_units, float(current[4])))
+                            to_si(inp_units, float(current[4]), HydParam.Power))
             else:
                 logger.error('%(fname)s:%(lnum)-6d %(sec)13s pump keyword not recognized: "%(line)s"', edata)
                 raise RuntimeError('Pump keyword in inp file not recognized.')
@@ -587,9 +587,9 @@ class InpFile(object):
             if float(current[6]) != 0:
                 logger.warning('%(fname)s:%(lnum)-6d %(sec)13s currently, only the EpanetSimulator supports non-zero minor losses in valves.', edata)
             if valve_type in ['PRV', 'PSV', 'PBV']:
-                valve_set = HydParam.Pressure.to_si(inp_units, float(current[5]))
+                valve_set = to_si(inp_units, float(current[5]), HydParam.Pressure)
             elif valve_type == 'FCV':
-                valve_set = HydParam.Flow.to_si(inp_units, float(current[5]))
+                valve_set = to_si(inp_units, float(current[5]), HydParam.Flow)
             elif valve_type == 'TCV':
                 valve_set = float(current[5])
             elif valve_type == 'GPV':
@@ -600,7 +600,7 @@ class InpFile(object):
             wn.add_valve(current[0],
                          current[1],
                          current[2],
-                         HydParam.PipeDiameter.to_si(inp_units, float(current[3])),
+                         to_si(inp_units, float(current[3]), HydParam.PipeDiameter),
                          current[4].upper(),
                          float(current[6]),
                          valve_set)
@@ -677,7 +677,7 @@ class InpFile(object):
                         logger.warning('Currently, valves of type ' + link.valve_type + ' are only supported in the EpanetSimulator.')
                         continue
                     else:
-                        setting = HydParam.Pressure.to_si(inp_units, float(current[2]))
+                        setting = to_si(inp_units, float(current[2]), HydParam.Pressure)
                         link.setting = setting
                         link._base_setting = setting
 
@@ -706,8 +706,7 @@ class InpFile(object):
                         logger.warning('Currently, valves of type %s are only supported in the EpanetSimulator.',link.valve_type)
                         continue
                     else:
-                        status = HydParam.Pressure.to_si(inp_units,
-                                                         float(current[2]))
+                        status = to_si(inp_units, float(current[2]), HydParam.Pressure)
                         action_obj = wntr.network.ControlAction(link, 'setting', status)
             else:
                 status = LinkBaseStatus[current[2].upper()].value
@@ -730,9 +729,11 @@ class InpFile(object):
                     # if this changes, it will affect multiple pieces, just an
                     # FYI.
                     if isinstance(node, wntr.network.Junction):
-                        threshold = HydParam.Pressure.to_si(inp_units, float(current[7])) + node.elevation
+                        threshold = to_si(inp_units,
+                                          float(current[7]), HydParam.Pressure) + node.elevation
                     elif isinstance(node, wntr.network.Tank):
-                        threshold = HydParam.Length.to_si(inp_units,  float(current[7])) + node.elevation
+                        threshold = to_si(inp_units,
+                                          float(current[7]), HydParam.Length) + node.elevation
                     control_obj = wntr.network.ConditionalControl((node, 'head'), oper, threshold, action_obj)
                 else:
                     raise RuntimeError("The following control is not recognized: " + line)
@@ -781,18 +782,28 @@ class InpFile(object):
                     opts.tank_rxn_order = int(float(current[2]))
             elif key1 == 'GLOBAL':
                 if key2 == 'BULK':
-                    opts.bulk_rxn_coeff = BulkReactionCoeff.to_si(inp_units, val3, mass_units, opts.bulk_rxn_order)
+                    opts.bulk_rxn_coeff = to_si(inp_units, val3, BulkReactionCoeff,
+                                                mass_units=mass_units,
+                                                reaction_order=opts.bulk_rxn_order)
                 elif key2 == 'WALL':
-                    opts.wall_rxn_coeff = WallReactionCoeff.to_si(inp_units, val3, mass_units, opts.wall_rxn_order)
+                    opts.wall_rxn_coeff = to_si(inp_units, val3, WallReactionCoeff,
+                                                mass_units=mass_units,
+                                                reaction_order=opts.wall_rxn_order)
             elif key1 == 'BULK':
                 pipe = wn.get_link(current[1])
-                pipe.bulk_rxn_coeff = BulkReactionCoeff.to_si(inp_units, val3, mass_units, opts.bulk_rxn_order)
+                pipe.bulk_rxn_coeff = to_si(inp_units, val3, BulkReactionCoeff,
+                                            mass_units=mass_units,
+                                            reaction_order=opts.bulk_rxn_order)
             elif key1 == 'WALL':
                 pipe = wn.get_link(current[1])
-                pipe.wall_rxn_coeff = WallReactionCoeff.to_si(inp_units, val3, mass_units, opts.wall_rxn_order)
+                pipe.wall_rxn_coeff = to_si(inp_units, val3, WallReactionCoeff,
+                                            mass_units=mass_units,
+                                            reaction_order=opts.wall_rxn_order)
             elif key1 == 'TANK':
                 tank = wn.get_node(current[1])
-                tank.bulk_rxn_coeff = BulkReactionCoeff.to_si(inp_units, val3, mass_units, opts.bulk_rxn_order)
+                tank.bulk_rxn_coeff = to_si(inp_units, val3, BulkReactionCoeff,
+                                            mass_units=mass_units,
+                                            reaction_order=opts.bulk_rxn_order)
             elif key1 == 'LIMITING':
                 opts.limiting_potential = float(current[2])
             elif key1 == 'ROUGHNESS':
@@ -898,8 +909,8 @@ class InpFile(object):
         for junction_name in nnames:
             junction = wn._junctions[junction_name]
             E = {'name': junction_name,
-                 'elev': HydParam.Elevation.from_si(inp_units, junction.elevation),
-                 'dem': HydParam.Demand.from_si(inp_units, junction.base_demand),
+                 'elev': from_si(inp_units, junction.elevation, HydParam.Elevation),
+                 'dem': from_si(inp_units, junction.base_demand, HydParam.Demand),
                  'pat': '',
                  'com': ';'}
             if junction.demand_pattern_name is not None:
@@ -915,7 +926,7 @@ class InpFile(object):
         for reservoir_name in nnames:
             reservoir = wn._reservoirs[reservoir_name]
             E = {'name': reservoir_name,
-                 'head': HydParam.HydraulicHead.from_si(inp_units, reservoir.base_head),
+                 'head': from_si(inp_units, reservoir.base_head, HydParam.HydraulicHead),
                  'com': ';'}
             if reservoir.head_pattern_name is None:
                 E['pat'] = ''
@@ -933,12 +944,12 @@ class InpFile(object):
         for tank_name in nnames:
             tank = wn._tanks[tank_name]
             E = {'name': tank_name,
-                 'elev': HydParam.Elevation.from_si(inp_units, tank.elevation),
-                 'initlev': HydParam.HydraulicHead.from_si(inp_units, tank.init_level),
-                 'minlev': HydParam.HydraulicHead.from_si(inp_units, tank.min_level),
-                 'maxlev': HydParam.HydraulicHead.from_si(inp_units, tank.max_level),
-                 'diam': HydParam.TankDiameter.from_si(inp_units, tank.diameter),
-                 'minvol': HydParam.Volume.from_si(inp_units, tank.min_vol),
+                 'elev': from_si(inp_units, tank.elevation, HydParam.Elevation),
+                 'initlev': from_si(inp_units, tank.init_level, HydParam.HydraulicHead),
+                 'minlev': from_si(inp_units, tank.min_level, HydParam.HydraulicHead),
+                 'maxlev': from_si(inp_units, tank.max_level, HydParam.HydraulicHead),
+                 'diam': from_si(inp_units, tank.diameter, HydParam.TankDiameter),
+                 'minvol': from_si(inp_units, tank.min_vol, HydParam.Volume),
                  'curve': '',
                  'com': ';'}
             if tank.vol_curve is not None:
@@ -957,8 +968,8 @@ class InpFile(object):
             E = {'name': pipe_name,
                  'node1': pipe.start_node(),
                  'node2': pipe.end_node(),
-                 'len': HydParam.Length.from_si(inp_units, pipe.length),
-                 'diam': HydParam.PipeDiameter.from_si(inp_units, pipe.diameter),
+                 'len': from_si(inp_units, pipe.length, HydParam.Length),
+                 'diam': from_si(inp_units, pipe.diameter, HydParam.PipeDiameter),
                  'rough': pipe.roughness,
                  'mloss': pipe.minor_loss,
                  'status': LinkBaseStatus(pipe.get_base_status()).name,
@@ -984,7 +995,7 @@ class InpFile(object):
             if pump.info_type == 'HEAD':
                 E['params'] = pump.curve.name
             elif pump.info_type == 'POWER':
-                E['params'] = str(HydParam.Power.from_si(inp_units, pump.power))
+                E['params'] = str(from_si(inp_units, pump.power, HydParam.Power))
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
             f.write(_PUMP_ENTRY.format(**E).encode('ascii'))
@@ -1000,7 +1011,7 @@ class InpFile(object):
             E = {'name': valve_name,
                  'node1': valve.start_node(),
                  'node2': valve.end_node(),
-                 'diam': HydParam.PipeDiameter.from_si(inp_units, valve.diameter),
+                 'diam': from_si(inp_units, valve.diameter, HydParam.PipeDiameter),
                  'vtype': valve.valve_type,
                  'set': valve._base_setting,
                  'mloss': valve.minor_loss,
@@ -1043,14 +1054,14 @@ class InpFile(object):
             if curve.curve_type == 'VOLUME':
                 f.write(';VOLUME: {}\n'.format(curve_name).encode('ascii'))
                 for point in curve.points:
-                    x = HydParam.Length.from_si(inp_units, point[0])
-                    y = HydParam.Volume.from_si(inp_units, point[1])
+                    x = from_si(inp_units, point[0], HydParam.Length)
+                    y = from_si(inp_units, point[1], HydParam.Volume)
                     f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
             elif curve.curve_type == 'HEAD':
                 f.write(';HEAD: {}\n'.format(curve_name).encode('ascii'))
                 for point in curve.points:
-                    x = HydParam.Flow.from_si(inp_units, point[0])
-                    y = HydParam.HydraulicHead.from_si(inp_units, point[1])
+                    x = from_si(inp_units, point[0], HydParam.Flow)
+                    y = from_si(inp_units, point[1], HydParam.HydraulicHead)
                     f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
             f.write('\n'.encode('ascii'))
         for curve_name, curve in self.curves.items():
@@ -1091,7 +1102,7 @@ class InpFile(object):
                 if all_control._operation is np.less:
                     vals['compare'] = 'below'
                 threshold = all_control._threshold - all_control._source_obj.elevation
-                vals['thresh'] = HydParam.HydraulicHead.from_si(inp_units, threshold)
+                vals['thresh'] = from_si(inp_units, threshold, HydParam.HydraulicHead)
                 f.write(entry.format(**vals).encode('ascii'))
             else:
                 raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
@@ -1147,15 +1158,17 @@ class InpFile(object):
         f.write(entry_int.format('ORDER', 'WALL', int(wn.options.wall_rxn_order)).encode('ascii'))
         f.write(entry_int.format('ORDER', 'TANK', int(wn.options.tank_rxn_order)).encode('ascii'))
         f.write(entry_float.format('GLOBAL','BULK',
-                                   QualParam.BulkReactionCoeff.from_si(inp_units,
-                                                                       wn.options.bulk_rxn_coeff,
-                                                                       mass_units,
-                                                                       wn.options.bulk_rxn_order)).encode('ascii'))
+                                   from_si(inp_units,
+                                           wn.options.bulk_rxn_coeff,
+                                           QualParam.BulkReactionCoeff,
+                                           mass_units=mass_units,
+                                           reaction_order=wn.options.bulk_rxn_order)).encode('ascii'))
         f.write(entry_float.format('GLOBAL','WALL',
-                                   QualParam.WallReactionCoeff.from_si(inp_units,
-                                                                       wn.options.wall_rxn_coeff,
-                                                                       mass_units,
-                                                                       wn.options.wall_rxn_order)).encode('ascii'))
+                                   from_si(inp_units,
+                                           wn.options.wall_rxn_coeff,
+                                           QualParam.WallReactionCoeff,
+                                           mass_units=mass_units,
+                                           reaction_order=wn.options.wall_rxn_order)).encode('ascii'))
         if wn.options.limiting_potential is not None:
             f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.limiting_potential).encode('ascii'))
         if wn.options.roughness_correlation is not None:
@@ -1163,23 +1176,26 @@ class InpFile(object):
         for tank_name, tank in wn.nodes(Tank):
             if tank.bulk_rxn_coeff is not None:
                 f.write(entry_float.format('TANK',tank_name,
-                                           QualParam.BulkReactionCoeff.from_si(inp_units,
-                                                                       tank.bulk_rxn_coeff,
-                                                                       mass_units,
-                                                                       wn.options.bulk_rxn_order)).encode('ascii'))
+                                           from_si(inp_units,
+                                                   tank.bulk_rxn_coeff,
+                                                   QualParam.BulkReactionCoeff,
+                                                   mass_units=mass_units,
+                                                   reaction_order=wn.options.bulk_rxn_order)).encode('ascii'))
         for pipe_name, pipe in wn.links(Pipe):
             if pipe.bulk_rxn_coeff is not None:
                 f.write(entry_float.format('BULK',pipe_name,
-                                           QualParam.BulkReactionCoeff.from_si(inp_units,
-                                                                       pipe.bulk_rxn_coeff,
-                                                                       mass_units,
-                                                                       wn.options.bulk_rxn_order)).encode('ascii'))
+                                           from_si(inp_units,
+                                                   pipe.bulk_rxn_coeff,
+                                                   QualParam.BulkReactionCoeff,
+                                                   mass_units=mass_units,
+                                                   reaction_order=wn.options.bulk_rxn_order)).encode('ascii'))
             if pipe.wall_rxn_coeff is not None:
                 f.write(entry_float.format('WALL',pipe_name,
-                                           QualParam.WallReactionCoeff.from_si(inp_units,
-                                                                       pipe.wall_rxn_coeff,
-                                                                       mass_units,
-                                                                       wn.options.wall_rxn_order)).encode('ascii'))
+                                           from_si(inp_units,
+                                                   pipe.wall_rxn_coeff,
+                                                   QualParam.WallReactionCoeff,
+                                                   mass_units=mass_units,
+                                                   reaction_order=wn.options.wall_rxn_order)).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
         # Time options
