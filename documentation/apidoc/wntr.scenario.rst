@@ -3,7 +3,7 @@ wntr.scenario package
 
 .. automodule:: wntr.scenario
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
 
 Submodules
@@ -11,7 +11,7 @@ Submodules
 
 .. toctree::
 
-   wntr.scenario.Earthquake
-   wntr.scenario.FragilityCurve
-   wntr.scenario.Waterquality
+   wntr.scenario.earthquake
+   wntr.scenario.fragility_curve
+   wntr.scenario.water_quality
 

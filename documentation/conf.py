@@ -41,17 +41,19 @@ extensions = [
     'sphinx.ext.intersphinx',
 ]
 
-autosummary_generate = True
 viewcode_import = True
 numpydoc_show_class_members = True
 numpydoc_class_members_toctree = False
 autodoc_member_order = 'bysource'
 autoclass_content = 'both'
 numfig=True
-numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Listing %s'} 
+numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Listing %s'}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
+import glob
+autosummary_generate = glob.glob("apidoc/*.rst")
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -133,16 +135,16 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
     html_theme = 'sphinx_rtd_theme'
-    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]  
+    html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
     html_style = 'wntr.css'
 else:
     html_theme = 'default'
-    html_context = {                                                             
-        'css_files': [                                                           
-            'https://media.readthedocs.org/css/sphinx_rtd_theme.css',            
-            'https://media.readthedocs.org/css/readthedocs-doc-embed.css',       
-            '_static/wntr.css',                                       
-        ],                                                                       
+    html_context = {
+        'css_files': [
+            'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
+            'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
+            '_static/wntr.css',
+        ],
     }
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -162,7 +164,7 @@ else:
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'figures/wntr.png'                                                   
+html_logo = 'figures/wntr.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32

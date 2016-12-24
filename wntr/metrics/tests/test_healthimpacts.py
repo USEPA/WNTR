@@ -36,7 +36,7 @@ def test_mass_consumed():
 
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
-    sim = wntr.epanet.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim(WQ)
 
     junctions = [junction_name for junction_name, junction in wn.junctions()]
@@ -66,7 +66,7 @@ def test_volume_consumed():
 
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
-    sim = wntr.epanet.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim(WQ)
 
     junctions = [junction_name for junction_name, junction in wn.junctions()]
@@ -96,7 +96,7 @@ def test_extent_contaminated():
 
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
-    sim = wntr.epanet.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim(WQ)
 
     #junctions = [junction_name for junction_name, junction in wn.junctions()]

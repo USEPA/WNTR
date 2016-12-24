@@ -23,7 +23,7 @@ def test_setpoint_waterquality_simulation():
 
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, -1)
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim(WQ)
 
     expected = 91661.72*(1e-6/0.001) # Node '159' at hour 6
@@ -37,7 +37,7 @@ def test_flowpaced_waterquality_simulation():
 
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'FLOWPACED', 100, 0, -1)
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim(WQ)
 
     expected = 92246.55*(1e-6/0.001) # Node '159' at hour 6
@@ -51,7 +51,7 @@ def test_mass_waterquality_simulation():
 
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'MASS', 100, 0, -1)
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim(WQ)
 
     expected = 217903.60*(1e-6/0.001) # Node '159' at hour 6
@@ -66,7 +66,7 @@ def test_conc_waterquality_simulation():
 
     WQ = wntr.scenario.Waterquality('CHEM', ['River'], 'CONCEN', 100, 0, -1)
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim(WQ)
 
     expected = 91661.72*(1e-6/0.001) # Node '159' at hour 6
@@ -82,7 +82,7 @@ def test_age_waterquality_simulation():
 
     WQ = wntr.scenario.Waterquality('AGE')
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim(WQ)
 
     expected = 3.65*3600 # Node '159' at hour 6
@@ -96,7 +96,7 @@ def test_trace_waterquality_simulation():
 
     WQ = wntr.scenario.Waterquality('TRACE', ['121'])
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim(WQ)
 
     expected = 91.66 # Node '159' at hour 6

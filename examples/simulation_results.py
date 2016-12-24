@@ -6,7 +6,7 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Simulate hydraulics
-sim = wntr.epanet.EpanetSimulator(wn)
+sim = wntr.sim.EpanetSimulator(wn)
 results = sim.run_sim()
 
 # Access node and link panels

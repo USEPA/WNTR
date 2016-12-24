@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 # Create a water network model and setup simulation
 inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
-sim = wntr.epanet.EpanetSimulator(wn)
+sim = wntr.sim.EpanetSimulator(wn)
 
 # Run chemical concentration scenario and plot results
 WQscenario = wntr.scenario.Waterquality('CHEM', ['121', '123'], 'SETPOINT', 1000, 2*3600, 15*3600)

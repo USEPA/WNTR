@@ -3,5 +3,5 @@ wntr.metrics.query module
 
 .. automodule:: wntr.metrics.query
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

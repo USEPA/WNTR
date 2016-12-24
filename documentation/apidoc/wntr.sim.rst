@@ -3,7 +3,7 @@ wntr.sim package
 
 .. automodule:: wntr.sim
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
 
 Submodules
@@ -11,9 +11,9 @@ Submodules
 
 .. toctree::
 
-   wntr.sim.HydraulicModel
-   wntr.sim.NetworkResults
-   wntr.sim.NewtonSolver
-   wntr.sim.WNTRSimulator
-   wntr.sim.WaterNetworkSimulator
+   wntr.sim.core
+   wntr.sim.epanet
+   wntr.sim.hydraulics
+   wntr.sim.results
+   wntr.sim.solvers
 

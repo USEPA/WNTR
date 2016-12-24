@@ -1,3 +1,8 @@
+"""
+The wntr.metrics package contains methods to compute resilience, including
+hydraulic, water quality, water security, and economic metrics.  Methods to 
+compute topographic metrics are included in the wntr.network.graph module.
+"""
 from wntr.metrics.todini import todini
 from wntr.metrics.entropy import entropy
 from wntr.metrics.cost import cost

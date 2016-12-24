@@ -31,7 +31,7 @@ def test_Todini_Fig2_optCost_GPM():
     parser = wntr.epanet.InpFile()
     wn = parser.read(inp_file)
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
     # Compute todini index
@@ -52,7 +52,7 @@ def test_Todini_Fig2_optCost_CMH():
     parser = wntr.epanet.InpFile()
     wn = parser.read(inp_file)
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
     # Compute todini index
@@ -73,7 +73,7 @@ def test_Todini_Fig2_solA_GPM():
     parser = wntr.epanet.InpFile()
     wn = parser.read(inp_file)
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
     # Compute todini index
@@ -93,7 +93,7 @@ def test_Todini_Fig2_solA_CMH():
     parser = wntr.epanet.InpFile()
     wn = parser.read(inp_file)
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
     # Compute todini index
@@ -115,7 +115,7 @@ def test_Net6():
     parser = wntr.epanet.InpFile()
     wn = parser.read(inp_file)
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
+    sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
     # Compute todini index

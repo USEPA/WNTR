@@ -3,7 +3,7 @@ wntr.epanet package
 
 .. automodule:: wntr.epanet
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
 
 Subpackages
@@ -19,6 +19,5 @@ Submodules
 .. toctree::
 
    wntr.epanet.io
-   wntr.epanet.sim
    wntr.epanet.util
 

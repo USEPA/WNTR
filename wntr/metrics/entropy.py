@@ -1,5 +1,5 @@
 import networkx as nx
-from wntr.network.WntrMultiDiGraph import _all_simple_paths
+from wntr.network.graph import _all_simple_paths
 import math
 import numpy as np
 from collections import Counter
