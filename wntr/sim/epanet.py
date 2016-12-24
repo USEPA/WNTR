@@ -37,7 +37,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         self.solve_step = {}
         self.warning_list = None
 
-    def run_sim(self, WQ=None, convert_units=True, inp_file_prefix='temp'):
+    def run_sim(self, WQ=None, convert_units=True, inp_file_prefix='temp', binary_file=False):
         """
         Run water network simulation using EPANET.  
         The EpanetSimulator uses an INP file written from the water network model.
@@ -62,7 +62,10 @@ class EpanetSimulator(WaterNetworkSimulator):
         # Create enData
         enData = wntr.epanet.pyepanet.ENepanet()
         enData.inpfile = self._wn.name
-        enData.ENopen(enData.inpfile, inp_file_prefix + '.rpt')
+        if not binary_file:
+            enData.ENopen(enData.inpfile, inp_file_prefix + '.rpt')
+        else:
+            enData.ENopen(enData.inpfile, inp_file_prefix + '.rpt', inp_file_prefix + '.bin')
         flowunits = FlowUnits(enData.ENgetflowunits())
         if self._wn._inpfile is not None:
             mass_units = self._wn._inpfile.mass_units
@@ -213,7 +216,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 else:
                     logger.error('Invalid Quality Type')
             enData.ENopenQ()
-            enData.ENinitQ((binary_file is not None))
+            enData.ENinitQ(int(binary_file))
 
             while True:
                 t = enData.ENrunQ()
