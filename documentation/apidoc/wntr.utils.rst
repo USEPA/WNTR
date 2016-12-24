@@ -11,6 +11,6 @@ Submodules
 
 .. toctree::
 
+   wntr.utils.color
    wntr.utils.logger
-   wntr.utils.timedelta
 

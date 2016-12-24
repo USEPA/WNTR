@@ -61,8 +61,8 @@ class TestNetworkMethods(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         import wntr
-        from wntr.network.WaterNetworkModel import Junction, Tank, Reservoir, Pipe, Pump, Valve
-        from wntr.network.NetworkControls import ControlAction, TimeControl
+        from wntr.network.model import Junction, Tank, Reservoir, Pipe, Pump, Valve
+        from wntr.network.controls import ControlAction, TimeControl
         self.Junction = Junction
         self.Tank = Tank
         self.Reservoir = Reservoir

@@ -4,7 +4,7 @@ Water quality simulation
 ==================================
 
 Water quality simulation can be run using the EpanetSimulator.  
-Water quality scenarios are defined using the class :doc:`Waterquality</apidoc/wntr.scenario.Waterquality>`.
+Water quality scenarios are defined using the class :doc:`Waterquality</apidoc/wntr.scenario.water_quality>`.
 This class stores information on the water quality type and injection.  
 EPANET supports water quality simulation to track chemical concentration, 
 water age, and tracer percent.

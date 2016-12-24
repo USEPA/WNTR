@@ -23,8 +23,8 @@ The example **hydraulic_simulation.py** can be used to run both simulators and
 pause/restart simulation.
 
 More information on the simulators can be found in the API documentation, under
-:doc:`EpanetSimulator</apidoc/wntr.sim.EpanetSimulator>` and 
-:doc:`WNTRSimulator</apidoc/wntr.sim.WNTRSimulator>`.
+:doc:`EpanetSimulator</apidoc/wntr.sim.epanet>` and 
+:doc:`WNTRSimulator</apidoc/wntr.sim.core>`.
 
 Pause and restart 
 ------------------
