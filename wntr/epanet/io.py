@@ -4,8 +4,9 @@ Provides classes for reading/writing EPANET input and output files.
 """
 from __future__ import absolute_import
 import wntr.network
-from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
-from wntr.sim import NetResults
+import wntr.sim
+#from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
+#from wntr.sim import NetResults
 import wntr
 import io
 
@@ -22,6 +23,7 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["InpFile", "BinFile"]
 
 _INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
                  '[TANKS]', '[PIPES]', '[PUMPS]', '[VALVES]', '[EMITTERS]',
@@ -244,7 +246,7 @@ class InpFile(object):
 
         """
         if wn is None:
-            wn = WaterNetworkModel()
+            wn = wntr.network.WaterNetworkModel()
         wn.name = filename
         opts = wn.options
 
@@ -1026,11 +1028,11 @@ class InpFile(object):
         # Print status information
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
-        for link_name, link in wn.links(Pump):
+        for link_name, link in wn.links(wntr.network.Pump):
             if link.get_base_status() == LinkBaseStatus.CLOSED.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
                         LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
-        for link_name, link in wn.links(Valve):
+        for link_name, link in wn.links(wntr.network.Valve):
             if link.get_base_status() == LinkBaseStatus.CLOSED.value or link.get_base_status() == LinkBaseStatus.OPEN.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
                         LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
@@ -1177,7 +1179,7 @@ class InpFile(object):
             f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.limiting_potential).encode('ascii'))
         if wn.options.roughness_correlation is not None:
             f.write(entry_float.format('ROUGHNESS','CORRELATION',wn.options.roughness_correlation).encode('ascii'))
-        for tank_name, tank in wn.nodes(Tank):
+        for tank_name, tank in wn.nodes(wntr.network.Tank):
             if tank.bulk_rxn_coeff is not None:
                 f.write(entry_float.format('TANK',tank_name,
                                            from_si(inp_units,
@@ -1185,7 +1187,7 @@ class InpFile(object):
                                                    QualParam.BulkReactionCoeff,
                                                    mass_units=mass_units,
                                                    reaction_order=wn.options.bulk_rxn_order)).encode('ascii'))
-        for pipe_name, pipe in wn.links(Pipe):
+        for pipe_name, pipe in wn.links(wntr.network.Pipe):
             if pipe.bulk_rxn_coeff is not None:
                 f.write(entry_float.format('BULK',pipe_name,
                                            from_si(inp_units,
@@ -1270,31 +1272,35 @@ class RptFile(object):
 
 
 class BinFile(object):
-    # __metaclass__ = ABCMeta
+    """
+    Read an EPANET 2.x binary output file.
 
+    Abstract class, does not save any of the data read, simply calls the
+    abstract functions at the appropriate times.
+
+    Parameters
+    ----------
+    results_type : list of ~wntr.epanet.util.ResultType
+        If ``None``, then all results will be saved (node quality, demand, link flow, etc.).
+        Otherwise, a list of result types can be passed to limit the memory used. This can
+        also be specified in a save_results_line call, but will default to this list.
+    network : bool
+        Save a new WaterNetworkModel from the description in the output binary file. Certain
+        elements may be missing, such as patterns and curves, if this is done.
+    energy : bool
+        Save the pump energy results.
+    statistics : bool
+        Save the statistics lines (different from the stats flag in the inp file) that are
+        automatically calculated regarding hydraulic conditions.
+
+    Attributes
+    ----------
+    results : :class:`~wntr.sim.results.NetResults`
+        A WNTR results object will be created and added to the instance after read.
+
+
+    """
     def __init__(self, result_types=None, network=False, energy=False, statistics=False):
-        """
-        Read an EPANET 2.x binary output file.
-
-        Abstract class, does not save any of the data read, simply calls the
-        abstract functions at the appropriate times.
-
-        Parameters
-        ----------
-        results_type : list of wntr.epanet.util.ResultType
-            If ``None``, then all results will be saved (node quality, demand, link flow, etc.).
-            Otherwise, a list of result types can be passed to limit the memory used. This can
-            also be specified in a save_results_line call, but will default to this list.
-        network : bool
-            Save a new WaterNetworkModel from the description in the output binary file. Certain
-            elements may be missing, such as patterns and curves, if this is done.
-        energy : bool
-            Save the pump energy results.
-        statistics : bool
-            Save the statistics lines (different from the stats flag in the inp file) that are
-            automatically calculated regarding hydraulic conditions.
-
-        """
         self.ftype = '=f4'
         self.idlen = 32
         self.hydraulic_id = None
@@ -1318,7 +1324,7 @@ class BinFile(object):
         self.chem_units = None
         self.inp_file = None
         self.rpt_file = None
-        self.results = NetResults()
+        self.results = wntr.sim.NetResults()
         if result_types is None:
             self.items = [ member for name, member in ResultType.__members__.items() ]
         else:
@@ -1353,11 +1359,11 @@ class BinFile(object):
         the nodes and links. Nodes and link values are provided in the same
         order as the names are specified in the prolog.
 
-        The result types for node data are: ``demand``, ``head``,
-        ``pressure`` and ``node_quality``.
+        The result types for node data are: :attr:`ResultType.demand`, :attr:`ResultType.head`,
+        :attr:`ResultType.pressure` and :attr:`ResultType.quality`.
 
-        The result types are
-
+        The result types for link data are: :attr:`ResultType.linkquality`,
+        :attr:`ResultType.flowrate`, and :attr:`ResultType.velocity`.
 
         Parameters
         ----------
@@ -1388,8 +1394,11 @@ class BinFile(object):
                 self.results.link[result_type.name].iloc[period] = values
 
     def save_network_desc_line(self, element, values):
-        """
-        Save network description meta-data and element characteristics.
+        """Save network description meta-data and element characteristics.
+
+        This method, by default, does nothing. It is available to be overloaded, but the
+        core implementation assumes that an INP file exists that will have a better,
+        human readable network description.
 
         Parameters
         ----------
@@ -1398,17 +1407,14 @@ class BinFile(object):
         values : numpy.array
             the values that go with the information
 
-        .. warning::
-            This method, by default, does nothing. It is available to be overloaded, but the
-            core implementation assumes that an INP file exists that will have a better,
-            human readable network description.
-
         """
         pass
 
     def save_energy_line(self, pump_idx, pump_name, values):
-        """
-        Save pump energy from the output file.
+        """Save pump energy from the output file.
+
+        This method, by default, does nothing. It is available to be overloaded in
+        order to save information for pump energy calculations.
 
         Parameters
         ----------
@@ -1423,8 +1429,7 @@ class BinFile(object):
         pass
 
     def finalize_save(self, good_read, sim_warnings):
-        """
-        Do any final post-read saves, writes, or processing.
+        """Do any final post-read saves, writes, or processing.
 
         Parameters
         ----------
@@ -1438,6 +1443,27 @@ class BinFile(object):
         pass
 
     def read(self, filename):
+        """Read a binary file and create a results object.
+
+        Parameters
+        ----------
+        filename : str
+            An EPANET BIN output file
+
+        Returns
+        -------
+        object
+            Returns the :attr:`~results` object, whatever it has been overloaded to be
+
+
+
+        .. note:: Overloading
+            This function should **not** be overloaded. Instead, overload the other functions
+            to change how it saves the results. Specifically, overload :func:`~setup_ep_results`,
+            :func:`~save_ep_line` and :func:`~finalize_save` to change how extended period
+            simulation results in a different format (such as directly to a file or database).
+
+        """
         logger.debug('Read binary EPANET data from %s',filename)
         fin = open(filename,'rb')
         ftype = self.ftype
@@ -1583,3 +1609,4 @@ class BinFile(object):
             logger.warning('Warnings were issued during simulation')
         fin.close()
         self.finalize_save(magic1==magic2, warnflag)
+        return self.results

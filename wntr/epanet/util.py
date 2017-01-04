@@ -8,6 +8,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["FlowUnits", "MassUnits", "QualParam", "HydParam", "to_si", "from_si",
+           "StatisticsType", "QualType", "SourceType", "PressureUnits", "FormulaType",
+           "NodeType", "LinkType", "ControlType", "LinkBaseStatus", "LinkTankStatus",
+           "MixType", "ResultType", "EN"]
+
 class FlowUnits(enum.Enum):
     u"""Epanet Units Enum class.
 
@@ -1074,6 +1079,26 @@ class EN(enum.IntEnum):
     For example, ``EN_LENGTH`` is accessed as ``EN.LENGTH``, instead.  Please see the EPANET
     toolkit documentation for the description of these enums. Several enums are duplicated
     in separaet classes above for clarity during programming.
+
+    The enums can be broken in the following groups.
+
+    - Node parameters: :attr:`~ELEVATION`, :attr:`~BASEDEMAND`, :attr:`~PATTERN`, :attr:`~EMITTER`, :attr:`~INITQUAL`, :attr:`~SOURCEQUAL`, :attr:`~SOURCEPAT`, :attr:`~SOURCETYPE`, :attr:`~TANKLEVEL`, :attr:`~DEMAND`, :attr:`~HEAD`, :attr:`~PRESSURE`, :attr:`~QUALITY`, :attr:`~SOURCEMASS`, :attr:`~INITVOLUME`, :attr:`~MIXMODEL`, :attr:`~MIXZONEVOL`, :attr:`~TANKDIAM`, :attr:`~MINVOLUME`, :attr:`~VOLCURVE`, :attr:`~MINLEVEL,`, :attr:`~MAXLEVEL`, :attr:`~MIXFRACTION`, :attr:`~TANK_KBULK`, :attr:`~TANKVOLUME`, :attr:`~MAXVOLUME`
+    - Link parameters: :attr:`~DIAMETER`, :attr:`~LENGTH`, :attr:`~ROUGHNESS`, :attr:`~MINORLOSS`, :attr:`~INITSTATUS`, :attr:`~INITSETTING`, :attr:`~KBULK`, :attr:`~KWALL`, :attr:`~FLOW`, :attr:`~VELOCITY`, :attr:`~HEADLOSS`, :attr:`~STATUS`, :attr:`~SETTING`, :attr:`~ENERGY`, :attr:`~LINKQUAL`, :attr:`~LINKPATTERN`
+    - Time parameters: :attr:`~DURATION`, :attr:`~HYDSTEP`, :attr:`~QUALSTEP`, :attr:`~PATTERNSTEP`, :attr:`~PATTERNSTART`, :attr:`~REPORTSTEP`, :attr:`~REPORTSTART`, :attr:`~RULESTEP`, :attr:`~STATISTIC`, :attr:`~PERIODS`, :attr:`~STARTTIME`, :attr:`~HTIME`, :attr:`~HALTFLAG`, :attr:`~NEXTEVENT`
+    - Solver parameters: :attr:`~ITERATIONS`, :attr:`~RELATIVEERROR`
+    - Component counts: :attr:`~NODECOUNT`, :attr:`~TANKCOUNT`, :attr:`~LINKCOUNT`, :attr:`~PATCOUNT`, :attr:`~CURVECOUNT`, :attr:`~CONTROLCOUNT`
+    - Node types: :attr:`~JUNCTION`, :attr:`~RESERVOIR`, :attr:`~TANK`
+    - Link types: :attr:`~CVPIPE`, :attr:`~PIPE`, :attr:`~PUMP`, :attr:`~PRV`, :attr:`~PSV`, :attr:`~PBV`, :attr:`~FCV`, :attr:`~TCV`, :attr:`~GPV`
+    - Quality analysis types: :attr:`~NONE`, :attr:`~CHEM`, :attr:`~AGE`, :attr:`~TRACE`
+    - Source quality types: :attr:`~CONCEN`, :attr:`~MASS`, :attr:`~SETPOINT`, :attr:`~FLOWPACED`
+    - Flow unit types: :attr:`~CFS`, :attr:`~GPM`, :attr:`~MGD`, :attr:`~IMGD`, :attr:`~AFD`, :attr:`~LPS`, :attr:`~LPM`, :attr:`~MLD`, :attr:`~CMH`, :attr:`~CMD`
+    - Miscelaneous options: :attr:`~TRIALS`, :attr:`~ACCURACY`, :attr:`~TOLERANCE`, :attr:`~EMITEXPON`, :attr:`~DEMANDMULT`
+    - Control types: :attr:`~LOWLEVEL`, :attr:`~HILEVEL`, :attr:`~TIMER`, :attr:`~TIMEOFDAY`
+    - Time statistic types: :attr:`~NONE`, :attr:`~AVERAGE`, :attr:`~MINIMUM`, :attr:`~MAXIMUM`, :attr:`~RANGE`
+    - Tank mixing model types: :attr:`~MIX1`, :attr:`~MIX2`, :attr:`~FIFO`, :attr:`~LIFO`
+    - Save results flag: :attr:`~NOSAVE`, :attr:`~SAVE`, :attr:`~INITFLOW`
+    - Pump behavior types: :attr:`~CONST_HP`, :attr:`~POWER_FUNC`, :attr:`~CUSTOM`
+
 
     """
     ELEVATION    = 0
