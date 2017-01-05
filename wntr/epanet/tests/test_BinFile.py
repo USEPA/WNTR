@@ -29,9 +29,7 @@ def test_epanet_binary_reader():
 
     enbin = wntr.epanet.BinFile()
     enbin.read(bin_file)
-    print('Finished read')
     expected = 91661.72*(1e-6/0.001) # Node '159' at hour 6
-    print(enbin.results.node.loc['quality', 6*3600])
     simOut = results.node.loc['quality', 6*3600, '159']
     binOut = enbin.results.node.loc['quality', 6*3600, '159']
     diff = abs((simOut-binOut)/expected)
