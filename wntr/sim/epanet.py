@@ -39,9 +39,9 @@ class EpanetSimulator(WaterNetworkSimulator):
 
     def run_sim(self, WQ=None, convert_units=True, inp_file_prefix='temp', binary_file=False):
         """
-        Run water network simulation using EPANET.  
+        Run water network simulation using EPANET.
         The EpanetSimulator uses an INP file written from the water network model.
-        
+
         Parameters
         ----------
         WQ : wntr.scenario.Waterquality object (optional)
@@ -49,14 +49,14 @@ class EpanetSimulator(WaterNetworkSimulator):
 
         convert_units : bool (optional)
             Convert results to SI units, default = True
-            
+
         inp_file_prefix : string (optional)
             INP file prefix, default = 'tmp'
         """
         # Write a new inp file from the water network model
         #self._wn.write_inpfile(inp_file_prefix + '.inp')
         #self._wn.name = inp_file_prefix + '.inp'
-        
+
         start_run_sim_time = time.time()
         logger.debug('Starting run')
         # Create enData
@@ -240,8 +240,13 @@ class EpanetSimulator(WaterNetworkSimulator):
 
             enData.ENcloseQ()
 
+        try:
+            enData.ENreport()
+        except:
+            pass
         # close epanet
-        enData.ENclose()
+        # this is causing a segmentation fault on linux if a binary file is ever read, like ever
+        # enData.ENclose()
 
         # Create Panel
         for key, value in node_dictonary.items():

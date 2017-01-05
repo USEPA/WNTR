@@ -21,8 +21,8 @@ import os, sys
 from pkg_resources import Requirement, resource_filename
 
 if os.name in ['nt','dos']:
-    libepanet = resource_filename(__name__,'data/Windows/epanet2.dll')
+    libepanet = resource_filename(__name__,'data/Windows/epanet2_amd64.dll')
 elif sys.platform in ['darwin']:
     libepanet = resource_filename(__name__,'data/Darwin/libepanet.dylib')
 else:
-    libepanet = resource_filename(__name__,'data/Linux/libepanet2.so')
+    libepanet = resource_filename(__name__,'data/Linux/libepanet2_amd64.so')

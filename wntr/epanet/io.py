@@ -332,9 +332,9 @@ class InpFile(object):
                     if len(words) > 2:
                         opts.quality_value = words[2]
                         if 'ug' in words[2]:
-                            self.mass_units = MassUnits.mg
-                        else:
                             self.mass_units = MassUnits.ug
+                        else:
+                            self.mass_units = MassUnits.mg
                     else:
                         self.mass_units = MassUnits.mg
                         opts.quality_value = 'mg/L'
@@ -1376,17 +1376,17 @@ class BinFile(object):
 
         """
         if result_type in [ResultType.quality, ResultType.linkquality]:
-            values = QualParam.Concentration.to_si(self.flow_units, values, mass_units=self.mass_units)
+            values = QualParam.Concentration._to_si(self.flow_units, values, mass_units=self.mass_units)
         elif result_type == ResultType.demand:
-            values = HydParam.Demand.to_si(self.flow_units, values)
+            values = HydParam.Demand._to_si(self.flow_units, values)
         elif result_type == ResultType.flowrate:
-            values = HydParam.Flow.to_si(self.flow_units, values)
+            values = HydParam.Flow._to_si(self.flow_units, values)
         elif result_type in [ResultType.head, ResultType.headloss]:
-            values = HydParam.HydraulicHead.to_si(self.flow_units, values)
+            values = HydParam.HydraulicHead._to_si(self.flow_units, values)
         elif result_type == ResultType.pressure:
-            values = HydParam.Pressure.to_si(self.flow_units, values)
+            values = HydParam.Pressure._to_si(self.flow_units, values)
         elif result_type == ResultType.velocity:
-            values = HydParam.Velocity.to_si(self.flow_units, values)
+            values = HydParam.Velocity._to_si(self.flow_units, values)
         if result_type in self.items:
             if result_type.is_node:
                 self.results.node[result_type.name].iloc[period] = values

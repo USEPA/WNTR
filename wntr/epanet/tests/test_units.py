@@ -162,8 +162,9 @@ def execute_test_list(typestring, flowunit, data, data_expected):
 def execute_test_qual(typestring, flowunit, data, data_expected):
 #    data_convert = wntr.utils.convert(typestring, flowunit, data)
     data_convert = wntr.epanet.util.QualParam[typestring]._to_si(wntr.epanet.util.FlowUnits(flowunit), data)
-    data_convert = round(data_convert,3)
-    assert_equal(data_convert, data_expected)
+    assert_less(abs((data_convert - data_expected)/float(data_expected)), 0.001)
+    data_convert = wntr.epanet.util.QualParam[typestring]._from_si(wntr.epanet.util.FlowUnits(flowunit), data_expected)
+    assert_less(abs((data_convert - data)/data), 0.001)
 
 @nottest
 def execute_test_qual_list(typestring, flowunit, data, data_expected):

@@ -17,20 +17,20 @@ River        CONCEN        100000   mg/L
 """
 
 def test_epanet_binary_reader():
-    raise SkipTest
+    #raise SkipTest
     inp_file = join(datadir,'Net3.inp')
-    bin_file = 'Net3.bin'
+    bin_file = 'tmp.bin'
 
     wn = wntr.network.WaterNetworkModel(inp_file)
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, -1)
 
-    sim = wntr.epanet.sim.EpanetSimulator(wn)
-    results = sim.run_sim(WQ, report_file='temp.rpt', binary_file=bin_file)
+    sim = wntr.sim.EpanetSimulator(wn)
+    results = sim.run_sim(WQ, inp_file_prefix='tmp', binary_file=True)
 
     enbin = wntr.epanet.BinFile()
     enbin.read(bin_file)
+    print('Finished read')
     expected = 91661.72*(1e-6/0.001) # Node '159' at hour 6
-    print(results.node.loc['quality', 6*3600])
     print(enbin.results.node.loc['quality', 6*3600])
     simOut = results.node.loc['quality', 6*3600, '159']
     binOut = enbin.results.node.loc['quality', 6*3600, '159']
