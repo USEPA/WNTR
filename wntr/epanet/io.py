@@ -1016,6 +1016,16 @@ class InpFile(object):
                  'set': valve._base_setting,
                  'mloss': valve.minor_loss,
                  'com': ';'}
+            valve_type = valve.valve_type
+            if valve_type in ['PRV', 'PSV', 'PBV']:
+                valve_set = from_si(inp_units, valve._base_setting, HydParam.Pressure)
+            elif valve_type == 'FCV':
+                valve_set = from_si(inp_units, valve._base_setting, HydParam.Flow)
+            elif valve_type == 'TCV':
+                valve_set = valve._base_setting
+            elif valve_type == 'GPV':
+                valve_set = valve._base_setting
+            E['set'] = valve_set
             f.write(_VALVE_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -1226,7 +1236,7 @@ class InpFile(object):
         hrs, mm, sec = _sec_to_string(wn.options.quality_timestep)
         f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec).encode('ascii'))
         hrs, mm, sec = _sec_to_string(wn.options.rule_timestep)
-        f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
+        #f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
         f.write(entry.format('STATISTIC', wn.options.statistic).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
