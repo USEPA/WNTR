@@ -27,22 +27,22 @@ _INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
                  '[TIMES]', '[REPORT]', '[COORDINATES]', '[VERTICES]',
                  '[LABELS]', '[BACKDROP]', '[TAGS]']
 
-_JUNC_ENTRY = ' {name:20} {elev:12.6g} {dem:12.6g} {pat:24} {com:>3s}\n'
+_JUNC_ENTRY = ' {name:20} {elev:12.12g} {dem:12.12g} {pat:24} {com:>3s}\n'
 _JUNC_LABEL = '{:21} {:>12s} {:>12s} {:24}\n'
 
-_RES_ENTRY = ' {name:20s} {head:12.6g} {pat:>24s} {com:>3s}\n'
+_RES_ENTRY = ' {name:20s} {head:12.12g} {pat:>24s} {com:>3s}\n'
 _RES_LABEL = '{:21s} {:>12s} {:>24s}\n'
 
-_TANK_ENTRY = ' {name:20s} {elev:12.6g} {initlev:12.6g} {minlev:12.6g} {maxlev:12.6g} {diam:12.6g} {minvol:12.6g} {curve:20s} {com:>3s}\n'
+_TANK_ENTRY = ' {name:20s} {elev:12.6g} {initlev:12.12g} {minlev:12.12g} {maxlev:12.12g} {diam:12.12g} {minvol:12.6g} {curve:20s} {com:>3s}\n'
 _TANK_LABEL = '{:21s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
 
-_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:12.6g} {diam:12.6g} {rough:12.6g} {mloss:12.6g} {status:>20s} {com:>3s}\n'
+_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:12.12g} {diam:12.12g} {rough:12.12g} {mloss:12.12g} {status:>20s} {com:>3s}\n'
 _PIPE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
 
 _PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:>3s}\n'
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
-_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:12.6g} {vtype:4s} {set:12.6g} {mloss:12.6g} {com:>3s}\n'
+_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:12.12g} {vtype:4s} {set:12.12g} {mloss:12.12g} {com:>3s}\n'
 _VALVE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
 
 _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
@@ -363,11 +363,11 @@ class InpFile(object):
                 elif key == 'TOLERANCE':
                     opts.tolerance = float(words[1])
                 elif key == 'CHECKFREQ':
-                    opts.tolerance = float(words[1])
+                    opts.checkfreq = float(words[1])
                 elif key == 'MAXCHECK':
-                    opts.tolerance = float(words[1])
+                    opts.maxcheck = float(words[1])
                 elif key == 'DAMPLIMIT':
-                    opts.tolerance = float(words[1])
+                    opts.damplimit = float(words[1])
                 elif key == 'MAP':
                     opts.map = words[1]
                 else:
