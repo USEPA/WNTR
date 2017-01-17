@@ -17,22 +17,23 @@ class FlowUnits(enum.Enum):
     a property that identifies it as either `traditional` or `metric` flow unit.
     EPANET *does not* use fully SI units - these are provided for WNTR compatibilty.
 
-    * Traditional (US customary, ``EN_US``)
-        * ``FlowUnits.CFS`` [ :math:`ft^3\,/\,s` ]
-        * ``FlowUnits.GPM`` [ :math:`gal\,/\,min` ]
-        * ``FlowUnits.MGD`` [ :math:`10^6\,gal\,/\,day` ]
-        * ``FlowUnits.IMGD`` [ :math:`10^6\,Imp.\,gal\,/\,day` ]
-        * ``FlowUnits.AFD`` [ :math:`acre\cdot\,ft\,/\,day` ]
-    * Metric (SI related, ``EN_SI``)
-        * ``FlowUnits.LPS`` [ :math:`L\,/\,s` ]
-        * ``FlowUnits.LPM`` [ :math:`L\,/\,min` ]
-        * ``FlowUnits.MLD`` [ :math:`ML\,/\,day` ]
-        * ``FlowUnits.CMH`` [ :math:`m^3\,\,hr` ]
-        * ``FlowUnits.CMD`` [ :math:`m^3\,/\,day` ]
-    * SI (WNTR internal units)
-        * ``FlowUnits.SI`` [ :math:`m^3\,/\,s` ]
+    .. rubric:: Enum Members
 
-    .. rubric:: Enum Properties
+    ==============  ====================================  ========================
+    :attr:`~CFS`    :math:`ft^3\,/\,s`                    :attr:`is_traditional`
+    :attr:`~GPM`    :math:`gal\,/\,min`                   :attr:`is_traditional`
+    :attr:`~MGD`    :math:`10^6\,gal\,/\,day`             :attr:`is_traditional`
+    :attr:`~IMGD`   :math:`10^6\,Imp.\,gal\,/\,day`       :attr:`is_traditional`
+    :attr:`~AFD`    :math:`acre\cdot\,ft\,/\,day`         :attr:`is_traditional`
+    :attr:`~LPS`    :math:`L\,/\,s`                       :attr:`is_metric`
+    :attr:`~LPM`    :math:`L\,/\,min`                     :attr:`is_metric`
+    :attr:`~MLD`    :math:`ML\,/\,day`                    :attr:`is_metric`
+    :attr:`~CMH`    :math:`m^3\,\,hr`                     :attr:`is_metric`
+    :attr:`~CMD`    :math:`m^3\,/\,day`                   :attr:`is_metric`
+    :attr:`~SI`     :math:`m^3\,/\,s`
+    ==============  ====================================  ========================
+
+    .. rubric:: Enum Member Attributes
 
     .. autosummary::
         factor
@@ -99,10 +100,15 @@ class FlowUnits(enum.Enum):
 
     def __init__(self, EN_id, flow_factor):
         self._value2member_map_[EN_id] = self
+        self._member_map_[self.name.lower()] = self
 
     def __int__(self):
         """Convert to an EPANET Toolkit enum number."""
         return int(self.value[0])
+
+    def __str__(self):
+        """Convert to a string for INP files."""
+        return self.name
 
     @property
     def factor(self):
@@ -159,27 +165,28 @@ class MassUnits(enum.Enum):
     r"""Mass units used by EPANET, plus SI conversion factor.
 
     Mass units are defined in the EPANET INP file when the QUALITY option is
-    set to a chemical. The line is formatted as follows
+    set to a chemical. This is parsed to obtain the mass part of the concentration units,
+    and is used to set this enumerated type.
 
-    .. code::
+    .. rubric:: Enum Members
 
-            [OPTIONS]
-            QUALITY Chemical mg/L
+    ============  ============================================
+    :attr:`~mg`   miligrams; EPANET as "mg/L" or "mg/min"
+    :attr:`~ug`   micrograms; EPANET as "ug/L" or "ug/min"
+    :attr:`~g`    grams
+    :attr:`~kg`   kilograms; WNTR standard
+    ============  ============================================
 
-
-    This is parsed to obtain the mass part of the concentration units, and
-    is used to set this enumerated type.
-
-    .. rubric:: Attribute (Enum value) Properties
+    .. rubric:: Enum Member Attributes
 
     .. autosummary::
         factor
 
     """
-    mg = (1, 0.000001) #: milligrams (default EPANET mass unit)
-    ug = (2, 0.000000001) #: micrograms (optional EPANET mass unit)
-    g = (3, 0.001) #: grams (not used by EPANET, but accepted by WNTR)
-    kg = (4, 1.0) #: kilograms (not used by EPANET, used by WNTR internally)
+    mg = (1, 0.000001)
+    ug = (2, 0.000000001)
+    g = (3, 0.001)
+    kg = (4, 1.0)
 
     @property
     def factor(self):
@@ -188,7 +195,7 @@ class MassUnits(enum.Enum):
 
 
 class QualParam(enum.Enum):
-    u"""EPANET water quality parameters.
+    u"""EPANET water quality parameters conversion.
 
     These parameters are separated from the HydParam parameters because they are related to a
     logically separate model in EPANET, but also because conversion to SI units requires additional
@@ -196,55 +203,64 @@ class QualParam(enum.Enum):
     the reaction coefficient conversions require information about the reaction order that was
     specified. See the `to_si` and `from_si` functions for details.
 
-    * ``QualParam.Concentration``, ``QualParam.Quality``, and ``QualParam.LinkQuality`` are
-      the EPANET "quality" reported.
-      simulations.
-    * ``QualParam.BulkReactionCoeff`` provides the decay or growth factor for chemicals/biologics within
-      the bulk water in pipes or tanks.
-    * ``QualParam.WallReactionCoeff`` provides the decay or growth factor for chemical/biologic reactions
-      with materials or biofilms on pipe walls. Converting to SI units requires knowing the
-      reaction order.
-    * ``QualParam.ReactionRate`` is the average reaction rate, in mass per time.
-    * ``QualParam.SourceMassInject`` provides the injection rate, in mass per time, of an EPANET MASS
-      type water quality source.
-    * ``QualParam.WaterAge`` is the time the water has been residing in the system.
+    .. rubric:: Enum Members
 
-    .. rubric:: Methods
+    ==========================  ================================================================
+    :attr:`~Concentration`      General concentration parameter
+    :attr:`~Quality`            Nodal water quality
+    :attr:`~LinkQuality`        Link water quality
+    :attr:`~BulkReactionCoeff`  Bulk reaction coefficient (req. `reaction_order` to convert)
+    :attr:`~WallReactionCoeff`  Wall reaction coefficient (req. `reaction_order` to convert)
+    :attr:`~ReactionRate`       Average reaction rate within a link
+    :attr:`~SourceMassInject`   Injection rate for water quality sources
+    :attr:`~WaterAge`           Water age at a node
+    ==========================  ================================================================
 
-    .. autosummary::
-        to_si
-        from_si
+    .. skip::
 
+        .. rubric:: Enum Member Methods
 
+        .. autosummary::
+            to_si
+            from_si
 
     """
-    Quality = 4  #: water quality at node
-    LinkQuality = 10  #: average water quality in link
-    ReactionRate = 13  #: average reaction rate within pipe
-    Concentration = 35  #: alias for quality
-    BulkReactionCoeff = 36  #: Bulk reaction coefficient (depends on reaction_order)
-    WallReactionCoeff = 37  #: wall reaction coefficient (depends on reaction_order)
-    SourceMassInject = 38  #: mass injection rate
-    WaterAge = 39  #: water age
+    Quality = 4
+    LinkQuality = 10
+    ReactionRate = 13
+    Concentration = 35
+    BulkReactionCoeff = 36
+    WallReactionCoeff = 37
+    SourceMassInject = 38
+    WaterAge = 39
 
-    def to_si(self, flow_units, data, mass_units=MassUnits.mg,
+    def __init__(self, value):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def _to_si(self, flow_units, data, mass_units=MassUnits.mg,
               reaction_order=0):
         """Convert a water quality parameter to SI units from EPANET units.
 
         By default, the mass units are the EPANET default of mg, and the reaction order is 0.
 
-        Examples
-        --------
-        The following examples show conversion from EPANET flow and mass units into SI units.
-        Convert concentration of 15.0 mg / L to SI units
+        Parameters
+        ----------
+        flow_units : ~FlowUnits
+            The EPANET flow units to use in the conversion
+        data : array-like
+            The data to be converted (scalar, array or dictionary)
+        mass_units : ~MassUnits
+            The EPANET mass units to use in the conversion (mg or ug)
+        reaction_order : int
+            The reaction order for use converting reaction coefficients
 
-        >>> QualParam.Concentration.to_si(FlowUnits.MGD, 15.0, MassUnits.mg)
-        0.015
-
-        Convert a bulk reaction coefficient for a first order reaction to SI units.
-
-        >>> QualParam.BulkReactionCoeff.to_si(FlowUnits.AFD, 1.0, MassUnits.ug, reaction_order=1)
-        1.1574074074074073e-05
+        Returns
+        -------
+        float
+            The data values converted to SI standard units
 
         """
         data_type = type(data)
@@ -289,11 +305,27 @@ class QualParam(enum.Enum):
             data = list(data)
         return data
 
-    def from_si(self, flow_units, data, mass_units=MassUnits.mg,
+    def _from_si(self, flow_units, data, mass_units=MassUnits.mg,
                 reaction_order=0):
         """Convert a water quality parameter back to EPANET units from SI units.
 
         Mass units defaults to :class:`MassUnits.mg`, as this is the EPANET default.
+
+        Parameters
+        ----------
+        flow_units : ~FlowUnits
+            The EPANET flow units to use in the conversion
+        data : array-like
+            The SI unit data to be converted (scalar, array or dictionary)
+        mass_units : ~MassUnits
+            The EPANET mass units to use in the conversion (mg or ug)
+        reaction_order : int
+            The reaction order for use converting reaction coefficients
+
+        Returns
+        -------
+        float
+            The data values converted to EPANET appropriate units, based on the flow units.
 
         Examples
         --------
@@ -354,72 +386,104 @@ class QualParam(enum.Enum):
 
 
 class HydParam(enum.Enum):
-    u"""EPANET hydraulics and energy parameters.
+    u"""EPANET hydraulics and energy parameter conversion.
 
     The hydraulic parameter enumerated type is used to perform unit conversion
     between EPANET internal units and SI units used by WNTR. The units for each
     parameter are determined based on the :class:`FlowUnits` used.
 
-    * Node parameters
-        * ``HydParam.Elevation``
-        * ``HydParam.Demand``
-        * ``HydParam.HydraulicHead``
-        * ``HydParam.Pressure``
-    * Emitter parameters
-        * ``HydParam.EmitterCoeff``
-    * Tank parameters
-        * ``HydParam.TankDiameter``
-        * ``HydParam.Volume``
-    * Link parameters
-        * ``HydParam.Length``
-        * ``HydParam.PipeDiameter``
-        * ``HydParam.Flow``
-        * ``HydParam.Velocity``
-        * ``HydParam.HeadLoss``
-    * Pipe parameters
-        * ``HydParam.RoughnessCoeff`` requires knowing the method. For Darcy-Weisbach, this parameter needs
-          conversion to milli-feet and millimeters, otherwise it is unitless.
-    * Pump parameters
-        * ``HydParam.Energy``
-        * ``HydParam.Power``
+    Parameters that are unitless or otherwise require no conversion are not members of this
+    Enum type.
 
-    .. rubric:: Methods
+    .. rubric:: Enum Members
 
-    .. autosummary::
-        to_si
-        from_si
+    ==========================  ===================================================================
+    :attr:`~Elevation`          Nodal elevation
+    :attr:`~Demand`             Nodal demand
+    :attr:`~HydraulicHead`      Nodal head
+    :attr:`~Pressure`           Nodal pressure
+    :attr:`~EmitterCoeff`       Emitter coefficient
+    :attr:`~TankDiameter`       Tank diameter
+    :attr:`~Volume`             Tank volume
+    :attr:`~Length`             Link length
+    :attr:`~PipeDiameter`       Pipe diameter
+    :attr:`~Flow`               Link flow
+    :attr:`~Velocity`           Link velocity
+    :attr:`~HeadLoss`           Link headloss (from start node to end node)
+    :attr:`~RoughnessCoeff`     Link roughness (requires `darcy_weisbach` setting for conversion)
+    :attr:`~Energy`             Pump energy
+    :attr:`~Power`              Pump power
+    ==========================  ===================================================================
+
+    .. skip::
+
+        .. rubric:: Methods
+
+        .. autosummary::
+            to_si
+            from_si
 
     """
-    Elevation = 0 #: Elevation is defined in feet or meters
-    Demand = 1 #: Demand is specified in :class:`FlowUnits` units
-    HydraulicHead = 2 #: Hydraulic head is defined in feet or meters
-    Pressure = 3 #: Pressure is defined in psi, kPa, or meters
+    Elevation = 0
+    Demand = 1
+    HydraulicHead = 2
+    Pressure = 3
+
     # Quality = 4
-    Length = 5 #: Length is defined in feet or meters
-    PipeDiameter = 6 #: Pipe diameter is specified in either inches or millimeters
-    Flow = 7 #: Flow is specified in :class:`FlowUnits` units
-    Velocity = 8 #: Velocity is defined in ft/second or meters/second
-    HeadLoss = 9 #: Head loss is defined in feet or meters
+
+    Length = 5
+    PipeDiameter = 6
+    Flow = 7
+    Velocity = 8
+    HeadLoss = 9
+
     # Link Quality = 10
     # Status = 11
     # Setting = 12
     # Reaction Rate = 13
     # Friction factor = 14
-    Power = 15 #: Power is defined in either horsepower or kilowatts
-    # Time = 16
-    Volume = 17 #: Volume is defined in cubic feet or cubic meters
-    # The following are not "output" network variables, and thus are defined separately
-    EmitterCoeff = 31 #: Emitter Coefficient is defined in :class:`FlowUnits` per :math:`psi^{1/2}`
-    RoughnessCoeff = 32 #: For Darcy-Weisbach loss equations, specified in milli-feet or millimeters; otherwise unitless
-    TankDiameter = 33 #: Tank diameters are defined in feet or meters
-    Energy = 34 #: Energy is defined in killowatt-hours, regardless or :class:`FlowUnits`
 
-    def to_si(self, flow_units, data, darcy_weisbach=False):
+    Power = 15
+
+    # Time = 16
+
+    Volume = 17
+
+    # The following are not "output" network variables, and thus are defined separately
+
+    EmitterCoeff = 31
+    RoughnessCoeff = 32
+    TankDiameter = 33
+    Energy = 34
+
+    def __init__(self, value):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def _to_si(self, flow_units, data, darcy_weisbach=False):
         """Convert from EPANET units groups to SI units.
 
         If converting roughness, specify if the Darcy-Weisbach equation is
         used using the darcy_weisbach parameter. Otherwise, that parameter
         can be safely ignored/omitted for any other conversion.
+
+        Parameters
+        ----------
+        flow_units : ~FlowUnits
+            The flow units to use in the conversion
+        data : array-like
+            The EPANET-units data to be converted (scalar, array or dictionary)
+        darcy_weisbach : bool, optional
+            Set to ``True`` if converting roughness coefficients for use with Darcy-Weisbach
+            formula.
+
+        Returns
+        -------
+        float
+            The data values converted to SI standard units.
+
         """
         # Convert to array for unit conversion
         data_type = type(data)
@@ -481,12 +545,28 @@ class HydParam(enum.Enum):
             data = list(data)
         return data
 
-    def from_si(self, flow_units, data, darcy_weisbach=False):
+    def _from_si(self, flow_units, data, darcy_weisbach=False):
         """Convert from SI units into EPANET specified units.
 
         If converting roughness, specify if the Darcy-Weisbach equation is
         used using the darcy_weisbach parameter. Otherwise, that parameter
         can be safely ignored/omitted for any other conversion.
+
+        Parameters
+        ----------
+        flow_units : :class:`~FlowUnits`
+            The flow units to use in the conversion
+        data : array-like
+            The SI unit data to be converted (scalar, array or dictionary)
+        darcy_weisbach : bool, optional
+            Set to ``True`` if converting roughness coefficients for use with Darcy-Weisbach
+            formula.
+
+        Returns
+        -------
+        float
+            The data values converted to EPANET appropriate units based on the flow units.
+
         """
         # Convert to array for conversion
         data_type = type(data)
@@ -549,106 +629,528 @@ class HydParam(enum.Enum):
         return data
 
 
+def to_si(from_units, data, param,
+          mass_units=MassUnits.mg, pressure_units=None,
+          darcy_weisbach=False, reaction_order=0):
+    """Convert an EPANET parameter from internal to SI standard units.
+
+    Parameters
+    ----------
+    from_units : :class:`~FlowUnits`
+        The EPANET flow units (and therefore units system) to use for conversion
+    data : float, array-like, dict
+        The data to be converted
+    param : :class:`~HydParam` or :class:`~QualParam`
+        The parameter type for the data
+    mass_units : :class:`~MassUnits`, optional
+        The EPANET mass units (mg or ug internal to EPANET)
+    pressure_units : :class:`~PressureUnits`, optional
+        The EPANET pressure units being used (based on `flow_units`, normally)
+    darcy_weisbach : bool, optional
+        For roughness coefficients, is this used in a Darcy-Weisbach formula?
+    reaction_order : int, optional
+        For reaction coefficients, what is the reaction order?
+
+    Returns
+    -------
+    float, array-like, or dict
+        The data values convert into SI standard units
+
+    Examples
+    --------
+    The following examples show conversion from EPANET flow and mass units into SI units.
+    Convert concentration of 15.0 mg / L to SI units
+
+    >>> to_si(FlowUnits.MGD, 15.0, QualParam.Concentration)
+    0.015
+
+    Convert a bulk reaction coefficient for a first order reaction to SI units.
+
+    >>> to_si(FlowUnits.AFD, 1.0, QualParam.BulkReactionCoeff,
+    ... mass_units=MassUnits.ug, reaction_order=1)
+    1.1574074074074073e-05
+
+
+    """
+    if isinstance(param, HydParam):
+        return param._to_si(from_units, data, darcy_weisbach)
+    elif isinstance(param, QualParam):
+        return param._to_si(from_units, data, mass_units, reaction_order)
+    else:
+        raise RuntimeError('Invalid parameter: %s' % param)
+
+
+def from_si(to_units, data, param,
+          mass_units=MassUnits.mg, pressure_units=None,
+          darcy_weisbach=False, reaction_order=0):
+    """Convert an EPANET parameter from SI standard units back to internal units.
+
+    Parameters
+    ----------
+    to_units : :class:`~FlowUnits`
+        The EPANET flow units (and therefore units system) to use for conversion
+    data : float, array-like, dict
+        The data to be converted
+    param : :class:`~HydParam` or :class:`~QualParam`
+        The parameter type for the data
+    mass_units : :class:`~MassUnits`, optional
+        The EPANET mass units (mg or ug internal to EPANET)
+    pressure_units : :class:`~PressureUnits`, optional
+        The EPANET pressure units being used (based on `flow_units`, normally)
+    darcy_weisbach : bool, optional
+        For roughness coefficients, is this used in a Darcy-Weisbach formula?
+    reaction_order : int, optional
+        For reaction coefficients, what is the reaction order?
+
+    Returns
+    -------
+    float, array-like, or dict
+        The data values converted into EPANET internal units
+
+    """
+    if isinstance(param, HydParam):
+        return param._from_si(to_units, data, darcy_weisbach)
+    elif isinstance(param, QualParam):
+        return param._from_si(to_units, data, mass_units, reaction_order)
+    else:
+        raise RuntimeError('Invalid parameter: %s' % param)
+
 
 class StatisticsType(enum.Enum):
-    """EPANET time series statistics processing."""
-    NONE = 0  #: Do no processing, provide instantaneous values on output at time `t`.
-    AVERAGE = 1  #: Average the value across the report period ending at time `t`.
-    MINIMUM = 2  #: Provide the minimum value across all complete reporting periods.
-    MAXIMUM = 3  #: Provide the maximum value across all complete reporting periods.
-    RANGE = 4  #: Provide the range (max - min) across all complete reporting periods.
+    """EPANET time series statistics processing.
+
+    .. rubric:: Enum Members
+
+    ================  =========================================================================
+    :attr:`~none`     Do no processing, provide instantaneous values on output at time `t`.
+    :attr:`~Average`  Average the value across the report period ending at time `t`.
+    :attr:`~Minimum`  Provide the minimum value across all complete reporting periods.
+    :attr:`~Maximum`  Provide the maximum value across all complete reporting periods.
+    :attr:`~Range`    Provide the range (max - min) across all complete reporting periods.
+    ================  =========================================================================
+
+    """
+    none = 0
+    Average = 1
+    Minimum = 2
+    Maximum = 3
+    Range = 4
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
 
 
 class QualType(enum.Enum):
-    """Provide the EPANET water quality simulation quality type."""
-    NONE = 0  #: Do not perform water quality simulation.
-    CHEM = 1  #: Do chemical transport simulation.
-    AGE = 2  #: Do water age simulation.
-    TRACE = 3  #: Do a tracer test (results in percentage of water is from trace node).
+    """Provide the EPANET water quality simulation quality type.
+
+    .. rubric:: Enum Members
+
+    ================  =========================================================================
+    :attr:`~none`     Do not perform water quality simulation.
+    :attr:`~Chem`     Do chemical transport simulation.
+    :attr:`~Age`      Do water age simulation.
+    :attr:`~Trace`    Do a tracer test (results in percentage of water is from trace node).
+    ================  =========================================================================
+
+    """
+    none = 0
+    Chem = 1
+    Age = 2
+    Trace = 3
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
 
 
 class SourceType(enum.Enum):
-    """What type of EPANET Chemical source is used."""
-    CONCEN = 0  #: Concentration -- cannot be used at nodes with non-zero demand.
-    MASS = 1  #: Mass -- mass per minute injection. Can be used at any node.
-    SETPOINT = 2  #: Setpoint -- force node quality to be a certain concentration.
-    FLOWPACED = 3  #: Flow paced -- set variable mass injection based on flow.
+    """What type of EPANET Chemical source is used.
+
+    .. rubric:: Enum Members
+
+    ==================  =========================================================================
+    :attr:`~Concen`     Concentration -- cannot be used at nodes with non-zero demand.
+    :attr:`~Mass`       Mass -- mass per minute injection. Can be used at any node.
+    :attr:`~Setpoint`   Setpoint -- force node quality to be a certain concentration.
+    :attr:`~FlowPaced`  Flow paced -- set variable mass injection based on flow.
+    ==================  =========================================================================
+
+    """
+    Concen = 0
+    Mass = 1
+    Setpoint = 2
+    FlowPaced = 3
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
 
 
 class PressureUnits(enum.Enum):
-    PSI = 0
-    KPA = 1
-    METERS = 2
+    """EPANET output pressure units.
+
+    .. rubric:: Enum Members
+
+    ===============  ====================================================
+    :attr:`~psi`     Pounds per square inch (flow units are traditional)
+    :attr:`~kPa`     kilopascals (flow units are metric)
+    :attr:`~meters`  meters of H2O
+    ===============  ====================================================
+
+    """
+    psi = 0
+    kPa = 1
+    Meters = 2
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
 
 
 class FormulaType(enum.Enum):
-    """Formula used for determining head loss due to roughness."""
-    HW = (0, "H-W",) #: Hazen-Williams
-    DW = (1, "D-W",) #: Darcy-Weisbach; requires units conversion.
-    CM = (2, "C-M",) #: Chezy-Manning
+    """Formula used for determining head loss due to roughness.
+
+    .. rubric:: Enum Members
+
+    ===============  ==================================================================
+    :attr:`~HW`      Hazen-Williams headloss formula (:attr:`~str`="H-W")
+    :attr:`~DW`      Darcy-Weisbach formala; requires units conversion.
+                     (:attr:`~str`='D-W')
+    :attr:`~CM`      Chezy-Manning formula (:attr:`~str`="C-M")
+    ===============  ==================================================================
+
+    """
+    HW = (0, "H-W",)
+    DW = (1, "D-W",)
+    CM = (2, "C-M",)
 
     def __init__(self, eid, inpcode):
         self._value2member_map_[eid] = self
         self._member_map_[inpcode] = self
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
 
     def __int__(self):
         return self.value[0]
 
-    @property
-    def inpcode(self):
-        """Return the INP file text needed for the OPTIONS section."""
+    def __str__(self):
         return self.value[1]
 
 
 class NodeType(enum.Enum):
-    JUNCTION = 0
-    RESERVOIR = 1
-    TANK = 2
+    """The node type.
+
+    .. rubric:: Enum Members
+
+    ==================  ==================================================================
+    :attr:`~Junction`   Node is a :class:`~wntr.network.WaterNetworkModel.Junction`
+    :attr:`~Reservoir`  Node is a :class:`~wntr.network.WaterNetworkModel.Reservoir`
+    :attr:`~Tank`       Node is a :class:`~wntr.network.WaterNetworkModel.Tank`
+    ==================  ==================================================================
+
+    """
+    Junction = 0
+    Reservoir = 1
+    Tank = 2
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
 
 
 class LinkType(enum.Enum):
-    CV = 0  #: pipe with check valve
-    PIPE = 1  #: regular pipe
-    PUMP = 2  #: pump
-    PRV = 3  #: pressure reducing valve
-    PSV = 4  #: pressure sustaining valve
-    PBV = 5  #: pressure breaker valve
-    FCV = 6  #: flow control valve
-    TCV = 7  #: throttle control valve
-    GPV = 8  #: general purpose valve
+    """The link type
+
+    .. rubric:: Enum Members
+
+    ===============  ==================================================================
+    :attr:`~CV`      Pipe with check valve
+    :attr:`~Pipe`    Regular pipe
+    :attr:`~Pump`    Pump
+    :attr:`~PRV`     Pressure reducing valve
+    :attr:`~PSV`     Pressure sustaining valve
+    :attr:`~PBV`     Pressure breaker valve
+    :attr:`~FCV`     Flow control valve
+    :attr:`~TCV`     Throttle control valve
+    :attr:`~GPV`     General purpose valve
+    ===============  ==================================================================
+
+    """
+    CV = 0
+    Pipe = 1
+    Pump = 2
+    PRV = 3
+    PSV = 4
+    PBV = 5
+    FCV = 6
+    TCV = 7
+    GPV = 8
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
 
 
 class ControlType(enum.Enum):
-    LOWLEVEL = 0  #: act when grade below set level
-    HILEVEL = 1  #: act when grade above set lavel
-    TIMER = 2  #: act when set time reached (from start of simulation)
-    TIMEOFDAY = 3  #: act when time of day occurs
+    """The type of control.
+
+    .. rubric:: Enum Members
+
+    ==================  ==================================================================
+    :attr:`~LowLevel`   Act when grade below set level
+    :attr:`~HiLevel`    Act when grade above set level
+    :attr:`~Timer`      Act when set time reached (from start of simulation)
+    :attr:`~TimeOfDay`  Act when time of day occurs (each day)
+    ==================  ==================================================================
+
+    """
+
+    LowLevel = 0
+    HiLevel = 1
+    Timer = 2
+    TimeOfDay = 3
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
 
 
 class LinkBaseStatus(enum.Enum):
-    CLOSED = 0  #: pipe/valve/pump is closed
-    OPEN = 1  #: pipe/valve/pump is open
-    ACTIVE = 2  #: valve is partially open
-    closed = 0
-    opened = 1
-    active = 2
+    """Base status for a link.
+
+    .. rubric:: Enum Members
+
+    ===============  ==================================================================
+    :attr:`~Closed`  Pipe/valve/pump is closed.
+    :attr:`~Open`    Pipe/valve/pump is open.
+    :attr:`~Active`  Valve is partially open.
+    ===============  ==================================================================
+
+    """
+    Closed = 0
+    Open = 1
+    Active = 2
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
 
 
 class LinkTankStatus(enum.Enum):
-    XHEAD = 0  #: pump cannot deliver head (closed)
-    TEMPCLOSED = 1  #: temporarily closed
-    CLOSED = 2 #: closed
-    OPEN = 3  #: open
-    ACTIVE = 4  #: valve active (partially open)
-    XFLOW = 5  #: pump exceeds maximum flow
+    XHead = 0  #: pump cannot deliver head (closed)
+    TempClosed = 1  #: temporarily closed
+    Closed = 2 #: closed
+    Open = 3  #: open
+    Active = 4  #: valve active (partially open)
+    XFlow = 5  #: pump exceeds maximum flow
     XFCV = 6  #: FCV cannot supply flow
-    XPRESSURE = 7  #: valve cannot supply pressure
-    FILLING = 8  #: tank filling
-    EMPTYING = 9  #: tank emptying
+    XPressure = 7  #: valve cannot supply pressure
+    Filling = 8  #: tank filling
+    Emptying = 9  #: tank emptying
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
 
 
 class MixType(enum.Enum):
-    MIX1 = 0  #: 1-compartment model
-    MIX2 = 1  #: 2-compartment model
-    FIFO = 2  #: first-in, first-out model
-    LIFO = 3  #: last-in, first-out model
+    """Tank mixing model type.
+
+    .. rubric:: Enum Members
+
+    ===============  ==================================================================
+    :attr:`~Mix1`    Single compartment mixing model
+    :attr:`~Mix2`    Two-compartment mixing model
+    :attr:`~FIFO`    First-in/first-out model
+    :attr:`~LIFO`    Last-in/first-out model
+    ===============  ==================================================================
+
+    """
+    Mix1 = 0
+    Mix2 = 1
+    FIFO = 2
+    LIFO = 3
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
+
+
+class EN(enum.IntEnum):
+    """All the ``EN_`` constants for the EPANET toolkit.
+
+    For example, ``EN_LENGTH`` is accessed as ``EN.LENGTH``, instead.  Please see the EPANET
+    toolkit documentation for the description of these enums. Several enums are duplicated
+    in separaet classes above for clarity during programming.
+
+    """
+    ELEVATION    = 0
+    BASEDEMAND   = 1
+    PATTERN      = 2
+    EMITTER      = 3
+    INITQUAL     = 4
+    SOURCEQUAL   = 5
+    SOURCEPAT    = 6
+    SOURCETYPE   = 7
+    TANKLEVEL    = 8
+    DEMAND       = 9
+    HEAD         = 10
+    PRESSURE     = 11
+    QUALITY      = 12
+    SOURCEMASS   = 13
+    INITVOLUME   = 14
+    MIXMODEL     = 15
+    MIXZONEVOL   = 16
+    TANKDIAM     = 17
+    MINVOLUME    = 18
+    VOLCURVE     = 19
+    MINLEVEL     = 20
+    MAXLEVEL     = 21
+    MIXFRACTION  = 22
+    TANK_KBULK   = 23
+    TANKVOLUME   = 24
+    MAXVOLUME    = 25
+    DIAMETER     = 0
+    LENGTH       = 1
+    ROUGHNESS    = 2
+    MINORLOSS    = 3
+    INITSTATUS   = 4
+    INITSETTING  = 5
+    KBULK        = 6
+    KWALL        = 7
+    FLOW         = 8
+    VELOCITY     = 9
+    HEADLOSS     = 10
+    STATUS       = 11
+    SETTING      = 12
+    ENERGY       = 13
+    LINKQUAL     = 14
+    LINKPATTERN  = 15
+    DURATION     = 0
+    HYDSTEP      = 1
+    QUALSTEP     = 2
+    PATTERNSTEP  = 3
+    PATTERNSTART = 4
+    REPORTSTEP   = 5
+    REPORTSTART  = 6
+    RULESTEP     = 7
+    STATISTIC    = 8
+    PERIODS      = 9
+    STARTTIME    = 10
+    HTIME        = 11
+    HALTFLAG     = 12
+    NEXTEVENT    = 13
+    ITERATIONS   = 0
+    RELATIVEERROR= 1
+    NODECOUNT    = 0
+    TANKCOUNT    = 1
+    LINKCOUNT    = 2
+    PATCOUNT     = 3
+    CURVECOUNT   = 4
+    CONTROLCOUNT = 5
+    JUNCTION     = 0
+    RESERVOIR    = 1
+    TANK         = 2
+    CVPIPE       = 0
+    PIPE         = 1
+    PUMP         = 2
+    PRV          = 3
+    PSV          = 4
+    PBV          = 5
+    FCV          = 6
+    TCV          = 7
+    GPV          = 8
+    NONE         = 0
+    CHEM         = 1
+    AGE          = 2
+    TRACE        = 3
+    CONCEN       = 0
+    MASS         = 1
+    SETPOINT     = 2
+    FLOWPACED    = 3
+    CFS          = 0
+    GPM          = 1
+    MGD          = 2
+    IMGD         = 3
+    AFD          = 4
+    LPS          = 5
+    LPM          = 6
+    MLD          = 7
+    CMH          = 8
+    CMD          = 9
+    TRIALS       = 0
+    ACCURACY     = 1
+    TOLERANCE    = 2
+    EMITEXPON    = 3
+    DEMANDMULT   = 4
+    LOWLEVEL     = 0
+    HILEVEL      = 1
+    TIMER        = 2
+    TIMEOFDAY    = 3
+    AVERAGE      = 1
+    MINIMUM      = 2
+    MAXIMUM      = 3
+    RANGE        = 4
+    MIX1         = 0
+    MIX2         = 1
+    FIFO         = 2
+    LIFO         = 3
+    NOSAVE       = 0
+    SAVE         = 1
+    INITFLOW     = 10
+    CONST_HP     = 0
+    POWER_FUNC   = 1
+    CUSTOM       = 2

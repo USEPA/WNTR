@@ -1,7 +1,7 @@
 from wntr.sim.core import *
 import pandas as pd
 import numpy as np
-from wntr.epanet.util import FlowUnits, MassUnits, HydParam, QualParam
+from wntr.epanet.util import FlowUnits, MassUnits, HydParam, QualParam, EN, to_si, from_si
 import logging
 
 logger = logging.getLogger(__name__)
@@ -103,16 +103,16 @@ class EpanetSimulator(WaterNetworkSimulator):
             if t in results.time:
                 for name in node_names:
                     nodeindex = enData.ENgetnodeindex(name)
-                    head = enData.ENgetnodevalue(nodeindex, wntr.epanet.pyepanet.EN_HEAD)
-                    demand = enData.ENgetnodevalue(nodeindex, wntr.epanet.pyepanet.EN_DEMAND)
+                    head = enData.ENgetnodevalue(nodeindex, EN.HEAD)
+                    demand = enData.ENgetnodevalue(nodeindex, EN.DEMAND)
                     expected_demand = demand
-                    pressure = enData.ENgetnodevalue(nodeindex, wntr.epanet.pyepanet.EN_PRESSURE)
+                    pressure = enData.ENgetnodevalue(nodeindex, EN.PRESSURE)
 
                     if convert_units: # expected demand is already converted
-                        head = HydParam.HydraulicHead.to_si(flowunits, head)
-                        demand = HydParam.Demand.to_si(flowunits, demand)
-                        expected_demand = HydParam.Demand.to_si(flowunits, expected_demand)
-                        pressure = HydParam.Pressure.to_si(flowunits, pressure) # Pa
+                        head = to_si(flowunits, head, HydParam.HydraulicHead)
+                        demand = to_si(flowunits, demand, HydParam.Demand)
+                        expected_demand = to_si(flowunits, expected_demand, HydParam.Demand)
+                        pressure = to_si(flowunits, pressure, HydParam.Pressure) # Pa
 
                     node_dictonary['demand'].append(demand)
                     node_dictonary['expected_demand'].append(expected_demand)
@@ -123,12 +123,12 @@ class EpanetSimulator(WaterNetworkSimulator):
                 for name in link_names:
                     linkindex = enData.ENgetlinkindex(name)
 
-                    flow = enData.ENgetlinkvalue(linkindex, wntr.epanet.pyepanet.EN_FLOW)
-                    velocity = enData.ENgetlinkvalue(linkindex, wntr.epanet.pyepanet.EN_VELOCITY)
+                    flow = enData.ENgetlinkvalue(linkindex, EN.FLOW)
+                    velocity = enData.ENgetlinkvalue(linkindex, EN.VELOCITY)
 
                     if convert_units:
-                        flow = HydParam.Flow.to_si(flowunits, flow)
-                        velocity = HydParam.Velocity.to_si(flowunits, flow)
+                        flow = to_si(flowunits, flow, HydParam.Flow)
+                        velocity = to_si(flowunits, flow, HydParam.Velocity)
 
                     link_dictonary['flowrate'].append(flow)
                     link_dictonary['velocity'].append(velocity)
@@ -157,37 +157,41 @@ class EpanetSimulator(WaterNetworkSimulator):
 
                     # Set quality type and convert source qual
                     if WQ.source_type == 'MASS':
-                        enData.ENsetqualtype(wntr.epanet.pyepanet.EN_CHEM, 'Chemical', 'mg/min', '')
-                        wq_sourceQual = QualParam.SourceMassInject.from_si(flowunits, WQ.source_quality, mass_units)
+                        enData.ENsetqualtype(EN.CHEM, 'Chemical', 'mg/min', '')
+                        wq_sourceQual = from_si(flowunits, WQ.source_quality,
+                                                QualParam.SourceMassInject,
+                                                mass_units=mass_units)
                         wq_sourceQual = WQ.source_quality*60*1e6 # kg/s to mg/min
                     else:
-                        enData.ENsetqualtype(wntr.epanet.pyepanet.EN_CHEM, 'Chemical', 'mg/L', '')
-                        wq_sourceQual = QualParam.Concentration.from_si(flowunits, WQ.source_quality, mass_units)
+                        enData.ENsetqualtype(EN.CHEM, 'Chemical', 'mg/L', '')
+                        wq_sourceQual = from_si(flowunits, WQ.source_quality,
+                                                QualParam.Concentration,
+                                                mass_units=mass_units)
                     # Set source quality
                     for node in WQ.nodes:
                         nodeid = enData.ENgetnodeindex(node)
-                        enData.ENsetnodevalue(nodeid, wntr.epanet.pyepanet.EN_SOURCEQUAL, wq_sourceQual)
+                        enData.ENsetnodevalue(nodeid, EN.SOURCEQUAL, wq_sourceQual)
 
                     # Set source type
                     if WQ.source_type == 'CONCEN':
-                        wq_sourceType = wntr.epanet.pyepanet.EN_CONCEN
+                        wq_sourceType = EN.CONCEN
                     elif WQ.source_type == 'MASS':
-                        wq_sourceType = wntr.epanet.pyepanet.EN_MASS
+                        wq_sourceType = EN.MASS
                     elif WQ.source_type == 'FLOWPACED':
-                        wq_sourceType = wntr.epanet.pyepanet.EN_FLOWPACED
+                        wq_sourceType = EN.FLOWPACED
                     elif WQ.source_type == 'SETPOINT':
-                        wq_sourceType = wntr.epanet.pyepanet.EN_SETPOINT
+                        wq_sourceType = EN.SETPOINT
                     else:
                         logger.error('Invalid Source Type for CHEM scenario')
-                    enData.ENsetnodevalue(nodeid, wntr.epanet.pyepanet.EN_SOURCETYPE, wq_sourceType)
+                    enData.ENsetnodevalue(nodeid, EN.SOURCETYPE, wq_sourceType)
 
                     # Set pattern
                     if WQ.end_time == -1:
-                        WQ.end_time = enData.ENgettimeparam(wntr.epanet.pyepanet.EN_DURATION)
+                        WQ.end_time = enData.ENgettimeparam(EN.DURATION)
                     if WQ.start_time > WQ.end_time:
                         raise RuntimeError('Start time is greater than end time')
-                    patternstep = enData.ENgettimeparam(wntr.epanet.pyepanet.EN_PATTERNSTEP)
-                    duration = enData.ENgettimeparam(wntr.epanet.pyepanet.EN_DURATION)
+                    patternstep = enData.ENgettimeparam(EN.PATTERNSTEP)
+                    duration = enData.ENgettimeparam(EN.DURATION)
                     patternlen = int(duration/patternstep)
                     patternstart = int(WQ.start_time/patternstep)
                     patternend = int(WQ.end_time/patternstep)
@@ -196,16 +200,16 @@ class EpanetSimulator(WaterNetworkSimulator):
                     enData.ENaddpattern('wq')
                     patternid = enData.ENgetpatternindex('wq')
                     enData.ENsetpattern(patternid, pattern)
-                    enData.ENsetnodevalue(nodeid, wntr.epanet.pyepanet.EN_SOURCEPAT, patternid)
+                    enData.ENsetnodevalue(nodeid, EN.SOURCEPAT, patternid)
 
                 elif WQ.quality_type == 'AGE':
                     # Set quality type
-                    enData.ENsetqualtype(wntr.epanet.pyepanet.EN_AGE,0,0,0)
+                    enData.ENsetqualtype(EN.AGE,0,0,0)
 
                 elif WQ.quality_type == 'TRACE':
                     # Set quality type
                     for node in WQ.nodes:
-                        enData.ENsetqualtype(wntr.epanet.pyepanet.EN_TRACE,0,0,node.encode('ascii'))
+                        enData.ENsetqualtype(EN.TRACE,0,0,node.encode('ascii'))
 
                 else:
                     logger.error('Invalid Quality Type')
@@ -217,13 +221,14 @@ class EpanetSimulator(WaterNetworkSimulator):
                 if t in results.time:
                     for name in node_names:
                         nodeindex = enData.ENgetnodeindex(name)
-                        quality = enData.ENgetnodevalue(nodeindex, wntr.epanet.pyepanet.EN_QUALITY)
+                        quality = enData.ENgetnodevalue(nodeindex, EN.QUALITY)
 
                         if convert_units:
                             if WQ.quality_type == 'CHEM':
-                                quality = QualParam.Concentration.to_si(flowunits, quality, mass_units)
+                                quality = to_si(flowunits, quality, QualParam.Concentration,
+                                                mass_units=mass_units)
                             elif WQ.quality_type == 'AGE':
-                                quality = QualParam.WaterAge.to_si(flowunits, quality)
+                                quality = to_si(flowunits, quality, QualParam.WaterAge)
 
                         node_dictonary['quality'].append(quality)
 

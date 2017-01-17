@@ -41,7 +41,6 @@ extensions = [
     'sphinx.ext.intersphinx',
 ]
 
-autosummary_generate = True
 viewcode_import = True
 numpydoc_show_class_members = True
 numpydoc_class_members_toctree = False
@@ -52,6 +51,9 @@ numfig_format = {'figure':  'Figure %s', 'table': 'Table %s', 'code-block': 'Lis
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+
+import glob
+autosummary_generate = glob.glob("apidoc/*.rst")
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:

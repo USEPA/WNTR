@@ -9,7 +9,7 @@ import wntr
 import io
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam
-from .util import LinkBaseStatus
+from .util import LinkBaseStatus, to_si, from_si
 
 import datetime
 import networkx as nx
@@ -27,22 +27,22 @@ _INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
                  '[TIMES]', '[REPORT]', '[COORDINATES]', '[VERTICES]',
                  '[LABELS]', '[BACKDROP]', '[TAGS]']
 
-_JUNC_ENTRY = ' {name:20} {elev:12.6g} {dem:12.6g} {pat:24} {com:>3s}\n'
+_JUNC_ENTRY = ' {name:20} {elev:12.12g} {dem:12.12g} {pat:24} {com:>3s}\n'
 _JUNC_LABEL = '{:21} {:>12s} {:>12s} {:24}\n'
 
-_RES_ENTRY = ' {name:20s} {head:12.6g} {pat:>24s} {com:>3s}\n'
+_RES_ENTRY = ' {name:20s} {head:12.12g} {pat:>24s} {com:>3s}\n'
 _RES_LABEL = '{:21s} {:>12s} {:>24s}\n'
 
-_TANK_ENTRY = ' {name:20s} {elev:12.6g} {initlev:12.6g} {minlev:12.6g} {maxlev:12.6g} {diam:12.6g} {minvol:12.6g} {curve:20s} {com:>3s}\n'
+_TANK_ENTRY = ' {name:20s} {elev:12.6g} {initlev:12.12g} {minlev:12.12g} {maxlev:12.12g} {diam:12.12g} {minvol:12.6g} {curve:20s} {com:>3s}\n'
 _TANK_LABEL = '{:21s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
 
-_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:12.6g} {diam:12.6g} {rough:12.6g} {mloss:12.6g} {status:>20s} {com:>3s}\n'
+_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:12.12g} {diam:12.12g} {rough:12.12g} {mloss:12.12g} {status:>20s} {com:>3s}\n'
 _PIPE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
 
 _PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:>3s}\n'
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
-_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:12.6g} {vtype:4s} {set:12.6g} {mloss:12.6g} {com:>3s}\n'
+_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:12.12g} {vtype:4s} {set:12.12g} {mloss:12.12g} {com:>3s}\n'
 _VALVE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
 
 _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
@@ -363,11 +363,11 @@ class InpFile(object):
                 elif key == 'TOLERANCE':
                     opts.tolerance = float(words[1])
                 elif key == 'CHECKFREQ':
-                    opts.tolerance = float(words[1])
+                    opts.checkfreq = float(words[1])
                 elif key == 'MAXCHECK':
-                    opts.tolerance = float(words[1])
+                    opts.maxcheck = float(words[1])
                 elif key == 'DAMPLIMIT':
-                    opts.tolerance = float(words[1])
+                    opts.damplimit = float(words[1])
                 elif key == 'MAP':
                     opts.map = words[1]
                 else:
@@ -436,14 +436,14 @@ class InpFile(object):
                 continue
             if len(current) == 3:
                 wn.add_junction(current[0],
-                                HydParam.Demand.to_si(inp_units, float(current[2])),
+                                to_si(inp_units, float(current[2]), HydParam.Demand),
                                 None,
-                                HydParam.Elevation.to_si(inp_units, float(current[1])))
+                                to_si(inp_units, float(current[1]), HydParam.Elevation))
             else:
                 wn.add_junction(current[0],
-                                HydParam.Demand.to_si(inp_units, float(current[2])),
+                                to_si(inp_units, float(current[2]), HydParam.Demand),
                                 current[3],
-                                HydParam.Elevation.to_si(inp_units, float(current[1])))
+                                to_si(inp_units, float(current[1]), HydParam.Elevation))
 
         for lnum, line in self.sections['[RESERVOIRS]']:
             edata['lnum'] = lnum
@@ -454,10 +454,10 @@ class InpFile(object):
                 continue
             if len(current) == 2:
                 wn.add_reservoir(current[0],
-                                 HydParam.HydraulicHead.to_si(inp_units, float(current[1])))
+                                 to_si(inp_units, float(current[1]), HydParam.HydraulicHead))
             else:
                 wn.add_reservoir(current[0],
-                                 HydParam.HydraulicHead.to_si(inp_units, float(current[1])),
+                                 to_si(inp_units, float(current[1]), HydParam.HydraulicHead),
                                  current[2])
                 logger.warn('%(fname)s:%(lnum)-6d %(sec)13s reservoir head patterns only supported in EpanetSimulator', edata)
 
@@ -475,29 +475,29 @@ class InpFile(object):
                 curve_name = current[7]
                 curve_points = []
                 for point in self.curves[curve_name]:
-                    x = HydParam.Length.to_si(inp_units, point[0])
-                    y = HydParam.Volume.to_si(inp_units, point[1])
+                    x = to_si(inp_units, point[0], HydParam.Length)
+                    y = to_si(inp_units, point[1], HydParam.Volume)
                     curve_points.append((x, y))
                 wn.add_curve(curve_name, 'VOLUME', curve_points)
                 curve = wn.get_curve(curve_name)
                 wn.add_tank(current[0],
-                            HydParam.Elevation.to_si(inp_units, float(current[1])),
-                            HydParam.Length.to_si(inp_units, float(current[2])),
-                            HydParam.Length.to_si(inp_units, float(current[3])),
-                            HydParam.Length.to_si(inp_units, float(current[4])),
-                            HydParam.TankDiameter.to_si(inp_units, float(current[5])),
-                            HydParam.Volume.to_si(inp_units, float(current[6])),
+                            to_si(inp_units, float(current[1]), HydParam.Elevation),
+                            to_si(inp_units, float(current[2]), HydParam.Length),
+                            to_si(inp_units, float(current[3]), HydParam.Length),
+                            to_si(inp_units, float(current[4]), HydParam.Length),
+                            to_si(inp_units, float(current[5]), HydParam.TankDiameter),
+                            to_si(inp_units, float(current[6]), HydParam.Volume),
                             curve)
             elif len(current) == 7:  # No volume curve provided
                 if float(current[6]) != 0:
                     logger.warn('%(fname)s:%(lnum)-6d %(sec)13s minimum tank volume is only available using EpanetSimulator; others use minimum level and cylindrical tanks.', edata)
                 wn.add_tank(current[0],
-                            HydParam.Elevation.to_si(inp_units, float(current[1])),
-                            HydParam.Length.to_si(inp_units, float(current[2])),
-                            HydParam.Length.to_si(inp_units, float(current[3])),
-                            HydParam.Length.to_si(inp_units, float(current[4])),
-                            HydParam.TankDiameter.to_si(inp_units, float(current[5])),
-                            HydParam.Volume.to_si(inp_units, float(current[6])))
+                            to_si(inp_units, float(current[1]), HydParam.Elevation),
+                            to_si(inp_units, float(current[2]), HydParam.Length),
+                            to_si(inp_units, float(current[3]), HydParam.Length),
+                            to_si(inp_units, float(current[4]), HydParam.Length),
+                            to_si(inp_units, float(current[5]), HydParam.TankDiameter),
+                            to_si(inp_units, float(current[6]), HydParam.Volume))
             else:
                 edata['line'] = line
                 logger.error('%(fname)s:%(lnum)-6d %(sec)13s tank entry format not recognized: "%(line)s"', edata)
@@ -516,8 +516,8 @@ class InpFile(object):
                 wn.add_pipe(current[0],
                             current[1],
                             current[2],
-                            HydParam.Length.to_si(inp_units, float(current[3])),
-                            HydParam.PipeDiameter.to_si(inp_units, float(current[4])),
+                            to_si(inp_units, float(current[3]), HydParam.Length),
+                            to_si(inp_units, float(current[4]), HydParam.PipeDiameter),
                             float(current[5]),
                             float(current[6]),
                             'OPEN',
@@ -526,8 +526,8 @@ class InpFile(object):
                 wn.add_pipe(current[0],
                             current[1],
                             current[2],
-                            HydParam.Length.to_si(inp_units, float(current[3])),
-                            HydParam.PipeDiameter.to_si(inp_units, float(current[4])),
+                            to_si(inp_units, float(current[3]), HydParam.Length),
+                            to_si(inp_units, float(current[4]), HydParam.PipeDiameter),
                             float(current[5]),
                             float(current[6]),
                             current[7].upper())
@@ -551,8 +551,8 @@ class InpFile(object):
                 curve_name = current[4]
                 curve_points = []
                 for point in self.curves[curve_name]:
-                    x = HydParam.Flow.to_si(inp_units, point[0])
-                    y = HydParam.HydraulicHead.to_si(inp_units, point[1])
+                    x = to_si(inp_units, point[0], HydParam.Flow)
+                    y = to_si(inp_units, point[1], HydParam.HydraulicHead)
                     curve_points.append((x, y))
                 wn.add_curve(curve_name, 'HEAD', curve_points)
                 curve = wn.get_curve(curve_name)
@@ -566,7 +566,7 @@ class InpFile(object):
                             current[1],
                             current[2],
                             current[3].upper(),
-                            HydParam.Power.to_si(inp_units, float(current[4])))
+                            to_si(inp_units, float(current[4]), HydParam.Power))
             else:
                 logger.error('%(fname)s:%(lnum)-6d %(sec)13s pump keyword not recognized: "%(line)s"', edata)
                 raise RuntimeError('Pump keyword in inp file not recognized.')
@@ -587,9 +587,9 @@ class InpFile(object):
             if float(current[6]) != 0:
                 logger.warning('%(fname)s:%(lnum)-6d %(sec)13s currently, only the EpanetSimulator supports non-zero minor losses in valves.', edata)
             if valve_type in ['PRV', 'PSV', 'PBV']:
-                valve_set = HydParam.Pressure.to_si(inp_units, float(current[5]))
+                valve_set = to_si(inp_units, float(current[5]), HydParam.Pressure)
             elif valve_type == 'FCV':
-                valve_set = HydParam.Flow.to_si(inp_units, float(current[5]))
+                valve_set = to_si(inp_units, float(current[5]), HydParam.Flow)
             elif valve_type == 'TCV':
                 valve_set = float(current[5])
             elif valve_type == 'GPV':
@@ -600,7 +600,7 @@ class InpFile(object):
             wn.add_valve(current[0],
                          current[1],
                          current[2],
-                         HydParam.PipeDiameter.to_si(inp_units, float(current[3])),
+                         to_si(inp_units, float(current[3]), HydParam.PipeDiameter),
                          current[4].upper(),
                          float(current[6]),
                          valve_set)
@@ -677,7 +677,7 @@ class InpFile(object):
                         logger.warning('Currently, valves of type ' + link.valve_type + ' are only supported in the EpanetSimulator.')
                         continue
                     else:
-                        setting = HydParam.Pressure.to_si(inp_units, float(current[2]))
+                        setting = to_si(inp_units, float(current[2]), HydParam.Pressure)
                         link.setting = setting
                         link._base_setting = setting
 
@@ -706,8 +706,7 @@ class InpFile(object):
                         logger.warning('Currently, valves of type %s are only supported in the EpanetSimulator.',link.valve_type)
                         continue
                     else:
-                        status = HydParam.Pressure.to_si(inp_units,
-                                                         float(current[2]))
+                        status = to_si(inp_units, float(current[2]), HydParam.Pressure)
                         action_obj = wntr.network.ControlAction(link, 'setting', status)
             else:
                 status = LinkBaseStatus[current[2].upper()].value
@@ -730,9 +729,11 @@ class InpFile(object):
                     # if this changes, it will affect multiple pieces, just an
                     # FYI.
                     if isinstance(node, wntr.network.Junction):
-                        threshold = HydParam.Pressure.to_si(inp_units, float(current[7])) + node.elevation
+                        threshold = to_si(inp_units,
+                                          float(current[7]), HydParam.Pressure) + node.elevation
                     elif isinstance(node, wntr.network.Tank):
-                        threshold = HydParam.Length.to_si(inp_units,  float(current[7])) + node.elevation
+                        threshold = to_si(inp_units,
+                                          float(current[7]), HydParam.Length) + node.elevation
                     control_obj = wntr.network.ConditionalControl((node, 'head'), oper, threshold, action_obj)
                 else:
                     raise RuntimeError("The following control is not recognized: " + line)
@@ -781,18 +782,28 @@ class InpFile(object):
                     opts.tank_rxn_order = int(float(current[2]))
             elif key1 == 'GLOBAL':
                 if key2 == 'BULK':
-                    opts.bulk_rxn_coeff = BulkReactionCoeff.to_si(inp_units, val3, mass_units, opts.bulk_rxn_order)
+                    opts.bulk_rxn_coeff = to_si(inp_units, val3, BulkReactionCoeff,
+                                                mass_units=mass_units,
+                                                reaction_order=opts.bulk_rxn_order)
                 elif key2 == 'WALL':
-                    opts.wall_rxn_coeff = WallReactionCoeff.to_si(inp_units, val3, mass_units, opts.wall_rxn_order)
+                    opts.wall_rxn_coeff = to_si(inp_units, val3, WallReactionCoeff,
+                                                mass_units=mass_units,
+                                                reaction_order=opts.wall_rxn_order)
             elif key1 == 'BULK':
                 pipe = wn.get_link(current[1])
-                pipe.bulk_rxn_coeff = BulkReactionCoeff.to_si(inp_units, val3, mass_units, opts.bulk_rxn_order)
+                pipe.bulk_rxn_coeff = to_si(inp_units, val3, BulkReactionCoeff,
+                                            mass_units=mass_units,
+                                            reaction_order=opts.bulk_rxn_order)
             elif key1 == 'WALL':
                 pipe = wn.get_link(current[1])
-                pipe.wall_rxn_coeff = WallReactionCoeff.to_si(inp_units, val3, mass_units, opts.wall_rxn_order)
+                pipe.wall_rxn_coeff = to_si(inp_units, val3, WallReactionCoeff,
+                                            mass_units=mass_units,
+                                            reaction_order=opts.wall_rxn_order)
             elif key1 == 'TANK':
                 tank = wn.get_node(current[1])
-                tank.bulk_rxn_coeff = BulkReactionCoeff.to_si(inp_units, val3, mass_units, opts.bulk_rxn_order)
+                tank.bulk_rxn_coeff = to_si(inp_units, val3, BulkReactionCoeff,
+                                            mass_units=mass_units,
+                                            reaction_order=opts.bulk_rxn_order)
             elif key1 == 'LIMITING':
                 opts.limiting_potential = float(current[2])
             elif key1 == 'ROUGHNESS':
@@ -879,364 +890,378 @@ class InpFile(object):
         else:
             mass_units = MassUnits.mg
 
-        f = io.open(filename, 'wb')
+        with io.open(filename, 'wb') as f:
 
-        # Print title
-        if wn.name is not None:
-            f.write('; Filename: {0}\n'.format(wn.name).encode('ascii'))
-            f.write('; WNTR: {}\n; Created: {:%Y-%m-%d %H:%M:%S}\n'.format(wntr.__version__, datetime.datetime.now()).encode('ascii'))
-        f.write('[TITLE]\n'.encode('ascii'))
-        for lnum, line in self.sections['[TITLE]']:
-            f.write('{}\n'.format(line).encode('ascii'))
-        f.write('\n'.encode('ascii'))
-
-        # Print junctions information
-        f.write('[JUNCTIONS]\n'.encode('ascii'))
-        f.write(_JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern').encode('ascii'))
-        nnames = list(wn._junctions.keys())
-        nnames.sort()
-        for junction_name in nnames:
-            junction = wn._junctions[junction_name]
-            E = {'name': junction_name,
-                 'elev': HydParam.Elevation.from_si(inp_units, junction.elevation),
-                 'dem': HydParam.Demand.from_si(inp_units, junction.base_demand),
-                 'pat': '',
-                 'com': ';'}
-            if junction.demand_pattern_name is not None:
-                E['pat'] = junction.demand_pattern_name
-            f.write(_JUNC_ENTRY.format(**E).encode('ascii'))
-        f.write('\n'.encode('ascii'))
-
-        # Print reservoir information
-        f.write('[RESERVOIRS]\n'.encode('ascii'))
-        f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern').encode('ascii'))
-        nnames = list(wn._reservoirs.keys())
-        nnames.sort()
-        for reservoir_name in nnames:
-            reservoir = wn._reservoirs[reservoir_name]
-            E = {'name': reservoir_name,
-                 'head': HydParam.HydraulicHead.from_si(inp_units, reservoir.base_head),
-                 'com': ';'}
-            if reservoir.head_pattern_name is None:
-                E['pat'] = ''
-            else:
-                E['pat'] = reservoir.head_pattern_name
-            f.write(_RES_ENTRY.format(**E).encode('ascii'))
-        f.write('\n'.encode('ascii'))
-
-        # Print tank information
-        f.write('[TANKS]\n'.encode('ascii'))
-        f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
-                                   'Diameter', 'Min Volume', 'Volume Curve').encode('ascii'))
-        nnames = list(wn._tanks.keys())
-        nnames.sort()
-        for tank_name in nnames:
-            tank = wn._tanks[tank_name]
-            E = {'name': tank_name,
-                 'elev': HydParam.Elevation.from_si(inp_units, tank.elevation),
-                 'initlev': HydParam.HydraulicHead.from_si(inp_units, tank.init_level),
-                 'minlev': HydParam.HydraulicHead.from_si(inp_units, tank.min_level),
-                 'maxlev': HydParam.HydraulicHead.from_si(inp_units, tank.max_level),
-                 'diam': HydParam.TankDiameter.from_si(inp_units, tank.diameter),
-                 'minvol': HydParam.Volume.from_si(inp_units, tank.min_vol),
-                 'curve': '',
-                 'com': ';'}
-            if tank.vol_curve is not None:
-                E['curve'] = tank.vol_curve
-            f.write(_TANK_ENTRY.format(**E).encode('ascii'))
-        f.write('\n'.encode('ascii'))
-
-        # Print pipe information
-        f.write('[PIPES]\n'.encode('ascii'))
-        f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
-                                   'Roughness', 'Minor Loss', 'Status').encode('ascii'))
-        lnames = list(wn._pipes.keys())
-        lnames.sort()
-        for pipe_name in lnames:
-            pipe = wn._pipes[pipe_name]
-            E = {'name': pipe_name,
-                 'node1': pipe.start_node(),
-                 'node2': pipe.end_node(),
-                 'len': HydParam.Length.from_si(inp_units, pipe.length),
-                 'diam': HydParam.PipeDiameter.from_si(inp_units, pipe.diameter),
-                 'rough': pipe.roughness,
-                 'mloss': pipe.minor_loss,
-                 'status': LinkBaseStatus(pipe.get_base_status()).name,
-                 'com': ';'}
-            if pipe.cv:
-                E['status'] = 'CV'
-            f.write(_PIPE_ENTRY.format(**E).encode('ascii'))
-        f.write('\n'.encode('ascii'))
-
-        # Print pump information
-        f.write('[PUMPS]\n'.encode('ascii'))
-        f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Parameters').encode('ascii'))
-        lnames = list(wn._pumps.keys())
-        lnames.sort()
-        for pump_name in lnames:
-            pump = wn._pumps[pump_name]
-            E = {'name': pump_name,
-                 'node1': pump.start_node(),
-                 'node2': pump.end_node(),
-                 'ptype': pump.info_type,
-                 'params': '',
-                 'com': ';'}
-            if pump.info_type == 'HEAD':
-                E['params'] = pump.curve.name
-            elif pump.info_type == 'POWER':
-                E['params'] = str(HydParam.Power.from_si(inp_units, pump.power))
-            else:
-                raise RuntimeError('Only head or power info is supported of pumps.')
-            f.write(_PUMP_ENTRY.format(**E).encode('ascii'))
-        f.write('\n'.encode('ascii'))
-
-        # Print valve information
-        f.write('[VALVES]\n'.encode('ascii'))
-        f.write(_VALVE_LABEL.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss').encode('ascii'))
-        lnames = list(wn._valves.keys())
-        lnames.sort()
-        for valve_name in lnames:
-            valve = wn._valves[valve_name]
-            E = {'name': valve_name,
-                 'node1': valve.start_node(),
-                 'node2': valve.end_node(),
-                 'diam': HydParam.PipeDiameter.from_si(inp_units, valve.diameter),
-                 'vtype': valve.valve_type,
-                 'set': valve._base_setting,
-                 'mloss': valve.minor_loss,
-                 'com': ';'}
-            f.write(_VALVE_ENTRY.format(**E).encode('ascii'))
-        f.write('\n'.encode('ascii'))
-
-        # Print status information
-        f.write('[STATUS]\n'.encode('ascii'))
-        f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
-        for link_name, link in wn.links(Pump):
-            if link.get_base_status() == LinkBaseStatus.CLOSED.value:
-                f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
-        for link_name, link in wn.links(Valve):
-            if link.get_base_status() == LinkBaseStatus.CLOSED.value or link.get_base_status() == LinkBaseStatus.OPEN.value:
-                f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
-        f.write('\n'.encode('ascii'))
-
-        # Print pattern information
-        num_columns = 8
-        f.write('[PATTERNS]\n'.encode('ascii'))
-        f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers').encode('ascii'))
-        for pattern_name, pattern in wn._patterns.items():
-            count = 0
-            for i in pattern:
-                if count % num_columns == 0:
-                    f.write('\n{:s} {:f}'.format(pattern_name, i).encode('ascii'))
-                else:
-                    f.write(' {:f}'.format(i).encode('ascii'))
-                count += 1
-            f.write('\n'.encode('ascii'))
-        f.write('\n'.encode('ascii'))
-
-        # Print curves
-        f.write('[CURVES]\n'.encode('ascii'))
-        f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value').encode('ascii'))
-        for curve_name, curve in wn._curves.items():
-            if curve.curve_type == 'VOLUME':
-                f.write(';VOLUME: {}\n'.format(curve_name).encode('ascii'))
-                for point in curve.points:
-                    x = HydParam.Length.from_si(inp_units, point[0])
-                    y = HydParam.Volume.from_si(inp_units, point[1])
-                    f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
-            elif curve.curve_type == 'HEAD':
-                f.write(';HEAD: {}\n'.format(curve_name).encode('ascii'))
-                for point in curve.points:
-                    x = HydParam.Flow.from_si(inp_units, point[0])
-                    y = HydParam.HydraulicHead.from_si(inp_units, point[1])
-                    f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
-            f.write('\n'.encode('ascii'))
-        for curve_name, curve in self.curves.items():
-            if curve_name not in wn._curves.keys():
-                for point in curve:
-                    f.write(_CURVE_ENTRY.format(name=curve_name, x=point[0], y=point[1], com=';').encode('ascii'))
-                f.write('\n'.encode('ascii'))
-        f.write('\n'.encode('ascii'))
-
-        # Print Controls
-        f.write( '[CONTROLS]\n'.encode('ascii'))
-        # Time controls and conditional controls only
-        for text, all_control in wn._control_dict.items():
-            if isinstance(all_control,wntr.network.TimeControl):
-                entry = 'Link {link} {setting} AT {compare} {time:g}\n'
-                vals = {'link': all_control._control_action._target_obj_ref.name(),
-                        'setting': 'OPEN',
-                        'compare': 'TIME',
-                        'time': int(all_control._fire_time / 3600.0)}
-                if all_control._control_action._attribute.lower() == 'status':
-                    vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
-                else:
-                    vals['setting'] = str(float(all_control._control_action._value))
-                if all_control._daily_flag:
-                    vals['compare'] = 'CLOCKTIME'
-                f.write(entry.format(**vals).encode('ascii'))
-            elif isinstance(all_control,wntr.network.ConditionalControl):
-                entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
-                vals = {'link': all_control._control_action._target_obj_ref.name(),
-                        'setting': 'OPEN',
-                        'node': all_control._source_obj.name(),
-                        'compare': 'above',
-                        'thresh': 0.0}
-                if all_control._control_action._attribute.lower() == 'status':
-                    vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
-                else:
-                    vals['setting'] = str(float(all_control._control_action._value))
-                if all_control._operation is np.less:
-                    vals['compare'] = 'below'
-                threshold = all_control._threshold - all_control._source_obj.elevation
-                vals['thresh'] = HydParam.HydraulicHead.from_si(inp_units, threshold)
-                f.write(entry.format(**vals).encode('ascii'))
-            else:
-                raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
-        f.write('\n'.encode('ascii'))
-
-        # Report
-        f.write('[REPORT]\n'.encode('ascii'))
-        if len(self.sections['[REPORT]']) > 0:
-            for lnum, line in self.sections['[REPORT]']:
+            # Print title
+            if wn.name is not None:
+                f.write('; Filename: {0}\n'.format(wn.name).encode('ascii'))
+                f.write('; WNTR: {}\n; Created: {:%Y-%m-%d %H:%M:%S}\n'.format(wntr.__version__, datetime.datetime.now()).encode('ascii'))
+            f.write('[TITLE]\n'.encode('ascii'))
+            for lnum, line in self.sections['[TITLE]']:
                 f.write('{}\n'.format(line).encode('ascii'))
-        else:
-            f.write('Status Yes\n'.encode('ascii'))
-            f.write('Summary yes\n'.encode('ascii'))
-        f.write('\n'.encode('ascii'))
+            f.write('\n'.encode('ascii'))
 
-        # Options
-        f.write('[OPTIONS]\n'.encode('ascii'))
-        entry_string = '{:20s} {:20s}\n'
-        entry_float = '{:20s} {:g}\n'
-        f.write(entry_string.format('UNITS', inp_units.name).encode('ascii'))
-        f.write(entry_string.format('HEADLOSS', wn.options.headloss).encode('ascii'))
-        if wn.options.hydraulics_option is not None:
-            f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulics_option, wn.options.hydraulics_filename).encode('ascii'))
-        if wn.options.quality_value is None:
-            f.write(entry_string.format('QUALITY', wn.options.quality_option).encode('ascii'))
-        else:
-            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality_option, wn.options.quality_value).encode('ascii'))
-        f.write(entry_float.format('VISCOSITY', wn.options.viscosity).encode('ascii'))
-        f.write(entry_float.format('DIFFUSIVITY', wn.options.diffusivity).encode('ascii'))
-        f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.specific_gravity).encode('ascii'))
-        f.write(entry_float.format('TRIALS', wn.options.trials).encode('ascii'))
-        f.write(entry_float.format('ACCURACY', wn.options.accuracy).encode('ascii'))
-        f.write(entry_float.format('CHECKFREQ', wn.options.checkfreq).encode('ascii'))
-        if wn.options.unbalanced_value is None:
-            f.write(entry_string.format('UNBALANCED', wn.options.unbalanced_option).encode('ascii'))
-        else:
-            f.write('{:20s} {:s} {:d}\n'.format('UNBALANCED', wn.options.unbalanced_option, wn.options.unbalanced_value).encode('ascii'))
-        if wn.options.pattern is not None:
-            f.write(entry_string.format('PATTERN', wn.options.pattern).encode('ascii'))
-        f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.demand_multiplier).encode('ascii'))
-        f.write(entry_float.format('EMITTER EXPONENT', wn.options.emitter_exponent).encode('ascii'))
-        f.write(entry_float.format('TOLERANCE', wn.options.tolerance).encode('ascii'))
-        if wn.options.map is not None:
-            f.write(entry_string.format('MAP', wn.options.map).encode('ascii'))
+            # Print junctions information
+            f.write('[JUNCTIONS]\n'.encode('ascii'))
+            f.write(_JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern').encode('ascii'))
+            nnames = list(wn._junctions.keys())
+            nnames.sort()
+            for junction_name in nnames:
+                junction = wn._junctions[junction_name]
+                E = {'name': junction_name,
+                     'elev': from_si(inp_units, junction.elevation, HydParam.Elevation),
+                     'dem': from_si(inp_units, junction.base_demand, HydParam.Demand),
+                     'pat': '',
+                     'com': ';'}
+                if junction.demand_pattern_name is not None:
+                    E['pat'] = junction.demand_pattern_name
+                f.write(_JUNC_ENTRY.format(**E).encode('ascii'))
+            f.write('\n'.encode('ascii'))
 
-        f.write('\n'.encode('ascii'))
+            # Print reservoir information
+            f.write('[RESERVOIRS]\n'.encode('ascii'))
+            f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern').encode('ascii'))
+            nnames = list(wn._reservoirs.keys())
+            nnames.sort()
+            for reservoir_name in nnames:
+                reservoir = wn._reservoirs[reservoir_name]
+                E = {'name': reservoir_name,
+                     'head': from_si(inp_units, reservoir.base_head, HydParam.HydraulicHead),
+                     'com': ';'}
+                if reservoir.head_pattern_name is None:
+                    E['pat'] = ''
+                else:
+                    E['pat'] = reservoir.head_pattern_name
+                f.write(_RES_ENTRY.format(**E).encode('ascii'))
+            f.write('\n'.encode('ascii'))
 
-        # Reaction Options
-        f.write( '[REACTIONS]\n'.encode('ascii'))
-        entry_int = ' {:s} {:s} {:d}\n'
-        entry_float = ' {:s} {:s} {:<10.4f}\n'
-        f.write(entry_int.format('ORDER', 'BULK', int(wn.options.bulk_rxn_order)).encode('ascii'))
-        f.write(entry_int.format('ORDER', 'WALL', int(wn.options.wall_rxn_order)).encode('ascii'))
-        f.write(entry_int.format('ORDER', 'TANK', int(wn.options.tank_rxn_order)).encode('ascii'))
-        f.write(entry_float.format('GLOBAL','BULK',
-                                   QualParam.BulkReactionCoeff.from_si(inp_units,
-                                                                       wn.options.bulk_rxn_coeff,
-                                                                       mass_units,
-                                                                       wn.options.bulk_rxn_order)).encode('ascii'))
-        f.write(entry_float.format('GLOBAL','WALL',
-                                   QualParam.WallReactionCoeff.from_si(inp_units,
-                                                                       wn.options.wall_rxn_coeff,
-                                                                       mass_units,
-                                                                       wn.options.wall_rxn_order)).encode('ascii'))
-        if wn.options.limiting_potential is not None:
-            f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.limiting_potential).encode('ascii'))
-        if wn.options.roughness_correlation is not None:
-            f.write(entry_float.format('ROUGHNESS','CORRELATION',wn.options.roughness_correlation).encode('ascii'))
-        for tank_name, tank in wn.nodes(Tank):
-            if tank.bulk_rxn_coeff is not None:
-                f.write(entry_float.format('TANK',tank_name,
-                                           QualParam.BulkReactionCoeff.from_si(inp_units,
-                                                                       tank.bulk_rxn_coeff,
-                                                                       mass_units,
-                                                                       wn.options.bulk_rxn_order)).encode('ascii'))
-        for pipe_name, pipe in wn.links(Pipe):
-            if pipe.bulk_rxn_coeff is not None:
-                f.write(entry_float.format('BULK',pipe_name,
-                                           QualParam.BulkReactionCoeff.from_si(inp_units,
-                                                                       pipe.bulk_rxn_coeff,
-                                                                       mass_units,
-                                                                       wn.options.bulk_rxn_order)).encode('ascii'))
-            if pipe.wall_rxn_coeff is not None:
-                f.write(entry_float.format('WALL',pipe_name,
-                                           QualParam.WallReactionCoeff.from_si(inp_units,
-                                                                       pipe.wall_rxn_coeff,
-                                                                       mass_units,
-                                                                       wn.options.wall_rxn_order)).encode('ascii'))
-        f.write('\n'.encode('ascii'))
+            # Print tank information
+            f.write('[TANKS]\n'.encode('ascii'))
+            f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
+                                       'Diameter', 'Min Volume', 'Volume Curve').encode('ascii'))
+            nnames = list(wn._tanks.keys())
+            nnames.sort()
+            for tank_name in nnames:
+                tank = wn._tanks[tank_name]
+                E = {'name': tank_name,
+                     'elev': from_si(inp_units, tank.elevation, HydParam.Elevation),
+                     'initlev': from_si(inp_units, tank.init_level, HydParam.HydraulicHead),
+                     'minlev': from_si(inp_units, tank.min_level, HydParam.HydraulicHead),
+                     'maxlev': from_si(inp_units, tank.max_level, HydParam.HydraulicHead),
+                     'diam': from_si(inp_units, tank.diameter, HydParam.TankDiameter),
+                     'minvol': from_si(inp_units, tank.min_vol, HydParam.Volume),
+                     'curve': '',
+                     'com': ';'}
+                if tank.vol_curve is not None:
+                    E['curve'] = tank.vol_curve
+                f.write(_TANK_ENTRY.format(**E).encode('ascii'))
+            f.write('\n'.encode('ascii'))
 
-        # Time options
-        f.write('[TIMES]\n'.encode('ascii'))
-        entry = '{:20s} {:10s}\n'
-        time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
-        hrs, mm, sec = _sec_to_string(wn.options.duration)
-        f.write(time_entry.format('DURATION', hrs, mm, sec).encode('ascii'))
-        hrs, mm, sec = _sec_to_string(wn.options.hydraulic_timestep)
-        f.write(time_entry.format('HYDRAULIC TIMESTEP', hrs, mm, sec).encode('ascii'))
-        hrs, mm, sec = _sec_to_string(wn.options.pattern_timestep)
-        f.write(time_entry.format('PATTERN TIMESTEP', hrs, mm, sec).encode('ascii'))
-        hrs, mm, sec = _sec_to_string(wn.options.pattern_start)
-        f.write(time_entry.format('PATTERN START', hrs, mm, sec).encode('ascii'))
-        hrs, mm, sec = _sec_to_string(wn.options.report_timestep)
-        f.write(time_entry.format('REPORT TIMESTEP', hrs, mm, sec).encode('ascii'))
-        hrs, mm, sec = _sec_to_string(wn.options.report_start)
-        f.write(time_entry.format('REPORT START', hrs, mm, sec).encode('ascii'))
+            # Print pipe information
+            f.write('[PIPES]\n'.encode('ascii'))
+            f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
+                                       'Roughness', 'Minor Loss', 'Status').encode('ascii'))
+            lnames = list(wn._pipes.keys())
+            lnames.sort()
+            for pipe_name in lnames:
+                pipe = wn._pipes[pipe_name]
+                E = {'name': pipe_name,
+                     'node1': pipe.start_node(),
+                     'node2': pipe.end_node(),
+                     'len': from_si(inp_units, pipe.length, HydParam.Length),
+                     'diam': from_si(inp_units, pipe.diameter, HydParam.PipeDiameter),
+                     'rough': pipe.roughness,
+                     'mloss': pipe.minor_loss,
+                     'status': LinkBaseStatus(pipe.get_base_status()).name,
+                     'com': ';'}
+                if pipe.cv:
+                    E['status'] = 'CV'
+                f.write(_PIPE_ENTRY.format(**E).encode('ascii'))
+            f.write('\n'.encode('ascii'))
 
-        hrs, mm, sec = _sec_to_string(wn.options.start_clocktime)
-        if hrs < 12:
-            time_format = ' AM'
-        else:
-            hrs -= 12
-            time_format = ' PM'
-        f.write('{:20s} {:02d}:{:02d}:{:02d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format).encode('ascii'))
+            # Print pump information
+            f.write('[PUMPS]\n'.encode('ascii'))
+            f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Parameters').encode('ascii'))
+            lnames = list(wn._pumps.keys())
+            lnames.sort()
+            for pump_name in lnames:
+                pump = wn._pumps[pump_name]
+                E = {'name': pump_name,
+                     'node1': pump.start_node(),
+                     'node2': pump.end_node(),
+                     'ptype': pump.info_type,
+                     'params': '',
+                     'com': ';'}
+                if pump.info_type == 'HEAD':
+                    E['params'] = pump.curve.name
+                elif pump.info_type == 'POWER':
+                    E['params'] = str(from_si(inp_units, pump.power, HydParam.Power))
+                else:
+                    raise RuntimeError('Only head or power info is supported of pumps.')
+                f.write(_PUMP_ENTRY.format(**E).encode('ascii'))
+            f.write('\n'.encode('ascii'))
 
-        hrs, mm, sec = _sec_to_string(wn.options.quality_timestep)
-        f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec).encode('ascii'))
-        hrs, mm, sec = _sec_to_string(wn.options.rule_timestep)
-        f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
-        f.write(entry.format('STATISTIC', wn.options.statistic).encode('ascii'))
-        f.write('\n'.encode('ascii'))
+            # Print valve information
+            f.write('[VALVES]\n'.encode('ascii'))
+            f.write(_VALVE_LABEL.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss').encode('ascii'))
+            lnames = list(wn._valves.keys())
+            lnames.sort()
+            for valve_name in lnames:
+                valve = wn._valves[valve_name]
+                E = {'name': valve_name,
+                     'node1': valve.start_node(),
+                     'node2': valve.end_node(),
+                     'diam': from_si(inp_units, valve.diameter, HydParam.PipeDiameter),
+                     'vtype': valve.valve_type,
+                     'set': valve._base_setting,
+                     'mloss': valve.minor_loss,
+                     'com': ';'}
+                valve_type = valve.valve_type
+                if valve_type in ['PRV', 'PSV', 'PBV']:
+                    valve_set = from_si(inp_units, valve._base_setting, HydParam.Pressure)
+                elif valve_type == 'FCV':
+                    valve_set = from_si(inp_units, valve._base_setting, HydParam.Flow)
+                elif valve_type == 'TCV':
+                    valve_set = valve._base_setting
+                elif valve_type == 'GPV':
+                    valve_set = valve._base_setting
+                E['set'] = valve_set
+                f.write(_VALVE_ENTRY.format(**E).encode('ascii'))
+            f.write('\n'.encode('ascii'))
 
-        # Coordinates
-        f.write('[COORDINATES]\n'.encode('ascii'))
-        entry = '{:10s} {:10g} {:10g}\n'
-        label = '{:10s} {:10s} {:10s}\n'
-        f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
-        coord = nx.get_node_attributes(wn._graph, 'pos')
-        for key, val in coord.items():
-            f.write(entry.format(key, val[0], val[1]).encode('ascii'))
-        f.write('\n'.encode('ascii'))
+            # Print status information
+            f.write('[STATUS]\n'.encode('ascii'))
+            f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
+            for link_name, link in wn.links(Pump):
+                if link.get_base_status() == LinkBaseStatus.CLOSED.value:
+                    f.write('{:10s} {:10s}\n'.format(link_name,
+                            LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
+            for link_name, link in wn.links(Valve):
+                if link.get_base_status() == LinkBaseStatus.CLOSED.value or link.get_base_status() == LinkBaseStatus.OPEN.value:
+                    f.write('{:10s} {:10s}\n'.format(link_name,
+                            LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
+            f.write('\n'.encode('ascii'))
 
-        unmodified = ['[ENERGY]', '[RULES]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]', '[SOURCES]',
-                      '[MIXING]', '[VERTICES]', '[LABELS]', '[BACKDROP]', '[TAGS]']
-
-        for section in unmodified:
-            if len(self.sections[section]) > 0:
-                logger.debug('Writting data from original epanet file: %s', section)
-                f.write('{0}\n'.format(section).encode('ascii'))
-                for lnum, line in self.sections[section]:
-                    f.write('{0}\n'.format(line).encode('ascii'))
+            # Print pattern information
+            num_columns = 8
+            f.write('[PATTERNS]\n'.encode('ascii'))
+            f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers').encode('ascii'))
+            for pattern_name, pattern in wn._patterns.items():
+                count = 0
+                for i in pattern:
+                    if count % num_columns == 0:
+                        f.write('\n{:s} {:f}'.format(pattern_name, i).encode('ascii'))
+                    else:
+                        f.write(' {:f}'.format(i).encode('ascii'))
+                    count += 1
                 f.write('\n'.encode('ascii'))
+            f.write('\n'.encode('ascii'))
 
-        f.write('[END]\n'.encode('ascii'))
-        f.close()
+            # Print curves
+            f.write('[CURVES]\n'.encode('ascii'))
+            f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value').encode('ascii'))
+            for curve_name, curve in wn._curves.items():
+                if curve.curve_type == 'VOLUME':
+                    f.write(';VOLUME: {}\n'.format(curve_name).encode('ascii'))
+                    for point in curve.points:
+                        x = from_si(inp_units, point[0], HydParam.Length)
+                        y = from_si(inp_units, point[1], HydParam.Volume)
+                        f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
+                elif curve.curve_type == 'HEAD':
+                    f.write(';HEAD: {}\n'.format(curve_name).encode('ascii'))
+                    for point in curve.points:
+                        x = from_si(inp_units, point[0], HydParam.Flow)
+                        y = from_si(inp_units, point[1], HydParam.HydraulicHead)
+                        f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
+                f.write('\n'.encode('ascii'))
+            for curve_name, curve in self.curves.items():
+                if curve_name not in wn._curves.keys():
+                    for point in curve:
+                        f.write(_CURVE_ENTRY.format(name=curve_name, x=point[0], y=point[1], com=';').encode('ascii'))
+                    f.write('\n'.encode('ascii'))
+            f.write('\n'.encode('ascii'))
+
+            # Print Controls
+            f.write( '[CONTROLS]\n'.encode('ascii'))
+            # Time controls and conditional controls only
+            for text, all_control in wn._control_dict.items():
+                if isinstance(all_control,wntr.network.TimeControl):
+                    entry = 'Link {link} {setting} AT {compare} {time:g}\n'
+                    vals = {'link': all_control._control_action._target_obj_ref.name(),
+                            'setting': 'OPEN',
+                            'compare': 'TIME',
+                            'time': int(all_control._fire_time / 3600.0)}
+                    if all_control._control_action._attribute.lower() == 'status':
+                        vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
+                    else:
+                        vals['setting'] = str(float(all_control._control_action._value))
+                    if all_control._daily_flag:
+                        vals['compare'] = 'CLOCKTIME'
+                    f.write(entry.format(**vals).encode('ascii'))
+                elif isinstance(all_control,wntr.network.ConditionalControl):
+                    entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
+                    vals = {'link': all_control._control_action._target_obj_ref.name(),
+                            'setting': 'OPEN',
+                            'node': all_control._source_obj.name(),
+                            'compare': 'above',
+                            'thresh': 0.0}
+                    if all_control._control_action._attribute.lower() == 'status':
+                        vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
+                    else:
+                        vals['setting'] = str(float(all_control._control_action._value))
+                    if all_control._operation is np.less:
+                        vals['compare'] = 'below'
+                    threshold = all_control._threshold - all_control._source_obj.elevation
+                    vals['thresh'] = from_si(inp_units, threshold, HydParam.HydraulicHead)
+                    f.write(entry.format(**vals).encode('ascii'))
+                else:
+                    raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
+            f.write('\n'.encode('ascii'))
+
+            # Report
+            f.write('[REPORT]\n'.encode('ascii'))
+            if len(self.sections['[REPORT]']) > 0:
+                for lnum, line in self.sections['[REPORT]']:
+                    f.write('{}\n'.format(line).encode('ascii'))
+            else:
+                f.write('Status Yes\n'.encode('ascii'))
+                f.write('Summary yes\n'.encode('ascii'))
+            f.write('\n'.encode('ascii'))
+
+            # Options
+            f.write('[OPTIONS]\n'.encode('ascii'))
+            entry_string = '{:20s} {:20s}\n'
+            entry_float = '{:20s} {:g}\n'
+            f.write(entry_string.format('UNITS', inp_units.name).encode('ascii'))
+            f.write(entry_string.format('HEADLOSS', wn.options.headloss).encode('ascii'))
+            if wn.options.hydraulics_option is not None:
+                f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulics_option, wn.options.hydraulics_filename).encode('ascii'))
+            if wn.options.quality_value is None:
+                f.write(entry_string.format('QUALITY', wn.options.quality_option).encode('ascii'))
+            else:
+                f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality_option, wn.options.quality_value).encode('ascii'))
+            f.write(entry_float.format('VISCOSITY', wn.options.viscosity).encode('ascii'))
+            f.write(entry_float.format('DIFFUSIVITY', wn.options.diffusivity).encode('ascii'))
+            f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.specific_gravity).encode('ascii'))
+            f.write(entry_float.format('TRIALS', wn.options.trials).encode('ascii'))
+            f.write(entry_float.format('ACCURACY', wn.options.accuracy).encode('ascii'))
+            f.write(entry_float.format('CHECKFREQ', wn.options.checkfreq).encode('ascii'))
+            if wn.options.unbalanced_value is None:
+                f.write(entry_string.format('UNBALANCED', wn.options.unbalanced_option).encode('ascii'))
+            else:
+                f.write('{:20s} {:s} {:d}\n'.format('UNBALANCED', wn.options.unbalanced_option, wn.options.unbalanced_value).encode('ascii'))
+            if wn.options.pattern is not None:
+                f.write(entry_string.format('PATTERN', wn.options.pattern).encode('ascii'))
+            f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.demand_multiplier).encode('ascii'))
+            f.write(entry_float.format('EMITTER EXPONENT', wn.options.emitter_exponent).encode('ascii'))
+            f.write(entry_float.format('TOLERANCE', wn.options.tolerance).encode('ascii'))
+            if wn.options.map is not None:
+                f.write(entry_string.format('MAP', wn.options.map).encode('ascii'))
+
+            f.write('\n'.encode('ascii'))
+
+            # Reaction Options
+            f.write( '[REACTIONS]\n'.encode('ascii'))
+            entry_int = ' {:s} {:s} {:d}\n'
+            entry_float = ' {:s} {:s} {:<10.4f}\n'
+            f.write(entry_int.format('ORDER', 'BULK', int(wn.options.bulk_rxn_order)).encode('ascii'))
+            f.write(entry_int.format('ORDER', 'WALL', int(wn.options.wall_rxn_order)).encode('ascii'))
+            f.write(entry_int.format('ORDER', 'TANK', int(wn.options.tank_rxn_order)).encode('ascii'))
+            f.write(entry_float.format('GLOBAL','BULK',
+                                       from_si(inp_units,
+                                               wn.options.bulk_rxn_coeff,
+                                               QualParam.BulkReactionCoeff,
+                                               mass_units=mass_units,
+                                               reaction_order=wn.options.bulk_rxn_order)).encode('ascii'))
+            f.write(entry_float.format('GLOBAL','WALL',
+                                       from_si(inp_units,
+                                               wn.options.wall_rxn_coeff,
+                                               QualParam.WallReactionCoeff,
+                                               mass_units=mass_units,
+                                               reaction_order=wn.options.wall_rxn_order)).encode('ascii'))
+            if wn.options.limiting_potential is not None:
+                f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.limiting_potential).encode('ascii'))
+            if wn.options.roughness_correlation is not None:
+                f.write(entry_float.format('ROUGHNESS','CORRELATION',wn.options.roughness_correlation).encode('ascii'))
+            for tank_name, tank in wn.nodes(Tank):
+                if tank.bulk_rxn_coeff is not None:
+                    f.write(entry_float.format('TANK',tank_name,
+                                               from_si(inp_units,
+                                                       tank.bulk_rxn_coeff,
+                                                       QualParam.BulkReactionCoeff,
+                                                       mass_units=mass_units,
+                                                       reaction_order=wn.options.bulk_rxn_order)).encode('ascii'))
+            for pipe_name, pipe in wn.links(Pipe):
+                if pipe.bulk_rxn_coeff is not None:
+                    f.write(entry_float.format('BULK',pipe_name,
+                                               from_si(inp_units,
+                                                       pipe.bulk_rxn_coeff,
+                                                       QualParam.BulkReactionCoeff,
+                                                       mass_units=mass_units,
+                                                       reaction_order=wn.options.bulk_rxn_order)).encode('ascii'))
+                if pipe.wall_rxn_coeff is not None:
+                    f.write(entry_float.format('WALL',pipe_name,
+                                               from_si(inp_units,
+                                                       pipe.wall_rxn_coeff,
+                                                       QualParam.WallReactionCoeff,
+                                                       mass_units=mass_units,
+                                                       reaction_order=wn.options.wall_rxn_order)).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+
+            # Time options
+            f.write('[TIMES]\n'.encode('ascii'))
+            entry = '{:20s} {:10s}\n'
+            time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
+            hrs, mm, sec = _sec_to_string(wn.options.duration)
+            f.write(time_entry.format('DURATION', hrs, mm, sec).encode('ascii'))
+            hrs, mm, sec = _sec_to_string(wn.options.hydraulic_timestep)
+            f.write(time_entry.format('HYDRAULIC TIMESTEP', hrs, mm, sec).encode('ascii'))
+            hrs, mm, sec = _sec_to_string(wn.options.pattern_timestep)
+            f.write(time_entry.format('PATTERN TIMESTEP', hrs, mm, sec).encode('ascii'))
+            hrs, mm, sec = _sec_to_string(wn.options.pattern_start)
+            f.write(time_entry.format('PATTERN START', hrs, mm, sec).encode('ascii'))
+            hrs, mm, sec = _sec_to_string(wn.options.report_timestep)
+            f.write(time_entry.format('REPORT TIMESTEP', hrs, mm, sec).encode('ascii'))
+            hrs, mm, sec = _sec_to_string(wn.options.report_start)
+            f.write(time_entry.format('REPORT START', hrs, mm, sec).encode('ascii'))
+
+            hrs, mm, sec = _sec_to_string(wn.options.start_clocktime)
+            if hrs < 12:
+                time_format = ' AM'
+            else:
+                hrs -= 12
+                time_format = ' PM'
+            f.write('{:20s} {:02d}:{:02d}:{:02d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format).encode('ascii'))
+
+            hrs, mm, sec = _sec_to_string(wn.options.quality_timestep)
+            f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec).encode('ascii'))
+            hrs, mm, sec = _sec_to_string(wn.options.rule_timestep)
+            #f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
+            f.write(entry.format('STATISTIC', wn.options.statistic).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+
+            # Coordinates
+            f.write('[COORDINATES]\n'.encode('ascii'))
+            entry = '{:10s} {:10g} {:10g}\n'
+            label = '{:10s} {:10s} {:10s}\n'
+            f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
+            coord = nx.get_node_attributes(wn._graph, 'pos')
+            for key, val in coord.items():
+                f.write(entry.format(key, val[0], val[1]).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+
+            unmodified = ['[ENERGY]', '[RULES]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]', '[SOURCES]',
+                          '[MIXING]', '[VERTICES]', '[LABELS]', '[BACKDROP]', '[TAGS]']
+
+            for section in unmodified:
+                if len(self.sections[section]) > 0:
+                    logger.debug('Writting data from original epanet file: %s', section)
+                    f.write('{0}\n'.format(section).encode('ascii'))
+                    for lnum, line in self.sections[section]:
+                        f.write('{0}\n'.format(line).encode('ascii'))
+                    f.write('\n'.encode('ascii'))
+
+            f.write('[END]\n'.encode('ascii'))
 
 
 #class HydFile(object):
