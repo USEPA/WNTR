@@ -51,7 +51,7 @@ def test_Net1():
                           '32': 710.0,
                           '31': 700.0,
                           '2':  850.0}
-    expected_elevation = wntr.epanet.util.HydParam.Elevation.to_si(wn._inpfile.flow_units, expected_elevation)
+    expected_elevation = wntr.epanet.util.HydParam.Elevation._to_si(wn._inpfile.flow_units, expected_elevation)
 
     expected_base_demand = {'11': 150,
                             '10':   0,
@@ -62,7 +62,7 @@ def test_Net1():
                             '23': 150,
                             '32': 100,
                             '31': 100}
-    expected_base_demand = wntr.epanet.util.HydParam.Demand.to_si(wn._inpfile.flow_units, expected_base_demand)
+    expected_base_demand = wntr.epanet.util.HydParam.Demand._to_si(wn._inpfile.flow_units, expected_base_demand)
 
     expected_edge = {'11': {'12': {'11':  {'type': 'pipe'}},
                             '21': {'111': {'type': 'pipe'}}},
@@ -92,7 +92,7 @@ def test_Net1():
                          '22':  12.0,
                          '31':   6.0,
                          '110': 18.0}
-    expected_diameter = wntr.epanet.util.HydParam.PipeDiameter.to_si(wn._inpfile.flow_units, expected_diameter)
+    expected_diameter = wntr.epanet.util.HydParam.PipeDiameter._to_si(wn._inpfile.flow_units, expected_diameter)
 
     expected_length = {'11':  5280.0,
                        '111': 5280.0,
@@ -106,7 +106,7 @@ def test_Net1():
                        '22':  5280.0,
                        '31':  5280.0,
                        '110':  200.0}
-    expected_length = wntr.epanet.util.HydParam.Length.to_si(wn._inpfile.flow_units, expected_length)
+    expected_length = wntr.epanet.util.HydParam.Length._to_si(wn._inpfile.flow_units, expected_length)
 
     assert_dict_equal(node, expected_node)
     assert_dict_equal(elevation, expected_elevation)
@@ -124,9 +124,9 @@ def test_query_node_attribute():
 
     elevation = 213.36 #700*float(units.ft/units.m) # ft to m
     nodes = wn.query_node_attribute('elevation', np.less, elevation)
-    
+
     expected_nodes = set(['13', '22', '23'])
-    
+
     assert_set_equal(set(nodes.keys()), expected_nodes)
 
 def test_query_pipe_attribute():
@@ -139,7 +139,7 @@ def test_query_pipe_attribute():
     pipes = wn.query_link_attribute('length', np.greater, length)
 
     expected_pipes = set(['10'])
-    
+
     assert_set_equal(set(pipes.keys()), expected_pipes)
 
 def test_nzd_nodes():
@@ -149,10 +149,10 @@ def test_nzd_nodes():
     wn = parser.read(inp_file)
 
     nzd_nodes = wn.query_node_attribute('base_demand', np.greater, 0.0)
-    
+
     expected_nodes = set(['11', '13', '12', '21', '22', '23', '32', '31'])
-    
+
     assert_set_equal(set(nzd_nodes.keys()), expected_nodes)
-    
+
 if __name__ == '__main__':
     test_Net1()
