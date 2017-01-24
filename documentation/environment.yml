@@ -8,3 +8,4 @@ dependencies:
     - sphinx
     - numpydoc
     - matplotlib
+    - enum34
