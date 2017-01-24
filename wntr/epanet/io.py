@@ -694,10 +694,14 @@ class InpFile(object):
 
             # Create the control action object
             link_name = current[1]
-
+            try:
+                tmp = float(current[2])
+                current[2] = tmp
+            except:
+                pass
             # print (link_name in wn._links.keys())
             link = wn.get_link(link_name)
-            if type(current[2]) == float or type(current[2]) == int:
+            if isinstance(current[2], float) or isinstance(current[2], int):
                 if isinstance(link, wntr.network.Pump):
                     logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
                     continue
