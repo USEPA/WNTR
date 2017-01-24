@@ -9,6 +9,10 @@ np.set_printoptions(precision=3, threshold=10000, linewidth=300)
 logger = logging.getLogger(__name__)
 
 class NewtonSolver(object):
+    """
+    Newton Solver class.
+    """
+    
     def __init__(self, num_nodes, num_links, num_leaks, model, options={}):
         self._options = options
         self.num_nodes = num_nodes
