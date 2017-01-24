@@ -18,7 +18,7 @@ from wntr.epanet.pyepanet.epanet2 import EpanetException, ENgetwarning
 
 class EpanetSimulator(WaterNetworkSimulator):
     """
-    EPANET Simulator class.
+    EPANET simulator class.
     The EPANET simulator uses the EPANET toolkit and dll.
     
     Parameters
@@ -38,7 +38,7 @@ class EpanetSimulator(WaterNetworkSimulator):
 
     def run_sim(self, WQ=None, convert_units=True, file_prefix='temp'):
         """
-        Run water network simulation using EPANET.  
+        Run an extended period simulation.
         The EpanetSimulator uses an INP file written from the water network model.
         
         Parameters

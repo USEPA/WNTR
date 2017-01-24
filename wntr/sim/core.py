@@ -1,12 +1,11 @@
 from wntr import *
-import numpy as np
-import scipy.sparse as sparse
-import warnings
 from wntr.sim.hydraulics import *
 from wntr.network.model import *
 from wntr.sim.solvers import *
 from wntr.sim.results import *
 from wntr.network.model import *
+import numpy as np
+import warnings
 import time
 import sys
 import logging
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class WaterNetworkSimulator(object):
     """
-    Base Water Network Simulator class.
+    Base water network simulator class.
 
     wn : WaterNetworkModel object
         Water network model
@@ -140,22 +139,25 @@ class WNTRSimulator(WaterNetworkSimulator):
 
     def run_sim(self,solver_options={}, convergence_error=True):
         """
-        Method to run an extended period simulation
+        Run an extended period simulation (hydraulics only).
 
         Parameters
         ----------
         solver_options: dict
-            solver options:
-                MAXITER: the maximum number of iterations for each hydraulic solve (each timestep and trial) (default = 100)
-                TOL: tolerance for the hydraulic equations (default = 1e-6)
-                BT_RHO: the fraction by which the step length is reduced at each iteration of the line search (default = 0.5)
-                BT_MAXITER: the maximum number of iterations for each line search (default = 20)
-                BACKTRACKING: whether or not to use a line search (default = True)
-                BT_START_ITER: the newton iteration at which a line search should start being used (default = 2)
+            Solver options are specified using the following dictionary keys:
+            
+            * MAXITER: the maximum number of iterations for each hydraulic solve (each timestep and trial) (default = 100)
+            * TOL: tolerance for the hydraulic equations (default = 1e-6)
+            * BT_RHO: the fraction by which the step length is reduced at each iteration of the line search (default = 0.5)
+            * BT_MAXITER: the maximum number of iterations for each line search (default = 20)
+            * BACKTRACKING: whether or not to use a line search (default = True)
+            * BT_START_ITER: the newton iteration at which a line search should start being used (default = 2)
         
-        convergence_error: bool
-            If convergence_error is True, an error will be raised if the simulation does not converge. If convergence_error is False, 
-            a warning will be issued and results.error_code will be set to 2 if the simulation does not converge. 
+        convergence_error: bool (optional)
+            If convergence_error is True, an error will be raised if the 
+            simulation does not converge. If convergence_error is False, 
+            a warning will be issued and results.error_code will be set to 2 
+            if the simulation does not converge.  Default = True.
         """
 
         self.time_per_step = []

@@ -1,10 +1,10 @@
 from __future__ import print_function
 from wntr import *
+from wntr.network.model import *
 import pandas as pd
 import numpy as np
 import scipy.sparse as sparse
 import math
-from wntr.network.model import *
 import warnings
 import logging
 
