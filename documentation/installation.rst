@@ -5,13 +5,13 @@ WNTR can be installed as a Python package using standard open source software to
 
 **Step 1**: Setup your Python environment
 
-	WNTR requires Python 2.7 along with several Python package dependencies.
+	WNTR requires Python (2.7, 3.4, or 3.5) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
 	General information on Python can be found at https://www.python.org/.
 	
-	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
-	Matplotlib, and SymPy.  For more information on Python package dependencies, see :ref:`requirements`.
+	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, and
+	Matplotlib.  For more information on Python package dependencies, see :ref:`requirements`.
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
 	editing and debug features along with a graphical user interface that is very similar 

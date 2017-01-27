@@ -8,12 +8,8 @@ pump curves,
 controls, 
 simulation options,
 and node coordinates.
-This is similar to the model components stored in an EPANET formatted water network model input file [Ross00]_.
-Some EPANET features are not supported by WNTR, 
-including non-cylindrical tanks, emitters, and energy reports.
-WNTR also includes features that are not supported by EPANET, 
-including leaks, pressure-driven hydraulic simulation, and 
-more flexible controls.  
+Water network models can be built from scratch or built directly from an EPANET INP file.
+:numref:`table-framework` lists sections of EPANET INP file that are compatible with WNTR.
 The example **water_network_model.py** can be used to generate, save, and modify water network models.
 
 A water network model can be created by adding components to an empty model.
@@ -21,7 +17,7 @@ A water network model can be created by adding components to an empty model.
 .. literalinclude:: ../examples/water_network_model.py
    :lines: 4-18
 
-A water network model can also be created directly from an EPANET formatted water network model input file.
+A water network model can also be created directly from an EPANET INP file.
 EPANET features not supported by WNTR are printed to the screen.
 
 .. literalinclude:: ../examples/water_network_model.py
@@ -39,13 +35,12 @@ The inp file will not include features not supported by EPANET.
 	demands in the inp file (**NOT COMPLETE**).  See :ref:`simulation_results` for more information on data stored in ``results.node``.
 
 :numref:`table-epanet-features` describes water network model components.  
-EPANET components that are not supported by WNTR are noted.
 For more information on the water network model, see the 
 :doc:`WaterNetworkModel</apidoc/wntr.network.model>` 
 module documentation.
 
 .. _table-epanet-features:
-.. table:: Water network model components and mapping of EPANET features to WNTR functions.
+.. table:: Water network model components.
 
    ==============================  ====================================================================================================================================================
    Component                       Description
@@ -66,11 +61,6 @@ module documentation.
                                    diameter, minimum volume, and volume curve.
                                    The method :doc:`add_tank</apidoc/wntr.network.model>` can be used to add a tank to the network.
                                    Tanks can also be added using the [TANKS] section of an EPANET input file.
-                                   **WNTR does not support non-cylindrical shape tanks.**
- 
-   Emitters                        Emitters are nodes with pressure-dependent demand.  Emitters are used for devices such as sprinklers where the flow is 
-                                   not controlled by a customer the way a sink or bathtub faucet is. 
-                                   **WNTR does not support emitters in the [EMMITER] section of an EPANET input file.  Pressure-driven simulation can be used to simulate emitters.**
  
    Pipes                           Pipes are links that transport water.
                                    Pipe attributes include pipe name, start node name, end node name, length, diameter, roughness, 
@@ -87,19 +77,12 @@ module documentation.
                                    Valve attributes include valve name, start node name, end node name, diameter, type, minor loss, and setting.
                                    The method :doc:`add_valve</apidoc/wntr.network.model>` can be used to add a valve to the network.
                                    Valves can also be added using the [VALVES] section of an EPANET input file.
-                                   WNTR supports check valves and pressure-reducing valves.  
-                                   **WNTR does not support pressure sustaining valves, 
-                                   pressure breaker valves,
-                                   flow control valves,
-                                   throttle control valves, and 
-                                   general purpose valve.**
 
    Curves                          Curves contain data pairs representing a relationship between two quantities. 
                                    Curve attributes include curve name, type, and data points. 
                                    The method :doc:`add_curve</apidoc/wntr.network.model>` can be used to add a curve to the network.
                                    Curves can also be added using the [CURVES] section of an EPANET input file.
-                                   Curves are used to define pump curves.  WNTR supports single point pump curves.
-                                   **WNTR does not support efficiency curves, shape curves, or head loss curves.**
+                                   Curves are used to define pump curves.
 
    Patterns                        Patterns contain data points representing a time-series.
                                    The method :doc:`add_pattern</apidoc/wntr.network.model>` can be used to add a pattern to the network.
@@ -113,10 +96,6 @@ module documentation.
    Conditional controls            Conditional controls define actions that start or stop based on a particular condition in the network. 
                                    The method :doc:`ConditionalControl</apidoc/wntr.network.controls>` can be used to add a conditional control to the network.
                                    Conditional controls can also be added using the [CONTROLS] section of an EPANET input file.
-
-   Energy                          **WNTR does not support the energy report options in the [ENERGY] section of an EPANET input file.**
-
-   Water quality                   The [QUALITY], [SOURCES], and [REACTIONS] options of the EPANET input file are used when simulating water quality with the EpanetSimulator.
 
    Options                         Options are defined in the class :doc:`WaterNetworkOptions</apidoc/wntr.network.model>`. 
                                    These options include input in the [OPTIONS] and [TIME] section of the EPANET input file.
