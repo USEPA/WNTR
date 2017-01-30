@@ -1,4 +1,7 @@
-
+"""
+The wntr.scenario.water_quality module includes methods to define a 
+chemical, age, or trace water quality scenario, used by the EpanetSimualtor.
+"""
 class Waterquality(object):
     """
     Waterquality scenario class.

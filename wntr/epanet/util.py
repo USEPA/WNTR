@@ -1,7 +1,6 @@
 """
-Provides parameter units conversion utilities through Enum classes based on EPANET units.
+The wntr.epanet.util module contains unit conversion utilities based on EPANET units.
 """
-
 import numpy as np
 import enum
 import logging

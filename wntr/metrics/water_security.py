@@ -1,3 +1,6 @@
+"""
+The wntr.metrics.water_security module contains water security metrics.
+"""
 import numpy as np
 import wntr.network
 import pandas as pd

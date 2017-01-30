@@ -1,3 +1,7 @@
+"""
+The wntr.metrics.misc module contains metrics that do not fall into the 
+topographic, hydraulic, water quality, water security, or economic categories.
+"""
 from wntr.network import Junction
 import pandas as pd
 import numpy as np

@@ -1,3 +1,6 @@
+"""
+The wntr.metrics.hydraulic module contains hydraulic metrics.
+"""
 import wntr.network
 from wntr.network.graph import _all_simple_paths
 #from wntr.metrics.misc import _average_attribute

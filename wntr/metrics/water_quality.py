@@ -1,3 +1,6 @@
+"""
+The wntr.metrics.water_quality module contains water quality metrics.
+"""
 from wntr.metrics.hydraulic import _average_attribute
 import logging
 
