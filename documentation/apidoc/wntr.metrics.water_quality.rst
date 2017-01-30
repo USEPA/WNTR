@@ -1,7 +1,7 @@
-wntr.metrics.fraction_delivered module
+wntr.metrics.water_quality module
 ======================================
 
-.. automodule:: wntr.metrics.fraction_delivered
+.. automodule:: wntr.metrics.water_quality
     :members:
     :no-undoc-members:
     :show-inheritance:

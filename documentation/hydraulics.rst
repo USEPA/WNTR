@@ -24,8 +24,8 @@ Hydraulic simulation using the WNTRsimulator is run using the following code.
 The example **hydraulic_simulation.py** can be used to run both simulators.
 
 More information on the simulators can be found in the API documentation, under
-:doc:`EpanetSimulator</apidoc/wntr.sim.epanet>` and 
-:doc:`WNTRSimulator</apidoc/wntr.sim.core>`.
+:meth:`~wntr.sim.epanet.EpanetSimulator` and 
+:meth:`~wntr.sim.core.WNTRSimulator`.
 
 Mass balance at nodes
 -------------------------

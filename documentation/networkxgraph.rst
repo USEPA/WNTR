@@ -7,7 +7,7 @@ WNTR updates the graph as elements are added and removed from the water network 
 NetworkX includes numerous methods to analyze the structure of complex networks.
 For more information on NetworkX, see https://networkx.github.io/.
 WNTR includes a custom Graph Class, 
-:doc:`WntrMultiDiGraph</apidoc/wntr.network.graph>`. 
+:meth:`~wntr.network.graph.WntrMultiDiGraph`.
 This class inherits from NetworkX MulitDigraph and includes additional methods 
 that are specific to WNTR. 
 The example **networkx_graph.py** can be used to generate a graph from a water network model.
