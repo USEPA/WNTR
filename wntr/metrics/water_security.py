@@ -1,7 +1,6 @@
 import numpy as np
 import wntr.network
 import pandas as pd
-import sys
 import logging
 
 logger = logging.getLogger(__name__)

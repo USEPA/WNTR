@@ -1,6 +1,7 @@
 from wntr.network import Junction
 import pandas as pd
 import numpy as np
+import sys
 import logging
 
 if sys.version_info >= (3,0):
