@@ -6,9 +6,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-if sys.version_info >= (3,0):
-    from functools import reduce
-
 def mass_contaminant_consumed(node_results):
     """ Mass of contaminant consumed, equation from [1].
     

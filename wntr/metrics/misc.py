@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 import logging
 
+if sys.version_info >= (3,0):
+    from functools import reduce
+    
 logger = logging.getLogger(__name__)
 
 def query(arg1, operation, arg2):
