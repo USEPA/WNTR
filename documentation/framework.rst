@@ -3,10 +3,10 @@
 Software framework
 ======================================
 
-Before using WNTR, it is helpful to understand the software framework and limitations.
-WNTR uses object oriented programming to 
+Before using WNTR, it is helpful to understand the software framework.
+WNTR uses object oriented programming. The main classes used to 
 generate water network models and 
-access simulators. 
+run simulations are described below, followed by a list of software limitations.
 
 Water network model
 ----------------------
