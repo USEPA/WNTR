@@ -11,18 +11,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 class HydraulicModel(object):
-    """
-    Class to create hyrdaulic models.
-        
-    Parameters
-    ----------
-    wn : class
-        water network model class
-    pressure_driven : bool
-        Determines if the network will be pressure driven or demand driven.
-    
-    """
     def __init__(self, wn, pressure_driven=False):
+        """
+        Class to create hyrdaulic models.
+
+        Parameters
+        ----------
+        wn : class
+            water network model class
+        pressure_driven : bool
+            Determines if the network will be pressure driven or demand driven.
+        """
         self._wn = wn
         self.pressure_driven = pressure_driven
 

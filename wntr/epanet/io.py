@@ -823,44 +823,44 @@ class InpFile(object):
 
         if len(self.sections['[ENERGY]']) > 0:
             # wn._en_energy = '\n'.join(self.sections['[ENERGY]'])
-            pass
+            logger.warning('ENERGY section is reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[RULES]']) > 0:
             # wn._en_rules = '\n'.join(self.sections['[RULES]'])
-            pass
+            logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[DEMANDS]']) > 0:
             # wn._en_demands = '\n'.join(self.sections['[DEMANDS]'])
-            pass
+            logger.warning('Multiple DEMANDS are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[QUALITY]']) > 0:
             # wn._en_quality = '\n'.join(self.sections['[QUALITY]'])
-            pass
+            logger.warning('QUALITY section is reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[EMITTERS]']) > 0:
             # wn._en_emitters = '\n'.join(self.sections['[EMITTERS]'])
-            pass
+            logger.warning('EMITTERS are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[SOURCES]']) > 0:
-            pass
+            logger.warning('SOURCES are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[MIXING]']) > 0:
-            pass
+            logger.warning('MIXING is currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[REPORT]']) > 0:
-            pass
+            logger.warning('REPORT is currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[VERTICES]']) > 0:
-            pass
+            logger.warning('VERTICES are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[LABELS]']) > 0:
-            pass
+            logger.warning('LABELS are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[BACKDROP]']) > 0:
-            pass
+            logger.warning('BACKDROP is currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[TAGS]']) > 0:
-            pass
+            logger.warning('TAGS are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         # Set the _inpfile io data inside the water network, so it is saved somewhere
         wn._inpfile = self

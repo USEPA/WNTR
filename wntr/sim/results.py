@@ -2,11 +2,11 @@ import numpy as np
 import datetime
 
 class NetResults(object):
-    """
-    A class to store water network simulation results.
-    """
-    
     def __init__(self):
+        """
+        A class to store water network simulation results.
+        """
+
         # Simulation time series
         self.time = None
         self.generated_datetime = datetime.datetime
