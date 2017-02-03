@@ -5,9 +5,9 @@ WNTR contains two simulators:  the **WNTRSimulator** and the **EpanetSimulator**
 See :ref:`software_framework` for more information on features and limitations of these simulators. 
 
 The EpanetSimulator can be used to run demand-driven hydraulic simulations
-using the EPANET Toolkit.  The simulator can also be 
+using the EPANET 2 Programmer's Toolkit.  The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
-Hydraulic simulation using the EpanetSimulator is run using the following code.
+A hydraulic simulation using the EpanetSimulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
    :lines: 12-13
@@ -15,8 +15,8 @@ Hydraulic simulation using the EpanetSimulator is run using the following code.
 The WNTRsimulator is a pure Python simulation engine based on the same equations
 as EPANET.  The WNTR simulator does not include equations to run water quality 
 simulations.  The WNTR simulator includes the option to run hydraulic simulation
-in demand-driven and pressure-driven demand mode. 
-Hydraulic simulation using the WNTRsimulator is run using the following code.
+in demand-driven or pressure-driven demand mode. 
+A hydraulic simulation using the WNTRsimulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
    :lines: 16-17

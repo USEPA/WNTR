@@ -2,42 +2,53 @@
 
 Simulation results
 =============================
-Simulation results are stored in Pandas Panels.  
+WNTR uses Pandas data objects to store simulation results.
+The use of Pandas facilitates a comprehensive set of time series analysis options that can be used to evaluate results.
 For more information on Pandas, see http://pandas.pydata.org/.
+
+Results are stored in Pandas Panels.  A Panel is a 3-dimensional database. 
+One Panel is used to store nodes results and one Panel is used to store link results. 
+The Panels are indexed by:
+
+* Node or link attribute
+
+* Time in seconds from the start of the simulation
+
+* Node or link name
+
+Conceptually, Panels can be visualized as blocks of data with 3 axis, as shown in :numref:`fig-panel`.
+ 
+.. _fig-panel:
+.. figure:: figures/panel.png
+   :scale: 100 %
+   :alt: Pandas Panels
+   
+   Conceptual representation of Panels used to store simulation results.
+
+Node attributes include:
+
+* Demand
+* Expected demand
+* Leak demand (only when the WNTRSimulator is used)
+* Pressure
+* Head
+* Quality (only when the EpanetSimulator is used for a water quality simulation)
+* Type (junction, tank, or reservoir)
+	
+Link attributes include:
+
+* Velocity
+* Flowrate
+* Status (0 indicates closed, 1 indicates open)
+* Type (pipe, pump, or valve)
+
 The example **simulation_results.py** demonstrates use cases of simulation results.
-Results are stored in one Panel for nodes and one Panel for links, accessed using:
+Node and link results are accessed using:
 
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 13-14
 
-Each Panel is indexed by item, major_axis, and minor_axis.
-
-* item
-    For node panels: 
-	* demand
-	* expected_demand
-	* leak_demand (only when the WntrSimulator is used)
-	* pressure
-	* head
-	* quality (only when the EpanetSimulator is used for a water quality simulation)
-	* type
-    
-    For link panels: 
-	* velocity
-	* flowrate
-	* type
-	* status
-	
-* major_axis
-	Time in seconds from the start of the simulation
-	
-* minor_axis
-    For node panels: 
-	* node name
-	
-    For link panels: 
-	* link name
-
+The indices can be used extract specific information from Panels.
 For example, to access the pressure and demand at node '123' at 1 hour:
 
 .. literalinclude:: ../examples/simulation_results.py

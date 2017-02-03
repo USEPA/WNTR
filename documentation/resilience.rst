@@ -23,6 +23,18 @@ researchers compare resilience using different methods.
 
    Example state transition plot and network graphic used to visualize resilience.
 
+The following sections outline metrics that can be computed using WNTR, including: 
+
+* Topographic metrics (:numref:`table-topographic-metrics`), 
+
+* Hydraulic metrics (:numref:`table-hydraulic-metrics`), 
+
+* Water quality metrics (:numref:`table-water-quality-metrics`), 
+
+* Water security metrics (:numref:`table-water-security-metrics`), 
+
+* Economic metrics (:numref:`table-economic-metrics`).
+
 The example **resilience_metrics.py** demonstrates how to compute these metrics.
 
 Topographic metrics

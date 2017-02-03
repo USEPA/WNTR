@@ -94,7 +94,7 @@ Climate change
 Climate change is a long term problem for water distribution 
 networks. This problem could lead to 
 reduced water availability, 
-damage from weather events, 
+damage from weather incidents, 
 or even damage from soil movement. 
 For example, severe drought in California has forced lawmakers to reduce the 
 states water usage by 25 percent. 
@@ -112,7 +112,7 @@ Contamination
 Water distribution networks are vulnerable to accidental and intentional contamination.
 Contamination can enter the system through reservoirs, tanks, and at other access points within the 
 distribution network.  Contamination can be difficult to detect and is very expensive to clean up. 
-Recent events, including the Elk River chemical spill and Flint lead contamination 
+Recent incidents, including the Elk River chemical spill and Flint lead contamination 
 highlight the need minimize human health and economic impacts.
 
 The example **water_quality_simulation.py** includes steps to define and simulate contamination scenarios.

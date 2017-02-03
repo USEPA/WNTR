@@ -5,6 +5,7 @@ WNTR can be installed as a Python package using standard open source software to
 
 **Step 1**: Setup your Python environment
 
+	Python can be installed on Windows, Linux, and Mac OS X operating systems.
 	WNTR requires Python (2.7, 3.4, or 3.5) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
@@ -21,12 +22,15 @@ WNTR can be installed as a Python package using standard open source software to
 	editor and console windows.  
 
 **Step 2**: Install WNTR
-
+	
+	The installation process differs for users and developers.  
+	Installation instructions for both types are described below.
+	
 	**For users**: 	Users can install WNTR using pip.  
 	pip is a command line software tool used to install and manage Python 
 	packages.  pip can be downloaded from https://pypi.python.org/pypi/pip.
 	
-	To install WNTR using pip, open a command prompt (cmd.exe on Windows) and run::
+	To install WNTR using pip, open a command prompt (cmd.exe on Windows, terminal window on Linux) and run::
 
 		pip install wntr
 	
@@ -65,6 +69,12 @@ WNTR can be installed as a Python package using standard open source software to
 	
 		import wntr
 
+	If WNTR is installed properly, python proceeds to the next line. No other output is printed to the screen. 
+	
+	If WNTR is **not** installed properly, the user will see the following ImportError::
+	
+		ImportError: No module named wntr
+	
 .. _requirements:
 
 Requirements

@@ -40,7 +40,6 @@ Additional examples, listed in :numref:`table-example`, are included in the exam
 
 Several EPANET INP files are included in the examples/network folder.  Example
 networks range from a simple 9 node network to a 3,000 node network.
-Ipython demos are included in the examples/demo folder. 
 Additional network models can be downloaded from the University of Kentucky 
 Water Distribution System Research Database at
 http://www.uky.edu/WDST/database.html.
