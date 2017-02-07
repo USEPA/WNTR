@@ -280,7 +280,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 results.error_code = 1
             if enData.Errflag:
                 results.error_code = 2
-        enData.ENcloseH()
+        #enData.ENcloseH()
         self.warning_list = enData.errcodelist
 
         if WQ:
@@ -373,13 +373,14 @@ class EpanetSimulator(WaterNetworkSimulator):
                 if tstep <= 0:
                     break
 
-            enData.ENcloseQ()
+            #enData.ENcloseQ()
 
         try:
             enData.ENreport()
         except:
             pass
         # close epanet
+
         enData.ENclose()
 
         # Create Panel
