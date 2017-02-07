@@ -55,22 +55,21 @@ class FastEpanetSim(WaterNetworkSimulator):
         self.reader = reader
         self.prep_time_before_main_loop = 0.0
         if self.reader is None:
-            self.reader = BinFile(result_types=result_types)
+            self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
     def run_sim(self, WQ=None, convert_units=True, file_prefix='temp'):
-        EN2 = self._wn._en2data
         inpfile = file_prefix + '.inp'
-        EN2.write(inpfile, self._wn, units=EN2.flow_units.name)
+        self._wn.write_inpfile(inpfile)
         enData = wntr.epanet.pyepanet.ENepanet()
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'
         # hydfile = file_prefix + '.hyd'
+        enData.ENopen(inpfile, rptfile, outfile)
         flowunits = FlowUnits(enData.ENgetflowunits())
         if self._wn._inpfile is not None:
             mass_units = self._wn._inpfile.mass_units
         else:
             mass_units = MassUnits.mg
-        enData.ENopen(inpfile, rptfile, outfile)
         enData.ENsolveH()
         # enData.ENsavehydfile(hydfile)
         if WQ:

@@ -1390,7 +1390,10 @@ class BinFile(object):
 
         """
         if result_type in [ResultType.quality, ResultType.linkquality]:
-            values = QualParam.Concentration._to_si(self.flow_units, values, mass_units=self.mass_units)
+            if self.quality_type is QualType.Chem:
+                values = QualParam.Concentration._to_si(self.flow_units, values, mass_units=self.mass_units)
+            elif self.quality_type is QualType.Age:
+                values = QualParam.WaterAge._to_si(self.flow_units, values)
         elif result_type == ResultType.demand:
             values = HydParam.Demand._to_si(self.flow_units, values)
         elif result_type == ResultType.flowrate:
@@ -1555,8 +1558,6 @@ class BinFile(object):
             elevation = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
             linklen = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
             diameter = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
-            print(nodenames)
-            print(linknames)
             self.save_network_desc_line('link_start', linkstart)
             self.save_network_desc_line('link_end', linkend)
             self.save_network_desc_line('link_type', linktype)
