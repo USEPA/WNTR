@@ -1,12 +1,11 @@
 from wntr import *
-import numpy as np
-import scipy.sparse as sparse
-import warnings
 from wntr.sim.hydraulics import *
 from wntr.network.model import *
 from wntr.sim.solvers import *
 from wntr.sim.results import *
 from wntr.network.model import *
+import numpy as np
+import warnings
 import time
 import sys
 import logging
@@ -14,19 +13,20 @@ import logging
 logger = logging.getLogger(__name__)
 
 class WaterNetworkSimulator(object):
-    def __init__(self, water_network=None, pressure_driven=False):
-        """
-        Water Network Simulator class.
+    """
+    Base water network simulator class.
 
-        water_network: WaterNetwork object 
+    wn : WaterNetworkModel object
+        Water network model
 
-        pressure_dependent: bool 
-            Specifies whether the simulation will be demand-driven or
-            pressure-driven. True means the simulation will be
-            pressure-driven.
-
-        """
-        self._wn = water_network
+    pressure_driven: bool (optional)
+        Specifies whether the simulation will be demand-driven or
+        pressure-driven, default = False
+    """
+        
+    def __init__(self, wn=None, pressure_driven=False):
+        
+        self._wn = wn
         self.pressure_driven = pressure_driven
 
     def get_node_demand(self, node_name, start_time=None, end_time=None):
@@ -110,24 +110,26 @@ class WaterNetworkSimulator(object):
             
 class WNTRSimulator(WaterNetworkSimulator):
     """
-    Run simulation using custom newton solver and linear solvers from scipy.sparse.
+    WNTR simulator class.  
+    The WNTR simulator uses a custom newton solver and linear solvers from scipy.sparse.
+
+    Parameters
+    ----------
+    wn : WaterNetworkModel object
+        Water network model
+
+    pressure_driven: bool (optional)
+        Specifies whether the simulation will be demand-driven or
+        pressure-driven, default = False
     """
 
     def __init__(self, wn, pressure_driven=False):
-        """
-        Simulator object to be used for running scipy simulations.
-
-        Parameters
-        ----------
-        wn : WaterNetworkModel
-            A water network
-        """
-
+    
         super(WNTRSimulator, self).__init__(wn, pressure_driven)
         self._internal_graph = None
         self._control_log = None
 
-    def get_time(self):
+    def _get_time(self):
         s = int(self._wn.sim_time)
         h = s/3600
         s -= h*3600
@@ -137,21 +139,25 @@ class WNTRSimulator(WaterNetworkSimulator):
 
     def run_sim(self,solver_options={}, convergence_error=True):
         """
-        Method to run an extended period simulation
+        Run an extended period simulation (hydraulics only).
 
         Parameters
         ----------
         solver_options: dict
-            solver options:
-                MAXITER: the maximum number of iterations for each hydraulic solve (each timestep and trial) (default = 100)
-                TOL: tolerance for the hydraulic equations (default = 1e-6)
-                BT_RHO: the fraction by which the step length is reduced at each iteration of the line search (default = 0.5)
-                BT_MAXITER: the maximum number of iterations for each line search (default = 20)
-                BACKTRACKING: wheter or not to use a line search (default = True)
-                BT_START_ITER: the newton iteration at which a line search should start being used (default = 2)
-        convergence_error: bool
-            If convergence_error is True, an error will be raised if the simulation does not converge. If convergence_error is False, 
-            a warning will be issued and results.error_code will be set to 2 if the simulation does not converge. 
+            Solver options are specified using the following dictionary keys:
+            
+            * MAXITER: the maximum number of iterations for each hydraulic solve (each timestep and trial) (default = 100)
+            * TOL: tolerance for the hydraulic equations (default = 1e-6)
+            * BT_RHO: the fraction by which the step length is reduced at each iteration of the line search (default = 0.5)
+            * BT_MAXITER: the maximum number of iterations for each line search (default = 20)
+            * BACKTRACKING: whether or not to use a line search (default = True)
+            * BT_START_ITER: the newton iteration at which a line search should start being used (default = 2)
+        
+        convergence_error: bool (optional)
+            If convergence_error is True, an error will be raised if the 
+            simulation does not converge. If convergence_error is False, 
+            a warning will be issued and results.error_code will be set to 2 
+            if the simulation does not converge.  Default = True.
         """
 
         self.time_per_step = []
@@ -227,7 +233,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                         break
                     last_backup_time = backup_time
 
-            logger.info('simulation time = %s, trial = %d',self.get_time(),trial)
+            logger.info('simulation time = %s, trial = %d',self._get_time(),trial)
 
             # Prepare for solve
             #model.reset_isolated_junctions()
@@ -254,7 +260,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                 if convergence_error:
                     raise RuntimeError('Simulation did not converge!')
                 warnings.warn('Simulation did not converge!')
-                logger.warning('Simulation did not converge at time %s',self.get_time())
+                logger.warning('Simulation did not converge at time %s',self._get_time())
                 model.get_results(results)
                 results.error_code = 2
                 return results
@@ -275,7 +281,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                             raise RuntimeError('Exceeded maximum number of trials.')
                         results.error_code = 2
                         warnings.warn('Exceeded maximum number of trials.')
-                        logger.warning('Exceeded maximum number of trials at time %s',self.get_time())
+                        logger.warning('Exceeded maximum number of trials at time %s',self._get_time())
                         model.get_results(results)
                         return results
                     continue

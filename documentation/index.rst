@@ -6,6 +6,7 @@ WNTR 0.1 documentation (**DRAFT**)
 
    overview
    installation
+   framework
    units
    getting_started
    waternetworkmodel

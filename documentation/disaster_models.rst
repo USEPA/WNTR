@@ -18,7 +18,7 @@ Additionally, earthquakes can cause power outages and fires. WNTR includes metho
 to add leaks to pipes and tanks, 
 shut off power to pumps, 
 and change demands for fire conditions, as described in the sections below.
-The :doc:`Earthquake</apidoc/wntr.scenario.earthquake>` class includes methods 
+The :meth:`~wntr.scenario.earthquake.Earthquake` class includes methods 
 to compute peak ground acceleration, peak ground velocity, and repair rate based on the earthquake
 location and magnitude.  Since the properties are a function of distance to the epicenter, the 
 node coordinates must be scaled properly in units of meters.  
@@ -94,7 +94,7 @@ Climate change
 Climate change is a long term problem for water distribution 
 networks. This problem could lead to 
 reduced water availability, 
-damage from weather events, 
+damage from weather incidents, 
 or even damage from soil movement. 
 For example, severe drought in California has forced lawmakers to reduce the 
 states water usage by 25 percent. 
@@ -112,7 +112,7 @@ Contamination
 Water distribution networks are vulnerable to accidental and intentional contamination.
 Contamination can enter the system through reservoirs, tanks, and at other access points within the 
 distribution network.  Contamination can be difficult to detect and is very expensive to clean up. 
-Recent events, including the Elk River chemical spill and Flint lead contamination 
+Recent incidents, including the Elk River chemical spill and Flint lead contamination 
 highlight the need minimize human health and economic impacts.
 
 The example **water_quality_simulation.py** includes steps to define and simulate contamination scenarios.

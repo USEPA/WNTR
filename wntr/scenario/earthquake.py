@@ -1,3 +1,8 @@
+"""
+The wntr.scenario.earthquake module includes methods to 
+define an earthquake location, magnitude and depth, and 
+compute PGA, PGV, and repair rate.
+"""
 from __future__ import print_function
 import wntr
 import numpy as np

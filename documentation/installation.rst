@@ -5,13 +5,14 @@ WNTR can be installed as a Python package using standard open source software to
 
 **Step 1**: Setup your Python environment
 
-	WNTR requires Python 2.7 along with several Python package dependencies.
+	Python can be installed on Windows, Linux, and Mac OS X operating systems.
+	WNTR requires Python (2.7, 3.4, or 3.5) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
 	General information on Python can be found at https://www.python.org/.
 	
-	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
-	Matplotlib, and SymPy.  For more information on Python package dependencies, see :ref:`requirements`.
+	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, and
+	Matplotlib.  For more information on Python package dependencies, see :ref:`requirements`.
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
 	editing and debug features along with a graphical user interface that is very similar 
@@ -21,36 +22,59 @@ WNTR can be installed as a Python package using standard open source software to
 	editor and console windows.  
 
 **Step 2**: Install WNTR
-
+	
+	The installation process differs for users and developers.  
+	Installation instructions for both types are described below.
+	
 	**For users**: 	Users can install WNTR using pip.  
 	pip is a command line software tool used to install and manage Python 
 	packages.  pip can be downloaded from https://pypi.python.org/pypi/pip.
 	
-	To install WNTR using pip, run::
+	To install WNTR using pip, open a command prompt (cmd.exe on Windows, terminal window on Linux) and run::
 
 		pip install wntr
 	
 	This will install the latest stable version of WNTR from https://pypi.python.org/pypi/wntr.  
+	
+	.. note:: A WNTR installation using pip will not include the examples folder, which is referenced throughout this manual.  
+	
+	Users can also download a zip file that includes source files and the examples folder from the USEPA GitHub organization.  
+	To download the master (development) branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP".
+	This downloads a zip file called WNTR-master.zip.
+	To download a specific release, go to https://github.com/USEPA/WNTR/releases and select a zip file.
+	The software can then be installed by running a python script, called setup.py, that is included in the zip file.
+	
+	To build WNTR from the source files in the zip file, open a command prompt and run::
 
+		unzip WNTR-master.zip
+		cd WNTR-master
+		python setup.py install
+		
 	**For developers**: Developers can install and build WNTR from source using git.
 	git is a command line software tool for version control and software development.
 	git can be downloaded from http://git-scm.com. 
 		
-	To build WNTR from source using git, run::
+	To build WNTR from source using git, open a command prompt and run::
 
 		git clone https://github.com/USEPA/WNTR
 		cd wntr
 		python setup.py develop
 	
-	This will install the development branch of WNTR from https://github.com/USEPA/WNTR.
+	This will install the master (development) branch of WNTR from https://github.com/USEPA/WNTR.
 	More information for developers can be found in the :ref:`developers` section.
 
 **Step 3**: Test installation
 
-	To test that WNTR is installed, open Python within a command prompt (cmd.exe on Windows) or by starting an IDE like Spyder, and run::
+	To test that WNTR is installed, open Python within a command prompt or by starting an IDE like Spyder and run::
 	
 		import wntr
 
+	If WNTR is installed properly, python proceeds to the next line. No other output is printed to the screen. 
+	
+	If WNTR is **not** installed properly, the user will see the following ImportError::
+	
+		ImportError: No module named wntr
+	
 .. _requirements:
 
 Requirements

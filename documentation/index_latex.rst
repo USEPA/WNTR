@@ -8,6 +8,7 @@ WNTR 0.1 documentation
    acronyms
    overview
    installation
+   framework
    units
    getting_started
    waternetworkmodel
@@ -21,3 +22,4 @@ WNTR 0.1 documentation
    license
    developers
    reference
+   API documentation <apidoc/wntr>

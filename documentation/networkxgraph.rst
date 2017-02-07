@@ -7,7 +7,7 @@ WNTR updates the graph as elements are added and removed from the water network 
 NetworkX includes numerous methods to analyze the structure of complex networks.
 For more information on NetworkX, see https://networkx.github.io/.
 WNTR includes a custom Graph Class, 
-:doc:`WntrMultiDiGraph</apidoc/wntr.network.graph>`. 
+:meth:`~wntr.network.graph.WntrMultiDiGraph`.
 This class inherits from NetworkX MulitDigraph and includes additional methods 
 that are specific to WNTR. 
 The example **networkx_graph.py** can be used to generate a graph from a water network model.
@@ -15,15 +15,15 @@ The example **networkx_graph.py** can be used to generate a graph from a water n
 A copy of the graph can an be obtained using the following function.
 
 .. literalinclude:: ../examples/networkx_graph.py
-   :lines: 7
+   :lines: 8
 	
 The graph is stored as a nested dictionary.  The nodes and links (note that links are called `edges` in the graph)
 can be accessed using the following.
 
 .. literalinclude:: ../examples/networkx_graph.py
-   :lines: 9-11
+   :lines: 10-12
 
 The graph can be used to access NetworkX methods, for example
 
 .. literalinclude:: ../examples/networkx_graph.py
-   :lines: 2,13-16
+   :lines: 3,14-17

@@ -48,7 +48,6 @@ def ENgetwarning(code, sec=-1):
 class ENepanet():
     """Wrapper class to load the EPANET DLL object, then perform operations on
     the EPANET object that is created when a file is loaded.
-
     """
 
     ENlib = None
@@ -65,21 +64,20 @@ class ENepanet():
 
     Errflag = False
     """A fatal error ocurred at some point during EPANET execution"""
+    
     inpfile = 'temp.inp'
+    """The name of the EPANET input file"""
+    
     rptfile = 'temp.rpt'
+    """The report file to generate"""
+    
     binfile = 'temp.bin'
-
+    """The optional binary output file"""
+    
     fileLoaded = False
 
     def __init__(self, inpfile='', rptfile='', binfile=''):
-        """Initialize the ENepanet class
 
-        Keyword arguments:
-         * inpfile = the name of the EPANET input file (default '')
-         * rptfile = the report file to generate (default '')
-         * binfile = the optional binary output file (default '')
-
-        """
         self.inpfile = inpfile
         self.rptfile = rptfile
         self.binfile = binfile

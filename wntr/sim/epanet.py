@@ -18,18 +18,17 @@ from wntr.epanet.pyepanet.epanet2 import EpanetException, ENgetwarning
 
 class EpanetSimulator(WaterNetworkSimulator):
     """
-    Epanet simulator inherited from Water Network Simulator.
+    EPANET simulator class.
+    The EPANET simulator uses the EPANET toolkit and dll.
+    
+    Parameters
+    ----------
+    wn : WaterNetworkModel object
+        Water network model
     """
 
     def __init__(self, wn):
-        """
-        Epanet simulator class.
-
-        Parameters
-        ----------
-        wn : Water Network Model
-            A water network model.
-        """
+        
         WaterNetworkSimulator.__init__(self, wn)
 
         # Timing
@@ -37,32 +36,32 @@ class EpanetSimulator(WaterNetworkSimulator):
         self.solve_step = {}
         self.warning_list = None
 
-    def run_sim(self, WQ=None, convert_units=True, inp_file_prefix='temp'):
+    def run_sim(self, WQ=None, convert_units=True, file_prefix='temp'):
         """
-        Run water network simulation using EPANET.  
+        Run an extended period simulation.
         The EpanetSimulator uses an INP file written from the water network model.
         
         Parameters
         ----------
         WQ : wntr.scenario.Waterquality object (optional)
-            Water quality scenario object, default = None (hydraulic simulation only)
+            Water quality scenario, default = None (hydraulic simulation only)
 
         convert_units : bool (optional)
             Convert results to SI units, default = True
             
-        inp_file_prefix : string (optional)
-            INP file prefix, default = 'tmp'
+        file_prefix : string (optional)
+            INP and RPT file prefix, default = 'tmp'
         """
         # Write a new inp file from the water network model
-        #self._wn.write_inpfile(inp_file_prefix + '.inp')
-        #self._wn.name = inp_file_prefix + '.inp'
+        #self._wn.write_inpfile(file_prefix + '.inp')
+        #self._wn.name = file_prefix + '.inp'
         
         start_run_sim_time = time.time()
         logger.debug('Starting run')
         # Create enData
         enData = wntr.epanet.pyepanet.ENepanet()
         enData.inpfile = self._wn.name
-        enData.ENopen(enData.inpfile, inp_file_prefix + '.rpt')
+        enData.ENopen(enData.inpfile, file_prefix + '.rpt')
         flowunits = FlowUnits(enData.ENgetflowunits())
         if self._wn._inpfile is not None:
             mass_units = self._wn._inpfile.mass_units
