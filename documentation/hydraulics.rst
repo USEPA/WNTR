@@ -1,49 +1,35 @@
 Hydraulic simulation
 ==============================
 
-WNTR contains two hydraulic simulators:  the EPANET simulator and the WNTR simulator.
-The EPANET simulator can be used to run demand-driven simulations.  
-The simulator uses the EPANET toolkit and dll.  The simulator can also be 
+WNTR contains two simulators:  the **WNTRSimulator** and the **EpanetSimulator**.
+See :ref:`software_framework` for more information on features and limitations of these simulators. 
+
+The EpanetSimulator can be used to run demand-driven hydraulic simulations
+using the EPANET 2 Programmer's Toolkit.  The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
-Hydraulic simulation using the EPANET simulator is run using the following code.
+A hydraulic simulation using the EpanetSimulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
-   :lines: 11-12
+   :lines: 12-13
 
-The WNTR simulator is a pure Python simulation engine based on the same equations
+The WNTRsimulator is a pure Python simulation engine based on the same equations
 as EPANET.  The WNTR simulator does not include equations to run water quality 
 simulations.  The WNTR simulator includes the option to run hydraulic simulation
-in demand-driven and pressure-driven demand mode. 
-Hydraulic simulation using the WNTR simulator is run using the following code.
+in demand-driven or pressure-driven demand mode. 
+A hydraulic simulation using the WNTRsimulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
-   :lines: 15-16
+   :lines: 16-17
 
-The example **hydraulic_simulation.py** can be used to run both simulators and 
-pause/restart simulation.
+The example **hydraulic_simulation.py** can be used to run both simulators.
 
 More information on the simulators can be found in the API documentation, under
-:doc:`EpanetSimulator</apidoc/wntr.sim.epanet>` and 
-:doc:`WNTRSimulator</apidoc/wntr.sim.core>`.
-
-Pause and restart 
-------------------
-
-The WntrSimulator includes the ability to 
-
-* Reset initial values and re-simulate using the same water network model
-
-* Pause a hydraulic simulation, change network operations, and then restart the simulation
-
-* Save the water network model and results to files and reload for future analysis 
-
-These features are helpful when evaluating various response action plans and when 
-simulating long periods of time with different resolution.
-The file **hydraulic_simulation.py** includes examples of these features.
+:meth:`~wntr.sim.epanet.EpanetSimulator` and 
+:meth:`~wntr.sim.core.WNTRSimulator`.
 
 Mass balance at nodes
 -------------------------
-WNTR uses the same mass balance equations as EPANET [Ross00]_. 
+Both simulators uses the mass balance equations from EPANET [Ross00]_. 
 Conservation of mass (and the assumption of constant density) requires
 
 .. math::
@@ -60,8 +46,7 @@ If water is flowing out of node :math:`n` and into pipe :math:`p`, then
 
 Headloss in pipes
 -------------------------
-The headloss formula used in WNTR is the Hazen-Williams
-formula [Ross00]_:
+Both simulators use the Hazen-Williams headloss formula from EPANET [Ross00]_:
 
 .. math:: H_{n_{j}} - H_{n_{i}} = h_{L} = 10.667 C^{-1.852} d^{-4.871} L q^{1.852}
 
@@ -121,7 +106,7 @@ detail.
 	The two figures below compare
 	the Hazen-Williams and modified Hazen-Williams curves, with :math:`m = 0.01 m^{2.556}/s^{0.852}`, :math:`C = 100`, :math:`d = 0.5` m, and :math:`L = 200` m. The
 	figures show that the two formulas are essentially indistinguishable.
-
+	
 Demand-driven simulation
 -------------------------
 
@@ -139,7 +124,7 @@ demand and pressure-driven demand simulation is recommended.
 In pressure-driven demand simulation, the delivered demand depends on pressure.  
 The mass balance and headloss equations described above are solved by 
 simultaneously determining demand along with the network pressures and flow rates.  
-WNTR uses the following pressure-demand relationship [WaSM88]_.
+The WNTRSimulator uses the following pressure-demand relationship [WaSM88]_.
 
 .. math::
 
@@ -163,8 +148,8 @@ Newton-Raphson algorithm.
 Leak model
 -------------------------
 
-Leaks can significantly change network hydraulics.  
-In WNTR, a leak is modeled with a general form of the equation proposed by 
+The WNTRSimulator includes the ability to add leaks to the network.
+The leak is modeled with a general form of the equation proposed by 
 [CrLo02]_ where the mass flow rate of fluid through the hole is expressed as
 
 .. math::
@@ -184,3 +169,19 @@ The value of :math:`\rho` is set to 0.5 (assuming large leaks out of steel pipes
 Leaks can be added to junctions and tanks.  
 A pipe break is modeled using a leak area large enough to drain the pipe.  
 WNTR includes methods to add leaks to any location along a pipe by splitting the pipe into two sections and adding a node. 
+
+
+Pause and restart 
+------------------
+
+The WNTRSimulator includes the ability to 
+
+* Reset initial values and re-simulate using the same water network model
+
+* Pause a hydraulic simulation, change network operations, and then restart the simulation
+
+* Save the water network model and results to files and reload for future analysis 
+
+These features are helpful when evaluating various response action plans and when 
+simulating long periods of time with different resolution.
+The file **hydraulic_simulation.py** includes examples of these features.

@@ -1,6 +1,5 @@
-# -*- coding: latin-1 -*-
 """
-Provides classes for reading/writing EPANET input and output files.
+The wntr.epanet.io module contains methods for reading/writing EPANET input and output files.
 """
 from __future__ import absolute_import
 import wntr.network

@@ -4,7 +4,7 @@ Stochastic simulation
 ===============================
 
 Stochastic simulation can be used to evaluate an ensemble of hydraulic and/or water quality 
-scenarios.  For disaster scenarios, the location, duration, and severity of different types of events
+scenarios.  For disaster scenarios, the location, duration, and severity of different types of incidents
 can be drawn from distributions and included in the simulation.  
 Distributions can be a function of component properties (i.e., age, material) or 
 based on engineering standards.

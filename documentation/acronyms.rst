@@ -1,7 +1,7 @@
 List of acronyms
 ======================================
 
-**API**: Application Program Interface
+**API**: Application Programming Interface
 
 **IDE**: Interactive Development Environment
 
