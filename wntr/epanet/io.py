@@ -8,6 +8,8 @@ import wntr.sim
 #from wntr.sim import NetResults
 import wntr
 import io
+from os import remove
+from shutil import copy
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam, ResultType
 from .util import LinkBaseStatus, to_si, from_si
@@ -1479,7 +1481,8 @@ class BinFile(object):
 
         """
         logger.debug('Read binary EPANET data from %s',filename)
-        with open(filename,'rb') as fin:
+        copy(filename, filename+'.tmp')
+        with open(filename+'.tmp','rb') as fin:
             ftype = self.ftype
             idlen = self.idlen
             logger.debug('... read prolog information ...')
@@ -1626,4 +1629,5 @@ class BinFile(object):
             if warnflag != 0:
                 logger.warning('Warnings were issued during simulation')
         self.finalize_save(magic1==magic2, warnflag)
+        remove(filename+'.tmp')
         return self.results

@@ -25,7 +25,7 @@ def test_epanet_binary_reader():
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, -1)
 
     sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim(WQ, inp_file_prefix='tmp', binary_file=True)
+    results = sim.run_sim(WQ, file_prefix='tmp', binary_file=True)
 
     enbin = wntr.epanet.BinFile()
     enbin.read(bin_file)
