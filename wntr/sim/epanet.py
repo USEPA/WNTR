@@ -63,7 +63,7 @@ class FastEpanetSim(WaterNetworkSimulator):
         enData = wntr.epanet.pyepanet.ENepanet()
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'
-        # hydfile = file_prefix + '.hyd'
+        hydfile = file_prefix + '.hyd'
         enData.ENopen(inpfile, rptfile, outfile)
         flowunits = FlowUnits(enData.ENgetflowunits())
         if self._wn._inpfile is not None:
@@ -71,7 +71,7 @@ class FastEpanetSim(WaterNetworkSimulator):
         else:
             mass_units = MassUnits.mg
         enData.ENsolveH()
-        # enData.ENsavehydfile(hydfile)
+        enData.ENsavehydfile(hydfile)
         if WQ:
             if not isinstance(WQ,list):
                 qlist = [WQ]
@@ -207,7 +207,7 @@ class EpanetSimulator(WaterNetworkSimulator):
             mass_units = MassUnits.mg
 
         enData.ENopenH()
-        enData.ENinitH(1)
+        enData.ENinitH(11)
 
         # Create results object and load general simulation options.
         results = NetResults()
@@ -279,7 +279,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 results.error_code = 1
             if enData.Errflag:
                 results.error_code = 2
-        #enData.ENcloseH()
+        enData.ENcloseH()
         self.warning_list = enData.errcodelist
 
         if WQ:
@@ -372,7 +372,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                 if tstep <= 0:
                     break
 
-            #enData.ENcloseQ()
+            enData.ENcloseQ()
 
         try:
             enData.ENreport()
