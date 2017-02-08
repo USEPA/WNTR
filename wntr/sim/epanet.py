@@ -64,7 +64,7 @@ class FastEpanetSim(WaterNetworkSimulator):
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'
         hydfile = file_prefix + '.hyd'
-        enData.ENopen(inpfile, rptfile, outfile)
+        enData.ENopen(inpfile, None, outfile)
         flowunits = FlowUnits(enData.ENgetflowunits())
         if self._wn._inpfile is not None:
             mass_units = self._wn._inpfile.mass_units
@@ -138,16 +138,6 @@ class FastEpanetSim(WaterNetworkSimulator):
                 else:
                     logger.error('Invalid Quality Type')
             enData.ENsolveQ()
-        if enData.Errflag:
-            enData.ENclose()
-            return 1
-        elif enData.Warnflag:
-            enData.ENclose()
-            return 2
-        try:
-            enData.ENreport()
-        except:
-            pass
         enData.ENclose()
         return self.reader.read(outfile)
 
