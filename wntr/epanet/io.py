@@ -9,6 +9,8 @@ import wntr.sim
 import wntr
 import io
 from os import remove
+import os
+import sys
 from shutil import copy
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam, ResultType
@@ -1315,7 +1317,10 @@ class BinFile(object):
 
     """
     def __init__(self, result_types=None, network=False, energy=False, statistics=False):
-        self.ftype = '=f4'
+        if os.name in ['nt', 'dos'] or sys.platform in ['darwin']:
+            self.ftype = '=f4'
+        else:
+            self.ftype = '=f8'
         self.idlen = 32
         self.hydraulic_id = None
         self.quality_id = None

@@ -7,6 +7,7 @@ import logging
 import time
 logger = logging.getLogger(__name__)
 from wntr.sim.results import NetResults
+import os
 
 try:
     import wntr.epanet.pyepanet
@@ -64,7 +65,8 @@ class FastEpanetSim(WaterNetworkSimulator):
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'
         hydfile = file_prefix + '.hyd'
-        enData.ENopen(inpfile, None, outfile)
+        enData.ENopen(inpfile, rptfile, outfile)
+        #os.sys.stderr.write('Opened EPANET\n')
         flowunits = FlowUnits(enData.ENgetflowunits())
         if self._wn._inpfile is not None:
             mass_units = self._wn._inpfile.mass_units
@@ -72,6 +74,7 @@ class FastEpanetSim(WaterNetworkSimulator):
             mass_units = MassUnits.mg
         enData.ENsolveH()
         enData.ENsavehydfile(hydfile)
+        #os.sys.stderr.write('Finished Hydraulics\n')
         if WQ:
             if not isinstance(WQ,list):
                 qlist = [WQ]
@@ -138,7 +141,13 @@ class FastEpanetSim(WaterNetworkSimulator):
                 else:
                     logger.error('Invalid Quality Type')
             enData.ENsolveQ()
+            #os.sys.stderr.write('Finished Quality\n')
+        try:
+            enData.ENreport()
+        except:
+            pass
         enData.ENclose()
+        #os.sys.stderr.write('Finished Closing\n')
         return self.reader.read(outfile)
 
 

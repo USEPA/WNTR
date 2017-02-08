@@ -24,7 +24,7 @@ def test_setpoint_waterquality_simulation():
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, -1)
 
     sim = wntr.sim.epanet.FastEpanetSim(wn)
-    results = sim.run_sim(WQ)
+    results = sim.run_sim(WQ, file_prefix='test_setpoint')
 
     expected = 91661.72*(1e-6/0.001) # Node '159' at hour 6
     error = abs((results.node.loc['quality', 6*3600, '159'] - expected)/expected)
@@ -38,7 +38,7 @@ def test_flowpaced_waterquality_simulation():
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'FLOWPACED', 100, 0, -1)
 
     sim = wntr.sim.epanet.FastEpanetSim(wn)
-    results = sim.run_sim(WQ)
+    results = sim.run_sim(WQ, file_prefix='test_flowpaced')
 
     expected = 92246.55*(1e-6/0.001) # Node '159' at hour 6
     error = abs((results.node.loc['quality', 6*3600, '159'] - expected)/expected)
@@ -52,7 +52,7 @@ def test_mass_waterquality_simulation():
     WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'MASS', 100, 0, -1)
 
     sim = wntr.sim.epanet.FastEpanetSim(wn)
-    results = sim.run_sim(WQ)
+    results = sim.run_sim(WQ, file_prefix='test_mass')
 
     expected = 217903.60*(1e-6/0.001) # Node '159' at hour 6
     error = abs((results.node.loc['quality', 6*3600, '159'] - expected)/expected)
@@ -66,7 +66,7 @@ def test_conc_waterquality_simulation():
     WQ = wntr.scenario.Waterquality('CHEM', ['River'], 'CONCEN', 100, 0, -1)
 
     sim = wntr.sim.epanet.FastEpanetSim(wn)
-    results = sim.run_sim(WQ)
+    results = sim.run_sim(WQ, file_prefix='test_conc')
 
     expected = 91661.72*(1e-6/0.001) # Node '159' at hour 6
     error = abs((results.node.loc['quality', 6*3600, '159'] - expected)/expected)
@@ -82,7 +82,7 @@ def test_age_waterquality_simulation():
     WQ = wntr.scenario.Waterquality('AGE')
 
     sim = wntr.sim.epanet.FastEpanetSim(wn)
-    results = sim.run_sim(WQ)
+    results = sim.run_sim(WQ, file_prefix='test_age')
 
     # WARNING: This does NOT match the EPANET Windows results - it does match
     # the epanet linux binary
@@ -98,16 +98,18 @@ def test_trace_waterquality_simulation():
     WQ = wntr.scenario.Waterquality('TRACE', ['121'])
 
     sim = wntr.sim.epanet.FastEpanetSim(wn)
-    results = sim.run_sim(WQ)
+    results = sim.run_sim(WQ, file_prefix='test_trace')
 
     expected = 91.66 # Node '159' at hour 6
     error = abs(float(results.node.loc['quality', 6*3600, '159'] - expected)/float(expected))
     assert_less(error, 0.0001) # 0.01% error
 
 if __name__ == '__main__':
-    #test_setpoint_waterquality_simulation()
-    #test_flowpaced_waterquality_simulation()
-    #test_mass_waterquality_simulation()
-    #test_conc_waterquality_simulation()
-    #test_age_waterquality_simulation()
+    import logging
+    logging.getLogger().setLevel(logging.DEBUG)
+    test_setpoint_waterquality_simulation()
+    test_flowpaced_waterquality_simulation()
+    test_mass_waterquality_simulation()
+    test_conc_waterquality_simulation()
+    test_age_waterquality_simulation()
     test_trace_waterquality_simulation()
