@@ -8,7 +8,7 @@ used to run water quality simulations, as described in :ref:`water_quality_simul
 Hydraulic simulation using the EPANET simulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
-   :lines: 11-12
+   :lines: 12-13
 
 The WNTR simulator is a pure Python simulation engine based on the same equations
 as EPANET.  The WNTR simulator does not include equations to run water quality 
@@ -17,7 +17,7 @@ in demand-driven and pressure-driven demand mode.
 Hydraulic simulation using the WNTR simulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
-   :lines: 15-16
+   :lines: 16-17
 
 The example **hydraulic_simulation.py** can be used to run both simulators and 
 pause/restart simulation.

@@ -26,28 +26,42 @@ WNTR can be installed as a Python package using standard open source software to
 	pip is a command line software tool used to install and manage Python 
 	packages.  pip can be downloaded from https://pypi.python.org/pypi/pip.
 	
-	To install WNTR using pip, run::
+	To install WNTR using pip, open a command prompt (cmd.exe on Windows) and run::
 
 		pip install wntr
 	
 	This will install the latest stable version of WNTR from https://pypi.python.org/pypi/wntr.  
+	
+	.. note:: A WNTR installation using pip will not include the examples folder, which is referenced throughout this manual.  
+	
+	Users can also download a zip file that includes source files and the examples folder from the USEPA GitHub organization.  
+	To download the master (development) branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP".
+	This downloads a zip file called WNTR-master.zip.
+	To download a specific release, go to https://github.com/USEPA/WNTR/releases and select a zip file.
+	The software can then be installed by running a python script, called setup.py, that is included in the zip file.
+	
+	To build WNTR from the source files in the zip file, open a command prompt and run::
 
+		unzip WNTR-master.zip
+		cd WNTR-master
+		python setup.py install
+		
 	**For developers**: Developers can install and build WNTR from source using git.
 	git is a command line software tool for version control and software development.
 	git can be downloaded from http://git-scm.com. 
 		
-	To build WNTR from source using git, run::
+	To build WNTR from source using git, open a command prompt and run::
 
 		git clone https://github.com/USEPA/WNTR
 		cd wntr
 		python setup.py develop
 	
-	This will install the development branch of WNTR from https://github.com/USEPA/WNTR.
+	This will install the master (development) branch of WNTR from https://github.com/USEPA/WNTR.
 	More information for developers can be found in the :ref:`developers` section.
 
 **Step 3**: Test installation
 
-	To test that WNTR is installed, open Python within a command prompt (cmd.exe on Windows) or by starting an IDE like Spyder, and run::
+	To test that WNTR is installed, open Python within a command prompt or by starting an IDE like Spyder and run::
 	
 		import wntr
 

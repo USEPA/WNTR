@@ -8,7 +8,7 @@ The example **simulation_results.py** demonstrates use cases of simulation resul
 Results are stored in one Panel for nodes and one Panel for links, accessed using:
 
 .. literalinclude:: ../examples/simulation_results.py
-   :lines: 12-13
+   :lines: 13-14
 
 Each Panel is indexed by item, major_axis, and minor_axis.
 
@@ -41,24 +41,24 @@ Each Panel is indexed by item, major_axis, and minor_axis.
 For example, to access the pressure and demand at node '123' at 1 hour:
 
 .. literalinclude:: ../examples/simulation_results.py
-   :lines: 16
+   :lines: 17
 	
 To access the pressure for all nodes and times (the ":" notation returns all variables along the specified axis):  
 
 .. literalinclude:: ../examples/simulation_results.py
-   :lines: 19
+   :lines: 20
 
 Attributes can be plotted as a time-series using:
 	
 .. literalinclude:: ../examples/simulation_results.py
-   :lines: 22-23
+   :lines: 23-24
 
 Attributes can be plotted on the water network model using:
 	
 .. literalinclude:: ../examples/simulation_results.py
-   :lines: 26-29
+   :lines: 27-30
 
 Panels can be saved to excel files using:
 
 .. literalinclude:: ../examples/simulation_results.py
-   :lines: 32-33
+   :lines: 33-34
