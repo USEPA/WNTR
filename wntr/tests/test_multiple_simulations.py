@@ -1,26 +1,25 @@
 # These tests run a demand driven simulation with both Pyomo and Epanet and compare the results for the example networks
 import unittest
-import sys
-import os, inspect
+from os.path import abspath, dirname, join
 import pandas as pd
 import pickle
-resilienceMainDir = os.path.abspath( 
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
-        inspect.currentframe() ) ) ), '..', '..' ))
+
+testdir = dirname(abspath(str(__file__)))
+test_datadir = join(testdir,'networks_for_testing')
+ex_datadir = join(testdir,'..','..','examples','networks')
 
 class TestResetInitialValues(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
+        inp_file = join(ex_datadir, 'Net3.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
-        
+
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
@@ -29,7 +28,7 @@ class TestResetInitialValues(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
@@ -65,19 +64,20 @@ class TestStopStartSim(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
+        inp_file = join(ex_datadir, 'Net3.inp')
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 10*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
@@ -92,8 +92,8 @@ class TestStopStartSim(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
-
+        pass
+    
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
             for t in self.res1.link.major_axis:
@@ -128,27 +128,28 @@ class TestPickle(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
+        inp_file = join(ex_datadir, 'Net3.inp')
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res1 = sim.run_sim(solver_options={'TOL':1e-8})
 
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+        parser = self.wntr.epanet.InpFile()
+        self.wn = parser.read(inp_file)
         self.wn.options.hydraulic_timestep = 3600
         self.wn.options.duration = 10*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res2 = sim.run_sim(solver_options={'TOL':1e-8})
-        f=open('pickle_test.pickle','w')
+        f=open('pickle_test.pickle','wb')
         pickle.dump(self.wn,f)
         f.close()
-        f=open('pickle_test.pickle','r')
+        f=open('pickle_test.pickle','rb')
         wn2 = pickle.load(f)
         f.close()
         wn2.options.duration = 24*3600
@@ -162,8 +163,9 @@ class TestPickle(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
+        
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
             for t in self.res1.link.major_axis:

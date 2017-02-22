@@ -3,5 +3,5 @@ wntr.metrics.health_impacts module
 
 .. automodule:: wntr.metrics.health_impacts
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

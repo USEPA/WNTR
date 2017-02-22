@@ -3,7 +3,7 @@ wntr.metrics package
 
 .. automodule:: wntr.metrics
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
 
 Submodules

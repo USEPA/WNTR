@@ -1,5 +1,5 @@
 import networkx as nx
-from wntr.network.WntrMultiDiGraph import _all_simple_paths
+from wntr.network.graph import _all_simple_paths
 import math
 import numpy as np
 from collections import Counter
@@ -118,8 +118,8 @@ def entropy(G, sources=None, sinks=None):
             for elem in MDij:
                 # divide by the numnber of links between two nodes
                 dk[elem] += 1/len(G[elem[0]][elem[1]].keys()) 
-            
-            aij.append(NDij*(1-float(sum(np.array(dk.values()) - 1))/sum(dk.values())))
+            V = np.array(list(dk.values()))
+            aij.append(NDij*(1-float(sum(V - 1))/sum(V)))
             
         Q[nodej] = sum(qij) # Total flow into node j
         

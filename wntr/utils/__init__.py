@@ -1,3 +1,6 @@
-from units import convert
-import logger
-from timedelta import sec_to_timedelta_str
+"""
+The wntr.utils package contains helper functions.
+"""
+from wntr.utils import logger
+from wntr.utils.color import custom_colormap
+

@@ -3,5 +3,5 @@ wntr.metrics.todini module
 
 .. automodule:: wntr.metrics.todini
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

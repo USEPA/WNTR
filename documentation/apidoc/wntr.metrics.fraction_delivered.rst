@@ -3,5 +3,5 @@ wntr.metrics.fraction_delivered module
 
 .. automodule:: wntr.metrics.fraction_delivered
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:

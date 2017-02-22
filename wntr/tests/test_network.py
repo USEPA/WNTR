@@ -1,33 +1,25 @@
 import unittest
-import sys
-# HACK until resilience is a proper module
-# __file__ fails if script is called in different ways on Windows
-# __file__ fails if someone does os.chdir() before
-# sys.argv[0] also fails because it doesn't not always contains the path
-import os, inspect
-resilienceMainDir = os.path.abspath( 
-    os.path.join( os.path.dirname( os.path.abspath( inspect.getfile( 
-        inspect.currentframe() ) ) ), '..', '..' ))
+from os.path import abspath, dirname, join
 import copy
 import numpy as np
-from scipy.optimize import fsolve
+
+testdir = dirname(abspath(str(__file__)))
+test_datadir = join(testdir,'networks_for_testing')
+ex_datadir = join(testdir,'..','..','examples','networks')
 
 class TestNetworkCreation(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
-        self.wn = self.wntr.network.WaterNetworkModel()
-        parser = self.wntr.network.ParseWaterNetwork()
-        parser.read_inp_file(self.wn, inp_file)
+        inp_file = join(ex_datadir,'Net6.inp')
+        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_num_junctions(self):
         self.assertEqual(self.wn._num_junctions, 3323)
@@ -68,10 +60,9 @@ class TestNetworkMethods(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
-        from wntr.network.WaterNetworkModel import Junction, Tank, Reservoir, Pipe, Pump, Valve
-        from wntr.network.NetworkControls import ControlAction, TimeControl
+        from wntr.network.model import Junction, Tank, Reservoir, Pipe, Pump, Valve
+        from wntr.network.controls import ControlAction, TimeControl
         self.Junction = Junction
         self.Tank = Tank
         self.Reservoir = Reservoir
@@ -84,7 +75,7 @@ class TestNetworkMethods(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_add_junction(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -169,16 +160,15 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(wn._graph.edges(), [('j1','j3')])
 
     def test_remove_node(self):
-        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
+        inp_file = join(ex_datadir,'Net6.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         wn.remove_node('TANK-3326')
-        
+
         self.assertNotIn('TANK-3326',wn._nodes.keys())
         self.assertNotIn('TANK-3326',wn._graph.nodes())
 
-        
-        inp_file = resilienceMainDir+'/wntr/tests/networks_for_testing/conditional_controls_1.inp'
+        inp_file = join(test_datadir,'conditional_controls_1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         tank1 = wn.get_node('tank1')
@@ -187,33 +177,30 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_control('tank_control', control)
 
         controls_1 = copy.deepcopy(wn._control_dict)
-        
+
         wn.remove_node('tank1')
 
         controls_2 = copy.deepcopy(wn._control_dict)
 
         self.assertEqual(True, 'tank_control' in controls_1.keys())
         self.assertEqual(False, 'tank_control' in controls_2.keys())
-        
+
         self.assertNotIn('tank1',wn._nodes.keys())
         self.assertNotIn('tank1',wn._graph.nodes())
-        node_list = ['junction1','res1']
-        node_list.sort()
-        node_list_2 = wn._nodes.keys()
-        node_list_2.sort()
-        self.assertEqual(node_list, node_list_2)
+        expected_nodes = set(['junction1','res1'])
+        self.assertSetEqual(set(wn._nodes.keys()), expected_nodes)
 
     def test_remove_controls_for_removing_link(self):
-        inp_file = resilienceMainDir+'/examples/networks/Net1.inp'
+        inp_file = join(ex_datadir, 'Net1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        
+
         control_action = self.wntr.network.ControlAction(wn.get_link('21'), 'status', self.wntr.network.LinkStatus.opened)
         control = self.wntr.network.ConditionalControl((wn.get_node('2'),'head'), np.greater, 10.0, control_action)
         wn.add_control('control_1',control)
-        
+
         import copy
         controls_1 = copy.deepcopy(wn._control_dict)
-        
+
         wn.remove_link('21')
 
         controls_2 = copy.deepcopy(wn._control_dict)
@@ -419,17 +406,16 @@ class TestInpFileWriter(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
-        inp_file = resilienceMainDir+'/examples/networks/Net6.inp'
+        inp_file = join(ex_datadir, 'Net6.inp')
         self.wn = wntr.network.WaterNetworkModel(inp_file)
         self.wn.write_inpfile('tmp.inp')
-        self.wn2 = wntr.network.WaterNetworkModel('tmp.inp')
+        self.wn2 = self.wntr.network.WaterNetworkModel(inp_file)
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
+        pass
 
     def test_wn(self):
         self.assertEqual(self.wn == self.wn2, True)
@@ -479,24 +465,25 @@ class TestInpFileWriter(unittest.TestCase):
             self.assertAlmostEqual(link.setting, link2.setting, 5)
 
     def test_user_controls(self):
-        for name1, control1 in self.wn._control_dict.iteritems():
+        for name1, control1 in self.wn._control_dict.items():
             control2 = self.wn2._control_dict[name1]
             self.assertEqual(control1==control2, True)
+
+
 
 class TestNet3InpWriterResults(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
-        sys.path.append(resilienceMainDir)
         import wntr
         self.wntr = wntr
 
-        inp_file = resilienceMainDir+'/examples/networks/Net3.inp'
+        inp_file = join(ex_datadir, 'Net3.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
-        
+
         sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
-        
+
         self.wn.write_inpfile('tmp.inp')
         self.wn2 = self.wntr.network.WaterNetworkModel('tmp.inp')
 
@@ -505,8 +492,8 @@ class TestNet3InpWriterResults(unittest.TestCase):
 
     @classmethod
     def tearDownClass(self):
-        sys.path.remove(resilienceMainDir)
-
+        pass
+    
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
             for t in self.results2.link.major_axis:
@@ -531,6 +518,35 @@ class TestNet3InpWriterResults(unittest.TestCase):
         for node_name, node in self.wn.nodes():
             for t in self.results2.node.major_axis:
                 self.assertLessEqual(abs(self.results2.node.at['pressure',t,node_name] - self.results.node.at['pressure',t,node_name]), 0.05)
+
+
+class TestNet3InpUnitsResults(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        import wntr
+        self.wntr = wntr
+
+        inp_file = join(ex_datadir, 'Net3.inp')
+        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+
+        sim = self.wntr.sim.EpanetSimulator(self.wn)
+        self.results = sim.run_sim()
+
+        self.wn.write_inpfile('tmp_units.inp', units='CMH')
+        self.wn2 = self.wntr.network.WaterNetworkModel('tmp_units.inp')
+
+        sim = self.wntr.sim.EpanetSimulator(self.wn2)
+        self.results2 = sim.run_sim()
+
+    @classmethod
+    def tearDownClass(self):
+        pass
+
+    def test_link_flowrate_units_convert(self):
+        for link_name, link in self.wn.links():
+            for t in self.results2.link.major_axis:
+                self.assertLessEqual(abs(self.results2.link.at['flowrate',t,link_name] - self.results.link.at['flowrate',t,link_name]), 0.00001)
 
 
 if __name__ == '__main__':

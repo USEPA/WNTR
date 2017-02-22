@@ -1,19 +1,20 @@
-wntr package
-============
+API documentation
+===================
 
 .. automodule:: wntr
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
 
 Subpackages
 -----------
 
 .. toctree::
-
+    :maxdepth: 1
+    
+    wntr.epanet
     wntr.metrics
     wntr.network
-    wntr.pyepanet
     wntr.scenario
     wntr.sim
     wntr.utils

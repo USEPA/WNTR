@@ -39,7 +39,7 @@ between a regular lattice and a random lattice in terms of structure and reliabi
   
 NetworkX includes a wide range of topographic metrics that can be computed using 
 the WntrMutliDiGraph.  WNTR includes additional methods/metrics to help compute 
-resilience. These methods are in the :doc:`WntrMultiDiGraph Class</apidoc/wntr.network.WntrMultiDiGraph>`.
+resilience. These methods are in the :doc:`WntrMultiDiGraph Class</apidoc/wntr.network.graph>`.
 Commonly used topographic metrics are listed in :numref:`table-topographic-metrics`.  
 
 .. _table-topographic-metrics:
@@ -55,7 +55,7 @@ Commonly used topographic metrics are listed in :numref:`table-topographic-metri
                                           Average node degree is system wide metric used to describe the number of 
                                           connected links in a network.
                                           Node degree can be computed using the NetworkX method ``degree``.
-                                          Terminal nodes can be found using the method :doc:`terminal_nodes</apidoc/wntr.network.WntrMultiDiGraph>`.
+                                          Terminal nodes can be found using the method :doc:`terminal_nodes</apidoc/wntr.network.graph>`.
 
    Link density                           Link density is the ratio between the total number of links and the maximum 
                                           number of links in the network.  If links are allowed to connect a node to 
@@ -76,9 +76,9 @@ Commonly used topographic metrics are listed in :numref:`table-topographic-metri
 
    Simple paths                           A simple path is a path between two nodes that does not repeat any nodes.  NetworkX includes a method, ``all_simple_paths``, to compute
                                           all simple paths between two nodes.  
-                                          The method :doc:`links_in_simple_paths</apidoc/wntr.network.WntrMultiDiGraph>`
+                                          The method :doc:`links_in_simple_paths</apidoc/wntr.network.graph>`
                                           can be used to extract all links in a simple path along with the number of times each link was used in the paths. 
-                                          Paths can be time dependent, if related to simulated flow direction.  The method :doc:`weight_graph</apidoc/wntr.network.WntrMultiDiGraph>` can be used 
+                                          Paths can be time dependent, if related to simulated flow direction.  The method :doc:`weight_graph</apidoc/wntr.network.graph>` can be used 
                                           to weight the graph by a specified attribute.
 
    Shortest path lengths                  Shortest path lengths is the minimum number of links between a source node and all 
@@ -93,7 +93,7 @@ Commonly used topographic metrics are listed in :numref:`table-topographic-metri
                                           node.  Betweenness coefficient is a value between 0 and 1.
                                           Central point dominance is the average difference in betweenness centrality 
                                           of the most central point (having the maximum betweenness centrality) 
-                                          and all other nodes. These metrics can be computed using the NetworkX methods ``betweenness_centrality`` and the method :doc:`central_point_dominance</apidoc/wntr.network.WntrMultiDiGraph>`
+                                          and all other nodes. These metrics can be computed using the NetworkX methods ``betweenness_centrality`` and the method :doc:`central_point_dominance</apidoc/wntr.network.graph>`
 
    Closeness centrality                   Closeness centrality is the inverse of the sum of shortest path from one node to all other nodes.
                                           Closeness centrality can be computed using the NetworkX method ``closeness_centrality``.
@@ -108,7 +108,7 @@ Commonly used topographic metrics are listed in :numref:`table-topographic-metri
 
    Bridges                                A link is considered a bridge if the removal of that link increases the number of connected components in the network.
                                           The ratio of the number of bridges and the total number of links in the network.  Density of bridges is a value between 0 and 1.
-                                          The method :doc:`bridges</apidoc/wntr.network.WntrMultiDiGraph>` can be used to find bridges in a network.
+                                          The method :doc:`bridges</apidoc/wntr.network.graph>` can be used to find bridges in a network.
    =====================================  ================================================================================================================================================
 
 ..
@@ -120,21 +120,21 @@ Commonly used topographic metrics are listed in :numref:`table-topographic-metri
       network to the maximum possible number of cycles in the network.  Meshedness coefficient is a value between 0 and 1.
 
       Spectral gap: The difference between the first and second eigenvalue of the networks adjacency matrix.
-	The method :doc:`spectral_gap</apidoc/wntr.network.WntrMultiDiGraph>` can be used to find the spectral gap of the network.
+	The method :doc:`spectral_gap</apidoc/wntr.network.graph>` can be used to find the spectral gap of the network.
 	
 	Algebraic connectivity	: The second smallest eigenvalue of the normalized Laplacian matrix of a network.
-	The method :doc:`algebraic_connectivity</apidoc/wntr.network.WntrMultiDiGraph>` can be used to find the algebraic connectivity of the network.
+	The method :doc:`algebraic_connectivity</apidoc/wntr.network.graph>` can be used to find the algebraic connectivity of the network.
 	
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
 	are connected in a network.  NPR is computed using ...
 	Connectivity will change at each time step, depending on the flow direction.  
-	The method :doc:`weight_graph</apidoc/wntr.network.WntrMultiDiGraph>` method 
+	The method :doc:`weight_graph</apidoc/wntr.network.graph>` method 
 	can be used to weight the graph by a specified attribute. 
 	
 	Critical ratio of defragmentation: The threshold where the network loses its large-scale connectivity and 
 	defragments, as a function of the node degree.  The critical ratio of 
 	defragmentation is related to percolation theory. The ratio is equal to 0 if all 
-	The method :doc:`critical_ratio_defrag</apidoc/wntr.network.WntrMultiDiGraph>` can be used to compute the critical ratio of defragmentation of the network.
+	The method :doc:`critical_ratio_defrag</apidoc/wntr.network.graph>` can be used to compute the critical ratio of defragmentation of the network.
 					
 Information on additional topographic metrics supported by NetworkX can be found 
 at https://networkx.github.io/.
@@ -168,7 +168,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           when a network component fails.  A network that carries maximum entropy 
                                           flow is considered reliable with multiple alternate paths.
                                           Connectivity will change at each time step, depending on the flow direction.  
-                                          The method :doc:`weight_graph</apidoc/wntr.network.WntrMultiDiGraph>` method can be used to weight the graph by a specified attribute. 
+                                          The method :doc:`weight_graph</apidoc/wntr.network.graph>` method can be used to weight the graph by a specified attribute. 
                                           Entropy can be computed using the :doc:`entropy</apidoc/wntr.metrics.entropy>` method.
 
    Fraction of delivered volume           Fraction of delivered volume is the ratio of total volume delivered to the total volume requested [OsKS02]_.  
