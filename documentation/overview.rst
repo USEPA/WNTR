@@ -50,7 +50,7 @@ WNTR includes capabilities to:
 
 * **Add response/repair strategies** including leak repair, retrofitted pipes, power restoration, and backup generation
 
-* **Simulate network hydraulics and water quality** using pressure-driven or demand-driven hydraulic simulation, the ability to pause and restart simulations, and run simulations in parallel
+* **Simulate network hydraulics and water quality** using pressure-driven or demand-driven hydraulic simulation, and the ability to pause and restart simulations
 
 * **Run probabilistic simulations** using fragility curves for component failure
   

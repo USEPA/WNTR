@@ -131,7 +131,7 @@ However, **the following model options cannot be modified/created in WNTR**:
 * [VERTICES] section
 
 While the EpanetSimulator uses all EPANET model options, several model options are not used by the WNTRSimulator.  
-Of the model options that directly apply to hydraulic simulation, **the following options are not supported by the WNTRSimualtor**:
+Of the EPANET model options that directly apply to hydraulic simulation, **the following options are not supported by the WNTRSimualtor**:
 
 * [DEMANDS] section (base demand for individual nodes from the [JUNCTIONS] section are used)
 * [EMITTERS] section
@@ -140,7 +140,7 @@ Of the model options that directly apply to hydraulic simulation, **the followin
 * Minor loss coefficient in the [PIPES] section
 * Speed option and multipoint head curves in the [PUMPS] section (3-point head curves are supported)
 * Head pattern option in the [RESERVOIRS] section
-* [RULES] section
+* [RULES] section 
 * Volume curves in the [TANKS] section
 * Rule timestep, pattern start, start clocktime in the [TIMES] section
 * PSV, FCV, PBV, TCV, GPV values and minor loss coefficient in the [VALVES] section

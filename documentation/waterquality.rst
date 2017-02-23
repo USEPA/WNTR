@@ -10,8 +10,11 @@ As listed in the :ref:`software_framework` section,  this means that the hydraul
  
 Water quality scenarios are defined using the class :meth:`~wntr.scenario.water_quality.Waterquality`.
 This class stores information on the water quality type and injection.  
+Note that water quality sources defined in the [SOURCES] section of the EPANET INP file will also be simulated.
+Reaction parameters in the EPANET INP file will also be applied.
 EPANET supports water quality simulation to track chemical concentration, 
 water age, and tracer percent.
+
 The example **water_quality_simulation.py** can be used to run water quality simulations and plot results.
 
 The following code can be used to run a hydraulic and water quality simulation, 

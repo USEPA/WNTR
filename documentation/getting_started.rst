@@ -33,7 +33,6 @@ Additional examples, listed in :numref:`table-example`, are included in the exam
    resilience_metrics.py           Compute resilience metrics, including topographic, hydraulic, water quality, and water security metrics
    stochastic_simulation.py        Run a stochastic simulation
    fragility_curves.py             Define fragility curves
-   parallel_simulations.py         Run simulations in parallel
    animation.py                    Animate network graphics
    ==============================  =========================================================================================================
 

@@ -22,8 +22,8 @@ wntr.network.draw_graph(wn, node_attribute=bet_cen, node_size=30,
 # Convert the digraph to an undirected graph
 uG = G.to_undirected()
 
-# Check to see if the graph is connected
-print(nx.is_connected(G))
+# Check to see if the undirected graph is connected
+print(nx.is_connected(uG))
 
 # Create a weighted graph based on length
 length = wn.query_link_attribute('length')
