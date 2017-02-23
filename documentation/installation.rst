@@ -1,5 +1,6 @@
 Installation
 ======================================
+.. include:: <isonum.txt>
 
 WNTR can be installed as a Python package using standard open source software tools.
 
@@ -16,11 +17,29 @@ WNTR can be installed as a Python package using standard open source software to
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
 	editing and debug features along with a graphical user interface that is very similar 
-	to MATLAB. Debugging options are available from the toolbar.  
+	to MATLAB |copy|. Debugging options are available from the toolbar.  
 	Code documentation is displayed in the object inspection 
 	window.  Pop-up information on class structure and functions is displayed in the 
 	editor and console windows.  
-
+	
+	To open a Python console, open a command prompt (cmd.exe on Windows, terminal window on Linux and Mac OS X) 
+	and run 'python', as shown in :numref:`fig-cmd-python`, 
+	or open a Python console using an IDE, like Spyder, as shown in :numref:`fig-spyder`.
+	
+	.. _fig-cmd-python:
+	.. figure:: figures/cmd_python.png
+	   :scale: 100 %
+	   :alt: Python
+	   
+	   Opening a Python console from a command prompt.
+   
+	.. _fig-spyder:
+	.. figure:: figures/spyder.png
+	   :scale: 100 %
+	   :alt: Spyder
+	   
+	   Opening a Python console using Spyder.
+	   
 **Step 2**: Install WNTR
 	
 	The installation process differs for users and developers.  
@@ -30,7 +49,7 @@ WNTR can be installed as a Python package using standard open source software to
 	pip is a command line software tool used to install and manage Python 
 	packages.  pip can be downloaded from https://pypi.python.org/pypi/pip.
 	
-	To install WNTR using pip, open a command prompt (cmd.exe on Windows, terminal window on Linux) and run::
+	To install WNTR using pip, open a command prompt and run::
 
 		pip install wntr
 	
@@ -65,11 +84,11 @@ WNTR can be installed as a Python package using standard open source software to
 
 **Step 3**: Test installation
 
-	To test that WNTR is installed, open Python within a command prompt or by starting an IDE like Spyder and run::
+	To test that WNTR is installed, open a Python console and run::
 	
 		import wntr
 
-	If WNTR is installed properly, python proceeds to the next line. No other output is printed to the screen. 
+	If WNTR is installed properly, Python proceeds to the next line. No other output is printed to the screen. 
 	
 	If WNTR is **not** installed properly, the user will see the following ImportError::
 	

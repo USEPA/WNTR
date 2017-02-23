@@ -21,5 +21,6 @@ WNTR 0.1 documentation
    stochastic
    license
    developers
-   reference
    API documentation <apidoc/wntr>
+   reference
+   

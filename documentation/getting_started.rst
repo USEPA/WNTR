@@ -1,8 +1,7 @@
 Getting started
 ======================================
 
-WNTR can be run from a Python console, or using an IDE, like Spyder.
-To start using WNTR, import the package ::
+To start using WNTR, open a Python console and import the package::
 
 	import wntr	
 
@@ -31,7 +30,7 @@ Additional examples, listed in :numref:`table-example`, are included in the exam
    water_quality_simulation.py     Simulate water quality using EPANET
    simulation_results.py           Extract information from simulation results
    disaster_scenarios.py           Define disaster scenarios, including power outage, pipe leak, and changes to supply and demand
-   resilience_metrics.py           Compute resilience metrics, including topographic, hydraulic, water quality and water security metrics
+   resilience_metrics.py           Compute resilience metrics, including topographic, hydraulic, water quality, and water security metrics
    stochastic_simulation.py        Run a stochastic simulation
    fragility_curves.py             Define fragility curves
    parallel_simulations.py         Run simulations in parallel

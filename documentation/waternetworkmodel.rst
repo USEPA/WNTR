@@ -9,7 +9,7 @@ controls,
 simulation options,
 and node coordinates.
 Water network models can be built from scratch or built directly from an EPANET INP file.
-:numref:`table-framework` lists sections of EPANET INP file that are compatible with WNTR.
+Sections of EPANET INP file that are not compatible with WNTR are described in :ref:`limitations`.  
 The example **water_network_model.py** can be used to generate, save, and modify water network models.
 
 A water network model can be created by adding components to an empty model.

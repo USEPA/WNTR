@@ -5,8 +5,8 @@ Water quality simulation
 
 Water quality simulation can only be run using the **EpanetSimulator** using the EPANET 2 Programmer's Toolkit. 
 As listed in the :ref:`software_framework` section,  this means that the hydraulic simulation must use demand driven simulation.
-Note that the WNTRSimulator can be used to compute demands under pressure-driven conditions and those 
-demands can be used in the EPANETSimulator. 
+
+.. Note that the WNTRSimulator can be used to compute demands under pressure-driven conditions and those demands can be used in the EPANETSimulator. 
  
 Water quality scenarios are defined using the class :meth:`~wntr.scenario.water_quality.Waterquality`.
 This class stores information on the water quality type and injection.  
@@ -23,7 +23,7 @@ in this case, to compute water age.
 Concentration
 -------------
 If water quality type is set to 'CHEM', then the EpanetSimulator computes chemical concentration.
-The user must supply the injection node(s), source type, quality, start and end time.
+The user must supply the injection node(s), source type, quality, and start and end times.
 Simulated concentration values at each node are stored in the `quality` section of the node results, described in :ref:`simulation_results`.  
 
 Water age

@@ -8,8 +8,10 @@ scenarios.  For disaster scenarios, the location, duration, and severity of diff
 can be drawn from distributions and included in the simulation.  
 Distributions can be a function of component properties (i.e., age, material) or 
 based on engineering standards.
-Numpy includes many distributions and random selection methods that can be used for stochastic
-simulation.  For example, the following code can be used to select N unique pipes 
+The Python package Numpy includes many distributions and random selection methods that can be used for stochastic
+simulation.  
+
+For example, the following code can be used to select N unique pipes 
 based on the failure probability of each pipe::
 	
 	N = 2
@@ -30,21 +32,32 @@ ground acceleration, peak ground velocity, or repair rate.  Fragility curves can
 be defined as a function of flood stage, wind speed, and temperature for other
 types of disasters.  
 The American Lifelines Alliance report [ALA01]_
-includes seismic fragility curves for water system components.
+includes seismic fragility curves for water network components.
 
 Fragility curves can have multiple damage states.  
-Each state is defined with a name (i.e. 'Major', 'Minor'), 
-priority (i.e. 1, 2, where higher numbers = higher priority), 
-and distribution (using scipy.stats).
+Each state should corresponds to specific changes to the network model that represent damage, for example, a major or minor leak.
+Each state is defined with a name (i.e., 'Major', 'Minor'), 
+priority (i.e., 1, 2, where higher numbers = higher priority), 
+and distribution (using the Scipy Python package).
 The distribution can be defined for all elements using the keyword 'Default', 
 or can be defined for individual components.
 Each fragility curve includes a "No damage" state with priority 0 (lowest priority).
+
+The example **fragility_curves.py** uses fragility curves to 
+determine probability of failure.  
 
 .. literalinclude:: ../examples/fragility_curves.py
    :lines: 2, 25-27
 
 :numref:`fig-fragility` illustrates a fragility curve based on peak ground acceleration with
-three damage states: No damage, minor damage, and major damage.  
+two damage states: Minor damage and Major damage.  For example, if the peak ground acceleration is 0.5 at 
+a specific junction, the probability of exceeding a Major damage state 0.25 and the probability
+of exceeding the Minor damage state is 0.85.  For each stochastic simulation, a random number is 
+drawn between 0 and 1.  If the random number is between 0 and 0.25, the junction is assigned Minor damage.
+If the random number is between 0.25 and 0.85, then the junction is assigned Major damage. 
+If the random number is between 0.85 and 1, then the junction is assigned no damage.
+After selecting a damage state for the junction, the network should be changed to reflect the associated damage.
+For example, if the junction has Major damage, a large leak might be defined at that location.
 
 .. _fig-fragility:
 .. figure:: figures/fragility_curve.png
@@ -53,6 +66,4 @@ three damage states: No damage, minor damage, and major damage.
 
    Example fragility curve.
    
-The example **fragility_curves.py** uses fragility curves to 
-determine probability of failure.  
 

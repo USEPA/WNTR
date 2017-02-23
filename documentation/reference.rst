@@ -28,6 +28,8 @@ Reference
 
 .. [Hunt07] Hunter, J.D. (2007). Matplotlib: A 2D graphics environment. Computing in Science & Engineering, 3(9), 90-95.
 
+.. [ICC12] International Code Council. (2012). International Fire Code, Appendix B - Fire-Flow Requirements for Buildings, International Code Council, ISBN: 978-1-60983-046-5.
+
 .. [JCMG11] Joyner, D., Certik, O., Meurer, A., & Granger, B.E. (2011). Open source computer algebra systems, SymPy. ACM Communications in Computer Algebra, 45(4), 225-234.
 
 .. [Mcki13] McKinney W. (2013). Python for Data Analysis: Data Wrangling with Pandas, NumPy, and IPython. O'Reilly Media, 1 edition, 466P.
@@ -48,4 +50,5 @@ Reference
 
 .. [WaSM88] Wagner, J.M., Shamir, U., & Marks, D.H. (1998). Water distribution reliability: Simulation methods. Journal of Water Resources Planning and Management, 114(3), 276-294.
 
+.. [WWQP06] Walk, D.J., Worden, B.C., Quitoriano, V., & Pankow, K.L. (2006). Shakemap manual, Technical manual, users guide, and software guide. United States Geologic Survey, http://pubs.usgs.gov/tm/2005/12A01/
 .. [Xlwt16] xlwt contributors. (2016, November 18). xlwt documentation. Retrieved from https://xlwt.readthedocs.io.

@@ -57,3 +57,14 @@ WNTR includes capabilities to:
 * **Compute resilience** using topographic, hydraulic, water quality/security, and economic metrics
 
 * **Analyze results and generate graphics** including state transition plots, network graphics, and network animation
+
+These capabilities can be linked together in many different ways.
+:numref:`fig-use-cases` illustrates four example use cases, from simple to complex.  
+
+.. _fig-use-cases:
+.. figure:: figures/use_cases.png
+   :scale: 100 %
+   :alt: WNTR user cases
+   
+   Flowchart illustrating four example use cases.
+   
