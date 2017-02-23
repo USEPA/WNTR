@@ -5,8 +5,12 @@ Software quality assurance
 
 The following section includes information about 
 the WNTR software repository, 
-software tests and documentation, and 
-ways to contribute and request new features.
+software tests,
+documentation, 
+examples, 
+bug reports,
+feature requests, and
+ways to contribute.
 
 GitHub repository
 ---------------------
@@ -15,22 +19,24 @@ WNTR is hosted on USEPA GitHub organization at https://github.com/USEPA/WNTR.
 
 Software tests
 --------------------
-WNTR includes continuous integration software tests that are run each time 
-changes are made to the repository.  The tests cover a wide range of unit and 
+WNTR includes continuous integration software tests that are run using Travis CI.  
+The tests are run each time changes are made to the repository.  
+The tests cover a wide range of unit and 
 integration tests designed to ensure that the code is performing as expected.  
 New tests are developed each time new functionality is added to the code.   
 Testing status (passing/failed) and code coverage statistics are posted on 
 the README section at https://github.com/USEPA/WNTR.
 	
-Tests can also be run locally using nosetests in the WNTR directory using the following command::
+Tests can also be run locally using the Python package nose.  
+For more information on nosetests, see  http://nose.readthedocs.io/.
+nose comes with a command line software tool called nosetests.
+Tests can be run in the WNTR directory using the following command::
 
 	nosetests -v --with-coverage --cover-package=wntr wntr
 
-For more information on nosetests, see  http://nose.readthedocs.io/.
-
 Documentation
 ---------------------
-WNTR includes a user manual that is built using Read the Docs.
+WNTR includes a user manual that is built using the Read the Docs service.
 Using this service, the user manual is rebuilt each time changes are made to the code.
 The documentation is publicly available at http://wntr.readthedocs.io/.
 The user manual includes an overview, installation instructions, simple examples, 

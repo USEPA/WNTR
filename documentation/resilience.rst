@@ -1,20 +1,38 @@
 Resilience metrics
 ======================================
 
-Resilience of water distribution systems refers to the 
-design, maintenance, and operations of that system.  
+Resilience of water distribution networks refers to the 
+design, maintenance, and operations of that network.  
 All these aspects must work together to limit the effects of disasters and 
 enables rapid return to normal delivery of safe water to customers.
 Numerous resilience metrics have been suggested [USEPA14]_.  
 These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic.
+When quantifying resilience, 
+it is important to understand which metric best defines resilience for 
+a particular scenario.  WNTR includes many metrics to help 
+users compare resilience using different methods.
+
+The following sections outline metrics that can be computed using WNTR, including: 
+
+* Topographic metrics (:numref:`table-topographic-metrics`)
+
+* Hydraulic metrics (:numref:`table-hydraulic-metrics`)
+
+* Water quality metrics (:numref:`table-water-quality-metrics`)
+
+* Water security metrics (:numref:`table-water-security-metrics`)
+
+* Economic metrics (:numref:`table-economic-metrics`)
+
 While some metrics define resilience as a single network-wide quantity, other metrics define 
 quantities that are a function of time, space, or both. 
 For this reason, state transition plots [BaRR13]_  and network graphics
 are useful ways to visualize resilience and compare metrics, as shown in :numref:`fig-metrics`.
-When quantifying resilience, 
-it is important to understand which metric best defines system resilience for 
-a particular scenario.  WNTR includes many metrics to help 
-researchers compare resilience using different methods.
+In the state transition plot, the x-axis represents time (before, during, and after a disruptive incident).  
+The y-axis represents performance.  This can be any time varying resilience metric that responds to the disruptive state.  
+State transition plots are often generated to show time varying performance of the system, but they can also represent the time varying performance of individual components, like tanks or pipes.
+Network graphics are useful to visualize resilience metrics that vary with respect to location.
+For metrics that vary with respect to time and space, network animation can be used to illustrate resilience.
 
 .. _fig-metrics:
 .. figure:: figures/resilience_metrics.png
@@ -22,18 +40,6 @@ researchers compare resilience using different methods.
    :alt: Resilience metrics
 
    Example state transition plot and network graphic used to visualize resilience.
-
-The following sections outline metrics that can be computed using WNTR, including: 
-
-* Topographic metrics (:numref:`table-topographic-metrics`), 
-
-* Hydraulic metrics (:numref:`table-hydraulic-metrics`), 
-
-* Water quality metrics (:numref:`table-water-quality-metrics`), 
-
-* Water security metrics (:numref:`table-water-security-metrics`), 
-
-* Economic metrics (:numref:`table-economic-metrics`).
 
 The example **resilience_metrics.py** demonstrates how to compute these metrics.
 
@@ -53,6 +59,8 @@ NetworkX includes a wide range of topographic metrics that can be computed using
 the WntrMutliDiGraph.  WNTR includes additional methods/metrics to help compute 
 resilience. These methods are in the :meth:`~wntr.network.graph.WntrMultiDiGraph` class.
 Commonly used topographic metrics are listed in :numref:`table-topographic-metrics`.  
+Information on additional topographic metrics supported by NetworkX can be found 
+at https://networkx.github.io/.
 
 .. _table-topographic-metrics:
 .. table:: Topographic metrics used to measure resilience.
@@ -63,8 +71,8 @@ Commonly used topographic metrics are listed in :numref:`table-topographic-metri
    Node degree                            Node degree is the number of links adjacent to a node.  Node degree is a 
                                           measure of the number of branches in a network.  A node with degree 0 is not 
                                           connected to the network.  Terminal nodes have degree 1. A node connected to every node (including itself) 
-                                          has degree equal to the number of nodes in the network.  
-                                          Average node degree is system wide metric used to describe the number of 
+                                          has a degree equal to the number of nodes in the network.  
+                                          The average node degree is a system wide metric used to describe the number of 
                                           connected links in a network.
                                           Node degree can be computed using the NetworkX method ``degree``.
                                           Terminal nodes can be found using the method :meth:`~wntr.network.graph.WntrMultiDiGraph.terminal_nodes`.
@@ -81,7 +89,7 @@ Commonly used topographic metrics are listed in :numref:`table-topographic-metri
                                           in the network.  
                                           Diameter is the maximum eccentricity in the network. 
                                           Eccentricity and diameter can only be computed using undirected, connected networks.
-                                          Network X includes methods to convert directed graphs to undirected graphs, ``to_undirected``, and 
+                                          Network X includes a method to convert directed graphs to undirected graphs, ``to_undirected``, and 
                                           to check if graphs are connected, ``is_connected``.
                                           Eccentricity and diameter can be computed using the  NetworkX methods 
                                           ``eccentricity`` and ``diameter``.
@@ -119,7 +127,7 @@ Commonly used topographic metrics are listed in :numref:`table-topographic-metri
                                           Articulation points can be computed using the NetworkX method ``articulation_points``.
 
    Bridges                                A link is considered a bridge if the removal of that link increases the number of connected components in the network.
-                                          The ratio of the number of bridges and the total number of links in the network.  Density of bridges is a value between 0 and 1.
+                                          The ratio of the number of bridges and the total number of links in the network is the bridge density.  Bridge density is a value between 0 and 1.
                                           The method :meth:`~wntr.network.graph.WntrMultiDiGraph.bridges` can be used to find bridges in a network.
    =====================================  ================================================================================================================================================
 
@@ -147,15 +155,12 @@ Commonly used topographic metrics are listed in :numref:`table-topographic-metri
 	defragments, as a function of the node degree.  The critical ratio of 
 	defragmentation is related to percolation theory. The ratio is equal to 0 if all 
 	The method :meth:`~wntr.network.graph.WntrMultiDiGraph.critical_ratio_defrag` can be used to compute the critical ratio of defragmentation of the network.
-					
-Information on additional topographic metrics supported by NetworkX can be found 
-at https://networkx.github.io/.
 
 Hydraulic metrics
 ---------------------
 
-Hydraulic metrics are based upon variable flows and/or pressure; 
-calculation of these metrics require simulation of network hydraulics that reflect how the
+Hydraulic metrics are based upon variable flows and/or pressure. The 
+calculation of these metrics requires simulation of network hydraulics that reflect how the
 system operates under normal or abnormal conditions.  
 Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metrics`.  
 
@@ -187,7 +192,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           This metric can be computed as a function of time or space using the :meth:`~wntr.metrics.hydraulic.fdv` method.
 
    Fraction of delivered demand           Fraction of delivered demand is the fraction of time periods where demand is met [OsKS02]_.
-                                          This metric can be computed as a function of time or space using the :meth:`~wntr.metrics.hydraulic.fdd` method
+                                          This metric can be computed as a function of time or space using the :meth:`~wntr.metrics.hydraulic.fdd` method.
 
    Population impacted                    Population that is impacted by a specific quantity can be computed using the 
                                           :meth:`~wntr.metrics.misc.population_impacted` method.  For example, this method can be used to compute the population
@@ -211,7 +216,7 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
                                           use the :meth:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using AGE.
 
    Concentration                          To determine the number of node-time pairs above or below a specified concentration threshold, 
-                                          use the :meth:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CONC or TRACE.
+                                          use the :meth:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CHEM or TRACE.
 
    Fraction of delivered quality          Fraction of delivered quality is the fraction of time periods where water quality standards are met [OsKS02]_.
                                           This metric can be computed as a function of time or space using the :meth:`~wntr.metrics.water_quality.fdq` method
@@ -225,7 +230,7 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
 
 Water security metrics
 -----------------------
-Water security metrics quality potential consequences of contamination scenarios.  These metrics are documented in [USEPA15]_.
+Water security metrics quantify potential consequences of contamination scenarios.  These metrics are documented in [USEPA15]_.
 Water security metrics included in WNTR are listed in  :numref:`table-water-security-metrics`.  
 
 .. _table-water-security-metrics:
@@ -234,15 +239,15 @@ Water security metrics included in WNTR are listed in  :numref:`table-water-secu
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
-   Mass consumed                          Mass consumed is the mass of contaminant the exists the network via node demand at each node-time pair [USEPA15]_.  
-                                          The metric can be computed using the :meth:`~wntr.metrics.water_security.mass_contaminant_consumed` method
+   Mass consumed                          Mass consumed is the mass of contaminant that exits the network via node demand at each node-time pair [USEPA15]_.  
+                                          The metric can be computed using the :meth:`~wntr.metrics.water_security.mass_contaminant_consumed` method.
 
-   Volume consumed                        Volume consumed is the volume of contaminant that exists the network via node demand at each node-time pair [USEPA15]_.   
-                                          A detection limit may be specified.
-                                          The metric can be computed using the :meth:`~wntr.metrics.water_security.volume_contaminant_consumed` method
+   Volume consumed                        Volume consumed is the volume of contaminant that exits the network via node demand at each node-time pair [USEPA15]_.   
+                                          A detection limit can be specified.
+                                          The metric can be computed using the :meth:`~wntr.metrics.water_security.volume_contaminant_consumed` method.
 
    Extent of contamination                Extent of contamination is the length of contaminated pipe at each node-time pair [USEPA15]_.  
-                                          A detection limit may be specified.
+                                          A detection limit can be specified.
                                           The metric can be computed using the :meth:`~wntr.metrics.water_security.extent_contaminant` method.
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
@@ -266,9 +271,14 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
-   Network cost                           Network cost can be computed based on equations from the Battle of Water Networks II [SOKZ12]_
+   Network cost                           Network cost is the annual maintenance and operations cost of tanks, pipes, vales, and pumps based on the equations from the Battle of 
+                                          Water Networks II [SOKZ12]_.  
+                                          Default values can be included in the calculation.
+                                          Network cost can be computed 
                                           using the :meth:`~wntr.metrics.economic.cost` method.
 
-   Greenhouse gas emissions               Greenhouse gas emissions can be computed based on equations from the Battle of Water Networks II [SOKZ12]_ 
+   Greenhouse gas emissions               Greenhouse gas emissions is the annual emissions associated with pipes based on equations from the Battle of Water Networks II [SOKZ12]_.
+                                          Default values can be included in the calculation.
+                                          Greenhouse gas emissions can be computed 
                                           using the :meth:`~wntr.metrics.economic.ghg_emissions` method.
    =====================================  ================================================================================================================================================

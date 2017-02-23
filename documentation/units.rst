@@ -25,10 +25,10 @@ generate a water network model, WNTR uses the specific internal units defined by
 Together, these define the mass and flow units for the model.
 Some units also depend on the equation used
 for pipe roughness headloss and on the reaction order specified. 
-:numref:`table-units` provides information on EPANET unit conventions (modified from [Ross00]_).  
+:numref:`table-hydraulic-units`, :numref:`table-quality-units`, and :numref:`table-energy-units` provide information on EPANET unit conventions (modified from [Ross00]_).  
 
-.. _table-units:
-.. table:: EPANET unit conventions.
+.. _table-hydraulic-units:
+.. table:: EPANET hydraulic unit conventions.
 
    +----------------------+-------------------------------------+------------------------------------+
    | **Hydraulic**        | **US Customary units**              | **SI-based units**                 |
@@ -73,13 +73,10 @@ for pipe roughness headloss and on the reaction order specified.
    +----------------------+-------------------------------------+------------------------------------+
    | Volume               |   ft³                               |   m³                               |
    +----------------------+-------------------------------------+------------------------------------+
-   | **Energy Parameter** | **US Customary units**              | **SI-based units**                 |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Energy               |   kW-hours                                                               |
-   +----------------------+--------------------------------------------------------------------------+
-   | Efficiency (pumps)   |   percent                                                                |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Power                |   hp (horse-power)                  |   kW                               |
+
+.. _table-quality-units:
+.. table:: EPANET water quality unit conventions.
+
    +----------------------+-------------------------------------+------------------------------------+
    | **Water Quality**    | **US Customary units**              | **SI-based units**                 |
    | **Parameter**        |                                     |                                    |
@@ -102,6 +99,19 @@ for pipe roughness headloss and on the reaction order specified.
    +----------------------+-------------------------------------+------------------------------------+
    | Water age            |   hours                                                                  |
    +----------------------+--------------------------------------------------------------------------+
+   
+.. _table-energy-units:
+.. table:: EPANET energy unit conventions.
+
+   +----------------------+-------------------------------------+------------------------------------+
+   | **Energy Parameter** | **US Customary units**              | **SI-based units**                 |
+   +----------------------+-------------------------------------+------------------------------------+
+   | Energy               |   kW-hours                                                               |
+   +----------------------+--------------------------------------------------------------------------+
+   | Efficiency (pumps)   |   percent                                                                |
+   +----------------------+-------------------------------------+------------------------------------+
+   | Power                |   hp (horse-power)                  |   kW                               |
+   +----------------------+-------------------------------------+------------------------------------+
 
 When running analysis in WNTR, all input values (i.e., time, pressure threshold, node demand) should be specified in SI units. 
 All simulation results are also stored in SI units and can be converted to other units if desired.

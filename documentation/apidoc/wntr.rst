@@ -1,3 +1,5 @@
+.. _api_documentation:
+
 API documentation
 ===================
 
