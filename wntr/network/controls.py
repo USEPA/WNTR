@@ -1,10 +1,11 @@
 """
-The wntr.network.controls module includes methods to define network controls 
-and control actions.  These controls modify parameters in the network during 
+The wntr.network.controls module includes methods to define network controls
+and control actions.  These controls modify parameters in the network during
 simulation.
 """
 import wntr
 import math
+import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
@@ -38,27 +39,226 @@ logger = logging.getLogger(__name__)
 #    Close pumps without power
 
 
+class ControlCondition(object):
+    """A base class for control conditions"""
+    def evaluate(self):
+        raise NotImplementedError('This is an abstract base class. It must be subclassed.')
+
+    def __bool__(self):
+        """Overload a boolean based on the evaluation."""
+        return self.evaluate()
+    __nonzero__ = __bool__
+
+
+class TimeCondition(ControlCondition):
+    """Control based on simulation or clock time.
+
+    Parameters
+    ----------
+    source : tuple
+        The tuple is of the form (wnm, attribute), where wnm is a WaterNetworkModel,
+        attribute is either "sim_time", "shifted_time", "daily_time", or "clock_time".
+        Both "daily_time" and "clock_time" are calculated every 24 hours; "daily_time" refers
+        to the 24-hour cycle from sim_time=0, while "clock_time" refers to the 24-hour cycle
+        from 12:00 AM. The "shifted_time" is calculated from 12:00 AM on the first simulation day,
+        regardless of the time of day the simulation 'starts'.
+    operation : bool
+        The comparison to make (generally either np.less_equal or np.greater_equal)
+    threshold : float
+        The time threshold for comparison
+    """
+    def __init__(self, source, operation, threshold):
+        if not isinstance(source, tuple):
+            raise ValueError('source must be a tuple, (source_object, source_attribute).')
+        if not isinstance(threshold, float):
+            raise ValueError('threshold must be a float.')
+        self._source_obj = source[0]
+        self._source_attr = source[1]
+        if self._source_attr == 'daily_time':
+            self._daily = True
+            self._source_attr = 'sim_time'
+        elif self._source_attr == 'clock_time':
+            self._daily = True
+            self._source_attr = 'shifted_time'
+        self._relation = operation
+        self._threshold = threshold
+
+    def __str__(self):
+        pass
+
+    def evaluate(self):
+        cur_time = getattr(self._source_obj, self._source_attr)
+        prev_time = getattr(self._source_obj, 'prev_'+self._source_attr)
+        if self._daily:
+            cur_time = cur_time % (24*3600)
+            prev_time = prev_time % (24*3600)
+
+
+
+class SimpleCondition(ControlCondition):
+    """Compare a network element attribute to a set value
+
+    This type of condition can be converted to an EPANET control or rule conditional clause.
+
+    Parameters
+    ----------
+    source : tuple
+        A two-tuple. The first value should be an object (such as a Junction, Tank, Reservoir, Pipe, Pump, Valve,
+        WaterNetworkModel, etc.). The second value should be an attribute of the object.
+
+    operation : numpy comparison method
+        Examples: numpy.greater, numpy.less_equal
+
+    threshold : float
+        A value to compare the source object attribute against
+
+
+    """
+    def __init__(self, source, operation, threshold):
+        if not isinstance(source, tuple):
+            raise ValueError('source must be a tuple, (source_object, source_attribute).')
+        if not isinstance(threshold, float):
+            raise ValueError('threshold must be a float.')
+        self._source_obj = source[0]
+        self._source_attr = source[1]
+        self._relation = operation
+        self._threshold = threshold
+
+    def __str__(self):
+        pass
+
+    def evaluate(self):
+        cur_value = getattr(self._source_obj, self._source_attr)
+        thresh_value = self._threshold
+        relation = self._relation
+        if np.isnan(self._threshold):
+            relation = np.greater
+            thresh_value = 0.0
+        state = relation(cur_value, thresh_value)
+        return state
+
+
+class RelativeCondition(ControlCondition):
+    """Compare attributes of two different objects (e.g., tank levels 1 and 2)
+
+    This type of condition does not work with the EpanetSimulator, only the WNTRSimulator.
+    This condition does not accept string node/link names, only Node or Link objects.
+
+    Parameters
+    ----------
+    source : tuple
+        A two-tuple. The first value should be an object (such as a Junction, Tank, Reservoir, Pipe, Pump, Valve,
+        WaterNetworkModel, etc.). The second value should be an attribute of the object.
+
+    operation : numpy or other comparison method that takes two values and returns a bool
+        Examples: numpy.greater, numpy.less_equal.
+
+    threshold : tuple
+        A two-tuple. The first value should be an object (such as a Junction, Tank, Reservoir, Pipe, Pump, Valve,
+        WaterNetworkModel, etc.). The second value should be an attribute of the object.
+
+
+    """
+    def __init__(self, source, operation, threshold):
+        if not isinstance(source, tuple):
+            raise ValueError('source must be a tuple, (source_object, source_attribute)')
+        if not isinstance(threshold, tuple):
+            raise ValueError('threshold must be a tuple, (threshold_object, threshold_attribute)')
+        self._source_obj = source[0]
+        self._source_attr = source[1]
+        self._relation = operation
+        self._threshold_obj = threshold[0]
+        self._threshold_attr = threshold[1]
+
+    def __str__(self):
+        pass
+
+    def evaluate(self):
+        cur_value = getattr(self._source_obj, self._source_attr)
+        thresh_value = getattr(self._threshold_obj, self._threshold_attr)
+        relation = self._relation
+        if np.isnan(self._threshold):
+            relation = np.greater
+            thresh_value = 0.0
+        state = relation(cur_value, thresh_value)
+        return state
+
+
+class OrCondition(ControlCondition):
+    """Combine two WNTR Conditions with an OR.
+
+    Parameters
+    ----------
+    cond1 : ControlCondition
+        The first condition
+    cond2 : ControlCondition
+        The second condition
+
+    Returns
+    -------
+    bool
+        True if either condition evaluates to True; otherwise False
+
+    """
+    def __init__(self, cond1, cond2):
+        self._condition_1 = cond1
+        self._condition_2 = cond2
+
+    def __str__(self):
+        return str(self._condition_1) + "\nOR " + str(self._condition_2)
+
+    def evaluate(self):
+        return bool(self._condition_1) or bool(self._condition_2)
+
+
+class AndCondition(ControlCondition):
+    """Combine two WNTR Conditions with an AND
+
+    Parameters
+    ----------
+    cond1 : ControlCondition
+        The first condition
+    cond2 : ControlCondition
+        The second condition
+
+    Returns
+    -------
+    bool
+        True if both conditions evaluate to True; otherwise False
+
+    """
+    def __init__(self, cond1, cond2):
+        self._condition_1 = cond1
+        self._condition_2 = cond2
+
+    def __str__(self):
+        return str(self._condition_1) + "\nAND " + str(self._condition_2)
+
+    def evaluate(self):
+        return bool(self._condition_1) and bool(self._condition_2)
+
+
 class BaseControlAction(object):
     """
-    A base class for deriving new control actions. The control action is fired by calling FireControlAction
+    A base class for deriving new control actions. The control action is run by calling RunControlAction
 
-    This class is not meant to be used directly. Derived classes must implement the FireControlActionImpl method.
+    This class is not meant to be used directly. Derived classes must implement the RunControlActionImpl method.
     """
     def __init__(self):
         pass
 
-    def FireControlAction(self, control_name):
+    def RunControlAction(self, control_name):
         """
-        This method is called to fire the corresponding control action.
+        This method is called to run the corresponding control action.
         """
-        return self._FireControlActionImpl(control_name)
+        return self._RunControlActionImpl(control_name)
 
-    def _FireControlActionImpl(self):
+    def _RunControlActionImpl(self):
         """
-        Implements the specific action that will be fired when FireControlAction is called. This method should be
+        Implements the specific action that will be run when RunControlAction is called. This method should be
         overridden in derived classes.
         """
-        raise NotImplementedError('_FireActionImpl is not implemented. '
+        raise NotImplementedError('_RunActionImpl is not implemented. '
                                   'This method must be implemented in '
                                   'derived classes of ControlAction.')
 
@@ -69,13 +269,13 @@ class ControlAction(BaseControlAction):
     Parameters
     ----------
     target_obj : object
-        The object whose attribute will be changed when the control fires.
+        The object whose attribute will be changed when the control runs.
 
     attribute : string
-        The attribute that will be changed on the target_obj when the control fires.
+        The attribute that will be changed on the target_obj when the control runs.
 
     value : any
-        The new value for target_obj.attribute when the control fires.
+        The new value for target_obj.attribute when the control runs.
     """
     def __init__(self, target_obj, attribute, value):
         if target_obj is None:
@@ -107,16 +307,16 @@ class ControlAction(BaseControlAction):
     def __hash__(self):
         return id(self)
 
-    def _FireControlActionImpl(self, control_name):
+    def _RunControlActionImpl(self, control_name):
         """
         This method overrides the corresponding method from the BaseControlAction class. Here, it changes
         target_obj.attribute to the provided value.
 
-        This method should not be called directly. Use FireControlAction of the ControlAction base class instead.
+        This method should not be called directly. Use RunControlAction of the ControlAction base class instead.
         """
         target = self._target_obj_ref
         if target is None:
-            raise ValueError('target is None inside TargetAttribureControlAction::_FireControlActionImpl.' +
+            raise ValueError('target is None inside TargetAttribureControlAction::_RunControlActionImpl.' +
                              'This may be because a target_obj was added, but later the object itself was deleted.')
         if not hasattr(target, self._attribute):
             raise ValueError('attribute specified in ControlAction is not valid for targe_obj')
@@ -132,18 +332,18 @@ class ControlAction(BaseControlAction):
 class Control(object):
     """
     This is the base class for all control objects. Control objects are used to check the conditions under which a
-    ControlAction should be fired. For example, if a pump is supposed to be turned on when the simulation time
+    ControlAction should be run. For example, if a pump is supposed to be turned on when the simulation time
     reaches 6 AM, the ControlAction would be "turn the pump on", and the Control would be "when the simulation
     reaches 6 AM".
 
     From an implementation standpoint, derived Control classes implement a particular mechanism for monitoring state
-    (e.g. checking the simulation time to see if a change should be made). Then, they typically call FireControlAction
+    (e.g. checking the simulation time to see if a change should be made). Then, they typically call RunControlAction
     on a derived ControlAction class.
 
     New Control classes (classes derived from Control) must implement the following methods:
 
     - _IsControlActionRequiredImpl(self, wnm, presolve_flag)
-    - _FireControlActionImpl(self, wnm, priority)
+    - _RunControlActionImpl(self, wnm, priority)
 
     """
     def __init__(self):
@@ -190,23 +390,23 @@ class Control(object):
                                   'This method must be implemented in any '
                                   ' class derived from Control.')
 
-    def FireControlAction(self, wnm, priority):
+    def RunControlAction(self, wnm, priority):
         """
-        This method is called to fire the control action after a call to IsControlActionRequired indicates that an
+        This method is called to run the control action after a call to IsControlActionRequired indicates that an
         action is required.
 
-        Note: Derived classes should not override this method, but should override _FireControlActionImpl instead.
+        Note: Derived classes should not override this method, but should override _RunControlActionImpl instead.
 
         Parameters
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated/modified.
         priority : int
-            A priority value. The action is only fired if priority == self._priority.
+            A priority value. The action is only run if priority == self._priority.
         """
-        return self._FireControlActionImpl(wnm, priority)
+        return self._RunControlActionImpl(wnm, priority)
 
-    def _FireControlActionImpl(self, wnm, priority):
+    def _RunControlActionImpl(self, wnm, priority):
         """
         This is the method that should be overridden in derived classes to implement the action of firing the control.
 
@@ -215,38 +415,38 @@ class Control(object):
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated/modified.
         priority : int
-            A priority value. The action is only fired if priority == self._priority.
+            A priority value. The action is only run if priority == self._priority.
         """
-        raise NotImplementedError('_FireControlActionImpl is not implemented. '
+        raise NotImplementedError('_RunControlActionImpl is not implemented. '
                                   'This method must be implemented in '
                                   'derived classes of ControlAction.')
 
 
 class TimeControl(Control):
     """
-    A class for creating time controls to fire a control action at a particular 
-    time. At the specified time, control_action will be fired/activated.
+    A class for creating time controls to run a control action at a particular
+    time. At the specified time, control_action will be run/activated.
 
     Parameters
     ----------
     wnm : WaterNetworkModel
         The instance of the WaterNetworkModel class that is being simulated/modified.
 
-    fire_time : int
-        Time (in seconds) when the control_action should be fired.
+    run_at_time : int
+        Time (in seconds) when the control_action should be run.
 
     time_flag : string
         Options include SIM_TIME and SHIFTED_TIME
-        
-        * SIM_TIME indicates that the value of fire_time is in seconds since 
+
+        * SIM_TIME indicates that the value of run_at_time is in seconds since
           the start of the simulation
-        * SHIFTED_TIME indicates that the value of fire_time is shifted by the 
-          start time of the simulations. That is, fire_time is in seconds since 
+        * SHIFTED_TIME indicates that the value of run_at_time is shifted by the
+          start time of the simulations. That is, run_at_time is in seconds since
           12 AM on the first day of the simulation. Therefore, 7200 refers to 2:00 AM
           regardless of the start time of the simulation.
 
     daily_flag : bool
-        
+
         * False indicates that control will execute once when time is first encountered
         * True indicates that control will execute at the same time daily
 
@@ -264,7 +464,7 @@ class TimeControl(Control):
     In this case, pipe8 will be opened 1 hour and 52 seconds after the start of the simulation.
     """
 
-    def __init__(self, wnm, fire_time, time_flag, daily_flag, control_action):
+    def __init__(self, wnm, run_at_time, time_flag, daily_flag, control_action):
         self.name = 'blah'
 
         if isinstance(control_action._target_obj_ref,wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
@@ -274,7 +474,7 @@ class TimeControl(Control):
         else:
             self._priority = 0
 
-        self._fire_time = fire_time
+        self._run_at_time = run_at_time
         self._time_flag = time_flag
         if time_flag != 'SIM_TIME' and time_flag != 'SHIFTED_TIME':
             raise ValueError('In TimeControl::__init__, time_flag must be "SIM_TIME" or "SHIFTED_TIME"')
@@ -282,17 +482,17 @@ class TimeControl(Control):
         self._daily_flag = daily_flag
         self._control_action = control_action
 
-        if daily_flag and fire_time > 24*3600:
+        if daily_flag and run_at_time > 24*3600:
             raise ValueError('In TimeControl, a daily control was requested, however, the time passed in was not between 0 and 24*3600')
 
-        if time_flag == 'SIM_TIME' and self._fire_time < wnm.sim_time:
+        if time_flag == 'SIM_TIME' and self._run_at_time < wnm.sim_time:
             raise RuntimeError('You cannot create a time control that should be activated before the start of the simulation.')
 
-        if time_flag == 'SHIFTED_TIME' and self._fire_time < wnm.shifted_time():
-            self._fire_time += 24*3600
+        if time_flag == 'SHIFTED_TIME' and self._run_at_time < wnm.shifted_time:
+            self._run_at_time += 24*3600
 
     def __eq__(self, other):
-        if self._fire_time      == other._fire_time      and \
+        if self._run_at_time      == other._run_at_time      and \
            self.name            == other.name            and \
            self._time_flag      == other._time_flag      and \
            self._daily_flag     == other._daily_flag     and \
@@ -304,27 +504,6 @@ class TimeControl(Control):
     def __hash__(self):
         return id(self)
 
-    def to_inp_string(self):
-        link_name = self._control_action._target_obj_ref.name()
-        action = 'OPEN'
-        if self._control_action._attribute == 'status':
-            if self._control_action._value == 1:
-                action = 'OPEN'
-            else:
-                action = 'CLOSED'
-        else:
-            action = str(self._control_action._value)
-        compare = 'TIME'
-        if self._daily_flag:
-            compare = 'CLOCKTIME'
-        fire_time_hours=self._fire_time / 3600.0
-        return 'Link %s %s AT %s %s'%(link_name, action, compare, fire_time_hours)
-
-    # @classmethod
-    # def WithTarget(self, fire_time, time_flag, daily_flag, target_obj, attribute, value):
-    #     t = ControlAction(target_obj, attribute, value)
-    #     return TimeControl(fire_time, time_flag, daily_flag, t)
-
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control.
@@ -333,7 +512,7 @@ class TimeControl(Control):
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated.
-        
+
         presolve_flag : bool
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
@@ -342,15 +521,15 @@ class TimeControl(Control):
             return (False, None)
 
         if self._time_flag == 'SIM_TIME':
-            if wnm.prev_sim_time < self._fire_time and self._fire_time <= wnm.sim_time:
-                return (True, int(wnm.sim_time - self._fire_time))
+            if wnm.prev_sim_time < self._run_at_time and self._run_at_time <= wnm.sim_time:
+                return (True, int(wnm.sim_time - self._run_at_time))
         elif self._time_flag == 'SHIFTED_TIME':
-            if wnm.prev_shifted_time() < self._fire_time and self._fire_time <= wnm.shifted_time():
-                return (True, int(round(wnm.shifted_time() - self._fire_time)))
+            if wnm.prev_shifted_time < self._run_at_time and self._run_at_time <= wnm.shifted_time:
+                return (True, int(round(wnm.shifted_time - self._run_at_time)))
 
         return (False, None)
 
-    def _FireControlActionImpl(self, wnm, priority):
+    def _RunControlActionImpl(self, wnm, priority):
         """
         This implements the derived method from Control.
 
@@ -358,9 +537,9 @@ class TimeControl(Control):
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated/modified.
-        
+
         priority : int
-            A priority value. The action is only fired if priority == self._priority.
+            A priority value. The action is only run if priority == self._priority.
         """
         if self._control_action is None:
             raise ValueError('_control_action is None inside TimeControl')
@@ -368,16 +547,16 @@ class TimeControl(Control):
         if self._priority != priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._control_action.FireControlAction(self.name)
+        change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
         if self._daily_flag:
-            self._fire_time += 24*3600
+            self._run_at_time += 24*3600
         return change_flag, change_tuple, orig_value
 
 
 class ConditionalControl(Control):
     """
-    A class for creating controls that fire when a specified condition is satisfied. The control_action is
-    fired/activated when the operation evaluated on the source object/attribute and the threshold is True.
+    A class for creating controls that run when a specified condition is satisfied. The control_action is
+    run/activated when the operation evaluated on the source object/attribute and the threshold is True.
 
     Parameters
     ----------
@@ -420,7 +599,7 @@ class ConditionalControl(Control):
         self._partial_step_for_tanks = True
         self._source_obj = source[0]
         self._source_attr = source[1]
-        self._operation = operation
+        self._relation = operation
         self._control_action = control_action
         self._threshold = threshold
 
@@ -435,7 +614,7 @@ class ConditionalControl(Control):
            self._partial_step_for_tanks == other._partial_step_for_tanks and \
            self._source_obj             == other._source_obj             and \
            self._source_attr            == other._source_attr            and \
-           self._operation              == other._operation              and \
+           self._relation              == other._relation              and \
            self._control_action         == other._control_action         and \
            abs(self._threshold           - other._threshold)<1e-10:
             return True
@@ -443,7 +622,7 @@ class ConditionalControl(Control):
 
     def __hash__(self):
         return id(self)
-        
+
 
 #    def to_inp_string(self, flowunit):
 #        link_name = self._control_action._target_obj_ref.name()
@@ -457,7 +636,7 @@ class ConditionalControl(Control):
 #            action = str(self._control_action._value)
 #        target_name = self._source_obj.name()
 #        compare = 'ABOVE'
-#        if self._operation is np.less:
+#        if self._relation is np.less:
 #            compare = 'BELOW'
 #        threshold = convert('Hydraulic Head',flowunit,self._threshold-self._source_obj.elevation,False)
 #        return 'Link %s %s IF Node %s %s %s'%(link_name, action, target_name, compare, threshold)
@@ -487,9 +666,9 @@ class ConditionalControl(Control):
                 q_net = self._source_obj.prev_demand
                 delta_h = 4.0*q_net*(wnm.sim_time-wnm.prev_sim_time)/(math.pi*self._source_obj.diameter**2)
                 next_val = val+delta_h
-                if self._operation(next_val, self._threshold) and self._operation(val, self._threshold):
+                if self._relation(next_val, self._threshold) and self._relation(val, self._threshold):
                     return (False, None)
-                if self._operation(next_val, self._threshold):
+                if self._relation(next_val, self._threshold):
                     #if self._source_obj.name()=='TANK-3352':
                         #print 'threshold for tank 3352 control is ',self._threshold
 
@@ -502,14 +681,14 @@ class ConditionalControl(Control):
                     return (False, None)
             else:
                 val = getattr(self._source_obj,self._source_attr)
-                if self._operation(val, self._threshold):
+                if self._relation(val, self._threshold):
                     return (True, 0)
                 else:
                     return (False, None)
         elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='head' and wnm.sim_time==0 and self._partial_step_for_tanks:
             if presolve_flag:
                 val = getattr(self._source_obj, self._source_attr)
-                if self._operation(val, self._threshold):
+                if self._relation(val, self._threshold):
                     return (True, 0)
                 else:
                     return (False, None)
@@ -519,12 +698,12 @@ class ConditionalControl(Control):
             return (False, None)
         else:
             val = getattr(self._source_obj, self._source_attr)
-            if self._operation(val, self._threshold):
+            if self._relation(val, self._threshold):
                 return (True, 0)
             else:
                 return (False, None)
 
-    def _FireControlActionImpl(self, wnm, priority):
+    def _RunControlActionImpl(self, wnm, priority):
         """
         This implements the derived method from Control.
 
@@ -533,17 +712,17 @@ class ConditionalControl(Control):
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated/modified.
         priority : int
-            A priority value. The action is only fired if priority == self._priority.
+            A priority value. The action is only run if priority == self._priority.
         """
         if self._priority!=priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._control_action.FireControlAction(self.name)
+        change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
 class MultiConditionalControl(Control):
     """
-    A class for creating controls that fire only when a set of specified conditions are all satisfied.
+    A class for creating controls that run only when a set of specified conditions are all satisfied.
 
     Parameters
     ----------
@@ -586,7 +765,7 @@ class MultiConditionalControl(Control):
         self.name = 'blah'
         self._priority = 0
         self._source = source
-        self._operation = operation
+        self._relation = operation
         self._control_action = control_action
         self._threshold = threshold
 
@@ -605,7 +784,7 @@ class MultiConditionalControl(Control):
         if self._control_action == other._control_action and \
            self.name            == other.name            and \
            self._priority       == other._priority       and \
-           self._operation      == other._operation:
+           self._relation      == other._relation:
             for point1, point2 in zip(self._threshold, other._threshold):
                 if type(point1) == tuple:
                     if not point1 == point2:
@@ -645,7 +824,7 @@ class MultiConditionalControl(Control):
             src_obj = self._source[ndx][0]
             src_attr = self._source[ndx][1]
             src_val = getattr(src_obj, src_attr)
-            oper = self._operation[ndx]
+            oper = self._relation[ndx]
             if not isinstance(self._threshold[ndx],tuple):
                 threshold_val = self._threshold[ndx]
             else:
@@ -662,7 +841,7 @@ class MultiConditionalControl(Control):
         else:
             return (False, None)
 
-    def _FireControlActionImpl(self, wnm, priority):
+    def _RunControlActionImpl(self, wnm, priority):
         """
         This implements the derived method from Control.
 
@@ -671,12 +850,12 @@ class MultiConditionalControl(Control):
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated/modified.
         priority : int
-            A priority value. The action is only fired if priority == self._priority.
+            A priority value. The action is only run if priority == self._priority.
         """
         if self._priority!=priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._control_action.FireControlAction(self.name)
+        change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
 class _CheckValveHeadControl(Control):
@@ -687,11 +866,11 @@ class _CheckValveHeadControl(Control):
         self.name = 'blah'
         self._priority = 3
         self._cv = cv
-        self._operation = operation
+        self._relation = operation
         self._threshold = threshold
         self._control_action = control_action
-        self._start_node_name = self._cv.start_node()
-        self._end_node_name = self._cv.end_node()
+        self._start_node_name = self._cv.start_node
+        self._end_node_name = self._cv.end_node
         self._start_node = wnm.get_node(self._start_node_name)
         self._end_node = wnm.get_node(self._end_node_name)
         self._pump_A = None
@@ -711,15 +890,15 @@ class _CheckValveHeadControl(Control):
             headloss = self._end_node.head - self._start_node.head
         else:
             headloss = self._start_node.head - self._end_node.head
-        if self._operation(headloss, self._threshold):
+        if self._relation(headloss, self._threshold):
             return (True, 0)
         return (False, None)
 
-    def _FireControlActionImpl(self, wnm, priority):
+    def _RunControlActionImpl(self, wnm, priority):
         if self._priority!=priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._control_action.FireControlAction(self.name)
+        change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
 class _PRVControl(Control):
@@ -735,9 +914,9 @@ class _PRVControl(Control):
         self._close_control_action = close_control_action
         self._open_control_action = open_control_action
         self._active_control_action = active_control_action
-        self._action_to_fire = None
-        self._start_node_name = valve.start_node()
-        self._end_node_name = valve.end_node()
+        self._action_to_run = None
+        self._start_node_name = valve.start_node
+        self._end_node_name = valve.end_node
         self._start_node = wnm.get_node(self._start_node_name)
         self._end_node = wnm.get_node(self._end_node_name)
         self._resistance_coefficient = 0.0826*0.02*self._valve.diameter**(-5)*self._valve.diameter*2.0
@@ -759,32 +938,32 @@ class _PRVControl(Control):
 
         if self._valve._status == wntr.network.LinkStatus.active:
             if self._valve.flow < -self._Qtol:
-                self._action_to_fire = self._close_control_action
+                self._action_to_run = self._close_control_action
                 return (True, 0)
             Hl = self._resistance_coefficient*abs(self._valve.flow)**2
             if self._start_node.head < head_setting + Hl - self._Htol:
-                self._action_to_fire = self._open_control_action
+                self._action_to_run = self._open_control_action
                 return (True, 0)
             return (False, None)
         elif self._valve._status == wntr.network.LinkStatus.opened:
             if self._valve.flow < -self._Qtol:
-                self._action_to_fire = self._close_control_action
+                self._action_to_run = self._close_control_action
                 return (True, 0)
             Hl = self._resistance_coefficient*abs(self._valve.flow)**2
             if self._start_node.head > head_setting + Hl + self._Htol:
-                self._action_to_fire = self._active_control_action
+                self._action_to_run = self._active_control_action
                 return (True, 0)
             return (False, None)
         elif self._valve._status == wntr.network.LinkStatus.closed:
             if self._start_node.head > self._end_node.head + self._Htol and self._start_node.head < head_setting - self._Htol:
-                self._action_to_fire = self._open_control_action
+                self._action_to_run = self._open_control_action
                 return (True, 0)
             if self._start_node.head > self._end_node.head + self._Htol and self._end_node.head < head_setting - self._Htol:
-                self._action_to_fire = self._active_control_action
+                self._action_to_run = self._active_control_action
                 return (True, 0)
             return (False, None)
 
-    def _FireControlActionImpl(self, wnm, priority):
+    def _RunControlActionImpl(self, wnm, priority):
         """
         This implements the derived method from Control. Please see
         the Control class and the documentation for this class.
@@ -792,7 +971,7 @@ class _PRVControl(Control):
         if self._priority!=priority:
             return False, None, None
 
-        change_flag, change_tuple, orig_value = self._action_to_fire.FireControlAction(self.name)
+        change_flag, change_tuple, orig_value = self._action_to_run.RunControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
 class ControlLogger(object):
@@ -801,11 +980,11 @@ class ControlLogger(object):
         self.changed_attributes = {}  # obj_name: attribute
 
     def add(self, obj, attr):
-        if obj.name() in self.changed_objects:
-            self.changed_attributes[obj.name()].append(attr)
+        if obj.name in self.changed_objects:
+            self.changed_attributes[obj.name].append(attr)
         else:
-            self.changed_objects[obj.name()] = obj
-            self.changed_attributes[obj.name()] = [attr]
+            self.changed_objects[obj.name] = obj
+            self.changed_attributes[obj.name] = [attr]
 
     def reset(self):
         self.changed_objects = {}

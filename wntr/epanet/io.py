@@ -9,6 +9,7 @@ import io
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam
 from .util import LinkBaseStatus, to_si, from_si
+from wntr.network.controls import ControlCondition, OrCondition, AndCondition
 
 import datetime
 import networkx as nx
@@ -749,17 +750,17 @@ class InpFile(object):
                     logger.warning('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
                 if len(current) == 6:  # at time
                     if ':' in current[5]:
-                        fire_time = int(_str_time_to_sec(current[5]))
+                        run_at_time = int(_str_time_to_sec(current[5]))
                     else:
-                        fire_time = int(float(current[5])*3600)
-                    control_obj = wntr.network.TimeControl(wn, fire_time, 'SIM_TIME', False, action_obj)
+                        run_at_time = int(float(current[5])*3600)
+                    control_obj = wntr.network.TimeControl(wn, run_at_time, 'SIM_TIME', False, action_obj)
                     control_name = ''
                     for i in range(len(current)-1):
                         control_name = control_name + current[i]
-                    control_name = control_name + str(fire_time)
+                    control_name = control_name + str(run_at_time)
                 elif len(current) == 7:  # at clocktime
-                    fire_time = int(_clock_time_to_sec(current[5], current[6]))
-                    control_obj = wntr.network.TimeControl(wn, fire_time, 'SHIFTED_TIME', True, action_obj)
+                    run_at_time = int(_clock_time_to_sec(current[5], current[6]))
+                    control_obj = wntr.network.TimeControl(wn, run_at_time, 'SHIFTED_TIME', True, action_obj)
             wn.add_control(control_name, control_obj)
 
         BulkReactionCoeff = QualParam.BulkReactionCoeff
@@ -969,8 +970,8 @@ class InpFile(object):
             for pipe_name in lnames:
                 pipe = wn._pipes[pipe_name]
                 E = {'name': pipe_name,
-                     'node1': pipe.start_node(),
-                     'node2': pipe.end_node(),
+                     'node1': pipe.start_node,
+                     'node2': pipe.end_node,
                      'len': from_si(inp_units, pipe.length, HydParam.Length),
                      'diam': from_si(inp_units, pipe.diameter, HydParam.PipeDiameter),
                      'rough': pipe.roughness,
@@ -990,8 +991,8 @@ class InpFile(object):
             for pump_name in lnames:
                 pump = wn._pumps[pump_name]
                 E = {'name': pump_name,
-                     'node1': pump.start_node(),
-                     'node2': pump.end_node(),
+                     'node1': pump.start_node,
+                     'node2': pump.end_node,
                      'ptype': pump.info_type,
                      'params': '',
                      'com': ';'}
@@ -1012,8 +1013,8 @@ class InpFile(object):
             for valve_name in lnames:
                 valve = wn._valves[valve_name]
                 E = {'name': valve_name,
-                     'node1': valve.start_node(),
-                     'node2': valve.end_node(),
+                     'node1': valve.start_node,
+                     'node2': valve.end_node,
                      'diam': from_si(inp_units, valve.diameter, HydParam.PipeDiameter),
                      'vtype': valve.valve_type,
                      'set': valve._base_setting,
@@ -1090,10 +1091,10 @@ class InpFile(object):
             for text, all_control in wn._control_dict.items():
                 if isinstance(all_control,wntr.network.TimeControl):
                     entry = 'Link {link} {setting} AT {compare} {time:g}\n'
-                    vals = {'link': all_control._control_action._target_obj_ref.name(),
+                    vals = {'link': all_control._control_action._target_obj_ref.name,
                             'setting': 'OPEN',
                             'compare': 'TIME',
-                            'time': int(all_control._fire_time / 3600.0)}
+                            'time': int(all_control._run_at_time / 3600.0)}
                     if all_control._control_action._attribute.lower() == 'status':
                         vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
                     else:
@@ -1103,9 +1104,9 @@ class InpFile(object):
                     f.write(entry.format(**vals).encode('ascii'))
                 elif isinstance(all_control,wntr.network.ConditionalControl):
                     entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
-                    vals = {'link': all_control._control_action._target_obj_ref.name(),
+                    vals = {'link': all_control._control_action._target_obj_ref.name,
                             'setting': 'OPEN',
-                            'node': all_control._source_obj.name(),
+                            'node': all_control._source_obj.name,
                             'compare': 'above',
                             'thresh': 0.0}
                     if all_control._control_action._attribute.lower() == 'status':
@@ -1265,6 +1266,359 @@ class InpFile(object):
                     f.write('\n'.encode('ascii'))
 
             f.write('[END]\n'.encode('ascii'))
+
+
+class _EpanetCondition(ControlCondition):
+    """
+    A conditional statement to associate with a rule or control
+    """
+    def __init__(self, object_type, object_id, attribute, relation, value, model):
+        self._source_type = object_type
+        if isinstance(object_type, str):
+            object_type = object_type.upper()
+            if object_type == 'NODE':
+                self._source_type = wntr.network.Node
+            elif object_type == 'JUNCTION':
+                self._source_type = wntr.network.Junction
+            elif object_type == 'RESERVOIR':
+                self._source_type = wntr.network.Reservoir
+            elif object_type == 'TANK':
+                self._source_type = wntr.network.Tank
+            elif object_type == 'LINK':
+                self._source_type = wntr.network.Link
+            elif object_type == 'PIPE':
+                self._source_type = wntr.network.Pipe
+            elif object_type == 'PUMP':
+                self._source_type = wntr.network.Pump
+            elif object_type == 'VALVE':
+                self._source_type = wntr.network.Valve
+        self._source_obj = object_id
+        self._source_attr = self._parse_attribute(object_type, attribute)
+        self._relation = self._parse_relation(relation)
+        self._threshold = self._parse_value(value)
+        self._time = False
+        self._daily = False
+        if self._source_attr == 'clocktime':
+            self._daily = True
+            self._time = True
+        elif self._source_attr == 'time':
+            self._time = True
+            self._daily = False
+        else:
+            self._time = False
+            self._daily = False
+        if model is not None:
+            self._attach_model(model)
+
+    def evaluate(self, model=None):
+        """Evaluate the condition against the current state of the attached or passed model."""
+        if model is not None:
+            self.attach_model(model)
+        elif model is None and not self.attached:
+            raise RuntimeError('No WaterNetworkModel available for condition: %s', str(self))
+        cur_value = getattr(self._source_obj, self._source_attr)
+        thresh_value = self._threshold
+        relation = self._relation
+        if np.isnan(self._threshold):
+            relation = np.greater
+            thresh_value = 0.0
+        state = relation(cur_value, thresh_value)
+        return state
+
+    @classmethod
+    def new_from_text(cls, text):
+        """Create a new EpanetCondition from an EPANET INP file conditional clause."""
+        words = text.split()
+        if len(words) > 1 and words[0].upper() in ['TIME', 'CLOCKTIME']:
+            return cls('SYSTEM', '', words[0], '=', ' '.join(words[1:]))
+        elif len(words) == 4 and words[0].upper() == 'NODE':
+            return cls('NODE', words[1], 'FORLINK', words[2], words[3])
+        elif words[0].upper() == 'SYSTEM':
+            return cls(words[0], '', words[1], words[2], words[3])
+        elif len(words) == 5:
+            return cls(words[0], words[1], words[2], words[3], words[4])
+
+    @property
+    def attached(self):
+        """Evaluates True if a model has been attached."""
+        if self._model is not None:
+            return True
+        return False
+
+    @property
+    def source(self):
+        if self._source_attr == 'clocktime':
+            att_str = 'clock_time'
+        elif self._source_attr == 'time':
+            att_str = 'sim_time'
+        else:
+            att_str = self._source_attr
+        return (self._source_obj, att_str)
+
+    @property
+    def operation(self):
+        if np.isnan(self._threshold):
+            return np.greater
+        return self._relation
+
+    @property
+    def threshold(self):
+        if np.isnan(self._threshold):
+            return 0.0
+        return self._threshold
+
+    def _attach_model(self, model):
+        if self._source_type in [wntr.network.Node, wntr.network.Junction,
+                                 wntr.network.Reservoir, wntr.network.Tank,
+                                 'NODE', 'RESERVOIR', 'TANK', 'JUNCTION']:
+            if not isinstance(self._source_obj, wntr.network.Node):
+                if isinstance(self._source_obj, str):
+                    self._source_obj = model.get_node(self._source_obj)
+                    if self._source_attr == 'forlink':
+                        if isinstance(self._source_obj, wntr.network.Tank):
+                            self._source_attr = 'level'
+                        else:
+                            self._source_attr = 'pressure'
+                else:
+                    logger.error('Uknown Node-type object: %s %s', type(self._source_type), self._source_obj)
+                    raise RuntimeError('Failure attaching model to rule - invalid object type')
+        elif self._source_type in [wntr.network.Link, wntr.network.Pump,
+                                   wntr.network.Pipe, wntr.network.Valve,
+                                   'LINK', 'PUMP', 'PIPE', 'VALVE']:
+            if not isinstance(self._source_obj, wntr.network.Link):
+                if isinstance(self._source_obj, str):
+                    self._source_obj = model.get_link(self._source_obj)
+                else:
+                    logger.error('Uknown Link-type object: %s %s', type(self._source_type), self._source_obj)
+                    raise RuntimeError('Failure attaching model to rule - invalid object type')
+        elif self._source_type in [wntr.network.WaterNetworkModel, 'SYSTEM']:
+            self._source_obj = model
+        else:
+            logger.error('Uknown object: %s %s', type(self._source_type), self._source_obj)
+            raise RuntimeError('Failure attaching model to rule - invalid object type')
+        self._model = model
+
+
+    def __str__(self):
+        val_str = str(self._threshold)
+        rel_str = self._relation_to_str(self._relation)
+        if self._source_type == 'SYSTEM' or \
+           isinstance(self._source_type, wntr.network.WaterNetworkModel):
+            typ_str = 'SYSTEM'
+            elem_id = ''
+        elif not isinstance(self._source_type, str):
+            typ_str = str(self._source_type).split('.')[-1].replace("'","").replace('>','')
+        else:
+            typ_str = self._source_type
+        if isinstance(self._source_obj, wntr.network.WaterNetworkModel):
+            elem_id = ''
+            typ_str = 'SYSTEM'
+        elif isinstance(self._source_obj, wntr.network.Node) or isinstance(self._source_obj, wntr.network.Link):
+            elem_id = self._source_obj.name
+        else:
+            elem_id = self._source_obj
+        att_str = self._source_attr.upper()
+        if self._time:
+            val_str = self._sec_to_string(self._threshold)
+        if att_str == 'STATUS':
+            if self._threshold == 0:
+                val_str = 'CLOSED'
+            elif self._threshold == 1:
+                val_str = 'OPEN'
+            else:
+                val_str = 'ACTIVE'
+            rel_str = self._relation_to_str(self._relation, human=True)
+        if att_str in ['PRESSURE', 'LEVEL']:
+            rel_str = self._relation_to_str(self._relation, human=True)
+        return '{} {} {} {} {}'.format(typ_str, elem_id, att_str, rel_str, val_str)
+
+    @classmethod
+    def _parse_relation(cls, rel):
+        """
+        Convert a string to a numpy relationship.
+        """
+        if isinstance(rel, np.ufunc):
+            return rel
+        elif not isinstance(rel, str):
+            return rel
+        rel = rel.upper().strip()
+        if rel == '=' or rel == 'IS':
+            return np.equal
+        elif rel == '<>' or rel == 'NOT':
+            return np.not_equal
+        elif rel == '<' or rel == 'BELOW':
+            return np.less
+        elif rel == '>' or rel == 'ABOVE':
+            return np.greater
+        elif rel == '<=':
+            return np.less_equal
+        elif rel == '>=':
+            return np.greater_equal
+        else:
+            raise ValueError('Unknown relation "%s"'%rel)
+
+    @classmethod
+    def _relation_to_str(cls, rel, human=False):
+        """
+        Convert a relation/comparison to a string.
+        """
+        if rel == np.equal:
+            if human:
+                return 'IS'
+            return '='
+        elif rel == np.not_equal:
+            if human:
+                return 'NOT'
+            return '<>'
+        elif rel == np.less:
+            if human:
+                return 'BELOW'
+            return '<'
+        elif rel == np.greater:
+            if human:
+                return 'ABOVE'
+            return '>'
+        elif rel == np.less_equal:
+            return '<='
+        elif rel == np.greater_equal:
+            return '>='
+        else:
+            return str(rel)
+
+    @classmethod
+    def _sec_to_string(cls, value, daily=False):
+        sec = value
+        hours = int(sec/3600.)
+        sec -= hours*3600
+        mm = int(sec/60.)
+        sec -= mm*60
+        if daily:
+            if hours >= 12:
+                pm = 'PM'
+            elif hours == 0:
+                pm = 'AM'
+                hours = 12
+            else:
+                pm = 'AM'
+            return '{}:{:02d}:{:02d} {}'.format(hours, mm, int(sec), pm)
+        return '{}:{:02d}:{:02d}'.format(hours, mm, int(sec))
+
+    @classmethod
+    def _parse_attribute(cls, object_type, attribute):
+        """
+        Get the appropriate water-network-model attribute.
+
+        Valid attribute to force dynamic interpretation of simple control:
+            - ForLink (Tank -> Level, Junction -> Pressure)
+
+        Valid attributes for a SYSTEM rule:
+            - Demand
+            - Time
+            - ClockTime
+
+        Valid attributes for Node objects:
+            - Demand
+            - Head
+            - Pressure
+
+        Additional attributes for Tanks:
+            - Level
+            - FillTime (hours needed to fill)
+            - DrainTime (hours needed to drain)
+
+        Valid attributes for Link objects:
+            - Flow
+            - Status (open, closed, active)
+            - Setting (pump speed or valve setting)
+
+        """
+        if isinstance(object_type, str):
+            object_type = object_type.upper()
+        else:
+            object_type = str(object_type.__class__).split('.')[-1].upper()
+        attribute = attribute.upper()
+        if attribute == 'FORLINK':
+            return 'forlink'
+        if object_type in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
+            if attribute in ['DEMAND', 'HEAD']:
+                return attribute.lower()
+            elif attribute in ['PRESSURE']:
+                logger.warning('Node-pressure controls are not available in WNTRSimulator')
+                return attribute.lower()
+            elif object_type == 'TANK':
+                if attribute in ['LEVEL', 'FILLTIME', 'DRAINTIME']:
+                    # valid attribute
+                    logger.warning('Tank-specific controls not implemented in WNTRSimulator')
+                    return attribute.lower()
+                else:
+                    logger.error('Unknown Tank attribute: %s', attribute)
+                    raise RuntimeError('Failure creating rule - invalid conditional statement')
+            else:
+                logger.error('Unknown Node-type attribute: %s', attribute)
+                raise RuntimeError('Failure creating rule - invalid conditional statement')
+        elif object_type in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
+            if attribute in ['FLOW', 'STATUS', 'SETTING']:
+                return attribute.lower()
+            else:
+                logger.error('Unknown Link-type attribute: %s', attribute)
+                raise RuntimeError('Failure creating rule - invalid conditional statement')
+        elif object_type in ['SYSTEM']:
+            if attribute in ['DEMAND', 'TIME', 'CLOCKTIME']:
+                return attribute.lower()
+            else:
+                logger.error('Unknown System attribute: %s', attribute)
+                raise RuntimeError('Failure creating rule - invalid conditional statement')
+        else:
+            logger.error('Unknown object: %s', object_type)
+            raise RuntimeError('Failure creating rule - invalid conditional statement')
+
+    @classmethod
+    def _parse_value(cls, value):
+        try:
+            v = float(value)
+            return v
+        except ValueError:
+            value = value.upper()
+            if value == 'CLOSED':
+                return 0
+            if value == 'OPEN':
+                return 1
+            if value == 'ACTIVE':
+                return np.nan
+            PM = 0
+            words = value.split()
+            if len(words) > 1:
+                if words[1] == 'PM':
+                    PM = 86400 / 2
+            hms = words[0].split(':')
+            v = 0
+            if len(hms) > 2:
+                v += int(hms[2])
+            if len(hms) > 1:
+                v += int(hms[1])*60
+            if len(hms) > 0:
+                v += int(hms[0])*3600
+            if int(hms[0]) <= 12:
+                v += PM
+            return v
+
+    @property
+    def wnm(self):
+        return self._model
+
+    @property
+    def run_at_time(self):
+        return self._threshold
+
+    @property
+    def time_flag(self):
+        if self._daily:
+            return 'SHIFTED_TIME'
+        return 'SIM_TIME'
+
+    @property
+    def daily_flag(self):
+        return self._daily
 
 
 #class HydFile(object):

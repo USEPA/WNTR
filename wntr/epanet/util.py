@@ -49,10 +49,11 @@ class FlowUnits(enum.Enum):
     --------
     >>> from wntr.epanet import FlowUnits
     >>> FlowUnits.GPM
-    <FlowUnits.GPM: 1>
+    <FlowUnits.GPM: (1, 6.30901964e-05)>
 
     Units can be converted to the EPANET integer values by casting as an ``int`` and can be
-    converted to a string by accessing the ``name`` property.
+    converted to a string by accessing the ``name`` property. The factor to convert to SI units
+    is accessed using the ``factor`` property.
 
     >>> FlowUnits.LPS.name
     'LPS'
@@ -63,9 +64,9 @@ class FlowUnits(enum.Enum):
     file can be used to get a ``FlowUnits`` object.
 
     >>> FlowUnits(4)
-    <FlowUnits.AFD: 4>
+    <FlowUnits.AFD: (4, 0.014276410185185185)>
     >>> FlowUnits['CMD']
-    <FlowUnits.CMD: 9>
+    <FlowUnits.CMD: (9, 1.1574074074074073e-05)>
 
     Units can be checked for metric or US customary status using the ``is_traditional`` or
     ``is_metric`` options.
@@ -330,20 +331,6 @@ class QualParam(enum.Enum):
         -------
         float
             The data values converted to EPANET appropriate units, based on the flow units.
-
-        Examples
-        --------
-        The following examples show conversion from EPANET flow and mass units from SI units.
-        Convert concentration of 0.015 kg / cubic meter back to EPANET units (mg/L)
-
-        >>> QualParam.Concentration.from_si(FlowUnits.MGD, 0.015)
-        15.0
-
-        Convert a bulk reaction coefficient for a first order reaction back into per-day.
-
-        >>> QualParam.BulkReactionCoeff.from_si(FlowUnits.AFD, 1.1574e-05, MassUnits.ug, reaction_order=1)
-        0.9999936
-
 
         """
         data_type = type(data)

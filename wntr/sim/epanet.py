@@ -20,7 +20,7 @@ class EpanetSimulator(WaterNetworkSimulator):
     """
     EPANET simulator class.
     The EPANET simulator uses the EPANET toolkit and dll.
-    
+
     Parameters
     ----------
     wn : WaterNetworkModel object
@@ -28,7 +28,7 @@ class EpanetSimulator(WaterNetworkSimulator):
     """
 
     def __init__(self, wn):
-        
+
         WaterNetworkSimulator.__init__(self, wn)
 
         # Timing
@@ -40,7 +40,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         """
         Run an extended period simulation.
         The EpanetSimulator uses an INP file written from the water network model.
-        
+
         Parameters
         ----------
         WQ : wntr.scenario.Waterquality object (optional)
@@ -48,14 +48,14 @@ class EpanetSimulator(WaterNetworkSimulator):
 
         convert_units : bool (optional)
             Convert results to SI units, default = True
-            
+
         file_prefix : string (optional)
             INP and RPT file prefix, default = 'tmp'
         """
         # Write a new inp file from the water network model
         #self._wn.write_inpfile(file_prefix + '.inp')
         #self._wn.name = file_prefix + '.inp'
-        
+
         start_run_sim_time = time.time()
         logger.debug('Starting run')
         # Create enData
@@ -77,8 +77,8 @@ class EpanetSimulator(WaterNetworkSimulator):
         results.error_code = 0
 
         ntimes = len(results.time)
-        nnodes = self._wn.num_nodes()
-        nlinks = self._wn.num_links()
+        nnodes = self._wn.num_nodes
+        nlinks = self._wn.num_links
         node_names = [name for name, node in self._wn.nodes()]
         link_names = [name for name, link in self._wn.links()]
 

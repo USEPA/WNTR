@@ -1,7 +1,7 @@
 """
-The wntr.network.graph module includes methods to represent a water network 
-model as a MultiDiGraph, compute topographic metrics on the graph, and plot the 
-water network model. 
+The wntr.network.graph module includes methods to represent a water network
+model as a MultiDiGraph, compute topographic metrics on the graph, and plot the
+water network model.
 """
 import networkx as nx
 import numpy as np
@@ -21,10 +21,10 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
     """
 
     def weight_graph(self, node_attribute={}, link_attribute={}):
-        """ 
+        """
         Return a weighted graph based on node and link attributes.
         The weighted graph changes the direction of the original link if the weight is negative.
-        
+
         Parameters
         ----------
         G : graph
@@ -40,7 +40,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         G : weighted graph
             A networkx weighted graph
         """
-        
+
         for node_name in self.nodes():
             try:
                 value = node_attribute[node_name]
@@ -65,7 +65,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
                     pass
 
     def terminal_nodes(self):
-        """ 
+        """
         Get all nodes with degree 1
 
         Parameters
@@ -85,9 +85,9 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return terminal_nodes
 
     def bridges(self):
-        """ 
+        """
         Get bridge links. Uses an undirected graph.
-        
+
         Parameters
         ----------
         G : graph
@@ -111,9 +111,9 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return bridges
 
     def central_point_dominance(self):
-        """ 
+        """
         Compute central point dominance.
-            
+
         Returns
         -------
         cpd : float
@@ -126,7 +126,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return cpd
 
     def spectral_gap(self):
-        """ 
+        """
         Spectral gap. Difference in the first and second eigenvalue of
         the adj matrix
 
@@ -142,7 +142,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return spectral_gap.real
 
     def algebraic_connectivity(self):
-        """ 
+        """
         Algebraic connectivity. Second smallest eigenvalue of the normalized
         Laplacian matrix of a network. Uses an undirected graph.
 
@@ -158,7 +158,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return alg_con
 
     def critical_ratio_defrag(self):
-        """ 
+        """
         Critical ratio of defragmentation.
 
         Returns
@@ -329,7 +329,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     -----
     For more network draw options, see nx.draw_networkx
     """
-    
+
     if plt_fig is None:
         plt.figure(facecolor='w', edgecolor='k')
 
@@ -378,13 +378,13 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         attr = {}
         for link_name, value in link_attribute.items():
             link = wn.get_link(link_name)
-            attr[(link.start_node(), link.end_node(), link_name)] = value
+            attr[(link.start_node, link.end_node, link_name)] = value
         link_attribute = attr
     if type(link_width) is dict:
         attr = {}
         for link_name, value in link_width.items():
             link = wn.get_link(link_name)
-            attr[(link.start_node(), link.end_node(), link_name)] = value
+            attr[(link.start_node, link.end_node, link_name)] = value
         link_width = attr
 
     # Define link list, color, and colormap

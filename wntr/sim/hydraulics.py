@@ -18,14 +18,14 @@ class HydraulicModel(object):
     ----------
     wn : WaterNetworkModel object
         Water network model
-        
+
     pressure_driven: bool (optional)
         Specifies whether the simulation will be demand-driven or
         pressure-driven, default = False
     """
-    
+
     def __init__(self, wn, pressure_driven=False):
-        
+
         self._wn = wn
         self.pressure_driven = pressure_driven
 
@@ -36,15 +36,15 @@ class HydraulicModel(object):
         self._initialize_name_id_maps()
 
         # Number of nodes and links
-        self.num_nodes = self._wn.num_nodes()
-        self.num_links = self._wn.num_links()
+        self.num_nodes = self._wn.num_nodes
+        self.num_links = self._wn.num_links
         self.num_leaks = len(self._leak_ids)
-        self.num_junctions = self._wn.num_junctions()
-        self.num_tanks = self._wn.num_tanks()
-        self.num_reservoirs = self._wn.num_reservoirs()
-        self.num_pipes = self._wn.num_pipes()
-        self.num_pumps = self._wn.num_pumps()
-        self.num_valves = self._wn.num_valves()
+        self.num_junctions = self._wn.num_junctions
+        self.num_tanks = self._wn.num_tanks
+        self.num_reservoirs = self._wn.num_reservoirs
+        self.num_pipes = self._wn.num_pipes
+        self.num_pumps = self._wn.num_pumps
+        self.num_valves = self._wn.num_valves
 
         # Initialize residuals
         # Equations will be ordered:
@@ -169,7 +169,7 @@ class HydraulicModel(object):
         # found in WaterNetworkModel.py. The index is the node/link id.
         self.node_types = []
         self.link_types = []
-        # Dictionary indicating whether or not the leak is active. False means inactive, True means active. 
+        # Dictionary indicating whether or not the leak is active. False means inactive, True means active.
         self.leak_status = {}
         # Dictionary indicating whether or not the node could have a leak; True if node._leak is True;
         # False if node._leak is False
@@ -292,9 +292,9 @@ class HydraulicModel(object):
             for link_name in connected_links:
                 link = self._wn.get_link(link_name)
                 link_id = self._link_name_to_id[link_name]
-                if link.start_node() == node_name:
+                if link.start_node == node_name:
                     self.out_link_ids_for_nodes[node_id].append(link_id)
-                elif link.end_node() == node_name:
+                elif link.end_node == node_name:
                     self.in_link_ids_for_nodes[node_id].append(link_id)
                 else:
                     raise RuntimeError('Node is neither start nor end node.')
@@ -314,9 +314,9 @@ class HydraulicModel(object):
             for link_name in connected_links:
                 link = self._wn.get_link(link_name)
                 link_id = self._link_name_to_id[link_name]
-                if link.start_node() == node_name:
+                if link.start_node == node_name:
                     self.out_link_ids_for_nodes[node_id].append(link_id)
-                elif link.end_node() == node_name:
+                elif link.end_node == node_name:
                     self.in_link_ids_for_nodes[node_id].append(link_id)
                 else:
                     raise RuntimeError('Node is neither start nor end node.')
@@ -332,9 +332,9 @@ class HydraulicModel(object):
             for link_name in connected_links:
                 link = self._wn.get_link(link_name)
                 link_id = self._link_name_to_id[link_name]
-                if link.start_node() == node_name:
+                if link.start_node == node_name:
                     self.out_link_ids_for_nodes[node_id].append(link_id)
-                elif link.end_node() == node_name:
+                elif link.end_node == node_name:
                     self.in_link_ids_for_nodes[node_id].append(link_id)
                 else:
                     raise RuntimeError('Node is neither start nor end node.')
@@ -353,9 +353,9 @@ class HydraulicModel(object):
 
         for link_name, link in self._wn.links():
             link_id = self._link_name_to_id[link_name]
-            start_node_name = link.start_node()
+            start_node_name = link.start_node
             start_node_id = self._node_name_to_id[start_node_name]
-            end_node_name = link.end_node()
+            end_node_name = link.end_node
             end_node_id = self._node_name_to_id[end_node_name]
             self.link_start_nodes[link_id] = start_node_id
             self.link_end_nodes[link_id] = end_node_id
@@ -586,7 +586,7 @@ class HydraulicModel(object):
         ----------
         x : numpy array
             values of heads, demands, flows, and leak flowrates
-            
+
         Returns
         -------
         residuals: numpy array
@@ -1148,8 +1148,8 @@ class HydraulicModel(object):
                 if flow[link_id]>self.max_pump_flows[link_id]:
                     link_name = self._link_id_to_name[link_id]
                     link = self._wn.get_link(link_name)
-                    start_node_name = link.start_node()
-                    end_node_name = link.end_node()
+                    start_node_name = link.start_node
+                    end_node_name = link.end_node
                     start_node_id = self._node_name_to_id[start_node_name]
                     end_node_id = self._node_name_to_id[end_node_name]
                     start_head = head[start_node_id]
@@ -1446,7 +1446,7 @@ class HydraulicModel(object):
         q_bar = (self.pump_m/(-B*C))**(1.0/(C-1.0))
         h_bar = A - B*q_bar**C
         return q_bar, h_bar
-        
+
     def print_jacobian(self, jacobian):
         #np.set_printoptions(threshold='nan')
         #print jacobian.toarray()

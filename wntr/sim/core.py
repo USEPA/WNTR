@@ -23,9 +23,9 @@ class WaterNetworkSimulator(object):
         Specifies whether the simulation will be demand-driven or
         pressure-driven, default = False
     """
-        
+
     def __init__(self, wn=None, pressure_driven=False):
-        
+
         self._wn = wn
         self.pressure_driven = pressure_driven
 
@@ -107,10 +107,10 @@ class WaterNetworkSimulator(object):
         else:
             raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, reservoir, or leak.')
 
-            
+
 class WNTRSimulator(WaterNetworkSimulator):
     """
-    WNTR simulator class.  
+    WNTR simulator class.
     The WNTR simulator uses a custom newton solver and linear solvers from scipy.sparse.
 
     Parameters
@@ -124,7 +124,7 @@ class WNTRSimulator(WaterNetworkSimulator):
     """
 
     def __init__(self, wn, pressure_driven=False):
-    
+
         super(WNTRSimulator, self).__init__(wn, pressure_driven)
         self._internal_graph = None
         self._control_log = None
@@ -145,18 +145,18 @@ class WNTRSimulator(WaterNetworkSimulator):
         ----------
         solver_options: dict
             Solver options are specified using the following dictionary keys:
-            
+
             * MAXITER: the maximum number of iterations for each hydraulic solve (each timestep and trial) (default = 100)
             * TOL: tolerance for the hydraulic equations (default = 1e-6)
             * BT_RHO: the fraction by which the step length is reduced at each iteration of the line search (default = 0.5)
             * BT_MAXITER: the maximum number of iterations for each line search (default = 20)
             * BACKTRACKING: whether or not to use a line search (default = True)
             * BT_START_ITER: the newton iteration at which a line search should start being used (default = 2)
-        
+
         convergence_error: bool (optional)
-            If convergence_error is True, an error will be raised if the 
-            simulation does not converge. If convergence_error is False, 
-            a warning will be issued and results.error_code will be set to 2 
+            If convergence_error is True, an error will be raised if the
+            simulation does not converge. If convergence_error is False,
+            a warning will be issued and results.error_code will be set to 2
             if the simulation does not converge.  Default = True.
         """
 
@@ -225,7 +225,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                 last_backup_time = np.inf
                 while True:
                     backup_time, controls_to_activate = self._check_controls(presolve=True,last_backup_time=last_backup_time)
-                    changes_made_flag = self._fire_controls(controls_to_activate)
+                    changes_made_flag = self._run_controls(controls_to_activate)
                     if changes_made_flag:
                         self._wn.sim_time -= backup_time
                         break
@@ -274,7 +274,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             if resolve or solver_status==0:
                 trial += 1
                 all_controls_to_activate = controls_to_activate+resolve_controls_to_activate
-                changes_made_flag = self._fire_controls(all_controls_to_activate)
+                changes_made_flag = self._run_controls(all_controls_to_activate)
                 if changes_made_flag:
                     if trial > max_trials:
                         if convergence_error:
@@ -355,33 +355,33 @@ class WNTRSimulator(WaterNetworkSimulator):
                     resolve_controls_to_activate.append(i)
             return resolve, resolve_controls_to_activate
 
-    def _fire_controls(self, controls_to_activate):
+    def _run_controls(self, controls_to_activate):
         changes_made = False
         change_dict = {}
         for i in controls_to_activate:
             control = self._controls[i]
-            change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 0)
+            change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 0)
             if change_flag:
                 if change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
-            change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 1)
+            change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 1)
             if change_flag:
                 if change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
-            change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 2)
+            change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 2)
             if change_flag:
                 if change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
-            change_flag, change_tuple, orig_value = control.FireControlAction(self._wn, 3)
+            change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 3)
             if change_flag:
                 if change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
@@ -396,7 +396,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             if orig_value!=getattr(change_tuple[0],change_tuple[1]):
                 changes_made = True
                 self._control_log.add(change_tuple[0],change_tuple[1])
-                logger.debug('setting {0} {1} to {2} because of control {3}'.format(change_tuple[0].name(),change_tuple[1],getattr(change_tuple[0],change_tuple[1]),control_name))
+                logger.debug('setting {0} {1} to {2} because of control {3}'.format(change_tuple[0].name,change_tuple[1],getattr(change_tuple[0],change_tuple[1]),control_name))
 
         self._update_internal_graph()
 
@@ -414,13 +414,13 @@ class WNTRSimulator(WaterNetworkSimulator):
     def _initialize_internal_graph(self):
         for link_name, link in self._wn.links(wntr.network.Pipe):
             if link.status == wntr.network.LinkStatus.closed:
-                self._internal_graph.remove_edge(link.start_node(), link.end_node(), key=link_name)
+                self._internal_graph.remove_edge(link.start_node, link.end_node, key=link_name)
         for link_name, link in self._wn.links(wntr.network.Pump):
             if link.status == wntr.network.LinkStatus.closed or link._cv_status == wntr.network.LinkStatus.closed:
-                self._internal_graph.remove_edge(link.start_node(), link.end_node(), key=link_name)
+                self._internal_graph.remove_edge(link.start_node, link.end_node, key=link_name)
         for link_name, link in self._wn.links(wntr.network.Valve):
             if link.status == wntr.network.LinkStatus.closed or link._status == wntr.network.LinkStatus.closed:
-                self._internal_graph.remove_edge(link.start_node(), link.end_node(), key=link_name)
+                self._internal_graph.remove_edge(link.start_node, link.end_node, key=link_name)
 
     def _update_internal_graph(self):
         for obj_name, obj in self._control_log.changed_objects.items():
@@ -428,45 +428,45 @@ class WNTRSimulator(WaterNetworkSimulator):
             if type(obj) == wntr.network.Pipe:
                 if 'status' in changed_attrs:
                     if getattr(obj, 'status') == wntr.network.LinkStatus.opened:
-                        self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                        self._internal_graph.add_edge(obj.start_node, obj.end_node, key=obj_name)
                     elif getattr(obj, 'status') == wntr.network.LinkStatus.closed:
-                        self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                        self._internal_graph.remove_edge(obj.start_node, obj.end_node, key=obj_name)
                     else:
                         raise RuntimeError('Pipe status not recognized.')
             elif type(obj) == wntr.network.Pump:
                 if 'status' in changed_attrs and '_cv_status' in changed_attrs:
                     if obj.status == wntr.network.LinkStatus.closed and obj._cv_status == wntr.network.LinkStatus.closed:
-                        self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                        self._internal_graph.remove_edge(obj.start_node, obj.end_node, key=obj_name)
                     elif obj.status == wntr.network.LinkStatus.opened and obj._cv_status == wntr.network.LinkStatus.opened:
-                        self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                        self._internal_graph.add_edge(obj.start_node, obj.end_node, key=obj_name)
                     else:
                         pass
                 elif 'status' in changed_attrs:
                     if obj.status == wntr.network.LinkStatus.closed:
                         if obj._cv_status == wntr.network.LinkStatus.opened:
-                            self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                            self._internal_graph.remove_edge(obj.start_node, obj.end_node, key=obj_name)
                     elif obj.status == wntr.network.LinkStatus.opened:
                         if obj._cv_status == wntr.network.LinkStatus.opened:
-                            self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                            self._internal_graph.add_edge(obj.start_node, obj.end_node, key=obj_name)
                 elif '_cv_status' in changed_attrs:
                     if obj._cv_status == wntr.network.LinkStatus.closed:
                         if obj.status == wntr.network.LinkStatus.opened:
-                            self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                            self._internal_graph.remove_edge(obj.start_node, obj.end_node, key=obj_name)
                     elif obj._cv_status == wntr.network.LinkStatus.opened:
                         if obj.status == wntr.network.LinkStatus.opened:
-                            self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                            self._internal_graph.add_edge(obj.start_node, obj.end_node, key=obj_name)
             elif type(obj) == wntr.network.Valve:
                 if ((obj.status == wntr.network.LinkStatus.opened or
                              obj.status == wntr.network.LinkStatus.active) and
                         (obj._status == wntr.network.LinkStatus.opened or
                                  obj._status == wntr.network.LinkStatus.active)):
-                    self._internal_graph.add_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                    self._internal_graph.add_edge(obj.start_node, obj.end_node, key=obj_name)
                 elif obj.status == wntr.network.LinkStatus.closed:
                     if obj_name in [k for i,j,k in self._internal_graph.edges_iter(keys=True)]:
-                        self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                        self._internal_graph.remove_edge(obj.start_node, obj.end_node, key=obj_name)
                 elif obj.status == wntr.network.LinkStatus.active and obj._status == wntr.network.LinkStatus.closed:
                     if obj_name in [k for i, j, k in self._internal_graph.edges_iter(keys=True)]:
-                        self._internal_graph.remove_edge(obj.start_node(), obj.end_node(), key=obj_name)
+                        self._internal_graph.remove_edge(obj.start_node, obj.end_node, key=obj_name)
 
     def _get_isolated_junctions_and_links(self):
 
@@ -489,7 +489,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         starting_recursion_limit = sys.getrecursionlimit()
         sys.setrecursionlimit(50000)
         G = self._internal_graph
-        node_set = set(self._wn.node_name_list())
+        node_set = set(self._wn.node_name_list)
 
         def grab_group(node_name):
             node_set.remove(node_name)

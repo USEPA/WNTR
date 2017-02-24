@@ -69,7 +69,7 @@ Issues to be aware of:
      it and the model doesn't know it. I don't know how to solve that
      problem yet.
 
-2. Infeasible problems due to pumps: 
+2. Infeasible problems due to pumps:
      Orinially, we were seeing ampl evaluation errors for pumps
      becuase the first or second derivative is undefined when q = 0
      (for some pumps - it depends on the particular pump curve). We
@@ -105,7 +105,7 @@ Issues to be aware of:
 """
 
 """
-Class for keeping approximation functions in a single place 
+Class for keeping approximation functions in a single place
 and avoid code duplications. Should be located in a better place
 This is just a temporal implementation
 """
@@ -168,7 +168,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         ----------
         wn : WaterNetwork object
 
-        pressure_dependent: bool 
+        pressure_dependent: bool
             Specifies whether the simulation will be demand-driven or
             pressure-driven. True means the simulation will be
             pressure-driven.
@@ -823,8 +823,8 @@ class PyomoSimulator(WaterNetworkSimulator):
             pipe = wn.get_link(l)
             pipe_resistance_coeff = self._Hw_k * (pipe.roughness ** (-1.852)) * (
             pipe.diameter ** (-4.871)) * pipe.length  # Hazen-Williams
-            start_node = pipe.start_node()
-            end_node = pipe.end_node()
+            start_node = pipe.start_node
+            end_node = pipe.end_node
             if l in links_closed:
                 pass
             else:
@@ -841,8 +841,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Head gain provided by the pump is implemented as negative headloss
         for l in model.pumps:
             pump = wn.get_link(l)
-            start_node = pump.start_node()
-            end_node = pump.end_node()
+            start_node = pump.start_node
+            end_node = pump.end_node
             if l not in links_closed:
                 if l in pumps_closed_by_outage:
                     # replace pump by pipe of length 10m, diameter 1m, and roughness coefficient of 200
@@ -979,7 +979,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         else:
             self._initialize_simulation(fixed_demands)
 
-        # Create results object and load general simulation options. 
+        # Create results object and load general simulation options.
         results = NetResults()
         results.time = np.arange(0, self._sim_duration_sec + self._report_step_sec, self._report_step_sec)
 
@@ -1116,7 +1116,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 self.solve_step[t] += end_solve_step - start_solve_step
             instance.load(pyomo_results)
 
-            # Post-solve controls 
+            # Post-solve controls
             #
             # These controls depend on the current timestep, and the
             # current timestep needs resolved if they are activated.
@@ -1127,7 +1127,7 @@ class PyomoSimulator(WaterNetworkSimulator):
             self._raise_warning_for_drain_to_reservoir(instance)
 
             # Combine the sets of closed links into new_links_closed
-            # This is used for comparison with links_closed to see if 
+            # This is used for comparison with links_closed to see if
             # the timestep needs to be resolved.
             new_links_closed = links_closed_by_controls.union(
                 links_closed_by_tank_controls.union(
@@ -1175,8 +1175,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         ######## END OF MAIN SIMULATION LOOP ##########
 
         ntimes = len(results.time)
-        nnodes = self._wn.num_nodes()
-        nlinks = self._wn.num_links()
+        nnodes = self._wn.num_nodes
+        nlinks = self._wn.num_links
         node_names = [name for name, node in self._wn.nodes()]
         link_names = [name for name, link in self._wn.links()]
 
@@ -1224,8 +1224,8 @@ class PyomoSimulator(WaterNetworkSimulator):
     def _add_valve_constraints(self, model):
         for l in model.valves:
             valve = self._wn.get_link(l)
-            start_node = valve.start_node()
-            end_node = valve.end_node()
+            start_node = valve.start_node
+            end_node = valve.end_node
             pressure_setting = valve.base_setting
             status = self._valve_status[l]
             if status == 'CLOSED':
@@ -1336,7 +1336,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 raise RuntimeError('This appears to be a bug. Please report this error tot he developers.')
 
         # Check the conditional controls. If the conditional controls
-        # say that a pipe should be opened or closed, it overrides the 
+        # say that a pipe should be opened or closed, it overrides the
         # time controls.
 
         # Conditional controls are based on the results from the previous
@@ -1350,7 +1350,7 @@ class PyomoSimulator(WaterNetworkSimulator):
 
                 # Tank levels are calculated from the flow rates of the previous timestep. Therefore,
                 # if a conditional control is based on a tank level, then we calculate the tank level
-                # before solving the current timestep. If the threshold will be crossed, then we open 
+                # before solving the current timestep. If the threshold will be crossed, then we open
                 # or close the specified links.
 
                 # If the conditional control is based on a junction pressure, then we open or close
@@ -1437,10 +1437,10 @@ class PyomoSimulator(WaterNetworkSimulator):
         If the tank head goes below min_head, then close all links
         connected to the tank except check valves and pumps that can
         only allow flow into the tank.
-        
+
         If the tank head goes above mind_head, open all the links
         connected to the tank.
-        
+
         Tank levels, are calculated from the flow rates of the
         previous timestep, so this method uses the tank level for the
         next timestep.
@@ -1465,7 +1465,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                         raise NotImplementedError('Placing valves directly next to tanks is not yet supported.' +
                                                   'Try placing a dummy pipe and junction between the tank and valve.')
                     if isinstance(link, Pump) or link.get_base_status() == LinkStatus.cv:
-                        if link.end_node() == tank_name:
+                        if link.end_node == tank_name:
                             continue
                         else:
                             links_closed_by_tank_controls.add(link_name)
@@ -1498,8 +1498,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                         if instance.head[node_name].value + self._Htol <= instance.head[tank_name].value:
                             links_closed_by_tank_controls.add(link_name)
                         link = self._wn.get_link(link_name)
-                        start_node_name = link.start_node()
-                        end_node_name = link.end_node()
+                        start_node_name = link.start_node
+                        end_node_name = link.end_node
                         if start_node_name == tank_name:
                             if instance.flow[link_name].value >= 0.0:
                                 links_closed_by_tank_controls.add(link_name)
@@ -1515,9 +1515,9 @@ class PyomoSimulator(WaterNetworkSimulator):
         tank = self._wn.get_node(tank_name)
         for l in self._wn.get_links_for_node(tank_name):
             link = self._wn.get_link(l)
-            if link.start_node() == tank_name:
+            if link.start_node == tank_name:
                 tank_net_inflow -= instance['flow'][l]
-            elif link.end_node() == tank_name:
+            elif link.end_node == tank_name:
                 tank_net_inflow += instance['flow'][l]
             else:
                 raise RuntimeError('Node link is neither start nor end node.')
@@ -1546,9 +1546,9 @@ class PyomoSimulator(WaterNetworkSimulator):
             status = self._valve_status[valve_name]
             valve = self._wn.get_link(valve_name)
             pressure_setting = valve.base_setting
-            start_node = valve.start_node()
+            start_node = valve.start_node
             start_node_elevation = self._wn.get_node(start_node).elevation
-            end_node = valve.end_node()
+            end_node = valve.end_node
 
             head_sp = pressure_setting + start_node_elevation
             if status == 'ACTIVE':
@@ -1587,8 +1587,8 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Also, treat HEAD pumps as check valves because the lower bound on the flow rate is not set to 0.0
         for pipe_name in self._wn._check_valves:
             pipe = self._wn.get_link(pipe_name)
-            start_node = pipe.start_node()
-            end_node = pipe.end_node()
+            start_node = pipe.start_node
+            end_node = pipe.end_node
             headloss = instance.head[start_node].value - instance.head[end_node].value
             if abs(headloss) > self._Htol:
                 if headloss < -self._Htol:
@@ -1601,8 +1601,8 @@ class PyomoSimulator(WaterNetworkSimulator):
                 closed_check_valves.add(pipe_name)
         for pump_name, pump in self._wn.links(Pump):
             if pump.info_type == 'HEAD':
-                start_node = pump.start_node()
-                end_node = pump.end_node()
+                start_node = pump.start_node
+                end_node = pump.end_node
                 A, B, C = pump.get_head_curve_coefficients()
                 headloss = instance.head[start_node].value + A - instance.head[end_node].value
                 if abs(headloss) > self._Htol / 10.0:
@@ -1618,7 +1618,7 @@ class PyomoSimulator(WaterNetworkSimulator):
     def _close_low_suction_pressure_pumps(self, instance, pumps_closed_by_low_suction_pressure, pumps_closed_by_outage):
         for pump_name in instance.pumps:
             pump = self._wn.get_link(pump_name)
-            start_node_name = pump.start_node()
+            start_node_name = pump.start_node
             start_node = self._wn.get_node(start_node_name)
             if isinstance(start_node, Reservoir):
                 continue
@@ -1654,8 +1654,8 @@ class PyomoSimulator(WaterNetworkSimulator):
 
         for link_name, reservoir_name in self._reservoir_links.items():
             link = self._wn.get_link(link_name)
-            start_node_name = link.start_node()
-            end_node_name = link.end_node()
+            start_node_name = link.start_node
+            end_node_name = link.end_node
 
             if start_node_name == reservoir_name:
                 if instance.flow[link_name].value <= -self._Qtol:
@@ -1680,7 +1680,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         a variable that does not appear in any constraints and Ipopt
         throws a too few degrees of freedom error. To fix this
         problem, we added the _check_for_isolated_junctions
-        method. 
+        method.
         """
 
         for junction_name in instance.junctions:

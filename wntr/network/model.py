@@ -1,5 +1,5 @@
 """
-The wntr.network.model module includes methods to define a water network 
+The wntr.network.model module includes methods to define a water network
 model.
 """
 import copy
@@ -17,20 +17,20 @@ logger = logging.getLogger(__name__)
 class WaterNetworkModel(object):
     """
     Base water network model class.
-    
+
     Parameters
     -------------------
     inp_file_name: string (optional)
-        Directory and filename of EPANET inp file to load into the 
+        Directory and filename of EPANET inp file to load into the
         WaterNetworkModel object.
-    
+
     Examples
     ---------
     >>> wn = WaterNetworkModel()
     """
-        
+
     def __init__(self, inp_file_name=None):
-    
+
         # Network name
         self.name = None
 
@@ -195,12 +195,12 @@ class WaterNetworkModel(object):
                 link_has_cv = False
                 if isinstance(link, Pipe):
                     if link.cv:
-                        if link.end_node() == tank_name:
+                        if link.end_node == tank_name:
                             continue
                         else:
                             link_has_cv = True
                 if isinstance(link, Pump):
-                    if link.end_node() == tank_name:
+                    if link.end_node == tank_name:
                         continue
                     else:
                         link_has_cv = True
@@ -210,7 +210,7 @@ class WaterNetworkModel(object):
 
                 control = wntr.network.ConditionalControl((tank,'head'), np.less_equal, min_head,close_control_action)
                 control._priority = 1
-                control.name = link_name+' closed because tank '+tank.name()+' head is less than min head'
+                control.name = link_name+' closed because tank '+tank.name+' head is less than min head'
                 tank_controls.append(control)
 
                 if not link_has_cv:
@@ -221,20 +221,20 @@ class WaterNetworkModel(object):
                                                                    open_control_action)
                     control._partial_step_for_tanks = False
                     control._priority = 0
-                    control.name = link_name+' opened because tank '+tank.name()+' head is greater than min head'
+                    control.name = link_name+' opened because tank '+tank.name+' head is greater than min head'
                     tank_controls.append(control)
 
-                    if link.start_node() == tank_name:
-                        other_node_name = link.end_node()
+                    if link.start_node == tank_name:
+                        other_node_name = link.end_node
                     else:
-                        other_node_name = link.start_node()
+                        other_node_name = link.start_node
                     other_node = self.get_node(other_node_name)
                     control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],
                                                                    [np.less_equal,np.less_equal],
                                                                    [min_head+self._Htol,(other_node,'head')],
                                                                    open_control_action)
                     control._priority = 2
-                    control.name = (link_name+' opened because tank '+tank.name()+
+                    control.name = (link_name+' opened because tank '+tank.name+
                                     ' head is below min head but flow should be in')
                     tank_controls.append(control)
 
@@ -245,12 +245,12 @@ class WaterNetworkModel(object):
                 link_has_cv = False
                 if isinstance(link, Pipe):
                     if link.cv:
-                        if link.start_node()==tank_name:
+                        if link.start_node==tank_name:
                             continue
                         else:
                             link_has_cv = True
                 if isinstance(link, Pump):
-                    if link.start_node()==tank_name:
+                    if link.start_node==tank_name:
                         continue
                     else:
                         link_has_cv = True
@@ -260,24 +260,24 @@ class WaterNetworkModel(object):
 
                 control = wntr.network.ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
                 control._priority = 1
-                control.name = link_name+' closed because tank '+tank.name()+' head is greater than max head'
+                control.name = link_name+' closed because tank '+tank.name+' head is greater than max head'
                 tank_controls.append(control)
 
                 if not link_has_cv:
                     control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
                     control._partial_step_for_tanks = False
                     control._priority = 0
-                    control.name = link_name+'opened because tank '+tank.name()+' head is less than max head'
+                    control.name = link_name+'opened because tank '+tank.name+' head is less than max head'
                     tank_controls.append(control)
 
-                    if link.start_node() == tank_name:
-                        other_node_name = link.end_node()
+                    if link.start_node == tank_name:
+                        other_node_name = link.end_node
                     else:
-                        other_node_name = link.start_node()
+                        other_node_name = link.start_node
                     other_node = self.get_node(other_node_name)
                     control = wntr.network.MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater_equal],[max_head-self._Htol,(other_node,'head')],open_control_action)
                     control._priority = 2
-                    control.name = link_name+' opened because tank '+tank.name()+' head above max head but flow should be out'
+                    control.name = link_name+' opened because tank '+tank.name+' head above max head but flow should be out'
                     tank_controls.append(control)
 
                 #control = wntr.network.MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
@@ -364,17 +364,17 @@ class WaterNetworkModel(object):
 
             control = wntr.network._CheckValveHeadControl(self, pipe, np.greater, self._Htol, open_control_action)
             control._priority = 0
-            control.name = pipe.name()+'opened because of cv head control'
+            control.name = pipe.name+'opened because of cv head control'
             cv_controls.append(control)
 
             control = wntr.network._CheckValveHeadControl(self, pipe, np.less, -self._Htol, close_control_action)
             control._priority = 3
-            control.name = pipe.name()+' closed because of cv head control'
+            control.name = pipe.name+' closed because of cv head control'
             cv_controls.append(control)
 
             control = wntr.network.ConditionalControl((pipe,'flow'),np.less, -self._Qtol, close_control_action)
             control._priority = 3
-            control.name = pipe.name()+' closed because negative flow in cv'
+            control.name = pipe.name+' closed because negative flow in cv'
             cv_controls.append(control)
 
         return cv_controls
@@ -402,7 +402,7 @@ class WaterNetworkModel(object):
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'pump'})
         self._num_pumps += 1
-        
+
     def _get_pump_controls(self):
         pump_controls = []
         for pump_name, pump in self.links(Pump):
@@ -412,17 +412,17 @@ class WaterNetworkModel(object):
 
             control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
             control._priority = 0
-            control.name = pump.name()+' opened because of cv head control'
+            control.name = pump.name+' opened because of cv head control'
             pump_controls.append(control)
 
             control = wntr.network._CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
             control._priority = 3
-            control.name = pump.name()+' closed because of cv head control'
+            control.name = pump.name+' closed because of cv head control'
             pump_controls.append(control)
 
             control = wntr.network.ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
             control._priority = 3
-            control.name = pump.name()+' closed because negative flow in pump'
+            control.name = pump.name+' closed because negative flow in pump'
             pump_controls.append(control)
 
         return pump_controls
@@ -447,9 +447,9 @@ class WaterNetworkModel(object):
         minor_loss : float, optional
             Pipe minor loss coefficient.
         setting : float or string, optional
-            pressure setting for PRV, PSV, or PBV, 
-            flow setting for FCV, 
-            loss coefficient for TCV, 
+            pressure setting for PRV, PSV, or PBV,
+            flow setting for FCV,
+            loss coefficient for TCV,
             name of headloss curve for GPV.
         """
         start_node = self.get_node(start_node_name)
@@ -474,7 +474,7 @@ class WaterNetworkModel(object):
             active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.active)
 
             control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
-            control.name = valve.name()+' prv control'
+            control.name = valve.name+' prv control'
             valve_controls.append(control)
 
         return valve_controls
@@ -527,8 +527,8 @@ class WaterNetworkModel(object):
         if target_type == wntr.network.Valve:
             logger.warn('Controls should not be added to valves! Note that this will become an error in the next release.')
         if target_type == wntr.network.Link:
-            start_node_name = target.start_node()
-            end_node_name = target.end_node()
+            start_node_name = target.start_node
+            end_node_name = target.end_node
             start_node = self.get_node(start_node_name)
             end_node = self.get_node(end_node_name)
             if type(start_node)==Tank or type(end_node)==Tank:
@@ -606,7 +606,7 @@ class WaterNetworkModel(object):
         if link.cv:
             self._check_valves.remove(name)
             logger.warn('You are removing a pipe with a check valve.')
-        self._graph.remove_edge(link.start_node(), link.end_node(), key=name)
+        self._graph.remove_edge(link.start_node, link.end_node, key=name)
         self._links.pop(name)
         if isinstance(link, Pipe):
             self._num_pipes -= 1
@@ -694,7 +694,7 @@ class WaterNetworkModel(object):
 
     def remove_control(self, name):
         """
-        Remove a control from the water network model. 
+        Remove a control from the water network model.
         If the control is not present, an exception is raised.
 
         Parameters
@@ -721,8 +721,8 @@ class WaterNetworkModel(object):
 
     def split_pipe_with_junction(self, pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side, junction_name):
         """
-        Split a pipe by adding a junction. 
-        
+        Split a pipe by adding a junction.
+
         This method will remove
         pipe_name_to_split, add a junction named junction_name, and
         add two new pipes. The first pipe to be added will be named
@@ -738,7 +738,7 @@ class WaterNetworkModel(object):
         original start and end nodes, coordinates at the midpoint
         between the original start and end nodes, and will use the
         default demand pattern. These attributes may be changed after
-        splitting the pipe. 
+        splitting the pipe.
 
         Note that if the original pipe has a check valve, both new
         pipes will have a check valve. Additionally, any controls
@@ -757,7 +757,7 @@ class WaterNetworkModel(object):
 
         junction_name: string
             The name of the new junction to be added.
-        
+
         Examples
         --------
         >>> j = wn.get_node(junction_name)
@@ -776,8 +776,8 @@ class WaterNetworkModel(object):
             raise RuntimeError('One of the new link names you provided is already being used for another link.')
 
         # Get start and end node info
-        start_node = self.get_node(pipe.start_node())
-        end_node = self.get_node(pipe.end_node())
+        start_node = self.get_node(pipe.start_node)
+        end_node = self.get_node(pipe.end_node)
         if isinstance(start_node, Reservoir):
             junction_elevation = end_node.elevation
         elif isinstance(end_node, Reservoir):
@@ -785,12 +785,12 @@ class WaterNetworkModel(object):
         else:
             junction_elevation = (start_node.elevation + end_node.elevation)/2.0
 
-        junction_coordinates = ((self._graph.node[pipe.start_node()]['pos'][0] + self._graph.node[pipe.end_node()]['pos'][0])/2.0,(self._graph.node[pipe.start_node()]['pos'][1] + self._graph.node[pipe.end_node()]['pos'][1])/2.0)
+        junction_coordinates = ((self._graph.node[pipe.start_node]['pos'][0] + self._graph.node[pipe.end_node]['pos'][0])/2.0,(self._graph.node[pipe.start_node]['pos'][1] + self._graph.node[pipe.end_node]['pos'][1])/2.0)
 
         self.remove_link(pipe_name_to_split)
         self.add_junction(junction_name, base_demand=0.0, demand_pattern_name=None, elevation=junction_elevation, coordinates=junction_coordinates)
-        self.add_pipe(pipe_name_on_start_node_side, pipe.start_node(), junction_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
-        self.add_pipe(pipe_name_on_end_node_side, junction_name, pipe.end_node(), pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
+        self.add_pipe(pipe_name_on_start_node_side, pipe.start_node, junction_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
+        self.add_pipe(pipe_name_on_end_node_side, junction_name, pipe.end_node, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
 
         if pipe.cv:
             logger.warn('You are splitting a pipe with a check valve. Both new pipes will have check valves.')
@@ -803,7 +803,7 @@ class WaterNetworkModel(object):
         ----------
         name : string
             Name of the node.
-        
+
         Returns
         --------
         Node object.
@@ -818,7 +818,7 @@ class WaterNetworkModel(object):
         ----------
         name : string
             Name of the link.
-        
+
         Returns
         --------
         Link object.
@@ -833,7 +833,7 @@ class WaterNetworkModel(object):
         ----------
         name: string
            Name of the control
-         
+
         Returns
         --------
         Control object.
@@ -843,7 +843,7 @@ class WaterNetworkModel(object):
     def get_all_nodes_deep_copy(self):
         """
         Return a deep copy of node names and objects for all nodes.
-        
+
         Returns
         --------
         A dictionary in the format {name: object}.
@@ -853,7 +853,7 @@ class WaterNetworkModel(object):
     def get_all_links_deep_copy(self):
         """
         Return a deep copy link names and objects for all links.
-         
+
         Returns
         --------
         A dictionary in the format {name: object}.
@@ -863,7 +863,7 @@ class WaterNetworkModel(object):
     def get_all_controls_deed_copy(self):
         """
         Return a deep copy of control names and objects for all controls.
-        
+
         Returns
         --------
         A dictionary in the format {name: object}.
@@ -878,9 +878,9 @@ class WaterNetworkModel(object):
         ----------
         node_name : string
             Name of the node.
-            
+
         flag : string
-            Options are 'ALL', 'INLET', 'OUTLET'.  
+            Options are 'ALL', 'INLET', 'OUTLET'.
             'ALL' returns all links connected to the node.
             'INLET' returns links that have the specified node as an end node.
             'OUTLET' returns links that have the specified node as a start node.
@@ -934,7 +934,7 @@ class WaterNetworkModel(object):
         ----------
         name : string
             Name of the curve.
-        
+
         Returns
         --------
         Curve object.
@@ -949,7 +949,7 @@ class WaterNetworkModel(object):
         ----------
         name : string
             Name of the pattern.
-        
+
         Returns
         --------
         Pattern object.
@@ -959,7 +959,7 @@ class WaterNetworkModel(object):
     def get_graph_deep_copy(self):
         """
         Return a deep copy of the WaterNetworkModel networkx graph.
-        
+
         Returns
         --------
         WaterNetworkModel networkx graph.
@@ -967,7 +967,7 @@ class WaterNetworkModel(object):
         return copy.deepcopy(self._graph)
 
     def query_node_attribute(self, attribute, operation=None, value=None, node_type=None):
-        """ 
+        """
         Query node attributes, for example get all nodes with elevation <= threshold.
 
         Parameters
@@ -976,28 +976,28 @@ class WaterNetworkModel(object):
             Node attribute.
 
         operation: numpy operator
-            Numpy operator, options include 
-            np.greater, 
-            np.greater_equal, 
-            np.less, 
-            np.less_equal, 
-            np.equal, 
+            Numpy operator, options include
+            np.greater,
+            np.greater_equal,
+            np.less,
+            np.less_equal,
+            np.equal,
             np.not_equal.
 
         value: float or int
             Threshold
 
-        node_type: Node type 
-            Node type, options include 
-            wntr.network.model.Node, 
-            wntr.network.model.Junction, 
-            wntr.network.model.Reservoir, 
+        node_type: Node type
+            Node type, options include
+            wntr.network.model.Node,
+            wntr.network.model.Junction,
+            wntr.network.model.Reservoir,
             wntr.network.model.Tank, or None. Default = None.
             Note None and wntr.network.model.Node produce the same results.
-            
+
         Returns
         -------
-        A dictionary of node names to attribute where node_type satisfies the 
+        A dictionary of node names to attribute where node_type satisfies the
         operation threshold.
 
         Notes
@@ -1020,7 +1020,7 @@ class WaterNetworkModel(object):
         return node_attribute_dict
 
     def query_link_attribute(self, attribute, operation=None, value=None, link_type=None):
-        """ 
+        """
         Query link attributes, for example get all pipe diameters > threshold.
 
         Parameters
@@ -1029,28 +1029,28 @@ class WaterNetworkModel(object):
             Link attribute
 
         operation: numpy operator
-            Numpy operator, options include 
-            np.greater, 
-            np.greater_equal, 
-            np.less, 
-            np.less_equal, 
-            np.equal, 
+            Numpy operator, options include
+            np.greater,
+            np.greater_equal,
+            np.less,
+            np.less_equal,
+            np.equal,
             np.not_equal.
 
         value: float or int
             Threshold
 
-        link_type: Link type 
-            Link type, options include 
-            wntr.network.model.Link, 
-            wntr.network.model.Pipe, 
-            wntr.network.model.Pump, 
+        link_type: Link type
+            Link type, options include
+            wntr.network.model.Link,
+            wntr.network.model.Pipe,
+            wntr.network.model.Pump,
             wntr.network.model.Valve, or None. Default = None.
             Note None and wntr.network.model.Link produce the same results.
 
         Returns
         -------
-        A dictionary of link names to attributes where link_type satisfies the 
+        A dictionary of link names to attributes where link_type satisfies the
         operation threshold.
 
         Notes
@@ -1072,80 +1072,88 @@ class WaterNetworkModel(object):
                 pass
         return link_attribute_dict
 
+    @property
     def num_nodes(self):
         """
         Return the number of nodes in the water network model.
-        
+
         Returns
         -------
         Number of nodes.
         """
         return len(self._nodes)
 
+    @property
     def num_junctions(self):
         """
         Return the number of junctions in the water network model.
-        
+
         Returns
         -------
         Number of junctions.
         """
         return self._num_junctions
 
+    @property
     def num_tanks(self):
         """
         Return the number of tanks in the water network model.
-        
+
         Returns
         -------
         Number of tanks.
         """
         return self._num_tanks
 
+    @property
     def num_reservoirs(self):
         """
         Return the number of reservoirs in the water network model.
-        
+
         Returns
         -------
         Number of reservoirs.
         """
         return self._num_reservoirs
 
+    @property
     def num_links(self):
         """
         Return the number of links in the water network model.
-        
+
         Returns
         -------
         Number of links.
         """
         return len(self._links)
 
+    @property
     def num_pipes(self):
         """
         Return the number of pipes in the water network model.
-        
+
         Returns
         -------
         Number of pipes.
         """
         return self._num_pipes
 
+    @property
     def num_pumps(self):
         """
         Return the number of pumps in the water network model.
-        
+
         Returns
         -------
         Number of pumps.
         """
         return self._num_pumps
 
+    @property
     def num_valves(self):
         """
         Return the number of valves in the water network model.
-        
+
         Returns
         -------
         Number of valves.
@@ -1159,14 +1167,14 @@ class WaterNetworkModel(object):
 
         Parameters
         ----------
-        node_type: Node type 
-            Node type, options include 
-            wntr.network.model.Node, 
-            wntr.network.model.Junction, 
-            wntr.network.model.Reservoir, 
+        node_type: Node type
+            Node type, options include
+            wntr.network.model.Node,
+            wntr.network.model.Junction,
+            wntr.network.model.Reservoir,
             wntr.network.model.Tank, or None. Default = None.
             Note None and wntr.network.model.Node produce the same results.
-        
+
         Returns
         -------
         A generator in the format (name, object).
@@ -1229,14 +1237,14 @@ class WaterNetworkModel(object):
 
         Parameters
         ----------
-        link_type: Link type 
-            Link type, options include 
-            wntr.network.model.Link, 
-            wntr.network.model.Pipe, 
-            wntr.network.model.Pump, 
+        link_type: Link type
+            Link type, options include
+            wntr.network.model.Link,
+            wntr.network.model.Pipe,
+            wntr.network.model.Pump,
             wntr.network.model.Valve, or None. Default = None.
             Note None and wntr.network.model.Link produce the same results.
-        
+
         Returns
         -------
         A generator in the format (name, object).
@@ -1270,7 +1278,7 @@ class WaterNetworkModel(object):
     def pumps(self):
         """
         Return a generator to iterate over all pumps.
-        
+
         Returns
         -------
         A generator in the format (name, object).
@@ -1281,7 +1289,7 @@ class WaterNetworkModel(object):
     def valves(self):
         """
         Return a generator to iterate over all valves.
-        
+
         Returns
         -------
         A generator in the format (name, object).
@@ -1289,54 +1297,63 @@ class WaterNetworkModel(object):
         for name, link in self._valves.items():
             yield name, link
 
+    @property
     def node_name_list(self):
         """
         Return a list of the names of all nodes.
         """
         return list(self._nodes.keys())
 
+    @property
     def junction_name_list(self):
         """
         Returns a list of the names of all junctions.
         """
         return list(self._junctions.keys())
 
+    @property
     def tank_name_list(self):
         """
         Returns a list of the names of all tanks.
         """
         return list(self._tanks.keys())
 
+    @property
     def reservoir_name_list(self):
         """
         Returns a list of the names of all reservoirs.
         """
         return list(self._reservoirs.keys())
 
+    @property
     def link_name_list(self):
         """
         Returns a list of the names of all links.
         """
         return list(self._links.keys())
 
+    @property
     def pipe_name_list(self):
         """
         Returns a list of the names of all pipes.
         """
         return list(self._pipes.keys())
 
+    @property
     def pump_name_list(self):
         """
         Returns a list of the names of all pumps.
         """
         return list(self._pumps.keys())
 
+    @property
     def valve_name_list(self):
         """
         Returns a list of the names of all valves.
         """
         return list(self._valves.keys())
 
+    @property
     def control_name_list(self):
         """
         Return a list of the names of all controls.
@@ -1346,7 +1363,7 @@ class WaterNetworkModel(object):
     def curves(self):
         """
         Return a generator to iterate over all curves.
-        
+
         Returns
         -------
         A generator in the format (name, object).
@@ -1395,8 +1412,9 @@ class WaterNetworkModel(object):
             Attribute value.
         """
         link = self.get_link(link_name)
-        self._graph.edge[link.start_node()][link.end_node()][link_name][attr_name] = value
+        self._graph.edge[link.start_node][link.end_node][link_name][attr_name] = value
 
+    @property
     def shifted_time(self):
         """
         Return the time in seconds shifted by the
@@ -1406,6 +1424,7 @@ class WaterNetworkModel(object):
         """
         return self.sim_time + self.options.start_clocktime
 
+    @property
     def prev_shifted_time(self):
         """
         Return the time in seconds of the previous solve shifted by
@@ -1415,11 +1434,12 @@ class WaterNetworkModel(object):
         """
         return self.prev_sim_time + self.options.start_clocktime
 
+    @property
     def clock_time(self):
         """
         Return the current time of day in seconds from 12 AM
         """
-        return self.shifted_time_sec() % (24*3600)
+        return self.shifted_time % (24*3600)
 
     def reset_initial_values(self):
         """
@@ -1579,7 +1599,7 @@ class WaterNetworkModel(object):
         #all_nodes_check = set()
         #for grp, nodes in groups.items():
         #    all_nodes_check = all_nodes_check.union(nodes)
-        #if all_nodes_check!=set(self.node_name_list()):
+        #if all_nodes_check!=set(self.node_name_list):
         #    raise RuntimeError('_get_isolated_junctions() did not find all of the nodes!')
 
         #for grp1, nodes1 in groups.items():
@@ -1851,7 +1871,7 @@ class LinkStatus(object):
 class Node(object):
     """
     The base node class.
-    
+
     Parameters
     -----------
     name : string
@@ -1889,6 +1909,7 @@ class Node(object):
     def __hash__(self):
         return id(self)
 
+    @property
     def name(self):
         """
         Returns the name of the node.
@@ -1899,7 +1920,7 @@ class Node(object):
 class Link(object):
     """
     The base link class.
-    
+
     Parameters
     ----------
     link_name : string
@@ -1915,9 +1936,9 @@ class Link(object):
     ---------
     >>> link1 = Link('Pipe 1','Pipe', 'Node 153', 'Node 159')
     """
-        
+
     def __init__(self, link_name, start_node_name, end_node_name):
-       
+
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
@@ -1951,18 +1972,21 @@ class Link(object):
         """
         return self._link_name
 
+    @property
     def start_node(self):
         """
         Returns name of start node
         """
         return self._start_node_name
 
+    @property
     def end_node(self):
         """
         Returns name of end node
         """
         return self._end_node_name
 
+    @property
     def name(self):
         """
         Returns the name of the link
@@ -1986,9 +2010,9 @@ class Junction(Node):
         Elevation of the junction.
         Internal units must be meters (m).
     """
-        
+
     def __init__(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0):
-        
+
         super(Junction, self).__init__(name)
         self.base_demand = base_demand
         self.prev_expected_demand = None
@@ -2154,7 +2178,7 @@ class Junction(Node):
 class Tank(Node):
     """
     Tank class that is inherited from Node
-    
+
     Parameters
     ----------
     name : string
@@ -2180,11 +2204,11 @@ class Tank(Node):
     vol_curve : Curve object, optional
         Curve object
     """
-        
+
     def __init__(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
                  min_vol=None, vol_curve=None):
-        
+
         super(Tank, self).__init__(name)
         self.elevation = elevation
         self.init_level = init_level
@@ -2356,7 +2380,7 @@ class Tank(Node):
 class Reservoir(Node):
     """
     Reservoir class that is inherited from Node
-   
+
     Parameters
     ----------
     name : string
@@ -2368,7 +2392,7 @@ class Reservoir(Node):
         Name of the head pattern.
     """
     def __init__(self, name, base_head=0.0, head_pattern_name=None):
-        
+
         super(Reservoir, self).__init__(name)
         self.base_head = base_head
         self.head = base_head
@@ -2387,7 +2411,7 @@ class Reservoir(Node):
 class Pipe(Link):
     """
     Pipe class that is inherited from Link
-    
+
     Parameters
     ----------
     name : string
@@ -2412,10 +2436,10 @@ class Pipe(Link):
         True if the pipe has a check valve
         False if the pipe does not have a check valve
     """
-        
+
     def __init__(self, name, start_node_name, end_node_name, length=304.8,
                  diameter=0.3048, roughness=100, minor_loss=0.00, status='OPEN', check_valve_flag=False):
-        
+
         super(Pipe, self).__init__(name, start_node_name, end_node_name)
         self.length = length
         self.diameter = diameter
@@ -2449,7 +2473,7 @@ class Pipe(Link):
 class Pump(Link):
     """
     Pump class that is inherited from Link
-    
+
     Parameters
     ----------
     name : string
@@ -2463,9 +2487,9 @@ class Pump(Link):
     info_value : float or curve type, optional
         Where power is a fixed value in KW, while a head curve is a Curve object.
     """
-        
+
     def __init__(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0):
-        
+
         super(Pump, self).__init__(name, start_node_name, end_node_name)
         self._cv_status = LinkStatus.opened
         self.prev_speed = None
@@ -2483,6 +2507,15 @@ class Pump(Link):
             self._base_power = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
+
+    @property
+    def setting(self):
+        """Alias to speed for consistency with other link types"""
+        return self.speed
+
+    @setting.setter
+    def setting(self, value):
+        self.speed = value
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2572,7 +2605,7 @@ class Pump(Link):
             raise RuntimeError('Coefficient for Multipoint pump curves cannot be generated. ')
 
         if A<=0 or B<0 or C<=0:
-            raise RuntimeError('Value of pump head curve coefficient is negative, which is not allowed. \nPump: {0} \nA: {1} \nB: {2} \nC:{3}'.format(self.name(),A,B,C))
+            raise RuntimeError('Value of pump head curve coefficient is negative, which is not allowed. \nPump: {0} \nA: {1} \nB: {2} \nC:{3}'.format(self.name,A,B,C))
         return (A, B, C)
 
     def get_design_flow(self):
@@ -2590,7 +2623,7 @@ class Pump(Link):
 class Valve(Link):
     """
     Valve class that is inherited from Link
-    
+
     Parameters
     ----------
     name : string
@@ -2611,7 +2644,7 @@ class Valve(Link):
     """
     def __init__(self, name, start_node_name, end_node_name,
                  diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
-        
+
         super(Valve, self).__init__(name, start_node_name, end_node_name)
         self.diameter = diameter
         self.valve_type = valve_type
@@ -2640,7 +2673,7 @@ class Valve(Link):
 class Curve(object):
     """
     Curve class.
-    
+
     Parameters
     ----------
     name : string
@@ -2650,9 +2683,9 @@ class Curve(object):
     points :
          List of tuples with X-Y points.
     """
-        
+
     def __init__(self, name, curve_type, points):
-        
+
         self.name = name
         self.curve_type = curve_type
         self.points = points
