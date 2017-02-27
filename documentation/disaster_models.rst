@@ -137,5 +137,4 @@ Recent incidents, including the Elk River chemical spill and Flint lead contamin
 highlight the need minimize human health and economic impacts.
 
 WNTR can be used to simulate contamination incidents. 
-The :meth:`~wntr.scenario.water_quality.Waterquality` class is used to define the injection location, rate, and start and end times.
 The example **water_quality_simulation.py** includes steps to define and simulate contamination incidents.

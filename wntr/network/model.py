@@ -45,6 +45,7 @@ class WaterNetworkModel(object):
         self._num_pipes = 0
         self._num_pumps = 0
         self._num_valves = 0
+        self._num_sources = 0
 
         # Initialize node and link dictionaries
         # Dictionary of node or link objects indexed by their names
@@ -61,6 +62,7 @@ class WaterNetworkModel(object):
         # Dictionary of pattern or curves indexed by their names
         self._patterns = {}
         self._curves = {}
+        self._sources = {}
 
         # Initialize options object
         self.options = WaterNetworkOptions()
@@ -98,6 +100,7 @@ class WaterNetworkModel(object):
            self._valves         == other._valves         and \
            self._patterns       == other._patterns       and \
            self._curves         == other._curves         and \
+           self._sources        == other._sources        and \
            self._control_dict   == other._control_dict   and \
            self._check_valves   == other._check_valves:
             return True
@@ -479,9 +482,12 @@ class WaterNetworkModel(object):
 
         return valve_controls
 
-    def add_pattern(self, name, pattern_list):
+    def add_pattern(self, name, pattern_list=None, start_time=None, end_time=None):
         """
         Add a pattern to the water network model.
+        If pattern_list is None, a new binary pattern will be created using 
+        the pattern timestep and duration stored in wn.options.
+        The pattern will have 1s between the start time and end time.
 
         Parameters
         ----------
@@ -489,7 +495,20 @@ class WaterNetworkModel(object):
             Name of the pattern.
         pattern_list : list of floats
             A list of floats that make up the pattern.
+        start_time: float
+            If pattern_list is None, a new binary pattern will be created using start_time.
+        end_time: float
+            If pattern_list is None, a new binary pattern will be created using end_time.
         """
+        if pattern_list is None:
+            patternstep = self.options.pattern_timestep
+            duration = self.options.duration
+            patternlen = int(duration/patternstep)
+            patternstart = int(start_time/patternstep)
+            patternend = int(end_time/patternstep)
+            pattern_list = [0.0]*patternlen
+            pattern_list[patternstart:patternend] = [1.0]*(patternend-patternstart)
+            
         self._patterns[name] = pattern_list
 
     def add_curve(self, name, curve_type, xy_tuples_list):
@@ -507,7 +526,32 @@ class WaterNetworkModel(object):
         """
         curve = Curve(name, curve_type, xy_tuples_list)
         self._curves[name] = curve
+    
+    def add_source(self, name, node_name, source_type, quality, pattern_name):
+        """
+        Add a source to the water network model.
 
+        Parameters
+        ----------
+        name : string
+            Name of the source
+        
+        node_name: string
+            Injection node.
+        
+        source_type: string
+            Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT
+            
+        quality: float
+            Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, FLOWPACED, or SETPOINT
+        
+        pattern_name: string
+            Pattern name
+        """
+        source = Source(name, node_name, source_type, quality, pattern_name)
+        self._sources[name] = source
+        self._num_sources += 1
+        
     def add_control(self, name, control_object):
         """
         Add a control to the water network model.
@@ -692,6 +736,18 @@ class WaterNetworkModel(object):
                     if node == control._control_action._target_obj_ref:
                         logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
 
+    def remove_source(self, name):
+        """
+        Remove a source from the water network model. 
+
+        Parameters
+        ----------
+        name : string
+           The name of the source object to be removed.
+        """
+        del self._sources[name]
+        self._num_sources -= 1
+
     def remove_control(self, name):
         """
         Remove a control from the water network model. 
@@ -795,6 +851,41 @@ class WaterNetworkModel(object):
         if pipe.cv:
             logger.warn('You are splitting a pipe with a check valve. Both new pipes will have check valves.')
 
+    def reset_demand(self, demand, pattern_prefix='ResetDemand'):
+        """
+        Reset demands.  
+        New demands are specified in a pandas DataFrame indexed by simulation 
+        time (in seconds) and one column for each node. The method resets 
+        node demands by creating a new demand pattern for each node and 
+        resetting the base demand to 1. The demand pattern is resampled to 
+        match the water network model pattern timestep. This method can be 
+        used to reset demands in a water network model to demands from a 
+        pressure-driven simualtion.
+        
+        Parameters
+        ----------
+        demand : pandas DataFrame
+            Name of the node.
+        
+        pattern_prefix: str
+            Pattern prefix, default = 'ResetDemand'
+        """
+        for node_name, node in self.nodes():
+            
+            # Extact the node demand pattern and resample to match the pattern timestep
+            demand_pattern = demand.loc[:, node_name]
+            demand_pattern.index = demand_pattern.index.astype('timedelta64[s]')
+            resample_offset = str(int(self.options.pattern_timestep))+'S'
+            demand_pattern = demand_pattern.resample(resample_offset).mean()
+            
+            # Add the pattern
+            pattern_name = pattern_prefix + node_name
+            self.add_pattern(pattern_name, demand_pattern.tolist())
+            
+            # Reset base demand
+            node.base_demand = 1
+            node.demand_pattern_name = pattern_name
+    
     def get_node(self, name):
         """
         Return the node object of a specific node.
@@ -840,6 +931,21 @@ class WaterNetworkModel(object):
         """
         return self._control_dict[name]
 
+    def get_source(self, name):
+        """
+        Return the source object of a specific source.
+
+        Parameters
+        ----------
+        name: string
+           Name of the source
+         
+        Returns
+        --------
+        Source object.
+        """
+        return self._sources[name]
+
     def get_all_nodes_deep_copy(self):
         """
         Return a deep copy of node names and objects for all nodes.
@@ -860,7 +966,7 @@ class WaterNetworkModel(object):
         """
         return copy.deepcopy(self._links)
 
-    def get_all_controls_deed_copy(self):
+    def get_all_controls_deep_copy(self):
         """
         Return a deep copy of control names and objects for all controls.
         
@@ -1151,6 +1257,16 @@ class WaterNetworkModel(object):
         Number of valves.
         """
         return self._num_valves
+    
+    def num_sources(self):
+        """
+        Return the number of sources in the water network model.
+        
+        Returns
+        -------
+        Number of sources.
+        """
+        return self._num_sources
 
     def nodes(self, node_type=None):
         """
@@ -1354,6 +1470,17 @@ class WaterNetworkModel(object):
         for curve_name, curve in self._curves.items():
             yield curve_name, curve
 
+    def sources(self):
+        """
+        Return a generator to iterate over all sources.
+        
+        Returns
+        -------
+        A generator in the format (name, object).
+        """
+        for source_name, source in self._sources.items():
+            yield source_name, source
+            
     def set_node_coordinates(self, name, coordinates):
         """
         Set the node coordinates in the network x graph.
@@ -1650,25 +1777,31 @@ class WaterNetworkModel(object):
 
 class WaterNetworkOptions(object):
     """
-    A class to manage options.
+    A class to manage options.  These options mimic options in the EPANET User Manual.  
     """
 
     def __init__(self):
         # Time related options
         self.duration = 0.0
-        "Simulation duration in seconds."
+        "Simulation duration in seconds"
 
         self.hydraulic_timestep = 3600.0
         "Hydraulic timestep in seconds."
-
+        
+        self.quality_timestep = 360.0
+        "Water quality timestep in seconds"
+        
+        self.rule_timestep = 360.0
+        "Rule timestep in seconds"
+        
         self.pattern_timestep = 3600.0
-        "Pattern timestep in seconds."
+        "Pattern timestep in seconds"
 
         self.pattern_start = 0.0
         "Time offset in seconds at which all patterns will start. E.g., a value of 7200 would start the simulation with each pattern in the time period that corresponds to hour 2."
 
         self.report_timestep = 3600.0
-        "Reporting timestep in seconds."
+        "Reporting timestep in seconds"
 
         self.report_start = 0.0
         "Start time of the report in seconds from the start of the simulation."
@@ -1676,42 +1809,95 @@ class WaterNetworkOptions(object):
         self.start_clocktime = 0.0
         "Time of day in seconds from 12 am at which the simulation begins."
 
-        self.quality_timestep = 360.0
-        self.rule_timestep = 360.0
         self.statistic = 'NONE'
+        "Post processing statistic.  Options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the EPANET User Manual)."
 
-        # general options
+        # General options
+        self.units = 'GPM'
+        "EPANET INP File units of measurement.  Options are CFS, GPM, MGD, IMGD, AFD, LPS, LPM, MLD, CMH, and CMD (as defined in the EPANET User Manual)."
+        
+        self.headloss = 'H-W'
+        "Formula to use for computing head loss through a pipe. Options are H-W, D-W, and C-M (as defined in the EPANET User Manual)."
+        
+        self.hydraulics = None #string
+        "Indicates if a hydraulics file should be used or saved.  Options are USE and SAVE (as defined in the EPANET User Manual)."
+        
+        self.hydraulics_filename = None #string
+        "Filename to use if hydrulics = SAVE"
+        
+        self.quality = 'NONE'
+        "Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and TRACE (as defined in the EPANET User Manual)."
+        
+        self.quality_value = None #string
+        "Trace node name if quality = TRACE, Chemical units if quality = CHEMICAL"
+        
+        self.viscosity = 1.0
+        "Kinematic viscosity of the fluid"
+        
+        self.diffusivity = 1.0
+        "Molecular diffusivity of the chemical"
+        
+        self.specific_gravity = 1.0
+        "Specific gravity of the fluid"
+        
+        self.trials = 40
+        "Maximum number of trials used to solve network hydraulics"
+        
+        self.accuracy = 0.001
+        "Convergence criteria for hydraulic solutions"
+        
+        self.unbalanced = 'STOP'
+        "Indicate what happeneds if a hydrulic soluation cannot be reached.  Options are STOP and CONTINUE  (as defined in the EPANET User Manual)."
+        
+        self.unbalanced_value = None #int
+        "Number of additional trials if unbalenced = CONTINUE"
+        
         self.pattern = None
         "Name of the default pattern for junction demands. If None, the junctions without patterns will be held constant."
 
-        self.units = 'GPM'
-        self.headloss = 'H-W'
-        self.hydraulics_option = None #string
-        self.hydraulics_filename = None #string
-        self.quality_option = 'NONE'
-        self.quality_value = None #string
-        self.viscosity = 1.0
-        self.diffusivity = 1.0
-        self.specific_gravity = 1.0
-        self.trials = 40
-        self.accuracy = 0.001
-        self.unbalanced_option = 'STOP'
-        self.unbalanced_value = None #int
         self.demand_multiplier = 1.0
+        "The demand multiplier adjusts the values of baseline demands for all junctions"
+        
         self.emitter_exponent = 0.5
+        "The expoent used when computing flow from an emitter"
+        
         self.tolerance = 0.01
+        "Convergence criteria for water quality solutions"
+        
         self.map = None
+        "Filename used to store node coordiates"
+        
         self.checkfreq = 2
-
-        # Reaction Options
+        "Number of solution trials that pass between status check"
+        
+        self.maxcheck = 10
+        "Number of solution trials that pass between status check"
+        
+        self.damplimit = 0
+        "Accuracy value at which solution damping begins"
+        
+        # Reaction options
         self.bulk_rxn_order = 1.0
+        "Order of reaction occurring in the bulk fluid"
+        
         self.wall_rxn_order = 1.0
+        "Order of reaction occurring at the pipe wall"
+        
         self.tank_rxn_order = 1.0
+        "Order of reaction occurring in the tanks"
+        
         self.bulk_rxn_coeff = 0.0
+        "Reaction coefficient for bulk fluid and tanks"
+        
         self.wall_rxn_coeff = 0.0
+        "Reaction coefficient for pipe walls"
+        
         self.limiting_potential = None
+        "Specifies that reaction rates are proportional to the difference between the current concentration and some limiting potential value"
+        
         self.roughness_correlation = None
-
+        "Makes all default pipe wall reaction coefficients related to pipe roughness"
+        
 class NodeTypes(object):
     """
     An enum class for types of nodes.
@@ -2674,4 +2860,43 @@ class Curve(object):
     def __hash__(self):
         return id(self)
 
+class Source(object):
+    """
+    Source class.
+    
+    Parameters
+    ----------
+    name : string
+         Name of the source
 
+    node_name: string
+        Injection node
+    
+    source_type: string
+        Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT
+        
+    quality: float
+        Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, FLOWPACED, or SETPOINT
+    
+    pattern_name: string
+        Pattern name
+            
+    """
+        
+    def __init__(self, name, node_name, source_type, quality, pattern_name):
+        
+        self.name = name
+        self.node_name = node_name
+        self.source_type = source_type
+        self.quality = quality
+        self.pattern_name = pattern_name
+
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if self.name == other.name:
+            return True
+        return False
+
+    def __hash__(self):
+        return id(self)

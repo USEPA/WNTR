@@ -36,16 +36,13 @@ class EpanetSimulator(WaterNetworkSimulator):
         self.solve_step = {}
         self.warning_list = None
 
-    def run_sim(self, WQ=None, convert_units=True, file_prefix='temp'):
+    def run_sim(self, convert_units=True, file_prefix='temp'):
         """
         Run an extended period simulation.
         The EpanetSimulator uses an INP file written from the water network model.
         
         Parameters
         ----------
-        WQ : wntr.scenario.Waterquality object (optional)
-            Water quality scenario, default = None (hydraulic simulation only)
-
         convert_units : bool (optional)
             Convert results to SI units, default = True
             
@@ -53,8 +50,8 @@ class EpanetSimulator(WaterNetworkSimulator):
             INP and RPT file prefix, default = 'tmp'
         """
         # Write a new inp file from the water network model
-        #self._wn.write_inpfile(file_prefix + '.inp')
-        #self._wn.name = file_prefix + '.inp'
+        self._wn.name = file_prefix + '.inp'
+        self._wn.write_inpfile(file_prefix + '.inp')
         
         start_run_sim_time = time.time()
         logger.debug('Starting run')
@@ -143,75 +140,11 @@ class EpanetSimulator(WaterNetworkSimulator):
                 results.error_code = 2
         enData.ENcloseH()
         self.warning_list = enData.errcodelist
+        
+        if self._wn.options.quality is not 'NONE':
+            
+            node_dictonary['quality'] = []
 
-        if WQ:
-            if not isinstance(WQ,list):
-                qlist = [WQ]
-            else:
-                qlist = WQ
-            for WQ in qlist:
-                node_dictonary['quality'] = []
-
-                if WQ.quality_type == 'CHEM':
-
-                    # Set quality type and convert source qual
-                    if WQ.source_type == 'MASS':
-                        enData.ENsetqualtype(EN.CHEM, 'Chemical', 'mg/min', '')
-                        wq_sourceQual = from_si(flowunits, WQ.source_quality,
-                                                QualParam.SourceMassInject,
-                                                mass_units=mass_units)
-                        wq_sourceQual = WQ.source_quality*60*1e6 # kg/s to mg/min
-                    else:
-                        enData.ENsetqualtype(EN.CHEM, 'Chemical', 'mg/L', '')
-                        wq_sourceQual = from_si(flowunits, WQ.source_quality,
-                                                QualParam.Concentration,
-                                                mass_units=mass_units)
-                    # Set source quality
-                    for node in WQ.nodes:
-                        nodeid = enData.ENgetnodeindex(node)
-                        enData.ENsetnodevalue(nodeid, EN.SOURCEQUAL, wq_sourceQual)
-
-                    # Set source type
-                    if WQ.source_type == 'CONCEN':
-                        wq_sourceType = EN.CONCEN
-                    elif WQ.source_type == 'MASS':
-                        wq_sourceType = EN.MASS
-                    elif WQ.source_type == 'FLOWPACED':
-                        wq_sourceType = EN.FLOWPACED
-                    elif WQ.source_type == 'SETPOINT':
-                        wq_sourceType = EN.SETPOINT
-                    else:
-                        logger.error('Invalid Source Type for CHEM scenario')
-                    enData.ENsetnodevalue(nodeid, EN.SOURCETYPE, wq_sourceType)
-
-                    # Set pattern
-                    if WQ.end_time == -1:
-                        WQ.end_time = enData.ENgettimeparam(EN.DURATION)
-                    if WQ.start_time > WQ.end_time:
-                        raise RuntimeError('Start time is greater than end time')
-                    patternstep = enData.ENgettimeparam(EN.PATTERNSTEP)
-                    duration = enData.ENgettimeparam(EN.DURATION)
-                    patternlen = int(duration/patternstep)
-                    patternstart = int(WQ.start_time/patternstep)
-                    patternend = int(WQ.end_time/patternstep)
-                    pattern = [0]*patternlen
-                    pattern[patternstart:patternend] = [1]*(patternend-patternstart)
-                    enData.ENaddpattern('wq')
-                    patternid = enData.ENgetpatternindex('wq')
-                    enData.ENsetpattern(patternid, pattern)
-                    enData.ENsetnodevalue(nodeid, EN.SOURCEPAT, patternid)
-
-                elif WQ.quality_type == 'AGE':
-                    # Set quality type
-                    enData.ENsetqualtype(EN.AGE,0,0,0)
-
-                elif WQ.quality_type == 'TRACE':
-                    # Set quality type
-                    for node in WQ.nodes:
-                        enData.ENsetqualtype(EN.TRACE,0,0,node.encode('ascii'))
-
-                else:
-                    logger.error('Invalid Quality Type')
             enData.ENopenQ()
             enData.ENinitQ(0)
 
@@ -223,10 +156,10 @@ class EpanetSimulator(WaterNetworkSimulator):
                         quality = enData.ENgetnodevalue(nodeindex, EN.QUALITY)
 
                         if convert_units:
-                            if WQ.quality_type == 'CHEM':
+                            if self._wn.options.quality == 'CHEMICAL':
                                 quality = to_si(flowunits, quality, QualParam.Concentration,
                                                 mass_units=mass_units)
-                            elif WQ.quality_type == 'AGE':
+                            elif self._wn.options.quality == 'AGE':
                                 quality = to_si(flowunits, quality, QualParam.WaterAge)
 
                         node_dictonary['quality'].append(quality)
@@ -236,7 +169,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                     break
 
             enData.ENcloseQ()
-
+        
         # close epanet
         enData.ENclose()
 

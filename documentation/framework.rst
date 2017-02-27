@@ -126,7 +126,6 @@ However, **the following model options cannot be modified/created in WNTR**:
 * [QUALITY] section
 * [REPORT] section
 * [RULES] section
-* [SOURCES] section
 * [TAGS] section
 * [VERTICES] section
 
