@@ -439,7 +439,7 @@ class ValueCondition(ControlCondition):
         return "<ValueCondition: name='{}'>".format(self.name)
 
     def __str__(self):
-        typ = str(self._source_obj.__class__).split('.')[-1].replace("'>",'')
+        typ = self._source_obj.__class__.__name__
         obj = str(self._source_obj)
         if hasattr(self._source_obj, 'name'):
             obj = self._source_obj.name
@@ -506,7 +506,7 @@ class RelativeCondition(ControlCondition):
         return "<RelativeCondition: name='{}'>".format(self.name)
 
     def __str__(self):
-        typ = str(self._source_obj.__class__).split('.')[-1].replace("'>",'')
+        typ = self._source_obj.__class__.__name__
         obj = str(self._source_obj)
         if hasattr(self._source_obj, 'name'):
             obj = self._source_obj.name

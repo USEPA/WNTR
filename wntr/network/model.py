@@ -1762,7 +1762,8 @@ class NodeType(enum.IntEnum):
         return self.name
 
     def __eq__(self, other):
-        return int(self) == int(other.value)
+        return int(self) == int(other) and \
+               self.__class__.__name__ == other.__class__.__name__
 
 
 class LinkType(enum.IntEnum):
@@ -1806,7 +1807,8 @@ class LinkType(enum.IntEnum):
         return self.name
 
     def __eq__(self, other):
-        return int(self) == int(other.value)
+        return int(self) == int(other) and \
+               self.__class__.__name__ == other.__class__.__name__
 
 
 class LinkStatus(enum.IntEnum):
@@ -1839,7 +1841,8 @@ class LinkStatus(enum.IntEnum):
         return self.name
 
     def __eq__(self, other):
-        return int(self) == int(other.value)
+        return int(self) == int(other) and \
+               self.__class__.__name__ == other.__class__.__name__
 
 
 class Node(object):
