@@ -3,12 +3,12 @@ The wntr.epanet.io module contains methods for reading/writing EPANET input and 
 """
 from __future__ import absolute_import
 import wntr.network
-from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
+from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve, LinkStatus
 import wntr
 import io
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam
-from .util import LinkBaseStatus, to_si, from_si
+from .util import to_si, from_si
 from wntr.network.controls import ControlCondition, OrCondition, AndCondition
 
 import datetime
@@ -174,7 +174,6 @@ def _sec_to_string(sec):
     mm = int(sec/60.)
     sec -= mm*60
     return (hours, mm, int(sec))
-
 
 
 class InpFile(object):
@@ -520,7 +519,7 @@ class InpFile(object):
                             to_si(inp_units, float(current[4]), HydParam.PipeDiameter),
                             float(current[5]),
                             float(current[6]),
-                            'OPEN',
+                            LinkStatus.Open,
                             True)
             else:
                 wn.add_pipe(current[0],
@@ -530,7 +529,7 @@ class InpFile(object):
                             to_si(inp_units, float(current[4]), HydParam.PipeDiameter),
                             float(current[5]),
                             float(current[6]),
-                            current[7].upper())
+                            LinkStatus[current[7].upper()])
 
         for lnum, line in self.sections['[PUMPS]']:
             edata['lnum'] = lnum
@@ -665,7 +664,7 @@ class InpFile(object):
             if (current[1].upper() == 'OPEN' or
                     current[1].upper() == 'CLOSED' or
                     current[1].upper() == 'ACTIVE'):
-                new_status = LinkBaseStatus[current[1].upper()].value
+                new_status = LinkStatus[current[1].upper()].value
                 link.status = new_status
                 link._base_status = new_status
             else:
@@ -713,7 +712,7 @@ class InpFile(object):
                         status = to_si(inp_units, float(current[2]), HydParam.Pressure)
                         action_obj = wntr.network.ControlAction(link, 'setting', status)
             else:
-                status = LinkBaseStatus[current[2].upper()].value
+                status = LinkStatus[current[2].upper()].value
                 action_obj = wntr.network.ControlAction(link, 'status', status)
 
             # Create the control object
@@ -976,7 +975,7 @@ class InpFile(object):
                      'diam': from_si(inp_units, pipe.diameter, HydParam.PipeDiameter),
                      'rough': pipe.roughness,
                      'mloss': pipe.minor_loss,
-                     'status': LinkBaseStatus(pipe.get_base_status()).name,
+                     'status': pipe.get_base_status().name,
                      'com': ';'}
                 if pipe.cv:
                     E['status'] = 'CV'
@@ -1037,13 +1036,13 @@ class InpFile(object):
             f.write('[STATUS]\n'.encode('ascii'))
             f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
             for link_name, link in wn.links(Pump):
-                if link.get_base_status() == LinkBaseStatus.CLOSED.value:
+                if link.get_base_status() == LinkStatus.CLOSED.value:
                     f.write('{:10s} {:10s}\n'.format(link_name,
-                            LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
+                            LinkStatus(link.get_base_status()).name).encode('ascii'))
             for link_name, link in wn.links(Valve):
-                if link.get_base_status() == LinkBaseStatus.CLOSED.value or link.get_base_status() == LinkBaseStatus.OPEN.value:
+                if link.get_base_status() == LinkStatus.CLOSED.value or link.get_base_status() == LinkStatus.Open.value:
                     f.write('{:10s} {:10s}\n'.format(link_name,
-                            LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
+                            LinkStatus(link.get_base_status()).name).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
             # Print pattern information
@@ -1096,7 +1095,7 @@ class InpFile(object):
                             'compare': 'TIME',
                             'time': int(all_control._run_at_time / 3600.0)}
                     if all_control._control_action._attribute.lower() == 'status':
-                        vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
+                        vals['setting'] = LinkStatus(all_control._control_action._value).name
                     else:
                         vals['setting'] = str(float(all_control._control_action._value))
                     if all_control._daily_flag:
@@ -1110,7 +1109,7 @@ class InpFile(object):
                             'compare': 'above',
                             'thresh': 0.0}
                     if all_control._control_action._attribute.lower() == 'status':
-                        vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
+                        vals['setting'] = LinkStatus(all_control._control_action._value).name
                     else:
                         vals['setting'] = str(float(all_control._control_action._value))
                     if all_control._operation is np.less:
@@ -1619,19 +1618,3 @@ class _EpanetCondition(ControlCondition):
     @property
     def daily_flag(self):
         return self._daily
-
-
-#class HydFile(object):
-#    """An EPANET hydraulics file (binary) reader/writer."""
-#    pass
-#
-#
-#class BinFile(object):
-#    """An EPANET ressults file (binray) reader."""
-#    pass
-#
-#
-#class RptFile(object):
-#    """An EPANET report file (text) reader."""
-#    pass
-#

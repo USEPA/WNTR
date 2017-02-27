@@ -142,7 +142,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel()
         wn.add_junction('j1')
         wn.add_junction('j2')
-        wn.add_pipe('p1', 'j1', 'j2', 1000, 1, 100, 0, 'OPEN', True)
+        wn.add_pipe('p1', 'j1', 'j2', 1000, 1, 100, 0, "OPEN", True)
         self.assertEqual(wn._check_valves, ['p1'])
 
     def test_remove_pipe(self):
@@ -151,7 +151,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction('j2')
         wn.add_junction('j3')
         wn.add_pipe('p2','j1','j3')
-        wn.add_pipe('p1','j1','j2', status = 'cv')
+        wn.add_pipe('p1','j1','j2', status=self.wntr.network.LinkStatus.cv)
         wn.remove_link('p1')
         link_list = [link_name for link_name, link in wn.links()]
         self.assertEqual(link_list, ['p2'])

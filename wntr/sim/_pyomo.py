@@ -10,6 +10,7 @@ except ImportError:
                       'Make sure pyomo is installed and added to path.')
 import math
 from wntr.sim.WaterNetworkSimulator import *
+from wntr.network import LinkStatus
 import pandas as pd
 from six import items
 import warnings
@@ -253,7 +254,7 @@ class PyomoSimulator(WaterNetworkSimulator):
         # Create valve status dictionary
         self._valve_status = {}
         for valve_name, valve in self._wn.links(Valve):
-            self._valve_status[valve_name] = 'ACTIVE'
+            self._valve_status[valve_name] = LinkStatus.Active
 
     def _initialize_results_dict(self):
         # Data for results object
@@ -1228,18 +1229,18 @@ class PyomoSimulator(WaterNetworkSimulator):
             end_node = valve.end_node
             pressure_setting = valve.base_setting
             status = self._valve_status[l]
-            if status == 'CLOSED':
+            if status == LinkStatus.closed:
                 # model.flow[l].value = self._Qtol/10.0
                 model.flow[l].value = 0.0
                 model.flow[l].fixed = True
-            elif status == 'OPEN':
+            elif status == LinkStatus.open:
                 diameter = valve.diameter
                 # Darcy-Weisbach model for valves
                 valve_resistance_coefficient = 0.02 * self._Dw_k * (diameter * 2) / (diameter ** 5)
                 setattr(model, 'valve_headloss_' + str(l), Constraint(
                     expr=valve_resistance_coefficient * model.flow[l] ** 2 == model.head[start_node] - model.head[
                         end_node]))
-            elif status == 'ACTIVE':
+            elif status == LinkStatus.active:
                 end_node_obj = self._wn.get_node(end_node)
                 model.head[end_node].value = pressure_setting + end_node_obj.elevation
                 model.head[end_node].fixed = True
@@ -1326,11 +1327,11 @@ class PyomoSimulator(WaterNetworkSimulator):
         #     1 means open the link
         #     2 means take no action
         for link_name, status in self._link_status.items():
-            if status[t] == 0:
+            if status[t] == LinkStatus.closed:
                 links_closed_by_controls.add(link_name)
-            elif status[t] == 1:
+            elif status[t] == LinkStatus.open:
                 links_closed_by_controls.discard(link_name)
-            elif status[t] == 2:
+            elif status[t] == LinkStatus.active:
                 continue
             else:
                 raise RuntimeError('This appears to be a bug. Please report this error tot he developers.')
@@ -1551,34 +1552,34 @@ class PyomoSimulator(WaterNetworkSimulator):
             end_node = valve.end_node
 
             head_sp = pressure_setting + start_node_elevation
-            if status == 'ACTIVE':
+            if status == LinkStatus.active:
                 if instance.flow[valve_name].value < -self._Qtol:
                     # print "----- Valve ", valve_name, " closed:  ", instance.flow[valve_name].value, " < ", -self._Qtol
-                    self._valve_status[valve_name] = 'CLOSED'
+                    self._valve_status[valve_name] = LinkStatus.closed
                     valve_status_changed = True
                 elif instance.head[start_node].value < head_sp - self._Htol:
                     # print "----- Valve ", valve_name, " opened:  ", instance.head[start_node].value, " < ", head_sp - self._Htol
-                    self._valve_status[valve_name] = 'OPEN'
+                    self._valve_status[valve_name] = LinkStatus.open
                     valve_status_changed = True
-            elif status == 'OPEN':
+            elif status == LinkStatus.open:
                 if instance.flow[valve_name].value < -self._Qtol:
                     # print "----- Valve ", valve_name, " closed:  ", instance.flow[valve_name].value, " < ", -self._Qtol
-                    self._valve_status[valve_name] = 'CLOSED'
+                    self._valve_status[valve_name] = LinkStatus.closed
                     valve_status_changed = True
                 elif instance.head[start_node].value > head_sp + self._Htol:
                     # print "----- Valve ", valve_name, " active:  ", instance.head[start_node].value, " > ", head_sp + self._Htol
-                    self._valve_status[valve_name] = 'ACTIVE'
+                    self._valve_status[valve_name] = LinkStatus.active
                     valve_status_changed = True
-            elif status == 'CLOSED':
+            elif status == LinkStatus.closed:
                 if instance.head[start_node].value > instance.head[end_node].value + self._Htol \
                         and instance.head[start_node].value < head_sp - self._Htol:
                     # print "----- Valve ", valve_name, " opened: from closed"
-                    self._valve_status[valve_name] = 'OPEN'
+                    self._valve_status[valve_name] = LinkStatus.open
                     valve_status_changed = True
                 elif instance.head[start_node].value > instance.head[end_node].value + self._Htol \
                         and instance.head[end_node].value < head_sp - self._Htol:
                     # print "----- Valve ", valve_name, " active from closed"
-                    self._valve_status[valve_name] = 'ACTIVE'
+                    self._valve_status[valve_name] = LinkStatus.active
                     valve_status_changed = True
         return valve_status_changed
 

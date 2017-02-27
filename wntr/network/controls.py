@@ -39,8 +39,28 @@ logger = logging.getLogger(__name__)
 #    Close pumps without power
 
 
+#
+# ---- Control Condition classes
+#
+
+
 class ControlCondition(object):
     """A base class for control conditions"""
+    def __init__(self):
+        self._backtrack = 0
+
+    @property
+    def name(self):
+        return str(self)
+
+    @property
+    def backtrack(self):
+        """Should be updated by the ``evaluate`` method if appropriate."""
+        return self._backtrack
+
+    def __hash__(self):
+        return hash(self.name)
+
     def evaluate(self):
         raise NotImplementedError('This is an abstract base class. It must be subclassed.')
 
@@ -49,83 +69,383 @@ class ControlCondition(object):
         return self.evaluate()
     __nonzero__ = __bool__
 
+    @classmethod
+    def _parse_relation(cls, rel):
+        """
+        Convert a string to a numpy relationship.
+        """
+        if isinstance(rel, np.ufunc):
+            return rel
+        elif not isinstance(rel, str):
+            return rel
+        rel = rel.upper().strip()
+        if rel == '=' or rel == 'IS':
+            return np.equal
+        elif rel == '<>' or rel == 'NOT':
+            return np.not_equal
+        elif rel == '<' or rel == 'BELOW' or rel == 'BEFORE':
+            return np.less
+        elif rel == '>' or rel == 'ABOVE' or rel == 'AFTER':
+            return np.greater
+        elif rel == '<=':
+            return np.less_equal
+        elif rel == '>=':
+            return np.greater_equal
+        else:
+            raise ValueError('Unknown relation "%s"'%rel)
 
-class TimeCondition(ControlCondition):
-    """Control based on simulation or clock time.
+    @classmethod
+    def _relation_to_str(cls, rel):
+        """
+        Convert a relation/comparison to a string.
+        """
+        if rel == np.equal or rel == 0:
+            return '='
+        elif rel == np.not_equal:
+            return '<>'
+        elif rel == np.less or rel == -1:
+            return '<'
+        elif rel == np.greater or rel == 1:
+            return '>'
+        elif rel == np.less_equal:
+            return '<='
+        elif rel == np.greater_equal:
+            return '>='
+        else:
+            return str(rel)
+
+    @classmethod
+    def _time_relation_to_str(cls, rel):
+        """
+        Convert a relation/comparison to a string.
+        """
+        if rel == np.equal or rel == 0:
+            return 'at'
+        elif rel == np.less or rel == -1:
+            return 'before'
+        elif rel == np.greater or rel == 1:
+            return 'after'
+        else:
+            return str(rel)
+
+    @classmethod
+    def _sec_to_hours_min_sec(cls, value):
+        sec = value
+        hours = int(sec/3600.)
+        sec -= hours*3600
+        mm = int(sec/60.)
+        sec -= mm*60
+        return '{:02d}:{:02d}:{:02d}'.format(hours, mm, int(sec))
+
+    @classmethod
+    def _sec_to_days_hours_min_sec(cls, value):
+        sec = value
+        days = int(sec/86400.)
+        sec -= days*86400
+        hours = int(sec/3600.)
+        sec -= hours*3600
+        mm = int(sec/60.)
+        sec -= mm*60
+        if days > 0:
+            return '{}-{:02d}:{:02d}:{:02d}'.format(days, hours, mm, int(sec))
+        else:
+            return '{:02d}:{:02d}:{:02d}'.format(hours, mm, int(sec))
+
+    @classmethod
+    def _sec_to_clock(cls, value):
+        sec = value
+        hours = int(sec/3600.)
+        sec -= hours*3600
+        mm = int(sec/60.)
+        sec -= mm*60
+        if hours >= 12:
+            pm = 'PM'
+        elif hours == 0:
+            pm = 'AM'
+            hours = 12
+        else:
+            pm = 'AM'
+        return '{}:{:02d}:{:02d} {}'.format(hours, mm, int(sec), pm)
+
+
+class SimpleNodeCondition(ControlCondition):
+    """Conditional based only on the pressure of a junction or the level of a tank.
 
     Parameters
     ----------
-    source : tuple
-        The tuple is of the form (wnm, attribute), where wnm is a WaterNetworkModel,
-        attribute is either "sim_time", "shifted_time", "daily_time", or "clock_time".
-        Both "daily_time" and "clock_time" are calculated every 24 hours; "daily_time" refers
-        to the 24-hour cycle from sim_time=0, while "clock_time" refers to the 24-hour cycle
-        from 12:00 AM. The "shifted_time" is calculated from 12:00 AM on the first simulation day,
-        regardless of the time of day the simulation 'starts'.
-    operation : bool
-        The comparison to make (generally either np.less_equal or np.greater_equal)
+    source_obj : wntr.network.model.Junction, wntr.network.model.Tank
+        The junction or tank to use as a comparison
+    relation : 'above', 'below', or function
+        Accepts the words *above* or *below*, or accepts
+        a function taking two arguments that returns a true or false. Usually a ``numpy.ufunc``
+        such as ``np.less`` or ``np.greater_equal``
     threshold : float
-        The time threshold for comparison
+        The pressure or tank level to use in the condition
+
     """
-    def __init__(self, source, operation, threshold):
-        if not isinstance(source, tuple):
-            raise ValueError('source must be a tuple, (source_object, source_attribute).')
-        if not isinstance(threshold, float):
-            raise ValueError('threshold must be a float.')
-        self._source_obj = source[0]
-        self._source_attr = source[1]
-        if self._source_attr == 'daily_time':
-            self._daily = True
-            self._source_attr = 'sim_time'
-        elif self._source_attr == 'clock_time':
-            self._daily = True
-            self._source_attr = 'shifted_time'
-        self._relation = operation
+    pass
+
+
+class TimeOfDayCondition(ControlCondition):
+    """Time-of-day or "clocktime" based condition statement.
+
+    Resets automatically at 12 AM in clock time (shifted time) every day simulated. Evaluated
+    from 12 AM the first day of the simulation, even if this is prior to simulation start.
+    Unlike the ``SimTimeCondition``, greater-than and less-than relationships make sense, and
+    reset at midnight.
+
+    Parameters
+    ----------
+    model : WaterNetworkModel
+        The model that the time is being compared against
+    relation : str or None
+        String options are 'at', 'after' or 'before'. The 'at' and None are equivalent, and only
+        evaluate as True during the simulation step the time occurs. After evaluates as True
+        from the time specified until midnight, before evaluates as True from midnight until
+        the specified time.
+    threshold : float or str
+        The time (a ``float`` in seconds since 12 AM) used in the condition; if provided as a
+        string in '[dd-]hh:mm[:ss] [am|pm]' format, the time will be parsed from the string;
+        the optional 'dd' specification is **only used** if `repeat` is set to ``False``
+    repeat : bool, optional
+        True by default; if False, allows for a single, timed trigger, and probably requires the
+        'dd' element of the time string; in this case after becomes True from the time until
+        the end of the simulation, and before is True from the beginning of the simulation until
+        the time specified.
+    first_day : float, default=0
+        Start rule on day `first_day`, with the first day of simulation as day 0
+
+
+    """
+    def __init__(self, model, relation, threshold, repeat=True, first_day=0):
+        self._model = model
         self._threshold = threshold
+        if isinstance(relation, str):
+            relation = relation.lower()
+        if relation is None or relation in ['at', '=', 'is'] or relation is np.equal:
+            self._relation = 0
+        elif (relation in ['before', 'below', '<', '<='] or
+              relation is np.less or relation is np.less_equal):
+            self._relation = -1
+        elif (relation in ['after', 'above', '>', '>='] or
+              relation is np.greater or relation is np.greater_equal):
+            self._relation = 1
+        else:
+            raise ValueError('Unknown relation "%s"'%(str(relation)))
+        self._first_day = first_day
+        self._repeat = repeat
+        self._backtrack = 0
+
+    @property
+    def name(self):
+        if not self._repeat:
+            rep = '_Once'
+        else:
+            rep = '_Daily'
+        if self._first_day > 0:
+            start = '_Start@{}day'.format(self._first_day)
+        else:
+            start = ''
+        return 'ClockTime_{}_{}{}{}'.format(self._time_relation_to_str(self._relation),
+                                             self._sec_to_hours_min_sec(self._threshold),
+                                             rep, start)
+
+    def __repr__(self):
+        return "<TimeOfDayCondition: name='{}', model={}>".format(self.name, str(self._model))
+
+    def __hash__(self):
+        return hash(self.name)
 
     def __str__(self):
-        pass
+        if not self._repeat:
+            thresh = self._threshold + self._first_day * 86400.
+            if self._model is not None:
+                thresh -= self._model.options.start_clocktime
+            if thresh <= 0:
+                thresh += 86400.
+            return 'TIME {} {}'.format(self._relation_to_str(self._relation), thresh)
+        return 'CLOCKTIME {} {}'.format(self._relation_to_str(self._relation),
+                                        self._sec_to_clock(self._threshold))
 
     def evaluate(self):
-        cur_time = getattr(self._source_obj, self._source_attr)
-        prev_time = getattr(self._source_obj, 'prev_'+self._source_attr)
-        if self._daily:
-            cur_time = cur_time % (24*3600)
-            prev_time = prev_time % (24*3600)
+        cur_time = self._model.shifted_time
+        prev_time = self._model.prev_shifted_time
+        day = np.floor(cur_time/86400)
+        if day < self._first_day:
+            self._backtrack = None
+            return False
+        if self._repeat:
+            cur_time = int(cur_time - self._threshold) % 86400
+            prev_time = int(prev_time - self._threshold) % 86400
+        else:
+            cur_time = cur_time - self._first_day * 86400.
+            prev_time = prev_time - self._first_day * 86400.
+        if self._relation == 0 and (prev_time < self._threshold and self._threshold <= cur_time):
+            self._backtrack = int(cur_time - self._threshold)
+            return True
+        elif self._relation == 1 and cur_time >= self._threshold and prev_time < self._threshold:
+            self._backtrack = int(cur_time - self._threshold)
+            return True
+        elif self._relation == 1 and cur_time >= self._threshold and prev_time >= self._threshold:
+            self._backtrack = 0
+            return True
+        elif self._relation == -1 and cur_time >= self._threshold and prev_time < self._threshold:
+            self._backtrack = int(cur_time - self._threshold)
+            return False
+        elif self._relation == -1 and cur_time >= self._threshold and prev_time >= self._threshold:
+            self._backtrack = None
+            return False
+        else:
+            self._backtrack = None
+            return False
 
 
+class SimTimeCondition(ControlCondition):
+    """Condition based on time since start of the simulation.
 
-class SimpleCondition(ControlCondition):
+    Generally, the relation should be ``None`` (converted to "at") --
+    then it is *only* evaluated "at" specific times. Using greater-than or less-than type
+    relationships should be reserved for complex, multi-condition statements and
+    should not be used for simple controls. If ``repeat`` is used, the relationship will
+    automatically be changed to an "at time" evaluation, and a warning will be raised.
+
+    Parameters
+    ----------
+    model : WaterNetworkModel
+        The model that the time threshold is being compared against
+    relation : str or None
+        String options are 'at', 'after' or 'before'. The 'at' and None are equivalent, and only
+        evaluate as True during the simulation step the time occurs. After evaluates as True
+        from the time specified until the end of simulation, before evaluates as True from
+        start of simulation until the specified time.
+    threshold : float or str
+        The time (a ``float`` in seconds) used in the condition; if provided as a string in
+        '[dd-]hh:mm[:ss]' format, then the time will be parsed from the string;
+    repeat : bool or float, default=False
+        If True, then repeat every 24-hours; if non-zero float, reset the
+        condition every `repeat` seconds after the first_time.
+    first_time : float, default=0
+        Start rule at `first_time`, using that time as 0 for the condition evaluation
+
+    """
+    def __init__(self, model, relation, threshold, repeat=False, first_time=0):
+        self._model = model
+        self._threshold = threshold
+        if relation is None or relation == 'at' or relation == '=' or relation is np.equal:
+            self._relation = 0
+        elif (relation == 'before' or relation == 'below' or relation == '<' or relation == '<=' or
+              relation is np.less or relation is np.less_equal):
+            self._relation = -1
+        elif (relation == 'after' or relation == 'above' or relation == '>' or relation == '>=' or
+              relation is np.greater or relation is np.greater_equal):
+            self._relation = 1
+        else:
+            raise ValueError('Unknown relation "%s"'%(str(relation)))
+        self._repeat = repeat
+        if repeat is True:
+            self._repeat = 86400
+        self._backtrack = 0
+        self._first_time = first_time
+
+
+    @property
+    def name(self):
+        if not self._repeat:
+            rep = ''
+        else:
+            rep = '_Every{}sec'.format(self._repeat)
+        if self._first_time > 0:
+            start = '_Start@{}sec'.format((self._first_time))
+        else:
+            start = ''
+        return 'SimTime_{}_{}{}{}'.format(self._relation_to_str(self._relation),
+                                      (self._threshold),
+                                      rep, start)
+
+    def __repr__(self):
+        return "<SimTimeCondition: name='{}', model={}>".format(self.name, str(self._model))
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def __str__(self):
+        return 'TIME {} {}'.format(self._relation_to_str(self._relation),
+                     self._sec_to_hours_min_sec(self._threshold + self._first_time))
+
+    def evaluate(self):
+        cur_time = self._model.sim_time
+        prev_time = self._model.prev_sim_time
+        if self._repeat and cur_time > self._threshold:
+            cur_time = (cur_time - self._threshold) % self._repeat
+            prev_time = (prev_time - self._threshold) % self._repeat
+        if self._relation == 0 and (prev_time < self._threshold and self._threshold <= cur_time):
+            self._backtrack = int(cur_time - self._threshold)
+            return True
+        elif self._relation == 1 and cur_time >= self._threshold and prev_time < self._threshold:
+            self._backtrack = int(cur_time - self._threshold)
+            return True
+        elif self._relation == 1 and cur_time >= self._threshold and prev_time >= self._threshold:
+            self._backtrack = 0
+            return True
+        elif self._relation == -1 and cur_time >= self._threshold and prev_time < self._threshold:
+            self._backtrack = int(cur_time - self._threshold)
+            return False
+        elif self._relation == 1 and cur_time >= self._threshold and prev_time >= self._threshold:
+            self._backtrack = 0
+            return False
+        else:
+            self._backtrack = 0
+            return False
+
+
+class ValueCondition(ControlCondition):
     """Compare a network element attribute to a set value
 
     This type of condition can be converted to an EPANET control or rule conditional clause.
 
     Parameters
     ----------
-    source : tuple
-        A two-tuple. The first value should be an object (such as a Junction, Tank, Reservoir, Pipe, Pump, Valve,
-        WaterNetworkModel, etc.). The second value should be an attribute of the object.
-
-    operation : numpy comparison method
-        Examples: numpy.greater, numpy.less_equal
-
+    source_obj : object
+        The object (such as a Junction, Tank, Pipe, etc.) to use in the comparison
+    source_attr : str
+        The attribute of the object (such as level, pressure, setting, etc.) to
+        compare against the threshold
+    operation : function or str
+        A two-parameter comparison function (e.g., numpy.greater, numpy.less_equal), or a
+        string describing the comparison (e.g., '=', 'below', 'is', '>=', etc.)
+        Words, such as 'below', are only accepted from the EPANET rules conditions list (see ...)
     threshold : float
         A value to compare the source object attribute against
 
-
     """
-    def __init__(self, source, operation, threshold):
-        if not isinstance(source, tuple):
-            raise ValueError('source must be a tuple, (source_object, source_attribute).')
-        if not isinstance(threshold, float):
-            raise ValueError('threshold must be a float.')
-        self._source_obj = source[0]
-        self._source_attr = source[1]
-        self._relation = operation
+    def __init__(self, source_obj, source_attr, relation, threshold):
+        self._source_obj = source_obj
+        self._source_attr = source_attr
+        self._relation = self._parse_relation(relation)
         self._threshold = threshold
+        self._backtrack = 0
+
+    @property
+    def name(self):
+        if hasattr(self._source_obj, 'name'):
+            obj = self._source_obj.name
+        else:
+            obj = str(self._source_obj)
+
+        return '{}:{}_{}_{}'.format(obj, self._source_attr,
+                                self._relation_to_str(self._relation), self._threshold)
+
+    def __repr__(self):
+        return "<ValueCondition: name='{}'>".format(self.name)
 
     def __str__(self):
-        pass
+        typ = str(self._source_obj.__class__).split('.')[-1].replace("'>",'')
+        obj = str(self._source_obj)
+        if hasattr(self._source_obj, 'name'):
+            obj = self._source_obj.name
+        att = self._source_attr
+        rel = self._relation_to_str(self._relation)
+        return '{} {} {} {} {}'.format(typ, obj, att, rel, self._threshold)
 
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
@@ -139,47 +459,70 @@ class SimpleCondition(ControlCondition):
 
 
 class RelativeCondition(ControlCondition):
-    """Compare attributes of two different objects (e.g., tank levels 1 and 2)
+    """Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
 
     This type of condition does not work with the EpanetSimulator, only the WNTRSimulator.
-    This condition does not accept string node/link names, only Node or Link objects.
 
     Parameters
     ----------
-    source : tuple
-        A two-tuple. The first value should be an object (such as a Junction, Tank, Reservoir, Pipe, Pump, Valve,
-        WaterNetworkModel, etc.). The second value should be an attribute of the object.
-
-    operation : numpy or other comparison method that takes two values and returns a bool
-        Examples: numpy.greater, numpy.less_equal.
-
-    threshold : tuple
-        A two-tuple. The first value should be an object (such as a Junction, Tank, Reservoir, Pipe, Pump, Valve,
-        WaterNetworkModel, etc.). The second value should be an attribute of the object.
+    source_obj : object
+        The object (such as a Junction, Tank, Pipe, etc.) to use in the comparison
+    source_attr : str
+        The attribute of the object (such as level, pressure, setting, etc.) to
+        compare against the threshold
+    relation : function
+        A numpy or other comparison method that takes two values and returns a bool
+        (e.g., numpy.greater, numpy.less_equal)
+    threshold_obj : object
+        The object (such as a Junction, Tank, Pipe, etc.) to use in the comparison of attributes
+    threshold_attr : str
+        The attribute to used in the comparison evaluation
 
 
     """
-    def __init__(self, source, operation, threshold):
-        if not isinstance(source, tuple):
-            raise ValueError('source must be a tuple, (source_object, source_attribute)')
-        if not isinstance(threshold, tuple):
-            raise ValueError('threshold must be a tuple, (threshold_object, threshold_attribute)')
-        self._source_obj = source[0]
-        self._source_attr = source[1]
-        self._relation = operation
-        self._threshold_obj = threshold[0]
-        self._threshold_attr = threshold[1]
+    def __init__(self, source_obj, source_attr, relation, threshold_obj, threshold_attr):
+        self._source_obj = source_obj
+        self._source_attr = source_attr
+        self._relation = relation
+        self._threshold_obj = threshold_obj
+        self._threshold_attr = threshold_attr
+        self._backtrack = 0
+
+    @property
+    def name(self):
+        if hasattr(self._source_obj, 'name'):
+            obj = self._source_obj.name
+        else:
+            obj = str(self._source_obj)
+        if hasattr(self._threshold_obj, 'name'):
+            tobj = self._threshold_obj.name
+        else:
+            tobj = str(self._threshold_obj)
+        return '{}:{}_{}_{}:{}'.format(obj, self._source_attr,
+                                self._relation_to_str(self._relation),
+                                tobj, self._threshold_attr)
+
+    def __repr__(self):
+        return "<RelativeCondition: name='{}'>".format(self.name)
 
     def __str__(self):
-        pass
+        typ = str(self._source_obj.__class__).split('.')[-1].replace("'>",'')
+        obj = str(self._source_obj)
+        if hasattr(self._source_obj, 'name'):
+            obj = self._source_obj.name
+        att = self._source_attr
+        rel = self._relation_to_str(self._relation)
+        if hasattr(self._threshold_obj, 'name'):
+            tobj = self._threshold_obj.name
+        else:
+            tobj = str(self._threshold_obj)
+        return '{} {} {} {} {} {}'.format(typ, obj, att, rel,
+                                       tobj, self._threshold_attr)
 
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
         thresh_value = getattr(self._threshold_obj, self._threshold_attr)
         relation = self._relation
-        if np.isnan(self._threshold):
-            relation = np.greater
-            thresh_value = 0.0
         state = relation(cur_value, thresh_value)
         return state
 
@@ -210,6 +553,10 @@ class OrCondition(ControlCondition):
     def evaluate(self):
         return bool(self._condition_1) or bool(self._condition_2)
 
+    @property
+    def backtrack(self):
+        return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
+
 
 class AndCondition(ControlCondition):
     """Combine two WNTR Conditions with an AND
@@ -236,6 +583,15 @@ class AndCondition(ControlCondition):
 
     def evaluate(self):
         return bool(self._condition_1) and bool(self._condition_2)
+
+    @property
+    def backtrack(self):
+        return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
+
+
+#
+# --- Control Action classes
+#
 
 
 class BaseControlAction(object):
@@ -328,6 +684,10 @@ class ControlAction(BaseControlAction):
             #logger.debug('control {0} setting {1} {2} to {3}'.format(control_name, target.name(),self._attribute,self._value))
             setattr(target, self._attribute, self._value)
             return True, (target, self._attribute), orig_value
+
+#
+# ---- Control classes
+#
 
 class Control(object):
     """
@@ -422,6 +782,15 @@ class Control(object):
                                   'derived classes of ControlAction.')
 
 
+
+class IfThenElseControl(Control):
+    """If-Then[-Else] contol
+    """
+    def __init__(self, conditions, then_actions, else_actions=None, priority=None):
+        pass
+
+
+
 class TimeControl(Control):
     """
     A class for creating time controls to run a control action at a particular
@@ -456,10 +825,10 @@ class TimeControl(Control):
 
     Examples
     --------
-    >>> pipe = wn.get_link('pipe8')
-    >>> action = ControlAction(pipe, 'status', wntr.network.LinkStatus.opened)
-    >>> control = TimeControl(wn, 3652, 'SIM_TIME', False, action)
-    >>> wn.add_control('control_name', control)
+    >>> #pipe = wn.get_link('pipe8')
+    >>> #action = ControlAction(pipe, 'status', wntr.network.LinkStatus.opened)
+    >>> #control = TimeControl(wn, 3652, 'SIM_TIME', False, action)
+    >>> #wn.add_control('control_name', control)
 
     In this case, pipe8 will be opened 1 hour and 52 seconds after the start of the simulation.
     """
@@ -576,11 +945,11 @@ class ConditionalControl(Control):
 
     Examples
     --------
-    >>> pipe = wn.get_link('pipe8')
-    >>> tank = wn.get_node('tank3')
-    >>> action = ControlAction(pipe, 'status', wntr.network.LinkStatus.closed)
-    >>> control = ConditionalControl((tank, 'head'), numpy.greater_equal, 13.5, action)
-    >>> wn.add_control('control_name', control)
+    >>> #pipe = wn.get_link('pipe8')
+    >>> #tank = wn.get_node('tank3')
+    >>> #action = ControlAction(pipe, 'status', wntr.network.LinkStatus.closed)
+    >>> #control = ConditionalControl((tank, 'head'), numpy.greater_equal, 13.5, action)
+    >>> #wn.add_control('control_name', control)
 
     In this case, pipe8 will be closed if the head in tank3 becomes greater than or equal to 13.5 meters.
 
@@ -599,7 +968,7 @@ class ConditionalControl(Control):
         self._partial_step_for_tanks = True
         self._source_obj = source[0]
         self._source_attr = source[1]
-        self._relation = operation
+        self._operation = operation
         self._control_action = control_action
         self._threshold = threshold
 
@@ -614,7 +983,7 @@ class ConditionalControl(Control):
            self._partial_step_for_tanks == other._partial_step_for_tanks and \
            self._source_obj             == other._source_obj             and \
            self._source_attr            == other._source_attr            and \
-           self._relation              == other._relation              and \
+           self._operation              == other._operation              and \
            self._control_action         == other._control_action         and \
            abs(self._threshold           - other._threshold)<1e-10:
             return True
@@ -666,9 +1035,9 @@ class ConditionalControl(Control):
                 q_net = self._source_obj.prev_demand
                 delta_h = 4.0*q_net*(wnm.sim_time-wnm.prev_sim_time)/(math.pi*self._source_obj.diameter**2)
                 next_val = val+delta_h
-                if self._relation(next_val, self._threshold) and self._relation(val, self._threshold):
+                if self._operation(next_val, self._threshold) and self._operation(val, self._threshold):
                     return (False, None)
-                if self._relation(next_val, self._threshold):
+                if self._operation(next_val, self._threshold):
                     #if self._source_obj.name()=='TANK-3352':
                         #print 'threshold for tank 3352 control is ',self._threshold
 
@@ -681,14 +1050,14 @@ class ConditionalControl(Control):
                     return (False, None)
             else:
                 val = getattr(self._source_obj,self._source_attr)
-                if self._relation(val, self._threshold):
+                if self._operation(val, self._threshold):
                     return (True, 0)
                 else:
                     return (False, None)
         elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='head' and wnm.sim_time==0 and self._partial_step_for_tanks:
             if presolve_flag:
                 val = getattr(self._source_obj, self._source_attr)
-                if self._relation(val, self._threshold):
+                if self._operation(val, self._threshold):
                     return (True, 0)
                 else:
                     return (False, None)
@@ -698,7 +1067,7 @@ class ConditionalControl(Control):
             return (False, None)
         else:
             val = getattr(self._source_obj, self._source_attr)
-            if self._relation(val, self._threshold):
+            if self._operation(val, self._threshold):
                 return (True, 0)
             else:
                 return (False, None)
@@ -743,18 +1112,18 @@ class MultiConditionalControl(Control):
 
     Examples
     --------
-    >>> pump = wn.get_link('pump1')
-    >>> pipe = wn.get_link('pipe8')
-    >>> tank = wn.get_node('tank3')
-    >>> junction = wn.get_node('junction15')
+    >>> #pump = wn.get_link('pump1')
+    >>> #pipe = wn.get_link('pipe8')
+    >>> #tank = wn.get_node('tank3')
+    >>> #junction = wn.get_node('junction15')
     >>>
-    >>> action = ControlAction(pump, 'status', wntr.network.LinkStatus.closed)
+    >>> #action = ControlAction(pump, 'status', wntr.network.LinkStatus.closed)
     >>>
-    >>> sources = [(pipe,'flow'),(tank,'head')]
-    >>> operations = [numpy.greater_equal, numpy.less_equal]
-    >>> thresholds = [0.01, (junction,'head')]
-    >>> control = MultiConditionalControl(sources, operations, thresholds, action)
-    >>> wn.add_control('control_name', control)
+    >>> #sources = [(pipe,'flow'),(tank,'head')]
+    >>> #operations = [numpy.greater_equal, numpy.less_equal]
+    >>> #thresholds = [0.01, (junction,'head')]
+    >>> #control = MultiConditionalControl(sources, operations, thresholds, action)
+    >>> #wn.add_control('control_name', control)
 
     In this case, pump1 will be closed if the flowrate in pipe8 is greater than or equal to 0.01 cubic meters per
     second and the head in tank3 is less than or equal to the head in junction 15.

@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 __all__ = ["FlowUnits", "MassUnits", "QualParam", "HydParam", "to_si", "from_si",
            "StatisticsType", "QualType", "SourceType", "PressureUnits", "FormulaType",
-           "NodeType", "LinkType", "ControlType", "LinkBaseStatus", "LinkTankStatus",
+           "ControlType", "LinkTankStatus",
            "MixType", "ResultType", "EN"]
 
 class FlowUnits(enum.Enum):
@@ -851,70 +851,6 @@ class FormulaType(enum.Enum):
         return self.value[1]
 
 
-class NodeType(enum.Enum):
-    """The node type.
-
-    .. rubric:: Enum Members
-
-    ==================  ==================================================================
-    :attr:`~Junction`   Node is a :class:`~wntr.network.WaterNetworkModel.Junction`
-    :attr:`~Reservoir`  Node is a :class:`~wntr.network.WaterNetworkModel.Reservoir`
-    :attr:`~Tank`       Node is a :class:`~wntr.network.WaterNetworkModel.Tank`
-    ==================  ==================================================================
-
-    """
-    Junction = 0
-    Reservoir = 1
-    Tank = 2
-
-    def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
-
-    def __str__(self):
-        return self.name
-
-
-class LinkType(enum.Enum):
-    """The link type
-
-    .. rubric:: Enum Members
-
-    ===============  ==================================================================
-    :attr:`~CV`      Pipe with check valve
-    :attr:`~Pipe`    Regular pipe
-    :attr:`~Pump`    Pump
-    :attr:`~PRV`     Pressure reducing valve
-    :attr:`~PSV`     Pressure sustaining valve
-    :attr:`~PBV`     Pressure breaker valve
-    :attr:`~FCV`     Flow control valve
-    :attr:`~TCV`     Throttle control valve
-    :attr:`~GPV`     General purpose valve
-    ===============  ==================================================================
-
-    """
-    CV = 0
-    Pipe = 1
-    Pump = 2
-    PRV = 3
-    PSV = 4
-    PBV = 5
-    FCV = 6
-    TCV = 7
-    GPV = 8
-
-    def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
-
-    def __str__(self):
-        return self.name
-
-
 class ControlType(enum.Enum):
     """The type of control.
 
@@ -933,32 +869,6 @@ class ControlType(enum.Enum):
     HiLevel = 1
     Timer = 2
     TimeOfDay = 3
-
-    def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
-
-    def __str__(self):
-        return self.name
-
-
-class LinkBaseStatus(enum.Enum):
-    """Base status for a link.
-
-    .. rubric:: Enum Members
-
-    ===============  ==================================================================
-    :attr:`~Closed`  Pipe/valve/pump is closed.
-    :attr:`~Open`    Pipe/valve/pump is open.
-    :attr:`~Active`  Valve is partially open.
-    ===============  ==================================================================
-
-    """
-    Closed = 0
-    Open = 1
-    Active = 2
 
     def __init__(self, val):
         if self.name != self.name.upper():
@@ -1113,6 +1023,7 @@ class EN(enum.IntEnum):
     TANK_KBULK   = 23
     TANKVOLUME   = 24
     MAXVOLUME    = 25
+
     DIAMETER     = 0
     LENGTH       = 1
     ROUGHNESS    = 2
@@ -1129,6 +1040,7 @@ class EN(enum.IntEnum):
     ENERGY       = 13
     LINKQUAL     = 14
     LINKPATTERN  = 15
+
     DURATION     = 0
     HYDSTEP      = 1
     QUALSTEP     = 2
@@ -1143,17 +1055,21 @@ class EN(enum.IntEnum):
     HTIME        = 11
     HALTFLAG     = 12
     NEXTEVENT    = 13
+
     ITERATIONS   = 0
     RELATIVEERROR= 1
+
     NODECOUNT    = 0
     TANKCOUNT    = 1
     LINKCOUNT    = 2
     PATCOUNT     = 3
     CURVECOUNT   = 4
     CONTROLCOUNT = 5
+
     JUNCTION     = 0
     RESERVOIR    = 1
     TANK         = 2
+
     CVPIPE       = 0
     PIPE         = 1
     PUMP         = 2
@@ -1163,14 +1079,17 @@ class EN(enum.IntEnum):
     FCV          = 6
     TCV          = 7
     GPV          = 8
+
     NONE         = 0
     CHEM         = 1
     AGE          = 2
     TRACE        = 3
+
     CONCEN       = 0
     MASS         = 1
     SETPOINT     = 2
     FLOWPACED    = 3
+
     CFS          = 0
     GPM          = 1
     MGD          = 2
@@ -1181,26 +1100,32 @@ class EN(enum.IntEnum):
     MLD          = 7
     CMH          = 8
     CMD          = 9
+
     TRIALS       = 0
     ACCURACY     = 1
     TOLERANCE    = 2
     EMITEXPON    = 3
     DEMANDMULT   = 4
+
     LOWLEVEL     = 0
     HILEVEL      = 1
     TIMER        = 2
     TIMEOFDAY    = 3
+
     AVERAGE      = 1
     MINIMUM      = 2
     MAXIMUM      = 3
     RANGE        = 4
+
     MIX1         = 0
     MIX2         = 1
     FIFO         = 2
     LIFO         = 3
+
     NOSAVE       = 0
     SAVE         = 1
     INITFLOW     = 10
+
     CONST_HP     = 0
     POWER_FUNC   = 1
     CUSTOM       = 2

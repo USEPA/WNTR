@@ -11,6 +11,7 @@ import wntr.epanet
 import numpy as np
 import sys
 import logging
+import enum
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ class WaterNetworkModel(object):
 
     Examples
     ---------
-    >>> wn = WaterNetworkModel()
+    >>> #wn = WaterNetworkModel()
     """
 
     def __init__(self, inp_file_name=None):
@@ -342,6 +343,8 @@ class WaterNetworkModel(object):
         diameter = float(diameter)
         roughness = float(roughness)
         minor_loss = float(minor_loss)
+        if isinstance(status, str):
+            status = LinkStatus[status]
         pipe = Pipe(name, start_node_name, end_node_name, length,
                     diameter, roughness, minor_loss, status, check_valve_flag)
         # Add to list of cv
@@ -760,8 +763,8 @@ class WaterNetworkModel(object):
 
         Examples
         --------
-        >>> j = wn.get_node(junction_name)
-        >>> j.elevation = 20.0
+        >>> #j = wn.get_node(junction_name)
+        >>> #j.elevation = 20.0
         """
         pipe = self.get_link(pipe_name_to_split)
         if not isinstance(pipe, Pipe):
@@ -789,8 +792,8 @@ class WaterNetworkModel(object):
 
         self.remove_link(pipe_name_to_split)
         self.add_junction(junction_name, base_demand=0.0, demand_pattern_name=None, elevation=junction_elevation, coordinates=junction_coordinates)
-        self.add_pipe(pipe_name_on_start_node_side, pipe.start_node, junction_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
-        self.add_pipe(pipe_name_on_end_node_side, junction_name, pipe.end_node, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, LinkStatus.status_to_str(pipe.status), pipe.cv)
+        self.add_pipe(pipe_name_on_start_node_side, pipe.start_node, junction_name, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, pipe.status, pipe.cv)
+        self.add_pipe(pipe_name_on_end_node_side, junction_name, pipe.end_node, pipe.length/2.0, pipe.diameter, pipe.roughness, pipe.minor_loss, pipe.status, pipe.cv)
 
         if pipe.cv:
             logger.warn('You are splitting a pipe with a check valve. Both new pipes will have check valves.')
@@ -1732,141 +1735,112 @@ class WaterNetworkOptions(object):
         self.limiting_potential = None
         self.roughness_correlation = None
 
-class NodeTypes(object):
+class NodeType(enum.IntEnum):
     """
     An enum class for types of nodes.
+
+    .. rubric:: Enum Members
+
+    ==================  ==================================================================
+    :attr:`~Junction`   Node is a :class:`~wntr.network.model.Junction`
+    :attr:`~Reservoir`  Node is a :class:`~wntr.network.model.Reservoir`
+    :attr:`~Tank`       Node is a :class:`~wntr.network.model.Tank`
+    ==================  ==================================================================
+
     """
-    junction = 0
-    "An enum member for junctions"
-    tank = 1
-    "An enum member for tanks"
-    reservoir = 2
-    "An enum member for reservoirs"
+    Junction = 0
+    Reservoir = 1
+    Tank = 2
 
-    def __init__(self):
-        pass
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
 
-    @classmethod
-    def node_type_to_str(self, value):
-        """
-        Convert a NodeTypes enum member to a string.
+    def __str__(self):
+        return self.name
 
-        Parameters
-        ----------
-        value: A NodeTypes enum member
+    def __eq__(self, other):
+        return int(self) == int(other.value)
 
-        Returns
-        -------
-        A string corresponding to the enum member
 
-        Examples
-        --------
-        >>> NodeTypes.node_type_to_str(NodeTypes.junction)
-        'Junction'
-        """
-        if value == self.junction:
-            return 'Junction'
-        elif value == self.tank:
-            return 'Tank'
-        elif value == self.reservoir:
-            return 'Reservoir'
-
-class LinkTypes(object):
+class LinkType(enum.IntEnum):
     """
     An enum class for types of links.
+
+    .. rubric:: Enum Members
+
+    ===============  ==================================================================
+    :attr:`~CV`      Pipe with check valve
+    :attr:`~Pipe`    Regular pipe
+    :attr:`~Pump`    Pump
+    :attr:`~Valve`   Any valve type (see following)
+    :attr:`~PRV`     Pressure reducing valve
+    :attr:`~PSV`     Pressure sustaining valve
+    :attr:`~PBV`     Pressure breaker valve
+    :attr:`~FCV`     Flow control valve
+    :attr:`~TCV`     Throttle control valve
+    :attr:`~GPV`     General purpose valve
+    ===============  ==================================================================
+
     """
-    pipe = 0
-    "An enum member for pipes"
-    pump = 1
-    "An enum member for pumps"
-    valve = 2
-    "An enum member for valves"
+    CV = 0
+    Pipe = 1
+    Pump = 2
+    PRV = 3
+    PSV = 4
+    PBV = 5
+    FCV = 6
+    TCV = 7
+    GPV = 8
+    Valve = 9
 
-    def __init__(self):
-        pass
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
 
-    @classmethod
-    def link_type_to_str(self, value):
-        """
-        Convert a LinkTypes enum member to a string.
+    def __str__(self):
+        return self.name
 
-        Parameters
-        ----------
-        value: A Linktypes enum member
+    def __eq__(self, other):
+        return int(self) == int(other.value)
 
-        Returns
-        -------
-        A string corresponding to the enum member
 
-        Examples
-        --------
-        >>> Linktypes.link_type_to_str(LinkTypes.pump)
-        'Pump'
-        """
-        if value == self.pipe:
-            return 'Pipe'
-        elif value == self.pump:
-            return 'Pump'
-        elif value == self.valve:
-            return 'Valve'
-
-class LinkStatus(object):
+class LinkStatus(enum.IntEnum):
     """
     An enum class for link statuses.
+
+    .. rubric:: Enum Members
+
+    ===============  ==================================================================
+    :attr:`~Closed`  Pipe/valve/pump is closed.
+    :attr:`~Opened`  Pipe/valve/pump is open.
+    :attr:`~Open`    Alias to "Opened"
+    :attr:`~Active`  Valve is partially open.
+    ===============  ==================================================================
+
     """
-    closed = 0
-    "An enum member for closed links"
-    opened = 1
-    "An enum member for open links"
-    active = 2
-    "An enum member for active valves"
+    Closed = 0
+    Open = 1
+    Opened = 1
+    Active = 2
+    CV = 3
 
-    def __init__(self):
-        pass
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
 
-    @classmethod
-    def str_to_status(self, value):
-        """
-        Convert a string to an enum member value.
+    def __str__(self):
+        return self.name
 
-        Parameters
-        ----------
-        value: string
-           Options are 'OPEN', 'CLOSED', or 'ACTIVE'.
-        """
-        if type(value) == int:
-            return value
-        elif value.upper() == 'OPEN':
-            return self.opened
-        elif value.upper() == 'CLOSED':
-            return self.closed
-        elif value.upper() == 'ACTIVE':
-            return self.active
+    def __eq__(self, other):
+        return int(self) == int(other.value)
 
-    @classmethod
-    def status_to_str(self, value):
-        """
-        Convert a LinkStatus enum member to a string.
-
-        Parameters
-        ----------
-        value: A LinkStatus enum member
-
-        Returns
-        -------
-        A string corresponding to the enum member
-
-        Examples
-        --------
-        >>> LinkStatus.status_to_str(LinkStatus.active)
-        'ACTIVE'
-        """
-        if value == self.opened:
-            return 'OPEN'
-        elif value == self.closed:
-            return 'CLOSED'
-        elif value == self.active:
-            return 'ACTIVE'
 
 class Node(object):
     """
@@ -1879,9 +1853,7 @@ class Node(object):
     node_type : string
         Type of the node. Options are 'Junction', 'Tank', or 'Reservoir'
 
-    Examples
-    ---------
-    >>> node2 = Node('North Lake','Reservoir')
+
     """
     def __init__(self, name):
 
@@ -1932,9 +1904,6 @@ class Link(object):
     end_node_name : string
          Name of the end node
 
-    Examples
-    ---------
-    >>> link1 = Link('Pipe 1','Pipe', 'Node 153', 'Node 159')
     """
 
     def __init__(self, link_name, start_node_name, end_node_name):
@@ -2009,6 +1978,8 @@ class Junction(Node):
     elevation : float, optional
         Elevation of the junction.
         Internal units must be meters (m).
+
+
     """
 
     def __init__(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0):
@@ -2447,7 +2418,10 @@ class Pipe(Link):
         self.minor_loss = minor_loss
         self.cv = check_valve_flag
         if status is not None:
-            self.status = LinkStatus.str_to_status(status)
+            if isinstance(status, str):
+                self.status = LinkStatus[status]
+            else:
+                self.status = status
             self._base_status = self.status
         self.bulk_rxn_coeff = None
         self.wall_rxn_coeff = None
@@ -2469,6 +2443,7 @@ class Pipe(Link):
 
     def __hash__(self):
         return id(self)
+
 
 class Pump(Link):
     """

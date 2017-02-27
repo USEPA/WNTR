@@ -320,11 +320,6 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     -------
     Figure
 
-    Examples
-    --------
-    >>> wn = en.network.WaterNetworkModel('Net1.inp')
-    >>> en.network.draw_graph(wn)
-
     Notes
     -----
     For more network draw options, see nx.draw_networkx
