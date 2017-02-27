@@ -20,7 +20,7 @@ def test_setpoint_waterquality_simulation():
     inp_file = join(datadir,'Net3.inp')
 
     wn = wntr.network.WaterNetworkModel(inp_file)
-    
+
     wn.options.quality = 'CHEMICAL'
     wn.add_pattern('NewPattern', start_time=0, end_time=wn.options.duration)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
@@ -37,7 +37,7 @@ def test_flowpaced_waterquality_simulation():
     inp_file = join(datadir,'Net3.inp')
 
     wn = wntr.network.WaterNetworkModel(inp_file)
-    
+
     wn.options.quality = 'CHEMICAL'
     wn.add_pattern('NewPattern', start_time=0, end_time=wn.options.duration)
     wn.add_source('Source1', '121', 'FLOWPACED', 100, 'NewPattern')
@@ -54,7 +54,7 @@ def test_mass_waterquality_simulation():
     inp_file = join(datadir,'Net3.inp')
 
     wn = wntr.network.WaterNetworkModel(inp_file)
-    
+
     wn.options.quality = 'CHEMICAL'
     wn.add_pattern('NewPattern', start_time=0, end_time=wn.options.duration)
     wn.add_source('Source1', '121', 'MASS', 100, 'NewPattern')
@@ -71,7 +71,7 @@ def test_conc_waterquality_simulation():
     inp_file = join(datadir,'Net3.inp')
 
     wn = wntr.network.WaterNetworkModel(inp_file)
-    
+
     wn.options.quality = 'CHEMICAL'
     wn.add_pattern('NewPattern', start_time=0, end_time=wn.options.duration)
     wn.add_source('Source1', 'River', 'CONCEN', 100, 'NewPattern')
@@ -99,7 +99,7 @@ def test_age_waterquality_simulation():
 
     # WARNING: This does NOT match the EPANET Windows results - it does match
     # the epanet linux binary
-    expected = 3.69*3600 # Node '159' at hour 6
+    expected = 3.652*3600 # Node '159' at hour 6
     error = abs((results.node.loc['quality', 6*3600, '159'] - expected)/expected)
     print([expected, results.node.loc['quality', 6*3600, '159']])
     assert_less(error, 0.001) # 0.01% error

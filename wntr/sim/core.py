@@ -427,9 +427,9 @@ class WNTRSimulator(WaterNetworkSimulator):
             changed_attrs = self._control_log.changed_attributes[obj_name]
             if type(obj) == wntr.network.Pipe:
                 if 'status' in changed_attrs:
-                    if getattr(obj, 'status') == wntr.network.LinkStatus.opened:
+                    if int(getattr(obj, 'status')) == int(wntr.network.LinkStatus.opened):
                         self._internal_graph.add_edge(obj.start_node, obj.end_node, key=obj_name)
-                    elif getattr(obj, 'status') == wntr.network.LinkStatus.closed:
+                    elif int(getattr(obj, 'status')) == int(wntr.network.LinkStatus.closed):
                         self._internal_graph.remove_edge(obj.start_node, obj.end_node, key=obj_name)
                     else:
                         raise RuntimeError('Pipe status not recognized: %s', getattr(obj, 'status'))
