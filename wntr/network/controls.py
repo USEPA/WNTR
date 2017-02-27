@@ -129,6 +129,18 @@ class ControlCondition(object):
             return str(rel)
 
     @classmethod
+    def _simple_relation_to_str(cls, rel):
+        """
+        Convert to an EPANET control comparison
+        """
+        if rel == np.less or rel == np.less_equal:
+            return 'BELOW'
+        elif rel == np.greater or rel == np.greater_equal:
+            return 'ABOVE'
+        else:
+            raise ValueError('Simple conditions can only take ABOVE (>, >=) or BELOW (<, <=)')
+
+    @classmethod
     def _sec_to_hours_min_sec(cls, value):
         sec = value
         hours = int(sec/3600.)
@@ -183,7 +195,51 @@ class SimpleNodeCondition(ControlCondition):
         The pressure or tank level to use in the condition
 
     """
-    pass
+    def __init__(self, source_obj, relation, threshold):
+        self._source_obj = source_obj
+        if isinstance(source_obj, wntr.network.model.Tank):
+            source_attr = 'level'
+        elif isinstance(source_obj, wntr.network.model.Junction):
+            source_attr = 'pressure'
+        self._source_attr = source_attr
+        self._relation = self._parse_relation(relation)
+        if self._relation in [np.equal, np.not_equal]:
+            raise ValueError('Simple conditions can only take ABOVE (>, >=) or BELOW (<, <=)')
+        self._threshold = threshold
+        self._backtrack = 0
+
+    @property
+    def name(self):
+        if hasattr(self._source_obj, 'name'):
+            obj = self._source_obj.name
+        else:
+            obj = str(self._source_obj)
+
+        return '{}:{}_{}_{}'.format(obj, self._source_attr,
+                                self._relation_to_str(self._relation), self._threshold)
+
+    def __repr__(self):
+        return "<SimpleNodeCondition: name='{}'>".format(self.name)
+
+    def __str__(self):
+        typ = self._source_obj.__class__.__name__
+        obj = str(self._source_obj)
+        if hasattr(self._source_obj, 'name'):
+            obj = self._source_obj.name
+        att = self._source_attr
+        rel = self._simple_relation_to_str(self._relation)
+        return '{} {} {}'.format(obj, rel, self._threshold)
+
+    def evaluate(self):
+        cur_value = getattr(self._source_obj, self._source_attr)
+        thresh_value = self._threshold
+        relation = self._relation
+        if np.isnan(self._threshold):
+            relation = np.greater
+            thresh_value = 0.0
+        state = relation(cur_value, thresh_value)
+        return state
+
 
 
 class TimeOfDayCondition(ControlCondition):
@@ -200,17 +256,16 @@ class TimeOfDayCondition(ControlCondition):
         The model that the time is being compared against
     relation : str or None
         String options are 'at', 'after' or 'before'. The 'at' and None are equivalent, and only
-        evaluate as True during the simulation step the time occurs. After evaluates as True
-        from the time specified until midnight, before evaluates as True from midnight until
+        evaluate as True during the simulation step the time occurs. `after` evaluates as True
+        from the time specified until midnight, `before` evaluates as True from midnight until
         the specified time.
     threshold : float or str
         The time (a ``float`` in seconds since 12 AM) used in the condition; if provided as a
-        string in '[dd-]hh:mm[:ss] [am|pm]' format, the time will be parsed from the string;
-        the optional 'dd' specification is **only used** if `repeat` is set to ``False``
+        string in 'hh:mm[:ss] [am|pm]' format, the time will be parsed from the string
     repeat : bool, optional
-        True by default; if False, allows for a single, timed trigger, and probably requires the
-        'dd' element of the time string; in this case after becomes True from the time until
-        the end of the simulation, and before is True from the beginning of the simulation until
+        True by default; if False, allows for a single, timed trigger, and probably needs an
+        entry for `first_day`; in this case a relation of `after` becomes True from the time until
+        the end of the simulation, and `before` is True from the beginning of the simulation until
         the time specified.
     first_day : float, default=0
         Start rule on day `first_day`, with the first day of simulation as day 0
