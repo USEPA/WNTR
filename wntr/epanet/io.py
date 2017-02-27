@@ -200,7 +200,6 @@ class InpFile(object):
     * *DEMANDS*
     * *QUALITY*
     * *EMITTERS*
-    * *SOURCES*
     * *MIXING*
     * *VERTICES*
     * *LABELS*
@@ -318,10 +317,10 @@ class InpFile(object):
                 elif key == 'HEADLOSS':
                     opts.headloss = words[1].upper()
                 elif key == 'HYDRAULICS':
-                    opts.hydraulics_option = words[1].upper()
+                    opts.hydraulics = words[1].upper()
                     opts.hydraulics_filename = words[2]
                 elif key == 'QUALITY':
-                    opts.quality_option = words[1].upper()
+                    opts.quality = words[1].upper()
                     if len(words) > 2:
                         opts.quality_value = words[2]
                         if 'ug' in words[2]:
@@ -342,7 +341,7 @@ class InpFile(object):
                 elif key == 'ACCURACY':
                     opts.accuracy = float(words[1])
                 elif key == 'UNBALANCED':
-                    opts.unbalanced_option = words[1].upper()
+                    opts.unbalanced = words[1].upper()
                     if len(words) > 2:
                         opts.unbalanced_value = int(words[2])
                 elif key == 'PATTERN':
@@ -613,7 +612,26 @@ class InpFile(object):
                 continue
             assert(len(current) == 3), ("Error reading node coordinates. Check format.")
             wn.set_node_coordinates(current[0], (float(current[1]), float(current[2])))
-
+        
+        source_num = 0
+        for lnum, line in self.sections['[SOURCES]']:
+            edata['lnum'] = lnum
+            edata['sec'] = '[SOURCES]'
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            assert(len(current) >= 3), ("Error reading sources. Check format.")
+            source_num = source_num + 1
+            if current[0].upper() == 'MASS':
+                strength = to_si(inp_units, float(current[2]), QualParam.SourceMassInject, mass_units)
+            else: 
+                strength = to_si(inp_units, float(current[2]), QualParam.Concentration, mass_units)
+            if len(current) == 3:
+                wn.add_source('INP'+str(source_num), current[0], current[1], strength, None)
+            else:
+                wn.add_source('INP'+str(source_num), current[0], current[1], strength,  current[3])
+            
         time_format = ['am', 'AM', 'pm', 'PM']
         for lnum, line in self.sections['[TIMES]']:
             edata['lnum'] = lnum
@@ -839,9 +857,6 @@ class InpFile(object):
         if len(self.sections['[EMITTERS]']) > 0:
             # wn._en_emitters = '\n'.join(self.sections['[EMITTERS]'])
             logger.warning('EMITTERS are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
-
-        if len(self.sections['[SOURCES]']) > 0:
-            logger.warning('SOURCES are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[MIXING]']) > 0:
             logger.warning('MIXING is currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
@@ -1120,6 +1135,30 @@ class InpFile(object):
                 else:
                     raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
             f.write('\n'.encode('ascii'))
+            
+            # sources
+            f.write('[SOURCES]\n'.encode('ascii'))
+            entry = '{:10s} {:10s} {:10s} {:10s}\n'
+            label = '{:10s} {:10s} {:10s} {:10s}\n'
+            f.write(label.format(';Node', 'Type', 'Quality', 'Pattern').encode('ascii'))
+            nsources = list(wn._sources.keys())
+            nsources.sort()
+            for source_name in nsources:
+                source = wn._sources[source_name]
+
+                if source.source_type.upper() == 'MASS':
+                    strength = from_si(inp_units, source.quality, QualParam.SourceMassInject, mass_units)
+                else: # CONC, SETPOINT, FLOWPACED
+                    strength = from_si(inp_units, source.quality, QualParam.Concentration, mass_units)
+                
+                E = {'node': source.node_name,
+                     'type': source.source_type,
+                     'quality': str(strength),
+                     'pat': ''}
+                if source.pattern_name is not None:
+                    E['pat'] = source.pattern_name
+                f.write(entry.format(E['node'], E['type'], str(E['quality']), E['pat']).encode('ascii'))
+            f.write('\n'.encode('ascii'))
 
             # Report
             f.write('[REPORT]\n'.encode('ascii'))
@@ -1137,12 +1176,12 @@ class InpFile(object):
             entry_float = '{:20s} {:g}\n'
             f.write(entry_string.format('UNITS', inp_units.name).encode('ascii'))
             f.write(entry_string.format('HEADLOSS', wn.options.headloss).encode('ascii'))
-            if wn.options.hydraulics_option is not None:
-                f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulics_option, wn.options.hydraulics_filename).encode('ascii'))
+            if wn.options.hydraulics is not None:
+                f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulics, wn.options.hydraulics_filename).encode('ascii'))
             if wn.options.quality_value is None:
-                f.write(entry_string.format('QUALITY', wn.options.quality_option).encode('ascii'))
+                f.write(entry_string.format('QUALITY', wn.options.quality).encode('ascii'))
             else:
-                f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality_option, wn.options.quality_value).encode('ascii'))
+                f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality, wn.options.quality_value).encode('ascii'))
             f.write(entry_float.format('VISCOSITY', wn.options.viscosity).encode('ascii'))
             f.write(entry_float.format('DIFFUSIVITY', wn.options.diffusivity).encode('ascii'))
             f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.specific_gravity).encode('ascii'))
@@ -1150,9 +1189,9 @@ class InpFile(object):
             f.write(entry_float.format('ACCURACY', wn.options.accuracy).encode('ascii'))
             f.write(entry_float.format('CHECKFREQ', wn.options.checkfreq).encode('ascii'))
             if wn.options.unbalanced_value is None:
-                f.write(entry_string.format('UNBALANCED', wn.options.unbalanced_option).encode('ascii'))
+                f.write(entry_string.format('UNBALANCED', wn.options.unbalanced).encode('ascii'))
             else:
-                f.write('{:20s} {:s} {:d}\n'.format('UNBALANCED', wn.options.unbalanced_option, wn.options.unbalanced_value).encode('ascii'))
+                f.write('{:20s} {:s} {:d}\n'.format('UNBALANCED', wn.options.unbalanced, wn.options.unbalanced_value).encode('ascii'))
             if wn.options.pattern is not None:
                 f.write(entry_string.format('PATTERN', wn.options.pattern).encode('ascii'))
             f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.demand_multiplier).encode('ascii'))
@@ -1253,7 +1292,7 @@ class InpFile(object):
                 f.write(entry.format(key, val[0], val[1]).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            unmodified = ['[ENERGY]', '[RULES]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]', '[SOURCES]',
+            unmodified = ['[ENERGY]', '[RULES]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]',
                           '[MIXING]', '[VERTICES]', '[LABELS]', '[BACKDROP]', '[TAGS]']
 
             for section in unmodified:

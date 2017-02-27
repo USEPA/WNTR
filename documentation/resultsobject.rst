@@ -32,7 +32,7 @@ Node attributes include:
 * Leak demand (only when the WNTRSimulator is used)
 * Pressure
 * Head
-* Quality (only when the EpanetSimulator is used for a water quality simulation)
+* Quality (only when the EpanetSimulator is used for a water quality simulation. Water age, tracer percent, or chemical concentration is stored, depending on the type of water quality analysis)
 * Type (junction, tank, or reservoir)
 	
 Link attributes include:

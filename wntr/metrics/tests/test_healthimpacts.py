@@ -34,10 +34,13 @@ def test_mass_consumed():
 
     wn = wntr.network.WaterNetworkModel(inp_file)
 
-    WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
+    wn.options.quality = 'CHEMICAL'
+    wn.add_pattern('NewPattern', start_time=0, end_time=24*3600)
+    wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
+    #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
     sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim(WQ)
+    results = sim.run_sim()
 
     junctions = [junction_name for junction_name, junction in wn.junctions()]
     node_results = results.node.loc[:, :, junctions]
@@ -63,11 +66,14 @@ def test_volume_consumed():
     inp_file = join(net3dir,'Net3.inp')
 
     wn = wntr.network.WaterNetworkModel(inp_file)
-
-    WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
+    
+    wn.options.quality = 'CHEMICAL'
+    wn.add_pattern('NewPattern', start_time=0, end_time=24*3600)
+    wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
+    #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
     sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim(WQ)
+    results = sim.run_sim()
 
     junctions = [junction_name for junction_name, junction in wn.junctions()]
     node_results = results.node.loc[:, :, junctions]
@@ -93,11 +99,14 @@ def test_extent_contaminated():
     inp_file = join(net3dir,'Net3.inp')
 
     wn = wntr.network.WaterNetworkModel(inp_file)
-
-    WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
+    
+    wn.options.quality = 'CHEMICAL'
+    wn.add_pattern('NewPattern', start_time=0, end_time=24*3600)
+    wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
+    #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
     sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim(WQ)
+    results = sim.run_sim()
 
     #junctions = [junction_name for junction_name, junction in wn.junctions]
     #node_results = results.node.loc[:, :, junctions]

@@ -137,7 +137,36 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(type(l.diameter), float)
         self.assertEqual(type(l.roughness), float)
         self.assertEqual(type(l.minor_loss), float)
-
+        
+    def test_add_pattern(self):
+        wn = self.wntr.network.WaterNetworkModel()
+        wn.add_junction('j1')
+        wn.options.duration = 10
+        wn.options.pattern_timestep = 1
+        wn.add_pattern('pat1', start_time=2, end_time=4)
+        
+        wn.add_pattern('pat2', [1,2,3,4])
+        
+        pat1 = wn.get_pattern('pat1')
+        pat2 = wn.get_pattern('pat2')
+        
+        self.assertEqual(pat1, [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        self.assertEqual(pat2, [1,2,3,4])
+        
+    def test_add_source(self):
+        wn = self.wntr.network.WaterNetworkModel()
+        wn.add_junction('j1')
+        wn.options.duration = 10
+        wn.options.pattern_timestep = 1
+        wn.add_pattern('pat1', start_time=2, end_time=4)
+        wn.add_source('s1', 'j1', 'SETPOINT', 100, 'pat1')
+        s = wn.get_source('s1')
+        self.assertEqual(s.name, 's1')
+        self.assertEqual(s.node_name, 'j1')
+        self.assertEqual(s.source_type, 'SETPOINT')
+        self.assertEqual(s.quality, 100)
+        self.assertEqual(s.pattern_name, 'pat1')
+        
     def test_add_pipe_with_cv(self):
         wn = self.wntr.network.WaterNetworkModel()
         wn.add_junction('j1')
@@ -401,7 +430,25 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l3,['p4'])
         self.assertEqual(l4,['p5'])
         self.assertEqual(l5,[])
-
+    
+#    def test_reset_demand(self):
+#        inp_file = join(ex_datadir, 'Net3.inp')
+#        wn = self.wntr.network.WaterNetworkModel(inp_file)
+#        
+#        sim = self.wntr.sim.WNTRSimulator(wn)
+#        results1 = sim.run_sim()
+#
+#        demand = results1.node['demand']
+#        wn.reset_demand(demand)
+#
+#        sim = self.wntr.sim.EpanetSimulator(wn)
+#        results2 = sim.run_sim()
+#        
+#        for node_name, node in self.wn.nodes():
+#            for t in self.res1.node.major_axis:
+#                self.assertAlmostEqual(results1.link.loc['flowrate', t, node_name],
+#                                       results2.link.loc['flowrate', t, node_name], 4)
+        
 class TestInpFileWriter(unittest.TestCase):
 
     @classmethod

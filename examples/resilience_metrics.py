@@ -205,16 +205,20 @@ def hydraulic_metrics(wn):
 
 
 def water_quality_metrics(wn):
-    # Define WQ scenarios
-    WQscenario1 = wntr.scenario.Waterquality('CHEM', ['121', '123'], 'SETPOINT', 1000, 2*3600, 15*3600)
-    WQscenario2 = wntr.scenario.Waterquality('AGE')
-    WQscenario3 = wntr.scenario.Waterquality('TRACE', ['111'])
-
-    # Simulate hydraulics and water quality for each scenario
+    # Simulate hydraulics and water quality
     sim = wntr.sim.EpanetSimulator(wn)
-    results_CHEM = sim.run_sim(WQscenario1)
-    results_AGE = sim.run_sim(WQscenario2)
-    results_TRACE = sim.run_sim(WQscenario3)
+    wn.options.quality = 'CHEMICAL'
+    wn.add_pattern('SourcePattern', start_time=2*3600, end_time=15*3600)
+    wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
+    wn.add_source('Source2', '123', 'SETPOINT', 1000, 'SourcePattern')
+    results_CHEM = sim.run_sim()
+    
+    wn.options.quality = 'AGE'
+    results_AGE = sim.run_sim()
+    
+    wn.options.quality = 'TRACE'
+    wn.options.quality_value = '111'
+    results_TRACE = sim.run_sim()
 
     # plot chem scenario
     CHEM_at_5hr = results_CHEM.node.loc['quality', 5*3600, :]
@@ -271,12 +275,14 @@ def water_quality_metrics(wn):
                             node_range=[0,1], title='FDQ averaged over all times')
 
 def water_security_metrics(wn):
-    # Define WQ scenarios
-    WQscenario = wntr.scenario.Waterquality('CHEM', '121', 'SETPOINT', 1000, 2*3600, 15*3600)
+    # Define WQ scenario
+    wn.options.quality = 'CHEMICAL'
+    wn.add_pattern('SourcePattern', start_time=2*3600, end_time=15*3600)
+    wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
 
     # Simulate hydraulics and water quality for each scenario
     sim = wntr.sim.EpanetSimulator(wn)
-    results_CHEM = sim.run_sim(WQscenario)
+    results_CHEM = sim.run_sim()
 
     MC = wntr.metrics.mass_contaminant_consumed(results_CHEM.node)
     VC = wntr.metrics.volume_contaminant_consumed(results_CHEM.node, 0.001)
