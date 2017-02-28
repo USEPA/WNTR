@@ -1559,7 +1559,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                     valve_status_changed = True
                 elif instance.head[start_node].value < head_sp - self._Htol:
                     # print "----- Valve ", valve_name, " opened:  ", instance.head[start_node].value, " < ", head_sp - self._Htol
-                    self._valve_status[valve_name] = LinkStatus.open
+                    self._valve_status[valve_name] = LinkStatus.opened
                     valve_status_changed = True
             elif status == LinkStatus.open:
                 if instance.flow[valve_name].value < -self._Qtol:
@@ -1574,7 +1574,7 @@ class PyomoSimulator(WaterNetworkSimulator):
                 if instance.head[start_node].value > instance.head[end_node].value + self._Htol \
                         and instance.head[start_node].value < head_sp - self._Htol:
                     # print "----- Valve ", valve_name, " opened: from closed"
-                    self._valve_status[valve_name] = LinkStatus.open
+                    self._valve_status[valve_name] = LinkStatus.opened
                     valve_status_changed = True
                 elif instance.head[start_node].value > instance.head[end_node].value + self._Htol \
                         and instance.head[end_node].value < head_sp - self._Htol:
