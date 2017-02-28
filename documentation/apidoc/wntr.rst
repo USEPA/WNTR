@@ -19,5 +19,6 @@ Subpackages
     wntr.network
     wntr.scenario
     wntr.sim
+    wntr.graphics
     wntr.utils
 

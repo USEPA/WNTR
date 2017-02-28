@@ -236,22 +236,6 @@ def entropy(G, sources=None, sinks=None):
         
     Shat : float
         System entropy
-
-    Examples
-    --------
-    The following example computes entropy using Net3 flow directions at time 3600 s.
-    
-    >>> inp_file = 'networks/Net3.inp'
-    >>> wn = wntr.network.WaterNetworkModel(inp_file)
-    >>> sim = wntr.sim.EpanetSimulator(wn)
-    >>> results = sim.run_sim()
-    >>> G = wn.get_graph_deep_copy()
-    >>> attr = results.link.loc['flowrate', 3600, :]
-    >>> G.weight_graph(link_attribute=attr) 
-    >>> [S, Shat] = wntr.metrics.entropy(G)
-    >>> wntr.network.draw_graph(wn, node_attribute = S, title = 'Node entropy")
-    >>> Shat
-    4.05
     
     References
     -----------
