@@ -47,6 +47,7 @@ Additionally, EPANET INP files can be generated from water network models.
    :meth:`~wntr.network.model.Pump`                   Contains methods to define pumps. Pumps are links that increase hydraulic head. 
    :meth:`~wntr.network.model.Valve`                  Contains methods to define valves. Valves are links that limit pressure or flow. 
    :meth:`~wntr.network.model.Curve`                  Contains methods to define curves. Curves are data pairs representing a relationship between two quantities.  Curves are used to define pump curves. 
+   :meth:`~wntr.network.model.Source`                 Contains methods to define sources. Sources define the location and characteristics of a substance injected directly into the network.
    :meth:`~wntr.network.controls.TimeControl`         Contains methods to define time controls. Time controls define actions that start or stop at a particular time. 
    :meth:`~wntr.network.controls.ConditionalControl`  Contains methods to define conditional controls. Conditional controls define actions that start or stop based on a particular condition in the network. 
    :meth:`~wntr.network.model.WaterNetworkOptions`    Contains methods to define model options, including the simulation duration and time step.
