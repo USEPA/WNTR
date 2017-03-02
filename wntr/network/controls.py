@@ -5,6 +5,7 @@ simulation.
 """
 import wntr
 import math
+import enum
 import numpy as np
 import logging
 
@@ -39,10 +40,75 @@ logger = logging.getLogger(__name__)
 #    Close pumps without power
 
 
+class Comparison(enum.Enum):
+    gt = (1, np.greater)
+    ge = (2, np.greater_equal)
+    lt = (3, np.less)
+    le = (4, np.less_equal)
+    eq = (5, np.equal)
+    ne = (6, np.not_equal)
+
+    def __str__(self):
+        return '-' + self.name
+
+    @property
+    def func(self):
+        """The function call to use for this comparison"""
+        return self.value[1]
+
+    @property
+    def symbol(self):
+        if self is Comparison.eq:
+            return '='
+        elif self is Comparison.ne:
+            return '<>'
+        elif self is Comparison.gt:
+            return '>'
+        elif self is Comparison.ge:
+            return '>='
+        elif self is Comparison.lt:
+            return '<'
+        elif self is Comparison.le:
+            return '<='
+        raise ValueError('Unknown Enum: Comparison.%s'%self)
+
+    @property
+    def text(self):
+        if self is Comparison.eq:
+            return 'Is'
+        elif self is Comparison.ne:
+            return 'Not'
+        elif self is Comparison.gt:
+            return 'Above'
+        elif self is Comparison.ge:
+            return '>='
+        elif self is Comparison.lt:
+            return 'Below'
+        elif self is Comparison.le:
+            return '<='
+        raise ValueError('Unknown Enum: Comparison.%s'%self)
+
+    @classmethod
+    def parse(cls, func):
+        if isinstance(func, str):
+            func = func.lower().strip()
+        if func in [np.equal, '=', 'eq', '-eq', '==', 'is', 'equal', 'equal to']:
+            return cls.eq
+        elif func in [np.not_equal, '<>', 'ne', '-ne', '!=', 'not', 'not_equal', 'not equal to']:
+            return cls.ne
+        elif func in [np.greater, '>', 'gt', '-gt', 'above', 'after', 'greater', 'greater than']:
+            return cls.gt
+        elif func in [np.less, '<', 'lt', '-lt', 'below', 'before', 'less', 'less than']:
+            return cls.lt
+        elif func in [np.greater_equal, '>=', 'ge', '-ge', 'greater_equal', 'greater than or equal to']:
+            return cls.ge
+        elif func in [np.less_equal, '<=', 'le', '-le', 'less_equal', 'less than or equal to']:
+            return cls.le
+        raise ValueError('Invalid Comparison name: %s'%func)
+
 #
 ### Control Condition classes
 #
-
 
 class ControlCondition(object):
     """A base class for control conditions"""
@@ -100,80 +166,9 @@ class ControlCondition(object):
             return v
 
     def _repr_value(self, attr, value):
-        if attr.lower() in ['status']:
+        if attr.lower() in ['status'] and int(value) == value:
             return wntr.network.model.LinkStatus(int(value)).name
         return value
-
-    @classmethod
-    def _parse_relation(cls, rel):
-        """
-        Convert a string to a numpy relationship.
-        """
-        if isinstance(rel, np.ufunc):
-            return rel
-        elif not isinstance(rel, str):
-            return rel
-        rel = rel.upper().strip()
-        if rel in ['=', 'IS']:
-            return np.equal
-        elif rel in ['<>', 'NOT']:
-            return np.not_equal
-        elif rel in ['<', 'BELOW', 'BEFORE']:
-            return np.less
-        elif rel in ['>', 'ABOVE', 'AFTER']:
-            return np.greater
-        elif rel in ['<=']:
-            return np.less_equal
-        elif rel in ['>=']:
-            return np.greater_equal
-        else:
-            raise ValueError('Unknown relation "%s"'%rel)
-
-    @classmethod
-    def _relation_to_str(cls, rel):
-        """
-        Convert a relation/comparison to a string.
-        """
-        if rel == np.equal or rel == 0:
-            return '='
-        elif rel == np.not_equal:
-            return '<>'
-        elif rel == np.less or rel == -1:
-            return '<'
-        elif rel == np.greater or rel == 1:
-            return '>'
-        elif rel == np.less_equal:
-            return '<='
-        elif rel == np.greater_equal:
-            return '>='
-        else:
-            return str(rel)
-
-    @classmethod
-    def _time_relation_to_str(cls, rel):
-        """
-        Convert a relation/comparison to a string.
-        """
-        if rel == np.equal or rel == 0:
-            return 'at'
-        elif rel == np.less or rel == -1:
-            return 'before'
-        elif rel == np.greater or rel == 1:
-            return 'after'
-        else:
-            return str(rel)
-
-    @classmethod
-    def _simple_relation_to_str(cls, rel):
-        """
-        Convert to an EPANET control comparison
-        """
-        if rel == np.less or rel == np.less_equal:
-            return 'BELOW'
-        elif rel == np.greater or rel == np.greater_equal:
-            return 'ABOVE'
-        else:
-            raise ValueError('Simple conditions can only take ABOVE (>, >=) or BELOW (<, <=)')
 
     @classmethod
     def _sec_to_hours_min_sec(cls, value):
@@ -237,9 +232,9 @@ class SimpleNodeCondition(ControlCondition):
         elif isinstance(source_obj, wntr.network.model.Junction):
             source_attr = 'pressure'
         self._source_attr = source_attr
-        self._relation = self._parse_relation(relation)
-        if self._relation in [np.equal, np.not_equal]:
-            raise ValueError('Simple conditions can only take ABOVE (>, >=) or BELOW (<, <=)')
+        self._relation = Comparison.parse(relation)
+        if self._relation in [Comparison.eq, Comparison.ne, Comparison.le, Comparison.ge]:
+            raise ValueError('Simple conditions can only take ABOVE (>) or BELOW (<)')
         self._threshold = self._parse_value(threshold)
         self._backtrack = 0
 
@@ -250,8 +245,7 @@ class SimpleNodeCondition(ControlCondition):
         else:
             obj = str(self._source_obj)
 
-        return '{}:{}_{}_{}'.format(obj, self._source_attr,
-                                self._relation_to_str(self._relation), self._threshold)
+        return '{}:{}_{}_{}'.format(obj, self._source_attr, self._relation.symbol, self._threshold)
 
     def __repr__(self):
         return "${}".format(self.name)
@@ -262,7 +256,7 @@ class SimpleNodeCondition(ControlCondition):
         if hasattr(self._source_obj, 'name'):
             obj = self._source_obj.name
         att = self._source_attr
-        rel = self._simple_relation_to_str(self._relation)
+        rel = self._relation.text
         return '{} {} {}'.format(obj, rel, self._threshold)
 
     def evaluate(self):
@@ -295,7 +289,7 @@ class TimeOfDayCondition(ControlCondition):
         from the time specified until midnight, `before` evaluates as True from midnight until
         the specified time.
     threshold : float or str
-        The time (a ``float`` in seconds since 12 AM) used in the condition; if provided as a
+        The time (a ``float`` in decimal hours since 12 AM) used in the condition; if provided as a
         string in 'hh:mm[:ss] [am|pm]' format, the time will be parsed from the string
     repeat : bool, optional
         True by default; if False, allows for a single, timed trigger, and probably needs an
@@ -309,19 +303,14 @@ class TimeOfDayCondition(ControlCondition):
     """
     def __init__(self, model, relation, threshold, repeat=True, first_day=0):
         self._model = model
-        self._threshold = self._parse_value(threshold)
-        if isinstance(relation, str):
-            relation = relation.lower()
-        if relation is None or relation in ['at', '=', 'is'] or relation is np.equal:
-            self._relation = 0
-        elif (relation in ['before', 'below', '<', '<='] or
-              relation is np.less or relation is np.less_equal):
-            self._relation = -1
-        elif (relation in ['after', 'above', '>', '>='] or
-              relation is np.greater or relation is np.greater_equal):
-            self._relation = 1
+        if isinstance(threshold, str) and not ':' in threshold:
+            self._threshold = float(threshold) * 3600.
         else:
-            raise ValueError('Unknown relation "%s"'%(str(relation)))
+            self._threshold = self._parse_value(threshold)
+        if relation is None:
+            self._relation = Comparison.eq
+        else:
+            self._relation = Comparison.parse(relation)
         self._first_day = first_day
         self._repeat = repeat
         self._backtrack = 0
@@ -336,12 +325,14 @@ class TimeOfDayCondition(ControlCondition):
             start = '#Start@{}day'.format(self._first_day)
         else:
             start = ''
-        return 'ClockTime{}{}{}{}'.format(self._relation_to_str(self._relation),
+        return 'ClockTime{}{}{}{}'.format(self._relation.symbol,
                                              self._sec_to_hours_min_sec(self._threshold),
                                              rep, start)
 
     def __repr__(self):
-        return "${}".format(self.name, str(self._model))
+        fmt = '<TimeOfDayCondition: model, {}, {}, {}, {}>'
+        return fmt.format(repr(self._relation.text), repr(self._sec_to_clock(self._threshold)),
+                          repr(self._repeat), repr(self._first_day))
 
     def __hash__(self):
         return hash(self.name)
@@ -353,8 +344,8 @@ class TimeOfDayCondition(ControlCondition):
                 thresh -= self._model.options.start_clocktime
             if thresh <= 0:
                 thresh += 86400.
-            return 'TIME {} {}'.format(self._relation_to_str(self._relation), thresh)
-        return 'CLOCKTIME {} {}'.format(self._relation_to_str(self._relation),
+            return 'TIME {} {}'.format(self._relation.text, thresh)
+        return 'CLOCKTIME {} {}'.format(self._relation.text,
                                         self._sec_to_clock(self._threshold))
 
     def evaluate(self):
@@ -370,19 +361,19 @@ class TimeOfDayCondition(ControlCondition):
         else:
             cur_time = cur_time - self._first_day * 86400.
             prev_time = prev_time - self._first_day * 86400.
-        if self._relation == 0 and (prev_time < self._threshold and self._threshold <= cur_time):
+        if self._relation is Comparison.eq and (prev_time < self._threshold and self._threshold <= cur_time):
             self._backtrack = int(cur_time - self._threshold)
             return True
-        elif self._relation == 1 and cur_time >= self._threshold and prev_time < self._threshold:
+        elif self._relation is Comparison.gt and cur_time >= self._threshold and prev_time < self._threshold:
             self._backtrack = int(cur_time - self._threshold)
             return True
-        elif self._relation == 1 and cur_time >= self._threshold and prev_time >= self._threshold:
+        elif self._relation is Comparison.gt and cur_time >= self._threshold and prev_time >= self._threshold:
             self._backtrack = 0
             return True
-        elif self._relation == -1 and cur_time >= self._threshold and prev_time < self._threshold:
+        elif self._relation is Comparison.lt and cur_time >= self._threshold and prev_time < self._threshold:
             self._backtrack = int(cur_time - self._threshold)
             return False
-        elif self._relation == -1 and cur_time >= self._threshold and prev_time >= self._threshold:
+        elif self._relation is Comparison.lt and cur_time >= self._threshold and prev_time >= self._threshold:
             self._backtrack = 0
             return False
         else:
@@ -409,7 +400,7 @@ class SimTimeCondition(ControlCondition):
         from the time specified until the end of simulation, before evaluates as True from
         start of simulation until the specified time.
     threshold : float or str
-        The time (a ``float`` in seconds) used in the condition; if provided as a string in
+        The time (a ``float`` in decimal hours) used in the condition; if provided as a string in
         '[dd-]hh:mm[:ss]' format, then the time will be parsed from the string;
     repeat : bool or float, default=False
         If True, then repeat every 24-hours; if non-zero float, reset the
@@ -420,23 +411,19 @@ class SimTimeCondition(ControlCondition):
     """
     def __init__(self, model, relation, threshold, repeat=False, first_time=0):
         self._model = model
-        self._threshold = self._parse_value(threshold)
-        if relation is None or relation == 'at' or relation == '=' or relation is np.equal:
-            self._relation = 0
-        elif (relation == 'before' or relation == 'below' or relation == '<' or relation == '<=' or
-              relation is np.less or relation is np.less_equal):
-            self._relation = -1
-        elif (relation == 'after' or relation == 'above' or relation == '>' or relation == '>=' or
-              relation is np.greater or relation is np.greater_equal):
-            self._relation = 1
+        if isinstance(threshold, str) and not ':' in threshold:
+            self._threshold = float(threshold) * 3600.
         else:
-            raise ValueError('Unknown relation "%s"'%(str(relation)))
+            self._threshold = self._parse_value(threshold)
+        if relation is None:
+            self._relation = Comparison.eq
+        else:
+            self._relation = Comparison.parse(relation)
         self._repeat = repeat
         if repeat is True:
             self._repeat = 86400
         self._backtrack = 0
         self._first_time = first_time
-
 
     @property
     def name(self):
@@ -448,18 +435,20 @@ class SimTimeCondition(ControlCondition):
             start = '#Start@{}sec'.format((self._first_time))
         else:
             start = ''
-        return 'SimTime{}{}{}{}'.format(self._relation_to_str(self._relation),
+        return 'SimTime{}{}{}{}'.format(self._relation.symbol,
                                       (self._threshold),
                                       rep, start)
 
     def __repr__(self):
-        return "${}".format(self.name, str(self._model))
+        fmt = '<SimTimeCondition: model, {}, {}, {}, {}>'
+        return fmt.format(repr(self._relation.text), repr(self._sec_to_days_hours_min_sec(self._threshold)),
+                          repr(self._repeat), repr(self._first_time))
 
     def __hash__(self):
         return hash(self.name)
 
     def __str__(self):
-        return 'TIME {} {}'.format(self._relation_to_str(self._relation),
+        return 'TIME {} {}'.format(self._relation.symbol,
                      self._sec_to_hours_min_sec(self._threshold + self._first_time))
 
     def evaluate(self):
@@ -468,19 +457,19 @@ class SimTimeCondition(ControlCondition):
         if self._repeat and cur_time > self._threshold:
             cur_time = (cur_time - self._threshold) % self._repeat
             prev_time = (prev_time - self._threshold) % self._repeat
-        if self._relation == 0 and (prev_time < self._threshold and self._threshold <= cur_time):
+        if self._relation is Comparison.eq and (prev_time < self._threshold and self._threshold <= cur_time):
             self._backtrack = int(cur_time - self._threshold)
             return True
-        elif self._relation == 1 and cur_time >= self._threshold and prev_time < self._threshold:
+        elif self._relation is Comparison.gt and cur_time >= self._threshold and prev_time < self._threshold:
             self._backtrack = int(cur_time - self._threshold)
             return True
-        elif self._relation == 1 and cur_time >= self._threshold and prev_time >= self._threshold:
+        elif self._relation is Comparison.gt and cur_time >= self._threshold and prev_time >= self._threshold:
             self._backtrack = 0
             return True
-        elif self._relation == -1 and cur_time >= self._threshold and prev_time < self._threshold:
+        elif self._relation is Comparison.lt and cur_time >= self._threshold and prev_time < self._threshold:
             self._backtrack = int(cur_time - self._threshold)
             return False
-        elif self._relation == 1 and cur_time >= self._threshold and prev_time >= self._threshold:
+        elif self._relation is Comparison.lt and cur_time >= self._threshold and prev_time >= self._threshold:
             self._backtrack = 0
             return False
         else:
@@ -511,7 +500,7 @@ class ValueCondition(ControlCondition):
     def __init__(self, source_obj, source_attr, relation, threshold):
         self._source_obj = source_obj
         self._source_attr = source_attr
-        self._relation = ControlCondition._parse_relation(relation)
+        self._relation = Comparison.parse(relation)
         self._threshold = ControlCondition._parse_value(threshold)
         self._backtrack = 0
 
@@ -523,10 +512,13 @@ class ValueCondition(ControlCondition):
             obj = str(self._source_obj)
 
         return '{}:{}{}{}'.format(obj, self._source_attr,
-                                self._relation_to_str(self._relation), self._threshold)
+                                self._relation.symbol, self._threshold)
 
     def __repr__(self):
-        return "${}".format(self.name)
+        return "<ValueCondition: {}, {}, {}, {}>".format(repr(self._source_obj),
+                                                       repr(self._source_attr),
+                                                       repr(self._relation.symbol),
+                                                       repr(self._threshold))
 
     def __str__(self):
         typ = self._source_obj.__class__.__name__
@@ -534,14 +526,14 @@ class ValueCondition(ControlCondition):
         if hasattr(self._source_obj, 'name'):
             obj = self._source_obj.name
         att = self._source_attr
-        rel = self._relation_to_str(self._relation)
+        rel = self._relation.symbol
         val = self._repr_value(att, self._threshold)
         return '{} {} {} {} {}'.format(typ, obj, att, rel, val)
 
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
         thresh_value = self._threshold
-        relation = self._relation
+        relation = self._relation.func
         if np.isnan(self._threshold):
             relation = np.greater
             thresh_value = 0.0
@@ -574,7 +566,7 @@ class RelativeCondition(ControlCondition):
     def __init__(self, source_obj, source_attr, relation, threshold_obj, threshold_attr):
         self._source_obj = source_obj
         self._source_attr = source_attr
-        self._relation = relation
+        self._relation = Comparison.parse(relation)
         self._threshold_obj = threshold_obj
         self._threshold_attr = threshold_attr
         self._backtrack = 0
@@ -590,11 +582,15 @@ class RelativeCondition(ControlCondition):
         else:
             tobj = str(self._threshold_obj)
         return '{}:{}_{}_{}:{}'.format(obj, self._source_attr,
-                                self._relation_to_str(self._relation),
+                                self._relation.symbol,
                                 tobj, self._threshold_attr)
 
     def __repr__(self):
-        return "${}".format(self.name)
+        return "RelativeCondition({}, {}, {}, {}, {})".format(repr(self._source_obj),
+                                                              repr(self._source_attr),
+                                                              repr(self._relation),
+                                                              repr(self._threshold_obj),
+                                                              repr(self._threshold_attr))
 
     def __str__(self):
         typ = self._source_obj.__class__.__name__
@@ -602,7 +598,7 @@ class RelativeCondition(ControlCondition):
         if hasattr(self._source_obj, 'name'):
             obj = self._source_obj.name
         att = self._source_attr
-        rel = self._relation_to_str(self._relation)
+        rel = self._relation.symbol
         if hasattr(self._threshold_obj, 'name'):
             tobj = self._threshold_obj.name
         else:
@@ -613,7 +609,7 @@ class RelativeCondition(ControlCondition):
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
         thresh_value = getattr(self._threshold_obj, self._threshold_attr)
-        relation = self._relation
+        relation = self._relation.func
         state = relation(cur_value, thresh_value)
         return state
 
@@ -642,7 +638,7 @@ class OrCondition(ControlCondition):
         return str(self._condition_1) + "\n  OR " + str(self._condition_2)
 
     def __repr__(self):
-        return '( {} || {} )'.format(repr(self._condition_1), repr(self._condition_2))
+        return 'Or({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
 
     def evaluate(self):
         return bool(self._condition_1) or bool(self._condition_2)
@@ -676,7 +672,7 @@ class AndCondition(ControlCondition):
         return str(self._condition_1) + "\n  AND " + str(self._condition_2)
 
     def __repr__(self):
-        return '( {} && {} )'.format(repr(self._condition_1), repr(self._condition_2))
+        return 'And({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
 
     def evaluate(self):
         return bool(self._condition_1) and bool(self._condition_2)
@@ -744,7 +740,7 @@ class ControlAction(BaseControlAction):
         #    raise ValueError('You may not add controls to valves or pipes with check valves.')
 
     def __repr__(self):
-        return '${}:{}={}'.format(self._target_obj_ref.name, self._attribute, self._repr_value())
+        return '<ControlAction: {}, {}, {}>'.format(repr(self._target_obj_ref), repr(self._attribute), repr(self._repr_value()))
 
     def __str__(self):
         return '{} {} {} IS {}'.format(self._target_obj_ref.__class__.__name__,
@@ -924,7 +920,8 @@ class IfThenElseControl(Control):
             return '/'.join(str(self).split())
 
     def __repr__(self):
-        return '<IfThenElseControl: {} >'.format('/'.join(str(self).split()))
+        fmt = "<IfThenElseControl: '{}', {}, {}, {}, priority={}>"
+        return fmt.format(self._name, repr(self._condition), repr(self._then_actions), repr(self._else_actions), self._priority)
 
     def __str__(self):
         text = 'RULE {}\n IF {}'.format(self._name, self._condition)
@@ -1082,6 +1079,21 @@ class TimeControl(Control):
         if time_flag == 'SHIFTED_TIME' and self._run_at_time < wnm.shifted_time:
             self._run_at_time += 24*3600
 
+    def __str__(self):
+        if self._time_flag == 'SIM_TIME':
+            fmt = 'LINK {} {} AT TIME {}'
+            tm = ControlCondition._sec_to_hours_min_sec(self._run_at_time)
+        else:
+            fmt = 'LINK {} {} AT CLOCKTIME {}'
+            tm = ControlCondition._sec_to_clock(self._run_at_time)
+        return fmt.format(self._control_action._target_obj_ref.name,
+                          self._control_action._repr_value(),
+                          tm)
+
+    def __repr__(self):
+        fmt = '<TimeControl: model, {}, {}, {}, {}>'
+        return fmt.format(repr(self._run_at_time), repr(self._time_flag), repr(self._daily_flag), repr(self._control_action))
+
     def __eq__(self, other):
         if self._run_at_time      == other._run_at_time      and \
            self.name            == other.name            and \
@@ -1198,6 +1210,18 @@ class ConditionalControl(Control):
             raise ValueError('source must be a tuple, (source_object, source_attribute).')
         if not isinstance(threshold,float):
             raise ValueError('threshold must be a float.')
+
+    def __str__(self):
+        fmt = 'LINK {} {} IF NODE {} {} {}'
+        return fmt.format(self._control_action._target_obj_ref.name,
+                          self._control_action._repr_value(),
+                          self._source_obj.name,
+                          Comparison.parse(self._operation).text,
+                          self._threshold)
+
+    def __repr__(self):
+        fmt = '<ConditionalControl: {}, {}), {}, {}, {}>'
+        return fmt.format(repr(self._source_obj), repr(self._source_attr), repr(self._operation), repr(self._threshold), repr(self._control_action))
 
     def __eq__(self, other):
         if self._priority               == other._priority               and \

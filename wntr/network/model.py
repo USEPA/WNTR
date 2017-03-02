@@ -2067,6 +2067,9 @@ class Node(object):
         """
         return self._name
 
+    def __repr__(self):
+        return "<Node '{}'>".format(self._name)
+
     def __hash__(self):
         return id(self)
 
@@ -2130,6 +2133,9 @@ class Link(object):
         """
         return self._link_name
 
+    def __repr__(self):
+        return "<Link '{}'>".format(self._link_name)
+
     @property
     def start_node(self):
         """
@@ -2189,6 +2195,9 @@ class Junction(Node):
         self.leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
+
+    def __repr__(self):
+        return "<Junction '{}'>".format(self._name)
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2404,6 +2413,9 @@ class Tank(Node):
     def __hash__(self):
         return id(self)
 
+    def __repr__(self):
+        return "<Tank '{}'>".format(self._name)
+
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
         Add a leak to a tank. Leaks are modeled by:
@@ -2565,6 +2577,9 @@ class Reservoir(Node):
             return False
         return True
 
+    def __repr__(self):
+        return "<Reservoir '{}'>".format(self._name)
+
     def __hash__(self):
         return id(self)
 
@@ -2630,6 +2645,9 @@ class Pipe(Link):
             return True
         return False
 
+    def __repr__(self):
+        return "<Pipe '{}'>".format(self._link_name)
+
     def __hash__(self):
         return id(self)
 
@@ -2671,6 +2689,9 @@ class Pump(Link):
             self._base_power = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
+
+    def __repr__(self):
+        return "<Pump '{}'>".format(self._link_name)
 
     @property
     def setting(self):
@@ -2831,6 +2852,9 @@ class Valve(Link):
             return True
         return False
 
+    def __repr__(self):
+        return "<Valve: '{}', '{}'>".format(self._link_name, self.valve_type)
+
     def __hash__(self):
         return id(self)
 
@@ -2867,6 +2891,9 @@ class Curve(object):
                         return False
             return True
         return False
+
+    def __repr__(self):
+        return '<Curve: {}, curve_type={}, points={}>'.format(repr(self.name), repr(self.curve_type), repr(self.points))
 
     def __hash__(self):
         return id(self)
@@ -2911,3 +2938,8 @@ class Source(object):
 
     def __hash__(self):
         return id(self)
+
+    def __repr__(self):
+        fmt = "<Source: '{}', '{}', '{}', {}, {}>"
+        return fmt.format(self.name, self.node_name, self.source_type, self.quality, repr(self.pattern_name))
+
