@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 #
-# ---- Control Condition classes
+### Control Condition classes
 #
 
 
@@ -70,6 +70,41 @@ class ControlCondition(object):
     __nonzero__ = __bool__
 
     @classmethod
+    def _parse_value(cls, value):
+        try:
+            v = float(value)
+            return v
+        except ValueError:
+            value = value.upper()
+            if value == 'CLOSED':
+                return 0
+            if value == 'OPEN':
+                return 1
+            if value == 'ACTIVE':
+                return np.nan
+            PM = 0
+            words = value.split()
+            if len(words) > 1:
+                if words[1] == 'PM':
+                    PM = 86400 / 2
+            hms = words[0].split(':')
+            v = 0
+            if len(hms) > 2:
+                v += int(hms[2])
+            if len(hms) > 1:
+                v += int(hms[1])*60
+            if len(hms) > 0:
+                v += int(hms[0])*3600
+            if int(hms[0]) <= 12:
+                v += PM
+            return v
+
+    def _repr_value(self, attr, value):
+        if attr.lower() in ['status']:
+            return wntr.network.model.LinkStatus(int(value)).name
+        return value
+
+    @classmethod
     def _parse_relation(cls, rel):
         """
         Convert a string to a numpy relationship.
@@ -79,17 +114,17 @@ class ControlCondition(object):
         elif not isinstance(rel, str):
             return rel
         rel = rel.upper().strip()
-        if rel == '=' or rel == 'IS':
+        if rel in ['=', 'IS']:
             return np.equal
-        elif rel == '<>' or rel == 'NOT':
+        elif rel in ['<>', 'NOT']:
             return np.not_equal
-        elif rel == '<' or rel == 'BELOW' or rel == 'BEFORE':
+        elif rel in ['<', 'BELOW', 'BEFORE']:
             return np.less
-        elif rel == '>' or rel == 'ABOVE' or rel == 'AFTER':
+        elif rel in ['>', 'ABOVE', 'AFTER']:
             return np.greater
-        elif rel == '<=':
+        elif rel in ['<=']:
             return np.less_equal
-        elif rel == '>=':
+        elif rel in ['>=']:
             return np.greater_equal
         else:
             raise ValueError('Unknown relation "%s"'%rel)
@@ -142,7 +177,7 @@ class ControlCondition(object):
 
     @classmethod
     def _sec_to_hours_min_sec(cls, value):
-        sec = value
+        sec = float(value)
         hours = int(sec/3600.)
         sec -= hours*3600
         mm = int(sec/60.)
@@ -151,7 +186,7 @@ class ControlCondition(object):
 
     @classmethod
     def _sec_to_days_hours_min_sec(cls, value):
-        sec = value
+        sec = float(value)
         days = int(sec/86400.)
         sec -= days*86400
         hours = int(sec/3600.)
@@ -165,7 +200,7 @@ class ControlCondition(object):
 
     @classmethod
     def _sec_to_clock(cls, value):
-        sec = value
+        sec = float(value)
         hours = int(sec/3600.)
         sec -= hours*3600
         mm = int(sec/60.)
@@ -205,7 +240,7 @@ class SimpleNodeCondition(ControlCondition):
         self._relation = self._parse_relation(relation)
         if self._relation in [np.equal, np.not_equal]:
             raise ValueError('Simple conditions can only take ABOVE (>, >=) or BELOW (<, <=)')
-        self._threshold = threshold
+        self._threshold = self._parse_value(threshold)
         self._backtrack = 0
 
     @property
@@ -219,7 +254,7 @@ class SimpleNodeCondition(ControlCondition):
                                 self._relation_to_str(self._relation), self._threshold)
 
     def __repr__(self):
-        return "<SimpleNodeCondition: name='{}'>".format(self.name)
+        return "${}".format(self.name)
 
     def __str__(self):
         typ = self._source_obj.__class__.__name__
@@ -274,7 +309,7 @@ class TimeOfDayCondition(ControlCondition):
     """
     def __init__(self, model, relation, threshold, repeat=True, first_day=0):
         self._model = model
-        self._threshold = threshold
+        self._threshold = self._parse_value(threshold)
         if isinstance(relation, str):
             relation = relation.lower()
         if relation is None or relation in ['at', '=', 'is'] or relation is np.equal:
@@ -294,19 +329,19 @@ class TimeOfDayCondition(ControlCondition):
     @property
     def name(self):
         if not self._repeat:
-            rep = '_Once'
+            rep = '%Once'
         else:
-            rep = '_Daily'
+            rep = '%Daily'
         if self._first_day > 0:
-            start = '_Start@{}day'.format(self._first_day)
+            start = '#Start@{}day'.format(self._first_day)
         else:
             start = ''
-        return 'ClockTime_{}_{}{}{}'.format(self._time_relation_to_str(self._relation),
+        return 'ClockTime{}{}{}{}'.format(self._relation_to_str(self._relation),
                                              self._sec_to_hours_min_sec(self._threshold),
                                              rep, start)
 
     def __repr__(self):
-        return "<TimeOfDayCondition: name='{}', model={}>".format(self.name, str(self._model))
+        return "${}".format(self.name, str(self._model))
 
     def __hash__(self):
         return hash(self.name)
@@ -348,10 +383,10 @@ class TimeOfDayCondition(ControlCondition):
             self._backtrack = int(cur_time - self._threshold)
             return False
         elif self._relation == -1 and cur_time >= self._threshold and prev_time >= self._threshold:
-            self._backtrack = None
+            self._backtrack = 0
             return False
         else:
-            self._backtrack = None
+            self._backtrack = 0
             return False
 
 
@@ -385,7 +420,7 @@ class SimTimeCondition(ControlCondition):
     """
     def __init__(self, model, relation, threshold, repeat=False, first_time=0):
         self._model = model
-        self._threshold = threshold
+        self._threshold = self._parse_value(threshold)
         if relation is None or relation == 'at' or relation == '=' or relation is np.equal:
             self._relation = 0
         elif (relation == 'before' or relation == 'below' or relation == '<' or relation == '<=' or
@@ -408,17 +443,17 @@ class SimTimeCondition(ControlCondition):
         if not self._repeat:
             rep = ''
         else:
-            rep = '_Every{}sec'.format(self._repeat)
+            rep = '%Every{}sec'.format(self._repeat)
         if self._first_time > 0:
-            start = '_Start@{}sec'.format((self._first_time))
+            start = '#Start@{}sec'.format((self._first_time))
         else:
             start = ''
-        return 'SimTime_{}_{}{}{}'.format(self._relation_to_str(self._relation),
+        return 'SimTime{}{}{}{}'.format(self._relation_to_str(self._relation),
                                       (self._threshold),
                                       rep, start)
 
     def __repr__(self):
-        return "<SimTimeCondition: name='{}', model={}>".format(self.name, str(self._model))
+        return "${}".format(self.name, str(self._model))
 
     def __hash__(self):
         return hash(self.name)
@@ -476,8 +511,8 @@ class ValueCondition(ControlCondition):
     def __init__(self, source_obj, source_attr, relation, threshold):
         self._source_obj = source_obj
         self._source_attr = source_attr
-        self._relation = self._parse_relation(relation)
-        self._threshold = threshold
+        self._relation = ControlCondition._parse_relation(relation)
+        self._threshold = ControlCondition._parse_value(threshold)
         self._backtrack = 0
 
     @property
@@ -487,11 +522,11 @@ class ValueCondition(ControlCondition):
         else:
             obj = str(self._source_obj)
 
-        return '{}:{}_{}_{}'.format(obj, self._source_attr,
+        return '{}:{}{}{}'.format(obj, self._source_attr,
                                 self._relation_to_str(self._relation), self._threshold)
 
     def __repr__(self):
-        return "<ValueCondition: name='{}'>".format(self.name)
+        return "${}".format(self.name)
 
     def __str__(self):
         typ = self._source_obj.__class__.__name__
@@ -500,7 +535,8 @@ class ValueCondition(ControlCondition):
             obj = self._source_obj.name
         att = self._source_attr
         rel = self._relation_to_str(self._relation)
-        return '{} {} {} {} {}'.format(typ, obj, att, rel, self._threshold)
+        val = self._repr_value(att, self._threshold)
+        return '{} {} {} {} {}'.format(typ, obj, att, rel, val)
 
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
@@ -558,7 +594,7 @@ class RelativeCondition(ControlCondition):
                                 tobj, self._threshold_attr)
 
     def __repr__(self):
-        return "<RelativeCondition: name='{}'>".format(self.name)
+        return "${}".format(self.name)
 
     def __str__(self):
         typ = self._source_obj.__class__.__name__
@@ -603,7 +639,10 @@ class OrCondition(ControlCondition):
         self._condition_2 = cond2
 
     def __str__(self):
-        return str(self._condition_1) + "\nOR " + str(self._condition_2)
+        return str(self._condition_1) + "\n  OR " + str(self._condition_2)
+
+    def __repr__(self):
+        return '( {} || {} )'.format(repr(self._condition_1), repr(self._condition_2))
 
     def evaluate(self):
         return bool(self._condition_1) or bool(self._condition_2)
@@ -634,18 +673,21 @@ class AndCondition(ControlCondition):
         self._condition_2 = cond2
 
     def __str__(self):
-        return str(self._condition_1) + "\nAND " + str(self._condition_2)
+        return str(self._condition_1) + "\n  AND " + str(self._condition_2)
+
+    def __repr__(self):
+        return '( {} && {} )'.format(repr(self._condition_1), repr(self._condition_2))
 
     def evaluate(self):
         return bool(self._condition_1) and bool(self._condition_2)
 
     @property
     def backtrack(self):
-        return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
+        return np.min([self._condition_1.backtrack, self._condition_2.backtrack])
 
 
 #
-# --- Control Action classes
+### Control Action classes
 #
 
 
@@ -701,6 +743,20 @@ class ControlAction(BaseControlAction):
         #if (isinstance(target_obj, wntr.network.Valve) or (isinstance(target_obj, wntr.network.Pipe) and target_obj.cv)) and attribute=='status':
         #    raise ValueError('You may not add controls to valves or pipes with check valves.')
 
+    def __repr__(self):
+        return '${}:{}={}'.format(self._target_obj_ref.name, self._attribute, self._repr_value())
+
+    def __str__(self):
+        return '{} {} {} IS {}'.format(self._target_obj_ref.__class__.__name__,
+                                       self._target_obj_ref.name,
+                                       self._attribute,
+                                       self._repr_value())
+
+    def _repr_value(self):
+        if self._attribute.lower() in ['status']:
+            return wntr.network.model.LinkStatus(int(self._value)).name
+        return self._value
+
     def __eq__(self, other):
         if self._target_obj_ref == other._target_obj_ref and \
            self._attribute      == other._attribute:
@@ -741,7 +797,7 @@ class ControlAction(BaseControlAction):
             return True, (target, self._attribute), orig_value
 
 #
-# ---- Control classes
+### Control classes
 #
 
 class Control(object):
@@ -836,13 +892,124 @@ class Control(object):
                                   'This method must be implemented in '
                                   'derived classes of ControlAction.')
 
-
-
 class IfThenElseControl(Control):
     """If-Then[-Else] contol
     """
-    def __init__(self, conditions, then_actions, else_actions=None, priority=None):
-        pass
+    def __init__(self, condition, then_actions, else_actions=None, priority=None, name=None):
+        if not isinstance(condition, ControlCondition):
+            raise ValueError('The conditions argument must be a ControlCondition instance')
+        self._condition = condition
+        if not isinstance(then_actions, list) and then_actions is not None:
+            self._then_actions = [then_actions]
+        else:
+            self._then_actions = then_actions
+        if else_actions is not None:
+            if not isinstance(else_actions, list):
+                self._else_actions = [else_actions]
+            else:
+                self._else_actions = else_actions
+        else:
+            self._else_actions = None
+        self._which = None
+        self._priority = priority
+        self._name = name
+        if self._name is None:
+            self._name = ''
+
+    @property
+    def name(self):
+        if self._name is not None:
+            return self._name
+        else:
+            return '/'.join(str(self).split())
+
+    def __repr__(self):
+        return '<IfThenElseControl: {} >'.format('/'.join(str(self).split()))
+
+    def __str__(self):
+        text = 'RULE {}\n IF {}'.format(self._name, self._condition)
+        if self._then_actions is not None and len(self._then_actions) > 0:
+            then_text = '\n THEN '
+            for ct, act in enumerate(self._then_actions):
+                if ct == 0:
+                    then_text += str(act)
+                else:
+                    then_text += '\n  AND {}'.format(str(act))
+            text += then_text
+        if self._else_actions is not None and len(self._else_actions) > 0:
+            else_text = '\n ELSE '
+            for ct, act in enumerate(self._else_actions):
+                if ct == 0:
+                    else_text += str(act)
+                else:
+                    else_text += '\n AND {}'.format(str(act))
+            text += else_text
+        if self._priority is not None and self._priority >= 0:
+            text += '\n PRIORITY {}'.format(self._priority)
+        return text
+
+    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
+        """
+        This implements the derived method from Control.
+
+        Parameters
+        ----------
+        wnm : WaterNetworkModel
+            An instance of the current WaterNetworkModel object that is being simulated.
+
+        presolve_flag : bool
+            This is true if we are calling before the solve, and false if we are calling after the solve (within the
+            current timestep).
+        """
+        res = (self._condition.evaluate(), self._condition.backtrack)
+        if res[0]:
+            self._which = 'then'
+            return res
+        elif self._else_actions is not None:
+            self._which = 'else'
+            return (True, res[1])
+        else:
+            self._which = None
+            return (False, None)
+
+    def _RunControlActionImpl(self, wnm, priority):
+        """
+        This implements the derived method from Control.
+
+        Parameters
+        ----------
+        wnm : WaterNetworkModel
+            An instance of the current WaterNetworkModel object that is being simulated/modified.
+
+        priority : int
+            A priority value. The action is only run if priority == self._priority.
+        """
+        if self._then_actions is None:
+            raise ValueError('_control_action is None inside TimeControl')
+
+        if self._priority != priority:
+            return False, None, None
+        flags = []
+        tuples = []
+        origins = []
+        if self._which == 'then':
+            for control_action in self._then_actions:
+                change_flag, change_tuple, orig_value = control_action.RunControlAction(self.name)
+                flags.append(change_flag)
+                tuples.append(change_tuple)
+                origins.append(orig_value)
+            self._which = None
+        elif self._which == 'else':
+            for control_action in self._else_actions:
+                change_flag, change_tuple, orig_value = control_action.RunControlAction(self.name)
+                flags.append(change_flag)
+                tuples.append(change_tuple)
+                origins.append(orig_value)
+            self._which = None
+        else:
+            raise RuntimeError('control actions called even though if-then statement was False')
+
+        return np.max(flags), tuples, origins
 
 
 
@@ -1146,6 +1313,10 @@ class ConditionalControl(Control):
 
 class MultiConditionalControl(Control):
     """
+    TODO:  Make this class private -- used specifically for internal (valve) controls, not
+    RULES or CONTROLS section.
+
+
     A class for creating controls that run only when a set of specified conditions are all satisfied.
 
     Parameters
@@ -1282,6 +1453,8 @@ class MultiConditionalControl(Control):
         change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
+### Valve control classes
+
 class _CheckValveHeadControl(Control):
     """
 
@@ -1397,6 +1570,8 @@ class _PRVControl(Control):
 
         change_flag, change_tuple, orig_value = self._action_to_run.RunControlAction(self.name)
         return change_flag, change_tuple, orig_value
+
+### Logger
 
 class ControlLogger(object):
     def __init__(self):

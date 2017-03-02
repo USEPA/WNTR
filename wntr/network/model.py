@@ -569,20 +569,20 @@ class WaterNetworkModel(object):
         if name in self._control_dict:
             raise ValueError('The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control.')
 
-        target = control_object._control_action._target_obj_ref
-        target_type = type(target)
-        if target_type == wntr.network.Valve:
-            logger.warn('Controls should not be added to valves! Note that this will become an error in the next release.')
-        if target_type == wntr.network.Link:
-            start_node_name = target.start_node
-            end_node_name = target.end_node
-            start_node = self.get_node(start_node_name)
-            end_node = self.get_node(end_node_name)
-            if type(start_node)==Tank or type(end_node)==Tank:
-                logger.warn('Controls should not be added to links that are connected to tanks. Consider adding an additional link and using the control on it. Note that this will become an error in the next release.')
-
+        if not isinstance(control_object, wntr.network.controls.IfThenElseControl):
+            target = control_object._control_action._target_obj_ref
+            target_type = type(target)
+            if target_type == wntr.network.Valve:
+                logger.warn('Controls should not be added to valves! Note that this will become an error in the next release.')
+            if target_type == wntr.network.Link:
+                start_node_name = target.start_node
+                end_node_name = target.end_node
+                start_node = self.get_node(start_node_name)
+                end_node = self.get_node(end_node_name)
+                if type(start_node)==Tank or type(end_node)==Tank:
+                    logger.warn('Controls should not be added to links that are connected to tanks. Consider adding an additional link and using the control on it. Note that this will become an error in the next release.')
+            control_object.name = name
         self._control_dict[name] = control_object
-        control_object.name = name
 
     def add_pump_outage(self, pump_name, start_time, end_time):
         """

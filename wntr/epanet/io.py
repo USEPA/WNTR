@@ -9,7 +9,8 @@ import io
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam
 from .util import to_si, from_si
-from wntr.network.controls import ControlCondition, OrCondition, AndCondition
+from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition
+from wntr.network.controls import OrCondition, AndCondition, IfThenElseControl, ControlAction
 
 import datetime
 import networkx as nx
@@ -302,6 +303,7 @@ class InpFile(object):
                 self.sections[section].append((lnum, line))
 
         # Parse each of the sections
+        ### Parse Options
         for lnum, line in self.sections['[OPTIONS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[OPTIONS]'
@@ -388,6 +390,7 @@ class InpFile(object):
             if opts.report_timestep % opts.hydraulic_timestep != 0:
                 raise RuntimeError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
 
+        ### Parse Curves
         for lnum, line in self.sections['[CURVES]']:
             # It should be noted carefully that these lines are never directly
             # applied to the WaterNetworkModel object. Because different curve
@@ -406,6 +409,7 @@ class InpFile(object):
             self.curves[curve_name].append((float(current[1]),
                                              float(current[2])))
 
+        ### Parse Patterns
         for lnum, line in self.sections['[PATTERNS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[PATTERNS]'
@@ -425,6 +429,7 @@ class InpFile(object):
         for pattern_name, pattern_list in _patterns.items():
             wn.add_pattern(pattern_name, pattern_list)
 
+        ### Parse Junctions
         for lnum, line in self.sections['[JUNCTIONS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[JUNCTIONS]'
@@ -443,6 +448,7 @@ class InpFile(object):
                                 current[3],
                                 to_si(inp_units, float(current[1]), HydParam.Elevation))
 
+        ### Parse Reservoirs
         for lnum, line in self.sections['[RESERVOIRS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[RESERVOIRS]'
@@ -459,6 +465,7 @@ class InpFile(object):
                                  current[2])
                 logger.warn('%(fname)s:%(lnum)-6d %(sec)13s reservoir head patterns only supported in EpanetSimulator', edata)
 
+        ### Parse Tanks
         for lnum, line in self.sections['[TANKS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[TANKS]'
@@ -501,6 +508,7 @@ class InpFile(object):
                 logger.error('%(fname)s:%(lnum)-6d %(sec)13s tank entry format not recognized: "%(line)s"', edata)
                 raise RuntimeError('Tank entry format not recognized.')
 
+        ### Parse Pipes
         for lnum, line in self.sections['[PIPES]']:
             edata['lnum'] = lnum
             edata['sec'] = '[PIPES]'
@@ -530,6 +538,7 @@ class InpFile(object):
                             float(current[6]),
                             LinkStatus[current[7].upper()])
 
+        ### Parse Pumps
         for lnum, line in self.sections['[PUMPS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[PUMPS]'
@@ -569,6 +578,7 @@ class InpFile(object):
                 logger.error('%(fname)s:%(lnum)-6d %(sec)13s pump keyword not recognized: "%(line)s"', edata)
                 raise RuntimeError('Pump keyword in inp file not recognized.')
 
+        ### Parse Valves
         for lnum, line in self.sections['[VALVES]']:
             edata['lnum'] = lnum
             edata['sec'] = '[VALVES]'
@@ -603,6 +613,7 @@ class InpFile(object):
                          float(current[6]),
                          valve_set)
 
+        ### Parse Coordinates
         for lnum, line in self.sections['[COORDINATES]']:
             edata['lnum'] = lnum
             edata['sec'] = '[COORDINATES]'
@@ -612,7 +623,8 @@ class InpFile(object):
                 continue
             assert(len(current) == 3), ("Error reading node coordinates. Check format.")
             wn.set_node_coordinates(current[0], (float(current[1]), float(current[2])))
-        
+
+        ### Parse Sources
         source_num = 0
         for lnum, line in self.sections['[SOURCES]']:
             edata['lnum'] = lnum
@@ -625,13 +637,14 @@ class InpFile(object):
             source_num = source_num + 1
             if current[0].upper() == 'MASS':
                 strength = to_si(inp_units, float(current[2]), QualParam.SourceMassInject, mass_units)
-            else: 
+            else:
                 strength = to_si(inp_units, float(current[2]), QualParam.Concentration, mass_units)
             if len(current) == 3:
                 wn.add_source('INP'+str(source_num), current[0], current[1], strength, None)
             else:
                 wn.add_source('INP'+str(source_num), current[0], current[1], strength,  current[3])
-            
+
+        ### Parse Times
         time_format = ['am', 'AM', 'pm', 'PM']
         for lnum, line in self.sections['[TIMES]']:
             edata['lnum'] = lnum
@@ -651,7 +664,8 @@ class InpFile(object):
                 opts.start_clocktime = _clock_time_to_sec(time, time_format)
             elif (current[0].upper() == 'STATISTIC'):
                 opts.statistic = current[1].upper()
-            else:  # Other time options
+            else:
+                # Other time options: RULE TIMESTEP, PATTERN TIMESTEP, REPORT TIMESTEP, REPORT START
                 key_string = current[0] + '_' + current[1]
                 setattr(opts, key_string.lower(), _str_time_to_sec(current[2]))
 
@@ -670,6 +684,7 @@ class InpFile(object):
         if opts.statistic != 'NONE':
             logger.warning('Currently, only the EpanetSimulator supports the STATISTIC option in the inp file.')
 
+        ### Parse Status
         for lnum, line in self.sections['[STATUS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[STATUS]'
@@ -698,6 +713,7 @@ class InpFile(object):
                         link.setting = setting
                         link._base_setting = setting
 
+        ### Parse Controls
         for lnum, line in self.sections['[CONTROLS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[CONTROLS]'
@@ -780,6 +796,63 @@ class InpFile(object):
                     control_obj = wntr.network.TimeControl(wn, run_at_time, 'SHIFTED_TIME', True, action_obj)
             wn.add_control(control_name, control_obj)
 
+        ### TODO: Parse Rules
+        if len(self.sections['[RULES]']) > 0:
+            rules = []
+            rule = None
+            in_if = False
+            in_then = False
+            in_else = False
+            for lnum, line in self.sections['[RULES]']:
+                line = line.split(';')[0]
+                words = line.split()
+                if words == []:
+                    continue
+                if len(words) == 0:
+                    continue
+                if words[0].upper() == 'RULE':
+                    if rule is not None:
+                        rules.append(rule)
+                    rule = _EpanetRule(words[1])
+                    in_if = False
+                    in_then = False
+                    in_else = False
+                elif words[0].upper() == 'IF':
+                    in_if = True
+                    in_then = False
+                    in_else = False
+                    rule.add_if(line)
+                elif words[0].upper() == 'THEN':
+                    in_if = False
+                    in_then = True
+                    in_else = False
+                    rule.add_then(line)
+                elif words[0].upper() == 'ELSE':
+                    in_if = False
+                    in_then = False
+                    in_else = True
+                    rule.add_else(line)
+                elif words[0].upper() == 'PRIORITY':
+                    in_if = False
+                    in_then = False
+                    in_else = False
+                    rule.set_priority(words[1])
+                elif in_if:
+                    rule.add_if(line)
+                elif in_then:
+                    rule.add_then(line)
+                elif in_else:
+                    rule.add_else(line)
+                else:
+                    continue
+            for rule in rules:
+                ctrl = rule.generate_control(wn)
+                wn.add_control(ctrl.name, ctrl)
+            # wn._en_rules = '\n'.join(self.sections['[RULES]'])
+            #logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+
+
+        ### Parse Reactions
         BulkReactionCoeff = QualParam.BulkReactionCoeff
         WallReactionCoeff = QualParam.WallReactionCoeff
         for lnum, line in self.sections['[REACTIONS]']:
@@ -832,19 +905,17 @@ class InpFile(object):
             else:
                 raise RuntimeError('Reaction option not recognized')
 
+        ### Parse Title
         if len(self.sections['[TITLE]']) > 0:
             pass
             # wn._en_title = '\n'.join(self.sections['[TITLE]'])
         else:
             pass
 
+        ### Parse Unsupported Sections:
         if len(self.sections['[ENERGY]']) > 0:
             # wn._en_energy = '\n'.join(self.sections['[ENERGY]'])
             logger.warning('ENERGY section is reapplied directly to an Epanet INP file on write; otherwise unsupported.')
-
-        if len(self.sections['[RULES]']) > 0:
-            # wn._en_rules = '\n'.join(self.sections['[RULES]'])
-            logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
         if len(self.sections['[DEMANDS]']) > 0:
             # wn._en_demands = '\n'.join(self.sections['[DEMANDS]'])
@@ -910,7 +981,7 @@ class InpFile(object):
 
         with io.open(filename, 'wb') as f:
 
-            # Print title
+            ### Print title
             if wn.name is not None:
                 f.write('; Filename: {0}\n'.format(wn.name).encode('ascii'))
                 f.write('; WNTR: {}\n; Created: {:%Y-%m-%d %H:%M:%S}\n'.format(wntr.__version__, datetime.datetime.now()).encode('ascii'))
@@ -919,7 +990,7 @@ class InpFile(object):
                 f.write('{}\n'.format(line).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print junctions information
+            ### Print junctions information
             f.write('[JUNCTIONS]\n'.encode('ascii'))
             f.write(_JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern').encode('ascii'))
             nnames = list(wn._junctions.keys())
@@ -936,7 +1007,7 @@ class InpFile(object):
                 f.write(_JUNC_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print reservoir information
+            ### Print reservoir information
             f.write('[RESERVOIRS]\n'.encode('ascii'))
             f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern').encode('ascii'))
             nnames = list(wn._reservoirs.keys())
@@ -953,7 +1024,7 @@ class InpFile(object):
                 f.write(_RES_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print tank information
+            ### Print tank information
             f.write('[TANKS]\n'.encode('ascii'))
             f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
                                        'Diameter', 'Min Volume', 'Volume Curve').encode('ascii'))
@@ -975,7 +1046,7 @@ class InpFile(object):
                 f.write(_TANK_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print pipe information
+            ### Print pipe information
             f.write('[PIPES]\n'.encode('ascii'))
             f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
                                        'Roughness', 'Minor Loss', 'Status').encode('ascii'))
@@ -997,7 +1068,7 @@ class InpFile(object):
                 f.write(_PIPE_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print pump information
+            ### Print pump information
             f.write('[PUMPS]\n'.encode('ascii'))
             f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Parameters').encode('ascii'))
             lnames = list(wn._pumps.keys())
@@ -1019,7 +1090,7 @@ class InpFile(object):
                 f.write(_PUMP_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print valve information
+            ### Print valve information
             f.write('[VALVES]\n'.encode('ascii'))
             f.write(_VALVE_LABEL.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss').encode('ascii'))
             lnames = list(wn._valves.keys())
@@ -1047,7 +1118,7 @@ class InpFile(object):
                 f.write(_VALVE_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print status information
+            ### Print status information
             f.write('[STATUS]\n'.encode('ascii'))
             f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
             for link_name, link in wn.links(Pump):
@@ -1060,7 +1131,7 @@ class InpFile(object):
                             LinkStatus(link.get_base_status()).name).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print pattern information
+            ### Print pattern information
             num_columns = 8
             f.write('[PATTERNS]\n'.encode('ascii'))
             f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers').encode('ascii'))
@@ -1075,7 +1146,7 @@ class InpFile(object):
                 f.write('\n'.encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print curves
+            ### Print curves
             f.write('[CURVES]\n'.encode('ascii'))
             f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value').encode('ascii'))
             for curve_name, curve in wn._curves.items():
@@ -1099,7 +1170,7 @@ class InpFile(object):
                     f.write('\n'.encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print Controls
+            ### Print Controls
             f.write( '[CONTROLS]\n'.encode('ascii'))
             # Time controls and conditional controls only
             for text, all_control in wn._control_dict.items():
@@ -1132,11 +1203,19 @@ class InpFile(object):
                     threshold = all_control._threshold - all_control._source_obj.elevation
                     vals['thresh'] = from_si(inp_units, threshold, HydParam.HydraulicHead)
                     f.write(entry.format(**vals).encode('ascii'))
-                else:
+                elif not isinstance(all_control, wntr.network.controls.IfThenElseControl):
                     raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
             f.write('\n'.encode('ascii'))
-            
-            # sources
+
+            ### Write rules
+            f.write('[RULES]\n'.encode('ascii'))
+            for text, all_control in wn._control_dict.items():
+                entry = '{}\n; end\n\n'
+                if isinstance(all_control,wntr.network.controls.IfThenElseControl):
+                    f.write(entry.format(str(all_control)).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+
+            ### Write sources
             f.write('[SOURCES]\n'.encode('ascii'))
             entry = '{:10s} {:10s} {:10s} {:10s}\n'
             label = '{:10s} {:10s} {:10s} {:10s}\n'
@@ -1150,7 +1229,7 @@ class InpFile(object):
                     strength = from_si(inp_units, source.quality, QualParam.SourceMassInject, mass_units)
                 else: # CONC, SETPOINT, FLOWPACED
                     strength = from_si(inp_units, source.quality, QualParam.Concentration, mass_units)
-                
+
                 E = {'node': source.node_name,
                      'type': source.source_type,
                      'quality': str(strength),
@@ -1160,7 +1239,7 @@ class InpFile(object):
                 f.write(entry.format(E['node'], E['type'], str(E['quality']), E['pat']).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Report
+            ### Report
             f.write('[REPORT]\n'.encode('ascii'))
             if len(self.sections['[REPORT]']) > 0:
                 for lnum, line in self.sections['[REPORT]']:
@@ -1170,7 +1249,7 @@ class InpFile(object):
                 f.write('Summary yes\n'.encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Options
+            ### Options
             f.write('[OPTIONS]\n'.encode('ascii'))
             entry_string = '{:20s} {:20s}\n'
             entry_float = '{:20s} {:g}\n'
@@ -1202,7 +1281,7 @@ class InpFile(object):
 
             f.write('\n'.encode('ascii'))
 
-            # Reaction Options
+            ### Reaction Options
             f.write( '[REACTIONS]\n'.encode('ascii'))
             entry_int = ' {:s} {:s} {:d}\n'
             entry_float = ' {:s} {:s} {:<10.4f}\n'
@@ -1250,7 +1329,7 @@ class InpFile(object):
                                                        reaction_order=wn.options.wall_rxn_order)).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Time options
+            ### Time options
             f.write('[TIMES]\n'.encode('ascii'))
             entry = '{:20s} {:10s}\n'
             time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
@@ -1278,11 +1357,13 @@ class InpFile(object):
             hrs, mm, sec = _sec_to_string(wn.options.quality_timestep)
             f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec).encode('ascii'))
             hrs, mm, sec = _sec_to_string(wn.options.rule_timestep)
-            #f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
+
+            ### TODO: RULE TIMESTEP is not written?!
+            # f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
             f.write(entry.format('STATISTIC', wn.options.statistic).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Coordinates
+            ### Coordinates
             f.write('[COORDINATES]\n'.encode('ascii'))
             entry = '{:10s} {:10g} {:10g}\n'
             label = '{:10s} {:10s} {:10s}\n'
@@ -1292,7 +1373,8 @@ class InpFile(object):
                 f.write(entry.format(key, val[0], val[1]).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            unmodified = ['[ENERGY]', '[RULES]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]',
+            ### Energy, Demands, Quality, Emitters, Mixing, Vertices, Labels, Backdrop, Tags
+            unmodified = ['[ENERGY]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]',
                           '[MIXING]', '[VERTICES]', '[LABELS]', '[BACKDROP]', '[TAGS]']
 
             for section in unmodified:
@@ -1306,354 +1388,97 @@ class InpFile(object):
             f.write('[END]\n'.encode('ascii'))
 
 
-class _EpanetCondition(ControlCondition):
-    """
-    A conditional statement to associate with a rule or control
-    """
-    def __init__(self, object_type, object_id, attribute, relation, value, model):
-        self._source_type = object_type
-        if isinstance(object_type, str):
-            object_type = object_type.upper()
-            if object_type == 'NODE':
-                self._source_type = wntr.network.Node
-            elif object_type == 'JUNCTION':
-                self._source_type = wntr.network.Junction
-            elif object_type == 'RESERVOIR':
-                self._source_type = wntr.network.Reservoir
-            elif object_type == 'TANK':
-                self._source_type = wntr.network.Tank
-            elif object_type == 'LINK':
-                self._source_type = wntr.network.Link
-            elif object_type == 'PIPE':
-                self._source_type = wntr.network.Pipe
-            elif object_type == 'PUMP':
-                self._source_type = wntr.network.Pump
-            elif object_type == 'VALVE':
-                self._source_type = wntr.network.Valve
-        self._source_obj = object_id
-        self._source_attr = self._parse_attribute(object_type, attribute)
-        self._relation = self._parse_relation(relation)
-        self._threshold = self._parse_value(value)
-        self._time = False
-        self._daily = False
-        if self._source_attr == 'clocktime':
-            self._daily = True
-            self._time = True
-        elif self._source_attr == 'time':
-            self._time = True
-            self._daily = False
-        else:
-            self._time = False
-            self._daily = False
-        if model is not None:
-            self._attach_model(model)
+class _EpanetRule(object):
+    """contains the text for an EPANET rule"""
+    def __init__(self, ruleID):
+        self.ruleID = ruleID
+        self._if_clauses = []
+        self._then_clauses = []
+        self._else_clauses = []
+        self.priority = -1
 
-    def evaluate(self, model=None):
-        """Evaluate the condition against the current state of the attached or passed model."""
-        if model is not None:
-            self.attach_model(model)
-        elif model is None and not self.attached:
-            raise RuntimeError('No WaterNetworkModel available for condition: %s', str(self))
-        cur_value = getattr(self._source_obj, self._source_attr)
-        thresh_value = self._threshold
-        relation = self._relation
-        if np.isnan(self._threshold):
-            relation = np.greater
-            thresh_value = 0.0
-        state = relation(cur_value, thresh_value)
-        return state
+    def add_if(self, clause):
+        self._if_clauses.append(clause)
 
-    @classmethod
-    def new_from_text(cls, text):
-        """Create a new EpanetCondition from an EPANET INP file conditional clause."""
-        words = text.split()
-        if len(words) > 1 and words[0].upper() in ['TIME', 'CLOCKTIME']:
-            return cls('SYSTEM', '', words[0], '=', ' '.join(words[1:]))
-        elif len(words) == 4 and words[0].upper() == 'NODE':
-            return cls('NODE', words[1], 'FORLINK', words[2], words[3])
-        elif words[0].upper() == 'SYSTEM':
-            return cls(words[0], '', words[1], words[2], words[3])
-        elif len(words) == 5:
-            return cls(words[0], words[1], words[2], words[3], words[4])
+    def add_then(self, clause):
+        self._then_clauses.append(clause)
 
-    @property
-    def attached(self):
-        """Evaluates True if a model has been attached."""
-        if self._model is not None:
-            return True
-        return False
+    def add_else(self, clause):
+        self._else_clauses.append(clause)
 
-    @property
-    def source(self):
-        if self._source_attr == 'clocktime':
-            att_str = 'clock_time'
-        elif self._source_attr == 'time':
-            att_str = 'sim_time'
-        else:
-            att_str = self._source_attr
-        return (self._source_obj, att_str)
-
-    @property
-    def operation(self):
-        if np.isnan(self._threshold):
-            return np.greater
-        return self._relation
-
-    @property
-    def threshold(self):
-        if np.isnan(self._threshold):
-            return 0.0
-        return self._threshold
-
-    def _attach_model(self, model):
-        if self._source_type in [wntr.network.Node, wntr.network.Junction,
-                                 wntr.network.Reservoir, wntr.network.Tank,
-                                 'NODE', 'RESERVOIR', 'TANK', 'JUNCTION']:
-            if not isinstance(self._source_obj, wntr.network.Node):
-                if isinstance(self._source_obj, str):
-                    self._source_obj = model.get_node(self._source_obj)
-                    if self._source_attr == 'forlink':
-                        if isinstance(self._source_obj, wntr.network.Tank):
-                            self._source_attr = 'level'
-                        else:
-                            self._source_attr = 'pressure'
-                else:
-                    logger.error('Uknown Node-type object: %s %s', type(self._source_type), self._source_obj)
-                    raise RuntimeError('Failure attaching model to rule - invalid object type')
-        elif self._source_type in [wntr.network.Link, wntr.network.Pump,
-                                   wntr.network.Pipe, wntr.network.Valve,
-                                   'LINK', 'PUMP', 'PIPE', 'VALVE']:
-            if not isinstance(self._source_obj, wntr.network.Link):
-                if isinstance(self._source_obj, str):
-                    self._source_obj = model.get_link(self._source_obj)
-                else:
-                    logger.error('Uknown Link-type object: %s %s', type(self._source_type), self._source_obj)
-                    raise RuntimeError('Failure attaching model to rule - invalid object type')
-        elif self._source_type in [wntr.network.WaterNetworkModel, 'SYSTEM']:
-            self._source_obj = model
-        else:
-            logger.error('Uknown object: %s %s', type(self._source_type), self._source_obj)
-            raise RuntimeError('Failure attaching model to rule - invalid object type')
-        self._model = model
-
+    def set_priority(self, priority):
+        self.priority = int(priority)
 
     def __str__(self):
-        val_str = str(self._threshold)
-        rel_str = self._relation_to_str(self._relation)
-        if self._source_type == 'SYSTEM' or \
-           isinstance(self._source_type, wntr.network.WaterNetworkModel):
-            typ_str = 'SYSTEM'
-            elem_id = ''
-        elif not isinstance(self._source_type, str):
-            typ_str = str(self._source_type).split('.')[-1].replace("'","").replace('>','')
-        else:
-            typ_str = self._source_type
-        if isinstance(self._source_obj, wntr.network.WaterNetworkModel):
-            elem_id = ''
-            typ_str = 'SYSTEM'
-        elif isinstance(self._source_obj, wntr.network.Node) or isinstance(self._source_obj, wntr.network.Link):
-            elem_id = self._source_obj.name
-        else:
-            elem_id = self._source_obj
-        att_str = self._source_attr.upper()
-        if self._time:
-            val_str = self._sec_to_string(self._threshold)
-        if att_str == 'STATUS':
-            if self._threshold == 0:
-                val_str = 'CLOSED'
-            elif self._threshold == 1:
-                val_str = 'OPEN'
+        if self.priority >= 0:
+            if len(self._else_clauses) > 0:
+                return 'RULE {}\n{}\n{}\n{}\nPRIORITY {}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses), self.priority)
             else:
-                val_str = 'ACTIVE'
-            rel_str = self._relation_to_str(self._relation, human=True)
-        if att_str in ['PRESSURE', 'LEVEL']:
-            rel_str = self._relation_to_str(self._relation, human=True)
-        return '{} {} {} {} {}'.format(typ_str, elem_id, att_str, rel_str, val_str)
-
-    @classmethod
-    def _parse_relation(cls, rel):
-        """
-        Convert a string to a numpy relationship.
-        """
-        if isinstance(rel, np.ufunc):
-            return rel
-        elif not isinstance(rel, str):
-            return rel
-        rel = rel.upper().strip()
-        if rel == '=' or rel == 'IS':
-            return np.equal
-        elif rel == '<>' or rel == 'NOT':
-            return np.not_equal
-        elif rel == '<' or rel == 'BELOW':
-            return np.less
-        elif rel == '>' or rel == 'ABOVE':
-            return np.greater
-        elif rel == '<=':
-            return np.less_equal
-        elif rel == '>=':
-            return np.greater_equal
+                return 'RULE {}\n{}\n{}\nPRIORITY {}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), self.priority)
         else:
-            raise ValueError('Unknown relation "%s"'%rel)
-
-    @classmethod
-    def _relation_to_str(cls, rel, human=False):
-        """
-        Convert a relation/comparison to a string.
-        """
-        if rel == np.equal:
-            if human:
-                return 'IS'
-            return '='
-        elif rel == np.not_equal:
-            if human:
-                return 'NOT'
-            return '<>'
-        elif rel == np.less:
-            if human:
-                return 'BELOW'
-            return '<'
-        elif rel == np.greater:
-            if human:
-                return 'ABOVE'
-            return '>'
-        elif rel == np.less_equal:
-            return '<='
-        elif rel == np.greater_equal:
-            return '>='
-        else:
-            return str(rel)
-
-    @classmethod
-    def _sec_to_string(cls, value, daily=False):
-        sec = value
-        hours = int(sec/3600.)
-        sec -= hours*3600
-        mm = int(sec/60.)
-        sec -= mm*60
-        if daily:
-            if hours >= 12:
-                pm = 'PM'
-            elif hours == 0:
-                pm = 'AM'
-                hours = 12
+            if len(self._else_clauses) > 0:
+                return 'RULE {}\n{}\n{}\n{}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses))
             else:
-                pm = 'AM'
-            return '{}:{:02d}:{:02d} {}'.format(hours, mm, int(sec), pm)
-        return '{}:{:02d}:{:02d}'.format(hours, mm, int(sec))
+                return 'RULE {}\n{}\n{}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses))
 
-    @classmethod
-    def _parse_attribute(cls, object_type, attribute):
-        """
-        Get the appropriate water-network-model attribute.
-
-        Valid attribute to force dynamic interpretation of simple control:
-            - ForLink (Tank -> Level, Junction -> Pressure)
-
-        Valid attributes for a SYSTEM rule:
-            - Demand
-            - Time
-            - ClockTime
-
-        Valid attributes for Node objects:
-            - Demand
-            - Head
-            - Pressure
-
-        Additional attributes for Tanks:
-            - Level
-            - FillTime (hours needed to fill)
-            - DrainTime (hours needed to drain)
-
-        Valid attributes for Link objects:
-            - Flow
-            - Status (open, closed, active)
-            - Setting (pump speed or valve setting)
-
-        """
-        if isinstance(object_type, str):
-            object_type = object_type.upper()
-        else:
-            object_type = str(object_type.__class__).split('.')[-1].upper()
-        attribute = attribute.upper()
-        if attribute == 'FORLINK':
-            return 'forlink'
-        if object_type in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
-            if attribute in ['DEMAND', 'HEAD']:
-                return attribute.lower()
-            elif attribute in ['PRESSURE']:
-                logger.warning('Node-pressure controls are not available in WNTRSimulator')
-                return attribute.lower()
-            elif object_type == 'TANK':
-                if attribute in ['LEVEL', 'FILLTIME', 'DRAINTIME']:
-                    # valid attribute
-                    logger.warning('Tank-specific controls not implemented in WNTRSimulator')
-                    return attribute.lower()
+    def generate_control(self, model):
+        condition_list = []
+        for line in self._if_clauses:
+            condition = None
+            words = line.split()
+            if words[1].upper() == 'SYSTEM':
+                if words[2].upper() == 'DEMAND':
+                    ### TODO: system demand
+                    pass
+                elif words[2].upper() == 'TIME':
+                    condition = SimTimeCondition(model, words[3].encode('ascii'), ' '.join(words[4:]).encode('ascii'))
                 else:
-                    logger.error('Unknown Tank attribute: %s', attribute)
-                    raise RuntimeError('Failure creating rule - invalid conditional statement')
+                    condition = TimeOfDayCondition(model, words[3].encode('ascii'), ' '.join(words[4:]).encode('ascii'))
             else:
-                logger.error('Unknown Node-type attribute: %s', attribute)
-                raise RuntimeError('Failure creating rule - invalid conditional statement')
-        elif object_type in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
-            if attribute in ['FLOW', 'STATUS', 'SETTING']:
-                return attribute.lower()
+                if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
+                    condition = ValueCondition(model.get_node(words[2].encode('ascii')), words[3].lower(), words[4].lower().encode('ascii'), words[5])
+                elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
+                    condition = ValueCondition(model.get_link(words[2].encode('ascii')), words[3].lower(), words[4].lower().encode('ascii'), words[5])
+                else:
+                    ### FIXME: raise error
+                    pass
+            if words[0].upper() == 'IF':
+                condition_list.append(condition)
+            elif words[0].upper() == 'AND':
+                condition_list.append(condition)
+            elif words[0].upper() == 'OR':
+                if len(condition_list) > 0:
+                    other = condition_list[-1]
+                    condition_list.remove(other)
+                else:
+                    ### FIXME: raise error
+                    pass
+                conj = OrCondition(other, condition)
+                condition_list.append(conj)
+        final_condition = None
+        for condition in condition_list:
+            if final_condition is None:
+                final_condition = condition
             else:
-                logger.error('Unknown Link-type attribute: %s', attribute)
-                raise RuntimeError('Failure creating rule - invalid conditional statement')
-        elif object_type in ['SYSTEM']:
-            if attribute in ['DEMAND', 'TIME', 'CLOCKTIME']:
-                return attribute.lower()
-            else:
-                logger.error('Unknown System attribute: %s', attribute)
-                raise RuntimeError('Failure creating rule - invalid conditional statement')
-        else:
-            logger.error('Unknown object: %s', object_type)
-            raise RuntimeError('Failure creating rule - invalid conditional statement')
-
-    @classmethod
-    def _parse_value(cls, value):
-        try:
-            v = float(value)
-            return v
-        except ValueError:
-            value = value.upper()
-            if value == 'CLOSED':
-                return 0
-            if value == 'OPEN':
-                return 1
-            if value == 'ACTIVE':
-                return np.nan
-            PM = 0
-            words = value.split()
-            if len(words) > 1:
-                if words[1] == 'PM':
-                    PM = 86400 / 2
-            hms = words[0].split(':')
-            v = 0
-            if len(hms) > 2:
-                v += int(hms[2])
-            if len(hms) > 1:
-                v += int(hms[1])*60
-            if len(hms) > 0:
-                v += int(hms[0])*3600
-            if int(hms[0]) <= 12:
-                v += PM
-            return v
-
-    @property
-    def wnm(self):
-        return self._model
-
-    @property
-    def run_at_time(self):
-        return self._threshold
-
-    @property
-    def time_flag(self):
-        if self._daily:
-            return 'SHIFTED_TIME'
-        return 'SIM_TIME'
-
-    @property
-    def daily_flag(self):
-        return self._daily
+                final_condition = AndCondition(final_condition, condition)
+        then_acts = []
+        for act in self._then_clauses:
+            words = act.strip().split()
+            if len(words) < 6:
+                # TODO: raise error
+                pass
+            link = model.get_link(words[2])
+            attr = words[3].lower()
+            value = ValueCondition._parse_value(words[5])
+            then_acts.append(ControlAction(link, attr, value))
+        else_acts = []
+        for act in self._else_clauses:
+            words = act.strip().split()
+            if len(words) < 6:
+                # TODO: raise error
+                pass
+            link = model.get_link(words[2])
+            attr = words[3].lower()
+            value = ValueCondition._parse_value(words[5])
+            else_acts.append(ControlAction(link, attr, value))
+        return IfThenElseControl(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)

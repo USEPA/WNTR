@@ -12,6 +12,7 @@ __all__ = ["FlowUnits", "MassUnits", "QualParam", "HydParam", "to_si", "from_si"
            "ControlType", "LinkTankStatus",
            "MixType", "ResultType", "EN"]
 
+
 class FlowUnits(enum.Enum):
     u"""Epanet Units Enum class.
 
