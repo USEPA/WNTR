@@ -13,5 +13,4 @@ Submodules
 
    wntr.scenario.earthquake
    wntr.scenario.fragility_curve
-   wntr.scenario.water_quality
 

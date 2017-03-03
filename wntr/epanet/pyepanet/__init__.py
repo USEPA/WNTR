@@ -1,5 +1,5 @@
 """
-Python extensions for the EPANET Programmers Toolkit DLLs
+The wntr.epanet.pyepanet package includes python extensions for the EPANET Programmers Toolkit DLLs
 
 Copyright 2011 Sandia Corporation Under the terms of Contract
 DE-AC04-94AL85000 there is a non-exclusive license for use of this

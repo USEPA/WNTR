@@ -1,3 +1,5 @@
+.. _api_documentation:
+
 API documentation
 ===================
 
@@ -17,5 +19,6 @@ Subpackages
     wntr.network
     wntr.scenario
     wntr.sim
+    wntr.graphics
     wntr.utils
 

@@ -1,7 +1,7 @@
-wntr.metrics.query module
+wntr.metrics.misc module
 =========================
 
-.. automodule:: wntr.metrics.query
+.. automodule:: wntr.metrics.misc
     :members:
     :no-undoc-members:
     :show-inheritance:

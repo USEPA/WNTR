@@ -247,6 +247,7 @@ htmlhelp_basename = 'WNTRdoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
+'printindex': '',
 # The paper size ('letterpaper' or 'a4paper').
 #'papersize': 'letterpaper',
 
@@ -257,6 +258,8 @@ latex_elements = {
 'preamble':  '''%
   \pagestyle{plain}
   \pagenumbering{arabic}
+  \\renewcommand{\\refname}{References}
+  \\raggedright
 ''',
 
 # Latex figure (float) alignment
@@ -291,6 +294,7 @@ latex_documents = [
 # If false, no module index is generated.
 latex_domain_indices = False
 
+latex_use_modindex = False
 
 # -- Options for manual page output ---------------------------------------
 

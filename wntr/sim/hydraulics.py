@@ -1,27 +1,31 @@
 from __future__ import print_function
 from wntr import *
+from wntr.network.model import *
 import pandas as pd
 import numpy as np
 import scipy.sparse as sparse
 import math
-from wntr.network.model import *
 import warnings
 import logging
 
 logger = logging.getLogger(__name__)
 
 class HydraulicModel(object):
-    def __init__(self, wn, pressure_driven=False):
-        """
-        Class to create hyrdaulic models.
+    """
+    Hydraulic model class.
 
-        Parameters
-        ----------
-        wn : class
-            water network model class
-        pressure_driven : bool
-            Determines if the network will be pressure driven or demand driven.
-        """
+    Parameters
+    ----------
+    wn : WaterNetworkModel object
+        Water network model
+        
+    pressure_driven: bool (optional)
+        Specifies whether the simulation will be demand-driven or
+        pressure-driven, default = False
+    """
+    
+    def __init__(self, wn, pressure_driven=False):
+        
         self._wn = wn
         self.pressure_driven = pressure_driven
 
@@ -582,6 +586,7 @@ class HydraulicModel(object):
         ----------
         x : numpy array
             values of heads, demands, flows, and leak flowrates
+            
         Returns
         -------
         residuals: numpy array

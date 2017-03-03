@@ -224,8 +224,8 @@ class Control(object):
 
 class TimeControl(Control):
     """
-    A class for creating time controls to fire a control action at a particular time. At the specified time,
-    control_action will be fired/activated.
+    A class for creating time controls to fire a control action at a particular 
+    time. At the specified time, control_action will be fired/activated.
 
     Parameters
     ----------
@@ -233,19 +233,22 @@ class TimeControl(Control):
         The instance of the WaterNetworkModel class that is being simulated/modified.
 
     fire_time : int
-        time (in seconds) when the control_action should be fired.
+        Time (in seconds) when the control_action should be fired.
 
-    time_flag : string, ('SIM_TIME', 'SHIFTED_TIME')
-
-        SIM_TIME: indicates that the value of fire_time is in seconds since the start of the simulation
-
-        SHIFTED_TIME: indicates that the value of fire_time is shifted by the start time of the simulations. That is,
-            fire_time is in seconds since 12 AM on the first day of the simulation. Therefore, 7200 refers to 2:00 AM
-            regardless of the start time of the simulation.
+    time_flag : string
+        Options include SIM_TIME and SHIFTED_TIME
+        
+        * SIM_TIME indicates that the value of fire_time is in seconds since 
+          the start of the simulation
+        * SHIFTED_TIME indicates that the value of fire_time is shifted by the 
+          start time of the simulations. That is, fire_time is in seconds since 
+          12 AM on the first day of the simulation. Therefore, 7200 refers to 2:00 AM
+          regardless of the start time of the simulation.
 
     daily_flag : bool
-        False : control will execute once when time is first encountered
-        True : control will execute at the same time daily
+        
+        * False indicates that control will execute once when time is first encountered
+        * True indicates that control will execute at the same time daily
 
     control_action : An object derived from BaseControlAction
         Examples: ControlAction
@@ -330,7 +333,7 @@ class TimeControl(Control):
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated.
-
+        
         presolve_flag : bool
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
@@ -355,6 +358,7 @@ class TimeControl(Control):
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated/modified.
+        
         priority : int
             A priority value. The action is only fired if priority == self._priority.
         """

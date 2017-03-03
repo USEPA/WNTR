@@ -3,6 +3,7 @@ from wntr import network
 from wntr import metrics
 from wntr import sim
 from wntr import scenario
+from wntr import graphics
 from wntr import utils
 
 __version__ = '0.1.1'
