@@ -1935,11 +1935,8 @@ class WaterNetworkOptions(object):
 
         self.roughness_correlation = None
         "Makes all default pipe wall reaction coefficients related to pipe roughness"
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> pr/9
+
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
