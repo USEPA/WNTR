@@ -80,6 +80,8 @@ class WaterNetworkModel(object):
         self._Htol = 0.00015  # Head tolerance in meters.
         self._Qtol = 2.8e-5  # Flow tolerance in m^3/s.
 
+        self._backdrop = _Backdrop()
+
         self._inpfile = None
         if inp_file_name:
             self.read_inpfile(inp_file_name)
@@ -1571,6 +1573,10 @@ class WaterNetworkModel(object):
         """
         return self.shifted_time % (24*3600)
 
+    @property
+    def clock_day(self):
+        return int(self.shifted_time / 86400)
+
     def reset_initial_values(self):
         """
         Resets all initial values in the network.
@@ -2395,6 +2401,10 @@ class Tank(Node):
         self._leak_end_control_name = 'tank'+self._name+'end_leak_control'
         self.bulk_rxn_coeff = None
 
+    @property
+    def level(self):
+        return self.head - self.elevation
+
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -2943,3 +2953,27 @@ class Source(object):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
         return fmt.format(self.name, self.node_name, self.source_type, self.quality, repr(self.pattern_name))
 
+
+
+class _Backdrop(object):
+    """An epanet backdrop object."""
+    def __init__(self, filename=None, dim=None, units=None, offset=None):
+        self.dimensions = dim
+        self.units = units
+        self.filename = filename
+        self.offset = offset
+
+    def __str__(self):
+        text = ""
+        if self.dimensions is not None:
+            text += "DIMENSIONS {} {} {} {}\n".format(self.dimensions[0],
+                                                      self.dimensions[1],
+                                                      self.dimensions[2],
+                                                      self.dimensions[3])
+        if self.units is not None:
+            text += "UNITS {}\n".format(self.units)
+        if self.filename is not None:
+            text += "FILE {}\n".format(self.filename)
+        if self.offset is not None:
+            text += "OFFSET {} {}\n".format(self.offset[0], self.offset[1])
+        return text.encode('ascii')

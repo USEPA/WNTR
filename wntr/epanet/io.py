@@ -49,7 +49,20 @@ _VALVE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
 _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
 _CURVE_LABEL = '{:11s} {:12s} {:12s}\n'
 
-
+def _split_line(line):
+    _vc = line.split(';', 1)
+    _cmnt = None
+    _vals = None
+    if len(_vc) == 0:
+        pass
+    elif len(_vc) == 1:
+        _vals = _vc[0].split()
+    elif _vc[0] == '':
+        _cmnt = _vc[1]
+    else:
+        _vals = _vc[0].split()
+        _cmnt = _vc[1]
+    return _vals, _cmnt
 
 def _is_number(s):
     """
@@ -252,21 +265,6 @@ class InpFile(object):
         self.mass_units = None
         self.flow_units = None
 
-        def split_line(line):
-            _vc = line.split(';', 1)
-            _cmnt = None
-            _vals = None
-            if len(_vc) == 0:
-                pass
-            elif len(_vc) == 1:
-                _vals = _vc[0].split()
-            elif _vc[0] == '':
-                _cmnt = _vc[1]
-            else:
-                _vals = _vc[0].split()
-                _cmnt = _vc[1]
-            return _vals, _cmnt
-
         section = None
         lnum = 0
         edata = {'fname': filename}
@@ -307,7 +305,7 @@ class InpFile(object):
         for lnum, line in self.sections['[OPTIONS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[OPTIONS]'
-            words, comments = split_line(line)
+            words, comments = _split_line(line)
             if words is not None and len(words) > 0:
                 if len(words) < 2:
                     edata['key'] = words[0]
@@ -797,6 +795,7 @@ class InpFile(object):
             wn.add_control(control_name, control_obj)
 
         ### TODO: Parse Rules
+        ### FIXME: UNIT CONVERSIONS
         if len(self.sections['[RULES]']) > 0:
             rules = []
             rule = None
@@ -845,9 +844,12 @@ class InpFile(object):
                     rule.add_else(line)
                 else:
                     continue
+            if rule is not None:
+                rules.append(rule)
             for rule in rules:
                 ctrl = rule.generate_control(wn)
                 wn.add_control(ctrl.name, ctrl)
+                logger.debug('Added %s', str(ctrl))
             # wn._en_rules = '\n'.join(self.sections['[RULES]'])
             #logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
@@ -903,7 +905,7 @@ class InpFile(object):
             elif key1 == 'ROUGHNESS':
                 opts.roughness_correlation = float(current[2])
             else:
-                raise RuntimeError('Reaction option not recognized')
+                raise RuntimeError('Reaction option not recognized: %s'%key1)
 
         ### Parse Title
         if len(self.sections['[TITLE]']) > 0:
@@ -941,8 +943,21 @@ class InpFile(object):
         if len(self.sections['[LABELS]']) > 0:
             logger.warning('LABELS are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
 
-        if len(self.sections['[BACKDROP]']) > 0:
-            logger.warning('BACKDROP is currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+        ### Parse Backdrop
+        for lnum, line in self.sections['[BACKDROP]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            key = current[0].upper()
+            if key == 'DIMENSIONS' and len(current) > 4:
+                wn._backdrop.dimensions = [current[1], current[2], current[3], current[4]]
+            elif key == 'UNITS' and len(current) > 1:
+                wn._backdrop.units = current[1]
+            elif key == 'FILE' and len(current) > 1:
+                wn._backdrop.filename = current[1]
+            elif key == 'OFFSET' and len(current) > 2:
+                wn._backdrop.offset = [current[1], current[2]]
 
         if len(self.sections['[TAGS]']) > 0:
             logger.warning('TAGS are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
@@ -1208,10 +1223,11 @@ class InpFile(object):
             f.write('\n'.encode('ascii'))
 
             ### Write rules
+            ### FIXME: RULES ARE WRITING WRONGLY
             f.write('[RULES]\n'.encode('ascii'))
             for text, all_control in wn._control_dict.items():
                 entry = '{}\n; end\n\n'
-                if isinstance(all_control,wntr.network.controls.IfThenElseControl):
+                if isinstance(all_control, wntr.network.controls.IfThenElseControl):
                     f.write(entry.format(str(all_control)).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
@@ -1373,9 +1389,15 @@ class InpFile(object):
                 f.write(entry.format(key, val[0], val[1]).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
+            ### Backdrop
+            if wn._backdrop.filename is not None:
+                f.write('[BACKDROP]\n'.encode('ascii'))
+                f.write(str(wn._backdrop).encode('ascii'))
+                f.write('\n'.encode('ascii'))
+
             ### Energy, Demands, Quality, Emitters, Mixing, Vertices, Labels, Backdrop, Tags
             unmodified = ['[ENERGY]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]',
-                          '[MIXING]', '[VERTICES]', '[LABELS]', '[BACKDROP]', '[TAGS]']
+                          '[MIXING]', '[VERTICES]', '[LABELS]', '[TAGS]']
 
             for section in unmodified:
                 if len(self.sections[section]) > 0:
@@ -1390,21 +1412,42 @@ class InpFile(object):
 
 class _EpanetRule(object):
     """contains the text for an EPANET rule"""
-    def __init__(self, ruleID):
+    def __init__(self, ruleID, inp_units=None, mass_units=None):
+        self.inp_units = inp_units
+        self.mass_units = mass_units
         self.ruleID = ruleID
         self._if_clauses = []
         self._then_clauses = []
         self._else_clauses = []
         self.priority = -1
 
+    def from_if_then_else(self, control):
+        """Create a rule from an IfThenElseControl object"""
+        pass
+
     def add_if(self, clause):
+        """Add an "if/and/or" clause from an INP file"""
         self._if_clauses.append(clause)
 
+    def add_control_condition(self, condition):
+        """Add a ControlCondition from an IfThenElseControl"""
+        pass
+
     def add_then(self, clause):
+        """Add a "then/and" clause from an INP file"""
         self._then_clauses.append(clause)
 
+    def add_action_on_true(self, action):
+        """Add a "then" action from an IfThenElseControl"""
+        pass
+
     def add_else(self, clause):
+        """Add an "else/and" clause from an INP file"""
         self._else_clauses.append(clause)
+
+    def add_action_on_false(self, action):
+        """Add an "else" action from an IfThenElseControl"""
+        pass
 
     def set_priority(self, priority):
         self.priority = int(priority)
