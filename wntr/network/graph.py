@@ -15,10 +15,10 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
     """
 
     def weight_graph(self, node_attribute={}, link_attribute={}):
-        """ 
+        """
         Return a weighted graph based on node and link attributes.
         The weighted graph changes the direction of the original link if the weight is negative.
-        
+
         Parameters
         ----------
         G : graph
@@ -34,7 +34,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         G : weighted graph
             A networkx weighted graph
         """
-        
+
         for node_name in self.nodes():
             try:
                 value = node_attribute[node_name]
@@ -59,7 +59,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
                     pass
 
     def terminal_nodes(self):
-        """ 
+        """
         Get all nodes with degree 1
 
         Parameters
@@ -79,9 +79,9 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return terminal_nodes
 
     def bridges(self):
-        """ 
+        """
         Get bridge links. Uses an undirected graph.
-        
+
         Parameters
         ----------
         G : graph
@@ -105,9 +105,9 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return bridges
 
     def central_point_dominance(self):
-        """ 
+        """
         Compute central point dominance.
-            
+
         Returns
         -------
         cpd : float
@@ -120,7 +120,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return cpd
 
     def spectral_gap(self):
-        """ 
+        """
         Spectral gap. Difference in the first and second eigenvalue of
         the adj matrix
 
@@ -136,7 +136,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return spectral_gap.real
 
     def algebraic_connectivity(self):
-        """ 
+        """
         Algebraic connectivity. Second smallest eigenvalue of the normalized
         Laplacian matrix of a network. Uses an undirected graph.
 
@@ -152,7 +152,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         return alg_con
 
     def critical_ratio_defrag(self):
-        """ 
+        """
         Critical ratio of defragmentation.
 
         Returns
@@ -242,5 +242,4 @@ def _all_simple_paths_multigraph(G, source, target, cutoff=None):
                 yield visited + [target]
             stack.pop()
             visited.pop()
-
 

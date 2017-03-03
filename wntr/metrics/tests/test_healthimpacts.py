@@ -108,7 +108,7 @@ def test_extent_contaminated():
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
-    #junctions = [junction_name for junction_name, junction in wn.junctions()]
+    #junctions = [junction_name for junction_name, junction in wn.junctions]
     #node_results = results.node.loc[:, :, junctions]
 
     EC = wntr.metrics.extent_contaminant(results.node, results.link, wn, 0)
