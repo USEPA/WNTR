@@ -81,6 +81,7 @@ class WaterNetworkModel(object):
         self._Qtol = 2.8e-5  # Flow tolerance in m^3/s.
 
         self._backdrop = _Backdrop()
+        self._energy = _Energy()
 
         self._inpfile = None
         if inp_file_name:
@@ -2687,16 +2688,24 @@ class Pump(Link):
         self.prev_speed = None
         self.speed = 1.0
         self.curve = None
+        self._efficiency = None
+        self._energy_price = None
+        self._energy_pat = None
         self.power = None
         self._power_outage = False
         self._prev_power_outage = False
         self._base_power = None
+        self.pattern = None
         self.info_type = info_type.upper()
         if self.info_type == 'HEAD':
             self.curve = info_value
         elif self.info_type == 'POWER':
             self.power = info_value
             self._base_power = info_value
+        elif self.info_type == 'SPEED':
+            self.speed = info_value
+        elif self.info_type == 'PATTERN':
+            self.pattern = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
 
@@ -2977,3 +2986,16 @@ class _Backdrop(object):
         if self.offset is not None:
             text += "OFFSET {} {}\n".format(self.offset[0], self.offset[1])
         return text.encode('ascii')
+
+
+class _Energy(object):
+    """An epanet energy definitions object."""
+    def __init__(self):
+        self.global_price = None
+        """Global average cost per kW-hour (default 0)"""
+        self.global_pattern = None
+        """ID label of time pattern describing how energy price varies with time"""
+        self.global_efficiency = None
+        """Global pump efficiency as percent (default 75%)"""
+        self.demand_charge = None
+        """Added cost per maximum kW usage during the simulation period"""

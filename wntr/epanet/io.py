@@ -547,11 +547,17 @@ class InpFile(object):
                 continue
             # Only add head curves for pumps
             if current[3].upper() == 'SPEED':
-                logger.warning('%(fname)s:%(lnum)-6d %(sec)13s speed settings for pumps are currently only supported in the EpanetSimulator.', edata)
-                continue
+                wn.add_pump(current[0],
+                            current[1],
+                            current[2],
+                            current[3].upper(),
+                            float(current[4]))
             elif current[3].upper() == 'PATTERN':
-                logger.warning('%(fname)s:%(lnum)-6d %(sec)13s speed patterns for pumps are currently only supported in the EpanetSimulator.', edata)
-                continue
+                wn.add_pump(current[0],
+                            current[1],
+                            current[2],
+                            current[3].upper(),
+                            current[4])
             elif current[3].upper() == 'HEAD':
                 curve_name = current[4]
                 curve_points = []
@@ -588,10 +594,8 @@ class InpFile(object):
             if len(current) < 7:
                 current[6] = 0
             valve_type = current[4].upper()
-            if valve_type != 'PRV':
-                logger.warning("%(fname)s:%(lnum)-6d %(sec)13s only PRV valves are currently supported.", edata)
-            if float(current[6]) != 0:
-                logger.warning('%(fname)s:%(lnum)-6d %(sec)13s currently, only the EpanetSimulator supports non-zero minor losses in valves.', edata)
+            #if valve_type != 'PRV':
+            #    logger.warning("%(fname)s:%(lnum)-6d %(sec)13s only PRV valves are currently supported.", edata)
             if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = to_si(inp_units, float(current[5]), HydParam.Pressure)
             elif valve_type == 'FCV':
@@ -599,7 +603,14 @@ class InpFile(object):
             elif valve_type == 'TCV':
                 valve_set = float(current[5])
             elif valve_type == 'GPV':
-                valve_set = current[5]
+                curve_name = current[5]
+                curve_points = []
+                for point in self.curves[curve_name]:
+                    x = to_si(inp_units, point[0], HydParam.Flow)
+                    y = to_si(inp_units, point[1], HydParam.HeadLoss)
+                    curve_points.append((x, y))
+                wn.add_curve(curve_name, 'HEADLOSS', curve_points)
+                valve_set = curve_name
             else:
                 logger.error('%(fname)s:%(lnum)-6d %(sec)13s valve type unrecognized: %(line)s', edata)
                 raise RuntimeError('VALVE type "%s" unrecognized' % valve_type)
@@ -735,6 +746,7 @@ class InpFile(object):
             if isinstance(current[2], float) or isinstance(current[2], int):
                 if isinstance(link, wntr.network.Pump):
                     logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
+                    ### TODO: WHAT IS GOING ON WITH THE CONTROL OBJECT HERE
                     continue
                 elif isinstance(link, wntr.network.Valve):
                     if link.valve_type != 'PRV':
@@ -794,8 +806,7 @@ class InpFile(object):
                     control_obj = wntr.network.TimeControl(wn, run_at_time, 'SHIFTED_TIME', True, action_obj)
             wn.add_control(control_name, control_obj)
 
-        ### TODO: Parse Rules
-        ### FIXME: UNIT CONVERSIONS
+        ### Parse Rules
         if len(self.sections['[RULES]']) > 0:
             rules = []
             rule = None
@@ -914,11 +925,50 @@ class InpFile(object):
         else:
             pass
 
-        ### Parse Unsupported Sections:
-        if len(self.sections['[ENERGY]']) > 0:
-            # wn._en_energy = '\n'.join(self.sections['[ENERGY]'])
-            logger.warning('ENERGY section is reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+        ### Parse Energy
+        for lnum, line in self.sections['[ENERGY]']:
+            edata['lnum'] = lnum
+            edata['sec'] = '[ENERGY]'
+            edata['line'] = line
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            # Only add head curves for pumps
+            if current[0].upper() == 'GLOBAL':
+                if current[1].upper() == 'PRICE':
+                    wn._energy.global_price = float(current[2])
+                elif current[1].upper() == 'PATTERN':
+                    wn._energy.global_pattern = current[2]
+                elif current[1].upper() in ['EFFIC', 'EFFICIENCY']:
+                    wn._energy.global_efficiency = float(current[2])
+                else:
+                    logger.warning('Unknown entry in ENERGY section: %s', line)
+            elif current[0].upper() == 'DEMAND':
+                wn._energy.demand_charge = float(current[2])
+            elif current[0].upper() == 'PUMP':
+                pump_name = current[1]
+                pump = wn._pumps[pump_name]
+                if current[2].upper() == 'PRICE':
+                    pump._energy_price = float(current[2])
+                elif current[2].upper() == 'PATTERN':
+                    pump._energy_pat = current[2]
+                elif current[2].upper() in ['EFFIC', 'EFFICIENCY']:
+                    curve_name = current[3]
+                    curve_points = []
+                    for point in self.curves[curve_name]:
+                        x = to_si(inp_units, point[0], HydParam.Flow)
+                        y = point[1]
+                        curve_points.append((x, y))
+                    wn.add_curve(curve_name, 'EFFICIENCY', curve_points)
+                    curve = wn.get_curve(curve_name)
+                    pump._efficiency = curve_name
+                else:
+                    logger.warning('Unknown entry in ENERGY section: %s', line)
+            else:
+                logger.warning('Unknown entry in ENERGY section: %s', line)
 
+        ### Parse Demands
         if len(self.sections['[DEMANDS]']) > 0:
             # wn._en_demands = '\n'.join(self.sections['[DEMANDS]'])
             logger.warning('Multiple DEMANDS are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
@@ -993,7 +1043,8 @@ class InpFile(object):
             mass_units = self.mass_units
         else:
             mass_units = MassUnits.mg
-
+        if not isinstance(wn, WaterNetworkModel):
+            raise ValueError('Must pass a WaterNetworkModel object')
         with io.open(filename, 'wb') as f:
 
             ### Print title
@@ -1161,7 +1212,7 @@ class InpFile(object):
                 f.write('\n'.encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            ### Print curves
+            ### Print Curves
             f.write('[CURVES]\n'.encode('ascii'))
             f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value').encode('ascii'))
             for curve_name, curve in wn._curves.items():
@@ -1172,17 +1223,24 @@ class InpFile(object):
                         y = from_si(inp_units, point[1], HydParam.Volume)
                         f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
                 elif curve.curve_type == 'HEAD':
-                    f.write(';HEAD: {}\n'.format(curve_name).encode('ascii'))
+                    f.write(';PUMP: {}\n'.format(curve_name).encode('ascii'))
                     for point in curve.points:
                         x = from_si(inp_units, point[0], HydParam.Flow)
                         y = from_si(inp_units, point[1], HydParam.HydraulicHead)
                         f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
+                elif curve.curve_type == 'EFFICIENCY':
+                    f.write(';EFFICIENCY: {}\n'.format(curve_name).encode('ascii'))
+                    for point in curve.points:
+                        x = from_si(inp_units, point[0], HydParam.Flow)
+                        y = point[1]
+                        f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
+                elif curve.curve_type == 'HEADLOSS':
+                    f.write(';HEADLOSS: {}\n'.format(curve_name).encode('ascii'))
+                    for point in curve.points:
+                        x = from_si(inp_units, point[0], HydParam.Flow)
+                        y = from_si(inp_units, point[1], HydParam.HeadLoss)
+                        f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
                 f.write('\n'.encode('ascii'))
-            for curve_name, curve in self.curves.items():
-                if curve_name not in wn._curves.keys():
-                    for point in curve:
-                        f.write(_CURVE_ENTRY.format(name=curve_name, x=point[0], y=point[1], com=';').encode('ascii'))
-                    f.write('\n'.encode('ascii'))
             f.write('\n'.encode('ascii'))
 
             ### Print Controls
@@ -1223,10 +1281,9 @@ class InpFile(object):
             f.write('\n'.encode('ascii'))
 
             ### Print Rules
-            ### FIXME: RULES ARE WRITING WRONGLY
             f.write('[RULES]\n'.encode('ascii'))
             for text, all_control in wn._control_dict.items():
-                entry = '{}\n; end\n\n'
+                entry = '{}\n'
                 if isinstance(all_control, wntr.network.controls.IfThenElseControl):
                     rule = _EpanetRule('blah', inp_units, mass_units)
                     rule.from_if_then_else(all_control)
@@ -1392,13 +1449,36 @@ class InpFile(object):
             f.write('\n'.encode('ascii'))
 
             ### Backdrop
-            if wn._backdrop.filename is not None:
+            if wn._backdrop is not None:
                 f.write('[BACKDROP]\n'.encode('ascii'))
                 f.write(str(wn._backdrop).encode('ascii'))
                 f.write('\n'.encode('ascii'))
 
-            ### Energy, Demands, Quality, Emitters, Mixing, Vertices, Labels, Backdrop, Tags
-            unmodified = ['[ENERGY]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]',
+            ### Energy
+            f.write('[ENERGY]\n'.encode('ascii'))
+            if wn._energy is not None:
+                if wn._energy.global_price is not None:
+                    f.write('GLOBAL PRICE   {:.4f}\n'.format(wn._energy.global_price).encode('ascii'))
+                if wn._energy.global_pattern is not None:
+                    f.write('GLOBAL PATTERN {:s}\n'.format(wn._energy.global_pattern).encode('ascii'))
+                if wn._energy.global_efficiency is not None:
+                    f.write('GLOBAL EFFIC   {:.4f}\n'.format(wn._energy.global_efficiency).encode('ascii'))
+                if wn._energy.demand_charge is not None:
+                    f.write('DEMAND CHARGE  {:.4f}\n'.format(wn._energy.demand_charge).encode('ascii'))
+            lnames = list(wn._pumps.keys())
+            lnames.sort()
+            for pump_name in lnames:
+                pump = wn._pumps[pump_name]
+                if pump._efficiency is not None:
+                    f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump._efficiency).encode('ascii'))
+                if pump._energy_price is not None:
+                    f.write('PUMP {:10s} PRICE   {:s}\n'.format(pump_name, pump._energy_price).encode('ascii'))
+                if pump._energy_pat is not None:
+                    f.write('PUMP {:10s} PATTERN {:s}\n'.format(pump_name, pump._energy_pat).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+
+            ### Demands, Quality, Emitters, Mixing, Vertices, Labels, Backdrop, Tags
+            unmodified = ['[DEMANDS]', '[QUALITY]', '[EMITTERS]',
                           '[MIXING]', '[VERTICES]', '[LABELS]', '[TAGS]']
 
             for section in unmodified:
@@ -1432,12 +1512,12 @@ class _EpanetRule(object):
                 if ct == 0:
                     self.add_action_on_true(action)
                 else:
-                    self.add_action_on_true(action, 'AND')
+                    self.add_action_on_true(action, '  AND')
             for ct, action in enumerate(control._else_actions):
                 if ct == 0:
                     self.add_action_on_false(action)
                 else:
-                    self.add_action_on_false(action, 'AND')
+                    self.add_action_on_false(action, '  AND')
             self.set_priority(control._priority)
         else:
             raise ValueError('Invalid control type for rules: %s'%control.__class__.__name__)
@@ -1446,14 +1526,14 @@ class _EpanetRule(object):
         """Add an "if/and/or" clause from an INP file"""
         self._if_clauses.append(clause)
 
-    def add_control_condition(self, condition, prefix='IF'):
+    def add_control_condition(self, condition, prefix=' IF'):
         """Add a ControlCondition from an IfThenElseControl"""
         if isinstance(condition, OrCondition):
             self.add_control_condition(condition._condition_1, prefix)
-            self.add_control_condition(condition._condition_2, 'OR')
+            self.add_control_condition(condition._condition_2, '  OR')
         elif isinstance(condition, AndCondition):
             self.add_control_condition(condition._condition_1, prefix)
-            self.add_control_condition(condition._condition_2, 'AND')
+            self.add_control_condition(condition._condition_2, '  AND')
         elif isinstance(condition, TimeOfDayCondition):
             fmt = '{} SYSTEM CLOCKTIME {} {}'
             clause = fmt.format(prefix, condition._relation.text, condition._sec_to_clock(condition._threshold))
@@ -1489,7 +1569,7 @@ class _EpanetRule(object):
         """Add a "then/and" clause from an INP file"""
         self._then_clauses.append(clause)
 
-    def add_action_on_true(self, action, prefix='THEN'):
+    def add_action_on_true(self, action, prefix=' THEN'):
         """Add a "then" action from an IfThenElseControl"""
         if isinstance(action, ControlAction):
             fmt = '{} {} {} {} = {}'
@@ -1516,7 +1596,7 @@ class _EpanetRule(object):
         """Add an "else/and" clause from an INP file"""
         self._else_clauses.append(clause)
 
-    def add_action_on_false(self, action, prefix='ELSE'):
+    def add_action_on_false(self, action, prefix=' ELSE'):
         """Add an "else" action from an IfThenElseControl"""
         if isinstance(action, ControlAction):
             fmt = '{} {} {} {} = {}'

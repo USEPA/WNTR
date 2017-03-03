@@ -202,6 +202,8 @@ class ControlCondition(object):
         sec -= mm*60
         if hours >= 12:
             pm = 'PM'
+            if hours > 12:
+                hours -= 12
         elif hours == 0:
             pm = 'AM'
             hours = 12
