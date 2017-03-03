@@ -47,6 +47,7 @@ class WaterNetworkModel(object):
         self._num_pumps = 0
         self._num_valves = 0
         self._num_sources = 0
+        self._num_demands = 0
 
         # Initialize node and link dictionaries
         # Dictionary of node or link objects indexed by their names
@@ -64,6 +65,7 @@ class WaterNetworkModel(object):
         self._patterns = {}
         self._curves = {}
         self._sources = {}
+        self._demands = {}
 
         # Initialize options object
         self.options = WaterNetworkOptions()
@@ -88,6 +90,7 @@ class WaterNetworkModel(object):
             self.read_inpfile(inp_file_name)
 
     def __eq__(self, other):
+        #self._control_dict   == other._control_dict   and \
         if self._num_junctions  == other._num_junctions  and \
            self._num_reservoirs == other._num_reservoirs and \
            self._num_tanks      == other._num_tanks      and \
@@ -105,7 +108,6 @@ class WaterNetworkModel(object):
            self._patterns       == other._patterns       and \
            self._curves         == other._curves         and \
            self._sources        == other._sources        and \
-           self._control_dict   == other._control_dict   and \
            self._check_valves   == other._check_valves:
             return True
         return False
@@ -557,6 +559,12 @@ class WaterNetworkModel(object):
         source = Source(name, node_name, source_type, quality, pattern_name)
         self._sources[name] = source
         self._num_sources += 1
+
+    def _add_demand(self, name, junction_name, base_demand=0.0, demand_pattern_name=None):
+
+        demands = _Demands(name, junction_name, base_demand, demand_pattern_name)
+        self._demands[name] = demands
+        self._num_demands += 1
 
     def add_control(self, name, control_object):
         """
@@ -1928,6 +1936,49 @@ class WaterNetworkOptions(object):
         self.roughness_correlation = None
         "Makes all default pipe wall reaction coefficients related to pipe roughness"
 
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        ###  self.units == other.units and \
+        if abs(self.duration - other.duration)<1e-10 and \
+           abs(self.hydraulic_timestep - other.hydraulic_timestep)<1e-10 and \
+           abs(self.quality_timestep - other.quality_timestep)<1e-10 and \
+           abs(self.rule_timestep - other.rule_timestep)<1e-10 and \
+           abs(self.pattern_timestep - other.pattern_timestep)<1e-10 and \
+           abs(self.pattern_start - other.pattern_start)<1e-10 and \
+           abs(self.report_timestep - other.report_timestep)<1e-10 and \
+           abs(self.report_start - other.report_start)<1e-10 and \
+           abs(self.start_clocktime - other.start_clocktime)<1e-10 and \
+           self.statistic == other.statistic and \
+           self.headloss == other.headloss and \
+           self.hydraulics == other.hydraulics and \
+           self.hydraulics_filename == other.hydraulics_filename and \
+           self.quality == other.quality and \
+           self.quality_value == other.quality_value and \
+           abs(self.viscosity - other.viscosity)<1e-10 and \
+           abs(self.diffusivity - other.diffusivity)<1e-10 and \
+           abs(self.specific_gravity - other.specific_gravity)<1e-10 and \
+           abs(self.trials - other.trials)<1e-10 and \
+           abs(self.accuracy - other.accuracy)<1e-10 and \
+           self.unbalanced == other.unbalanced and \
+           self.pattern == other.pattern and \
+           abs(self.demand_multiplier - other.demand_multiplier)<1e-10 and \
+           abs(self.emitter_exponent - other.emitter_exponent)<1e-10 and \
+           abs(self.tolerance - other.tolerance)<1e-10 and \
+           self.map == other.map and \
+           abs(self.checkfreq - other.checkfreq)<1e-10 and \
+           abs(self.maxcheck - other.maxcheck)<1e-10 and \
+           abs(self.damplimit - other.damplimit)<1e-10 and \
+           abs(self.bulk_rxn_order - other.bulk_rxn_order)<1e-10 and \
+           abs(self.wall_rxn_order - other.wall_rxn_order)<1e-10 and \
+           abs(self.tank_rxn_order - other.tank_rxn_order)<1e-10 and \
+           abs(self.bulk_rxn_coeff - other.bulk_rxn_coeff)<1e-10 and \
+           abs(self.wall_rxn_coeff - other.wall_rxn_coeff)<1e-10 and \
+           abs(self.limiting_potential - other.limiting_potential)<1e-10 and \
+           abs(self.roughness_correlation - other.roughness_correlation)<1e-10:
+               return True
+        return False
+
 class NodeType(enum.IntEnum):
     """
     An enum class for types of nodes.
@@ -2060,12 +2111,16 @@ class Node(object):
         self.demand = None
         self.leak_demand = None
         self.prev_leak_demand = None
+        self.initial_quality = None
+        self.tag = None
 
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
-        elif self._name == other._name:
-            return True
+        if self._name == other._name and \
+           self.initial_quality == other.initial_quality and \
+           self.tag == other.tag:
+               return True
         return False
 
     def __str__(self):
@@ -2115,13 +2170,15 @@ class Link(object):
         self.status = LinkStatus.opened
         self.prev_flow = None
         self.flow = None
+        self.tag = None
 
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
         elif self._link_name       == other._link_name       and \
            self._start_node_name   == other._start_node_name and \
-           self._end_node_name     == other._end_node_name:
+           self._end_node_name     == other._end_node_name and \
+           self.tag               == other.tag:
             return True
         return False
 
@@ -2202,6 +2259,7 @@ class Junction(Node):
         self.leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
+        self._emitter_coefficient = None
 
     def __repr__(self):
         return "<Junction '{}'>".format(self._name)
@@ -2211,9 +2269,12 @@ class Junction(Node):
             return False
         if not super(Junction, self).__eq__(other):
             return False
-        if abs(self.elevation - other.elevation)<1e-10 and \
+        if abs(self.base_demand - other.base_demand)<1e-10 and \
+           self.demand_pattern_name == other.demand_pattern_name and \
+           abs(self.elevation - other.elevation)<1e-10 and \
            abs(self.nominal_pressure - other.nominal_pressure)<1e-10 and \
-           abs(self.minimum_pressure - other.minimum_pressure)<1e-10:
+           abs(self.minimum_pressure - other.minimum_pressure)<1e-10 and \
+           self._emitter_coefficient == other._emitter_coefficient:
             return True
         return False
 
@@ -2412,10 +2473,10 @@ class Tank(Node):
         if not super(Tank, self).__eq__(other):
             return False
         if abs(self.elevation   - other.elevation)<1e-10 and \
-           abs(self.min_vol     - other.min_vol)<1e-10   and \
-           abs(self.diameter    - other.diameter)<1e-10  and \
            abs(self.min_level   - other.min_level)<1e-10 and \
            abs(self.max_level   - other.max_level)<1e-10 and \
+           abs(self.diameter    - other.diameter)<1e-10  and \
+           abs(self.min_vol     - other.min_vol)<1e-10   and \
            self.bulk_rxn_coeff == other.bulk_rxn_coeff   and \
            self.vol_curve      == other.vol_curve:
             return True
@@ -2586,6 +2647,9 @@ class Reservoir(Node):
             return False
         if not super(Reservoir, self).__eq__(other):
             return False
+        if abs(self.base_head - other.base_head)<1e-10 and \
+           self.head_pattern_name == other.head_pattern_name:
+            return True
         return True
 
     def __repr__(self):
@@ -2951,7 +3015,10 @@ class Source(object):
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
-        if self.name == other.name:
+        if self.node_name == other.node_name and \
+           self.source_type == other.source_type and \
+           abs(self.quality - other.quality)<1e-10 and \
+           self.pattern_name == other.pattern_name:
             return True
         return False
 
@@ -2961,8 +3028,6 @@ class Source(object):
     def __repr__(self):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
         return fmt.format(self.name, self.node_name, self.source_type, self.quality, repr(self.pattern_name))
-
-
 
 class _Backdrop(object):
     """An epanet backdrop object."""
@@ -2985,7 +3050,7 @@ class _Backdrop(object):
             text += "FILE {}\n".format(self.filename)
         if self.offset is not None:
             text += "OFFSET {} {}\n".format(self.offset[0], self.offset[1])
-        return text.encode('ascii')
+        return text
 
 
 class _Energy(object):
@@ -2999,3 +3064,20 @@ class _Energy(object):
         """Global pump efficiency as percent (default 75%)"""
         self.demand_charge = None
         """Added cost per maximum kW usage during the simulation period"""
+
+class _Demands(object):
+    def __init__(self, name, junction_name=None, base_demand=None, demand_pattern_name=None):
+        self.name = name
+        self.junction_name = junction_name
+        self.base_demand = base_demand
+        self.demand_pattern_name = demand_pattern_name
+
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if self.junction_name == other.junction_name and \
+           abs(self.base_demand - other.base_demand)<1e-10 and \
+           self.demand_pattern_name == other.demand_pattern_name:
+            return True
+        return False
+
