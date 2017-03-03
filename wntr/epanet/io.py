@@ -183,35 +183,7 @@ class InpFile(object):
     formatted, and cannot be used from the command line. The second, the INP file,
     is text formatted and easily human (and machine) readable. This class provides read
     and write functionality for INP files within WNTR.
-
-    There are numerous sections of the INP file that are not used by WNTR. For example,
-    WNTR does not perform energy calculations. Sections that are not used by WNTR are
-    stored within this object as unmodified text strings. In order to ensure that a new
-    INP file has all options that were read in, the user must use the same object for both
-    reading and writing an INP file; if, of course, the INP file was used to create the
-    network in the first place. If a new object is used solely to provide a writer for INP files,
-    the INP file created will still be a valid EPANET input file, but will not have any sections
-    that are not used by WNTR.
-
-    The sections that are currently not modified by WNTR are
-
-    * *ENERGY*
-    * *RULES*
-    * *DEMANDS*
-    * *QUALITY*
-    * *EMITTERS*
-    * *MIXING*
-    * *VERTICES*
-    * *LABELS*
-    * *BACKDROP*
-    * *TAGS*
-
-    In addition to storing these lines, the top-of-file comments are stored, and the original
-    flow units and mass units are stored for easy conversion back to the same units that were
-    read in. The output EPANET units can be changed during the ``write`` function call.
-
     The EPANET Users Manual provides full documentation for the INP file format in its Appendix C.
-
     """
     def __init__(self):
         self.sections = {}
@@ -229,7 +201,6 @@ class InpFile(object):
         ----------
         filename : str
             An EPANET INP input file.
-
 
         Returns
         -------
@@ -302,6 +273,7 @@ class InpFile(object):
                 self.sections[section].append((lnum, line))
 
         # Parse each of the sections
+        ### OPTIONS
         for lnum, line in self.sections['[OPTIONS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[OPTIONS]'
@@ -387,7 +359,8 @@ class InpFile(object):
                 raise RuntimeError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
             if opts.report_timestep % opts.hydraulic_timestep != 0:
                 raise RuntimeError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
-
+        
+        ### CURVES
         for lnum, line in self.sections['[CURVES]']:
             # It should be noted carefully that these lines are never directly
             # applied to the WaterNetworkModel object. Because different curve
@@ -405,7 +378,7 @@ class InpFile(object):
                 self.curves[curve_name] = []
             self.curves[curve_name].append((float(current[1]),
                                              float(current[2])))
-
+        ### PATTERNS
         for lnum, line in self.sections['[PATTERNS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[PATTERNS]'
@@ -424,7 +397,8 @@ class InpFile(object):
 
         for pattern_name, pattern_list in _patterns.items():
             wn.add_pattern(pattern_name, pattern_list)
-
+        
+        ### JUNCTIONS
         for lnum, line in self.sections['[JUNCTIONS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[JUNCTIONS]'
@@ -443,6 +417,7 @@ class InpFile(object):
                                 current[3],
                                 to_si(inp_units, float(current[1]), HydParam.Elevation))
 
+        ### RESERVOIRS
         for lnum, line in self.sections['[RESERVOIRS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[RESERVOIRS]'
@@ -459,6 +434,7 @@ class InpFile(object):
                                  current[2])
                 logger.warn('%(fname)s:%(lnum)-6d %(sec)13s reservoir head patterns only supported in EpanetSimulator', edata)
 
+        ### TANKS
         for lnum, line in self.sections['[TANKS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[TANKS]'
@@ -500,7 +476,8 @@ class InpFile(object):
                 edata['line'] = line
                 logger.error('%(fname)s:%(lnum)-6d %(sec)13s tank entry format not recognized: "%(line)s"', edata)
                 raise RuntimeError('Tank entry format not recognized.')
-
+                
+        ### PIPES
         for lnum, line in self.sections['[PIPES]']:
             edata['lnum'] = lnum
             edata['sec'] = '[PIPES]'
@@ -530,6 +507,7 @@ class InpFile(object):
                             float(current[6]),
                             current[7].upper())
 
+        ### PUMPS
         for lnum, line in self.sections['[PUMPS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[PUMPS]'
@@ -540,11 +518,8 @@ class InpFile(object):
                 continue
             # Only add head curves for pumps
             if current[3].upper() == 'SPEED':
-                logger.warning('%(fname)s:%(lnum)-6d %(sec)13s speed settings for pumps are currently only supported in the EpanetSimulator.', edata)
-                continue
-            elif current[3].upper() == 'PATTERN':
-                logger.warning('%(fname)s:%(lnum)-6d %(sec)13s speed patterns for pumps are currently only supported in the EpanetSimulator.', edata)
-                continue
+                ### TODO, I think you need to set this in the pump
+                pass  
             elif current[3].upper() == 'HEAD':
                 curve_name = current[4]
                 curve_points = []
@@ -568,7 +543,8 @@ class InpFile(object):
             else:
                 logger.error('%(fname)s:%(lnum)-6d %(sec)13s pump keyword not recognized: "%(line)s"', edata)
                 raise RuntimeError('Pump keyword in inp file not recognized.')
-
+        
+        ### VALVES
         for lnum, line in self.sections['[VALVES]']:
             edata['lnum'] = lnum
             edata['sec'] = '[VALVES]'
@@ -580,10 +556,6 @@ class InpFile(object):
             if len(current) < 7:
                 current[6] = 0
             valve_type = current[4].upper()
-            if valve_type != 'PRV':
-                logger.warning("%(fname)s:%(lnum)-6d %(sec)13s only PRV valves are currently supported.", edata)
-            if float(current[6]) != 0:
-                logger.warning('%(fname)s:%(lnum)-6d %(sec)13s currently, only the EpanetSimulator supports non-zero minor losses in valves.', edata)
             if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = to_si(inp_units, float(current[5]), HydParam.Pressure)
             elif valve_type == 'FCV':
@@ -603,6 +575,7 @@ class InpFile(object):
                          float(current[6]),
                          valve_set)
 
+        ### COORDINATES
         for lnum, line in self.sections['[COORDINATES]']:
             edata['lnum'] = lnum
             edata['sec'] = '[COORDINATES]'
@@ -613,6 +586,7 @@ class InpFile(object):
             assert(len(current) == 3), ("Error reading node coordinates. Check format.")
             wn.set_node_coordinates(current[0], (float(current[1]), float(current[2])))
         
+        ### SOURCES
         source_num = 0
         for lnum, line in self.sections['[SOURCES]']:
             edata['lnum'] = lnum
@@ -631,7 +605,8 @@ class InpFile(object):
                 wn.add_source('INP'+str(source_num), current[0], current[1], strength, None)
             else:
                 wn.add_source('INP'+str(source_num), current[0], current[1], strength,  current[3])
-            
+        
+        ### TIMES
         time_format = ['am', 'AM', 'pm', 'PM']
         for lnum, line in self.sections['[TIMES]']:
             edata['lnum'] = lnum
@@ -654,22 +629,8 @@ class InpFile(object):
             else:  # Other time options
                 key_string = current[0] + '_' + current[1]
                 setattr(opts, key_string.lower(), _str_time_to_sec(current[2]))
-
-        if opts.pattern_start != 0.0:
-            logger.warning('Currently, only the EpanetSimulator supports a non-zero patern start time.')
-
-        if opts.report_start != 0.0:
-            logger.warning('Currently, only the EpanetSimulator supports a non-zero report start time.')
-
-        if opts.report_timestep != opts.hydraulic_timestep:
-            logger.warning('Currently, only a the EpanetSimulator supports a report timestep that is not equal to the hydraulic timestep.')
-
-        if opts.start_clocktime != 0.0:
-            logger.warning('Currently, only the EpanetSimulator supports a start clocktime other than 12 am.')
-
-        if opts.statistic != 'NONE':
-            logger.warning('Currently, only the EpanetSimulator supports the STATISTIC option in the inp file.')
-
+            
+        ### STATUS
         for lnum, line in self.sections['[STATUS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[STATUS]'
@@ -686,18 +647,15 @@ class InpFile(object):
                 link.status = new_status
                 link._base_status = new_status
             else:
-                if isinstance(link, wntr.network.Pump):
-                    logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
-                    continue
-                elif isinstance(link, wntr.network.Valve):
+                if isinstance(link, wntr.network.Valve):
                     if link.valve_type != 'PRV':
-                        logger.warning('Currently, valves of type ' + link.valve_type + ' are only supported in the EpanetSimulator.')
                         continue
                     else:
                         setting = to_si(inp_units, float(current[2]), HydParam.Pressure)
                         link.setting = setting
                         link._base_setting = setting
 
+        ### CONTROLS
         for lnum, line in self.sections['[CONTROLS]']:
             edata['lnum'] = lnum
             edata['sec'] = '[CONTROLS]'
@@ -720,11 +678,9 @@ class InpFile(object):
             link = wn.get_link(link_name)
             if isinstance(current[2], float) or isinstance(current[2], int):
                 if isinstance(link, wntr.network.Pump):
-                    logger.warning('Currently, pump speed settings are only supported in the EpanetSimulator.')
                     continue
                 elif isinstance(link, wntr.network.Valve):
                     if link.valve_type != 'PRV':
-                        logger.warning('Currently, valves of type %s are only supported in the EpanetSimulator.',link.valve_type)
                         continue
                     else:
                         status = to_si(inp_units, float(current[2]), HydParam.Pressure)
@@ -763,8 +719,6 @@ class InpFile(object):
                     control_name = control_name + current[i]
                 control_name = control_name + str(round(threshold, 2))
             else:
-                if len(current) != 6:
-                    logger.warning('Using CLOCKTIME in time controls is currently only supported by the EpanetSimulator.')
                 if len(current) == 6:  # at time
                     if ':' in current[5]:
                         fire_time = int(_str_time_to_sec(current[5]))
@@ -779,7 +733,8 @@ class InpFile(object):
                     fire_time = int(_clock_time_to_sec(current[5], current[6]))
                     control_obj = wntr.network.TimeControl(wn, fire_time, 'SHIFTED_TIME', True, action_obj)
             wn.add_control(control_name, control_obj)
-
+        
+        ### REACTIONS
         BulkReactionCoeff = QualParam.BulkReactionCoeff
         WallReactionCoeff = QualParam.WallReactionCoeff
         for lnum, line in self.sections['[REACTIONS]']:
@@ -839,42 +794,89 @@ class InpFile(object):
             pass
 
         if len(self.sections['[ENERGY]']) > 0:
-            # wn._en_energy = '\n'.join(self.sections['[ENERGY]'])
-            logger.warning('ENERGY section is reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+            pass
 
         if len(self.sections['[RULES]']) > 0:
-            # wn._en_rules = '\n'.join(self.sections['[RULES]'])
-            logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+            pass
 
-        if len(self.sections['[DEMANDS]']) > 0:
-            # wn._en_demands = '\n'.join(self.sections['[DEMANDS]'])
-            logger.warning('Multiple DEMANDS are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+        ### DEMANDS
+        demand_num = 0
+        for lnum, line in self.sections['[DEMANDS]']: # Private object on the WaterNetweorkModel
+            edata['lnum'] = lnum
+            edata['sec'] = '[DEMANDS]'
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            demand_num = demand_num + 1
+            if len(current) == 2:
+                wn._add_demand('INP'+str(demand_num), current[0],
+                                to_si(inp_units, float(current[1]), HydParam.Demand),
+                                None)
+            else:
+                wn._add_demand('INP'+str(demand_num), current[0],
+                                to_si(inp_units, float(current[1]), HydParam.Demand),
+                                current[2])
 
-        if len(self.sections['[QUALITY]']) > 0:
-            # wn._en_quality = '\n'.join(self.sections['[QUALITY]'])
-            logger.warning('QUALITY section is reapplied directly to an Epanet INP file on write; otherwise unsupported.')
-
-        if len(self.sections['[EMITTERS]']) > 0:
-            # wn._en_emitters = '\n'.join(self.sections['[EMITTERS]'])
-            logger.warning('EMITTERS are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
-
+        ### QUALITY
+        for lnum, line in self.sections['[QUALITY]']: # Private attribute on junctions
+            edata['lnum'] = lnum
+            edata['sec'] = '[QUALITY]'
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            node = wn.get_node(current[0])
+            if wn.options.quality == 'CHEMICAL':
+                quality = to_si(inp_units, float(current[1]), QualParam.Concentration, mass_units=mass_units)
+            elif wn.options.quality == 'AGE':
+                quality = to_si(inp_units, float(current[1]), QualParam.WaterAge)
+            else :
+                quality = float(current[1])
+            node.initial_quality = quality
+            
+        ### EMITTERS
+        for lnum, line in self.sections['[EMITTERS]']: # Private attribute on junctions
+            edata['lnum'] = lnum
+            edata['sec'] = '[EMITTERS]'
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            junction = wn.get_node(current[0])
+            junction._emitter_coefficient = to_si(inp_units, float(current[1]), HydParam.Flow)
+            
         if len(self.sections['[MIXING]']) > 0:
-            logger.warning('MIXING is currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+            pass
 
         if len(self.sections['[REPORT]']) > 0:
-            logger.warning('REPORT is currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+            pass
 
         if len(self.sections['[VERTICES]']) > 0:
-            logger.warning('VERTICES are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+            pass
 
         if len(self.sections['[LABELS]']) > 0:
-            logger.warning('LABELS are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+            pass
 
         if len(self.sections['[BACKDROP]']) > 0:
-            logger.warning('BACKDROP is currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+            pass
 
-        if len(self.sections['[TAGS]']) > 0:
-            logger.warning('TAGS are currently reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+        ### TAGS
+        for lnum, line in self.sections['[TAGS]']: # Private attribute on nodes and links
+            edata['lnum'] = lnum
+            edata['sec'] = '[TAGS]'
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            if current[0] == 'NODE':
+                node = wn.get_node(current[1])
+                node.tag = current[2]
+            elif current[0] == 'LINK':
+                link = wn.get_link(current[1])
+                link.tag = current[2]
+            else:
+                continue
 
         # Set the _inpfile io data inside the water network, so it is saved somewhere
         wn._inpfile = self
@@ -889,7 +891,6 @@ class InpFile(object):
             Name of the inp file. example - Net3_adjusted_demands.inp
         units : str, int or FlowUnits
             Name of the units being written to the inp file.
-
         """
 
         if units is not None and isinstance(units, str):
@@ -910,7 +911,7 @@ class InpFile(object):
 
         with io.open(filename, 'wb') as f:
 
-            # Print title
+            ### TITLE
             if wn.name is not None:
                 f.write('; Filename: {0}\n'.format(wn.name).encode('ascii'))
                 f.write('; WNTR: {}\n; Created: {:%Y-%m-%d %H:%M:%S}\n'.format(wntr.__version__, datetime.datetime.now()).encode('ascii'))
@@ -919,7 +920,7 @@ class InpFile(object):
                 f.write('{}\n'.format(line).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print junctions information
+            ### JUNCTIONS
             f.write('[JUNCTIONS]\n'.encode('ascii'))
             f.write(_JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern').encode('ascii'))
             nnames = list(wn._junctions.keys())
@@ -936,7 +937,7 @@ class InpFile(object):
                 f.write(_JUNC_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print reservoir information
+            ### RESERVOIRS
             f.write('[RESERVOIRS]\n'.encode('ascii'))
             f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern').encode('ascii'))
             nnames = list(wn._reservoirs.keys())
@@ -953,7 +954,7 @@ class InpFile(object):
                 f.write(_RES_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print tank information
+            ### TANKS
             f.write('[TANKS]\n'.encode('ascii'))
             f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
                                        'Diameter', 'Min Volume', 'Volume Curve').encode('ascii'))
@@ -975,7 +976,7 @@ class InpFile(object):
                 f.write(_TANK_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print pipe information
+            ### PIPES
             f.write('[PIPES]\n'.encode('ascii'))
             f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
                                        'Roughness', 'Minor Loss', 'Status').encode('ascii'))
@@ -997,7 +998,7 @@ class InpFile(object):
                 f.write(_PIPE_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print pump information
+            ### PUMPS
             f.write('[PUMPS]\n'.encode('ascii'))
             f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Parameters').encode('ascii'))
             lnames = list(wn._pumps.keys())
@@ -1019,7 +1020,7 @@ class InpFile(object):
                 f.write(_PUMP_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print valve information
+            ### VALVES
             f.write('[VALVES]\n'.encode('ascii'))
             f.write(_VALVE_LABEL.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss').encode('ascii'))
             lnames = list(wn._valves.keys())
@@ -1047,7 +1048,7 @@ class InpFile(object):
                 f.write(_VALVE_ENTRY.format(**E).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print status information
+            ### STATUS
             f.write('[STATUS]\n'.encode('ascii'))
             f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
             for link_name, link in wn.links(Pump):
@@ -1060,7 +1061,7 @@ class InpFile(object):
                             LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print pattern information
+            ### PATTERNS
             num_columns = 8
             f.write('[PATTERNS]\n'.encode('ascii'))
             f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers').encode('ascii'))
@@ -1075,7 +1076,7 @@ class InpFile(object):
                 f.write('\n'.encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print curves
+            ### CURVES
             f.write('[CURVES]\n'.encode('ascii'))
             f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value').encode('ascii'))
             for curve_name, curve in wn._curves.items():
@@ -1099,7 +1100,7 @@ class InpFile(object):
                     f.write('\n'.encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Print Controls
+            ### CONTROLS
             f.write( '[CONTROLS]\n'.encode('ascii'))
             # Time controls and conditional controls only
             for text, all_control in wn._control_dict.items():
@@ -1136,7 +1137,7 @@ class InpFile(object):
                     raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
             f.write('\n'.encode('ascii'))
             
-            # sources
+            ### COURVES
             f.write('[SOURCES]\n'.encode('ascii'))
             entry = '{:10s} {:10s} {:10s} {:10s}\n'
             label = '{:10s} {:10s} {:10s} {:10s}\n'
@@ -1159,8 +1160,57 @@ class InpFile(object):
                     E['pat'] = source.pattern_name
                 f.write(entry.format(E['node'], E['type'], str(E['quality']), E['pat']).encode('ascii'))
             f.write('\n'.encode('ascii'))
-
-            # Report
+            
+            ### DEMANDS
+            f.write('[DEMANDS]\n'.encode('ascii'))
+            entry = '{:10s} {:10s} {:10s}\n'
+            label = '{:10s} {:10s} {:10s}\n'
+            f.write(label.format(';ID', 'Demand', 'Pattern').encode('ascii'))
+            ndemands = list(wn._demands.keys())
+            ndemands.sort()
+            for demand_name in ndemands:
+                demand = wn._demands[demand_name]
+                E = {'node': demand.junction_name,
+                     'base': from_si(inp_units, demand.base_demand, HydParam.Demand),
+                     'pat': ''}
+                if demand.demand_pattern_name is not None:
+                    E['pat'] = demand.demand_pattern_name
+                f.write(entry.format(E['node'], str(E['base']), E['pat']).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+            
+            ### EMITTERS
+            f.write('[EMITTERS]\n'.encode('ascii'))
+            entry = '{:10s} {:10s}\n'
+            label = '{:10s} {:10s}\n'
+            f.write(label.format(';ID', 'Flow coefficient').encode('ascii'))
+            njunctions = list(wn._junctions.keys())
+            njunctions.sort()
+            for junction_name in njunctions:
+                junction = wn._junctions[junction_name]
+                if junction._emitter_coefficient:
+                    val = from_si(inp_units, junction._emitter_coefficient, HydParam.Flow)
+                    f.write(entry.format(junction_name, str(val)).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+            
+            ### QUALITY
+            f.write('[QUALITY]\n'.encode('ascii'))
+            entry = '{:10s} {:10s}\n'
+            label = '{:10s} {:10s}\n'
+            nnodes = list(wn._nodes.keys())
+            nnodes.sort()
+            for node_name in nnodes:
+                node = wn._nodes[node_name]
+                if node.initial_quality:
+                    if wn.options.quality == 'CHEMICAL':
+                        quality = from_si(inp_units, node.initial_quality, QualParam.Concentration, mass_units=mass_units)
+                    elif wn.options.quality == 'AGE':
+                        quality = to_si(inp_units, node.initial_quality, QualParam.WaterAge)
+                    else:
+                        quality = node.initial_quality
+                    f.write(entry.format(node_name, str(quality)).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+            
+            ### REPORT
             f.write('[REPORT]\n'.encode('ascii'))
             if len(self.sections['[REPORT]']) > 0:
                 for lnum, line in self.sections['[REPORT]']:
@@ -1170,7 +1220,7 @@ class InpFile(object):
                 f.write('Summary yes\n'.encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Options
+            ### OPTIONS
             f.write('[OPTIONS]\n'.encode('ascii'))
             entry_string = '{:20s} {:20s}\n'
             entry_float = '{:20s} {:g}\n'
@@ -1202,7 +1252,7 @@ class InpFile(object):
 
             f.write('\n'.encode('ascii'))
 
-            # Reaction Options
+            ### REACTIONS
             f.write( '[REACTIONS]\n'.encode('ascii'))
             entry_int = ' {:s} {:s} {:d}\n'
             entry_float = ' {:s} {:s} {:<10.4f}\n'
@@ -1250,7 +1300,7 @@ class InpFile(object):
                                                        reaction_order=wn.options.wall_rxn_order)).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Time options
+            ### TIMES
             f.write('[TIMES]\n'.encode('ascii'))
             entry = '{:20s} {:10s}\n'
             time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
@@ -1282,7 +1332,7 @@ class InpFile(object):
             f.write(entry.format('STATISTIC', wn.options.statistic).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            # Coordinates
+            ### COORDINATES
             f.write('[COORDINATES]\n'.encode('ascii'))
             entry = '{:10s} {:10g} {:10g}\n'
             label = '{:10s} {:10s} {:10s}\n'
@@ -1292,9 +1342,27 @@ class InpFile(object):
                 f.write(entry.format(key, val[0], val[1]).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            unmodified = ['[ENERGY]', '[RULES]', '[DEMANDS]', '[QUALITY]', '[EMITTERS]',
-                          '[MIXING]', '[VERTICES]', '[LABELS]', '[BACKDROP]', '[TAGS]']
-
+            unmodified = ['[BACKDROP]', '[ENERGY]', '[LABELS]', 
+                          '[MIXING]', '[REPORT]', '[RULES]', '[VERTICES]']
+            
+            ### TAGS
+            f.write('[TAGS]\n'.encode('ascii'))
+            entry = '{:10s} {:10s} {:10s}\n'
+            label = '{:10s} {:10s} {:10s}\n'
+            nnodes = list(wn._nodes.keys())
+            nnodes.sort()
+            for node_name in nnodes:
+                node = wn._nodes[node_name]
+                if node.tag:
+                    f.write(entry.format('NODE', node_name, node.tag).encode('ascii'))
+            nlinks = list(wn._links.keys())
+            nlinks.sort()
+            for link_name in nlinks:
+                link = wn._links[link_name]
+                if link.tag:
+                    f.write(entry.format('LINK', link_name, link.tag).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+            
             for section in unmodified:
                 if len(self.sections[section]) > 0:
                     logger.debug('Writting data from original epanet file: %s', section)
