@@ -1,6 +1,6 @@
 """
-The wntr.graphics.network module includes methods plot the 
-water network model. 
+The wntr.graphics.network module includes methods plot the
+water network model.
 """
 import networkx as nx
 import pandas as pd
@@ -87,7 +87,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     -----
     For more network draw options, see nx.draw_networkx
     """
-    
+
     if plt_fig is None:
         plt.figure(facecolor='w', edgecolor='k')
 
@@ -136,13 +136,13 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         attr = {}
         for link_name, value in link_attribute.items():
             link = wn.get_link(link_name)
-            attr[(link.start_node(), link.end_node(), link_name)] = value
+            attr[(link.start_node, link.end_node, link_name)] = value
         link_attribute = attr
     if type(link_width) is dict:
         attr = {}
         for link_name, value in link_width.items():
             link = wn.get_link(link_name)
-            attr[(link.start_node(), link.end_node(), link_name)] = value
+            attr[(link.start_node, link.end_node, link_name)] = value
         link_width = attr
 
     # Define link list, color, and colormap
