@@ -974,16 +974,19 @@ class IfThenElseControl(Control):
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
         """
-        res = (self._condition.evaluate(), self._condition.backtrack)
-        if res[0]:
+        do = self._condition.evaluate()
+        back = self._condition.backtrack
+        if not presolve_flag:
+            back = 0
+        if do:
             self._which = 'then'
-            return res
-        elif self._else_actions is not None:
+            return (True, back)
+        elif not do and self._else_actions is not None and len(self._else_actions) > 0:
             self._which = 'else'
-            return (True, res[1])
+            return (True, back)
         else:
-            self._which = None
             return (False, None)
+        return None
 
     def _RunControlActionImpl(self, wnm, priority):
         """
@@ -1011,17 +1014,14 @@ class IfThenElseControl(Control):
                 flags.append(change_flag)
                 tuples.append(change_tuple)
                 origins.append(orig_value)
-            self._which = None
         elif self._which == 'else':
             for control_action in self._else_actions:
                 change_flag, change_tuple, orig_value = control_action.RunControlAction(self.name)
                 flags.append(change_flag)
                 tuples.append(change_tuple)
                 origins.append(orig_value)
-            self._which = None
         else:
             raise RuntimeError('control actions called even though if-then statement was False')
-
         return np.max(flags), tuples, origins
 
 

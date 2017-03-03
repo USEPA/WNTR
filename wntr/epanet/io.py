@@ -1421,7 +1421,7 @@ class _EpanetRule(object):
         self._if_clauses = []
         self._then_clauses = []
         self._else_clauses = []
-        self.priority = -1
+        self.priority = 0
 
     def from_if_then_else(self, control):
         """Create a rule from an IfThenElseControl object"""

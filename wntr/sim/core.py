@@ -362,28 +362,44 @@ class WNTRSimulator(WaterNetworkSimulator):
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 0)
             if change_flag:
-                if change_tuple not in change_dict:
+                if isinstance(change_tuple, list):
+                    for ct in range(len(change_tuple)):
+                        if change_tuple[ct] not in change_dict:
+                            change_dict[change_tuple[ct]] = (orig_value[ct], control.name)
+                elif change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 1)
             if change_flag:
-                if change_tuple not in change_dict:
+                if isinstance(change_tuple, list):
+                    for ct in range(len(change_tuple)):
+                        if change_tuple[ct] not in change_dict:
+                            change_dict[change_tuple[ct]] = (orig_value[ct], control.name)
+                elif change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 2)
             if change_flag:
-                if change_tuple not in change_dict:
+                if isinstance(change_tuple, list):
+                    for ct in range(len(change_tuple)):
+                        if change_tuple[ct] not in change_dict:
+                            change_dict[change_tuple[ct]] = (orig_value[ct], control.name)
+                elif change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         for i in controls_to_activate:
             control = self._controls[i]
             change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 3)
             if change_flag:
-                if change_tuple not in change_dict:
+                if isinstance(change_tuple, list):
+                    for ct in range(len(change_tuple)):
+                        if change_tuple[ct] not in change_dict:
+                            change_dict[change_tuple[ct]] = (orig_value[ct], control.name)
+                elif change_tuple not in change_dict:
                     change_dict[change_tuple] = (orig_value, control.name)
 
         self._control_log.reset()
