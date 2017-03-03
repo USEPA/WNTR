@@ -869,7 +869,7 @@ class InpFile(object):
         else:
             pass
 
-        ### Parse Energy
+        ### ENERGY
         for lnum, line in self.sections['[ENERGY]']:
             edata['lnum'] = lnum
             edata['sec'] = '[ENERGY]'
@@ -912,15 +912,6 @@ class InpFile(object):
             else:
                 logger.warning('Unknown entry in ENERGY section: %s', line)
 
-        ### Parse Demands
-        if len(self.sections['[DEMANDS]']) > 0:
-            # wn._en_demands = '\n'.join(self.sections['[DEMANDS]'])
-            logger.warning('Multiple DEMANDS are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
-
-        ### RULES
-        if len(self.sections['[RULES]']) > 0:
-            pass
-
         ### DEMANDS
         demand_num = 0
         for lnum, line in self.sections['[DEMANDS]']: # Private object on the WaterNetweorkModel
@@ -939,7 +930,6 @@ class InpFile(object):
                 wn._add_demand('INP'+str(demand_num), current[0],
                                 to_si(inp_units, float(current[1]), HydParam.Demand),
                                 current[2])
-
         ### QUALITY
         for lnum, line in self.sections['[QUALITY]']: # Private attribute on junctions
             edata['lnum'] = lnum
@@ -1279,6 +1269,7 @@ class InpFile(object):
                 elif not isinstance(all_control, wntr.network.controls.IfThenElseControl):
                     raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
             f.write('\n'.encode('ascii'))
+
             ### RULES
             f.write('[RULES]\n'.encode('ascii'))
             for text, all_control in wn._control_dict.items():
@@ -1496,13 +1487,13 @@ class InpFile(object):
                 f.write(entry.format(key, val[0], val[1]).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
-            ### Backdrop
+            ### BACKDROP
             if wn._backdrop is not None:
                 f.write('[BACKDROP]\n'.encode('ascii'))
                 f.write('{}'.format(wn._backdrop).encode('ascii'))
                 f.write('\n'.encode('ascii'))
 
-            ### Energy
+            ### ENERGY
             f.write('[ENERGY]\n'.encode('ascii'))
             if wn._energy is not None:
                 if wn._energy.global_price is not None:

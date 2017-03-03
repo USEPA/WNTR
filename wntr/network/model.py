@@ -559,13 +559,13 @@ class WaterNetworkModel(object):
         source = Source(name, node_name, source_type, quality, pattern_name)
         self._sources[name] = source
         self._num_sources += 1
-
+        
     def _add_demand(self, name, junction_name, base_demand=0.0, demand_pattern_name=None):
 
         demands = _Demands(name, junction_name, base_demand, demand_pattern_name)
         self._demands[name] = demands
         self._num_demands += 1
-
+        
     def add_control(self, name, control_object):
         """
         Add a control to the water network model.
@@ -1935,7 +1935,11 @@ class WaterNetworkOptions(object):
 
         self.roughness_correlation = None
         "Makes all default pipe wall reaction coefficients related to pipe roughness"
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> pr/9
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -3080,4 +3084,3 @@ class _Demands(object):
            self.demand_pattern_name == other.demand_pattern_name:
             return True
         return False
-
