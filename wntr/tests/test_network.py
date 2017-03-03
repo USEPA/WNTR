@@ -40,10 +40,10 @@ class TestNetworkCreation(unittest.TestCase):
         self.assertEqual(self.wn._num_valves, 2)
 
     def test_num_nodes(self):
-        self.assertEqual(self.wn.num_nodes(), 3323+1+34)
+        self.assertEqual(self.wn.num_nodes, 3323+1+34)
 
     def test_num_links(self):
-        self.assertEqual(self.wn.num_links(), 3829+61+2)
+        self.assertEqual(self.wn.num_links, 3829+61+2)
 
     def test_junction_attr(self):
         j = self.wn.get_node('JUNCTION-18')
@@ -125,8 +125,8 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_pipe('p1', 'j1', 'j2', 1000, 1, 100, 0, 'Open')
         l = wn.get_link('p1')
         self.assertEqual(l._link_name, 'p1')
-        self.assertEqual(l.start_node(), 'j1')
-        self.assertEqual(l.end_node(), 'j2')
+        self.assertEqual(l.start_node, 'j1')
+        self.assertEqual(l.end_node, 'j2')
         self.assertEqual(l.get_base_status(), self.wntr.network.LinkStatus.opened)
         self.assertEqual(l.length, 1000.0)
         self.assertEqual(l.diameter, 1.0)
@@ -171,7 +171,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel()
         wn.add_junction('j1')
         wn.add_junction('j2')
-        wn.add_pipe('p1', 'j1', 'j2', 1000, 1, 100, 0, 'OPEN', True)
+        wn.add_pipe('p1', 'j1', 'j2', 1000, 1, 100, 0, "OPEN", True)
         self.assertEqual(wn._check_valves, ['p1'])
 
     def test_remove_pipe(self):
@@ -180,7 +180,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction('j2')
         wn.add_junction('j3')
         wn.add_pipe('p2','j1','j3')
-        wn.add_pipe('p1','j1','j2', status = 'cv')
+        wn.add_pipe('p1','j1','j2', status=self.wntr.network.LinkStatus.cv)
         wn.remove_link('p1')
         link_list = [link_name for link_name, link in wn.links()]
         self.assertEqual(link_list, ['p2'])
@@ -540,7 +540,7 @@ class TestNet3InpWriterResults(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
         pass
-    
+
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
             for t in self.results2.link.major_axis:
