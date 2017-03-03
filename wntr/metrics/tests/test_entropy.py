@@ -31,7 +31,6 @@ def test_layout1():
 
     G_flowrate = wn.get_graph_deep_copy()
     G_flowrate.weight_graph(link_attribute=attr)
-    #wntr.network.draw_graph(wn, link_attribute=attr)
 
     [S, Shat] = wntr.metrics.entropy(G_flowrate)
     
@@ -85,7 +84,6 @@ def test_layout8():
 
     G_flowrate = wn.get_graph_deep_copy()
     G_flowrate.weight_graph(link_attribute=attr)
-    #wntr.network.draw_graph(wn, link_attribute=attr)
 
     [S, Shat] = wntr.metrics.entropy(G_flowrate)
     

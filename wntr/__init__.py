@@ -3,9 +3,10 @@ from wntr import network
 from wntr import metrics
 from wntr import sim
 from wntr import scenario
+from wntr import graphics
 from wntr import utils
 
-__version__ = '0.1'
+__version__ = '0.1.1'
 
 __copyright__ = """Copyright 2015 Sandia Corporation.
 Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,

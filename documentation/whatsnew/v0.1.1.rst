@@ -1,0 +1,9 @@
+.. _whatsnew_0110:
+
+v0.1.1 (February 6, 2017)
+-------------------------------
+
+* Updated package for Python 3.4 and 3.5 compatibility
+* Added install requirements to setup.py
+* Bug fix in animation example
+* Updated documentation

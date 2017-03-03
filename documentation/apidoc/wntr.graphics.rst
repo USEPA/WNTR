@@ -1,7 +1,7 @@
-wntr.scenario package
+wntr.graphics package
 =====================
 
-.. automodule:: wntr.scenario
+.. automodule:: wntr.graphics
     :members:
     :no-undoc-members:
     :show-inheritance:
@@ -11,6 +11,6 @@ Submodules
 
 .. toctree::
 
-   wntr.scenario.earthquake
-   wntr.scenario.fragility_curve
+   wntr.graphics.network
+   wntr.graphics.color
 

@@ -1,5 +1,5 @@
 wntr.metrics.water_quality module
-======================================
+=====================================
 
 .. automodule:: wntr.metrics.water_quality
     :members:

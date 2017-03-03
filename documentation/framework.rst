@@ -23,6 +23,7 @@ run simulations are described in more detail below, followed by a list of softwa
    :meth:`~wntr.network`	Contains methods to define a water network model, network controls, and graph representation of the network.
    :meth:`~wntr.scenario`   Contains methods to define disaster scenarios and fragility/survival curves.
    :meth:`~wntr.sim`		Contains methods to run hydraulic and water quality simulations using the water network model.
+   :meth:`wntr.graphics`    Contains methods to generate graphics.
    :meth:`~wntr.utils`      Contains helper functions.
    =======================  =============================================================================================================================================================================================================================================================================
 
@@ -47,6 +48,7 @@ Additionally, EPANET INP files can be generated from water network models.
    :meth:`~wntr.network.model.Pump`                   Contains methods to define pumps. Pumps are links that increase hydraulic head. 
    :meth:`~wntr.network.model.Valve`                  Contains methods to define valves. Valves are links that limit pressure or flow. 
    :meth:`~wntr.network.model.Curve`                  Contains methods to define curves. Curves are data pairs representing a relationship between two quantities.  Curves are used to define pump curves. 
+   :meth:`~wntr.network.model.Source`                 Contains methods to define sources. Sources define the location and characteristics of a substance injected directly into the network.
    :meth:`~wntr.network.controls.TimeControl`         Contains methods to define time controls. Time controls define actions that start or stop at a particular time. 
    :meth:`~wntr.network.controls.ConditionalControl`  Contains methods to define conditional controls. Conditional controls define actions that start or stop based on a particular condition in the network. 
    :meth:`~wntr.network.model.WaterNetworkOptions`    Contains methods to define model options, including the simulation duration and time step.
@@ -118,11 +120,11 @@ However, **the following model options cannot be modified/created in WNTR**:
 
 * [BACKDROP] section
 * Efficiency and headloss curves in the [CURVES] section
+* [DEMANDS] section
 * [EMITTERS] section
 * [ENERGY] section
 * [LABELS] section
 * [MIXING] section
-* Map in the [OPTIONS] section
 * [QUALITY] section
 * [REPORT] section
 * [RULES] section
@@ -132,16 +134,17 @@ However, **the following model options cannot be modified/created in WNTR**:
 While the EpanetSimulator uses all EPANET model options, several model options are not used by the WNTRSimulator.  
 Of the EPANET model options that directly apply to hydraulic simulation, **the following options are not supported by the WNTRSimualtor**:
 
-* [DEMANDS] section (base demand for individual nodes from the [JUNCTIONS] section are used)
+* [DEMANDS] section (base demand and patterns from the [JUNCTIONS] section are used)
 * [EMITTERS] section
-* D-W and C-M headloss options in the [OPTIONS] section
+* [MIXING] section
+* D-W and C-M headloss options in the [OPTIONS] section (H-W option is used)
 * Accuracy, unbalanced, demand multiplier, and emitter exponent from the [OPTIONS] section
 * Minor loss coefficient in the [PIPES] section
 * Speed option and multipoint head curves in the [PUMPS] section (3-point head curves are supported)
 * Head pattern option in the [RESERVOIRS] section
 * [RULES] section 
 * Volume curves in the [TANKS] section
-* Rule timestep, pattern start, start clocktime in the [TIMES] section
+* Rule timestep, pattern start, report start, start clocktime, and statistics in the [TIMES] section
 * PSV, FCV, PBV, TCV, GPV values and minor loss coefficient in the [VALVES] section
 
 Future development of WNTR will address these limitations.
