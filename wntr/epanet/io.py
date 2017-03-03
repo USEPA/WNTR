@@ -812,7 +812,7 @@ class InpFile(object):
                 if words[0].upper() == 'RULE':
                     if rule is not None:
                         rules.append(rule)
-                    rule = _EpanetRule(words[1])
+                    rule = _EpanetRule(words[1], inp_units, mass_units)
                     in_if = False
                     in_then = False
                     in_else = False
@@ -1222,13 +1222,15 @@ class InpFile(object):
                     raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
             f.write('\n'.encode('ascii'))
 
-            ### Write rules
+            ### Print Rules
             ### FIXME: RULES ARE WRITING WRONGLY
             f.write('[RULES]\n'.encode('ascii'))
             for text, all_control in wn._control_dict.items():
                 entry = '{}\n; end\n\n'
                 if isinstance(all_control, wntr.network.controls.IfThenElseControl):
-                    f.write(entry.format(str(all_control)).encode('ascii'))
+                    rule = _EpanetRule('blah', inp_units, mass_units)
+                    rule.from_if_then_else(all_control)
+                    f.write(entry.format(str(rule)).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
             ### Write sources
@@ -1423,31 +1425,119 @@ class _EpanetRule(object):
 
     def from_if_then_else(self, control):
         """Create a rule from an IfThenElseControl object"""
-        pass
+        if isinstance(control, IfThenElseControl):
+            self.ruleID = control.name
+            self.add_control_condition(control._condition)
+            for ct, action in enumerate(control._then_actions):
+                if ct == 0:
+                    self.add_action_on_true(action)
+                else:
+                    self.add_action_on_true(action, 'AND')
+            for ct, action in enumerate(control._else_actions):
+                if ct == 0:
+                    self.add_action_on_false(action)
+                else:
+                    self.add_action_on_false(action, 'AND')
+            self.set_priority(control._priority)
+        else:
+            raise ValueError('Invalid control type for rules: %s'%control.__class__.__name__)
 
     def add_if(self, clause):
         """Add an "if/and/or" clause from an INP file"""
         self._if_clauses.append(clause)
 
-    def add_control_condition(self, condition):
+    def add_control_condition(self, condition, prefix='IF'):
         """Add a ControlCondition from an IfThenElseControl"""
-        pass
+        if isinstance(condition, OrCondition):
+            self.add_control_condition(condition._condition_1, prefix)
+            self.add_control_condition(condition._condition_2, 'OR')
+        elif isinstance(condition, AndCondition):
+            self.add_control_condition(condition._condition_1, prefix)
+            self.add_control_condition(condition._condition_2, 'AND')
+        elif isinstance(condition, TimeOfDayCondition):
+            fmt = '{} SYSTEM CLOCKTIME {} {}'
+            clause = fmt.format(prefix, condition._relation.text, condition._sec_to_clock(condition._threshold))
+            self.add_if(clause)
+        elif isinstance(condition, SimTimeCondition):
+            fmt = '{} SYSTEM TIME {} {}'
+            clause = fmt.format(prefix, condition._relation.text, condition._sec_to_hours_min_sec(condition._threshold))
+            self.add_if(clause)
+        elif isinstance(condition, ValueCondition):
+            fmt = '{} {} {} {} {} {}'  # CONJ, TYPE, ID, ATTRIBUTE, RELATION, THRESHOLD
+            attr = condition._source_attr
+            val_si = condition._repr_value(attr, condition._threshold)
+            if attr.lower() in ['demand']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Demand))
+            elif attr.lower() in ['head', 'level']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.HydraulicHead))
+            elif attr.lower() in ['flow']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+            elif attr.lower() in ['pressure']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+            elif attr.lower() in ['setting']:
+                value = '{:.6g}'.format(val_si)
+            else: # status
+                value = val_si
+            clause = fmt.format(prefix, condition._source_obj.__class__.__name__,
+                                condition._source_obj.name, condition._source_attr,
+                                condition._relation.symbol, value)
+            self.add_if(clause)
+        else:
+            raise ValueError('Unknown ControlCondition for EPANET Rules')
 
     def add_then(self, clause):
         """Add a "then/and" clause from an INP file"""
         self._then_clauses.append(clause)
 
-    def add_action_on_true(self, action):
+    def add_action_on_true(self, action, prefix='THEN'):
         """Add a "then" action from an IfThenElseControl"""
-        pass
+        if isinstance(action, ControlAction):
+            fmt = '{} {} {} {} = {}'
+            attr = action._attribute
+            val_si = action._repr_value()
+            if attr.lower() in ['demand']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Demand))
+            elif attr.lower() in ['head', 'level']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.HydraulicHead))
+            elif attr.lower() in ['flow']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+            elif attr.lower() in ['pressure']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+            elif attr.lower() in ['setting']:
+                value = '{:.6g}'.format(val_si)
+            else: # status
+                value = val_si
+            clause = fmt.format(prefix, action._target_obj_ref.__class__.__name__,
+                                action._target_obj_ref.name, action._attribute,
+                                value)
+            self.add_then(clause)
 
     def add_else(self, clause):
         """Add an "else/and" clause from an INP file"""
         self._else_clauses.append(clause)
 
-    def add_action_on_false(self, action):
+    def add_action_on_false(self, action, prefix='ELSE'):
         """Add an "else" action from an IfThenElseControl"""
-        pass
+        if isinstance(action, ControlAction):
+            fmt = '{} {} {} {} = {}'
+            attr = action._attribute
+            val_si = action._repr_value()
+            if attr.lower() in ['demand']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Demand))
+            elif attr.lower() in ['head', 'level']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.HydraulicHead))
+            elif attr.lower() in ['flow']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+            elif attr.lower() in ['pressure']:
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+            elif attr.lower() in ['setting']:
+                value = '{:.6g}'.format(val_si)
+            else: # status
+                value = val_si
+            clause = fmt.format(prefix, action._target_obj_ref.__class__.__name__,
+                                action._target_obj_ref.name, action._attribute,
+                                value)
+            self.add_else(clause)
 
     def set_priority(self, priority):
         self.priority = int(priority)
@@ -1478,10 +1568,20 @@ class _EpanetRule(object):
                 else:
                     condition = TimeOfDayCondition(model, words[3].encode('ascii'), ' '.join(words[4:]).encode('ascii'))
             else:
+                attr = words[3].lower()
+                value = ValueCondition._parse_value(words[5])
+                if attr.lower() in ['demand']:
+                    value = to_si(self.inp_units, value, HydParam.Demand)
+                elif attr.lower() in ['head', 'level']:
+                    value = to_si(self.inp_units, value, HydParam.HydraulicHead)
+                elif attr.lower() in ['flow']:
+                    value = to_si(self.inp_units, value, HydParam.Flow)
+                elif attr.lower() in ['pressure']:
+                    value = to_si(self.inp_units, value, HydParam.Flow)
                 if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
-                    condition = ValueCondition(model.get_node(words[2].encode('ascii')), words[3].lower(), words[4].lower().encode('ascii'), words[5])
+                    condition = ValueCondition(model.get_node(words[2].encode('ascii')), words[3].lower(), words[4].lower().encode('ascii'), value)
                 elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
-                    condition = ValueCondition(model.get_link(words[2].encode('ascii')), words[3].lower(), words[4].lower().encode('ascii'), words[5])
+                    condition = ValueCondition(model.get_link(words[2].encode('ascii')), words[3].lower(), words[4].lower().encode('ascii'), value)
                 else:
                     ### FIXME: raise error
                     pass
@@ -1513,6 +1613,14 @@ class _EpanetRule(object):
             link = model.get_link(words[2])
             attr = words[3].lower()
             value = ValueCondition._parse_value(words[5])
+            if attr.lower() in ['demand']:
+                value = to_si(self.inp_units, value, HydParam.Demand)
+            elif attr.lower() in ['head', 'level']:
+                value = to_si(self.inp_units, value, HydParam.HydraulicHead)
+            elif attr.lower() in ['flow']:
+                value = to_si(self.inp_units, value, HydParam.Flow)
+            elif attr.lower() in ['pressure']:
+                value = to_si(self.inp_units, value, HydParam.Flow)
             then_acts.append(ControlAction(link, attr, value))
         else_acts = []
         for act in self._else_clauses:
@@ -1523,5 +1631,13 @@ class _EpanetRule(object):
             link = model.get_link(words[2])
             attr = words[3].lower()
             value = ValueCondition._parse_value(words[5])
+            if attr.lower() in ['demand']:
+                value = to_si(self.inp_units, value, HydParam.Demand)
+            elif attr.lower() in ['head', 'level']:
+                value = to_si(self.inp_units, value, HydParam.HydraulicHead)
+            elif attr.lower() in ['flow']:
+                value = to_si(self.inp_units, value, HydParam.Flow)
+            elif attr.lower() in ['pressure']:
+                value = to_si(self.inp_units, value, HydParam.Flow)
             else_acts.append(ControlAction(link, attr, value))
         return IfThenElseControl(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)
