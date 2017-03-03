@@ -3,12 +3,14 @@ The wntr.epanet.io module contains methods for reading/writing EPANET input and 
 """
 from __future__ import absolute_import
 import wntr.network
-from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
+from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve, LinkStatus
 import wntr
 import io
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam
-from .util import LinkBaseStatus, to_si, from_si
+from .util import to_si, from_si
+from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition
+from wntr.network.controls import OrCondition, AndCondition, IfThenElseControl, ControlAction
 
 import datetime
 import networkx as nx
@@ -173,7 +175,6 @@ def _sec_to_string(sec):
     mm = int(sec/60.)
     sec -= mm*60
     return (hours, mm, int(sec))
-
 
 
 class InpFile(object):
@@ -359,7 +360,7 @@ class InpFile(object):
                 raise RuntimeError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
             if opts.report_timestep % opts.hydraulic_timestep != 0:
                 raise RuntimeError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
-        
+
         ### CURVES
         for lnum, line in self.sections['[CURVES]']:
             # It should be noted carefully that these lines are never directly
@@ -495,7 +496,7 @@ class InpFile(object):
                             to_si(inp_units, float(current[4]), HydParam.PipeDiameter),
                             float(current[5]),
                             float(current[6]),
-                            'OPEN',
+                            LinkStatus.Open,
                             True)
             else:
                 wn.add_pipe(current[0],
@@ -505,7 +506,7 @@ class InpFile(object):
                             to_si(inp_units, float(current[4]), HydParam.PipeDiameter),
                             float(current[5]),
                             float(current[6]),
-                            current[7].upper())
+                            LinkStatus[current[7].upper()])
 
         ### PUMPS
         for lnum, line in self.sections['[PUMPS]']:
@@ -543,7 +544,7 @@ class InpFile(object):
             else:
                 logger.error('%(fname)s:%(lnum)-6d %(sec)13s pump keyword not recognized: "%(line)s"', edata)
                 raise RuntimeError('Pump keyword in inp file not recognized.')
-        
+
         ### VALVES
         for lnum, line in self.sections['[VALVES]']:
             edata['lnum'] = lnum
@@ -599,7 +600,7 @@ class InpFile(object):
             source_num = source_num + 1
             if current[0].upper() == 'MASS':
                 strength = to_si(inp_units, float(current[2]), QualParam.SourceMassInject, mass_units)
-            else: 
+            else:
                 strength = to_si(inp_units, float(current[2]), QualParam.Concentration, mass_units)
             if len(current) == 3:
                 wn.add_source('INP'+str(source_num), current[0], current[1], strength, None)
@@ -626,7 +627,8 @@ class InpFile(object):
                 opts.start_clocktime = _clock_time_to_sec(time, time_format)
             elif (current[0].upper() == 'STATISTIC'):
                 opts.statistic = current[1].upper()
-            else:  # Other time options
+            else:
+                # Other time options: RULE TIMESTEP, PATTERN TIMESTEP, REPORT TIMESTEP, REPORT START
                 key_string = current[0] + '_' + current[1]
                 setattr(opts, key_string.lower(), _str_time_to_sec(current[2]))
             
@@ -643,7 +645,7 @@ class InpFile(object):
             if (current[1].upper() == 'OPEN' or
                     current[1].upper() == 'CLOSED' or
                     current[1].upper() == 'ACTIVE'):
-                new_status = LinkBaseStatus[current[1].upper()].value
+                new_status = LinkStatus[current[1].upper()].value
                 link.status = new_status
                 link._base_status = new_status
             else:
@@ -686,7 +688,7 @@ class InpFile(object):
                         status = to_si(inp_units, float(current[2]), HydParam.Pressure)
                         action_obj = wntr.network.ControlAction(link, 'setting', status)
             else:
-                status = LinkBaseStatus[current[2].upper()].value
+                status = LinkStatus[current[2].upper()].value
                 action_obj = wntr.network.ControlAction(link, 'status', status)
 
             # Create the control object
@@ -721,19 +723,74 @@ class InpFile(object):
             else:
                 if len(current) == 6:  # at time
                     if ':' in current[5]:
-                        fire_time = int(_str_time_to_sec(current[5]))
+                        run_at_time = int(_str_time_to_sec(current[5]))
                     else:
-                        fire_time = int(float(current[5])*3600)
-                    control_obj = wntr.network.TimeControl(wn, fire_time, 'SIM_TIME', False, action_obj)
+                        run_at_time = int(float(current[5])*3600)
+                    control_obj = wntr.network.TimeControl(wn, run_at_time, 'SIM_TIME', False, action_obj)
                     control_name = ''
                     for i in range(len(current)-1):
                         control_name = control_name + current[i]
-                    control_name = control_name + str(fire_time)
+                    control_name = control_name + str(run_at_time)
                 elif len(current) == 7:  # at clocktime
-                    fire_time = int(_clock_time_to_sec(current[5], current[6]))
-                    control_obj = wntr.network.TimeControl(wn, fire_time, 'SHIFTED_TIME', True, action_obj)
+                    run_at_time = int(_clock_time_to_sec(current[5], current[6]))
+                    control_obj = wntr.network.TimeControl(wn, run_at_time, 'SHIFTED_TIME', True, action_obj)
             wn.add_control(control_name, control_obj)
         
+        ### RULES
+        if len(self.sections['[RULES]']) > 0:
+            rules = []
+            rule = None
+            in_if = False
+            in_then = False
+            in_else = False
+            for lnum, line in self.sections['[RULES]']:
+                line = line.split(';')[0]
+                words = line.split()
+                if words == []:
+                    continue
+                if len(words) == 0:
+                    continue
+                if words[0].upper() == 'RULE':
+                    if rule is not None:
+                        rules.append(rule)
+                    rule = _EpanetRule(words[1])
+                    in_if = False
+                    in_then = False
+                    in_else = False
+                elif words[0].upper() == 'IF':
+                    in_if = True
+                    in_then = False
+                    in_else = False
+                    rule.add_if(line)
+                elif words[0].upper() == 'THEN':
+                    in_if = False
+                    in_then = True
+                    in_else = False
+                    rule.add_then(line)
+                elif words[0].upper() == 'ELSE':
+                    in_if = False
+                    in_then = False
+                    in_else = True
+                    rule.add_else(line)
+                elif words[0].upper() == 'PRIORITY':
+                    in_if = False
+                    in_then = False
+                    in_else = False
+                    rule.set_priority(words[1])
+                elif in_if:
+                    rule.add_if(line)
+                elif in_then:
+                    rule.add_then(line)
+                elif in_else:
+                    rule.add_else(line)
+                else:
+                    continue
+            for rule in rules:
+                ctrl = rule.generate_control(wn)
+                wn.add_control(ctrl.name, ctrl)
+            # wn._en_rules = '\n'.join(self.sections['[RULES]'])
+            #logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+
         ### REACTIONS
         BulkReactionCoeff = QualParam.BulkReactionCoeff
         WallReactionCoeff = QualParam.WallReactionCoeff
@@ -787,15 +844,18 @@ class InpFile(object):
             else:
                 raise RuntimeError('Reaction option not recognized')
 
+        ### TITLE
         if len(self.sections['[TITLE]']) > 0:
             pass
             # wn._en_title = '\n'.join(self.sections['[TITLE]'])
         else:
             pass
 
+        ### ENERGY
         if len(self.sections['[ENERGY]']) > 0:
             pass
 
+        ### RULES
         if len(self.sections['[RULES]']) > 0:
             pass
 
@@ -985,13 +1045,13 @@ class InpFile(object):
             for pipe_name in lnames:
                 pipe = wn._pipes[pipe_name]
                 E = {'name': pipe_name,
-                     'node1': pipe.start_node(),
-                     'node2': pipe.end_node(),
+                     'node1': pipe.start_node,
+                     'node2': pipe.end_node,
                      'len': from_si(inp_units, pipe.length, HydParam.Length),
                      'diam': from_si(inp_units, pipe.diameter, HydParam.PipeDiameter),
                      'rough': pipe.roughness,
                      'mloss': pipe.minor_loss,
-                     'status': LinkBaseStatus(pipe.get_base_status()).name,
+                     'status': pipe.get_base_status().name,
                      'com': ';'}
                 if pipe.cv:
                     E['status'] = 'CV'
@@ -1006,8 +1066,8 @@ class InpFile(object):
             for pump_name in lnames:
                 pump = wn._pumps[pump_name]
                 E = {'name': pump_name,
-                     'node1': pump.start_node(),
-                     'node2': pump.end_node(),
+                     'node1': pump.start_node,
+                     'node2': pump.end_node,
                      'ptype': pump.info_type,
                      'params': '',
                      'com': ';'}
@@ -1028,8 +1088,8 @@ class InpFile(object):
             for valve_name in lnames:
                 valve = wn._valves[valve_name]
                 E = {'name': valve_name,
-                     'node1': valve.start_node(),
-                     'node2': valve.end_node(),
+                     'node1': valve.start_node,
+                     'node2': valve.end_node,
                      'diam': from_si(inp_units, valve.diameter, HydParam.PipeDiameter),
                      'vtype': valve.valve_type,
                      'set': valve._base_setting,
@@ -1052,13 +1112,13 @@ class InpFile(object):
             f.write('[STATUS]\n'.encode('ascii'))
             f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
             for link_name, link in wn.links(Pump):
-                if link.get_base_status() == LinkBaseStatus.CLOSED.value:
+                if link.get_base_status() == LinkStatus.CLOSED.value:
                     f.write('{:10s} {:10s}\n'.format(link_name,
-                            LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
+                            LinkStatus(link.get_base_status()).name).encode('ascii'))
             for link_name, link in wn.links(Valve):
-                if link.get_base_status() == LinkBaseStatus.CLOSED.value or link.get_base_status() == LinkBaseStatus.OPEN.value:
+                if link.get_base_status() == LinkStatus.CLOSED.value or link.get_base_status() == LinkStatus.Open.value:
                     f.write('{:10s} {:10s}\n'.format(link_name,
-                            LinkBaseStatus(link.get_base_status()).name).encode('ascii'))
+                            LinkStatus(link.get_base_status()).name).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
             ### PATTERNS
@@ -1106,12 +1166,12 @@ class InpFile(object):
             for text, all_control in wn._control_dict.items():
                 if isinstance(all_control,wntr.network.TimeControl):
                     entry = 'Link {link} {setting} AT {compare} {time:g}\n'
-                    vals = {'link': all_control._control_action._target_obj_ref.name(),
+                    vals = {'link': all_control._control_action._target_obj_ref.name,
                             'setting': 'OPEN',
                             'compare': 'TIME',
-                            'time': int(all_control._fire_time / 3600.0)}
+                            'time': int(all_control._run_at_time / 3600.0)}
                     if all_control._control_action._attribute.lower() == 'status':
-                        vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
+                        vals['setting'] = LinkStatus(all_control._control_action._value).name
                     else:
                         vals['setting'] = str(float(all_control._control_action._value))
                     if all_control._daily_flag:
@@ -1119,13 +1179,13 @@ class InpFile(object):
                     f.write(entry.format(**vals).encode('ascii'))
                 elif isinstance(all_control,wntr.network.ConditionalControl):
                     entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
-                    vals = {'link': all_control._control_action._target_obj_ref.name(),
+                    vals = {'link': all_control._control_action._target_obj_ref.name,
                             'setting': 'OPEN',
-                            'node': all_control._source_obj.name(),
+                            'node': all_control._source_obj.name,
                             'compare': 'above',
                             'thresh': 0.0}
                     if all_control._control_action._attribute.lower() == 'status':
-                        vals['setting'] = LinkBaseStatus(all_control._control_action._value).name
+                        vals['setting'] = LinkStatus(all_control._control_action._value).name
                     else:
                         vals['setting'] = str(float(all_control._control_action._value))
                     if all_control._operation is np.less:
@@ -1133,11 +1193,19 @@ class InpFile(object):
                     threshold = all_control._threshold - all_control._source_obj.elevation
                     vals['thresh'] = from_si(inp_units, threshold, HydParam.HydraulicHead)
                     f.write(entry.format(**vals).encode('ascii'))
-                else:
+                elif not isinstance(all_control, wntr.network.controls.IfThenElseControl):
                     raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
             f.write('\n'.encode('ascii'))
             
-            ### COURVES
+            ### RULES
+            f.write('[RULES]\n'.encode('ascii'))
+            for text, all_control in wn._control_dict.items():
+                entry = '{}\n; end\n\n'
+                if isinstance(all_control,wntr.network.controls.IfThenElseControl):
+                    f.write(entry.format(str(all_control)).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+
+            ### SOURCES
             f.write('[SOURCES]\n'.encode('ascii'))
             entry = '{:10s} {:10s} {:10s} {:10s}\n'
             label = '{:10s} {:10s} {:10s} {:10s}\n'
@@ -1151,7 +1219,7 @@ class InpFile(object):
                     strength = from_si(inp_units, source.quality, QualParam.SourceMassInject, mass_units)
                 else: # CONC, SETPOINT, FLOWPACED
                     strength = from_si(inp_units, source.quality, QualParam.Concentration, mass_units)
-                
+
                 E = {'node': source.node_name,
                      'type': source.source_type,
                      'quality': str(strength),
@@ -1328,7 +1396,9 @@ class InpFile(object):
             hrs, mm, sec = _sec_to_string(wn.options.quality_timestep)
             f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec).encode('ascii'))
             hrs, mm, sec = _sec_to_string(wn.options.rule_timestep)
-            #f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
+
+            ### TODO: RULE TIMESTEP is not written?!
+            # f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
             f.write(entry.format('STATISTIC', wn.options.statistic).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
@@ -1374,17 +1444,97 @@ class InpFile(object):
             f.write('[END]\n'.encode('ascii'))
 
 
-#class HydFile(object):
-#    """An EPANET hydraulics file (binary) reader/writer."""
-#    pass
-#
-#
-#class BinFile(object):
-#    """An EPANET ressults file (binray) reader."""
-#    pass
-#
-#
-#class RptFile(object):
-#    """An EPANET report file (text) reader."""
-#    pass
-#
+class _EpanetRule(object):
+    """contains the text for an EPANET rule"""
+    def __init__(self, ruleID):
+        self.ruleID = ruleID
+        self._if_clauses = []
+        self._then_clauses = []
+        self._else_clauses = []
+        self.priority = -1
+
+    def add_if(self, clause):
+        self._if_clauses.append(clause)
+
+    def add_then(self, clause):
+        self._then_clauses.append(clause)
+
+    def add_else(self, clause):
+        self._else_clauses.append(clause)
+
+    def set_priority(self, priority):
+        self.priority = int(priority)
+
+    def __str__(self):
+        if self.priority >= 0:
+            if len(self._else_clauses) > 0:
+                return 'RULE {}\n{}\n{}\n{}\nPRIORITY {}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses), self.priority)
+            else:
+                return 'RULE {}\n{}\n{}\nPRIORITY {}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), self.priority)
+        else:
+            if len(self._else_clauses) > 0:
+                return 'RULE {}\n{}\n{}\n{}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses), '\n'.join(self._else_clauses))
+            else:
+                return 'RULE {}\n{}\n{}\n; end of rule\n'.format(self.ruleID, '\n'.join(self._if_clauses), '\n'.join(self._then_clauses))
+
+    def generate_control(self, model):
+        condition_list = []
+        for line in self._if_clauses:
+            condition = None
+            words = line.split()
+            if words[1].upper() == 'SYSTEM':
+                if words[2].upper() == 'DEMAND':
+                    ### TODO: system demand
+                    pass
+                elif words[2].upper() == 'TIME':
+                    condition = SimTimeCondition(model, words[3].encode('ascii'), ' '.join(words[4:]).encode('ascii'))
+                else:
+                    condition = TimeOfDayCondition(model, words[3].encode('ascii'), ' '.join(words[4:]).encode('ascii'))
+            else:
+                if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
+                    condition = ValueCondition(model.get_node(words[2].encode('ascii')), words[3].lower(), words[4].lower().encode('ascii'), words[5])
+                elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
+                    condition = ValueCondition(model.get_link(words[2].encode('ascii')), words[3].lower(), words[4].lower().encode('ascii'), words[5])
+                else:
+                    ### FIXME: raise error
+                    pass
+            if words[0].upper() == 'IF':
+                condition_list.append(condition)
+            elif words[0].upper() == 'AND':
+                condition_list.append(condition)
+            elif words[0].upper() == 'OR':
+                if len(condition_list) > 0:
+                    other = condition_list[-1]
+                    condition_list.remove(other)
+                else:
+                    ### FIXME: raise error
+                    pass
+                conj = OrCondition(other, condition)
+                condition_list.append(conj)
+        final_condition = None
+        for condition in condition_list:
+            if final_condition is None:
+                final_condition = condition
+            else:
+                final_condition = AndCondition(final_condition, condition)
+        then_acts = []
+        for act in self._then_clauses:
+            words = act.strip().split()
+            if len(words) < 6:
+                # TODO: raise error
+                pass
+            link = model.get_link(words[2])
+            attr = words[3].lower()
+            value = ValueCondition._parse_value(words[5])
+            then_acts.append(ControlAction(link, attr, value))
+        else_acts = []
+        for act in self._else_clauses:
+            words = act.strip().split()
+            if len(words) < 6:
+                # TODO: raise error
+                pass
+            link = model.get_link(words[2])
+            attr = words[3].lower()
+            value = ValueCondition._parse_value(words[5])
+            else_acts.append(ControlAction(link, attr, value))
+        return IfThenElseControl(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)

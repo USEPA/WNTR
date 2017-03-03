@@ -34,10 +34,10 @@ class TestTimeControls(unittest.TestCase):
         for t in res.time:
             if t < 5*3600 or t >= 10*3600:
                 self.assertAlmostEqual(link_res.at['flowrate',t,'pipe2'], 150/3600.0)
-                self.assertEqual(link_res.at['status',t,'pipe2'], 1)
+                self.assertEqual(link_res.at['status',t,'pipe2'], self.wntr.network.LinkStatus.open)
             else:
                 self.assertAlmostEqual(link_res.at['flowrate',t,'pipe2'], 0.0)
-                self.assertEqual(link_res.at['status',t,'pipe2'], 0)
+                self.assertEqual(link_res.at['status',t,'pipe2'], self.wntr.network.LinkStatus.closed)
 
 
 class TestConditionalControls(unittest.TestCase):
@@ -71,11 +71,11 @@ class TestConditionalControls(unittest.TestCase):
                 activated_flag = True
             if activated_flag:
                 self.assertAlmostEqual(link_res.at['flowrate',t,'pump1'], 0.0)
-                self.assertEqual(link_res.at['status',t,'pump1'], 0)
+                self.assertEqual(link_res.at['status',t,'pump1'], self.wntr.network.LinkStatus.closed)
                 count += 1
             else:
                 self.assertGreaterEqual(link_res.at['flowrate',t,'pump1'], 0.0001)
-                self.assertEqual(link_res.at['status',t,'pump1'], 1)
+                self.assertEqual(link_res.at['status',t,'pump1'], self.wntr.network.LinkStatus.open)
         self.assertEqual(activated_flag, True)
         self.assertGreaterEqual(count, 2)
 
@@ -97,14 +97,14 @@ class TestConditionalControls(unittest.TestCase):
                 activated_flag = True
             if activated_flag:
                 self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.002)
-                self.assertEqual(results.link.at['status',t,'pipe1'], 1)
+                self.assertEqual(results.link.at['status',t,'pipe1'], self.wntr.network.LinkStatus.open)
                 count +=1
             else:
                 self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
-                self.assertEqual(results.link.at['status',t,'pipe1'], 0)
+                self.assertEqual(results.link.at['status',t,'pipe1'], self.wntr.network.LinkStatus.closed)
         self.assertEqual(activated_flag, True)
         self.assertGreaterEqual(count, 2)
-        self.assertEqual(results.link.at['status',results.time[0],'pipe1'], 0) # make sure the pipe starts closed
+        self.assertEqual(results.link.at['status',results.time[0],'pipe1'], self.wntr.network.LinkStatus.closed) # make sure the pipe starts closed
         self.assertLessEqual(results.node.at['pressure',results.time[0],'tank1'],300.0) # make sure the pipe starts closed
 
 class TestTankControls(unittest.TestCase):
@@ -131,7 +131,7 @@ class TestTankControls(unittest.TestCase):
         for t in results.time:
             if results.node.at['pressure',t,'tank1'] <= 10.0:
                 self.assertLessEqual(results.link.at['flowrate',t,'pipe1'],0.0)
-                self.assertEqual(results.link.at['status',t,'pipe1'],0)
+                self.assertEqual(results.link.at['status',t,'pipe1'],self.wntr.network.LinkStatus.closed)
                 tank_level_dropped_flag = True
         self.assertEqual(tank_level_dropped_flag, True)
 
