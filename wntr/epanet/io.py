@@ -1700,9 +1700,9 @@ class _EpanetRule(object):
                     ### TODO: system demand
                     pass
                 elif words[2].upper() == 'TIME':
-                    condition = SimTimeCondition(model, words[3].encode('ascii'), ' '.join(words[4:]).encode('ascii'))
+                    condition = SimTimeCondition(model, words[3], ' '.join(words[4:]))
                 else:
-                    condition = TimeOfDayCondition(model, words[3].encode('ascii'), ' '.join(words[4:]).encode('ascii'))
+                    condition = TimeOfDayCondition(model, words[3], ' '.join(words[4:]))
             else:
                 attr = words[3].lower()
                 value = ValueCondition._parse_value(words[5])
@@ -1715,9 +1715,9 @@ class _EpanetRule(object):
                 elif attr.lower() in ['pressure']:
                     value = to_si(self.inp_units, value, HydParam.Flow)
                 if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
-                    condition = ValueCondition(model.get_node(words[2].encode('ascii')), words[3].lower(), words[4].lower().encode('ascii'), value)
+                    condition = ValueCondition(model.get_node(words[2]), words[3].lower(), words[4].lower(), value)
                 elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
-                    condition = ValueCondition(model.get_link(words[2].encode('ascii')), words[3].lower(), words[4].lower().encode('ascii'), value)
+                    condition = ValueCondition(model.get_link(words[2]), words[3].lower(), words[4].lower(), value)
                 else:
                     ### FIXME: raise error
                     pass
