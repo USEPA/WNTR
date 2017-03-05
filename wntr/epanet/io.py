@@ -1222,7 +1222,7 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_reactions(self):
-        opts = self.wn
+        opts = self.wn.options
         BulkReactionCoeff = QualParam.BulkReactionCoeff
         WallReactionCoeff = QualParam.WallReactionCoeff
         for lnum, line in self.sections['[REACTIONS]']:
