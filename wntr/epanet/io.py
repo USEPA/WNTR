@@ -247,9 +247,7 @@ class InpFile(object):
             wn = WaterNetworkModel()
         self.wn = wn
         wn.name = filename
-        opts = wn.options
 
-        _patterns = {}
         self.curves = {}
         self.top_comments = []
         self.sections = {}
@@ -294,740 +292,81 @@ class InpFile(object):
                 self.sections[section].append((lnum, line))
 
         # Parse each of the sections
+
         ### OPTIONS
-        for lnum, line in self.sections['[OPTIONS]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[OPTIONS]'
-            words, comments = _split_line(line)
-            if words is not None and len(words) > 0:
-                if len(words) < 2:
-                    edata['key'] = words[0]
-                    raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
-                key = words[0].upper()
-                if key == 'UNITS':
-                    self.flow_units = FlowUnits[words[1].upper()]
-                    opts.units = words[1].upper()
-                elif key == 'HEADLOSS':
-                    opts.headloss = words[1].upper()
-                elif key == 'HYDRAULICS':
-                    opts.hydraulics = words[1].upper()
-                    opts.hydraulics_filename = words[2]
-                elif key == 'QUALITY':
-                    opts.quality = words[1].upper()
-                    if len(words) > 2:
-                        opts.quality_value = words[2]
-                        if 'ug' in words[2]:
-                            self.mass_units = MassUnits.mg
-                        else:
-                            self.mass_units = MassUnits.ug
-                    else:
-                        self.mass_units = MassUnits.mg
-                        opts.quality_value = 'mg/L'
-                elif key == 'VISCOSITY':
-                    opts.viscosity = float(words[1])
-                elif key == 'DIFFUSIVITY':
-                    opts.diffusivity = float(words[1])
-                elif key == 'SPECIFIC':
-                    opts.specific_gravity = float(words[2])
-                elif key == 'TRIALS':
-                    opts.trials = int(words[1])
-                elif key == 'ACCURACY':
-                    opts.accuracy = float(words[1])
-                elif key == 'UNBALANCED':
-                    opts.unbalanced = words[1].upper()
-                    if len(words) > 2:
-                        opts.unbalanced_value = int(words[2])
-                elif key == 'PATTERN':
-                    opts.pattern = words[1]
-                elif key == 'DEMAND':
-                    if len(words) > 2:
-                        opts.demand_multiplier = float(words[2])
-                    else:
-                        edata['key'] = 'DEMAND MULTIPLIER'
-                        raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
-                elif key == 'EMITTER':
-                    if len(words) > 2:
-                        opts.emitter_exponent = float(words[2])
-                    else:
-                        edata['key'] = 'EMITTER EXPONENT'
-                        raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
-                elif key == 'TOLERANCE':
-                    opts.tolerance = float(words[1])
-                elif key == 'CHECKFREQ':
-                    opts.checkfreq = float(words[1])
-                elif key == 'MAXCHECK':
-                    opts.maxcheck = float(words[1])
-                elif key == 'DAMPLIMIT':
-                    opts.damplimit = float(words[1])
-                elif key == 'MAP':
-                    opts.map = words[1]
-                else:
-                    if len(words) == 2:
-                        edata['key'] = words[0]
-                        setattr(opts, words[0].lower(), float(words[1]))
-                        logger.warn('%(fname)s:%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
-                    elif len(words) == 3:
-                        edata['key'] = words[0] + ' ' + words[1]
-                        setattr(opts, words[0].lower() + '_' + words[1].lower(), float(words[2]))
-                        logger.warn('%(fname)s:%(lnum)-6d %(sec)13s option "%(key)s" is undocumented; adding, but please verify syntax', edata)
-
-        inp_units = self.flow_units
-        mass_units = self.mass_units
-
-        if (type(opts.report_timestep) == float or
-                type(opts.report_timestep) == int):
-            if opts.report_timestep < opts.hydraulic_timestep:
-                raise RuntimeError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
-            if opts.report_timestep % opts.hydraulic_timestep != 0:
-                raise RuntimeError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
+        self._read_options()
 
         ### CURVES
-        for lnum, line in self.sections['[CURVES]']:
-            # It should be noted carefully that these lines are never directly
-            # applied to the WaterNetworkModel object. Because different curve
-            # types are treated differently, each of the curves are converted
-            # the first time they are used, and this is used to build up a
-            # dictionary for those conversions to take place.
-            edata['lnum'] = lnum
-            edata['sec'] = '[CURVES]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            curve_name = current[0]
-            if curve_name not in self.curves:
-                self.curves[curve_name] = []
-            self.curves[curve_name].append((float(current[1]),
-                                             float(current[2])))
-        ### PATTERNS
-        for lnum, line in self.sections['[PATTERNS]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[PATTERNS]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            pattern_name = current[0]
-            if pattern_name not in _patterns:
-                _patterns[pattern_name] = []
-                for i in current[1:]:
-                    _patterns[pattern_name].append(float(i))
-            else:
-                for i in current[1:]:
-                    _patterns[pattern_name].append(float(i))
+        self._read_curves()
 
-        for pattern_name, pattern_list in _patterns.items():
-            wn.add_pattern(pattern_name, pattern_list)
+        ### PATTERNS
+        self._read_patterns()
 
         ### JUNCTIONS
-        for lnum, line in self.sections['[JUNCTIONS]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[JUNCTIONS]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            if len(current) == 3:
-                wn.add_junction(current[0],
-                                to_si(self.flow_units, float(current[2]), HydParam.Demand),
-                                None,
-                                to_si(self.flow_units, float(current[1]), HydParam.Elevation))
-            else:
-                wn.add_junction(current[0],
-                                to_si(self.flow_units, float(current[2]), HydParam.Demand),
-                                current[3],
-                                to_si(self.flow_units, float(current[1]), HydParam.Elevation))
+        self._read_junctions()
 
         ### RESERVOIRS
-        for lnum, line in self.sections['[RESERVOIRS]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[RESERVOIRS]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            if len(current) == 2:
-                wn.add_reservoir(current[0],
-                                 to_si(self.flow_units, float(current[1]), HydParam.HydraulicHead))
-            else:
-                wn.add_reservoir(current[0],
-                                 to_si(self.flow_units, float(current[1]), HydParam.HydraulicHead),
-                                 current[2])
-                logger.warn('%(fname)s:%(lnum)-6d %(sec)13s reservoir head patterns only supported in EpanetSimulator', edata)
+        self._read_reservoirs()
 
         ### TANKS
-        for lnum, line in self.sections['[TANKS]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[TANKS]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            if len(current) == 8:  # Volume curve provided
-                if float(current[6]) != 0:
-                    logger.warn('%(fname)s:%(lnum)-6d %(sec)13s minimum tank volume is only available using EpanetSimulator; others use minimum level and cylindrical tanks.', edata)
-                logger.warn('<%(fname)s:%(sec)s:%(line)d> tank volume curves only supported in EpanetSimulator', edata)
-                curve_name = current[7]
-                curve_points = []
-                for point in self.curves[curve_name]:
-                    x = to_si(self.flow_units, point[0], HydParam.Length)
-                    y = to_si(self.flow_units, point[1], HydParam.Volume)
-                    curve_points.append((x, y))
-                wn.add_curve(curve_name, 'VOLUME', curve_points)
-                curve = wn.get_curve(curve_name)
-                wn.add_tank(current[0],
-                            to_si(self.flow_units, float(current[1]), HydParam.Elevation),
-                            to_si(self.flow_units, float(current[2]), HydParam.Length),
-                            to_si(self.flow_units, float(current[3]), HydParam.Length),
-                            to_si(self.flow_units, float(current[4]), HydParam.Length),
-                            to_si(self.flow_units, float(current[5]), HydParam.TankDiameter),
-                            to_si(self.flow_units, float(current[6]), HydParam.Volume),
-                            curve)
-            elif len(current) == 7:  # No volume curve provided
-                if float(current[6]) != 0:
-                    logger.warn('%(fname)s:%(lnum)-6d %(sec)13s minimum tank volume is only available using EpanetSimulator; others use minimum level and cylindrical tanks.', edata)
-                wn.add_tank(current[0],
-                            to_si(self.flow_units, float(current[1]), HydParam.Elevation),
-                            to_si(self.flow_units, float(current[2]), HydParam.Length),
-                            to_si(self.flow_units, float(current[3]), HydParam.Length),
-                            to_si(self.flow_units, float(current[4]), HydParam.Length),
-                            to_si(self.flow_units, float(current[5]), HydParam.TankDiameter),
-                            to_si(self.flow_units, float(current[6]), HydParam.Volume))
-            else:
-                edata['line'] = line
-                logger.error('%(fname)s:%(lnum)-6d %(sec)13s tank entry format not recognized: "%(line)s"', edata)
-                raise RuntimeError('Tank entry format not recognized.')
+        self._read_tanks()
 
         ### PIPES
-        for lnum, line in self.sections['[PIPES]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[PIPES]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            if float(current[6]) != 0:
-                logger.warn('%(fname)s:%(lnum)-6d %(sec)13s non-zero minor losses only supported in EpanetSimulator', edata)
-            if current[7].upper() == 'CV':
-                wn.add_pipe(current[0],
-                            current[1],
-                            current[2],
-                            to_si(self.flow_units, float(current[3]), HydParam.Length),
-                            to_si(self.flow_units, float(current[4]), HydParam.PipeDiameter),
-                            float(current[5]),
-                            float(current[6]),
-                            LinkStatus.Open,
-                            True)
-            else:
-                wn.add_pipe(current[0],
-                            current[1],
-                            current[2],
-                            to_si(self.flow_units, float(current[3]), HydParam.Length),
-                            to_si(self.flow_units, float(current[4]), HydParam.PipeDiameter),
-                            float(current[5]),
-                            float(current[6]),
-                            LinkStatus[current[7].upper()])
+        self._read_pipes()
 
         ### PUMPS
-        for lnum, line in self.sections['[PUMPS]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[PUMPS]'
-            edata['line'] = line
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            # Only add head curves for pumps
-            if current[3].upper() == 'SPEED':
-                wn.add_pump(current[0],
-                            current[1],
-                            current[2],
-                            current[3].upper(),
-                            float(current[4]))
-            elif current[3].upper() == 'PATTERN':
-                wn.add_pump(current[0],
-                            current[1],
-                            current[2],
-                            current[3].upper(),
-                            current[4])
-            elif current[3].upper() == 'HEAD':
-                curve_name = current[4]
-                curve_points = []
-                for point in self.curves[curve_name]:
-                    x = to_si(self.flow_units, point[0], HydParam.Flow)
-                    y = to_si(self.flow_units, point[1], HydParam.HydraulicHead)
-                    curve_points.append((x, y))
-                wn.add_curve(curve_name, 'HEAD', curve_points)
-                curve = wn.get_curve(curve_name)
-                wn.add_pump(current[0],
-                            current[1],
-                            current[2],
-                            'HEAD',
-                            curve)
-            elif current[3].upper() == 'POWER':
-                wn.add_pump(current[0],
-                            current[1],
-                            current[2],
-                            current[3].upper(),
-                            to_si(self.flow_units, float(current[4]), HydParam.Power))
-            else:
-                logger.error('%(fname)s:%(lnum)-6d %(sec)13s pump keyword not recognized: "%(line)s"', edata)
-                raise RuntimeError('Pump keyword in inp file not recognized.')
+        self._read_pumps()
 
         ### VALVES
-        for lnum, line in self.sections['[VALVES]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[VALVES]'
-            edata['line'] = line
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            if len(current) < 7:
-                current[6] = 0
-            valve_type = current[4].upper()
-            if valve_type in ['PRV', 'PSV', 'PBV']:
-                valve_set = to_si(self.flow_units, float(current[5]), HydParam.Pressure)
-            elif valve_type == 'FCV':
-                valve_set = to_si(self.flow_units, float(current[5]), HydParam.Flow)
-            elif valve_type == 'TCV':
-                valve_set = float(current[5])
-            elif valve_type == 'GPV':
-                curve_name = current[5]
-                curve_points = []
-                for point in self.curves[curve_name]:
-                    x = to_si(self.flow_units, point[0], HydParam.Flow)
-                    y = to_si(self.flow_units, point[1], HydParam.HeadLoss)
-                    curve_points.append((x, y))
-                wn.add_curve(curve_name, 'HEADLOSS', curve_points)
-                valve_set = curve_name
-            else:
-                logger.error('%(fname)s:%(lnum)-6d %(sec)13s valve type unrecognized: %(line)s', edata)
-                raise RuntimeError('VALVE type "%s" unrecognized' % valve_type)
-            wn.add_valve(current[0],
-                         current[1],
-                         current[2],
-                         to_si(self.flow_units, float(current[3]), HydParam.PipeDiameter),
-                         current[4].upper(),
-                         float(current[6]),
-                         valve_set)
+        self._read_valves()
 
         ### COORDINATES
-        for lnum, line in self.sections['[COORDINATES]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[COORDINATES]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            assert(len(current) == 3), ("Error reading node coordinates. Check format.")
-            wn.set_node_coordinates(current[0], (float(current[1]), float(current[2])))
+        self._read_coordinates()
 
         ### SOURCES
-        source_num = 0
-        for lnum, line in self.sections['[SOURCES]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[SOURCES]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            assert(len(current) >= 3), ("Error reading sources. Check format.")
-            source_num = source_num + 1
-            if current[0].upper() == 'MASS':
-                strength = to_si(self.flow_units, float(current[2]), QualParam.SourceMassInject, self.mass_units)
-            else:
-                strength = to_si(self.flow_units, float(current[2]), QualParam.Concentration, self.mass_units)
-            if len(current) == 3:
-                wn.add_source('INP'+str(source_num), current[0], current[1], strength, None)
-            else:
-                wn.add_source('INP'+str(source_num), current[0], current[1], strength,  current[3])
+        self._read_sources()
 
         ### TIMES
-        time_format = ['am', 'AM', 'pm', 'PM']
-        for lnum, line in self.sections['[TIMES]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[TIMES]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            if (current[0].upper() == 'DURATION'):
-                opts.duration = _str_time_to_sec(current[1])
-            elif (current[0].upper() == 'HYDRAULIC'):
-                opts.hydraulic_timestep = _str_time_to_sec(current[2])
-            elif (current[0].upper() == 'QUALITY'):
-                opts.quality_timestep = _str_time_to_sec(current[2])
-            elif (current[1].upper() == 'CLOCKTIME'):
-                [time, time_format] = [current[2], current[3].upper()]
-                opts.start_clocktime = _clock_time_to_sec(time, time_format)
-            elif (current[0].upper() == 'STATISTIC'):
-                opts.statistic = current[1].upper()
-            else:
-                # Other time options: RULE TIMESTEP, PATTERN TIMESTEP, REPORT TIMESTEP, REPORT START
-                key_string = current[0] + '_' + current[1]
-                setattr(opts, key_string.lower(), _str_time_to_sec(current[2]))
+        self._read_times()
 
         ### STATUS
-        for lnum, line in self.sections['[STATUS]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[STATUS]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            assert(len(current) == 2), ("Error reading [STATUS] block, Check format.")
-            link = wn.get_link(current[0])
-            if (current[1].upper() == 'OPEN' or
-                    current[1].upper() == 'CLOSED' or
-                    current[1].upper() == 'ACTIVE'):
-                new_status = LinkStatus[current[1].upper()].value
-                link.status = new_status
-                link._base_status = new_status
-            else:
-                if isinstance(link, wntr.network.Valve):
-                    if link.valve_type != 'PRV':
-                        continue
-                    else:
-                        setting = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
-                        link.setting = setting
-                        link._base_setting = setting
+        self._read_status()
 
         ### CONTROLS
-        for lnum, line in self.sections['[CONTROLS]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[CONTROLS]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            current_copy = current
-            current = [i.upper() for i in current]
-            current[1] = current_copy[1]  # don't capitalize the link name
-
-            # Create the control action object
-            link_name = current[1]
-            try:
-                tmp = float(current[2])
-                current[2] = tmp
-            except:
-                pass
-            # print (link_name in wn._links.keys())
-            link = wn.get_link(link_name)
-            if isinstance(current[2], float) or isinstance(current[2], int):
-                if isinstance(link, wntr.network.Pump):
-                    ### TODO: WHAT IS GOING ON WITH THE CONTROL OBJECT HERE
-                    continue
-                elif isinstance(link, wntr.network.Valve):
-                    if link.valve_type != 'PRV':
-                        continue
-                    else:
-                        status = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
-                        action_obj = wntr.network.ControlAction(link, 'setting', status)
-            else:
-                status = LinkStatus[current[2].upper()].value
-                action_obj = wntr.network.ControlAction(link, 'status', status)
-
-            # Create the control object
-            if 'TIME' not in current and 'CLOCKTIME' not in current:
-                current[5] = current_copy[5]
-                if 'IF' in current:
-                    node_name = current[5]
-                    node = wn.get_node(node_name)
-                    if current[6] == 'ABOVE':
-                        oper = np.greater
-                    elif current[6] == 'BELOW':
-                        oper = np.less
-                    else:
-                        raise RuntimeError("The following control is not recognized: " + line)
-                    # OKAY - we are adding in the elevation. This is A PROBLEM
-                    # IN THE INP WRITER. Now that we know, we can fix it, but
-                    # if this changes, it will affect multiple pieces, just an
-                    # FYI.
-                    if isinstance(node, wntr.network.Junction):
-                        threshold = to_si(self.flow_units,
-                                          float(current[7]), HydParam.Pressure) + node.elevation
-                    elif isinstance(node, wntr.network.Tank):
-                        threshold = to_si(self.flow_units,
-                                          float(current[7]), HydParam.Length) + node.elevation
-                    control_obj = wntr.network.ConditionalControl((node, 'head'), oper, threshold, action_obj)
-                else:
-                    raise RuntimeError("The following control is not recognized: " + line)
-                control_name = ''
-                for i in range(len(current)-1):
-                    control_name = control_name + current[i]
-                control_name = control_name + str(round(threshold, 2))
-            else:
-                if len(current) == 6:  # at time
-                    if ':' in current[5]:
-                        run_at_time = int(_str_time_to_sec(current[5]))
-                    else:
-                        run_at_time = int(float(current[5])*3600)
-                    control_obj = wntr.network.TimeControl(wn, run_at_time, 'SIM_TIME', False, action_obj)
-                    control_name = ''
-                    for i in range(len(current)-1):
-                        control_name = control_name + current[i]
-                    control_name = control_name + str(run_at_time)
-                elif len(current) == 7:  # at clocktime
-                    run_at_time = int(_clock_time_to_sec(current[5], current[6]))
-                    control_obj = wntr.network.TimeControl(wn, run_at_time, 'SHIFTED_TIME', True, action_obj)
-            wn.add_control(control_name, control_obj)
+        self._read_controls()
 
         ### RULES
-        if len(self.sections['[RULES]']) > 0:
-            rules = []
-            rule = None
-            in_if = False
-            in_then = False
-            in_else = False
-            for lnum, line in self.sections['[RULES]']:
-                line = line.split(';')[0]
-                words = line.split()
-                if words == []:
-                    continue
-                if len(words) == 0:
-                    continue
-                if words[0].upper() == 'RULE':
-                    if rule is not None:
-                        rules.append(rule)
-                    rule = _EpanetRule(words[1], self.flow_units, self.mass_units)
-                    in_if = False
-                    in_then = False
-                    in_else = False
-                elif words[0].upper() == 'IF':
-                    in_if = True
-                    in_then = False
-                    in_else = False
-                    rule.add_if(line)
-                elif words[0].upper() == 'THEN':
-                    in_if = False
-                    in_then = True
-                    in_else = False
-                    rule.add_then(line)
-                elif words[0].upper() == 'ELSE':
-                    in_if = False
-                    in_then = False
-                    in_else = True
-                    rule.add_else(line)
-                elif words[0].upper() == 'PRIORITY':
-                    in_if = False
-                    in_then = False
-                    in_else = False
-                    rule.set_priority(words[1])
-                elif in_if:
-                    rule.add_if(line)
-                elif in_then:
-                    rule.add_then(line)
-                elif in_else:
-                    rule.add_else(line)
-                else:
-                    continue
-            if rule is not None:
-                rules.append(rule)
-            for rule in rules:
-                ctrl = rule.generate_control(wn)
-                wn.add_control(ctrl.name, ctrl)
-                logger.debug('Added %s', str(ctrl))
-            # wn._en_rules = '\n'.join(self.sections['[RULES]'])
-            #logger.warning('RULES are reapplied directly to an Epanet INP file on write; otherwise unsupported.')
+        self._read_rules()
 
         ### REACTIONS
-        BulkReactionCoeff = QualParam.BulkReactionCoeff
-        WallReactionCoeff = QualParam.WallReactionCoeff
-        for lnum, line in self.sections['[REACTIONS]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[REACTIONS]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            assert len(current) == 3, ('INP file option in [REACTIONS] block '
-                                       'not recognized: ' + line)
-            key1 = current[0].upper()
-            key2 = current[1].upper()
-            val3 = float(current[2])
-            if key1 == 'ORDER':
-                if key2 == 'BULK':
-                    opts.bulk_rxn_order = int(float(current[2]))
-                elif key2 == 'WALL':
-                    opts.wall_rxn_order = int(float(current[2]))
-                elif key2 == 'TANK':
-                    opts.tank_rxn_order = int(float(current[2]))
-            elif key1 == 'GLOBAL':
-                if key2 == 'BULK':
-                    opts.bulk_rxn_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
-                                                mass_units=self.mass_units,
-                                                reaction_order=opts.bulk_rxn_order)
-                elif key2 == 'WALL':
-                    opts.wall_rxn_coeff = to_si(self.flow_units, val3, WallReactionCoeff,
-                                                mass_units=self.mass_units,
-                                                reaction_order=opts.wall_rxn_order)
-            elif key1 == 'BULK':
-                pipe = wn.get_link(current[1])
-                pipe.bulk_rxn_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
-                                            mass_units=self.mass_units,
-                                            reaction_order=opts.bulk_rxn_order)
-            elif key1 == 'WALL':
-                pipe = wn.get_link(current[1])
-                pipe.wall_rxn_coeff = to_si(self.flow_units, val3, WallReactionCoeff,
-                                            mass_units=self.mass_units,
-                                            reaction_order=opts.wall_rxn_order)
-            elif key1 == 'TANK':
-                tank = wn.get_node(current[1])
-                tank.bulk_rxn_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
-                                            mass_units=self.mass_units,
-                                            reaction_order=opts.bulk_rxn_order)
-            elif key1 == 'LIMITING':
-                opts.limiting_potential = float(current[2])
-            elif key1 == 'ROUGHNESS':
-                opts.roughness_correlation = float(current[2])
-            else:
-                raise RuntimeError('Reaction option not recognized: %s'%key1)
+        self._read_reactions()
 
         ### TITLE
-        if len(self.sections['[TITLE]']) > 0:
-            pass
-            # wn._en_title = '\n'.join(self.sections['[TITLE]'])
-        else:
-            pass
+        self._read_title()
 
         ### ENERGY
-        for lnum, line in self.sections['[ENERGY]']:
-            edata['lnum'] = lnum
-            edata['sec'] = '[ENERGY]'
-            edata['line'] = line
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            # Only add head curves for pumps
-            if current[0].upper() == 'GLOBAL':
-                if current[1].upper() == 'PRICE':
-                    wn._energy.global_price = float(current[2])
-                elif current[1].upper() == 'PATTERN':
-                    wn._energy.global_pattern = current[2]
-                elif current[1].upper() in ['EFFIC', 'EFFICIENCY']:
-                    wn._energy.global_efficiency = float(current[2])
-                else:
-                    logger.warning('Unknown entry in ENERGY section: %s', line)
-            elif current[0].upper() == 'DEMAND':
-                wn._energy.demand_charge = float(current[2])
-            elif current[0].upper() == 'PUMP':
-                pump_name = current[1]
-                pump = wn._pumps[pump_name]
-                if current[2].upper() == 'PRICE':
-                    pump._energy_price = float(current[2])
-                elif current[2].upper() == 'PATTERN':
-                    pump._energy_pat = current[2]
-                elif current[2].upper() in ['EFFIC', 'EFFICIENCY']:
-                    curve_name = current[3]
-                    curve_points = []
-                    for point in self.curves[curve_name]:
-                        x = to_si(self.flow_units, point[0], HydParam.Flow)
-                        y = point[1]
-                        curve_points.append((x, y))
-                    wn.add_curve(curve_name, 'EFFICIENCY', curve_points)
-                    curve = wn.get_curve(curve_name)
-                    pump._efficiency = curve_name
-                else:
-                    logger.warning('Unknown entry in ENERGY section: %s', line)
-            else:
-                logger.warning('Unknown entry in ENERGY section: %s', line)
+        self._read_energy()
 
         ### DEMANDS
-        demand_num = 0
-        for lnum, line in self.sections['[DEMANDS]']: # Private object on the WaterNetweorkModel
-            edata['lnum'] = lnum
-            edata['sec'] = '[DEMANDS]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            demand_num = demand_num + 1
-            if len(current) == 2:
-                wn._add_demand('INP'+str(demand_num), current[0],
-                                to_si(self.flow_units, float(current[1]), HydParam.Demand),
-                                None)
-            else:
-                wn._add_demand('INP'+str(demand_num), current[0],
-                                to_si(self.flow_units, float(current[1]), HydParam.Demand),
-                                current[2])
-        ### QUALITY
-        for lnum, line in self.sections['[QUALITY]']: # Private attribute on junctions
-            edata['lnum'] = lnum
-            edata['sec'] = '[QUALITY]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            node = wn.get_node(current[0])
-            if wn.options.quality == 'CHEMICAL':
-                quality = to_si(self.flow_units, float(current[1]), QualParam.Concentration, mass_units=self.mass_units)
-            elif wn.options.quality == 'AGE':
-                quality = to_si(self.flow_units, float(current[1]), QualParam.WaterAge)
-            else :
-                quality = float(current[1])
-            node.initial_quality = quality
+        self._read_demands()
 
         ### EMITTERS
-        for lnum, line in self.sections['[EMITTERS]']: # Private attribute on junctions
-            edata['lnum'] = lnum
-            edata['sec'] = '[EMITTERS]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            junction = wn.get_node(current[0])
-            junction._emitter_coefficient = to_si(self.flow_units, float(current[1]), HydParam.Flow)
+        self._read_emitters()
 
-        if len(self.sections['[MIXING]']) > 0:
-            pass
-
-        if len(self.sections['[REPORT]']) > 0:
-            pass
-
-        if len(self.sections['[VERTICES]']) > 0:
-            pass
-
-        if len(self.sections['[LABELS]']) > 0:
-            pass
+        self._read_mixing()
+        self._read_report()
+        self._read_vertices()
+        self._read_labels()
 
         ### Parse Backdrop
-        for lnum, line in self.sections['[BACKDROP]']:
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            key = current[0].upper()
-            if key == 'DIMENSIONS' and len(current) > 4:
-                wn._backdrop.dimensions = [current[1], current[2], current[3], current[4]]
-            elif key == 'UNITS' and len(current) > 1:
-                wn._backdrop.units = current[1]
-            elif key == 'FILE' and len(current) > 1:
-                wn._backdrop.filename = current[1]
-            elif key == 'OFFSET' and len(current) > 2:
-                wn._backdrop.offset = [current[1], current[2]]
+        self._read_backdrop()
 
         ### TAGS
-        for lnum, line in self.sections['[TAGS]']: # Private attribute on nodes and links
-            edata['lnum'] = lnum
-            edata['sec'] = '[TAGS]'
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            if current[0] == 'NODE':
-                node = wn.get_node(current[1])
-                node.tag = current[2]
-            elif current[0] == 'LINK':
-                link = wn.get_link(current[1])
-                link.tag = current[2]
-            else:
-                continue
+        self._read_tags()
 
         # Set the _inpfile io data inside the water network, so it is saved somewhere
         wn._inpfile = self
-        return wn
+        return self.wn
 
     def write(self, filename, wn, units=None):
         """Write the current network into an EPANET inp file.
@@ -1497,7 +836,7 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_patterns(self):
-        _patterns = []
+        _patterns = {}
         for lnum, line in self.sections['[PATTERNS]']:
             line = line.split(';')[0]
             current = line.split()
