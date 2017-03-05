@@ -920,6 +920,8 @@ class MixType(enum.Enum):
     Mix2 = 1
     FIFO = 2
     LIFO = 3
+    Mixed = 0
+    TwoComp = 1
 
     def __init__(self, val):
         if self.name != self.name.upper():
@@ -947,7 +949,7 @@ class ResultType(enum.Enum):
 
     @property
     def is_node(self):
-        if self.value < 5:
+        if abs(self.value) < 5:
             return True
         return False
 

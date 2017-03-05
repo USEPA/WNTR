@@ -84,6 +84,8 @@ class WaterNetworkModel(object):
 
         self._backdrop = _Backdrop()
         self._energy = _Energy()
+        self._reportopts = _Report()
+        self._labels = None
 
         self._inpfile = None
         if inp_file_name:
@@ -559,13 +561,13 @@ class WaterNetworkModel(object):
         source = Source(name, node_name, source_type, quality, pattern_name)
         self._sources[name] = source
         self._num_sources += 1
-        
+
     def _add_demand(self, name, junction_name, base_demand=0.0, demand_pattern_name=None):
 
         demands = _Demands(name, junction_name, base_demand, demand_pattern_name)
         self._demands[name] = demands
         self._num_demands += 1
-        
+
     def add_control(self, name, control_object):
         """
         Add a control to the water network model.
@@ -2172,6 +2174,7 @@ class Link(object):
         self.prev_flow = None
         self.flow = None
         self.tag = None
+        self._vertices = []
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2457,6 +2460,8 @@ class Tank(Node):
         self.min_vol = min_vol
         self.vol_curve = vol_curve
         self._leak = False
+        self._mix_model = None
+        self._mix_frac = None
         self.leak_status = False
         self.leak_area = 0.0
         self.leak_discharge_coeff = 0.0
@@ -3081,3 +3086,45 @@ class _Demands(object):
            self.demand_pattern_name == other.demand_pattern_name:
             return True
         return False
+
+class _Report(object):
+    def __init__(self):
+        self.pagesize = 0
+        self.file = None
+        self.status = 'NO'
+        self.summary = 'YES'
+        self.energy = 'NO'
+        self.nodes = False
+        self.links = False
+        self.rpt_params = { # param name: [Default, Setting]
+                           'elevation': [False, False],
+                           'demand': [True, True],
+                           'head': [True, True],
+                           'pressure': [True, True],
+                           'quality': [True, True],
+                           'length': [False, False],
+                           'diameter': [False, False],
+                           'flow': [True, True],
+                           'velocity': [True, True],
+                           'headloss': [True, True],
+                           'position': [False, False],
+                           'setting': [False, False],
+                           'reaction': [False, False],
+                           'f-factor': [False, False],
+                           }
+        self.param_opts = { # param name: [Default, Setting]
+                           'elevation': {},
+                           'demand': {},
+                           'head': {},
+                           'pressure': {},
+                           'quality': {},
+                           'length': {},
+                           'diameter': {},
+                           'flow': {},
+                           'velocity': {},
+                           'headloss': {},
+                           'position': {},
+                           'setting': {},
+                           'reaction': {},
+                           'f-factor': {},
+                           }

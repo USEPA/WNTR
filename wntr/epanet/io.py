@@ -7,7 +7,7 @@ from wntr.network import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pum
 import wntr
 import io
 
-from .util import FlowUnits, MassUnits, HydParam, QualParam
+from .util import FlowUnits, MassUnits, HydParam, QualParam, MixType
 from .util import to_si, from_si
 from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition
 from wntr.network.controls import OrCondition, AndCondition, IfThenElseControl, ControlAction
@@ -427,19 +427,7 @@ class InpFile(object):
             self._write_backdrop(f, wn)
             self._write_tags(f, wn)
 
-            unmodified = ['[LABELS]',
-                          '[MIXING]', '[REPORT]', '[VERTICES]']
-
-            for section in unmodified:
-                if len(self.sections[section]) > 0:
-                    logger.debug('Writting data from original epanet file: %s', section)
-                    f.write('{0}\n'.format(section).encode('ascii'))
-                    for lnum, line in self.sections[section]:
-                        f.write('{0}\n'.format(line).encode('ascii'))
-                    f.write('\n'.encode('ascii'))
-
             self._write_end(f, wn)
-
 
     ### Network Components
 
@@ -451,7 +439,7 @@ class InpFile(object):
             if current == []:
                 continue
             lines.append(line)
-        self.wn._title = '\n'.join(lines)
+        self.wn._title = lines
 
     def _write_title(self, f, wn):
         if wn.name is not None:
@@ -1365,12 +1353,49 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_mixing(self):
-        edata = {}
-        wn = self.wn
-        opts = wn.options
+        for lnum, line in self.sections['[MIXING]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            key = current[1].upper()
+            tank_name = current[0]
+            tank = self.wn.get_node(tank_name)
+            if key == 'MIXED':
+                tank._mix_model = MixType.Mix1
+            elif key == '2COMP' and len(current) > 2:
+                tank._mix_model = MixType.Mix2
+                tank._mix_frac = float(current[2])
+            elif key == '2COMP' and len(current) < 3:
+                raise RuntimeError('Mixing model 2COMP requires fraction on tank %s'%tank_name)
+            elif key == 'FIFO':
+                tank._mix_model = MixType.FIFO
+            elif key == 'LIFO':
+                tank._mix_model = MixType.LIFO
 
     def _write_mixing(self, f, wn):
-        pass
+        f.write('[MIXING]\n'.encode('ascii'))
+        f.write('{:20s} {:5s} {}\n'.format(';Tank ID', 'Model', 'Fraction').encode('ascii'))
+        lnames = list(wn._tanks.keys())
+        lnames.sort()
+        for tank_name in lnames:
+            tank = wn._tanks[tank_name]
+            if tank._mix_model is not None:
+                if tank._mix_model in [MixType.Mixed, MixType.Mix1, 0]:
+                    f.write(' {:19s} MIXED\n'.format(tank_name).encode('ascii'))
+                elif tank._mix_model in [MixType.TwoComp, MixType.Mix2, '2comp', '2COMP', 1]:
+                    f.write(' {:19s} 2COMP  {}\n'.format(tank_name, tank._mix_frac).encode('ascii'))
+                elif tank._mix_model in [MixType.FIFO, 2]:
+                    f.write(' {:19s} FIFO\n'.format(tank_name).encode('ascii'))
+                elif tank._mix_model in [MixType.LIFO, 3]:
+                    f.write(' {:19s} LIFO\n'.format(tank_name).encode('ascii'))
+                elif isinstance(tank._mix_model, str) and tank._mix_frac is not None:
+                    f.write(' {:19s} {} {}\n'.format(tank_name, tank._mix_model, tank._mix_frac).encode('ascii'))
+                elif isinstance(tank._mix_model, str):
+                    f.write(' {:19s} {}\n'.format(tank_name, tank._mix_model).encode('ascii'))
+                else:
+                    logger.warning('Unknown mixing model: %s', tank._mix_model)
+        f.write('\n'.encode('ascii'))
 
     ### Options and Reporting
 
@@ -1551,18 +1576,109 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_report(self):
-        edata = {}
-        wn = self.wn
-        opts = wn.options
+        report = wntr.network.model._Report()
+        self.wn._reportopts = report
+        for lnum, line in self.sections['[REPORT]']:
+            line = line.split(';')[0]
+            current = line.split()
+            if current == []:
+                continue
+            if current[0].upper() in ['PAGE', 'PAGESIZE']:
+                report.pagesize = int(current[1])
+            elif current[0].upper() in ['FILE']:
+                report.file = current[1]
+            elif current[0].upper() in ['STATUS']:
+                report.status = current[1].upper()
+            elif current[0].upper() in ['SUMMARY']:
+                report.summary = current[1].upper()
+            elif current[0].upper() in ['ENERGY']:
+                report.energy = current[1].upper()
+            elif current[0].upper() in ['NODES']:
+                if current[1].upper() in ['NONE']:
+                    report.nodes = False
+                elif current[1].upper() in ['ALL']:
+                    report.nodes = True
+                elif not isinstance(report.nodes, list):
+                    report.nodes = []
+                    for ct in xrange(len(current)-2):
+                        i = ct + 2
+                        report.nodes.append(current[i])
+                else:
+                    for ct in xrange(len(current)-2):
+                        i = ct + 2
+                        report.nodes.append(current[i])
+            elif current[0].upper() in ['LINKS']:
+                if current[1].upper() in ['NONE']:
+                    report.links = False
+                elif current[1].upper() in ['ALL']:
+                    report.links = True
+                elif not isinstance(report.links, list):
+                    report.links = []
+                    for ct in xrange(len(current)-2):
+                        i = ct + 2
+                        report.links.append(current[i])
+                else:
+                    for ct in xrange(len(current)-2):
+                        i = ct + 2
+                        report.links.append(current[i])
+            else:
+                if current[0].lower() not in report.rpt_params.keys():
+                    logger.warning('Unknown report parameter: %s', current[0])
+                    continue
+                elif current[1].upper() in ['YES']:
+                    report.rpt_params[current[0].lower()][1] = True
+                elif current[1].upper() in ['NO']:
+                    report.rpt_params[current[0].lower()][1] = False
+                else:
+                    report.param_opts[current[0].lower()][current[1].upper()] = float(current[2])
 
     def _write_report(self, f, wn):
         f.write('[REPORT]\n'.encode('ascii'))
-        if len(self.sections['[REPORT]']) > 0:
-            for lnum, line in self.sections['[REPORT]']:
-                f.write('{}\n'.format(line).encode('ascii'))
-        else:
-            f.write('Status Yes\n'.encode('ascii'))
-            f.write('Summary yes\n'.encode('ascii'))
+        if hasattr(wn, '_reportopts') and wn._reportopts is not None:
+            report = wn._reportopts
+            if report.pagesize != 0:
+                f.write('PAGESIZE   {}\n'.format(report.pagesize).encode('ascii'))
+            if report.file is not None:
+                f.write('FILE       {}\n'.format(report.file).encode('ascii'))
+            if report.status.upper() != 'NO':
+                f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
+            if report.summary.upper() != 'YES':
+                f.write('SUMMARY    {}\n'.format(report.summary).encode('ascii'))
+            if report.energy.upper() != 'NO':
+                f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
+            if report.nodes is True:
+                f.write('NODES      ALL\n'.encode('ascii'))
+            elif isinstance(report.nodes, str):
+                f.write('NODES      {}\n'.format(report.nodes).encode('ascii'))
+            elif isinstance(report.nodes, list):
+                for ct, node in enumerate(report.nodes):
+                    if ct == 0:
+                        f.write('NODES      {}'.format(node).encode('ascii'))
+                    elif ct % 10 == 0:
+                        f.write('\nNODES      {}'.format(node).encode('ascii'))
+                    else:
+                        f.write(' {}'.format(node).encode('ascii'))
+                f.write('\n'.encode('ascii'))
+            if report.links is True:
+                f.write('LINKS      ALL\n'.encode('ascii'))
+            elif isinstance(report.links, str):
+                f.write('LINKS      {}\n'.format(report.links).encode('ascii'))
+            elif isinstance(report.links, list):
+                for ct, link in enumerate(report.links):
+                    if ct == 0:
+                        f.write('LINKS      {}'.format(link).encode('ascii'))
+                    elif ct % 10 == 0:
+                        f.write('\nLINKS      {}'.format(link).encode('ascii'))
+                    else:
+                        f.write(' {}'.format(link).encode('ascii'))
+                f.write('\n'.encode('ascii'))
+            for key, item in report.rpt_params.items():
+                if item[1] != item[0]:
+                    f.write('{:10s} {}\n'.format(key.upper(), item[1]).encode('ascii'))
+            for key, item in report.param_opts.items():
+                for opt, val in item.items():
+                    f.write('{:10s} {:10s} {}\n'.format(key.upper(), opt.upper(), val).encode('ascii'))
+
         f.write('\n'.encode('ascii'))
 
     ### Network Map/Tags
@@ -1587,21 +1703,47 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_vertices(self):
-        edata = {}
-        wn = self.wn
-        opts = wn.options
+        for lnum, line in self.sections['[VERTICES]']:
+            line = line.split(';')[0].strip()
+            current = line.split()
+            if current == []:
+                continue
+            if len(current) != 3:
+                logger.warning('Invalid VERTICES line: %s', line)
+                continue
+            link_name = current[0]
+            link = self.wn.get_link(link_name)
+            link._vertices.append((float(current[1]), float(current[2])))
 
     def _write_vertices(self, f, wn):
-        pass
+        f.write('[VERTICES]\n'.encode('ascii'))
+        entry = '{:10s} {:10g} {:10g}\n'
+        label = '{:10s} {:10s} {:10s}\n'
+        f.write(label.format(';Link', 'X-Coord', 'Y-Coord').encode('ascii'))
+        lnames = list(wn._pipes.keys())
+        lnames.sort()
+        for pipe_name in lnames:
+            pipe = wn._pipes[pipe_name]
+            for vert in pipe._vertices:
+                f.write(entry.format(pipe_name, vert[0], vert[1]).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
     def _read_labels(self):
-        edata = {}
-        wn = self.wn
-        opts = wn.options
-
+        labels = []
+        for lnum, line in self.sections['[LABELS]']:
+            line = line.split(';')[0].strip()
+            current = line.split()
+            if current == []:
+                continue
+            labels.append(line)
+        self.wn._labels = labels
 
     def _write_labels(self, f, wn):
-        pass
+        f.write('[LABELS]\n'.encode('ascii'))
+        if wn._labels is not None:
+            for label in wn._labels:
+                f.write(' {}\n'.format(label).encode('ascii'))
+        f.write('\n'.encode('ascii'))
 
     def _read_backdrop(self):
         for lnum, line in self.sections['[BACKDROP]']:
