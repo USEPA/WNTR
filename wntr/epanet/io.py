@@ -2323,7 +2323,7 @@ class InpFile(object):
     ### End of File
 
     def _write_end(self, f, wn):
-        f.write('[END]\n')
+        f.write('[END]\n'.encode('ascii'))
 
 
 class _EpanetRule(object):
