@@ -4,8 +4,6 @@ Water quality simulation
 ==================================
 
 Water quality simulation can only be run using the **EpanetSimulator**. 
-The example **water_quality_simulation.py** can be used to run water quality simulations and plot results.
-
 As listed in the :ref:`software_framework` section,  this means that the hydraulic simulation must use demand driven simulation.
 Note that the WNTRSimulator can be used to compute demands under pressure-driven conditions and those 
 demands can be used in the EPANETSimulator.
@@ -18,7 +16,9 @@ using the EpanetSimualtor is run using the following code.
 
 .. literalinclude:: ../examples/water_quality_simulation.py
    :lines: 7, 14
-   
+
+The example **water_quality_simulation.py** can be used to run water quality simulations and plot results.
+
 .. _wq_options:
 
 Options
