@@ -81,7 +81,12 @@ class WaterNetworkModel(object):
 
         self._Htol = 0.00015  # Head tolerance in meters.
         self._Qtol = 2.8e-5  # Flow tolerance in m^3/s.
-        
+
+        self._backdrop = _Backdrop()
+        self._energy = _Energy()
+        self._reportopts = _Report()
+        self._labels = None
+
         self._inpfile = None
         if inp_file_name:
             self.read_inpfile(inp_file_name)
@@ -387,7 +392,8 @@ class WaterNetworkModel(object):
 
         return cv_controls
 
-    def add_pump(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0):
+    def add_pump(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0,
+                 speed=1.0, pattern=None):
         """
         Add a pump to the water network model.
 
@@ -403,8 +409,12 @@ class WaterNetworkModel(object):
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
         info_value : float or Curve object, optional
             Float value of power in KW. Head curve object.
+        speed: float
+            Relative speed setting (1.0 is normal speed)
+        pattern: str
+            ID of pattern for speed setting
         """
-        pump = Pump(name, start_node_name, end_node_name, info_type, info_value)
+        pump = Pump(name, start_node_name, end_node_name, info_type, info_value, speed, pattern)
         self._links[name] = pump
         self._pumps[name] = pump
         self._graph.add_edge(start_node_name, end_node_name, key=name)
@@ -556,13 +566,13 @@ class WaterNetworkModel(object):
         source = Source(name, node_name, source_type, quality, pattern_name)
         self._sources[name] = source
         self._num_sources += 1
-        
+
     def _add_demand(self, name, junction_name, base_demand=0.0, demand_pattern_name=None):
 
         demands = _Demands(name, junction_name, base_demand, demand_pattern_name)
         self._demands[name] = demands
         self._num_demands += 1
-        
+
     def add_control(self, name, control_object):
         """
         Add a control to the water network model.
@@ -786,7 +796,8 @@ class WaterNetworkModel(object):
         except KeyError:
             pass
 
-    def split_pipe_with_junction(self, pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side, junction_name):
+    def split_pipe_with_junction(self, pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side,
+                                 junction_name):
         """
         Split a pipe by adding a junction.
 
@@ -1277,6 +1288,7 @@ class WaterNetworkModel(object):
         """
         return self._num_valves
 
+    @property
     def num_sources(self):
         """
         Return the number of sources in the water network model.
@@ -1578,6 +1590,10 @@ class WaterNetworkModel(object):
         Return the current time of day in seconds from 12 AM
         """
         return self.shifted_time % (24*3600)
+
+    @property
+    def clock_day(self):
+        return int(self.shifted_time / 86400)
 
     def reset_initial_values(self):
         """
@@ -1928,7 +1944,8 @@ class WaterNetworkOptions(object):
 
         self.roughness_correlation = None
         "Makes all default pipe wall reaction coefficients related to pipe roughness"
-        
+
+
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -1971,7 +1988,7 @@ class WaterNetworkOptions(object):
            abs(self.roughness_correlation - other.roughness_correlation)<1e-10:
                return True
         return False
-        
+
 class NodeType(enum.IntEnum):
     """
     An enum class for types of nodes.
@@ -2164,6 +2181,7 @@ class Link(object):
         self.prev_flow = None
         self.flow = None
         self.tag = None
+        self._vertices = []
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2253,7 +2271,7 @@ class Junction(Node):
         self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
         self._emitter_coefficient = None
-        
+
     def __repr__(self):
         return "<Junction '{}'>".format(self._name)
 
@@ -2449,12 +2467,18 @@ class Tank(Node):
         self.min_vol = min_vol
         self.vol_curve = vol_curve
         self._leak = False
+        self._mix_model = None
+        self._mix_frac = None
         self.leak_status = False
         self.leak_area = 0.0
         self.leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'tank'+self._name+'start_leak_control'
         self._leak_end_control_name = 'tank'+self._name+'end_leak_control'
         self.bulk_rxn_coeff = None
+
+    @property
+    def level(self):
+        return self.head - self.elevation
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2732,15 +2756,24 @@ class Pump(Link):
         Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
     info_value : float or curve type, optional
         Where power is a fixed value in KW, while a head curve is a Curve object.
+    speed: float
+        Relative speed setting (1.0 is normal speed)
+    pattern: str
+        ID of pattern for speed setting
     """
 
-    def __init__(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0):
+    def __init__(self, name, start_node_name, end_node_name, info_type='POWER',info_value=50.0,
+                 speed=1.0, pattern=None):
 
         super(Pump, self).__init__(name, start_node_name, end_node_name)
         self._cv_status = LinkStatus.opened
         self.prev_speed = None
-        self.speed = 1.0
+        self.speed = speed
+        self.pattern = pattern
         self.curve = None
+        self._efficiency = None
+        self._energy_price = None
+        self._energy_pat = None
         self.power = None
         self._power_outage = False
         self._prev_power_outage = False
@@ -2944,17 +2977,19 @@ class Curve(object):
         self.num_points = len(points)
 
     def __eq__(self, other):
-        if not type(self) == type(other):
+        if type(self) != type(other):
             return False
-        if self.name == other.name and \
-           self.curve_type == other.curve_type and \
-           self.num_points == other.num_points:
-            for point1, point2 in zip(self.points, other.points):
-                for value1, value2 in zip(point1, point2):
-                    if not abs(value1 - value2)<1e-8:
-                        return False
-            return True
-        return False
+        if self.name != other.name:
+            return False
+        if self.curve_type != other.curve_type:
+            return False
+        if self.num_points != other.num_points:
+            return False
+        for point1, point2 in zip(self.points, other.points):
+            for value1, value2 in zip(point1, point2):
+                if abs(value1 - value2) > 1e-8:
+                    return False
+        return True
 
     def __repr__(self):
         return '<Curve: {}, curve_type={}, points={}>'.format(repr(self.name), repr(self.curve_type), repr(self.points))
@@ -3009,14 +3044,50 @@ class Source(object):
     def __repr__(self):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
         return fmt.format(self.name, self.node_name, self.source_type, self.quality, repr(self.pattern_name))
-        
+
+class _Backdrop(object):
+    """An epanet backdrop object."""
+    def __init__(self, filename=None, dim=None, units=None, offset=None):
+        self.dimensions = dim
+        self.units = units
+        self.filename = filename
+        self.offset = offset
+
+    def __str__(self):
+        text = ""
+        if self.dimensions is not None:
+            text += "DIMENSIONS {} {} {} {}\n".format(self.dimensions[0],
+                                                      self.dimensions[1],
+                                                      self.dimensions[2],
+                                                      self.dimensions[3])
+        if self.units is not None:
+            text += "UNITS {}\n".format(self.units)
+        if self.filename is not None:
+            text += "FILE {}\n".format(self.filename)
+        if self.offset is not None:
+            text += "OFFSET {} {}\n".format(self.offset[0], self.offset[1])
+        return text
+
+
+class _Energy(object):
+    """An epanet energy definitions object."""
+    def __init__(self):
+        self.global_price = None
+        """Global average cost per kW-hour (default 0)"""
+        self.global_pattern = None
+        """ID label of time pattern describing how energy price varies with time"""
+        self.global_efficiency = None
+        """Global pump efficiency as percent (default 75%)"""
+        self.demand_charge = None
+        """Added cost per maximum kW usage during the simulation period"""
+
 class _Demands(object):
     def __init__(self, name, junction_name=None, base_demand=None, demand_pattern_name=None):
         self.name = name
         self.junction_name = junction_name
         self.base_demand = base_demand
         self.demand_pattern_name = demand_pattern_name
-    
+
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -3025,4 +3096,45 @@ class _Demands(object):
            self.demand_pattern_name == other.demand_pattern_name:
             return True
         return False
-    
+
+class _Report(object):
+    def __init__(self):
+        self.pagesize = 0
+        self.file = None
+        self.status = 'NO'
+        self.summary = 'YES'
+        self.energy = 'NO'
+        self.nodes = False
+        self.links = False
+        self.rpt_params = { # param name: [Default, Setting]
+                           'elevation': [False, False],
+                           'demand': [True, True],
+                           'head': [True, True],
+                           'pressure': [True, True],
+                           'quality': [True, True],
+                           'length': [False, False],
+                           'diameter': [False, False],
+                           'flow': [True, True],
+                           'velocity': [True, True],
+                           'headloss': [True, True],
+                           'position': [False, False],
+                           'setting': [False, False],
+                           'reaction': [False, False],
+                           'f-factor': [False, False],
+                           }
+        self.param_opts = { # param name: [Default, Setting]
+                           'elevation': {},
+                           'demand': {},
+                           'head': {},
+                           'pressure': {},
+                           'quality': {},
+                           'length': {},
+                           'diameter': {},
+                           'flow': {},
+                           'velocity': {},
+                           'headloss': {},
+                           'position': {},
+                           'setting': {},
+                           'reaction': {},
+                           'f-factor': {},
+                           }

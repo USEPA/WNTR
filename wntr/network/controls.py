@@ -202,6 +202,8 @@ class ControlCondition(object):
         sec -= mm*60
         if hours >= 12:
             pm = 'PM'
+            if hours > 12:
+                hours -= 12
         elif hours == 0:
             pm = 'AM'
             hours = 12
@@ -245,7 +247,7 @@ class SimpleNodeCondition(ControlCondition):
         else:
             obj = str(self._source_obj)
 
-        return '{}:{}_{}_{}'.format(obj, self._source_attr, self._relation.symbol, self._threshold)
+        return '/'.join([obj, self._source_attr, self._relation.symbol, self._threshold])
 
     def __repr__(self):
         return "${}".format(self.name)
@@ -257,7 +259,11 @@ class SimpleNodeCondition(ControlCondition):
             obj = self._source_obj.name
         att = self._source_attr
         rel = self._relation.text
-        return '{} {} {}'.format(obj, rel, self._threshold)
+        if att == 'pressure':
+            uni = 'kPa'
+        else:
+            uni = 'm'
+        return '{} {} {} {} {:.6g} {}'.format(obj, typ, att, rel, self._threshold, uni)
 
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
@@ -314,18 +320,20 @@ class TimeOfDayCondition(ControlCondition):
         self._first_day = first_day
         self._repeat = repeat
         self._backtrack = 0
+        if model is not None and not self._repeat and self._threshold < model._start_clocktime and first_day < 1:
+            self._first_day = 1
 
     @property
     def name(self):
         if not self._repeat:
-            rep = '%Once'
+            rep = '/Once'
         else:
-            rep = '%Daily'
+            rep = '/Daily'
         if self._first_day > 0:
-            start = '#Start@{}day'.format(self._first_day)
+            start = '/FirstDay/{}'.format(self._first_day)
         else:
-            start = ''
-        return 'ClockTime{}{}{}{}'.format(self._relation.symbol,
+            start = '/'
+        return 'ClockTime/{}/{}{}{}'.format(self._relation.text,
                                              self._sec_to_hours_min_sec(self._threshold),
                                              rep, start)
 
@@ -338,15 +346,13 @@ class TimeOfDayCondition(ControlCondition):
         return hash(self.name)
 
     def __str__(self):
+        fmt = 'clock_time {:s} "{}"'.format(self._relation.symbol,
+                                          self._sec_to_clock(self._threshold))
         if not self._repeat:
-            thresh = self._threshold + self._first_day * 86400.
-            if self._model is not None:
-                thresh -= self._model.options.start_clocktime
-            if thresh <= 0:
-                thresh += 86400.
-            return 'TIME {} {}'.format(self._relation.text, thresh)
-        return 'CLOCKTIME {} {}'.format(self._relation.text,
-                                        self._sec_to_clock(self._threshold))
+            fmt = '( ' + ' && clock_day == {} )'.format(self._first_day)
+        elif self._first_day > 0:
+            fmt = '( ' + ' && clock_day >= {} )'.format(self._first_day)
+        return fmt
 
     def evaluate(self):
         cur_time = self._model.shifted_time
@@ -448,8 +454,16 @@ class SimTimeCondition(ControlCondition):
         return hash(self.name)
 
     def __str__(self):
-        return 'TIME {} {}'.format(self._relation.symbol,
-                     self._sec_to_hours_min_sec(self._threshold + self._first_time))
+        fmt = '{} {} sec'.format(self._relation.symbol, self._threshold)
+        if self._repeat is True:
+            fmt = '% 86400.0 ' + fmt
+        elif self._repeat > 0:
+            fmt = '% {:.1f} '.format(int(self._repeat)) + fmt
+        if self._first_time > 0:
+            fmt = '(sim_time - {:d}) '.format(int(self._first_time)) + fmt
+        else:
+            fmt = 'sim_time ' + fmt
+        return fmt
 
     def evaluate(self):
         cur_time = self._model.sim_time
@@ -528,7 +542,7 @@ class ValueCondition(ControlCondition):
         att = self._source_attr
         rel = self._relation.symbol
         val = self._repr_value(att, self._threshold)
-        return '{} {} {} {} {}'.format(typ, obj, att, rel, val)
+        return "{}('{}').{} {} {}".format(typ, obj, att, rel, val)
 
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
@@ -599,12 +613,16 @@ class RelativeCondition(ControlCondition):
             obj = self._source_obj.name
         att = self._source_attr
         rel = self._relation.symbol
+        ttyp = self._threshold_obj.__class__.__name__
         if hasattr(self._threshold_obj, 'name'):
             tobj = self._threshold_obj.name
         else:
             tobj = str(self._threshold_obj)
-        return '{} {} {} {} {} {}'.format(typ, obj, att, rel,
-                                       tobj, self._threshold_attr)
+        tatt = self._threshold_attr
+        fmt = "{}('{}').{} {} {}('{}').{}"
+        return fmt.format(typ, obj, att,
+                          rel,
+                          ttyp, tobj, tatt)
 
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
@@ -635,7 +653,7 @@ class OrCondition(ControlCondition):
         self._condition_2 = cond2
 
     def __str__(self):
-        return str(self._condition_1) + "\n  OR " + str(self._condition_2)
+        return "( " + str(self._condition_1) + " || " + str(self._condition_2) + " )"
 
     def __repr__(self):
         return 'Or({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
@@ -669,7 +687,7 @@ class AndCondition(ControlCondition):
         self._condition_2 = cond2
 
     def __str__(self):
-        return str(self._condition_1) + "\n  AND " + str(self._condition_2)
+        return "( "+ str(self._condition_1) + " && " + str(self._condition_2) + " )"
 
     def __repr__(self):
         return 'And({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
@@ -743,7 +761,7 @@ class ControlAction(BaseControlAction):
         return '<ControlAction: {}, {}, {}>'.format(repr(self._target_obj_ref), repr(self._attribute), repr(self._repr_value()))
 
     def __str__(self):
-        return '{} {} {} IS {}'.format(self._target_obj_ref.__class__.__name__,
+        return "set {}('{}').{} to {}".format(self._target_obj_ref.__class__.__name__,
                                        self._target_obj_ref.name,
                                        self._attribute,
                                        self._repr_value())
@@ -924,25 +942,25 @@ class IfThenElseControl(Control):
         return fmt.format(self._name, repr(self._condition), repr(self._then_actions), repr(self._else_actions), self._priority)
 
     def __str__(self):
-        text = 'RULE {}\n IF {}'.format(self._name, self._condition)
+        text = 'Rule {} := if {}'.format(self._name, self._condition)
         if self._then_actions is not None and len(self._then_actions) > 0:
-            then_text = '\n THEN '
+            then_text = ' then '
             for ct, act in enumerate(self._then_actions):
                 if ct == 0:
                     then_text += str(act)
                 else:
-                    then_text += '\n  AND {}'.format(str(act))
+                    then_text += ' and {}'.format(str(act))
             text += then_text
         if self._else_actions is not None and len(self._else_actions) > 0:
-            else_text = '\n ELSE '
+            else_text = ' else '
             for ct, act in enumerate(self._else_actions):
                 if ct == 0:
                     else_text += str(act)
                 else:
-                    else_text += '\n AND {}'.format(str(act))
+                    else_text += ' and {}'.format(str(act))
             text += else_text
         if self._priority is not None and self._priority >= 0:
-            text += '\n PRIORITY {}'.format(self._priority)
+            text += ' with priority {}'.format(self._priority)
         return text
 
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
@@ -958,16 +976,19 @@ class IfThenElseControl(Control):
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
         """
-        res = (self._condition.evaluate(), self._condition.backtrack)
-        if res[0]:
+        do = self._condition.evaluate()
+        back = self._condition.backtrack
+        if not presolve_flag:
+            back = 0
+        if do:
             self._which = 'then'
-            return res
-        elif self._else_actions is not None:
+            return (True, back)
+        elif not do and self._else_actions is not None and len(self._else_actions) > 0:
             self._which = 'else'
-            return (True, res[1])
+            return (True, back)
         else:
-            self._which = None
             return (False, None)
+        return None
 
     def _RunControlActionImpl(self, wnm, priority):
         """
@@ -995,17 +1016,14 @@ class IfThenElseControl(Control):
                 flags.append(change_flag)
                 tuples.append(change_tuple)
                 origins.append(orig_value)
-            self._which = None
         elif self._which == 'else':
             for control_action in self._else_actions:
                 change_flag, change_tuple, orig_value = control_action.RunControlAction(self.name)
                 flags.append(change_flag)
                 tuples.append(change_tuple)
                 origins.append(orig_value)
-            self._which = None
         else:
             raise RuntimeError('control actions called even though if-then statement was False')
-
         return np.max(flags), tuples, origins
 
 

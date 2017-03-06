@@ -1,6 +1,6 @@
 """
-The wntr.graphics.network module includes methods plot the 
-water network model. 
+The wntr.graphics.network module includes methods plot the
+water network model.
 """
 import networkx as nx
 import pandas as pd
@@ -87,7 +87,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     -----
     For more network draw options, see nx.draw_networkx
     """
-    
+
     if plt_fig is None:
         plt.figure(facecolor='w', edgecolor='k')
 
