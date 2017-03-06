@@ -39,3 +39,16 @@ wntr.graphics.draw_graph(wn, node_attribute=TRACE_at_5hr, node_size=20,
 TRACE_at_node = results.node.loc['quality', :, '208']
 plt.figure()
 TRACE_at_node.plot(title='Trace percent, node 208')
+
+# Run a hydraulic simulation only
+wn.options.quality = 'NONE'
+results = sim.run_sim()
+
+# To run water quality simulation with pressure-driven demands, 
+# reset demands in the water network using demands computed using the 
+# WNTRSimulator.
+sim = wntr.sim.WNTRSimulator(wn)
+results = sim.run_sim()
+wn.reset_demand(results.node['demand'], 'PDD')
+sim = wntr.sim.EpanetSimulator(wn)
+results_withPDdemands = sim.run_sim()

@@ -88,7 +88,7 @@ Current software limitations are noted:
 
 * Water quality simulation is only available using the EPANETSimulator.  
 
-**WNTR reads in and writes all sections of EPANET INP files** (
+**WNTR reads in and writes all sections of EPANET INP files**.  This includes the following sections: 
 [BACKDROP], 
 [CONTROLS], 
 [COORDINATES], 
@@ -114,19 +114,18 @@ Current software limitations are noted:
 [TIMES],
 [TITLE],                                  
 [VALVES],
-[VERTICES]).
+[VERTICES].  
 
 However, **the following model options cannot be modified/created in WNTR**:
 
 * [BACKDROP] section
-* Efficiency and headloss curves in the [CURVES] section
+* Efficiency curves in the [CURVES] section
 * [DEMANDS] section
 * [EMITTERS] section
 * [ENERGY] section
 * [LABELS] section
 * [MIXING] section
 * [REPORT] section
-* [RULES] section
 * [VERTICES] section
 
 While the EpanetSimulator uses all EPANET model options, several model options are not used by the WNTRSimulator.  
@@ -139,7 +138,6 @@ Of the EPANET model options that directly apply to hydraulic simulation, **the f
 * Minor loss coefficient in the [PIPES] section
 * Speed option and multipoint head curves in the [PUMPS] section (3-point head curves are supported)
 * Head pattern option in the [RESERVOIRS] section
-* [RULES] section 
 * Volume curves in the [TANKS] section
 * Rule timestep, pattern start, report start, start clocktime, and statistics in the [TIMES] section
 * PSV, FCV, PBV, TCV, GPV values and minor loss coefficient in the [VALVES] section

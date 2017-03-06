@@ -439,15 +439,15 @@ class InpFile(object):
             if current == []:
                 continue
             lines.append(line)
-        self.wn._title = lines
+        self.wn.title = lines
 
     def _write_title(self, f, wn):
         if wn.name is not None:
             f.write('; Filename: {0}\n'.format(wn.name).encode('ascii'))
             f.write('; WNTR: {}\n; Created: {:%Y-%m-%d %H:%M:%S}\n'.format(wntr.__version__, datetime.datetime.now()).encode('ascii'))
         f.write('[TITLE]\n'.encode('ascii'))
-        if hasattr(wn, '_title'):
-            for line in wn._title:
+        if hasattr(wn, 'title'):
+            for line in wn.title:
                 f.write('{}\n'.format(line).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
