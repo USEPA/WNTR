@@ -23,7 +23,7 @@ run simulations are described in more detail below, followed by a list of softwa
    :meth:`~wntr.network`	Contains methods to define a water network model, network controls, and graph representation of the network.
    :meth:`~wntr.scenario`   Contains methods to define disaster scenarios and fragility/survival curves.
    :meth:`~wntr.sim`		Contains methods to run hydraulic and water quality simulations using the water network model.
-   :meth:`wntr.graphics`    Contains methods to generate graphics.
+   :meth:`~wntr.graphics`    Contains methods to generate graphics.
    :meth:`~wntr.utils`      Contains helper functions.
    =======================  =============================================================================================================================================================================================================================================================================
 
@@ -125,10 +125,8 @@ However, **the following model options cannot be modified/created in WNTR**:
 * [ENERGY] section
 * [LABELS] section
 * [MIXING] section
-* [QUALITY] section
 * [REPORT] section
 * [RULES] section
-* [TAGS] section
 * [VERTICES] section
 
 While the EpanetSimulator uses all EPANET model options, several model options are not used by the WNTRSimulator.  
@@ -136,7 +134,6 @@ Of the EPANET model options that directly apply to hydraulic simulation, **the f
 
 * [DEMANDS] section (base demand and patterns from the [JUNCTIONS] section are used)
 * [EMITTERS] section
-* [MIXING] section
 * D-W and C-M headloss options in the [OPTIONS] section (H-W option is used)
 * Accuracy, unbalanced, demand multiplier, and emitter exponent from the [OPTIONS] section
 * Minor loss coefficient in the [PIPES] section
