@@ -392,7 +392,8 @@ class WaterNetworkModel(object):
 
         return cv_controls
 
-    def add_pump(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0):
+    def add_pump(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0,
+                 speed=1.0, pattern=None):
         """
         Add a pump to the water network model.
 
@@ -408,8 +409,12 @@ class WaterNetworkModel(object):
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
         info_value : float or Curve object, optional
             Float value of power in KW. Head curve object.
+        speed: float
+            Relative speed setting (1.0 is normal speed)
+        pattern: str
+            ID of pattern for speed setting
         """
-        pump = Pump(name, start_node_name, end_node_name, info_type, info_value)
+        pump = Pump(name, start_node_name, end_node_name, info_type, info_value, speed, pattern)
         self._links[name] = pump
         self._pumps[name] = pump
         self._graph.add_edge(start_node_name, end_node_name, key=name)
@@ -791,7 +796,8 @@ class WaterNetworkModel(object):
         except KeyError:
             pass
 
-    def split_pipe_with_junction(self, pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side, junction_name):
+    def split_pipe_with_junction(self, pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side,
+                                 junction_name):
         """
         Split a pipe by adding a junction.
 
@@ -1282,6 +1288,7 @@ class WaterNetworkModel(object):
         """
         return self._num_valves
 
+    @property
     def num_sources(self):
         """
         Return the number of sources in the water network model.
@@ -2749,14 +2756,20 @@ class Pump(Link):
         Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
     info_value : float or curve type, optional
         Where power is a fixed value in KW, while a head curve is a Curve object.
+    speed: float
+        Relative speed setting (1.0 is normal speed)
+    pattern: str
+        ID of pattern for speed setting
     """
 
-    def __init__(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0):
+    def __init__(self, name, start_node_name, end_node_name, info_type='POWER',info_value=50.0,
+                 speed=1.0, pattern=None):
 
         super(Pump, self).__init__(name, start_node_name, end_node_name)
         self._cv_status = LinkStatus.opened
         self.prev_speed = None
-        self.speed = 1.0
+        self.speed = speed
+        self.pattern = pattern
         self.curve = None
         self._efficiency = None
         self._energy_price = None
@@ -2765,17 +2778,12 @@ class Pump(Link):
         self._power_outage = False
         self._prev_power_outage = False
         self._base_power = None
-        self.pattern = None
         self.info_type = info_type.upper()
         if self.info_type == 'HEAD':
             self.curve = info_value
         elif self.info_type == 'POWER':
             self.power = info_value
             self._base_power = info_value
-        elif self.info_type == 'SPEED':
-            self.speed = info_value
-        elif self.info_type == 'PATTERN':
-            self.pattern = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
 
@@ -2969,17 +2977,19 @@ class Curve(object):
         self.num_points = len(points)
 
     def __eq__(self, other):
-        if not type(self) == type(other):
+        if type(self) != type(other):
             return False
-        if self.name == other.name and \
-           self.curve_type == other.curve_type and \
-           self.num_points == other.num_points:
-            for point1, point2 in zip(self.points, other.points):
-                for value1, value2 in zip(point1, point2):
-                    if not abs(value1 - value2)<1e-8:
-                        return False
-            return True
-        return False
+        if self.name != other.name:
+            return False
+        if self.curve_type != other.curve_type:
+            return False
+        if self.num_points != other.num_points:
+            return False
+        for point1, point2 in zip(self.points, other.points):
+            for value1, value2 in zip(point1, point2):
+                if abs(value1 - value2) > 1e-8:
+                    return False
+        return True
 
     def __repr__(self):
         return '<Curve: {}, curve_type={}, points={}>'.format(repr(self.name), repr(self.curve_type), repr(self.points))

@@ -40,7 +40,7 @@ _TANK_LABEL = '{:21s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
 _PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:12.12g} {diam:12.12g} {rough:12.12g} {mloss:12.12g} {status:>20s} {com:>3s}\n'
 _PIPE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
 
-_PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:>3s}\n'
+_PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {speed_keyword:8s} {speed:12.12g} {com:>3s}\n'
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
 _VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:12.12g} {vtype:4s} {set:12.12g} {mloss:12.12g} {com:>3s}\n'
@@ -624,50 +624,56 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_pumps(self):
+        def create_curve(curve_name):
+            curve_points = []
+            for point in self.curves[curve_name]:
+                x = to_si(self.flow_units, point[0], HydParam.Flow)
+                y = to_si(self.flow_units, point[1], HydParam.HydraulicHead)
+                curve_points.append((x,y))
+            self.wn.add_curve(curve_name, 'HEAD', curve_points)
+            curve = self.wn.get_curve(curve_name)
+            return curve
+
         for lnum, line in self.sections['[PUMPS]']:
             line = line.split(';')[0]
             current = line.split()
             if current == []:
                 continue
-            # Only add head curves for pumps
-            if current[3].upper() == 'SPEED':
-                self.wn.add_pump(current[0],
-                            current[1],
-                            current[2],
-                            current[3].upper(),
-                            float(current[4]))
-            elif current[3].upper() == 'PATTERN':
-                self.wn.add_pump(current[0],
-                            current[1],
-                            current[2],
-                            current[3].upper(),
-                            current[4])
-            elif current[3].upper() == 'HEAD':
-                curve_name = current[4]
-                curve_points = []
-                for point in self.curves[curve_name]:
-                    x = to_si(self.flow_units, point[0], HydParam.Flow)
-                    y = to_si(self.flow_units, point[1], HydParam.HydraulicHead)
-                    curve_points.append((x, y))
-                self.wn.add_curve(curve_name, 'HEAD', curve_points)
-                curve = self.wn.get_curve(curve_name)
-                self.wn.add_pump(current[0],
-                            current[1],
-                            current[2],
-                            'HEAD',
-                            curve)
-            elif current[3].upper() == 'POWER':
-                self.wn.add_pump(current[0],
-                            current[1],
-                            current[2],
-                            current[3].upper(),
-                            to_si(self.flow_units, float(current[4]), HydParam.Power))
-            else:
-                raise RuntimeError('Pump keyword in inp file not recognized.')
+
+            pump_type = None
+            value = None
+            speed = None
+            pattern = None
+
+            for i in range(3, len(current), 2):
+                if current[i].upper() == 'HEAD':
+                    assert pump_type is None, 'In [PUMPS] entry, specify either HEAD or POWER once.'
+                    pump_type = 'HEAD'
+                    value = create_curve(current[i+1])
+                elif current[i].upper() == 'POWER':
+                    assert pump_type is None, 'In [PUMPS] entry, specify either HEAD or POWER once.'
+                    pump_type = 'POWER'
+                    value = to_si(self.flow_units, float(current[i+1]), HydParam.Power)
+                elif current[i].upper() == 'SPEED':
+                    assert speed is None, 'In [PUMPS] entry, SPEED may only be specified once.'
+                    speed = float(current[i+1])
+                elif current[i].upper() == 'PATTERN':
+                    assert pattern is None, 'In [PUMPS] entry, PATTERN may only be specified once.'
+                    pattern = current[i+1]
+                else:
+                    raise RuntimeError('Pump keyword in inp file not recognized.')
+
+            if speed is None:
+                speed = 1.0
+
+            if pump_type is None:
+                raise RuntimeError('Either head curve id or pump power must be specified for all pumps.')
+
+            self.wn.add_pump(current[0], current[1], current[2], pump_type, value, speed, pattern)
 
     def _write_pumps(self, f, wn):
         f.write('[PUMPS]\n'.encode('ascii'))
-        f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Parameters').encode('ascii'))
+        f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Properties').encode('ascii'))
         lnames = list(wn._pumps.keys())
         lnames.sort()
         for pump_name in lnames:
@@ -677,6 +683,8 @@ class InpFile(object):
                  'node2': pump.end_node,
                  'ptype': pump.info_type,
                  'params': '',
+                 'speed_keyword': 'SPEED',
+                 'speed': pump.speed,
                  'com': ';'}
             if pump.info_type == 'HEAD':
                 E['params'] = pump.curve.name
@@ -684,7 +692,13 @@ class InpFile(object):
                 E['params'] = str(from_si(self.flow_units, pump.power, HydParam.Power))
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
-            f.write(_PUMP_ENTRY.format(**E).encode('ascii'))
+            tmp_entry = _PUMP_ENTRY
+            if pump.pattern is not None:
+                tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
+                             ' {pattern_keyword:10s} {pattern:20s} {com:>3s}\n')
+                E['pattern_keyword'] = 'PATTERN'
+                E['pattern'] = pump.pattern
+            f.write(tmp_entry.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_valves(self):
@@ -693,8 +707,11 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
-            if len(current) < 7:
-                current[6] = 0
+            if len(current) == 6:
+                current.append(0.0)
+            else:
+                if len(current) != 7:
+                    raise RuntimeError('The [VALVES] section of an INP file must have 6 or 7 entries.')
             valve_type = current[4].upper()
             if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = to_si(self.flow_units, float(current[5]), HydParam.Pressure)
