@@ -1059,15 +1059,6 @@ class TimeControl(Control):
     control_action : An object derived from BaseControlAction
         Examples: ControlAction
         This is the actual change that will occur at the specified time.
-
-    Examples
-    --------
-    >>> #pipe = wn.get_link('pipe8')
-    >>> #action = ControlAction(pipe, 'status', wntr.network.LinkStatus.opened)
-    >>> #control = TimeControl(wn, 3652, 'SIM_TIME', False, action)
-    >>> #wn.add_control('control_name', control)
-
-    In this case, pipe8 will be opened 1 hour and 52 seconds after the start of the simulation.
     """
 
     def __init__(self, wnm, run_at_time, time_flag, daily_flag, control_action):
@@ -1194,17 +1185,6 @@ class ConditionalControl(Control):
     control_action : An object derived from BaseControlAction
         Examples: ControlAction
         This object defines the actual change that will occur when the specified condition is satisfied.
-
-    Examples
-    --------
-    >>> #pipe = wn.get_link('pipe8')
-    >>> #tank = wn.get_node('tank3')
-    >>> #action = ControlAction(pipe, 'status', wntr.network.LinkStatus.closed)
-    >>> #control = ConditionalControl((tank, 'head'), numpy.greater_equal, 13.5, action)
-    >>> #wn.add_control('control_name', control)
-
-    In this case, pipe8 will be closed if the head in tank3 becomes greater than or equal to 13.5 meters.
-
     """
 
     def __init__(self, source, operation, threshold, control_action):
@@ -1377,25 +1357,6 @@ class MultiConditionalControl(Control):
     control_action : An object derived from BaseControlAction
         Examples: ControlAction
         This object defines the actual change that will occur when all specified conditions are satisfied.
-
-    Examples
-    --------
-    >>> #pump = wn.get_link('pump1')
-    >>> #pipe = wn.get_link('pipe8')
-    >>> #tank = wn.get_node('tank3')
-    >>> #junction = wn.get_node('junction15')
-    >>>
-    >>> #action = ControlAction(pump, 'status', wntr.network.LinkStatus.closed)
-    >>>
-    >>> #sources = [(pipe,'flow'),(tank,'head')]
-    >>> #operations = [numpy.greater_equal, numpy.less_equal]
-    >>> #thresholds = [0.01, (junction,'head')]
-    >>> #control = MultiConditionalControl(sources, operations, thresholds, action)
-    >>> #wn.add_control('control_name', control)
-
-    In this case, pump1 will be closed if the flowrate in pipe8 is greater than or equal to 0.01 cubic meters per
-    second and the head in tank3 is less than or equal to the head in junction 15.
-
     """
 
     def __init__(self, source, operation, threshold, control_action):

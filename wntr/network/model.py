@@ -24,10 +24,6 @@ class WaterNetworkModel(object):
     inp_file_name: string (optional)
         Directory and filename of EPANET inp file to load into the
         WaterNetworkModel object.
-
-    Examples
-    ---------
-    >>> #wn = WaterNetworkModel()
     """
 
     def __init__(self, inp_file_name=None):
@@ -835,11 +831,6 @@ class WaterNetworkModel(object):
 
         junction_name: string
             The name of the new junction to be added.
-
-        Examples
-        --------
-        >>> #j = wn.get_node(junction_name)
-        >>> #j.elevation = 20.0
         """
         pipe = self.get_link(pipe_name_to_split)
         if not isinstance(pipe, Pipe):

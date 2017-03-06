@@ -156,17 +156,6 @@ def todini(node_results, link_results, wn, Pstar):
     todini_index : pd.Series
         Time-series of Todini indexes
 
-    Examples
-    --------
-    The following example computes the Todini index using a pressure threshold of 21.09 m (30 psi).
-
-    >>> #inp_file = 'networks/Net3.inp'
-    >>> #wn = wntr.network.WaterNetworkModel(inp_file)
-    >>> #sim = wntr.sim.EpanetSimulator(wn)
-    >>> #results = sim.run_sim()
-    >>> #todini = wntr.metrics.todini(results,wn,21.09)
-    >>> #todini.plot()
-
     References
     -----------
     [1] Todini E. (2000). Looped water distribution networks design using a
