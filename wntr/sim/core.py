@@ -66,6 +66,13 @@ class WaterNetworkSimulator(object):
         pattern_name = node.demand_pattern_name
         if pattern_name is None:
             pattern_name = self._wn.options.pattern
+        if pattern_name is None:
+            demand_values = []
+            demand_times_minutes = range(start_time, end_time + self._wn.options.hydraulic_timestep,
+                                         self._wn.options.hydraulic_timestep)
+            for t in demand_times_minutes:
+                demand_values.append(base_demand)
+            return demand_values
         pattern_list = self._wn.get_pattern(pattern_name)
         pattern_length = len(pattern_list)
         offset = self._wn.options.pattern_start

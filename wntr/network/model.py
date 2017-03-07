@@ -1820,10 +1820,10 @@ class WaterNetworkOptions(object):
 
     def __init__(self):
         # Time related options
-        self.duration = 0.0
+        self.duration = 0
         "Simulation duration in seconds"
 
-        self.hydraulic_timestep = 3600.0
+        self.hydraulic_timestep = 3600
         "Hydraulic timestep in seconds."
 
         self.quality_timestep = 360.0

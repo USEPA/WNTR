@@ -344,6 +344,7 @@ class HydraulicModel(object):
         self.link_start_nodes = list(range(self.num_links))
         self.link_end_nodes = list(range(self.num_links))
         self.pipe_resistance_coefficients = np.zeros(self.num_links)
+        self.pipe_minor_loss_coefficients = np.zeros(self.num_links)
         self.pipe_diameters = {}
         self.head_curve_coefficients = {}
         self.max_pump_flows = {}
@@ -362,6 +363,7 @@ class HydraulicModel(object):
             if link_id in self._pipe_ids:
                 self.pipe_resistance_coefficients[link_id] = (self._Hw_k*(link.roughness**(-1.852)) *
                                                               (link.diameter**(-4.871))*link.length)  # Hazen-Williams
+                self.pipe_minor_loss_coefficients[link_id] = 8.0*link.minor_loss/(self._g*math.pi**2*link.diameter**4)
                 self.pipe_diameters[link_id] = link.diameter
             elif link_id in self._valve_ids:
                 self.pipe_resistance_coefficients[link_id] = self._Dw_k*0.02*link.diameter**(-5)*link.diameter*2
@@ -692,6 +694,7 @@ class HydraulicModel(object):
 
         pf = abs(flows[:self.num_pipes])
         coeff = self.pipe_resistance_coefficients[:self.num_pipes]
+        minor_loss = self.pipe_minor_loss_coefficients[:self.num_pipes]
         self.jac_G.data[:self.num_pipes] = ((self.isolated_link_array[:self.num_pipes] +
                                             (1.0 - self.closed_link_array[:self.num_pipes]) -
                                             (self.isolated_link_array[:self.num_pipes] *
@@ -700,11 +703,11 @@ class HydraulicModel(object):
                                              ) +
                                             (1.0-self.isolated_link_array[:self.num_pipes])*
                                             self.closed_link_array[:self.num_pipes]*(
-                                                (pf > self.hw_q2)*1.852*coeff*pf**0.852 +
-                                                (pf <= self.hw_q2)*(pf >= self.hw_q1)*coeff*(
+                                                (pf > self.hw_q2)*(1.852*coeff*pf**0.852 + 2.0*minor_loss*pf) +
+                                                (pf <= self.hw_q2)*(pf >= self.hw_q1)*(coeff*(
                                                     3.0*self.hw_a*pf**2 + 2.0*self.hw_b*pf + self.hw_c
-                                                ) +
-                                                (pf < self.hw_q1)*coeff*self.hw_m
+                                                ) + 2*minor_loss*pf) +
+                                                (pf < self.hw_q1)*(coeff*self.hw_m + 2.0*minor_loss*pf)
                                             )
                                             )
 
@@ -815,6 +818,7 @@ class HydraulicModel(object):
             pf = flow[:n_p]
             abs_f = abs(pf)
             sign_coeff = np.sign(pf)*self.pipe_resistance_coefficients[:n_p]
+            sign_minor = np.sign(pf)*self.pipe_minor_loss_coefficients[:n_p]
             self.headloss_residual[:n_p] = (
                 (
                     self.isolated_link_array[:n_p] + (1.0 - self.closed_link_array[:n_p]) -
@@ -824,12 +828,13 @@ class HydraulicModel(object):
                     (1.0 - self.isolated_link_array[:n_p]) * self.closed_link_array[:n_p]
                 ) *
                 (
-                    (abs_f > self.hw_q2) * (sign_coeff * abs_f**1.852 - head_diff_vector[:n_p]) +
+                    (abs_f > self.hw_q2) * (sign_coeff * abs_f**1.852 + sign_minor*abs_f**2 - head_diff_vector[:n_p]) +
                     (abs_f <= self.hw_q2) * (abs_f >= self.hw_q1) * (sign_coeff *
                                                                      (self.hw_a*abs_f**3 + self.hw_b*abs_f**2 +
-                                                                      self.hw_c*abs_f + self.hw_d) -
+                                                                      self.hw_c*abs_f + self.hw_d) +
+                                                                     (sign_minor*abs_f**2) -
                                                                      head_diff_vector[:n_p]) +
-                    (abs_f < self.hw_q1) * (sign_coeff * self.hw_m*abs_f - head_diff_vector[:n_p])
+                    (abs_f < self.hw_q1) * (sign_coeff*self.hw_m*abs_f + sign_minor*abs_f**2 - head_diff_vector[:n_p])
                 )
             )
 
@@ -1222,6 +1227,9 @@ class HydraulicModel(object):
         for link_name, link in self._wn.links():
             link_id = self._link_name_to_id[link_name]
             self.link_status[link_id] = link.status
+        for pipe_name, pipe in self._wn.links(Pipe):
+            pipe_id = self._link_name_to_id[pipe_name]
+            self.pipe_minor_loss_coefficients[pipe_id] = 8.0*pipe.minor_loss/(self._g*math.pi**2*pipe.diameter**4)
         for valve_name, valve in self._wn.links(Valve):
             valve_id = self._link_name_to_id[valve_name]
             self.valve_settings[valve_id] = valve.setting
