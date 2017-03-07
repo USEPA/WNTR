@@ -2,7 +2,7 @@ import unittest
 import wntr
 
 
-class TestWriter(unittest.TestCase):
+class TestMinorLosses(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
