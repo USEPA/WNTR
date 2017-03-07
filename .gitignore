@@ -1,3 +1,7 @@
 /.project
+/.spyproject
 *.pyc
 _build/
+wntr.egg-info/
+build/
+*.egg

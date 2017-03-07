@@ -17,24 +17,24 @@ def test_central_point_dominance():
     """
 
     raise SkipTest
-    
-    inp_file = join(datadir,'Anytown.inp') 
+
+    inp_file = join(datadir,'Anytown.inp')
 
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)
-            
+
     G = wn.get_graph_deep_copy()
-    
+
     CPD = G.central_point_dominance()
 
-    print('num_links = ',wn.num_links())
-    print('num_nodes = ',wn.num_nodes())
+    print('num_links = ',wn.num_links)
+    print('num_nodes = ',wn.num_nodes)
     print('CPD = ',CPD)
     print('expected CPD = ',0.28)
     error = abs(0.28-CPD)
     assert_less(error, 0.01)
-    assert_equal(wn.num_links(),41)
-    assert_equal(wn.num_nodes(),22)
+    assert_equal(wn.num_links,41)
+    assert_equal(wn.num_nodes,22)
 
 def test_diameter():
     """
@@ -43,17 +43,17 @@ def test_diameter():
     """
 
     raise SkipTest
-    
-    inp_file = join(datadir,'Anytown.inp') 
+
+    inp_file = join(datadir,'Anytown.inp')
 
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)
-            
+
     G = wn.get_graph_deep_copy()
     udG = G.to_undirected()
-    
+
     diameter = nx.diameter(udG)
-    
+
     error = abs(5.0-diameter)
     assert_less(error, 0.01)
 
@@ -64,17 +64,17 @@ def test_characteristic_path_length():
     """
 
     raise SkipTest
-    
-    inp_file = join(datadir,'Anytown.inp') 
+
+    inp_file = join(datadir,'Anytown.inp')
 
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)
-            
+
     G = wn.get_graph_deep_copy()
     udG = G.to_undirected()
-    
+
     CPL = nx.average_shortest_path_length(udG)
-    
+
     print('CPL = ',CPL)
     print('expected CPL = ',1.24)
     error = abs(1.24-CPL)
@@ -87,8 +87,8 @@ def test_algebraic_connectivity():
     """
 
     raise SkipTest
-    
-    inp_file = join(datadir,'Anytown.inp') 
+
+    inp_file = join(datadir,'Anytown.inp')
 
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)
@@ -107,8 +107,8 @@ def test_crit_ratio_defrag():
     """
 
     raise SkipTest
-    
-    inp_file = join(datadir,'Anytown.inp') 
+
+    inp_file = join(datadir,'Anytown.inp')
 
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)

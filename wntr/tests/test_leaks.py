@@ -32,10 +32,10 @@ class TestLeakAdditionAndRemoval(unittest.TestCase):
         self.assertEqual(True, 'pipe1__A' in [name for name,l in wn.links(self.wntr.network.Pipe)])
         self.assertEqual(True, 'pipe1__B' in [name for name,l in wn.links()])
         self.assertEqual(True, 'pipe1__B' in [name for name,l in wn.links(self.wntr.network.Pipe)])
-        self.assertEqual(pipe.start_node(), pipeA.start_node())
-        self.assertEqual(pipe.end_node(), pipeB.end_node())
-        self.assertEqual(pipeA.end_node(), 'leak1')
-        self.assertEqual(pipeB.start_node(), 'leak1')
+        self.assertEqual(pipe.start_node, pipeA.start_node)
+        self.assertEqual(pipe.end_node, pipeB.end_node)
+        self.assertEqual(pipeA.end_node, 'leak1')
+        self.assertEqual(pipeB.start_node, 'leak1')
         self.assertEqual(pipe.length, pipeA.length+pipeB.length)
         self.assertEqual(pipe.diameter, pipeA.diameter)
         self.assertEqual(pipe.diameter, pipeB.diameter)
@@ -127,7 +127,7 @@ class TestLeakResults(unittest.TestCase):
     #    j2.remove_leak()
     #    sim = self.wntr.sim.PyomoSimulator(wn)
     #    results2 = sim.run_sim()
-    #    
+    #
     #    self.assertEqual(True, (results1.node == results2.node)['demand'].all().all())
     #    self.assertEqual(True, (results1.node == results2.node)['expected_demand'].all().all())
     #    self.assertEqual(True, (results1.node == results2.node)['head'].all().all())

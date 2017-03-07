@@ -1,32 +1,55 @@
 Installation
 ======================================
+.. include:: <isonum.txt>
 
 WNTR can be installed as a Python package using standard open source software tools.
 
 **Step 1**: Setup your Python environment
 
-	WNTR requires Python 2.7 along with several Python package dependencies.
+	Python can be installed on Windows, Linux, and Mac OS X operating systems.
+	WNTR requires Python (2.7, 3.4, or 3.5) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
 	General information on Python can be found at https://www.python.org/.
 	
-	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, 
-	Matplotlib, and SymPy.  For more information on Python package dependencies, see :ref:`requirements`.
+	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, and
+	Matplotlib.  For more information on Python package dependencies, see :ref:`requirements`.
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
 	editing and debug features along with a graphical user interface that is very similar 
-	to MATLAB. Debugging options are available from the toolbar.  
+	to MATLAB |copy|. Debugging options are available from the toolbar.  
 	Code documentation is displayed in the object inspection 
 	window.  Pop-up information on class structure and functions is displayed in the 
 	editor and console windows.  
-
+	
+	To open a Python console, open a command prompt (cmd.exe on Windows, terminal window on Linux and Mac OS X) 
+	and run 'python', as shown in :numref:`fig-cmd-python`, 
+	or open a Python console using an IDE, like Spyder, as shown in :numref:`fig-spyder`.
+	
+	.. _fig-cmd-python:
+	.. figure:: figures/cmd_python.png
+	   :scale: 100 %
+	   :alt: Python
+	   
+	   Opening a Python console from a command prompt.
+   
+	.. _fig-spyder:
+	.. figure:: figures/spyder.png
+	   :scale: 100 %
+	   :alt: Spyder
+	   
+	   Opening a Python console using Spyder.
+	   
 **Step 2**: Install WNTR
-
+	
+	The installation process differs for users and developers.  
+	Installation instructions for both types are described below.
+	
 	**For users**: 	Users can install WNTR using pip.  
 	pip is a command line software tool used to install and manage Python 
 	packages.  pip can be downloaded from https://pypi.python.org/pypi/pip.
 	
-	To install WNTR using pip, open a command prompt (cmd.exe on Windows) and run::
+	To install WNTR using pip, open a command prompt and run::
 
 		pip install wntr
 	
@@ -61,10 +84,16 @@ WNTR can be installed as a Python package using standard open source software to
 
 **Step 3**: Test installation
 
-	To test that WNTR is installed, open Python within a command prompt or by starting an IDE like Spyder and run::
+	To test that WNTR is installed, open a Python console and run::
 	
 		import wntr
 
+	If WNTR is installed properly, Python proceeds to the next line. No other output is printed to the screen. 
+	
+	If WNTR is **not** installed properly, the user will see the following ImportError::
+	
+		ImportError: No module named wntr
+	
 .. _requirements:
 
 Requirements
@@ -82,6 +111,8 @@ The following Python packages are required:
   http://pandas.pydata.org/
 * Matplotlib [Hunt07]_: used to produce figures, 
   http://matplotlib.org/
+* enum34 (for Python 2.7): used to add enumerated type support for Python 2.7, 
+  https://pypi.python.org/pypi/enum34
 
 Optional dependencies
 -------------------------
@@ -94,6 +125,9 @@ The following Python packages are optional:
   http://xlwt.readthedocs.io
 * Numpydoc [VaCV11]_: used to build the user manual,
   https://github.com/numpy/numpydoc
+* nose: used to run software tests,
+  http://nose.readthedocs.io
+	
 
 .. The following is not shown in the UM
    WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 

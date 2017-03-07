@@ -1,9 +1,9 @@
 wntr.metrics package
-====================
+======================
 
 .. automodule:: wntr.metrics
     :members:
-    :undoc-members:
+    :no-undoc-members:
     :show-inheritance:
 
 Submodules
@@ -11,11 +11,8 @@ Submodules
 
 .. toctree::
 
-   wntr.metrics.cost
-   wntr.metrics.entropy
-   wntr.metrics.fraction_delivered
-   wntr.metrics.ghg_emissions
-   wntr.metrics.health_impacts
-   wntr.metrics.query
-   wntr.metrics.todini
-
+   wntr.metrics.hydraulic
+   wntr.metrics.water_quality
+   wntr.metrics.water_security
+   wntr.metrics.economic
+   wntr.metrics.misc

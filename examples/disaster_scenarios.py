@@ -17,7 +17,7 @@ pgv = earthquake.pgv_attenuation_model(distance)
 repair_rate = earthquake.repair_rate_model(pgv) 
    
 # Plot PGA and epicenter
-wntr.network.draw_graph(wn, link_attribute=pga, node_size=0, link_width=1.5, title='Peak ground acceleration', figsize=(12,8), dpi=100)
+wntr.graphics.draw_graph(wn, link_attribute=pga, node_size=0, link_width=1.5, title='Peak ground acceleration', figsize=(12,8), dpi=100)
 plt.hold('True')
 plt.scatter(epicenter[0], epicenter[1], s=1000, c='r', marker='*', zorder=2)
 

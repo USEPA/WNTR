@@ -1,4 +1,4 @@
-WNTR 0.1 documentation (**DRAFT**)
+WNTR documentation (**DRAFT**)
 ===================================
 
 .. toctree::
@@ -6,6 +6,7 @@ WNTR 0.1 documentation (**DRAFT**)
 
    overview
    installation
+   framework
    units
    getting_started
    waternetworkmodel
