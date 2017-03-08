@@ -368,8 +368,8 @@ class HydraulicModel(object):
             elif link_id in self._valve_ids:
                 """
                 There is a discrepancy between Epanet and the Epanet Manual on how open valves are treated. The manual
-                states “Open valves are assigned an r-value by assuming the open valve acts as a smooth pipe (f = 0.02)
-                whose length is twice the valve diameter.” However, when I run Epanet with an open valve, the results
+                states: Open valves are assigned an r-value by assuming the open valve acts as a smooth pipe (f = 0.02)
+                whose length is twice the valve diameter. However, when I run Epanet with an open valve, the results
                 are as if there is absolutely no headloss in the valve (assuming the minor loss is 0.0). Here, at least
                 for now, we are seeding to match the behavior of Epanet rather than the manual.
 
