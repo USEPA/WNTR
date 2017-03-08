@@ -483,13 +483,14 @@ class WaterNetworkModel(object):
         valve_controls = []
         for valve_name, valve in self.links(Valve):
 
-            close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.closed)
-            open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.opened)
-            active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.active)
+            if valve.valve_type == 'PRV':
+                close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.closed)
+                open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.opened)
+                active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.active)
 
-            control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
-            control.name = valve.name+' prv control'
-            valve_controls.append(control)
+                control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
+                control.name = valve.name+' prv control'
+                valve_controls.append(control)
 
         return valve_controls
 
@@ -1820,10 +1821,10 @@ class WaterNetworkOptions(object):
 
     def __init__(self):
         # Time related options
-        self.duration = 0.0
+        self.duration = 0
         "Simulation duration in seconds"
 
-        self.hydraulic_timestep = 3600.0
+        self.hydraulic_timestep = 3600
         "Hydraulic timestep in seconds."
 
         self.quality_timestep = 360.0
