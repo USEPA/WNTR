@@ -66,7 +66,7 @@ def _split_line(line):
 
 def _is_number(s):
     """
-    Checks if imput is a number
+    Checks if input is a number
 
 
     Parameters
@@ -191,12 +191,11 @@ def _sec_to_string(sec):
 
 
 class InpFile(object):
-    """An EPANET input (.inp) file reader and writer.
+    """
+	EPANET INP file reader and writer class.
 
-    EPANET has two possible formats for its input files. The first, a NET file, is binary
-    formatted, and cannot be used from the command line. The second, the INP file,
-    is text formatted and easily human (and machine) readable. This class provides read
-    and write functionality for INP files within WNTR.
+    This class provides read
+    and write functionality for EPANET INP files.
     The EPANET Users Manual provides full documentation for the INP file format in its Appendix C.
     """
     def __init__(self):
@@ -209,7 +208,7 @@ class InpFile(object):
         self.curves = {}
 
     def read(self, filename, wn=None):
-        """Method to read EPANET INP file and load data into a water network object.
+        """Method to read EPANET INP file and load data into a water network model object.
 
         Parameters
         ----------
@@ -219,7 +218,7 @@ class InpFile(object):
         Returns
         -------
         :class:`wntr.network.WaterNetworkModel.WaterNetworkModel`
-            A WNTR network model object
+            A water network model object
 
         """
 
@@ -369,12 +368,12 @@ class InpFile(object):
         return self.wn
 
     def write(self, filename, wn, units=None):
-        """Write the current network into an EPANET inp file.
+        """Write a water network model into an EPANET INP file.
 
         Parameters
         ----------
         filename : str
-            Name of the inp file. example - Net3_adjusted_demands.inp
+            Name of the inp file. 
         units : str, int or FlowUnits
             Name of the units being written to the inp file.
         """

@@ -605,6 +605,8 @@ class HydraulicModel(object):
 
     def get_hydraulic_equations(self, x):
         """
+        Get hydraulic equations.
+        
         Parameters
         ----------
         x : numpy array
@@ -631,7 +633,7 @@ class HydraulicModel(object):
 
     def set_jacobian_constants(self):
         """
-        set the jacobian entries that depend on the network status
+        Set the jacobian entries that depend on the network status
         but do not depend on the value of any variable.
 
         ordering is very important here
@@ -669,6 +671,8 @@ class HydraulicModel(object):
 
     def get_jacobian(self, x):
         """
+        Get jacobian
+        
         Parameters
         ----------
         x : numpy array
