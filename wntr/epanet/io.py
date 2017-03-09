@@ -1090,7 +1090,7 @@ class InpFile(object):
                 vals = {'link': all_control._control_action._target_obj_ref.name,
                         'setting': get_setting(all_control, text),
                         'compare': 'TIME',
-                        'time': int(all_control._run_at_time / 3600.0)}
+                        'time': all_control._run_at_time / 3600.0}
                 if vals['setting'] is None:
                     continue
                 if all_control._daily_flag:
