@@ -135,11 +135,10 @@ Of the EPANET model options that directly apply to hydraulic simulation, **the f
 * [EMITTERS] section
 * D-W and C-M headloss options in the [OPTIONS] section (H-W option is used)
 * Accuracy, unbalanced, demand multiplier, and emitter exponent from the [OPTIONS] section
-* Minor loss coefficient in the [PIPES] section
 * Speed option and multipoint head curves in the [PUMPS] section (3-point head curves are supported)
 * Head pattern option in the [RESERVOIRS] section
 * Volume curves in the [TANKS] section
 * Rule timestep, pattern start, report start, start clocktime, and statistics in the [TIMES] section
-* PSV, FCV, PBV, TCV, GPV values and minor loss coefficient in the [VALVES] section
+* PSV, FCV, PBV, GPV values in the [VALVES] section
 
 Future development of WNTR will address these limitations.

@@ -355,8 +355,8 @@ class TimeOfDayCondition(ControlCondition):
         return fmt
 
     def evaluate(self):
-        cur_time = self._model.shifted_time
-        prev_time = self._model.prev_shifted_time
+        cur_time = self._model._shifted_time
+        prev_time = self._model._prev_shifted_time
         day = np.floor(cur_time/86400)
         if day < self._first_day:
             self._backtrack = None
@@ -1085,7 +1085,7 @@ class TimeControl(Control):
         if time_flag == 'SIM_TIME' and self._run_at_time < wnm.sim_time:
             raise RuntimeError('You cannot create a time control that should be activated before the start of the simulation.')
 
-        if time_flag == 'SHIFTED_TIME' and self._run_at_time < wnm.shifted_time:
+        if time_flag == 'SHIFTED_TIME' and self._run_at_time < wnm._shifted_time:
             self._run_at_time += 24*3600
 
     def __str__(self):
@@ -1136,8 +1136,8 @@ class TimeControl(Control):
             if wnm.prev_sim_time < self._run_at_time and self._run_at_time <= wnm.sim_time:
                 return (True, int(wnm.sim_time - self._run_at_time))
         elif self._time_flag == 'SHIFTED_TIME':
-            if wnm.prev_shifted_time < self._run_at_time and self._run_at_time <= wnm.shifted_time:
-                return (True, int(round(wnm.shifted_time - self._run_at_time)))
+            if wnm._prev_shifted_time < self._run_at_time and self._run_at_time <= wnm.shifted_time:
+                return (True, int(round(wnm._shifted_time - self._run_at_time)))
 
         return (False, None)
 
@@ -1333,7 +1333,7 @@ class ConditionalControl(Control):
         change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
-class MultiConditionalControl(Control):
+class _MultiConditionalControl(Control):
     """
     TODO:  Make this class private -- used specifically for internal (valve) controls, not
     RULES or CONTROLS section.
