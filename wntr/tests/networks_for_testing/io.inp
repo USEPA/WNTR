@@ -40,6 +40,7 @@
  curve1		50	0
 
 [CONTROLS]
+link v1 0.82 at time 3.4
 
 [COORDINATES]
 ;Node            	X-Coord         	Y-Coord

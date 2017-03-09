@@ -1077,7 +1077,8 @@ class InpFile(object):
                 else:
                     raise ValueError('Valve type not recognized' + str(valve_type))
             else:
-                raise RuntimeError('Could not write control '+str(control_name))
+                setting = None
+                logger.warning('Could not write control '+str(control_name)+' - skipping')
 
             return setting
 
@@ -1090,6 +1091,8 @@ class InpFile(object):
                         'setting': get_setting(all_control, text),
                         'compare': 'TIME',
                         'time': int(all_control._run_at_time / 3600.0)}
+                if vals['setting'] is None:
+                    continue
                 if all_control._daily_flag:
                     vals['compare'] = 'CLOCKTIME'
                 f.write(entry.format(**vals).encode('ascii'))
@@ -1100,6 +1103,8 @@ class InpFile(object):
                         'node': all_control._source_obj.name,
                         'compare': 'above',
                         'thresh': 0.0}
+                if vals['setting'] is None:
+                    continue
                 if all_control._operation is np.less:
                     vals['compare'] = 'below'
                 threshold = all_control._threshold - all_control._source_obj.elevation
