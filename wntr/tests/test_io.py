@@ -51,3 +51,14 @@ class TestWriter(unittest.TestCase):
         p2 = self.wn2.get_link('pump2')
         self.assertEqual(p2.info_type, 'POWER')
         self.assertAlmostEqual(p2._base_power, 16629.107, 2)
+
+    def test_valve_setting_control(self):
+        control = self.wn2.get_control('LINKv10.82ATTIME12240')
+        run_time = control._run_at_time
+        self.assertAlmostEqual(run_time, 3600.0*3.4, 6)
+        value = control._control_action._value
+        self.assertAlmostEqual(value, 0.82, 6)
+
+        control = self.wn2.get_control('LINKv22.61IFNODET1BELOW1.53')
+        value = control._control_action._value
+        self.assertAlmostEqual(value, 1.83548, 4)
