@@ -34,12 +34,6 @@ def query(arg1, operation, arg2):
     -------
     mask : same size and type as arg1
         contains bool
-
-    Examples
-    ---------
-    >>> #wntr.metrics.query(1, np.greater, 2)  # False
-    >>> #wntr.metrics.query([1,2,3], np.not_equal, [5,2,1])  # array([ True, False,  True], dtype=bool)
-    >>> #wntr.metrics.query(results.node['demand'], np.less_equal, 0.9*results.node['expected_demand'])
     """
     try:
         mask = operation(arg1, arg2)
@@ -165,12 +159,6 @@ def population_impacted(pop, arg1, operation=None, arg2=None):
 
     arg2 : same size and type as arg1, or a scalar
         Argument 2
-
-    Examples
-    ---------
-    >>> #temp = pd.Series(data = np.random.rand(len(nzd_junctions)), index=nzd_junctions)
-    >>> #pop_impacted1 = wntr.metrics.population_impacted(pop, temp, np.greater, 0.5)
-    >>> #pop_impacted2 = wntr.metrics.population_impacted(pop, fdd, np.less, 1)
     """
     mask = query(arg1, operation, arg2)
     pop_impacted = mask.multiply(pop)

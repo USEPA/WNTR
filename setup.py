@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from distutils.core import Extension
 
 DISTNAME = 'wntr'
-VERSION = '0.1.1'
+VERSION = '0.1.2'
 PACKAGES = find_packages()
 EXTENSIONS = []
 DESCRIPTION = 'Water Network Tool for Resilience'

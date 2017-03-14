@@ -355,8 +355,8 @@ class TimeOfDayCondition(ControlCondition):
         return fmt
 
     def evaluate(self):
-        cur_time = self._model.shifted_time
-        prev_time = self._model.prev_shifted_time
+        cur_time = self._model._shifted_time
+        prev_time = self._model._prev_shifted_time
         day = np.floor(cur_time/86400)
         if day < self._first_day:
             self._backtrack = None
@@ -1059,15 +1059,6 @@ class TimeControl(Control):
     control_action : An object derived from BaseControlAction
         Examples: ControlAction
         This is the actual change that will occur at the specified time.
-
-    Examples
-    --------
-    >>> #pipe = wn.get_link('pipe8')
-    >>> #action = ControlAction(pipe, 'status', wntr.network.LinkStatus.opened)
-    >>> #control = TimeControl(wn, 3652, 'SIM_TIME', False, action)
-    >>> #wn.add_control('control_name', control)
-
-    In this case, pipe8 will be opened 1 hour and 52 seconds after the start of the simulation.
     """
 
     def __init__(self, wnm, run_at_time, time_flag, daily_flag, control_action):
@@ -1094,7 +1085,7 @@ class TimeControl(Control):
         if time_flag == 'SIM_TIME' and self._run_at_time < wnm.sim_time:
             raise RuntimeError('You cannot create a time control that should be activated before the start of the simulation.')
 
-        if time_flag == 'SHIFTED_TIME' and self._run_at_time < wnm.shifted_time:
+        if time_flag == 'SHIFTED_TIME' and self._run_at_time < wnm._shifted_time:
             self._run_at_time += 24*3600
 
     def __str__(self):
@@ -1145,8 +1136,8 @@ class TimeControl(Control):
             if wnm.prev_sim_time < self._run_at_time and self._run_at_time <= wnm.sim_time:
                 return (True, int(wnm.sim_time - self._run_at_time))
         elif self._time_flag == 'SHIFTED_TIME':
-            if wnm.prev_shifted_time < self._run_at_time and self._run_at_time <= wnm.shifted_time:
-                return (True, int(round(wnm.shifted_time - self._run_at_time)))
+            if wnm._prev_shifted_time < self._run_at_time and self._run_at_time <= wnm.shifted_time:
+                return (True, int(round(wnm._shifted_time - self._run_at_time)))
 
         return (False, None)
 
@@ -1194,17 +1185,6 @@ class ConditionalControl(Control):
     control_action : An object derived from BaseControlAction
         Examples: ControlAction
         This object defines the actual change that will occur when the specified condition is satisfied.
-
-    Examples
-    --------
-    >>> #pipe = wn.get_link('pipe8')
-    >>> #tank = wn.get_node('tank3')
-    >>> #action = ControlAction(pipe, 'status', wntr.network.LinkStatus.closed)
-    >>> #control = ConditionalControl((tank, 'head'), numpy.greater_equal, 13.5, action)
-    >>> #wn.add_control('control_name', control)
-
-    In this case, pipe8 will be closed if the head in tank3 becomes greater than or equal to 13.5 meters.
-
     """
 
     def __init__(self, source, operation, threshold, control_action):
@@ -1353,7 +1333,7 @@ class ConditionalControl(Control):
         change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
-class MultiConditionalControl(Control):
+class _MultiConditionalControl(Control):
     """
     TODO:  Make this class private -- used specifically for internal (valve) controls, not
     RULES or CONTROLS section.
@@ -1377,25 +1357,6 @@ class MultiConditionalControl(Control):
     control_action : An object derived from BaseControlAction
         Examples: ControlAction
         This object defines the actual change that will occur when all specified conditions are satisfied.
-
-    Examples
-    --------
-    >>> #pump = wn.get_link('pump1')
-    >>> #pipe = wn.get_link('pipe8')
-    >>> #tank = wn.get_node('tank3')
-    >>> #junction = wn.get_node('junction15')
-    >>>
-    >>> #action = ControlAction(pump, 'status', wntr.network.LinkStatus.closed)
-    >>>
-    >>> #sources = [(pipe,'flow'),(tank,'head')]
-    >>> #operations = [numpy.greater_equal, numpy.less_equal]
-    >>> #thresholds = [0.01, (junction,'head')]
-    >>> #control = MultiConditionalControl(sources, operations, thresholds, action)
-    >>> #wn.add_control('control_name', control)
-
-    In this case, pump1 will be closed if the flowrate in pipe8 is greater than or equal to 0.01 cubic meters per
-    second and the head in tank3 is less than or equal to the head in junction 15.
-
     """
 
     def __init__(self, source, operation, threshold, control_action):
