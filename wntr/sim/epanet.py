@@ -1,20 +1,19 @@
-from wntr.sim.core import *
+from wntr.sim.core import WaterNetworkSimulator, NetResults
+import time
 import pandas as pd
 import numpy as np
-from wntr.epanet.util import FlowUnits, MassUnits, HydParam, QualParam, EN, to_si, from_si
+from wntr.epanet.util import FlowUnits, MassUnits, HydParam, QualParam, EN, to_si
 import logging
 
 logger = logging.getLogger(__name__)
 
 try:
-    import wntr.epanet.pyepanet
+    import wntr.epanet.toolkit
 except ImportError as e:
     print('{}'.format(e))
     logger.critical('%s',e)
     raise ImportError('Error importing pyepanet while running epanet simulator. '
                       'Make sure pyepanet is installed and added to path.')
-
-from wntr.epanet.pyepanet.epanet2 import EpanetException, ENgetwarning
 
 class EpanetSimulator(WaterNetworkSimulator):
     """
@@ -52,11 +51,11 @@ class EpanetSimulator(WaterNetworkSimulator):
         # Write a new inp file from the water network model
         self._wn.name = file_prefix + '.inp'
         self._wn.write_inpfile(file_prefix + '.inp')
-        
+
         start_run_sim_time = time.time()
         logger.debug('Starting run')
         # Create enData
-        enData = wntr.epanet.pyepanet.ENepanet()
+        enData = wntr.epanet.toolkit.ENepanet()
         enData.inpfile = self._wn.name
         enData.ENopen(enData.inpfile, file_prefix + '.rpt')
         flowunits = FlowUnits(enData.ENgetflowunits())
@@ -140,9 +139,9 @@ class EpanetSimulator(WaterNetworkSimulator):
                 results.error_code = 2
         enData.ENcloseH()
         self.warning_list = enData.errcodelist
-        
+
         if self._wn.options.quality is not 'NONE':
-            
+
             node_dictonary['quality'] = []
 
             enData.ENopenQ()
@@ -169,7 +168,7 @@ class EpanetSimulator(WaterNetworkSimulator):
                     break
 
             enData.ENcloseQ()
-        
+
         # close epanet
         enData.ENclose()
 

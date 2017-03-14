@@ -15,19 +15,6 @@ def test_Concentration():
     for flowunit in range(10):
         execute_test_qual(typestring, flowunit, data, data_expected)
 
-def test_EN_Enum():
-    assert_equal(int(wntr.epanet.FlowUnits.AFD), wntr.epanet.pyepanet.EN_AFD)
-    assert_equal(int(wntr.epanet.FlowUnits.CFS), wntr.epanet.pyepanet.EN_CFS)
-    assert_equal(int(wntr.epanet.FlowUnits.CMD), wntr.epanet.pyepanet.EN_CMD)
-    assert_equal(int(wntr.epanet.FlowUnits.CMH), wntr.epanet.pyepanet.EN_CMH)
-    assert_equal(int(wntr.epanet.FlowUnits.GPM), wntr.epanet.pyepanet.EN_GPM)
-    assert_equal(int(wntr.epanet.FlowUnits.IMGD), wntr.epanet.pyepanet.EN_IMGD)
-    assert_equal(int(wntr.epanet.FlowUnits.LPM), wntr.epanet.pyepanet.EN_LPM)
-    assert_equal(int(wntr.epanet.FlowUnits.LPS), wntr.epanet.pyepanet.EN_LPS)
-    assert_equal(int(wntr.epanet.FlowUnits.MGD), wntr.epanet.pyepanet.EN_MGD)
-    assert_equal(int(wntr.epanet.FlowUnits.MLD), wntr.epanet.pyepanet.EN_MLD)
-
-
 def test_Demand():
     data_expected = 1.0 # m/s
     for typestring in ['Demand', 'Flow']:
