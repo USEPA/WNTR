@@ -107,7 +107,7 @@ class TestLeakResults(unittest.TestCase):
         for node_name, node in wn.nodes():
             if node_name != 'leak1':
                 for t in results.node.major_axis:
-                    self.assertLessEqual(abs(results.node.at['expected_demand',t,node_name] - epanet_results.node.at['expected_demand',t,node_name]), 0.00001)
+                    self.assertLessEqual(abs(results.node.at['expected_demand',t,node_name] - epanet_results.node.at['demand',t,node_name]), 0.00001)
 
         for node_name, node in wn.nodes():
             for t in results.node.major_axis:

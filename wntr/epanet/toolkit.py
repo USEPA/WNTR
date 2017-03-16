@@ -249,7 +249,7 @@ class ENepanet():
          * filename= name of file
 
         """
-        self.errcode = self.ENlib.ENsavehydfile(filename)
+        self.errcode = self.ENlib.ENsavehydfile(filename.encode('ascii'))
         self._error()
         return
 
@@ -261,7 +261,7 @@ class ENepanet():
          * filename= name of file
 
         """
-        self.errcode = self.ENlib.ENusehydfile(filename)
+        self.errcode = self.ENlib.ENusehydfile(filename.encode('ascii'))
         self._error()
         return
 
