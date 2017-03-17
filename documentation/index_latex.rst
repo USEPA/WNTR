@@ -1,4 +1,4 @@
-WNTR 0.1 documentation
+WNTR documentation
 ==================================
 
 .. toctree::
@@ -12,6 +12,7 @@ WNTR 0.1 documentation
    units
    getting_started
    waternetworkmodel
+   controls
    networkxgraph
    hydraulics
    waterquality
@@ -21,6 +22,5 @@ WNTR 0.1 documentation
    stochastic
    license
    developers
-   API documentation <apidoc/wntr>
    reference
    

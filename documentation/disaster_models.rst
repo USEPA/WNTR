@@ -1,10 +1,14 @@
+.. raw:: latex
+
+    \newpage
+
 Disaster scenarios
 ======================================
 
 Drinking water utilities might be interested in examining many different disaster scenarios.
 They could be acute incidents like power outages and earthquakes 
 or they could be long term issues like persistent pipe 
-leaks, population fluctuation, and climate change. The following section describes
+leaks, population fluctuation, and changes to supply and demand. The following section describes
 disaster scenarios that can be modeled in WNTR.  
 The example **disaster_scenarios.py** demonstrates methods to define disaster scenarios.
 
@@ -106,20 +110,20 @@ To model the impact of fire conditions at a specific node:
 .. literalinclude:: ../examples/disaster_scenarios.py
    :lines: 33-43
 
-Climate change
----------------
-Climate change is a long term problem for water distribution 
-networks. This problem could lead to 
+Enviromental change
+---------------------
+Enviromental change is a long term problem for water distribution 
+networks. Changes in the enviromnet could lead to 
 reduced water availability, 
 damage from weather incidents, 
 or even damage from subsidence. 
 For example, severe drought in California has forced lawmakers to reduce the 
 state's water usage by 25 percent. 
-Climate change also leads to sea level rise which can inundate distribution 
+Enviromnetal change also leads to sea level rise which can inundate distribution 
 networks. This is especially prevalent in cities built on unstable soils like 
 New Orleans and Washington DC which are experiencing land subsidence. 
 
-WNTR can be used to simulate the effects of climate change on the water distribution network by
+WNTR can be used to simulate the effects of enviromnetal change on the water distribution network by
 changing supply and demand, adding disruptive conditions (i.e. power outages, pipe leaks) caused by severe weather, or by adding pipe leaks caused by subsidence.
 Power outages and pipe leaks are discribed above.  
 Changes to supply and demand can be simple (i.e. changing all nodes by a certain percent), or complex (i.e. using external data or correlated statistical methods).

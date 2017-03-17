@@ -1,7 +1,11 @@
+.. raw:: latex
+
+    \newpage
+
 Hydraulic simulation
 ==============================
 
-WNTR contains two simulators:  the **WNTRSimulator** and the **EpanetSimulator**.
+WNTR contains two simulators: the **WNTRSimulator** and the **EpanetSimulator**.
 See :ref:`software_framework` for more information on features and limitations of these simulators. 
 
 The EpanetSimulator can be used to run demand-driven hydraulic simulations
@@ -13,9 +17,9 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
    :lines: 12-13
 
 The WNTRsimulator is a pure Python simulation engine based on the same equations
-as EPANET.  The WNTR simulator does not include equations to run water quality 
-simulations.  The WNTR simulator includes the option to run hydraulic simulation
-in demand-driven or pressure-driven demand mode. 
+as EPANET.  The WNTRsimulator does not include equations to run water quality 
+simulations.  The WNTRsimulator includes the option to simulate leaks, and run hydraulic simulation
+in demand-driven or pressure-driven demand mode.
 A hydraulic simulation using the WNTRsimulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
@@ -27,10 +31,31 @@ More information on the simulators can be found in the API documentation, under
 :meth:`~wntr.sim.epanet.EpanetSimulator` and 
 :meth:`~wntr.sim.core.WNTRSimulator`.
 
+Options
+----------
+Hydraulic simulation options are defined in the :meth:`~wntr.network.model.WaterNetworkOptions` class.
+These options include 
+duration, 
+hydraulic timestep, 
+rule timestep, 
+pattern timestep, 
+pattern start, 
+default pattern, 
+report timestep, 
+report start, 
+start clocktime, 
+headloss, 
+trails, 
+accuracy, 
+unbalenced, 
+demand multiplier, and 
+emitter exponent.
+All options are used with the EpanetSimulator.  
+Options that are not used with the WNTRSimulator are described in :ref:`limitations`.  
+
 Mass balance at nodes
 -------------------------
-Both simulators uses the mass balance equations from EPANET [Ross00]_. 
-Conservation of mass (and the assumption of constant density) requires
+Both simulators uses the mass balance equations from EPANET [Ross00]_:
 
 .. math::
 
@@ -76,8 +101,8 @@ These equations are symmetric across the origin
 and valid for any :math:`q`. Thus, this equation can be used for flow in
 either direction. However, the derivative with respect to :math:`q` at :math:`q = 0` 
 is :math:`0`. In certain scenarios, this can cause the Jacobian of the
-set of hydraulic equations to become singular (when :math:`q=0`). Therefore,
-WNTR uses a modified Hazen-Williams formula by default. The modified
+set of hydraulic equations to become singular (when :math:`q=0`). The WNTRSimulator
+uses a modified Hazen-Williams formula. The modified
 Hazen-Williams formula splits the domain of :math:`q` into six segments to
 create a piecewise smooth function.
 
@@ -137,7 +162,7 @@ The mass balance and headloss equations described above are solved by
 simultaneously determining demand along with the network pressures and flow rates.  
 
 The WNTRsimulator can run hydraulics using pressure-driven demand simulation
-using the following pressure-demand relationship [WaSM88]_.
+using the following pressure-demand relationship [WaSM88]_:
 
 .. math::
 
@@ -178,7 +203,7 @@ Leak model
 
 The WNTRSimulator includes the ability to add leaks to the network.
 The leak is modeled with a general form of the equation proposed by 
-[CrLo02]_ where the mass flow rate of fluid through the hole is expressed as
+[CrLo02]_ where the mass flow rate of fluid through the hole is expressed as:
 
 .. math::
 
