@@ -979,38 +979,41 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
-            current_copy = current
+            link_name = current[1]
+            link = self.wn.get_link(link_name)
+            if current[5].upper() != 'TIME' and current[5].upper() != 'CLOCKTIME':
+                node_name = current[5]
             current = [i.upper() for i in current]
-            current[1] = current_copy[1]  # don't capitalize the link name
+            current[1] = link_name # don't capitalize the link name
 
             # Create the control action object
-            link_name = current[1]
-            try:
-                tmp = float(current[2])
-                current[2] = tmp
-            except:
-                pass
-            # print (link_name in wn._links.keys())
-            link = self.wn.get_link(link_name)
-            if isinstance(current[2], float) or isinstance(current[2], int):
-                if isinstance(link, wntr.network.Pump):
-                    ### TODO: WHAT IS GOING ON WITH THE CONTROL OBJECT HERE
-                    continue
-                elif isinstance(link, wntr.network.Valve):
-                    if link.valve_type != 'PRV':
-                        continue
-                    else:
-                        status = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
-                        action_obj = wntr.network.ControlAction(link, 'setting', status)
+
+            status = current[2].upper()
+            if status == 'OPEN' or status == 'OPENED' or status == 'CLOSED' or status == 'ACTIVE':
+                setting = LinkStatus[status].value
+                action_obj = wntr.network.ControlAction(link, 'status', setting)
             else:
-                status = LinkStatus[current[2].upper()].value
-                action_obj = wntr.network.ControlAction(link, 'status', status)
+                if isinstance(link, wntr.network.Pump):
+                    action_obj = wntr.network.ControlAction(link, 'speed', float(current[2]))
+                elif isinstance(link, wntr.network.Valve):
+                    if link.valve_type == 'PRV' or link.valve_type == 'PSV' or link.valve_type == 'PBV':
+                        setting = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
+                    elif link.valve_type == 'FCV':
+                        setting = to_si(self.flow_units, float(current[2]), HydParam.Flow)
+                    elif link.valve_type == 'TCV':
+                        setting = float(current[2])
+                    elif link.valve_type == 'GPV':
+                        setting = current[2]
+                    else:
+                        raise ValueError('Unrecognized valve type {0} while parsing control {1}'.format(link.valve_type, line))
+                    action_obj = wntr.network.ControlAction(link, 'setting', setting)
+                else:
+                    raise RuntimeError(('Links of type {0} can only have controls that change\n'.format(type(link))+
+                                        'the link status. Control: {0}'.format(line)))
 
             # Create the control object
             if 'TIME' not in current and 'CLOCKTIME' not in current:
-                current[5] = current_copy[5]
                 if 'IF' in current:
-                    node_name = current[5]
                     node = self.wn.get_node(node_name)
                     if current[6] == 'ABOVE':
                         oper = np.greater
@@ -1052,33 +1055,56 @@ class InpFile(object):
             self.wn.add_control(control_name, control_obj)
 
     def _write_controls(self, f, wn):
-        f.write( '[CONTROLS]\n'.encode('ascii'))
+        def get_setting(control, control_name):
+            value = control._control_action._value
+            attribute = control._control_action._attribute.lower()
+            if attribute == 'status':
+                setting = LinkStatus(value).name
+            elif attribute == 'speed':
+                setting = str(value)
+            elif attribute == 'setting':
+                valve = control._control_action._target_obj_ref
+                assert isinstance(valve, wntr.network.Valve), 'Could not write control '+str(control_name)
+                valve_type = valve.valve_type
+                if valve_type == 'PRV' or valve_type == 'PSV' or valve_type == 'PBV':
+                    setting = str(from_si(self.flow_units, value, HydParam.Pressure))
+                elif valve_type == 'FCV':
+                    setting = str(from_si(self.flow_units, value, HydParam.Flow))
+                elif valve_type == 'TCV':
+                    setting = str(value)
+                elif valve_type == 'GPV':
+                    setting = value
+                else:
+                    raise ValueError('Valve type not recognized' + str(valve_type))
+            else:
+                setting = None
+                logger.warning('Could not write control '+str(control_name)+' - skipping')
+
+            return setting
+
+        f.write('[CONTROLS]\n'.encode('ascii'))
         # Time controls and conditional controls only
         for text, all_control in wn._control_dict.items():
-            if isinstance(all_control,wntr.network.TimeControl):
+            if isinstance(all_control, wntr.network.TimeControl):
                 entry = 'Link {link} {setting} AT {compare} {time:g}\n'
                 vals = {'link': all_control._control_action._target_obj_ref.name,
-                        'setting': 'OPEN',
+                        'setting': get_setting(all_control, text),
                         'compare': 'TIME',
-                        'time': int(all_control._run_at_time / 3600.0)}
-                if all_control._control_action._attribute.lower() == 'status':
-                    vals['setting'] = LinkStatus(all_control._control_action._value).name
-                else:
-                    vals['setting'] = str(float(all_control._control_action._value))
+                        'time': all_control._run_at_time / 3600.0}
+                if vals['setting'] is None:
+                    continue
                 if all_control._daily_flag:
                     vals['compare'] = 'CLOCKTIME'
                 f.write(entry.format(**vals).encode('ascii'))
-            elif isinstance(all_control,wntr.network.ConditionalControl):
+            elif isinstance(all_control, wntr.network.ConditionalControl):
                 entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
                 vals = {'link': all_control._control_action._target_obj_ref.name,
-                        'setting': 'OPEN',
+                        'setting': get_setting(all_control, text),
                         'node': all_control._source_obj.name,
                         'compare': 'above',
                         'thresh': 0.0}
-                if all_control._control_action._attribute.lower() == 'status':
-                    vals['setting'] = LinkStatus(all_control._control_action._value).name
-                else:
-                    vals['setting'] = str(float(all_control._control_action._value))
+                if vals['setting'] is None:
+                    continue
                 if all_control._operation is np.less:
                     vals['compare'] = 'below'
                 threshold = all_control._threshold - all_control._source_obj.elevation

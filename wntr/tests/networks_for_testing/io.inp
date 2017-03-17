@@ -3,7 +3,7 @@
 [JUNCTIONS]
 ;ID           	        Elev        	Demand      	Pattern         
  j1              	0         	0           	pattern1                	;
- j2              	0         	100         	pattern1                	;
+ j2              	1.38         	100         	pattern1                	;
  j3			0		0		pattern1			;
  j4			0		0		pattern1			;
 
@@ -25,7 +25,8 @@
 
 [VALVES]
 ;ID	Node1	Node2	Diameter	Type	Setting		MinorLoss
- v1	j1	j2	12		TCV	3.52		0.54	
+ v1	j1	j2	12		TCV	3.52		0.54
+ v2 j2  j3  12      PSV 2.51        0.985
 
 [PATTERNS]
  pattern1			1.0	1.0	1.0	1.0
@@ -40,6 +41,8 @@
  curve1		50	0
 
 [CONTROLS]
+link v1 0.82 at time 3.4
+link v2 2.61 if node t1 below 5.01
 
 [COORDINATES]
 ;Node            	X-Coord         	Y-Coord
