@@ -72,7 +72,7 @@ def test_Todini_Fig2_solA_GPM():
     wn = parser.read(inp_file)
 
     sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim()
+    results = sim.run_sim(file_prefix='tmp_tod_solA_GPM')
 
     # Compute todini index
     todini = wntr.metrics.todini(results.node, results.link, wn, 30) # h* = 30 m

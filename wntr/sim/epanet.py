@@ -79,17 +79,21 @@ class EpanetSimulator(WaterNetworkSimulator):
         if hydfile is None:
             hydfile = file_prefix + '.hyd'
         enData.ENopen(inpfile, rptfile, outfile)
-        #os.sys.stderr.write('Opened EPANET\n')
         if use_hyd:
             enData.ENusehydfile(hydfile)
-        #os.sys.stderr.write('Finished Hydraulics\n')
+            logger.debug('Loaded hydraulics')
         else:
             enData.ENsolveH()
+            logger.debug('Solved hydraulics')
         if save_hyd:
             enData.ENsavehydfile(hydfile)
+            logger.debug('Saved hydraulics')
         enData.ENsolveQ()
+        logger.debug('Solved quality')
         enData.ENreport()
+        logger.debug('Ran quality')
         enData.ENclose()
+        logger.debug('Completed run')
         #os.sys.stderr.write('Finished Closing\n')
         return self.reader.read(outfile)
 
