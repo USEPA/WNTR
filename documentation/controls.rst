@@ -16,15 +16,16 @@ Control actions
 -----------------------
 
 Control actions tell the simulator what to do when a rule becomes "true." 
-These are created using the :any:`~ControlAction` class.
+These are created using the :class:`~wntr.network.controls.ControlAction` class.
 A control action takes a target link, the property to change, and the value to change it to.
 
 >>> import wntr
+>>> from __future__ import print_function
 >>> n1 = wntr.network.model.Junction('N1')
 >>> n2 = wntr.network.model.Junction('N2')
 >>> link = wntr.network.model.Pipe('L1', 'N1', 'N2')
 >>> ctrl = wntr.network.controls.ControlAction(link, 'status', 0)
->>> print ctrl
+>>> print(ctrl)
 set Pipe('L1').status to Closed
 
 
