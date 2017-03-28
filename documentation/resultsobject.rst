@@ -1,5 +1,9 @@
 .. _simulation_results:
 
+.. raw:: latex
+
+    \newpage
+
 Simulation results
 =============================
 WNTR uses Pandas data objects to store simulation results.

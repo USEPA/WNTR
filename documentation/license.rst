@@ -1,3 +1,7 @@
+.. raw:: latex
+
+    \newpage
+
 Copyright and license
 ================================
 The WNTR python package is copyright through Sandia National Laboratories.

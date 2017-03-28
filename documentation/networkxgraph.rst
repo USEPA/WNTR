@@ -1,3 +1,7 @@
+.. raw:: latex
+
+    \newpage
+
 NetworkX graph
 ======================================
 
@@ -14,7 +18,7 @@ The link direction is used as a reference to track flow direction in the network
 Multiple links with the same start and end node can be used to represent redundant pipes or backup pumps.
 In WNTR, the graph stores 
 the start and end node of each link, 
-the node coordinates, 
+node coordinates, 
 and node and link types (i.e tank, reservoir, valve). 
 WNTR updates the graph as elements are added and removed from the water network model.  
 
@@ -44,7 +48,7 @@ can be accessed using the following.
 .. literalinclude:: ../examples/networkx_graph.py
    :lines: 12-14
 
-The graph can be used to access NetworkX methods, for example
+The graph can be used to access NetworkX methods, for example:
 
 .. literalinclude:: ../examples/networkx_graph.py
    :lines: 3,17-20

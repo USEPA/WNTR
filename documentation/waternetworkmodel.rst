@@ -1,11 +1,16 @@
+.. raw:: latex
+
+    \newpage
+
 Water network model
 ======================================
 
 The water network model includes 
-nodes and links in the pipe network, 
+junctions, tanks, reservoirs, pipes, pumps, valves, 
 demand patterns, 
 pump curves,
 controls, 
+sources,
 simulation options,
 and node coordinates.
 Water network models can be built from scratch or built directly from an EPANET INP file.
@@ -18,17 +23,16 @@ A water network model can be created by adding components to an empty model.
    :lines: 4-18
 
 A water network model can also be created directly from an EPANET INP file.
-EPANET features not supported by WNTR are printed to the screen.
 
 .. literalinclude:: ../examples/water_network_model.py
    :lines: 28
    
-The water network model can be written to a file in EPANET format.
+The water network model can be written to a file in EPANET INP format.
 By default, files are written in LPS units.  
-The inp file will not include features not supported by EPANET.
+The EPANET INP file will not include features not supported by EPANET (i.e. pressure-driven simulation options)
 
 .. literalinclude:: ../examples/water_network_model.py
    :lines: 25
 
-For more information on the water network model, see the 
-:meth:`~wntr.network.model.WaterNetworkModel` documentation.
+For more information on the water network model, see 
+:meth:`~wntr.network.model.WaterNetworkModel` in the API documentation.
