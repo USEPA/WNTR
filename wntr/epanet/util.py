@@ -245,13 +245,6 @@ class QualParam(enum.Enum):
     :attr:`~WaterAge`           Water age at a node
     ==========================  ================================================================
 
-    .. skip::
-
-        .. rubric:: Enum Member Methods
-
-        .. autosummary::
-            to_si
-            from_si
 
     """
     Quality = 4
@@ -430,13 +423,6 @@ class HydParam(enum.Enum):
     :attr:`~Power`              Pump power
     ==========================  ===================================================================
 
-    .. skip::
-
-        .. rubric:: Methods
-
-        .. autosummary::
-            to_si
-            from_si
 
     """
     Elevation = 0
@@ -670,20 +656,6 @@ def to_si(from_units, data, param,
     -------
     float, array-like, or dict
         The data values convert into SI standard units
-
-    Examples
-    --------
-    The following examples show conversion from EPANET flow and mass units into SI units.
-    Convert concentration of 15.0 mg / L to SI units
-
-    >>> to_si(FlowUnits.MGD, 15.0, QualParam.Concentration)
-    0.015
-
-    Convert a bulk reaction coefficient for a first order reaction to SI units.
-
-    >>> to_si(FlowUnits.AFD, 1.0, QualParam.BulkReactionCoeff,
-    ... mass_units=MassUnits.ug, reaction_order=1)
-    1.1574074074074073e-05
 
 
     """
