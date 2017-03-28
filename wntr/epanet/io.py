@@ -2132,7 +2132,7 @@ class BinFile(object):
         if os.name in ['nt', 'dos'] or sys.platform in ['darwin']:
             self.ftype = '=f4'
         else:
-            self.ftype = '=f8'
+            self.ftype = '=f4'
         self.idlen = 32
         self.hydraulic_id = None
         self.quality_id = None
