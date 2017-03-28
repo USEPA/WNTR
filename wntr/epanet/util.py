@@ -1,5 +1,28 @@
 """
 The wntr.epanet.util module contains unit conversion utilities based on EPANET units.
+
+.. rubric:: Contents
+
+- :class:`~wntr.epanet.util.FlowUnits`
+- :class:`~wntr.epanet.util.MassUnits`
+- :class:`~wntr.epanet.util.QualParam`
+- :class:`~wntr.epanet.util.HydParam`
+- :meth:`to_si`
+- :meth:`from_si`
+- :class:`~StatisticsType`
+- :class:`~QualType`
+- :class:`~SourceType`
+- :class:`~PressureUnits`
+- :class:`~FormulaType`
+- :class:`~ControlType`
+- :class:`~LinkTankStatus`
+- :class:`~MixType`
+- :class:`~ResultType`
+- :class:`~wntr.epanet.util.EN`
+
+----
+
+
 """
 import numpy as np
 import enum
@@ -934,6 +957,7 @@ class MixType(enum.Enum):
 
 
 class ResultType(enum.Enum):
+    """Extended period simulation results type"""
     demand = 1
     head = 2
     pressure = 3
@@ -949,24 +973,28 @@ class ResultType(enum.Enum):
 
     @property
     def is_node(self):
+        """Is a nodal property result"""
         if abs(self.value) < 5:
             return True
         return False
 
     @property
     def is_link(self):
+        """Is a link property result"""
         if self.value > 4:
             return True
         return False
 
     @property
     def is_qual(self):
+        """Is related to quality"""
         if self.value in [4, 8, 11]:
             return True
         return False
 
     @property
     def is_hyd(self):
+        """Is related to hydraulics"""
         if self.value in [1,2,3,5,6,7,12]:
             return True
         return False

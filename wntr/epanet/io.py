@@ -1,5 +1,16 @@
 """
 The wntr.epanet.io module contains methods for reading/writing EPANET input and output files.
+
+.. rubric:: Classes
+
+.. autosummary::
+
+    InpFile
+    BinFile
+
+----
+
+
 """
 from __future__ import absolute_import
 import wntr.network
