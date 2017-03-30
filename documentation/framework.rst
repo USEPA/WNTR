@@ -71,7 +71,6 @@ These classes are listed in :numref:`table-sim-subpackage`.
    Class                                              Description
    =================================================  =============================================================================================================================================================================================================================================================================
    :meth:`~wntr.sim.epanet.EpanetSimulator`           The EpanetSimulator uses the EPANET 2 Programmer's Toolkit [Ross00]_ to run demand-driven hydraulic simulation and water quality simulation.
-                                                      The EPANET 2 Programmer's Toolkit is accessed using the :meth:`~wntr.epanet.pyepanet` package, a python extensions for the EPANET Toolkit. 
                                                       When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation.
                                                       This allows the user to read in INP files, modify the model, run 
                                                       an EPANET simulation, and analyze results all within WNTR.

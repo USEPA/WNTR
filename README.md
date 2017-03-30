@@ -24,9 +24,6 @@ License
 
 WNTR is released under the Revised BSD license.  See the LICENSE.txt file.
 
-WNTR includes pyepanet, a separate python package licensed through Sandia Corporation, copyright 2011.
-pyepanet is released under the BSD license.  See wntr/pyepanet/__init__.py
-
 Organization
 ------------
 
