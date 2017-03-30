@@ -1,4 +1,4 @@
-wntr.epanet.pyepanet.toolkit module
+wntr.epanet.toolkit module
 ===================================
 
 .. automodule:: wntr.epanet.toolkit

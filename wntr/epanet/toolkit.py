@@ -7,14 +7,14 @@ import ctypes, os, sys
 from ctypes import byref
 from pkg_resources import resource_filename
 import platform
-pyepanet_package = 'wntr.epanet.toolkit'
+epanet_toolkit = 'wntr.epanet.toolkit'
 
 if os.name in ['nt','dos']:
-    libepanet = resource_filename(__name__,'pyepanet/data/Windows/epanet2.dll')
+    libepanet = resource_filename(__name__,'Windows/epanet2.dll')
 elif sys.platform in ['darwin']:
-    libepanet = resource_filename(__name__,'pyepanet/data/Darwin/libepanet.dylib')
+    libepanet = resource_filename(__name__,'Darwin/libepanet.dylib')
 else:
-    libepanet = resource_filename(__name__,'pyepanet/data/Linux/libepanet2.so')
+    libepanet = resource_filename(__name__,'Linux/libepanet2.so')
 
 import logging
 logger = logging.getLogger(__name__)
@@ -94,13 +94,13 @@ class ENepanet():
         for lib in libnames:
             try:
                 if os.name in ['nt','dos']:
-                    libepanet = resource_filename(pyepanet_package,'pyepanet/data/Windows/%s.dll' % lib)
+                    libepanet = resource_filename(epanet_toolkit,'Windows/%s.dll' % lib)
                     self.ENlib = ctypes.windll.LoadLibrary(libepanet)
                 elif sys.platform in ['darwin']:
-                    libepanet = resource_filename(pyepanet_package,'pyepanet/data/Darwin/lib%s.dylib' % lib)
+                    libepanet = resource_filename(epanet_toolkit,'Darwin/lib%s.dylib' % lib)
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                 else:
-                    libepanet = resource_filename(pyepanet_package,'pyepanet/data/Linux/lib%s.so' % lib)
+                    libepanet = resource_filename(epanet_toolkit,'Linux/lib%s.so' % lib)
                     self.ENlib = ctypes.cdll.LoadLibrary(libepanet)
                 return # OK!
             except Exception as E1:
