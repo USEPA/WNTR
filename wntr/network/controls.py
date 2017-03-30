@@ -2,6 +2,32 @@
 The wntr.network.controls module includes methods to define network controls
 and control actions.  These controls modify parameters in the network during
 simulation.
+
+.. rubric:: Condition classes
+
+- :class:`~ControlCondition`
+- :class:`~SimpleNodeCondition`
+- :class:`~TimeOfDayCondition`
+- :class:`~SimTimeCondition`
+- :class:`~ValueCondition`
+- :class:`~RelativeCondition`
+- :class:`~OrCondition`
+- :class:`~AndCondition`
+
+.. rubric:: Action classes
+
+- :class:`~BaseControlAction`
+- :class:`~ControlAction`
+
+.. rubric:: Control classes
+
+- :class:`~Control`
+- :class:`~IfThenElseControl`
+- :class:`~TimeControl`
+- :class:`~ConditionalControl`
+
+
+
 """
 import wntr
 import math
