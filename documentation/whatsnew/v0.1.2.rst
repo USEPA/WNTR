@@ -1,14 +1,15 @@
 .. _whatsnew_0120:
 
-v0.1.2 (March 6, 2017)
--------------------------------
+v0.1.2 (Current development on the Master branch)
+---------------------------------------------------
 
 * Improved EPANET INP file reader/writer with unit conversions
+* Added EPANET binary file reader
 * Improved model option handling with the EpanetSimulator
 * Added water network compatibility with EPANET INP file SOURCES and RULES
 * Restructured code base (API change)
 
-  * Added `epanet` package which contains pyepanet, EPANET INP file reader/writer, and unit conversions
+  * Added `epanet` package which contains an epanet toolkit, EPANET INP file reader/writer, and unit conversions.  Removed pyepanet package.
   * Added `graphics` package with functions to plot networks
   * Reorganized `metrics`, `network`, `scenario`, `sim`, and `utils` packages
   * Removed Waterquality class from the scenario package.  This functionality has been replaced with Source class in the water network model.

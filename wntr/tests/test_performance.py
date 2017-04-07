@@ -239,7 +239,7 @@ class TestPerformance(unittest.TestCase):
         self.Net3_num_steps.append(len(sim.time_per_step))
 
         self.assertLess(np.average(head_diff_list), 3e-5)
-        self.assertLess(np.average(demand_diff_list), 1.4e-8)
+        self.assertLess(np.average(demand_diff_list), 1.5e-8)
         self.assertLess(np.average(flow_diff_list), 2.0e-7)
         self.assertLess(np.std(head_diff_list), 3e-5)
         self.assertLess(np.std(demand_diff_list), 1.1e-7)

@@ -1351,7 +1351,7 @@ class WaterNetworkModel(object):
         """
         for name, link in self._valves.items():
             yield name, link
-    
+
     def curves(self):
         """
         Returns a generator to iterate over all curves.
@@ -1373,7 +1373,7 @@ class WaterNetworkModel(object):
         """
         for source_name, source in self._sources.items():
             yield source_name, source
-            
+
     @property
     def node_name_list(self):
         """
@@ -1456,7 +1456,7 @@ class WaterNetworkModel(object):
 
         for name, node in self._nodes.items():
             self.set_node_coordinates(name, (pos[name][0]*scale, pos[name][1]*scale))
-    
+
     @property
     def _shifted_time(self):
         """
@@ -2152,6 +2152,7 @@ class Junction(Node):
         self.prev_expected_demand = None
         self.expected_demand = base_demand
         self.demand_pattern_name = demand_pattern_name
+        self._categorized_demands = {}  # _categorized_demands[category] = (base_demand, pattern_name)
         self.elevation = elevation
         self.nominal_pressure = 20.0
         "The nominal pressure attribute is used for pressure-dependent demand. This is the lowest pressure at which the customer receives the full requested demand."
@@ -2315,6 +2316,16 @@ class Junction(Node):
         """
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
+
+    def set_demand(self, base_demand, pattern_name=None):
+        pass
+
+    def add_categorized_demand(self, category, base_demand, pattern_name=None):
+        pass
+
+    def remove_categorized_demand(self, category):
+        pass
+
 
 class Tank(Node):
     """
