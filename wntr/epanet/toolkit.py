@@ -167,6 +167,80 @@ class ENepanet():
         self._error()
         return
 
+    def ENsaveH(self):
+        """
+        solves for network hydraulics in all time periods
+
+        Must be called before ENreport() if no WQ simulation made.
+        Should not be called if ENsolveQ() will be used.
+
+        """
+        self.errcode = self.ENlib.ENsaveH()
+        self._error()
+        return
+
+    def ENopenH(self):
+        """sets up data structures for hydraulic analysis"""
+        self.errcode = self.ENlib.ENopenH()
+        self._error()
+        return
+
+    def ENinitH(self, iFlag):
+        """
+        initializes hydraulic analysis
+
+        Arguments:
+         * iFlag   = 2-digit flag where 1st (left) digit indicates
+                     if link flows should be re-initialized (1) or
+                     not (0) and 2nd digit indicates if hydraulic
+                     results should be saved to file (1) or not (0)
+        """
+        self.errcode = self.ENlib.ENinitH(iFlag)
+        self._error()
+        return
+
+    def ENrunH(self):
+        """
+        solves hydraulics for conditions at time t.
+
+        Returns: long
+         * current simulation time (seconds)
+
+        This function is used in a loop with ENnextH() to run
+        an extended period hydraulic simulation.
+        See ENsolveH() for an example.
+
+        """
+        lT = ctypes.c_long()
+        self.errcode = self.ENlib.ENrunH(byref(lT))
+        self._error()
+        self.cur_time = lT.value
+        return lT.value
+
+    def ENnextH(self):
+        """
+        determines time until next hydraulic event.
+
+        Returns:
+         * time (seconds) until next hydraulic event
+           (0 marks end of simulation period)
+
+        This function is used in a loop with ENrunH() to run
+        an extended period hydraulic simulation.
+        See ENsolveH() for an example.
+
+        """
+        lTstep = ctypes.c_long()
+        self.errcode = self.ENlib.ENnextH(byref(lTstep))
+        self._error()
+        return lTstep.value
+
+    def ENcloseH(self):
+        """frees data allocated by hydraulics solver"""
+        self.errcode = self.ENlib.ENcloseH()
+        self._error()
+        return
+
     def ENsavehydfile(self, filename):
         """
         copies binary hydraulics file to disk
@@ -197,6 +271,66 @@ class ENepanet():
         self._error()
         return
 
+    def ENopenQ(self):
+        """sets up data structures for WQ analysis"""
+        self.errcode = self.ENlib.ENopenQ()
+        self._error()
+        return
+
+    def ENinitQ(self, iSaveflag):
+        """
+        initializes WQ analysis
+
+        Arguments:
+         * saveflag= EN_SAVE (1) if results saved to file,
+                     EN_NOSAVE (0) if not
+
+        """
+        self.errcode = self.ENlib.ENinitQ(iSaveflag)
+        self._error()
+        return
+
+    def ENrunQ(self):
+        """
+        retrieves hydraulic & WQ results at time t.
+
+        Returns: long
+         * current simulation time (seconds)
+
+        This function is used in a loop with ENnextQ() to run
+        an extended period WQ simulation. See ENsolveQ() for
+        an example.
+
+        """
+        lT = ctypes.c_long()
+        self.errcode = self.ENlib.ENrunQ(byref(lT))
+        self._error()
+        return lT.value
+
+    def ENnextQ(self):
+        """
+        advances WQ simulation to next hydraulic event.
+
+        Returns: long
+         * time (seconds) until next hydraulic event
+           (0 marks end of simulation period)
+
+        This function is used in a loop with ENrunQ() to run
+        an extended period WQ simulation. See ENsolveQ() for
+        an example.
+
+        """
+        lTstep = ctypes.c_long()
+        self.errcode = self.ENlib.ENnextQ(byref(lTstep))
+        self._error()
+        return lTstep.value
+
+    def ENcloseQ(self):
+        """frees data allocated by WQ solver"""
+        self.errcode = self.ENlib.ENcloseQ()
+        self._error()
+        return
+
     def ENreport(self):
         """writes report to report file"""
         self.errcode = self.ENlib.ENreport()
@@ -218,3 +352,91 @@ class ENepanet():
         self.errcode = self.ENlib.ENgetcount(iCode, byref(iCount))
         self._error()
         return iCount.value
+
+
+    def ENgetflowunits(self):
+        """
+        retrieves flow units code
+
+        Returns: int
+         * code of flow units in use (see toolkit.optFlowUnits)
+
+        """
+        iCode = ctypes.c_int()
+        self.errcode = self.ENlib.ENgetflowunits(byref(iCode))
+        self._error()
+        return iCode.value
+
+
+
+    def ENgetnodeindex(self, sId):
+        """
+        retrieves index of a node with specific ID
+
+        Arguments:
+         * sId     = node ID
+
+        Returns: int
+         * index of node in list of nodes
+
+        """
+        iIndex = ctypes.c_int()
+        self.errcode = self.ENlib.ENgetnodeindex(sId.encode('ascii'), byref(iIndex))
+        self._error()
+        return iIndex.value
+
+
+    def ENgetnodevalue(self, iIndex, iCode):
+        """
+        retrieves parameter value for a node
+
+        Arguments:
+         * iIndex  = node index
+         * iCode   = node parameter code (see toolkit.optNodeParams)
+
+        Returns: float
+         * value of node's parameter
+
+        """
+        fValue = ctypes.c_float()
+        self.errcode = self.ENlib.ENgetnodevalue(iIndex, iCode, byref(fValue))
+        self._error()
+        return fValue.value
+
+
+    def ENgetlinkindex(self, sId):
+        """
+        retrieves index of a link with specific ID
+
+        Arguments:
+         * sId     = link ID
+
+        Returns: int
+         * index of link in list of links
+
+        """
+        iIndex = ctypes.c_int()
+        self.errcode = self.ENlib.ENgetlinkindex(sId.encode('ascii'), byref(iIndex))
+        self._error()
+        return iIndex.value
+
+
+
+    def ENgetlinkvalue(self, iIndex, iCode):
+        """
+        retrieves parameter value for a link
+
+        Arguments:
+         * iIndex  = link index
+         * iCode   = link parameter code (see toolkit.optLinkParams)
+
+        Returns:
+         * value of link's parameter
+
+        """
+        fValue = ctypes.c_float()
+        self.errcode = self.ENlib.ENgetlinkvalue(iIndex, iCode, byref(fValue))
+        self._error()
+        return fValue.value
+
+
