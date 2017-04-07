@@ -8,7 +8,6 @@ Overview
 Water distribution systems face multiple challenges, including 
 aging infrastructure, 
 water quality concerns, 
-pipe breaks, 
 uncertainty in supply and demand, 
 natural disasters, 
 environmental emergencies, 
