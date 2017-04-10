@@ -1,5 +1,9 @@
 .. _stochastic_simulation:
 
+.. raw:: latex
+
+    \newpage
+
 Stochastic simulation
 ===============================
 
@@ -8,7 +12,7 @@ scenarios.  For disaster scenarios, the location, duration, and severity of diff
 can be drawn from distributions and included in the simulation.  
 Distributions can be a function of component properties (i.e., age, material) or 
 based on engineering standards.
-The Python package Numpy includes many distributions and random selection methods that can be used for stochastic
+The Python packages Numpy and Scipy include statistical distributions and random selection methods that can be used for stochastic
 simulation.  
 
 For example, the following code can be used to select N unique pipes 
@@ -24,15 +28,18 @@ The example **stochastic_simulation.py** runs multiple realizations
 of a pipe leak scenario where the location and duration are drawn from probability 
 distributions.
 
+Fragility curves
+-------------------
 Fragility curves are commonly used in disaster models to define the probability 
 of exceeding a given damage state as a function environmental change.
 Fragility curves are closely related to survival curves, which are used to define the probability of component failure due to age.  
 To estimate earthquake damage, fragility curves are defined as a function of peak
-ground acceleration, peak ground velocity, or repair rate.  Fragility curves can also
-be defined as a function of flood stage, wind speed, and temperature for other
-types of disasters.  
+ground acceleration, peak ground velocity, or repair rate.  
 The American Lifelines Alliance report [ALA01]_
 includes seismic fragility curves for water network components.
+Fragility curves can also
+be defined as a function of flood stage, wind speed, and temperature for other
+types of disasters.  
 
 Fragility curves can have multiple damage states.  
 Each state should corresponds to specific changes to the network model that represent damage, for example, a major or minor leak.
@@ -55,7 +62,7 @@ a specific junction, the probability of exceeding a Major damage state 0.25 and 
 of exceeding the Minor damage state is 0.85.  For each stochastic simulation, a random number is 
 drawn between 0 and 1.  If the random number is between 0 and 0.25, the junction is assigned Minor damage.
 If the random number is between 0.25 and 0.85, then the junction is assigned Major damage. 
-If the random number is between 0.85 and 1, then the junction is assigned no damage.
+If the random number is between 0.85 and 1, then the junction is assigned No damage.
 After selecting a damage state for the junction, the network should be changed to reflect the associated damage.
 For example, if the junction has Major damage, a large leak might be defined at that location.
 

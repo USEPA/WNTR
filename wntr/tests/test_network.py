@@ -559,11 +559,6 @@ class TestNet3InpWriterResults(unittest.TestCase):
             for t in self.results2.node.major_axis:
                 self.assertAlmostEqual(self.results2.node.at['demand',t,node_name], self.results.node.at['demand',t,node_name], 4)
 
-    def test_node_expected_demand(self):
-        for node_name, node in self.wn.nodes():
-            for t in self.results2.node.major_axis:
-                self.assertAlmostEqual(self.results2.node.at['expected_demand',t,node_name], self.results.node.at['expected_demand',t,node_name], 4)
-
     def test_node_head(self):
         for node_name, node in self.wn.nodes():
             for t in self.results2.node.major_axis:

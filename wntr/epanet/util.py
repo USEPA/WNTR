@@ -1,5 +1,28 @@
 """
 The wntr.epanet.util module contains unit conversion utilities based on EPANET units.
+
+.. rubric:: Contents
+
+- :class:`~wntr.epanet.util.FlowUnits`
+- :class:`~wntr.epanet.util.MassUnits`
+- :class:`~wntr.epanet.util.QualParam`
+- :class:`~wntr.epanet.util.HydParam`
+- :meth:`to_si`
+- :meth:`from_si`
+- :class:`~StatisticsType`
+- :class:`~QualType`
+- :class:`~SourceType`
+- :class:`~PressureUnits`
+- :class:`~FormulaType`
+- :class:`~ControlType`
+- :class:`~LinkTankStatus`
+- :class:`~MixType`
+- :class:`~ResultType`
+- :class:`~wntr.epanet.util.EN`
+
+----
+
+
 """
 import numpy as np
 import enum
@@ -222,13 +245,6 @@ class QualParam(enum.Enum):
     :attr:`~WaterAge`           Water age at a node
     ==========================  ================================================================
 
-    .. skip::
-
-        .. rubric:: Enum Member Methods
-
-        .. autosummary::
-            to_si
-            from_si
 
     """
     Quality = 4
@@ -407,13 +423,6 @@ class HydParam(enum.Enum):
     :attr:`~Power`              Pump power
     ==========================  ===================================================================
 
-    .. skip::
-
-        .. rubric:: Methods
-
-        .. autosummary::
-            to_si
-            from_si
 
     """
     Elevation = 0
@@ -647,20 +656,6 @@ def to_si(from_units, data, param,
     -------
     float, array-like, or dict
         The data values convert into SI standard units
-
-    Examples
-    --------
-    The following examples show conversion from EPANET flow and mass units into SI units.
-    Convert concentration of 15.0 mg / L to SI units
-
-    >>> to_si(FlowUnits.MGD, 15.0, QualParam.Concentration)
-    0.015
-
-    Convert a bulk reaction coefficient for a first order reaction to SI units.
-
-    >>> to_si(FlowUnits.AFD, 1.0, QualParam.BulkReactionCoeff,
-    ... mass_units=MassUnits.ug, reaction_order=1)
-    1.1574074074074073e-05
 
 
     """
@@ -934,6 +929,7 @@ class MixType(enum.Enum):
 
 
 class ResultType(enum.Enum):
+    """Extended period simulation results type"""
     demand = 1
     head = 2
     pressure = 3
@@ -949,24 +945,28 @@ class ResultType(enum.Enum):
 
     @property
     def is_node(self):
+        """Is a nodal property result"""
         if abs(self.value) < 5:
             return True
         return False
 
     @property
     def is_link(self):
+        """Is a link property result"""
         if self.value > 4:
             return True
         return False
 
     @property
     def is_qual(self):
+        """Is related to quality"""
         if self.value in [4, 8, 11]:
             return True
         return False
 
     @property
     def is_hyd(self):
+        """Is related to hydraulics"""
         if self.value in [1,2,3,5,6,7,12]:
             return True
         return False

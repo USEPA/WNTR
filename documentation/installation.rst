@@ -1,3 +1,7 @@
+.. raw:: latex
+
+    \newpage
+
 Installation
 ======================================
 .. include:: <isonum.txt>

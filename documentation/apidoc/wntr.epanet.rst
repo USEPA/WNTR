@@ -6,12 +6,6 @@ wntr.epanet package
     :no-undoc-members:
     :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-
-    wntr.epanet.pyepanet
 
 Submodules
 ----------
@@ -19,5 +13,6 @@ Submodules
 .. toctree::
 
    wntr.epanet.io
+   wntr.epanet.toolkit
    wntr.epanet.util
 

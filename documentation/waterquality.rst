@@ -1,12 +1,17 @@
-.. _water_quality_simulation:
+.. raw:: latex
 
+    \newpage
+
+.. _water_quality_simulation:
+	
 Water quality simulation
 ==================================
 
 Water quality simulation can only be run using the **EpanetSimulator**. 
 As listed in the :ref:`software_framework` section,  this means that the hydraulic simulation must use demand driven simulation.
 Note that the WNTRSimulator can be used to compute demands under pressure-driven conditions and those 
-demands can be used in the EPANETSimulator.
+demands can be used in the EpanetSimulator.  The following code illustrates how to reset demands in a water network model using 
+a pressure-driven simulation.
 
 .. literalinclude:: ../examples/water_quality_simulation.py
    :lines: 50-54
@@ -53,7 +58,7 @@ Three types of water quality analysis are supported.  These options include wate
 
 Additional water quality options include viscosity, diffusivity, specific gravity, tolerance, bulk reaction order, wall reaction order, 
 tank reaction order, bulk reaction coefficient, wall reaction coefficient, limiting potential, and roughness correlation.
-These parameters are defined in the in the :meth:`~wntr.network.model.WaterNetworkOptions` documentation.
+These parameters are defined in the in the :meth:`~wntr.network.model.WaterNetworkOptions` API documentation.
 
 When creating a water network model from an EPANET INP file, water quality options are populated from the [OPTIONS] and [REACTIONS] sections of EPANET INP file.
 All of these options can be modified in WNTR and then written to an EPANET INP file.
