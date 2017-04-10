@@ -16,11 +16,11 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 .. literalinclude:: ../examples/hydraulic_simulation.py
    :lines: 12-13
 
-The WNTRsimulator is a pure Python simulation engine based on the same equations
-as EPANET.  The WNTRsimulator does not include equations to run water quality 
-simulations.  The WNTRsimulator includes the option to simulate leaks, and run hydraulic simulation
+The WNTRSimulator is a pure Python simulation engine based on the same equations
+as EPANET.  The WNTRSimulator does not include equations to run water quality 
+simulations.  The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulation
 in demand-driven or pressure-driven demand mode.
-A hydraulic simulation using the WNTRsimulator is run using the following code.
+A hydraulic simulation using the WNTRSimulator is run using the following code.
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
    :lines: 16-17
@@ -161,7 +161,7 @@ In pressure-driven demand simulation, the delivered demand depends on pressure.
 The mass balance and headloss equations described above are solved by 
 simultaneously determining demand along with the network pressures and flow rates.  
 
-The WNTRsimulator can run hydraulics using pressure-driven demand simulation
+The WNTRSimulator can run hydraulics using pressure-driven demand simulation
 using the following pressure-demand relationship [WaSM88]_:
 
 .. math::

@@ -5,18 +5,17 @@
 Overview
 ======================================
 
-Water distribution systems face multiple challenges, including 
+Drinking water systems face multiple challenges, including 
 aging infrastructure, 
 water quality concerns, 
-pipe breaks, 
 uncertainty in supply and demand, 
 natural disasters, 
-environmental emergencies, 
+environmental emergencies, cyber
 and terrorist attacks.  
-All of these have the potential to disrupt a large portion of a water system.  
+All of these have the potential to disrupt a large portion of a water system causing damage to infrastructure and outages to customers.  
 Increasing resilience to these types of hazards is essential to improving 
-water security.  Water utilities need to be able to predict how their system 
-will perform during disruptive incidents and understand how to best absorb, 
+water security.  Resiliences means being able to predict how their system 
+will perform during disruptive incidents and understanding how to best absorb, 
 recover from, and more successfully adapt.  Simulation and analysis tools 
 can help water utilities explore how their network will respond to expected, 
 and unexpected, incidents and help inform decisions to make networks
@@ -24,8 +23,8 @@ more resilient over time [USEPA14]_.
 
 The Water Network Tool for Resilience (WNTR, pronounced *winter*) is a Python 
 package designed to simulate and analyze resilience of 
-water distribution networks.  
-The Application Program Interface (API) is flexible and allows for changes to the network structure and operations, 
+water distribution networks.  Here, a network refers to the collection of pipes, pumps, nodes, and valves that make up a water distribution system. 
+WNTR has an Application Program Interface (API) that is flexible and allows for changes to the network structure and operations, 
 along with simulation of disruptive incidents and recovery actions.  
 WNTR can be installed through the United States Environmental Protection Agency (USEPA) GitHub organization at https://github.com/USEPA/WNTR.  
 Interactive Development Environments (IDE), like Spyder, are recommended for code development.
@@ -40,15 +39,15 @@ Interactive Development Environments (IDE), like Spyder, are recommended for cod
    
 WNTR includes capabilities to:
 
-* **Generate water network models** from scratch or using EPANET formatted water network model input (EPANET INP) files [Ross00]_ 
+* **Generate water network models** from scratch or from existing EPANET formatted water network model input (EPANET INP) files [Ross00]_ 
 
 * **Modify network structure** by adding/removing components and changing component characteristics
 
 * **Modify network operation** by changing initial conditions, component settings, and time-based and conditional controls
 
-* **Add disruptive incidents** including pipe leaks, power outages, contaminant injection, and changes to supply and demand
+* **Add disruptive incidents** including damage to tanks, valves, and pumps, pipe leaks, power outages, contaminant injection, and changes to supply and demand
 
-* **Add response/repair strategies** including leak repair, retrofitted pipes, power restoration, and backup generation
+* **Add response/repair/mitigation strategies** including leak repair, retrofitted pipes, power restoration, and backup generation
 
 * **Simulate network hydraulics and water quality** using pressure-driven or demand-driven hydraulic simulation, and the ability to pause and restart simulations
 

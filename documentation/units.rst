@@ -1,4 +1,4 @@
-﻿.. raw:: latex
+.. raw:: latex
 
     \newpage
 
@@ -25,7 +25,7 @@ All data in WNTR is stored in SI (International System) units:
 
 WNTR is compatible with all EPANET unit conventions.  When using an EPANET INP file to 
 generate a water network model, WNTR converts model parameters using the units defined in the 
-**Units** and **Quality** options.  
+**Units** and **Quality** options of the EPANET INP file.  
 These options define the mass and flow units for the model.
 Some units also depend on the equation used
 for pipe roughness headloss and on the reaction order specified. 
@@ -40,11 +40,11 @@ for pipe roughness headloss and on the reaction order specified.
    +======================+=====================================+====================================+
    | Flow                 | *flow* can be defined as:           | *flow* can be defined as:          |
    |                      |                                     |                                    |
-   |                      | - CFS: ft³/s                        | - LPS: L/s                         |
+   |                      | - CFS: ft :sup:`3` /s               | - LPS: L/s                         |
    |                      | - GPM: gal/min                      | - LPM: L/min                       |
    |                      | - MGD: million gal/day              | - MLD: ML/day                      |
-   |                      | - IMGD: million imperial gal/day    | - CMH: m³/hr                       |
-   |                      | - AFD: acre-feet/day                | - CMD: m³/day                      |
+   |                      | - IMGD: million imperial gal/day    | - CMH: m :sup:`3` /hr              |
+   |                      | - AFD: acre-feet/day                | - CMD: m :sup:`3` /day             |
    +----------------------+-------------------------------------+------------------------------------+
    | Demand               |   *flow*                            |   *flow*                           |
    +----------------------+-------------------------------------+------------------------------------+
@@ -67,7 +67,7 @@ for pipe roughness headloss and on the reaction order specified.
    +----------------------+-------------------------------------+------------------------------------+
    | Pressure             |   psi                               |   m   or   kPa                     |
    +----------------------+-------------------------------------+------------------------------------+
-   | Roughness coeff:     |   10³ ft                            |   mm                               |
+   | Roughness coeff:     |   10 :sup:`3` ft                    |   mm                               |
    | D-W                  |                                     |                                    |
    +----------------------+-------------------------------------+------------------------------------+
    | Roughness coeff:     | unitless                            |  unitless                          |
@@ -75,7 +75,7 @@ for pipe roughness headloss and on the reaction order specified.
    +----------------------+-------------------------------------+------------------------------------+
    | Velocity             |   ft/s                              |   m/s                              |
    +----------------------+-------------------------------------+------------------------------------+
-   | Volume               |   ft³                               |   m³                               |
+   | Volume               |   ft :sup:`3`                       |   m :sup:`3`                       |
    +----------------------+-------------------------------------+------------------------------------+
 
 .. _table-quality-units:
@@ -91,7 +91,7 @@ for pipe roughness headloss and on the reaction order specified.
    | Bulk reaction        |   1/day                             |  1/day                             |
    | coefficient: order-1 |                                     |                                    |
    +----------------------+-------------------------------------+------------------------------------+
-   | Wall reaction        |   *mass* /ft²/day                   |   *mass* /m²/day                   |
+   | Wall reaction        |   *mass* /ft :sup:`2` /day          |   *mass* /m :sup:`2` /day          |
    | coefficient: order-0 |                                     |                                    |
    +----------------------+-------------------------------------+------------------------------------+
    | Wall reaction        |   ft/day                            |   m/day                            |
