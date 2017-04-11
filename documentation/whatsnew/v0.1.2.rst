@@ -1,6 +1,6 @@
 .. _whatsnew_0120:
 
-v0.1.2 (Current development on the Master branch)
+v0.1.2 (Master branch)
 ---------------------------------------------------
 
 * Improved EPANET INP file reader/writer with unit conversions
