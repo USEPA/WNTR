@@ -1,6 +1,6 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
 
 Installation
 ======================================
@@ -118,6 +118,8 @@ The following Python packages are required:
 * enum34 (for Python 2.7): used to add enumerated type support for Python 2.7, 
   https://pypi.python.org/pypi/enum34
 
+These packages are included in the Anaconda Python distribution.
+ 
 Optional dependencies
 -------------------------
 
@@ -131,7 +133,8 @@ The following Python packages are optional:
   https://github.com/numpy/numpydoc
 * nose: used to run software tests,
   http://nose.readthedocs.io
-	
+
+These packages are included in the Anaconda Python distribution.
 
 .. The following is not shown in the UM
    WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 

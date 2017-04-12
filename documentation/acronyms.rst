@@ -1,6 +1,6 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
 
 List of acronyms
 ======================================

@@ -1,6 +1,6 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
 
 NetworkX graph
 ======================================
@@ -15,6 +15,8 @@ the graph can have multiple links with the same start and end node.
 A simple example is shown in :numref:`fig-graph`.
 For water networks, the link direction is from the start node to the end node. 
 The link direction is used as a reference to track flow direction in the network.
+For example, positive flow indicates that the flow direction is from the start node to the end node 
+while negative flow indicates that the flow direction is from the end node to the start node.
 Multiple links with the same start and end node can be used to represent redundant pipes or backup pumps.
 In WNTR, the graph stores 
 the start and end node of each link, 
@@ -32,7 +34,7 @@ WNTR updates the graph as elements are added and removed from the water network 
 NetworkX includes numerous methods to analyze the structure of complex networks.
 For more information on NetworkX, see https://networkx.github.io/.
 WNTR includes a custom Graph Class, 
-:meth:`~wntr.network.graph.WntrMultiDiGraph`.
+:class:`~wntr.network.graph.WntrMultiDiGraph`.
 This class inherits from NetworkX MulitDigraph and includes additional methods 
 that are specific to WNTR. 
 The example **networkx_graph.py** can be used to generate a graph from a water network model.
@@ -69,7 +71,7 @@ The following NetworkX method can be used to check if a graph is connected.
 
 Some methods in NetworkX can use weighted graphs.
 A **weighted graph** is a graph in which each link is given a weight.  
-The WNTR method :meth:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` can be used to weight the graph by any attribute.
+The WNTR method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` can be used to weight the graph by any attribute.
 In the following example, the graph is weighted by length.  This graph can then be used to compute path lengths.
 
 .. literalinclude:: ../examples/networkx_graph.py

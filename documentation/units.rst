@@ -1,6 +1,6 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
 
 Units
 ======================================
@@ -29,7 +29,8 @@ generate a water network model, WNTR converts model parameters using the units d
 These options define the mass and flow units for the model.
 Some units also depend on the equation used
 for pipe roughness headloss and on the reaction order specified. 
-:numref:`table-hydraulic-units`, :numref:`table-quality-units`, and :numref:`table-energy-units` provide information on EPANET unit conventions (modified from [Ross00]_).  
+:numref:`table-hydraulic-units`, :numref:`table-quality-units`, and :numref:`table-energy-units` provide 
+information on EPANET unit conventions (modified from [Ross00]_).  
 
 .. _table-hydraulic-units:
 .. table:: EPANET hydraulic unit conventions.
