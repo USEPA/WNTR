@@ -59,7 +59,7 @@ install:
     - python setup.py install
 
 script:
-    - nosetests -v --with-coverage --with-doctest --cover-package=wntr wntr
+    - nosetests -v --with-coverage --with-doctest --doctest-extension=.rst --cover-package=wntr documentation/*.rst wntr 
 
 after_success:
     coveralls

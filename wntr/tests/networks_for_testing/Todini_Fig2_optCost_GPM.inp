@@ -2,7 +2,7 @@
 
 
 [JUNCTIONS]
-;ID              	Elev        	Demand      	Pattern         
+;ID              	Elev        	Demand      	Pattern
  2               	492         	440         	                	;
  3               	525         	440         	                	;
  4               	509         	528         	                	;
@@ -11,7 +11,7 @@
  7               	525         	881         	                	;
 
 [RESERVOIRS]
-;ID              	Head        	Pattern         
+;ID              	Head        	Pattern
  1               	689         	                	;
 
 [TANKS]
@@ -32,7 +32,7 @@
 ;ID              	Node1           	Node2           	Parameters
 
 [VALVES]
-;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss   
+;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss
 
 [TAGS]
 
@@ -71,6 +71,7 @@
 
 [SOURCES]
 ;Node            	Type        	Quality     	Pattern
+2                    MASS        1.0
 
 [REACTIONS]
 ;Type     	Pipe/Tank       	Coefficient
@@ -89,13 +90,13 @@
 ;Tank            	Model
 
 [TIMES]
- Duration           	0:00 
- Hydraulic Timestep 	1:00 
- Quality Timestep   	0:05 
- Pattern Timestep   	1:00 
- Pattern Start      	0:00 
- Report Timestep    	1:00 
- Report Start       	0:00 
+ Duration           	0:00
+ Hydraulic Timestep 	1:00
+ Quality Timestep   	0:05
+ Pattern Timestep   	1:00
+ Pattern Start      	0:00
+ Report Timestep    	1:00
+ Report Start       	0:00
  Start ClockTime    	12 am
  Statistic          	NONE
 
@@ -124,13 +125,13 @@
 
 [COORDINATES]
 ;Node            	X-Coord         	Y-Coord
- 2               	4500.00         	7698.41         
- 3               	3119.05         	7698.41         
- 4               	4500.00         	6269.84         
- 5               	3119.05         	6269.84         
- 6               	4500.00         	5031.75         
- 7               	3119.05         	5031.75         
- 1               	5563.49         	7698.41         
+ 2               	4500.00         	7698.41
+ 3               	3119.05         	7698.41
+ 4               	4500.00         	6269.84
+ 5               	3119.05         	6269.84
+ 6               	4500.00         	5031.75
+ 7               	3119.05         	5031.75
+ 1               	5563.49         	7698.41
 
 [VERTICES]
 ;Link            	X-Coord         	Y-Coord
@@ -139,9 +140,9 @@
 ;X-Coord           Y-Coord          Label & Anchor Node
 
 [BACKDROP]
- DIMENSIONS     	0.00            	0.00            	10000.00        	10000.00        
+ DIMENSIONS     	0.00            	0.00            	10000.00        	10000.00
  UNITS          	None
- FILE           	
- OFFSET         	0.00            	0.00            
+ FILE
+ OFFSET         	0.00            	0.00
 
 [END]

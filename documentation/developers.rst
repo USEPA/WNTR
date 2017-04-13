@@ -1,5 +1,9 @@
 .. _developers:
 
+.. raw:: latex
+
+    \clearpage
+	
 Software quality assurance
 =======================================
 
@@ -28,7 +32,7 @@ Testing status (passing/failed) and code coverage statistics are posted on
 the README section at https://github.com/USEPA/WNTR.
 	
 Tests can also be run locally using the Python package nose.  
-For more information on nosetests, see  http://nose.readthedocs.io/.
+For more information on nose, see  http://nose.readthedocs.io/.
 nose comes with a command line software tool called nosetests.
 Tests can be run in the WNTR directory using the following command::
 
@@ -37,7 +41,7 @@ Tests can be run in the WNTR directory using the following command::
 Documentation
 ---------------------
 WNTR includes a user manual that is built using the Read the Docs service.
-Using this service, the user manual is rebuilt each time changes are made to the code.
+The user manual is automatically rebuilt each time changes are made to the code.
 The documentation is publicly available at http://wntr.readthedocs.io/.
 The user manual includes an overview, installation instructions, simple examples, 
 and information on the code structure and functions.  

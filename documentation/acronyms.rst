@@ -1,3 +1,7 @@
+.. raw:: latex
+
+    \clearpage
+
 List of acronyms
 ======================================
 

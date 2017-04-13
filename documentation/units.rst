@@ -1,4 +1,8 @@
-﻿Units
+.. raw:: latex
+
+    \clearpage
+
+Units
 ======================================
 
 All data in WNTR is stored in SI (International System) units:
@@ -20,27 +24,28 @@ All data in WNTR is stored in SI (International System) units:
 * Volume = :math:`m^3`
 
 WNTR is compatible with all EPANET unit conventions.  When using an EPANET INP file to 
-generate a water network model, WNTR uses the specific internal units defined by the 
-**Units** and **Quality** options in the EPANET INP file.  
-Together, these define the mass and flow units for the model.
+generate a water network model, WNTR converts model parameters using the units defined in the 
+**Units** and **Quality** options of the EPANET INP file.  
+These options define the mass and flow units for the model.
 Some units also depend on the equation used
 for pipe roughness headloss and on the reaction order specified. 
-:numref:`table-hydraulic-units`, :numref:`table-quality-units`, and :numref:`table-energy-units` provide information on EPANET unit conventions (modified from [Ross00]_).  
+:numref:`table-hydraulic-units`, :numref:`table-quality-units`, and :numref:`table-energy-units` provide 
+information on EPANET unit conventions (modified from [Ross00]_).  
 
 .. _table-hydraulic-units:
 .. table:: EPANET hydraulic unit conventions.
 
    +----------------------+-------------------------------------+------------------------------------+
-   | **Hydraulic**        | **US Customary units**              | **SI-based units**                 |
-   | **Parameter**        |                                     |                                    |
+   |   Hydraulic          |   US customary units                |   SI-based units                   |
+   |   parameter          |                                     |                                    |
    +======================+=====================================+====================================+
    | Flow                 | *flow* can be defined as:           | *flow* can be defined as:          |
    |                      |                                     |                                    |
-   |                      | - CFS: ft³/s                        | - LPS: L/s                         |
+   |                      | - CFS: ft :sup:`3` /s               | - LPS: L/s                         |
    |                      | - GPM: gal/min                      | - LPM: L/min                       |
    |                      | - MGD: million gal/day              | - MLD: ML/day                      |
-   |                      | - IMGD: million imperial gal/day    | - CMH: m³/hr                       |
-   |                      | - AFD: acre-feet/day                | - CMD: m³/day                      |
+   |                      | - IMGD: million imperial gal/day    | - CMH: m :sup:`3` /hr              |
+   |                      | - AFD: acre-feet/day                | - CMD: m :sup:`3` /day             |
    +----------------------+-------------------------------------+------------------------------------+
    | Demand               |   *flow*                            |   *flow*                           |
    +----------------------+-------------------------------------+------------------------------------+
@@ -54,7 +59,7 @@ for pipe roughness headloss and on the reaction order specified.
    +----------------------+-------------------------------------+------------------------------------+
    | Length               |   ft                                |   m                                |
    +----------------------+-------------------------------------+------------------------------------+
-   | Emitter coefficient  |   *flow* / vpsi                     |  *flow* / vm                       |
+   | Emitter coefficient  |   *flow* / sqrt(psi)                |  *flow* / sqrt(m)                  |
    +----------------------+-------------------------------------+------------------------------------+
    | Friction factor      |  unitless                           |  unitless                          |
    +----------------------+-------------------------------------+------------------------------------+
@@ -63,7 +68,7 @@ for pipe roughness headloss and on the reaction order specified.
    +----------------------+-------------------------------------+------------------------------------+
    | Pressure             |   psi                               |   m   or   kPa                     |
    +----------------------+-------------------------------------+------------------------------------+
-   | Roughness coeff:     |   10³ ft                            |   mm                               |
+   | Roughness coeff:     |   10 :sup:`3` ft                    |   mm                               |
    | D-W                  |                                     |                                    |
    +----------------------+-------------------------------------+------------------------------------+
    | Roughness coeff:     | unitless                            |  unitless                          |
@@ -71,15 +76,15 @@ for pipe roughness headloss and on the reaction order specified.
    +----------------------+-------------------------------------+------------------------------------+
    | Velocity             |   ft/s                              |   m/s                              |
    +----------------------+-------------------------------------+------------------------------------+
-   | Volume               |   ft³                               |   m³                               |
+   | Volume               |   ft :sup:`3`                       |   m :sup:`3`                       |
    +----------------------+-------------------------------------+------------------------------------+
 
 .. _table-quality-units:
 .. table:: EPANET water quality unit conventions.
 
    +----------------------+-------------------------------------+------------------------------------+
-   | **Water Quality**    | **US Customary units**              | **SI-based units**                 |
-   | **Parameter**        |                                     |                                    |
+   | Water quality        | US customary units                  | SI-based units                     |
+   | parameter            |                                     |                                    |
    +======================+=====================================+====================================+
    | Concentration        |  *mass* /L where *mass* can be      |  *mass* /L where *mass* can be     |
    |                      |  defined as mg or ug                |  defined as mg or ug               |
@@ -87,7 +92,7 @@ for pipe roughness headloss and on the reaction order specified.
    | Bulk reaction        |   1/day                             |  1/day                             |
    | coefficient: order-1 |                                     |                                    |
    +----------------------+-------------------------------------+------------------------------------+
-   | Wall reaction        |   *mass* /ft²/day                   |   *mass* /m²/day                   |
+   | Wall reaction        |   *mass* /ft :sup:`2` /day          |   *mass* /m :sup:`2` /day          |
    | coefficient: order-0 |                                     |                                    |
    +----------------------+-------------------------------------+------------------------------------+
    | Wall reaction        |   ft/day                            |   m/day                            |
@@ -105,7 +110,7 @@ for pipe roughness headloss and on the reaction order specified.
 .. table:: EPANET energy unit conventions.
 
    +----------------------+-------------------------------------+------------------------------------+
-   | **Energy Parameter** | **US Customary units**              | **SI-based units**                 |
+   |   Energy parameter   |   US customary units                |   SI-based units                   |
    +======================+=====================================+====================================+
    | Energy               |   kW-hours                          | kW-hours                           |
    +----------------------+-------------------------------------+------------------------------------+

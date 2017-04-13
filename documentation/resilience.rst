@@ -1,3 +1,7 @@
+.. raw:: latex
+
+    \clearpage
+
 Resilience metrics
 ======================================
 
@@ -57,7 +61,7 @@ between a regular lattice and a random lattice in terms of structure and reliabi
   
 NetworkX includes a wide range of topographic metrics that can be computed using 
 the WntrMutliDiGraph.  WNTR includes additional methods/metrics to help compute 
-resilience. These methods are in the :meth:`~wntr.network.graph.WntrMultiDiGraph` class.
+resilience. These methods are in the :class:`~wntr.network.graph.WntrMultiDiGraph` class.
 Commonly used topographic metrics are listed in :numref:`table-topographic-metrics`.  
 Information on additional topographic metrics supported by NetworkX can be found 
 at https://networkx.github.io/.
@@ -75,7 +79,7 @@ at https://networkx.github.io/.
                                           The average node degree is a system wide metric used to describe the number of 
                                           connected links in a network.
                                           Node degree can be computed using the NetworkX method ``degree``.
-                                          Terminal nodes can be found using the method :meth:`~wntr.network.graph.WntrMultiDiGraph.terminal_nodes`.
+                                          Terminal nodes can be found using the method :class:`~wntr.network.graph.WntrMultiDiGraph.terminal_nodes`.
 
    Link density                           Link density is the ratio between the total number of links and the maximum 
                                           number of links in the network.  If links are allowed to connect a node to 
@@ -96,9 +100,9 @@ at https://networkx.github.io/.
 
    Simple paths                           A simple path is a path between two nodes that does not repeat any nodes.  NetworkX includes a method, ``all_simple_paths``, to compute
                                           all simple paths between two nodes.  
-                                          The method :meth:`~wntr.network.graph.WntrMultiDiGraph.links_in_simple_paths`
+                                          The method :class:`~wntr.network.graph.WntrMultiDiGraph.links_in_simple_paths`
                                           can be used to extract all links in a simple path along with the number of times each link was used in the paths. 
-                                          Paths can be time dependent, if related to simulated flow direction.  The method :meth:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` can be used 
+                                          Paths can be time dependent, if related to simulated flow direction.  The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` can be used 
                                           to weight the graph by a specified attribute.
 
    Shortest path lengths                  Shortest path lengths is the minimum number of links between a source node and all 
@@ -113,7 +117,7 @@ at https://networkx.github.io/.
                                           node.  Betweenness coefficient is a value between 0 and 1.
                                           Central point dominance is the average difference in betweenness centrality 
                                           of the most central point (having the maximum betweenness centrality) 
-                                          and all other nodes. These metrics can be computed using the NetworkX methods ``betweenness_centrality`` and the method :meth:`~wntr.network.graph.WntrMultiDiGraph.central_point_dominance`
+                                          and all other nodes. These metrics can be computed using the NetworkX methods ``betweenness_centrality`` and the method :class:`~wntr.network.graph.WntrMultiDiGraph.central_point_dominance`
 
    Closeness centrality                   Closeness centrality is the inverse of the sum of shortest path from one node to all other nodes.
                                           Closeness centrality can be computed using the NetworkX method ``closeness_centrality``.
@@ -128,7 +132,7 @@ at https://networkx.github.io/.
 
    Bridges                                A link is considered a bridge if the removal of that link increases the number of connected components in the network.
                                           The ratio of the number of bridges and the total number of links in the network is the bridge density.  Bridge density is a value between 0 and 1.
-                                          The method :meth:`~wntr.network.graph.WntrMultiDiGraph.bridges` can be used to find bridges in a network.
+                                          The method :class:`~wntr.network.graph.WntrMultiDiGraph.bridges` can be used to find bridges in a network.
    =====================================  ================================================================================================================================================
 
 ..
@@ -140,21 +144,21 @@ at https://networkx.github.io/.
       network to the maximum possible number of cycles in the network.  Meshedness coefficient is a value between 0 and 1.
 
       Spectral gap: The difference between the first and second eigenvalue of the networks adjacency matrix.
-	The method :meth:`~wntr.network.graph.WntrMultiDiGraph.spectral_gap` can be used to find the spectral gap of the network.
+	The method :class:`~wntr.network.graph.WntrMultiDiGraph.spectral_gap` can be used to find the spectral gap of the network.
 	
 	Algebraic connectivity	: The second smallest eigenvalue of the normalized Laplacian matrix of a network.
-	The method :meth:`~wntr.network.graph.WntrMultiDiGraph.algebraic_connectivity` can be used to find the algebraic connectivity of the network.
+	The method :class:`~wntr.network.graph.WntrMultiDiGraph.algebraic_connectivity` can be used to find the algebraic connectivity of the network.
 	
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
 	are connected in a network.  NPR is computed using ...
 	Connectivity will change at each time step, depending on the flow direction.  
-	The method :meth:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method 
+	The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method 
 	can be used to weight the graph by a specified attribute. 
 	
 	Critical ratio of defragmentation: The threshold where the network loses its large-scale connectivity and 
 	defragments, as a function of the node degree.  The critical ratio of 
 	defragmentation is related to percolation theory. The ratio is equal to 0 if all 
-	The method :meth:`~wntr.network.graph.WntrMultiDiGraph.critical_ratio_defrag` can be used to compute the critical ratio of defragmentation of the network.
+	The method :class:`~wntr.network.graph.WntrMultiDiGraph.critical_ratio_defrag` can be used to compute the critical ratio of defragmentation of the network.
 
 Hydraulic metrics
 ---------------------
@@ -171,13 +175,13 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
    Metric                                 Description
    =====================================  ================================================================================================================================================
    Pressure                               To determine the number of node-time pairs above or below a specified pressure threshold, 
-                                          use the :meth:`~wntr.metrics.misc.query` method on results.node['pressure'].  
+                                          use the :class:`~wntr.metrics.misc.query` method on results.node['pressure'].  
 
    Todini index                           The Todini index [Todi00]_ is related to the capability of a system to overcome 
                                           failures while still meeting demands and pressures at the nodes. The 
                                           Todini index defines resilience at a specific time as a measure of surplus 
                                           power at each node and measures relative energy redundancy. 
-                                          The Todini index can be computed using the :meth:`~wntr.metrics.hydraulic.todini` method.
+                                          The Todini index can be computed using the :class:`~wntr.metrics.hydraulic.todini` method.
 
    Entropy                                Entropy [AwGB90]_ is a measure of uncertainty in a random variable.  
                                           In a water distribution network model, the random variable is 
@@ -185,17 +189,17 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           when a network component fails.  A network that carries maximum entropy 
                                           flow is considered reliable with multiple alternate paths.
                                           Connectivity will change at each time step, depending on the flow direction.  
-                                          The method :meth:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method can be used to weight the graph by a specified attribute. 
-                                          Entropy can be computed using the :meth:`~wntr.metrics.hydraulic.entropy` method.
+                                          The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method can be used to weight the graph by a specified attribute. 
+                                          Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
 
    Fraction of delivered volume           Fraction of delivered volume is the ratio of total volume delivered to the total volume requested [OsKS02]_.  
-                                          This metric can be computed as a function of time or space using the :meth:`~wntr.metrics.hydraulic.fdv` method.
+                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.fdv` method.
 
    Fraction of delivered demand           Fraction of delivered demand is the fraction of time periods where demand is met [OsKS02]_.
-                                          This metric can be computed as a function of time or space using the :meth:`~wntr.metrics.hydraulic.fdd` method.
+                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.fdd` method.
 
    Population impacted                    Population that is impacted by a specific quantity can be computed using the 
-                                          :meth:`~wntr.metrics.misc.population_impacted` method.  For example, this method can be used to compute the population
+                                          :class:`~wntr.metrics.misc.population_impacted` method.  For example, this method can be used to compute the population
                                           impacted by pressure below a specified threshold.
    =====================================  ================================================================================================================================================
 
@@ -213,19 +217,19 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
    Metric                                 Description
    =====================================  ================================================================================================================================================
    Water age                              To determine the number of node-time pairs above or below a specified water age threshold, 
-                                          use the :meth:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using AGE.
+                                          use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using AGE.
 
    Concentration                          To determine the number of node-time pairs above or below a specified concentration threshold, 
-                                          use the :meth:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CHEM or TRACE.
+                                          use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CHEM or TRACE.
 
    Fraction of delivered quality          Fraction of delivered quality is the fraction of time periods where water quality standards are met [OsKS02]_.
-                                          This metric can be computed as a function of time or space using the :meth:`~wntr.metrics.water_quality.fdq` method
+                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.water_quality.fdq` method
 
    Average water consumed                 Average water consumed is computed at each node, based on node demand and demand patterns [USEPA15]_.
-                                          The metric can be computed using the :meth:`~wntr.metrics.misc.average_water_consumed` method.
+                                          The metric can be computed using the :class:`~wntr.metrics.misc.average_water_consumed` method.
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
-                                          :meth:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water quality metrics.
+                                          :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water quality metrics.
    =====================================  ================================================================================================================================================
 
 Water security metrics
@@ -240,18 +244,18 @@ Water security metrics included in WNTR are listed in  :numref:`table-water-secu
    Metric                                 Description
    =====================================  ================================================================================================================================================
    Mass consumed                          Mass consumed is the mass of contaminant that exits the network via node demand at each node-time pair [USEPA15]_.  
-                                          The metric can be computed using the :meth:`~wntr.metrics.water_security.mass_contaminant_consumed` method.
+                                          The metric can be computed using the :class:`~wntr.metrics.water_security.mass_contaminant_consumed` method.
 
    Volume consumed                        Volume consumed is the volume of contaminant that exits the network via node demand at each node-time pair [USEPA15]_.   
                                           A detection limit can be specified.
-                                          The metric can be computed using the :meth:`~wntr.metrics.water_security.volume_contaminant_consumed` method.
+                                          The metric can be computed using the :class:`~wntr.metrics.water_security.volume_contaminant_consumed` method.
 
    Extent of contamination                Extent of contamination is the length of contaminated pipe at each node-time pair [USEPA15]_.  
                                           A detection limit can be specified.
-                                          The metric can be computed using the :meth:`~wntr.metrics.water_security.extent_contaminant` method.
+                                          The metric can be computed using the :class:`~wntr.metrics.water_security.extent_contaminant` method.
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
-                                          :meth:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water security metrics.
+                                          :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water security metrics.
    =====================================  ================================================================================================================================================
 
 ..
@@ -275,10 +279,10 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
                                           Water Networks II [SOKZ12]_.  
                                           Default values can be included in the calculation.
                                           Network cost can be computed 
-                                          using the :meth:`~wntr.metrics.economic.cost` method.
+                                          using the :class:`~wntr.metrics.economic.cost` method.
 
    Greenhouse gas emissions               Greenhouse gas emissions is the annual emissions associated with pipes based on equations from the Battle of Water Networks II [SOKZ12]_.
                                           Default values can be included in the calculation.
                                           Greenhouse gas emissions can be computed 
-                                          using the :meth:`~wntr.metrics.economic.ghg_emissions` method.
+                                          using the :class:`~wntr.metrics.economic.ghg_emissions` method.
    =====================================  ================================================================================================================================================

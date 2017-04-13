@@ -1,10 +1,14 @@
+.. raw:: latex
+
+    \clearpage
+
 Disaster scenarios
 ======================================
 
 Drinking water utilities might be interested in examining many different disaster scenarios.
 They could be acute incidents like power outages and earthquakes 
 or they could be long term issues like persistent pipe 
-leaks, population fluctuation, and climate change. The following section describes
+leaks, population fluctuation, and changes to supply and demand. The following section describes
 disaster scenarios that can be modeled in WNTR.  
 The example **disaster_scenarios.py** demonstrates methods to define disaster scenarios.
 
@@ -20,7 +24,7 @@ WNTR includes methods
 to add leaks to pipes and tanks, 
 shut off power to pumps, 
 and change demands for fire conditions, as described in the sections below.
-The :meth:`~wntr.scenario.earthquake.Earthquake` class includes methods 
+The :class:`~wntr.scenario.earthquake.Earthquake` class includes methods 
 to compute peak ground acceleration, peak ground velocity, and repair rate based on the earthquake
 location and magnitude.  
 Alternatively, external earthquake models or databases (i.e. ShakeMap [WWQP06]_) can be used to compute earthquake properties and 
@@ -49,8 +53,8 @@ The following code can be used to compute peak ground acceleration, peak ground 
    :lines: 10-17
 
 
-Pipe leaks
------------
+Pipe breaks or leaks
+---------------------
 Pipes are susceptible to leaks.  Leaks can be caused by 
 aging infrastructure, 
 the freezing/thaw process, 
@@ -67,7 +71,7 @@ To add a leak to a specific pipe:
 .. literalinclude:: ../examples/disaster_scenarios.py
    :lines: 25-27
 
-The method :meth:`~wntr.network.model.Junction.add_leak` adds time controls to a junction which includes the start and stop time for the leak.
+The method :class:`~wntr.network.model.Junction.add_leak` adds time controls to a junction which includes the start and stop time for the leak.
 
 Power outage
 -------------
@@ -86,13 +90,13 @@ To model the impact of a power outage on a specific pump:
 .. literalinclude:: ../examples/disaster_scenarios.py
    :lines: 30
    
-The method :meth:`~wntr.network.model.WaterNetworkModel.add_pump_outage` adds time controls to a pump to start and stop a power outage.
+The method :class:`~wntr.network.model.WaterNetworkModel.add_pump_outage` adds time controls to a pump to start and stop a power outage.
 When simulating power outages, consider placing check bypasses around pumps 
 and check valves next to reservoirs.
 
-Fire conditions
+Fires
 ----------------
-To fight fires, additional water is drawn from the network.  Fire codes vary by 
+WNTR can be used to simulate damage caused to network components due to fire and/or to simulate water usage due to fighting fires.  To fight fires, additional water is drawn from the network.  Fire codes vary by 
 state.  Minimum required fire flow and duration are generally based on building area and purpose.
 While small residential fires might require 1500 gallons/minute for 2 hours, large commercial
 spaces might require 8000 gallons/minute for 4 hours [ICC12]_.  This additional demand can 
@@ -106,22 +110,22 @@ To model the impact of fire conditions at a specific node:
 .. literalinclude:: ../examples/disaster_scenarios.py
    :lines: 33-43
 
-Climate change
----------------
-Climate change is a long term problem for water distribution 
-networks. This problem could lead to 
+Environmental change
+---------------------
+Environmental change is a long term problem for water distribution 
+networks. Changes in the environment could lead to 
 reduced water availability, 
 damage from weather incidents, 
 or even damage from subsidence. 
 For example, severe drought in California has forced lawmakers to reduce the 
 state's water usage by 25 percent. 
-Climate change also leads to sea level rise which can inundate distribution 
+Environmental change also leads to sea level rise which can inundate distribution 
 networks. This is especially prevalent in cities built on unstable soils like 
 New Orleans and Washington DC which are experiencing land subsidence. 
 
-WNTR can be used to simulate the effects of climate change on the water distribution network by
+WNTR can be used to simulate the effects of environmental change on the water distribution network by
 changing supply and demand, adding disruptive conditions (i.e. power outages, pipe leaks) caused by severe weather, or by adding pipe leaks caused by subsidence.
-Power outages and pipe leaks are discribed above.  
+Power outages and pipe leaks are described above.  
 Changes to supply and demand can be simple (i.e. changing all nodes by a certain percent), or complex (i.e. using external data or correlated statistical methods).
 To model simple changes in supply and demand:
 
@@ -130,11 +134,21 @@ To model simple changes in supply and demand:
    
 Contamination
 --------------------
-Water distribution networks are vulnerable to accidental and intentional contamination.
-Contamination can enter the system through reservoirs, tanks, and at other access points within the 
-distribution network.  Contamination can be difficult to detect and is very expensive to clean up. 
+Water distribution networks are vulnerable to contamination by a variety of chemical, microbial, or radiological substances.
+During disasters, contamination can enter the system through reservoirs, tanks, and at other access points within the 
+distribution network.  Long term environmental change can lead to degradation of water sources.  Contamination can be difficult to detect and is very expensive to clean up. 
 Recent incidents, including the Elk River chemical spill and Flint lead contamination, 
-highlight the need minimize human health and economic impacts.
+highlight the need to minimize human health and economic impacts.
 
-WNTR can be used to simulate contamination incidents. 
+WNTR simulates contamination incidents by introducing contaminants into the distribution system and allowing them to propagate through the network. 
 The example **water_quality_simulation.py** includes steps to define and simulate contamination incidents.
+
+Future versions of WNTR will be able to simulate changes in source water quality due to disruptions.
+
+Other disaster scenarios
+-------------------------------
+Drinking water systems are also susceptible to other natural disasters including floods, droughts, 
+hurricanes, tornadoes, extreme winter storms, wind events.  WNTR can be used to simulate these events 
+by combining the disaster models already described above.  For example, tornadoes might cause power 
+outages, pipe breaks, other damage to infrastructure, and fires.  Floods might cause power outages, 
+changes to source water (because of treatment failures), and pipe breaks.   
