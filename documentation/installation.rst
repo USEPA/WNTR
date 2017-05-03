@@ -11,7 +11,7 @@ WNTR can be installed as a Python package using standard open source software to
 **Step 1**: Setup your Python environment
 
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
-	WNTR requires Python (2.7, 3.4, or 3.5) along with several Python package dependencies.
+	WNTR requires Python (versions 2.7, 3.4, or 3.5) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
 	General information on Python can be found at https://www.python.org/.
@@ -21,7 +21,7 @@ WNTR can be installed as a Python package using standard open source software to
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
 	editing and debug features along with a graphical user interface that is very similar 
-	to MATLAB |copy|. Debugging options are available from the toolbar.  
+	to MATLAB |copy| The Mathworks, Inc. Debugging options are available from the toolbar.  
 	Code documentation is displayed in the object inspection 
 	window.  Pop-up information on class structure and functions is displayed in the 
 	editor and console windows.  
@@ -42,7 +42,7 @@ WNTR can be installed as a Python package using standard open source software to
 	   :scale: 100 %
 	   :alt: Spyder
 	   
-	   Opening a Python console using Spyder.
+	   **Opening a Python console using Spyder.**
 	   
 **Step 2**: Install WNTR
 	
@@ -125,7 +125,7 @@ The following Python packages are optional:
 
 * SymPy [JCMG11]_: used to convert units, 
   http://www.sympy.org/en/index.html
-* xlwt [Xlwt16]_: used to read/write to Excel spreadsheets,
+* xlwt [Xlwt16]_: used to read/write to Microsoft® Excel® spreadsheets,
   http://xlwt.readthedocs.io
 * Numpydoc [VaCV11]_: used to build the user manual,
   https://github.com/numpy/numpydoc
