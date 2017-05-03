@@ -17,7 +17,7 @@ The classes used to generate water network models and
 run simulations are described in more detail below, followed by a list of software limitations.
 
 .. _table-wntr-subpackage:
-.. table:: WNTR subpackages.
+.. **table:: WNTR subpackages.**
    
    =================================================  =============================================================================================================================================================================================================================================================================
    Subpackage                                         Description
@@ -39,12 +39,12 @@ Water network models can be built from scratch or built directly from EPANET INP
 Additionally, EPANET INP files can be generated from water network models.
 
 .. _table-network-subpackage:
-.. table:: Classes in the network subpackage.
+.. **table:: Classes in the network subpackage.**
 
    =================================================  =============================================================================================================================================================================================================================================================================
    Class                                              Description
    =================================================  =============================================================================================================================================================================================================================================================================
-   :meth:`~wntr.network.model.WaterNetworkModel`      Contains methods to generate water network models, including methods to read and write INP files, and access/add/remove/modify network components.  This class links to additional model classes (below) which define network components, controls and model options.
+   :meth:`~wntr.network.model.WaterNetworkModel`      Contains methods to generate water network models, including methods to read and write INP files, and access/add/remove/modify network components.  This class links to additional model classes (below), which define network components, controls and model options.
    :meth:`~wntr.network.model.Junction`	              Contains methods to define junctions. Junctions are nodes where links connect. Water can enter or leave the network at a junction.
    :meth:`~wntr.network.model.Reservoir`              Contains methods to define reservoirs. Reservoirs are nodes with an infinite external source or sink.      
    :meth:`~wntr.network.model.Tank`                   Contains methods to define tanks. Tanks are nodes with storage capacity.     
@@ -65,7 +65,7 @@ WNTR contains two simulators: the EpanetSimulator and the WNTRSimulator.
 These classes are listed in :numref:`table-sim-subpackage`.
 
 .. _table-sim-subpackage:
-.. table:: Classes in the sim subpackage.
+.. **table:: Classes in the sim subpackage.**
 
    =================================================  =============================================================================================================================================================================================================================================================================
    Class                                              Description
@@ -116,7 +116,7 @@ Current software limitations are noted:
 [TANKS],
 [TIMES],
 [TITLE],                                  
-[VALVES],
+[VALVES], and
 [VERTICES].  
 
 However, **the following model options cannot be modified/created in WNTR**:
