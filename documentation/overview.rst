@@ -18,7 +18,7 @@ is a national priority.  The National Infrastructure Advisory Council (NIAC)
 defined infrastructure resilience as “the ability to reduce the magnitude and/or 
 duration of disruptive events. The effectiveness of a resilient infrastructure 
 or enterprise depends upon its ability to anticipate, absorb, adapt to, and/or 
-rapidly recover from a potentially disruptive event” [NIAC, 2009]_.
+rapidly recover from a potentially disruptive event” [NIAC09]_.
 
 Being able to predict how drinking water systems will perform during disruptive 
 incidents and understanding how to best absorb, recover from, and more successfully adapt
