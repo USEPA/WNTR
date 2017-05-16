@@ -8,10 +8,11 @@ dependencies:
     - networkx
     - pandas
     - matplotlib
-	- plotly
+    - plotly
     - nose
     - sympy
     - xlwt
     - enum34
     - pip:
         - coveralls
+		

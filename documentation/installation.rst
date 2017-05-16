@@ -121,7 +121,8 @@ These packages are included in the Anaconda Python distribution.
 Optional dependencies
 -------------------------
 
-The following Python packages are optional:'
+The following Python packages are optional:
+
 * Matplotlib [Hunt07]_: used to produce figures, 
   http://matplotlib.org/
 * Plotly [SPHC16]_: used to produce interactive scalable figures, 
