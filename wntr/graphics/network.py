@@ -8,16 +8,21 @@ try:
     import matplotlib.pyplot as plt
 except:
     pass
+try:
+    import plotly
+except:
+    pass
 import logging
 
 logger = logging.getLogger(__name__)
 
-def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
-               node_size=10, node_range = [None,None], node_cmap=None,
-               link_width=1, link_range = [None,None], link_cmap=None,
-               add_colorbar=True, figsize=None, dpi=None, directed=False, node_labels=False,plt_fig=None):
+def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
+               node_size=20, node_range = [None,None], node_cmap=plt.cm.jet,
+               link_width=1, link_range = [None,None], link_cmap=plt.cm.jet,
+               add_colorbar=True, figsize=[8,6], dpi=100, directed=False, 
+               node_labels=False,use_current_fig=False):
     """
-    Draw a WaterNetworkModel networkx graph
+    Plot network graphic using networkx. 
 
     Parameters
     ----------
@@ -27,69 +32,77 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     node_attribute : str, list, pd.Series, or dict, optional
         (default = None)
 
-        - If node_attribute is a string, then the node_attribute dictonary is
-          populated using node_attribute = wn.query_node_attribute(str)
-        - If node_attribute is a list, then each node is given a value of 1.
-        - If node_attribute is a pd.Series, then it shoud be in the format
+        - If node_attribute is a string, then a node attribute dictionary is
+          created using node_attribute = wn.query_node_attribute(str)
+        - If node_attribute is a list, then each node in the list is given a value of 1.
+        - If node_attribute is a pd.Series, then it should be in the format
           {(nodeid,time): x} or {nodeid: x} where nodeid is a string and x is a float.
           The time index is not used in the plot.
-        - If node_attribute is a dict, then it shoud be in the format
+        - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
 
     link_attribute : str, list, pd.Series, or dict, optional
         (default = None)
 
-        - If link_attribute is a string, then the link_attribute dictonary is
-          populated using edge_attribute = wn.query_link_attribute(str)
-        - If link_attribute is a list, then each link is given a value of 1.
-        - If link_attribute is a pd.Series, then it shoud be in the format
+        - If link_attribute is a string, then a link attribute dictionary is
+          created using edge_attribute = wn.query_link_attribute(str)
+        - If link_attribute is a list, then each link in the list is given a value of 1.
+        - If link_attribute is a pd.Series, then it should be in the format
           {(linkid,time): x} or {linkid: x} where linkid is a string and x is a float.
           The time index is not used in the plot.
-        - If link_attribute is a dict, then it shoud be in the format
+        - If link_attribute is a dict, then it should be in the format
           {linkid: x} where linkid is a string and x is a float.
 
     title : str, optional
-        (default = None)
+        Plot title (default = None)
 
     node_size : int, optional
-        (default = 10)
+        Node size (default = 10)
 
     node_range : list, optional
-        (default = [None,None])
+        Node range (default = [None,None], autoscale)
 
     node_cmap : matplotlib.pyplot.cm colormap, optional
-        (default = jet)
+        Node colormap (default = jet)
 
     link_width : int, optional
-        (default = 1)
+        Link width (default = 1)
 
     link_range : list, optional
-        (default = [None,None])
+        Link range (default = [None,None], autoscale)
 
     link_cmap : matplotlib.pyplot.cm colormap, optional
-        (default = jet)
+        Link colormap (default = jet)
 
     add_colorbar : bool, optional
-        (default = True)
+        Add colorbar (default = True)
 
+    figsize: list, optional
+        Figure size in inches (default= [8, 6])
+
+    dpi : int, optional
+        Dots per inch (default = 100)
+    
     directed : bool, optional
-        (default = False)
-
+        If True, plot the directed graph (default = False, converts the graph to undirected)
+        
     node_labels: bool, optional
-        If True, the graph will have each node labeled with its name.
-        (default = False)
-
+        If True, the plot will include node names (default = False)
+    
+    use_current_fig : bool, optional
+        If True, use the current matplotlib figure (plt.gcf()) and overlay 
+        the network plot (default = False)
+        
     Returns
     -------
-    Figure
+    nodes, edges
 
     Notes
     -----
     For more network draw options, see nx.draw_networkx
     """
-
-    if plt_fig is None:
-        plt.figure(facecolor='w', edgecolor='k')
+    if not use_current_fig: # create a new figure
+        plt.figure(facecolor='w', edgecolor='k', figsize=tuple(figsize), dpi=dpi)
 
     # Graph
     G = wn.get_graph_deep_copy()
@@ -117,8 +130,6 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         nodecolor = 'k'
     else:
         nodelist,nodecolor = zip(*node_attribute.items())
-    if node_cmap is None:
-        node_cmap=plt.cm.jet
 
     # Link attribute
     if isinstance(link_attribute, str):
@@ -130,7 +141,7 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
             link_attribute.reset_index(level=1, drop=True, inplace=True) # drop time
         link_attribute = dict(link_attribute)
 
-    # Replace link_attribute dictonary defined as
+    # Replace link_attribute dictionary defined as
     # {link_name: attr} with {(start_node, end_node, link_name): attr}
     if link_attribute is not None:
         attr = {}
@@ -156,23 +167,20 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
         if not linklist == linklist2:
             logger.warning('Link color and width do not share the same indexes, link width changed to 1.')
             link_width = 1
-    if link_cmap is None:
-        link_cmap=plt.cm.jet
-
-    # Plot
-    #plt.figure(facecolor='w', edgecolor='k', figsize=figsize, dpi=dpi)
 
     if title is not None:
         plt.title(title)
 
     if node_labels:
-        nodes = nx.draw_networkx_labels(G, pos,
-                                       nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1],linewidths=0)
+        nodes = nx.draw_networkx_labels(G, pos, nodelist=nodelist, node_color=nodecolor, 
+            node_size=node_size, cmap=node_cmap, vmin=node_range[0], vmax=node_range[1],
+            linewidths=0)
     else:
-        nodes = nx.draw_networkx_nodes(G, pos, with_labels=False,
-                                       nodelist=nodelist, node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin = node_range[0], vmax = node_range[1],linewidths=0)
-    edges = nx.draw_networkx_edges(G, pos,
-                                   edgelist=linklist, edge_color=linkcolor, width=link_width, edge_cmap=link_cmap, edge_vmin = link_range[0], edge_vmax = link_range[1])
+        nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, nodelist=nodelist, 
+            node_color=nodecolor, node_size=node_size, cmap=node_cmap, vmin=node_range[0], 
+            vmax = node_range[1], linewidths=0)
+    edges = nx.draw_networkx_edges(G, pos, edgelist=linklist, edge_color=linkcolor, 
+            width=link_width, edge_cmap=link_cmap, edge_vmin=link_range[0], edge_vmax=link_range[1])
     if add_colorbar and node_attribute:
         plt.colorbar(nodes, shrink=0.5, pad = 0)
     if add_colorbar and link_attribute:
@@ -180,3 +188,163 @@ def draw_graph(wn, node_attribute=None, link_attribute=None, title=None,
     plt.axis('off')
 
     return nodes, edges
+
+def plot_interactive_network(wn, node_attribute=None, title=None,
+               node_size=8, node_range = [None,None], node_cmap='Jet',
+               link_width=1, add_colorbar=True, reverse_colormap=False,
+               figsize=[700, 450], node_labels=True, round_ndigits=2, filename=None):
+    """
+    Create an interactive scalable network graphic using networkx and plotly.  
+
+    Parameters
+    ----------
+    wn : WaterNetworkModel
+        A WaterNetworkModel object
+
+    node_attribute : str, list, pd.Series, or dict, optional
+        (default = None)
+
+        - If node_attribute is a string, then a node attribute dictionary is
+          created using node_attribute = wn.query_node_attribute(str)
+        - If node_attribute is a list, then each node in the list is given a value of 1.
+        - If node_attribute is a pd.Series, then it should be in the format
+          {(nodeid,time): x} or {nodeid: x} where nodeid is a string and x is a float.
+          The time index is not used in the plot.
+        - If node_attribute is a dict, then it should be in the format
+          {nodeid: x} where nodeid is a string and x is a float
+
+    title : str, optional
+        Plot title (default = None)
+
+    node_size : int, optional
+        Node size (default = 8)
+
+    node_range : list, optional
+        Node range (default = [None,None], autoscale)
+
+    node_cmap : palette name string, optional
+        Node colormap, options include Greys, YlGnBu, Greens, YlOrRd, Bluered, 
+        RdBu, Reds, Blues, Picnic, Rainbow, Portland, Jet, Hot, Blackbody, 
+        Earth, Electric, Viridis (default = Jet)
+    
+    link_width : int, optional
+        Link width (default = 1)
+    
+    add_colorbar : bool, optional
+        Add colorbar (default = True)
+        
+    reverse_colormap : bool, optional
+        Reverse colormap (default = True)
+        
+    figsize: list, optional
+        Figure size in pixels, default= [700, 450]
+
+    node_labels: bool, optional
+        If True, the graph will include each node labelled with its name and value.
+        (default = True)
+    
+    round_ndigits : int, optional
+        Number of digits to round node values used in the label (default = 2)
+        
+    filename : string, optional
+        HTML file name (default=None, temp-plot.html)
+    """
+
+    # Graph
+    G = wn.get_graph_deep_copy()
+    
+    # Node attribute
+    if isinstance(node_attribute, str):
+        node_attribute = wn.query_node_attribute(node_attribute)
+    if isinstance(node_attribute, list):
+        node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
+    if isinstance(node_attribute, pd.Series):
+        if node_attribute.index.nlevels == 2: # (nodeid, time) index
+            node_attribute.reset_index(level=1, drop=True, inplace=True) # drop time
+        node_attribute = dict(node_attribute)
+
+    # Create edge trace
+    edge_trace = plotly.graph_objs.Scatter(
+        x=[], 
+        y=[], 
+        text=[],
+        hoverinfo='text',
+        mode='lines',
+        line=plotly.graph_objs.Line(
+            #colorscale=link_cmap,
+            #reversescale=reverse_colormap,
+            color='#888', #[], 
+            width=link_width))
+    for edge in G.edges():
+        x0, y0 = G.node[edge[0]]['pos']
+        x1, y1 = G.node[edge[1]]['pos']
+        edge_trace['x'] += [x0, x1, None]
+        edge_trace['y'] += [y0, y1, None]
+    #    try:
+    #        # Add link attributes
+    #        link_name = G[edge[0]][edge[1]].keys()[0]
+    #        edge_trace['line']['color'].append(pipe_attr[link_name])
+    #        edge_info = 'Edge ' + str(link_name) + ', '+str(round(pipe_attr[link_name], round_ndigits)
+    #        edge_trace['text'].append(edge_info)
+    #    except:
+    #        print link_name
+    #edge_trace['colorbar']['title'] = 'Link colorbar title'
+    
+    # Create node trace      
+    node_trace = plotly.graph_objs.Scatter(
+        x=[], 
+        y=[], 
+        text=[],
+        hoverinfo='text',
+        mode='markers', 
+        marker=plotly.graph_objs.Marker(
+            showscale=add_colorbar,
+            colorscale=node_cmap, 
+            cmin=node_range[0],
+            cmax=node_range[1],
+            reversescale=reverse_colormap,
+            color=[], 
+            size=node_size,         
+            #opacity=0.75,
+            colorbar=dict(
+                thickness=15,
+                xanchor='left',
+                titleside='right'),
+            line=dict(width=1)))
+    for node in G.nodes():
+        x, y = G.node[node]['pos']
+        node_trace['x'].append(x)
+        node_trace['y'].append(y)
+        try:
+            # Add node attributes
+            node_trace['marker']['color'].append(node_attribute[node])
+            #node_trace['marker']['size'].append(node_size)
+            # Add node labels
+            if node_labels:
+                node_info = 'Node ' + str(node) + ', '+str(round(node_attribute[node],round_ndigits))
+                node_trace['text'].append(node_info)
+        except:
+            node_trace['marker']['color'].append('#888')
+            if node_labels:
+                node_trace['text'].append(None)
+            #node_trace['marker']['size'].append(5)
+    #node_trace['marker']['colorbar']['title'] = 'Node colorbar title'
+    
+    # Create figure
+    data = plotly.graph_objs.Data([edge_trace, node_trace])
+    layout = plotly.graph_objs.Layout(
+                    title=title,
+                    titlefont=dict(size=16),
+                    showlegend=False, 
+                    width=figsize[0],
+                    height=figsize[1],
+                    hovermode='closest',
+                    margin=dict(b=20,l=5,r=5,t=40),
+                    xaxis=plotly.graph_objs.XAxis(showgrid=False, zeroline=False, showticklabels=False),
+                    yaxis=plotly.graph_objs.YAxis(showgrid=False, zeroline=False, showticklabels=False))
+    
+    fig = plotly.graph_objs.Figure(data=data,layout=layout)
+    if filename:
+        plotly.offline.plot(fig, filename=filename)  
+    else:
+        plotly.offline.plot(fig)

@@ -16,7 +16,7 @@ print(G.edge[node_name])
 # Compute betweenness centrality
 node_degree = G.degree()
 bet_cen = nx.betweenness_centrality(G)
-wntr.graphics.draw_graph(wn, node_attribute=bet_cen, node_size=30, 
+wntr.graphics.plot_network(wn, node_attribute=bet_cen, node_size=30, 
                         title='Betweenness Centrality')
 
 # Convert the digraph to an undirected graph

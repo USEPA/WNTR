@@ -27,7 +27,7 @@ pipe_diameters = wn.query_link_attribute('diameter', np.less_equal,
                                          link_type=wntr.network.Pipe)
 failure_probability = {}
 for k,v in pipe_diameters.items():
-    failure_probability[k] = v/sum(pipe_diameters.values())
+    failure_probability[k] = v/sum(list(pipe_diameters.values()))
 
 # Define maximum iterations
 Imax = 5
@@ -113,10 +113,8 @@ for name in result_names:
     for node_name in nzd_junctions:
         pressure = FDV_knt.loc[:,node_name]
         pressure.plot()
-        plt.hold(True)
 
     FDV_knt.plot(ax=plt.gca(), legend=False)
-    plt.hold(True)
     FDV_kt.plot(ax=plt.gca(), label='Average', color='k', linewidth=3.0, legend=False)
     plt.ylim( (-0.05, 1.05) )
     plt.ylabel('FDV')
@@ -127,7 +125,6 @@ for name in result_names:
     for tank_name, tank in wn.tanks():
         tank_pressure = results[name].node['pressure'][tank_name]
         tank_pressure.plot(ax=plt.gca(),label=tank_name)
-        plt.hold(True)
 
     plt.ylim(ymin=0, ymax=12)
     plt.legend()

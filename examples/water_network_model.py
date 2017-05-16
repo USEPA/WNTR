@@ -39,7 +39,7 @@ wn.add_pipe('new_pipe', start_node_name = 'new_junction',
             roughness = 1, minor_loss = 3)
 
 # Graph the network with new junction and pipe
-wntr.graphics.draw_graph(wn, title= wn.name)
+wntr.graphics.plot_network(wn, title= wn.name)
 
 # Remove a link
 wn.remove_link('153')
