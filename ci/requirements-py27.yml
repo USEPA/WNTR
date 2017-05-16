@@ -8,6 +8,7 @@ dependencies:
     - networkx
     - pandas
     - matplotlib
+	- plotly
     - nose
     - sympy
     - xlwt
