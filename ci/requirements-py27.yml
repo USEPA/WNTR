@@ -15,4 +15,3 @@ dependencies:
     - enum34
     - pip:
         - coveralls
-		
