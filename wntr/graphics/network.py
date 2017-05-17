@@ -281,15 +281,15 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         x1, y1 = G.node[edge[1]]['pos']
         edge_trace['x'] += [x0, x1, None]
         edge_trace['y'] += [y0, y1, None]
-    #    try:
-    #        # Add link attributes
-    #        link_name = G[edge[0]][edge[1]].keys()[0]
-    #        edge_trace['line']['color'].append(pipe_attr[link_name])
-    #        edge_info = 'Edge ' + str(link_name) + ', '+str(round(pipe_attr[link_name], round_ndigits)
-    #        edge_trace['text'].append(edge_info)
-    #    except:
-    #        print link_name
-    #edge_trace['colorbar']['title'] = 'Link colorbar title'
+#        try:
+#            # Add link attributes
+#            link_name = G[edge[0]][edge[1]].keys()[0]
+#            edge_trace['line']['color'].append(pipe_attr[link_name])
+#            edge_info = 'Edge ' + str(link_name)
+#            edge_trace['text'].append(edge_info)
+#        except:
+#            pass
+#    edge_trace['colorbar']['title'] = 'Link colorbar title'
     
     # Create node trace      
     node_trace = plotly.graph_objs.Scatter(
@@ -327,7 +327,8 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         except:
             node_trace['marker']['color'].append('#888')
             if node_labels:
-                node_trace['text'].append(None)
+                node_info = 'Node ' + str(node)
+                node_trace['text'].append(node_info)
             #node_trace['marker']['size'].append(5)
     #node_trace['marker']['colorbar']['title'] = 'Node colorbar title'
     

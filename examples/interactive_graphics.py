@@ -22,7 +22,7 @@ wntr.graphics.plot_network(wn, node_attribute=pressure_at_5hr, title='Pressure a
 wntr.graphics.plot_interactive_network(wn, node_attribute='elevation', 
     title='Elevation', filename='elevation.html', auto_open=False) 
 wntr.graphics.plot_interactive_network(wn, node_attribute=['123', '199'], 
-    title='Node 123 and 199', filename='nodes.html', auto_open=False) 
+    title='Node 123 and 199', filename='node123_199.html', auto_open=False) 
 wntr.graphics.plot_interactive_network(wn, node_attribute=pressure_at_5hr, 
     title='Pressure at 5 hours', filename='pressure5hr.html', auto_open=False) 
 
@@ -31,7 +31,7 @@ fig = plt.figure()
 ax = plt.gca()
 pressure_at_node123 = results.node.loc['pressure', :, '123']
 pressure_at_node123.plot(ax=ax)
-plotly.offline.plot_mpl(fig, filename='pressure_at123_timeseries.html', auto_open=False) 
+plotly.offline.plot_mpl(fig, filename='pressure123_timeseries.html', auto_open=False) 
 
 fig = plt.figure()
 ax = plt.gca()
