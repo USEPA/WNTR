@@ -20,11 +20,11 @@ wntr.graphics.plot_network(wn, node_attribute=pressure_at_5hr, title='Pressure a
     
 ## Create interactive scalable network graphics
 wntr.graphics.plot_interactive_network(wn, node_attribute='elevation', 
-    title='Elevation', filename='elevation.html')
+    title='Elevation', filename='elevation.html', auto_open=False) 
 wntr.graphics.plot_interactive_network(wn, node_attribute=['123', '199'], 
-    title='Node 123 and 199', filename='nodes.html')
+    title='Node 123 and 199', filename='nodes.html', auto_open=False) 
 wntr.graphics.plot_interactive_network(wn, node_attribute=pressure_at_5hr, 
-    title='Pressure at 5 hours', filename='pressure5hr.html')
+    title='Pressure at 5 hours', filename='pressure5hr.html', auto_open=False) 
 
 # Create interactive scalable time series graphics
 fig = plt.figure()
