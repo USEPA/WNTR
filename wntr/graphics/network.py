@@ -192,7 +192,8 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
 def plot_interactive_network(wn, node_attribute=None, title=None,
                node_size=8, node_range = [None,None], node_cmap='Jet',
                link_width=1, add_colorbar=True, reverse_colormap=False,
-               figsize=[700, 450], node_labels=True, round_ndigits=2, filename=None):
+               figsize=[700, 450], node_labels=True, round_ndigits=2, 
+               filename=None, auto_open=False):
     """
     Create an interactive scalable network graphic using networkx and plotly.  
 
@@ -345,6 +346,6 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
     
     fig = plotly.graph_objs.Figure(data=data,layout=layout)
     if filename:
-        plotly.offline.plot(fig, filename=filename)  
+        plotly.offline.plot(fig, filename=filename, auto_open=auto_open)  
     else:
-        plotly.offline.plot(fig)
+        plotly.offline.plot(fig, auto_open=auto_open)  
