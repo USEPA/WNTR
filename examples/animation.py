@@ -18,14 +18,14 @@ results = sim.run_sim()
 fig = plt.figure(figsize=(12,10), facecolor='w')
 values = results.node.loc['quality', :, :]
 initial_values = values.loc[0, :]
-nodes, edges = wntr.graphics.draw_graph(wn, node_attribute=initial_values, 
-    plt_fig=fig, node_range = [0,100], node_size=30, title='Trace at 0 hours')
+nodes, edges = wntr.graphics.plot_network(wn, node_attribute=initial_values, 
+    use_current_fig=True, node_range = [0,100], node_size=30, title='Trace at 0 hours')
     
 def update(n):
   node_values = values.loc[n*3600, :]
   fig.clf()    
-  nodes, edges = wntr.graphics.draw_graph(wn, node_attribute=node_values, 
-    plt_fig=fig, node_range = [0,100], node_size=30, title='Trace at ' + str(n) +' hours')
+  nodes, edges = wntr.graphics.plot_network(wn, node_attribute=node_values, 
+    use_current_fig=True, node_range = [0,100], node_size=30, title='Trace at ' + str(n) +' hours')
   return nodes, edges
 
 anim = animation.FuncAnimation(fig, update, interval=50, frames=97, blit=False, repeat=False)
