@@ -129,7 +129,7 @@ The following Python packages are optional:
   https://plot.ly/
 * SymPy [JCMG11]_: used to convert units, 
   http://www.sympy.org/en/index.html
-* xlwt [Xlwt16]_: used to read/write to Microsoft® Excel® spreadsheets,
+* xlwt [Xlwt16]_: used to read/write to Microsoft Excel spreadsheets,
   http://xlwt.readthedocs.io
 * Numpydoc [VaCV11]_: used to build the user manual,
   https://github.com/numpy/numpydoc
