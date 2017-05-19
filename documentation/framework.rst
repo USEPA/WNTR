@@ -1,11 +1,12 @@
-.. _software_framework:
 
 .. role:: red
 
 .. raw:: latex
 
     \clearpage
-	
+
+.. _software_framework:
+
 Software framework and limitations
 ======================================
 

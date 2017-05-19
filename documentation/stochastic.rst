@@ -1,8 +1,8 @@
-.. _stochastic_simulation:
-
 .. raw:: latex
 
     \clearpage
+
+.. _stochastic_simulation:
 
 Stochastic simulation
 ===============================
