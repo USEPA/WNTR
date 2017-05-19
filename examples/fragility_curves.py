@@ -32,7 +32,7 @@ for name, state in FC.states():
     dist=state.distribution['Default']
     plt.plot(x,dist.cdf(x), label=name)
 plt.ylim((0,1))
-plt.xlabel('PGA')
+plt.xlabel('Peak Ground Acceleration (g)')
 plt.ylabel('Probability of exceeding a damage state')
 plt.legend()
 

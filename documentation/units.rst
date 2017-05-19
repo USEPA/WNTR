@@ -9,7 +9,7 @@ All data in WNTR is stored in SI (International System) units:
 
 * Length = :math:`m`
 * Diameter = :math:`m`
-* Water pressure = :math:`m`
+* Water pressure = :math:`m` (this assumes a fluid density of 1000 :math:`kg/m^3`)
 * Elevation = :math:`m`
 * Mass = :math:`kg`
 * Time = :math:`s`

@@ -7,7 +7,7 @@ Water network controls
 
 One of the key features of water network models is the ability to control pipes, pumps and valves using simple and complex conditions.  
 EPANET uses "controls" and "rules" to define conditions [Ross00]_.
-A control is a single action (i.e. closing/opening a link or changing the setting) based on a single condition (i.e. time based or tank level based).
+A control is a single action (i.e., closing/opening a link or changing the setting) based on a single condition (i.e., time based or tank level based).
 A rule is more complex; rules take an IF-THEN-ELSE form and can have multiple conditions and multiple actions in each of the logical blocks.
 WNTR supports EPANET's rules and controls when generating a water network model from and INP file and simulating hydraulics using the EpanetSimulator.
 WNTR includes additional options to define controls that can be used by the WNTRSimulator.
@@ -90,7 +90,7 @@ To get an EPANET-like description of this control, use the print function.
 TimeControl objects define time-based controls.
 Time-based controls require a water network model object, a time to start the condition, a control action, and additional flags to specify the time reference point and recurrence.
 The time flag is either `SIM_TIME` or `SHIFTED_TIME`; these indicate simulation or clock time, respectively.
-The daily flag is eithTrue or False and indicates if the control should be repeated every 24 hours.
+The daily flag is either True or False and indicates if the control should be repeated every 24 hours.
 
 In the following example, a time-based control is defined that opens Pump 10 at hour 121.
 The time flag is set to `SIM_TIME` and the daily flag is set to False.
@@ -157,7 +157,7 @@ In the following example, the previous simple controls are recreated using the I
     Rule control2 := if sim_time = 435600 sec then set Pump('10').status to Open
 
 
-More complex rules can be written using one of the boolean logic condition classes.
+More complex rules can be written using one of the Boolean logic condition classes.
 The following example creates a new rule that will open pipe 330 if both conditions are true, and otherwise it will open pipe 10; this rule will behave very differently from the rules above.
 
 .. doctest::

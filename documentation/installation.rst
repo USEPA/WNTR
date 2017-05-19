@@ -42,7 +42,7 @@ WNTR can be installed as a Python package using standard open source software to
 	   :scale: 100 %
 	   :alt: Spyder
 	   
-	   **Opening a Python console using Spyder.**
+	   Opening a Python console using Spyder.
 	   
 **Step 2**: Install WNTR
 	

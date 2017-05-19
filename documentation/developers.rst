@@ -1,9 +1,9 @@
-.. _developers:
-
 .. raw:: latex
 
     \clearpage
 	
+.. _developers:
+
 Software quality assurance
 =======================================
 

@@ -10,14 +10,14 @@ Software framework and limitations
 ======================================
 
 Before using WNTR, it is helpful to understand the software framework.
-WNTR is a python package, which contains several object oriented subpackages, listed in :numref:`table-wntr-subpackage`.
+WNTR is a python package, which contains several object-oriented subpackages, listed in :numref:`table-wntr-subpackage`.
 Each subpackage contains modules which contain classes, methods, and functions.
 See :ref:`api_documentation` for more information on the code structure.
 The classes used to generate water network models and 
 run simulations are described in more detail below, followed by a list of software limitations.
 
 .. _table-wntr-subpackage:
-.. **table:: WNTR subpackages.**
+.. table:: WNTR subpackages.
    
    =================================================  =============================================================================================================================================================================================================================================================================
    Subpackage                                         Description
@@ -39,7 +39,7 @@ Water network models can be built from scratch or built directly from EPANET INP
 Additionally, EPANET INP files can be generated from water network models.
 
 .. _table-network-subpackage:
-.. **table:: Classes in the network subpackage.**
+.. table:: Classes in the network subpackage.
 
    ==================================================  =============================================================================================================================================================================================================================================================================
    Class                                               Description
@@ -65,7 +65,7 @@ WNTR contains two simulators: the EpanetSimulator and the WNTRSimulator.
 These classes are listed in :numref:`table-sim-subpackage`.
 
 .. _table-sim-subpackage:
-.. **table:: Classes in the sim subpackage.**
+.. table:: Classes in the sim subpackage.
 
    =================================================  =============================================================================================================================================================================================================================================================================
    Class                                              Description

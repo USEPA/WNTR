@@ -21,7 +21,7 @@ Multiple links with the same start and end node can be used to represent redunda
 In WNTR, the graph stores 
 the start and end node of each link, 
 node coordinates, 
-and node and link types (i.e tank, reservoir, valve). 
+and node and link types (i.e., tank, reservoir, valve). 
 WNTR updates the graph as elements are added and removed from the water network model.  
 
 .. _fig-graph:
@@ -56,14 +56,14 @@ The graph can be used to access NetworkX methods, for example:
    :lines: 3,17-20
   
 Some methods in NetworkX require that networks are undirected.  
-A **undirected graph** is a graph with no direction associated with links.
+An **undirected graph** is a graph with no direction associated with links.
 The following NetworkX method can be used to convert a directed graph to an undirected graph.
 
 .. literalinclude:: ../examples/networkx_graph.py
    :lines: 23
 
 Some methods in NetworkX require that networks are connected.     
-A **connected graph** is a graph where a path exists between every node in the network (i.e. no node is disconnected).  
+A **connected graph** is a graph where a path exists between every node in the network (i.e., no node is disconnected).  
 The following NetworkX method can be used to check if a graph is connected.
 
 .. literalinclude:: ../examples/networkx_graph.py

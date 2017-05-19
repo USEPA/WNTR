@@ -89,7 +89,7 @@ Network and time-series graphics can be customized to add titles, labels, etc.
 
    Example network graphic.
    
-Panels can be saved to excel files using:
+Panels can be saved to Excel files using:
 
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 33-34

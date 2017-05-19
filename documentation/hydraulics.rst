@@ -55,7 +55,7 @@ Options that are not used with the WNTRSimulator are described in :ref:`limitati
 
 Mass balance at nodes
 -------------------------
-Both simulators uses the mass balance equations from EPANET [Ross00]_:
+Both simulators use the mass balance equations from EPANET [Ross00]_:
 
 .. math::
 
@@ -196,13 +196,13 @@ Using pressure-driven demand simulation, the demand starts to decrease when pres
    :scale: 100 %
    :alt: Pressure driven example
    
-   Example relationship between pressure and demand using demand-driven and pressure-driven demand simulation.
+   Example relationship between pressure (p) and demand (d) using demand-driven and pressure-driven demand simulation.
 
 Leak model
 -------------------------
 
 The WNTRSimulator includes the ability to add leaks to the network.
-The leak is modeled with a general form of the equation proposed by 
+The leak is modeled with a general form of the equation proposed by Crowl and Louvar
 [CrLo02]_ where the mass flow rate of fluid through the hole is expressed as:
 
 .. math::
@@ -224,14 +224,14 @@ A pipe break is modeled using a leak area large enough to drain the pipe.
 WNTR includes methods to add leaks to any location along a pipe by splitting the pipe into two sections and adding a node. 
 
 :numref:`fig-leak` illustrates leak demand.
-In the example, the leak diameter is set to 0.5 cm, 1.0 cm, and 1.5 cm. 
+In the example, the diameter of the leak is set to 0.5 cm, 1.0 cm, and 1.5 cm. 
 
 .. _fig-leak:
 .. figure:: figures/leak_demand.png
    :scale: 100 %
    :alt: Leak demand
    
-   Example relationship between leak demand and pressure.
+   Example relationship between leak demand (d) and pressure (p).
 
 
 Pause and restart 
