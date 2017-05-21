@@ -39,13 +39,13 @@ This class inherits from NetworkX MulitDigraph and includes additional methods
 that are specific to WNTR. 
 The example **networkx_graph.py** can be used to generate a graph from a water network model.
   
-A copy of the graph can an be obtained using the following function.
+A copy of the graph can an be obtained using the following function:
 
 .. literalinclude:: ../examples/networkx_graph.py
    :lines: 9
 	
 The graph is stored as a nested dictionary.  The nodes and links (note that links are called `edges` in NetworkX)
-can be accessed using the following.
+can be accessed using the following:
 
 .. literalinclude:: ../examples/networkx_graph.py
    :lines: 12-14
@@ -57,14 +57,14 @@ The graph can be used to access NetworkX methods, for example:
   
 Some methods in NetworkX require that networks are undirected.  
 An **undirected graph** is a graph with no direction associated with links.
-The following NetworkX method can be used to convert a directed graph to an undirected graph.
+The following NetworkX method can be used to convert a directed graph to an undirected graph:
 
 .. literalinclude:: ../examples/networkx_graph.py
    :lines: 23
 
 Some methods in NetworkX require that networks are connected.     
 A **connected graph** is a graph where a path exists between every node in the network (i.e., no node is disconnected).  
-The following NetworkX method can be used to check if a graph is connected.
+The following NetworkX method can be used to check if a graph is connected:
 
 .. literalinclude:: ../examples/networkx_graph.py
    :lines: 26
@@ -72,7 +72,7 @@ The following NetworkX method can be used to check if a graph is connected.
 Some methods in NetworkX can use weighted graphs.
 A **weighted graph** is a graph in which each link is given a weight.  
 The WNTR method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` can be used to weight the graph by any attribute.
-In the following example, the graph is weighted by length.  This graph can then be used to compute path lengths.
+In the following example, the graph is weighted by length.  This graph can then be used to compute path lengths:
 
 .. literalinclude:: ../examples/networkx_graph.py
    :lines: 29-30
