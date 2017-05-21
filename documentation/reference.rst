@@ -40,6 +40,8 @@ Cross reference notation will be updated to a standard format when better option
 
 .. [Mcki13] McKinney W. (2013). Python for Data Analysis: Data Wrangling with Pandas, NumPy, and IPython. Sebastopal, CA: O'Reilly Media, 1 edition, 466p.
 
+.. [NIAC09]	National Infrastructure Advisory Council (NIAC). (2009). Critical Infrastructure Resilience, Final Report and Recommendations, U.S. Department of Homeland Security, Washington, D.C., Accessed September 20, 2014. http://www.dhs.gov/xlibrary/assets/niac/niac_critical_infrastructure_resilience.pdf.
+
 .. [OsKS02] Ostfeld, A., Kogan, D., and Shamir, U. (2002). Reliability simulation of water distribution systems - single and multiquality. Urban Water, 4(1), 53-61.
 
 .. [Ross00] Rossman, L.A. (2000). EPANET 2 Users Manual. Cininnati, OH: U.S. Environmental Protection Agency. U.S. Environmental Protection Agency Technical Report, EPA/600/R--00/057, 200p.
