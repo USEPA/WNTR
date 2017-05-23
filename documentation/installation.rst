@@ -49,7 +49,7 @@ WNTR can be installed as a Python package using standard open source software to
 	The installation process differs for users and developers.  
 	Installation instructions for both types are described below.
 	
-	**For users**: 	Users can install WNTR using pip.  
+	**Installation for users (with pip)**: Users can install WNTR using pip.  
 	pip is a command line software tool used to install and manage Python 
 	packages.  pip can be downloaded from https://pypi.python.org/pypi/pip.
 	
@@ -59,13 +59,19 @@ WNTR can be installed as a Python package using standard open source software to
 	
 	This will install the latest stable version of WNTR from https://pypi.python.org/pypi/wntr.  
 	
-	.. note:: A WNTR installation using pip will not include the examples folder, which is referenced throughout this manual.  
-	
-	Users can also download a zip file that includes source files and the examples folder from the USEPA GitHub organization.  
-	To download the master (development) branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP".
+	.. note:: A WNTR installation using pip will not include the examples folder, which is referenced throughout this manual. You can download
+		  a zip file that includes the examples using the instructions below.
+
+	**Download source and examples**: Users can also download a zip file that includes source files and the examples folder from the
+	USEPA GitHub organization. To download the master (development) branch, go to https://github.com/USEPA/WNTR, select the
+	"Clone or download" button and then select "Download ZIP".
+
 	This downloads a zip file called WNTR-master.zip.
 	To download a specific release, go to https://github.com/USEPA/WNTR/releases and select a zip file.
-	The software can then be installed by running a python script, called setup.py, that is included in the zip file.
+
+	**Installation for users (from source)**: Users can also install the software from the source files. Download the source
+	using the instructions given above. The software can then be installed by running a python script, called
+	setup.py, that is included in the zip file.
 	
 	To build WNTR from the source files in the zip file, open a command prompt and run::
 
@@ -73,7 +79,7 @@ WNTR can be installed as a Python package using standard open source software to
 		cd WNTR-master
 		python setup.py install
 		
-	**For developers**: Developers can install and build WNTR from source using git.
+	**Installation for developers**: Developers can install and build WNTR from source using git.
 	git is a command line software tool for version control and software development.
 	git can be downloaded from http://git-scm.com. 
 		
@@ -86,7 +92,14 @@ WNTR can be installed as a Python package using standard open source software to
 	This will install the master (development) branch of WNTR from https://github.com/USEPA/WNTR.
 	More information for developers can be found in the :ref:`developers` section.
 
-**Step 3**: Test installation
+**Step 3**: Install dependencies
+
+        If you installed python using Anaconda (or another scientific python distribution), then you
+	already have the required dependencies included. If your python installation does not include
+	these dependencies already then you will need to install them. This is most commonly done using
+	pip. See the requirements_ section for the list of required packages.
+
+**Step 4**: Test installation
 
 	To test that WNTR is installed, open a Python console and run::
 	
