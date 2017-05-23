@@ -6,19 +6,7 @@ Reference
 ====================
 
 Due to limitations with cross referenced citations in reStructuredText (e.g., commas and spaces are not supported), 
-citations are cross referenced using a 6 digit notation.  
-Cross references begins with 4 letters:
-
-* If the citation has one author, the first 4 letters of name are used
-* If the citation has two authors, the first 2 letters of author 1 and first 2 letters of author 2 are used
-* If the citation has three authors, the first 2 letters of author 1, first letter of author 2, and first letter of author 3 are used
-* If the citation has four authors, the first letter of each author is used
-* If the citation has more than four authors, the first letter of first four authors is used
-* Exceptions are made for American Lifelines Alliance (ALA) and United States Environmental Protection Agency (USEPA)
-	
-The next two digits are the year (century ignored).
-If the 6 digits match another citation, a lower case letter (a, b, ...) is added.
-Cross reference notation will be updated to a standard format when better options come available.
+citations are cross referenced using a 6 digit notation [*]_. 
 
 .. [ALA01] American Lifelines Alliance (2001).  Seismic Fragility Formulations for Water Systems, Part 1 and 2.  Report for the American Lifelines Alliance, ASCE (Ed.) Reston, VA: American Society of Civil Engineers. April 2001.
 
@@ -46,7 +34,7 @@ Cross reference notation will be updated to a standard format when better option
 
 .. [Ross00] Rossman, L.A. (2000). EPANET 2 Users Manual. Cininnati, OH: U.S. Environmental Protection Agency. U.S. Environmental Protection Agency Technical Report, EPA/600/R--00/057, 200p.
 
-.. [SOKZ12] Salomons, E., Ostfeld, A., Kapelan, Z., Zecchin, A., Marchi, A., and Simpson, A. (2012). The battle of the water networks II - Adelaide 2012 (BWN-II). In Proceedings of the 2012 Water Distribution Systems Analysis Conference, September 24-27, Adelaide, South Australia, Australia.
+.. [SOKZ12] Salomons, E., Ostfeld, A., Kapelan, Z., Zecchin, A., Marchi, A., and Simpson, A. (2012). The battle of the water networks II - Problem description. Water Distribution Systems Analysis Conference 2012, September 24-27, Adelaide, South Australia, Australia. Retrieved on May 23, 2017 from https://emps.exeter.ac.uk/media/universityofexeter/emps/research/cws/downloads/WDSA2012-BWNII-ProblemDescription.pdf.
 
 .. [SPHC16] Sievert, C., Parmer, C., Hocking, T., Chamberlain, S., Ram, K., Corvellec, M., and Despouy, P. (2016). plotly: Create interactive web graphics via Plotly’s JavaScript graphing library [Software].
 
@@ -63,3 +51,16 @@ Cross reference notation will be updated to a standard format when better option
 .. [WWQP06] Walk, D.J., Worden, B.C., Quitoriano, V., and Pankow, K.L. (2006). Shakemap manual, Technical manual, users guide, and software guide. United States Geologic Survey, Retrieved on April 25, 2017 from http://pubs.usgs.gov/tm/2005/12A01/
 
 .. [Xlwt16] xlwt contributors. (2016, November 18). xlwt documentation. Retrieved on April 25, 2017 from https://xlwt.readthedocs.io.
+
+.. [*] Cross reference labels begins with 4 letters:
+
+   * If the citation has one author, the first 4 letters of name are used
+   * If the citation has two authors, the first 2 letters of author 1 and first 2 letters of author 2 are used
+   * If the citation has three authors, the first 2 letters of author 1, first letter of author 2, and first letter of author 3 are used
+   * If the citation has four authors, the first letter of each author is used
+   * If the citation has more than four authors, the first letter of first four authors is used
+   * Exceptions are made for American Lifelines Alliance (ALA) and United States Environmental Protection Agency (USEPA)
+	
+   The next two digits are the year (century ignored).
+   If the 6 digits match another citation, a lower case letter (a, b, ...) is added.
+   Cross reference notation will be updated to a standard format when better options come available.
