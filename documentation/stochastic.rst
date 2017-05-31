@@ -2,7 +2,7 @@
 
 .. raw:: latex
 
-    \newpage
+    \clearpage
 
 Stochastic simulation
 ===============================

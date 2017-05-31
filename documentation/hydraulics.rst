@@ -1,6 +1,6 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
 
 Hydraulic simulation
 ==============================
@@ -28,12 +28,12 @@ A hydraulic simulation using the WNTRSimulator is run using the following code.
 The example **hydraulic_simulation.py** can be used to run both simulators.
 
 More information on the simulators can be found in the API documentation, under
-:meth:`~wntr.sim.epanet.EpanetSimulator` and 
-:meth:`~wntr.sim.core.WNTRSimulator`.
+:class:`~wntr.sim.epanet.EpanetSimulator` and 
+:class:`~wntr.sim.core.WNTRSimulator`.
 
 Options
 ----------
-Hydraulic simulation options are defined in the :meth:`~wntr.network.model.WaterNetworkOptions` class.
+Hydraulic simulation options are defined in the :class:`~wntr.network.model.WaterNetworkOptions` class.
 These options include 
 duration, 
 hydraulic timestep, 

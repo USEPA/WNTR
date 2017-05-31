@@ -1,6 +1,6 @@
 .. _whatsnew_0120:
 
-v0.1.2 (Master branch)
+v0.1.2 (May 19, 2017)
 ---------------------------------------------------
 
 * Improved EPANET INP file reader/writer with unit conversions
@@ -10,7 +10,7 @@ v0.1.2 (Master branch)
 * Restructured code base (API change)
 
   * Added `epanet` package which contains an epanet toolkit, EPANET INP file reader/writer, and unit conversions.  Removed pyepanet package.
-  * Added `graphics` package with functions to plot networks
+  * Added `graphics` package which contains functions to plot networks.  Renamed draw_graph to plot_network.  Added a function to create network graphics using Plotly.
   * Reorganized `metrics`, `network`, `scenario`, `sim`, and `utils` packages
   * Removed Waterquality class from the scenario package.  This functionality has been replaced with Source class in the water network model.
 

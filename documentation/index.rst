@@ -43,9 +43,9 @@ EPA approval, endorsement, or recommendation.
 Sandia Funding Statement
 --------------------------------
 
-Sandia National Laboratories is a multi-mission laboratory managed and operated by Sandia Corporation, a wholly 
-owned subsidiary of Lockheed Martin Corporation, for the U.S. Department of Energy's National Nuclear Security 
-Administration under contract DE-AC04-94AL85000.
+Sandia National Laboratories is a multimission laboratory managed and operated by National Technology and 
+Engineering Solutions of Sandia, LLC., a wholly owned subsidiary of Honeywell International, Inc., for the 
+U.S. Department of Energy's National Nuclear Security Administration under contract DE-NA-0003525.
 
 Indices and tables
 ==================

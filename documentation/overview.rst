@@ -1,6 +1,9 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
+	\listoffigures
+	\listoftables
+	\clearpage
     
 Overview
 ======================================
@@ -66,4 +69,15 @@ These capabilities can be linked together in many different ways.
    :alt: WNTR user cases
    
    Flowchart illustrating four example use cases.
-   
+
+While EPANET includes some features to model and analyze water distribution system resilience, 
+WNTR was developed to greatly extend these capabilities.
+WNTR provides a flexible platform for modeling a wide range of disruptive incidents and repair strategies, and  
+pressure-driven hydraulic simulation is included to model the system during low pressure conditions.
+Furthermore, WNTR is compatible with widely used scientific computing packages for Python, 
+including NetworkX [HaSS08]_, Pandas [Mcki13]_, Numpy [VaCV11]_, Scipy [VaCV11]_, and Matplotlib [Hunt07]_.  
+These packages allow the user to build custom analysis directly in Python, and gain access to tools that
+analyze the structure of complex water distribution networks, 
+analyze time-series data from simulation results,
+run simulations efficiently, and 
+create high-quality graphics and animations.

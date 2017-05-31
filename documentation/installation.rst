@@ -1,6 +1,6 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
 
 Installation
 ======================================
@@ -113,16 +113,20 @@ The following Python packages are required:
   https://networkx.github.io/
 * Pandas [Mcki13]_: used to analyze and store time series data, 
   http://pandas.pydata.org/
-* Matplotlib [Hunt07]_: used to produce figures, 
-  http://matplotlib.org/
 * enum34 (for Python 2.7): used to add enumerated type support for Python 2.7, 
   https://pypi.python.org/pypi/enum34
 
+These packages are included in the Anaconda Python distribution.
+ 
 Optional dependencies
 -------------------------
 
 The following Python packages are optional:
 
+* Matplotlib [Hunt07]_: used to produce figures, 
+  http://matplotlib.org/
+* Plotly [SPHC16]_: used to produce interactive scalable figures, 
+  https://plot.ly/
 * SymPy [JCMG11]_: used to convert units, 
   http://www.sympy.org/en/index.html
 * xlwt [Xlwt16]_: used to read/write to Excel spreadsheets,
@@ -131,7 +135,8 @@ The following Python packages are optional:
   https://github.com/numpy/numpydoc
 * nose: used to run software tests,
   http://nose.readthedocs.io
-	
+
+These packages are included in the Anaconda Python distribution.
 
 .. The following is not shown in the UM
    WNTR includes a beta version of a Pyomo hydraulic simulator which requires installing 

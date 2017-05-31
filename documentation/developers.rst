@@ -2,7 +2,7 @@
 
 .. raw:: latex
 
-    \newpage
+    \clearpage
 	
 Software quality assurance
 =======================================

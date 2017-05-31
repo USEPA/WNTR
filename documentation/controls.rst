@@ -1,6 +1,6 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
 
 Water network controls
 ======================================
@@ -118,18 +118,22 @@ Complex rules
 Control objects that emulate EPANET's [RULES] section are defined in the :class:`~wntr.network.controls.IfThenElseControl` class.
 When generating a water network model from an EPANET INP file, an IfThenElseControl will be created for each rule.
 An IfThenElseControl is defined using a :class:`~wntr.network.controls.ControlCondition` object and a :class:`~wntr.network.controls.ControlAction` object.
-The different condition classes available are listed below, along with a short explanation.
+Condition classes are listed in :numref:`table-condition-classes`.  
 
-.. autosummary::
+.. _table-condition-classes:
+.. table:: Condition classes.
 
-    ~wntr.network.controls.TimeOfDayCondition
-    ~wntr.network.controls.SimTimeCondition
-    ~wntr.network.controls.ValueCondition
-    ~wntr.network.controls.RelativeCondition
-    ~wntr.network.controls.OrCondition
-    ~wntr.network.controls.AndCondition
-
-
+   ===================================================  ========================================================================================
+   Condition class                                      Description
+   ===================================================  ========================================================================================
+   :class:`~wntr.network.controls.TimeOfDayCondition`	Time-of-day or “clocktime” based condition statement.
+   :class:`~wntr.network.controls.SimTimeCondition`	    Condition based on time since start of the simulation.
+   :class:`~wntr.network.controls.ValueCondition`	    Compare a network element attribute to a set value
+   :class:`~wntr.network.controls.RelativeCondition`	Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
+   :class:`~wntr.network.controls.OrCondition`	        Combine two WNTR Conditions with an OR.
+   :class:`~wntr.network.controls.AndCondition`	        Combine two WNTR Conditions with an AND
+   ===================================================  ========================================================================================
+   
 All the above conditions are valid EPANET conditions except RelativeCondition; however, some advanced features of may not be defined.
 
 In the following example, the previous simple controls are recreated using the IfThenElseControl.
@@ -181,7 +185,7 @@ Adding controls to a network
 -------------------------------
 
 Once a control is created, they must be added to the network.
-This is accomplished using the :meth:`~wntr.network.model.WaterNetworkModel.add_control` method of the water network model object.
+This is accomplished using the :class:`~wntr.network.model.WaterNetworkModel.add_control` method of the water network model object.
 The control should be named so that it can be retrieved and modified if desired.
 
 .. doctest::

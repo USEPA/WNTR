@@ -1,6 +1,6 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
 
 Water network model
 ======================================
@@ -35,4 +35,4 @@ The EPANET INP file will not include features not supported by EPANET (i.e. pres
    :lines: 25
 
 For more information on the water network model, see 
-:meth:`~wntr.network.model.WaterNetworkModel` in the API documentation.
+:class:`~wntr.network.model.WaterNetworkModel` in the API documentation.

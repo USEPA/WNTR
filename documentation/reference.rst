@@ -1,6 +1,6 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
 
 Reference
 ====================
@@ -43,6 +43,8 @@ Reference
 .. [Ross00] Rossman, L.A. (2000). EPANET 2 Users Manual. U. S. Environmental Protection Agency Technical Report, EPA/600/R--00/057, 200p.
 
 .. [SOKZ12] Salomons, E., Ostfeld, A., Kapelan, Z., Zecchin, A., Marchi, A., & Simpson, A. (2012). The battle of the water networks II - Adelaide 2012 (BWN-II). In Proceedings of the 2012 Water Distribution Systems Analysis Conference, September 24-27, Adelaide, South Australia, Australia.
+
+.. [SPHC16] Sievert, C., Parmer, C., Hocking, T., Chamberlain, S., Ram, K., Corvellec, M., & Despouy, P. (2016). plotly: Create interactive web graphics via Plotly’s JavaScript graphing library [Software].
 
 .. [Todi00] Todini, E. (2000). Looped water distribution networks design using a resilience index based heuristic approach. Urban Water, 2(2), 115-122.
 
