@@ -901,22 +901,22 @@ class InpFile(object):
             # Only add head curves for pumps
             if current[0].upper() == 'GLOBAL':
                 if current[1].upper() == 'PRICE':
-                    self.wn._energy.global_price = float(current[2])
+                    self.wn.energy.global_price = float(current[2])
                 elif current[1].upper() == 'PATTERN':
-                    self.wn._energy.global_pattern = current[2]
+                    self.wn.energy.global_pattern = current[2]
                 elif current[1].upper() in ['EFFIC', 'EFFICIENCY']:
-                    self.wn._energy.global_efficiency = float(current[2])
+                    self.wn.energy.global_efficiency = float(current[2])
                 else:
                     logger.warning('Unknown entry in ENERGY section: %s', line)
             elif current[0].upper() == 'DEMAND':
-                self.wn._energy.demand_charge = float(current[2])
+                self.wn.energy.demand_charge = float(current[2])
             elif current[0].upper() == 'PUMP':
                 pump_name = current[1]
                 pump = self.wn._pumps[pump_name]
                 if current[2].upper() == 'PRICE':
-                    pump._energy_price = float(current[2])
+                    pump.energy_price = float(current[2])
                 elif current[2].upper() == 'PATTERN':
-                    pump._energy_pat = current[2]
+                    pump.energy_pattern = current[2]
                 elif current[2].upper() in ['EFFIC', 'EFFICIENCY']:
                     curve_name = current[3]
                     curve_points = []
@@ -926,7 +926,7 @@ class InpFile(object):
                         curve_points.append((x, y))
                     self.wn.add_curve(curve_name, 'EFFICIENCY', curve_points)
                     curve = self.wn.get_curve(curve_name)
-                    pump._efficiency = curve_name
+                    pump.efficiency = curve_name
                 else:
                     logger.warning('Unknown entry in ENERGY section: %s', line)
             else:
@@ -934,25 +934,25 @@ class InpFile(object):
 
     def _write_energy(self, f, wn):
         f.write('[ENERGY]\n'.encode('ascii'))
-        if wn._energy is not None:
-            if wn._energy.global_price is not None:
-                f.write('GLOBAL PRICE   {:.4f}\n'.format(wn._energy.global_price).encode('ascii'))
-            if wn._energy.global_pattern is not None:
-                f.write('GLOBAL PATTERN {:s}\n'.format(wn._energy.global_pattern).encode('ascii'))
-            if wn._energy.global_efficiency is not None:
-                f.write('GLOBAL EFFIC   {:.4f}\n'.format(wn._energy.global_efficiency).encode('ascii'))
-            if wn._energy.demand_charge is not None:
-                f.write('DEMAND CHARGE  {:.4f}\n'.format(wn._energy.demand_charge).encode('ascii'))
+        if wn.energy is not None:
+            if wn.energy.global_price is not None:
+                f.write('GLOBAL PRICE   {:.4f}\n'.format(wn.energy.global_price).encode('ascii'))
+            if wn.energy.global_pattern is not None:
+                f.write('GLOBAL PATTERN {:s}\n'.format(wn.energy.global_pattern).encode('ascii'))
+            if wn.energy.global_efficiency is not None:
+                f.write('GLOBAL EFFIC   {:.4f}\n'.format(wn.energy.global_efficiency).encode('ascii'))
+            if wn.energy.demand_charge is not None:
+                f.write('DEMAND CHARGE  {:.4f}\n'.format(wn.energy.demand_charge).encode('ascii'))
         lnames = list(wn._pumps.keys())
         lnames.sort()
         for pump_name in lnames:
             pump = wn._pumps[pump_name]
-            if pump._efficiency is not None:
-                f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump._efficiency).encode('ascii'))
-            if pump._energy_price is not None:
-                f.write('PUMP {:10s} PRICE   {:s}\n'.format(pump_name, pump._energy_price).encode('ascii'))
-            if pump._energy_pat is not None:
-                f.write('PUMP {:10s} PATTERN {:s}\n'.format(pump_name, pump._energy_pat).encode('ascii'))
+            if pump.efficiency is not None:
+                f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump.efficiency).encode('ascii'))
+            if pump.energy_price is not None:
+                f.write('PUMP {:10s} PRICE   {:s}\n'.format(pump_name, pump.energy_price).encode('ascii'))
+            if pump.energy_pattern is not None:
+                f.write('PUMP {:10s} PATTERN {:s}\n'.format(pump_name, pump.energy_pattern).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_status(self):

@@ -5,6 +5,7 @@ from wntr.network import Tank, Pipe, Pump, Valve
 import numpy as np 
 import pandas as pd 
 import logging
+import scipy
 
 logger = logging.getLogger(__name__)
 
@@ -218,4 +219,91 @@ def ghg_emissions(wn, pipe_ghg=None):
         network_ghg = network_ghg + pipe_ghg.iloc[idx]*link.length
        
     return network_ghg    
-    
+
+
+def pump_energy(wn, sim_results, return_type='time series'):
+    """
+    Note: This method is more accurate if you use a reporting timestep of 'all'.
+
+    Parameters
+    ----------
+    wn: wntr.network.WaterNetworkModel
+    sim_results: wntr.sim.results.NetResults
+    return_type: str
+        options are 'time series', 'total', 'average'
+
+    Returns
+    -------
+    pandas.Panel or pandas.DataFrame
+    """
+    if wn.energy.demand_charge is not None and wn.energy.demand_charge != 0:
+        raise ValueError('WNTR does not support demand charge yet.')
+
+    pumps = wn.pump_name_list
+    flow = sim_results.link.loc['flowrate', :, pumps]
+
+    end_nodes = {wn.get_link(pump_name).end_node:pump_name for pump_name in pumps}
+    start_nodes = {wn.get_link(pump_name).start_node:pump_name for pump_name in pumps}
+
+    end_heads = sim_results.node.loc['head',:,end_nodes.keys()]
+    start_heads = sim_results.node.loc['head',:,start_nodes.keys()]
+    end_heads.rename(index=None, columns=end_nodes, inplace=True)
+    start_heads.rename(index=None, columns=start_nodes, inplace=True)
+    headloss = end_heads - start_heads
+
+    efficiency_dict = {}
+    for pump_name, pump in wn.pumps():
+        if pump.efficiency is None:
+            efficiency_dict[pump_name] = [wn.energy.global_efficiency/100.0 for i in sim_results.time]
+        else:
+            curve = wn.get_curve(pump.efficiency)
+            x = [point[0] for point in curve.points]
+            y = [point[1]/100.0 for point in curve.points]
+            interp = scipy.interpolate.interp1d(x, y, kind='linear')
+            efficiency_dict[pump_name] = interp(np.array(flow.loc[:, pump_name]))
+
+    efficiency = pd.DataFrame(data=efficiency_dict, index=sim_results.time, columns=pumps)
+
+    price_dict = {}
+    for pump_name, pump in wn.pumps():
+        if pump.energy_price is None and pump.energy_pattern is None:
+            if wn.energy.global_pattern is None:
+                price_dict[pump_name] = [wn.energy.global_price for i in sim_results.time]
+            else:
+                raise NotImplementedError('WNTR does not support price patterns yet.')
+        elif pump.energy_pattern is None:
+            if wn.energy.global_pattern is None:
+                price_dict[pump_name] = [pump.energy_price for i in sim_results.time]
+            else:
+                raise NotImplementedError('WNTR does not support price patterns yet.')
+        else:
+            raise NotImplementedError('WNTR does not support price patterns yet.')
+    price = pd.DataFrame(data=price_dict, index=sim_results.time, columns=pumps)
+
+    energy = 9.81 * headloss * flow / efficiency
+    cost_series = energy * price / 3600.0
+
+    if return_type.upper() == 'TIME SERIES':
+        pump_energy_results = pd.Panel(items=['energy', 'cost'], major_axis=sim_results.time, minor_axis=pumps)
+        pump_energy_results.loc['energy', :, :] = energy
+        pump_energy_results.loc['cost', :, :] = cost_series
+        return pump_energy_results
+
+    total_energy = 0
+    total_cost = 0
+    for i in range(len(sim_results.time)-1):
+        t = sim_results.time[i]
+        delta_t = sim_results.time[i+1] - t
+        total_energy = total_energy + energy.loc[t, :] * delta_t
+        total_cost = total_cost + cost_series.loc[t, :] * delta_t
+
+    if return_type.upper() == 'TOTAL':
+        return pd.DataFrame(data={'energy': total_energy, 'cost': total_cost}, index=pumps, columns=['energy', 'cost'])
+
+    avg_energy = total_energy / (sim_results.time[-1] - sim_results.time[0])
+    avg_cost = total_cost / (sim_results.time[-1] - sim_results.time[0])
+
+    if return_type.upper() == 'AVERAGE':
+        return pd.DataFrame(data={'energy': avg_energy, 'cost': avg_cost}, index=pumps, columns=['energy', 'cost'])
+
+    raise ValueError('Unrecognized return_type: {0}'.format(return_type))
