@@ -242,14 +242,13 @@ def pump_energy(wn, sim_results, return_type='time series'):
     pumps = wn.pump_name_list
     flow = sim_results.link.loc['flowrate', :, pumps]
 
-    end_nodes = {wn.get_link(pump_name).end_node:pump_name for pump_name in pumps}
-    start_nodes = {wn.get_link(pump_name).start_node:pump_name for pump_name in pumps}
-
-    end_heads = sim_results.node.loc['head',:,end_nodes.keys()]
-    start_heads = sim_results.node.loc['head',:,start_nodes.keys()]
-    end_heads.rename(index=None, columns=end_nodes, inplace=True)
-    start_heads.rename(index=None, columns=start_nodes, inplace=True)
-    headloss = end_heads - start_heads
+    headloss = pd.DataFrame(data=None, index=sim_results.time, columns=pumps)
+    for pump_name, pump in wn.pumps():
+        start_node = pump.start_node
+        end_node = pump.end_node
+        start_head = sim_results.node.loc['head',:,start_node]
+        end_head = sim_results.node.loc['head',:,end_node]
+        headloss.loc[:,pump_name] = end_head - start_head
 
     efficiency_dict = {}
     for pump_name, pump in wn.pumps():
