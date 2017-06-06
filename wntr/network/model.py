@@ -1961,6 +1961,10 @@ class LinkType(enum.IntEnum):
 class LinkStatus(enum.IntEnum):
     """
     An enum class for link statuses.
+    
+    .. warning:: 
+        This is NOT the class for determining output status from an EPANET binary file.
+        The class for output status is wntr.epanet.util.LinkTankStatus.
 
     .. rubric:: Enum Members
 
