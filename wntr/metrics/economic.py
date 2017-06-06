@@ -221,20 +221,41 @@ def ghg_emissions(wn, pipe_ghg=None):
     return network_ghg    
 
 
-def pump_energy(wn, sim_results, return_type='time series'):
+def pump_energy(wn, sim_results):
     """
-    Note: This method is more accurate if you use a reporting timestep of 'all'.
+    This method takes a WaterNetworkModel object and a simulation results object and computes the required pump
+    energy and cost at each time step in the results object for each pump in the network. The computation is based
+    on the flow rate through the pump, the pump head, the pump efficiency, and the electricity price. Pump efficiency
+    curves may be specified through the "efficiency" attribute on the pump object. Alternatively, a global efficiency
+    may be set on the wn.energy object:
+
+    >>> wn.energy.global_efficiency = 75 # This means 75% or 0.75
+
+    The price can also be set on the pump or the energy object:
+
+    >>> wn.energy.global_price = 3.61e-8  # $/J; equal to $0.13/kW-h
+
+    or
+
+    >>> pump.energy_price = 3.61e-8  # $/J
 
     Parameters
     ----------
     wn: wntr.network.WaterNetworkModel
     sim_results: wntr.sim.results.NetResults
-    return_type: str
-        options are 'time series', 'total', 'average'
 
     Returns
     -------
-    pandas.Panel or pandas.DataFrame
+    pandas.Panel
+        The items are ['energy', 'cost']
+        The major axis is equivalent to sim_results.time
+        The minor axis corresponds to pump names
+        Energy is given in Watts
+        Cost is given in $/s
+        Ex:
+
+        >>> res = pump_energy(wn, sim_results)
+        >>> print(res.loc['cost', 3600, 'pump1'])
     """
     if wn.energy.demand_charge is not None and wn.energy.demand_charge != 0:
         raise ValueError('WNTR does not support demand charge yet.')
@@ -255,6 +276,7 @@ def pump_energy(wn, sim_results, return_type='time series'):
         if pump.efficiency is None:
             efficiency_dict[pump_name] = [wn.energy.global_efficiency/100.0 for i in sim_results.time]
         else:
+            raise NotImplementedError('WNTR does not support pump efficiency curves yet.')
             curve = wn.get_curve(pump.efficiency)
             x = [point[0] for point in curve.points]
             y = [point[1]/100.0 for point in curve.points]
@@ -279,30 +301,8 @@ def pump_energy(wn, sim_results, return_type='time series'):
             raise NotImplementedError('WNTR does not support price patterns yet.')
     price = pd.DataFrame(data=price_dict, index=sim_results.time, columns=pumps)
 
-    energy = 9.81 * headloss * flow / efficiency
-    cost_series = energy * price / 3600.0
+    energy = 1000.0 * 9.81 * headloss * flow / efficiency
+    cost_series = energy * price
 
-    if return_type.upper() == 'TIME SERIES':
-        pump_energy_results = pd.Panel(items=['energy', 'cost'], major_axis=sim_results.time, minor_axis=pumps)
-        pump_energy_results.loc['energy', :, :] = energy
-        pump_energy_results.loc['cost', :, :] = cost_series
-        return pump_energy_results
-
-    total_energy = 0
-    total_cost = 0
-    for i in range(len(sim_results.time)-1):
-        t = sim_results.time[i]
-        delta_t = sim_results.time[i+1] - t
-        total_energy = total_energy + energy.loc[t, :] * delta_t
-        total_cost = total_cost + cost_series.loc[t, :] * delta_t
-
-    if return_type.upper() == 'TOTAL':
-        return pd.DataFrame(data={'energy': total_energy, 'cost': total_cost}, index=pumps, columns=['energy', 'cost'])
-
-    avg_energy = total_energy / (sim_results.time[-1] - sim_results.time[0])
-    avg_cost = total_cost / (sim_results.time[-1] - sim_results.time[0])
-
-    if return_type.upper() == 'AVERAGE':
-        return pd.DataFrame(data={'energy': avg_energy, 'cost': avg_cost}, index=pumps, columns=['energy', 'cost'])
-
-    raise ValueError('Unrecognized return_type: {0}'.format(return_type))
+    pump_energy_results = pd.Panel(data={'energy':energy, 'cost':cost_series}, items=['energy', 'cost'], major_axis=sim_results.time, minor_axis=pumps)
+    return pump_energy_results

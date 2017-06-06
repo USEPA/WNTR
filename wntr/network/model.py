@@ -2977,12 +2977,12 @@ class _Backdrop(object):
 class Energy(object):
     """An epanet energy definitions object."""
     def __init__(self):
-        self.global_price = None
-        """Global average cost per kW-hour (default 0)"""
+        self.global_price = 0
+        """Global average cost per Joule (default 0)"""
         self.global_pattern = None
         """ID label of time pattern describing how energy price varies with time"""
-        self.global_efficiency = None
-        """Global pump efficiency as percent (default 75%)"""
+        self.global_efficiency = 75.0
+        """Global pump efficiency as percent; i.e., 75.0 means 75% (default 75%)"""
         self.demand_charge = None
         """Added cost per maximum kW usage during the simulation period"""
 

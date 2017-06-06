@@ -901,7 +901,7 @@ class InpFile(object):
             # Only add head curves for pumps
             if current[0].upper() == 'GLOBAL':
                 if current[1].upper() == 'PRICE':
-                    self.wn.energy.global_price = float(current[2])
+                    self.wn.energy.global_price = from_si(self.flow_units, float(current[2]), HydParam.Energy)
                 elif current[1].upper() == 'PATTERN':
                     self.wn.energy.global_pattern = current[2]
                 elif current[1].upper() in ['EFFIC', 'EFFICIENCY']:
@@ -914,7 +914,7 @@ class InpFile(object):
                 pump_name = current[1]
                 pump = self.wn._pumps[pump_name]
                 if current[2].upper() == 'PRICE':
-                    pump.energy_price = float(current[2])
+                    pump.energy_price = from_si(self.flow_units, float(current[2]), HydParam.Energy)
                 elif current[2].upper() == 'PATTERN':
                     pump.energy_pattern = current[2]
                 elif current[2].upper() in ['EFFIC', 'EFFICIENCY']:
@@ -936,7 +936,7 @@ class InpFile(object):
         f.write('[ENERGY]\n'.encode('ascii'))
         if wn.energy is not None:
             if wn.energy.global_price is not None:
-                f.write('GLOBAL PRICE   {:.4f}\n'.format(wn.energy.global_price).encode('ascii'))
+                f.write('GLOBAL PRICE   {:.4f}\n'.format(to_si(self.flow_units, wn.energy.global_price, HydParam.Energy)).encode('ascii'))
             if wn.energy.global_pattern is not None:
                 f.write('GLOBAL PATTERN {:s}\n'.format(wn.energy.global_pattern).encode('ascii'))
             if wn.energy.global_efficiency is not None:
@@ -950,7 +950,7 @@ class InpFile(object):
             if pump.efficiency is not None:
                 f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump.efficiency).encode('ascii'))
             if pump.energy_price is not None:
-                f.write('PUMP {:10s} PRICE   {:s}\n'.format(pump_name, pump.energy_price).encode('ascii'))
+                f.write('PUMP {:10s} PRICE   {:s}\n'.format(pump_name, to_si(self.flow_units, pump.energy_price, HydParam.Energy)).encode('ascii'))
             if pump.energy_pattern is not None:
                 f.write('PUMP {:10s} PATTERN {:s}\n'.format(pump_name, pump.energy_pattern).encode('ascii'))
         f.write('\n'.encode('ascii'))
