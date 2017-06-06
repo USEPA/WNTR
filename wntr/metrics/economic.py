@@ -229,6 +229,7 @@ def pump_energy(wn, sim_results):
     curves may be specified through the "efficiency" attribute on the pump object. Alternatively, a global efficiency
     may be set on the wn.energy object:
 
+    >>> import wntr
     >>> wn = wntr.network.WaterNetworkModel('../examples/networks/Net1.inp')
     >>> wn.energy.global_efficiency = 75 # This means 75% or 0.75
 
