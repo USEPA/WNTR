@@ -68,7 +68,9 @@ All of these options can be modified in WNTR and then written to an EPANET INP f
 Sources
 ------------
 Sources are required for CHEMICAL water quality analysis.  
+=======
 Sources are added to the water network model using the :class:`~wntr.network.model.WaterNetworkModel.add_source` method.
+Sources can still be defined, but *will not* be used if AGE, TRACE or NONE water quality analysis is selected.
 Sources include the following information:
 
 * **Source name**: A unique source name used to reference the source in the water network model.

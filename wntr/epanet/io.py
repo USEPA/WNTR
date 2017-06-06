@@ -588,7 +588,7 @@ class InpFile(object):
                  'curve': '',
                  'com': ';'}
             if tank.vol_curve is not None:
-                E['curve'] = tank.vol_curve
+                E['curve'] = tank.vol_curve.name
             f.write(_TANK_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -1592,7 +1592,12 @@ class InpFile(object):
             elif (current[0].upper() == 'QUALITY'):
                 opts.quality_timestep = _str_time_to_sec(current[2])
             elif (current[1].upper() == 'CLOCKTIME'):
-                [time, time_format] = [current[2], current[3].upper()]
+                if len(current) > 3:
+                    time_format = current[3].upper()
+                else:
+                    # Kludge for 24hr time that needs an AM/PM
+                    time_format = 'AM'
+                time = current[2]
                 opts.start_clocktime = _clock_time_to_sec(time, time_format)
             elif (current[0].upper() == 'STATISTIC'):
                 opts.statistic = current[1].upper()
@@ -1754,7 +1759,7 @@ class InpFile(object):
 
     def _write_coordinates(self, f, wn):
         f.write('[COORDINATES]\n'.encode('ascii'))
-        entry = '{:10s} {:10g} {:10g}\n'
+        entry = '{:10s} {:f} {:f}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
         coord = nx.get_node_attributes(wn._graph, 'pos')
