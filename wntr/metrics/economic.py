@@ -229,6 +229,7 @@ def pump_energy(wn, sim_results):
     curves may be specified through the "efficiency" attribute on the pump object. Alternatively, a global efficiency
     may be set on the wn.energy object:
 
+    >>> wn = wntr.network.WaterNetworkModel('../examples/networks/Net1.inp')
     >>> wn.energy.global_efficiency = 75 # This means 75% or 0.75
 
     The price can also be set on the pump or the energy object:
@@ -237,6 +238,7 @@ def pump_energy(wn, sim_results):
 
     or
 
+    >>> pump = wn.get_link('9')
     >>> pump.energy_price = 3.61e-8  # $/J
 
     Parameters
@@ -254,8 +256,10 @@ def pump_energy(wn, sim_results):
         Cost is given in $/s
         Ex:
 
+        >>> sim = wntr.sim.WNTRSimulator(wn)
+        >>> sim_results = sim.run_sim()
         >>> res = pump_energy(wn, sim_results)
-        >>> print(res.loc['cost', 3600, 'pump1'])
+        >>> print(res.loc['cost', 3600, '9'])
     """
     if wn.energy.demand_charge is not None and wn.energy.demand_charge != 0:
         raise ValueError('WNTR does not support demand charge yet.')
