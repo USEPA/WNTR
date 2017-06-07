@@ -51,7 +51,7 @@ or can be defined for individual components.
 Each fragility curve includes a "No damage" state with priority 0 (lowest priority).
 
 The example **fragility_curves.py** uses fragility curves to 
-determine probability of failure.  
+determine probability of failure:
 
 .. literalinclude:: ../examples/fragility_curves.py
    :lines: 2, 25-27
