@@ -19,27 +19,19 @@ earthquake = wntr.scenario.Earthquake(epicenter, magnitude, depth)
 # Compute PGA
 R = earthquake.distance_to_epicenter(wn, element_type=wntr.network.Pipe)
 pga = earthquake.pga_attenuation_model(R)  
-wntr.graphics.plot_network(wn, link_attribute=pga,title='PGA')
+wntr.graphics.plot_network(wn, link_attribute=pga,title='Peak Ground Acceleration (g)')
   
 # Define fragility curve  
 FC = wntr.scenario.FragilityCurve()
 FC.add_state('Minor', 1, {'Default': lognorm(0.5,scale=0.3)})
 FC.add_state('Major', 2, {'Default': lognorm(0.5,scale=0.7)}) 
-plt.figure()
-plt.title('Fragility curve')
-x = np.linspace(0,1,100)
-for name, state in FC.states():
-    dist=state.distribution['Default']
-    plt.plot(x,dist.cdf(x), label=name)
-plt.ylim((0,1))
-plt.xlabel('Peak Ground Acceleration (g)')
-plt.ylabel('Probability of exceeding a damage state')
-plt.legend()
+wntr.graphics.plot_fragility_curve(FC, xlabel='Peak Ground Acceleration (g)')
 
 # Draw damage state for each pipe
 pipe_PEDS = FC.cdf_probability(pga)
 pipe_damage_state = FC.sample_damage_state(pipe_PEDS)
 pipe_damage_state_map = FC.get_priority_map()
 val = pipe_damage_state.map(pipe_damage_state_map)
-wntr.graphics.plot_network(wn, link_attribute=val,
+custom_cmp = wntr.graphics.custom_colormap(3, ['black', 'cyan', 'red'])
+wntr.graphics.plot_network(wn, link_attribute=val, link_cmap = custom_cmp,
                         title='Damage state, 0 = None, 1 = Minor, 2 = Major')
