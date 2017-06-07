@@ -50,7 +50,8 @@ Additionally, EPANET INP files can be generated from water network models.
    :class:`~wntr.network.model.Reservoir`              Contains methods to define reservoirs. Reservoirs are nodes with an infinite external source or sink.      
    :class:`~wntr.network.model.Tank`                   Contains methods to define tanks. Tanks are nodes with storage capacity.     
    :class:`~wntr.network.model.Pipe`		           Contains methods to define pipes. Pipes are links that transport water. 
-   :class:`~wntr.network.model.Pump`                   Contains methods to define pumps. Pumps are links that increase hydraulic head. 
+   :class:`~wntr.network.model.Pump`                   Contains methods to define pumps. Pumps are links that increase hydraulic head.
+   :class:`~wntr.network.model.Energy`                 Contains attributes for specifying global energy prices and global pump efficiencies.
    :class:`~wntr.network.model.Valve`                  Contains methods to define valves. Valves are links that limit pressure or flow. 
    :class:`~wntr.network.model.Curve`                  Contains methods to define curves. Curves are data pairs representing a relationship between two quantities.  Curves are used to define pump curves. 
    :class:`~wntr.network.model.Source`                 Contains methods to define sources. Sources define the location and characteristics of a substance injected directly into the network.
@@ -126,7 +127,6 @@ However, **the following model options cannot be modified/created in WNTR**:
 * Efficiency curves in the [CURVES] section
 * [DEMANDS] section (base demand and patterns from the [JUNCTIONS] section can be modified)
 * [EMITTERS] section
-* [ENERGY] section
 * [LABELS] section
 * [MIXING] section
 * [REPORT] section
