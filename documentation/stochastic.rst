@@ -1,8 +1,8 @@
-.. _stochastic_simulation:
-
 .. raw:: latex
 
     \clearpage
+
+.. _stochastic_simulation:
 
 Stochastic simulation
 ===============================
@@ -42,7 +42,7 @@ be defined as a function of flood stage, wind speed, and temperature for other
 types of disasters.  
 
 Fragility curves can have multiple damage states.  
-Each state should corresponds to specific changes to the network model that represent damage, for example, a major or minor leak.
+Each state should correspond to specific changes to the network model that represent damage, for example, a major or minor leak.
 Each state is defined with a name (i.e., 'Major', 'Minor'), 
 priority (i.e., 1, 2, where higher numbers = higher priority), 
 and distribution (using the Scipy Python package).
@@ -51,7 +51,7 @@ or can be defined for individual components.
 Each fragility curve includes a "No damage" state with priority 0 (lowest priority).
 
 The example **fragility_curves.py** uses fragility curves to 
-determine probability of failure.  
+determine probability of failure:
 
 .. literalinclude:: ../examples/fragility_curves.py
    :lines: 2, 25-27

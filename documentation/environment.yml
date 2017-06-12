@@ -8,4 +8,5 @@ dependencies:
     - sphinx
     - numpydoc
     - matplotlib
+    - plotly
     - enum34

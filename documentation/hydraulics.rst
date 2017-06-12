@@ -11,7 +11,7 @@ See :ref:`software_framework` for more information on features and limitations o
 The EpanetSimulator can be used to run demand-driven hydraulic simulations
 using the EPANET 2 Programmer's Toolkit.  The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
-A hydraulic simulation using the EpanetSimulator is run using the following code.
+A hydraulic simulation using the EpanetSimulator is run using the following code:
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
    :lines: 12-13
@@ -20,7 +20,7 @@ The WNTRSimulator is a pure Python simulation engine based on the same equations
 as EPANET.  The WNTRSimulator does not include equations to run water quality 
 simulations.  The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulation
 in demand-driven or pressure-driven demand mode.
-A hydraulic simulation using the WNTRSimulator is run using the following code.
+A hydraulic simulation using the WNTRSimulator is run using the following code:
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
    :lines: 16-17
@@ -55,7 +55,7 @@ Options that are not used with the WNTRSimulator are described in :ref:`limitati
 
 Mass balance at nodes
 -------------------------
-Both simulators uses the mass balance equations from EPANET [Ross00]_:
+Both simulators use the mass balance equations from EPANET [Ross00]_:
 
 .. math::
 
@@ -186,8 +186,8 @@ Newton-Raphson algorithm.
 :numref:`fig-pressure-driven` illustrates the pressure demand relationship using demand-driven and pressure-driven demand simulation.
 In the example, 
 :math:`D_f` is 0.0025 m³/s (39.6 GPM),
-:math:`P_f` is 200,000 Pa (29.0 psi), and 
-:math:`P_0` is 25,000 Pa (3.6 psi).
+:math:`P_f` is 30 psi, and 
+:math:`P_0` is 5 psi.
 Using demand-driven simulation, the demand is equal to :math:`D_f` regardless of pressure.  
 Using pressure-driven demand simulation, the demand starts to decrease when pressure is below :math:`P_f` and goes to 0 when pressure is below :math:`P_0`.
 
@@ -196,13 +196,13 @@ Using pressure-driven demand simulation, the demand starts to decrease when pres
    :scale: 100 %
    :alt: Pressure driven example
    
-   Example relationship between pressure and demand using demand-driven and pressure-driven demand simulation.
+   Example relationship between pressure (p) and demand (d) using demand-driven and pressure-driven demand simulation.
 
 Leak model
 -------------------------
 
 The WNTRSimulator includes the ability to add leaks to the network.
-The leak is modeled with a general form of the equation proposed by 
+The leak is modeled with a general form of the equation proposed by Crowl and Louvar
 [CrLo02]_ where the mass flow rate of fluid through the hole is expressed as:
 
 .. math::
@@ -224,14 +224,14 @@ A pipe break is modeled using a leak area large enough to drain the pipe.
 WNTR includes methods to add leaks to any location along a pipe by splitting the pipe into two sections and adding a node. 
 
 :numref:`fig-leak` illustrates leak demand.
-In the example, the leak diameter is set to 0.5 cm, 1.0 cm, and 1.5 cm. 
+In the example, the diameter of the leak is set to 0.5 cm, 1.0 cm, and 1.5 cm. 
 
 .. _fig-leak:
 .. figure:: figures/leak_demand.png
    :scale: 100 %
    :alt: Leak demand
    
-   Example relationship between leak demand and pressure.
+   Example relationship between leak demand (d) and pressure (p).
 
 
 Pause and restart 
