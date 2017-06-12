@@ -32,7 +32,7 @@ def test_plot_interactive_network1():
     wn = wntr.network.WaterNetworkModel(inp_file)
 		
     plt.figure()
-    wntr.graphics.plot_interactive_network(wn, filename=filename)
+    wntr.graphics.plot_interactive_network(wn, filename=filename, auto_open=False)
     
     assert_true(isfile(filename))
 
