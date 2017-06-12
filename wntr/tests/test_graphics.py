@@ -33,7 +33,6 @@ def test_plot_interactive_network1():
 		
     plt.figure()
     wntr.graphics.plot_interactive_network(wn, filename=filename, auto_open=False)
-    plt.close()
     
     assert_true(isfile(filename))
 
