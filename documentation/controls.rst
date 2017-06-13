@@ -7,7 +7,7 @@ Water network controls
 
 One of the key features of water network models is the ability to control pipes, pumps and valves using simple and complex conditions.  
 EPANET uses "controls" and "rules" to define conditions [Ross00]_.
-A control is a single action (i.e. closing/opening a link or changing the setting) based on a single condition (i.e. time based or tank level based).
+A control is a single action (i.e., closing/opening a link or changing the setting) based on a single condition (i.e., time based or tank level based).
 A rule is more complex; rules take an IF-THEN-ELSE form and can have multiple conditions and multiple actions in each of the logical blocks.
 WNTR supports EPANET's rules and controls when generating a water network model from and INP file and simulating hydraulics using the EpanetSimulator.
 WNTR includes additional options to define controls that can be used by the WNTRSimulator.
@@ -26,7 +26,7 @@ Control actions
 Control actions tell the simulator what to do when a condition becomes "true." 
 Control actions are created using the :class:`~wntr.network.controls.ControlAction` class.
 A control action is defined by a target link, the property to change, and the value to change it to.
-The following example creates a control action that opens pipe 330.
+The following example creates a control action that opens pipe 330:
 
 .. doctest::
     :hide:
@@ -69,7 +69,7 @@ The control action is defined above.
 In the following example, a conditional control is defined that opens pipe 330 if the level of tank 1 goes above 46.0248 m.
 The source is the the tank level and is defined as a tuple with the node object `n1` and the attribute `level`.
 To specify that the condition should be true when the level is greater than the threshold, the operation is set to `np.greater` and the threshold is set to 46.0248.
-The control action `act1` from above is used in the conditional control.
+The control action `act1` from above is used in the conditional control:
 
 .. doctest::
 	
@@ -79,7 +79,7 @@ The control action `act1` from above is used in the conditional control.
     >>> ctrl1
     <ConditionalControl: <Tank '1'>, 'level'), <ufunc 'greater'>, 46.0248, <ControlAction: <Pipe '330'>, 'status', 'Open'>>
 
-To get an EPANET-like description of this control, use the print function.
+To get an EPANET-like description of this control, use the print function:
 
 .. doctest::
 
@@ -90,11 +90,11 @@ To get an EPANET-like description of this control, use the print function.
 TimeControl objects define time-based controls.
 Time-based controls require a water network model object, a time to start the condition, a control action, and additional flags to specify the time reference point and recurrence.
 The time flag is either `SIM_TIME` or `SHIFTED_TIME`; these indicate simulation or clock time, respectively.
-The daily flag is eithTrue or False and indicates if the control should be repeated every 24 hours.
+The daily flag is either True or False and indicates if the control should be repeated every 24 hours.
 
 In the following example, a time-based control is defined that opens Pump 10 at hour 121.
 The time flag is set to `SIM_TIME` and the daily flag is set to False.
-A new control action is defined that opens the pump.
+A new control action is defined that opens the pump:
 
 .. doctest::
 
@@ -136,7 +136,7 @@ Condition classes are listed in :numref:`table-condition-classes`.
    
 All the above conditions are valid EPANET conditions except RelativeCondition; however, some advanced features of may not be defined.
 
-In the following example, the previous simple controls are recreated using the IfThenElseControl.
+In the following example, the previous simple controls are recreated using the IfThenElseControl:
 
 .. doctest::
 
@@ -157,8 +157,8 @@ In the following example, the previous simple controls are recreated using the I
     Rule control2 := if sim_time = 435600 sec then set Pump('10').status to Open
 
 
-More complex rules can be written using one of the boolean logic condition classes.
-The following example creates a new rule that will open pipe 330 if both conditions are true, and otherwise it will open pipe 10; this rule will behave very differently from the rules above.
+More complex rules can be written using one of the Boolean logic condition classes.
+The following example creates a new rule that will open pipe 330 if both conditions are true, and otherwise it will open pipe 10; this rule will behave very differently from the rules above:
 
 .. doctest::
 
@@ -170,7 +170,7 @@ The following example creates a new rule that will open pipe 330 if both conditi
     >>> print(rule3)
     Rule weird := if ( Tank('1').level > 46.0248 && sim_time = 435600 sec ) then set Pipe('330').status to Open else set Pump('10').status to Open with priority 3
 
-Actions can also be combined, as shown in the following example.
+Actions can also be combined, as shown in the following example:
 
 .. doctest::
 
@@ -186,7 +186,7 @@ Adding controls to a network
 
 Once a control is created, they must be added to the network.
 This is accomplished using the :class:`~wntr.network.model.WaterNetworkModel.add_control` method of the water network model object.
-The control should be named so that it can be retrieved and modified if desired.
+The control should be named so that it can be retrieved and modified if desired:
 
 .. doctest::
 

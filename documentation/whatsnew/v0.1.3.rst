@@ -1,0 +1,9 @@
+.. _whatsnew_0130:
+
+v0.1.3 (Master branch)
+---------------------------------------------------
+
+* Added method to compute pump energy and cost
+* Added methods to plot fragility curves and pump curves
+* Bug fix to support 24-hour clocktime format and correct tank volume curve name in EPANET INP files
+* Updated documentation

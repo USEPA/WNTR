@@ -27,7 +27,7 @@ and change demands for fire conditions, as described in the sections below.
 The :class:`~wntr.scenario.earthquake.Earthquake` class includes methods 
 to compute peak ground acceleration, peak ground velocity, and repair rate based on the earthquake
 location and magnitude.  
-Alternatively, external earthquake models or databases (i.e. ShakeMap [WWQP06]_) can be used to compute earthquake properties and 
+Alternatively, external earthquake models or databases (e.g., ShakeMap [WWQP06]_) can be used to compute earthquake properties and 
 those properties can be loaded into Python for analysis in WNTR.
 
 When simulating the effects of an earthquake, fragility curves are commonly used to define the probability that a component is 
@@ -124,9 +124,9 @@ networks. This is especially prevalent in cities built on unstable soils like
 New Orleans and Washington DC which are experiencing land subsidence. 
 
 WNTR can be used to simulate the effects of environmental change on the water distribution network by
-changing supply and demand, adding disruptive conditions (i.e. power outages, pipe leaks) caused by severe weather, or by adding pipe leaks caused by subsidence.
+changing supply and demand, adding disruptive conditions (i.e., power outages, pipe leaks) caused by severe weather, or by adding pipe leaks caused by subsidence.
 Power outages and pipe leaks are described above.  
-Changes to supply and demand can be simple (i.e. changing all nodes by a certain percent), or complex (i.e. using external data or correlated statistical methods).
+Changes to supply and demand can be simple (i.e., changing all nodes by a certain percent), or complex (i.e., using external data or correlated statistical methods).
 To model simple changes in supply and demand:
 
 .. literalinclude:: ../examples/disaster_scenarios.py

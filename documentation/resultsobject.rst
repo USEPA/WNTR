@@ -63,7 +63,7 @@ To access the pressure for all nodes and times (the ":" notation returns all var
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 20
 
-Attributes can be plotted as a time-series, as shown in :numref:`fig-plot-timeseries`.
+Attributes can be plotted as a time-series, as shown in :numref:`fig-plot-timeseries`:
 	
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 23-24
@@ -77,7 +77,7 @@ Attributes can be plotted as a time-series, as shown in :numref:`fig-plot-timese
    
 Attributes can be plotted on the water network model, as shown in :numref:`fig-plot-network`.
 In this figure, a colorbar is included for both node and link attributes.
-Network and time-series graphics can be customized to add titles, labels, etc.
+Network and time-series graphics can be customized to add titles, labels, etc:
 	
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 27-30
@@ -89,7 +89,7 @@ Network and time-series graphics can be customized to add titles, labels, etc.
 
    Example network graphic.
    
-Panels can be saved to excel files using:
+Panels can be saved to Excel files using:
 
 .. literalinclude:: ../examples/simulation_results.py
    :lines: 33-34

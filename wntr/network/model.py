@@ -79,7 +79,7 @@ class WaterNetworkModel(object):
         self._Qtol = 2.8e-5  # Flow tolerance in m^3/s.
 
         self._backdrop = _Backdrop()
-        self._energy = _Energy()
+        self.energy = Energy()
         self._reportopts = _Report()
         self._labels = None
 
@@ -2679,9 +2679,9 @@ class Pump(Link):
         self.speed = speed
         self.pattern = pattern
         self.curve = None
-        self._efficiency = None
-        self._energy_price = None
-        self._energy_pat = None
+        self.efficiency = None
+        self.energy_price = None
+        self.energy_pattern = None
         self.power = None
         self._power_outage = False
         self._prev_power_outage = False
@@ -2882,6 +2882,7 @@ class Curve(object):
         self.name = name
         self.curve_type = curve_type
         self.points = points
+        self.points.sort()
         self.num_points = len(points)
 
     def __eq__(self, other):
@@ -2977,15 +2978,15 @@ class _Backdrop(object):
         return text
 
 
-class _Energy(object):
+class Energy(object):
     """An epanet energy definitions object."""
     def __init__(self):
-        self.global_price = None
-        """Global average cost per kW-hour (default 0)"""
+        self.global_price = 0
+        """Global average cost per Joule (default 0)"""
         self.global_pattern = None
         """ID label of time pattern describing how energy price varies with time"""
-        self.global_efficiency = None
-        """Global pump efficiency as percent (default 75%)"""
+        self.global_efficiency = 75.0
+        """Global pump efficiency as percent; i.e., 75.0 means 75% (default 75%)"""
         self.demand_charge = None
         """Added cost per maximum kW usage during the simulation period"""
 

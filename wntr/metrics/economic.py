@@ -5,6 +5,7 @@ from wntr.network import Tank, Pipe, Pump, Valve
 import numpy as np 
 import pandas as pd 
 import logging
+import scipy
 
 logger = logging.getLogger(__name__)
 
@@ -218,4 +219,93 @@ def ghg_emissions(wn, pipe_ghg=None):
         network_ghg = network_ghg + pipe_ghg.iloc[idx]*link.length
        
     return network_ghg    
-    
+
+
+def pump_energy(wn, sim_results):
+    """
+    This method takes a WaterNetworkModel object and a simulation results object and computes the required pump
+    energy and cost at each time step in the results object for each pump in the network. The computation is based
+    on the flow rate through the pump, the pump head, the pump efficiency, and the electricity price. Pump efficiency
+    curves may be specified through the "efficiency" attribute on the pump object. Alternatively, a global efficiency
+    may be set on the wn.energy object:
+
+        wn.energy.global_efficiency = 75 # This means 75% or 0.75
+
+    The price can also be set on the pump or the energy object:
+
+        wn.energy.global_price = 3.61e-8  # $/J; equal to $0.13/kW-h
+
+    or
+
+        pump = wn.get_link('pump1')
+        pump.energy_price = 3.61e-8  # $/J
+
+    Parameters
+    ----------
+    wn: wntr.network.WaterNetworkModel
+    sim_results: wntr.sim.results.NetResults
+
+    Returns
+    -------
+    pandas.Panel
+        The items are ['energy', 'cost']
+        The major axis is equivalent to sim_results.time
+        The minor axis corresponds to pump names
+        Energy is given in Watts
+        Cost is given in $/s
+        Ex:
+
+            sim = wntr.sim.WNTRSimulator(wn)
+            sim_results = sim.run_sim()
+            res = pump_energy(wn, sim_results)
+            print(res.loc['cost', 3600, '9'])
+    """
+    if wn.energy.demand_charge is not None and wn.energy.demand_charge != 0:
+        raise ValueError('WNTR does not support demand charge yet.')
+
+    pumps = wn.pump_name_list
+    flow = sim_results.link.loc['flowrate', :, pumps]
+
+    headloss = pd.DataFrame(data=None, index=sim_results.time, columns=pumps)
+    for pump_name, pump in wn.pumps():
+        start_node = pump.start_node
+        end_node = pump.end_node
+        start_head = sim_results.node.loc['head',:,start_node]
+        end_head = sim_results.node.loc['head',:,end_node]
+        headloss.loc[:,pump_name] = end_head - start_head
+
+    efficiency_dict = {}
+    for pump_name, pump in wn.pumps():
+        if pump.efficiency is None:
+            efficiency_dict[pump_name] = [wn.energy.global_efficiency/100.0 for i in sim_results.time]
+        else:
+            raise NotImplementedError('WNTR does not support pump efficiency curves yet.')
+            curve = wn.get_curve(pump.efficiency)
+            x = [point[0] for point in curve.points]
+            y = [point[1]/100.0 for point in curve.points]
+            interp = scipy.interpolate.interp1d(x, y, kind='linear')
+            efficiency_dict[pump_name] = interp(np.array(flow.loc[:, pump_name]))
+
+    efficiency = pd.DataFrame(data=efficiency_dict, index=sim_results.time, columns=pumps)
+
+    price_dict = {}
+    for pump_name, pump in wn.pumps():
+        if pump.energy_price is None and pump.energy_pattern is None:
+            if wn.energy.global_pattern is None:
+                price_dict[pump_name] = [wn.energy.global_price for i in sim_results.time]
+            else:
+                raise NotImplementedError('WNTR does not support price patterns yet.')
+        elif pump.energy_pattern is None:
+            if wn.energy.global_pattern is None:
+                price_dict[pump_name] = [pump.energy_price for i in sim_results.time]
+            else:
+                raise NotImplementedError('WNTR does not support price patterns yet.')
+        else:
+            raise NotImplementedError('WNTR does not support price patterns yet.')
+    price = pd.DataFrame(data=price_dict, index=sim_results.time, columns=pumps)
+
+    energy = 1000.0 * 9.81 * headloss * flow / efficiency
+    cost_series = energy * price
+
+    pump_energy_results = pd.Panel(data={'energy':energy, 'cost':cost_series}, items=['energy', 'cost'], major_axis=sim_results.time, minor_axis=pumps)
+    return pump_energy_results

@@ -9,7 +9,7 @@ All data in WNTR is stored in SI (International System) units:
 
 * Length = :math:`m`
 * Diameter = :math:`m`
-* Water pressure = :math:`m`
+* Water pressure = :math:`m` (this assumes a fluid density of 1000 :math:`kg/m^3`)
 * Elevation = :math:`m`
 * Mass = :math:`kg`
 * Time = :math:`s`
@@ -122,6 +122,6 @@ information on EPANET unit conventions (modified from [Ross00]_).
 When running analysis in WNTR, all input values (i.e., time, pressure threshold, node demand) should be specified in SI units. 
 All simulation results are also stored in SI units and can be converted to other units if desired.
 The SymPy package can be used to convert between units.  The example **converting_units.py**
-demonstrates its use.
+demonstrates its use:
 
 .. literalinclude:: ../examples/converting_units.py

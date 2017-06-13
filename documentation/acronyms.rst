@@ -1,13 +1,13 @@
 .. raw:: latex
 
-    \clearpage
+    \newpage
 
 List of acronyms
 ======================================
 
-**API**: Application Programming Interface
+**API**: Application programming interface
 
-**IDE**: Interactive Development Environment
+**IDE**: Integrated development environment
 
 **SI**: International System of Units
 
