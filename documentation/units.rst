@@ -33,7 +33,7 @@ for pipe roughness headloss and on the reaction order specified.
 information on EPANET unit conventions (modified from [Ross00]_).  
 
 .. _table-hydraulic-units:
-.. table:: EPANET hydraulic unit conventions.
+.. table:: EPANET Hydraulic Unit Conventions
 
    +----------------------+-------------------------------------+------------------------------------+
    |   Hydraulic          |   US customary units                |   SI-based units                   |
@@ -80,7 +80,7 @@ information on EPANET unit conventions (modified from [Ross00]_).
    +----------------------+-------------------------------------+------------------------------------+
 
 .. _table-quality-units:
-.. table:: EPANET water quality unit conventions.
+.. table:: EPANET Water Quality Unit Conventions
 
    +----------------------+-------------------------------------+------------------------------------+
    | Water quality        | US customary units                  | SI-based units                     |
@@ -107,7 +107,7 @@ information on EPANET unit conventions (modified from [Ross00]_).
    +----------------------+-------------------------------------+------------------------------------+
    
 .. _table-energy-units:
-.. table:: EPANET energy unit conventions.
+.. table:: EPANET Energy Unit Conventions
 
    +----------------------+-------------------------------------+------------------------------------+
    |   Energy parameter   |   US customary units                |   SI-based units                   |

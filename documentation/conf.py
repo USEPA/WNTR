@@ -258,8 +258,8 @@ latex_elements = {
 'preamble':  '''%
   \pagestyle{plain}
   \pagenumbering{arabic}
-  \\renewcommand{\\refname}{References}
   \\raggedright
+  \\bibliographystyle{ieeetr}
 ''',
 
 # Latex figure (float) alignment
