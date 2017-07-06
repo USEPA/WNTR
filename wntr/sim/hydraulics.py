@@ -714,8 +714,11 @@ class HydraulicModel(object):
             self.jac_D.data[:n_j] = self.jac_D.data[:n_j] + last_segment*(1-self.isolated_junction_array)
 
         for link_id in self.power_pump_ids:
-            self.jac_F.data[link_id] = 1000.0*self._g*flows[link_id]
-            self.jac_F.data[self.num_links+link_id] = -1000.0*self._g*flows[link_id]
+            if self.isolated_link_array[link_id] == 1 or self.closed_link_array[link_id] == 0:
+                pass
+            else:
+                self.jac_F.data[link_id] = 1000.0*self._g*flows[link_id]
+                self.jac_F.data[self.num_links+link_id] = -1000.0*self._g*flows[link_id]
 
         pf = abs(flows[:self.num_pipes])
         coeff = self.pipe_resistance_coefficients[:self.num_pipes]
