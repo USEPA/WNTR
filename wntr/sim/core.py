@@ -577,21 +577,19 @@ class WNTRSimulator(WaterNetworkSimulator):
                     self._internal_graph[start_node_id, end_node_id] = 1
                     self._internal_graph[end_node_id, start_node_id] = 1
                 elif obj.status == wntr.network.LinkStatus.closed:
-                    if obj_name in [k for i,j,k in self._internal_graph.edges_iter(keys=True)]:
-                        start_node_name = obj.start_node
-                        end_node_name = obj.end_node
-                        start_node_id = self._model._node_name_to_id[start_node_name]
-                        end_node_id = self._model._node_name_to_id[end_node_name]
-                        self._internal_graph[start_node_id, end_node_id] = 0
-                        self._internal_graph[end_node_id, start_node_id] = 0
+                    start_node_name = obj.start_node
+                    end_node_name = obj.end_node
+                    start_node_id = self._model._node_name_to_id[start_node_name]
+                    end_node_id = self._model._node_name_to_id[end_node_name]
+                    self._internal_graph[start_node_id, end_node_id] = 0
+                    self._internal_graph[end_node_id, start_node_id] = 0
                 elif obj.status == wntr.network.LinkStatus.active and obj._status == wntr.network.LinkStatus.closed:
-                    if obj_name in [k for i, j, k in self._internal_graph.edges_iter(keys=True)]:
-                        start_node_name = obj.start_node
-                        end_node_name = obj.end_node
-                        start_node_id = self._model._node_name_to_id[start_node_name]
-                        end_node_id = self._model._node_name_to_id[end_node_name]
-                        self._internal_graph[start_node_id, end_node_id] = 0
-                        self._internal_graph[end_node_id, start_node_id] = 0
+                    start_node_name = obj.start_node
+                    end_node_name = obj.end_node
+                    start_node_id = self._model._node_name_to_id[start_node_name]
+                    end_node_id = self._model._node_name_to_id[end_node_name]
+                    self._internal_graph[start_node_id, end_node_id] = 0
+                    self._internal_graph[end_node_id, start_node_id] = 0
 
     def _get_isolated_junctions_and_links(self):
 
