@@ -135,6 +135,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         super(WNTRSimulator, self).__init__(wn, pressure_driven)
         self._internal_graph = None
+        self._node_pairs_with_multiple_links = None
         self._control_log = None
 
     def _get_time(self):
@@ -439,6 +440,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                     #print 'setting ',valve.name(),' _status to ',valve.status
 
     def _initialize_internal_graph(self):
+        n_links = {}
         rows = []
         cols = []
         vals = []
@@ -447,6 +449,11 @@ class WNTRSimulator(WaterNetworkSimulator):
             to_node_name = link.end_node
             from_node_id = self._model._node_name_to_id[from_node_name]
             to_node_id = self._model._node_name_to_id[to_node_name]
+            if (from_node_id, to_node_id) not in n_links:
+                n_links[(from_node_id, to_node_id)] = 0
+                n_links[(to_node_id, from_node_id)] = 0
+            n_links[(from_node_id, to_node_id)] += 1
+            n_links[(to_node_id, from_node_id)] += 1
             rows.append(from_node_id)
             cols.append(to_node_id)
             rows.append(to_node_id)
@@ -463,6 +470,11 @@ class WNTRSimulator(WaterNetworkSimulator):
             to_node_name = link.end_node
             from_node_id = self._model._node_name_to_id[from_node_name]
             to_node_id = self._model._node_name_to_id[to_node_name]
+            if (from_node_id, to_node_id) not in n_links:
+                n_links[(from_node_id, to_node_id)] = 0
+                n_links[(to_node_id, from_node_id)] = 0
+            n_links[(from_node_id, to_node_id)] += 1
+            n_links[(to_node_id, from_node_id)] += 1
             rows.append(from_node_id)
             cols.append(to_node_id)
             rows.append(to_node_id)
@@ -479,6 +491,11 @@ class WNTRSimulator(WaterNetworkSimulator):
             to_node_name = link.end_node
             from_node_id = self._model._node_name_to_id[from_node_name]
             to_node_id = self._model._node_name_to_id[to_node_name]
+            if (from_node_id, to_node_id) not in n_links:
+                n_links[(from_node_id, to_node_id)] = 0
+                n_links[(to_node_id, from_node_id)] = 0
+            n_links[(from_node_id, to_node_id)] += 1
+            n_links[(to_node_id, from_node_id)] += 1
             rows.append(from_node_id)
             cols.append(to_node_id)
             rows.append(to_node_id)
@@ -491,6 +508,29 @@ class WNTRSimulator(WaterNetworkSimulator):
                 vals.append(1)
 
         self._internal_graph = scipy.sparse.csr_matrix((vals, (rows, cols)))
+
+        self._node_pairs_with_multiple_links = {}
+        for from_node_id, to_node_id in n_links.keys():
+            if n_links[(from_node_id, to_node_id)] > 1:
+                self._internal_graph[from_node_id, to_node_id] = 0
+                from_node_name = self._model._node_id_to_name[from_node_id]
+                to_node_name = self._model._node_id_to_name[to_node_id]
+                tmp_list = self._node_pairs_with_multiple_links[(from_node_id, to_node_id)] = []
+                for link_name in self._wn.get_links_for_node(from_node_name):
+                    link = self._wn.get_link(link_name)
+                    if link.start_node == to_node_name or link.end_node == to_node_name:
+                        tmp_list.append(link)
+                        if isinstance(link, wntr.network.Pipe):
+                            if link.status != wntr.network.LinkStatus.closed:
+                                self._internal_graph[from_node_id, to_node_id] = 1
+                        elif isinstance(link, wntr.network.Pump):
+                            if link.status != wntr.network.LinkStatus.closed and link._cv_status != wntr.network.LinkStatus.closed:
+                                self._internal_graph[from_node_id, to_node_id] = 1
+                        elif isinstance(link, wntr.network.Valve):
+                            if link.status != wntr.network.LinkStatus.closed and link._status != wntr.network.LinkStatus.closed:
+                                self._internal_graph[from_node_id, to_node_id] = 1
+                        else:
+                            raise RuntimeError('Unrecognized link type.')
 
     def _update_internal_graph(self):
         for obj_name, obj in self._control_log.changed_objects.items():
@@ -590,6 +630,23 @@ class WNTRSimulator(WaterNetworkSimulator):
                     end_node_id = self._model._node_name_to_id[end_node_name]
                     self._internal_graph[start_node_id, end_node_id] = 0
                     self._internal_graph[end_node_id, start_node_id] = 0
+
+        for key, link_list in self._node_pairs_with_multiple_links.items():
+            from_node_id = key[0]
+            to_node_id = key[1]
+            self._internal_graph[from_node_id, to_node_id] = 0
+            for link in link_list:
+                if isinstance(link, wntr.network.Pipe):
+                    if link.status != wntr.network.LinkStatus.closed:
+                        self._internal_graph[from_node_id, to_node_id] = 1
+                elif isinstance(link, wntr.network.Pump):
+                    if link.status != wntr.network.LinkStatus.closed and link._cv_status != wntr.network.LinkStatus.closed:
+                        self._internal_graph[from_node_id, to_node_id] = 1
+                elif isinstance(link, wntr.network.Valve):
+                    if link.status != wntr.network.LinkStatus.closed and link._status != wntr.network.LinkStatus.closed:
+                        self._internal_graph[from_node_id, to_node_id] = 1
+                else:
+                    raise RuntimeError('Unrecognized link type.')
 
     def _get_isolated_junctions_and_links(self):
 
