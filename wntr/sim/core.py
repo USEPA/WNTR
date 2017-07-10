@@ -509,6 +509,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                 vals.append(1)
 
         self._internal_graph = scipy.sparse.csr_matrix((vals, (rows, cols)))
+
         ndx_map = {}
         for link_name, link in self._wn.links():
             ndx1 = None
@@ -521,6 +522,10 @@ class WNTRSimulator(WaterNetworkSimulator):
             ndx2 = _get_csr_data_index(self._internal_graph, to_node_id, from_node_id)
             ndx_map[link] = (ndx1, ndx2)
         self._map_link_to_internal_graph_data_ndx = ndx_map
+
+        self._number_of_connections = [0 for i in range(self._model.num_nodes)]
+        for node_id in self._model._node_ids:
+            self._number_of_connections[node_id] = self._internal_graph.indptr[node_id+1] - self._internal_graph.indptr[node_id]
 
         self._node_pairs_with_multiple_links = {}
         for from_node_id, to_node_id in n_links.keys():
@@ -672,16 +677,20 @@ class WNTRSimulator(WaterNetworkSimulator):
             node_set.remove(node_id)
             nodes_to_explore = set()
             nodes_to_explore.add(node_id)
+            indptr = self._internal_graph.indptr
+            indices = self._internal_graph.indices
+            data = self._internal_graph.data
+            num_connections = self._number_of_connections
 
             while len(nodes_to_explore) != 0:
                 node_being_explored = nodes_to_explore.pop()
-                number_of_connections = (self._internal_graph.indptr[node_being_explored+1] -
-                                         self._internal_graph.indptr[node_being_explored])
-                ndx = self._internal_graph.indptr[node_being_explored]
-                vals = self._internal_graph.data[ndx:ndx+number_of_connections]
-                cols = self._internal_graph.indices[ndx:ndx+number_of_connections]
-                for val, col in zip(vals, cols):
+                ndx = indptr[node_being_explored]
+                number_of_connections = num_connections[node_being_explored]
+                vals = data[ndx:ndx+number_of_connections]
+                cols = indices[ndx:ndx+number_of_connections]
+                for i, val in enumerate(vals):
                     if val == 1:
+                        col = cols[i]
                         if col in node_set:
                             node_set.remove(col)
                             nodes_to_explore.add(col)
