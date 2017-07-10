@@ -671,10 +671,10 @@ class WNTRSimulator(WaterNetworkSimulator):
         #             isolated_links.add(key)
         # return isolated_junctions, isolated_links
 
-        node_set = set(range(self._model.num_nodes))
+        node_set = [1 for i in range(self._model.num_nodes)]
 
         def grab_group(node_id):
-            node_set.remove(node_id)
+            node_set[node_id] = 0
             nodes_to_explore = set()
             nodes_to_explore.add(node_id)
             indptr = self._internal_graph.indptr
@@ -691,25 +691,25 @@ class WNTRSimulator(WaterNetworkSimulator):
                 for i, val in enumerate(vals):
                     if val == 1:
                         col = cols[i]
-                        if col in node_set:
-                            node_set.remove(col)
+                        if node_set[col] ==1:
+                            node_set[col] = 0
                             nodes_to_explore.add(col)
 
         for tank_name, tank in self._wn.nodes(wntr.network.Tank):
             tank_id = self._model._node_name_to_id[tank_name]
-            if tank_id in node_set:
+            if node_set[tank_id] == 1:
                 grab_group(tank_id)
             else:
                 continue
 
         for reservoir_name, reservoir in self._wn.nodes(wntr.network.Reservoir):
             reservoir_id = self._model._node_name_to_id[reservoir_name]
-            if reservoir_id in node_set:
+            if node_set[reservoir_id] == 1:
                 grab_group(reservoir_id)
             else:
                 continue
 
-        isolated_junction_ids = list(node_set)
+        isolated_junction_ids = [i for i in range(len(node_set)) if node_set[i] == 1]
         isolated_junctions = set()
         isolated_links = set()
         for j_id in isolated_junction_ids:
