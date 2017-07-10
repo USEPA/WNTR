@@ -140,11 +140,7 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
 else:
     html_theme = 'default'
     html_context = {
-        'css_files': [
-            'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
-            'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
-            '_static/wntr.css',
-        ],
+        'css_files': ['_static/wntr.css'],
     }
 
 # Theme options are theme-specific and customize the look and feel of a theme
