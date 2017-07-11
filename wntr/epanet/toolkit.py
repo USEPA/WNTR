@@ -120,7 +120,7 @@ class ENepanet():
         if self.errcode >= 100:
             self.Errflag = True
             self.errcodelist.append(self.errcode)
-            raise EpanetException(self.ENgeterror(self.errcode))
+            raise EpanetException('EPANET Error {}'.format(self.errcode))
         else:
             self.Warnflag = True
             # warnings.warn(ENgetwarning(self.errcode))
