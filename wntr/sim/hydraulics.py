@@ -714,8 +714,11 @@ class HydraulicModel(object):
             self.jac_D.data[:n_j] = self.jac_D.data[:n_j] + last_segment*(1-self.isolated_junction_array)
 
         for link_id in self.power_pump_ids:
-            self.jac_F.data[link_id] = 1000.0*self._g*flows[link_id]
-            self.jac_F.data[self.num_links+link_id] = -1000.0*self._g*flows[link_id]
+            if self.isolated_link_array[link_id] == 1 or self.closed_link_array[link_id] == 0:
+                pass
+            else:
+                self.jac_F.data[link_id] = 1000.0*self._g*flows[link_id]
+                self.jac_F.data[self.num_links+link_id] = -1000.0*self._g*flows[link_id]
 
         pf = abs(flows[:self.num_pipes])
         coeff = self.pipe_resistance_coefficients[:self.num_pipes]
@@ -1002,44 +1005,6 @@ class HydraulicModel(object):
                     self.leak_demand_residual[leak_idx] = leak_demand[leak_idx] - self.leak_Cd[node_id]*self.leak_area[node_id]*math.sqrt(2.0*self._g*p)
             else:
                 self.leak_demand_residual[leak_idx] = leak_demand[leak_idx]
-
-    def correct_step(self,d_head,d_demand,d_flow,d_leak,x):
-        heads = x[:self.num_nodes]
-        demands = x[self.num_nodes:2*self.num_nodes]
-        flows = x[2*self.num_nodes:2*self.num_nodes+self.num_links]
-        leaks = x[2*self.num_nodes+self.num_links:]
-
-        for link_id in self._prv_ids:
-            end_node_id = self.link_end_nodes[link_id]
-            in_links = self.in_link_ids_for_nodes[end_node_id]
-            out_links = self.out_link_ids_for_nodes[end_node_id]
-            d_head[end_node_id] = self.valve_settings[link_id]+self.node_elevations[end_node_id] - heads[end_node_id]
-            if link_id in in_links:
-                d_flow[link_id] = demands[end_node_id] + sum(flows[out_link_id] for out_link_id in out_links) - \
-                                  sum(flows[in_link_id] for in_link_id in in_links if in_link_id!=link_id) - \
-                                  flows[link_id]
-            else:
-                d_flow[link_id] = sum(flows[in_link_id] for in_link_id in in_links) - demands[end_node_id] - \
-                                  sum(flows[out_link_id] for out_link_id in out_links if out_link_id!=link_id) - \
-                                  flows[link_id]
-            if end_node_id in self._leak_ids:
-                raise RuntimeError('Leaks at the end nodes of PRVs is not allowed.')
-                # d_flow[link_id] += leaks[end_node_id]
-        for node_id in self._tank_ids:
-            in_links = self.in_link_ids_for_nodes[node_id]
-            out_links = self.out_link_ids_for_nodes[node_id]
-            d_demand[node_id] = sum(flows[in_link_id] for in_link_id in in_links) - \
-                                sum(flows[out_link_id] for out_link_id in out_links) - demands[node_id]
-            if node_id in self._leak_ids:
-                d_demand[node_id] -= leaks[self._leak_idx[node_id]]
-        for node_id in self._reservoir_ids:
-            in_links = self.in_link_ids_for_nodes[node_id]
-            out_links = self.out_link_ids_for_nodes[node_id]
-            d_demand[node_id] = sum(flows[in_link_id] for in_link_id in in_links) - \
-                                sum(flows[out_link_id] for out_link_id in out_links) - demands[node_id]
-        d_demand[:self.num_junctions] = d_demand[:self.num_junctions] - \
-                                        self.isolated_junction_array*demands[:self.num_junctions]
-        return d_head,d_demand,d_flow,d_leak
 
     def initialize_flow(self):
         flow = 0.001*np.ones(self.num_links)
@@ -1649,7 +1614,6 @@ class HydraulicModel(object):
             #self.print_jacobian(difference)
 
             #raise RuntimeError('Jacobian is not correct!')
-
 
     def check_jac_for_zero_rows(self):
         for i in range(self.jacobian.shape[0]):

@@ -68,7 +68,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'WNTR'
-copyright = u'2015, Sandia National Laboratories'
+copyright = u'2015-2017, Sandia National Laboratories'
 author = u'Sandia National Laboratories'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -131,6 +131,9 @@ todo_include_todos = True
 # a list of builtin themes.
 #html_theme = 'sphinx_rtd_theme'
 
+def setup(app):
+  app.add_stylesheet( "wntr.css" )
+  
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
@@ -139,13 +142,9 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_style = 'wntr.css'
 else:
     html_theme = 'default'
-    html_context = {
-        'css_files': [
-            'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
-            'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
-            '_static/wntr.css',
-        ],
-    }
+#    html_context = {
+#        'css_files': ['_static/wntr.css'],
+#    }
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -164,7 +163,7 @@ else:
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = 'figures/wntr.png'
+#html_logo = 'figures/wntr.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -258,8 +257,8 @@ latex_elements = {
 'preamble':  '''%
   \pagestyle{plain}
   \pagenumbering{arabic}
-  \\renewcommand{\\refname}{References}
   \\raggedright
+  \\bibliographystyle{ieeetr}
 ''',
 
 # Latex figure (float) alignment
