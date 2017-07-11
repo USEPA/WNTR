@@ -67,7 +67,7 @@ Information on additional topographic metrics supported by NetworkX can be found
 at https://networkx.github.io/.
 
 .. _table-topographic-metrics:
-.. table:: Topographic metrics used to measure resilience.
+.. table:: Topographic Resilience Metrics
 
    =====================================  ================================================================================================================================================
    Metric                                 Description
@@ -169,7 +169,7 @@ system operates under normal or abnormal conditions.
 Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metrics`.  
 
 .. _table-hydraulic-metrics:
-.. table:: Hydraulic metrics used to measure resilience.
+.. table:: Hydraulic Resilience Metrics
 
    =====================================  ================================================================================================================================================
    Metric                                 Description
@@ -211,7 +211,7 @@ calculation of these metrics require water quality simulation.
 Water quality metrics included in WNTR are listed in  :numref:`table-water-quality-metrics`.  
 
 .. _table-water-quality-metrics:
-.. table:: Water quality metrics used to measure resilience.
+.. table:: Water Quality Resilience Metrics
 
    =====================================  ================================================================================================================================================
    Metric                                 Description
@@ -238,7 +238,7 @@ Water security metrics quantify potential consequences of contamination scenario
 Water security metrics included in WNTR are listed in  :numref:`table-water-security-metrics`.  
 
 .. _table-water-security-metrics:
-.. table:: Water security metrics used to measure resilience.
+.. table:: Water Security Resilience Metrics
 
    =====================================  ================================================================================================================================================
    Metric                                 Description
@@ -270,7 +270,7 @@ Economic metrics include network cost and greenhouse gas emissions.
 Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics`.  
 
 .. _table-economic-metrics:
-.. table:: Economic metrics used to measure resilience.
+.. table:: Economic Resilience Metrics
 
    =====================================  ================================================================================================================================================
    Metric                                 Description

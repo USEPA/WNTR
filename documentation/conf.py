@@ -131,6 +131,9 @@ todo_include_todos = True
 # a list of builtin themes.
 #html_theme = 'sphinx_rtd_theme'
 
+def setup(app):
+  app.add_stylesheet( "wntr.css" )
+  
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:  # only import and set the theme if we're building docs locally
     import sphinx_rtd_theme
@@ -139,13 +142,9 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_style = 'wntr.css'
 else:
     html_theme = 'default'
-    html_context = {
-        'css_files': [
-            'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
-            'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
-            '_static/wntr.css',
-        ],
-    }
+#    html_context = {
+#        'css_files': ['_static/wntr.css'],
+#    }
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -258,8 +257,8 @@ latex_elements = {
 'preamble':  '''%
   \pagestyle{plain}
   \pagenumbering{arabic}
-  \\renewcommand{\\refname}{References}
   \\raggedright
+  \\bibliographystyle{ieeetr}
 ''',
 
 # Latex figure (float) alignment
