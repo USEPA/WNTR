@@ -22,7 +22,7 @@ folder.  This example demonstrates how to:
 Additional examples, listed in :numref:`table-example`, are included in the examples folder.  
 
 .. _table-example:
-.. table:: Description of WNTR example files.
+.. table:: Description of WNTR Example Files
 
    ==============================  ===================================================================================================================
    Example file                    Description

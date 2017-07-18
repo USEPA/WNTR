@@ -121,7 +121,7 @@ An IfThenElseControl is defined using a :class:`~wntr.network.controls.ControlCo
 Condition classes are listed in :numref:`table-condition-classes`.  
 
 .. _table-condition-classes:
-.. table:: Condition classes.
+.. table:: Condition Classes
 
    ===================================================  ========================================================================================
    Condition class                                      Description
