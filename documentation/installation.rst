@@ -20,8 +20,8 @@ WNTR can be installed as a Python package using standard open source software to
 	Matplotlib.  For more information on Python package dependencies, see :ref:`requirements`.
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
-	editing and debug features along with a graphical user interface that is very similar 
-	to MATLAB |copy| The Mathworks, Inc. Debugging options are available from the toolbar.  
+	editing and debug features along with a graphical user interface. 
+	Debugging options are available from the toolbar.  
 	Code documentation is displayed in the object inspection 
 	window.  Pop-up information on class structure and functions is displayed in the 
 	editor and console windows.  
@@ -49,9 +49,9 @@ WNTR can be installed as a Python package using standard open source software to
 	The installation process differs for users and developers.  
 	Installation instructions for both types are described below.
 	
-	**For users**: 	Users can install WNTR using pip.  
-	pip is a command line software tool used to install and manage Python 
-	packages.  pip can be downloaded from https://pypi.python.org/pypi/pip.
+	**For users**: 	Users can install WNTR using pip, which 
+	is a command line software tool used to install and manage Python 
+	packages.  It can be downloaded from https://pypi.python.org/pypi/pip.
 	
 	To install WNTR using pip, open a command prompt and run::
 
@@ -61,11 +61,11 @@ WNTR can be installed as a Python package using standard open source software to
 	
 	.. note:: A WNTR installation using pip will not include the examples folder, which is referenced throughout this manual.  
 	
-	Users can also download a zip file that includes source files and the examples folder from the USEPA GitHub organization.  
-	To download the master (development) branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP".
+	Users can also download a zip file that includes source files and the examples folder from the US EPA GitHub organization.  
+	To download the master (development) branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
 	This downloads a zip file called WNTR-master.zip.
 	To download a specific release, go to https://github.com/USEPA/WNTR/releases and select a zip file.
-	The software can then be installed by running a python script, called setup.py, that is included in the zip file.
+	The software can then be installed by running a Python script, called setup.py, that is included in the zip file.
 	
 	To build WNTR from the source files in the zip file, open a command prompt and run::
 
@@ -73,9 +73,9 @@ WNTR can be installed as a Python package using standard open source software to
 		cd WNTR-master
 		python setup.py install
 		
-	**For developers**: Developers can install and build WNTR from source using git.
-	git is a command line software tool for version control and software development.
-	git can be downloaded from http://git-scm.com. 
+	**For developers**: Developers can install and build WNTR from source using git, which 
+	is a command line software tool for version control and software development.
+	It can be downloaded from http://git-scm.com. 
 		
 	To build WNTR from source using git, open a command prompt and run::
 
@@ -127,8 +127,6 @@ The following Python packages are optional:
   http://matplotlib.org/
 * Plotly [SPHC16]_: used to produce interactive scalable figures, 
   https://plot.ly/
-* SymPy [JCMG11]_: used to convert units, 
-  http://www.sympy.org/en/index.html
 * xlwt [Xlwt16]_: used to read/write to Microsoft® Excel® spreadsheets,
   http://xlwt.readthedocs.io
 * Numpydoc [VaCV11]_: used to build the user manual,

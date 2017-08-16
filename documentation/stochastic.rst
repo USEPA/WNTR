@@ -7,13 +7,13 @@
 Stochastic simulation
 ===============================
 
-Stochastic simulation can be used to evaluate an ensemble of hydraulic and/or water quality 
+Stochastic simulations can be used to evaluate an ensemble of hydraulic and/or water quality 
 scenarios.  For disaster scenarios, the location, duration, and severity of different types of incidents
 can be drawn from distributions and included in the simulation.  
 Distributions can be a function of component properties (i.e., age, material) or 
 based on engineering standards.
 The Python packages Numpy and Scipy include statistical distributions and random selection methods that can be used for stochastic
-simulation.  
+simulations.  
 
 For example, the following code can be used to select N unique pipes 
 based on the failure probability of each pipe::
@@ -43,12 +43,12 @@ types of disasters.
 
 Fragility curves can have multiple damage states.  
 Each state should correspond to specific changes to the network model that represent damage, for example, a major or minor leak.
-Each state is defined with a name (i.e., 'Major', 'Minor'), 
+Each state is defined with a name (i.e., 'Major,' 'Minor'), 
 priority (i.e., 1, 2, where higher numbers = higher priority), 
 and distribution (using the Scipy Python package).
-The distribution can be defined for all elements using the keyword 'Default', 
+The distribution can be defined for all elements using the keyword 'Default,'
 or can be defined for individual components.
-Each fragility curve includes a "No damage" state with priority 0 (lowest priority).
+Each fragility curve includes a 'No damage' state with priority 0 (lowest priority).
 
 The example **fragility_curves.py** uses fragility curves to 
 determine probability of failure:
