@@ -1,17 +1,22 @@
 .. raw:: latex
 
-    \newpage
+    \clearpage
+	\listoftables
+	\clearpage
+	\listoffigures
+	\clearpage
 
-List of acronyms
+Abbreviations
 ======================================
 
 **API**: Application programming interface
+
+**EPA**: Environmental Protection Agency
 
 **IDE**: Integrated development environment
 
 **SI**: International System of Units
 
-**USEPA**: United States Environmental Protection Agency
+**US**: United States
 
 **WNTR**: Water Network Tool for Resilience
-

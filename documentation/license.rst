@@ -4,7 +4,7 @@
 
 Copyright and license
 ================================
-The WNTR python package is copyright through Sandia National Laboratories.
+The WNTR Python package is copyright through Sandia National Laboratories.
 The software is distributed under the Revised BSD License.
 WNTR also leverages a variety of third-party software packages, which
 have separate licensing policies. 

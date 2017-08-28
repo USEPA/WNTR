@@ -29,7 +29,7 @@ A water network model can also be created directly from an EPANET INP file:
    
 The water network model can be written to a file in EPANET INP format.
 By default, files are written in LPS units.  
-The EPANET INP file will not include features not supported by EPANET (i.e., pressure-driven simulation options).:
+The EPANET INP file will not include features not supported by EPANET (i.e., pressure dependent demand simulation options).:
 
 .. literalinclude:: ../examples/water_network_model.py
    :lines: 25

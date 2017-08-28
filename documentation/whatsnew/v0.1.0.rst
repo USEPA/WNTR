@@ -9,7 +9,7 @@ Features include basic functionality to:
 * Generate water network models
 * Modify network structure and operations
 * Add disruptive incident and response/repair strategies
-* Simulate network hydraulics using pressure-driven or demand-driven hydraulic simulation
+* Simulate network hydraulics using pressure dependent demand or demand-driven hydraulic simulation
 * Run probabilistic simulations using fragility curves
 * Compute resilience using topographic, hydraulic, water quality/security, and economic metrics
 * Analyze results and generate graphics 

@@ -5,11 +5,11 @@
 Water network controls
 ======================================
 
-One of the key features of water network models is the ability to control pipes, pumps and valves using simple and complex conditions.  
+One of the key features of water network models is the ability to control pipes, pumps, and valves using simple and complex conditions.  
 EPANET uses "controls" and "rules" to define conditions [Ross00]_.
 A control is a single action (i.e., closing/opening a link or changing the setting) based on a single condition (i.e., time based or tank level based).
 A rule is more complex; rules take an IF-THEN-ELSE form and can have multiple conditions and multiple actions in each of the logical blocks.
-WNTR supports EPANET's rules and controls when generating a water network model from and INP file and simulating hydraulics using the EpanetSimulator.
+WNTR supports EPANET's rules and controls when generating a water network model from an INP file and simulating hydraulics using the EpanetSimulator.
 WNTR includes additional options to define controls that can be used by the WNTRSimulator.
 
 The basic steps to define a control for a water network model are:
@@ -63,11 +63,11 @@ ConditionalControl objects define tank level and junction pressure based control
 Conditional controls require a source, operation, threshold, and a control action.
 The source is defined as tuple where the first value is a water network model component and the second value is the attribute of the object.
 The operation is defined using NumPy functions such as  `np.greater` and `np.less`.
-The threshold is the value that triggers the condition to the true.
+The threshold is the value that triggers the condition to be true.
 The control action is defined above.
 
 In the following example, a conditional control is defined that opens pipe 330 if the level of tank 1 goes above 46.0248 m.
-The source is the the tank level and is defined as a tuple with the node object `n1` and the attribute `level`.
+The source is the tank level and is defined as a tuple with the node object `n1` and the attribute `level`.
 To specify that the condition should be true when the level is greater than the threshold, the operation is set to `np.greater` and the threshold is set to 46.0248.
 The control action `act1` from above is used in the conditional control:
 
@@ -126,15 +126,15 @@ Condition classes are listed in :numref:`table-condition-classes`.
    ===================================================  ========================================================================================
    Condition class                                      Description
    ===================================================  ========================================================================================
-   :class:`~wntr.network.controls.TimeOfDayCondition`	Time-of-day or “clocktime” based condition statement.
-   :class:`~wntr.network.controls.SimTimeCondition`	    Condition based on time since start of the simulation.
+   :class:`~wntr.network.controls.TimeOfDayCondition`	Time-of-day or “clocktime” based condition statement
+   :class:`~wntr.network.controls.SimTimeCondition`	    Condition based on time since start of the simulation
    :class:`~wntr.network.controls.ValueCondition`	    Compare a network element attribute to a set value
    :class:`~wntr.network.controls.RelativeCondition`	Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
-   :class:`~wntr.network.controls.OrCondition`	        Combine two WNTR Conditions with an OR.
+   :class:`~wntr.network.controls.OrCondition`	        Combine two WNTR Conditions with an OR
    :class:`~wntr.network.controls.AndCondition`	        Combine two WNTR Conditions with an AND
    ===================================================  ========================================================================================
    
-All the above conditions are valid EPANET conditions except RelativeCondition; however, some advanced features of may not be defined.
+All of the above conditions are valid EPANET conditions except RelativeCondition.
 
 In the following example, the previous simple controls are recreated using the IfThenElseControl:
 
@@ -158,7 +158,7 @@ In the following example, the previous simple controls are recreated using the I
 
 
 More complex rules can be written using one of the Boolean logic condition classes.
-The following example creates a new rule that will open pipe 330 if both conditions are true, and otherwise it will open pipe 10; this rule will behave very differently from the rules above:
+The following example creates a new rule that will open pipe 330 if both conditions are true, and otherwise it will open pipe 10. This rule will behave very differently from the rules above:
 
 .. doctest::
 
@@ -184,7 +184,7 @@ The flexibility of the IfThenElseControl combined with the different ControlCond
 Adding controls to a network
 -------------------------------
 
-Once a control is created, they must be added to the network.
+Once a control is created, they can be added to the network.
 This is accomplished using the :class:`~wntr.network.model.WaterNetworkModel.add_control` method of the water network model object.
 The control should be named so that it can be retrieved and modified if desired:
 
