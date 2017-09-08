@@ -70,7 +70,7 @@ for i in range(Imax):
                           end_time=(time_of_failure + duration_of_failure)*3600)
 
     # Create simulation object of the PYOMO simulator
-    sim = wntr.sim.WNTRSimulator(wn, pressure_driven=True)
+    sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
 
     # Simulate hydraulics
     sim_name = 'Pipe Breaks: ' + str(pipes_to_fail) + ', Start Time: ' + \

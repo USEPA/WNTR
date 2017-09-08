@@ -12,7 +12,7 @@ water distribution networks.  The software includes capability to:
 * Modify network structure and operations
 * Add disruptive events including pipe leaks
 * Add response/repair strategies
-* Simulate pressure driven demand and demand driven hydraulics
+* Simulate pressure dependent demand and demand-driven hydraulics
 * Simulate water quality 
 * Evaluate resilience 
 * Visualize results

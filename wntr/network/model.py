@@ -871,7 +871,7 @@ class WaterNetworkModel(object):
         resetting the base demand to 1. The demand pattern is resampled to
         match the water network model pattern timestep. This method can be
         used to reset demands in a water network model to demands from a
-        pressure-driven simualtion.
+        pressure dependent demand simualtion.
 
         Parameters
         ----------
