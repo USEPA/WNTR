@@ -33,7 +33,7 @@ To cite WNTR, use one of the following references:
 
 * Klise, K.A., Murray, R., Bynum, M., Moriarty, D., (2016), Water Network Tool for Resilience, Version 0.1, Technical Report SAND2016-11253, Sandia National Laboratories.
 
-USEPA Disclaimer
+US EPA Disclaimer
 ---------------------
 
 The U.S. Environmental Protection Agency through its Office of Research and Development funded and collaborated 

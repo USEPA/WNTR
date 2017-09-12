@@ -19,7 +19,7 @@ ways to contribute.
 GitHub repository
 ---------------------
 WNTR is maintained in a version controlled repository.  
-WNTR is hosted on USEPA GitHub organization at https://github.com/USEPA/WNTR.
+WNTR is hosted on US EPA GitHub organization at https://github.com/USEPA/WNTR.
 
 Software tests
 --------------------

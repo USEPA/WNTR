@@ -10,6 +10,7 @@ import time
 import sys
 import logging
 import scipy.sparse
+import scipy.sparse.csr
 
 logger = logging.getLogger(__name__)
 
@@ -20,15 +21,15 @@ class WaterNetworkSimulator(object):
     wn : WaterNetworkModel object
         Water network model
 
-    pressure_driven: bool (optional)
-        Specifies whether the simulation will be demand-driven or
-        pressure-driven, default = False
+    mode: string (optional)
+        Specifies whether the simulation will be demand-driven (DD) or
+        pressure dependent demand (PDD), default = DD
     """
 
-    def __init__(self, wn=None, pressure_driven=False):
+    def __init__(self, wn=None, mode='DD'):
 
         self._wn = wn
-        self.pressure_driven = pressure_driven
+        self.mode = mode
 
     def get_node_demand(self, node_name, start_time=None, end_time=None):
         """
@@ -126,14 +127,14 @@ class WNTRSimulator(WaterNetworkSimulator):
     wn : WaterNetworkModel object
         Water network model
 
-    pressure_driven: bool (optional)
-        Specifies whether the simulation will be demand-driven or
-        pressure-driven, default = False
+    mode: string (optional)
+        Specifies whether the simulation will be demand-driven (DD) or
+        pressure dependent demand (PDD), default = DD
     """
 
-    def __init__(self, wn, pressure_driven=False):
+    def __init__(self, wn, mode='DD'):
 
-        super(WNTRSimulator, self).__init__(wn, pressure_driven)
+        super(WNTRSimulator, self).__init__(wn, mode)
         self._internal_graph = None
         self._node_pairs_with_multiple_links = None
         self._control_log = None
@@ -180,7 +181,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         self._controls = list(self._wn._control_dict.values())+tank_controls+cv_controls+pump_controls+valve_controls
 
-        model = HydraulicModel(self._wn, self.pressure_driven)
+        model = HydraulicModel(self._wn, self.mode)
         self._model = model
         model.initialize_results_dict()
 
@@ -509,10 +510,30 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         self._internal_graph = scipy.sparse.csr_matrix((vals, (rows, cols)))
 
+        ndx_map = {}
+        for link_name, link in self._wn.links():
+            ndx1 = None
+            ndx2 = None
+            from_node_name = link.start_node
+            to_node_name = link.end_node
+            from_node_id = self._model._node_name_to_id[from_node_name]
+            to_node_id = self._model._node_name_to_id[to_node_name]
+            ndx1 = _get_csr_data_index(self._internal_graph, from_node_id, to_node_id)
+            ndx2 = _get_csr_data_index(self._internal_graph, to_node_id, from_node_id)
+            ndx_map[link] = (ndx1, ndx2)
+        self._map_link_to_internal_graph_data_ndx = ndx_map
+
+        self._number_of_connections = [0 for i in range(self._model.num_nodes)]
+        for node_id in self._model._node_ids:
+            self._number_of_connections[node_id] = self._internal_graph.indptr[node_id+1] - self._internal_graph.indptr[node_id]
+
         self._node_pairs_with_multiple_links = {}
         for from_node_id, to_node_id in n_links.keys():
             if n_links[(from_node_id, to_node_id)] > 1:
+                if (to_node_id, from_node_id) in self._node_pairs_with_multiple_links:
+                    continue
                 self._internal_graph[from_node_id, to_node_id] = 0
+                self._internal_graph[to_node_id, from_node_id] = 0
                 from_node_name = self._model._node_id_to_name[from_node_id]
                 to_node_name = self._model._node_id_to_name[to_node_id]
                 tmp_list = self._node_pairs_with_multiple_links[(from_node_id, to_node_id)] = []
@@ -522,129 +543,113 @@ class WNTRSimulator(WaterNetworkSimulator):
                         tmp_list.append(link)
                         if isinstance(link, wntr.network.Pipe):
                             if link.status != wntr.network.LinkStatus.closed:
-                                self._internal_graph[from_node_id, to_node_id] = 1
+                                ndx1, ndx2 = ndx_map[link]
+                                self._internal_graph.data[ndx1] = 1
+                                self._internal_graph.data[ndx2] = 1
                         elif isinstance(link, wntr.network.Pump):
                             if link.status != wntr.network.LinkStatus.closed and link._cv_status != wntr.network.LinkStatus.closed:
-                                self._internal_graph[from_node_id, to_node_id] = 1
+                                ndx1, ndx2 = ndx_map[link]
+                                self._internal_graph.data[ndx1] = 1
+                                self._internal_graph.data[ndx2] = 1
                         elif isinstance(link, wntr.network.Valve):
                             if link.status != wntr.network.LinkStatus.closed and link._status != wntr.network.LinkStatus.closed:
-                                self._internal_graph[from_node_id, to_node_id] = 1
+                                ndx1, ndx2 = ndx_map[link]
+                                self._internal_graph.data[ndx1] = 1
+                                self._internal_graph.data[ndx2] = 1
                         else:
                             raise RuntimeError('Unrecognized link type.')
 
     def _update_internal_graph(self):
+        data = self._internal_graph.data
+        ndx_map = self._map_link_to_internal_graph_data_ndx
         for obj_name, obj in self._control_log.changed_objects.items():
             changed_attrs = self._control_log.changed_attributes[obj_name]
             if type(obj) == wntr.network.Pipe:
                 if 'status' in changed_attrs:
                     if obj.status == wntr.network.LinkStatus.opened:
-                        start_node_name = obj.start_node
-                        end_node_name = obj.end_node
-                        start_node_id = self._model._node_name_to_id[start_node_name]
-                        end_node_id = self._model._node_name_to_id[end_node_name]
-                        self._internal_graph[start_node_id, end_node_id] = 1
-                        self._internal_graph[end_node_id, start_node_id] = 1
+                        ndx1, ndx2 = ndx_map[obj]
+                        data[ndx1] = 1
+                        data[ndx2] = 1
                     elif obj.status == wntr.network.LinkStatus.closed:
-                        start_node_name = obj.start_node
-                        end_node_name = obj.end_node
-                        start_node_id = self._model._node_name_to_id[start_node_name]
-                        end_node_id = self._model._node_name_to_id[end_node_name]
-                        self._internal_graph[start_node_id, end_node_id] = 0
-                        self._internal_graph[end_node_id, start_node_id] = 0
+                        ndx1, ndx2 = ndx_map[obj]
+                        data[ndx1] = 0
+                        data[ndx2] = 0
                     else:
                         raise RuntimeError('Pipe status not recognized: %s', getattr(obj, 'status'))
             elif type(obj) == wntr.network.Pump:
                 if 'status' in changed_attrs and '_cv_status' in changed_attrs:
                     if obj.status == wntr.network.LinkStatus.closed and obj._cv_status == wntr.network.LinkStatus.closed:
-                        start_node_name = obj.start_node
-                        end_node_name = obj.end_node
-                        start_node_id = self._model._node_name_to_id[start_node_name]
-                        end_node_id = self._model._node_name_to_id[end_node_name]
-                        self._internal_graph[start_node_id, end_node_id] = 0
-                        self._internal_graph[end_node_id, start_node_id] = 0
+                        ndx1, ndx2 = ndx_map[obj]
+                        data[ndx1] = 0
+                        data[ndx2] = 0
                     elif obj.status == wntr.network.LinkStatus.opened and obj._cv_status == wntr.network.LinkStatus.opened:
-                        start_node_name = obj.start_node
-                        end_node_name = obj.end_node
-                        start_node_id = self._model._node_name_to_id[start_node_name]
-                        end_node_id = self._model._node_name_to_id[end_node_name]
-                        self._internal_graph[start_node_id, end_node_id] = 1
-                        self._internal_graph[end_node_id, start_node_id] = 1
+                        ndx1, ndx2 = ndx_map[obj]
+                        data[ndx1] = 1
+                        data[ndx2] = 1
                     else:
                         pass
                 elif 'status' in changed_attrs:
                     if obj.status == wntr.network.LinkStatus.closed:
                         if obj._cv_status == wntr.network.LinkStatus.opened:
-                            start_node_name = obj.start_node
-                            end_node_name = obj.end_node
-                            start_node_id = self._model._node_name_to_id[start_node_name]
-                            end_node_id = self._model._node_name_to_id[end_node_name]
-                            self._internal_graph[start_node_id, end_node_id] = 0
-                            self._internal_graph[end_node_id, start_node_id] = 0
+                            ndx1, ndx2 = ndx_map[obj]
+                            data[ndx1] = 0
+                            data[ndx2] = 0
                     elif obj.status == wntr.network.LinkStatus.opened:
                         if obj._cv_status == wntr.network.LinkStatus.opened:
-                            start_node_name = obj.start_node
-                            end_node_name = obj.end_node
-                            start_node_id = self._model._node_name_to_id[start_node_name]
-                            end_node_id = self._model._node_name_to_id[end_node_name]
-                            self._internal_graph[start_node_id, end_node_id] = 1
-                            self._internal_graph[end_node_id, start_node_id] = 1
+                            ndx1, ndx2 = ndx_map[obj]
+                            data[ndx1] = 1
+                            data[ndx2] = 1
                 elif '_cv_status' in changed_attrs:
                     if obj._cv_status == wntr.network.LinkStatus.closed:
                         if obj.status == wntr.network.LinkStatus.opened:
-                            start_node_name = obj.start_node
-                            end_node_name = obj.end_node
-                            start_node_id = self._model._node_name_to_id[start_node_name]
-                            end_node_id = self._model._node_name_to_id[end_node_name]
-                            self._internal_graph[start_node_id, end_node_id] = 0
-                            self._internal_graph[end_node_id, start_node_id] = 0
+                            ndx1, ndx2 = ndx_map[obj]
+                            data[ndx1] = 0
+                            data[ndx2] = 0
                     elif obj._cv_status == wntr.network.LinkStatus.opened:
                         if obj.status == wntr.network.LinkStatus.opened:
-                            start_node_name = obj.start_node
-                            end_node_name = obj.end_node
-                            start_node_id = self._model._node_name_to_id[start_node_name]
-                            end_node_id = self._model._node_name_to_id[end_node_name]
-                            self._internal_graph[start_node_id, end_node_id] = 1
-                            self._internal_graph[end_node_id, start_node_id] = 1
+                            ndx1, ndx2 = ndx_map[obj]
+                            data[ndx1] = 1
+                            data[ndx2] = 1
             elif type(obj) == wntr.network.Valve:
                 if ((obj.status == wntr.network.LinkStatus.opened or
                              obj.status == wntr.network.LinkStatus.active) and
                         (obj._status == wntr.network.LinkStatus.opened or
                                  obj._status == wntr.network.LinkStatus.active)):
-                    start_node_name = obj.start_node
-                    end_node_name = obj.end_node
-                    start_node_id = self._model._node_name_to_id[start_node_name]
-                    end_node_id = self._model._node_name_to_id[end_node_name]
-                    self._internal_graph[start_node_id, end_node_id] = 1
-                    self._internal_graph[end_node_id, start_node_id] = 1
+                    ndx1, ndx2 = ndx_map[obj]
+                    data[ndx1] = 1
+                    data[ndx2] = 1
                 elif obj.status == wntr.network.LinkStatus.closed:
-                    start_node_name = obj.start_node
-                    end_node_name = obj.end_node
-                    start_node_id = self._model._node_name_to_id[start_node_name]
-                    end_node_id = self._model._node_name_to_id[end_node_name]
-                    self._internal_graph[start_node_id, end_node_id] = 0
-                    self._internal_graph[end_node_id, start_node_id] = 0
+                    ndx1, ndx2 = ndx_map[obj]
+                    data[ndx1] = 0
+                    data[ndx2] = 0
                 elif obj.status == wntr.network.LinkStatus.active and obj._status == wntr.network.LinkStatus.closed:
-                    start_node_name = obj.start_node
-                    end_node_name = obj.end_node
-                    start_node_id = self._model._node_name_to_id[start_node_name]
-                    end_node_id = self._model._node_name_to_id[end_node_name]
-                    self._internal_graph[start_node_id, end_node_id] = 0
-                    self._internal_graph[end_node_id, start_node_id] = 0
+                    ndx1, ndx2 = ndx_map[obj]
+                    data[ndx1] = 0
+                    data[ndx2] = 0
 
         for key, link_list in self._node_pairs_with_multiple_links.items():
             from_node_id = key[0]
             to_node_id = key[1]
-            self._internal_graph[from_node_id, to_node_id] = 0
+            first_link = link_list[0]
+            ndx1, ndx2 = ndx_map[first_link]
+            data[ndx1] = 0
+            data[ndx2] = 0
             for link in link_list:
                 if isinstance(link, wntr.network.Pipe):
                     if link.status != wntr.network.LinkStatus.closed:
-                        self._internal_graph[from_node_id, to_node_id] = 1
+                        ndx1, ndx2 = ndx_map[link]
+                        data[ndx1] = 1
+                        data[ndx2] = 1
                 elif isinstance(link, wntr.network.Pump):
                     if link.status != wntr.network.LinkStatus.closed and link._cv_status != wntr.network.LinkStatus.closed:
-                        self._internal_graph[from_node_id, to_node_id] = 1
+                        ndx1, ndx2 = ndx_map[link]
+                        data[ndx1] = 1
+                        data[ndx2] = 1
                 elif isinstance(link, wntr.network.Valve):
                     if link.status != wntr.network.LinkStatus.closed and link._status != wntr.network.LinkStatus.closed:
-                        self._internal_graph[from_node_id, to_node_id] = 1
+                        ndx1, ndx2 = ndx_map[link]
+                        data[ndx1] = 1
+                        data[ndx2] = 1
                 else:
                     raise RuntimeError('Unrecognized link type.')
 
@@ -666,41 +671,45 @@ class WNTRSimulator(WaterNetworkSimulator):
         #             isolated_links.add(key)
         # return isolated_junctions, isolated_links
 
-        node_set = set(range(self._model.num_nodes))
+        node_set = [1 for i in range(self._model.num_nodes)]
 
         def grab_group(node_id):
-            node_set.remove(node_id)
+            node_set[node_id] = 0
             nodes_to_explore = set()
             nodes_to_explore.add(node_id)
+            indptr = self._internal_graph.indptr
+            indices = self._internal_graph.indices
+            data = self._internal_graph.data
+            num_connections = self._number_of_connections
 
             while len(nodes_to_explore) != 0:
                 node_being_explored = nodes_to_explore.pop()
-                number_of_connections = (self._internal_graph.indptr[node_being_explored+1] -
-                                         self._internal_graph.indptr[node_being_explored])
-                ndx = self._internal_graph.indptr[node_being_explored]
-                vals = self._internal_graph.data[ndx:ndx+number_of_connections]
-                cols = self._internal_graph.indices[ndx:ndx+number_of_connections]
-                for val, col in zip(vals, cols):
+                ndx = indptr[node_being_explored]
+                number_of_connections = num_connections[node_being_explored]
+                vals = data[ndx:ndx+number_of_connections]
+                cols = indices[ndx:ndx+number_of_connections]
+                for i, val in enumerate(vals):
                     if val == 1:
-                        if col in node_set:
-                            node_set.remove(col)
+                        col = cols[i]
+                        if node_set[col] ==1:
+                            node_set[col] = 0
                             nodes_to_explore.add(col)
 
         for tank_name, tank in self._wn.nodes(wntr.network.Tank):
             tank_id = self._model._node_name_to_id[tank_name]
-            if tank_id in node_set:
+            if node_set[tank_id] == 1:
                 grab_group(tank_id)
             else:
                 continue
 
         for reservoir_name, reservoir in self._wn.nodes(wntr.network.Reservoir):
             reservoir_id = self._model._node_name_to_id[reservoir_name]
-            if reservoir_id in node_set:
+            if node_set[reservoir_id] == 1:
                 grab_group(reservoir_id)
             else:
                 continue
 
-        isolated_junction_ids = list(node_set)
+        isolated_junction_ids = [i for i in range(len(node_set)) if node_set[i] == 1]
         isolated_junctions = set()
         isolated_links = set()
         for j_id in isolated_junction_ids:
@@ -714,3 +723,20 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         return isolated_junctions, isolated_links
 
+
+def _get_csr_data_index(a, row, col):
+    """
+    Parameters:
+    a: scipy.sparse.csr.csr_matrix
+    row: int
+    col: int
+    """
+    row_indptr = a.indptr[row]
+    num = a.indptr[row+1] - row_indptr
+    cols = a.indices[row_indptr:row_indptr+num]
+    n = 0
+    for j in cols:
+        if j == col:
+            return row_indptr + n
+        n += 1
+    raise RuntimeError('Unable to find csr data index.')

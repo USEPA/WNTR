@@ -27,7 +27,6 @@ Additional examples, listed in :numref:`table-example`, are included in the exam
    ==============================  ===================================================================================================================
    Example file                    Description
    ==============================  ===================================================================================================================
-   converting_units.py             Convert units
    water_network_model.py          Generate and modify water network models
    networkx_graph.py               Generate a NetworkX graph from a water network model 
    hydraulic_simulation.py         Simulate hydraulics using the EPANET and WNTR simulators

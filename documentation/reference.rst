@@ -1,14 +1,14 @@
-.. raw:: latex
+﻿.. raw:: latex
 
     \clearpage
 
-Reference
+References
 ====================
 
 Due to limitations with cross referenced citations in reStructuredText (e.g., commas and spaces are not supported), 
 citations are cross referenced using a 6 digit notation [*]_. 
 
-.. [ALA01] American Lifelines Alliance (2001).  Seismic Fragility Formulations for Water Systems, Part 1 and 2.  Report for the American Lifelines Alliance, ASCE (Ed.) Reston, VA: American Society of Civil Engineers. April 2001.
+.. [ALA01] American Lifelines Alliance. (2001).  Seismic Fragility Formulations for Water Systems, Part 1 and 2.  Report for the American Lifelines Alliance, ASCE (Ed.) Reston, VA: American Society of Civil Engineers. April 2001.
 
 .. [AwGB90] Awumah, K., Goulter, I., and Bhatt, S.K. (1990). Assessment of reliability in water distribution networks using entropy based measures. Stochastic Hydrology and Hydraulics, 4(4), 309-320.
 
@@ -16,9 +16,9 @@ citations are cross referenced using a 6 digit notation [*]_.
 
 .. [CrLo02] Crowl, D.A., and Louvar, J.F. (2002). Chemical Process Safety: Fundamentals with Applications, 3 edition. Upper Saddle River, NJ: Prentice Hall, 720p.
 
-.. [ELLT12] Eto, J.H., LaCommare, K.H., Larsen, P.H., Todd, A., and Fisher, E. (2012) An Examination of Temporal Trends in Electricity Reliability Based on Reports from U.S. Electric Utilities. Lawrence Berkeley National Laboratory Report Number 5268E. Berkley, CA: Ernest Orlando Lawrence Berkely National Laboratory, 68p.
+.. [ELLT12] Eto, J.H., LaCommare, K.H., Larsen, P.H., Todd, A., and Fisher, E. (2012). An Examination of Temporal Trends in Electricity Reliability Based on Reports from U.S. Electric Utilities. Lawrence Berkeley National Laboratory Report Number 5268E. Berkeley, CA: Ernest Orlando Lawrence Berkeley National Laboratory, 68p.
 
-.. [HaSS08] Hagberg, A.A., Schult, D.A., and Swart P.J. (2008) Exploring network structure, dynamics, and function using NetworkX. In Proceedings of the 7th Python in Science Conference (SciPy2008), August 19-24, Pasadena, CA, USA.
+.. [HaSS08] Hagberg, A.A., Schult, D.A., and Swart P.J. (2008). Exploring network structure, dynamics, and function using NetworkX. In Proceedings of the 7th Python in Science Conference (SciPy2008), August 19-24, Pasadena, CA, USA.
 
 .. [Hunt07] Hunter, J.D. (2007). Matplotlib: A 2D graphics environment. Computing in Science and Engineering, 9(3), 90-95.
 
@@ -32,7 +32,7 @@ citations are cross referenced using a 6 digit notation [*]_.
 
 .. [OsKS02] Ostfeld, A., Kogan, D., and Shamir, U. (2002). Reliability simulation of water distribution systems - single and multiquality. Urban Water, 4(1), 53-61.
 
-.. [Ross00] Rossman, L.A. (2000). EPANET 2 Users Manual. Cininnati, OH: U.S. Environmental Protection Agency. U.S. Environmental Protection Agency Technical Report, EPA/600/R--00/057, 200p.
+.. [Ross00] Rossman, L.A. (2000). EPANET 2 Users Manual. Cincinnati, OH: U.S. Environmental Protection Agency. U.S. Environmental Protection Agency Technical Report, EPA/600/R--00/057, 200p.
 
 .. [SOKZ12] Salomons, E., Ostfeld, A., Kapelan, Z., Zecchin, A., Marchi, A., and Simpson, A. (2012). The battle of the water networks II - Problem description. Water Distribution Systems Analysis Conference 2012, September 24-27, Adelaide, South Australia, Australia. Retrieved on May 23, 2017 from https://emps.exeter.ac.uk/media/universityofexeter/emps/research/cws/downloads/WDSA2012-BWNII-ProblemDescription.pdf.
 

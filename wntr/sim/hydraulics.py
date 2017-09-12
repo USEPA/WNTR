@@ -19,15 +19,15 @@ class HydraulicModel(object):
     wn : WaterNetworkModel object
         Water network model
 
-    pressure_driven: bool (optional)
-        Specifies whether the simulation will be demand-driven or
-        pressure-driven, default = False
+    mode: string (optional)
+        Specifies whether the simulation will be demand-driven (DD) or
+        pressure dependent demand (PDD), default = DD
     """
 
-    def __init__(self, wn, pressure_driven=False):
+    def __init__(self, wn, mode='DD'):
 
         self._wn = wn
-        self.pressure_driven = pressure_driven
+        self.mode = mode
 
         # Global constants
         self._initialize_global_constants()
@@ -472,7 +472,7 @@ class HydraulicModel(object):
         *1: 1 for tanks and reservoirs
             1 for isolated junctions
             0 for junctions if the simulation is demand-driven and the junction is not isolated
-            f(H) for junctions if the simulation is pressure-driven and the junction is not isolated
+            f(H) for junctions if the simulation is pressure dependent demand and the junction is not isolated
         *2: 0 for tanks and reservoirs
             1 for non-isolated junctions
             0 for isolated junctions
@@ -653,7 +653,7 @@ class HydraulicModel(object):
                      [0, 3, 6, 1, 4, 7, 2, 5, 8]
         """
 
-        if not self.pressure_driven:
+        if self.mode == 'DD':
             self.jac_D.data[:self.num_junctions] = self.isolated_junction_array
 
         self.jac_E.data[:self.num_junctions] = 1.0-self.isolated_junction_array
@@ -686,7 +686,7 @@ class HydraulicModel(object):
         heads = x[:self.num_nodes]
         flows = x[self.num_nodes*2:2*self.num_nodes+self.num_links]
 
-        if self.pressure_driven:
+        if self.mode == 'PDD':
             minP = self.minimum_pressures
             nomP = self.nominal_pressures
             j_d = self.junction_demand
@@ -942,7 +942,7 @@ class HydraulicModel(object):
 
     def get_demand_or_head_residual(self, head, demand):
 
-        if self.pressure_driven:
+        if self.mode == 'PDD':
             minP = self.minimum_pressures
             nomP = self.nominal_pressures
             j_d = self.junction_demand
@@ -1005,44 +1005,6 @@ class HydraulicModel(object):
                     self.leak_demand_residual[leak_idx] = leak_demand[leak_idx] - self.leak_Cd[node_id]*self.leak_area[node_id]*math.sqrt(2.0*self._g*p)
             else:
                 self.leak_demand_residual[leak_idx] = leak_demand[leak_idx]
-
-    def correct_step(self,d_head,d_demand,d_flow,d_leak,x):
-        heads = x[:self.num_nodes]
-        demands = x[self.num_nodes:2*self.num_nodes]
-        flows = x[2*self.num_nodes:2*self.num_nodes+self.num_links]
-        leaks = x[2*self.num_nodes+self.num_links:]
-
-        for link_id in self._prv_ids:
-            end_node_id = self.link_end_nodes[link_id]
-            in_links = self.in_link_ids_for_nodes[end_node_id]
-            out_links = self.out_link_ids_for_nodes[end_node_id]
-            d_head[end_node_id] = self.valve_settings[link_id]+self.node_elevations[end_node_id] - heads[end_node_id]
-            if link_id in in_links:
-                d_flow[link_id] = demands[end_node_id] + sum(flows[out_link_id] for out_link_id in out_links) - \
-                                  sum(flows[in_link_id] for in_link_id in in_links if in_link_id!=link_id) - \
-                                  flows[link_id]
-            else:
-                d_flow[link_id] = sum(flows[in_link_id] for in_link_id in in_links) - demands[end_node_id] - \
-                                  sum(flows[out_link_id] for out_link_id in out_links if out_link_id!=link_id) - \
-                                  flows[link_id]
-            if end_node_id in self._leak_ids:
-                raise RuntimeError('Leaks at the end nodes of PRVs is not allowed.')
-                # d_flow[link_id] += leaks[end_node_id]
-        for node_id in self._tank_ids:
-            in_links = self.in_link_ids_for_nodes[node_id]
-            out_links = self.out_link_ids_for_nodes[node_id]
-            d_demand[node_id] = sum(flows[in_link_id] for in_link_id in in_links) - \
-                                sum(flows[out_link_id] for out_link_id in out_links) - demands[node_id]
-            if node_id in self._leak_ids:
-                d_demand[node_id] -= leaks[self._leak_idx[node_id]]
-        for node_id in self._reservoir_ids:
-            in_links = self.in_link_ids_for_nodes[node_id]
-            out_links = self.out_link_ids_for_nodes[node_id]
-            d_demand[node_id] = sum(flows[in_link_id] for in_link_id in in_links) - \
-                                sum(flows[out_link_id] for out_link_id in out_links) - demands[node_id]
-        d_demand[:self.num_junctions] = d_demand[:self.num_junctions] - \
-                                        self.isolated_junction_array*demands[:self.num_junctions]
-        return d_head,d_demand,d_flow,d_leak
 
     def initialize_flow(self):
         flow = 0.001*np.ones(self.num_links)
@@ -1652,7 +1614,6 @@ class HydraulicModel(object):
             #self.print_jacobian(difference)
 
             #raise RuntimeError('Jacobian is not correct!')
-
 
     def check_jac_for_zero_rows(self):
         for i in range(self.jacobian.shape[0]):
