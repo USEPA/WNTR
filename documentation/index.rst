@@ -1,5 +1,5 @@
-WNTR documentation (**DRAFT**)
-===================================
+WNTR User Manual
+===========================================================
 
 .. toctree::
    :maxdepth: 1
@@ -29,9 +29,9 @@ Citing WNTR
 -----------------
 To cite WNTR, use one of the following references:
 
-* Klise, K.A., Bynum, M., Moriarty, D., Murray, R., (2017), A software framework for assessing the resilience of drinking water systems to disasters with an example earthquake case study, Environmental Modelling and Software, Volume 95, September 2017, Pages 420–431.
+* Klise, K.A., Bynum, M., Moriarty, D., Murray, R. (2017). A software framework for assessing the resilience of drinking water systems to disasters with an example earthquake case study, Environmental Modelling and Software, Volume 95, September 2017, Pages 420-431.
 
-* Klise, K.A., Murray, R., Bynum, M., Moriarty, D., (2016), Water Network Tool for Resilience, Version 0.1, Technical Report SAND2016-11253, Sandia National Laboratories.
+* Klise, K.A., Hart, D.B., Moriarty, D., Bynum, M., Murray, R., Burkhardt, J., Haxton, T. (2017). Water Network Tool for Resilience (WNTR) User Manual, U.S. Environmental Protection Agency Technical Report, EPA/600/R-17/264, 47p.
 
 US EPA Disclaimer
 ---------------------
