@@ -884,24 +884,26 @@ class WaterNetworkModel(object):
 
         if add_pipe_at_node.lower() == 'start':
             # add original pipe back to graph between new junction and original end
-            self._graph.add_edge(new_junction_name, pipe.end_node_name, key=pipe_name_to_split)
+            pipe._start_node_name = new_junction_name
+            self._graph.add_edge(new_junction_name, end_node.name, key=pipe_name_to_split)
             nx.set_edge_attributes(self._graph, 'type', {(new_junction_name, 
                                                           pipe.end_node,
                                                           pipe_name_to_split):'pipe'})
             # add new pipe and change original length
-            self.add_pipe(new_pipe_name, pipe.start_node, new_junction_name,
+            self.add_pipe(new_pipe_name, start_node.name, new_junction_name,
                           original_length*split_at_point, pipe.diameter, pipe.roughness,
                           pipe.minor_loss, pipe.status, pipe.cv)
             pipe.length = original_length * (1-split_at_point)
 
         elif add_pipe_at_node.lower() == 'end':
             # add original pipe back to graph between original start and new junction
-            self._graph.add_edge(pipe.start_node, new_junction_name, key=pipe_name_to_split)
+            pipe._end_node_name = new_junction_name            
+            self._graph.add_edge(start_node.name, new_junction_name, key=pipe_name_to_split)
             nx.set_edge_attributes(self._graph, 'type', {(pipe.start_node,
                                                           new_junction_name,
                                                           pipe_name_to_split):'pipe'})
             # add new pipe and change original length
-            self.add_pipe(new_pipe_name, new_junction_name, pipe.end_node,
+            self.add_pipe(new_pipe_name, new_junction_name, end_node.name,
                           original_length*(1-split_at_point), pipe.diameter, pipe.roughness,
                           pipe.minor_loss, pipe.status, pipe.cv)
             pipe.length = original_length * split_at_point
