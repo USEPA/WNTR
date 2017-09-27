@@ -879,14 +879,14 @@ class WaterNetworkModel(object):
                           elevation=junction_elevation, coordinates=junction_coordinates)
 
         # remove the original pipe from the graph (to be added back below)
-        self._graph.remove_edge(pipe.start_node_name, pipe.end_node_name, key=pipe_name_to_split)
+        self._graph.remove_edge(pipe.start_node, pipe.end_node, key=pipe_name_to_split)
         original_length = pipe.length
 
         if add_pipe_at_node.lower() == 'start':
             # add original pipe back to graph between new junction and original end
             self._graph.add_edge(new_junction_name, pipe.end_node_name, key=pipe_name_to_split)
             nx.set_edge_attributes(self._graph, 'type', {(new_junction_name, 
-                                                          pipe.end_node_name,
+                                                          pipe.end_node,
                                                           pipe_name_to_split):'pipe'})
             # add new pipe and change original length
             self.add_pipe(new_pipe_name, pipe.start_node, new_junction_name,
@@ -896,8 +896,8 @@ class WaterNetworkModel(object):
 
         elif add_pipe_at_node.lower() == 'end':
             # add original pipe back to graph between original start and new junction
-            self._graph.add_edge(pipe.start_node_name, new_junction_name, key=pipe_name_to_split)
-            nx.set_edge_attributes(self._graph, 'type', {(pipe.start_node_name,
+            self._graph.add_edge(pipe.start_node, new_junction_name, key=pipe_name_to_split)
+            nx.set_edge_attributes(self._graph, 'type', {(pipe.start_node,
                                                           new_junction_name,
                                                           pipe_name_to_split):'pipe'})
             # add new pipe and change original length
