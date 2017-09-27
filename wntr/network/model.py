@@ -794,6 +794,20 @@ class WaterNetworkModel(object):
                    add_pipe_at_node='end', split_at_point=0.5):
         """Splits a pipe by adding a junction and one new pipe segment.
         
+        This method is convenient when adding leaks to a pipe. It provides 
+        an initially zero-demand node at some point along the pipe and then
+        reconnects the original pipe to this node and adds a new pipe to the
+        other side. Hydraulic paths are maintained. The new junction can 
+        then have a leak added to it.
+        
+        It is important to note that check valves are not added to the new
+        pipe. By allowing the new pipe to be connected at either the start
+        or the end of the old pipe, this allows the split to occur before
+        or after the check valve. Additionally, no controls will be added
+        to the new pipe; the old pipe will keep any controls. Again, this
+        allows the split to occur before or after a "valve" that is controled
+        by opening or closing a pipe.
+        
         This method keeps 'pipe_name_to_split', resizes it, and adds
         a new pipe to keep total length equal. The pipe will be split at 
         a new junction placed at a point 'split_at_point' of the way 
@@ -811,10 +825,6 @@ class WaterNetworkModel(object):
         original start and end nodes, coordinates at 'split_at_point'
         between the original start and end nodes, and will use the
         default demand pattern.
-        
-        The original pipe will keep its controls.  
-        The new pipe _will not_ have any controls automatically added;
-        this includes not adding a check valve.
         
         Parameters
         ----------
@@ -839,7 +849,7 @@ class WaterNetworkModel(object):
         Returns
         -------
         tuple
-            A 2-tuple of (the new pipe, the new junction)
+            returns (original_pipe, new_junction, new_pipe) objects
             
         """
         
@@ -884,7 +894,6 @@ class WaterNetworkModel(object):
         self.add_junction(new_junction_name, base_demand=0.0, demand_pattern_name=None,
                           elevation=junction_elevation, coordinates=junction_coordinates)
         new_junction = self.get_node(new_junction_name)
-        new_pipe = None
 
         # remove the original pipe from the graph (to be added back below)
         self._graph.remove_edge(pipe.start_node, pipe.end_node, key=pipe_name_to_split)
@@ -915,10 +924,164 @@ class WaterNetworkModel(object):
                           original_length*(1-split_at_point), pipe.diameter, pipe.roughness,
                           pipe.minor_loss, pipe.status, pipe.cv)
             pipe.length = original_length * split_at_point
-        new_pipe = self.get_link(new_pipe_name)            
+        new_pipe = self.get_link(new_pipe_name)
         if pipe.cv:
             logger.warn('You are splitting a pipe with a check valve. The new pipe will not have a check valve.')
-        return (new_pipe, new_junction)
+        return (pipe, new_junction, new_pipe)
+
+    def break_pipe(self, pipe_name_to_split, new_pipe_name, new_junction_name_old_pipe,
+                   new_junction_name_new_pipe,
+                   add_pipe_at_node='end', split_at_point=0.5):
+        """Breaks a pipe by adding a two unconnected junctions and one new pipe segment.
+        
+        This method provides a true broken pipe -- i.e., there is no longer flow possible 
+        from one side of the break to the other. This is more likely to break the model
+        through non-convergable hydraulics than a simple split_pipe with a leak added.
+
+        It is important to note that check valves are not added to the new
+        pipe. By allowing the new pipe to be connected at either the start
+        or the end of the old pipe, this allows the break to occur before
+        or after the check valve. This may mean that one of the junctions will
+        not have demand, as it would be inaccessible. No error checking is 
+        performed to stop such a condition, it is left to the user.
+        Additionally, no controls will be added
+        to the new pipe; the old pipe will keep any controls. Again, this
+        allows the break to occur before or after a "valve" that is controled
+        by opening or closing a pipe.
+        
+        This method keeps 'pipe_name_to_split', resizes it, and adds
+        a new pipe to keep total length equal. Two junctions are added at the same position,
+        but are not connected. The pipe will be split at 
+        a point 'split_at_point' of the way 
+        between the start and end (in that direction). The new pipe can be
+        added to 'add_pipe_at_node' of either ``start`` or ``end``. For
+        example, if ``add_pipe_at_node='start'``, then the original pipe
+        will go from the first new junction to the original end node, and the
+        new pipe will go from the original start node to the second new junction.
+        
+        The new pipe will have the same diameter,
+        roughness, minor loss, and base status of the original
+        pipe. The new junctions will have a base demand of 0,
+        an elevation equal to the 'split_at_point' x 100% of the 
+        elevation between the
+        original start and end nodes, coordinates at 'split_at_point'
+        between the original start and end nodes, and will use the
+        default demand pattern. These junctions will be returned so that 
+        a new demand (usually a leak) can be added to them.
+        
+        The original pipe will keep its controls.  
+        The new pipe _will not_ have any controls automatically added;
+        this includes not adding a check valve.
+        
+        Parameters
+        ----------
+        pipe_name_to_split: string
+            The name of the pipe to split.
+
+        new_pipe_name: string
+            The name of the new pipe to be added as the split part of the pipe.
+
+        new_junction_name_old_pipe: string
+            The name of the new junction to be added to the original pipe
+
+        new_junction_name_old_pipe: string
+            The name of the new junction to be added to the new pipe
+
+        add_pipe_at_node: string
+            Either 'start' or 'end', 'end' is default. The new pipe goes between this
+            original node and the new junction.
+            
+        split_at_point: float
+            Between 0 and 1, the position along the original pipe where the new 
+            junction will be located.
+                
+            
+        Returns
+        -------
+        tuple
+            Returns the new junctions that have been created, with the junction attached to the 
+            original pipe as the first element of the tuple
+            
+        """
+        
+        # Do sanity checks
+        pipe = self.get_link(pipe_name_to_split)
+        if not isinstance(pipe, Pipe):
+            raise ValueError('You can only split pipes.')
+        if split_at_point < 0 or split_at_point > 1:
+            raise ValueError('split_at_point must be between 0 and 1')
+        if add_pipe_at_node.lower() not in ['end', 'start']:
+            raise ValueError('add_pipe_at_node must be "end" or "start"')
+        node_list = [node_name for node_name, node in self.nodes()]
+        link_list = [link_name for link_name, link in self.links()]
+        if new_junction_name_old_pipe in node_list or new_junction_name_new_pipe in node_list:
+            raise RuntimeError('The junction name you provided is already being used for another node.')
+        if new_pipe_name in link_list:
+            raise RuntimeError('The new link name you provided is already being used for another link.')
+
+        # Get start and end node info
+        start_node = self.get_node(pipe.start_node)
+        end_node = self.get_node(pipe.end_node)
+        
+        # calculate the new elevation
+        if isinstance(start_node, Reservoir):
+            junction_elevation = end_node.elevation
+        elif isinstance(end_node, Reservoir):
+            junction_elevation = start_node.elevation
+        else:
+            e0 = start_node.elevation
+            de = end_node.elevation - e0
+            junction_elevation = e0 + de * split_at_point
+
+        # calculate the new coordinates
+        x0 = self._graph.node[pipe.start_node]['pos'][0]
+        dx = self._graph.node[pipe.end_node]['pos'][0] - x0
+        y0 = self._graph.node[pipe.start_node]['pos'][1]
+        dy = self._graph.node[pipe.end_node]['pos'][1] - y0
+        junction_coordinates = (x0 + dx * split_at_point,
+                                y0 + dy * split_at_point)
+
+        # add the new junction
+        self.add_junction(new_junction_name_old_pipe, base_demand=0.0, demand_pattern_name=None,
+                          elevation=junction_elevation, coordinates=junction_coordinates)
+        new_junction1 = self.get_node(new_junction_name_old_pipe)
+        self.add_junction(new_junction_name_new_pipe, base_demand=0.0, demand_pattern_name=None,
+                          elevation=junction_elevation, coordinates=junction_coordinates)
+        new_junction2 = self.get_node(new_junction_name_new_pipe)
+
+        # remove the original pipe from the graph (to be added back below)
+        self._graph.remove_edge(pipe.start_node, pipe.end_node, key=pipe_name_to_split)
+        original_length = pipe.length
+
+        if add_pipe_at_node.lower() == 'start':
+            # add original pipe back to graph between new junction and original end
+            pipe._start_node_name = new_junction_name_old_pipe
+            self._graph.add_edge(new_junction_name_old_pipe, end_node.name, key=pipe_name_to_split)
+            nx.set_edge_attributes(self._graph, 'type', {(new_junction_name_old_pipe, 
+                                                          end_node.name,
+                                                          pipe_name_to_split):'pipe'})
+            # add new pipe and change original length
+            self.add_pipe(new_pipe_name, start_node.name, new_junction_name_new_pipe,
+                          original_length*split_at_point, pipe.diameter, pipe.roughness,
+                          pipe.minor_loss, pipe.status, pipe.cv)
+            pipe.length = original_length * (1-split_at_point)
+
+        elif add_pipe_at_node.lower() == 'end':
+            # add original pipe back to graph between original start and new junction
+            pipe._end_node_name = new_junction_name_old_pipe            
+            self._graph.add_edge(start_node.name, new_junction_name_old_pipe, key=pipe_name_to_split)
+            nx.set_edge_attributes(self._graph, 'type', {(start_node.name,
+                                                          new_junction_name_old_pipe,
+                                                          pipe_name_to_split):'pipe'})
+            # add new pipe and change original length
+            self.add_pipe(new_pipe_name, new_junction_name_new_pipe, end_node.name,
+                          original_length*(1-split_at_point), pipe.diameter, pipe.roughness,
+                          pipe.minor_loss, pipe.status, pipe.cv)
+            pipe.length = original_length * split_at_point
+        new_pipe = self.get_link(new_pipe_name)
+        if pipe.cv:
+            logger.warn('You are splitting a pipe with a check valve. The new pipe will not have a check valve.')
+        return (pipe, new_junction1, new_junction2, new_pipe)
 
     def split_pipe_with_junction(self, pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side,
                                  junction_name):
