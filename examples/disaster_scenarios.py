@@ -22,7 +22,7 @@ wntr.graphics.plot_network(wn, link_attribute=pga, node_size=0, link_width=1.5,
 plt.scatter(epicenter[0], epicenter[1], s=1000, c='r', marker='*', zorder=2)
 
 # Define a leak at pipe '123'
-wn.split_pipe_with_junction('123', '123_A', '123_B', '123_leak_node')
+wn.split_pipe('123', '123_B', '123_leak_node')
 leak_node = wn.get_node('123_leak_node')           
 leak_node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)
                           
