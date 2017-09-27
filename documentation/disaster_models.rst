@@ -69,7 +69,7 @@ Leaks can be added to a pipe by splitting the pipe and adding a junction.
 To add a leak to a specific pipe:
 
 .. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 24-26
+   :lines: 25-27
 
 The method :class:`~wntr.network.model.Junction.add_leak` adds time controls to a junction which includes the start and stop time for the leak.
 
@@ -88,7 +88,7 @@ WNTR can be used to simulate power outages by changing the pump status from ON t
 To model the impact of a power outage on a specific pump:
 
 .. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 29
+   :lines: 30
    
 The method :class:`~wntr.network.model.WaterNetworkModel.add_pump_outage` adds time controls to a pump to start and stop a power outage.
 When simulating power outages, consider placing check bypasses around pumps 
@@ -108,7 +108,7 @@ Pressure dependent demand simulation is recommended in cases where fire fighting
 To model the impact of fire conditions at a specific node:
 
 .. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 32-42
+   :lines: 33-43
 
 Environmental change
 ---------------------
@@ -130,7 +130,7 @@ Changes to supply and demand can be simple (i.e., changing all nodes by a certai
 To model simple changes in supply and demand:
 
 .. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 45-48
+   :lines: 46-49
    
 Contamination
 --------------------
