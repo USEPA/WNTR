@@ -835,6 +835,12 @@ class WaterNetworkModel(object):
             Between 0 and 1, the position along the original pipe where the new 
             junction will be located.
                 
+            
+        Returns
+        -------
+        tuple
+            A 2-tuple of (the new pipe, the new junction)
+            
         """
         
         # Do sanity checks
@@ -877,6 +883,8 @@ class WaterNetworkModel(object):
         # add the new junction
         self.add_junction(new_junction_name, base_demand=0.0, demand_pattern_name=None,
                           elevation=junction_elevation, coordinates=junction_coordinates)
+        new_junction = self.get_node(new_junction_name)
+        new_pipe = None
 
         # remove the original pipe from the graph (to be added back below)
         self._graph.remove_edge(pipe.start_node, pipe.end_node, key=pipe_name_to_split)
@@ -907,9 +915,10 @@ class WaterNetworkModel(object):
                           original_length*(1-split_at_point), pipe.diameter, pipe.roughness,
                           pipe.minor_loss, pipe.status, pipe.cv)
             pipe.length = original_length * split_at_point
-            
+        new_pipe = self.get_link(new_pipe_name)            
         if pipe.cv:
             logger.warn('You are splitting a pipe with a check valve. The new pipe will not have a check valve.')
+        return (new_pipe, new_junction)
 
     def split_pipe_with_junction(self, pipe_name_to_split, pipe_name_on_start_node_side, pipe_name_on_end_node_side,
                                  junction_name):
