@@ -85,7 +85,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(j.base_demand, 150.0)
         self.assertEqual(j.demand_pattern_name, 'pattern1')
         self.assertEqual(j.elevation, 15.0)
-        self.assertEqual(wn._graph.nodes(),['j1'])
+        self.assertEqual(list(wn._graph.nodes()),['j1'])
         self.assertEqual(type(j.base_demand), float)
         self.assertEqual(type(j.elevation), float)
 
@@ -100,7 +100,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(n.max_level, 100.0)
         self.assertEqual(n.diameter, 10.0)
         self.assertEqual(n.min_vol, 0.0)
-        self.assertEqual(wn._graph.nodes(),['t1'])
+        self.assertEqual(list(wn._graph.nodes()),['t1'])
         self.assertEqual(type(n.elevation), float)
         self.assertEqual(type(n.init_level), float)
         self.assertEqual(type(n.min_level), float)
@@ -115,7 +115,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(n._name, 'r1')
         self.assertEqual(n.base_head, 30.0)
         self.assertEqual(n.head_pattern_name, 'pattern1')
-        self.assertEqual(wn._graph.nodes(),['r1'])
+        self.assertEqual(list(wn._graph.nodes()),['r1'])
         self.assertEqual(type(n.base_head), float)
 
     def test_add_pipe(self):
@@ -132,7 +132,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l.diameter, 1.0)
         self.assertEqual(l.roughness, 100.0)
         self.assertEqual(l.minor_loss, 0.0)
-        self.assertEqual(wn._graph.edges(), [('j1','j2')])
+        self.assertEqual(list(wn._graph.edges()), [('j1','j2')])
         self.assertEqual(type(l.length), float)
         self.assertEqual(type(l.diameter), float)
         self.assertEqual(type(l.roughness), float)
@@ -186,7 +186,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(link_list, ['p2'])
         self.assertEqual(wn._check_valves,[])
         self.assertEqual(wn._num_pipes, 1)
-        self.assertEqual(wn._graph.edges(), [('j1','j3')])
+        self.assertEqual(list(wn._graph.edges()), [('j1','j3')])
 
     def test_remove_node(self):
         inp_file = join(ex_datadir,'Net6.inp')

@@ -53,7 +53,7 @@ def test_Net1_MultiDiGraph():
             '9':  {'10': {'9':   {'type': 'pump'}}}}
 
     assert_dict_contains_subset(node, G.node)
-    assert_dict_contains_subset(edge, G.edge)
+    assert_dict_contains_subset(edge, G.adj)
 
 if __name__ == '__main__':
     test_Net1()

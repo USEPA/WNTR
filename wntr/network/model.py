@@ -138,7 +138,7 @@ class WaterNetworkModel(object):
         self._graph.add_node(name)
         if coordinates is not None:
             self.set_node_coordinates(name, coordinates)
-        nx.set_node_attributes(self._graph, 'type', {name:'junction'})
+        nx.set_node_attributes(self._graph, name='type', values={name:'junction'})
         self._num_junctions += 1
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
@@ -183,7 +183,7 @@ class WaterNetworkModel(object):
         self._graph.add_node(name)
         if coordinates is not None:
             self.set_node_coordinates(name, coordinates)
-        nx.set_node_attributes(self._graph, 'type', {name: 'tank'})
+        nx.set_node_attributes(self._graph, name='type', values={name: 'tank'})
         self._num_tanks += 1
 
     def _get_all_tank_controls(self):
@@ -315,7 +315,7 @@ class WaterNetworkModel(object):
         self._graph.add_node(name)
         if coordinates is not None:
             self.set_node_coordinates(name, coordinates)
-        nx.set_node_attributes(self._graph, 'type', {name:'reservoir'})
+        nx.set_node_attributes(self._graph, name='type', values={name:'reservoir'})
         self._num_reservoirs += 1
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
@@ -360,7 +360,7 @@ class WaterNetworkModel(object):
         self._links[name] = pipe
         self._pipes[name] = pipe
         self._graph.add_edge(start_node_name, end_node_name, key=name)
-        nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'pipe'})
+        nx.set_edge_attributes(self._graph, name='type', values={(start_node_name, end_node_name, name):'pipe'})
         self._num_pipes += 1
 
     def _get_cv_controls(self):
@@ -414,7 +414,7 @@ class WaterNetworkModel(object):
         self._links[name] = pump
         self._pumps[name] = pump
         self._graph.add_edge(start_node_name, end_node_name, key=name)
-        nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'pump'})
+        nx.set_edge_attributes(self._graph, name='type', values={(start_node_name, end_node_name, name):'pump'})
         self._num_pumps += 1
 
     def _get_pump_controls(self):
@@ -476,7 +476,7 @@ class WaterNetworkModel(object):
         self._links[name] = valve
         self._valves[name] = valve
         self._graph.add_edge(start_node_name, end_node_name, key=name)
-        nx.set_edge_attributes(self._graph, 'type', {(start_node_name, end_node_name, name):'valve'})
+        nx.set_edge_attributes(self._graph, name='type', values={(start_node_name, end_node_name, name):'valve'})
         self._num_valves += 1
 
     def _get_valve_controls(self):
@@ -979,13 +979,13 @@ class WaterNetworkModel(object):
         if flag.upper() == 'ALL':
             in_edges = self._graph.in_edges(node_name, data=False, keys=True)
             out_edges = self._graph.out_edges(node_name, data=False, keys=True)
-            edges = in_edges + out_edges
+            edges = list(in_edges) + list(out_edges)
         if flag.upper() == 'INLET':
             in_edges = self._graph.in_edges(node_name, data=False, keys=True)
-            edges = in_edges
+            edges = list(in_edges)
         if flag.upper() == 'OUTLET':
             out_edges = self._graph.out_edges(node_name, data=False, keys=True)
-            edges = out_edges
+            edges = list(out_edges)
         list_of_links = []
         for edge_tuple in edges:
             list_of_links.append(edge_tuple[2])
@@ -1441,7 +1441,7 @@ class WaterNetworkModel(object):
         coordinates : tuple
             X-Y coordinates.
         """
-        nx.set_node_attributes(self._graph, 'pos', {name: coordinates})
+        nx.set_node_attributes(self._graph, name='pos', values={name: coordinates})
 
     def scale_node_coordinates(self, scale):
         """
