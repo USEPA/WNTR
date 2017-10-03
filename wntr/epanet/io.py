@@ -2220,7 +2220,7 @@ class BinFile(object):
             values = HydParam.Demand._to_si(self.flow_units, values)
         elif result_type == ResultType.flowrate:
             values = HydParam.Flow._to_si(self.flow_units, values)
-        elif result_type in [ResultType.head, ResultType.headloss]:
+        elif result_type == ResultType.head:
             values = HydParam.HydraulicHead._to_si(self.flow_units, values)
         elif result_type == ResultType.pressure:
             values = HydParam.Pressure._to_si(self.flow_units, values)
