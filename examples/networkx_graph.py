@@ -11,7 +11,7 @@ G = wn.get_graph_deep_copy()
 # Extract node and link properties
 node_name = '123'
 print(G.node[node_name])
-print(G.edge[node_name])
+print(G.adj[node_name])
 
 # Compute betweenness centrality
 node_degree = G.degree()

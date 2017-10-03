@@ -21,15 +21,15 @@ class WaterNetworkSimulator(object):
     wn : WaterNetworkModel object
         Water network model
 
-    pressure_driven: bool (optional)
-        Specifies whether the simulation will be demand-driven or
-        pressure-driven, default = False
+    mode: string (optional)
+        Specifies whether the simulation will be demand-driven (DD) or
+        pressure dependent demand (PDD), default = DD
     """
 
-    def __init__(self, wn=None, pressure_driven=False):
+    def __init__(self, wn=None, mode='DD'):
 
         self._wn = wn
-        self.pressure_driven = pressure_driven
+        self.mode = mode
 
     def get_node_demand(self, node_name, start_time=None, end_time=None):
         """
@@ -127,14 +127,14 @@ class WNTRSimulator(WaterNetworkSimulator):
     wn : WaterNetworkModel object
         Water network model
 
-    pressure_driven: bool (optional)
-        Specifies whether the simulation will be demand-driven or
-        pressure-driven, default = False
+    mode: string (optional)
+        Specifies whether the simulation will be demand-driven (DD) or
+        pressure dependent demand (PDD), default = DD
     """
 
-    def __init__(self, wn, pressure_driven=False):
+    def __init__(self, wn, mode='DD'):
 
-        super(WNTRSimulator, self).__init__(wn, pressure_driven)
+        super(WNTRSimulator, self).__init__(wn, mode)
         self._internal_graph = None
         self._node_pairs_with_multiple_links = None
         self._control_log = None
@@ -181,7 +181,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         self._controls = list(self._wn._control_dict.values())+tank_controls+cv_controls+pump_controls+valve_controls
 
-        model = HydraulicModel(self._wn, self.pressure_driven)
+        model = HydraulicModel(self._wn, self.mode)
         self._model = model
         model.initialize_results_dict()
 

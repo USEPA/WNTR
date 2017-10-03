@@ -253,12 +253,6 @@ def pump_energy(wn, sim_results):
         The minor axis corresponds to pump names
         Energy is given in Watts
         Cost is given in $/s
-        Ex:
-
-            sim = wntr.sim.WNTRSimulator(wn)
-            sim_results = sim.run_sim()
-            res = pump_energy(wn, sim_results)
-            print(res.loc['cost', 3600, '9'])
     """
     if wn.energy.demand_charge is not None and wn.energy.demand_charge != 0:
         raise ValueError('WNTR does not support demand charge yet.')

@@ -39,11 +39,11 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
             try:
                 value = node_attribute[node_name]
 
-                nx.set_node_attributes(self, 'weight', {node_name: value})
+                nx.set_node_attributes(self, name='weight', values={node_name: value})
             except:
                 pass
 
-        for (node1, node2, link_name) in self.edges(keys=True):
+        for (node1, node2, link_name) in list(self.edges(keys=True)):
             try:
                 value = link_attribute[link_name]
 
@@ -51,10 +51,10 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
                     link_type = self[node1][node2][link_name]['type'] # 'type' should be the only other attribute on G.edge
                     self.remove_edge(node1, node2, link_name)
                     self.add_edge(node2, node1, link_name)
-                    nx.set_edge_attributes(self, 'type', {(node2, node1, link_name): link_type})
-                    nx.set_edge_attributes(self, 'weight', {(node2, node1, link_name): -value})
+                    nx.set_edge_attributes(self, name='type', values={(node2, node1, link_name): link_type})
+                    nx.set_edge_attributes(self, name='weight', values={(node2, node1, link_name): -value})
                 else:
-                    nx.set_edge_attributes(self, 'weight', {(node1, node2, link_name): value})
+                    nx.set_edge_attributes(self, name='weight', values={(node1, node2, link_name): value})
             except:
                     pass
 
@@ -73,7 +73,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
             list of node indexes
         """
 
-        node_degree = self.degree()
+        node_degree = dict(self.degree())
         terminal_nodes = [k for k,v in node_degree.items() if v == 1]
 
         return terminal_nodes
@@ -94,7 +94,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         """
         n = nx.number_connected_components(self.to_undirected())
         bridges = []
-        for (node1, node2, link_name) in self.edges(keys=True):
+        for (node1, node2, link_name) in list(self.edges(keys=True)):
             # if node1 and node2 have a neighbor in common, no bridge
             if len(set(self.neighbors(node1)) & set(self.neighbors(node2))) == 0:
                 self.remove_edge(node1, node2, key=link_name)
@@ -160,7 +160,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         fd : float
             Critical ratio of defragmentation
         """
-        node_degree = self.degree()
+        node_degree = dict(self.degree())
         tmp = np.mean(pow(np.array(list(node_degree.values())),2))
         fc = 1-(1/((tmp/np.mean(list(node_degree.values())))-1))
 
@@ -184,7 +184,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         link_count : dict
             A dictonary with the number of times each link is involved in a path
         """
-        link_names = [name for (node1, node2, name) in self.edges(keys=True)]
+        link_names = [name for (node1, node2, name) in list(self.edges(keys=True))]
         link_count = pd.Series(data = 0, index=link_names)
 
         for sink in sinks:
@@ -221,7 +221,7 @@ def _all_simple_paths_multigraph(G, source, target, cutoff=None):
     if cutoff < 1:
         return
     visited = [source]
-    stack = [(v for u,v,k in G.edges(source, keys=True))]
+    stack = [(v for u,v,k in list(G.edges(source, keys=True)))]
     while stack:
         children = stack[-1]
         child = next(children, None)
@@ -235,7 +235,7 @@ def _all_simple_paths_multigraph(G, source, target, cutoff=None):
                 yield visited + [target]
             elif child not in visited:
                 visited.append(child)
-                stack.append((v for u,v in G.edges(child)))
+                stack.append((v for u,v in list(G.edges(child))))
         else: #len(visited) == cutoff:
             count = ([child]+list(children)).count(target)
             for i in range(count):
