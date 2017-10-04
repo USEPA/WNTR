@@ -35,7 +35,7 @@ NetworkX includes numerous methods to analyze the structure of complex networks.
 For more information on NetworkX, see https://networkx.github.io/.
 WNTR includes a custom Graph Class, 
 :class:`~wntr.network.graph.WntrMultiDiGraph`.
-This class inherits from NetworkX MulitDigraph and includes additional methods 
+This class inherits from NetworkX MultiDigraph and includes additional methods 
 that are specific to WNTR. 
 The example **networkx_graph.py** can be used to generate a graph from a water network model.
   

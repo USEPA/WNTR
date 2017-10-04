@@ -62,15 +62,14 @@ for i in range(Imax):
         pipe = wn.get_link(pipe_to_fail)
         leak_diameter = pipe.diameter*0.3
         leak_area=3.14159*(leak_diameter/2)**2
-        wn.split_pipe_with_junction(pipe_to_fail, pipe_to_fail + '_A', pipe_to_fail + '_B',
-                      pipe_to_fail+'leak_node')
+        wn.split_pipe(pipe_to_fail, pipe_to_fail + '_B', pipe_to_fail+'leak_node')
         leak_node = wn.get_node(pipe_to_fail+'leak_node')
         leak_node.add_leak(wn, area=leak_area,
                           start_time=time_of_failure*3600,
                           end_time=(time_of_failure + duration_of_failure)*3600)
 
     # Create simulation object of the PYOMO simulator
-    sim = wntr.sim.WNTRSimulator(wn, pressure_driven=True)
+    sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
 
     # Simulate hydraulics
     sim_name = 'Pipe Breaks: ' + str(pipes_to_fail) + ', Start Time: ' + \

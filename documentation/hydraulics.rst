@@ -16,10 +16,10 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 .. literalinclude:: ../examples/hydraulic_simulation.py
    :lines: 12-13
 
-The WNTRSimulator is a pure Python simulation engine based on the same equations
+The WNTRSimulator is a pure Python hydraulics simulation engine based on the same equations
 as EPANET.  The WNTRSimulator does not include equations to run water quality 
-simulations.  The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulation
-in demand-driven or pressure-driven demand mode.
+simulations.  The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulations
+in either demand-driven or pressure dependent demand mode.
 A hydraulic simulation using the WNTRSimulator is run using the following code:
 
 .. literalinclude:: ../examples/hydraulic_simulation.py
@@ -45,9 +45,9 @@ report timestep,
 report start, 
 start clocktime, 
 headloss, 
-trails, 
+trials, 
 accuracy, 
-unbalenced, 
+unbalanced, 
 demand multiplier, and 
 emitter exponent.
 All options are used with the EpanetSimulator.  
@@ -86,8 +86,12 @@ where
 
 The flow rate in a pipe is positive if water is flowing from
 the starting node to the ending node and negative if water is flowing
-from the ending node to the starting node. However, this equation is not valid for negative
-flow rates. Therefore, WNTR uses a reformulation of this constraint. 
+from the ending node to the starting node. 
+
+The WNTRSimulator solves for pressures and flows throughout the network 
+as a set of linear equations.
+However, the Hazen-Williams headloss formula is not valid for negative
+flow rates. Therefore, the WNTRSimulator uses a reformulation of this constraint. 
 
 For :math:`q<0`:
 
@@ -101,9 +105,9 @@ These equations are symmetric across the origin
 and valid for any :math:`q`. Thus, this equation can be used for flow in
 either direction. However, the derivative with respect to :math:`q` at :math:`q = 0` 
 is :math:`0`. In certain scenarios, this can cause the Jacobian of the
-set of hydraulic equations to become singular (when :math:`q=0`). The WNTRSimulator
-uses a modified Hazen-Williams formula. The modified
-Hazen-Williams formula splits the domain of :math:`q` into six segments to
+set of hydraulic equations to become singular (when :math:`q=0`). 
+To overcome this limitation, the WNTRSimulator
+splits the domain of :math:`q` into six segments to
 create a piecewise smooth function.
 
 .. as presented below.
@@ -145,24 +149,24 @@ create a piecewise smooth function.
 Demand-driven simulation
 -------------------------
 
-In demand-driven simulation, pressure in the system depends on the node demands.
+In demand-driven simulation, the pressure in the system depends on the node demands.
 The mass balance and headloss equations described above are solved assuming 
 that node demands are known and satisfied.  
 This assumption is reasonable under normal operating conditions and for use in network design.  
 Both simulators can run hydraulics using demand-driven simulation.
 
-Pressure-driven demand simulation
-----------------------------------
+Pressure dependent demand simulation
+--------------------------------------
 
 In situations that lead to low pressure conditions (i.e., fire fighting, 
 power outages, pipe leaks), consumers do not always receive their requested 
-demand and pressure-driven demand simulation is recommended.
-In pressure-driven demand simulation, the delivered demand depends on pressure.  
+demand and a pressure dependent demand simulation is recommended.
+In a pressure dependent demand simulation, the delivered demand depends on the pressure.  
 The mass balance and headloss equations described above are solved by 
 simultaneously determining demand along with the network pressures and flow rates.  
 
-The WNTRSimulator can run hydraulics using pressure-driven demand simulation
-using the following pressure-demand relationship [WaSM88]_:
+The WNTRSimulator can run hydraulics using a pressure dependent demand simulation
+according to the following pressure-demand relationship [WaSM88]_:
 
 .. math::
 
@@ -183,20 +187,20 @@ The set of nonlinear equations comprising the hydraulic
 model and the pressure-demand relationship is solved directly using a 
 Newton-Raphson algorithm.  
 
-:numref:`fig-pressure-driven` illustrates the pressure demand relationship using demand-driven and pressure-driven demand simulation.
+:numref:`fig-pressure-dependent` illustrates the pressure-demand relationship using both the demand-driven and pressure dependent demand simulations.
 In the example, 
 :math:`D_f` is 0.0025 m³/s (39.6 GPM),
 :math:`P_f` is 30 psi, and 
 :math:`P_0` is 5 psi.
-Using demand-driven simulation, the demand is equal to :math:`D_f` regardless of pressure.  
-Using pressure-driven demand simulation, the demand starts to decrease when pressure is below :math:`P_f` and goes to 0 when pressure is below :math:`P_0`.
+Using the demand-driven simulation, the demand is equal to :math:`D_f` regardless of pressure.  
+Using the pressure dependent demand simulation, the demand starts to decrease when the pressure is below :math:`P_f` and goes to 0 when pressure is below :math:`P_0`.
 
-.. _fig-pressure-driven:
+.. _fig-pressure-dependent:
 .. figure:: figures/pressure_driven.png
    :scale: 100 %
    :alt: Pressure driven example
    
-   Example relationship between pressure (p) and demand (d) using demand-driven and pressure-driven demand simulation.
+   Example relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
 
 Leak model
 -------------------------
@@ -243,7 +247,7 @@ The WNTRSimulator includes the ability to
 
 * Pause a hydraulic simulation, change network operations, and then restart the simulation
 
-* Save the water network model and results to files and reload for future analysis 
+* Save the water network model and results to files and reload for future analysis
 
 These features are helpful when evaluating various response action plans or when 
 simulating long periods of time where the time resolution might vary.

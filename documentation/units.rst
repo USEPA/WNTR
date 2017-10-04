@@ -43,7 +43,7 @@ information on EPANET unit conventions (modified from [Ross00]_).
    |                      |                                     |                                    |
    |                      | - CFS: ft :sup:`3` /s               | - LPS: L/s                         |
    |                      | - GPM: gal/min                      | - LPM: L/min                       |
-   |                      | - MGD: million gal/day              | - MLD: ML/day                      |
+   |                      | - MGD: million gal/day              | - MLD: million L/day               |
    |                      | - IMGD: million imperial gal/day    | - CMH: m :sup:`3` /hr              |
    |                      | - AFD: acre-feet/day                | - CMD: m :sup:`3` /day             |
    +----------------------+-------------------------------------+------------------------------------+
@@ -64,11 +64,11 @@ information on EPANET unit conventions (modified from [Ross00]_).
    | Friction factor      |  unitless                           |  unitless                          |
    +----------------------+-------------------------------------+------------------------------------+
    | Minor loss           |  unitless                           |  unitless                          |
-   | coeff.               |                                     |                                    |
+   | coefficient          |                                     |                                    |
    +----------------------+-------------------------------------+------------------------------------+
    | Pressure             |   psi                               |   m   or   kPa                     |
    +----------------------+-------------------------------------+------------------------------------+
-   | Roughness coeff:     |   10 :sup:`3` ft                    |   mm                               |
+   | Roughness coeff:     |   10 :sup:`-3` ft                   |   mm                               |
    | D-W                  |                                     |                                    |
    +----------------------+-------------------------------------+------------------------------------+
    | Roughness coeff:     | unitless                            |  unitless                          |
@@ -121,7 +121,4 @@ information on EPANET unit conventions (modified from [Ross00]_).
 
 When running analysis in WNTR, all input values (i.e., time, pressure threshold, node demand) should be specified in SI units. 
 All simulation results are also stored in SI units and can be converted to other units if desired.
-The SymPy package can be used to convert between units.  The example **converting_units.py**
-demonstrates its use:
-
-.. literalinclude:: ../examples/converting_units.py
+The SymPy Python package can be used to convert between units [JCMG11]_.  

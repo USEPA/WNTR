@@ -1,4 +1,4 @@
-# These tests run a demand driven simulation with both Pyomo and Epanet and compare the results for the example networks
+# These tests run a demand-driven simulation with both WNTR and Epanet and compare the results for the example networks
 import unittest
 from os.path import abspath, dirname, join
 import pandas as pd

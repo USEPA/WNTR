@@ -24,7 +24,7 @@ def topographic_metrics(wn):
     print("Link density: " + str(nx.density(G)))
 
     # Compute node degree
-    node_degree = G.degree()
+    node_degree = dict(G.degree())
     wntr.graphics.plot_network(wn, node_attribute=node_degree,
                           title='Node Degree', node_size=40, node_range=[1,5])
 
@@ -124,7 +124,7 @@ def hydraulic_metrics(wn):
         node.nominal_pressure = 15
 
     # Simulate hydraulics
-    sim = wntr.sim.WNTRSimulator(wn, pressure_driven=True)
+    sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
     results = sim.run_sim()
 
     # Create list of node names
