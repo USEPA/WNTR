@@ -4,6 +4,7 @@ water network model.
 """
 import networkx as nx
 import pandas as pd
+from wntr.graphics.color import custom_colormap
 try:
     import matplotlib.pyplot as plt
 except:
@@ -118,10 +119,12 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         pos = None
 
     # Node attribute
+    node_attr_from_list = False
     if isinstance(node_attribute, str):
         node_attribute = wn.query_node_attribute(node_attribute)
     if isinstance(node_attribute, list):
         node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
+        node_attr_from_list = True
     if isinstance(node_attribute, pd.Series):
         if node_attribute.index.nlevels == 2: # (nodeid, time) index
             # drop time
@@ -134,12 +137,20 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         nodecolor = 'k'
     else:
         nodelist,nodecolor = zip(*node_attribute.items())
-
+        if node_attr_from_list:
+            nodecolor = 'r'
+            add_colorbar = False
+        
     # Link attribute
+    link_attr_from_list = False
     if isinstance(link_attribute, str):
         link_attribute = wn.query_link_attribute(link_attribute)
     if isinstance(link_attribute, list):
-        link_attribute = dict(zip(link_attribute,[1]*len(link_attribute)))
+        all_link_attribute = dict(zip(wn.link_name_list,[0]*len(wn.link_name_list)))
+        for link in link_attribute:
+            all_link_attribute[link] = 1
+        link_attribute = all_link_attribute
+        link_attr_from_list = True
     if isinstance(link_attribute, pd.Series):
         if link_attribute.index.nlevels == 2: # (linkid, time) index
             # drop time
@@ -167,13 +178,17 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         linkcolor = 'k'
     else:
         linklist,linkcolor = zip(*link_attribute.items())
+        if link_attr_from_list:
+            link_cmap = custom_colormap(2, ['black', 'red'])
+            add_colorbar = False
+            
     if type(link_width) is dict:
         linklist2,link_width = zip(*link_width.items())
         if not linklist == linklist2:
             logger.warning('Link color and width do not share the same \
                            indexes, link width changed to 1.')
             link_width = 1
-
+        
     if title is not None:
         ax.set_title(title)
 
