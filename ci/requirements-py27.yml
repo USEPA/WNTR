@@ -10,7 +10,6 @@ dependencies:
     - matplotlib
     - plotly
     - nose
-    - sympy=1.1
     - xlwt
     - enum34
     - pip:

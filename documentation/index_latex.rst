@@ -4,8 +4,9 @@ WNTR documentation
 .. toctree::
    :maxdepth: 1
 
-   acknowledgements
+   disclaimer
    acronyms
+   acknowledgements
    overview
    installation
    framework

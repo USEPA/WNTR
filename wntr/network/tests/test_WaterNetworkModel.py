@@ -23,7 +23,7 @@ def test_Net1():
     node = G.node
     elevation = wn.query_node_attribute('elevation')
     base_demand = wn.query_node_attribute('base_demand')
-    edge = G.edge
+    edge = G.adj
     diameter = wn.query_link_attribute('diameter')
     length = wn.query_link_attribute('length')
 
@@ -108,11 +108,11 @@ def test_Net1():
                        '110':  200.0}
     expected_length = wntr.epanet.util.HydParam.Length._to_si(wn._inpfile.flow_units, expected_length)
 
-    assert_dict_equal(node, expected_node)
+    assert_dict_equal(dict(node), expected_node)
     assert_dict_equal(elevation, expected_elevation)
     assert_dict_equal(base_demand, expected_base_demand)
 
-    assert_dict_equal(edge, expected_edge)
+    assert_dict_equal(dict(edge), expected_edge)
     assert_dict_equal(diameter, expected_diameter)
     assert_dict_equal(length, expected_length)
 
