@@ -648,7 +648,7 @@ class WaterNetworkModel(object):
 #        for pump_name, pump in self.links(Pump):
 #            self.add_pump_outage(pump_name, start_time, end_time)
 
-    def remove_link(self, name, with_control=True):
+    def remove_link(self, name, with_control=False):
         """
         Removes a link from the water network model.
 
@@ -697,11 +697,11 @@ class WaterNetworkModel(object):
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
                         logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
-                else:
-                    if link == control._control_action._target_obj_ref:
-                        logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
+                #else:
+                #    if link == control._control_action._target_obj_ref:
+                #        logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
 
-    def remove_node(self, name, with_control=True):
+    def remove_node(self, name, with_control=False):
         """
         Removes a node from the water network model.
 
@@ -747,10 +747,15 @@ class WaterNetworkModel(object):
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
                         logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
-                else:
-                    if node == control._control_action._target_obj_ref:
-                        logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
+                #else:
+                #    if node == control._control_action._target_obj_ref:
+                #        logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
+     
+    def _remove_demand(self, name):
 
+        del self._demands[name]
+        self._num_demands -= 1
+        
     def remove_source(self, name):
         """
         Removes a source from the water network model.
