@@ -18,7 +18,7 @@ class NetResults(object):
 
     def _adjust_demand(self, Pstar):
         """
-        Correction factor when using demand driven simualtion, see [1]
+        Correction factor when using demand-driven simulation, see [1]
 
         Parameters
         ----------

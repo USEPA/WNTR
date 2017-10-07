@@ -17,11 +17,12 @@ pgv = earthquake.pgv_attenuation_model(distance)
 repair_rate = earthquake.repair_rate_model(pgv) 
    
 # Plot PGA and epicenter
-wntr.graphics.plot_network(wn, link_attribute=pga, node_size=0, link_width=1.5, title='Peak ground acceleration', figsize=(12,8), dpi=100)
+wntr.graphics.plot_network(wn, link_attribute=pga, node_size=0, link_width=1.5, 
+                           title='Peak ground acceleration')
 plt.scatter(epicenter[0], epicenter[1], s=1000, c='r', marker='*', zorder=2)
 
 # Define a leak at pipe '123'
-wn.split_pipe_with_junction('123', '123_A', '123_B', '123_leak_node')
+wn.split_pipe('123', '123_B', '123_leak_node')
 leak_node = wn.get_node('123_leak_node')           
 leak_node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)
                           
@@ -48,5 +49,5 @@ for junction_name, junction in wn.junctions():
     junction.base_demand = junction.base_demand*1.15
     
 # Simulate 
-sim = wntr.sim.WNTRSimulator(wn, pressure_driven=True)
+sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
 sim.run_sim()

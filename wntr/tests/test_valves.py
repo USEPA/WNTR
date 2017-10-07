@@ -28,7 +28,7 @@ class TestTCVs(unittest.TestCase):
         control = wntr.network.TimeControl(wn, 7200, time_flag='SIM_TIME', daily_flag=False, control_action=open_action)
         wn.add_control('c1', control)
 
-        sim = wntr.sim.WNTRSimulator(wn, pressure_driven=False)
+        sim = wntr.sim.WNTRSimulator(wn, mode='DD')
 
         results1 = sim.run_sim()
 

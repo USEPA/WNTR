@@ -54,7 +54,7 @@ A very simple network with a tank and two nodes all at the same elevation
 ;If minor loss coefficient is 0 and the pipe is open, then the last two columns can be left out.
 ;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
  pipe1              	tank1              	junction1             	1000       	457.2          	100         	0           	Open  	;
- pipe2__A              	junction1              	leak1      		500        	457.2          	100         	0           	Open  	;
+ pipe2              	junction1              	leak1      		500        	457.2          	100         	0           	Open  	;
  pipe2__B		leak1			junction2		500		457.2		100		0		Open	;
 
 

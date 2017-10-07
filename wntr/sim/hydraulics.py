@@ -19,15 +19,15 @@ class HydraulicModel(object):
     wn : WaterNetworkModel object
         Water network model
 
-    pressure_driven: bool (optional)
-        Specifies whether the simulation will be demand-driven or
-        pressure-driven, default = False
+    mode: string (optional)
+        Specifies whether the simulation will be demand-driven (DD) or
+        pressure dependent demand (PDD), default = DD
     """
 
-    def __init__(self, wn, pressure_driven=False):
+    def __init__(self, wn, mode='DD'):
 
         self._wn = wn
-        self.pressure_driven = pressure_driven
+        self.mode = mode
 
         # Global constants
         self._initialize_global_constants()
@@ -474,7 +474,7 @@ class HydraulicModel(object):
         *1: 1 for tanks and reservoirs
             1 for isolated junctions
             0 for junctions if the simulation is demand-driven and the junction is not isolated
-            f(H) for junctions if the simulation is pressure-driven and the junction is not isolated
+            f(H) for junctions if the simulation is pressure dependent demand and the junction is not isolated
         *2: 0 for tanks and reservoirs
             1 for non-isolated junctions
             0 for isolated junctions
@@ -657,7 +657,7 @@ class HydraulicModel(object):
                      [0, 3, 6, 1, 4, 7, 2, 5, 8]
         """
 
-        if not self.pressure_driven:
+        if self.mode == 'DD':
             self.jac_D.data[:self.num_junctions] = self.isolated_junction_array
 
         self.jac_E.data[:self.num_junctions] = 1.0-self.isolated_junction_array
@@ -695,7 +695,7 @@ class HydraulicModel(object):
         heads = x[:self.num_nodes]
         flows = x[self.num_nodes*2:2*self.num_nodes+self.num_links]
 
-        if self.pressure_driven:
+        if self.mode == 'PDD':
             minP = self.minimum_pressures
             nomP = self.nominal_pressures
             j_d = self.junction_demand
@@ -968,7 +968,7 @@ class HydraulicModel(object):
 
     def get_demand_or_head_residual(self, head, demand):
 
-        if self.pressure_driven:
+        if self.mode == 'PDD':
             minP = self.minimum_pressures
             nomP = self.nominal_pressures
             j_d = self.junction_demand

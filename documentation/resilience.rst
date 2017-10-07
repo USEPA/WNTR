@@ -5,10 +5,10 @@
 Resilience metrics
 ======================================
 
-Resilience of water distribution networks refers to the 
-design, maintenance, and operations of that network.  
+Resilience of water distribution systems refers to the 
+design, maintenance, and operations of that system.  
 All these aspects must work together to limit the effects of disasters and 
-enables rapid return to normal delivery of safe water to customers.
+enable rapid return to normal delivery of safe water to customers.
 Numerous resilience metrics have been suggested [USEPA14]_.  
 These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic.
 When quantifying resilience, 
@@ -28,7 +28,7 @@ The following sections outline metrics that can be computed using WNTR, includin
 
 * Economic metrics (:numref:`table-economic-metrics`)
 
-While some metrics define resilience as a single network-wide quantity, other metrics define 
+While some metrics define resilience as a single system-wide quantity, other metrics define 
 quantities that are a function of time, space, or both. 
 For this reason, state transition plots [BaRR13]_  and network graphics
 are useful ways to visualize resilience and compare metrics, as shown in :numref:`fig-metrics`.
@@ -60,7 +60,7 @@ that are placed according to a random process. A real world water distribution s
 between a regular lattice and a random lattice in terms of structure and reliability.
   
 NetworkX includes a wide range of topographic metrics that can be computed using 
-the WntrMutliDiGraph.  WNTR includes additional methods/metrics to help compute 
+the WntrMultiDiGraph.  WNTR includes additional methods/metrics to help compute 
 resilience. These methods are in the :class:`~wntr.network.graph.WntrMultiDiGraph` class.
 Commonly used topographic metrics are listed in :numref:`table-topographic-metrics`.  
 Information on additional topographic metrics supported by NetworkX can be found 
@@ -206,8 +206,8 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
 
 Water quality metrics
 ---------------------
-Water quality metrics are based on concentration or water age; 
-calculation of these metrics require water quality simulation.
+Water quality metrics are based on the concentration or water age. The
+calculation of these metrics require a water quality simulation.
 Water quality metrics included in WNTR are listed in  :numref:`table-water-quality-metrics`.  
 
 .. _table-water-quality-metrics:
@@ -243,10 +243,10 @@ Water security metrics included in WNTR are listed in  :numref:`table-water-secu
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
-   Mass consumed                          Mass consumed is the mass of contaminant that exits the network via node demand at each node-time pair [USEPA15]_.  
+   Mass consumed                          Mass consumed is the mass of a contaminant that exits the network via node demand at each node-time pair [USEPA15]_.  
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.mass_contaminant_consumed` method.
 
-   Volume consumed                        Volume consumed is the volume of contaminant that exits the network via node demand at each node-time pair [USEPA15]_.   
+   Volume consumed                        Volume consumed is the volume of a contaminant that exits the network via node demand at each node-time pair [USEPA15]_.   
                                           A detection limit can be specified.
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.volume_contaminant_consumed` method.
 
@@ -286,6 +286,6 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
                                           Greenhouse gas emissions can be computed 
                                           using the :class:`~wntr.metrics.economic.ghg_emissions` method.
 
-   Pump operating energy and cost         The energy and cost required to operate a pump may be computed using the :class:`~wntr.metrics.economic.pump_energy` method. This
+   Pump operating energy and cost         The energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy` method. This
                                           uses the flowrates and pressures from simulation results to compute pump energy and cost.
    =====================================  ================================================================================================================================================

@@ -21,7 +21,7 @@ class TestTimeControls(unittest.TestCase):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
 
-        sim = self.wntr.sim.WNTRSimulator(self.wn, pressure_driven=True)
+        sim = self.wntr.sim.WNTRSimulator(self.wn, mode='PDD')
         self.results = sim.run_sim()
 
     @classmethod
@@ -59,7 +59,7 @@ class TestConditionalControls(unittest.TestCase):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
 
-        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven=True)
+        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
         results = sim.run_sim()
 
         activated_flag = False
@@ -87,7 +87,7 @@ class TestConditionalControls(unittest.TestCase):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
 
-        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
         results = sim.run_sim()
 
         activated_flag = False
@@ -124,7 +124,7 @@ class TestTankControls(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven=True)
+        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
         results = sim.run_sim()
 
         tank_level_dropped_flag = False
@@ -142,7 +142,7 @@ class TestTankControls(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven=True)
+        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
         results = sim.run_sim()
 
         tank_level_dropped_flag = False
@@ -177,7 +177,7 @@ class TestValveControls(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
         results = sim.run_sim()
 
         for t in results.link.major_axis:
@@ -196,7 +196,7 @@ class TestValveControls(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
         results = sim.run_sim()
 
         flag1 = False
@@ -231,7 +231,7 @@ class TestControlCombinations(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
         results = sim.run_sim()
 
         flag1 = False
@@ -264,7 +264,7 @@ class TestControlCombinations(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
         results = sim.run_sim()
 
         flag1 = False
@@ -297,7 +297,7 @@ class TestControlCombinations(unittest.TestCase):
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, pressure_driven = True)
+        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
         results = sim.run_sim()
 
         flag1 = False

@@ -44,7 +44,7 @@ TRACE_at_node.plot(title='Trace percent, node 208')
 wn.options.quality = 'NONE'
 results = sim.run_sim()
 
-# To run water quality simulation with pressure-driven demands, 
+# To run water quality simulation with pressure dependent demands, 
 # reset demands in the water network using demands computed using the 
 # WNTRSimulator.
 sim = wntr.sim.WNTRSimulator(wn)
