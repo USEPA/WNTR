@@ -1521,11 +1521,6 @@ class _PRVControl(Control):
         self._end_node = wnm.get_node(self._end_node_name)
         self._resistance_coefficient = 0.0826*0.02*self._valve.diameter**(-5)*self._valve.diameter*2.0
 
-    @classmethod
-    def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
-        ca = ControlAction(target_obj, target_attribute, target_value)
-        return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
-
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control. Please see
@@ -1562,6 +1557,73 @@ class _PRVControl(Control):
                 self._action_to_run = self._active_control_action
                 return (True, 0)
             return (False, None)
+
+    def _RunControlActionImpl(self, wnm, priority):
+        """
+        This implements the derived method from Control. Please see
+        the Control class and the documentation for this class.
+        """
+        if self._priority!=priority:
+            return False, None, None
+
+        change_flag, change_tuple, orig_value = self._action_to_run.RunControlAction(self.name)
+        return change_flag, change_tuple, orig_value
+
+
+class _FCVControl(Control):
+    """
+    Parameters
+    ----------
+    wnm: wntr.network.WaterNetworkModel
+    valve: wntr.network.Valve
+    Qtol: float
+    open_control_action: ControlAction
+    active_control_action: ControlAction
+    """
+
+    def __init__(self, wnm, valve, Htol, open_control_action, active_control_action):
+        self.name = 'fcv'
+        self._priority = 3
+        self._valve = valve
+        self._Htol = Htol
+        self._open_control_action = open_control_action
+        self._active_control_action = active_control_action
+        self._action_to_run = None
+        self._start_node_name = valve.start_node
+        self._end_node_name = valve.end_node
+        self._start_node = wnm.get_node(self._start_node_name)
+        self._end_node = wnm.get_node(self._end_node_name)
+
+    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
+        """
+        This implements the derived method from Control. Please see
+        the Control class and the documentation for this class.
+        """
+        if presolve_flag:
+            if self._valve._status == wntr.network.LinkStatus.Active:
+                self._action_to_run = self._open_control_action
+                return True, 0
+            return False, None
+
+        if self._valve._status == wntr.network.LinkStatus.Active:
+            actual_headloss = self._start_node.head - self._end_node.head
+            if actual_headloss < 0: # flow should be negative
+                self._action_to_run = self._open_control_action
+                return True, 0
+            headloss_if_open = (8.0 * self._valve.minor_loss / (9.81 * math.pi**2 * self._valve.diameter**4) *
+                                self._valve.flow ** 2)
+            if actual_headloss + self._Htol < headloss_if_open:
+                self._action_to_run = self._open_control_action
+                return True, 0
+            return False, None
+        elif self._valve._status == wntr.network.LinkStatus.Opened:
+            if self._valve.flow > self._valve.setting:
+                self._action_to_run = self._active_control_action
+                return True, 0
+            return False, None
+        else:
+            raise ValueError('unexpected _status for valve: \n\tValve: {0}\n\t_status: {1}'.format(self._valve,
+                                                                                                   self._valve._status))
 
     def _RunControlActionImpl(self, wnm, priority):
         """

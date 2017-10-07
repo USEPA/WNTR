@@ -7,6 +7,7 @@ import networkx as nx
 import math
 from scipy.optimize import fsolve
 import wntr.network
+import wntr.network.controls
 import wntr.epanet
 import numpy as np
 import sys
@@ -484,12 +485,19 @@ class WaterNetworkModel(object):
         for valve_name, valve in self.links(Valve):
 
             if valve.valve_type == 'PRV':
-                close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.closed)
-                open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.opened)
-                active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.active)
+                close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Closed)
+                open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Opened)
+                active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Active)
 
                 control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
                 control.name = valve.name+' prv control'
+                valve_controls.append(control)
+            elif valve.valve_type == 'FCV':
+                open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Opened)
+                active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Active)
+                control = wntr.network.controls._FCVControl(self, valve, self._Htol, open_control_action,
+                                                            active_control_action)
+                control.name = valve.name + ' FCV control'
                 valve_controls.append(control)
 
         return valve_controls
