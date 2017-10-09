@@ -1621,6 +1621,8 @@ class _FCVControl(Control):
                 self._action_to_run = self._active_control_action
                 return True, 0
             return False, None
+        elif self._valve._status == wntr.network.LinkStatus.Closed:
+            return False, None
         else:
             raise ValueError('unexpected _status for valve: \n\tValve: {0}\n\t_status: {1}'.format(self._valve,
                                                                                                    self._valve._status))
