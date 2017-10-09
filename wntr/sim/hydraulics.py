@@ -371,7 +371,7 @@ class HydraulicModel(object):
                 states: Open valves are assigned an r-value by assuming the open valve acts as a smooth pipe (f = 0.02)
                 whose length is twice the valve diameter. However, when I run Epanet with an open valve, the results
                 are as if there is absolutely no headloss in the valve (assuming the minor loss is 0.0). Here, at least
-                for now, we are seeding to match the behavior of Epanet rather than the manual.
+                for now, we are seeking to match the behavior of Epanet rather than the manual.
 
                 The minor loss on an open valve acts just as the minor loss on a pipe.
                 """
@@ -385,8 +385,10 @@ class HydraulicModel(object):
                     self.pipe_resistance_coefficients[link_id] = 8.0*link.setting/(self._g*math.pi**2*link.diameter**4)
                 elif link_id in self._prv_ids:
                     self.pipe_resistance_coefficients[link_id] = 0.0
+                elif link_id in self._fcv_ids:
+                    self.pipe_resistance_coefficients[link_id] = 0.0
                 else:
-                    raise ValueError('Currently only PRVs and TCVs are supported.')
+                    raise ValueError('Currently only PRVs, FCVs, and TCVs are supported.')
             else:
                 self.pipe_resistance_coefficients[link_id] = 0
             if link_id in self._pump_ids:
@@ -477,9 +479,9 @@ class HydraulicModel(object):
             1 for non-isolated junctions
             0 for isolated junctions
         *3: 0 for closed/isolated links
-                         pipes   head_pumps  power_pumps  active_PRV   open_prv active/openTCV
-            start node    -1        1            f(F)        0             -1         -1
-            end node       1       -1            f(F)        1              1          1
+                         pipes   head_pumps  power_pumps  active_PRV   open_prv active/openTCV   active_FCV   open_FCV
+            start node    -1        1            f(F)        0             -1         -1             0           -1
+            end node       1       -1            f(F)        1              1          1             0            1
         *4: 1 for closed/isolated links
             f(F) for pipes
             f(F) for head pumps
@@ -487,6 +489,8 @@ class HydraulicModel(object):
             0 for active PRVs
             f(F) for open PRVs
             f(F) for open or active TCVs
+            f(F) for open FCVs
+            1 for active FCVs
         *5: 0 for inactive leaks
             0 for leaks at isolated junctions
             f(H-z) otherwise
@@ -666,6 +670,11 @@ class HydraulicModel(object):
             if self.link_status[link_id] == LinkStatus.active:
                 self.jac_F.data[link_id] = 0
 
+        for link_id in self._fcv_ids:
+            if self.link_status[link_id] == LinkStatus.Active:
+                self.jac_F.data[link_id] = 0
+                self.jac_F.data[self.num_links+link_id] = 0
+
         # self.jac_G.data = (self.isolated_link_array + (1.0 - self.closed_link_array) -
         #                        self.isolated_link_array * (1.0 - self.closed_link_array))
 
@@ -783,6 +792,14 @@ class HydraulicModel(object):
                 self.jac_G.data[link_id] = 2.0*self.pipe_minor_loss_coefficients[link_id]*abs(flows[link_id])
             elif self.link_status[link_id] == LinkStatus.Active:
                 self.jac_G.data[link_id] = 2.0*self.pipe_resistance_coefficients[link_id]*abs(flows[link_id])
+
+        for link_id in self._fcv_ids:
+            if self.isolated_link_array[link_id] == 1 or self.closed_link_array[link_id] == 0:
+                self.jac_G.data[link_id] = 1.0
+            elif self.link_status[link_id] == LinkStatus.Opened:
+                self.jac_G.data[link_id] = 2.0*self.pipe_minor_loss_coefficients[link_id]*abs(flows[link_id])
+            elif self.link_status[link_id] == LinkStatus.Active:
+                self.jac_G.data[link_id] = 1.0
 
         for ndx, node_id in enumerate(self._leak_ids):
             if not self.leak_status[node_id]:
@@ -912,7 +929,6 @@ class HydraulicModel(object):
             for link_id in self._prv_ids:
                 link_flow = flow[link_id]
                 end_node_id = self.link_end_nodes[link_id]
-
                 if self.link_status[link_id] == wntr.network.LinkStatus.Closed or link_id in self.isolated_link_ids:
                     self.headloss_residual[link_id] = link_flow
                 elif self.link_status[link_id] == LinkStatus.Active:
@@ -922,9 +938,19 @@ class HydraulicModel(object):
                     pipe_headloss = coeff*abs(flow[link_id])**2
                     self.headloss_residual[link_id] = pipe_headloss - (head_diff_vector[link_id])
 
+            for link_id in self._fcv_ids:
+                link_flow = flow[link_id]
+                if self.link_status[link_id] == wntr.network.LinkStatus.Closed or link_id in self.isolated_link_ids:
+                    self.headloss_residual[link_id] = link_flow
+                elif self.link_status[link_id] == LinkStatus.Active:
+                    self.headloss_residual[link_id] = link_flow - self.valve_settings[link_id]
+                elif self.link_status[link_id] == LinkStatus.Opened:
+                    coeff = self.pipe_minor_loss_coefficients[link_id]
+                    pipe_headloss = np.sign(link_flow) * coeff * abs(link_flow) ** 2
+                    self.headloss_residual[link_id] = pipe_headloss - (head_diff_vector[link_id])
+
             for link_id in self._tcv_ids:
                 link_flow = flow[link_id]
-
                 if self.link_status[link_id] == wntr.network.LinkStatus.Closed or link_id in self.isolated_link_ids:
                     self.headloss_residual[link_id] = link_flow
                 elif self.link_status[link_id] == LinkStatus.Active:
