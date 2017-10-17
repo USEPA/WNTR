@@ -1102,7 +1102,7 @@ class InpFile(object):
 
         f.write('[CONTROLS]\n'.encode('ascii'))
         # Time controls and conditional controls only
-        for text, all_control in wn._control_dict.items():
+        for text, all_control in wn._controls.items():
             if isinstance(all_control, wntr.network.TimeControl):
                 entry = 'Link {link} {setting} AT {compare} {time:g}\n'
                 vals = {'link': all_control._control_action._target_obj_ref.name,
@@ -1192,7 +1192,7 @@ class InpFile(object):
 
     def _write_rules(self, f, wn):
         f.write('[RULES]\n'.encode('ascii'))
-        for text, all_control in wn._control_dict.items():
+        for text, all_control in wn._controls.items():
             entry = '{}\n'
             if isinstance(all_control, wntr.network.controls.IfThenElseControl):
                 rule = _EpanetRule('blah', self.flow_units, self.mass_units)
