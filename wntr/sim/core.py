@@ -179,7 +179,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         pump_controls = self._wn._get_pump_controls()
         valve_controls = self._wn._get_valve_controls()
 
-        self._controls = list(self._wn._control_dict.values())+tank_controls+cv_controls+pump_controls+valve_controls
+        self._controls = list(self._wn._controls.values())+tank_controls+cv_controls+pump_controls+valve_controls
 
         model = HydraulicModel(self._wn, self.mode)
         self._model = model
