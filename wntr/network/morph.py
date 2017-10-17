@@ -38,7 +38,7 @@ class Skeletonize(object):
         # Get a list of junctions and pipes that are associated with controls
         juncs = set()
         pipes = set()
-        for control_name, control in self.wn._control_dict.items():
+        for control_name, control in self.wn._controls.items():
             objs = []
             try:
                 objs.append(control._control_action._target_obj_ref)
