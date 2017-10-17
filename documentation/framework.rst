@@ -143,6 +143,6 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * Head pattern option in the [RESERVOIRS] section
 * Volume curves in the [TANKS] section
 * Rule timestep, pattern start, report start, start clocktime, and statistics in the [TIMES] section
-* PSV, FCV, PBV, and GPV values in the [VALVES] section
+* PSV, PBV, and GPV values in the [VALVES] section
 
 **Future development of WNTR will address these limitations.**

@@ -7,6 +7,7 @@ import networkx as nx
 import math
 from scipy.optimize import fsolve
 import wntr.network
+import wntr.network.controls
 import wntr.epanet
 import numpy as np
 import sys
@@ -35,18 +36,20 @@ class WaterNetworkModel(object):
         self.sim_time = 0.0
         self.prev_sim_time = -np.inf  # the last time at which results were accepted
 
-        # Initialize Network size parameters
+        # Initialize network size parameters
         self._num_junctions = 0
         self._num_reservoirs = 0
         self._num_tanks = 0
         self._num_pipes = 0
         self._num_pumps = 0
         self._num_valves = 0
+        self._num_patterns = 0
+        self._num_curves = 0
         self._num_sources = 0
         self._num_demands = 0
-
-        # Initialize node and link dictionaries
-        # Dictionary of node or link objects indexed by their names
+        self._num_controls = 0
+        
+        # Initialize dictionaries indexed by their names
         self._nodes = {}
         self._links = {}
         self._junctions = {}
@@ -55,19 +58,14 @@ class WaterNetworkModel(object):
         self._pipes = {}
         self._pumps = {}
         self._valves = {}
-
-        # Initialize pattern and curve dictionaries
-        # Dictionary of pattern or curves indexed by their names
         self._patterns = {}
         self._curves = {}
         self._sources = {}
         self._demands = {}
-
+        self._controls = {}
+        
         # Initialize options object
         self.options = WaterNetworkOptions()
-
-        # A list of control objects
-        self._control_dict = {}
 
         # Name of pipes that are check valves
         self._check_valves = []
@@ -88,7 +86,7 @@ class WaterNetworkModel(object):
             self.read_inpfile(inp_file_name)
 
     def __eq__(self, other):
-        #self._control_dict   == other._control_dict   and \
+        #self._controls   == other._controls   and \
         if self._num_junctions  == other._num_junctions  and \
            self._num_reservoirs == other._num_reservoirs and \
            self._num_tanks      == other._num_tanks      and \
@@ -186,113 +184,6 @@ class WaterNetworkModel(object):
         nx.set_node_attributes(self._graph, name='type', values={name: 'tank'})
         self._num_tanks += 1
 
-    def _get_all_tank_controls(self):
-
-        tank_controls = []
-
-        for tank_name, tank in self.nodes(Tank):
-
-            # add the tank controls
-            all_links = self.get_links_for_node(tank_name, 'ALL')
-
-            # First take care of the min level
-            min_head = tank.min_level+tank.elevation
-            for link_name in all_links:
-                link = self.get_link(link_name)
-                link_has_cv = False
-                if isinstance(link, Pipe):
-                    if link.cv:
-                        if link.end_node == tank_name:
-                            continue
-                        else:
-                            link_has_cv = True
-                if isinstance(link, Pump):
-                    if link.end_node == tank_name:
-                        continue
-                    else:
-                        link_has_cv = True
-
-                close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
-                open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
-
-                control = wntr.network.ConditionalControl((tank,'head'), np.less_equal, min_head,close_control_action)
-                control._priority = 1
-                control.name = link_name+' closed because tank '+tank.name+' head is less than min head'
-                tank_controls.append(control)
-
-                if not link_has_cv:
-                    control = wntr.network._MultiConditionalControl([(tank,'head'), (tank, 'prev_head'),
-                                                                    (self, 'sim_time')],
-                                                                   [np.greater, np.less_equal,np.greater],
-                                                                   [min_head+self._Htol, min_head+self._Htol, 0.0],
-                                                                   open_control_action)
-                    control._partial_step_for_tanks = False
-                    control._priority = 0
-                    control.name = link_name+' opened because tank '+tank.name+' head is greater than min head'
-                    tank_controls.append(control)
-
-                    if link.start_node == tank_name:
-                        other_node_name = link.end_node
-                    else:
-                        other_node_name = link.start_node
-                    other_node = self.get_node(other_node_name)
-                    control = wntr.network._MultiConditionalControl([(tank,'head'),(tank,'head')],
-                                                                   [np.less_equal,np.less_equal],
-                                                                   [min_head+self._Htol,(other_node,'head')],
-                                                                   open_control_action)
-                    control._priority = 2
-                    control.name = (link_name+' opened because tank '+tank.name+
-                                    ' head is below min head but flow should be in')
-                    tank_controls.append(control)
-
-            # Now take care of the max level
-            max_head = tank.max_level+tank.elevation
-            for link_name in all_links:
-                link = self.get_link(link_name)
-                link_has_cv = False
-                if isinstance(link, Pipe):
-                    if link.cv:
-                        if link.start_node==tank_name:
-                            continue
-                        else:
-                            link_has_cv = True
-                if isinstance(link, Pump):
-                    if link.start_node==tank_name:
-                        continue
-                    else:
-                        link_has_cv = True
-
-                close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
-                open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
-
-                control = wntr.network.ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
-                control._priority = 1
-                control.name = link_name+' closed because tank '+tank.name+' head is greater than max head'
-                tank_controls.append(control)
-
-                if not link_has_cv:
-                    control = wntr.network._MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
-                    control._partial_step_for_tanks = False
-                    control._priority = 0
-                    control.name = link_name+'opened because tank '+tank.name+' head is less than max head'
-                    tank_controls.append(control)
-
-                    if link.start_node == tank_name:
-                        other_node_name = link.end_node
-                    else:
-                        other_node_name = link.start_node
-                    other_node = self.get_node(other_node_name)
-                    control = wntr.network._MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater_equal],[max_head-self._Htol,(other_node,'head')],open_control_action)
-                    control._priority = 2
-                    control.name = link_name+' opened because tank '+tank.name+' head above max head but flow should be out'
-                    tank_controls.append(control)
-
-                #control = wntr.network._MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
-                #control._priority = 2
-                #self.add_control(control)
-
-        return tank_controls
-
     def add_reservoir(self, name, base_head=0.0, head_pattern_name=None, coordinates=None):
         """
         Adds a reservoir to the water network model.
@@ -363,31 +254,6 @@ class WaterNetworkModel(object):
         nx.set_edge_attributes(self._graph, name='type', values={(start_node_name, end_node_name, name):'pipe'})
         self._num_pipes += 1
 
-    def _get_cv_controls(self):
-        cv_controls = []
-        for pipe_name in self._check_valves:
-            pipe = self.get_link(pipe_name)
-
-            close_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.closed)
-            open_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.opened)
-
-            control = wntr.network._CheckValveHeadControl(self, pipe, np.greater, self._Htol, open_control_action)
-            control._priority = 0
-            control.name = pipe.name+'opened because of cv head control'
-            cv_controls.append(control)
-
-            control = wntr.network._CheckValveHeadControl(self, pipe, np.less, -self._Htol, close_control_action)
-            control._priority = 3
-            control.name = pipe.name+' closed because of cv head control'
-            cv_controls.append(control)
-
-            control = wntr.network.ConditionalControl((pipe,'flow'),np.less, -self._Qtol, close_control_action)
-            control._priority = 3
-            control.name = pipe.name+' closed because negative flow in cv'
-            cv_controls.append(control)
-
-        return cv_controls
-
     def add_pump(self, name, start_node_name, end_node_name, info_type='POWER', info_value=50.0,
                  speed=1.0, pattern=None):
         """
@@ -416,31 +282,7 @@ class WaterNetworkModel(object):
         self._graph.add_edge(start_node_name, end_node_name, key=name)
         nx.set_edge_attributes(self._graph, name='type', values={(start_node_name, end_node_name, name):'pump'})
         self._num_pumps += 1
-
-    def _get_pump_controls(self):
-        pump_controls = []
-        for pump_name, pump in self.links(Pump):
-
-            close_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.closed)
-            open_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.opened)
-
-            control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
-            control._priority = 0
-            control.name = pump.name+' opened because of cv head control'
-            pump_controls.append(control)
-
-            control = wntr.network._CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
-            control._priority = 3
-            control.name = pump.name+' closed because of cv head control'
-            pump_controls.append(control)
-
-            control = wntr.network.ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
-            control._priority = 3
-            control.name = pump.name+' closed because negative flow in pump'
-            pump_controls.append(control)
-
-        return pump_controls
-
+    
     def add_valve(self, name, start_node_name, end_node_name,
                  diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
         """
@@ -479,21 +321,6 @@ class WaterNetworkModel(object):
         nx.set_edge_attributes(self._graph, name='type', values={(start_node_name, end_node_name, name):'valve'})
         self._num_valves += 1
 
-    def _get_valve_controls(self):
-        valve_controls = []
-        for valve_name, valve in self.links(Valve):
-
-            if valve.valve_type == 'PRV':
-                close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.closed)
-                open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.opened)
-                active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.active)
-
-                control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
-                control.name = valve.name+' prv control'
-                valve_controls.append(control)
-
-        return valve_controls
-
     def add_pattern(self, name, pattern_list=None, start_time=None, end_time=None):
         """
         Adds a pattern to the water network model.
@@ -522,7 +349,8 @@ class WaterNetworkModel(object):
             pattern_list[patternstart:patternend] = [1.0]*(patternend-patternstart)
 
         self._patterns[name] = pattern_list
-
+        self._num_patterns += 1
+        
     def add_curve(self, name, curve_type, xy_tuples_list):
         """
         Adds a curve to the water network model.
@@ -538,7 +366,8 @@ class WaterNetworkModel(object):
         """
         curve = Curve(name, curve_type, xy_tuples_list)
         self._curves[name] = curve
-
+        self._num_curves += 1
+        
     def add_source(self, name, node_name, source_type, quality, pattern_name):
         """
         Adds a source to the water network model.
@@ -581,7 +410,7 @@ class WaterNetworkModel(object):
         control_object : Control object
             Control object.
         """
-        if name in self._control_dict:
+        if name in self._controls:
             raise ValueError('The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control.')
 
         if not isinstance(control_object, wntr.network.controls.IfThenElseControl):
@@ -594,7 +423,8 @@ class WaterNetworkModel(object):
                 if type(start_node)==Tank or type(end_node)==Tank:
                     logger.warning('Controls should not be added to links that are connected to tanks. Consider adding an additional link and using the control on it. Note that this will become an error in the next release.')
             control_object.name = name
-        self._control_dict[name] = control_object
+        self._controls[name] = control_object
+        self._num_controls += 1
 
     def add_pump_outage(self, pump_name, start_time, end_time):
         """
@@ -662,12 +492,12 @@ class WaterNetworkModel(object):
            False, no controls will be removed.
         """
         link = self.get_link(name)
-        if link.cv:
-            self._check_valves.remove(name)
-            logger.warn('You are removing a pipe with a check valve.')
         self._graph.remove_edge(link.start_node, link.end_node, key=name)
         self._links.pop(name)
         if isinstance(link, Pipe):
+            if link.cv:
+                self._check_valves.remove(name)
+                logger.warn('You are removing a pipe with a check valve.')
             self._num_pipes -= 1
             self._pipes.pop(name)
         elif isinstance(link, Pump):
@@ -681,7 +511,7 @@ class WaterNetworkModel(object):
 
         if with_control:
             x=[]
-            for control_name, control in self._control_dict.items():
+            for control_name, control in self._controls.items():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
                         logger.warn('Control '+control_name+' is being removed along with link '+name)
@@ -693,7 +523,7 @@ class WaterNetworkModel(object):
             for i in x:
                 self.remove_control(i)
         else:
-            for control_name, control in self._control_dict.items():
+            for control_name, control in self._controls.items():
                 if type(control)==wntr.network._PRVControl:
                     if link==control._close_control_action._target_obj_ref:
                         logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
@@ -731,7 +561,7 @@ class WaterNetworkModel(object):
 
         if with_control:
             x = []
-            for control_name, control in self._control_dict.items():
+            for control_name, control in self._controls.items():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
                         logger.warn('Control '+control_name+' is being removed along with node '+name)
@@ -743,7 +573,7 @@ class WaterNetworkModel(object):
             for i in x:
                 self.remove_control(i)
         else:
-            for control_name, control in self._control_dict.items():
+            for control_name, control in self._controls.items():
                 if type(control)==wntr.network._PRVControl:
                     if node==control._close_control_action._target_obj_ref:
                         logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
@@ -751,6 +581,30 @@ class WaterNetworkModel(object):
                     if node == control._control_action._target_obj_ref:
                         logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
 
+    def remove_pattern(self, name):
+        """
+        Removes a pattern from the water network model.
+
+        Parameters
+        ----------
+        name : string
+           The name of the pattern object to be removed.
+        """
+        del self._patterns[name]
+        self._num_patterns -= 1
+        
+    def remove_curve(self, name):
+        """
+        Removes a curve from the water network model.
+
+        Parameters
+        ----------
+        name : string
+           The name of the curve object to be removed.
+        """
+        del self._curves[name]
+        self._num_curves -= 1
+        
     def remove_source(self, name):
         """
         Removes a source from the water network model.
@@ -763,6 +617,18 @@ class WaterNetworkModel(object):
         del self._sources[name]
         self._num_sources -= 1
 
+    def _remove_demand(self, name):
+        """
+        Removes a demand from the water network model.
+
+        Parameters
+        ----------
+        name : string
+           The name of the demand object to be removed.
+        """
+        del self._demands[name]
+        self._num_demands -= 1
+    
     def remove_control(self, name):
         """
         Removes a control from the water network model.
@@ -773,8 +639,9 @@ class WaterNetworkModel(object):
         name : string
            The name of the control object to be removed.
         """
-        del self._control_dict[name]
-
+        del self._controls[name]
+        self._num_controls -= 1
+        
     def _discard_control(self, name):
         """
         Removes a control from the water network model.
@@ -786,7 +653,8 @@ class WaterNetworkModel(object):
            The name of the control object to be removed.
         """
         try:
-            del self._control_dict[name]
+            del self._controls[name]
+            self._num_controls -= 1
         except KeyError:
             pass
 
@@ -1148,21 +1016,36 @@ class WaterNetworkModel(object):
         """
         return self._links[name]
 
-    def get_control(self, name):
+    def get_pattern(self, name):
         """
-        Returns the control object of a specific control.
+        Returns the pattern object of a specific pattern.
 
         Parameters
         ----------
-        name: string
-           Name of the control
+        name : string
+            Name of the pattern.
 
         Returns
         --------
-        Control object.
+        Pattern object.
         """
-        return self._control_dict[name]
+        return self._patterns[name]
 
+    def get_curve(self, name):
+        """
+        Returns the curve object of a specific curve.
+
+        Parameters
+        ----------
+        name : string
+            Name of the curve.
+
+        Returns
+        --------
+        Curve object.
+        """
+        return self._curves[name]
+    
     def get_source(self, name):
         """
         Returns the source object of a specific source.
@@ -1177,6 +1060,36 @@ class WaterNetworkModel(object):
         Source object.
         """
         return self._sources[name]
+    
+    def _get_demand(self, name):
+        """
+        Returns the demand object of a specific demand.
+
+        Parameters
+        ----------
+        name: string
+           Name of the demand
+
+        Returns
+        --------
+        Demand object.
+        """
+        return self._demands[name]
+    
+    def get_control(self, name):
+        """
+        Returns the control object of a specific control.
+
+        Parameters
+        ----------
+        name: string
+           Name of the control
+
+        Returns
+        --------
+        Control object.
+        """
+        return self._controls[name]
 
     def get_links_for_node(self, node_name, flag='ALL'):
         """
@@ -1234,36 +1147,6 @@ class WaterNetworkModel(object):
             coordinates_dict = nx.get_node_attributes(self._graph, 'pos')
             return coordinates_dict
 
-    def get_curve(self, name):
-        """
-        Returns the curve object of a specific curve.
-
-        Parameters
-        ----------
-        name : string
-            Name of the curve.
-
-        Returns
-        --------
-        Curve object.
-        """
-        return self._curves[name]
-
-    def get_pattern(self, name):
-        """
-        Returns the pattern object of a specific pattern.
-
-        Parameters
-        ----------
-        name : string
-            Name of the pattern.
-
-        Returns
-        --------
-        Pattern object.
-        """
-        return self._patterns[name]
-
     def get_graph_deep_copy(self):
         """
         Returns a deep copy of the WaterNetworkModel networkx graph.
@@ -1274,6 +1157,184 @@ class WaterNetworkModel(object):
         """
         return copy.deepcopy(self._graph)
 
+    def _get_all_tank_controls(self):
+
+        tank_controls = []
+
+        for tank_name, tank in self.nodes(Tank):
+
+            # add the tank controls
+            all_links = self.get_links_for_node(tank_name, 'ALL')
+
+            # First take care of the min level
+            min_head = tank.min_level+tank.elevation
+            for link_name in all_links:
+                link = self.get_link(link_name)
+                link_has_cv = False
+                if isinstance(link, Pipe):
+                    if link.cv:
+                        if link.end_node == tank_name:
+                            continue
+                        else:
+                            link_has_cv = True
+                if isinstance(link, Pump):
+                    if link.end_node == tank_name:
+                        continue
+                    else:
+                        link_has_cv = True
+
+                close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
+                open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
+
+                control = wntr.network.ConditionalControl((tank,'head'), np.less_equal, min_head,close_control_action)
+                control._priority = 1
+                control.name = link_name+' closed because tank '+tank.name+' head is less than min head'
+                tank_controls.append(control)
+
+                if not link_has_cv:
+                    control = wntr.network._MultiConditionalControl([(tank,'head'), (tank, 'prev_head'),
+                                                                    (self, 'sim_time')],
+                                                                   [np.greater, np.less_equal,np.greater],
+                                                                   [min_head+self._Htol, min_head+self._Htol, 0.0],
+                                                                   open_control_action)
+                    control._partial_step_for_tanks = False
+                    control._priority = 0
+                    control.name = link_name+' opened because tank '+tank.name+' head is greater than min head'
+                    tank_controls.append(control)
+
+                    if link.start_node == tank_name:
+                        other_node_name = link.end_node
+                    else:
+                        other_node_name = link.start_node
+                    other_node = self.get_node(other_node_name)
+                    control = wntr.network._MultiConditionalControl([(tank,'head'),(tank,'head')],
+                                                                   [np.less_equal,np.less_equal],
+                                                                   [min_head+self._Htol,(other_node,'head')],
+                                                                   open_control_action)
+                    control._priority = 2
+                    control.name = (link_name+' opened because tank '+tank.name+
+                                    ' head is below min head but flow should be in')
+                    tank_controls.append(control)
+
+            # Now take care of the max level
+            max_head = tank.max_level+tank.elevation
+            for link_name in all_links:
+                link = self.get_link(link_name)
+                link_has_cv = False
+                if isinstance(link, Pipe):
+                    if link.cv:
+                        if link.start_node==tank_name:
+                            continue
+                        else:
+                            link_has_cv = True
+                if isinstance(link, Pump):
+                    if link.start_node==tank_name:
+                        continue
+                    else:
+                        link_has_cv = True
+
+                close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
+                open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
+
+                control = wntr.network.ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
+                control._priority = 1
+                control.name = link_name+' closed because tank '+tank.name+' head is greater than max head'
+                tank_controls.append(control)
+
+                if not link_has_cv:
+                    control = wntr.network._MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
+                    control._partial_step_for_tanks = False
+                    control._priority = 0
+                    control.name = link_name+'opened because tank '+tank.name+' head is less than max head'
+                    tank_controls.append(control)
+
+                    if link.start_node == tank_name:
+                        other_node_name = link.end_node
+                    else:
+                        other_node_name = link.start_node
+                    other_node = self.get_node(other_node_name)
+                    control = wntr.network._MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater_equal],[max_head-self._Htol,(other_node,'head')],open_control_action)
+                    control._priority = 2
+                    control.name = link_name+' opened because tank '+tank.name+' head above max head but flow should be out'
+                    tank_controls.append(control)
+
+                #control = wntr.network._MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
+                #control._priority = 2
+                #self.add_control(control)
+
+        return tank_controls
+
+    def _get_cv_controls(self):
+        cv_controls = []
+        for pipe_name in self._check_valves:
+            pipe = self.get_link(pipe_name)
+
+            close_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.closed)
+            open_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.opened)
+
+            control = wntr.network._CheckValveHeadControl(self, pipe, np.greater, self._Htol, open_control_action)
+            control._priority = 0
+            control.name = pipe.name+'opened because of cv head control'
+            cv_controls.append(control)
+
+            control = wntr.network._CheckValveHeadControl(self, pipe, np.less, -self._Htol, close_control_action)
+            control._priority = 3
+            control.name = pipe.name+' closed because of cv head control'
+            cv_controls.append(control)
+
+            control = wntr.network.ConditionalControl((pipe,'flow'),np.less, -self._Qtol, close_control_action)
+            control._priority = 3
+            control.name = pipe.name+' closed because negative flow in cv'
+            cv_controls.append(control)
+
+        return cv_controls
+    
+    def _get_pump_controls(self):
+        pump_controls = []
+        for pump_name, pump in self.links(Pump):
+
+            close_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.closed)
+            open_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.opened)
+
+            control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
+            control._priority = 0
+            control.name = pump.name+' opened because of cv head control'
+            pump_controls.append(control)
+
+            control = wntr.network._CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
+            control._priority = 3
+            control.name = pump.name+' closed because of cv head control'
+            pump_controls.append(control)
+
+            control = wntr.network.ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
+            control._priority = 3
+            control.name = pump.name+' closed because negative flow in pump'
+            pump_controls.append(control)
+
+        return pump_controls
+
+    def _get_valve_controls(self):
+        valve_controls = []
+        for valve_name, valve in self.links(Valve):
+
+            if valve.valve_type == 'PRV':
+                close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Closed)
+                open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Opened)
+                active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Active)
+
+                control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
+                control.name = valve.name+' prv control'
+                valve_controls.append(control)
+            elif valve.valve_type == 'FCV':
+                open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Opened)
+                active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Active)
+                control = wntr.network.controls._FCVControl(self, valve, self._Htol, open_control_action,
+                                                            active_control_action)
+                control.name = valve.name + ' FCV control'
+                valve_controls.append(control)
+
+        return valve_controls
+    
     def query_node_attribute(self, attribute, operation=None, value=None, node_type=None):
         """
         Query node attributes, for example get all nodes with elevation <= threshold.
@@ -1379,7 +1440,7 @@ class WaterNetworkModel(object):
             except AttributeError:
                 pass
         return link_attribute_dict
-
+    
     @property
     def num_nodes(self):
         """
@@ -1414,7 +1475,7 @@ class WaterNetworkModel(object):
         Returns the number of links in the water network model.
         """
         return len(self._links)
-
+    
     @property
     def num_pipes(self):
         """
@@ -1435,7 +1496,42 @@ class WaterNetworkModel(object):
         Returns the number of valves in the water network model.
         """
         return self._num_valves
-
+    
+    @property
+    def num_patterns(self):
+        """
+        Returns the number of patterns in the water network model.
+        """
+        return self._num_patterns
+    
+    @property
+    def num_curves(self):
+        """
+        Returns the number of curves in the water network model.
+        """
+        return self._num_curves
+    
+    @property
+    def num_sources(self):
+        """
+        Returns the number of sources in the water network model.
+        """
+        return self._num_valves
+    
+    @property
+    def __num_demands(self):
+        """
+        Returns the number of demands in the water network model.
+        """
+        return self._num_demands
+    
+    @property
+    def num_controls(self):
+        """
+        Returns the number of controls in the water network model.
+        """
+        return self._num_controls
+    
     def nodes(self, node_type=None):
         """
         Returns a generator to iterate over all nodes of a specific node type.
@@ -1573,6 +1669,17 @@ class WaterNetworkModel(object):
         for name, link in self._valves.items():
             yield name, link
 
+    def patterns(self):
+        """
+        Returns a generator to iterate over all patterns.
+
+        Returns
+        -------
+        A generator in the format (name, object).
+        """
+        for pattern_name, pattern in self._patterns.items():
+            yield pattern_name, pattern
+    
     def curves(self):
         """
         Returns a generator to iterate over all curves.
@@ -1594,7 +1701,29 @@ class WaterNetworkModel(object):
         """
         for source_name, source in self._sources.items():
             yield source_name, source
+        
+    def _demands(self):
+        """
+        Returns a generator to iterate over all demands.
 
+        Returns
+        -------
+        A generator in the format (name, object).
+        """
+        for demand_name, demand in self._demands.items():
+            yield demand_name, demand
+    
+    def controls(self):
+        """
+        Returns a generator to iterate over all controls.
+
+        Returns
+        -------
+        A generator in the format (name, object).
+        """
+        for control_name, control in self._controls.items():
+            yield control_name, control
+            
     @property
     def node_name_list(self):
         """
@@ -1651,6 +1780,41 @@ class WaterNetworkModel(object):
         """
         return list(self._valves.keys())
 
+    @property
+    def pattern_name_list(self):
+        """
+        Returns a list of the names of all patterns.
+        """
+        return list(self._patterns.keys())
+
+    @property
+    def curve_name_list(self):
+        """
+        Returns a list of the names of all curves.
+        """
+        return list(self._curves.keys())
+    
+    @property
+    def source_name_list(self):
+        """
+        Returns a list of the names of all sources.
+        """
+        return list(self._sources.keys())
+    
+    @property
+    def _demand_name_list(self):
+        """
+        Returns a list of the names of all demands.
+        """
+        return list(self._demands.keys())
+    
+    @property
+    def control_name_list(self):
+        """
+        Returns a list of the names of all controls.
+        """
+        return list(self._controls.keys())
+    
     def set_node_coordinates(self, name, coordinates):
         """
         Sets the node coordinates in the networkx graph.
