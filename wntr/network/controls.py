@@ -6,6 +6,7 @@ simulation.
 import wntr
 import math
 import enum
+import six
 import numpy as np
 import logging
 
@@ -90,7 +91,7 @@ class Comparison(enum.Enum):
 
     @classmethod
     def parse(cls, func):
-        if isinstance(func, str) or isinstance(func, unicode):
+        if isintance(func, six.string_types):
             func = func.lower().strip()
         if func in [np.equal, '=', 'eq', '-eq', '==', 'is', 'equal', 'equal to']:
             return cls.eq
