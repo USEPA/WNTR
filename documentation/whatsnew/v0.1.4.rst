@@ -3,4 +3,4 @@
 v0.1.4 (Master branch)
 ---------------------------------------------------
 
-
+* Added support for FCVs in the WNTRSimulator

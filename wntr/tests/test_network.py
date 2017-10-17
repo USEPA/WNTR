@@ -205,11 +205,11 @@ class TestNetworkMethods(unittest.TestCase):
         control = self.TimeControl(wn, 3652, 'SIM_TIME', False, action)
         wn.add_control('tank_control', control)
 
-        controls_1 = copy.deepcopy(wn._control_dict)
+        controls_1 = copy.deepcopy(wn._controls)
 
         wn.remove_node('tank1')
 
-        controls_2 = copy.deepcopy(wn._control_dict)
+        controls_2 = copy.deepcopy(wn._controls)
 
         self.assertEqual(True, 'tank_control' in controls_1.keys())
         self.assertEqual(False, 'tank_control' in controls_2.keys())
@@ -228,11 +228,11 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_control('control_1',control)
 
         import copy
-        controls_1 = copy.deepcopy(wn._control_dict)
+        controls_1 = copy.deepcopy(wn._controls)
 
         wn.remove_link('21')
 
-        controls_2 = copy.deepcopy(wn._control_dict)
+        controls_2 = copy.deepcopy(wn._controls)
         self.assertEqual(True, 'control_1' in controls_1.keys())
         self.assertEqual(False, 'control_1' in controls_2.keys())
 
@@ -517,8 +517,8 @@ class TestInpFileWriter(unittest.TestCase):
 
     ### TODO
 #    def test_controls(self):
-#        for name1, control1 in self.wn._control_dict.items():
-#            control2 = self.wn2._control_dict[name1]
+#        for name1, control1 in self.wn._controls.items():
+#            control2 = self.wn2._controls[name1]
 #            self.assertEqual(control1 == control2, True)
 
     def test_options(self):
