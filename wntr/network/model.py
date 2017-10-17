@@ -3282,10 +3282,6 @@ class Pattern(object):
         return self.multipliers[step]
 
 
-class ConstantPattern(Pattern):
-    
-
-
 class Demand(object):
     """Defines a demand or set of demands to be assigned to a node"""
     def __init__(self, base, pattern, name=None, category=None):
