@@ -3078,6 +3078,105 @@ class Energy(object):
         self.demand_charge = None
         """Added cost per maximum kW usage during the simulation period"""
 
+
+class Pattern(object):
+    """Defines a multiplier pattern (series of multiplier factors)"""
+    def __init__(self, name, multipliers, step_size=None, step_start=0, wrap=True):
+        self.name = name
+        """The name should be unique"""
+        self.multipliers = multipliers
+        """The array of multipliers (list or numpy array)"""
+        self.step_size = step_size
+        """The length of the pattern step in seconds (int); if undefined, the 'at_time' method will fail"""
+        self.step_start = step_start
+        """The time when the pattern starts in seconds (default 0)"""
+        self.wrap = wrap
+        """If wrap (default true) then repeat pattern forever, otherwise return 0 if exceeds length"""
+        
+    def __str__(self):
+        return '<Pattern "%s">'%self.name
+        
+    def __len__(self):
+        return len(self.multipliers)
+    
+    def __getitem__(self, index):
+        return self.multipliers[index%len(self.multipliers)]
+
+    def at_step(self, step):
+        if not self.wrap and (step >= len(self.multipliers) or step < 0):
+            return 0.0
+        return self.multipliers[step%len(self.multipliers)]
+
+    def at_time(self, time):
+        """The pattern value at 'time', given in seconds since start of simulation"""
+        if self.step_size is None:
+            raise ValueError("Pattern '%s' must have a step_size defined to use the at_time function"%self.name)
+        nmult = len(self.multipliers)
+        step = ((time+self.step_start)/self.step_size)%nmult
+        if not self.wrap and step >= nmult:
+            return 0.0
+        return self.multipliers[step]
+
+
+class ConstantPattern(Pattern):
+    
+
+
+class Demand(object):
+    """Defines a demand or set of demands to be assigned to a node"""
+    def __init__(self, base, pattern, name=None, category=None):
+        self.demands = []
+        self.add(base, pattern, category)
+        self.name = name if name else id(self)
+        """Optional name for debugging ease"""
+        
+    def __str__(self):
+        return '<Demand "%s">'%self.name
+        
+    def __len__(self):
+        return len(self.base_demands)
+    
+    def __getitem__(self, index):
+        """Returns a tuple of (base, pattern) from the given index"""
+        return self.demands[index]
+    
+    def add(self, base, pattern, category=None):
+        if not isinstance(base, int) and not isinstance(base, float):
+            raise ValueError('Demand "base" must be a number')
+        if not isinstance(pattern, Pattern):
+            raise ValueError('Demand "pattern" must be a Pattern object')
+        self.demands.append((base, pattern, category))
+
+    def remove(self, index):
+        """Remove an entry that exactly matches the (base, pattern) pair"""
+        return self.demands.remove(index)
+
+    def at_step(self, step):
+        """Get the total demand at a given step index"""
+        return sum([base * pat.at_step[step] for base, pat, _ in self.demands])
+
+    def at_time(self, time):
+        """Get the total demand at a given time - Demand objects must have been initialized with a step size"""
+        return sum([base * pat.at_time[time] for base, pat, _ in self.demands])
+
+    @property
+    def categories(self):
+        """Set of all category names within this Demand"""
+        return set([cat for _, _, cat in self.demands])
+
+    def category_base(self, category=None):
+        """Get the sum of all base demands for a category"""
+        return sum([base for base, _, cat in self.demands if cat == category])
+
+    def category_at_step(self, category, step):
+        """Get the total demand at a given step index"""
+        return sum([base * pat.at_step[step] for base, pat, cat in self.demands if cat == category])
+
+    def category_at_time(self, category, time):
+        """Get the total demand at a given time - Demand objects must have been initialized with a step size"""
+        return sum([base * pat.at_time[time] for base, pat, cat in self.demands if cat == category])
+
+
 class _Demands(object):
     def __init__(self, name, junction_name=None, base_demand=None, demand_pattern_name=None):
         self.name = name
