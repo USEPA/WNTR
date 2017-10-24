@@ -294,10 +294,17 @@ class SolverOptions(object):
         return False
 
 
+class UserOptions(object):
+    def __init__(self):
+        """This is a generic user options dictionary to allow for private extensions"""
+        pass
+
+
 class WaterNetworkOptions(object):
     """
     A class to manage options.  These options mimic options in the EPANET User Manual.
     """
+    __slots__ = ['time','general','results','quality','energy','solver','graphics','user']
 
     def __init__(self):
         self.time = TimeOptions()
@@ -307,6 +314,13 @@ class WaterNetworkOptions(object):
         self.energy = EnergyOptions()
         self.solver = SolverOptions()
         self.graphics = GraphicsOptions()
+        self.user = UserOptions()
+        
+    def __getstate__(self):
+        return self.time, self.general, self.results, self.quality, self.energy, self.solver, self.graphics, self.user
+    
+    def __setstate__(self, state):
+        self.time, self.general, self.results, self.quality, self.energy, self.solver, self.graphics, self.user = state
         
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -314,10 +328,9 @@ class WaterNetworkOptions(object):
         ###  self.units == other.units and \
         if self.time == other.time and \
            self.general == other.general and \
-           self.results == other.results and \
            self.quality == other.quality and \
            self.energy == other.energy and \
-           self.solver == other.solver and \
-           self.graphics == other.graphics:
+           self.results.statistic == other.results.statistic and \
+           self.solver == other.solver:
                return True
         return False

@@ -6,7 +6,6 @@ import enum
 import numpy as np
 import six
 
-
 class Curve(object):
     """
     Curve class.
@@ -27,20 +26,6 @@ class Curve(object):
         self.points.sort()
         self.num_points = len(points)
         self._headloss_function = None
-
-    @property
-    def wn_args(self):
-        return {'name': self.name, 
-                'curve_type': self.curve_type, 
-                'xy_tuples_list': self.points,
-                }
-
-    def validate(self, water_network_model):
-        if self.name not in water_network_model.curve_name_list:
-            raise KeyError('My name "{}" is not in the curve list!'.format(self.name))
-    
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
 
     def __eq__(self, other):
         if type(self) != type(other):
@@ -98,33 +83,22 @@ class Pattern(object):
         """The name should be unique"""
         if isinstance(multipliers, (int, float)):
             multipliers = [multipliers]
-        self._multipliers = multipliers
+        self._multipliers = np.array(multipliers)
         """The array of multipliers (list or numpy array)"""
         self.step_size = step_size
         self.step_start = step_start
         self.wrap = wrap
         """If wrap (default true) then repeat pattern forever, otherwise return 0 if exceeds length"""
 
-    def validate(self, water_network_model):
-        if self.name not in water_network_model.curve_name_list:
-            raise KeyError('My name "{}" is not in the pattern list!'.format(self.name))
-    
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
-    
-    @property
-    def wn_args(self):
-        return {'name': self.name,
-                'pattern_list': multipliers}
-    
     @classmethod
-    def BinaryPattern(cls, name, step_size, start_time, end_time):
+    def BinaryPattern(cls, name, step_size, start_time, end_time, duration):
         """Factory method to create a binary pattern (single instance of step up, step down)"""
         patternstep = step_size
         patternlen = int(end_time/patternstep)
         patternstart = int(start_time/patternstep)
         patternend = int(end_time/patternstep)
-        pattern_list = [0.0]*patternlen
+        patterndur = int(duration/patternstep)
+        pattern_list = [0.0]*patterndur
         pattern_list[patternstart:patternend] = [1.0]*(patternend-patternstart)
         return cls(name, multipliers=pattern_list, step_size=patternstep, wrap=False)
     
@@ -141,9 +115,7 @@ class Pattern(object):
            self.step_start != other.step_start or \
            self.wrap != other.wrap:
             return False
-        cmp1 = np.array(self._multipliers)
-        cmp2 = np.array(other._multipliers)
-        return np.all(np.abs(cmp1-cmp2)<1.0e-10)
+        return np.all(np.abs(self._multipliers-other._multipliers)<1.0e-10)
 
     def __hash__(self):
         return hash(self.name)
@@ -162,50 +134,50 @@ class Pattern(object):
     @multipliers.setter
     def multipliers(self, values):
         if isinstance(values, (int, float, complex)):
-            self._multipliers = [values]
+            self._multipliers = np.array([values])
         elif not isinstance(values, list):
-            self._multipliers = list(values)
+            self._multipliers = np.array(values)
 
     def at_step(self, step):
         """Get the multiplier appropriate for step"""
         nmult = len(self._multipliers)
-        if nmult == 0:                          return 1.0
-        elif nmult == 1:                        return self._multipliers[0]
-        elif self.wrap:                         return self._multipliers[step%nmult]
+#        if nmult == 0:                          return 1.0
+#        elif nmult == 1:                        return self._multipliers[0]
+        if self.wrap:                         return self._multipliers[step%nmult]
         elif step < 0 or step >= nmult:         return 0.0
         return self._multipliers[step]
     __getitem__ = at_step
 
     def at_time(self, time):
         """The pattern value at 'time', given in seconds since start of simulation"""
-        step = ((time+self.step_start)/self.step_size)
-        return self.at_step(step)
+        step = ((time+self.step_start)//self.step_size)
+        nmult = len(self._multipliers)
+#        elif nmult == 1:                        return self._multipliers[0]
+        if self.wrap:                         return self._multipliers[step%nmult]
+        elif step < 0 or step >= nmult:         return 0.0
+        return self._multipliers[step]
     __call__ = at_time
 
 
 class TimeVaryingValue(object):
-    def __init__(self, base=None, pattern_name=None, category=None):
+    def __init__(self, base=None, pattern=None, name=None):
         """A simple time varying value.
-        Requires a base value, a pattern  of multipliers (optional) and a category name (optional)"""
+        Requires a base value, a pattern (optional) and a  name (optional)"""
         if base and not isinstance(base, (int, float, complex)):
             raise ValueError('TimeVaryingValue->base must be a number')
-        if isinstance(pattern, str):
-            self._pattern_name = pattern
-            self._pattern = None
-        elif isinstance(pattern, Pattern):
+        if isinstance(pattern, Pattern):
             self._pattern = pattern
-            self._pattern_name = pattern.name
         elif pattern is None:
             self._pattern = None
-            self._pattern_name = None
         else:
-            raise ValueError('TimeVaryingValue->pattern must be a Pattern object or None')
+            raise ValueError('TimeVaryingValue(pattern) must be a string, Pattern object, or None')
         if base is None: base = 0.0
         self._base = base
-        self._category = category
+        self._name = name
         
     def __nonzero__(self):
         return self._base
+    __bool__ = __nonzero__
 
     def __str__(self):
         return repr(self)
@@ -215,7 +187,7 @@ class TimeVaryingValue(object):
 
     def __repr__(self):
         fmt = "<TimeVaryingValue: {}, {}, category={}>"
-        return fmt.format(self._base, self._pattern, repr(self._category))
+        return fmt.format(self._base, self._pattern, repr(self._name))
     
     @property
     def base_value(self):
@@ -223,46 +195,34 @@ class TimeVaryingValue(object):
     
     @property
     def pattern_name(self):
-        return self._pattern_name
-    
-    @pattern_name.setter
-    def pattern_name(self, pattern_name):
-        self._pattern = None
-        self._pattern_name = pattern_name
-    
+        if self._pattern:
+            return self._pattern.name
+        return None
+        
     @property
     def pattern(self):
         return self._pattern
     
     @property
-    def category(self):
-        return self._category
-    
-    def validate(self, pattern_dict):
-        if self._pattern_name and self._pattern_name not in pattern_dict:
-            raise KeyError('No such key in list of patterns: {}'.format(self._pattern_name))
-    
-    def instantiate(self, pattern_dict):
-        if self._pattern_name and self._pattern_name not in pattern_dict:
-            raise KeyError('No such key in list of patterns: {}'.format(self._pattern_name))
-        self._pattern = pattern_dict[self._pattern_name]
+    def name(self):
+        return self._name
     
     def at_step(self, step):
         if not self._pattern:
             return self._base
-        return self._base * self._pattern[step]
+        return self._base * self._pattern.at_step(step)
     __getitem__ = at_step
     
     def at_time(self, time):
         if not self._pattern:
             return self._base
-        return self._base * self._pattern(time)
+        return self._base * self._pattern.at_time(time)
     __call__ = at_time
 
 
 class Pricing(TimeVaryingValue):
-    def __init__(self, base_price=None, pattern_name=None, category=None):
-        super(Pricing, self).__init__(base=base_price, pattern_name=pattern_name, category=category)    
+    def __init__(self, base_price=None, pattern=None, category=None):
+        super(Pricing, self).__init__(base=base_price, pattern=pattern, name=category)    
 
     def __str__(self):
         return repr(self)
@@ -272,7 +232,11 @@ class Pricing(TimeVaryingValue):
 
     def __repr__(self):
         fmt = "<Pricing: {}, {}, category={}>"
-        return fmt.format(self._base, self._pattern_name, repr(self._category))
+        return fmt.format(self._base, self._pattern_name, repr(self._name))
+
+    @property
+    def category(self):
+        return self._name
 
     @property
     def base_price(self):
@@ -280,8 +244,8 @@ class Pricing(TimeVaryingValue):
 
 
 class Speed(TimeVaryingValue):
-    def __init__(self, base_speed=None, pattern_name=None, pump_name):
-        super(Speed, self).__init__(base=base_speed, pattern_name=pattern_name, category=pump_name)    
+    def __init__(self, base_speed=None, pattern=None, pump_name=None):
+        super(Speed, self).__init__(base=base_speed, pattern=pattern, name=pump_name)    
 
     def __str__(self):
         return repr(self)
@@ -291,7 +255,7 @@ class Speed(TimeVaryingValue):
 
     def __repr__(self):
         fmt = "<VariableSpeed: {}, {}, pump_name={}>"
-        return fmt.format(self._base, self._pattern_name, repr(self.category))
+        return fmt.format(self._base, self._pattern_name, repr(self._name))
 
     @property
     def base_speed(self):
@@ -299,12 +263,12 @@ class Speed(TimeVaryingValue):
         
     @property
     def pump_name(self):
-        return self._category
+        return self._name
 
 
 class Demand(TimeVaryingValue):
-    def __init__(self, base_demand=None, pattern_name=None, category=None):
-        super(Demand, self).__init__(base=base_demand, pattern_name=pattern_name, category=category)
+    def __init__(self, base_demand=None, pattern=None, category=None):
+        super(Demand, self).__init__(base=base_demand, pattern=pattern, name=category)
     
     def __str__(self):
         return repr(self)
@@ -314,14 +278,11 @@ class Demand(TimeVaryingValue):
 
     def __repr__(self):
         fmt = "<Demand: {}, {}, category={}>"
-        return fmt.format(self._base, self._pattern_name, repr(self._category))
+        return fmt.format(self._base, self._pattern_name, repr(self._name))
 
     @property
-    def wn_args(self):
-        return {'base_demand': self._base,
-                'demand_pattern_name': self._pattern_name if self._pattern_name is not None else '',
-                'name': self.category,
-                }
+    def category(self):
+        return self._name
 
     @property
     def base_demand(self):
@@ -329,8 +290,8 @@ class Demand(TimeVaryingValue):
 
 
 class ReservoirHead(TimeVaryingValue):
-    def __init__(self, total_head=None, pattern_name=None, name=None):
-        super(ReservoirHead, self).__init__(base=total_head, pattern_name=pattern_name, category=name)
+    def __init__(self, total_head=None, pattern=None, name=None):
+        super(ReservoirHead, self).__init__(base=total_head, pattern=pattern, name=name)
     
     def __str__(self):
         return repr(self)
@@ -341,10 +302,6 @@ class ReservoirHead(TimeVaryingValue):
     def __repr__(self):
         fmt = "<ReservoirHead: {}, {}>"
         return fmt.format(self._base, self._pattern_name)
-
-    @property
-    def name(self):
-        return self._category
 
     @property
     def total_head(self):
@@ -374,19 +331,10 @@ class Source(TimeVaryingValue):
 
     """
 
-    def __init__(self, name, node_name, source_type, quality, pattern_name):
-        super(Source, self).__init__(base=quality, pattern_name=pattern_name, category=name)
+    def __init__(self, name, node_name, source_type, quality, pattern):
+        super(Source, self).__init__(base=quality, pattern=pattern, name=name)
         self.node_name = node_name
         self.source_type = source_type
-        
-    @property
-    def wn_args(self):
-        return {'name': self.name,
-                'node_name': self.node_name,
-                'source_type': self.source_type,
-                'quality': self.base_quality, 
-                'pattern_name': self._pattern_name if self._pattern_name is not None else '',
-                }
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -408,22 +356,8 @@ class Source(TimeVaryingValue):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
         return fmt.format(self.name, self.node_name, self.source_type, self._base, self._pattern_name)
 
-    def validate(self, water_network_model):
-        if self._pattern_name and self._pattern_name not in water_network_model.pattern_name_list:
-            raise KeyError('No such pattern in water network model: {}'.format(self._pattern_name))
-        if self.node_name not in water_network_model.node_name_list:
-            raise KeyError('No such node in water network model: {}'.format(self.node_name))
-    
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
-        self._pattern = water_network_model.get_pattern(self._pattern_name)
-
     @property
-    def name(self):
-        return self._category
-
-    @property
-    def base_quality(self):
+    def quality(self):
         return self._base
     
 
@@ -573,16 +507,16 @@ class DemandList(object):
     def __nonzero__(self):
         return self._non_zero
 
-    def __iter__(self):
+    def items(self):
         return self._demands.__iter__()
 
-    def validate(self, water_network_model):
-        for demand in self._demands:
-            demand.validate(water_network_model)
-    
-    def instantiate(self, water_network_model):
-        for demand in self._demands:
-            deman.instantiate(water_network_model)
+    def demand_values(self, start_time, end_time, time_step):
+        demand_times = range(start_time, end_time + time_step, time_step)
+        demand_values = np.zeros((len(demand_times,)))
+        for dem in self._demands:
+            for ct, t in enumerate(demand_times):
+                demand_values[ct] += dem(t)
+        return demand_values
 
     def base_demands(self):
         """generator yielding the base demands"""

@@ -34,8 +34,11 @@ def test_mass_consumed():
 
     wn = wntr.network.WaterNetworkModel(inp_file)
 
-    wn.options.quality = 'CHEMICAL'
-    wn.add_pattern('NewPattern', start_time=0, end_time=24*3600)
+    wn.options.quality.type = 'CHEMICAL'
+    wn.options.general.units = 'LPS'
+    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 3600, 0, 24*3600, wn.options.time.duration)
+    wn.add_pattern(newpat.name, newpat)
+    
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
     #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
@@ -43,8 +46,9 @@ def test_mass_consumed():
     results = sim.run_sim()
 
     junctions = [junction_name for junction_name, junction in wn.junctions()]
-    node_results = results.node.loc[:, :, junctions]
-
+    node_results = {} #results.node #.loc[:, :, junctions]
+    node_results['quality'] = results.node['quality'].loc[:, junctions]
+    node_results['demand'] = results.node['demand'].loc[:, junctions]
     MC = wntr.metrics.mass_contaminant_consumed(node_results)
     MC_timeseries = MC.sum(axis=1)
     MC_cumsum = MC_timeseries.cumsum()
@@ -52,7 +56,7 @@ def test_mass_consumed():
 
     expected = float(39069900000/1000000) # hour 2
     error = abs((MC_cumsum[2*3600] - expected)/expected)
-    # print(MC_cumsum[2*3600], expected, error)
+    # print(MC_cumsum[900], expected, error)
     assert_less(error, 0.01) # 1% error
 
     expected = float(1509440000000/1000000) # hour 12
@@ -67,8 +71,9 @@ def test_volume_consumed():
 
     wn = wntr.network.WaterNetworkModel(inp_file)
     
-    wn.options.quality = 'CHEMICAL'
-    wn.add_pattern('NewPattern', start_time=0, end_time=24*3600)
+    wn.options.quality.type = 'CHEMICAL'
+    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 3600, 0, 24*3600, wn.options.time.duration)
+    wn.add_pattern(newpat.name, newpat)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
     #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
@@ -100,8 +105,9 @@ def test_extent_contaminated():
 
     wn = wntr.network.WaterNetworkModel(inp_file)
     
-    wn.options.quality = 'CHEMICAL'
-    wn.add_pattern('NewPattern', start_time=0, end_time=24*3600)
+    wn.options.quality.type = 'CHEMICAL'
+    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 3600, 0, 24*3600, wn.options.time.duration)
+    wn.add_pattern(newpat.name, newpat)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
     #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 

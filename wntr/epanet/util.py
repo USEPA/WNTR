@@ -514,7 +514,7 @@ class HydParam(enum.Enum):
                 data = data * 0.001  # mm to m
 
         elif self in [HydParam.TankDiameter, HydParam.Elevation, HydParam.HydraulicHead,
-                      HydParam.Length, HydParam.HeadLoss]:
+                      HydParam.Length]:#, HydParam.HeadLoss]:
             if flow_units.is_traditional:
                 data = data * 0.3048  # ft to m
 
@@ -597,7 +597,7 @@ class HydParam(enum.Enum):
                 data = data / 0.001  # mm from m
 
         elif self in [HydParam.TankDiameter, HydParam.Elevation, HydParam.HydraulicHead,
-                      HydParam.Length, HydParam.HeadLoss]:
+                      HydParam.Length]:#, HydParam.HeadLoss]:
             if flow_units.is_traditional:
                 data = data / 0.3048  # ft from m
 

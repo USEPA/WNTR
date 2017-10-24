@@ -14,6 +14,7 @@ from .elements import LinkStatus
 from .elements import DemandList , ReservoirHead #, HeadCurve, PumpCurve, EfficiencyCurve, HeadlossCurve
 import wntr.epanet
 import numpy as np
+import six
 import sys
 import logging
 import enum
@@ -111,36 +112,8 @@ class WaterNetworkModel(object):
 
     def __hash__(self):
         return id(self)
-
-    def validate_model(self):
-        for name, node in self.nodes():
-            node.validate(self)
-        for name, link in self.links():
-            link.validate(self)
-        for name, curve in self.curves():
-            curve.validate(self)
-        for name, pattern in self.patterns():
-            pattern.validate(self)
-        for name, source in self.sources():
-            source.validate(self)
-        for name, control in self.controls():
-            control.validate(self)
-    
-    def instantiate_model(self):
-        for name, node in self.nodes():
-            node.instantiate(self)
-        for name, link in self.links():
-            link.instantiate(self)
-        for name, curve in self.curves():
-            curve.instantiate(self)
-        for name, pattern in self.patterns():
-            pattern.instantiate(self)
-        for name, source in self.sources():
-            source.instantiate(self)
-        for name, control in self.controls():
-            control.instantiate(self)
             
-    def add_junction(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0, coordinates=None):
+    def add_junction(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0, coordinates=None):
         """
         Adds a junction to the water network model.
 
@@ -159,7 +132,11 @@ class WaterNetworkModel(object):
         """
         base_demand = float(base_demand)
         elevation = float(elevation)
-        junction = Junction(name, base_demand, demand_pattern_name, elevation)
+        if demand_pattern and isinstance(demand_pattern, six.string_types):
+            pattern = self.get_pattern(demand_pattern)
+        else:
+            pattern = demand_pattern
+        junction = Junction(name, base_demand, pattern, elevation)
         self._nodes[name] = junction
         self._junctions[name] = junction
         self._graph.add_node(name)
@@ -204,6 +181,8 @@ class WaterNetworkModel(object):
             min_vol = float(min_vol)
         assert init_level >= min_level, "Initial tank level must be greater than or equal to the tank minimum level."
         assert init_level <= max_level, "Initial tank level must be less than or equal to the tank maximum level."
+        if vol_curve and isinstance(vol_curve, six.string_types):
+            vol_curve = self.get_curve(vol_curve)
         tank = Tank(name, elevation, init_level, min_level, max_level, diameter, min_vol, vol_curve)
         self._nodes[name] = tank
         self._tanks[name] = tank
@@ -213,7 +192,7 @@ class WaterNetworkModel(object):
         nx.set_node_attributes(self._graph, name='type', values={name: 'tank'})
         self._num_tanks += 1
 
-    def add_reservoir(self, name, base_head=0.0, head_pattern_name=None, coordinates=None):
+    def add_reservoir(self, name, base_head=0.0, head_pattern=None, coordinates=None):
         """
         Adds a reservoir to the water network model.
 
@@ -229,7 +208,9 @@ class WaterNetworkModel(object):
             X-Y coordinates of the node location.
         """
         base_head = float(base_head)
-        reservoir = Reservoir(name, base_head, head_pattern_name)
+        if head_pattern and isinstance(head_pattern, six.string_types):
+            head_pattern = self.get_pattern(head_pattern)
+        reservoir = Reservoir(name, base_head, head_pattern)
         self._nodes[name] = reservoir
         self._reservoirs[name] = reservoir
         self._graph.add_node(name)
@@ -305,6 +286,8 @@ class WaterNetworkModel(object):
         pattern: str
             ID of pattern for speed setting
         """
+        if info_value and isinstance(info_value, six.string_types):
+            info_value = self.get_curve(info_value)
         pump = Pump(name, start_node_name, end_node_name, info_type, info_value, speed, pattern)
         self._links[name] = pump
         self._pumps[name] = pump
@@ -350,7 +333,7 @@ class WaterNetworkModel(object):
         nx.set_edge_attributes(self._graph, name='type', values={(start_node_name, end_node_name, name):'valve'})
         self._num_valves += 1
 
-    def add_pattern(self, name, pattern_list=None):
+    def add_pattern(self, name, pattern=None):
         """
         Adds a pattern to the water network model.
         If pattern_list is None, a new binary pattern will be created using
@@ -361,18 +344,16 @@ class WaterNetworkModel(object):
         ----------
         name : string
             Name of the pattern.
-        pattern_list : list of floats
+        pattern : list of floats or Pattern
             A list of floats that make up the pattern.
         """
-        patternstep = self.options.general.pattern_timestep
+        patternstep = self.options.time.pattern_timestep
         patternstart = int(self.options.time.pattern_start/patternstep)
-        pattern = Pattern(name, multipliers=pattern_list, step_size=patternstep, step_start=patternstart)
-        self._insert_pattern(pattern)
-
-    def _insert_pattern(self, pattern):
+        if not isinstance(pattern, Pattern):
+            pattern = Pattern(name, multipliers=pattern, step_size=patternstep, step_start=patternstart)
         self._patterns[pattern.name] = pattern
         self._num_patterns += 1
-        
+            
     def add_curve(self, name, curve_type, xy_tuples_list):
         """
         Adds a curve to the water network model.
@@ -383,7 +364,7 @@ class WaterNetworkModel(object):
             Name of the curve.
         curve_type : string
             Type of curve. Options are HEAD, EFFICIENCY, VOLUME, HEADLOSS.
-        xy_tuples_list : list of tuples
+        xy_tuples_list : list of (x, y) tuples
             List of X-Y coordinate tuples on the curve.
         """
         curve = Curve(name, curve_type, xy_tuples_list)
@@ -393,7 +374,7 @@ class WaterNetworkModel(object):
         self._curves[curve.name] = curve
         self._num_curves += 1
         
-    def add_source(self, name, node_name, source_type, quality, pattern_name):
+    def add_source(self, name, node_name, source_type, quality, pattern=None):
         """
         Adds a source to the water network model.
 
@@ -414,7 +395,9 @@ class WaterNetworkModel(object):
         pattern_name: string
             Pattern name
         """
-        source = Source(name, node_name, source_type, quality, pattern_name)
+        if pattern and isinstance(pattern, six.string_types):
+            pattern = self.get_pattern(pattern)
+        source = Source(name, node_name, source_type, quality, pattern)
         self._insert_source(source)
         
     def _insert_source(self, source):        
@@ -620,6 +603,7 @@ class WaterNetworkModel(object):
         name : string
            The name of the pattern object to be removed.
         """
+        logger.warning('You are deleting a pattern! This could have unintended side effects! If you are replacing values, use get_pattern(name).modify_pattern(values) instead!')
         del self._patterns[name]
         self._num_patterns -= 1
         
@@ -632,6 +616,7 @@ class WaterNetworkModel(object):
         name : string
            The name of the curve object to be removed.
         """
+        logger.warning('You are deleting a curve! This could have unintended side effects! If you are replacing values, use get_curve(name) and modify it instead!')
         del self._curves[name]
         self._num_curves -= 1
         
@@ -644,6 +629,7 @@ class WaterNetworkModel(object):
         name : string
            The name of the source object to be removed.
         """
+        logger.warning('You are deleting a source! This could have unintended side effects! If you are replacing values, use get_source(name) and modify it instead!')
         del self._sources[name]
         self._num_sources -= 1
 
@@ -669,6 +655,7 @@ class WaterNetworkModel(object):
         name : string
            The name of the control object to be removed.
         """
+        logger.warning('You are deleting a control! This could have unintended side effects! If you are replacing values, use get_control(name) and modify it instead!')
         del self._controls[name]
         self._num_controls -= 1
         
@@ -789,7 +776,7 @@ class WaterNetworkModel(object):
                                 y0 + dy * split_at_point)
 
         # add the new junction
-        self.add_junction(new_junction_name, base_demand=0.0, demand_pattern_name=None,
+        self.add_junction(new_junction_name, base_demand=0.0, demand_pattern=None,
                           elevation=junction_elevation, coordinates=junction_coordinates)
         new_junction = self.get_node(new_junction_name)
 
@@ -1005,7 +992,7 @@ class WaterNetworkModel(object):
             # Extact the node demand pattern and resample to match the pattern timestep
             demand_pattern = demand.loc[:, node_name]
             demand_pattern.index = demand_pattern.index.astype('timedelta64[s]')
-            resample_offset = str(int(self.options.pattern_timestep))+'S'
+            resample_offset = str(int(self.options.time.pattern_timestep))+'S'
             demand_pattern = demand_pattern.resample(resample_offset).mean()
 
             # Add the pattern
@@ -1863,7 +1850,7 @@ class WaterNetworkModel(object):
         inp file). This is, this is the time since 12 AM
         on the first day.
         """
-        return self.sim_time + self.options.start_clocktime
+        return self.sim_time + self.options.time.start_clocktime
 
     @property
     def _prev_shifted_time(self):
@@ -1873,7 +1860,7 @@ class WaterNetworkModel(object):
         AM on the first day to the time at the prevous hydraulic
         timestep.
         """
-        return self.prev_sim_time + self.options.start_clocktime
+        return self.prev_sim_time + self.options.time.start_clocktime
 
     @property
     def _clock_time(self):
@@ -2027,15 +2014,6 @@ class Node(object):
     def __hash__(self):
         return id(self)
 
-    def validate(self, water_network_model):
-        if self._name not in water_network_model.node_name_list:
-            raise KeyError('My name is not in the water network model list! "{}"'.format(self._name))
-        if water_network_model.get_node(self._name) is not self:
-            raise ReferenceError('Node {} is not the object in the water network model')            
-    
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
-
     @property
     def name(self):
         """Returns the name of the node."""
@@ -2113,19 +2091,6 @@ class Link(object):
     def __repr__(self):
         return "<Link '{}'>".format(self._link_name)
 
-    def validate(self, water_network_model):
-        if self._link_name not in water_network_model.link_name_list:
-            raise KeyError('My name is not in the water network model list! "{}"'.format(self._link_name))
-        if water_network_model.get_link(self._link_name) is not self:
-            raise ReferenceError('Link {} is not the object in the water network model')            
-        if self._start_node_name not in water_network_model.node_name_list:
-            raise KeyError('Start node "{}" does not appear in the water network model'.format(self._start_node_name))
-        if self._end_node_name not in water_network_model.node_name_list:
-            raise KeyError('End node "{}" does not appear in the water network model'.format(self._end_node_name))
-    
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
-
     @property
     def start_node(self):
         """
@@ -2167,15 +2132,18 @@ class Junction(Node):
 
     """
 
-    def __init__(self, name, base_demand=0.0, demand_pattern_name=None, elevation=0.0):
+    def __init__(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0):
         super(Junction, self).__init__(name)
-        self.base_demand = base_demand
+#        self._base_demand = base_demand
         self.prev_expected_demand = None
         self.expected_demand = base_demand
-        self.demand_pattern_name = demand_pattern_name
+#        if demand_pattern:
+#            self._demand_pattern_name = demand_pattern.name
+#        else:
+#            self._demand_pattern_name = None
         self.demands = DemandList()
-        if base_demand: self.demands.add(base_demand, demand_pattern_name, 'base')
-        self._categorized_demands = {}  # _categorized_demands[category] = (base_demand, pattern_name)
+        if base_demand: self.demands.add(base_demand, demand_pattern, '_base_demand')
+#        self._categorized_demands = {}  # _categorized_demands[category] = (base_demand, pattern_name)
         self.elevation = elevation
         self.nominal_pressure = 20.0
         "The nominal pressure attribute is used for pressure-dependent demand. This is the lowest pressure at which the customer receives the full requested demand."
@@ -2189,18 +2157,22 @@ class Junction(Node):
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
         self._emitter_coefficient = None
 
-    def validate(self, water_network_model):
-        super(Junction, self).validate(water_network_model)
-        if water_network_model.get_junction(self._name) is not self:
-            raise ReferenceError('Junction {} is not the same in nodes and junctions dictionaries')
-        self.demands.validate(water_network_model)
-        
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
-        self.demands.instantiate(water_network_model)
-
     def __repr__(self):
         return "<Junction '{}'>".format(self._name)
+
+    @property
+    def base_demand(self):
+        if len(self.demands) > 0:
+            dem0 = self.demands.get_entry(0)
+            return dem0.base_demand
+        return 0
+        
+    @property
+    def demand_pattern_name(self):
+        if len(self.demands) > 0:
+            dem0 = self.demands.get_entry(0)
+            return dem0.pattern_name
+        return None
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2414,17 +2386,6 @@ class Tank(Node):
         self._leak_end_control_name = 'tank'+self._name+'end_leak_control'
         self.bulk_rxn_coeff = None
 
-    def validate(self, water_network_model):
-        super(Tank, self).validate(water_network_model)
-        if water_network_model.get_tank(self._name) is not self:
-            raise ReferenceError('Reservoir {} is not the same in nodes and reservoirs dictionaries')
-        if self.vol_curve_name and self.vol_curve_name not in water_network_model.curve_name_list:
-            raise KeyError('No such curve in water network model: {}'.format(self.vol_curve_name))
-    
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
-        self.vol_curve = water_network_model.get_curve(self.vol_curve_name)
-
     @property
     def level(self):
         return self.head - self.elevation
@@ -2597,23 +2558,19 @@ class Reservoir(Node):
     head_pattern_name : string, optional
         Name of the head pattern.
     """
-    def __init__(self, name, base_head=0.0, head_pattern_name=None):
+    def __init__(self, name, base_head=0.0, head_pattern=None):
 
         super(Reservoir, self).__init__(name)
         self.base_head = base_head
         self.head = base_head
-        self.head_pattern_name = head_pattern_name
-        self.heads = ReservoirHead(base_head, head_pattern_name, name)
+        self.head_pattern = head_pattern
+        self.heads = ReservoirHead(base_head, head_pattern, name)
 
-    def validate(self, water_network_model):
-        super(Reservoir, self).validate(water_network_model)
-        if water_network_model.get_reservoir(self._name) is not self:
-            raise ReferenceError('Reservoir {} is not the same in nodes and reservoirs dictionaries')
-        self.heads.validate()
-    
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
-        self.heads.instantiate()
+    @property
+    def head_pattern_name(self):
+        if self.head_pattern:
+            return self.head_pattern.name
+        return None
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2621,7 +2578,7 @@ class Reservoir(Node):
         if not super(Reservoir, self).__eq__(other):
             return False
         if abs(self.base_head - other.base_head)<1e-10 and \
-           self.head_pattern_name == other.head_pattern_name:
+           self.heads == other.heads:
             return True
         return True
 
@@ -2699,14 +2656,6 @@ class Pipe(Link):
     def __hash__(self):
         return id(self)
 
-    def validate(self, water_network_model):
-        super(Valve, self).validate(water_network_model)
-        if water_network_model.get_pipe(self._link_name) is not self:
-            raise ReferenceError('Pipe {} is not the same in links and pipes dictionaries')
-        
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
-        
 
 class Pump(Link):
     """
@@ -2738,7 +2687,6 @@ class Pump(Link):
         self.prev_speed = None
         self.speed = speed
         self.pattern = pattern
-        self.curve_name = None
         self.curve = None
         self.efficiency = None
         self.energy_price = None
@@ -2749,24 +2697,19 @@ class Pump(Link):
         self._base_power = None
         self.info_type = info_type.upper()
         if self.info_type == 'HEAD':
-            self.curve_name = info_value
+            self.curve = info_value
         elif self.info_type == 'POWER':
             self.power = info_value
             self._base_power = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
 
-    def validate(self, water_network_model):
-        super(Pump, self).validate(water_network_model)
-        if water_network_model.get_pump(self._link_name) is not self:
-            raise ReferenceError('Pump {} is not the same in links and pumps dictionaries')
-        if self.curve_name and self.curve_name not in water_network_model.curve_name_list:
-            raise KeyError('No such curve in water network model: {}'.format(self.curve_name))
-    
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
-        self.curve = water_network_model.get_curve(self.curve_name)
-        
+    @property
+    def curve_name(self):
+        if self.curve:
+            return self.curve.name
+        return None
+
     def __repr__(self):
         return "<Pump '{}'>".format(self._link_name)
 
@@ -2934,14 +2877,3 @@ class Valve(Link):
 
     def __hash__(self):
         return id(self)
-
-    def validate(self, water_network_model):
-        super(Valve, self).validate(water_network_model)
-        if water_network_model.get_valve(self._link_name) is not self:
-            raise ReferenceError('Valve {} is not the same in links and valves dictionaries')
-        
-    def instantiate(self, water_network_model):
-        self.validate(water_network_model)
-        
-
-
