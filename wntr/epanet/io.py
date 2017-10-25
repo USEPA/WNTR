@@ -866,7 +866,7 @@ class InpFile(object):
             # Sanity check - if the default pattern does not exist and it is not '1' then balk
             # If default is '1' but it does not exist, then it is constant
             # Any other default that does not exist is an error
-            if self.wn.options.general.pattern != '1':
+            if self.wn.options.general.pattern is not None and self.wn.options.general.pattern != '1':
                 raise KeyError('Default pattern {} is undefined'.format(self.wn.options.general.pattern))
             self.wn.options.general.pattern = None
 
@@ -2285,13 +2285,14 @@ class BinFile(object):
         filename : str
             An EPANET BIN output file
         custom_handlers : bool, optional
-            If true, then the the custom, by-line handlers will be used. Otherwise, will use
+            If true, then the the custom, by-line handlers will be used. (:func:`~save_ep_line`, 
+            :func:`~setup_ep_results`, :func:`~finalize_save`, etc.) Otherwise read will use
             a faster, all-at-once reader that reads all results.
 
         Returns
         -------
         object
-            Returns the :attr:`~results` object, whatever it has been overloaded to be
+            returns a WaterNetworkResults object
 
 
         .. note:: Overloading
@@ -2299,6 +2300,11 @@ class BinFile(object):
             to change how it saves the results. Specifically, overload :func:`~setup_ep_results`,
             :func:`~save_ep_line` and :func:`~finalize_save` to change how extended period
             simulation results in a different format (such as directly to a file or database).
+            
+            
+        .. verisionchanged:: 0.1.3
+            Added fast handler by default with *custom_handlers* option
+            
 
         """
         logger.debug('Read binary EPANET data from %s',filename)

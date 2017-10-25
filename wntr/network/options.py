@@ -1,10 +1,91 @@
 """
 Water Network Model Options Classes
+
+.. versionchanged:: 0.1.5
+    Module added. Class split into manageable pieces
+
 """
+
+
+class WaterNetworkOptions(object):
+    """
+    A class to manage options.  These options mimic options in the EPANET User Manual.
+
+    This class now uses the `__slots__` syntax to ensure that older code will raise an appropriate
+    error -- for example, trying to set the options.duration value will result in an error 
+    rather than creating a new attribute (which would never be used and cause undiagnosable errors).
+    
+    The `user` attribute is a generic python class object that allows for dynamically created 
+    attributes that are user specific; core WNTR functionality will never use options in the `user`
+    section, but 3-rd party libraries or add-ons may.
+
+    .. versionchanged:: 0.1.5
+        Major changes to structure. All options now divided into groups. Slots control of
+        attributes to aid in checks.
+        
+    Attributes
+    ----------
+    time : :class:`~TimeOptions`
+        All options related to model timing
+    general : :class:`~GeneralOptions`
+        General WNTR model options
+    results : :class:`~ResultsOptions`
+        Options related to the saving or presentaion of results
+    quality : :class:`~QualityOptions`
+        Water quality model options
+    energy : :class:`~EnergyOptions`
+        Energy calculation options
+    solver : :class:`~SolverOptions`
+        Solver configuration options
+    graphics : :class:`~GraphicsOptions`
+        Graphics and mapping options
+    user : :class:`~UserOptions`
+        Space for end-user defined options
+        
+    """
+    __slots__ = ['time','general','results','quality','energy','solver','graphics','user']
+
+    def __init__(self):
+        self.time = TimeOptions()
+        self.general = GeneralOptions()
+        self.results = ResultsOptions()
+        self.quality = QualityOptions()
+        self.energy = EnergyOptions()
+        self.solver = SolverOptions()
+        self.graphics = GraphicsOptions()
+        self.user = UserOptions()
+        
+    def __getstate__(self):
+        """Allow pickling with the __slots__ construct"""
+        return self.time, self.general, self.results, self.quality, self.energy, self.solver, self.graphics, self.user
+    
+    def __setstate__(self, state):
+        """Allow pickling with the __slots__ construct"""
+        self.time, self.general, self.results, self.quality, self.energy, self.solver, self.graphics, self.user = state
+        
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        ###  self.units == other.units and \
+        if self.time == other.time and \
+           self.general == other.general and \
+           self.quality == other.quality and \
+           self.energy == other.energy and \
+           self.results.statistic == other.results.statistic and \
+           self.solver == other.solver:
+               return True
+        return False
+
 
 ## Start with the component classes
 
 class TimeOptions(object):
+    """All options relating to simulation and model timing.
+    
+    .. versionchanged:: 0.1.5
+        Class added, attributes here are now in `options.time.*` in the water network model.
+        
+    """
     def __init__(self):
         # Time related options
         self.duration = 0
@@ -52,7 +133,13 @@ class TimeOptions(object):
 
 
 class GraphicsOptions(object):
-    """An epanet backdrop object."""
+    """All options relating to graphics.
+    
+    .. versionchanged:: 0.1.5
+        Class added, attributes here are now in `options.graphics.*` in the water network model.
+        The previous _Backdrop class deprecated, moved here.
+        
+    """
     def __init__(self, filename=None, dim=None, units=None, offset=None):
         self.dimensions = dim
         self.units = units
@@ -76,6 +163,12 @@ class GraphicsOptions(object):
 
 
 class GeneralOptions(object):
+    """All options relating to general model (such as units).
+    
+    .. versionchanged:: 0.1.5
+        Class added, attributes here are now in `options.general.*` in the water network model.
+        
+    """
     def __init__(self):
         # General options
         self.units = 'GPM'
@@ -131,6 +224,13 @@ class GeneralOptions(object):
 
 
 class ResultsOptions(object):
+    """All options relating to results outputs.
+    
+    .. versionchanged:: 0.1.5
+        Class added, attributes here are now in `options.results.*` in the water network model.
+        Class _Report deprecated, values moved here
+        
+    """
     def __init__(self):
         self.statistic = 'NONE'
         "Post processing statistic.  Options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the EPANET User Manual)."
@@ -191,6 +291,13 @@ class ResultsOptions(object):
         
         
 class QualityOptions(object):
+    """All options relating to water quality modeling.
+    
+    .. versionchanged:: 0.1.5
+        Class added, attributes here are now in `options.quality.*` in the water network model.
+        Some names changed (specifically, options.quality is now options.quality.type)
+        
+    """
     def __init__(self):
         self.type = 'NONE'
         "Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and TRACE (as defined in the EPANET User Manual)."
@@ -238,7 +345,13 @@ class QualityOptions(object):
 
 
 class EnergyOptions(object):
-    """An epanet energy definitions object."""
+    """All options relating to energy calculations.
+    
+    .. versionchanged:: 0.1.5
+        Class added, attributes here are now in `options.energy.*` in the water network model.
+        The _Energy class has been deprecated and moved here
+        
+    """
     def __init__(self):
         self.global_price = 0
         """Global average cost per Joule (default 0)"""
@@ -261,6 +374,12 @@ class EnergyOptions(object):
 
 
 class SolverOptions(object):
+    """All options relating to solver options (for any solver).
+    
+    .. versionchanged:: 0.1.5
+        Class added, attributes here are now in `options.solver.*` in the water network model.
+        
+    """
     def __init__(self):
         self.trials = 40
         "Maximum number of trials used to solve network hydraulics"
@@ -296,41 +415,9 @@ class SolverOptions(object):
 
 class UserOptions(object):
     def __init__(self):
-        """This is a generic user options dictionary to allow for private extensions"""
+        """This is a generic user options dictionary to allow for private extensions
+        
+        Allows users to add attributes for their own personal use under options.user.*
+        """
         pass
 
-
-class WaterNetworkOptions(object):
-    """
-    A class to manage options.  These options mimic options in the EPANET User Manual.
-    """
-    __slots__ = ['time','general','results','quality','energy','solver','graphics','user']
-
-    def __init__(self):
-        self.time = TimeOptions()
-        self.general = GeneralOptions()
-        self.results = ResultsOptions()
-        self.quality = QualityOptions()
-        self.energy = EnergyOptions()
-        self.solver = SolverOptions()
-        self.graphics = GraphicsOptions()
-        self.user = UserOptions()
-        
-    def __getstate__(self):
-        return self.time, self.general, self.results, self.quality, self.energy, self.solver, self.graphics, self.user
-    
-    def __setstate__(self, state):
-        self.time, self.general, self.results, self.quality, self.energy, self.solver, self.graphics, self.user = state
-        
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        ###  self.units == other.units and \
-        if self.time == other.time and \
-           self.general == other.general and \
-           self.quality == other.quality and \
-           self.energy == other.energy and \
-           self.results.statistic == other.results.statistic and \
-           self.solver == other.solver:
-               return True
-        return False

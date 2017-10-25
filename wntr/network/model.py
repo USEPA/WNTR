@@ -116,6 +116,10 @@ class WaterNetworkModel(object):
     def add_junction(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0, coordinates=None):
         """
         Adds a junction to the water network model.
+        
+        .. versionchanged:: 0.1.5
+            The previous parameter *demand_pattern_name* was changed to **demand_pattern** to allow passing of a 
+            :class:`wntr.network.elements.Pattern` object.
 
         Parameters
         -------------------
@@ -123,12 +127,13 @@ class WaterNetworkModel(object):
             Name of the junction.
         base_demand : float
             Base demand at the junction.
-        demand_pattern_name : string
-            Name of the demand pattern.
+        demand_pattern : string or Pattern
+            Name of the demand pattern or the actual pattern object
         elevation : float
             Elevation of the junction.
         coordinates : tuple of floats
             X-Y coordinates of the node location.
+                
         """
         base_demand = float(base_demand)
         elevation = float(elevation)
@@ -171,6 +176,13 @@ class WaterNetworkModel(object):
             Curve object
         coordinates : tuple of floats
             X-Y coordinates of the node location.
+            
+        
+        Raises
+        ------
+        ValueError
+            If `init_level` greater than `max_level` or less than `min_level`
+            
         """
         elevation = float(elevation)
         init_level = float(init_level)
@@ -179,8 +191,10 @@ class WaterNetworkModel(object):
         diameter = float(diameter)
         if min_vol is not None:
             min_vol = float(min_vol)
-        assert init_level >= min_level, "Initial tank level must be greater than or equal to the tank minimum level."
-        assert init_level <= max_level, "Initial tank level must be less than or equal to the tank maximum level."
+        if init_level < min_level:
+            raise ValueError("Initial tank level must be greater than or equal to the tank minimum level.")
+        if init_level > max_level:
+            raise ValueError("Initial tank level must be less than or equal to the tank maximum level.")
         if vol_curve and isinstance(vol_curve, six.string_types):
             vol_curve = self.get_curve(vol_curve)
         tank = Tank(name, elevation, init_level, min_level, max_level, diameter, min_vol, vol_curve)
@@ -196,16 +210,22 @@ class WaterNetworkModel(object):
         """
         Adds a reservoir to the water network model.
 
+        .. versionchanged:: 0.1.5
+            The previous parameter *head_pattern_name* was changed to **head_pattern** to allow passing of a 
+            :class:`wntr.network.elements.Pattern` object.
+
+
         Parameters
         ----------
         name : string
             Name of the reservoir.
         base_head : float, optional
             Base head at the reservoir.
-        head_pattern_name : string, optional
+        head_pattern : string, optional
             Name of the head pattern.
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
+        
         """
         base_head = float(base_head)
         if head_pattern and isinstance(head_pattern, six.string_types):
@@ -245,6 +265,7 @@ class WaterNetworkModel(object):
         check_valve_flag : bool, optional
             True if the pipe has a check valve.
             False if the pipe does not have a check valve.
+        
         """
         length = float(length)
         diameter = float(diameter)
@@ -283,8 +304,9 @@ class WaterNetworkModel(object):
             Float value of power in KW. Head curve object.
         speed: float
             Relative speed setting (1.0 is normal speed)
-        pattern: str
+        pattern: str or Pattern
             ID of pattern for speed setting
+        
         """
         if info_value and isinstance(info_value, six.string_types):
             info_value = self.get_curve(info_value)
@@ -319,6 +341,7 @@ class WaterNetworkModel(object):
             flow setting for FCV,
             loss coefficient for TCV,
             name of headloss curve for GPV.
+        
         """
         start_node = self.get_node(start_node_name)
         end_node = self.get_node(end_node_name)
@@ -336,21 +359,43 @@ class WaterNetworkModel(object):
     def add_pattern(self, name, pattern=None):
         """
         Adds a pattern to the water network model.
-        If pattern_list is None, a new binary pattern will be created using
-        the pattern timestep and duration stored in wn.options.
-        The pattern will have 1s between the start time and end time.
+        
+        The pattern can be either a list of values (list, numpy array, etc.) or a 
+        :class:`~wntr.network.elements.Pattern` object. The Pattern class has options to automatically
+        create certain types of patterns, such as a single, on/off pattern (previously created using
+        the start_time and stop_time arguments to this function) -- see the class documentation for
+        examples.
+        
+        .. warning::
+            Patterns **must** be added to the model prior to adding any model element that uses the pattern,
+            such as junction demands, sources, etc. Patterns are linked by reference, so changes to a 
+            pattern affects all elements using that pattern. 
+
+        .. versionchanged:: 0.1.5
+            Function signature changed significantly: *start_time* and *stop_time* removed as options.
+
 
         Parameters
         ----------
         name : string
             Name of the pattern.
         pattern : list of floats or Pattern
-            A list of floats that make up the pattern.
+            A list of floats that make up the pattern, or a :class:`~wntr.network.elements.Pattern` object.
+
+
+        Raises
+        ------
+        ValueError
+            If adding a pattern with `name` that already exists.
+
+        
         """
         patternstep = self.options.time.pattern_timestep
         patternstart = int(self.options.time.pattern_start/patternstep)
         if not isinstance(pattern, Pattern):
             pattern = Pattern(name, multipliers=pattern, step_size=patternstep, step_start=patternstart)
+        if pattern.name in self._patterns:
+            raise ValueError('Pattern name already exists')
         self._patterns[pattern.name] = pattern
         self._num_patterns += 1
             
@@ -735,6 +780,13 @@ class WaterNetworkModel(object):
         -------
         tuple
             returns (original_pipe, new_junction, new_pipe) objects
+            
+        Raises
+        ------
+        ValueError
+            The link is not a pipe, `split_at_point` is out of bounds, `add_pipe_at_node` is invalid.
+        RuntimeError
+            The `new_junction_name` or `new_pipe_name` is already in use.
             
         """
         
@@ -2116,6 +2168,9 @@ class Junction(Node):
     """
     Junction class that is inherited from Node
 
+    .. versionchanged:: 0.1.5
+        Parameter name changed to `demand_pattern`; The `demands` attribute was added.
+
     Parameters
     ----------
     name : string
@@ -2123,12 +2178,11 @@ class Junction(Node):
     base_demand : float, optional
         Base demand at the junction.
         Internal units must be cubic meters per second (m^3/s).
-    demand_pattern_name : string, optional
+    demand_pattern : string, optional
         Name of the demand pattern.
     elevation : float, optional
         Elevation of the junction.
         Internal units must be meters (m).
-
 
     """
 

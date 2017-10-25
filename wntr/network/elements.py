@@ -1,5 +1,9 @@
 """
 The wntr.network.elements module contains base classes for elements of a water network model.
+
+.. versionchanged:: 0.1.5
+    Module added.
+
 """
 
 import enum
@@ -18,6 +22,8 @@ class Curve(object):
          Type of curve. Options are Volume, Pump, Efficiency, Headloss.
     points :
          List of tuples with X-Y points.
+         
+         
     """
     def __init__(self, name, curve_type, points):
         self.name = name
@@ -77,8 +83,24 @@ class Curve(object):
 
 
 class Pattern(object):
-    """Defines a multiplier pattern (series of multiplier factors)"""
     def __init__(self, name, multipliers=[], step_size=1, step_start=0, wrap=True):
+        """Defines a multiplier pattern (series of multiplier factors)
+        
+        Parameters
+        ----------
+        name : str
+            A unique name to describe the pattern (should be the same used when adding the pattern to the model)
+        multipliers : list-like
+            A list of multipliers that makes up the pattern; internally saved as a numpy array
+        step_size : int
+            The pattern timestep (in seconds)
+        step_start : int
+            Which pattern index goes with time=0, if not the first
+        wrap : bool
+            If true (the default), then the pattern repeats itself forever; if false, after the pattern
+            has been exhausted, it will return 0.0
+        
+        """
         self.name = name
         """The name should be unique"""
         if isinstance(multipliers, (int, float)):
@@ -92,7 +114,30 @@ class Pattern(object):
 
     @classmethod
     def BinaryPattern(cls, name, step_size, start_time, end_time, duration):
-        """Factory method to create a binary pattern (single instance of step up, step down)"""
+        """Factory method to create a binary pattern (single instance of step up, step down)
+        
+        This class method is equivalent to using the old (WNTR<0.1.5) `WaterNetworkModel.add_pattern` method with the
+        `start_time` and `end_time` attributes. 
+        
+        Parameters
+        ----------
+        name : str
+            A unique name to describe the pattern (should be the same used when adding the pattern to the model)
+        step_size : int
+            The pattern timestep (in seconds)
+        start_time : int
+            The time at which the pattern turns "on" (1.0)
+        end_time : int
+            The time at which the pattern turns "off" (0.0)
+        duration : int
+            The length of the simulation out to which the "off" values should go
+        
+        Returns
+        -------
+        Pattern
+            The new pattern object
+        
+        """
         patternstep = step_size
         patternlen = int(end_time/patternstep)
         patternstart = int(start_time/patternstep)
@@ -139,21 +184,43 @@ class Pattern(object):
             self._multipliers = np.array(values)
 
     def at_step(self, step):
-        """Get the multiplier appropriate for step"""
+        """Get the multiplier appropriate for step
+        
+        Parameters
+        ----------
+        step : int
+            The index into the pattern to get a value
+            
+        Returns
+        -------
+        float
+            The value at index `step`
+        
+        """
         nmult = len(self._multipliers)
-#        if nmult == 0:                          return 1.0
-#        elif nmult == 1:                        return self._multipliers[0]
-        if self.wrap:                         return self._multipliers[step%nmult]
+        if nmult == 0:                          return 1.0
+        elif self.wrap:                         return self._multipliers[step%nmult]
         elif step < 0 or step >= nmult:         return 0.0
         return self._multipliers[step]
     __getitem__ = at_step
 
     def at_time(self, time):
-        """The pattern value at 'time', given in seconds since start of simulation"""
+        """The pattern value at 'time', given in seconds since start of simulation
+        
+        Parameters
+        ----------
+        time : int
+            The time in seconds to get a value
+            
+        Returns
+        -------
+            The value at index calculated from the time
+        
+        """
         step = ((time+self.step_start)//self.step_size)
         nmult = len(self._multipliers)
-#        elif nmult == 1:                        return self._multipliers[0]
-        if self.wrap:                         return self._multipliers[step%nmult]
+        if nmult == 0:                          return 1.0
+        elif self.wrap:                         return self._multipliers[step%nmult]
         elif step < 0 or step >= nmult:         return 0.0
         return self._multipliers[step]
     __call__ = at_time
@@ -162,7 +229,25 @@ class Pattern(object):
 class TimeVaryingValue(object):
     def __init__(self, base=None, pattern=None, name=None):
         """A simple time varying value.
-        Requires a base value, a pattern (optional) and a  name (optional)"""
+        
+        Provides a mechanism to calculate values based on a base value and a multiplier pattern.
+        Uses __call__ with a `time` to calculate the appropriate value based on that time.
+        
+        Parameters
+        ----------
+        base : number
+            A number that represents the baseline value for this variable
+        pattern : Pattern, optional
+            If None, then the value will be constant. Otherwise, the Pattern will be used.
+        name : str
+            A category, description, or other name that is useful to the user to describe this value
+            
+        Raises
+        ------
+        ValueError
+            If `base` or `pattern` are invalid types
+        
+        """
         if base and not isinstance(base, (int, float, complex)):
             raise ValueError('TimeVaryingValue->base must be a number')
         if isinstance(pattern, Pattern):
@@ -170,7 +255,7 @@ class TimeVaryingValue(object):
         elif pattern is None:
             self._pattern = None
         else:
-            raise ValueError('TimeVaryingValue(pattern) must be a string, Pattern object, or None')
+            raise ValueError('TimeVaryingValue->pattern must be a Pattern object or None')
         if base is None: base = 0.0
         self._base = base
         self._name = name
@@ -191,29 +276,58 @@ class TimeVaryingValue(object):
     
     @property
     def base_value(self):
+        """The baseline value for this variable"""
         return self._base
     
     @property
     def pattern_name(self):
+        """The name of the pattern used"""
         if self._pattern:
             return self._pattern.name
         return None
         
     @property
     def pattern(self):
+        """The pattern itself"""
         return self._pattern
     
     @property
     def name(self):
+        """The name of this value"""
         return self._name
     
     def at_step(self, step):
+        """Calculate the value at a specific step
+        
+        Parameters
+        ----------
+        step : int
+            The index (not time!) to get a value for
+            
+        Returns
+        -------
+        float
+            The value
+        """
+        
         if not self._pattern:
             return self._base
         return self._base * self._pattern.at_step(step)
     __getitem__ = at_step
     
     def at_time(self, time):
+        """Calculate the value at a specific time
+        
+        Parameters
+        ----------
+        time : int
+            The time (in seconds) to get a value for
+            
+        Returns
+        -------
+        float
+            The value
+        """
         if not self._pattern:
             return self._base
         return self._base * self._pattern.at_time(time)
@@ -221,6 +335,7 @@ class TimeVaryingValue(object):
 
 
 class Pricing(TimeVaryingValue):
+    """A value class for pump pricing based on an optional time pattern"""
     def __init__(self, base_price=None, pattern=None, category=None):
         super(Pricing, self).__init__(base=base_price, pattern=pattern, name=category)    
 
@@ -244,6 +359,7 @@ class Pricing(TimeVaryingValue):
 
 
 class Speed(TimeVaryingValue):
+    """A value class for pump speed based on a pattern"""
     def __init__(self, base_speed=None, pattern=None, pump_name=None):
         super(Speed, self).__init__(base=base_speed, pattern=pattern, name=pump_name)    
 
@@ -267,6 +383,7 @@ class Speed(TimeVaryingValue):
 
 
 class Demand(TimeVaryingValue):
+    """A value class for demand at a junction based on a pattern"""
     def __init__(self, base_demand=None, pattern=None, category=None):
         super(Demand, self).__init__(base=base_demand, pattern=pattern, name=category)
     
@@ -290,6 +407,7 @@ class Demand(TimeVaryingValue):
 
 
 class ReservoirHead(TimeVaryingValue):
+    """A value class for varying head based on a pattern"""
     def __init__(self, total_head=None, pattern=None, name=None):
         super(ReservoirHead, self).__init__(base=total_head, pattern=pattern, name=name)
     
@@ -309,8 +427,7 @@ class ReservoirHead(TimeVaryingValue):
 
 
 class Source(TimeVaryingValue):
-    """
-    Source class.
+    """A water quality source
 
     Parameters
     ----------
@@ -476,13 +593,17 @@ class LinkStatus(enum.IntEnum):
 
 
 class DemandList(object):
-    """Defines a demand or set of demands to be assigned to a node"""
+    """Defines a demand or set of demands to be assigned to a node
+    
+    Allows for categorized demands and calculating the cumulative demand at a specific time
+    more easily
+    
+    """
     def __init__(self, base=None, pattern=None, name=None, category=None):
         self._non_zero = False
         self._demands = []
         self.add(base, pattern, category)
-        self.name = name if name else id(self)
-        """Optional name for debugging ease"""
+        self.name = name 
         
     def __str__(self):
         return "<DemandList '{}'>".format(self.name)
