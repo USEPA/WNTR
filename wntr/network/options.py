@@ -414,10 +414,10 @@ class SolverOptions(object):
 
 
 class UserOptions(object):
+    """This is a generic user options dictionary to allow for private extensions
+    
+    Allows users to add attributes for their own personal use under options.user.*
+    """
     def __init__(self):
-        """This is a generic user options dictionary to allow for private extensions
-        
-        Allows users to add attributes for their own personal use under options.user.*
-        """
         pass
 

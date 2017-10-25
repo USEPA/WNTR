@@ -83,24 +83,24 @@ class Curve(object):
 
 
 class Pattern(object):
+    """Defines a multiplier pattern (series of multiplier factors)
+    
+    Parameters
+    ----------
+    name : str
+        A unique name to describe the pattern (should be the same used when adding the pattern to the model)
+    multipliers : list-like
+        A list of multipliers that makes up the pattern; internally saved as a numpy array
+    step_size : int
+        The pattern timestep (in seconds)
+    step_start : int
+        Which pattern index goes with time=0, if not the first
+    wrap : bool
+        If true (the default), then the pattern repeats itself forever; if false, after the pattern
+        has been exhausted, it will return 0.0
+    
+    """
     def __init__(self, name, multipliers=[], step_size=1, step_start=0, wrap=True):
-        """Defines a multiplier pattern (series of multiplier factors)
-        
-        Parameters
-        ----------
-        name : str
-            A unique name to describe the pattern (should be the same used when adding the pattern to the model)
-        multipliers : list-like
-            A list of multipliers that makes up the pattern; internally saved as a numpy array
-        step_size : int
-            The pattern timestep (in seconds)
-        step_start : int
-            Which pattern index goes with time=0, if not the first
-        wrap : bool
-            If true (the default), then the pattern repeats itself forever; if false, after the pattern
-            has been exhausted, it will return 0.0
-        
-        """
         self.name = name
         """The name should be unique"""
         if isinstance(multipliers, (int, float)):
@@ -227,27 +227,27 @@ class Pattern(object):
 
 
 class TimeVaryingValue(object):
+    """A simple time varying value.
+    
+    Provides a mechanism to calculate values based on a base value and a multiplier pattern.
+    Uses __call__ with a `time` to calculate the appropriate value based on that time.
+    
+    Parameters
+    ----------
+    base : number
+        A number that represents the baseline value for this variable
+    pattern : Pattern, optional
+        If None, then the value will be constant. Otherwise, the Pattern will be used.
+    name : str
+        A category, description, or other name that is useful to the user to describe this value
+        
+    Raises
+    ------
+    ValueError
+        If `base` or `pattern` are invalid types
+    
+    """
     def __init__(self, base=None, pattern=None, name=None):
-        """A simple time varying value.
-        
-        Provides a mechanism to calculate values based on a base value and a multiplier pattern.
-        Uses __call__ with a `time` to calculate the appropriate value based on that time.
-        
-        Parameters
-        ----------
-        base : number
-            A number that represents the baseline value for this variable
-        pattern : Pattern, optional
-            If None, then the value will be constant. Otherwise, the Pattern will be used.
-        name : str
-            A category, description, or other name that is useful to the user to describe this value
-            
-        Raises
-        ------
-        ValueError
-            If `base` or `pattern` are invalid types
-        
-        """
         if base and not isinstance(base, (int, float, complex)):
             raise ValueError('TimeVaryingValue->base must be a number')
         if isinstance(pattern, Pattern):
