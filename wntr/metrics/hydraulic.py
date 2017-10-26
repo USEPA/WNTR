@@ -192,7 +192,7 @@ def todini(node_results, link_results, wn, Pstar):
     todini_index = (sum(POut.values()) - sum(PExp.values()))/  \
         (sum(PInRes.values()) + sum(PInPump.values()) - sum(PExp.values()))
 
-    todini_index = pd.Series(data = todini_index.tolist(), index = node_results['quality'].index)
+    todini_index = pd.Series(data = todini_index.tolist(), index = node_results['head'].index)
 
     return todini_index
 

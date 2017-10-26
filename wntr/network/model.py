@@ -150,6 +150,10 @@ class WaterNetworkModel(object):
         nx.set_node_attributes(self._graph, name='type', values={name:'junction'})
         self._num_junctions += 1
 
+    def add_demand(self, junction_name, base_demand=0.0, demand_pattern=None, category=None):
+        """Add demand entry to a junction"""
+        pass
+
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
                  min_vol=None, vol_curve=None, coordinates=None):
@@ -1053,8 +1057,9 @@ class WaterNetworkModel(object):
             pattern = self.get_pattern(pattern_name)
 
             # Reset base demand
-            node.demands.clear()
-            node.demands.add(1.0, pattern, 'PDD')
+            if hasattr(node, 'demands'):
+                node.demands.clear()
+                node.demands.append((1.0, pattern, 'PDD'))
 
     def get_node(self, name):
         """
@@ -1160,6 +1165,11 @@ class WaterNetworkModel(object):
         Control object.
         """
         return self._controls[name]
+
+
+    def get_demands_for_junction(self, junction_name, category=None):
+        """Returns a list of demands at a junction"""
+        pass
 
     def get_links_for_node(self, node_name, flag='ALL'):
         """
@@ -2196,7 +2206,7 @@ class Junction(Node):
 #        else:
 #            self._demand_pattern_name = None
         self.demands = DemandList()
-        if base_demand: self.demands.add(base_demand, demand_pattern, '_base_demand')
+        if base_demand: self.demands.append((base_demand, demand_pattern, '_base_demand'))
 #        self._categorized_demands = {}  # _categorized_demands[category] = (base_demand, pattern_name)
         self.elevation = elevation
         self.nominal_pressure = 20.0
@@ -2217,14 +2227,14 @@ class Junction(Node):
     @property
     def base_demand(self):
         if len(self.demands) > 0:
-            dem0 = self.demands.get_entry(0)
+            dem0 = self.demands[0]
             return dem0.base_demand
         return 0
         
     @property
     def demand_pattern_name(self):
         if len(self.demands) > 0:
-            dem0 = self.demands.get_entry(0)
+            dem0 = self.demands[0]
             return dem0.pattern_name
         return None
 

@@ -479,8 +479,8 @@ class InpFile(object):
         for junction_name in nnames:
             junction = wn._junctions[junction_name]
             if junction.demands:
-                base_demand = junction.demands.get_entry(0).base_demand
-                demand_pattern = junction.demands.get_entry(0).pattern_name
+                base_demand = junction.demands[0].base_demand
+                demand_pattern = junction.demands[0].pattern_name
             else:
                 base_demand = 0.0
                 demand_pattern = None
@@ -1210,8 +1210,8 @@ class InpFile(object):
                 pattern = None
             else:
                 pattern = self.wn.get_pattern(current[2])
-            node.demands.add(to_si(self.flow_units, float(current[1]), HydParam.Demand), 
-                                    pattern, category)
+            node.demands.append((to_si(self.flow_units, float(current[1]), HydParam.Demand), 
+                                    pattern, category))
 
     def _write_demands(self, f, wn):
         f.write('[DEMANDS]\n'.encode('ascii'))
@@ -1222,7 +1222,7 @@ class InpFile(object):
         nodes.sort()
         for node in nodes:
             demands = wn.get_node(node).demands
-            for ct, demand in enumerate(demands.items()):
+            for ct, demand in enumerate(demands):
                 if ct == 0: continue
                 E = {'node': node,
                      'base': from_si(self.flow_units, demand.base_demand, HydParam.Demand),

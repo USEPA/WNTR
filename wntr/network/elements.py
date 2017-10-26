@@ -8,7 +8,12 @@ The wntr.network.elements module contains base classes for elements of a water n
 
 import enum
 import numpy as np
-import six
+import sys
+
+if sys.version_info[0] == 2:
+    from collections import MutableSequence
+else:
+    from collections.abc import MutableSequence
 
 class Curve(object):
     """
@@ -183,7 +188,7 @@ class Pattern(object):
         elif not isinstance(values, list):
             self._multipliers = np.array(values)
 
-    def at_step(self, step):
+    def __getitem__(self, step):
         """Get the multiplier appropriate for step
         
         Parameters
@@ -199,12 +204,11 @@ class Pattern(object):
         """
         nmult = len(self._multipliers)
         if nmult == 0:                          return 1.0
-        elif self.wrap:                         return self._multipliers[step%nmult]
+        elif self.wrap:                         return self._multipliers[int(step%nmult)]
         elif step < 0 or step >= nmult:         return 0.0
         return self._multipliers[step]
-    __getitem__ = at_step
 
-    def at_time(self, time):
+    def at(self, time):
         """The pattern value at 'time', given in seconds since start of simulation
         
         Parameters
@@ -220,10 +224,10 @@ class Pattern(object):
         step = ((time+self.step_start)//self.step_size)
         nmult = len(self._multipliers)
         if nmult == 0:                          return 1.0
-        elif self.wrap:                         return self._multipliers[step%nmult]
+        elif self.wrap:                         return self._multipliers[int(step%nmult)]
         elif step < 0 or step >= nmult:         return 0.0
         return self._multipliers[step]
-    __call__ = at_time
+    __call__ = at
 
 
 class TimeVaryingValue(object):
@@ -247,8 +251,8 @@ class TimeVaryingValue(object):
         If `base` or `pattern` are invalid types
     
     """
-    def __init__(self, base=None, pattern=None, name=None):
-        if base and not isinstance(base, (int, float, complex)):
+    def __init__(self, base, pattern=None, name=None):
+        if not isinstance(base, (int, float, complex)):
             raise ValueError('TimeVaryingValue->base must be a number')
         if isinstance(pattern, Pattern):
             self._pattern = pattern
@@ -288,7 +292,7 @@ class TimeVaryingValue(object):
         
     @property
     def pattern(self):
-        """The pattern itself"""
+        """The pattern object"""
         return self._pattern
     
     @property
@@ -296,7 +300,16 @@ class TimeVaryingValue(object):
         """The name of this value"""
         return self._name
     
-    def at_step(self, step):
+    def set_base_value(self, value):
+        self._base = value
+    
+    def set_pattern(self, pattern):
+        self._pattern = pattern
+        
+    def set_name(self, name):
+        self._name = name
+    
+    def __getitem__(self, step):
         """Calculate the value at a specific step
         
         Parameters
@@ -312,10 +325,9 @@ class TimeVaryingValue(object):
         
         if not self._pattern:
             return self._base
-        return self._base * self._pattern.at_step(step)
-    __getitem__ = at_step
+        return self._base * self._pattern[step]
     
-    def at_time(self, time):
+    def at(self, time):
         """Calculate the value at a specific time
         
         Parameters
@@ -330,14 +342,14 @@ class TimeVaryingValue(object):
         """
         if not self._pattern:
             return self._base
-        return self._base * self._pattern.at_time(time)
-    __call__ = at_time
+        return self._base * self._pattern.at(time)
+    __call__ = at
 
 
 class Pricing(TimeVaryingValue):
     """A value class for pump pricing based on an optional time pattern"""
     def __init__(self, base_price=None, pattern=None, category=None):
-        super(Pricing, self).__init__(base=base_price, pattern=pattern, name=category)    
+        super(Pricing, self).__init__(base=base_price, pattern=pattern, name=category)
 
     def __str__(self):
         return repr(self)
@@ -347,7 +359,7 @@ class Pricing(TimeVaryingValue):
 
     def __repr__(self):
         fmt = "<Pricing: {}, {}, category={}>"
-        return fmt.format(self._base, self._pattern_name, repr(self._name))
+        return fmt.format(self._base, self.pattern_name, repr(self._name))
 
     @property
     def category(self):
@@ -371,7 +383,7 @@ class Speed(TimeVaryingValue):
 
     def __repr__(self):
         fmt = "<VariableSpeed: {}, {}, pump_name={}>"
-        return fmt.format(self._base, self._pattern_name, repr(self._name))
+        return fmt.format(self._base, self.pattern_name, repr(self._name))
 
     @property
     def base_speed(self):
@@ -394,8 +406,8 @@ class Demand(TimeVaryingValue):
         return id(self)
 
     def __repr__(self):
-        fmt = "<Demand: {}, {}, category={}>"
-        return fmt.format(self._base, self._pattern_name, repr(self._name))
+        fmt = "<Demand: base_demand={}, pattern={}, category={}>"
+        return fmt.format(self._base, repr(self.pattern_name), repr(self._name))
 
     @property
     def category(self):
@@ -404,6 +416,18 @@ class Demand(TimeVaryingValue):
     @property
     def base_demand(self):
         return self._base
+    
+    @base_demand.setter
+    def base_demand(self, value):
+        self._base = value
+
+    def demand_values(self, start_time, end_time, time_step):
+        """Create a numpy array populated with the demand for a range of times, including end"""
+        demand_times = range(start_time, end_time + time_step, time_step)
+        demand_values = np.zeros((len(demand_times,)))
+        for ct, t in enumerate(demand_times):
+            demand_values[ct] = self.at(t)
+        return demand_values
 
 
 class ReservoirHead(TimeVaryingValue):
@@ -419,7 +443,7 @@ class ReservoirHead(TimeVaryingValue):
 
     def __repr__(self):
         fmt = "<ReservoirHead: {}, {}>"
-        return fmt.format(self._base, self._pattern_name)
+        return fmt.format(self._base, self.pattern_name)
 
     @property
     def total_head(self):
@@ -592,169 +616,112 @@ class LinkStatus(enum.IntEnum):
                self.__class__.__name__ == other.__class__.__name__)
 
 
-class DemandList(object):
-    """Defines a demand or set of demands to be assigned to a node
+class DemandList(MutableSequence):
+    """List with specialized demand-specific calls and type checking"""
     
-    Allows for categorized demands and calculating the cumulative demand at a specific time
-    more easily
+    def __init__(self, *args):
+        self._list = []
+        for object in args:
+            self.append(object)
+
+    def __getitem__(self, index):
+        """Get the demand at index <==> y = S[index]"""
+        return self._list.__getitem__(index)
     
-    """
-    def __init__(self, base=None, pattern=None, name=None, category=None):
-        self._non_zero = False
-        self._demands = []
-        self.add(base, pattern, category)
-        self.name = name 
-        
-    def __str__(self):
-        return "<DemandList '{}'>".format(self.name)
-        
+    def __setitem__(self, index, object):
+        """Set demand and index <==> S[index] = object"""
+        if isinstance(object, (list, tuple)) and len(object) in [2,3]:
+            object = Demand(*object)
+        elif not isinstance(object, Demand):
+            raise ValueError('object must be a Demand or demand tuple')
+        return self._list.__setitem__(index, object)
+    
+    def __delitem__(self, index):
+        """Remove demand at index <==> del S[index]"""
+        return self._list.__delitem__(index)
+
     def __len__(self):
-        return len(self._demands)
-    
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if len(self._demands) != len(other._demands):
-            return False
-        l1 = [ v for v in self._demands ]
-        l2 = [ v for v in other._demands ]
-        l1.sort()
-        l2.sort()
-        for v1, v2 in zip(l1, l2):
-            if v1[0] != v2[0] or v1[1] != v2[1] or v1[2] != v2[2]: 
-                return False
-        return True
+        """Number of demands in list <==> len(S)"""
+        return len(self._list)
     
     def __nonzero__(self):
-        return self._non_zero
+        """True if demands exist in list NOT if demand is non-zero"""
+        return len(self._list) > 0
+    __bool__ = __nonzero__
+    
+    def __repr__(self):
+        return '<DemandList: {}>'.format(repr(self._list))
+    
+    def insert(self, index, object):
+        """S.insert(index, object) - insert object before index"""
+        if isinstance(object, (list, tuple)) and len(object) in [2,3]:
+            object = Demand(*object)
+        elif not isinstance(object, Demand):
+            raise ValueError('object must be a Demand or demand tuple')
+        self._list.insert(index, object)
+    
+    def append(self, object):
+        """S.append(object) - append object to the end"""
+        if isinstance(object, (list, tuple)) and len(object) in [2,3]:
+            object = Demand(*object)
+        elif not isinstance(object, Demand):
+            raise ValueError('object must be a Demand or demand tuple')
+        self._list.append(object)
+    
+    def extend(self, iterable):
+        """S.extend(iterable) - extend list by appending elements from the iterable"""
+        for object in iterable:
+            if isinstance(object, (list, tuple)) and len(object) in [2,3]:
+                object = Demand(*object)
+            elif not isinstance(object, Demand):
+                raise ValueError('object must be a Demand or demand tuple')
+            self._list.append(object)
 
-    def items(self):
-        return self._demands.__iter__()
+    def clear(self):
+        """S.clear() - remove all entries"""
+        self._list = []
+
+    def at(self, time, category=None):
+        """Get the total demand at a given time - Demand objects must have been initialized with a step size"""
+        demand = 0.0
+        if category:
+            for dem in self._list:
+                if dem.category == category:  
+                    demand += dem.at(time)
+        else:
+            for dem in self._list:
+                demand += dem.at(time)
+        return demand
+    __call__ = at
+    
+    def base_demand_list(self, category=None):
+        """A list of the base demands, optionally of a single category"""
+        res = []
+        for dem in self._list:
+            if category is None or dem.category == category:
+                res.append(dem.base_demand)
+        return res
+
+    def pattern_list(self, category=None):
+        """A list of the patterns, optionally of a single category"""
+        res = []
+        for dem in self._list:
+            if category is None or dem.category == category:
+                res.append(dem.pattern)
+        return res
+    
+    def category_list(self):
+        """A list of all the pattern categories"""
+        res = []
+        for dem in self._list:
+                res.append(dem.category)
+        return res
 
     def demand_values(self, start_time, end_time, time_step):
+        """Create a numpy array populated with the total demand for a range of times"""
         demand_times = range(start_time, end_time + time_step, time_step)
         demand_values = np.zeros((len(demand_times,)))
-        for dem in self._demands:
+        for dem in self._list:
             for ct, t in enumerate(demand_times):
                 demand_values[ct] += dem(t)
         return demand_values
-
-    def base_demands(self):
-        """generator yielding the base demands"""
-        for v in self._demands:
-            yield v.base_demand
-    
-    def clear(self):
-        self._non_zero = False
-        while self._demands: self._demands.pop()
-    
-    @property
-    def total_base_demand(self):
-        sum = 0.0
-        for v in self._demands:
-            sum += v.base_demand
-            
-    def patterns(self):
-        """generator yielding the patterns"""
-        for v in self._demands:
-            yield v.pattern
-            
-    def categories(self):
-        """generator yielding the categories"""
-        for v in self._demands:
-            yield v.cattegory
-    
-    def add(self, base, pattern, category=None):
-        """add a base demand, pattern, and optional category name to the demands"""
-        if base is None and pattern is None:
-            return
-        self._demands.append(Demand(float(base), pattern, category))
-        self._non_zero = (self.total_base_demand != 0.0)
-
-    def append(self, obj):
-        """add a tuple of (base, pattern, category) to the demands"""
-        demand = None
-        if isinstance(obj, tuple) and len(obj) == 3:
-            demand = Demand(*obj)
-        elif isinstance(obj, Demand):
-            demand = obj
-        else:
-            raise ValueError('remove requires a tuple or Demand')
-        self._demands.append(demand)
-        self._non_zero = (self.total_base_demand != 0.0)
-
-    def extend(self, obj):
-        """add all demands in obj to this Demand's demands"""
-        if isinstance(obj, list):
-            for i in list: self.append(i)
-        elif isinstance(obj, DemandList):
-            self._demands.extend(obj._demands)
-        elif isinstance(obj, Demand):
-            self.append(obj)
-        else:
-            raise ValueError('obj must be a list of 3-tuples or a Demand object')
-        self._non_zero = (self.total_base_demand != 0.0)
-
-    def remove(self, obj):
-        """Remove an entry that exactly matches the (base, pattern, category) tuple"""
-        if isinstance(obj, tuple) and len(obj) == 3:
-            demand = Demand(*obj)
-        elif isinstance(obj, Demand):
-            demand = obj
-        else:
-            raise ValueError('remove requires a tuple or Demand')
-        ret = self._demands.remove(demand)
-        self._non_zero = (self.total_base_demand != 0.0)
-        return ret
-
-    def pop(self, index=None):
-        """remove the demand at index, defaulting to the last one"""
-        ret = self._demands.pop(index)
-        self._non_zero = (self.total_base_demand != 0.0)        
-        return ret
-    
-    def add_entry(self, entry):
-        """add a Demand to the list of demands"""
-        self.append(entry)
-    
-    def remove_entry(self, index):
-        """remove a demand entry by index"""
-        self.pop(index)
-
-    def get_entry(self, index):
-        """Returns a Demand from the given index"""
-        return self._demands[index]
-    
-    def at_step(self, step):
-        """Get the total demand at a given step index"""
-        if not self._non_zero: return 0.0
-        demand = 0.0
-        for dem in self._demands:
-            demand += dem.at_step(step)
-        return demand
-    __getitem__ = at_step
-
-    def at_time(self, time):
-        """Get the total demand at a given time - Demand objects must have been initialized with a step size"""
-        if not self._non_zero: return 0.0
-        demand = 0.0
-        for dem in self._demands:
-            demand += dem.at_time(time)
-        return demand
-    __call__ = at_time
-
-    @property
-    def _all_categories(self):
-        """return a set of all category names within this Demand"""
-        return set([cat for _, _, cat in self.demands])
-
-    def _category_at_step(self, category, step):
-        """Get the category demand at a given step index"""
-        if not self._non_zero: return 0
-        return sum([base * pat.at_step(step) for base, pat, cat in self.demands if cat == category])
-
-    def _category_at_time(self, category, time):
-        """Get the category demand at a given time - Demand objects must have been initialized with a step size"""
-        if not self._non_zero: return 0
-        return sum([base * pat.at_time(time) for base, pat, cat in self.demands if cat == category])
-

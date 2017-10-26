@@ -83,7 +83,7 @@ def extent_contaminant(node_results, link_results, wn, detection_limit):
     EC = pd.DataFrame(index = node_results['quality'].index, columns = node_results['quality'].columns, data = 0)
     L = pd.DataFrame(index = node_results['quality'].index, columns = node_results['quality'].columns, data = 0)
 
-    for t in node_results.major_axis:
+    for t in node_results['quality'].index:
         # Weight the graph
         attr = link_results['flowrate'].loc[t, :]   
         G.weight_graph(link_attribute=attr)  

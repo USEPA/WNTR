@@ -134,7 +134,7 @@ def hydraulic_metrics(wn):
     P_lower = 21.09 # m (30 psi)
 
     # Query pressure
-    pressure = results.node.loc['pressure', :, junctions]
+    pressure = results.node['pressure'].loc[ :, junctions]
     mask = wntr.metrics.query(pressure, np.greater, P_lower)
     pressure_regulation = mask.all(axis=0).sum() # True over all time
     print("Fraction of nodes > 30 psi: " + str(pressure_regulation))
@@ -155,7 +155,7 @@ def hydraulic_metrics(wn):
 
     # Create a weighted graph for flowrate at time 36 hours
     t = 36*3600
-    attr = results.link.loc['flowrate', t, :]
+    attr = results.link['flowrate'].loc[ t, :]
     G_flowrate_36hrs = wn.get_graph_deep_copy()
     G_flowrate_36hrs.weight_graph(link_attribute=attr)
 
@@ -179,7 +179,7 @@ def hydraulic_metrics(wn):
     shat = []
     G_flowrate_t = wn.get_graph_deep_copy()
     for t in np.arange(0, 24*3600+1,3600):
-        attr = results.link.loc['flowrate', t, :]
+        attr = results.link['flowrate'].loc[ t, :]
         G_flowrate_t.weight_graph(link_attribute=attr)
         entropy = wntr.metrics.entropy(G_flowrate_t)
         shat.append(entropy[1])
@@ -207,45 +207,46 @@ def hydraulic_metrics(wn):
 def water_quality_metrics(wn):
     # Simulate hydraulics and water quality
     sim = wntr.sim.EpanetSimulator(wn)
-    wn.options.quality = 'CHEMICAL'
-    wn.add_pattern('SourcePattern', start_time=2*3600, end_time=15*3600)
+    wn.options.quality.type = 'CHEMICAL'
+    source_pattern = wntr.network.elements.Pattern.BinaryPattern('SourcePattern', step_size=wn.options.time.pattern_timestep, start_time=2*3600, end_time=15*3600, duration=wn.options.time.duration)
+    wn.add_pattern('SourcePattern', source_pattern)
     wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
     wn.add_source('Source2', '123', 'SETPOINT', 1000, 'SourcePattern')
     results_CHEM = sim.run_sim()
     
-    wn.options.quality = 'AGE'
+    wn.options.quality.type = 'AGE'
     results_AGE = sim.run_sim()
     
-    wn.options.quality = 'TRACE'
-    wn.options.quality_value = '111'
+    wn.options.quality.type = 'TRACE'
+    wn.options.quality.value = '111'
     results_TRACE = sim.run_sim()
 
     # plot chem scenario
-    CHEM_at_5hr = results_CHEM.node.loc['quality', 5*3600, :]
+    CHEM_at_5hr = results_CHEM.node['quality'].loc[ 5*3600, :]
     wntr.graphics.plot_network(wn, node_attribute=CHEM_at_5hr, node_size=20,
                           title='Chemical concentration, time = 5 hours')
-    CHEM_at_node = results_CHEM.node.loc['quality', :, '208']
+    CHEM_at_node = results_CHEM.node['quality'].loc[ :, '208']
     plt.figure()
     CHEM_at_node.plot(title='Chemical concentration, node 208')
 
     # Plot age scenario (convert to hours)
-    AGE_at_5hr = results_AGE.node.loc['quality', 5*3600, :]/3600.0
+    AGE_at_5hr = results_AGE.node['quality'].loc[ 5*3600, :]/3600.0
     wntr.graphics.plot_network(wn, node_attribute=AGE_at_5hr, node_size=20,
                           title='Water age (hrs), time = 5 hours')
-    AGE_at_node = results_AGE.node.loc['quality', :, '208']/3600.0
+    AGE_at_node = results_AGE.node['quality'].loc[ :, '208']/3600.0
     plt.figure()
     AGE_at_node.plot(title='Water age, node 208')
 
     # Plot trace scenario
-    TRACE_at_5hr = results_TRACE.node.loc['quality', 5*3600, :]
+    TRACE_at_5hr = results_TRACE.node['quality'].loc[ 5*3600, :]
     wntr.graphics.plot_network(wn, node_attribute=TRACE_at_5hr, node_size=20,
                           title='Trace percent, time = 5 hours')
-    TRACE_at_node = results_TRACE.node.loc['quality', :, '208']
+    TRACE_at_node = results_TRACE.node['quality'].loc[ :, '208']
     plt.figure()
     TRACE_at_node.plot(title='Trace percent, node 208')
 
     # Calculate average water age (last 48 hours)
-    age = results_AGE.node.loc['quality',:,:]
+    age = results_AGE.node['quality'].loc[:,:]
     age_last_48h = age.loc[age.index[-1]-48*3600:age.index[-1]]/3600
     age_last_48h.index = age_last_48h.index/3600
     age_last_48h.plot(legend=False)
@@ -257,7 +258,7 @@ def water_quality_metrics(wn):
 
     # Query concentration
     chem_upper_bound = 750
-    chem = results_CHEM.node.loc['quality', :, :]
+    chem = results_CHEM.node['quality'].loc[ :, :]
     mask = wntr.metrics.query(chem, np.greater, chem_upper_bound)
     chem_regulation = mask.any(axis=0) # True for any time
     wntr.graphics.plot_network(wn, node_attribute=chem_regulation, node_size=40,
@@ -276,8 +277,10 @@ def water_quality_metrics(wn):
 
 def water_security_metrics(wn):
     # Define WQ scenario
-    wn.options.quality = 'CHEMICAL'
-    wn.add_pattern('SourcePattern', start_time=2*3600, end_time=15*3600)
+    wn.options.quality.type = 'CHEMICAL'
+    # Source pattern already exists
+    # source_pattern = wntr.network.elements.Pattern.BinaryPattern('SourcePattern', step_size=wn.options.time.pattern_timestep, start_time=2*3600, end_time=15*3600, duration=wn.options.time.duration)
+    # wn.add_pattern('SourcePattern', source_pattern)
     wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
 
     # Simulate hydraulics and water quality for each scenario
@@ -307,10 +310,10 @@ def population_impacted_metrics(wn):
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
     junctions = [name for name, node in wn.junctions()]
-    pop_impacted = wntr.metrics.population_impacted(pop, results.node['pressure',:,junctions], np.less, 40)
+    pop_impacted = wntr.metrics.population_impacted(pop, results.node['pressure'].loc[:,junctions], np.less, 40)
     plt.figure()
     pop_impacted.sum(axis=1).plot(title='Total population with pressure < 40 m')
-    nodes_impacted = wntr.metrics.query(results.node['pressure',:,junctions], np.less, 40)
+    nodes_impacted = wntr.metrics.query(results.node['pressure'].loc[:,junctions], np.less, 40)
     wntr.graphics.plot_network(wn, node_attribute=nodes_impacted.any(axis=0), node_size=40,
                           title='Nodes impacted')
 
