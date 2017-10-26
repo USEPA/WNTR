@@ -3,21 +3,21 @@ The wntr.network.model module includes methods to define a water network
 model.
 """
 import copy
-import networkx as nx
+import logging
 import math
+import networkx as nx
+import numpy as np
+import six
 from scipy.optimize import fsolve
-import wntr.network
-import wntr.network.controls
+
+from .graph import WntrMultiDiGraph
+from .controls import IfThenElseControl, ControlAction, _FCVControl, ConditionalControl, TimeControl
+from .controls import _MultiConditionalControl, _PRVControl, _CheckValveHeadControl
 from .options import WaterNetworkOptions
 from .elements import Curve, Pattern, Source
 from .elements import LinkStatus
 from .elements import DemandList , ReservoirHead #, HeadCurve, PumpCurve, EfficiencyCurve, HeadlossCurve
 import wntr.epanet
-import numpy as np
-import six
-import sys
-import logging
-import enum
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class WaterNetworkModel(object):
         self._check_valves = []
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
-        self._graph = wntr.network.WntrMultiDiGraph()
+        self._graph = WntrMultiDiGraph()
 
         self._Htol = 0.00015  # Head tolerance in meters.
         self._Qtol = 2.8e-5  # Flow tolerance in m^3/s.
@@ -475,7 +475,7 @@ class WaterNetworkModel(object):
         if name in self._controls:
             raise ValueError('The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control.')
 
-        if not isinstance(control_object, wntr.network.controls.IfThenElseControl):
+        if not isinstance(control_object, IfThenElseControl):
             target = control_object._control_action._target_obj_ref
             if isinstance(target, Link):
                 start_node_name = target.start_node
@@ -503,26 +503,26 @@ class WaterNetworkModel(object):
         """
         pump = self.get_link(pump_name)
 
-        end_power_outage_action = wntr.network.ControlAction(pump, '_power_outage', False)
-        start_power_outage_action = wntr.network.ControlAction(pump, '_power_outage', True)
+        end_power_outage_action = ControlAction(pump, '_power_outage', False)
+        start_power_outage_action = ControlAction(pump, '_power_outage', True)
 
-        control = wntr.network.TimeControl(self, end_time, 'SIM_TIME', False, end_power_outage_action)
+        control = TimeControl(self, end_time, 'SIM_TIME', False, end_power_outage_action)
         control._priority = 0
         self.add_control(pump_name+'PowerOn'+str(end_time),control)
 
-        control = wntr.network.TimeControl(self, start_time, 'SIM_TIME', False, start_power_outage_action)
+        control = TimeControl(self, start_time, 'SIM_TIME', False, start_power_outage_action)
         control._priority = 3
         self.add_control(pump_name+'PowerOff'+str(start_time),control)
 
 
-        opened_action_obj = wntr.network.ControlAction(pump, 'status', LinkStatus.opened)
-        closed_action_obj = wntr.network.ControlAction(pump, 'status', LinkStatus.closed)
+        opened_action_obj = ControlAction(pump, 'status', LinkStatus.opened)
+        closed_action_obj = ControlAction(pump, 'status', LinkStatus.closed)
 
-        control = wntr.network._MultiConditionalControl([(pump,'_power_outage')],[np.equal],[True], closed_action_obj)
+        control = _MultiConditionalControl([(pump,'_power_outage')],[np.equal],[True], closed_action_obj)
         control._priority = 3
         self.add_control(pump_name+'PowerOffStatus'+str(end_time),control)
 
-        control = wntr.network._MultiConditionalControl([(pump,'_prev_power_outage'),(pump,'_power_outage')],[np.equal,np.equal],[True,False],opened_action_obj)
+        control = _MultiConditionalControl([(pump,'_prev_power_outage'),(pump,'_power_outage')],[np.equal,np.equal],[True,False],opened_action_obj)
         control._priority = 0
         self.add_control(pump_name+'PowerOnStatus'+str(start_time),control)
 
@@ -574,7 +574,7 @@ class WaterNetworkModel(object):
         if with_control:
             x=[]
             for control_name, control in self._controls.items():
-                if type(control)==wntr.network._PRVControl:
+                if type(control)==_PRVControl:
                     if link==control._close_control_action._target_obj_ref:
                         logger.warn('Control '+control_name+' is being removed along with link '+name)
                         x.append(control_name)
@@ -586,7 +586,7 @@ class WaterNetworkModel(object):
                 self.remove_control(i)
         else:
             for control_name, control in self._controls.items():
-                if type(control)==wntr.network._PRVControl:
+                if type(control)==_PRVControl:
                     if link==control._close_control_action._target_obj_ref:
                         logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
                 else:
@@ -624,7 +624,7 @@ class WaterNetworkModel(object):
         if with_control:
             x = []
             for control_name, control in self._controls.items():
-                if type(control)==wntr.network._PRVControl:
+                if type(control)==_PRVControl:
                     if node==control._close_control_action._target_obj_ref:
                         logger.warn('Control '+control_name+' is being removed along with node '+name)
                         x.append(control_name)
@@ -636,7 +636,7 @@ class WaterNetworkModel(object):
                 self.remove_control(i)
         else:
             for control_name, control in self._controls.items():
-                if type(control)==wntr.network._PRVControl:
+                if type(control)==_PRVControl:
                     if node==control._close_control_action._target_obj_ref:
                         logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
                 else:
@@ -1263,16 +1263,16 @@ class WaterNetworkModel(object):
                     else:
                         link_has_cv = True
 
-                close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
-                open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
+                close_control_action = ControlAction(link, 'status', LinkStatus.closed)
+                open_control_action = ControlAction(link, 'status', LinkStatus.opened)
 
-                control = wntr.network.ConditionalControl((tank,'head'), np.less_equal, min_head,close_control_action)
+                control = ConditionalControl((tank,'head'), np.less_equal, min_head,close_control_action)
                 control._priority = 1
                 control.name = link_name+' closed because tank '+tank.name+' head is less than min head'
                 tank_controls.append(control)
 
                 if not link_has_cv:
-                    control = wntr.network._MultiConditionalControl([(tank,'head'), (tank, 'prev_head'),
+                    control = _MultiConditionalControl([(tank,'head'), (tank, 'prev_head'),
                                                                     (self, 'sim_time')],
                                                                    [np.greater, np.less_equal,np.greater],
                                                                    [min_head+self._Htol, min_head+self._Htol, 0.0],
@@ -1287,7 +1287,7 @@ class WaterNetworkModel(object):
                     else:
                         other_node_name = link.start_node
                     other_node = self.get_node(other_node_name)
-                    control = wntr.network._MultiConditionalControl([(tank,'head'),(tank,'head')],
+                    control = _MultiConditionalControl([(tank,'head'),(tank,'head')],
                                                                    [np.less_equal,np.less_equal],
                                                                    [min_head+self._Htol,(other_node,'head')],
                                                                    open_control_action)
@@ -1313,16 +1313,16 @@ class WaterNetworkModel(object):
                     else:
                         link_has_cv = True
 
-                close_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.closed)
-                open_control_action = wntr.network.ControlAction(link, 'status', LinkStatus.opened)
+                close_control_action = ControlAction(link, 'status', LinkStatus.closed)
+                open_control_action = ControlAction(link, 'status', LinkStatus.opened)
 
-                control = wntr.network.ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
+                control = ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
                 control._priority = 1
                 control.name = link_name+' closed because tank '+tank.name+' head is greater than max head'
                 tank_controls.append(control)
 
                 if not link_has_cv:
-                    control = wntr.network._MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
+                    control = _MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
                     control._partial_step_for_tanks = False
                     control._priority = 0
                     control.name = link_name+'opened because tank '+tank.name+' head is less than max head'
@@ -1333,12 +1333,12 @@ class WaterNetworkModel(object):
                     else:
                         other_node_name = link.start_node
                     other_node = self.get_node(other_node_name)
-                    control = wntr.network._MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater_equal],[max_head-self._Htol,(other_node,'head')],open_control_action)
+                    control = _MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater_equal],[max_head-self._Htol,(other_node,'head')],open_control_action)
                     control._priority = 2
                     control.name = link_name+' opened because tank '+tank.name+' head above max head but flow should be out'
                     tank_controls.append(control)
 
-                #control = wntr.network._MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
+                #control = _MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
                 #control._priority = 2
                 #self.add_control(control)
 
@@ -1349,20 +1349,20 @@ class WaterNetworkModel(object):
         for pipe_name in self._check_valves:
             pipe = self.get_link(pipe_name)
 
-            close_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.closed)
-            open_control_action = wntr.network.ControlAction(pipe, 'status', LinkStatus.opened)
+            close_control_action = ControlAction(pipe, 'status', LinkStatus.closed)
+            open_control_action = ControlAction(pipe, 'status', LinkStatus.opened)
 
-            control = wntr.network._CheckValveHeadControl(self, pipe, np.greater, self._Htol, open_control_action)
+            control = _CheckValveHeadControl(self, pipe, np.greater, self._Htol, open_control_action)
             control._priority = 0
             control.name = pipe.name+'opened because of cv head control'
             cv_controls.append(control)
 
-            control = wntr.network._CheckValveHeadControl(self, pipe, np.less, -self._Htol, close_control_action)
+            control = _CheckValveHeadControl(self, pipe, np.less, -self._Htol, close_control_action)
             control._priority = 3
             control.name = pipe.name+' closed because of cv head control'
             cv_controls.append(control)
 
-            control = wntr.network.ConditionalControl((pipe,'flow'),np.less, -self._Qtol, close_control_action)
+            control = ConditionalControl((pipe,'flow'),np.less, -self._Qtol, close_control_action)
             control._priority = 3
             control.name = pipe.name+' closed because negative flow in cv'
             cv_controls.append(control)
@@ -1373,20 +1373,20 @@ class WaterNetworkModel(object):
         pump_controls = []
         for pump_name, pump in self.links(Pump):
 
-            close_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.closed)
-            open_control_action = wntr.network.ControlAction(pump, '_cv_status', LinkStatus.opened)
+            close_control_action = ControlAction(pump, '_cv_status', LinkStatus.closed)
+            open_control_action = ControlAction(pump, '_cv_status', LinkStatus.opened)
 
-            control = wntr.network._CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
+            control = _CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
             control._priority = 0
             control.name = pump.name+' opened because of cv head control'
             pump_controls.append(control)
 
-            control = wntr.network._CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
+            control = _CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
             control._priority = 3
             control.name = pump.name+' closed because of cv head control'
             pump_controls.append(control)
 
-            control = wntr.network.ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
+            control = ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
             control._priority = 3
             control.name = pump.name+' closed because negative flow in pump'
             pump_controls.append(control)
@@ -1398,17 +1398,17 @@ class WaterNetworkModel(object):
         for valve_name, valve in self.links(Valve):
 
             if valve.valve_type == 'PRV':
-                close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Closed)
-                open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Opened)
-                active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Active)
+                close_control_action = ControlAction(valve, '_status', LinkStatus.Closed)
+                open_control_action = ControlAction(valve, '_status', LinkStatus.Opened)
+                active_control_action = ControlAction(valve, '_status', LinkStatus.Active)
 
-                control = wntr.network._PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
+                control = _PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
                 control.name = valve.name+' prv control'
                 valve_controls.append(control)
             elif valve.valve_type == 'FCV':
-                open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Opened)
-                active_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Active)
-                control = wntr.network.controls._FCVControl(self, valve, self._Htol, open_control_action,
+                open_control_action = ControlAction(valve, '_status', LinkStatus.Opened)
+                active_control_action = ControlAction(valve, '_status', LinkStatus.Active)
+                control = _FCVControl(self, valve, self._Htol, open_control_action,
                                                             active_control_action)
                 control.name = valve.name + ' FCV control'
                 valve_controls.append(control)
@@ -2293,13 +2293,13 @@ class Junction(Node):
         self.leak_discharge_coeff = discharge_coeff
 
         if start_time is not None:
-            start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
-            control = wntr.network.TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
+            start_control_action = ControlAction(self, 'leak_status', True)
+            control = TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
             wn.add_control(self._leak_start_control_name, control)
 
         if end_time is not None:
-            end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
-            control = wntr.network.TimeControl(wn, end_time, 'SIM_TIME', False, end_control_action)
+            end_control_action = ControlAction(self, 'leak_status', False)
+            control = TimeControl(wn, end_time, 'SIM_TIME', False, end_control_action)
             wn.add_control(self._leak_end_control_name, control)
 
     def remove_leak(self,wn):
@@ -2345,8 +2345,8 @@ class Junction(Node):
         wn._discard_control(self._leak_start_control_name)
 
         # add new control
-        start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
-        control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
+        start_control_action = ControlAction(self, 'leak_status', True)
+        control = TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
         wn.add_control(self._leak_start_control_name, control)
 
     def set_leak_end_time(self, wn, t):
@@ -2368,8 +2368,8 @@ class Junction(Node):
         wn._discard_control(self._leak_end_control_name)
 
         # add new control
-        end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
-        control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
+        end_control_action = ControlAction(self, 'leak_status', False)
+        control = TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
 
     def discard_leak_controls(self, wn):
@@ -2515,13 +2515,13 @@ class Tank(Node):
         self.leak_discharge_coeff = discharge_coeff
 
         if start_time is not None:
-            start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
-            control = wntr.network.TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
+            start_control_action = ControlAction(self, 'leak_status', True)
+            control = TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
             wn.add_control(self._leak_start_control_name, control)
 
         if end_time is not None:
-            end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
-            control = wntr.network.TimeControl(wn, end_time, 'SIM_TIME', False, end_control_action)
+            end_control_action = ControlAction(self, 'leak_status', False)
+            control = TimeControl(wn, end_time, 'SIM_TIME', False, end_control_action)
             wn.add_control(self._leak_end_control_name, control)
 
     def remove_leak(self,wn):
@@ -2567,8 +2567,8 @@ class Tank(Node):
         wn._discard_control(self._leak_start_control_name)
 
         # add new control
-        start_control_action = wntr.network.ControlAction(self, 'leak_status', True)
-        control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
+        start_control_action = ControlAction(self, 'leak_status', True)
+        control = TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
         wn.add_control(self._leak_start_control_name, control)
 
     def set_leak_end_time(self, wn, t):
@@ -2590,8 +2590,8 @@ class Tank(Node):
         wn._discard_control(self._leak_end_control_name)
 
         # add new control
-        end_control_action = wntr.network.ControlAction(self, 'leak_status', False)
-        control = wntr.network.TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
+        end_control_action = ControlAction(self, 'leak_status', False)
+        control = TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
 
     def use_external_leak_control(self, wn):
