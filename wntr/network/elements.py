@@ -1,9 +1,6 @@
 """
 The wntr.network.elements module contains base classes for elements of a water network model.
 
-.. versionchanged:: 0.1.5
-    Module added.
-
 """
 
 import enum
@@ -617,7 +614,26 @@ class LinkStatus(enum.IntEnum):
 
 
 class DemandList(MutableSequence):
-    """List with specialized demand-specific calls and type checking"""
+    """List with specialized demand-specific calls and type checking.
+    
+    A demand list is a list of demands and can be used with all normal list-like commands.
+    For example,
+    
+    >>> from wntr.network.elements import DemandList
+    >>> dl = DemandList()
+    >>> len(dl)
+    0
+    >>> dl.append( (0.5, None, None) )
+    >>> len(dl)
+    1
+    >>> dl[0]
+    <Demand: base_demand=0.5, pattern=None, category=None>
+    
+    The demand list does not have any attributes, but can be created by passing in demand objects
+    or demand tuples as ``(base_demand, pattern, category_name)``
+    
+    
+    """
     
     def __init__(self, *args):
         self._list = []

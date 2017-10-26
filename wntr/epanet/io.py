@@ -1491,7 +1491,7 @@ class InpFile(object):
                 elif key == 'VISCOSITY':
                     opts.general.viscosity = float(words[1])
                 elif key == 'DIFFUSIVITY':
-                    opts.general.diffusivity = float(words[1])
+                    opts.quality.diffusivity = float(words[1])
                 elif key == 'SPECIFIC':
                     opts.general.specific_gravity = float(words[2])
                 elif key == 'TRIALS':
@@ -1556,7 +1556,7 @@ class InpFile(object):
         else:
             f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.type, wn.options.quality.value).encode('ascii'))
         f.write(entry_float.format('VISCOSITY', wn.options.general.viscosity).encode('ascii'))
-        f.write(entry_float.format('DIFFUSIVITY', wn.options.general.diffusivity).encode('ascii'))
+        f.write(entry_float.format('DIFFUSIVITY', wn.options.quality.diffusivity).encode('ascii'))
         f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.general.specific_gravity).encode('ascii'))
         f.write(entry_float.format('TRIALS', wn.options.solver.trials).encode('ascii'))
         f.write(entry_float.format('ACCURACY', wn.options.solver.accuracy).encode('ascii'))
@@ -2453,8 +2453,8 @@ class BinFile(object):
                     data = np.fromfile(fin, dtype = np.dtype(ftype), count = (4*nnodes+8*nlinks)*nrptsteps)
                     data = np.reshape(data, (nrptsteps, (4*nnodes+8*nlinks)))
                 except Exception as e:
-                    print e, "oops"
-             
+                    logger.exception('Failed to process file: %s', e)
+                    
                 df = pd.DataFrame(data.transpose(), index =index, columns = reporttimes)
                 df = df.transpose()
                 self.results.node = {}

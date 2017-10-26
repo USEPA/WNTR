@@ -1,8 +1,7 @@
 """
 Water Network Model Options Classes
 
-.. versionchanged:: 0.1.5
-    Module added. Class split into manageable pieces
+Provides the classes that make up the WNTR options for a model and to pass to solvers.
 
 """
 
@@ -18,10 +17,6 @@ class WaterNetworkOptions(object):
     The `user` attribute is a generic python class object that allows for dynamically created 
     attributes that are user specific; core WNTR functionality will never use options in the `user`
     section, but 3-rd party libraries or add-ons may.
-
-    .. versionchanged:: 0.1.5
-        Major changes to structure. All options now divided into groups. Slots control of
-        attributes to aid in checks.
         
     Attributes
     ----------
@@ -82,38 +77,40 @@ class WaterNetworkOptions(object):
 class TimeOptions(object):
     """All options relating to simulation and model timing.
     
-    .. versionchanged:: 0.1.5
-        Class added, attributes here are now in `options.time.*` in the water network model.
-        
+    Attributes
+    ----------
+    duration
+        Simulation duration in seconds (default 0)
+    hydraulic_timestep
+        Hydraulic timestep in seconds (default 3600)
+    quality_timestep
+        Water quality timestep in seconds (default 360)
+    rule_timestep
+        Rule timestep in seconds (default 360)
+    pattern_timestep
+        Pattern timestep in seconds (default 3600)
+    pattern_start
+        Time offset (in seconds) to find the starting pattern step; changes where in pattern
+        the pattern starts out, *not* what time the pattern starts (default 0)
+    report_timestep
+        Reporting timestep in seconds (default 3600)
+    report_start
+        Start time of the report in seconds from the start of the simulation (default 0)
+    start_clocktime
+        Time of day in seconds from 12 am at which the simulation begins (default 0)
+    
     """
     def __init__(self):
         # Time related options
         self.duration = 0
-        "Simulation duration in seconds"
-
         self.hydraulic_timestep = 3600
-        "Hydraulic timestep in seconds."
-
         self.quality_timestep = 360.0
-        "Water quality timestep in seconds"
-
         self.rule_timestep = 360.0
-        "Rule timestep in seconds"
-
         self.pattern_timestep = 3600.0
-        "Pattern timestep in seconds"
-
         self.pattern_start = 0.0
-        "Time offset in seconds at which all patterns will start. E.g., a value of 7200 would start the simulation with each pattern in the time period that corresponds to hour 2."
-
         self.report_timestep = 3600.0
-        "Reporting timestep in seconds"
-
         self.report_start = 0.0
-        "Start time of the report in seconds from the start of the simulation."
-
         self.start_clocktime = 0.0
-        "Time of day in seconds from 12 am at which the simulation begins."
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -133,12 +130,22 @@ class TimeOptions(object):
 
 
 class GraphicsOptions(object):
-    """All options relating to graphics.
+    """All options relating to graphics. 
     
-    .. versionchanged:: 0.1.5
-        Class added, attributes here are now in `options.graphics.*` in the water network model.
-        The previous _Backdrop class deprecated, moved here.
-        
+    May be used to contain custom, user defined values. Default attributes comprise the
+    EPANET "backdrop" section options.
+    
+    Attributes
+    ----------
+    dimensions
+        (x, y, dx, dy) Dimensions for backdrop image 
+    units
+        Units for backdrop image
+    filename
+        Filename where image is located
+    offset
+        (x,y) offset for the network
+    
     """
     def __init__(self, filename=None, dim=None, units=None, offset=None):
         self.dimensions = dim
@@ -163,47 +170,44 @@ class GraphicsOptions(object):
 
 
 class GeneralOptions(object):
-    """All options relating to general model (such as units).
+    """All options relating to general model, including hydraulics.
     
-    .. versionchanged:: 0.1.5
-        Class added, attributes here are now in `options.general.*` in the water network model.
-        
+    Attributes
+    ----------
+    units
+        Input/output units (EPANET); options are CFS, GPM, MGD, IMGD, AFD, LPS, LPM, MLD, CMH, and CMD (default is GPM)
+    headloss
+        Formula to use for computing head loss through a pipe. Options are H-W, D-W, and C-M (default is H-W)
+    hydraulics
+        Indicates if a hydraulics file should be read in or saved; options are None, USE and SAVE (as defined in the EPANET User Manual).
+    hydraulics_filename
+        Filename to use if hydraulics = SAVE
+    viscosity
+        Kinematic viscosity of the fluid
+    specific_gravity
+        Specific gravity of the fluid
+    pattern
+        Name of the default pattern for junction demands. If None, the junctions with demands but without patterns will be held constant
+    demand_multiplier
+        The demand multiplier adjusts the values of baseline demands for all junctions
+    emitter_exponent
+        The exponent used when computing flow from an emitter
+    map
+        Filename used to store node coordinates in (node, x, y) format
+
     """
     def __init__(self):
         # General options
         self.units = 'GPM'
-        "EPANET INP File units of measurement.  Options are CFS, GPM, MGD, IMGD, AFD, LPS, LPM, MLD, CMH, and CMD (as defined in the EPANET User Manual)."
-
         self.headloss = 'H-W'
-        "Formula to use for computing head loss through a pipe. Options are H-W, D-W, and C-M (as defined in the EPANET User Manual)."
-
         self.hydraulics = None #string
-        "Indicates if a hydraulics file should be used or saved.  Options are USE and SAVE (as defined in the EPANET User Manual)."
-
         self.hydraulics_filename = None #string
-        "Filename to use if hydraulics = SAVE"
-
         self.viscosity = 1.0
-        "Kinematic viscosity of the fluid"
-
-        self.diffusivity = 1.0
-        "Molecular diffusivity of the chemical"
-
         self.specific_gravity = 1.0
-        "Specific gravity of the fluid"
-        
-
         self.pattern = None
-        "Name of the default pattern for junction demands. If None, the junctions without patterns will be held constant."
-
         self.demand_multiplier = 1.0
-        "The demand multiplier adjusts the values of baseline demands for all junctions"
-
         self.emitter_exponent = 0.5
-        "The exponent used when computing flow from an emitter"
-
         self.map = None
-        "Filename used to store node coordinates"
         
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -225,15 +229,16 @@ class GeneralOptions(object):
 
 class ResultsOptions(object):
     """All options relating to results outputs.
-    
-    .. versionchanged:: 0.1.5
-        Class added, attributes here are now in `options.results.*` in the water network model.
-        Class _Report deprecated, values moved here
+
+    Attributes
+    ----------
+    statistic
+        Output results as statistical values, rather than time-series; options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the EPANET User Manual).
+
         
     """
     def __init__(self):
         self.statistic = 'NONE'
-        "Post processing statistic.  Options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the EPANET User Manual)."
         self.pagesize = 0
         self.file = None
         self.status = 'NO'
@@ -293,39 +298,43 @@ class ResultsOptions(object):
 class QualityOptions(object):
     """All options relating to water quality modeling.
     
-    .. versionchanged:: 0.1.5
-        Class added, attributes here are now in `options.quality.*` in the water network model.
-        Some names changed (specifically, options.quality is now options.quality.type)
+    Attributes
+    ----------
+    analysis_type
+        Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and TRACE (as defined in the EPANET User Manual)
+    trace_node
+        Trace node name if quality = TRACE
+    concentration_units
+        Chemical units if quality = CHEMICAL
+    diffusivity
+        Molecular diffusivity of the chemical
+    bulk_rxn_order
+        Order of reaction occurring in the bulk fluid
+    wall_rxn_order
+        Order of reaction occurring at the pipe wall
+    tank_rxn_order
+        Order of reaction occurring in the tanks
+    bulk_rxn_coeff        
+        Reaction coefficient for bulk fluid and tanks
+    wall_rxn_coeff
+        Reaction coefficient for pipe walls
+    limiting_potential
+        Specifies that reaction rates are proportional to the difference between the current concentration and some limiting potential value
+    roughness_correlation
+        Makes all default pipe wall reaction coefficients related to pipe roughness
         
     """
     def __init__(self):
         self.type = 'NONE'
-        "Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and TRACE (as defined in the EPANET User Manual)."
-
         self.value = None #string
-        "Trace node name if quality = TRACE, Chemical units if quality = CHEMICAL"
-
-        # Reaction options
+        self.diffusivity = 1.0
         self.bulk_rxn_order = 1.0
-        "Order of reaction occurring in the bulk fluid"
-
         self.wall_rxn_order = 1.0
-        "Order of reaction occurring at the pipe wall"
-
         self.tank_rxn_order = 1.0
-        "Order of reaction occurring in the tanks"
-
         self.bulk_rxn_coeff = 0.0
-        "Reaction coefficient for bulk fluid and tanks"
-
         self.wall_rxn_coeff = 0.0
-        "Reaction coefficient for pipe walls"
-
         self.limiting_potential = None
-        "Specifies that reaction rates are proportional to the difference between the current concentration and some limiting potential value"
-
         self.roughness_correlation = None
-        "Makes all default pipe wall reaction coefficients related to pipe roughness"
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -347,20 +356,24 @@ class QualityOptions(object):
 class EnergyOptions(object):
     """All options relating to energy calculations.
     
-    .. versionchanged:: 0.1.5
-        Class added, attributes here are now in `options.energy.*` in the water network model.
-        The _Energy class has been deprecated and moved here
-        
+    Attributes
+    ----------
+    global_price
+        Global average cost per Joule (default 0)
+    global_pattern
+        ID label of time pattern describing how energy price varies with time
+    global_efficiency
+        Global pump efficiency as percent; i.e., 75.0 means 75% (default 75%)
+    demand_charge
+        Added cost per maximum kW usage during the simulation period
+    
     """
     def __init__(self):
         self.global_price = 0
-        """Global average cost per Joule (default 0)"""
         self.global_pattern = None
-        """ID label of time pattern describing how energy price varies with time"""
         self.global_efficiency = 75.0
-        """Global pump efficiency as percent; i.e., 75.0 means 75% (default 75%)"""
         self.demand_charge = None
-        """Added cost per maximum kW usage during the simulation period"""
+
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -375,28 +388,36 @@ class EnergyOptions(object):
 
 class SolverOptions(object):
     """All options relating to solver options (for any solver).
+
+    Attributes
+    ----------
+    trials
+        Maximum number of trials used to solve network hydraulics
+    accuracy
+        Convergence criteria for hydraulic solutions
+    unbalanced
+        Indicate what happens if a hydraulic solution cannot be reached.  Options are STOP and CONTINUE  (as defined in the EPANET User Manual).
+    unbalanced_value
+        Number of additional trials if unbalanced = CONTINUE
+    tolerance
+        Convergence criteria for water quality solutions
+    checkfreq
+        Number of solution trials that pass between status check
+    maxcheck
+        Number of solution trials that pass between status check
+    damplimit
+        Accuracy value at which solution damping begins
     
-    .. versionchanged:: 0.1.5
-        Class added, attributes here are now in `options.solver.*` in the water network model.
-        
     """
     def __init__(self):
         self.trials = 40
-        "Maximum number of trials used to solve network hydraulics"
         self.accuracy = 0.001
-        "Convergence criteria for hydraulic solutions"
         self.unbalanced = 'STOP'
-        "Indicate what happens if a hydraulic solution cannot be reached.  Options are STOP and CONTINUE  (as defined in the EPANET User Manual)."
         self.unbalanced_value = None #int
-        "Number of additional trials if unbalanced = CONTINUE"
         self.tolerance = 0.01
-        "Convergence criteria for water quality solutions"
         self.checkfreq = 2
-        "Number of solution trials that pass between status check"
         self.maxcheck = 10
-        "Number of solution trials that pass between status check"
         self.damplimit = 0
-        "Accuracy value at which solution damping begins"
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -417,6 +438,7 @@ class UserOptions(object):
     """This is a generic user options dictionary to allow for private extensions
     
     Allows users to add attributes for their own personal use under options.user.*
+    
     """
     def __init__(self):
         pass

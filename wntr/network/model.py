@@ -16,7 +16,7 @@ from .controls import _MultiConditionalControl, _PRVControl, _CheckValveHeadCont
 from .options import WaterNetworkOptions
 from .elements import Curve, Pattern, Source
 from .elements import LinkStatus
-from .elements import DemandList , ReservoirHead #, HeadCurve, PumpCurve, EfficiencyCurve, HeadlossCurve
+from .elements import DemandList , ReservoirHead
 import wntr.epanet
 
 logger = logging.getLogger(__name__)
