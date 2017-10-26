@@ -217,7 +217,6 @@ class GeneralOptions(object):
            self.hydraulics == other.hydraulics and \
            self.hydraulics_filename == other.hydraulics_filename and \
            abs(self.viscosity - other.viscosity)<1e-10 and \
-           abs(self.diffusivity - other.diffusivity)<1e-10 and \
            abs(self.specific_gravity - other.specific_gravity)<1e-10 and \
            self.pattern == other.pattern and \
            abs(self.demand_multiplier - other.demand_multiplier)<1e-10 and \
@@ -342,6 +341,7 @@ class QualityOptions(object):
         ###  self.units == other.units and \
         if self.type == other.type and \
            self.value == other.value and \
+           abs(self.diffusivity - other.diffusivity)<1e-10 and \
            abs(self.bulk_rxn_order - other.bulk_rxn_order)<1e-10 and \
            abs(self.wall_rxn_order - other.wall_rxn_order)<1e-10 and \
            abs(self.tank_rxn_order - other.tank_rxn_order)<1e-10 and \
