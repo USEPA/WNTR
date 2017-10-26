@@ -499,120 +499,6 @@ class Source(TimeVaryingValue):
         return self._base
     
 
-class NodeType(enum.IntEnum):
-    """
-    An enum class for types of nodes.
-
-    .. rubric:: Enum Members
-
-    ==================  ==================================================================
-    :attr:`~Junction`   Node is a :class:`~wntr.network.model.Junction`
-    :attr:`~Reservoir`  Node is a :class:`~wntr.network.model.Reservoir`
-    :attr:`~Tank`       Node is a :class:`~wntr.network.model.Tank`
-    ==================  ==================================================================
-
-    """
-    Junction = 0
-    Reservoir = 1
-    Tank = 2
-
-    def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
-
-    def __str__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return int(self) == int(other) and (isinstance(other, int) or \
-               self.__class__.__name__ == other.__class__.__name__)
-
-
-class LinkType(enum.IntEnum):
-    """
-    An enum class for types of links.
-
-    .. rubric:: Enum Members
-
-    ===============  ==================================================================
-    :attr:`~CV`      Pipe with check valve
-    :attr:`~Pipe`    Regular pipe
-    :attr:`~Pump`    Pump
-    :attr:`~Valve`   Any valve type (see following)
-    :attr:`~PRV`     Pressure reducing valve
-    :attr:`~PSV`     Pressure sustaining valve
-    :attr:`~PBV`     Pressure breaker valve
-    :attr:`~FCV`     Flow control valve
-    :attr:`~TCV`     Throttle control valve
-    :attr:`~GPV`     General purpose valve
-    ===============  ==================================================================
-
-    """
-    CV = 0
-    Pipe = 1
-    Pump = 2
-    PRV = 3
-    PSV = 4
-    PBV = 5
-    FCV = 6
-    TCV = 7
-    GPV = 8
-    Valve = 9
-
-    def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
-
-    def __str__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return int(self) == int(other) and (isinstance(other, int) or \
-               self.__class__.__name__ == other.__class__.__name__)
-
-
-class LinkStatus(enum.IntEnum):
-    """
-    An enum class for link statuses.
-    
-    .. warning:: 
-        This is NOT the class for determining output status from an EPANET binary file.
-        The class for output status is wntr.epanet.util.LinkTankStatus.
-
-    .. rubric:: Enum Members
-
-    ===============  ==================================================================
-    :attr:`~Closed`  Pipe/valve/pump is closed.
-    :attr:`~Opened`  Pipe/valve/pump is open.
-    :attr:`~Open`    Alias to "Opened"
-    :attr:`~Active`  Valve is partially open.
-    ===============  ==================================================================
-
-    """
-    Closed = 0
-    Open = 1
-    Opened = 1
-    Active = 2
-    CV = 3
-
-    def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
-
-    def __str__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return int(self) == int(other) and (isinstance(other, int) or \
-               self.__class__.__name__ == other.__class__.__name__)
-
-
 class DemandList(MutableSequence):
     """List with specialized demand-specific calls and type checking.
     
@@ -741,3 +627,119 @@ class DemandList(MutableSequence):
             for ct, t in enumerate(demand_times):
                 demand_values[ct] += dem(t)
         return demand_values
+
+
+
+class NodeType(enum.IntEnum):
+    """
+    An enum class for types of nodes.
+
+    .. rubric:: Enum Members
+
+    ==================  ==================================================================
+    :attr:`~Junction`   Node is a :class:`~wntr.network.model.Junction`
+    :attr:`~Reservoir`  Node is a :class:`~wntr.network.model.Reservoir`
+    :attr:`~Tank`       Node is a :class:`~wntr.network.model.Tank`
+    ==================  ==================================================================
+
+    """
+    Junction = 0
+    Reservoir = 1
+    Tank = 2
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
+
+    def __eq__(self, other):
+        return int(self) == int(other) and (isinstance(other, int) or \
+               self.__class__.__name__ == other.__class__.__name__)
+
+
+class LinkType(enum.IntEnum):
+    """
+    An enum class for types of links.
+
+    .. rubric:: Enum Members
+
+    ===============  ==================================================================
+    :attr:`~CV`      Pipe with check valve
+    :attr:`~Pipe`    Regular pipe
+    :attr:`~Pump`    Pump
+    :attr:`~Valve`   Any valve type (see following)
+    :attr:`~PRV`     Pressure reducing valve
+    :attr:`~PSV`     Pressure sustaining valve
+    :attr:`~PBV`     Pressure breaker valve
+    :attr:`~FCV`     Flow control valve
+    :attr:`~TCV`     Throttle control valve
+    :attr:`~GPV`     General purpose valve
+    ===============  ==================================================================
+
+    """
+    CV = 0
+    Pipe = 1
+    Pump = 2
+    PRV = 3
+    PSV = 4
+    PBV = 5
+    FCV = 6
+    TCV = 7
+    GPV = 8
+    Valve = 9
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
+
+    def __eq__(self, other):
+        return int(self) == int(other) and (isinstance(other, int) or \
+               self.__class__.__name__ == other.__class__.__name__)
+
+
+class LinkStatus(enum.IntEnum):
+    """
+    An enum class for link statuses.
+    
+    .. warning:: 
+        This is NOT the class for determining output status from an EPANET binary file.
+        The class for output status is wntr.epanet.util.LinkTankStatus.
+
+    .. rubric:: Enum Members
+
+    ===============  ==================================================================
+    :attr:`~Closed`  Pipe/valve/pump is closed.
+    :attr:`~Opened`  Pipe/valve/pump is open.
+    :attr:`~Open`    Alias to "Opened"
+    :attr:`~Active`  Valve is partially open.
+    ===============  ==================================================================
+
+    """
+    Closed = 0
+    Open = 1
+    Opened = 1
+    Active = 2
+    CV = 3
+
+    def __init__(self, val):
+        if self.name != self.name.upper():
+            self._member_map_[self.name.upper()] = self
+        if self.name != self.name.lower():
+            self._member_map_[self.name.lower()] = self
+
+    def __str__(self):
+        return self.name
+
+    def __eq__(self, other):
+        return int(self) == int(other) and (isinstance(other, int) or \
+               self.__class__.__name__ == other.__class__.__name__)
+
