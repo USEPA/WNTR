@@ -164,19 +164,19 @@ class TestPerformance(unittest.TestCase):
 
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
-
+        
         head_diff_list = []
         demand_diff_list = []
         flow_diff_list = []
         for name, node in wn.nodes():
             for t in results.time:
-                head_diff_n = abs(results.node.at['head',t,name]-epa_res.node.at['head',t,name])
-                demand_diff_n = abs(results.node.at['demand',t,name]-epa_res.node.at['demand',t,name])
+                head_diff_n = abs(results.node['head'].loc[t,name]-epa_res.node['head'].loc[t,name])
+                demand_diff_n = abs(results.node['demand'].loc[t,name]-epa_res.node['demand'].loc[t,name])
                 head_diff_list.append(head_diff_n)
                 demand_diff_list.append(demand_diff_n)
         for name, link in wn.links():
             for t in results.time:
-                flow_diff_l = abs(results.link.at['flowrate',t,name]-epa_res.link.at['flowrate',t,name])
+                flow_diff_l = abs(results.link['flowrate'].loc[t,name]-epa_res.link['flowrate'].loc[t,name])
                 flow_diff_list.append(flow_diff_l)
 
         self.Net1_avg_head_diff.append(np.average(head_diff_list))
@@ -190,7 +190,6 @@ class TestPerformance(unittest.TestCase):
         self.Net1_total_sim_time.append(t1-t0)
         self.Net1_time_per_step.append(np.average(sim.time_per_step))
         self.Net1_num_steps.append(len(sim.time_per_step))
-
 
         self.assertLess(np.average(head_diff_list), 6e-5)
         self.assertLess(np.average(demand_diff_list), 2.3e-8)
@@ -217,13 +216,13 @@ class TestPerformance(unittest.TestCase):
         flow_diff_list = []
         for name, node in wn.nodes():
             for t in results.time:
-                head_diff_n = abs(results.node.at['head',t,name]-epa_res.node.at['head',t,name])
-                demand_diff_n = abs(results.node.at['demand',t,name]-epa_res.node.at['demand',t,name])
+                head_diff_n = abs(results.node['head'].loc[t,name]-epa_res.node['head'].loc[t,name])
+                demand_diff_n = abs(results.node['demand'].loc[t,name]-epa_res.node['demand'].loc[t,name])
                 head_diff_list.append(head_diff_n)
                 demand_diff_list.append(demand_diff_n)
         for name, link in wn.links():
             for t in results.time:
-                flow_diff_l = abs(results.link.at['flowrate',t,name]-epa_res.link.at['flowrate',t,name])
+                flow_diff_l = abs(results.link['flowrate'].loc[t,name]-epa_res.link['flowrate'].loc[t,name])
                 flow_diff_list.append(flow_diff_l)
 
         self.Net3_avg_head_diff.append(np.average(head_diff_list))
@@ -250,7 +249,7 @@ class TestPerformance(unittest.TestCase):
 
         inp_file = join(ex_datadir,'Net6.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.options.duration = 24*3600
+        wn.options.time.duration = 24*3600
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
@@ -264,13 +263,13 @@ class TestPerformance(unittest.TestCase):
         flow_diff_list = []
         for name, node in wn.nodes():
             for t in results.time:
-                head_diff_n = abs(results.node.at['head',t,name]-epa_res.node.at['head',t,name])
-                demand_diff_n = abs(results.node.at['demand',t,name]-epa_res.node.at['demand',t,name])
+                head_diff_n = abs(results.node['head'].loc[t,name]-epa_res.node['head'].loc[t,name])
+                demand_diff_n = abs(results.node['demand'].loc[t,name]-epa_res.node['demand'].loc[t,name])
                 head_diff_list.append(head_diff_n)
                 demand_diff_list.append(demand_diff_n)
         for name, link in wn.links():
             for t in results.time:
-                flow_diff_l = abs(results.link.at['flowrate',t,name]-epa_res.link.at['flowrate',t,name])
+                flow_diff_l = abs(results.link['flowrate'].loc[t,name]-epa_res.link['flowrate'].loc[t,name])
                 flow_diff_list.append(flow_diff_l)
 
         self.Net6_mod_avg_head_diff.append(np.average(head_diff_list))

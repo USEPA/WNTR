@@ -54,7 +54,7 @@ class WaterNetworkSimulator(object):
         if start_time is None:
             start_time = 0
         if end_time is None:
-            end_time = self._wn.options.duration
+            end_time = self._wn.options.time.duration
 
         # Get node object
         try:
@@ -64,35 +64,7 @@ class WaterNetworkSimulator(object):
         # Make sure node object is a Junction
         assert(isinstance(node, Junction)), "Demands can only be calculated for Junctions"
         # Calculate demand pattern values
-        base_demand = node.base_demand
-        pattern_name = node.demand_pattern_name
-        if pattern_name is None:
-            pattern_name = self._wn.options.pattern
-        if pattern_name is None:
-            demand_values = []
-            demand_times_minutes = range(start_time, end_time + self._wn.options.hydraulic_timestep,
-                                         self._wn.options.hydraulic_timestep)
-            for t in demand_times_minutes:
-                demand_values.append(base_demand)
-            return demand_values
-        pattern_list = self._wn.get_pattern(pattern_name)
-        pattern_length = len(pattern_list)
-        offset = self._wn.options.pattern_start
-
-        assert(offset == 0.0), "Only 0.0 Pattern Start time is currently supported. "
-
-        demand_times_minutes = range(start_time, end_time + self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
-        demand_pattern_values = [base_demand*i for i in pattern_list]
-
-        demand_values = []
-        for t in demand_times_minutes:
-            # Modulus with the last pattern time to get time within pattern range
-            pattern_index = t / self._wn.options.pattern_timestep
-            # Modulus with the pattern time step to get the pattern index
-            pattern_index = pattern_index % pattern_length
-            demand_values.append(demand_pattern_values[int(pattern_index)])
-
-        return demand_values
+        return node.demands.demand_values(start_time, end_time, self._wn.options.time.hydraulic_timestep)
 
     def _get_link_type(self, name):
         if isinstance(self._wn.get_link(name), Pipe):
@@ -169,11 +141,10 @@ class WNTRSimulator(WaterNetworkSimulator):
             a warning will be issued and results.error_code will be set to 2
             if the simulation does not converge.  Default = True.
         """
-
         self.time_per_step = []
 
         self._get_demand_dict()
-
+        
         tank_controls = self._wn._get_all_tank_controls()
         cv_controls = self._wn._get_cv_controls()
         pump_controls = self._wn._get_pump_controls()
@@ -190,11 +161,11 @@ class WNTRSimulator(WaterNetworkSimulator):
         results = NetResults()
         results.error_code = 0
         results.time = []
-        # if self._wn.sim_time%self._wn.options.hydraulic_timestep!=0:
-        #     results_start_time = int(round((self._wn.options.hydraulic_timestep-(self._wn.sim_time%self._wn.options.hydraulic_timestep))+self._wn.sim_time))
+        # if self._wn.sim_time%self._wn.options.time.hydraulic_timestep!=0:
+        #     results_start_time = int(round((self._wn.options.time.hydraulic_timestep-(self._wn.sim_time%self._wn.options.time.hydraulic_timestep))+self._wn.sim_time))
         # else:
         #     results_start_time = int(round(self._wn.sim_time))
-        # results.time = np.arange(results_start_time, self._wn.options.duration+self._wn.options.hydraulic_timestep, self._wn.options.hydraulic_timestep)
+        # results.time = np.arange(results_start_time, self._wn.options.time.duration+self._wn.options.time.hydraulic_timestep, self._wn.options.time.hydraulic_timestep)
 
         # Initialize X
         # Vars will be ordered:
@@ -218,7 +189,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         else:
             first_step = False
         trial = -1
-        max_trials = self._wn.options.trials
+        max_trials = self._wn.options.solver.trials
         resolve = False
 
         while True:
@@ -301,20 +272,20 @@ class WNTRSimulator(WaterNetworkSimulator):
                         raise RuntimeError('failed to converge')
                     resolve = False
 
-            if type(self._wn.options.report_timestep)==float or type(self._wn.options.report_timestep)==int:
-                if self._wn.sim_time%self._wn.options.report_timestep == 0:
+            if type(self._wn.options.time.report_timestep)==float or type(self._wn.options.time.report_timestep)==int:
+                if self._wn.sim_time%self._wn.options.time.report_timestep == 0:
                     model.save_results(self._X, results)
                     results.time.append(int(self._wn.sim_time))
-            elif self._wn.options.report_timestep.upper()=='ALL':
+            elif self._wn.options.time.report_timestep.upper()=='ALL':
                 model.save_results(self._X, results)
                 results.time.append(int(self._wn.sim_time))
             model.update_network_previous_values()
             first_step = False
-            self._wn.sim_time += self._wn.options.hydraulic_timestep
-            overstep = float(self._wn.sim_time)%self._wn.options.hydraulic_timestep
+            self._wn.sim_time += self._wn.options.time.hydraulic_timestep
+            overstep = float(self._wn.sim_time)%self._wn.options.time.hydraulic_timestep
             self._wn.sim_time -= overstep
 
-            if self._wn.sim_time > self._wn.options.duration:
+            if self._wn.sim_time > self._wn.options.time.duration:
                 break
 
             if not resolve:
@@ -326,7 +297,7 @@ class WNTRSimulator(WaterNetworkSimulator):
     def _get_demand_dict(self):
 
         # Number of hydraulic timesteps
-        self._n_timesteps = int(round(self._wn.options.duration / self._wn.options.hydraulic_timestep)) + 1
+        self._n_timesteps = int(round(self._wn.options.time.duration / self._wn.options.time.hydraulic_timestep)) + 1
 
         # Get all demand for complete time interval
         self._demand_dict = {}
@@ -352,7 +323,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                     backup_time = control_tuple[1]
                 elif control_tuple[0] and control_tuple[1] == backup_time:
                     controls_to_activate.append(i)
-            assert backup_time <= self._wn.options.hydraulic_timestep, 'Backup time is larger than hydraulic timestep'
+            assert backup_time <= self._wn.options.time.hydraulic_timestep, 'Backup time is larger than hydraulic timestep'
             return backup_time, (controls_to_activate+controls_to_activate_regardless_of_time)
 
         else:

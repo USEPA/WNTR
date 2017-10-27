@@ -72,7 +72,7 @@ class EpanetSimulator(WaterNetworkSimulator):
 
         """
         inpfile = file_prefix + '.inp'
-        self._wn.write_inpfile(inpfile)
+        self._wn.write_inpfile(inpfile, units=self._wn.options.general.units)
         enData = wntr.epanet.toolkit.ENepanet()
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'

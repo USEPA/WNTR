@@ -27,7 +27,6 @@ def test_Net1():
     length = wn.query_link_attribute('length')
 
     # Data from the INP file, converted using flowunits
-    flowunits = epanet_unit_id[wn.options.units]
     expected_node = {'11': {'type': 'junction', 'pos': (30.0, 70.0)},
                      '10': {'type': 'junction', 'pos': (20.0, 70.0)},
                      '13': {'type': 'junction', 'pos': (70.0, 70.0)},
@@ -166,7 +165,7 @@ def test_name_list():
     assert_in('1', wn.pattern_name_list)
     assert_in('1', wn.curve_name_list)
     assert_equal(0, len(wn.source_name_list))
-    assert_equal(0, len(wn._demand_name_list))
+#    assert_equal(0, len(wn._demand_name_list))
     assert_in('LINK10OPENATTIME3600', wn.control_name_list)
 
 def test_add_get_remove_num():
@@ -200,8 +199,8 @@ def test_add_get_remove_num():
     wn.add_source('new_source', 'new_junc', 'CONCEN', 1, 'new_pattern')
     wn.get_source('new_source')
     
-    wn._add_demand('new_demand', 'new_junc')
-    wn._get_demand('new_demand')
+#    wn._add_demand('new_demand', 'new_junc')
+#    wn._get_demand('new_demand')
     
     nums = [wn.num_junctions,
            wn.num_tanks,
@@ -211,9 +210,9 @@ def test_add_get_remove_num():
            wn.num_valves,
            wn.num_patterns,
            wn.num_curves,
-           wn.num_sources,
-           wn._num_demands]
-    expected = [93,4,3,118,3,1,6,3,1,1]
+           wn.num_sources,]
+#           wn._num_demands]
+    expected = [93,4,3,118,3,1,6,3,1,]#1]
     assert_list_equal(nums, expected)
     
     wn.remove_node('new_junc')
@@ -225,7 +224,7 @@ def test_add_get_remove_num():
     wn.remove_pattern('new_pattern')
     wn.remove_curve('new_curve')
     wn.remove_source('new_source')
-    wn._remove_demand('new_demand')
+#    wn._remove_demand('new_demand')
     
     nums = [wn.num_junctions,
            wn.num_tanks,
@@ -235,7 +234,7 @@ def test_add_get_remove_num():
            wn.num_valves,
            wn.num_patterns,
            wn.num_curves,
-           wn.num_sources,
-           wn._num_demands]
-    expected = [92,3,2,117,2,0,5,2,0,0]
+           wn.num_sources,]
+#           wn._num_demands]
+    expected = [92,3,2,117,2,0,5,2,0,]#0]
     assert_list_equal(nums, expected)

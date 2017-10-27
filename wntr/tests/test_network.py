@@ -54,7 +54,7 @@ class TestNetworkCreation(unittest.TestCase):
     def test_reservoir_attr(self):
         j = self.wn.get_node('RESERVOIR-3323')
         self.assertAlmostEqual(j.base_head, 27.45*0.3048)
-        self.assertEqual(j.head_pattern_name, None)
+        self.assertEqual(j.head_pattern, None)
 
 class TestNetworkMethods(unittest.TestCase):
 
@@ -79,6 +79,7 @@ class TestNetworkMethods(unittest.TestCase):
 
     def test_add_junction(self):
         wn = self.wntr.network.WaterNetworkModel()
+        wn.add_pattern('pattern1', [1])
         wn.add_junction('j1', 150, 'pattern1', 15)
         j = wn.get_node('j1')
         self.assertEqual(j._name, 'j1')
@@ -110,6 +111,7 @@ class TestNetworkMethods(unittest.TestCase):
 
     def test_add_reservoir(self):
         wn = self.wntr.network.WaterNetworkModel()
+        wn.add_pattern('pattern1', [1])
         wn.add_reservoir('r1', 30, 'pattern1')
         n = wn.get_node('r1')
         self.assertEqual(n._name, 'r1')
@@ -141,24 +143,26 @@ class TestNetworkMethods(unittest.TestCase):
     def test_add_pattern(self):
         wn = self.wntr.network.WaterNetworkModel()
         wn.add_junction('j1')
-        wn.options.duration = 10
-        wn.options.pattern_timestep = 1
-        wn.add_pattern('pat1', start_time=2, end_time=4)
-
+        wn.options.time.duration = 10
+        wn.options.time.pattern_timestep = 1
+#        wn.add_pattern('pat1', start_time=2, end_time=4)
+        pat1 = self.wntr.network.elements.Pattern.BinaryPattern('pat1', start_time=2, end_time=4, duration=10, step_size=1)
+        wn.add_pattern('pat1', pat1)
         wn.add_pattern('pat2', [1,2,3,4])
 
         pat1 = wn.get_pattern('pat1')
         pat2 = wn.get_pattern('pat2')
 
-        self.assertEqual(pat1, [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-        self.assertEqual(pat2, [1,2,3,4])
+        self.assertEqual(pat1.multipliers.tolist(), [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        self.assertEqual(pat2.multipliers.tolist(), [1,2,3,4])
 
     def test_add_source(self):
         wn = self.wntr.network.WaterNetworkModel()
         wn.add_junction('j1')
-        wn.options.duration = 10
-        wn.options.pattern_timestep = 1
-        wn.add_pattern('pat1', start_time=2, end_time=4)
+        wn.options.time.duration = 10
+        wn.options.time.pattern_timestep = 1
+        pat1 = self.wntr.network.elements.Pattern.BinaryPattern('pat1', start_time=2, end_time=4, duration=10, step_size=1)
+        wn.add_pattern('pat1', pat1)
         wn.add_source('s1', 'j1', 'SETPOINT', 100, 'pat1')
         s = wn.get_source('s1')
         self.assertEqual(s.name, 's1')
@@ -551,23 +555,23 @@ class TestNet3InpWriterResults(unittest.TestCase):
 
     def test_link_flowrate(self):
         for link_name, link in self.wn.links():
-            for t in self.results2.link.major_axis:
-                self.assertLessEqual(abs(self.results2.link.at['flowrate',t,link_name] - self.results.link.at['flowrate',t,link_name]), 0.00001)
+            for t in self.results2.time:
+                self.assertLessEqual(abs(self.results2.link['flowrate'].loc[t,link_name] - self.results.link['flowrate'].loc[t,link_name]), 0.00001)
 
     def test_node_demand(self):
         for node_name, node in self.wn.nodes():
-            for t in self.results2.node.major_axis:
-                self.assertAlmostEqual(self.results2.node.at['demand',t,node_name], self.results.node.at['demand',t,node_name], 4)
+            for t in self.results2.time:
+                self.assertAlmostEqual(self.results2.node['demand'].loc[t,node_name], self.results.node['demand'].loc[t,node_name], 4)
 
     def test_node_head(self):
         for node_name, node in self.wn.nodes():
-            for t in self.results2.node.major_axis:
-                self.assertLessEqual(abs(self.results2.node.at['head',t,node_name] - self.results.node.at['head',t,node_name]), 0.01)
+            for t in self.results2.time:
+                self.assertLessEqual(abs(self.results2.node['head'].loc[t,node_name] - self.results.node['head'].loc[t,node_name]), 0.01)
 
     def test_node_pressure(self):
         for node_name, node in self.wn.nodes():
-            for t in self.results2.node.major_axis:
-                self.assertLessEqual(abs(self.results2.node.at['pressure',t,node_name] - self.results.node.at['pressure',t,node_name]), 0.05)
+            for t in self.results2.time:
+                self.assertLessEqual(abs(self.results2.node['pressure'].loc[t,node_name] - self.results.node['pressure'].loc[t,node_name]), 0.05)
 
 
 class TestNet3InpUnitsResults(unittest.TestCase):
@@ -595,8 +599,8 @@ class TestNet3InpUnitsResults(unittest.TestCase):
 
     def test_link_flowrate_units_convert(self):
         for link_name, link in self.wn.links():
-            for t in self.results2.link.major_axis:
-                self.assertLessEqual(abs(self.results2.link.at['flowrate',t,link_name] - self.results.link.at['flowrate',t,link_name]), 0.00001)
+            for t in self.results2.time:
+                self.assertLessEqual(abs(self.results2.link['flowrate'].loc[t,link_name] - self.results.link['flowrate'].loc[t,link_name]), 0.00001)
 
 
 if __name__ == '__main__':

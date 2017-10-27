@@ -15,9 +15,9 @@ class TestPumpCost(unittest.TestCase):
 
         inp_file = join(ex_datadir, 'Net6.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
-        self.wn.options.report_timestep = 'all'
-        self.wn.options.duration = 12*3600
-        self.wn.energy.global_price = 3.61111111111e-8
+        self.wn.options.time.report_timestep = 'all'
+        self.wn.options.time.duration = 12*3600
+        self.wn.options.energy.global_price = 3.61111111111e-8
         sim = self.wntr.sim.WNTRSimulator(self.wn, mode='DD')
         self.results = sim.run_sim()
 

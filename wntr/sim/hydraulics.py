@@ -1,6 +1,7 @@
 from __future__ import print_function
 from wntr import *
 from wntr.network.model import *
+from wntr.network.elements import *
 import pandas as pd
 import numpy as np
 import scipy.sparse as sparse
@@ -1296,7 +1297,7 @@ class HydraulicModel(object):
             tank.head = tank.prev_head + delta_h
 
     def update_junction_demands(self, demand_dict):
-        t = math.floor(self._wn.sim_time/self._wn.options.hydraulic_timestep)
+        t = math.floor(self._wn.sim_time/self._wn.options.time.hydraulic_timestep)
         for junction_name, junction in self._wn.nodes(Junction):
             junction.expected_demand = demand_dict[(junction_name,t)]
 

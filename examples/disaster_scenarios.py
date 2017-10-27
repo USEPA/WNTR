@@ -33,20 +33,25 @@ wn.add_pump_outage('335', 5*3600, 10*3600)
 fire_flow_demand = 0.252 # 4000 gal/min = 0.252 m3/s
 time_of_fire = 10
 duration_of_fire = 4
-remainder = int(wn.options.duration/3600-time_of_fire-duration_of_fire)
+remainder = int(wn.options.time.duration/3600-time_of_fire-duration_of_fire)
 fire_flow_pattern = [0]*time_of_fire + [1]*duration_of_fire + [0]*remainder
 wn.add_pattern('fire_flow', fire_flow_pattern)
 node = wn.get_node('197')
 original_base_demand = node.base_demand
 original_demand_pattern_name = node.demand_pattern_name
-node.base_demand = original_base_demand+fire_flow_demand
-node.demand_pattern_name = 'fire_flow'
+new_base_demand = original_base_demand+fire_flow_demand
+new_demand_pattern_name = 'fire_flow'
+orig_demand = node.demands[0]
+node.demands.remove(orig_demand)
+pattern = wn.get_pattern('fire_flow')
+node.demands.append( (new_base_demand, pattern, 'fire_flow' ))
     
 # Reduce supply, imcrease demand
 for reservoir_name, reservoir in wn.reservoirs():
     reservoir.base_head = reservoir.base_head*0.9 
 for junction_name, junction in wn.junctions():
-    junction.base_demand = junction.base_demand*1.15
+    for demand in junction.demands:
+        demand.base_demand = demand.base_demand*1.15
     
 # Simulate 
 sim = wntr.sim.WNTRSimulator(wn, mode='PDD')

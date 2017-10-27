@@ -24,7 +24,7 @@ def mass_contaminant_consumed(node_results):
     Technical report, U.S. Environmental Protection Agency
     """
     maskD = np.greater(node_results['demand'], 0) # positive demand
-    deltaT = node_results.major_axis[1] # this assumes constant timedelta
+    deltaT = node_results['quality'].index[1] # this assumes constant timedelta
     MC = node_results['demand']*deltaT*node_results['quality']*maskD # m3/s * s * kg/m3 - > kg
     
     return MC
@@ -49,7 +49,7 @@ def volume_contaminant_consumed(node_results, detection_limit):
     """
     maskQ = np.greater(node_results['quality'], detection_limit)
     maskD = np.greater(node_results['demand'], 0) # positive demand
-    deltaT = node_results.major_axis[1] # this assumes constant timedelta
+    deltaT = node_results['quality'].index[1] # this assumes constant timedelta
     VC = node_results['demand']*deltaT*maskQ*maskD # m3/s * s * bool - > m3
     
     return VC
@@ -80,12 +80,12 @@ def extent_contaminant(node_results, link_results, wn, detection_limit):
     Technical report, U.S. Environmental Protection Agency
     """
     G = wn.get_graph_deep_copy()
-    EC = pd.DataFrame(index = node_results.major_axis, columns = node_results.minor_axis, data = 0)
-    L = pd.DataFrame(index = node_results.major_axis, columns = node_results.minor_axis, data = 0)
+    EC = pd.DataFrame(index = node_results['quality'].index, columns = node_results['quality'].columns, data = 0)
+    L = pd.DataFrame(index = node_results['quality'].index, columns = node_results['quality'].columns, data = 0)
 
-    for t in node_results.major_axis:
+    for t in node_results['quality'].index:
         # Weight the graph
-        attr = link_results.loc['flowrate', t, :]   
+        attr = link_results['flowrate'].loc[t, :]   
         G.weight_graph(link_attribute=attr)  
         
         # Compute pipe_length associated with each node at time t

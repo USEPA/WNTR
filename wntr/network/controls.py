@@ -8,6 +8,7 @@ import math
 import enum
 import numpy as np
 import logging
+import six
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ class Comparison(enum.Enum):
 
     @classmethod
     def parse(cls, func):
-        if isinstance(func, str):
+        if isinstance(func, six.string_types):
             func = func.lower().strip()
         if func in [np.equal, '=', 'eq', '-eq', '==', 'is', 'equal', 'equal to']:
             return cls.eq
@@ -114,6 +115,10 @@ class ControlCondition(object):
     """A base class for control conditions"""
     def __init__(self):
         self._backtrack = 0
+
+    @property
+    def requires(self):
+        return []
 
     @property
     def name(self):
@@ -214,7 +219,6 @@ class ControlCondition(object):
 
 class SimpleNodeCondition(ControlCondition):
     """Conditional based only on the pressure of a junction or the level of a tank.
-
     Parameters
     ----------
     source_obj : wntr.network.model.Junction, wntr.network.model.Tank
@@ -225,7 +229,6 @@ class SimpleNodeCondition(ControlCondition):
         such as ``np.less`` or ``np.greater_equal``
     threshold : float
         The pressure or tank level to use in the condition
-
     """
     def __init__(self, source_obj, relation, threshold):
         self._source_obj = source_obj
@@ -275,16 +278,17 @@ class SimpleNodeCondition(ControlCondition):
         state = relation(cur_value, thresh_value)
         return state
 
+    @property
+    def requires(self):
+        return [self._source_obj.name]
 
 
 class TimeOfDayCondition(ControlCondition):
     """Time-of-day or "clocktime" based condition statement.
-
     Resets automatically at 12 AM in clock time (shifted time) every day simulated. Evaluated
     from 12 AM the first day of the simulation, even if this is prior to simulation start.
     Unlike the ``SimTimeCondition``, greater-than and less-than relationships make sense, and
     reset at midnight.
-
     Parameters
     ----------
     model : WaterNetworkModel
@@ -304,8 +308,6 @@ class TimeOfDayCondition(ControlCondition):
         the time specified.
     first_day : float, default=0
         Start rule on day `first_day`, with the first day of simulation as day 0
-
-
     """
     def __init__(self, model, relation, threshold, repeat=True, first_day=0):
         self._model = model
@@ -389,13 +391,11 @@ class TimeOfDayCondition(ControlCondition):
 
 class SimTimeCondition(ControlCondition):
     """Condition based on time since start of the simulation.
-
     Generally, the relation should be ``None`` (converted to "at") --
     then it is *only* evaluated "at" specific times. Using greater-than or less-than type
     relationships should be reserved for complex, multi-condition statements and
     should not be used for simple controls. If ``repeat`` is used, the relationship will
     automatically be changed to an "at time" evaluation, and a warning will be raised.
-
     Parameters
     ----------
     model : WaterNetworkModel
@@ -413,7 +413,6 @@ class SimTimeCondition(ControlCondition):
         condition every `repeat` seconds after the first_time.
     first_time : float, default=0
         Start rule at `first_time`, using that time as 0 for the condition evaluation
-
     """
     def __init__(self, model, relation, threshold, repeat=False, first_time=0):
         self._model = model
@@ -493,9 +492,7 @@ class SimTimeCondition(ControlCondition):
 
 class ValueCondition(ControlCondition):
     """Compare a network element attribute to a set value
-
     This type of condition can be converted to an EPANET control or rule conditional clause.
-
     Parameters
     ----------
     source_obj : object
@@ -509,7 +506,6 @@ class ValueCondition(ControlCondition):
         Words, such as 'below', are only accepted from the EPANET rules conditions list (see ...)
     threshold : float
         A value to compare the source object attribute against
-
     """
     def __init__(self, source_obj, source_attr, relation, threshold):
         self._source_obj = source_obj
@@ -517,6 +513,10 @@ class ValueCondition(ControlCondition):
         self._relation = Comparison.parse(relation)
         self._threshold = ControlCondition._parse_value(threshold)
         self._backtrack = 0
+
+    @property
+    def requires(self):
+        return [self._source_obj.name]
 
     @property
     def name(self):
@@ -557,9 +557,7 @@ class ValueCondition(ControlCondition):
 
 class RelativeCondition(ControlCondition):
     """Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
-
     This type of condition does not work with the EpanetSimulator, only the WNTRSimulator.
-
     Parameters
     ----------
     source_obj : object
@@ -574,8 +572,6 @@ class RelativeCondition(ControlCondition):
         The object (such as a Junction, Tank, Pipe, etc.) to use in the comparison of attributes
     threshold_attr : str
         The attribute to used in the comparison evaluation
-
-
     """
     def __init__(self, source_obj, source_attr, relation, threshold_obj, threshold_attr):
         self._source_obj = source_obj
@@ -598,6 +594,10 @@ class RelativeCondition(ControlCondition):
         return '{}:{}_{}_{}:{}'.format(obj, self._source_attr,
                                 self._relation.symbol,
                                 tobj, self._threshold_attr)
+
+    @property
+    def requires(self):
+        return [self._source_obj.name, self._threshold_obj.name]
 
     def __repr__(self):
         return "RelativeCondition({}, {}, {}, {}, {})".format(repr(self._source_obj),
@@ -634,19 +634,16 @@ class RelativeCondition(ControlCondition):
 
 class OrCondition(ControlCondition):
     """Combine two WNTR Conditions with an OR.
-
     Parameters
     ----------
     cond1 : ControlCondition
         The first condition
     cond2 : ControlCondition
         The second condition
-
     Returns
     -------
     bool
         True if either condition evaluates to True; otherwise False
-
     """
     def __init__(self, cond1, cond2):
         self._condition_1 = cond1
@@ -665,22 +662,23 @@ class OrCondition(ControlCondition):
     def backtrack(self):
         return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
 
+    @property
+    def requires(self):
+        return self._condition_1.requires + self._condition_2.requires
+
 
 class AndCondition(ControlCondition):
     """Combine two WNTR Conditions with an AND
-
     Parameters
     ----------
     cond1 : ControlCondition
         The first condition
     cond2 : ControlCondition
         The second condition
-
     Returns
     -------
     bool
         True if both conditions evaluate to True; otherwise False
-
     """
     def __init__(self, cond1, cond2):
         self._condition_1 = cond1
@@ -699,6 +697,9 @@ class AndCondition(ControlCondition):
     def backtrack(self):
         return np.min([self._condition_1.backtrack, self._condition_2.backtrack])
 
+    @property
+    def requires(self):
+        return self._condition_1.requires + self._condition_2.requires
 
 #
 ### Control Action classes
@@ -708,7 +709,6 @@ class AndCondition(ControlCondition):
 class BaseControlAction(object):
     """
     A base class for deriving new control actions. The control action is run by calling RunControlAction
-
     This class is not meant to be used directly. Derived classes must implement the RunControlActionImpl method.
     """
     def __init__(self):
@@ -729,18 +729,19 @@ class BaseControlAction(object):
                                   'This method must be implemented in '
                                   'derived classes of ControlAction.')
 
+    @property
+    def requires(self):
+        return []
+
 class ControlAction(BaseControlAction):
     """
     A general class for specifying a control action that simply modifies the attribute of an object (target).
-
     Parameters
     ----------
     target_obj : object
         The object whose attribute will be changed when the control runs.
-
     attribute : string
         The attribute that will be changed on the target_obj when the control runs.
-
     value : any
         The new value for target_obj.attribute when the control runs.
     """
@@ -756,6 +757,10 @@ class ControlAction(BaseControlAction):
 
         #if (isinstance(target_obj, wntr.network.Valve) or (isinstance(target_obj, wntr.network.Pipe) and target_obj.cv)) and attribute=='status':
         #    raise ValueError('You may not add controls to valves or pipes with check valves.')
+
+    @property
+    def requires(self):
+        return [self._target_obj_ref.name]
 
     def __repr__(self):
         return '<ControlAction: {}, {}, {}>'.format(repr(self._target_obj_ref), repr(self._attribute), repr(self._repr_value()))
@@ -792,7 +797,6 @@ class ControlAction(BaseControlAction):
         """
         This method overrides the corresponding method from the BaseControlAction class. Here, it changes
         target_obj.attribute to the provided value.
-
         This method should not be called directly. Use RunControlAction of the ControlAction base class instead.
         """
         target = self._target_obj_ref
@@ -820,16 +824,12 @@ class Control(object):
     ControlAction should be run. For example, if a pump is supposed to be turned on when the simulation time
     reaches 6 AM, the ControlAction would be "turn the pump on", and the Control would be "when the simulation
     reaches 6 AM".
-
     From an implementation standpoint, derived Control classes implement a particular mechanism for monitoring state
     (e.g. checking the simulation time to see if a change should be made). Then, they typically call RunControlAction
     on a derived ControlAction class.
-
     New Control classes (classes derived from Control) must implement the following methods:
-
     - _IsControlActionRequiredImpl(self, wnm, presolve_flag)
     - _RunControlActionImpl(self, wnm, priority)
-
     """
     def __init__(self):
         pass
@@ -839,12 +839,10 @@ class Control(object):
         This method is called to see if any action is required by this control object. This method returns a tuple
         that indicates if action is required (a bool) and a recommended time for the simulation to backup (in seconds
         as a positive int).
-
         Parameters
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated.
-
         presolve_flag : bool
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
@@ -855,18 +853,14 @@ class Control(object):
         """
         This method should be implemented in derived Control classes as the main implementation of
         IsControlActionRequired.
-
         The derived classes that override this method should return a tuple that indicates if action is required (a
         bool) and a recommended time for the simulation to backup (in seconds as a positive int).
-
         This method should not be called directly. Use IsControlActionRequired instead. For more details see
         documentation for IsControlActionRequired.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated.
-
         presolve_flag : bool
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
@@ -879,9 +873,7 @@ class Control(object):
         """
         This method is called to run the control action after a call to IsControlActionRequired indicates that an
         action is required.
-
         Note: Derived classes should not override this method, but should override _RunControlActionImpl instead.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
@@ -894,7 +886,6 @@ class Control(object):
     def _RunControlActionImpl(self, wnm, priority):
         """
         This is the method that should be overridden in derived classes to implement the action of firing the control.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
@@ -905,6 +896,9 @@ class Control(object):
         raise NotImplementedError('_RunControlActionImpl is not implemented. '
                                   'This method must be implemented in '
                                   'derived classes of ControlAction.')
+
+    def requires(self):
+        return []
 
 class IfThenElseControl(Control):
     """If-Then[-Else] contol
@@ -929,6 +923,15 @@ class IfThenElseControl(Control):
         self._name = name
         if self._name is None:
             self._name = ''
+
+    @property
+    def requires(self):
+        req = self._condition.requires
+        for action in self._then_actions:
+            req += action.requires
+        for action in self._else_actions:
+            req += action.requires
+        return req
 
     @property
     def name(self):
@@ -966,12 +969,10 @@ class IfThenElseControl(Control):
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated.
-
         presolve_flag : bool
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
@@ -993,12 +994,10 @@ class IfThenElseControl(Control):
     def _RunControlActionImpl(self, wnm, priority):
         """
         This implements the derived method from Control.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated/modified.
-
         priority : int
             A priority value. The action is only run if priority == self._priority.
         """
@@ -1032,30 +1031,23 @@ class TimeControl(Control):
     """
     A class for creating time controls to run a control action at a particular
     time. At the specified time, control_action will be run/activated.
-
     Parameters
     ----------
     wnm : WaterNetworkModel
         The instance of the WaterNetworkModel class that is being simulated/modified.
-
     run_at_time : int
         Time (in seconds) when the control_action should be run.
-
     time_flag : string
         Options include SIM_TIME and SHIFTED_TIME
-
         * SIM_TIME indicates that the value of run_at_time is in seconds since
           the start of the simulation
         * SHIFTED_TIME indicates that the value of run_at_time is shifted by the
           start time of the simulations. That is, run_at_time is in seconds since
           12 AM on the first day of the simulation. Therefore, 7200 refers to 2:00 AM
           regardless of the start time of the simulation.
-
     daily_flag : bool
-
         * False indicates that control will execute once when time is first encountered
         * True indicates that control will execute at the same time daily
-
     control_action : An object derived from BaseControlAction
         Examples: ControlAction
         This is the actual change that will occur at the specified time.
@@ -1088,6 +1080,11 @@ class TimeControl(Control):
         if time_flag == 'SHIFTED_TIME' and self._run_at_time < wnm._shifted_time:
             self._run_at_time += 24*3600
 
+    @property
+    def requires(self):
+        req = self._condition.requires
+        return req
+
     def __str__(self):
         if self._time_flag == 'SIM_TIME':
             fmt = 'LINK {} {} AT TIME {}'
@@ -1119,12 +1116,10 @@ class TimeControl(Control):
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated.
-
         presolve_flag : bool
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
@@ -1144,12 +1139,10 @@ class TimeControl(Control):
     def _RunControlActionImpl(self, wnm, priority):
         """
         This implements the derived method from Control.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated/modified.
-
         priority : int
             A priority value. The action is only run if priority == self._priority.
         """
@@ -1169,19 +1162,15 @@ class ConditionalControl(Control):
     """
     A class for creating controls that run when a specified condition is satisfied. The control_action is
     run/activated when the operation evaluated on the source object/attribute and the threshold is True.
-
     Parameters
     ----------
     source : tuple
         A two-tuple. The first value should be an object (such as a Junction, Tank, Reservoir, Pipe, Pump, Valve,
         WaterNetworkModel, etc.). The second value should be an attribute of the object.
-
     operation : numpy comparison method
         Examples: numpy.greater, numpy.less_equal
-
     threshold : float
         A value to compare the source object attribute against
-
     control_action : An object derived from BaseControlAction
         Examples: ControlAction
         This object defines the actual change that will occur when the specified condition is satisfied.
@@ -1208,6 +1197,11 @@ class ConditionalControl(Control):
             raise ValueError('source must be a tuple, (source_object, source_attribute).')
         if not isinstance(threshold,float):
             raise ValueError('threshold must be a float.')
+
+    @property
+    def requires(self):
+        req = [self._source_obj.name] + self._control_action.requires
+        return req
 
     def __str__(self):
         fmt = 'LINK {} {} IF NODE {} {} {}'
@@ -1263,12 +1257,10 @@ class ConditionalControl(Control):
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated.
-
         presolve_flag : bool
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
@@ -1319,7 +1311,6 @@ class ConditionalControl(Control):
     def _RunControlActionImpl(self, wnm, priority):
         """
         This implements the derived method from Control.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
@@ -1337,23 +1328,17 @@ class _MultiConditionalControl(Control):
     """
     TODO:  Make this class private -- used specifically for internal (valve) controls, not
     RULES or CONTROLS section.
-
-
     A class for creating controls that run only when a set of specified conditions are all satisfied.
-
     Parameters
     ----------
     source : list of two-tuples
         A list of two-tuples. The first value of each tuple should be an object (e.g., Junction, Tank, Reservoir,
         Pipe, Pump, Valve, WaterNetworkModel, etc.). The second value of each tuple should be an attribute of the
         object.
-
     operation : list of numpy comparison methods
         Examples: [numpy.greater, numpy.greater, numpy.less_equal]
-
     threshold : list of floats or two-tuples
         Examples: [3.8, (junction1,'head'), (tank3,'head'), 0.5]
-
     control_action : An object derived from BaseControlAction
         Examples: ControlAction
         This object defines the actual change that will occur when all specified conditions are satisfied.
@@ -1377,6 +1362,14 @@ class _MultiConditionalControl(Control):
             raise ValueError('The length of the source list must equal the length of the operation list.')
         if len(source)!=len(threshold):
             raise ValueError('The length of the source list must equal the length of the threshold list.')
+
+    @property
+    def requires(self):
+        req = []
+        for source, attr in self._source:
+            req += [source.name]
+        req += self._control_action.requires
+        return req
 
     def __eq__(self, other):
         if self._control_action == other._control_action and \
@@ -1404,12 +1397,10 @@ class _MultiConditionalControl(Control):
     def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
         """
         This implements the derived method from Control.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
             An instance of the current WaterNetworkModel object that is being simulated.
-
         presolve_flag : bool
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
@@ -1442,7 +1433,6 @@ class _MultiConditionalControl(Control):
     def _RunControlActionImpl(self, wnm, priority):
         """
         This implements the derived method from Control.
-
         Parameters
         ----------
         wnm : WaterNetworkModel
@@ -1460,7 +1450,6 @@ class _MultiConditionalControl(Control):
 
 class _CheckValveHeadControl(Control):
     """
-
     """
     def __init__(self, wnm, cv, operation, threshold, control_action):
         self.name = 'blah'
@@ -1503,7 +1492,6 @@ class _CheckValveHeadControl(Control):
 
 class _PRVControl(Control):
     """
-
     """
     def __init__(self, wnm, valve, Htol, Qtol, close_control_action, open_control_action, active_control_action):
         self.name = 'blah'

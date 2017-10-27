@@ -2,6 +2,8 @@
 import unittest
 from nose import SkipTest
 from os.path import abspath, dirname, join
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir,'networks_for_testing')
@@ -16,7 +18,7 @@ class TestTimeControls(unittest.TestCase):
 
         inp_file = join(test_datadir, 'time_controls.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
-        self.wn.options.report_timestep = 'all'
+        self.wn.options.time.report_timestep = 'all'
         for jname, j in self.wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
@@ -54,7 +56,7 @@ class TestConditionalControls(unittest.TestCase):
     def test_close_link_by_tank_level(self):
         inp_file = join(test_datadir, 'conditional_controls_1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.options.report_timestep = 'all'
+        wn.options.time.report_timestep = 'all'
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
@@ -82,11 +84,10 @@ class TestConditionalControls(unittest.TestCase):
     def test_open_link_by_tank_level(self):
         inp_file = join(test_datadir, 'conditional_controls_2.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.options.report_timestep = 'all'
+        wn.options.time.report_timestep = 'all'
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
             j.nominal_pressure = 15.0
-
         sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
         results = sim.run_sim()
 
@@ -100,6 +101,7 @@ class TestConditionalControls(unittest.TestCase):
                 self.assertEqual(results.link.at['status',t,'pipe1'], self.wntr.network.LinkStatus.open)
                 count +=1
             else:
+                print(t, results.node.at['pressure',t,'tank1'], results.link.at['status',t,'pipe1'], results.link.at['flowrate',t,'pipe1'])
                 self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
                 self.assertEqual(results.link.at['status',t,'pipe1'], self.wntr.network.LinkStatus.closed)
         self.assertEqual(activated_flag, True)
