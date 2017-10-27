@@ -1027,9 +1027,12 @@ class WaterNetworkModel(object):
 
         Returns
         --------
-        Pattern object.
+        Pattern object, the pattern does not exist, returns [1.0] (constant pattern)
         """
-        return self._patterns[name]
+        try:
+            return self._patterns[name]
+        except:
+            return [1.0]
 
     def get_curve(self, name):
         """
@@ -1959,7 +1962,7 @@ class WaterNetworkModel(object):
             logger.warning('Writing a minimal INP file without saved non-WNTR options (energy, etc.)')
             self._inpfile = wntr.epanet.InpFile()
         self._inpfile.write(filename, self, units=units)
-
+    
     def _sec_to_string(self, sec):
         hours = int(sec/3600.)
         sec -= hours*3600
