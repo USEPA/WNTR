@@ -79,25 +79,25 @@ class TimeOptions(object):
     
     Attributes
     ----------
-    duration
-        Simulation duration in seconds (default 0)
-    hydraulic_timestep
-        Hydraulic timestep in seconds (default 3600)
-    quality_timestep
-        Water quality timestep in seconds (default 360)
-    rule_timestep
-        Rule timestep in seconds (default 360)
-    pattern_timestep
-        Pattern timestep in seconds (default 3600)
-    pattern_start
+    duration : int, default 0
+        Simulation duration in seconds
+    hydraulic_timestep : int, default 3600
+        Hydraulic timestep in seconds
+    quality_timestep : int, default 360
+        Water quality timestep in seconds 
+    rule_timestep : int, default 360
+        Rule timestep in seconds
+    pattern_timestep : int, default 3600
+        Pattern timestep in seconds
+    pattern_start : int, default 0
         Time offset (in seconds) to find the starting pattern step; changes where in pattern
-        the pattern starts out, *not* what time the pattern starts (default 0)
-    report_timestep
-        Reporting timestep in seconds (default 3600)
-    report_start
-        Start time of the report in seconds from the start of the simulation (default 0)
-    start_clocktime
-        Time of day in seconds from 12 am at which the simulation begins (default 0)
+        the pattern starts out, *not* what time the pattern starts
+    report_timestep : int, default 3600
+        Reporting timestep in seconds
+    report_start : int, default 0
+        Start time of the report in seconds from the start of the simulation
+    start_clocktime : int, default 0
+        Time of day in seconds from 12 am at which the simulation begins
     
     """
     def __init__(self):
@@ -137,13 +137,13 @@ class GraphicsOptions(object):
     
     Attributes
     ----------
-    dimensions
+    dimensions : 4-tuple or list
         (x, y, dx, dy) Dimensions for backdrop image 
-    units
+    units : str
         Units for backdrop image
-    filename
+    filename : str
         Filename where image is located
-    offset
+    offset : 2-tuple or list
         (x,y) offset for the network
     
     """
@@ -174,25 +174,25 @@ class GeneralOptions(object):
     
     Attributes
     ----------
-    units
-        Input/output units (EPANET); options are CFS, GPM, MGD, IMGD, AFD, LPS, LPM, MLD, CMH, and CMD (default is GPM)
-    headloss
-        Formula to use for computing head loss through a pipe. Options are H-W, D-W, and C-M (default is H-W)
-    hydraulics
-        Indicates if a hydraulics file should be read in or saved; options are None, USE and SAVE (as defined in the EPANET User Manual).
-    hydraulics_filename
+    units : str, default 'GPM'
+        Input/output units (EPANET); options are CFS, GPM, MGD, IMGD, AFD, LPS, LPM, MLD, CMH, and CMD
+    headloss : str, default 'H-W'
+        Formula to use for computing head loss through a pipe. Options are H-W, D-W, and C-M
+    hydraulics : str, default None
+        Indicates if a hydraulics file should be read in or saved; options are None, USE and SAVE (default None)
+    hydraulics_filename : str
         Filename to use if hydraulics = SAVE
-    viscosity
+    viscosity : float, default 1.0
         Kinematic viscosity of the fluid
-    specific_gravity
-        Specific gravity of the fluid
-    pattern
+    specific_gravity : float, default 1.0
+        Specific gravity of the fluid 
+    pattern : str, default None
         Name of the default pattern for junction demands. If None, the junctions with demands but without patterns will be held constant
-    demand_multiplier
+    demand_multiplier : float, default 1.0
         The demand multiplier adjusts the values of baseline demands for all junctions
-    emitter_exponent
+    emitter_exponent : float, default 0.5
         The exponent used when computing flow from an emitter
-    map
+    map : str
         Filename used to store node coordinates in (node, x, y) format
 
     """
@@ -231,8 +231,8 @@ class ResultsOptions(object):
 
     Attributes
     ----------
-    statistic
-        Output results as statistical values, rather than time-series; options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the EPANET User Manual).
+    statistic : str, default 'None'
+        Output results as statistical values, rather than time-series; options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the EPANET User Manual)
 
         
     """
@@ -299,28 +299,28 @@ class QualityOptions(object):
     
     Attributes
     ----------
-    analysis_type
-        Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and TRACE (as defined in the EPANET User Manual)
-    trace_node
+    analysis_type : str, default 'None'
+        Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and TRACE
+    trace_node : str
         Trace node name if quality = TRACE
-    concentration_units
-        Chemical units if quality = CHEMICAL
-    diffusivity
-        Molecular diffusivity of the chemical
-    bulk_rxn_order
+    concentration_units : str, default = 'mg/L'
+        Units for chemical analysis
+    diffusivity : float, default 1.0
+        Molecular diffusivity of the chemical (default 1.0)
+    bulk_rxn_order : float, default 1.0
         Order of reaction occurring in the bulk fluid
-    wall_rxn_order
+    wall_rxn_order : float, default 1.0
         Order of reaction occurring at the pipe wall
-    tank_rxn_order
+    tank_rxn_order : float, default 1.0
         Order of reaction occurring in the tanks
-    bulk_rxn_coeff        
+    bulk_rxn_coeff : float, default 0.0
         Reaction coefficient for bulk fluid and tanks
-    wall_rxn_coeff
+    wall_rxn_coeff : float, default 0.0
         Reaction coefficient for pipe walls
-    limiting_potential
-        Specifies that reaction rates are proportional to the difference between the current concentration and some limiting potential value
-    roughness_correlation
-        Makes all default pipe wall reaction coefficients related to pipe roughness
+    limiting_potential : float, default None
+        Specifies that reaction rates are proportional to the difference between the current concentration and some limiting potential value, off if None
+    roughness_correlation : float, default None
+        Makes all default pipe wall reaction coefficients related to pipe roughness, off if None
         
     """
     def __init__(self):
@@ -358,14 +358,14 @@ class EnergyOptions(object):
     
     Attributes
     ----------
-    global_price
-        Global average cost per Joule (default 0)
-    global_pattern
+    global_price : float, default 0
+        Global average cost per Joule
+    global_pattern : str, default None
         ID label of time pattern describing how energy price varies with time
-    global_efficiency
-        Global pump efficiency as percent; i.e., 75.0 means 75% (default 75%)
-    demand_charge
-        Added cost per maximum kW usage during the simulation period
+    global_efficiency : float, default 75.0
+        Global pump efficiency as percent; i.e., 75.0 means 75%
+    demand_charge : float, default None
+        Added cost per maximum kW usage during the simulation period, or None
     
     """
     def __init__(self):
@@ -391,21 +391,21 @@ class SolverOptions(object):
 
     Attributes
     ----------
-    trials
+    trials : int, default 40
         Maximum number of trials used to solve network hydraulics
-    accuracy
-        Convergence criteria for hydraulic solutions
-    unbalanced
-        Indicate what happens if a hydraulic solution cannot be reached.  Options are STOP and CONTINUE  (as defined in the EPANET User Manual).
-    unbalanced_value
+    accuracy : float, default 0.001
+        Convergence criteria for hydraulic solutions (default 0.001)
+    unbalanced : str, default 'STOP'
+        Indicate what happens if a hydraulic solution cannot be reached.  Options are STOP and CONTINUE
+    unbalanced_value : int, default None
         Number of additional trials if unbalanced = CONTINUE
-    tolerance
+    tolerance : float, default 0.01
         Convergence criteria for water quality solutions
-    checkfreq
-        Number of solution trials that pass between status check
-    maxcheck
-        Number of solution trials that pass between status check
-    damplimit
+    checkfreq : int, default 2
+        Number of solution trials that pass between status check 
+    maxcheck : int, default 10
+        Number of solution trials that pass between status check 
+    damplimit : float, default 0.0
         Accuracy value at which solution damping begins
     
     """
