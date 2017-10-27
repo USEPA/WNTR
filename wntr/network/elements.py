@@ -6,6 +6,7 @@ The wntr.network.elements module contains base classes for elements of a water n
 import enum
 import numpy as np
 import sys
+import copy
 
 if sys.version_info[0] == 2:
     from collections import MutableSequence
@@ -30,9 +31,8 @@ class Curve(object):
     def __init__(self, name, curve_type, points):
         self.name = name
         self.curve_type = curve_type
-        self.points = points
+        self.points = copy.deepcopy(points)
         self.points.sort()
-        self.num_points = len(points)
         self._headloss_function = None
 
     def __eq__(self, other):
@@ -57,7 +57,17 @@ class Curve(object):
         return id(self)
     
     def __getitem__(self, index):
-        return self.points[index]
+        return self.points.__getitem__(index)
+
+    def __getslice__(self, i, j):
+        return self.points.__getslice__(i, j)
+
+    def __len__(self):
+        return len(self.points)
+
+    @property
+    def num_points(self):
+        return len(self.points)
 
     def _pump_curve(self, flow):
         pass
@@ -182,7 +192,7 @@ class Pattern(object):
     def multipliers(self, values):
         if isinstance(values, (int, float, complex)):
             self._multipliers = np.array([values])
-        elif not isinstance(values, list):
+        else:
             self._multipliers = np.array(values)
 
     def __getitem__(self, step):
@@ -268,9 +278,6 @@ class TimeVaryingValue(object):
     def __str__(self):
         return repr(self)
 
-    def __hash__(self):
-        return id(self)
-
     def __repr__(self):
         fmt = "<TimeVaryingValue: {}, {}, category={}>"
         return fmt.format(self._base, self._pattern, repr(self._name))
@@ -348,12 +355,6 @@ class Pricing(TimeVaryingValue):
     def __init__(self, base_price=None, pattern=None, category=None):
         super(Pricing, self).__init__(base=base_price, pattern=pattern, name=category)
 
-    def __str__(self):
-        return repr(self)
-
-    def __hash__(self):
-        return id(self)
-
     def __repr__(self):
         fmt = "<Pricing: {}, {}, category={}>"
         return fmt.format(self._base, self.pattern_name, repr(self._name))
@@ -365,21 +366,22 @@ class Pricing(TimeVaryingValue):
     @property
     def base_price(self):
         return self._base
-
+    
+    def __eq__(self, other):
+        if type(self) == type(other) and \
+           self.pattern == other.pattern and \
+           self.category == other.category and \
+           abs(self._base - other._base)<1e-10 :
+            return True
+        return False
 
 class Speed(TimeVaryingValue):
     """A value class for pump speed based on a pattern"""
     def __init__(self, base_speed=None, pattern=None, pump_name=None):
         super(Speed, self).__init__(base=base_speed, pattern=pattern, name=pump_name)    
 
-    def __str__(self):
-        return repr(self)
-
-    def __hash__(self):
-        return id(self)
-
     def __repr__(self):
-        fmt = "<VariableSpeed: {}, {}, pump_name={}>"
+        fmt = "<Speed: {}, {}, pump_name={}>"
         return fmt.format(self._base, self.pattern_name, repr(self._name))
 
     @property
@@ -390,18 +392,20 @@ class Speed(TimeVaryingValue):
     def pump_name(self):
         return self._name
 
+    def __eq__(self, other):
+        if type(self) == type(other) and \
+           self.pattern == other.pattern and \
+           self.pump_name == other.pump_name and \
+           abs(self._base - other._base)<1e-10 :
+            return True
+        return False
+
 
 class Demand(TimeVaryingValue):
     """A value class for demand at a junction based on a pattern"""
     def __init__(self, base_demand=None, pattern=None, category=None):
         super(Demand, self).__init__(base=base_demand, pattern=pattern, name=category)
     
-    def __str__(self):
-        return repr(self)
-
-    def __hash__(self):
-        return id(self)
-
     def __repr__(self):
         fmt = "<Demand: base_demand={}, pattern={}, category={}>"
         return fmt.format(self._base, repr(self.pattern_name), repr(self._name))
@@ -426,18 +430,20 @@ class Demand(TimeVaryingValue):
             demand_values[ct] = self.at(t)
         return demand_values
 
+    def __eq__(self, other):
+        if type(self) == type(other) and \
+           self.pattern == other.pattern and \
+           self.category == other.category and \
+           abs(self._base - other._base)<1e-10 :
+            return True
+        return False
+
 
 class ReservoirHead(TimeVaryingValue):
     """A value class for varying head based on a pattern"""
     def __init__(self, total_head=None, pattern=None, name=None):
         super(ReservoirHead, self).__init__(base=total_head, pattern=pattern, name=name)
     
-    def __str__(self):
-        return repr(self)
-
-    def __hash__(self):
-        return id(self)
-
     def __repr__(self):
         fmt = "<ReservoirHead: {}, {}>"
         return fmt.format(self._base, self.pattern_name)
@@ -446,6 +452,13 @@ class ReservoirHead(TimeVaryingValue):
     def total_head(self):
         return self._base
 
+    def __eq__(self, other):
+        if type(self) == type(other) and \
+           self.pattern == other.pattern and \
+           self.name == other.name and \
+           abs(self._base - other._base)<1e-10 :
+            return True
+        return False
 
 class Source(TimeVaryingValue):
     """A water quality source
@@ -483,12 +496,6 @@ class Source(TimeVaryingValue):
            self._pattern == other._pattern:
             return True
         return False
-
-    def __str__(self):
-        return self.name
-
-    def __hash__(self):
-        return id(self)
 
     def __repr__(self):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
