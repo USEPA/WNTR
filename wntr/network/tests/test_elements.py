@@ -83,28 +83,28 @@ def test_Pattern():
     nose.tools.assert_equals(pattern5a, pattern5b)
     nose.tools.assert_raises(NotImplementedError, elements.Pattern._SquareWave, *(None, None, None, None, None))
 
-def test_TimeVaryingValues():
+def test_TimeSeries():
     pattern_points2 = [1.0, 1.2, 1.0 ]
     pattern2 = elements.Pattern('oops', multipliers=pattern_points2, step_size=10)
     pattern5 = elements.Pattern.BinaryPattern('binary', step_size=1, start_time=2, end_time=6, duration=9)
     base1 = 2.0
     
     # test constructor and setters, getters
-    tvv1 = elements.TimeVaryingValue(base1, None, None)
-    tvv2 = elements.TimeVaryingValue(base1, pattern2, 'tvv2')
-    nose.tools.assert_raises(ValueError, elements.TimeVaryingValue, *('A', None, None))
-    nose.tools.assert_raises(ValueError, elements.TimeVaryingValue, *(1.0, 'A', None))
+    tvv1 = elements.TimeSeries(base1, None, None)
+    tvv2 = elements.TimeSeries(base1, pattern2, 'tvv2')
+    nose.tools.assert_raises(ValueError, elements.TimeSeries, *('A', None, None))
+    nose.tools.assert_raises(ValueError, elements.TimeSeries, *(1.0, 'A', None))
     nose.tools.assert_equals(tvv1._base, base1)
     nose.tools.assert_equal(tvv1.base_value, tvv1._base)
     nose.tools.assert_equals(tvv1.pattern_name, None)
     nose.tools.assert_equals(tvv1.pattern, None)
-    nose.tools.assert_equals(tvv1.name, None)
+    nose.tools.assert_equals(tvv1.category, None)
     tvv1.set_base_value(3.0)
     nose.tools.assert_equals(tvv1.base_value, 3.0)
     tvv1.set_pattern(pattern5)
     nose.tools.assert_equals(tvv1.pattern_name, 'binary')
-    tvv1.set_name('binary')
-    nose.tools.assert_equals(tvv1.name, 'binary')
+    tvv1.set_category('binary')
+    nose.tools.assert_equals(tvv1.category, 'binary')
     
     # Test getitem
     nose.tools.assert_equals(tvv1[1], 0.0)
@@ -112,34 +112,34 @@ def test_TimeVaryingValues():
     nose.tools.assert_equals(tvv2[1], 2.4)
     nose.tools.assert_equals(tvv2(16), 2.4)
     
-    price1 = elements.Pricing(base_price=35.0, pattern=None, category="base")
-    price2 = elements.Pricing(base_price=35.0, pattern=None, category="base")
-    nose.tools.assert_equal(price1.base_price, 35.0)
-    nose.tools.assert_equal(price1.category, 'base')
+    price1 = elements.TimeSeries(base=35.0, pattern=None, category="base")
+    price2 = elements.TimeSeries(base=35.0, pattern=None, category="base")
     nose.tools.assert_equal(price1, price2)
+    nose.tools.assert_equal(price1.base_value, 35.0)
+    nose.tools.assert_equal(price1.category, 'base')
     
-    speed1 = elements.Speed(base_speed=35.0, pattern=pattern5, pump_name="base")
-    speed2 = elements.Speed(base_speed=35.0, pattern=pattern5, pump_name="base")
+    speed1 = elements.TimeSeries(base=35.0, pattern=pattern5, category="base")
+    speed2 = elements.TimeSeries(base=35.0, pattern=pattern5, category="base")
     nose.tools.assert_equal(speed1, speed2)
-    nose.tools.assert_equal(speed1.base_speed, 35.0)
-    nose.tools.assert_equal(speed1.pump_name, 'base')
-
-    head1 = elements.ReservoirHead(total_head=35.0, pattern=pattern2, name="base")
-    head2 = elements.ReservoirHead(total_head=35.0, pattern=pattern2, name="base")
+    nose.tools.assert_equal(speed1.base_value, 35.0)
+    nose.tools.assert_equal(speed1.category, 'base')
+    
+    head1 = elements.TimeSeries(base=35.0, pattern=pattern2, category="base")
+    head2 = elements.TimeSeries(base=35.0, pattern=pattern2, category="base")
     nose.tools.assert_equal(head1, head2)
-    nose.tools.assert_equal(head1.total_head, 35.0)
-    nose.tools.assert_equal(head1.name, 'base')
+    nose.tools.assert_equal(head1.base_value, 35.0)
+    nose.tools.assert_equal(head1.category, 'base')
 
-    demand1 = elements.Demand(base_demand=1.35, pattern=pattern2, category="base")
-    demand2 = elements.Demand(base_demand=1.35, pattern=pattern2, category="base")
+    demand1 = elements.TimeSeries(base=1.35, pattern=pattern2, category="base")
+    demand2 = elements.TimeSeries(base=1.35, pattern=pattern2, category="base")
     nose.tools.assert_equal(demand1, demand2)
-    nose.tools.assert_equal(demand1.base_demand, 1.35)
+    nose.tools.assert_equal(demand1.base_value, 1.35)
     nose.tools.assert_equal(demand1.category, 'base')
     expected_values1 = np.array([1.35, 1.62, 1.35, 1.35, 1.62])
-    demand_values1 = demand2.demand_values(0, 40, 10)
+    demand_values1 = demand2.get_values(0, 40, 10)
     nose.tools.assert_true(np.all(np.abs(expected_values1-demand_values1)<1.0e-10))
     expected_values1 = np.array([1.35, 1.35, 1.62, 1.62, 1.35, 1.35, 1.35, 1.35, 1.62])
-    demand_values1 = demand2.demand_values(0, 40, 5)
+    demand_values1 = demand2.get_values(0, 40, 5)
     nose.tools.assert_true(np.all(np.abs(expected_values1-demand_values1)<1.0e-10))
     
     source1 = elements.Source('source1', 'NODE-1131', 'CONCEN', 1000.0, pattern5)
@@ -148,21 +148,21 @@ def test_TimeVaryingValues():
     nose.tools.assert_equal(source1.quality, 1000.0)
     
 
-def test_DemandList():
+def test_Demands():
     pattern_points1 = [0.5, 1.0, 0.4, 0.2 ]
     pattern1 = elements.Pattern('1', multipliers=pattern_points1, step_size=10)
     pattern_points2 = [1.0, 1.2, 1.0 ]
     pattern2 = elements.Pattern('2', multipliers=pattern_points2, step_size=10)
-    demand1 = elements.Demand( 2.5, pattern1, '_base_demand')
-    demand2 = elements.Demand( 1.0, pattern2, 'residential')
-    demand3 = elements.Demand( 0.8, pattern2, 'residential')
+    demand1 = elements.TimeSeries( 2.5, pattern1, '_base_demand')
+    demand2 = elements.TimeSeries( 1.0, pattern2, 'residential')
+    demand3 = elements.TimeSeries( 0.8, pattern2, 'residential')
     expected1 = 2.5 * np.array(pattern_points1*3)
     expected2 = 1.0 * np.array(pattern_points2*4)
     expected3 = 0.8 * np.array(pattern_points2*4)
     expectedtotal = expected1 + expected2 + expected3
     expectedresidential = expected2 + expected3
-    demandlist1 = elements.DemandList( demand1, demand2, demand3 )
-    demandlist2 = elements.DemandList()
+    demandlist1 = elements.Demands( demand1, demand2, demand3 )
+    demandlist2 = elements.Demands()
     demandlist2.append(demand1)
     demandlist2.append(demand1)
     demandlist2[1] = demand2
@@ -183,7 +183,7 @@ def test_DemandList():
     nose.tools.assert_equal(demandlist1.at(5), expectedtotal[0])
     nose.tools.assert_equal(demandlist1.at(13), expectedtotal[1])
     nose.tools.assert_equal(demandlist1.at(13, 'residential'), expectedresidential[1])
-    nose.tools.assert_true(np.all(np.abs(demandlist1.demand_values(0,110,10)-expectedtotal)<1.0e-10))
+    nose.tools.assert_true(np.all(np.abs(demandlist1.get_values(0,110,10)-expectedtotal)<1.0e-10))
     nose.tools.assert_list_equal(demandlist1.base_demand_list(), [2.5, 1.0, 0.8])
     nose.tools.assert_list_equal(demandlist1.base_demand_list('_base_demand'), [2.5])
     nose.tools.assert_list_equal(demandlist1.pattern_list(), [pattern1, pattern2, pattern2])
@@ -198,6 +198,6 @@ def test_Enums():
 if __name__ == '__main__':
     test_Curve()
     test_Pattern()
-    test_TimeVaryingValues()
-    test_DemandList()
+    test_TimeSeries()
+    test_Demands()
     test_Enums()

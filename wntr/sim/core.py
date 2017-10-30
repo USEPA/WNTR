@@ -64,7 +64,7 @@ class WaterNetworkSimulator(object):
         # Make sure node object is a Junction
         assert(isinstance(node, Junction)), "Demands can only be calculated for Junctions"
         # Calculate demand pattern values
-        return node.demands.demand_values(start_time, end_time, self._wn.options.time.hydraulic_timestep)
+        return node.demands.get_values(start_time, end_time, self._wn.options.time.hydraulic_timestep)
 
     def _get_link_type(self, name):
         if isinstance(self._wn.get_link(name), Pipe):
