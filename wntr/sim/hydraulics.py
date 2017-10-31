@@ -1336,6 +1336,7 @@ class HydraulicModel(object):
             link._prev_power_outage = link._power_outage
         for link_name, link in self._wn.links(Valve):
             link.prev_flow = link.flow
+            link.prev_setting = link.setting
 
     def store_results_in_network(self, x):
         head = x[:self.num_nodes]

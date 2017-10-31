@@ -12,7 +12,7 @@ from scipy.optimize import fsolve
 
 from .graph import WntrMultiDiGraph
 from .controls import IfThenElseControl, ControlAction, _FCVControl, ConditionalControl, TimeControl
-from .controls import _MultiConditionalControl, _PRVControl, _CheckValveHeadControl
+from .controls import _MultiConditionalControl, _PRVControl, _CheckValveHeadControl, _ValveNewSettingControl
 from .options import WaterNetworkOptions
 from .elements import Curve, Pattern, Source
 from .elements import LinkStatus
@@ -1104,7 +1104,10 @@ class WaterNetworkModel(object):
         --------
         Pattern object.
         """
-        return self._patterns[name]
+        try:
+            return self._patterns[name]
+        except:
+            return [1.0]
 
     def get_curve(self, name):
         """
@@ -1396,6 +1399,10 @@ class WaterNetworkModel(object):
     def _get_valve_controls(self):
         valve_controls = []
         for valve_name, valve in self.links(Valve):
+
+            control = _ValveNewSettingControl(self, valve)
+            control.name = valve.name + ' new setting for valve control'
+            valve_controls.append(control)
 
             if valve.valve_type == 'PRV':
                 close_control_action = ControlAction(valve, '_status', LinkStatus.Closed)

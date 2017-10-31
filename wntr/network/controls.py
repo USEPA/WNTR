@@ -1626,6 +1626,64 @@ class _FCVControl(Control):
         change_flag, change_tuple, orig_value = self._action_to_run.RunControlAction(self.name)
         return change_flag, change_tuple, orig_value
 
+
+class _ValveNewSettingControl(Control):
+    """
+    This is a control to change the valve status to active when a new setting is given to the valve (see page 73 of
+    the Epanet2 user manual).
+
+    Parameters
+    ----------
+    wnm: wntr.network.WaterNetworkModel
+    valve: wntr.network.Valve
+    Qtol: float
+    open_control_action: ControlAction
+    active_control_action: ControlAction
+    """
+
+    def __init__(self, wnm, valve):
+        self.name = 'new_valve_setting_makes_status_active'
+        self._priority = 1
+        self._valve = valve
+        valve.prev_setting = valve.setting
+        self._active_control_action = ControlAction(valve, 'status', wntr.network.LinkStatus.Active)
+        self._action_to_run = self._active_control_action
+
+    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
+        """
+        This implements the derived method from Control. Please see
+        the Control class and the documentation for this class.
+        """
+        if presolve_flag:
+            return False, None
+
+        if self._valve.status == wntr.network.LinkStatus.Closed:
+            if self._valve.prev_setting != self._valve.setting:
+                self._action_to_run = self._active_control_action
+                return True, 0
+            return False, None
+        elif self._valve.status == wntr.network.LinkStatus.Opened:
+            if self._valve.prev_setting != self._valve.setting:
+                self._action_to_run = self._active_control_action
+                return True, 0
+            return False, None
+        elif self._valve.status == wntr.network.LinkStatus.Active:
+            return False, None
+        else:
+            raise ValueError('unexpected status for valve: \n\tValve: {0}\n\t_status: {1}'.format(self._valve,
+                                                                                                   self._valve.status))
+
+    def _RunControlActionImpl(self, wnm, priority):
+        """
+        This implements the derived method from Control. Please see
+        the Control class and the documentation for this class.
+        """
+        if self._priority!=priority:
+            return False, None, None
+
+        change_flag, change_tuple, orig_value = self._action_to_run.RunControlAction(self.name)
+        return change_flag, change_tuple, orig_value
+
 ### Logger
 
 class ControlLogger(object):
