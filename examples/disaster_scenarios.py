@@ -51,7 +51,7 @@ for reservoir_name, reservoir in wn.reservoirs():
     reservoir.base_head = reservoir.base_head*0.9 
 for junction_name, junction in wn.junctions():
     for demand in junction.demands:
-        demand.base_demand = demand.base_demand*1.15
+        demand.base_value = demand.base_value*1.15
     
 # Simulate 
 sim = wntr.sim.WNTRSimulator(wn, mode='PDD')

@@ -27,7 +27,7 @@ import wntr
 import wntr.network
 from wntr.network.model import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
 from wntr.network.options import WaterNetworkOptions
-from wntr.network.elements import Demand, Pattern, LinkStatus, Curve, Pricing, Speed, DemandList, Source
+from wntr.network.elements import Pattern, LinkStatus, Curve, Demands, Source
 from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition
 from wntr.network.controls import OrCondition, AndCondition, IfThenElseControl, ControlAction
 
@@ -479,7 +479,7 @@ class InpFile(object):
         for junction_name in nnames:
             junction = wn._junctions[junction_name]
             if junction.demands:
-                base_demand = junction.demands[0].base_demand
+                base_demand = junction.demands[0].base_value
                 demand_pattern = junction.demands[0].pattern_name
             else:
                 base_demand = 0.0
@@ -1225,7 +1225,7 @@ class InpFile(object):
             for ct, demand in enumerate(demands):
                 if ct == 0: continue
                 E = {'node': node,
-                     'base': from_si(self.flow_units, demand.base_demand, HydParam.Demand),
+                     'base': from_si(self.flow_units, demand.base_value, HydParam.Demand),
                      'pat': ''}
                 if demand.pattern_name is not None:
                     E['pat'] = demand.pattern_name
