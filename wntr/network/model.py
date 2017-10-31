@@ -16,14 +16,14 @@ from .controls import _MultiConditionalControl, _PRVControl, _CheckValveHeadCont
 from .options import WaterNetworkOptions
 from .elements import Curve, Pattern, Source
 from .elements import LinkStatus
-from .elements import DemandList , ReservoirHead
+from .elements import Demands, TimeSeries
 import wntr.epanet
 
 logger = logging.getLogger(__name__)
 
 class WaterNetworkModel(object):
     """
-    Base water network model class.
+    Water network model class.
 
     Parameters
     -------------------
@@ -128,7 +128,7 @@ class WaterNetworkModel(object):
         base_demand : float
             Base demand at the junction.
         demand_pattern : string or Pattern
-            Name of the demand pattern or the actual pattern object
+            Name of the demand pattern or the actual Pattern object
         elevation : float
             Elevation of the junction.
         coordinates : tuple of floats
@@ -138,10 +138,8 @@ class WaterNetworkModel(object):
         base_demand = float(base_demand)
         elevation = float(elevation)
         if demand_pattern and isinstance(demand_pattern, six.string_types):
-            pattern = self.get_pattern(demand_pattern)
-        else:
-            pattern = demand_pattern
-        junction = Junction(name, base_demand, pattern, elevation)
+            demand_pattern = self.get_pattern(demand_pattern)
+        junction = Junction(name, base_demand, demand_pattern, elevation)
         self._nodes[name] = junction
         self._junctions[name] = junction
         self._graph.add_node(name)
@@ -150,8 +148,8 @@ class WaterNetworkModel(object):
         nx.set_node_attributes(self._graph, name='type', values={name:'junction'})
         self._num_junctions += 1
 
-    def add_demand(self, junction_name, base_demand=0.0, demand_pattern=None, category=None):
-        """Add demand entry to a junction"""
+    def add_demand(self, junction_name, base_demand=0.0, demand_pattern=None, name=None):
+        """Add demand entry to a junction""" # KAK
         pass
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
@@ -181,7 +179,6 @@ class WaterNetworkModel(object):
         coordinates : tuple of floats
             X-Y coordinates of the node location.
             
-        
         Raises
         ------
         ValueError
@@ -218,15 +215,14 @@ class WaterNetworkModel(object):
             The previous parameter *head_pattern_name* was changed to **head_pattern** to allow passing of a 
             :class:`wntr.network.elements.Pattern` object.
 
-
         Parameters
         ----------
         name : string
             Name of the reservoir.
         base_head : float, optional
             Base head at the reservoir.
-        head_pattern : string, optional
-            Name of the head pattern.
+        head_pattern : string or Pattern
+            Name of the head pattern or the actual Pattern object
         coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
         
@@ -419,7 +415,7 @@ class WaterNetworkModel(object):
         curve = Curve(name, curve_type, xy_tuples_list)
         self._insert_curve(curve)
         
-    def _insert_curve(self, curve):
+    def _insert_curve(self, curve): # KAK
         self._curves[curve.name] = curve
         self._num_curves += 1
         
@@ -441,20 +437,20 @@ class WaterNetworkModel(object):
         quality: float
             Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, FLOWPACED, or SETPOINT
 
-        pattern_name: string
-            Pattern name
+        pattern: string or Pattern object
+            Pattern name or object
         """
         if pattern and isinstance(pattern, six.string_types):
             pattern = self.get_pattern(pattern)
         source = Source(name, node_name, source_type, quality, pattern)
         self._insert_source(source)
         
-    def _insert_source(self, source):        
+    def _insert_source(self, source): # KAK
         self._sources[source.name] = source
         self._num_sources += 1
-
+# KAK
 #    def add_demand(self, junction_name, base_demand=0.0, demand_pattern_name=None, category=None):
-#        demand = Demand(base_demand, demand_pattern_name, category)
+#        demand = TimeSeries(base_demand, demand_pattern_name, category)
 #        self._insert_demand(demand, junction_name)
 #        
 #    def _insert_demand(self, demand, for_junction):
@@ -652,7 +648,9 @@ class WaterNetworkModel(object):
         name : string
            The name of the pattern object to be removed.
         """
-        logger.warning('You are deleting a pattern! This could have unintended side effects! If you are replacing values, use get_pattern(name).modify_pattern(values) instead!')
+        logger.warning('You are deleting a pattern! This could have \
+            unintended side effects! If you are replacing values, use \
+            get_pattern(name).modify_pattern(values) instead!')
         del self._patterns[name]
         self._num_patterns -= 1
         
@@ -665,7 +663,9 @@ class WaterNetworkModel(object):
         name : string
            The name of the curve object to be removed.
         """
-        logger.warning('You are deleting a curve! This could have unintended side effects! If you are replacing values, use get_curve(name) and modify it instead!')
+        logger.warning('You are deleting a curve! This could have unintended \
+            side effects! If you are replacing values, use get_curve(name) \
+            and modify it instead!')
         del self._curves[name]
         self._num_curves -= 1
         
@@ -678,7 +678,9 @@ class WaterNetworkModel(object):
         name : string
            The name of the source object to be removed.
         """
-        logger.warning('You are deleting a source! This could have unintended side effects! If you are replacing values, use get_source(name) and modify it instead!')
+        logger.warning('You are deleting a source! This could have unintended \
+            side effects! If you are replacing values, use get_source(name) \
+            and modify it instead!')
         del self._sources[name]
         self._num_sources -= 1
 
@@ -704,7 +706,9 @@ class WaterNetworkModel(object):
         name : string
            The name of the control object to be removed.
         """
-        logger.warning('You are deleting a control! This could have unintended side effects! If you are replacing values, use get_control(name) and modify it instead!')
+        logger.warning('You are deleting a control! This could have unintended \
+            side effects! If you are replacing values, use get_control(name) \
+            and modify it instead!')
         del self._controls[name]
         self._num_controls -= 1
         
@@ -983,10 +987,10 @@ class WaterNetworkModel(object):
                                 y0 + dy * split_at_point)
 
         # add the new junction
-        self.add_junction(new_junction_name_old_pipe, base_demand=0.0, demand_pattern_name=None,
+        self.add_junction(new_junction_name_old_pipe, base_demand=0.0, demand_pattern=None,
                           elevation=junction_elevation, coordinates=junction_coordinates)
         new_junction1 = self.get_node(new_junction_name_old_pipe)
-        self.add_junction(new_junction_name_new_pipe, base_demand=0.0, demand_pattern_name=None,
+        self.add_junction(new_junction_name_new_pipe, base_demand=0.0, demand_pattern=None,
                           elevation=junction_elevation, coordinates=junction_coordinates)
         new_junction2 = self.get_node(new_junction_name_new_pipe)
 
@@ -1102,7 +1106,7 @@ class WaterNetworkModel(object):
 
         Returns
         --------
-        Pattern object.
+        Pattern object, the pattern does not exist, returns [1.0] (constant pattern)
         """
         try:
             return self._patterns[name]
@@ -1139,7 +1143,7 @@ class WaterNetworkModel(object):
         """
         return self._sources[name]
     
-#    def _get_demand(self, name):
+#    def _get_demand(self, name): # KAK
 #        """
 #        Returns the demand object of a specific demand.
 #
@@ -1150,7 +1154,7 @@ class WaterNetworkModel(object):
 #
 #        Returns
 #        --------
-#        Demand object.
+#        TimeSeries object.
 #        """
 #        return self._demands[name]
 #    
@@ -1170,7 +1174,7 @@ class WaterNetworkModel(object):
         return self._controls[name]
 
 
-    def get_demands_for_junction(self, junction_name, category=None):
+    def get_demands_for_junction(self, junction_name, category=None): # KAK
         """Returns a list of demands at a junction"""
         pass
 
@@ -2028,7 +2032,7 @@ class WaterNetworkModel(object):
             logger.warning('Writing a minimal INP file without saved non-WNTR options (energy, etc.)')
             self._inpfile = wntr.epanet.InpFile()
         self._inpfile.write(filename, self, units=units)
-
+    
     def _sec_to_string(self, sec):
         hours = int(sec/3600.)
         sec -= hours*3600
@@ -2195,8 +2199,8 @@ class Junction(Node):
     base_demand : float, optional
         Base demand at the junction.
         Internal units must be cubic meters per second (m^3/s).
-    demand_pattern : string, optional
-        Name of the demand pattern.
+    demand_pattern : Pattern object, optional
+        Demand pattern.
     elevation : float, optional
         Elevation of the junction.
         Internal units must be meters (m).
@@ -2208,11 +2212,11 @@ class Junction(Node):
 #        self._base_demand = base_demand
         self.prev_expected_demand = None
         self.expected_demand = base_demand
-#        if demand_pattern:
+#        if demand_pattern: # KAK
 #            self._demand_pattern_name = demand_pattern.name
 #        else:
 #            self._demand_pattern_name = None
-        self.demands = DemandList()
+        self.demands = Demands()
         if base_demand: self.demands.append((base_demand, demand_pattern, '_base_demand'))
 #        self._categorized_demands = {}  # _categorized_demands[category] = (base_demand, pattern_name)
         self.elevation = elevation
@@ -2235,11 +2239,11 @@ class Junction(Node):
     def base_demand(self):
         if len(self.demands) > 0:
             dem0 = self.demands[0]
-            return dem0.base_demand
+            return dem0.base_value
         return 0
         
     @property
-    def demand_pattern_name(self):
+    def demand_pattern_name(self): 
         if len(self.demands) > 0:
             dem0 = self.demands[0]
             return dem0.pattern_name
@@ -2393,14 +2397,16 @@ class Junction(Node):
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
 
-    def set_demand(self, base_demand, pattern_name=None):
+    """
+    def set_demand(self, base_demand, pattern_name=None): # KAK
         pass
 
-    def add_categorized_demand(self, category, base_demand, pattern_name=None):
+    def add_categorized_demand(self, category, base_demand, pattern_name=None): # KAK
         pass
 
-    def remove_categorized_demand(self, category):
+    def remove_categorized_demand(self, category): # KAK
         pass
+    """
 
 
 class Tank(Node):
@@ -2626,8 +2632,8 @@ class Reservoir(Node):
     base_head : float, optional
         Base head at the reservoir.
         Internal units must be meters (m).
-    head_pattern_name : string, optional
-        Name of the head pattern.
+    head_pattern : Pattern object, optional
+        Head pattern.
     """
     def __init__(self, name, base_head=0.0, head_pattern=None):
 
@@ -2635,7 +2641,7 @@ class Reservoir(Node):
         self.base_head = base_head
         self.head = base_head
         self.head_pattern = head_pattern
-        self.heads = ReservoirHead(base_head, head_pattern, name)
+        self.heads = TimeSeries(base_head, head_pattern, name)
 
     @property
     def head_pattern_name(self):
@@ -2746,8 +2752,8 @@ class Pump(Link):
         Where power is a fixed value in KW, while a head curve is a Curve object.
     speed: float
         Relative speed setting (1.0 is normal speed)
-    pattern: str
-        ID of pattern for speed setting
+    pattern: Pattern object, optional
+        Speed pattern
     """
 
     def __init__(self, name, start_node_name, end_node_name, info_type='POWER',info_value=50.0,

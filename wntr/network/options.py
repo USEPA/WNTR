@@ -1,22 +1,21 @@
 """
-Water Network Model Options Classes
-
-Provides the classes that make up the WNTR options for a model and to pass to solvers.
-
+The wntr.network.options module includes simulation options.
 """
+import logging
 
+logger = logging.getLogger(__name__)
 
 class WaterNetworkOptions(object):
     """
-    A class to manage options.  These options mimic options in the EPANET User Manual.
-
-    This class now uses the `__slots__` syntax to ensure that older code will raise an appropriate
-    error -- for example, trying to set the options.duration value will result in an error 
-    rather than creating a new attribute (which would never be used and cause undiagnosable errors).
+    Water network model options class.
     
-    The `user` attribute is a generic python class object that allows for dynamically created 
-    attributes that are user specific; core WNTR functionality will never use options in the `user`
-    section, but 3-rd party libraries or add-ons may.
+    These options mimic options in the EPANET User Manual.
+    The class uses the `__slots__` syntax to ensure that older code will raise 
+    an appropriate error -- for example, trying to set the options.duration 
+    value will result in an error rather than creating a new attribute 
+    (which would never be used and cause undiagnosable errors).
+    The `user` attribute is a generic python class object that allows for 
+    dynamically created attributes that are user specific.
         
     Attributes
     ----------
@@ -25,7 +24,7 @@ class WaterNetworkOptions(object):
     general : :class:`~GeneralOptions`
         General WNTR model options
     results : :class:`~ResultsOptions`
-        Options related to the saving or presentaion of results
+        Options related to the saving or presentation of results
     quality : :class:`~QualityOptions`
         Water quality model options
     energy : :class:`~EnergyOptions`
@@ -36,7 +35,6 @@ class WaterNetworkOptions(object):
         Graphics and mapping options
     user : :class:`~UserOptions`
         Space for end-user defined options
-        
     """
     __slots__ = ['time','general','results','quality','energy','solver','graphics','user']
 
@@ -71,11 +69,9 @@ class WaterNetworkOptions(object):
                return True
         return False
 
-
-## Start with the component classes
-
 class TimeOptions(object):
-    """All options relating to simulation and model timing.
+    """
+    Options related to simulation and model timing.
     
     Attributes
     ----------
@@ -90,15 +86,15 @@ class TimeOptions(object):
     pattern_timestep : int, default 3600
         Pattern timestep in seconds
     pattern_start : int, default 0
-        Time offset (in seconds) to find the starting pattern step; changes where in pattern
-        the pattern starts out, *not* what time the pattern starts
+        Time offset (in seconds) to find the starting pattern step; changes 
+        where in pattern the pattern starts out, *not* what time the pattern 
+        starts
     report_timestep : int, default 3600
         Reporting timestep in seconds
     report_start : int, default 0
         Start time of the report in seconds from the start of the simulation
     start_clocktime : int, default 0
         Time of day in seconds from 12 am at which the simulation begins
-    
     """
     def __init__(self):
         # Time related options
@@ -130,10 +126,11 @@ class TimeOptions(object):
 
 
 class GraphicsOptions(object):
-    """All options relating to graphics. 
+    """
+    Options related to graphics. 
     
-    May be used to contain custom, user defined values. Default attributes comprise the
-    EPANET "backdrop" section options.
+    May be used to contain custom, user defined values. Default attributes 
+    comprise the EPANET "backdrop" section options.
     
     Attributes
     ----------
@@ -145,7 +142,6 @@ class GraphicsOptions(object):
         Filename where image is located
     offset : 2-tuple or list
         (x,y) offset for the network
-    
     """
     def __init__(self, filename=None, dim=None, units=None, offset=None):
         self.dimensions = dim
@@ -168,18 +164,21 @@ class GraphicsOptions(object):
             text += "OFFSET {} {}\n".format(self.offset[0], self.offset[1])
         return text
 
-
-class GeneralOptions(object):
-    """All options relating to general model, including hydraulics.
+class GeneralOptions(object): # KAK, HydraulicOptions?
+    """
+    Options related to general model, including hydraulics. 
     
     Attributes
     ----------
     units : str, default 'GPM'
-        Input/output units (EPANET); options are CFS, GPM, MGD, IMGD, AFD, LPS, LPM, MLD, CMH, and CMD
+        Input/output units (EPANET); options are CFS, GPM, MGD, IMGD, AFD, LPS, 
+        LPM, MLD, CMH, and CMD
     headloss : str, default 'H-W'
-        Formula to use for computing head loss through a pipe. Options are H-W, D-W, and C-M
+        Formula to use for computing head loss through a pipe. Options are H-W, 
+        D-W, and C-M
     hydraulics : str, default None
-        Indicates if a hydraulics file should be read in or saved; options are None, USE and SAVE (default None)
+        Indicates if a hydraulics file should be read in or saved; options are 
+        None, USE and SAVE (default None)
     hydraulics_filename : str
         Filename to use if hydraulics = SAVE
     viscosity : float, default 1.0
@@ -187,14 +186,15 @@ class GeneralOptions(object):
     specific_gravity : float, default 1.0
         Specific gravity of the fluid 
     pattern : str, default None
-        Name of the default pattern for junction demands. If None, the junctions with demands but without patterns will be held constant
+        Name of the default pattern for junction demands. If None, the 
+        junctions with demands but without patterns will be held constant
     demand_multiplier : float, default 1.0
-        The demand multiplier adjusts the values of baseline demands for all junctions
+        The demand multiplier adjusts the values of baseline demands for all 
+        junctions
     emitter_exponent : float, default 0.5
         The exponent used when computing flow from an emitter
     map : str
         Filename used to store node coordinates in (node, x, y) format
-
     """
     def __init__(self):
         # General options
@@ -227,14 +227,15 @@ class GeneralOptions(object):
 
 
 class ResultsOptions(object):
-    """All options relating to results outputs.
+    """
+    Options related to results outputs.
 
     Attributes
     ----------
     statistic : str, default 'None'
-        Output results as statistical values, rather than time-series; options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the EPANET User Manual)
-
-        
+        Output results as statistical values, rather than time-series; options 
+        are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the 
+        EPANET User Manual)
     """
     def __init__(self):
         self.statistic = 'NONE'
@@ -295,12 +296,14 @@ class ResultsOptions(object):
         
         
 class QualityOptions(object):
-    """All options relating to water quality modeling.
+    """
+    Options related to water quality modeling.
     
     Attributes
     ----------
     analysis_type : str, default 'None'
-        Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and TRACE
+        Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and 
+        TRACE
     trace_node : str
         Trace node name if quality = TRACE
     concentration_units : str, default = 'mg/L'
@@ -318,10 +321,12 @@ class QualityOptions(object):
     wall_rxn_coeff : float, default 0.0
         Reaction coefficient for pipe walls
     limiting_potential : float, default None
-        Specifies that reaction rates are proportional to the difference between the current concentration and some limiting potential value, off if None
+        Specifies that reaction rates are proportional to the difference 
+        between the current concentration and some limiting potential value, 
+        off if None
     roughness_correlation : float, default None
-        Makes all default pipe wall reaction coefficients related to pipe roughness, off if None
-        
+        Makes all default pipe wall reaction coefficients related to pipe 
+        roughness, off if None
     """
     def __init__(self):
         self.type = 'NONE'
@@ -354,7 +359,8 @@ class QualityOptions(object):
 
 
 class EnergyOptions(object):
-    """All options relating to energy calculations.
+    """
+    Options related to energy calculations.
     
     Attributes
     ----------
@@ -366,7 +372,6 @@ class EnergyOptions(object):
         Global pump efficiency as percent; i.e., 75.0 means 75%
     demand_charge : float, default None
         Added cost per maximum kW usage during the simulation period, or None
-    
     """
     def __init__(self):
         self.global_price = 0
@@ -387,7 +392,8 @@ class EnergyOptions(object):
 
 
 class SolverOptions(object):
-    """All options relating to solver options (for any solver).
+    """
+    Options related to solver options (for any solver).
 
     Attributes
     ----------
@@ -396,7 +402,8 @@ class SolverOptions(object):
     accuracy : float, default 0.001
         Convergence criteria for hydraulic solutions (default 0.001)
     unbalanced : str, default 'STOP'
-        Indicate what happens if a hydraulic solution cannot be reached.  Options are STOP and CONTINUE
+        Indicate what happens if a hydraulic solution cannot be reached.  
+        Options are STOP and CONTINUE
     unbalanced_value : int, default None
         Number of additional trials if unbalanced = CONTINUE
     tolerance : float, default 0.01
@@ -407,7 +414,6 @@ class SolverOptions(object):
         Number of solution trials that pass between status check 
     damplimit : float, default 0.0
         Accuracy value at which solution damping begins
-    
     """
     def __init__(self):
         self.trials = 40
@@ -435,11 +441,8 @@ class SolverOptions(object):
 
 
 class UserOptions(object):
-    """This is a generic user options dictionary to allow for private extensions
-    
-    Allows users to add attributes for their own personal use under options.user.*
-    
+    """
+    Options defined by the user.
     """
     def __init__(self):
         pass
-

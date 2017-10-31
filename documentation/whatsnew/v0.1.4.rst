@@ -4,20 +4,19 @@ v0.1.4 (Master branch)
 ---------------------------------------------------
 
 * Added a much faster EPANET binary output file reader
-* Modified the NetResutls object to be a dictionary of DataFrames rather than using Panels, as 
+* Modified simulation results to be a dictionary of Pandas DataFrames rather than a Pandas Panels, as 
   Pandas no longer supports the Panel object
 * Added support for FCVs in the WNTRSimulator
-* Added ability to introspect a control object to get the names of all required objects that are 
-  queried or acted upon by the control
-* Modified structure of the WaterNetworkOptions object to logically group the options
-* Created a Pattern object that can be called to get the value at a specific time
-* Created a Demand object that uses a pattern and base value to get demand at a specific time
-* Created a DemandList object that contains categorized demands for a single junction and can 
-  calculate single instantaneous demand values from the collection of demands
-* Change to DemandLists makes the Junction.base_demand and Junction.demand_pattern_name *read-only*
-  attributes
-* EPANET Demands section now fully supported for use by the WNTR simulator
-* Modified the WaterNetworkModel.add_pattern() to no longer accept start_time and end_time options
-* Added a class method to create an off-on-off type pattern (:method:`~wntr.network.elements.Pattern.BinaryPattern`)
-  to replace the lost functionality from changing the add_pattern method
+* Added ability to get the names of all required objects that are queried or acted upon by the control
+* Modified the structure of the WaterNetworkOptions object to group options into types (API change, see :class:`~wntr.network.options.WaterNetworkOptions`)
+* Created a Pattern object that can be called to get the pattern value at a specific time (see :class:`~wntr.network.elements.Pattern`)
+* Created a TimeSeries object that contains a base value, Pattern object, and category.  The object can be called to get its value at a specific time.
+  TimeSeries are used to store junction demand, source injection, pricing, pump speed, and reservoir head. (see :class:`~wntr.network.elements.TimeSeries`)
+* Created a Demands object that contains multiple demands for a single junction and can 
+  calculate demand values at a specific time.  Change to the way multiple demands are stored makes the 
+  Junction.base_demand and Junction.demand_pattern_name *read-only* attributes (API change).
+* EPANET Demands section now fully supported by the WNTRSimulator
+* Modified the WaterNetworkModel.add_pattern() to no longer accept start_time and end_time options.  
+  Binary patterns can be created using the Patterns object (API change, see :class:`~wntr.network.elements.Pattern.BinaryPattern`).
+
   

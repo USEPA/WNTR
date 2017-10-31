@@ -1,12 +1,14 @@
 """
-The wntr.network.elements module contains base classes for elements of a water network model.
-
+The wntr.network.elements module includes elements of a water network model, 
+such as curves, patterns, sources, and demands.
 """
-
 import enum
 import numpy as np
 import sys
 import copy
+import logging
+
+logger = logging.getLogger(__name__)
 
 if sys.version_info[0] == 2:
     from collections import MutableSequence
@@ -25,8 +27,6 @@ class Curve(object):
          Type of curve. Options are Volume, Pump, Efficiency, Headloss.
     points :
          List of tuples with X-Y points.
-         
-         
     """
     def __init__(self, name, curve_type, points):
         self.name = name
@@ -68,7 +68,7 @@ class Curve(object):
     @property
     def num_points(self):
         return len(self.points)
-
+    """
     def _pump_curve(self, flow):
         pass
     
@@ -92,49 +92,47 @@ class Curve(object):
     
     def _headloss_curve(self, flow):
         pass
-
+    """
 
 class Pattern(object):
-    """Defines a multiplier pattern (series of multiplier factors)
+    """
+    Pattern class.
     
     Parameters
     ----------
-    name : str
-        A unique name to describe the pattern (should be the same used when adding the pattern to the model)
+    name : string
+        A unique name to describe the pattern (should be the same used when 
+        adding the pattern to the model)
     multipliers : list-like
-        A list of multipliers that makes up the pattern; internally saved as a numpy array
+        A list of multipliers that makes up the pattern
     step_size : int
         The pattern timestep (in seconds)
     step_start : int
-        Which pattern index goes with time=0, if not the first
+        The pattern index that goes with time=0, if not the first (default = 0)
     wrap : bool
-        If true (the default), then the pattern repeats itself forever; if false, after the pattern
-        has been exhausted, it will return 0.0
-    
+        If true (the default), then the pattern repeats itself forever; if 
+        false, after the pattern has been exhausted, it will return 0.0
     """
+    
     def __init__(self, name, multipliers=[], step_size=1, step_start=0, wrap=True):
         self.name = name
-        """The name should be unique"""
         if isinstance(multipliers, (int, float)):
             multipliers = [multipliers]
-        self._multipliers = np.array(multipliers)
-        """The array of multipliers (list or numpy array)"""
-        self.step_size = step_size
-        self.step_start = step_start
+        self._multipliers = np.array(multipliers) 
+        self.step_size = step_size 
+        self.step_start = step_start 
         self.wrap = wrap
-        """If wrap (default true) then repeat pattern forever, otherwise return 0 if exceeds length"""
 
     @classmethod
-    def BinaryPattern(cls, name, step_size, start_time, end_time, duration):
-        """Factory method to create a binary pattern (single instance of step up, step down)
-        
-        This class method is equivalent to using the old (WNTR<0.1.5) `WaterNetworkModel.add_pattern` method with the
-        `start_time` and `end_time` attributes. 
-        
+    def BinaryPattern(cls, name, step_size, start_time, end_time, duration): # KAK, allow wrap?
+        """
+        Creates a binary pattern (single instance of step up, step down)
+                
         Parameters
         ----------
         name : str
-            A unique name to describe the pattern (should be the same used when adding the pattern to the model)
+            A unique name to describe the pattern (should be the same used when 
+            adding the pattern to the model)
         step_size : int
             The pattern timestep (in seconds)
         start_time : int
@@ -142,16 +140,9 @@ class Pattern(object):
         end_time : int
             The time at which the pattern turns "off" (0.0)
         duration : int
-            The length of the simulation out to which the "off" values should go
-        
-        Returns
-        -------
-        Pattern
-            The new pattern object
-        
+            The length of the pattern    
         """
         patternstep = step_size
-        patternlen = int(end_time/patternstep)
         patternstart = int(start_time/patternstep)
         patternend = int(end_time/patternstep)
         patterndur = int(duration/patternstep)
@@ -185,7 +176,7 @@ class Pattern(object):
     
     @property
     def multipliers(self):
-        """The actual multiplier values in an array"""
+        """The multiplier values"""
         return self._multipliers
     
     @multipliers.setter
@@ -195,38 +186,22 @@ class Pattern(object):
         else:
             self._multipliers = np.array(values)
 
-    def __getitem__(self, step):
-        """Get the multiplier appropriate for step
-        
-        Parameters
-        ----------
-        step : int
-            The index into the pattern to get a value
-            
-        Returns
-        -------
-        float
-            The value at index `step`
-        
-        """
+    def __getitem__(self, index):
+        """Returns the pattern value at a specific index (not time!)"""
         nmult = len(self._multipliers)
         if nmult == 0:                          return 1.0
-        elif self.wrap:                         return self._multipliers[int(step%nmult)]
-        elif step < 0 or step >= nmult:         return 0.0
-        return self._multipliers[step]
+        elif self.wrap:                         return self._multipliers[int(index%nmult)]
+        elif index < 0 or index >= nmult:         return 0.0
+        return self._multipliers[index]
 
     def at(self, time):
-        """The pattern value at 'time', given in seconds since start of simulation
+        """
+        Returns the pattern value at a specific time
         
         Parameters
         ----------
         time : int
-            The time in seconds to get a value
-            
-        Returns
-        -------
-            The value at index calculated from the time
-        
+            Time in seconds        
         """
         step = ((time+self.step_start)//self.step_size)
         nmult = len(self._multipliers)
@@ -237,20 +212,23 @@ class Pattern(object):
     __call__ = at
 
 
-class TimeVaryingValue(object):
-    """A simple time varying value.
+class TimeSeries(object): 
+    """
+    Time series class.
     
-    Provides a mechanism to calculate values based on a base value and a multiplier pattern.
-    Uses __call__ with a `time` to calculate the appropriate value based on that time.
+    A TimeSeries object contains a base value, Pattern object, and category.  
+    The object can be used to store changes in junction demand, source injection, 
+    pricing, pump speed, and reservoir head. The class provides methods
+    to calculate values using the base value and a multiplier pattern.
     
     Parameters
     ----------
     base : number
-        A number that represents the baseline value for this variable
+        A number that represents the baseline value
     pattern : Pattern, optional
         If None, then the value will be constant. Otherwise, the Pattern will be used.
-    name : str
-        A category, description, or other name that is useful to the user to describe this value
+    category : string, optional
+        A category, description, or other name that is useful to the user
         
     Raises
     ------
@@ -258,18 +236,18 @@ class TimeVaryingValue(object):
         If `base` or `pattern` are invalid types
     
     """
-    def __init__(self, base, pattern=None, name=None):
+    def __init__(self, base, pattern=None, category=None):
         if not isinstance(base, (int, float, complex)):
-            raise ValueError('TimeVaryingValue->base must be a number')
+            raise ValueError('TimeSeries->base must be a number')
         if isinstance(pattern, Pattern):
             self._pattern = pattern
         elif pattern is None:
             self._pattern = None
         else:
-            raise ValueError('TimeVaryingValue->pattern must be a Pattern object or None')
+            raise ValueError('TimeSeries->pattern must be a Pattern object or None')
         if base is None: base = 0.0
         self._base = base
-        self._name = name
+        self._category = category
         
     def __nonzero__(self):
         return self._base
@@ -279,14 +257,32 @@ class TimeVaryingValue(object):
         return repr(self)
 
     def __repr__(self):
-        fmt = "<TimeVaryingValue: {}, {}, category={}>"
-        return fmt.format(self._base, self._pattern, repr(self._name))
+        fmt = "<TimeSeries: base={}, pattern={}, category={}>"
+        return fmt.format(self._base, self._pattern, repr(self._category))
+    
+    def __eq__(self, other):
+        if type(self) == type(other) and \
+           self.pattern == other.pattern and \
+           self.category == other.category and \
+           abs(self._base - other._base)<1e-10 :
+            return True
+        return False
+    
+    def __getitem__(self, index):
+        """Returns the value at a specific index (not time!)"""
+        if not self._pattern:
+            return self._base
+        return self._base * self._pattern[index]
     
     @property
     def base_value(self):
         """The baseline value for this variable"""
         return self._base
     
+    @base_value.setter
+    def base_value(self, value):
+        self._base = value
+        
     @property
     def pattern_name(self):
         """The name of the pattern used"""
@@ -300,9 +296,9 @@ class TimeVaryingValue(object):
         return self._pattern
     
     @property
-    def name(self):
-        """The name of this value"""
-        return self._name
+    def category(self):
+        """The category"""
+        return self._category
     
     def set_base_value(self, value):
         self._base = value
@@ -310,180 +306,64 @@ class TimeVaryingValue(object):
     def set_pattern(self, pattern):
         self._pattern = pattern
         
-    def set_name(self, name):
-        self._name = name
-    
-    def __getitem__(self, step):
-        """Calculate the value at a specific step
-        
-        Parameters
-        ----------
-        step : int
-            The index (not time!) to get a value for
-            
-        Returns
-        -------
-        float
-            The value
-        """
-        
-        if not self._pattern:
-            return self._base
-        return self._base * self._pattern[step]
-    
+    def set_category(self, category):
+        self._category = category
+
     def at(self, time):
-        """Calculate the value at a specific time
+        """
+        Returns the value at a specific time
         
         Parameters
         ----------
         time : int
-            The time (in seconds) to get a value for
-            
-        Returns
-        -------
-        float
-            The value
+            Time in seconds
         """
         if not self._pattern:
             return self._base
         return self._base * self._pattern.at(time)
     __call__ = at
-
-
-class Pricing(TimeVaryingValue):
-    """A value class for pump pricing based on an optional time pattern"""
-    def __init__(self, base_price=None, pattern=None, category=None):
-        super(Pricing, self).__init__(base=base_price, pattern=pattern, name=category)
-
-    def __repr__(self):
-        fmt = "<Pricing: {}, {}, category={}>"
-        return fmt.format(self._base, self.pattern_name, repr(self._name))
-
-    @property
-    def category(self):
-        return self._name
-
-    @property
-    def base_price(self):
-        return self._base
     
-    def __eq__(self, other):
-        if type(self) == type(other) and \
-           self.pattern == other.pattern and \
-           self.category == other.category and \
-           abs(self._base - other._base)<1e-10 :
-            return True
-        return False
-
-class Speed(TimeVaryingValue):
-    """A value class for pump speed based on a pattern"""
-    def __init__(self, base_speed=None, pattern=None, pump_name=None):
-        super(Speed, self).__init__(base=base_speed, pattern=pattern, name=pump_name)    
-
-    def __repr__(self):
-        fmt = "<Speed: {}, {}, pump_name={}>"
-        return fmt.format(self._base, self.pattern_name, repr(self._name))
-
-    @property
-    def base_speed(self):
-        return self._base
+    def get_values(self, start_time, end_time, time_step):
+        """
+        Returns the values for a range of times
         
-    @property
-    def pump_name(self):
-        return self._name
-
-    def __eq__(self, other):
-        if type(self) == type(other) and \
-           self.pattern == other.pattern and \
-           self.pump_name == other.pump_name and \
-           abs(self._base - other._base)<1e-10 :
-            return True
-        return False
-
-
-class Demand(TimeVaryingValue):
-    """A value class for demand at a junction based on a pattern"""
-    def __init__(self, base_demand=None, pattern=None, category=None):
-        super(Demand, self).__init__(base=base_demand, pattern=pattern, name=category)
-    
-    def __repr__(self):
-        fmt = "<Demand: base_demand={}, pattern={}, category={}>"
-        return fmt.format(self._base, repr(self.pattern_name), repr(self._name))
-
-    @property
-    def category(self):
-        return self._name
-
-    @property
-    def base_demand(self):
-        return self._base
-    
-    @base_demand.setter
-    def base_demand(self, value):
-        self._base = value
-
-    def demand_values(self, start_time, end_time, time_step):
-        """Create a numpy array populated with the demand for a range of times, including end"""
+        Parameters
+        ----------
+        start_time : int
+            Start time in seconds
+        end_time : int
+            End time in seconds
+        time_step : int
+            time_step
+        """
         demand_times = range(start_time, end_time + time_step, time_step)
         demand_values = np.zeros((len(demand_times,)))
         for ct, t in enumerate(demand_times):
             demand_values[ct] = self.at(t)
         return demand_values
 
-    def __eq__(self, other):
-        if type(self) == type(other) and \
-           self.pattern == other.pattern and \
-           self.category == other.category and \
-           abs(self._base - other._base)<1e-10 :
-            return True
-        return False
-
-
-class ReservoirHead(TimeVaryingValue):
-    """A value class for varying head based on a pattern"""
-    def __init__(self, total_head=None, pattern=None, name=None):
-        super(ReservoirHead, self).__init__(base=total_head, pattern=pattern, name=name)
-    
-    def __repr__(self):
-        fmt = "<ReservoirHead: {}, {}>"
-        return fmt.format(self._base, self.pattern_name)
-
-    @property
-    def total_head(self):
-        return self._base
-
-    def __eq__(self, other):
-        if type(self) == type(other) and \
-           self.pattern == other.pattern and \
-           self.name == other.name and \
-           abs(self._base - other._base)<1e-10 :
-            return True
-        return False
-
-class Source(TimeVaryingValue):
-    """A water quality source
+class Source(TimeSeries):
+    """
+    Water quality source class.
 
     Parameters
     ----------
     name : string
          Name of the source
-
     node_name: string
         Injection node
-
     source_type: string
         Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT
-
     quality: float
-        Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, FLOWPACED, or SETPOINT
-
-    pattern_name: string
-        Pattern name
-
+        Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, 
+        FLOWPACED, or SETPOINT
+    pattern: Pattern, optional
+        If None, then the value will be constant. Otherwise, the Pattern will be used.
     """
 
     def __init__(self, name, node_name, source_type, quality, pattern):
-        super(Source, self).__init__(base=quality, pattern=pattern, name=name)
+        super(Source, self).__init__(base=quality, pattern=pattern)
+        self.name = name
         self.node_name = node_name
         self.source_type = source_type
 
@@ -506,26 +386,30 @@ class Source(TimeVaryingValue):
         return self._base
     
 
-class DemandList(MutableSequence):
-    """List with specialized demand-specific calls and type checking.
+class Demands(MutableSequence):
+    """
+    Demands class.  
     
-    A demand list is a list of demands and can be used with all normal list-like commands.
+    The Demands object is used to store multiple demands per 
+    junction in a list. The class includes specialized demand-specific calls 
+    and type checking.
+    
+    A demand list is a list of demands and can be used with all normal list-
+    like commands.
     For example,
     
-    >>> from wntr.network.elements import DemandList
-    >>> dl = DemandList()
+    >>> from wntr.network.elements import Demands
+    >>> dl = Demands()
     >>> len(dl)
     0
     >>> dl.append( (0.5, None, None) )
     >>> len(dl)
     1
     >>> dl[0]
-    <Demand: base_demand=0.5, pattern=None, category=None>
+    <TimeSeries: base=0.5, pattern=None, category=None>
     
-    The demand list does not have any attributes, but can be created by passing in demand objects
-    or demand tuples as ``(base_demand, pattern, category_name)``
-    
-    
+    The demand list does not have any attributes, but can be created by passing 
+    in demand objects or demand tuples as ``(base_demand, pattern, category_name)``
     """
     
     def __init__(self, *args):
@@ -540,9 +424,9 @@ class DemandList(MutableSequence):
     def __setitem__(self, index, object):
         """Set demand and index <==> S[index] = object"""
         if isinstance(object, (list, tuple)) and len(object) in [2,3]:
-            object = Demand(*object)
-        elif not isinstance(object, Demand):
-            raise ValueError('object must be a Demand or demand tuple')
+            object = TimeSeries(*object)
+        elif not isinstance(object, TimeSeries):
+            raise ValueError('object must be a TimeSeries or demand tuple')
         return self._list.__setitem__(index, object)
     
     def __delitem__(self, index):
@@ -559,31 +443,31 @@ class DemandList(MutableSequence):
     __bool__ = __nonzero__
     
     def __repr__(self):
-        return '<DemandList: {}>'.format(repr(self._list))
+        return '<Demands: {}>'.format(repr(self._list))
     
     def insert(self, index, object):
         """S.insert(index, object) - insert object before index"""
         if isinstance(object, (list, tuple)) and len(object) in [2,3]:
-            object = Demand(*object)
-        elif not isinstance(object, Demand):
-            raise ValueError('object must be a Demand or demand tuple')
+            object = TimeSeries(*object)
+        elif not isinstance(object, TimeSeries):
+            raise ValueError('object must be a TimeSeries or demand tuple')
         self._list.insert(index, object)
     
     def append(self, object):
         """S.append(object) - append object to the end"""
         if isinstance(object, (list, tuple)) and len(object) in [2,3]:
-            object = Demand(*object)
-        elif not isinstance(object, Demand):
-            raise ValueError('object must be a Demand or demand tuple')
+            object = TimeSeries(*object)
+        elif not isinstance(object, TimeSeries):
+            raise ValueError('object must be a TimeSeries or demand tuple')
         self._list.append(object)
     
     def extend(self, iterable):
         """S.extend(iterable) - extend list by appending elements from the iterable"""
         for object in iterable:
             if isinstance(object, (list, tuple)) and len(object) in [2,3]:
-                object = Demand(*object)
-            elif not isinstance(object, Demand):
-                raise ValueError('object must be a Demand or demand tuple')
+                object = TimeSeries(*object)
+            elif not isinstance(object, TimeSeries):
+                raise ValueError('object must be a TimeSeries or demand tuple')
             self._list.append(object)
 
     def clear(self):
@@ -591,7 +475,8 @@ class DemandList(MutableSequence):
         self._list = []
 
     def at(self, time, category=None):
-        """Get the total demand at a given time - Demand objects must have been initialized with a step size"""
+        """Get the total demand at a given time - Demand objects must have 
+        been initialized with a step size"""
         demand = 0.0
         if category:
             for dem in self._list:
@@ -608,7 +493,7 @@ class DemandList(MutableSequence):
         res = []
         for dem in self._list:
             if category is None or dem.category == category:
-                res.append(dem.base_demand)
+                res.append(dem.base_value)
         return res
 
     def pattern_list(self, category=None):
@@ -626,15 +511,25 @@ class DemandList(MutableSequence):
                 res.append(dem.category)
         return res
 
-    def demand_values(self, start_time, end_time, time_step):
-        """Create a numpy array populated with the total demand for a range of times"""
+    def get_values(self, start_time, end_time, time_step):
+        """
+        Returns the values for a range of times
+        
+        Parameters
+        ----------
+        start_time : int
+            Start time in seconds
+        end_time : int
+            End time in seconds
+        time_step : int
+            time_step
+        """
         demand_times = range(start_time, end_time + time_step, time_step)
         demand_values = np.zeros((len(demand_times,)))
         for dem in self._list:
             for ct, t in enumerate(demand_times):
                 demand_values[ct] += dem(t)
         return demand_values
-
 
 
 class NodeType(enum.IntEnum):
