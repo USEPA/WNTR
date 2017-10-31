@@ -516,12 +516,12 @@ class InpFile(object):
         for reservoir_name in nnames:
             reservoir = wn._reservoirs[reservoir_name]
             E = {'name': reservoir_name,
-                 'head': from_si(self.flow_units, reservoir.base_head, HydParam.HydraulicHead),
+                 'head': from_si(self.flow_units, reservoir.head.base_value, HydParam.HydraulicHead),
                  'com': ';'}
-            if reservoir.heads.pattern is None:
+            if reservoir.head.pattern is None:
                 E['pat'] = ''
             else:
-                E['pat'] = reservoir.heads.pattern.name
+                E['pat'] = reservoir.head.pattern.name
             f.write(_RES_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 

@@ -2636,18 +2636,9 @@ class Reservoir(Node):
         Head pattern.
     """
     def __init__(self, name, base_head=0.0, head_pattern=None):
-
         super(Reservoir, self).__init__(name)
-        self.base_head = base_head
-        self.head = base_head
-        self.head_pattern = head_pattern
-        self.heads = TimeSeries(base_head, head_pattern, name)
-
-    @property
-    def head_pattern_name(self):
-        if self.head_pattern:
-            return self.head_pattern.name
-        return None
+        self._head = None
+        self.head = TimeSeries(base_head, head_pattern, name)
 
     def __eq__(self, other):
         if not type(self) == type(other):
