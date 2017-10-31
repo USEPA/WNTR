@@ -68,6 +68,9 @@ class WaterNetworkOptions(object):
            self.solver == other.solver:
                return True
         return False
+    
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 class TimeOptions(object):
     """
@@ -123,6 +126,9 @@ class TimeOptions(object):
            abs(self.start_clocktime - other.start_clocktime)<1e-10:
                return True
         return False
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class GraphicsOptions(object):
@@ -225,6 +231,10 @@ class GeneralOptions(object): # KAK, HydraulicOptions?
                return True
         return False
 
+    def __ne__(self, other):
+        return not self == other
+
+
 
 class ResultsOptions(object):
     """
@@ -293,6 +303,10 @@ class ResultsOptions(object):
            self.links == other.links:
                return True
         return False
+
+    def __ne__(self, other):
+        return not self == other
+
         
         
 class QualityOptions(object):
@@ -357,6 +371,9 @@ class QualityOptions(object):
                return True
         return False
 
+    def __ne__(self, other):
+        return not self == other
+
 
 class EnergyOptions(object):
     """
@@ -389,6 +406,9 @@ class EnergyOptions(object):
            abs(self.demand_charge - other.demand_charge)<1e-10:
                return True
         return False
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class SolverOptions(object):
@@ -438,6 +458,9 @@ class SolverOptions(object):
            abs(self.damplimit - other.damplimit)<1e-10:
                return True
         return False
+
+    def __ne__(self, other):
+        return not self == other
 
 
 class UserOptions(object):
