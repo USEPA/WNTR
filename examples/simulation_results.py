@@ -30,5 +30,5 @@ wntr.graphics.plot_network(wn, node_attribute=pressure_at_1hr,
                         link_attribute=flowrate_at_1hr)
 
 # Store results to an excel file
-# results.node.to_excel('node_results.xls')
-# results.link.to_excel('link_results.xls')
+results.node.to_excel('node_results.xls')
+results.link.to_excel('link_results.xls')

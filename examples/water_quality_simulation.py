@@ -8,7 +8,9 @@ sim = wntr.sim.EpanetSimulator(wn)
 
 # Run chemical concentration scenario and plot results
 wn.options.quality.type = 'CHEMICAL'
-source_pattern = wntr.network.elements.Pattern.BinaryPattern('SourcePattern', step_size=wn.options.time.pattern_timestep, start_time=2*3600, end_time=15*3600, duration=wn.options.time.duration)
+source_pattern = wntr.network.elements.Pattern.BinaryPattern('SourcePattern', 
+    step_size=wn.options.time.pattern_timestep, start_time=2*3600, 
+    end_time=15*3600, duration=wn.options.time.duration)
 wn.add_pattern('SourcePattern', source_pattern)
 wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
 wn.add_source('Source2', '123', 'SETPOINT', 1000, 'SourcePattern')

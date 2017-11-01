@@ -4,8 +4,6 @@ v0.1.4 (Master branch)
 ---------------------------------------------------
 
 * Added a much faster EPANET binary output file reader
-* Modified simulation results to be a dictionary of Pandas DataFrames rather than a Pandas Panels, as 
-  Pandas no longer supports the Panel object
 * Added support for FCVs in the WNTRSimulator
 * Added ability to get the names of all required objects that are queried or acted upon by the control
 * Modified the structure of the WaterNetworkOptions object to group options into types (API change, see :class:`~wntr.network.options.WaterNetworkOptions`)
