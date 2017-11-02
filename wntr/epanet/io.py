@@ -1210,8 +1210,8 @@ class InpFile(object):
                 pattern = None
             else:
                 pattern = self.wn.get_pattern(current[2])
-            node.demands.append((to_si(self.flow_units, float(current[1]), HydParam.Demand), 
-                                    pattern, category))
+            node.expected_demand.append((to_si(self.flow_units, float(current[1]), HydParam.Demand),
+                                         pattern, category))
 
     def _write_demands(self, f, wn):
         f.write('[DEMANDS]\n'.encode('ascii'))
