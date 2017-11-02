@@ -466,7 +466,7 @@ class SimTimeCondition(ControlCondition):
 
     def evaluate(self):
         cur_time = self._model.sim_time
-        prev_time = self._model.prev_sim_time
+        prev_time = self._model._prev_sim_time
         if self._repeat and cur_time > self._threshold:
             cur_time = (cur_time - self._threshold) % self._repeat
             prev_time = (prev_time - self._threshold) % self._repeat
@@ -1128,7 +1128,7 @@ class TimeControl(Control):
             return (False, None)
 
         if self._time_flag == 'SIM_TIME':
-            if wnm.prev_sim_time < self._run_at_time and self._run_at_time <= wnm.sim_time:
+            if wnm._prev_sim_time < self._run_at_time and self._run_at_time <= wnm.sim_time:
                 return (True, int(wnm.sim_time - self._run_at_time))
         elif self._time_flag == 'SHIFTED_TIME':
             if wnm._prev_shifted_time < self._run_at_time and self._run_at_time <= wnm.shifted_time:
@@ -1268,8 +1268,8 @@ class ConditionalControl(Control):
         if type(self._source_obj)==wntr.network.Tank and self._source_attr=='head' and wnm.sim_time!=0 and self._partial_step_for_tanks:
             if presolve_flag:
                 val = getattr(self._source_obj,self._source_attr)
-                q_net = self._source_obj.prev_demand
-                delta_h = 4.0*q_net*(wnm.sim_time-wnm.prev_sim_time)/(math.pi*self._source_obj.diameter**2)
+                q_net = self._source_obj._prev_demand
+                delta_h = 4.0*q_net*(wnm.sim_time-wnm._prev_sim_time)/(math.pi*self._source_obj.diameter**2)
                 next_val = val+delta_h
                 if self._operation(next_val, self._threshold) and self._operation(val, self._threshold):
                     return (False, None)
@@ -1277,7 +1277,7 @@ class ConditionalControl(Control):
                     #if self._source_obj.name()=='TANK-3352':
                         #print 'threshold for tank 3352 control is ',self._threshold
 
-                    m = (next_val-val)/(wnm.sim_time-wnm.prev_sim_time)
+                    m = (next_val-val)/(wnm.sim_time-wnm._prev_sim_time)
                     b = next_val - m*wnm.sim_time
                     new_t = (self._threshold - b)/m
                     #print 'new time = ',new_t
@@ -1645,7 +1645,7 @@ class _ValveNewSettingControl(Control):
         self.name = 'new_valve_setting_makes_status_active'
         self._priority = 1
         self._valve = valve
-        valve.prev_setting = valve.setting
+        valve._prev_setting = valve.setting
         self._active_control_action = ControlAction(valve, 'status', wntr.network.LinkStatus.Active)
         self._action_to_run = self._active_control_action
 
@@ -1658,12 +1658,12 @@ class _ValveNewSettingControl(Control):
             return False, None
 
         if self._valve.status == wntr.network.LinkStatus.Closed:
-            if self._valve.prev_setting != self._valve.setting:
+            if self._valve._prev_setting != self._valve.setting:
                 self._action_to_run = self._active_control_action
                 return True, 0
             return False, None
         elif self._valve.status == wntr.network.LinkStatus.Opened:
-            if self._valve.prev_setting != self._valve.setting:
+            if self._valve._prev_setting != self._valve.setting:
                 self._action_to_run = self._active_control_action
                 return True, 0
             return False, None
