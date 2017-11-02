@@ -36,7 +36,7 @@ def test_mass_consumed():
 
     wn.options.quality.type = 'CHEMICAL'
     wn.options.general.units = 'LPS'
-    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 3600, 0, 24*3600, wn.options.time.duration)
+    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.duration, wn.options.time)
     wn.add_pattern(newpat.name, newpat)
     
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')

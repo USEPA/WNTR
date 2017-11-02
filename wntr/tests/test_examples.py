@@ -27,12 +27,16 @@ class TestExamples(unittest.TestCase):
         os.chdir(examples_dir)
         example_files = [f for f in listdir(examples_dir) if isfile(join(examples_dir,f)) and f.endswith('.py') and not f.startswith('test')]
         flag = 0
+        failed_examples = []
         for f in example_files:
             tmp_flag = call([sys.executable, join(packdir,'examples',f)])
             print(f, tmp_flag)
             if tmp_flag == 1:
+                failed_examples.append(f)
                 flag = 1
         os.chdir(cwd)
+        if len(failed_examples) > 0:
+            print('failed examples: {0}'.format(failed_examples))
         self.assertEqual(flag,0)
 
 if __name__ == '__main__':

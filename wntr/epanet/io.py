@@ -478,9 +478,9 @@ class InpFile(object):
         nnames.sort()
         for junction_name in nnames:
             junction = wn._junctions[junction_name]
-            if junction.demands:
-                base_demand = junction.demands[0].base_value
-                demand_pattern = junction.demands[0].pattern_name
+            if junction.expected_demand:
+                base_demand = junction.expected_demand[0].base_value
+                demand_pattern = junction.expected_demand[0].pattern_name
             else:
                 base_demand = 0.0
                 demand_pattern = None
@@ -516,12 +516,12 @@ class InpFile(object):
         for reservoir_name in nnames:
             reservoir = wn._reservoirs[reservoir_name]
             E = {'name': reservoir_name,
-                 'head': from_si(self.flow_units, reservoir.base_head, HydParam.HydraulicHead),
+                 'head': from_si(self.flow_units, reservoir.expected_head.base_value, HydParam.HydraulicHead),
                  'com': ';'}
-            if reservoir.heads.pattern is None:
+            if reservoir.expected_head.pattern is None:
                 E['pat'] = ''
             else:
-                E['pat'] = reservoir.heads.pattern.name
+                E['pat'] = reservoir.expected_head.pattern.name
             f.write(_RES_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -685,7 +685,7 @@ class InpFile(object):
                  'ptype': pump.info_type,
                  'params': '',
                  'speed_keyword': 'SPEED',
-                 'speed': pump.speed,
+                 'speed': pump.expected_speed.base_value,
                  'com': ';'}
             if pump.info_type == 'HEAD':
                 E['params'] = pump.curve.name
@@ -694,11 +694,11 @@ class InpFile(object):
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
             tmp_entry = _PUMP_ENTRY
-            if pump.pattern is not None:
+            if pump.expected_speed.pattern is not None:
                 tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
                              ' {pattern_keyword:10s} {pattern:20s} {com:>3s}\n')
                 E['pattern_keyword'] = 'PATTERN'
-                E['pattern'] = pump.pattern.name
+                E['pattern'] = pump.expected_speed.pattern.name
             f.write(tmp_entry.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -1210,8 +1210,8 @@ class InpFile(object):
                 pattern = None
             else:
                 pattern = self.wn.get_pattern(current[2])
-            node.demands.append((to_si(self.flow_units, float(current[1]), HydParam.Demand), 
-                                    pattern, category))
+            node.expected_demand.append((to_si(self.flow_units, float(current[1]), HydParam.Demand),
+                                         pattern, category))
 
     def _write_demands(self, f, wn):
         f.write('[DEMANDS]\n'.encode('ascii'))
@@ -1221,7 +1221,7 @@ class InpFile(object):
         nodes = list(wn._junctions.keys())
         nodes.sort()
         for node in nodes:
-            demands = wn.get_node(node).demands
+            demands = wn.get_node(node).expected_demand
             for ct, demand in enumerate(demands):
                 if ct == 0: continue
                 E = {'node': node,
@@ -1383,7 +1383,6 @@ class InpFile(object):
                 self.wn.add_source('INP'+str(source_num), current[0], current[1], strength, None)
             else:
                 self.wn.add_source('INP'+str(source_num), current[0], current[1], strength,  current[3])
-
 
     def _write_sources(self, f, wn):
         f.write('[SOURCES]\n'.encode('ascii'))
@@ -1694,51 +1693,49 @@ class InpFile(object):
 
     def _write_report(self, f, wn):
         f.write('[REPORT]\n'.encode('ascii'))
-        if hasattr(wn, '_reportopts') and wn._reportopts is not None:
-            report = wn.options.results
-            if report.pagesize != 0:
-                f.write('PAGESIZE   {}\n'.format(report.pagesize).encode('ascii'))
-            if report.file is not None:
-                f.write('FILE       {}\n'.format(report.file).encode('ascii'))
-            if report.status.upper() != 'NO':
-                f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
-            if report.summary.upper() != 'YES':
-                f.write('SUMMARY    {}\n'.format(report.summary).encode('ascii'))
-            if report.energy.upper() != 'NO':
-                f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
-            if report.nodes is True:
-                f.write('NODES      ALL\n'.encode('ascii'))
-            elif isinstance(report.nodes, str):
-                f.write('NODES      {}\n'.format(report.nodes).encode('ascii'))
-            elif isinstance(report.nodes, list):
-                for ct, node in enumerate(report.nodes):
-                    if ct == 0:
-                        f.write('NODES      {}'.format(node).encode('ascii'))
-                    elif ct % 10 == 0:
-                        f.write('\nNODES      {}'.format(node).encode('ascii'))
-                    else:
-                        f.write(' {}'.format(node).encode('ascii'))
-                f.write('\n'.encode('ascii'))
-            if report.links is True:
-                f.write('LINKS      ALL\n'.encode('ascii'))
-            elif isinstance(report.links, str):
-                f.write('LINKS      {}\n'.format(report.links).encode('ascii'))
-            elif isinstance(report.links, list):
-                for ct, link in enumerate(report.links):
-                    if ct == 0:
-                        f.write('LINKS      {}'.format(link).encode('ascii'))
-                    elif ct % 10 == 0:
-                        f.write('\nLINKS      {}'.format(link).encode('ascii'))
-                    else:
-                        f.write(' {}'.format(link).encode('ascii'))
-                f.write('\n'.encode('ascii'))
-            for key, item in report.rpt_params.items():
-                if item[1] != item[0]:
-                    f.write('{:10s} {}\n'.format(key.upper(), item[1]).encode('ascii'))
-            for key, item in report.param_opts.items():
-                for opt, val in item.items():
-                    f.write('{:10s} {:10s} {}\n'.format(key.upper(), opt.upper(), val).encode('ascii'))
-
+        report = wn.options.results
+        if report.pagesize != 0:
+            f.write('PAGESIZE   {}\n'.format(report.pagesize).encode('ascii'))
+        if report.file is not None:
+            f.write('FILE       {}\n'.format(report.file).encode('ascii'))
+        if report.status.upper() != 'NO':
+            f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
+        if report.summary.upper() != 'YES':
+            f.write('SUMMARY    {}\n'.format(report.summary).encode('ascii'))
+        if report.energy.upper() != 'NO':
+            f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
+        if report.nodes is True:
+            f.write('NODES      ALL\n'.encode('ascii'))
+        elif isinstance(report.nodes, str):
+            f.write('NODES      {}\n'.format(report.nodes).encode('ascii'))
+        elif isinstance(report.nodes, list):
+            for ct, node in enumerate(report.nodes):
+                if ct == 0:
+                    f.write('NODES      {}'.format(node).encode('ascii'))
+                elif ct % 10 == 0:
+                    f.write('\nNODES      {}'.format(node).encode('ascii'))
+                else:
+                    f.write(' {}'.format(node).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+        if report.links is True:
+            f.write('LINKS      ALL\n'.encode('ascii'))
+        elif isinstance(report.links, str):
+            f.write('LINKS      {}\n'.format(report.links).encode('ascii'))
+        elif isinstance(report.links, list):
+            for ct, link in enumerate(report.links):
+                if ct == 0:
+                    f.write('LINKS      {}'.format(link).encode('ascii'))
+                elif ct % 10 == 0:
+                    f.write('\nLINKS      {}'.format(link).encode('ascii'))
+                else:
+                    f.write(' {}'.format(link).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+        for key, item in report.rpt_params.items():
+            if item[1] != item[0]:
+                f.write('{:10s} {}\n'.format(key.upper(), item[1]).encode('ascii'))
+        for key, item in report.param_opts.items():
+            for opt, val in item.items():
+                f.write('{:10s} {:10s} {}\n'.format(key.upper(), opt.upper(), val).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     ### Network Map/Tags
@@ -1930,7 +1927,14 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
             elif attr.lower() in ['setting']:
-                value = '{:.6g}'.format(val_si)
+                assert isinstance(condition._source_obj, Valve)
+                if condition._source_obj.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Pressure)
+                elif condition._source_obj.valve_type.upper() in ['FCV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Flow)
+                else:
+                    value = val_si
+                value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
             clause = fmt.format(prefix, condition._source_obj.__class__.__name__,
@@ -1959,7 +1963,14 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
             elif attr.lower() in ['setting']:
-                value = '{:.6g}'.format(val_si)
+                assert isinstance(action._target_obj_ref, Valve)
+                if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Pressure)
+                elif action._target_obj_ref.valve_type.upper() in ['FCV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Flow)
+                else:
+                    value = val_si
+                value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
             clause = fmt.format(prefix, action._target_obj_ref.__class__.__name__,
@@ -1986,7 +1997,14 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
             elif attr.lower() in ['setting']:
-                value = '{:.6g}'.format(val_si)
+                assert isinstance(action._target_obj_ref, Valve)
+                if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Pressure)
+                elif action._target_obj_ref.valve_type.upper() in ['FCV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Flow)
+                else:
+                    value = val_si
+                value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
             clause = fmt.format(prefix, action._target_obj_ref.__class__.__name__,
@@ -2032,7 +2050,13 @@ class _EpanetRule(object):
                 elif attr.lower() in ['flow']:
                     value = to_si(self.inp_units, value, HydParam.Flow)
                 elif attr.lower() in ['pressure']:
-                    value = to_si(self.inp_units, value, HydParam.Flow)
+                    value = to_si(self.inp_units, value, HydParam.Pressure)
+                elif attr.lower() in ['setting']:
+                    link = model.get_link(words[2])
+                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                        value = to_si(self.inp_units, value, HydParam.Pressure)
+                    elif link.valve_type.upper() in ['FCV']:
+                        value = to_si(self.inp_units, value, HydParam.Flow)
                 if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
                     condition = ValueCondition(model.get_node(words[2]), words[3].lower(), words[4].lower(), value)
                 elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
@@ -2075,7 +2099,13 @@ class _EpanetRule(object):
             elif attr.lower() in ['flow']:
                 value = to_si(self.inp_units, value, HydParam.Flow)
             elif attr.lower() in ['pressure']:
-                value = to_si(self.inp_units, value, HydParam.Flow)
+                value = to_si(self.inp_units, value, HydParam.Pressure)
+            elif attr.lower() in ['setting']:
+                assert isinstance(link, Valve)
+                if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                    value = to_si(self.inp_units, value, HydParam.Pressure)
+                elif link.valve_type.upper() in ['FCV']:
+                    value = to_si(self.inp_units, value, HydParam.Flow)
             then_acts.append(ControlAction(link, attr, value))
         else_acts = []
         for act in self._else_clauses:
@@ -2093,7 +2123,13 @@ class _EpanetRule(object):
             elif attr.lower() in ['flow']:
                 value = to_si(self.inp_units, value, HydParam.Flow)
             elif attr.lower() in ['pressure']:
-                value = to_si(self.inp_units, value, HydParam.Flow)
+                value = to_si(self.inp_units, value, HydParam.Pressure)
+            elif attr.lower() in ['setting']:
+                assert isinstance(link, Valve)
+                if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                    value = to_si(self.inp_units, value, HydParam.Pressure)
+                elif link.valve_type.upper() in ['FCV']:
+                    value = to_si(self.inp_units, value, HydParam.Flow)
             else_acts.append(ControlAction(link, attr, value))
         return IfThenElseControl(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)
 

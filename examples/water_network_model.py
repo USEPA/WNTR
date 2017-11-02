@@ -62,11 +62,11 @@ tank.max_level = tank.max_level*1.1
 
 # Change supply
 reservoir = wn.get_node('River')
-reservoir.base_head = reservoir.base_head*0.9 # decrease by 10%
+reservoir.expected_head.base_value = reservoir.base_head*0.9 # decrease by 10%
 
 # Change demand
 junction = wn.get_node('121')
-junction.demands[0].base_value = junction.demands[0].base_value*1.15
+junction.expected_demand[0].base_value = junction.expected_demand[0].base_value*1.15
 
 # Set nominal pressure to 15 meters for all nodes
 for junction_name, junction in wn.junctions():
