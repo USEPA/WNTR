@@ -1221,7 +1221,7 @@ class InpFile(object):
         nodes = list(wn._junctions.keys())
         nodes.sort()
         for node in nodes:
-            demands = wn.get_node(node).demands
+            demands = wn.get_node(node).expected_demand
             for ct, demand in enumerate(demands):
                 if ct == 0: continue
                 E = {'node': node,
