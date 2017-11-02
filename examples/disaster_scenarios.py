@@ -41,16 +41,16 @@ original_base_demand = node.base_demand
 original_demand_pattern_name = node.demand_pattern_name
 new_base_demand = original_base_demand+fire_flow_demand
 new_demand_pattern_name = 'fire_flow'
-orig_demand = node.demands[0]
-node.demands.remove(orig_demand)
+orig_demand = node.expected_demand[0]
+node.expected_demand.remove(orig_demand)
 pattern = wn.get_pattern('fire_flow')
-node.demands.append( (new_base_demand, pattern, 'fire_flow' ))
+node.expected_demand.append((new_base_demand, pattern, 'fire_flow' ))
     
 # Reduce supply, imcrease demand
 for reservoir_name, reservoir in wn.reservoirs():
-    reservoir.base_head = reservoir.base_head*0.9 
+    reservoir.expected_head.base_value = reservoir.base_head*0.9
 for junction_name, junction in wn.junctions():
-    for demand in junction.demands:
+    for demand in junction.expected_demand:
         demand.base_value = demand.base_value*1.15
     
 # Simulate 
