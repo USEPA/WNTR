@@ -478,7 +478,7 @@ class InpFile(object):
         nnames.sort()
         for junction_name in nnames:
             junction = wn._junctions[junction_name]
-            if junction.demands:
+            if junction.expected_demand:
                 base_demand = junction.expected_demand[0].base_value
                 demand_pattern = junction.expected_demand[0].pattern_name
             else:
