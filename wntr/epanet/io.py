@@ -516,12 +516,12 @@ class InpFile(object):
         for reservoir_name in nnames:
             reservoir = wn._reservoirs[reservoir_name]
             E = {'name': reservoir_name,
-                 'head': from_si(self.flow_units, reservoir.head.base_value, HydParam.HydraulicHead),
+                 'head': from_si(self.flow_units, reservoir.expected_head.base_value, HydParam.HydraulicHead),
                  'com': ';'}
-            if reservoir.head.pattern is None:
+            if reservoir.expected_head.pattern is None:
                 E['pat'] = ''
             else:
-                E['pat'] = reservoir.head.pattern.name
+                E['pat'] = reservoir.expected_head.pattern.name
             f.write(_RES_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -685,7 +685,7 @@ class InpFile(object):
                  'ptype': pump.info_type,
                  'params': '',
                  'speed_keyword': 'SPEED',
-                 'speed': pump.speed,
+                 'speed': pump.expected_speed.base_value,
                  'com': ';'}
             if pump.info_type == 'HEAD':
                 E['params'] = pump.curve.name
@@ -694,11 +694,11 @@ class InpFile(object):
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
             tmp_entry = _PUMP_ENTRY
-            if pump.pattern is not None:
+            if pump.expected_speed.pattern is not None:
                 tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
                              ' {pattern_keyword:10s} {pattern:20s} {com:>3s}\n')
                 E['pattern_keyword'] = 'PATTERN'
-                E['pattern'] = pump.pattern.name
+                E['pattern'] = pump.expected_speed.pattern.name
             f.write(tmp_entry.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -1383,7 +1383,6 @@ class InpFile(object):
                 self.wn.add_source('INP'+str(source_num), current[0], current[1], strength, None)
             else:
                 self.wn.add_source('INP'+str(source_num), current[0], current[1], strength,  current[3])
-
 
     def _write_sources(self, f, wn):
         f.write('[SOURCES]\n'.encode('ascii'))
