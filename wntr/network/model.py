@@ -2628,17 +2628,11 @@ class Reservoir(Node):
 
     @property
     def base_head(self):
-        if len(self.expected_head) > 0:
-            h0 = self.expected_head[0]
-            return h0.base_value
-        return 0
+        return self.expected_head.base_value
 
     @property
     def head_pattern_name(self):
-        if len(self.expected_head) > 0:
-            h0 = self.expected_head[0]
-            return h0.pattern_name
-        return None
+        return self.expected_head.pattern_name
 
 
 class Pipe(Link):
@@ -2758,17 +2752,11 @@ class Pump(Link):
 
     @property
     def base_speed(self):
-        if len(self.expected_speed) > 0:
-            s0 = self.expected_speed[0]
-            return s0.base_value
-        return 0
+        return self.expected_speed.base_value
 
     @property
     def speed_pattern_name(self):
-        if len(self.expected_speed) > 0:
-            s0 = self.expected_speed[0]
-            return s0.pattern_name
-        return None
+        return self.expected_speed.pattern_name
 
     @property
     def curve_name(self):
