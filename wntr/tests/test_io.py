@@ -45,9 +45,9 @@ class TestWriter(unittest.TestCase):
         self.assertEqual(p1.info_type, 'HEAD')
         self.assertEqual(p1.curve, p11.curve)
         self.assertEqual(p1.curve_name, 'curve1')
-        self.assertAlmostEqual(p1.speed, 1.2, 6)
-        self.assertEqual(p1.pattern, p11.pattern)
-        self.assertEqual(p1.pattern.name, 'pattern1')
+        self.assertAlmostEqual(p1.base_speed, 1.2, 6)
+        self.assertEqual(p1.expected_speed, p11.expected_speed)
+        self.assertEqual(p1.expected_speed.pattern_name, 'pattern1')
 
         p2 = self.wn2.get_link('pump2')
         self.assertEqual(p2.info_type, 'POWER')
