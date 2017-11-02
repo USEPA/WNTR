@@ -1251,7 +1251,7 @@ class WaterNetworkModel(object):
                 tank_controls.append(control)
 
                 if not link_has_cv:
-                    control = _MultiConditionalControl([(tank,'head'), (tank, 'prev_head'),
+                    control = _MultiConditionalControl([(tank,'head'), (tank, '_prev_head'),
                                                                     (self, 'sim_time')],
                                                                    [np.greater, np.less_equal,np.greater],
                                                                    [min_head+self._Htol, min_head+self._Htol, 0.0],
@@ -1301,7 +1301,7 @@ class WaterNetworkModel(object):
                 tank_controls.append(control)
 
                 if not link_has_cv:
-                    control = _MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
+                    control = _MultiConditionalControl([(tank,'head'),(tank,'_prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
                     control._partial_step_for_tanks = False
                     control._priority = 0
                     control.name = link_name+'opened because tank '+tank.name+' head is less than max head'
