@@ -479,8 +479,8 @@ class InpFile(object):
         for junction_name in nnames:
             junction = wn._junctions[junction_name]
             if junction.demands:
-                base_demand = junction.demands[0].base_value
-                demand_pattern = junction.demands[0].pattern_name
+                base_demand = junction.expected_demand[0].base_value
+                demand_pattern = junction.expected_demand[0].pattern_name
             else:
                 base_demand = 0.0
                 demand_pattern = None
