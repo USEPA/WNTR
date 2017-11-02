@@ -391,10 +391,10 @@ class WaterNetworkModel(object):
 
         
         """
-        patternstep = self.options.time.pattern_timestep
-        patternstart = int(self.options.time.pattern_start/patternstep)
         if not isinstance(pattern, Pattern):
-            pattern = Pattern(name, multipliers=pattern, step_size=patternstep, step_start=patternstart)
+            pattern = Pattern(name, multipliers=pattern, time_options=self.options.time)
+        elif pattern.time_options is None:
+            pattern.time_options = self.options.time
         if pattern.name in self._patterns:
             raise ValueError('Pattern name already exists')
         self._patterns[pattern.name] = pattern
@@ -414,9 +414,6 @@ class WaterNetworkModel(object):
             List of X-Y coordinate tuples on the curve.
         """
         curve = Curve(name, curve_type, xy_tuples_list)
-        self._insert_curve(curve)
-        
-    def _insert_curve(self, curve): # KAK
         self._curves[curve.name] = curve
         self._num_curves += 1
         
@@ -444,19 +441,8 @@ class WaterNetworkModel(object):
         if pattern and isinstance(pattern, six.string_types):
             pattern = self.get_pattern(pattern)
         source = Source(name, node_name, source_type, quality, pattern)
-        self._insert_source(source)
-        
-    def _insert_source(self, source): # KAK
         self._sources[source.name] = source
         self._num_sources += 1
-# KAK
-#    def add_demand(self, junction_name, base_demand=0.0, demand_pattern_name=None, category=None):
-#        demand = TimeSeries(base_demand, demand_pattern_name, category)
-#        self._insert_demand(demand, junction_name)
-#        
-#    def _insert_demand(self, demand, for_junction):
-#        self._junctions[for_junction].demands.append(demand)
-#        self._num_demands += 1
 
     def add_control(self, name, control_object):
         """
@@ -1144,21 +1130,6 @@ class WaterNetworkModel(object):
         """
         return self._sources[name]
     
-#    def _get_demand(self, name): # KAK
-#        """
-#        Returns the demand object of a specific demand.
-#
-#        Parameters
-#        ----------
-#        name: string
-#           Name of the demand
-#
-#        Returns
-#        --------
-#        TimeSeries object.
-#        """
-#        return self._demands[name]
-#    
     def get_control(self, name):
         """
         Returns the control object of a specific control.

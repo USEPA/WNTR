@@ -8,6 +8,8 @@ import sys
 import copy
 import logging
 
+from .options import TimeOptions
+
 logger = logging.getLogger(__name__)
 
 if sys.version_info[0] == 2:
@@ -68,31 +70,6 @@ class Curve(object):
     @property
     def num_points(self):
         return len(self.points)
-    """
-    def _pump_curve(self, flow):
-        pass
-    
-    def _single_point_pump_curve(self, flow):
-        pass
-    
-    def _three_point_pump_curve(self, flow):
-        pass
-    
-    def _multi_point_pump_curve(self, flow):
-        pass
-    
-    def _variable_speed_pump_curve(self, flow):
-        pass
-    
-    def _efficiency_curve(self, flow):
-        pass
-    
-    def _volume_curve(self, level):
-        pass
-    
-    def _headloss_curve(self, flow):
-        pass
-    """
 
 class Pattern(object):
     """
@@ -105,65 +82,70 @@ class Pattern(object):
         adding the pattern to the model)
     multipliers : list-like
         A list of multipliers that makes up the pattern
-    step_size : int
-        The pattern timestep (in seconds)
-    step_start : int
-        The pattern index that goes with time=0, if not the first (default = 0)
+    time_options : TimeOptions or tuple
+        The global options.time object or a tuple of (pattern_start, pattern_timestep) in seconds
     wrap : bool
         If true (the default), then the pattern repeats itself forever; if 
         false, after the pattern has been exhausted, it will return 0.0
     """
     
-    def __init__(self, name, multipliers=[], step_size=1, step_start=0, wrap=True):
+    def __init__(self, name, multipliers=[], time_options=None, wrap=True):
         self.name = name
         if isinstance(multipliers, (int, float)):
             multipliers = [multipliers]
-        self._multipliers = np.array(multipliers) 
-        self.step_size = step_size 
-        self.step_start = step_start 
+        self._multipliers = np.array(multipliers)
+        if time_options:
+            if isinstance(time_options, (tuple, list)) and len(time_options) >= 2:
+                tmp = TimeOptions()
+                tmp.pattern_start = time_options[0]
+                tmp.pattern_timestep = time_options[1]
+                time_options = tmp
+            elif not isinstance(time_options, TimeOptions):
+                raise ValueError('Pattern->time_options must be a TimeOptions class or null')
+        self._time_options = time_options
         self.wrap = wrap
 
     @classmethod
-    def BinaryPattern(cls, name, step_size, start_time, end_time, duration): # KAK, allow wrap?
+    def BinaryPattern(cls, name, start_time, end_time, duration, time_options, wrap=False):
         """
         Creates a binary pattern (single instance of step up, step down)
-                
+        
         Parameters
         ----------
         name : str
             A unique name to describe the pattern (should be the same used when 
             adding the pattern to the model)
-        step_size : int
-            The pattern timestep (in seconds)
+        time_options : TimeOptions or tuple
+            Pattern and duration options set or as tuple (pattern_start, pattern_timestep)    
         start_time : int
             The time at which the pattern turns "on" (1.0)
         end_time : int
             The time at which the pattern turns "off" (0.0)
-        duration : int
-            The length of the pattern    
         """
-        patternstep = step_size
-        patternstart = int(start_time/patternstep)
+        if isinstance(time_options, (tuple, list)) and len(time_options) >= 2:
+            tmp = TimeOptions()
+            tmp.pattern_start = time_options[0]
+            tmp.pattern_timestep = time_options[1]
+            time_options = tmp
+        elif not isinstance(time_options, TimeOptions):
+            raise ValueError('Pattern->time_options must be a TimeOptions, tuple or null')
+        patternstep = time_options.pattern_timestep
+        patternstart = int(start_time/time_options.pattern_timestep)
         patternend = int(end_time/patternstep)
         patterndur = int(duration/patternstep)
         pattern_list = [0.0]*patterndur
         pattern_list[patternstart:patternend] = [1.0]*(patternend-patternstart)
-        return cls(name, multipliers=pattern_list, step_size=patternstep, wrap=False)
-    
-    @classmethod
-    def _SquareWave(cls, name, step_size, length_off, length_on, first_on):
-        raise NotImplementedError('Square wave currently unimplemented')
+        return cls(name, multipliers=pattern_list, time_options=time_options, wrap=wrap)
     
     def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if self.name != other.name or \
-           len(self) != len(other) or \
-           self.step_size != other.step_size or \
-           self.step_start != other.step_start or \
-           self.wrap != other.wrap:
-            return False
-        return np.all(np.abs(self._multipliers-other._multipliers)<1.0e-10)
+        if type(self) == type(other) and \
+          self.name == other.name and \
+          len(self._multipliers) == len(other._multipliers) and \
+          self._time_options == other._time_options and \
+          self.wrap == other.wrap and \
+          np.all(np.abs(np.array(self._multipliers)-np.array(other._multipliers))<1.0e-10):
+            return True
+        return False
 
     def __hash__(self):
         return hash(self.name)
@@ -186,6 +168,17 @@ class Pattern(object):
         else:
             self._multipliers = np.array(values)
 
+    @property
+    def time_options(self):
+        """The TimeOptions object for the model"""
+        return self._time_options
+    
+    @time_options.setter
+    def time_options(self, object):
+        if object and not isinstance(object, TimeOptions):
+            raise ValueError('Pattern->time_options must be a TimeOptions or null')
+        self._time_options = object
+
     def __getitem__(self, index):
         """Returns the pattern value at a specific index (not time!)"""
         nmult = len(self._multipliers)
@@ -203,10 +196,13 @@ class Pattern(object):
         time : int
             Time in seconds        
         """
-        step = ((time+self.step_start)//self.step_size)
         nmult = len(self._multipliers)
-        if nmult == 0:                          return 1.0
-        elif self.wrap:                         return self._multipliers[int(step%nmult)]
+        if nmult == 0: return 1.0
+        if nmult == 1: return self._multipliers[0]
+        if self._time_options is None:
+            raise RuntimeError('Pattern->time_options cannot be None at runtime')
+        step = ((time+self._time_options.pattern_start)//self._time_options.pattern_timestep)
+        if self.wrap:                         return self._multipliers[int(step%nmult)]
         elif step < 0 or step >= nmult:         return 0.0
         return self._multipliers[step]
     __call__ = at
@@ -281,32 +277,38 @@ class TimeSeries(object):
     
     @base_value.setter
     def base_value(self, value):
+        if not isinstance(value, (int, float, complex)):
+            raise ValueError('TimeSeries->base_value must be a number')
         self._base = value
-        
-    @property
-    def pattern_name(self):
-        """The name of the pattern used"""
-        if self._pattern:
-            return self._pattern.name
-        return None
         
     @property
     def pattern(self):
         """The pattern object"""
         return self._pattern
     
+    @pattern.setter
+    def pattern(self, pattern):
+        if not isinstance(pattern, Pattern):
+            raise ValueError('TimeSeries->pattern must be a Pattern object')
+        self._pattern = pattern
+
+    @property
+    def pattern_name(self):
+        """Get the name of the pattern used.
+        
+        This is a read-only property.
+        """
+        if self._pattern:
+            return self._pattern.name
+        return None
+                    
     @property
     def category(self):
         """The category"""
         return self._category
     
-    def set_base_value(self, value):
-        self._base = value
-    
-    def set_pattern(self, pattern):
-        self._pattern = pattern
-        
-    def set_category(self, category):
+    @category.setter
+    def category(self, category):
         self._category = category
 
     def at(self, time):

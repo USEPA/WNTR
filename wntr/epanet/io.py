@@ -1694,51 +1694,49 @@ class InpFile(object):
 
     def _write_report(self, f, wn):
         f.write('[REPORT]\n'.encode('ascii'))
-        if hasattr(wn, '_reportopts') and wn._reportopts is not None:
-            report = wn.options.results
-            if report.pagesize != 0:
-                f.write('PAGESIZE   {}\n'.format(report.pagesize).encode('ascii'))
-            if report.file is not None:
-                f.write('FILE       {}\n'.format(report.file).encode('ascii'))
-            if report.status.upper() != 'NO':
-                f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
-            if report.summary.upper() != 'YES':
-                f.write('SUMMARY    {}\n'.format(report.summary).encode('ascii'))
-            if report.energy.upper() != 'NO':
-                f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
-            if report.nodes is True:
-                f.write('NODES      ALL\n'.encode('ascii'))
-            elif isinstance(report.nodes, str):
-                f.write('NODES      {}\n'.format(report.nodes).encode('ascii'))
-            elif isinstance(report.nodes, list):
-                for ct, node in enumerate(report.nodes):
-                    if ct == 0:
-                        f.write('NODES      {}'.format(node).encode('ascii'))
-                    elif ct % 10 == 0:
-                        f.write('\nNODES      {}'.format(node).encode('ascii'))
-                    else:
-                        f.write(' {}'.format(node).encode('ascii'))
-                f.write('\n'.encode('ascii'))
-            if report.links is True:
-                f.write('LINKS      ALL\n'.encode('ascii'))
-            elif isinstance(report.links, str):
-                f.write('LINKS      {}\n'.format(report.links).encode('ascii'))
-            elif isinstance(report.links, list):
-                for ct, link in enumerate(report.links):
-                    if ct == 0:
-                        f.write('LINKS      {}'.format(link).encode('ascii'))
-                    elif ct % 10 == 0:
-                        f.write('\nLINKS      {}'.format(link).encode('ascii'))
-                    else:
-                        f.write(' {}'.format(link).encode('ascii'))
-                f.write('\n'.encode('ascii'))
-            for key, item in report.rpt_params.items():
-                if item[1] != item[0]:
-                    f.write('{:10s} {}\n'.format(key.upper(), item[1]).encode('ascii'))
-            for key, item in report.param_opts.items():
-                for opt, val in item.items():
-                    f.write('{:10s} {:10s} {}\n'.format(key.upper(), opt.upper(), val).encode('ascii'))
-
+        report = wn.options.results
+        if report.pagesize != 0:
+            f.write('PAGESIZE   {}\n'.format(report.pagesize).encode('ascii'))
+        if report.file is not None:
+            f.write('FILE       {}\n'.format(report.file).encode('ascii'))
+        if report.status.upper() != 'NO':
+            f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
+        if report.summary.upper() != 'YES':
+            f.write('SUMMARY    {}\n'.format(report.summary).encode('ascii'))
+        if report.energy.upper() != 'NO':
+            f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
+        if report.nodes is True:
+            f.write('NODES      ALL\n'.encode('ascii'))
+        elif isinstance(report.nodes, str):
+            f.write('NODES      {}\n'.format(report.nodes).encode('ascii'))
+        elif isinstance(report.nodes, list):
+            for ct, node in enumerate(report.nodes):
+                if ct == 0:
+                    f.write('NODES      {}'.format(node).encode('ascii'))
+                elif ct % 10 == 0:
+                    f.write('\nNODES      {}'.format(node).encode('ascii'))
+                else:
+                    f.write(' {}'.format(node).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+        if report.links is True:
+            f.write('LINKS      ALL\n'.encode('ascii'))
+        elif isinstance(report.links, str):
+            f.write('LINKS      {}\n'.format(report.links).encode('ascii'))
+        elif isinstance(report.links, list):
+            for ct, link in enumerate(report.links):
+                if ct == 0:
+                    f.write('LINKS      {}'.format(link).encode('ascii'))
+                elif ct % 10 == 0:
+                    f.write('\nLINKS      {}'.format(link).encode('ascii'))
+                else:
+                    f.write(' {}'.format(link).encode('ascii'))
+            f.write('\n'.encode('ascii'))
+        for key, item in report.rpt_params.items():
+            if item[1] != item[0]:
+                f.write('{:10s} {}\n'.format(key.upper(), item[1]).encode('ascii'))
+        for key, item in report.param_opts.items():
+            for opt, val in item.items():
+                f.write('{:10s} {:10s} {}\n'.format(key.upper(), opt.upper(), val).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     ### Network Map/Tags

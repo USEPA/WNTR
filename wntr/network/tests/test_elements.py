@@ -7,6 +7,7 @@ from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
 import wntr.network.elements as elements
+from wntr.network.options import TimeOptions
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','tests','networks_for_testing')
@@ -46,18 +47,25 @@ def test_Pattern():
     pattern_points3 = 3.2
     
     # test constant pattern creation
-    pattern1a = elements.Pattern('constant', multipliers=pattern_points3)
-    pattern1b = elements.Pattern('constant', multipliers=[pattern_points3])
+    timing1 = TimeOptions()
+    timing1.pattern_start = 0
+    timing1.pattern_timestep = 1
+    
+    timing2 = TimeOptions()
+    timing2.pattern_start = 0
+    timing2.pattern_timestep = 5
+    pattern1a = elements.Pattern('constant', multipliers=pattern_points3, time_options=timing1)
+    pattern1b = elements.Pattern('constant', multipliers=[pattern_points3], time_options=(0,1))
     nose.tools.assert_list_equal(pattern1a.multipliers.tolist(), [pattern_points3])
     nose.tools.assert_true(np.all(pattern1a.multipliers == pattern1b.multipliers))
     nose.tools.assert_false(id(pattern1a.multipliers) == id(pattern1b.multipliers))
-    nose.tools.assert_equal(pattern1a, pattern1b)
+    nose.tools.assert_equal(pattern1a.time_options, pattern1b.time_options)
     
     # def multipliers setter
-    pattern2a = elements.Pattern('oops', multipliers=pattern_points3, step_size=5)
-    pattern2b = elements.Pattern('oops', multipliers=pattern_points1, step_size=5)
+    pattern2a = elements.Pattern('oops', multipliers=pattern_points3, time_options=(0,5))
+    pattern2b = elements.Pattern('oops', multipliers=pattern_points1, time_options=timing2)
     pattern2a.multipliers = pattern_points1
-    nose.tools.assert_equal(pattern2a, pattern2b)
+    nose.tools.assert_equal(pattern2a.time_options, pattern2b.time_options)
     
     # test pattern evaluations
     expected_value = pattern_points1[2]
@@ -68,7 +76,7 @@ def test_Pattern():
     nose.tools.assert_equal(pattern2b(9*5), expected_value)
     nose.tools.assert_not_equal(pattern2b.at(15), expected_value)
     
-    pattern3 = elements.Pattern('nowrap', multipliers=pattern_points2, step_size=100, wrap=False)
+    pattern3 = elements.Pattern('nowrap', multipliers=pattern_points2, time_options=(0, 100), wrap=False)
     nose.tools.assert_equal(pattern3[5], 0.0)
     nose.tools.assert_equal(pattern3[-39], 0.0)
     nose.tools.assert_equal(pattern3(-39), 0.0)
@@ -78,15 +86,15 @@ def test_Pattern():
     nose.tools.assert_equal(len(pattern4), 0)
     nose.tools.assert_equal(pattern4(492), 1.0)
     
-    pattern5a = elements.Pattern('binary', [0,0,1,1,1,1,0,0,0], wrap=False)
-    pattern5b = elements.Pattern.BinaryPattern('binary', step_size=1, start_time=2, end_time=6, duration=9)
-    nose.tools.assert_equals(pattern5a, pattern5b)
-    nose.tools.assert_raises(NotImplementedError, elements.Pattern._SquareWave, *(None, None, None, None, None))
+    pattern5a = elements.Pattern('binary', [0.,0.,1.,1.,1.,1.,0.,0.,0.], time_options=(0, 1), wrap=False)
+    pattern5b = elements.Pattern.BinaryPattern('binary', time_options=(0, 1), start_time=2, end_time=6, duration=9)
+    nose.tools.assert_true(pattern5a.__eq__(pattern5b))
+    
 
 def test_TimeSeries():
     pattern_points2 = [1.0, 1.2, 1.0 ]
-    pattern2 = elements.Pattern('oops', multipliers=pattern_points2, step_size=10)
-    pattern5 = elements.Pattern.BinaryPattern('binary', step_size=1, start_time=2, end_time=6, duration=9)
+    pattern2 = elements.Pattern('oops', multipliers=pattern_points2, time_options=(0,10))
+    pattern5 = elements.Pattern.BinaryPattern('binary', time_options=(0,1), start_time=2, end_time=6, duration=9)
     base1 = 2.0
     
     # test constructor and setters, getters
@@ -99,11 +107,11 @@ def test_TimeSeries():
     nose.tools.assert_equals(tvv1.pattern_name, None)
     nose.tools.assert_equals(tvv1.pattern, None)
     nose.tools.assert_equals(tvv1.category, None)
-    tvv1.set_base_value(3.0)
+    tvv1.base_value = 3.0
     nose.tools.assert_equals(tvv1.base_value, 3.0)
-    tvv1.set_pattern(pattern5)
+    tvv1.pattern = pattern5
     nose.tools.assert_equals(tvv1.pattern_name, 'binary')
-    tvv1.set_category('binary')
+    tvv1.category ='binary'
     nose.tools.assert_equals(tvv1.category, 'binary')
     
     # Test getitem
@@ -150,9 +158,9 @@ def test_TimeSeries():
 
 def test_Demands():
     pattern_points1 = [0.5, 1.0, 0.4, 0.2 ]
-    pattern1 = elements.Pattern('1', multipliers=pattern_points1, step_size=10)
+    pattern1 = elements.Pattern('1', multipliers=pattern_points1, time_options=(0,10))
     pattern_points2 = [1.0, 1.2, 1.0 ]
-    pattern2 = elements.Pattern('2', multipliers=pattern_points2, step_size=10)
+    pattern2 = elements.Pattern('2', multipliers=pattern_points2, time_options=(0,10))
     demand1 = elements.TimeSeries( 2.5, pattern1, '_base_demand')
     demand2 = elements.TimeSeries( 1.0, pattern2, 'residential')
     demand3 = elements.TimeSeries( 0.8, pattern2, 'residential')
@@ -193,7 +201,6 @@ def test_Demands():
 
 def test_Enums():
     pass
-
 
 if __name__ == '__main__':
     test_Curve()
