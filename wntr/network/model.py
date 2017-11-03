@@ -484,7 +484,7 @@ class WaterNetworkModel(object):
         valve_controls = []
         for valve_name, valve in self.links(Valve):
 
-            control = _ValveNewSettingControl(self, valve)
+            control = wntr.network.controls._ValveNewSettingControl(self, valve)
             control.name = valve.name + ' new setting for valve control'
             valve_controls.append(control)
 
