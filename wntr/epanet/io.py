@@ -1925,7 +1925,7 @@ class _EpanetRule(object):
             elif attr.lower() in ['flow']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
             elif attr.lower() in ['pressure']:
-                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
                 assert isinstance(condition._source_obj, Valve)
                 if condition._source_obj.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
@@ -1961,7 +1961,7 @@ class _EpanetRule(object):
             elif attr.lower() in ['flow']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
             elif attr.lower() in ['pressure']:
-                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
                 assert isinstance(action._target_obj_ref, Valve)
                 if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
@@ -1995,7 +1995,7 @@ class _EpanetRule(object):
             elif attr.lower() in ['flow']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
             elif attr.lower() in ['pressure']:
-                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
                 assert isinstance(action._target_obj_ref, Valve)
                 if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
