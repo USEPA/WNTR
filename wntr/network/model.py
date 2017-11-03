@@ -366,14 +366,19 @@ class WaterNetworkModel(object):
         create certain types of patterns, such as a single, on/off pattern (previously created using
         the start_time and stop_time arguments to this function) -- see the class documentation for
         examples.
+
         
         .. warning::
             Patterns **must** be added to the model prior to adding any model element that uses the pattern,
             such as junction demands, sources, etc. Patterns are linked by reference, so changes to a 
             pattern affects all elements using that pattern. 
 
-        .. versionchanged:: 0.1.5
-            Function signature changed significantly: *start_time* and *stop_time* removed as options.
+            
+        .. warning::
+            Patterns **always** use the global water network model options.time values.
+            Patterns **will not** be resampled to match these values, it is assumed that 
+            patterns created using Pattern(...) or Pattern.BinaryPattern(...) object used the same 
+            pattern timestep value as the global value, and they will be treated accordingly.
 
 
         Parameters
@@ -383,7 +388,6 @@ class WaterNetworkModel(object):
         pattern : list of floats or Pattern
             A list of floats that make up the pattern, or a :class:`~wntr.network.elements.Pattern` object.
 
-
         Raises
         ------
         ValueError
@@ -392,8 +396,8 @@ class WaterNetworkModel(object):
         
         """
         if not isinstance(pattern, Pattern):
-            pattern = Pattern(name, multipliers=pattern, time_options=self.options.time)
-        elif pattern.time_options is None:
+            pattern = Pattern(name, multipliers=pattern, time_options=self.options.time)            
+        else: #elif pattern.time_options is None:
             pattern.time_options = self.options.time
         if pattern.name in self._patterns:
             raise ValueError('Pattern name already exists')

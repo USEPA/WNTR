@@ -106,7 +106,7 @@ class Pattern(object):
         self.wrap = wrap
 
     @classmethod
-    def BinaryPattern(cls, name, start_time, end_time, duration, time_options, wrap=False):
+    def BinaryPattern(cls, name, start_time, end_time, step_size, duration, wrap=False):
         """
         Creates a binary pattern (single instance of step up, step down)
         
@@ -115,27 +115,33 @@ class Pattern(object):
         name : str
             A unique name to describe the pattern (should be the same used when 
             adding the pattern to the model)
-        time_options : TimeOptions or tuple
-            Pattern and duration options set or as tuple (pattern_start, pattern_timestep)    
         start_time : int
             The time at which the pattern turns "on" (1.0)
         end_time : int
             The time at which the pattern turns "off" (0.0)
+        step_size : int
+            Pattern and duration options set or as tuple (pattern_start, pattern_timestep)    
+        duration : int
+            Total length of the pattern
+        
+        Returns
+        -------
+        Pattern
+            A new pattern object with a list of 1's and 0's as multipliers. The pattern
+            will have time_options set to None, 
+        
         """
-        if isinstance(time_options, (tuple, list)) and len(time_options) >= 2:
-            tmp = TimeOptions()
-            tmp.pattern_start = time_options[0]
-            tmp.pattern_timestep = time_options[1]
-            time_options = tmp
-        elif not isinstance(time_options, TimeOptions):
-            raise ValueError('Pattern->time_options must be a TimeOptions, tuple or null')
+        tmp = TimeOptions()
+        tmp.pattern_start = 0
+        tmp.pattern_timestep = step_size
+        time_options = tmp
         patternstep = time_options.pattern_timestep
         patternstart = int(start_time/time_options.pattern_timestep)
         patternend = int(end_time/patternstep)
         patterndur = int(duration/patternstep)
         pattern_list = [0.0]*patterndur
         pattern_list[patternstart:patternend] = [1.0]*(patternend-patternstart)
-        return cls(name, multipliers=pattern_list, time_options=time_options, wrap=wrap)
+        return cls(name, multipliers=pattern_list, time_options=None, wrap=wrap)
     
     def __eq__(self, other):
         if type(self) == type(other) and \
