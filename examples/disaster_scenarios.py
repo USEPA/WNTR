@@ -36,6 +36,7 @@ fire_end = 14*3600
 fire_flow_pattern = wntr.network.elements.Pattern.BinaryPattern('fire_flow', 
     step_size=wn.options.time.pattern_timestep, start_time=fire_start, 
     end_time=fire_end, duration=wn.options.time.duration)
+wn.add_pattern('fire_flow', fire_flow_pattern)
 node = wn.get_node('197')
 node.demands.append( (fire_flow_demand, fire_flow_pattern, 'Fire flow'))
     

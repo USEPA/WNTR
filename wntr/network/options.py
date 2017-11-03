@@ -450,7 +450,7 @@ class QualityOptions(object):
         self.mode = 'NONE'
         self.trace_node = None #string 
         self.wq_units = 'mg/L' #string (mg/L or ug/L)
-        self.chemical = 'CHEMICAL' #string
+        self.chemical_name = 'CHEMICAL' #string
         self.diffusivity = 1.0
         self.bulk_rxn_order = 1.0
         self.wall_rxn_order = 1.0
@@ -467,7 +467,7 @@ class QualityOptions(object):
         if self.mode == other.mode and \
            self.trace_node == other.trace_node and \
            self.wq_units == other.wq_units and \
-           self.chemical == other.chemical and \
+           self.chemical_name == other.chemical_name and \
            abs(self.diffusivity - other.diffusivity)<1e-10 and \
            abs(self.bulk_rxn_order - other.bulk_rxn_order)<1e-10 and \
            abs(self.wall_rxn_order - other.wall_rxn_order)<1e-10 and \

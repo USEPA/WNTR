@@ -146,7 +146,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.options.time.duration = 10
         wn.options.time.pattern_timestep = 1
 #        wn.add_pattern('pat1', start_time=2, end_time=4)
-        pat1 = self.wntr.network.elements.Pattern.BinaryPattern('pat1', start_time=2, end_time=4, duration=10, time_options=(0,1))
+        pat1 = self.wntr.network.elements.Pattern.BinaryPattern('pat1', start_time=2, end_time=4, duration=10, step_size=1)
         wn.add_pattern('pat1', pat1)
         wn.add_pattern('pat2', [1,2,3,4])
 
@@ -161,7 +161,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction('j1')
         wn.options.time.duration = 10
         wn.options.time.pattern_timestep = 1
-        pat1 = self.wntr.network.elements.Pattern.BinaryPattern('pat1', start_time=2, end_time=4, duration=10, time_options=wn.options.time)
+        pat1 = self.wntr.network.elements.Pattern.BinaryPattern('pat1', start_time=2, end_time=4, duration=10, step_size=wn.options.time.pattern_timestep)
         wn.add_pattern('pat1', pat1)
         wn.add_source('s1', 'j1', 'SETPOINT', 100, 'pat1')
         s = wn.get_source('s1')

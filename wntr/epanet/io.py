@@ -1485,7 +1485,7 @@ class InpFile(object):
                         opts.quality.mode = words[1].upper()
                     else:
                         opts.quality.mode = 'CHEMICAL'
-                        opts.quality.chemical = words[1]
+                        opts.quality.chemical_name = words[1]
                     if len(words) > 2:
                         if 'mg' in words[2]:
                             self.mass_units = MassUnits.mg
@@ -1566,7 +1566,7 @@ class InpFile(object):
         elif wn.options.quality.mode.upper() in ['TRACE']:
             f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.mode, wn.options.quality.trace_node).encode('ascii'))
         else:
-            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.chemical, wn.options.quality.wq_units).encode('ascii'))
+            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.chemical_name, wn.options.quality.wq_units).encode('ascii'))
         f.write(entry_float.format('VISCOSITY', wn.options.general.viscosity).encode('ascii'))
         f.write(entry_float.format('DIFFUSIVITY', wn.options.quality.diffusivity).encode('ascii'))
         f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.general.specific_gravity).encode('ascii'))
@@ -2437,7 +2437,7 @@ class BinFile(object):
             self.results.meta['link_diameter'] = pd.Series(data=diameter, index=linknames)
             self.results.meta['stats_mode'] = statsflag
             self.results.meta['stats_N'] = statsN
-            nodetypes = np.array(['Junction']*self.num_nodes)
+            nodetypes = np.array(['Junction']*self.num_nodes, dtype='|S10')
             nodetypes[tankidxs-1] = 'Tank'
             nodetypes[tankidxs[tankarea==0]-1] = 'Reservoir'
             linktypes = np.array(['Pipe']*self.num_links)
