@@ -16,45 +16,27 @@ class WaterNetworkOptions(object):
     (which would never be used and cause undiagnosable errors).
     The `user` attribute is a generic python class object that allows for 
     dynamically created attributes that are user specific.
-        
-    Attributes
-    ----------
-    time : :class:`~TimeOptions`
-        All options related to model timing
-    general : :class:`~GeneralOptions`
-        General WNTR model options
-    results : :class:`~ResultsOptions`
-        Options related to the saving or presentation of results
-    quality : :class:`~QualityOptions`
-        Water quality model options
-    energy : :class:`~EnergyOptions`
-        Energy calculation options
-    solver : :class:`~SolverOptions`
-        Solver configuration options
-    graphics : :class:`~GraphicsOptions`
-        Graphics and mapping options
-    user : :class:`~UserOptions`
-        Space for end-user defined options
+
     """
-    __slots__ = ['time','general','results','quality','energy','solver','graphics','user']
+    __slots__ = ['_time','_general','_results','_quality','_energy','_solver','_graphics','_user']
 
     def __init__(self):
-        self.time = TimeOptions()
-        self.general = GeneralOptions()
-        self.results = ResultsOptions()
-        self.quality = QualityOptions()
-        self.energy = EnergyOptions()
-        self.solver = SolverOptions()
-        self.graphics = GraphicsOptions()
-        self.user = UserOptions()
+        self._time = TimeOptions()
+        self._general = GeneralOptions()
+        self._results = ResultsOptions()
+        self._quality = QualityOptions()
+        self._energy = EnergyOptions()
+        self._solver = SolverOptions()
+        self._graphics = GraphicsOptions()
+        self._user = UserOptions()
         
     def __getstate__(self):
         """Allow pickling with the __slots__ construct"""
-        return self.time, self.general, self.results, self.quality, self.energy, self.solver, self.graphics, self.user
+        return self._time, self._general, self._results, self._quality, self._energy, self._solver, self._graphics, self._user
     
     def __setstate__(self, state):
         """Allow pickling with the __slots__ construct"""
-        self.time, self.general, self.results, self.quality, self.energy, self.solver, self.graphics, self.user = state
+        self._time, self._general, self._results, self._quality, self._energy, self._solver, self._graphics, self._user = state
         
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -71,6 +53,95 @@ class WaterNetworkOptions(object):
     
     def __ne__(self, other):
         return not self.__eq__(other)
+    
+    @property
+    def time(self):
+        """All options related to model timing"""
+        return self._time
+    
+    @time.setter
+    def time(self, opts):
+        if not isinstance(opts, TimeOptions):
+            raise ValueError('time must be a TimeOptions object')
+        self._time = opts
+
+    @property
+    def general(self):
+        """General WNTR model options"""
+        return self._general
+    
+    @general.setter
+    def general(self, opts):
+        if not isinstance(opts, GeneralOptions):
+            raise ValueError('general must be a GeneralOptions object')
+        self._general = opts
+
+    @property
+    def results(self):
+        """Options related to the saving or presentation of results"""
+        return self._results
+    
+    @results.setter
+    def results(self, opts):
+        if not isinstance(opts, ResultsOptions):
+            raise ValueError('results must be a ResultsOptions object')
+        self._results = opts
+
+    @property
+    def quality(self):
+        """Water quality model options"""
+        return self._quality
+    
+    @quality.setter
+    def quality(self, opts):
+        if not isinstance(opts, QualityOptions):
+            raise ValueError('quality must be a QualityOptions object')
+        self._quality = opts
+
+    @property
+    def energy(self):
+        """Energy calculation options"""
+        return self._energy
+    
+    @energy.setter
+    def energy(self, opts):
+        if not isinstance(opts, EnergyOptions):
+            raise ValueError('energy must be an EnergyOptions object')
+        self._energy = opts
+
+    @property
+    def solver(self):
+        """Solver configuration options"""
+        return self._solver
+    
+    @solver.setter
+    def solver(self, opts):
+        if not isinstance(opts, SolverOptions):
+            raise ValueError('solver must be a SolverOptions object')
+        self._solver = opts
+
+    @property
+    def graphics(self):
+        """Graphics and mapping options"""
+        return self._graphics
+    
+    @graphics.setter
+    def graphics(self, opts):
+        if not isinstance(opts, GraphicsOptions):
+            raise ValueError('graphics must be a GraphicsOptions object')
+        self._graphics = opts
+
+    @property
+    def user(self):
+        """Space for end-user defined options"""
+        return self._user
+    
+    @user.setter
+    def user(self, opts):
+        if not isinstance(opts, UserOptions):
+            raise ValueError('quality must be a UserOptions object')
+        self._user = opts
+
 
 class TimeOptions(object):
     """
@@ -246,6 +317,20 @@ class ResultsOptions(object):
         Output results as statistical values, rather than time-series; options 
         are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the 
         EPANET User Manual)
+    file : str, filename
+        Provides the filename to use for outputting an EPANET report file.
+        By default, this will be the prefix plus ".rpt".
+    status : str, default 'NO'
+        Output solver status ('YES', 'NO', 'FULL'). 'FULL' is only useful for debugging
+    summary : str, default 'YES'
+        Output summary information ('YES' or 'NO')
+    energy : str, default 'NO'
+        Output energy information
+    nodes : bool, default False
+        Output node information in report file
+    links : bool, default False
+        Output link information in report file
+    
     """
     def __init__(self):
         self.statistic = 'NONE'
@@ -271,6 +356,21 @@ class ResultsOptions(object):
                            'setting': [False, False],
                            'reaction': [False, False],
                            'f-factor': [False, False],
+                           }
+        self.results_obj = { # Node extended period results
+                           'demand': True,     #node demand (actual)
+                           'head': True,       #node head
+                           'pressure': True,   #node pressure
+                           'quality': True,    #node quality
+                           # Link extended period results
+                           'flow': True,       #flow in pipes
+                           'linkquality': True,#quality in pipes
+                           'velocity': True,   #velocity in pipes
+                           'headloss': True,   #headloss in pipes
+                           'status': True,     #link status
+                           'setting': True,    #valve/pump setting
+                           'rxnrate': True,    #reaction rate in pipes
+                           'frictionfact': True,   #friction factor in pipes
                            }
         self.param_opts = { # param name: [Default, Setting]
                            'elevation': {},
@@ -315,13 +415,16 @@ class QualityOptions(object):
     
     Attributes
     ----------
-    analysis_type : str, default 'None'
+    mode : str, default 'None'
         Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and 
         TRACE
-    trace_node : str
+    trace_node : str, default None
         Trace node name if quality = TRACE
-    concentration_units : str, default = 'mg/L'
-        Units for chemical analysis
+    wq_units : str, default None
+        Units for quality analysis; concentration for 'chemical', 's' for 'age',
+        '%' for 'trace'
+    chemical : str, default None
+        Chemical name for 'chemical' analysis
     diffusivity : float, default 1.0
         Molecular diffusivity of the chemical (default 1.0)
     bulk_rxn_order : float, default 1.0
@@ -341,10 +444,13 @@ class QualityOptions(object):
     roughness_correlation : float, default None
         Makes all default pipe wall reaction coefficients related to pipe 
         roughness, off if None
+        
     """
     def __init__(self):
-        self.type = 'NONE'
-        self.value = None #string
+        self.mode = 'NONE'
+        self.trace_node = None #string 
+        self.wq_units = 'mg/L' #string (mg/L or ug/L)
+        self.chemical = 'CHEMICAL' #string
         self.diffusivity = 1.0
         self.bulk_rxn_order = 1.0
         self.wall_rxn_order = 1.0
@@ -358,8 +464,10 @@ class QualityOptions(object):
         if not type(self) == type(other):
             return False
         ###  self.units == other.units and \
-        if self.type == other.type and \
-           self.value == other.value and \
+        if self.mode == other.mode and \
+           self.trace_node == other.trace_node and \
+           self.wq_units == other.wq_units and \
+           self.chemical == other.chemical and \
            abs(self.diffusivity - other.diffusivity)<1e-10 and \
            abs(self.bulk_rxn_order - other.bulk_rxn_order)<1e-10 and \
            abs(self.wall_rxn_order - other.wall_rxn_order)<1e-10 and \
@@ -389,6 +497,7 @@ class EnergyOptions(object):
         Global pump efficiency as percent; i.e., 75.0 means 75%
     demand_charge : float, default None
         Added cost per maximum kW usage during the simulation period, or None
+        
     """
     def __init__(self):
         self.global_price = 0
@@ -434,6 +543,7 @@ class SolverOptions(object):
         Number of solution trials that pass between status check 
     damplimit : float, default 0.0
         Accuracy value at which solution damping begins
+        
     """
     def __init__(self):
         self.trials = 40
@@ -466,6 +576,13 @@ class SolverOptions(object):
 class UserOptions(object):
     """
     Options defined by the user.
+    
+    Provides an empty class that accepts getattribute and setattribute methods to
+    create user-defined options. For example, if using WNTR for uncertainty 
+    quantification, certain options could be added here that would never be 
+    used directly by WNTR, but which would be saved on pickling and could be
+    used by the user-built analysis scripts.
+    
     """
     def __init__(self):
         pass

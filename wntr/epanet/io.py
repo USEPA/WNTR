@@ -31,7 +31,7 @@ from wntr.network.elements import Pattern, LinkStatus, Curve, Demands, Source
 from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition
 from wntr.network.controls import OrCondition, AndCondition, IfThenElseControl, ControlAction
 
-from .util import FlowUnits, MassUnits, HydParam, QualParam, MixType, ResultType
+from .util import FlowUnits, MassUnits, HydParam, QualParam, MixType, ResultType, EN
 from .util import to_si, from_si
 from .util import StatisticsType, QualType, PressureUnits
 
@@ -1241,9 +1241,9 @@ class InpFile(object):
             if current == []:
                 continue
             node = self.wn.get_node(current[0])
-            if self.wn.options.quality.type == 'CHEMICAL':
+            if self.wn.options.quality.mode == 'CHEMICAL':
                 quality = to_si(self.flow_units, float(current[1]), QualParam.Concentration, mass_units=self.mass_units)
-            elif self.wn.options.quality.type == 'AGE':
+            elif self.wn.options.quality.mode == 'AGE':
                 quality = to_si(self.flow_units, float(current[1]), QualParam.WaterAge)
             else :
                 quality = float(current[1])
@@ -1258,9 +1258,9 @@ class InpFile(object):
         for node_name in nnodes:
             node = wn._nodes[node_name]
             if node.initial_quality:
-                if wn.options.quality.type == 'CHEMICAL':
+                if wn.options.quality.mode == 'CHEMICAL':
                     quality = from_si(self.flow_units, node.initial_quality, QualParam.Concentration, mass_units=self.mass_units)
-                elif wn.options.quality.type == 'AGE':
+                elif wn.options.quality.mode == 'AGE':
                     quality = from_si(self.flow_units, node.initial_quality, QualParam.WaterAge)
                 else:
                     quality = node.initial_quality
@@ -1270,6 +1270,8 @@ class InpFile(object):
     def _read_reactions(self):
         BulkReactionCoeff = QualParam.BulkReactionCoeff
         WallReactionCoeff = QualParam.WallReactionCoeff
+        if self.mass_units is None:
+            self.mass_units = MassUnits.mg
         for lnum, line in self.sections['[REACTIONS]']:
             line = line.split(';')[0]
             current = line.split()
@@ -1478,13 +1480,21 @@ class InpFile(object):
                     opts.general.hydraulics = words[1].upper()
                     opts.general.hydraulics_filename = words[2]
                 elif key == 'QUALITY':
-                    opts.quality.type = words[1].upper()
+                    mode = words[1].upper()
+                    if mode in ['NONE', 'AGE', 'TRACE']:
+                        opts.quality.mode = words[1].upper()
+                    else:
+                        opts.quality.mode = 'CHEMICAL'
+                        opts.quality.chemical = words[1]
                     if len(words) > 2:
-                        opts.quality.value = words[2]
-                        if 'ug' in words[2]:
+                        if 'mg' in words[2]:
                             self.mass_units = MassUnits.mg
-                        else:
+                            opts.quality.wq_units = words[2]
+                        elif 'ug' in words[2]:
                             self.mass_units = MassUnits.ug
+                            opts.quality.wq_units = words[2]
+                        else:
+                            opts.quality.trace_node = words[2]
                     else:
                         self.mass_units = MassUnits.mg
                         opts.quality.value = 'mg/L'
@@ -1551,10 +1561,12 @@ class InpFile(object):
         f.write(entry_string.format('HEADLOSS', wn.options.general.headloss).encode('ascii'))
         if wn.options.general.hydraulics is not None:
             f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.general.hydraulics, wn.options.general.hydraulics_filename).encode('ascii'))
-        if wn.options.quality.value is None:
-            f.write(entry_string.format('QUALITY', wn.options.quality.type).encode('ascii'))
+        if wn.options.quality.mode.upper() in ['NONE', 'AGE']:
+            f.write(entry_string.format('QUALITY', wn.options.quality.mode).encode('ascii'))
+        elif wn.options.quality.mode.upper() in ['TRACE']:
+            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.mode, wn.options.quality.trace_node).encode('ascii'))
         else:
-            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.type, wn.options.quality.value).encode('ascii'))
+            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.chemical, wn.options.quality.wq_units).encode('ascii'))
         f.write(entry_float.format('VISCOSITY', wn.options.general.viscosity).encode('ascii'))
         f.write(entry_float.format('DIFFUSIVITY', wn.options.quality.diffusivity).encode('ascii'))
         f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.general.specific_gravity).encode('ascii'))
@@ -2326,12 +2338,12 @@ class BinFile(object):
             reportstart = prolog[12]
             reportstep = prolog[13]
             duration = prolog[14]
-            logger.info('EPANET/Toolkit version %d',version)
-            logger.info('Nodes: %d; Tanks/Resrv: %d Links: %d; Pumps: %d; Valves: %d',
+            logger.debug('EPANET/Toolkit version %d',version)
+            logger.debug('Nodes: %d; Tanks/Resrv: %d Links: %d; Pumps: %d; Valves: %d',
                          nnodes, ntanks, nlinks, npumps, nvalve)
-            logger.info('WQ opt: %s; Trace Node: %s; Flow Units %s; Pressure Units %s',
+            logger.debug('WQ opt: %s; Trace Node: %s; Flow Units %s; Pressure Units %s',
                          wqopt, srctrace, flowunits, presunits)
-            logger.info('Statistics: %s; Report Start %d, step %d; Duration=%d sec',
+            logger.debug('Statistics: %s; Report Start %d, step %d; Duration=%d sec',
                          statsflag, reportstart, reportstep, duration)
 
             # Ignore the title lines
@@ -2344,7 +2356,7 @@ class BinFile(object):
             if mass in ['mg', 'ug', u'mg', u'ug']:
                 massunits = MassUnits[mass]
             else:
-                massunits = MassUnits.mg
+                massunits = MassUnits.mg            
             self.flow_units = flowunits
             self.pres_units = presunits
             self.quality_type = wqopt
@@ -2399,14 +2411,52 @@ class BinFile(object):
             logger.debug('... read EP simulation data ...')
             reporttimes = np.arange(reportstart, duration+reportstep, reportstep)
             nrptsteps = len(reporttimes)
+            statsN = nrptsteps
             if statsflag in [StatisticsType.Maximum, StatisticsType.Minimum, StatisticsType.Range]:
                 nrptsteps = 1
                 reporttimes = [reportstart + reportstep]
             self.num_periods = nrptsteps
             self.report_times = reporttimes
 
+            # set up results metadata dictionary
+            if wqopt == QualType.Age:
+                self.results.meta['quality_mode'] = 'AGE'
+                self.results.meta['quality_units'] = 's'
+            elif wqopt == QualType.Trace:
+                self.results.meta['quality_mode'] = 'TRACE'
+                self.results.meta['quality_units'] = '%'
+                self.results.meta['quality_trace'] = srctrace
+            elif wqopt == QualType.Chem:
+                self.results.meta['quality_mode'] = 'CHEMICAL'
+                self.results.meta['quality_units'] = wqunits
+                self.results.meta['quality_chem'] = chemical
+            self.results.time = reporttimes
+            self.results.meta['report_times'] = reporttimes
+            self.results.meta['node_elevation'] = pd.Series(data=elevation, index=nodenames)
+            self.results.meta['link_length'] = pd.Series(data=linklen, index=linknames)
+            self.results.meta['link_diameter'] = pd.Series(data=diameter, index=linknames)
+            self.results.meta['stats_mode'] = statsflag
+            self.results.meta['stats_N'] = statsN
+            nodetypes = np.array(['Junction']*self.num_nodes)
+            nodetypes[tankidxs-1] = 'Tank'
+            nodetypes[tankidxs[tankarea==0]-1] = 'Reservoir'
+            linktypes = np.array(['Pipe']*self.num_links)
+            linktypes[ linktype == EN.PUMP ] = 'Pump'
+            linktypes[ linktype > EN.PUMP ] = 'Valve'
+            self.results.meta['link_type'] = pd.Series(data=linktypes, index=linknames, copy=True)
+            linktypes[ linktype == EN.CVPIPE ] = 'CV'
+            linktypes[ linktype == EN.FCV ] = 'FCV'
+            linktypes[ linktype == EN.PRV ] = 'PRV'
+            linktypes[ linktype == EN.PSV ] = 'PSV'
+            linktypes[ linktype == EN.PBV ] = 'PBV'
+            linktypes[ linktype == EN.TCV ] = 'TCV'
+            linktypes[ linktype == EN.GPV ] = 'GPV'
+            self.results.meta['link_subtype'] = pd.Series(data=linktypes, index=linknames, copy=True)
+            self.results.meta['node_type'] = pd.Series(data=nodetypes, index=nodenames, copy=True)
+            self.results.meta['node_names'] = nodenames
+            self.results.meta['link_names'] = linknames
+
             if custom_handlers is True:
-    
                 logger.debug('... set up results object ...')
                 self.setup_ep_results(reporttimes, nodenames, linknames)
     
@@ -2457,27 +2507,41 @@ class BinFile(object):
                 df = df.transpose()
                 self.results.node = {}
                 self.results.link = {}
-            
+                
+                # Node Results
+                self.results.node['demand'] = HydParam.Demand._to_si(self.flow_units, df['demand'])
+                self.results.node['head'] = HydParam.HydraulicHead._to_si(self.flow_units, df['head'])
+                self.results.node['pressure'] = HydParam.Pressure._to_si(self.flow_units, df['pressure'])
+                
+                # Water Quality Results (node and link)
                 if self.quality_type is QualType.Chem:
                     self.results.node['quality'] = QualParam.Concentration._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                    self.results.node['linkquality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+                    self.results.link['linkquality'] = QualParam.Concentration._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
                 elif self.quality_type is QualType.Age:
                     self.results.node['quality'] = QualParam.WaterAge._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
-                    self.results.node['linkquality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
+                    self.results.link['linkquality'] = QualParam.WaterAge._to_si(self.flow_units, df['linkquality'], mass_units=self.mass_units)
                 else:
                     self.results.node['quality'] = df['quality']
-                    self.results.node['linkquality'] = df['linkquality']
-                self.results.node['demand'] = HydParam.Demand._to_si(self.flow_units, df['demand'])
+                    self.results.link['linkquality'] = df['linkquality']
+
+                # Link Results
                 self.results.link['flowrate'] = HydParam.Flow._to_si(self.flow_units, df['flow'])
-                self.results.node['head'] = HydParam.HydraulicHead._to_si(self.flow_units, df['head'])
-                self.results.link['headloss'] = df['headloss']
-                self.results.node['pressure'] = HydParam.Pressure._to_si(self.flow_units, df['pressure'])
+                self.results.link['headloss'] = df['headloss']  # Unit is per 1000
                 self.results.link['velocity'] = HydParam.Velocity._to_si(self.flow_units, df['velocity'])
                 self.results.link['status'] = df['linkstatus']
-                self.results.link['setting'] = df['linksetting']
+                settings = np.array(df['linksetting'])
+                settings[:, linktype == EN.PRV] = to_si(self.flow_units, settings[:, linktype == EN.PRV], HydParam.Pressure)
+                settings[:, linktype == EN.PSV] = to_si(self.flow_units, settings[:, linktype == EN.PSV], HydParam.Pressure)
+                settings[:, linktype == EN.PBV] = to_si(self.flow_units, settings[:, linktype == EN.PBV], HydParam.Pressure)
+                settings[:, linktype == EN.FCV] = to_si(self.flow_units, settings[:, linktype == EN.FCV], HydParam.Flow)
+                self.results.link['setting'] = pd.DataFrame(data=settings, columns=linknames, index=reporttimes)
                 self.results.link['frictionfact'] = df['frictionfactor']
                 self.results.link['rxnrate'] = df['reactionrate']
-                self.results.time = reporttimes
+                
+                # Convert to panels
+                self.results.link = pd.Panel.from_dict(self.results.link)
+                self.results.node = pd.Panel.from_dict(self.results.node)
+                
             logger.debug('... read epilog ...')
             # Read the averages and then the number of periods for checks
             averages = np.fromfile(fin, dtype=np.dtype(ftype), count=4)
