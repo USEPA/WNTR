@@ -484,6 +484,10 @@ class WaterNetworkModel(object):
         valve_controls = []
         for valve_name, valve in self.links(Valve):
 
+            control = wntr.network.controls._ValveNewSettingControl(self, valve)
+            control.name = valve.name + ' new setting for valve control'
+            valve_controls.append(control)
+
             if valve.valve_type == 'PRV':
                 close_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Closed)
                 open_control_action = wntr.network.ControlAction(valve, '_status', LinkStatus.Opened)

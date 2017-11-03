@@ -1933,9 +1933,16 @@ class _EpanetRule(object):
             elif attr.lower() in ['flow']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
             elif attr.lower() in ['pressure']:
-                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
-                value = '{:.6g}'.format(val_si)
+                assert isinstance(condition._source_obj, Valve)
+                if condition._source_obj.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Pressure)
+                elif condition._source_obj.valve_type.upper() in ['FCV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Flow)
+                else:
+                    value = val_si
+                value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
             clause = fmt.format(prefix, condition._source_obj.__class__.__name__,
@@ -1962,9 +1969,16 @@ class _EpanetRule(object):
             elif attr.lower() in ['flow']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
             elif attr.lower() in ['pressure']:
-                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
-                value = '{:.6g}'.format(val_si)
+                assert isinstance(action._target_obj_ref, Valve)
+                if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Pressure)
+                elif action._target_obj_ref.valve_type.upper() in ['FCV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Flow)
+                else:
+                    value = val_si
+                value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
             clause = fmt.format(prefix, action._target_obj_ref.__class__.__name__,
@@ -1989,9 +2003,16 @@ class _EpanetRule(object):
             elif attr.lower() in ['flow']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
             elif attr.lower() in ['pressure']:
-                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Flow))
+                value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
-                value = '{:.6g}'.format(val_si)
+                assert isinstance(action._target_obj_ref, Valve)
+                if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Pressure)
+                elif action._target_obj_ref.valve_type.upper() in ['FCV']:
+                    value = from_si(self.inp_units, val_si, HydParam.Flow)
+                else:
+                    value = val_si
+                value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
             clause = fmt.format(prefix, action._target_obj_ref.__class__.__name__,
@@ -2037,7 +2058,13 @@ class _EpanetRule(object):
                 elif attr.lower() in ['flow']:
                     value = to_si(self.inp_units, value, HydParam.Flow)
                 elif attr.lower() in ['pressure']:
-                    value = to_si(self.inp_units, value, HydParam.Flow)
+                    value = to_si(self.inp_units, value, HydParam.Pressure)
+                elif attr.lower() in ['setting']:
+                    link = model.get_link(words[2])
+                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                        value = to_si(self.inp_units, value, HydParam.Pressure)
+                    elif link.valve_type.upper() in ['FCV']:
+                        value = to_si(self.inp_units, value, HydParam.Flow)
                 if words[1].upper() in ['NODE', 'JUNCTION', 'RESERVOIR', 'TANK']:
                     condition = ValueCondition(model.get_node(words[2]), words[3].lower(), words[4].lower(), value)
                 elif words[1].upper() in ['LINK', 'PIPE', 'PUMP', 'VALVE']:
@@ -2080,7 +2107,13 @@ class _EpanetRule(object):
             elif attr.lower() in ['flow']:
                 value = to_si(self.inp_units, value, HydParam.Flow)
             elif attr.lower() in ['pressure']:
-                value = to_si(self.inp_units, value, HydParam.Flow)
+                value = to_si(self.inp_units, value, HydParam.Pressure)
+            elif attr.lower() in ['setting']:
+                assert isinstance(link, Valve)
+                if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                    value = to_si(self.inp_units, value, HydParam.Pressure)
+                elif link.valve_type.upper() in ['FCV']:
+                    value = to_si(self.inp_units, value, HydParam.Flow)
             then_acts.append(ControlAction(link, attr, value))
         else_acts = []
         for act in self._else_clauses:
@@ -2098,7 +2131,13 @@ class _EpanetRule(object):
             elif attr.lower() in ['flow']:
                 value = to_si(self.inp_units, value, HydParam.Flow)
             elif attr.lower() in ['pressure']:
-                value = to_si(self.inp_units, value, HydParam.Flow)
+                value = to_si(self.inp_units, value, HydParam.Pressure)
+            elif attr.lower() in ['setting']:
+                assert isinstance(link, Valve)
+                if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                    value = to_si(self.inp_units, value, HydParam.Pressure)
+                elif link.valve_type.upper() in ['FCV']:
+                    value = to_si(self.inp_units, value, HydParam.Flow)
             else_acts.append(ControlAction(link, attr, value))
         return IfThenElseControl(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)
 
