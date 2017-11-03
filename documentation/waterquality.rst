@@ -14,13 +14,13 @@ demands can be used in the EpanetSimulator.  The following code illustrates how 
 a pressure dependent demand simulation:
 
 .. literalinclude:: ../examples/water_quality_simulation.py
-   :lines: 50-54
+   :lines: 53-57
    
 After defining water quality options and sources (described in the :ref:`wq_options` and :ref:`sources` sections below), a hydraulic and water quality simulation 
 using the EpanetSimualtor is run using the following code:
 
 .. literalinclude:: ../examples/water_quality_simulation.py
-   :lines: 7, 14
+   :lines: 7, 17
 
 The example **water_quality_simulation.py** can be used to run water quality simulations and plot results.
 
@@ -28,21 +28,21 @@ The example **water_quality_simulation.py** can be used to run water quality sim
 
 Options
 ----------
-Water quality simulation options are defined in the :class:`~wntr.network.model.WaterNetworkOptions` class.
+Water quality simulation options are defined in the :class:`~wntr.network.options.WaterNetworkOptions` class.
 Three types of water quality analysis are supported.  These options include water age, tracer, and chemical concentration.
 
 * **Water age**: Water quality simulation can be used to compute water age at every node.
   To compute water age, set the 'quality' option as follows:
 
 .. literalinclude:: ../examples/water_quality_simulation.py
-   :lines: 23
+   :lines: 26
 
 * **Tracer**: Water quality simulation can be used to compute the percent of flow originating from a specific location.
   The results include tracer percent values at each node.
   For example, to track a tracer from node '111', set the 'quality' and 'tracer_node' options as follows:
 
 .. literalinclude:: ../examples/water_quality_simulation.py
-   :lines: 33, 34
+   :lines: 36, 37
 
 * **Chemical concentration**: Water quality simulation can be used to compute chemical concentration given a set of source injections.
   The results include chemical concentration values at each node.
@@ -54,11 +54,11 @@ Three types of water quality analysis are supported.  These options include wate
 * To skip the water quality simulation, set the 'quality' options as follows:
 
 .. literalinclude:: ../examples/water_quality_simulation.py
-   :lines: 44
+   :lines: 47
 
 Additional water quality options include viscosity, diffusivity, specific gravity, tolerance, bulk reaction order, wall reaction order, 
 tank reaction order, bulk reaction coefficient, wall reaction coefficient, limiting potential, and roughness correlation.
-These parameters are defined in the :class:`~wntr.network.model.WaterNetworkOptions` API documentation.
+These parameters are defined in the :class:`~wntr.network.options.WaterNetworkOptions` API documentation.
 
 When creating a water network model from an EPANET INP file, water quality options are populated from the [OPTIONS] and [REACTIONS] sections of EPANET INP file.
 All of these options can be modified in WNTR and then written to an EPANET INP file.
@@ -93,7 +93,7 @@ Sources include the following information:
 For example, the following code can be used to add a source, and associated pattern, to the water network model:
 
 .. literalinclude:: ../examples/water_quality_simulation.py
-   :lines: 11, 12
+   :lines: 11-15
 	
 In the above example, the pattern is given a value of 1 between 2 and 15 hours, and 0 otherwise.
 The method :class:`~wntr.network.model.WaterNetworkModel.remove_source` can be used to remove sources from the water network model.
