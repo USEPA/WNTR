@@ -21,7 +21,7 @@ class TestPDD(unittest.TestCase):
         inp_file = join(test_datadir, 'simulator.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         res1 = wn.get_node('reservoir1')
-        res1.expected_head.base_value = 10.0
+        res1.head_timeseries.base_value = 10.0
         p1 = wn.get_link('pipe1')
         p1.length = 0.0
         p2 = wn.get_link('pipe2')
