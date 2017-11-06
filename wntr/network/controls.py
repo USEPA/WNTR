@@ -117,8 +117,8 @@ class ControlCondition(object):
     def __init__(self):
         self._backtrack = 0
 
-    @property
     def requires(self):
+        """Returns a list of objects required to evaluate this condition"""
         return []
 
     @property
@@ -280,9 +280,8 @@ class SimpleNodeCondition(ControlCondition):
         state = relation(cur_value, thresh_value)
         return state
 
-    @property
     def requires(self):
-        return [self._source_obj.name]
+        return [self._source_obj]
 
 
 class TimeOfDayCondition(ControlCondition):
@@ -519,9 +518,8 @@ class ValueCondition(ControlCondition):
         self._threshold = ControlCondition._parse_value(threshold)
         self._backtrack = 0
 
-    @property
     def requires(self):
-        return [self._source_obj.name]
+        return [self._source_obj]
 
     @property
     def name(self):
@@ -601,9 +599,8 @@ class RelativeCondition(ControlCondition):
                                 self._relation.symbol,
                                 tobj, self._threshold_attr)
 
-    @property
     def requires(self):
-        return [self._source_obj.name, self._threshold_obj.name]
+        return [self._source_obj, self._threshold_obj]
 
     def __repr__(self):
         return "RelativeCondition({}, {}, {}, {}, {})".format(repr(self._source_obj),
@@ -669,9 +666,8 @@ class OrCondition(ControlCondition):
     def backtrack(self):
         return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
 
-    @property
     def requires(self):
-        return self._condition_1.requires + self._condition_2.requires
+        return self._condition_1.requires() + self._condition_2.requires()
 
 
 class AndCondition(ControlCondition):
@@ -705,9 +701,8 @@ class AndCondition(ControlCondition):
     def backtrack(self):
         return np.min([self._condition_1.backtrack, self._condition_2.backtrack])
 
-    @property
     def requires(self):
-        return self._condition_1.requires + self._condition_2.requires
+        return self._condition_1.requires() + self._condition_2.requires()
 
 #
 ### Control Action classes
@@ -737,8 +732,8 @@ class BaseControlAction(object):
                                   'This method must be implemented in '
                                   'derived classes of ControlAction.')
 
-    @property
     def requires(self):
+        """Returns a list of objects used to evaluate the control"""
         return []
 
 class ControlAction(BaseControlAction):
@@ -767,9 +762,8 @@ class ControlAction(BaseControlAction):
         #if (isinstance(target_obj, wntr.network.Valve) or (isinstance(target_obj, wntr.network.Pipe) and target_obj.cv)) and attribute=='status':
         #    raise ValueError('You may not add controls to valves or pipes with check valves.')
 
-    @property
     def requires(self):
-        return [self._target_obj_ref.name]
+        return [self._target_obj_ref]
 
     def __repr__(self):
         return '<ControlAction: {}, {}, {}>'.format(repr(self._target_obj_ref), repr(self._attribute), repr(self._repr_value()))
@@ -911,6 +905,7 @@ class Control(object):
                                   'derived classes of ControlAction.')
 
     def requires(self):
+        """Returns a list of objects required to evaluate this control"""
         return []
 
 class IfThenElseControl(Control):
@@ -937,13 +932,12 @@ class IfThenElseControl(Control):
         if self._name is None:
             self._name = ''
 
-    @property
     def requires(self):
-        req = self._condition.requires
+        req = self._condition.requires()
         for action in self._then_actions:
-            req += action.requires
+            req += action.requires()
         for action in self._else_actions:
-            req += action.requires
+            req += action.requires()
         return req
 
     @property
@@ -1096,9 +1090,8 @@ class TimeControl(Control):
         if time_flag == 'SHIFTED_TIME' and self._run_at_time < wnm._shifted_time:
             self._run_at_time += 24*3600
 
-    @property
     def requires(self):
-        req = self._control_action.requires
+        req = self._control_action.requires()
         return req
 
     def __str__(self):
@@ -1217,9 +1210,8 @@ class ConditionalControl(Control):
         if not isinstance(threshold,float):
             raise ValueError('threshold must be a float.')
 
-    @property
     def requires(self):
-        req = [self._source_obj.name] + self._control_action.requires
+        req = [self._source_obj] + self._control_action.requires()
         return req
 
     def __str__(self):
@@ -1285,7 +1277,7 @@ class ConditionalControl(Control):
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
         """
-        if type(self._source_obj)==wntr.network.Tank and self._source_attr=='head' and wnm.sim_time!=0 and self._partial_step_for_tanks:
+        if type(self._source_obj)==wntr.network.Tank and self._source_attr=='level' and wnm.sim_time!=0 and self._partial_step_for_tanks:
             if presolve_flag:
                 val = getattr(self._source_obj,self._source_attr)
                 q_net = self._source_obj._prev_demand
@@ -1310,7 +1302,7 @@ class ConditionalControl(Control):
                     return (True, 0)
                 else:
                     return (False, None)
-        elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='head' and wnm.sim_time==0 and self._partial_step_for_tanks:
+        elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='level' and wnm.sim_time==0 and self._partial_step_for_tanks:
             if presolve_flag:
                 val = getattr(self._source_obj, self._source_attr)
                 if self._operation(val, self._threshold):
@@ -1385,12 +1377,11 @@ class _MultiConditionalControl(Control):
         if len(source)!=len(threshold):
             raise ValueError('The length of the source list must equal the length of the threshold list.')
 
-    @property
     def requires(self):
         req = []
         for source, attr in self._source:
-            req += [source.name]
-        req += self._control_action.requires
+            req += [source]
+        req += self._control_action.requires()
         return req
 
     def __eq__(self, other):

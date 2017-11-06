@@ -1056,7 +1056,7 @@ class HydraulicModel(object):
             head[node_id] = node.head
         for name, node in self._wn.nodes(Reservoir):
             node_id = self._node_name_to_id[name]
-            head[node_id] = node.expected_head(self._wn.sim_time)
+            head[node_id] = node.head_timeseries(self._wn.sim_time)
         return head
 
     def initialize_demand(self):
@@ -1254,7 +1254,7 @@ class HydraulicModel(object):
                 self.leak_status[tank_id] = tank.leak_status
         for reservoir_name, reservoir in self._wn.nodes(Reservoir):
             reservoir_id = self._node_name_to_id[reservoir_name]
-            self.reservoir_head[reservoir_id] = reservoir.expected_head(self._wn.sim_time)
+            self.reservoir_head[reservoir_id] = reservoir.head_timeseries(self._wn.sim_time)
         for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
             #if junction_id in self.isolated_junction_ids:
