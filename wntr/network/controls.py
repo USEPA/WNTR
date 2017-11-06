@@ -1098,7 +1098,7 @@ class TimeControl(Control):
 
     @property
     def requires(self):
-        req = self._condition.requires
+        req = self._control_action.requires
         return req
 
     def __str__(self):
