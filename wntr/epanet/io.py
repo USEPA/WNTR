@@ -390,8 +390,8 @@ class InpFile(object):
             self.flow_units = FlowUnits(units)
         elif self.flow_units is not None:
             self.flow_units = self.flow_units
-        elif isinstance(wn.options.general.units, str):
-            units = wn.options.general.units.upper()
+        elif isinstance(wn.options.hydraulic.units, str):
+            units = wn.options.hydraulic.units.upper()
             self.flow_units = FlowUnits[units]
         else:
             self.flow_units = FlowUnits.GPM
@@ -462,8 +462,8 @@ class InpFile(object):
                 continue
             if len(current) > 3:
                 pat = current[3]
-            elif self.wn.options.general.pattern:
-                pat = self.wn.options.general.pattern
+            elif self.wn.options.hydraulic.pattern:
+                pat = self.wn.options.hydraulic.pattern
             else:
                 pat = None
             self.wn.add_junction(current[0],
@@ -481,7 +481,7 @@ class InpFile(object):
             if junction.expected_demand:
                 base_demand = junction.expected_demand[0].base_value
                 demand_pattern = junction.expected_demand[0].pattern_name
-                if demand_pattern == wn.options.general.pattern:
+                if demand_pattern == wn.options.hydraulic.pattern:
                     demand_pattern = None
             else:
                 base_demand = 0.0
@@ -861,16 +861,16 @@ class InpFile(object):
         for pattern_name, pattern in _patterns.items():
             # add the patterns to the water newtork model
             self.wn.add_pattern(pattern_name, pattern)
-        if not self.wn.options.general.pattern and '1' in _patterns.keys():
+        if not self.wn.options.hydraulic.pattern and '1' in _patterns.keys():
             # If there is a pattern called "1", then it is the default pattern if no other is supplied
-            self.wn.options.general.pattern = '1'
-        elif self.wn.options.general.pattern not in _patterns.keys():
+            self.wn.options.hydraulic.pattern = '1'
+        elif self.wn.options.hydraulic.pattern not in _patterns.keys():
             # Sanity check - if the default pattern does not exist and it is not '1' then balk
             # If default is '1' but it does not exist, then it is constant
             # Any other default that does not exist is an error
-            if self.wn.options.general.pattern is not None and self.wn.options.general.pattern != '1':
-                raise KeyError('Default pattern {} is undefined'.format(self.wn.options.general.pattern))
-            self.wn.options.general.pattern = None
+            if self.wn.options.hydraulic.pattern is not None and self.wn.options.hydraulic.pattern != '1':
+                raise KeyError('Default pattern {} is undefined'.format(self.wn.options.hydraulic.pattern))
+            self.wn.options.hydraulic.pattern = None
 
     def _write_patterns(self, f, wn):
         num_columns = 8
@@ -1474,12 +1474,12 @@ class InpFile(object):
                 key = words[0].upper()
                 if key == 'UNITS':
                     self.flow_units = FlowUnits[words[1].upper()]
-                    opts.general.units = words[1].upper()
+                    opts.hydraulic.units = words[1].upper()
                 elif key == 'HEADLOSS':
-                    opts.general.headloss = words[1].upper()
+                    opts.hydraulic.headloss = words[1].upper()
                 elif key == 'HYDRAULICS':
-                    opts.general.hydraulics = words[1].upper()
-                    opts.general.hydraulics_filename = words[2]
+                    opts.hydraulic.hydraulics = words[1].upper()
+                    opts.hydraulic.hydraulics_filename = words[2]
                 elif key == 'QUALITY':
                     mode = words[1].upper()
                     if mode in ['NONE', 'AGE']:
@@ -1502,11 +1502,11 @@ class InpFile(object):
                                 self.mass_units = MassUnits.mg
                                 opts.quality.wq_units = 'mg/L'
                 elif key == 'VISCOSITY':
-                    opts.general.viscosity = float(words[1])
+                    opts.hydraulic.viscosity = float(words[1])
                 elif key == 'DIFFUSIVITY':
-                    opts.quality.diffusivity = float(words[1])
+                    opts.hydraulic.diffusivity = float(words[1])
                 elif key == 'SPECIFIC':
-                    opts.general.specific_gravity = float(words[2])
+                    opts.hydraulic.specific_gravity = float(words[2])
                 elif key == 'TRIALS':
                     opts.solver.trials = int(words[1])
                 elif key == 'ACCURACY':
@@ -1516,16 +1516,16 @@ class InpFile(object):
                     if len(words) > 2:
                         opts.solver.unbalanced_value = int(words[2])
                 elif key == 'PATTERN':
-                    opts.general.pattern = words[1]
+                    opts.hydraulic.pattern = words[1]
                 elif key == 'DEMAND':
                     if len(words) > 2:
-                        opts.general.demand_multiplier = float(words[2])
+                        opts.hydraulic.demand_multiplier = float(words[2])
                     else:
                         edata['key'] = 'DEMAND MULTIPLIER'
                         raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 elif key == 'EMITTER':
                     if len(words) > 2:
-                        opts.general.emitter_exponent = float(words[2])
+                        opts.hydraulic.emitter_exponent = float(words[2])
                     else:
                         edata['key'] = 'EMITTER EXPONENT'
                         raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
@@ -1538,7 +1538,7 @@ class InpFile(object):
                 elif key == 'DAMPLIMIT':
                     opts.solver.damplimit = float(words[1])
                 elif key == 'MAP':
-                    opts.general.map = words[1]
+                    opts.graphics.map_filename = words[1]
                 else:
                     if len(words) == 2:
                         edata['key'] = words[0]
@@ -1561,18 +1561,18 @@ class InpFile(object):
         entry_string = '{:20s} {:20s}\n'
         entry_float = '{:20s} {:g}\n'
         f.write(entry_string.format('UNITS', self.flow_units.name).encode('ascii'))
-        f.write(entry_string.format('HEADLOSS', wn.options.general.headloss).encode('ascii'))
-        if wn.options.general.hydraulics is not None:
-            f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.general.hydraulics, wn.options.general.hydraulics_filename).encode('ascii'))
+        f.write(entry_string.format('HEADLOSS', wn.options.hydraulic.headloss).encode('ascii'))
+        if wn.options.hydraulic.hydraulics is not None:
+            f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulic.hydraulics, wn.options.hydraulic.hydraulics_filename).encode('ascii'))
         if wn.options.quality.mode.upper() in ['NONE', 'AGE']:
             f.write(entry_string.format('QUALITY', wn.options.quality.mode).encode('ascii'))
         elif wn.options.quality.mode.upper() in ['TRACE']:
             f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.mode, wn.options.quality.trace_node).encode('ascii'))
         else:
             f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.chemical_name, wn.options.quality.wq_units).encode('ascii'))
-        f.write(entry_float.format('VISCOSITY', wn.options.general.viscosity).encode('ascii'))
+        f.write(entry_float.format('VISCOSITY', wn.options.hydraulic.viscosity).encode('ascii'))
         f.write(entry_float.format('DIFFUSIVITY', wn.options.quality.diffusivity).encode('ascii'))
-        f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.general.specific_gravity).encode('ascii'))
+        f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.hydraulic.specific_gravity).encode('ascii'))
         f.write(entry_float.format('TRIALS', wn.options.solver.trials).encode('ascii'))
         f.write(entry_float.format('ACCURACY', wn.options.solver.accuracy).encode('ascii'))
         f.write(entry_float.format('CHECKFREQ', wn.options.solver.checkfreq).encode('ascii'))
@@ -1580,13 +1580,13 @@ class InpFile(object):
             f.write(entry_string.format('UNBALANCED', wn.options.solver.unbalanced).encode('ascii'))
         else:
             f.write('{:20s} {:s} {:d}\n'.format('UNBALANCED', wn.options.solver.unbalanced, wn.options.solver.unbalanced_value).encode('ascii'))
-        if wn.options.general.pattern is not None:
-            f.write(entry_string.format('PATTERN', wn.options.general.pattern).encode('ascii'))
-        f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.general.demand_multiplier).encode('ascii'))
-        f.write(entry_float.format('EMITTER EXPONENT', wn.options.general.emitter_exponent).encode('ascii'))
+        if wn.options.hydraulic.pattern is not None:
+            f.write(entry_string.format('PATTERN', wn.options.hydraulic.pattern).encode('ascii'))
+        f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.hydraulic.demand_multiplier).encode('ascii'))
+        f.write(entry_float.format('EMITTER EXPONENT', wn.options.hydraulic.emitter_exponent).encode('ascii'))
         f.write(entry_float.format('TOLERANCE', wn.options.solver.tolerance).encode('ascii'))
-        if wn.options.general.map is not None:
-            f.write(entry_string.format('MAP', wn.options.general.map).encode('ascii'))
+        if wn.options.graphics.map_filename is not None:
+            f.write(entry_string.format('MAP', wn.options.graphics.map_filename).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_times(self):
@@ -1712,8 +1712,8 @@ class InpFile(object):
         report = wn.options.results
         if report.pagesize is not None:
             f.write('PAGESIZE   {}\n'.format(report.pagesize).encode('ascii'))
-        if report.file is not None:
-            f.write('FILE       {}\n'.format(report.file).encode('ascii'))
+        if report.rpt_filename is not None:
+            f.write('FILE       {}\n'.format(report.rpt_filename).encode('ascii'))
         if report.status.upper() != 'NO':
             f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
         if report.summary.upper() != 'YES':
@@ -1830,7 +1830,7 @@ class InpFile(object):
             elif key == 'UNITS' and len(current) > 1:
                 self.wn.options.graphics.units = current[1]
             elif key == 'FILE' and len(current) > 1:
-                self.wn.options.graphics.filename = current[1]
+                self.wn.options.graphics.image_filename = current[1]
             elif key == 'OFFSET' and len(current) > 2:
                 self.wn.options.graphics.offset = [current[1], current[2]]
 

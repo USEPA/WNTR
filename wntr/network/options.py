@@ -18,11 +18,11 @@ class WaterNetworkOptions(object):
     dynamically created attributes that are user specific.
 
     """
-    __slots__ = ['_time','_general','_results','_quality','_energy','_solver','_graphics','_user']
+    __slots__ = ['_time','_hydraulic','_results','_quality','_energy','_solver','_graphics','_user']
 
     def __init__(self):
         self._time = TimeOptions()
-        self._general = GeneralOptions()
+        self._hydraulic = HydraulicOptions()
         self._results = ResultsOptions()
         self._quality = QualityOptions()
         self._energy = EnergyOptions()
@@ -32,18 +32,18 @@ class WaterNetworkOptions(object):
         
     def __getstate__(self):
         """Allow pickling with the __slots__ construct"""
-        return self._time, self._general, self._results, self._quality, self._energy, self._solver, self._graphics, self._user
+        return self._time, self._hydraulic, self._results, self._quality, self._energy, self._solver, self._graphics, self._user
     
     def __setstate__(self, state):
         """Allow pickling with the __slots__ construct"""
-        self._time, self._general, self._results, self._quality, self._energy, self._solver, self._graphics, self._user = state
+        self._time, self._hydraulic, self._results, self._quality, self._energy, self._solver, self._graphics, self._user = state
         
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
         ###  self.units == other.units and \
         if self.time == other.time and \
-           self.general == other.general and \
+           self.hydraulic == other.hydraulic and \
            self.quality == other.quality and \
            self.energy == other.energy and \
            self.results.statistic == other.results.statistic and \
@@ -66,15 +66,15 @@ class WaterNetworkOptions(object):
         self._time = opts
 
     @property
-    def general(self):
-        """General WNTR model options"""
-        return self._general
+    def hydraulic(self):
+        """Hydraulic WNTR model options"""
+        return self._hydraulic
     
-    @general.setter
-    def general(self, opts):
-        if not isinstance(opts, GeneralOptions):
-            raise ValueError('general must be a GeneralOptions object')
-        self._general = opts
+    @hydraulic.setter
+    def hydraulic(self, opts):
+        if not isinstance(opts, HydraulicOptions):
+            raise ValueError('hydraulic must be a HydraulicOptions object')
+        self._hydraulic = opts
 
     @property
     def results(self):
@@ -231,16 +231,19 @@ class GraphicsOptions(object):
         (x, y, dx, dy) Dimensions for backdrop image 
     units : str
         Units for backdrop image
-    filename : str
-        Filename where image is located
     offset : 2-tuple or list
         (x,y) offset for the network
+    image_filename : string
+        Filename where image is located
+    map_filename : string
+        Filename used to store node coordinates in (node, x, y) format
     """
-    def __init__(self, filename=None, dim=None, units=None, offset=None):
-        self.dimensions = dim
-        self.units = units
-        self.filename = filename
-        self.offset = offset
+    def __init__(self):
+        self.dimensions = None
+        self.units = None
+        self.offset = None
+        self.image_filename = None
+        self.map_filename = None
 
     def __str__(self):
         text = ""
@@ -251,15 +254,17 @@ class GraphicsOptions(object):
                                                       self.dimensions[3])
         if self.units is not None:
             text += "UNITS {}\n".format(self.units)
-        if self.filename is not None:
-            text += "FILE {}\n".format(self.filename)
+        if self.image_filename is not None:
+            text += "FILE {}\n".format(self.image_filename)
         if self.offset is not None:
             text += "OFFSET {} {}\n".format(self.offset[0], self.offset[1])
+        if self.map_filename is not None:
+            text += "MAP {}\n".format(self.map_filename)
         return text
 
-class GeneralOptions(object): # KAK, HydraulicOptions?
+class HydraulicOptions(object): 
     """
-    Options related to general model, including hydraulics. 
+    Options related to hydraulic model, including hydraulics. 
     
     Attributes
     ----------
@@ -286,8 +291,6 @@ class GeneralOptions(object): # KAK, HydraulicOptions?
         junctions
     emitter_exponent : float, default 0.5
         The exponent used when computing flow from an emitter
-    map : str
-        Filename used to store node coordinates in (node, x, y) format
     """
     def __init__(self):
         # General options
@@ -300,7 +303,6 @@ class GeneralOptions(object): # KAK, HydraulicOptions?
         self.pattern = None
         self.demand_multiplier = 1.0
         self.emitter_exponent = 0.5
-        self.map = None
         
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -313,8 +315,7 @@ class GeneralOptions(object): # KAK, HydraulicOptions?
            abs(self.specific_gravity - other.specific_gravity)<1e-10 and \
            self.pattern == other.pattern and \
            abs(self.demand_multiplier - other.demand_multiplier)<1e-10 and \
-           abs(self.emitter_exponent - other.emitter_exponent)<1e-10 and \
-           self.map == other.map:
+           abs(self.emitter_exponent - other.emitter_exponent)<1e-10:
                return True
         return False
 
@@ -333,7 +334,7 @@ class ResultsOptions(object):
         Output results as statistical values, rather than time-series; options 
         are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the 
         EPANET User Manual)
-    file : str, filename
+    rpt_filename : str, filename
         Provides the filename to use for outputting an EPANET report file.
         By default, this will be the prefix plus ".rpt".
     status : str, default 'NO'
@@ -351,7 +352,7 @@ class ResultsOptions(object):
     def __init__(self):
         self.statistic = 'NONE'
         self.pagesize = None
-        self.file = None
+        self.rpt_filename = None
         self.status = 'NO'
         self.summary = 'YES'
         self.energy = 'NO'
@@ -411,7 +412,7 @@ class ResultsOptions(object):
         ###  self.units == other.units and \
         if self.statistic == other.statistic and \
            self.pagesize == other.pagesize and \
-           self.file == other.file and \
+           self.rpt_filename == other.rpt_filename and \
            self.status == other.status and \
            self.summary == other.summary and \
            self.energy == other.energy and \

@@ -80,7 +80,7 @@ def average_water_consumed(wn):
         for i in range(numdemands):
             pattern_name = node.demand_pattern_name
             if not pattern_name:
-                pattern_name = wn.options.general.pattern
+                pattern_name = wn.options.hydraulic.pattern
             pattern[i] = wn.get_pattern(pattern_name)
             L[i] = len(pattern[i])
         lcm_n = _lcml(L.values())
