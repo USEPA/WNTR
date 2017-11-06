@@ -2165,7 +2165,6 @@ class Junction(Node):
 
     def __init__(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0):
         super(Junction, self).__init__(name)
-        self._prev_expected_demand = None
         self.demand_timeseries_list = Demands()
         if base_demand:
             self.demand_timeseries_list.append((base_demand, demand_pattern, '_base_demand'))
@@ -2585,7 +2584,7 @@ class Reservoir(Node):
     """
     def __init__(self, name, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(name)
-        self.head = None
+        self.head = base_head
         self.head_timeseries = TimeSeries(base_head, head_pattern, name)
 
     def __eq__(self, other):

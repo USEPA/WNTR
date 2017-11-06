@@ -1315,7 +1315,6 @@ class HydraulicModel(object):
         for name, node in self._wn.nodes(Junction):
             node._prev_head = node.head
             node._prev_demand = node.demand
-            node._prev_expected_demand = node.demand_timeseries_list
             node._prev_leak_demand = node.leak_demand
         for name, node in self._wn.nodes(Tank):
             node._prev_head = node.head
