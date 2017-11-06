@@ -1482,23 +1482,25 @@ class InpFile(object):
                     opts.general.hydraulics_filename = words[2]
                 elif key == 'QUALITY':
                     mode = words[1].upper()
-                    if mode in ['NONE', 'AGE', 'TRACE']:
+                    if mode in ['NONE', 'AGE']:
                         opts.quality.mode = words[1].upper()
+                    elif mode in ['TRACE']:
+                        opts.quality.mode = 'TRACE'
+                        opts.quality.trace_node = words[2]
                     else:
                         opts.quality.mode = 'CHEMICAL'
                         opts.quality.chemical_name = words[1]
-                    if len(words) > 2:
-                        if 'mg' in words[2]:
-                            self.mass_units = MassUnits.mg
-                            opts.quality.wq_units = words[2]
-                        elif 'ug' in words[2]:
-                            self.mass_units = MassUnits.ug
-                            opts.quality.wq_units = words[2]
-                        else:
-                            opts.quality.trace_node = words[2]
-                    else:
-                        self.mass_units = MassUnits.mg
-                        opts.quality.wq_units = 'mg/L'
+                        if len(words) > 2:
+                            if 'mg' in words[2].lower():
+                                self.mass_units = MassUnits.mg
+                                opts.quality.wq_units = words[2]
+                            elif 'ug' in words[2].lower():
+                                self.mass_units = MassUnits.ug
+                                opts.quality.wq_units = words[2]
+                            else:
+                                raise ValueError('Invalid chemical units in OPTIONS section')
+                                self.mass_units = MassUnits.mg
+                                opts.quality.wq_units = 'mg/L'
                 elif key == 'VISCOSITY':
                     opts.general.viscosity = float(words[1])
                 elif key == 'DIFFUSIVITY':
