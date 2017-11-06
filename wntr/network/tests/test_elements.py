@@ -154,7 +154,7 @@ def test_TimeSeries():
     source1 = elements.Source('source1', 'NODE-1131', 'CONCEN', 1000.0, pattern5)
     source2 = elements.Source('source1', 'NODE-1131', 'CONCEN', 1000.0, pattern5)
     nose.tools.assert_equal(source1, source2)
-    nose.tools.assert_equal(source1.quality, 1000.0)
+    nose.tools.assert_equal(source1.strength_timeseries.base_value, 1000.0)
     
 
 def test_Demands():

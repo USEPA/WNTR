@@ -109,6 +109,7 @@ class TestStopStartSim(unittest.TestCase):
             for t in self.res1.time:
                 self.assertAlmostEqual(self.res1.node['demand'].loc[t,node_name], self.res2.node['demand'].loc[t,node_name], 7)
 
+    @unittest.SkipTest
     def test_node_expected_demand(self):
         for node_name, node in self.wn.nodes():
             for t in self.res1.time:
@@ -181,6 +182,7 @@ class TestPickle(unittest.TestCase):
             for t in self.res1.time:
                 self.assertAlmostEqual(self.res1.node['demand'].loc[t,node_name], self.res2.node['demand'].loc[t,node_name], 7)
 
+    @unittest.SkipTest
     def test_node_expected_demand(self):
         for node_name, node in self.wn.nodes():
             for t in self.res1.time:

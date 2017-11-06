@@ -53,8 +53,8 @@ class TestNetworkCreation(unittest.TestCase):
 
     def test_reservoir_attr(self):
         j = self.wn.get_node('RESERVOIR-3323')
-        self.assertAlmostEqual(j.base_head, 27.45*0.3048)
-        self.assertEqual(j.head_pattern_name, None)
+        self.assertAlmostEqual(j.head_timeseries.base_value, 27.45*0.3048)
+        self.assertEqual(j.head_timeseries.pattern_name, None)
 
 class TestNetworkMethods(unittest.TestCase):
 
@@ -115,10 +115,9 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_reservoir('r1', 30, 'pattern1')
         n = wn.get_node('r1')
         self.assertEqual(n._name, 'r1')
-        self.assertEqual(n.base_head, 30.0)
-        self.assertEqual(n.head_pattern_name, 'pattern1')
+        self.assertEqual(n.head_timeseries.base_value, 30.0)
+        self.assertEqual(n.head_timeseries.pattern_name, 'pattern1')
         self.assertEqual(list(wn._graph.nodes()),['r1'])
-        self.assertEqual(type(n.base_head), float)
 
     def test_add_pipe(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -168,8 +167,8 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(s.name, 's1')
         self.assertEqual(s.node_name, 'j1')
         self.assertEqual(s.source_type, 'SETPOINT')
-        self.assertEqual(s.quality, 100)
-        self.assertEqual(s.pattern_name, 'pat1')
+        self.assertEqual(s.strength_timeseries.base_value, 100)
+        self.assertEqual(s.strength_timeseries.pattern_name, 'pat1')
 
     def test_add_pipe_with_cv(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -481,7 +480,7 @@ class TestInpFileWriter(unittest.TestCase):
         for name, node in self.wn.nodes(self.wntr.network.Reservoir):
             node2 = self.wn2.get_node(name)
             self.assertEqual(node == node2, True)
-            self.assertAlmostEqual(node.base_head, node2.base_head, 5)
+            self.assertAlmostEqual(node.head_timeseries.base_value, node2.head_timeseries.base_value, 5)
 
     def test_tanks(self):
         for name, node in self.wn.nodes(self.wntr.network.Tank):

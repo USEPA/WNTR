@@ -1933,7 +1933,7 @@ class WaterNetworkModel(object):
 
         for name, node in self.nodes(Reservoir):
             node._prev_head = None
-            node.head = node.base_head
+            node.head = node.head_timeseries.base_value
             node._prev_demand = None
             node.demand = None
             node._prev_leak_demand = None
