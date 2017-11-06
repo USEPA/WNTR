@@ -1009,7 +1009,8 @@ class WaterNetworkModel(object):
 
     def reset_demand(self, demand, pattern_prefix='ResetDemand'):
         """
-        Resets demands.
+        Resets demands using values in a DataFrame. 
+        
         New demands are specified in a pandas DataFrame indexed by simulation
         time (in seconds) and one column for each node. The method resets
         node demands by creating a new demand pattern for each node and
@@ -1021,13 +1022,13 @@ class WaterNetworkModel(object):
         Parameters
         ----------
         demand : pandas DataFrame
-            Name of the node.
+            A pandas DataFrame containing demands (index = time, columns = node names)
 
-        pattern_prefix: str
+        pattern_prefix: string
             Pattern prefix, default = 'ResetDemand'
         """
         for node_name, node in self.nodes():
-
+            
             # Extact the node demand pattern and resample to match the pattern timestep
             demand_pattern = demand.loc[:, node_name]
             demand_pattern.index = demand_pattern.index.astype('timedelta64[s]')
@@ -2350,7 +2351,6 @@ class Junction(Node):
         """
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
-
 
 class Tank(Node):
     """

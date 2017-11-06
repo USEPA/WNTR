@@ -199,9 +199,6 @@ def test_add_get_remove_num():
     wn.add_source('new_source', 'new_junc', 'CONCEN', 1, 'new_pattern')
     wn.get_source('new_source')
     
-#    wn._add_demand('new_demand', 'new_junc')
-#    wn._get_demand('new_demand')
-    
     nums = [wn.num_junctions,
            wn.num_tanks,
            wn.num_reservoirs,
@@ -210,9 +207,8 @@ def test_add_get_remove_num():
            wn.num_valves,
            wn.num_patterns,
            wn.num_curves,
-           wn.num_sources,]
-#           wn._num_demands]
-    expected = [93,4,3,118,3,1,6,3,1,]#1]
+           wn.num_sources]
+    expected = [93,4,3,118,3,1,6,3,1]
     assert_list_equal(nums, expected)
     
     wn.remove_node('new_junc')
@@ -224,7 +220,6 @@ def test_add_get_remove_num():
     wn.remove_pattern('new_pattern')
     wn.remove_curve('new_curve')
     wn.remove_source('new_source')
-#    wn._remove_demand('new_demand')
     
     nums = [wn.num_junctions,
            wn.num_tanks,
@@ -234,7 +229,6 @@ def test_add_get_remove_num():
            wn.num_valves,
            wn.num_patterns,
            wn.num_curves,
-           wn.num_sources,]
-#           wn._num_demands]
-    expected = [92,3,2,117,2,0,5,2,0,]#0]
+           wn.num_sources]
+    expected = [92,3,2,117,2,0,5,2,0]
     assert_list_equal(nums, expected)

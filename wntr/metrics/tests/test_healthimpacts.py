@@ -35,7 +35,7 @@ def test_mass_consumed():
     wn = wntr.network.WaterNetworkModel(inp_file)
 
     wn.options.quality.mode = 'CHEMICAL'
-    wn.options.general.units = 'LPS'
+    wn.options.hydraulic.units = 'LPS'
     newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
     wn.add_pattern(newpat.name, newpat)
     
