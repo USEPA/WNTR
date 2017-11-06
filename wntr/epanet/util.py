@@ -734,7 +734,7 @@ class StatisticsType(enum.Enum):
 
 
 class QualType(enum.Enum):
-    """Provide the EPANET water quality simulation quality type.
+    """Provide the EPANET water quality simulation mode.
 
     .. rubric:: Enum Members
 

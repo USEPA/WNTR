@@ -3,9 +3,9 @@
 v0.1.4 (Master branch)
 ---------------------------------------------------
 
-* Added a much faster EPANET binary output file reader
+* Added a faster EPANET binary output file reader
 * Added support for FCVs in the WNTRSimulator
-* Added ability to get the names of all required objects that are queried or acted upon by the control
+* Added ability to get the names of all required objects that are queried or acted upon by the control (see `requires` method on each control class)
 * Modified the structure of the WaterNetworkOptions object to group options into types (API change, see :class:`~wntr.network.options.WaterNetworkOptions`)
 * Created a Pattern object that can be called to get the pattern value at a specific time (see :class:`~wntr.network.elements.Pattern`)
 * Created a TimeSeries object that contains a base value, Pattern object, and category.  The object can be called to get its value at a specific time.

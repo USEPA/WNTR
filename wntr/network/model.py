@@ -117,10 +117,6 @@ class WaterNetworkModel(object):
     def add_junction(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0, coordinates=None):
         """
         Adds a junction to the water network model.
-        
-        .. versionchanged:: 0.1.5
-            The previous parameter *demand_pattern_name* was changed to **demand_pattern** to allow passing of a 
-            :class:`wntr.network.elements.Pattern` object.
 
         Parameters
         -------------------
@@ -211,10 +207,6 @@ class WaterNetworkModel(object):
     def add_reservoir(self, name, base_head=0.0, head_pattern=None, coordinates=None):
         """
         Adds a reservoir to the water network model.
-
-        .. versionchanged:: 0.1.5
-            The previous parameter *head_pattern_name* was changed to **head_pattern** to allow passing of a 
-            :class:`wntr.network.elements.Pattern` object.
 
         Parameters
         ----------
@@ -2163,9 +2155,6 @@ class Link(object):
 class Junction(Node):
     """
     Junction class that is inherited from Node
-
-    .. versionchanged:: 0.1.5
-        Parameter name changed to `demand_pattern`; The `demands` attribute was added.
 
     Parameters
     ----------

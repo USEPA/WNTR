@@ -7,8 +7,8 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Simulate trace contaminant
-wn.options.quality.type = 'TRACE'
-wn.options.quality.value = '111'
+wn.options.quality.mode = 'TRACE'
+wn.options.quality.trace_node = '111'
 
 # Simulate hydraulics
 sim = wntr.sim.EpanetSimulator(wn)
@@ -18,7 +18,7 @@ results = sim.run_sim()
 fig = plt.figure(figsize=(12,10), facecolor='w')
 ax = plt.gca()
 
-values = results.node['quality'].loc[ :, :]
+values = results.node.loc['quality',:,:]
 initial_values = values.loc[0, :]
 nodes, edges = wntr.graphics.plot_network(wn, node_attribute=initial_values, 
     ax=ax, node_range = [0,100], node_size=30, title='Trace at 0 hours')

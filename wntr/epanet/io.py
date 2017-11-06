@@ -210,7 +210,7 @@ def _sec_to_string(sec):
 
 class InpFile(object):
     """
-	EPANET INP file reader and writer class.
+	 EPANET INP file reader and writer class.
 
     This class provides read
     and write functionality for EPANET INP files.
@@ -2349,11 +2349,6 @@ class BinFile(object):
             :func:`~save_ep_line` and :func:`~finalize_save` to change how extended period
             simulation results in a different format (such as directly to a file or database).
             
-            
-        .. verisionchanged:: 0.1.3
-            Added fast handler by default with *custom_handlers* option
-            
-
         """
         logger.debug('Read binary EPANET data from %s',filename)
         with open(filename, 'rb') as fin:
