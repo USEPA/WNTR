@@ -38,13 +38,13 @@ fire_flow_pattern = wntr.network.elements.Pattern.BinaryPattern('fire_flow',
     end_time=fire_end, duration=wn.options.time.duration)
 wn.add_pattern('fire_flow', fire_flow_pattern)
 node = wn.get_node('197')
-node.expected_demand.append( (fire_flow_demand, fire_flow_pattern, 'Fire flow'))
+node.demand_timeseries_list.append( (fire_flow_demand, fire_flow_pattern, 'Fire flow'))
     
 # Reduce supply, increase demand
 for reservoir_name, reservoir in wn.reservoirs():
     reservoir.head_timeseries.base_value = reservoir.head_timeseries.base_value*0.9
 for junction_name, junction in wn.junctions():
-    for demand in junction.expected_demand:
+    for demand in junction.demand_timeseries_list:
         demand.base_value = demand.base_value*1.15
     
 # Simulate 

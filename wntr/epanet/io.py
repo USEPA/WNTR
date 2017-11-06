@@ -478,9 +478,9 @@ class InpFile(object):
         nnames.sort()
         for junction_name in nnames:
             junction = wn._junctions[junction_name]
-            if junction.expected_demand:
-                base_demand = junction.expected_demand[0].base_value
-                demand_pattern = junction.expected_demand[0].pattern_name
+            if junction.demand_timeseries_list:
+                base_demand = junction.demand_timeseries_list[0].base_value
+                demand_pattern = junction.demand_timeseries_list[0].pattern_name
                 if demand_pattern == wn.options.hydraulic.pattern:
                     demand_pattern = None
             else:
@@ -1218,7 +1218,7 @@ class InpFile(object):
                 pattern = None
             else:
                 pattern = self.wn.get_pattern(current[2])
-            node.expected_demand.append((to_si(self.flow_units, float(current[1]), HydParam.Demand),
+            node.demand_timeseries_list.append((to_si(self.flow_units, float(current[1]), HydParam.Demand),
                                          pattern, category))
 
     def _write_demands(self, f, wn):
@@ -1229,7 +1229,7 @@ class InpFile(object):
         nodes = list(wn._junctions.keys())
         nodes.sort()
         for node in nodes:
-            demands = wn.get_node(node).expected_demand
+            demands = wn.get_node(node).demand_timeseries_list
             for ct, demand in enumerate(demands):
                 if ct == 0: continue
                 E = {'node': node,
