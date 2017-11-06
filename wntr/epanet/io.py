@@ -1710,7 +1710,7 @@ class InpFile(object):
     def _write_report(self, f, wn):
         f.write('[REPORT]\n'.encode('ascii'))
         report = wn.options.results
-        if report.pagesize != 0:
+        if report.pagesize is not None:
             f.write('PAGESIZE   {}\n'.format(report.pagesize).encode('ascii'))
         if report.file is not None:
             f.write('FILE       {}\n'.format(report.file).encode('ascii'))
