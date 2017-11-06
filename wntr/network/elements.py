@@ -372,7 +372,7 @@ class Source(object):
     """
 
     def __init__(self, name, node_name, source_type, strength, pattern=None):
-        self.strength_timeseries = TimeSeries(base=strength, pattern=pattern)
+        self.strength_timeseries = TimeSeries(strength, pattern, name)
         self.name = name
         self.node_name = node_name
         self.source_type = source_type

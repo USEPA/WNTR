@@ -66,7 +66,7 @@ reservoir.head_timeseries.base_value = reservoir.head_timeseries*0.9 # decrease 
 
 # Change demand
 junction = wn.get_node('121')
-junction.expected_demand[0].base_value = junction.expected_demand[0].base_value*1.15
+junction.demand_timeseries_list[0].base_value = junction.demand_timeseries_list[0].base_value*1.15
 
 # Set nominal pressure to 15 meters for all nodes
 for junction_name, junction in wn.junctions():

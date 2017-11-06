@@ -1260,7 +1260,7 @@ class HydraulicModel(object):
             #if junction_id in self.isolated_junction_ids:
             #    self.junction_demand[junction_id] = 0.0
             #else:
-            self.junction_demand[junction_id] = junction.expected_demand(self._wn.sim_time)
+            self.junction_demand[junction_id] = junction.demand_timeseries_list(self._wn.sim_time)
             if junction._leak:
                 self.leak_status[junction_id] = junction.leak_status
         for link_name, link in self._wn.links():
@@ -1315,7 +1315,7 @@ class HydraulicModel(object):
         for name, node in self._wn.nodes(Junction):
             node._prev_head = node.head
             node._prev_demand = node.demand
-            node._prev_expected_demand = node.expected_demand
+            node._prev_expected_demand = node.demand_timeseries_list
             node._prev_leak_demand = node.leak_demand
         for name, node in self._wn.nodes(Tank):
             node._prev_head = node.head

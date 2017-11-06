@@ -2166,9 +2166,9 @@ class Junction(Node):
     def __init__(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0):
         super(Junction, self).__init__(name)
         self._prev_expected_demand = None
-        self.expected_demand = Demands()
+        self.demand_timeseries_list = Demands()
         if base_demand:
-            self.expected_demand.append((base_demand, demand_pattern, '_base_demand'))
+            self.demand_timeseries_list.append((base_demand, demand_pattern, '_base_demand'))
         self.elevation = elevation
 
         self.nominal_pressure = 20.0
@@ -2196,15 +2196,15 @@ class Junction(Node):
 
     @property
     def base_demand(self):
-        if len(self.expected_demand) > 0:
-            dem0 = self.expected_demand[0]
+        if len(self.demand_timeseries_list) > 0:
+            dem0 = self.demand_timeseries_list[0]
             return dem0.base_value
         return 0
 
     @property
     def demand_pattern_name(self):
-        if len(self.expected_demand) > 0:
-            dem0 = self.expected_demand[0]
+        if len(self.demand_timeseries_list) > 0:
+            dem0 = self.demand_timeseries_list[0]
             return dem0.pattern_name
         return None
 
