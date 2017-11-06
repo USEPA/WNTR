@@ -143,8 +143,6 @@ class WNTRSimulator(WaterNetworkSimulator):
         """
         self.time_per_step = []
 
-        self._get_demand_dict()
-        
         tank_controls = self._wn._get_all_tank_controls()
         cv_controls = self._wn._get_cv_controls()
         pump_controls = self._wn._get_pump_controls()
@@ -223,7 +221,6 @@ class WNTRSimulator(WaterNetworkSimulator):
             # model.identify_isolated_junctions()
             if not first_step:
                 model.update_tank_heads()
-            model.update_junction_demands(self._demand_dict)
             model.set_network_inputs_by_id()
             model.set_jacobian_constants()
 
@@ -293,18 +290,6 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         model.get_results(results)
         return results
-
-    def _get_demand_dict(self):
-
-        # Number of hydraulic timesteps
-        self._n_timesteps = int(round(self._wn.options.time.duration / self._wn.options.time.hydraulic_timestep)) + 1
-
-        # Get all demand for complete time interval
-        self._demand_dict = {}
-        for node_name, node in self._wn.nodes(Junction):
-            demand_values = self.get_node_demand(node_name)
-            for t in range(self._n_timesteps):
-                self._demand_dict[(node_name, t)] = demand_values[t]
 
     def _check_controls(self, presolve, last_backup_time=None):
         if presolve:

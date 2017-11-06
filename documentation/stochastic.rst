@@ -54,7 +54,7 @@ The example **fragility_curves.py** uses fragility curves to
 determine probability of failure:
 
 .. literalinclude:: ../examples/fragility_curves.py
-   :lines: 2, 25-27
+   :lines: 2, 25-28
 
 :numref:`fig-fragility` illustrates a fragility curve based on peak ground acceleration with
 two damage states: Minor damage and Major damage.  For example, if the peak ground acceleration is 0.5 at 

@@ -32,11 +32,11 @@ Conceptually, Panels can be visualized as blocks of data with 3 axis, as shown i
 Node attributes include:
 
 * Demand
-* Expected demand
+* Expected demand (only when the WNTRSimulator is used)
 * Leak demand (only when the WNTRSimulator is used)
 * Pressure
 * Head
-* Quality (only when the EpanetSimulator is used for a water quality simulation. Water age, tracer percent, or chemical concentration is stored, depending on the type of water quality analysis)
+* Quality (only when the EpanetSimulator is used. Water age, tracer percent, or chemical concentration is stored, depending on the mode of water quality analysis)
 * Type (junction, tank, or reservoir)
 	
 Link attributes include:

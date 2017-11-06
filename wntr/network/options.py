@@ -198,6 +198,22 @@ class TimeOptions(object):
                return True
         return False
 
+    def __repr__(self):
+        s = 'Time options:\n'
+        s += '\t{0:<20}: {1:<20}\n'.format('duration', self.duration)
+        s += '\t{0:<20}: {1:<20}\n'.format('hydraulic_timestep', self.hydraulic_timestep)
+        s += '\t{0:<20}: {1:<20}\n'.format('quality_timestep', self.quality_timestep)
+        s += '\t{0:<20}: {1:<20}\n'.format('rule_timestep', self.rule_timestep)
+        s += '\t{0:<20}: {1:<20}\n'.format('pattern_timestep', self.pattern_timestep)
+        s += '\t{0:<20}: {1:<20}\n'.format('pattern_start', self.pattern_start)
+        s += '\t{0:<20}: {1:<20}\n'.format('report_timestep', self.report_timestep)
+        s += '\t{0:<20}: {1:<20}\n'.format('report_start', self.report_start)
+        s += '\t{0:<20}: {1:<20}\n'.format('start_clocktime', self.start_clocktime)
+        return s
+
+    def __str__(self):
+        return self.__repr__()
+
     def __ne__(self, other):
         return not self == other
 

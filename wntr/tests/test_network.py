@@ -54,7 +54,7 @@ class TestNetworkCreation(unittest.TestCase):
     def test_reservoir_attr(self):
         j = self.wn.get_node('RESERVOIR-3323')
         self.assertAlmostEqual(j.base_head, 27.45*0.3048)
-        self.assertEqual(j.head_pattern, None)
+        self.assertEqual(j.head_pattern_name, None)
 
 class TestNetworkMethods(unittest.TestCase):
 

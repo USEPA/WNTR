@@ -12,7 +12,7 @@ from scipy.optimize import fsolve
 
 from .graph import WntrMultiDiGraph
 from .controls import IfThenElseControl, ControlAction, _FCVControl, ConditionalControl, TimeControl
-from .controls import _MultiConditionalControl, _PRVControl, _CheckValveHeadControl
+from .controls import _MultiConditionalControl, _PRVControl, _CheckValveHeadControl, _ValveNewSettingControl
 from .options import WaterNetworkOptions
 from .elements import Curve, Pattern, Source
 from .elements import LinkStatus
@@ -20,6 +20,7 @@ from .elements import Demands, TimeSeries
 import wntr.epanet
 
 logger = logging.getLogger(__name__)
+
 
 class WaterNetworkModel(object):
     """
@@ -39,7 +40,7 @@ class WaterNetworkModel(object):
 
         # Time parameters
         self.sim_time = 0.0
-        self.prev_sim_time = -np.inf  # the last time at which results were accepted
+        self._prev_sim_time = -np.inf  # the last time at which results were accepted
 
         # Initialize network size parameters
         self._num_junctions = 0
@@ -116,10 +117,6 @@ class WaterNetworkModel(object):
     def add_junction(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0, coordinates=None):
         """
         Adds a junction to the water network model.
-        
-        .. versionchanged:: 0.1.5
-            The previous parameter *demand_pattern_name* was changed to **demand_pattern** to allow passing of a 
-            :class:`wntr.network.elements.Pattern` object.
 
         Parameters
         -------------------
@@ -210,10 +207,6 @@ class WaterNetworkModel(object):
     def add_reservoir(self, name, base_head=0.0, head_pattern=None, coordinates=None):
         """
         Adds a reservoir to the water network model.
-
-        .. versionchanged:: 0.1.5
-            The previous parameter *head_pattern_name* was changed to **head_pattern** to allow passing of a 
-            :class:`wntr.network.elements.Pattern` object.
 
         Parameters
         ----------
@@ -1254,7 +1247,7 @@ class WaterNetworkModel(object):
                 tank_controls.append(control)
 
                 if not link_has_cv:
-                    control = _MultiConditionalControl([(tank,'head'), (tank, 'prev_head'),
+                    control = _MultiConditionalControl([(tank,'head'), (tank, '_prev_head'),
                                                                     (self, 'sim_time')],
                                                                    [np.greater, np.less_equal,np.greater],
                                                                    [min_head+self._Htol, min_head+self._Htol, 0.0],
@@ -1304,7 +1297,7 @@ class WaterNetworkModel(object):
                 tank_controls.append(control)
 
                 if not link_has_cv:
-                    control = _MultiConditionalControl([(tank,'head'),(tank,'prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
+                    control = _MultiConditionalControl([(tank,'head'),(tank,'_prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
                     control._partial_step_for_tanks = False
                     control._priority = 0
                     control.name = link_name+'opened because tank '+tank.name+' head is less than max head'
@@ -1378,6 +1371,10 @@ class WaterNetworkModel(object):
     def _get_valve_controls(self):
         valve_controls = []
         for valve_name, valve in self.links(Valve):
+
+            control = _ValveNewSettingControl(self, valve)
+            control.name = valve.name + ' new setting for valve control'
+            valve_controls.append(control)
 
             if valve.valve_type == 'PRV':
                 close_control_action = ControlAction(valve, '_status', LinkStatus.Closed)
@@ -1904,7 +1901,7 @@ class WaterNetworkModel(object):
         AM on the first day to the time at the prevous hydraulic
         timestep.
         """
-        return self.prev_sim_time + self.options.time.start_clocktime
+        return self._prev_sim_time + self.options.time.start_clocktime
 
     @property
     def _clock_time(self):
@@ -1922,44 +1919,44 @@ class WaterNetworkModel(object):
         Resets all initial values in the network.
         """
         self.sim_time = 0.0
-        self.prev_sim_time = -np.inf
+        self._prev_sim_time = -np.inf
 
         for name, node in self.nodes(Junction):
-            node.prev_head = None
+            node._prev_head = None
             node.head = None
-            node.prev_demand = None
+            node._prev_demand = None
             node.demand = None
-            node.prev_leak_demand = None
+            node._prev_leak_demand = None
             node.leak_demand = None
             node.leak_status = False
 
         for name, node in self.nodes(Tank):
-            node.prev_head = None
+            node._prev_head = None
             node.head = node.init_level+node.elevation
-            node.prev_demand = None
+            node._prev_demand = None
             node.demand = None
-            node.prev_leak_demand = None
+            node._prev_leak_demand = None
             node.leak_demand = None
             node.leak_status = False
 
         for name, node in self.nodes(Reservoir):
-            node.prev_head = None
+            node._prev_head = None
             node.head = node.base_head
-            node.prev_demand = None
+            node._prev_demand = None
             node.demand = None
-            node.prev_leak_demand = None
+            node._prev_leak_demand = None
             node.leak_demand = None
 
         for name, link in self.links(Pipe):
             link.status = link._base_status
-            link.prev_status = None
-            link.prev_flow = None
+            link._prev_status = None
+            link._prev_flow = None
             link.flow = None
 
         for name, link in self.links(Pump):
             link.status = link._base_status
-            link.prev_status = None
-            link.prev_flow = None
+            link._prev_status = None
+            link._prev_flow = None
             link.flow = None
             link.power = link._base_power
             link._power_outage = False
@@ -1967,11 +1964,11 @@ class WaterNetworkModel(object):
 
         for name, link in self.links(Valve):
             link.status = link._base_status
-            link.prev_status = None
-            link.prev_flow = None
+            link._prev_status = None
+            link._prev_flow = None
             link.flow = None
             link.setting = link._base_setting
-            link.prev_setting = None
+            link._prev_setting = None
 
     def read_inpfile(self, filename):
         """
@@ -2026,14 +2023,13 @@ class Node(object):
 
     """
     def __init__(self, name):
-
         self._name = name
-        self.prev_head = None
+        self._prev_head = None
         self.head = None
-        self.prev_demand = None
+        self._prev_demand = None
         self.demand = None
         self.leak_demand = None
-        self.prev_leak_demand = None
+        self._prev_leak_demand = None
         self._initial_quality = None
         self.tag = None
 
@@ -2095,14 +2091,13 @@ class Link(object):
     """
 
     def __init__(self, link_name, start_node_name, end_node_name):
-
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
-        self.prev_status = None
+        self._prev_status = None
         self._base_status = LinkStatus.opened
         self.status = LinkStatus.opened
-        self.prev_flow = None
+        self._prev_flow = None
         self.flow = None
         self.tag = None
         self._vertices = []
@@ -2156,12 +2151,10 @@ class Link(object):
         """
         return self._link_name
 
+
 class Junction(Node):
     """
     Junction class that is inherited from Node
-
-    .. versionchanged:: 0.1.5
-        Parameter name changed to `demand_pattern`; The `demands` attribute was added.
 
     Parameters
     ----------
@@ -2180,21 +2173,20 @@ class Junction(Node):
 
     def __init__(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0):
         super(Junction, self).__init__(name)
-#        self._base_demand = base_demand
-        self.prev_expected_demand = None
-        self.expected_demand = base_demand
-#        if demand_pattern: # KAK
-#            self._demand_pattern_name = demand_pattern.name
-#        else:
-#            self._demand_pattern_name = None
-        self.demands = Demands()
-        if base_demand: self.demands.append((base_demand, demand_pattern, '_base_demand'))
-#        self._categorized_demands = {}  # _categorized_demands[category] = (base_demand, pattern_name)
+        self._prev_expected_demand = None
+        self.expected_demand = Demands()
+        if base_demand:
+            self.expected_demand.append((base_demand, demand_pattern, '_base_demand'))
         self.elevation = elevation
+
         self.nominal_pressure = 20.0
-        "The nominal pressure attribute is used for pressure-dependent demand. This is the lowest pressure at which the customer receives the full requested demand."
+        """The nominal pressure attribute is used for pressure-dependent demand. This is the lowest pressure at
+        which the customer receives the full requested demand."""
+
         self.minimum_pressure = 0.0
-        "The minimum pressure attribute is used for pressure-dependent demand simulations. Below this pressure, the customer will not receive any water."
+        """The minimum pressure attribute is used for pressure-dependent demand simulations. Below this pressure,
+        the customer will not receive any water."""
+
         self._leak = False
         self.leak_status = False
         self.leak_area = 0.0
@@ -2208,15 +2200,15 @@ class Junction(Node):
 
     @property
     def base_demand(self):
-        if len(self.demands) > 0:
-            dem0 = self.demands[0]
+        if len(self.expected_demand) > 0:
+            dem0 = self.expected_demand[0]
             return dem0.base_value
         return 0
-        
+
     @property
-    def demand_pattern_name(self): 
-        if len(self.demands) > 0:
-            dem0 = self.demands[0]
+    def demand_pattern_name(self):
+        if len(self.expected_demand) > 0:
+            dem0 = self.expected_demand[0]
             return dem0.pattern_name
         return None
 
@@ -2592,6 +2584,7 @@ class Tank(Node):
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
 
+
 class Reservoir(Node):
     """
     Reservoir class that is inherited from Node
@@ -2607,34 +2600,33 @@ class Reservoir(Node):
         Head pattern.
     """
     def __init__(self, name, base_head=0.0, head_pattern=None):
-
         super(Reservoir, self).__init__(name)
-        self.base_head = base_head
-        self.head = base_head
-        self.head_pattern = head_pattern
-        self.heads = TimeSeries(base_head, head_pattern, name)
-
-    @property
-    def head_pattern_name(self):
-        if self.head_pattern:
-            return self.head_pattern.name
-        return None
+        self.head = None
+        self.expected_head = TimeSeries(base_head, head_pattern, name)
 
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
         if not super(Reservoir, self).__eq__(other):
             return False
-        if abs(self.base_head - other.base_head)<1e-10 and \
-           self.heads == other.heads:
+        if self.expected_head == other.expected_head:
             return True
-        return True
+        return False
 
     def __repr__(self):
         return "<Reservoir '{}'>".format(self._name)
 
     def __hash__(self):
         return id(self)
+
+    @property
+    def base_head(self):
+        return self.expected_head.base_value
+
+    @property
+    def head_pattern_name(self):
+        return self.expected_head.pattern_name
+
 
 class Pipe(Link):
     """
@@ -2732,9 +2724,8 @@ class Pump(Link):
 
         super(Pump, self).__init__(name, start_node_name, end_node_name)
         self._cv_status = LinkStatus.opened
-        self.prev_speed = None
-        self.speed = speed
-        self.pattern = pattern
+        self.speed = None
+        self.expected_speed = TimeSeries(speed, pattern, name)
         self.curve = None
         self.efficiency = None
         self.energy_price = None
@@ -2753,6 +2744,14 @@ class Pump(Link):
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
 
     @property
+    def base_speed(self):
+        return self.expected_speed.base_value
+
+    @property
+    def speed_pattern_name(self):
+        return self.expected_speed.pattern_name
+
+    @property
     def curve_name(self):
         if self.curve:
             return self.curve.name
@@ -2765,10 +2764,6 @@ class Pump(Link):
     def setting(self):
         """Alias to speed for consistency with other link types"""
         return self.speed
-
-    @setting.setter
-    def setting(self, value):
-        self.speed = value
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2902,7 +2897,7 @@ class Valve(Link):
         self.diameter = diameter
         self.valve_type = valve_type
         self.minor_loss = minor_loss
-        self.prev_setting = None
+        self._prev_setting = None
         self.setting = setting
         self._base_setting = setting
         self._base_status = LinkStatus.active
