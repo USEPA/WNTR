@@ -2705,7 +2705,7 @@ class Pump(Link):
         super(Pump, self).__init__(name, start_node_name, end_node_name)
         self._cv_status = LinkStatus.opened
         self.speed = None
-        self.expected_speed = TimeSeries(speed, pattern, name)
+        self.speed_timeseries = TimeSeries(speed, pattern, name)
         self.curve = None
         self.efficiency = None
         self.energy_price = None
@@ -2722,14 +2722,6 @@ class Pump(Link):
             self._base_power = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
-
-    @property
-    def base_speed(self):
-        return self.expected_speed.base_value
-
-    @property
-    def speed_pattern_name(self):
-        return self.expected_speed.pattern_name
 
     @property
     def curve_name(self):

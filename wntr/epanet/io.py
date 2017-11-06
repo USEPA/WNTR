@@ -687,7 +687,7 @@ class InpFile(object):
                  'ptype': pump.info_type,
                  'params': '',
                  'speed_keyword': 'SPEED',
-                 'speed': pump.expected_speed.base_value,
+                 'speed': pump.speed_timeseries.base_value,
                  'com': ';'}
             if pump.info_type == 'HEAD':
                 E['params'] = pump.curve.name
@@ -696,11 +696,11 @@ class InpFile(object):
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
             tmp_entry = _PUMP_ENTRY
-            if pump.expected_speed.pattern is not None:
+            if pump.speed_timeseries.pattern is not None:
                 tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
                              ' {pattern_keyword:10s} {pattern:20s} {com:>3s}\n')
                 E['pattern_keyword'] = 'PATTERN'
-                E['pattern'] = pump.expected_speed.pattern.name
+                E['pattern'] = pump.speed_timeseries.pattern.name
             f.write(tmp_entry.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 

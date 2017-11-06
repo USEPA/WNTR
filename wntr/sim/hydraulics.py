@@ -1282,7 +1282,7 @@ class HydraulicModel(object):
                 self.pipe_resistance_coefficients[valve_id] = 0.0
         for pump_name, pump in self._wn.links(Pump):
             pump_id = self._link_name_to_id[pump_name]
-            self.pump_speeds[pump_id] = pump.expected_speed(self._wn.sim_time)
+            self.pump_speeds[pump_id] = pump.speed_timeseries(self._wn.sim_time)
             if pump._cv_status == wntr.network.LinkStatus.closed:
                 self.link_status[pump_id] = wntr.network.LinkStatus(pump._cv_status)
         for link_id in self._link_ids:

@@ -56,7 +56,7 @@ class WaterNetworkOptions(object):
     
     @property
     def time(self):
-        """All options related to model timing"""
+        """Options related to model timing"""
         return self._time
     
     @time.setter
@@ -67,7 +67,7 @@ class WaterNetworkOptions(object):
 
     @property
     def hydraulic(self):
-        """Hydraulic WNTR model options"""
+        """Options related to the hydraulic model"""
         return self._hydraulic
     
     @hydraulic.setter
@@ -89,7 +89,7 @@ class WaterNetworkOptions(object):
 
     @property
     def quality(self):
-        """Water quality model options"""
+        """Options related to the water quality model"""
         return self._quality
     
     @quality.setter
@@ -100,7 +100,7 @@ class WaterNetworkOptions(object):
 
     @property
     def energy(self):
-        """Energy calculation options"""
+        """Options related to energy calculations"""
         return self._energy
     
     @energy.setter
@@ -111,7 +111,7 @@ class WaterNetworkOptions(object):
 
     @property
     def solver(self):
-        """Solver configuration options"""
+        """Options related to solver configuration"""
         return self._solver
     
     @solver.setter
@@ -122,7 +122,7 @@ class WaterNetworkOptions(object):
 
     @property
     def graphics(self):
-        """Graphics and mapping options"""
+        """Options related to graphics and mapping"""
         return self._graphics
     
     @graphics.setter
@@ -133,7 +133,7 @@ class WaterNetworkOptions(object):
 
     @property
     def user(self):
-        """Space for end-user defined options"""
+        """User defined options"""
         return self._user
     
     @user.setter
@@ -334,7 +334,7 @@ class ResultsOptions(object):
         Output results as statistical values, rather than time-series; options 
         are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the 
         EPANET User Manual)
-    rpt_filename : str, filename
+    rpt_filename : str
         Provides the filename to use for outputting an EPANET report file.
         By default, this will be the prefix plus ".rpt".
     status : str, default 'NO'
