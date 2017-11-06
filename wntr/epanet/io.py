@@ -518,12 +518,12 @@ class InpFile(object):
         for reservoir_name in nnames:
             reservoir = wn._reservoirs[reservoir_name]
             E = {'name': reservoir_name,
-                 'head': from_si(self.flow_units, reservoir.expected_head.base_value, HydParam.HydraulicHead),
+                 'head': from_si(self.flow_units, reservoir.head_timeseries.base_value, HydParam.HydraulicHead),
                  'com': ';'}
-            if reservoir.expected_head.pattern is None:
+            if reservoir.head_timeseries.pattern is None:
                 E['pat'] = ''
             else:
-                E['pat'] = reservoir.expected_head.pattern.name
+                E['pat'] = reservoir.head_timeseries.pattern.name
             f.write(_RES_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -687,7 +687,7 @@ class InpFile(object):
                  'ptype': pump.info_type,
                  'params': '',
                  'speed_keyword': 'SPEED',
-                 'speed': pump.expected_speed.base_value,
+                 'speed': pump.speed_timeseries.base_value,
                  'com': ';'}
             if pump.info_type == 'HEAD':
                 E['params'] = pump.curve.name
@@ -696,11 +696,11 @@ class InpFile(object):
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
             tmp_entry = _PUMP_ENTRY
-            if pump.expected_speed.pattern is not None:
+            if pump.speed_timeseries.pattern is not None:
                 tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
                              ' {pattern_keyword:10s} {pattern:20s} {com:>3s}\n')
                 E['pattern_keyword'] = 'PATTERN'
-                E['pattern'] = pump.expected_speed.pattern.name
+                E['pattern'] = pump.speed_timeseries.pattern.name
             f.write(tmp_entry.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -1040,11 +1040,12 @@ class InpFile(object):
                     # FYI.
                     if isinstance(node, wntr.network.Junction):
                         threshold = to_si(self.flow_units,
-                                          float(current[7]), HydParam.Pressure) + node.elevation
+                                          float(current[7]), HydParam.Pressure)
+                        control_obj = wntr.network.ConditionalControl((node, 'pressure'), oper, threshold, action_obj)
                     elif isinstance(node, wntr.network.Tank):
                         threshold = to_si(self.flow_units,
-                                          float(current[7]), HydParam.Length) + node.elevation
-                    control_obj = wntr.network.ConditionalControl((node, 'head'), oper, threshold, action_obj)
+                                          float(current[7]), HydParam.Length)
+                        control_obj = wntr.network.ConditionalControl((node, 'level'), oper, threshold, action_obj)
                 else:
                     raise RuntimeError("The following control is not recognized: " + line)
                 control_name = ''
@@ -1120,8 +1121,13 @@ class InpFile(object):
                     continue
                 if all_control._operation in [np.less, np.less_equal, '<', 'below']:
                     vals['compare'] = 'below'
-                threshold = all_control._threshold - all_control._source_obj.elevation
-                vals['thresh'] = from_si(self.flow_units, threshold, HydParam.HydraulicHead)
+                threshold = all_control._threshold
+                if isinstance(all_control._source_obj, Tank):
+                    vals['thresh'] = from_si(self.flow_units, threshold, HydParam.Length)
+                elif isinstance(all_control._source_obj, Junction):
+                    vals['thresh'] = from_si(self.flow_units, threshold, HydParam.Pressure)
+                else: 
+                    raise RuntimeError('Unknown control for EPANET INP files: %s' %type(all_control))
                 f.write(entry.format(**vals).encode('ascii'))
             elif not isinstance(all_control, wntr.network.controls.IfThenElseControl):
                 raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
@@ -1399,16 +1405,16 @@ class InpFile(object):
             source = wn._sources[source_name]
 
             if source.source_type.upper() == 'MASS':
-                strength = from_si(self.flow_units, source.quality, QualParam.SourceMassInject, self.mass_units)
+                strength = from_si(self.flow_units, source.strength_timeseries.base_value, QualParam.SourceMassInject, self.mass_units)
             else: # CONC, SETPOINT, FLOWPACED
-                strength = from_si(self.flow_units, source.quality, QualParam.Concentration, self.mass_units)
+                strength = from_si(self.flow_units, source.strength_timeseries.base_value, QualParam.Concentration, self.mass_units)
 
             E = {'node': source.node_name,
                  'type': source.source_type,
                  'quality': str(strength),
                  'pat': ''}
-            if source.pattern_name is not None:
-                E['pat'] = source.pattern_name
+            if source.strength_timeseries.pattern_name is not None:
+                E['pat'] = source.strength_timeseries.pattern_name
             f.write(entry.format(E['node'], E['type'], str(E['quality']), E['pat']).encode('ascii'))
         f.write('\n'.encode('ascii'))
 

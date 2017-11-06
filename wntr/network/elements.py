@@ -351,7 +351,7 @@ class TimeSeries(object):
             demand_values[ct] = self.at(t)
         return demand_values
 
-class Source(TimeSeries):
+class Source(object):
     """
     Water quality source class.
 
@@ -371,8 +371,8 @@ class Source(TimeSeries):
         (default = None).
     """
 
-    def __init__(self, name, node_name, source_type, quality, pattern=None):
-        super(Source, self).__init__(base=quality, pattern=pattern)
+    def __init__(self, name, node_name, source_type, strength, pattern=None):
+        self.strength_timeseries = TimeSeries(base=strength, pattern=pattern)
         self.name = name
         self.node_name = node_name
         self.source_type = source_type
@@ -382,8 +382,7 @@ class Source(TimeSeries):
             return False
         if self.node_name == other.node_name and \
            self.source_type == other.source_type and \
-           abs(self._base - other._base)<1e-10 and \
-           self._pattern == other._pattern:
+           self.strength_timeseries == other.strength_timeseries:
             return True
         return False
 
@@ -391,11 +390,6 @@ class Source(TimeSeries):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
         return fmt.format(self.name, self.node_name, self.source_type, self._base, self._pattern_name)
 
-    @property
-    def quality(self):
-        """Returns the source strength (same as base_value)."""
-        return self._base
-    
 
 class Demands(MutableSequence):
     """

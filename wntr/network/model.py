@@ -2191,6 +2191,10 @@ class Junction(Node):
         return "<Junction '{}'>".format(self._name)
 
     @property
+    def pressure(self):
+        return self.head - self.elevation
+
+    @property
     def base_demand(self):
         if len(self.expected_demand) > 0:
             dem0 = self.expected_demand[0]
@@ -2582,14 +2586,14 @@ class Reservoir(Node):
     def __init__(self, name, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(name)
         self.head = None
-        self.expected_head = TimeSeries(base_head, head_pattern, name)
+        self.head_timeseries = TimeSeries(base_head, head_pattern, name)
 
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
         if not super(Reservoir, self).__eq__(other):
             return False
-        if self.expected_head == other.expected_head:
+        if self.head_timeseries == other.head_timeseries:
             return True
         return False
 
@@ -2598,14 +2602,6 @@ class Reservoir(Node):
 
     def __hash__(self):
         return id(self)
-
-    @property
-    def base_head(self):
-        return self.expected_head.base_value
-
-    @property
-    def head_pattern_name(self):
-        return self.expected_head.pattern_name
 
 
 class Pipe(Link):
@@ -2705,7 +2701,7 @@ class Pump(Link):
         super(Pump, self).__init__(name, start_node_name, end_node_name)
         self._cv_status = LinkStatus.opened
         self.speed = None
-        self.expected_speed = TimeSeries(speed, pattern, name)
+        self.speed_timeseries = TimeSeries(speed, pattern, name)
         self.curve = None
         self.efficiency = None
         self.energy_price = None

@@ -1277,7 +1277,7 @@ class ConditionalControl(Control):
             This is true if we are calling before the solve, and false if we are calling after the solve (within the
             current timestep).
         """
-        if type(self._source_obj)==wntr.network.Tank and self._source_attr=='head' and wnm.sim_time!=0 and self._partial_step_for_tanks:
+        if type(self._source_obj)==wntr.network.Tank and self._source_attr=='level' and wnm.sim_time!=0 and self._partial_step_for_tanks:
             if presolve_flag:
                 val = getattr(self._source_obj,self._source_attr)
                 q_net = self._source_obj._prev_demand
@@ -1302,7 +1302,7 @@ class ConditionalControl(Control):
                     return (True, 0)
                 else:
                     return (False, None)
-        elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='head' and wnm.sim_time==0 and self._partial_step_for_tanks:
+        elif type(self._source_obj==wntr.network.Tank) and self._source_attr=='level' and wnm.sim_time==0 and self._partial_step_for_tanks:
             if presolve_flag:
                 val = getattr(self._source_obj, self._source_attr)
                 if self._operation(val, self._threshold):
