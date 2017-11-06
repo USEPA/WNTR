@@ -350,7 +350,7 @@ class ResultsOptions(object):
     """
     def __init__(self):
         self.statistic = 'NONE'
-        self.pagesize = 0
+        self.pagesize = None
         self.file = None
         self.status = 'NO'
         self.summary = 'YES'

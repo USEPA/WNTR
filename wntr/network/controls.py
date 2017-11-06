@@ -56,6 +56,7 @@ class Comparison(enum.Enum):
     def func(self):
         """The function call to use for this comparison"""
         return self.value[1]
+    __call__ = func
 
     @property
     def symbol(self):
@@ -1097,7 +1098,7 @@ class TimeControl(Control):
 
     @property
     def requires(self):
-        req = self._condition.requires
+        req = self._control_action.requires
         return req
 
     def __str__(self):

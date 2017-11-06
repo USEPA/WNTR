@@ -13,10 +13,6 @@ class NetResults(object):
         self.generated_datetime = datetime.datetime
         self.network_name = None
         self.solver_statistics = {}
-        self.quality_mode = None
-        self.quality_chem = None
-        self.quality_units = None
-        self.quality_trace = None
         self.link = None
         self.node = None
         self.meta = {'quality_mode':None,
