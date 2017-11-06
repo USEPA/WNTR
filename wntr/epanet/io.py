@@ -481,6 +481,8 @@ class InpFile(object):
             if junction.demands:
                 base_demand = junction.demands[0].base_value
                 demand_pattern = junction.demands[0].pattern_name
+                if demand_pattern == wn.options.general.pattern:
+                    demand_pattern = None
             else:
                 base_demand = 0.0
                 demand_pattern = None
@@ -1116,7 +1118,7 @@ class InpFile(object):
                         'thresh': 0.0}
                 if vals['setting'] is None:
                     continue
-                if all_control._operation is np.less:
+                if all_control._operation in [np.less, np.less_equal, '<', 'below']:
                     vals['compare'] = 'below'
                 threshold = all_control._threshold - all_control._source_obj.elevation
                 vals['thresh'] = from_si(self.flow_units, threshold, HydParam.HydraulicHead)
@@ -1497,7 +1499,7 @@ class InpFile(object):
                             opts.quality.trace_node = words[2]
                     else:
                         self.mass_units = MassUnits.mg
-                        opts.quality.value = 'mg/L'
+                        opts.quality.wq_units = 'mg/L'
                 elif key == 'VISCOSITY':
                     opts.general.viscosity = float(words[1])
                 elif key == 'DIFFUSIVITY':
