@@ -292,6 +292,9 @@ class QualParam(enum.Enum):
         elif data_type is list:
             data = np.array(data)
 
+        if mass_units is None:
+            mass_units=MassUnits.mg
+
         # Do conversions
         if self in [QualParam.Concentration, QualParam.Quality, QualParam.LinkQuality]:
             data = data * (mass_units.factor/0.001)  # MASS /L to kg/m3

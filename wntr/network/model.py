@@ -145,10 +145,6 @@ class WaterNetworkModel(object):
         nx.set_node_attributes(self._graph, name='type', values={name:'junction'})
         self._num_junctions += 1
 
-    def add_demand(self, junction_name, base_demand=0.0, demand_pattern=None, name=None):
-        """Add demand entry to a junction""" # KAK
-        pass
-
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
                  min_vol=None, vol_curve=None, coordinates=None):
@@ -1140,11 +1136,6 @@ class WaterNetworkModel(object):
         Control object.
         """
         return self._controls[name]
-
-
-    def get_demands_for_junction(self, junction_name, category=None): # KAK
-        """Returns a list of demands at a junction"""
-        pass
 
     def get_links_for_node(self, node_name, flag='ALL'):
         """
@@ -2359,17 +2350,6 @@ class Junction(Node):
         """
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
-
-    """
-    def set_demand(self, base_demand, pattern_name=None): # KAK
-        pass
-
-    def add_categorized_demand(self, category, base_demand, pattern_name=None): # KAK
-        pass
-
-    def remove_categorized_demand(self, category): # KAK
-        pass
-    """
 
 
 class Tank(Node):
