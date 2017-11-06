@@ -2689,19 +2689,19 @@ class Pump(Link):
         Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
     info_value : float or curve type, optional
         Where power is a fixed value in KW, while a head curve is a Curve object.
-    speed: float
+    base_speed: float
         Relative speed setting (1.0 is normal speed)
-    pattern: Pattern object, optional
+    speed_pattern: Pattern object, optional
         Speed pattern
     """
 
     def __init__(self, name, start_node_name, end_node_name, info_type='POWER',info_value=50.0,
-                 speed=1.0, pattern=None):
+                 base_speed=1.0, speed_pattern=None):
 
         super(Pump, self).__init__(name, start_node_name, end_node_name)
         self._cv_status = LinkStatus.opened
         self.speed = None
-        self.speed_timeseries = TimeSeries(speed, pattern, name)
+        self.speed_timeseries = TimeSeries(base_speed, speed_pattern, name)
         self.curve = None
         self.efficiency = None
         self.energy_price = None

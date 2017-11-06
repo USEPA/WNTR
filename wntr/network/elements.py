@@ -363,7 +363,7 @@ class Source(object):
         Injection node.
     source_type: string
         Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT.
-    quality: float
+    strength: float
         Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, 
         FLOWPACED, or SETPOINT.
     pattern: Pattern, optional
@@ -372,7 +372,7 @@ class Source(object):
     """
 
     def __init__(self, name, node_name, source_type, strength, pattern=None):
-        self.strength_timeseries = TimeSeries(base=strength, pattern=pattern)
+        self.strength_timeseries = TimeSeries(base=strength, pattern=pattern, name=name)
         self.name = name
         self.node_name = node_name
         self.source_type = source_type

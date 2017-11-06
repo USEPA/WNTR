@@ -62,7 +62,7 @@ tank.max_level = tank.max_level*1.1
 
 # Change supply
 reservoir = wn.get_node('River')
-reservoir.expected_head.base_value = reservoir.base_head*0.9 # decrease by 10%
+reservoir.head_timeseries.base_value = reservoir.head_timeseries*0.9 # decrease by 10%
 
 # Change demand
 junction = wn.get_node('121')

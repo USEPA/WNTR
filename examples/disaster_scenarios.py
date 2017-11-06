@@ -42,7 +42,7 @@ node.expected_demand.append( (fire_flow_demand, fire_flow_pattern, 'Fire flow'))
     
 # Reduce supply, increase demand
 for reservoir_name, reservoir in wn.reservoirs():
-    reservoir.expected_head.base_value = reservoir.base_head*0.9
+    reservoir.head_timeseries.base_value = reservoir.head_timeseries.base_value*0.9
 for junction_name, junction in wn.junctions():
     for demand in junction.expected_demand:
         demand.base_value = demand.base_value*1.15
