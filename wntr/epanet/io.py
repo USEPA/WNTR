@@ -1499,8 +1499,9 @@ class InpFile(object):
                                 opts.quality.wq_units = words[2]
                             else:
                                 raise ValueError('Invalid chemical units in OPTIONS section')
-                                self.mass_units = MassUnits.mg
-                                opts.quality.wq_units = 'mg/L'
+                        else:
+                            self.mass_units = MassUnits.mg
+                            opts.quality.wq_units = 'mg/L'                            
                 elif key == 'VISCOSITY':
                     opts.general.viscosity = float(words[1])
                 elif key == 'DIFFUSIVITY':
