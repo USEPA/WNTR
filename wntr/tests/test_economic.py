@@ -39,5 +39,4 @@ class TestPumpCost(unittest.TestCase):
 
         avg_cost_sum = avg_cost.sum()
 
-        self.assertAlmostEqual(avg_cost_sum, 0.0707, 4)
-#        self.assertAlmostEqual(avg_cost_sum, 0.070484, 5)
+        self.assertAlmostEqual(avg_cost_sum, 0.070484, 5)
