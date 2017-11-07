@@ -24,10 +24,10 @@ class Curve(object):
     Parameters
     ----------
     name : string
-         Name of the curve
-    curve_type :
+         Name of the curve.
+    curve_type : string
          Type of curve. Options are Volume, Pump, Efficiency, Headloss.
-    points :
+    points : list
          List of tuples with X-Y points.
     """
     def __init__(self, name, curve_type, points):
@@ -69,6 +69,7 @@ class Curve(object):
 
     @property
     def num_points(self):
+        """Returns the number of points in the curve."""
         return len(self.points)
 
 class Pattern(object):
@@ -78,15 +79,16 @@ class Pattern(object):
     Parameters
     ----------
     name : string
-        A unique name to describe the pattern (should be the same used when 
-        adding the pattern to the model)
-    multipliers : list-like
-        A list of multipliers that makes up the pattern
-    time_options : TimeOptions or tuple
-        The global options.time object or a tuple of (pattern_start, pattern_timestep) in seconds
-    wrap : bool
-        If true (the default), then the pattern repeats itself forever; if 
-        false, after the pattern has been exhausted, it will return 0.0
+        Name of the pattern.
+    multipliers : list
+        A list of multipliers that makes up the pattern.
+    time_options : wntr TimeOptions or tuple
+        The water network model options.time object or a tuple of (pattern_start, 
+        pattern_timestep) in seconds.
+    wrap : bool, optional
+        Boolean indicating if the pattern should be wrapped.
+        If True (the default), then the pattern repeats itself forever; if 
+        False, after the pattern has been exhausted, it will return 0.0.
     """
     
     def __init__(self, name, multipliers=[], time_options=None, wrap=True):
@@ -106,36 +108,42 @@ class Pattern(object):
         self.wrap = wrap
 
     @classmethod
-    def BinaryPattern(cls, name, start_time, end_time, duration, time_options, wrap=False):
+    def BinaryPattern(cls, name, start_time, end_time, step_size, duration, wrap=False):
         """
-        Creates a binary pattern (single instance of step up, step down)
+        Creates a binary pattern (single instance of step up, step down).
         
         Parameters
         ----------
-        name : str
-            A unique name to describe the pattern (should be the same used when 
-            adding the pattern to the model)
-        time_options : TimeOptions or tuple
-            Pattern and duration options set or as tuple (pattern_start, pattern_timestep)    
+        name : string
+            Name of the pattern.
         start_time : int
-            The time at which the pattern turns "on" (1.0)
+            The time at which the pattern turns "on" (1.0).
         end_time : int
-            The time at which the pattern turns "off" (0.0)
+            The time at which the pattern turns "off" (0.0).
+        step_size : int
+            Pattern step size.
+        duration : int
+            Total length of the pattern.
+        wrap : bool, optional
+            Boolean indicating if the pattern should be wrapped.
+            If True, then the pattern repeats itself forever; if 
+            False (the default), after the pattern has been exhausted, it will return 0.0.
+        
+        Returns
+        -------
+        A new pattern object with a list of 1's and 0's as multipliers. 
         """
-        if isinstance(time_options, (tuple, list)) and len(time_options) >= 2:
-            tmp = TimeOptions()
-            tmp.pattern_start = time_options[0]
-            tmp.pattern_timestep = time_options[1]
-            time_options = tmp
-        elif not isinstance(time_options, TimeOptions):
-            raise ValueError('Pattern->time_options must be a TimeOptions, tuple or null')
+        tmp = TimeOptions()
+        tmp.pattern_start = 0
+        tmp.pattern_timestep = step_size
+        time_options = tmp
         patternstep = time_options.pattern_timestep
         patternstart = int(start_time/time_options.pattern_timestep)
         patternend = int(end_time/patternstep)
         patterndur = int(duration/patternstep)
         pattern_list = [0.0]*patterndur
         pattern_list[patternstart:patternend] = [1.0]*(patternend-patternstart)
-        return cls(name, multipliers=pattern_list, time_options=time_options, wrap=wrap)
+        return cls(name, multipliers=pattern_list, time_options=None, wrap=wrap)
     
     def __eq__(self, other):
         if type(self) == type(other) and \
@@ -158,7 +166,7 @@ class Pattern(object):
     
     @property
     def multipliers(self):
-        """The multiplier values"""
+        """Returns the pattern multiplier values."""
         return self._multipliers
     
     @multipliers.setter
@@ -170,7 +178,7 @@ class Pattern(object):
 
     @property
     def time_options(self):
-        """The TimeOptions object for the model"""
+        """Returns the TimeOptions object."""
         return self._time_options
     
     @time_options.setter
@@ -189,7 +197,7 @@ class Pattern(object):
 
     def at(self, time):
         """
-        Returns the pattern value at a specific time
+        Returns the pattern value at a specific time.
         
         Parameters
         ----------
@@ -201,7 +209,7 @@ class Pattern(object):
         if nmult == 1: return self._multipliers[0]
         if self._time_options is None:
             raise RuntimeError('Pattern->time_options cannot be None at runtime')
-        step = ((time+self._time_options.pattern_start)//self._time_options.pattern_timestep)
+        step = int((time+self._time_options.pattern_start)//self._time_options.pattern_timestep)
         if self.wrap:                         return self._multipliers[int(step%nmult)]
         elif step < 0 or step >= nmult:         return 0.0
         return self._multipliers[step]
@@ -220,11 +228,13 @@ class TimeSeries(object):
     Parameters
     ----------
     base : number
-        A number that represents the baseline value
+        A number that represents the baseline value.
     pattern : Pattern, optional
         If None, then the value will be constant. Otherwise, the Pattern will be used.
+        (default = None)
     category : string, optional
-        A category, description, or other name that is useful to the user
+        A category, description, or other name that is useful to the user 
+        (default = None).
         
     Raises
     ------
@@ -265,14 +275,14 @@ class TimeSeries(object):
         return False
     
     def __getitem__(self, index):
-        """Returns the value at a specific index (not time!)"""
+        """Returns the value at a specific index (not time!)."""
         if not self._pattern:
             return self._base
         return self._base * self._pattern[index]
     
     @property
     def base_value(self):
-        """The baseline value for this variable"""
+        """Returns the baseline value."""
         return self._base
     
     @base_value.setter
@@ -283,7 +293,7 @@ class TimeSeries(object):
         
     @property
     def pattern(self):
-        """The pattern object"""
+        """Returns the Pattern object."""
         return self._pattern
     
     @pattern.setter
@@ -294,17 +304,14 @@ class TimeSeries(object):
 
     @property
     def pattern_name(self):
-        """Get the name of the pattern used.
-        
-        This is a read-only property.
-        """
+        """Returns the name of the pattern."""
         if self._pattern:
             return self._pattern.name
         return None
                     
     @property
     def category(self):
-        """The category"""
+        """Returns the category."""
         return self._category
     
     @category.setter
@@ -313,7 +320,7 @@ class TimeSeries(object):
 
     def at(self, time):
         """
-        Returns the value at a specific time
+        Returns the value at a specific time.
         
         Parameters
         ----------
@@ -327,16 +334,16 @@ class TimeSeries(object):
     
     def get_values(self, start_time, end_time, time_step):
         """
-        Returns the values for a range of times
+        Returns the values for a range of times.
         
         Parameters
         ----------
         start_time : int
-            Start time in seconds
+            Start time in seconds.
         end_time : int
-            End time in seconds
+            End time in seconds.
         time_step : int
-            time_step
+            Time step.
         """
         demand_times = range(start_time, end_time + time_step, time_step)
         demand_values = np.zeros((len(demand_times,)))
@@ -344,27 +351,28 @@ class TimeSeries(object):
             demand_values[ct] = self.at(t)
         return demand_values
 
-class Source(TimeSeries):
+class Source(object):
     """
     Water quality source class.
 
     Parameters
     ----------
     name : string
-         Name of the source
+         Name of the source.
     node_name: string
-        Injection node
+        Injection node.
     source_type: string
-        Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT
-    quality: float
+        Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT.
+    strength: float
         Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, 
-        FLOWPACED, or SETPOINT
+        FLOWPACED, or SETPOINT.
     pattern: Pattern, optional
-        If None, then the value will be constant. Otherwise, the Pattern will be used.
+        If None, then the value will be constant. Otherwise, the Pattern will be used
+        (default = None).
     """
 
-    def __init__(self, name, node_name, source_type, quality, pattern):
-        super(Source, self).__init__(base=quality, pattern=pattern)
+    def __init__(self, name, node_name, source_type, strength, pattern=None):
+        self.strength_timeseries = TimeSeries(strength, pattern, name)
         self.name = name
         self.node_name = node_name
         self.source_type = source_type
@@ -374,8 +382,7 @@ class Source(TimeSeries):
             return False
         if self.node_name == other.node_name and \
            self.source_type == other.source_type and \
-           abs(self._base - other._base)<1e-10 and \
-           self._pattern == other._pattern:
+           self.strength_timeseries == other.strength_timeseries:
             return True
         return False
 
@@ -383,14 +390,10 @@ class Source(TimeSeries):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
         return fmt.format(self.name, self.node_name, self.source_type, self._base, self._pattern_name)
 
-    @property
-    def quality(self):
-        return self._base
-    
 
 class Demands(MutableSequence):
     """
-    Demands class.  
+    Demands class.
     
     The Demands object is used to store multiple demands per 
     junction in a list. The class includes specialized demand-specific calls 
@@ -477,8 +480,7 @@ class Demands(MutableSequence):
         self._list = []
 
     def at(self, time, category=None):
-        """Get the total demand at a given time - Demand objects must have 
-        been initialized with a step size"""
+        """Return the total demand at a given time."""
         demand = 0.0
         if category:
             for dem in self._list:
@@ -491,7 +493,7 @@ class Demands(MutableSequence):
     __call__ = at
     
     def base_demand_list(self, category=None):
-        """A list of the base demands, optionally of a single category"""
+        """Returns a list of the base demands, optionally of a single category."""
         res = []
         for dem in self._list:
             if category is None or dem.category == category:
@@ -499,7 +501,7 @@ class Demands(MutableSequence):
         return res
 
     def pattern_list(self, category=None):
-        """A list of the patterns, optionally of a single category"""
+        """Returns a list of the patterns, optionally of a single category."""
         res = []
         for dem in self._list:
             if category is None or dem.category == category:
@@ -507,7 +509,7 @@ class Demands(MutableSequence):
         return res
     
     def category_list(self):
-        """A list of all the pattern categories"""
+        """Returns a list of all the pattern categories."""
         res = []
         for dem in self._list:
                 res.append(dem.category)
@@ -515,7 +517,7 @@ class Demands(MutableSequence):
 
     def get_values(self, start_time, end_time, time_step):
         """
-        Returns the values for a range of times
+        Returns the values for a range of times.
         
         Parameters
         ----------

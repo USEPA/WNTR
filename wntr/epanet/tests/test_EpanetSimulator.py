@@ -21,7 +21,7 @@ def test_setpoint_waterquality_simulation():
 
     wn = wntr.network.WaterNetworkModel(inp_file)
 
-    wn.options.quality.type = 'CHEMICAL'
+    wn.options.quality.mode = 'CHEMICAL'
     wn.add_pattern('NewPattern', [1]) #start_time=0, end_time=wn.options.time.duration)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
     #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, -1)
@@ -38,7 +38,7 @@ def test_flowpaced_waterquality_simulation():
 
     wn = wntr.network.WaterNetworkModel(inp_file)
 
-    wn.options.quality.type = 'CHEMICAL'
+    wn.options.quality.mode = 'CHEMICAL'
     wn.add_pattern('NewPattern', [1]) #start_time=0, end_time=wn.options.time.duration)
     wn.add_source('Source1', '121', 'FLOWPACED', 100, 'NewPattern')
     #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'FLOWPACED', 100, 0, -1)
@@ -55,7 +55,7 @@ def test_mass_waterquality_simulation():
 
     wn = wntr.network.WaterNetworkModel(inp_file)
 
-    wn.options.quality.type = 'CHEMICAL'
+    wn.options.quality.mode = 'CHEMICAL'
     wn.add_pattern('NewPattern', [1.0] )# start_time=0, end_time=wn.options.time.duration)
     wn.add_source('Source1', '121', 'MASS', 100, 'NewPattern')
     #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'MASS', 100, 0, -1)
@@ -72,7 +72,7 @@ def test_conc_waterquality_simulation():
 
     wn = wntr.network.WaterNetworkModel(inp_file)
 
-    wn.options.quality.type = 'CHEMICAL'
+    wn.options.quality.mode = 'CHEMICAL'
     wn.add_pattern('NewPattern', [1.0])# start_time=0, end_time=wn.options.time.duration)
     wn.add_source('Source1', 'River', 'CONCEN', 100, 'NewPattern')
     #WQ = wntr.scenario.Waterquality('CHEM', ['River'], 'CONCEN', 100, 0, -1)
@@ -91,7 +91,7 @@ def test_age_waterquality_simulation():
 
     wn = wntr.network.WaterNetworkModel(inp_file)
 
-    wn.options.quality.type = 'AGE'
+    wn.options.quality.mode = 'AGE'
     #WQ = wntr.scenario.Waterquality('AGE')
 
     sim = wntr.sim.EpanetSimulator(wn)
@@ -108,8 +108,8 @@ def test_trace_waterquality_simulation():
     inp_file = join(datadir,'Net3.inp')
 
     wn = wntr.network.WaterNetworkModel(inp_file)
-    wn.options.quality.type = 'TRACE'
-    wn.options.quality.value = '121'
+    wn.options.quality.mode = 'TRACE'
+    wn.options.quality.trace_node = '121'
     #WQ = wntr.scenario.Waterquality('TRACE', ['121'])
 
     sim = wntr.sim.EpanetSimulator(wn)

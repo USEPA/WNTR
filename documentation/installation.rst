@@ -11,7 +11,7 @@ WNTR can be installed as a Python package using standard open source software to
 **Step 1**: Setup your Python environment
 
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
-	WNTR requires Python (versions 2.7, 3.4, or 3.5) along with several Python package dependencies.
+	WNTR requires Python (versions 2.7, 3.4, 3.5, or 3.6) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
 	General information on Python can be found at https://www.python.org/.
@@ -102,7 +102,7 @@ WNTR can be installed as a Python package using standard open source software to
 
 Requirements
 -------------
-Requirements for WNTR include Python (2.7, 3.4, or 3.5) along with several Python packages. 
+Requirements for WNTR include Python (2.7, 3.4, 3.5, or 3.6) along with several Python packages. 
 The following Python packages are required:
 
 * Numpy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 

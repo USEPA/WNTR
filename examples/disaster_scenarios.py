@@ -31,26 +31,20 @@ wn.add_pump_outage('335', 5*3600, 10*3600)
 
 # Define fire conditions at node '197'
 fire_flow_demand = 0.252 # 4000 gal/min = 0.252 m3/s
-time_of_fire = 10
-duration_of_fire = 4
-remainder = int(wn.options.time.duration/3600-time_of_fire-duration_of_fire)
-fire_flow_pattern = [0]*time_of_fire + [1]*duration_of_fire + [0]*remainder
+fire_start = 10*3600
+fire_end = 14*3600
+fire_flow_pattern = wntr.network.elements.Pattern.BinaryPattern('fire_flow', 
+    step_size=wn.options.time.pattern_timestep, start_time=fire_start, 
+    end_time=fire_end, duration=wn.options.time.duration)
 wn.add_pattern('fire_flow', fire_flow_pattern)
 node = wn.get_node('197')
-original_base_demand = node.base_demand
-original_demand_pattern_name = node.demand_pattern_name
-new_base_demand = original_base_demand+fire_flow_demand
-new_demand_pattern_name = 'fire_flow'
-orig_demand = node.expected_demand[0]
-node.expected_demand.remove(orig_demand)
-pattern = wn.get_pattern('fire_flow')
-node.expected_demand.append((new_base_demand, pattern, 'fire_flow' ))
+node.demand_timeseries_list.append( (fire_flow_demand, fire_flow_pattern, 'Fire flow'))
     
-# Reduce supply, imcrease demand
+# Reduce supply, increase demand
 for reservoir_name, reservoir in wn.reservoirs():
-    reservoir.expected_head.base_value = reservoir.base_head*0.9
+    reservoir.head_timeseries.base_value = reservoir.head_timeseries.base_value*0.9
 for junction_name, junction in wn.junctions():
-    for demand in junction.expected_demand:
+    for demand in junction.demand_timeseries_list:
         demand.base_value = demand.base_value*1.15
     
 # Simulate 

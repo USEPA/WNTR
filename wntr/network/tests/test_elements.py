@@ -87,14 +87,15 @@ def test_Pattern():
     nose.tools.assert_equal(pattern4(492), 1.0)
     
     pattern5a = elements.Pattern('binary', [0.,0.,1.,1.,1.,1.,0.,0.,0.], time_options=(0, 1), wrap=False)
-    pattern5b = elements.Pattern.BinaryPattern('binary', time_options=(0, 1), start_time=2, end_time=6, duration=9)
-    nose.tools.assert_true(pattern5a.__eq__(pattern5b))
+    pattern5b = elements.Pattern.BinaryPattern('binary', step_size=1, start_time=2, end_time=6, duration=9)
+    nose.tools.assert_false(pattern5a.__eq__(pattern5b))
+    nose.tools.assert_true(np.all(np.abs(pattern5a.multipliers - pattern5b.multipliers)<1.0e-10))
     
 
 def test_TimeSeries():
     pattern_points2 = [1.0, 1.2, 1.0 ]
     pattern2 = elements.Pattern('oops', multipliers=pattern_points2, time_options=(0,10))
-    pattern5 = elements.Pattern.BinaryPattern('binary', time_options=(0,1), start_time=2, end_time=6, duration=9)
+    pattern5 = elements.Pattern.BinaryPattern('binary', step_size=1, start_time=2, end_time=6, duration=9)
     base1 = 2.0
     
     # test constructor and setters, getters
@@ -153,7 +154,7 @@ def test_TimeSeries():
     source1 = elements.Source('source1', 'NODE-1131', 'CONCEN', 1000.0, pattern5)
     source2 = elements.Source('source1', 'NODE-1131', 'CONCEN', 1000.0, pattern5)
     nose.tools.assert_equal(source1, source2)
-    nose.tools.assert_equal(source1.quality, 1000.0)
+    nose.tools.assert_equal(source1.strength_timeseries.base_value, 1000.0)
     
 
 def test_Demands():

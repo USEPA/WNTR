@@ -117,10 +117,6 @@ class WaterNetworkModel(object):
     def add_junction(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0, coordinates=None):
         """
         Adds a junction to the water network model.
-        
-        .. versionchanged:: 0.1.5
-            The previous parameter *demand_pattern_name* was changed to **demand_pattern** to allow passing of a 
-            :class:`wntr.network.elements.Pattern` object.
 
         Parameters
         -------------------
@@ -148,10 +144,6 @@ class WaterNetworkModel(object):
             self.set_node_coordinates(name, coordinates)
         nx.set_node_attributes(self._graph, name='type', values={name:'junction'})
         self._num_junctions += 1
-
-    def add_demand(self, junction_name, base_demand=0.0, demand_pattern=None, name=None):
-        """Add demand entry to a junction""" # KAK
-        pass
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
@@ -211,10 +203,6 @@ class WaterNetworkModel(object):
     def add_reservoir(self, name, base_head=0.0, head_pattern=None, coordinates=None):
         """
         Adds a reservoir to the water network model.
-
-        .. versionchanged:: 0.1.5
-            The previous parameter *head_pattern_name* was changed to **head_pattern** to allow passing of a 
-            :class:`wntr.network.elements.Pattern` object.
 
         Parameters
         ----------
@@ -366,14 +354,19 @@ class WaterNetworkModel(object):
         create certain types of patterns, such as a single, on/off pattern (previously created using
         the start_time and stop_time arguments to this function) -- see the class documentation for
         examples.
+
         
         .. warning::
             Patterns **must** be added to the model prior to adding any model element that uses the pattern,
             such as junction demands, sources, etc. Patterns are linked by reference, so changes to a 
             pattern affects all elements using that pattern. 
 
-        .. versionchanged:: 0.1.5
-            Function signature changed significantly: *start_time* and *stop_time* removed as options.
+            
+        .. warning::
+            Patterns **always** use the global water network model options.time values.
+            Patterns **will not** be resampled to match these values, it is assumed that 
+            patterns created using Pattern(...) or Pattern.BinaryPattern(...) object used the same 
+            pattern timestep value as the global value, and they will be treated accordingly.
 
 
         Parameters
@@ -383,7 +376,6 @@ class WaterNetworkModel(object):
         pattern : list of floats or Pattern
             A list of floats that make up the pattern, or a :class:`~wntr.network.elements.Pattern` object.
 
-
         Raises
         ------
         ValueError
@@ -392,8 +384,8 @@ class WaterNetworkModel(object):
         
         """
         if not isinstance(pattern, Pattern):
-            pattern = Pattern(name, multipliers=pattern, time_options=self.options.time)
-        elif pattern.time_options is None:
+            pattern = Pattern(name, multipliers=pattern, time_options=self.options.time)            
+        else: #elif pattern.time_options is None:
             pattern.time_options = self.options.time
         if pattern.name in self._patterns:
             raise ValueError('Pattern name already exists')
@@ -1017,7 +1009,8 @@ class WaterNetworkModel(object):
 
     def reset_demand(self, demand, pattern_prefix='ResetDemand'):
         """
-        Resets demands.
+        Resets demands using values in a DataFrame. 
+        
         New demands are specified in a pandas DataFrame indexed by simulation
         time (in seconds) and one column for each node. The method resets
         node demands by creating a new demand pattern for each node and
@@ -1029,13 +1022,13 @@ class WaterNetworkModel(object):
         Parameters
         ----------
         demand : pandas DataFrame
-            Name of the node.
+            A pandas DataFrame containing demands (index = time, columns = node names)
 
-        pattern_prefix: str
+        pattern_prefix: string
             Pattern prefix, default = 'ResetDemand'
         """
         for node_name, node in self.nodes():
-
+            
             # Extact the node demand pattern and resample to match the pattern timestep
             demand_pattern = demand.loc[:, node_name]
             demand_pattern.index = demand_pattern.index.astype('timedelta64[s]')
@@ -1144,11 +1137,6 @@ class WaterNetworkModel(object):
         Control object.
         """
         return self._controls[name]
-
-
-    def get_demands_for_junction(self, junction_name, category=None): # KAK
-        """Returns a list of demands at a junction"""
-        pass
 
     def get_links_for_node(self, node_name, flag='ALL'):
         """
@@ -1945,7 +1933,7 @@ class WaterNetworkModel(object):
 
         for name, node in self.nodes(Reservoir):
             node._prev_head = None
-            node.head = node.base_head
+            node.head = node.head_timeseries.base_value
             node._prev_demand = None
             node.demand = None
             node._prev_leak_demand = None
@@ -2119,10 +2107,21 @@ class Link(object):
     def __hash__(self):
         return id(self)
 
-    def get_base_status(self):
+    def set_initial_status(self, status):
+        """Set the initial status for pumps and valves
+        
+        ..warning:: 
+            This will override the current status - don't do it during (or after) simulation
+        
+        
         """
-        Returns the base status.
-        """
+        if not isinstance(status, LinkStatus):
+            status = LinkStatus[status]
+        self._base_status = status
+        self.status = status
+    
+    def get_initial_status(self):
+        """Get the initial status for pumps and valves"""
         return self._base_status
 
     def __str__(self):
@@ -2160,9 +2159,6 @@ class Junction(Node):
     """
     Junction class that is inherited from Node
 
-    .. versionchanged:: 0.1.5
-        Parameter name changed to `demand_pattern`; The `demands` attribute was added.
-
     Parameters
     ----------
     name : string
@@ -2180,10 +2176,9 @@ class Junction(Node):
 
     def __init__(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0):
         super(Junction, self).__init__(name)
-        self._prev_expected_demand = None
-        self.expected_demand = Demands()
+        self.demand_timeseries_list = Demands()
         if base_demand:
-            self.expected_demand.append((base_demand, demand_pattern, '_base_demand'))
+            self.demand_timeseries_list.append((base_demand, demand_pattern, '_base_demand'))
         self.elevation = elevation
 
         self.nominal_pressure = 20.0
@@ -2206,16 +2201,20 @@ class Junction(Node):
         return "<Junction '{}'>".format(self._name)
 
     @property
+    def pressure(self):
+        return self.head - self.elevation
+
+    @property
     def base_demand(self):
-        if len(self.expected_demand) > 0:
-            dem0 = self.expected_demand[0]
+        if len(self.demand_timeseries_list) > 0:
+            dem0 = self.demand_timeseries_list[0]
             return dem0.base_value
         return 0
 
     @property
     def demand_pattern_name(self):
-        if len(self.expected_demand) > 0:
-            dem0 = self.expected_demand[0]
+        if len(self.demand_timeseries_list) > 0:
+            dem0 = self.demand_timeseries_list[0]
             return dem0.pattern_name
         return None
 
@@ -2366,18 +2365,6 @@ class Junction(Node):
         """
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
-
-    """
-    def set_demand(self, base_demand, pattern_name=None): # KAK
-        pass
-
-    def add_categorized_demand(self, category, base_demand, pattern_name=None): # KAK
-        pass
-
-    def remove_categorized_demand(self, category): # KAK
-        pass
-    """
-
 
 class Tank(Node):
     """
@@ -2608,15 +2595,15 @@ class Reservoir(Node):
     """
     def __init__(self, name, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(name)
-        self.head = None
-        self.expected_head = TimeSeries(base_head, head_pattern, name)
+        self.head = base_head
+        self.head_timeseries = TimeSeries(base_head, head_pattern, name)
 
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
         if not super(Reservoir, self).__eq__(other):
             return False
-        if self.expected_head == other.expected_head:
+        if self.head_timeseries == other.head_timeseries:
             return True
         return False
 
@@ -2724,19 +2711,19 @@ class Pump(Link):
         Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
     info_value : float or curve type, optional
         Where power is a fixed value in KW, while a head curve is a Curve object.
-    speed: float
+    base_speed: float
         Relative speed setting (1.0 is normal speed)
-    pattern: Pattern object, optional
+    speed_pattern: Pattern object, optional
         Speed pattern
     """
 
     def __init__(self, name, start_node_name, end_node_name, info_type='POWER',info_value=50.0,
-                 speed=1.0, pattern=None):
+                 base_speed=1.0, speed_pattern=None):
 
         super(Pump, self).__init__(name, start_node_name, end_node_name)
         self._cv_status = LinkStatus.opened
         self.speed = None
-        self.expected_speed = TimeSeries(speed, pattern, name)
+        self.speed_timeseries = TimeSeries(base_speed, speed_pattern, name)
         self.curve = None
         self.efficiency = None
         self.energy_price = None
@@ -2753,14 +2740,6 @@ class Pump(Link):
             self._base_power = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
-
-    @property
-    def base_speed(self):
-        return self.expected_speed.base_value
-
-    @property
-    def speed_pattern_name(self):
-        return self.expected_speed.pattern_name
 
     @property
     def curve_name(self):
@@ -2931,3 +2910,4 @@ class Valve(Link):
 
     def __hash__(self):
         return id(self)
+
