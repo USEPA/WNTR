@@ -618,7 +618,7 @@ class InpFile(object):
                  'diam': from_si(self.flow_units, pipe.diameter, HydParam.PipeDiameter),
                  'rough': pipe.roughness,
                  'mloss': pipe.minor_loss,
-                 'status': pipe.get_base_status().name,
+                 'status': pipe.get_initial_status().name,
                  'com': ';'}
             if pipe.cv:
                 E['status'] = 'CV'
@@ -977,13 +977,13 @@ class InpFile(object):
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
         for link_name, link in wn.links(Pump):
-            if link.get_base_status() == LinkStatus.CLOSED.value:
+            if link.get_initial_status() == LinkStatus.CLOSED.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.get_base_status()).name).encode('ascii'))
+                        LinkStatus(link.get_initial_status()).name).encode('ascii'))
         for link_name, link in wn.links(Valve):
-            if link.get_base_status() == LinkStatus.CLOSED.value or link.get_base_status() == LinkStatus.Open.value:
+            if link.get_initial_status() == LinkStatus.CLOSED.value or link.get_initial_status() == LinkStatus.Open.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.get_base_status()).name).encode('ascii'))
+                        LinkStatus(link.get_initial_status()).name).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_controls(self):
@@ -1040,12 +1040,12 @@ class InpFile(object):
                     # FYI.
                     if isinstance(node, wntr.network.Junction):
                         threshold = to_si(self.flow_units,
-                                          float(current[7]), HydParam.Pressure) + node.elevation
+                                          float(current[7]), HydParam.Pressure)# + node.elevation
                         control_obj = wntr.network.ConditionalControl((node, 'pressure'), oper, threshold, action_obj)
                     elif isinstance(node, wntr.network.Tank):
                         threshold = to_si(self.flow_units, 
-                                          float(current[7]), HydParam.HydraulicHead) + node.elevation
-                        control_obj = wntr.network.ConditionalControl((node, 'head'), oper, threshold, action_obj)
+                                          float(current[7]), HydParam.HydraulicHead)# + node.elevation
+                        control_obj = wntr.network.ConditionalControl((node, 'level'), oper, threshold, action_obj)
                 else:
                     raise RuntimeError("The following control is not recognized: " + line)
                 control_name = ''
@@ -1123,9 +1123,9 @@ class InpFile(object):
                     vals['compare'] = 'below'
                 threshold = all_control._threshold
                 if isinstance(all_control._source_obj, Tank):
-                    vals['thresh'] = from_si(self.flow_units, threshold - all_control._source_obj.elevation, HydParam.HydraulicHead)
+                    vals['thresh'] = from_si(self.flow_units, threshold, HydParam.HydraulicHead)
                 elif isinstance(all_control._source_obj, Junction):
-                    vals['thresh'] = from_si(self.flow_units, threshold - all_control._source_obj.elevation, HydParam.Pressure) 
+                    vals['thresh'] = from_si(self.flow_units, threshold, HydParam.Pressure) 
                 else: 
                     raise RuntimeError('Unknown control for EPANET INP files: %s' %type(all_control))
                 f.write(entry.format(**vals).encode('ascii'))

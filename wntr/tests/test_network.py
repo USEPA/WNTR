@@ -128,7 +128,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l._link_name, 'p1')
         self.assertEqual(l.start_node, 'j1')
         self.assertEqual(l.end_node, 'j2')
-        self.assertEqual(l.get_base_status(), self.wntr.network.LinkStatus.opened)
+        self.assertEqual(l.get_initial_status(), self.wntr.network.LinkStatus.opened)
         self.assertEqual(l.length, 1000.0)
         self.assertEqual(l.diameter, 1.0)
         self.assertEqual(l.roughness, 100.0)
@@ -492,7 +492,7 @@ class TestInpFileWriter(unittest.TestCase):
         for name, link in self.wn.links(self.wntr.network.Pipe):
             link2 = self.wn2.get_link(name)
             self.assertEqual(link == link2, True)
-            self.assertEqual(link.get_base_status(), link2.get_base_status())
+            self.assertEqual(link.get_initial_status(), link2.get_initial_status())
 
     def test_pumps(self):
         for name, link in self.wn.links(self.wntr.network.Pump):

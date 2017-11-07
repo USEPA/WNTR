@@ -2107,10 +2107,21 @@ class Link(object):
     def __hash__(self):
         return id(self)
 
-    def get_base_status(self):
+    def set_initial_status(self, status):
+        """Set the initial status for pumps and valves
+        
+        ..warning:: 
+            This will override the current status - don't do it during (or after) simulation
+        
+        
         """
-        Returns the base status.
-        """
+        if not isinstance(status, LinkStatus):
+            status = LinkStatus[status]
+        self._base_status = status
+        self.status = status
+    
+    def get_initial_status(self):
+        """Get the initial status for pumps and valves"""
         return self._base_status
 
     def __str__(self):
