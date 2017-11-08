@@ -42,8 +42,8 @@ class TestLeakAdditionAndRemoval(unittest.TestCase):
         self.assertEqual(pipe.roughness, pipeB.roughness)
         #self.assertEqual(pipe.minor_loss, pipeA.minor_loss)
         self.assertEqual(pipe.minor_loss, pipeB.minor_loss)
-        #self.assertEqual(pipe.get_base_status(), pipeA.get_base_status())
-        self.assertEqual(pipe.get_base_status(), pipeB.get_base_status())
+        #self.assertEqual(pipe.get_initial_status(), pipeA.get_initial_status())
+        self.assertEqual(pipe.get_initial_status(), pipeB.get_initial_status())
 
 class TestLeakResults(unittest.TestCase):
 

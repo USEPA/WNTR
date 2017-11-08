@@ -2101,10 +2101,21 @@ class Link(object):
     def __hash__(self):
         return id(self)
 
-    def get_base_status(self):
+    def set_initial_status(self, status):
+        """Set the initial status for pumps and valves
+        
+        ..warning:: 
+            This will override the current status - don't do it during (or after) simulation
+        
+        
         """
-        Returns the base status.
-        """
+        if not isinstance(status, LinkStatus):
+            status = LinkStatus[status]
+        self._base_status = status
+        self.status = status
+    
+    def get_initial_status(self):
+        """Get the initial status for pumps and valves"""
         return self._base_status
 
     def __str__(self):
@@ -2159,7 +2170,6 @@ class Junction(Node):
 
     def __init__(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0):
         super(Junction, self).__init__(name)
-        self._prev_expected_demand = None
         self.demand_timeseries_list = Demands()
         if base_demand:
             self.demand_timeseries_list.append((base_demand, demand_pattern, '_base_demand'))
@@ -2591,7 +2601,7 @@ class Reservoir(Node):
     """
     def __init__(self, name, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(name)
-        self.head = None
+        self.head = base_head
         self.head_timeseries = TimeSeries(base_head, head_pattern, name)
 
     def __eq__(self, other):
