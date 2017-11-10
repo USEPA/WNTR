@@ -168,31 +168,31 @@ def todini(node_results, link_results, wn, Pstar):
     PInPump = {}
 
     for name, node in wn.nodes(wntr.network.Junction):
-        h = np.array(node_results.loc['head',:,name]) # m
-        p = np.array(node_results.loc['pressure',:,name])
+        h = np.array(node_results['head'].loc[:,name]) # m
+        p = np.array(node_results['pressure'].loc[:,name])
         e = h - p # m
-        q = np.array(node_results.loc['demand',:,name]) # m3/s
+        q = np.array(node_results['demand'].loc[:,name]) # m3/s
         POut[name] = q*h
         PExp[name] = q*(Pstar+e)
 
     for name, node in wn.nodes(wntr.network.Reservoir):
-        H = np.array(node_results.loc['head',:,name]) # m
-        Q = np.array(node_results.loc['demand',:,name]) # m3/s
+        H = np.array(node_results['head'].loc[:,name]) # m
+        Q = np.array(node_results['demand'].loc[:,name]) # m3/s
         PInRes[name] = -Q*H # switch sign on Q.
 
     for name, link in wn.links(wntr.network.Pump):
         start_node = link._start_node_name
         end_node = link._end_node_name
-        h_start = np.array(node_results.loc['head',:,start_node]) # (m)
-        h_end = np.array(node_results.loc['head',:,end_node]) # (m)
+        h_start = np.array(node_results['head'].loc[:,start_node]) # (m)
+        h_end = np.array(node_results['head'].loc[:,end_node]) # (m)
         h = h_start - h_end # (m)
-        q = np.array(link_results.loc['flowrate',:,name]) # (m^3/s)
+        q = np.array(link_results['flowrate'].loc[:,name]) # (m^3/s)
         PInPump[name] = q*(abs(h)) # assumes that pumps always add energy to the system
 
     todini_index = (sum(POut.values()) - sum(PExp.values()))/  \
         (sum(PInRes.values()) + sum(PInPump.values()) - sum(PExp.values()))
 
-    todini_index = pd.Series(data = todini_index.tolist(), index = node_results.major_axis)
+    todini_index = pd.Series(data = todini_index.tolist(), index = node_results['head'].index)
 
     return todini_index
 

@@ -53,11 +53,13 @@ Additionally, EPANET INP files can be generated from water network models.
    :class:`~wntr.network.model.Pump`                   Contains methods to define pumps. Pumps are links that increase hydraulic head.
    :class:`~wntr.network.model.Energy`                 Contains attributes for specifying global energy prices and global pump efficiencies.
    :class:`~wntr.network.model.Valve`                  Contains methods to define valves. Valves are links that limit pressure or flow. 
-   :class:`~wntr.network.model.Curve`                  Contains methods to define curves. Curves are data pairs representing a relationship between two quantities.  Curves are used to define pump curves. 
-   :class:`~wntr.network.model.Source`                 Contains methods to define sources. Sources define the location and characteristics of a substance injected directly into the network.
+   :class:`~wntr.network.elements.Curve`               Contains methods to define curves. Curves are data pairs representing a relationship between two quantities.  Curves are used to define pump curves. 
+   :class:`~wntr.network.elements.Source`              Contains methods to define sources. Sources define the location and characteristics of a substance injected directly into the network.
+   :class:`~wntr.network.elements.Demands`             Contains methods to define multiple demands per junction. Demands are the rate of withdrawal from the network.
+   :class:`~wntr.network.elements.Pattern`             Contains methods to define patterns. Demands, reservoir heads, pump schedules, and water quality sources can have patterns associated with them. 
    :class:`~wntr.network.controls.TimeControl`         Contains methods to define time controls. Time controls define actions that start or stop at a particular time. 
    :class:`~wntr.network.controls.ConditionalControl`  Contains methods to define conditional controls. Conditional controls define actions that start or stop based on a particular condition in the network. 
-   :class:`~wntr.network.model.WaterNetworkOptions`    Contains methods to define model options, including the simulation duration and time step.
+   :class:`~wntr.network.options.WaterNetworkOptions`  Contains methods to define model options, including the simulation duration and time step.
    ==================================================  =============================================================================================================================================================================================================================================================================
 
 Simulators
@@ -123,24 +125,19 @@ Current software limitations are noted:
 
 However, **the following model options cannot be modified/created in WNTR**:
 
-* [BACKDROP] section
-* Efficiency curves in the [CURVES] section
-* [DEMANDS] section (base demand and patterns from the [JUNCTIONS] section can be modified)
 * [EMITTERS] section
 * [LABELS] section
 * [MIXING] section
-* [REPORT] section
 * [VERTICES] section
 
 While the EpanetSimulator uses all EPANET model options, several model options are not used by the WNTRSimulator.  
-Of the EPANET model options that directly apply to hydraulic simulations, **the following options are not supported by the WNTRSimualtor**:
+Of the EPANET model options that directly apply to hydraulic simulations, **the following options are not supported by the WNTRSimulator**:
 
-* [DEMANDS] section (base demand and patterns from the [JUNCTIONS] section are used)
 * [EMITTERS] section
 * D-W and C-M headloss options in the [OPTIONS] section (H-W option is used)
 * Accuracy, unbalanced, demand multiplier, and emitter exponent from the [OPTIONS] section
-* Speed option and multipoint head curves in the [PUMPS] section (3-point head curves are supported)
-* Head pattern option in the [RESERVOIRS] section
+* Multipoint curves in the [CURVES] section (3-point curves are supported)
+* Pump speed in the [PUMPS] section
 * Volume curves in the [TANKS] section
 * Rule timestep, pattern start, report start, start clocktime, and statistics in the [TIMES] section
 * PSV, PBV, and GPV values in the [VALVES] section

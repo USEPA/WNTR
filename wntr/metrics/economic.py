@@ -253,25 +253,31 @@ def pump_energy(wn, sim_results):
         The minor axis corresponds to pump names
         Energy is given in Watts
         Cost is given in $/s
+        
+        
+    ..todo:
+        
+        Need to get this unit tested and not just functionally tested
+        
     """
-    if wn.energy.demand_charge is not None and wn.energy.demand_charge != 0:
+    if wn.options.energy.demand_charge is not None and wn.options.energy.demand_charge != 0:
         raise ValueError('WNTR does not support demand charge yet.')
 
     pumps = wn.pump_name_list
-    flow = sim_results.link.loc['flowrate', :, pumps]
+    flow = sim_results.link['flowrate'].loc[:, pumps]
 
     headloss = pd.DataFrame(data=None, index=sim_results.time, columns=pumps)
     for pump_name, pump in wn.pumps():
         start_node = pump.start_node
         end_node = pump.end_node
-        start_head = sim_results.node.loc['head',:,start_node]
-        end_head = sim_results.node.loc['head',:,end_node]
+        start_head = sim_results.node['head'].loc[:,start_node]
+        end_head = sim_results.node['head'].loc[:,end_node]
         headloss.loc[:,pump_name] = end_head - start_head
 
     efficiency_dict = {}
     for pump_name, pump in wn.pumps():
         if pump.efficiency is None:
-            efficiency_dict[pump_name] = [wn.energy.global_efficiency/100.0 for i in sim_results.time]
+            efficiency_dict[pump_name] = [wn.options.energy.global_efficiency/100.0 for i in sim_results.time]
         else:
             raise NotImplementedError('WNTR does not support pump efficiency curves yet.')
             curve = wn.get_curve(pump.efficiency)
@@ -285,8 +291,8 @@ def pump_energy(wn, sim_results):
     price_dict = {}
     for pump_name, pump in wn.pumps():
         if pump.energy_price is None and pump.energy_pattern is None:
-            if wn.energy.global_pattern is None:
-                price_dict[pump_name] = [wn.energy.global_price for i in sim_results.time]
+            if wn.options.energy.global_pattern is None:
+                price_dict[pump_name] = [wn.options.energy.global_price for i in sim_results.time]
             else:
                 raise NotImplementedError('WNTR does not support price patterns yet.')
         elif pump.energy_pattern is None:
