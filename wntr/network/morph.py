@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 ### TODO
 """
-Add tests, check units, run simulation on new WN
+Add tests, check units
 """
 
 class Skeletonize(object):
@@ -27,43 +27,25 @@ class Skeletonize(object):
         for node_name in self.wn.node_name_list:
             skel_map[node_name] = [node_name]
         self.skeleton_map = skel_map
-        
-        # Create a map of demands (key = junction name, item = list of demand objects)
-        demand_map = {j: [] for j in self.wn.junction_name_list}
-        for name, demand in self.wn._demands.items():
-            demand_map[demand.junction_name].append(demand)
-        self._demand_map = demand_map
-        self.new_demand_index = len([key for key in self.wn._demands.keys()])+1
-        
-        # Get a list of junctions and pipes that are associated with controls
-        juncs = set()
-        pipes = set()
-        for control_name, control in self.wn._controls.items():
-            objs = []
-            try:
-                objs.append(control._control_action._target_obj_ref)
-            except: #IfThenElseControl
-                for then_action in control._then_actions:
-                    objs.append(then_action._target_obj_ref)
-            for obj in objs:
-                if isinstance(obj, wntr.network.Junction):
-                    juncs.add(obj.name)
-                if isinstance(obj, wntr.network.Pipe):
-                    pipes.add(obj.name)
-        self.juncs_with_controls = list(juncs)
-        self.pipes_with_controls = list(pipes)
 
+        # Get a list of components that are associated with controls
+        comp_with_controls = []
+        for name, control in wn.controls():
+            comp_with_controls.append(control.requires())
+        comp_with_controls = list(itertools.chain.from_iterable(comp_with_controls))
+        self.comp_with_controls = list(set(comp_with_controls))
+        
         # Calculate pipe headloss using a single period EPANET simulation
-        duration = self.wn.options.duration
+        duration = self.wn.options.time.duration
         sim = wntr.sim.EpanetSimulator(self.wn)
-        self.wn.options.duration = 0
+        self.wn.options.time.duration = 0
         results = sim.run_sim()
         head = results.node['head']
         headloss = {}
         for link_name, link in self.wn.links():
             headloss[link_name] = float(abs(head[link.start_node] - head[link.end_node]))
         self.headloss = headloss
-        self.wn.options.duration = duration
+        self.wn.options.time.duration = duration
     
         self.num_branch_trim = 0
         self.num_series_merge = 0
@@ -119,7 +101,8 @@ class Skeletonize(object):
             Dictonary with original nodes as keys and grouped nodes as values
         """
         for junc_name in self.wn.junction_name_list:
-            if junc_name in self.juncs_with_controls:
+            junc = self.wn.get_node(junc_name)
+            if junc_name  in self.comp_with_controls:
                 continue
             neighbors = list(nx.neighbors(self.G,junc_name))
             if len(neighbors) > 1:
@@ -135,7 +118,7 @@ class Skeletonize(object):
             pipe = self.wn.get_link(pipe_name)
             if not ((isinstance(pipe, wntr.network.Pipe)) and \
                 (pipe.diameter <= pipe_threshold) and \
-                pipe not in self.pipes_with_controls):
+                pipe not in self.comp_with_controls):
                 continue
             
             logger.info('Branch trim:', junc_name, neighbors)
@@ -145,12 +128,10 @@ class Skeletonize(object):
             self.skeleton_map[junc_name] = []
             
             # Move demand
-            self._move_demand(junc_name, neigh_junc_name)
+            for demand in junc.demand_timeseries_list:
+                neigh_junc.demand_timeseries_list.append(demand)
+            junc.demand_timeseries_list.clear()
 
-            # Update demand map
-            self._demand_map[neigh_junc_name].extend(self._demand_map[junc_name])
-            self._demand_map[junc_name] = []
-            
             # Remove node and links from wn and G
             self.wn.remove_link(pipe_name)
             self.wn.remove_node(junc_name)
@@ -177,7 +158,8 @@ class Skeletonize(object):
             Dictonary with original nodes as keys and grouped nodes as values
         """
         for junc_name in self.wn.junction_name_list:
-            if junc_name in self.juncs_with_controls:
+            junc = self.wn.get_node(junc_name)
+            if junc in self.comp_with_controls:
                 continue
             neighbors = list(nx.neighbors(self.G,junc_name))
             if not (len(neighbors) == 2):
@@ -201,35 +183,33 @@ class Skeletonize(object):
                 (isinstance(pipe1, wntr.network.Pipe)) and \
                 (pipe0.diameter <= pipe_threshold) and \
                 (pipe1.diameter <= pipe_threshold) and \
-                pipe0 not in self.pipes_with_controls and \
-                pipe1 not in self.pipes_with_controls):
+                pipe0 not in self.comp_with_controls and \
+                pipe1 not in self.comp_with_controls):
                 continue
             # Find closest neighbor junction
             if (isinstance(neigh_junc0, wntr.network.Junction)) and \
                (isinstance(neigh_junc1, wntr.network.Junction)):
                 if pipe0.length < pipe1.length:
-                    closest_junc_name = neigh_junc_name0
+                    closest_junc = neigh_junc0
                 else:
-                    closest_junc_name = neigh_junc_name1
+                    closest_junc = neigh_junc1
             elif (isinstance(neigh_junc0, wntr.network.Junction)):
-                closest_junc_name = neigh_junc_name0
+                closest_junc = neigh_junc0
             elif (isinstance(neigh_junc1, wntr.network.Junction)):
-                closest_junc_name = neigh_junc_name1
+                closest_junc = neigh_junc1
             else:
                 continue
             
             logger.info('Series pipe merge:', junc_name, neighbors)
                 
             # Update skeleton map    
-            self.skeleton_map[closest_junc_name].extend(self.skeleton_map[junc_name])
+            self.skeleton_map[closest_junc.name].extend(self.skeleton_map[junc_name])
             self.skeleton_map[junc_name] = []
                 
             # Move demand
-            self._move_demand(junc_name, closest_junc_name)
-                
-            # Update demand map
-            self._demand_map[closest_junc_name].extend(self._demand_map[junc_name])
-            self._demand_map[junc_name] = []
+            for demand in junc.demand_timeseries_list:
+                closest_junc.demand_timeseries_list.append(demand)
+            junc.demand_timeseries_list.clear()
 
             # Remove node and links from wn and G
             self.wn.remove_link(pipe_name0)
@@ -280,7 +260,8 @@ class Skeletonize(object):
         """
         
         for junc_name in self.wn.junction_name_list:
-            if junc_name in self.juncs_with_controls:
+            junc = self.wn.get_node(junc_name)
+            if junc in self.comp_with_controls:
                 continue
             neighbors = nx.neighbors(self.G,junc_name)
             for neighbor in neighbors:
@@ -297,8 +278,8 @@ class Skeletonize(object):
                        (isinstance(pipe1, wntr.network.Pipe)) and \
                         (pipe0.diameter <= pipe_threshold) and \
                         (pipe1.diameter <= pipe_threshold) and \
-                        pipe0 not in self.pipes_with_controls and \
-                        pipe1 not in self.pipes_with_controls):
+                        pipe0 not in self.comp_with_controls and \
+                        pipe1 not in self.comp_with_controls):
                         continue
                     
                     logger.info('Parallel pipe merge:', junc_name, (pipe_name0, pipe_name1))
@@ -383,24 +364,3 @@ class Skeletonize(object):
         props['status'] = larger_pipe.status
         
         return props
-    
-    def _move_demand(self, from_node_name, to_node_name):
-
-        # Move demand from one node (in the JUNCTION object) to another (in the DEMAND object) 
-        # Add the new DEMAND object to the demand map
-        node = self.wn.get_node(from_node_name)
-        if node.base_demand > 0:
-            demand_pattern = node.demand_pattern_name
-            if demand_pattern is None:
-                demand_pattern = self.wn.options.pattern
-            demand_name = 'INP'+str(self.new_demand_index)
-            self.wn._add_demand(demand_name, 
-                                to_node_name, 
-                                base_demand=node.base_demand, 
-                                demand_pattern_name=demand_pattern)
-            self.new_demand_index += 1
-            self._demand_map[to_node_name].append(self.wn._demands[demand_name])
-            
-        # Move demand from one node (in the DEMAND object) to another (in the DEMAND object) 
-        for demand in self._demand_map[from_node_name]:
-            self.wn._demands[demand.name].junction_name = to_node_name
