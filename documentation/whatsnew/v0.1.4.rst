@@ -4,8 +4,7 @@ v0.1.4 (Master branch)
 ---------------------------------------------------
 
 * Added a faster EPANET binary output file reader
-* Added support for FCVs in the WNTRSimulator
-* Added ability to get the names of all required objects that are queried or acted upon by the control (see `requires` method on each control class)
+* Added ability to get the names of all required objects that are queried or acted upon by the control (see :class:`~wntr.network.controls.Control.requires`)
 * Modified the structure of the WaterNetworkOptions object to group options into types (API change, see :class:`~wntr.network.options.WaterNetworkOptions`)
 * Created a Pattern object that can be called to get the pattern value at a specific time (see :class:`~wntr.network.elements.Pattern`)
 * Created a TimeSeries object that contains a base value, Pattern object, and category.  The object can be called to get its value at a specific time.
@@ -13,8 +12,6 @@ v0.1.4 (Master branch)
 * Created a Demands object that contains multiple demands for a single junction and can 
   calculate demand values at a specific time.  Change to the way multiple demands are stored makes the 
   Junction.base_demand and Junction.demand_pattern_name *read-only* attributes (API change).
-* EPANET Demands section now fully supported by the WNTRSimulator
+* Added support for flow control valves (FCV), multiple demands at a junction, and variable reservoir head in the WNTRSimulator
 * Modified the WaterNetworkModel.add_pattern() to no longer accept start_time and end_time options.  
   Binary patterns can be created using the Patterns object (API change, see :class:`~wntr.network.elements.Pattern.BinaryPattern`).
-
-  

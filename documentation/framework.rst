@@ -125,7 +125,6 @@ Current software limitations are noted:
 
 However, **the following model options cannot be modified/created in WNTR**:
 
-* Efficiency curves in the [CURVES] section
 * [EMITTERS] section
 * [LABELS] section
 * [MIXING] section
@@ -137,8 +136,8 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * [EMITTERS] section
 * D-W and C-M headloss options in the [OPTIONS] section (H-W option is used)
 * Accuracy, unbalanced, demand multiplier, and emitter exponent from the [OPTIONS] section
-* Speed option and multipoint head curves in the [PUMPS] section (3-point head curves are supported)
-* Head pattern option in the [RESERVOIRS] section
+* Multipoint curves in the [CURVES] section (3-point curves are supported)
+* Pump speed in the [PUMPS] section
 * Volume curves in the [TANKS] section
 * Rule timestep, pattern start, report start, start clocktime, and statistics in the [TIMES] section
 * PSV, PBV, and GPV values in the [VALVES] section

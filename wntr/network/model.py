@@ -2009,10 +2009,6 @@ class Node(object):
     -----------
     name : string
         Name of the node
-    node_type : string
-        Type of the node. Options are 'Junction', 'Tank', or 'Reservoir'
-
-
     """
     def __init__(self, name):
         self._name = name
@@ -2053,7 +2049,7 @@ class Node(object):
     
     @property
     def initial_quality(self):
-        """The initial quality (concentration) of the node. Can be a float or list of floats."""
+        """Returns the initial quality (concentration) of the node. Can be a float or list of floats."""
         if not self._initial_quality:
             return 0.0
         return self._initial_quality
@@ -2073,8 +2069,6 @@ class Link(object):
     ----------
     link_name : string
         Name of the link
-    link_type : string
-        Type of the link. Options are 'Pipe', 'Valve', or 'Pump'
     start_node_name : string
          Name of the start node
     end_node_name : string
@@ -2202,10 +2196,12 @@ class Junction(Node):
 
     @property
     def pressure(self):
+        """Returns pressure (head - elevation)"""
         return self.head - self.elevation
 
     @property
     def base_demand(self):
+        """Returns the first base demand (first entry in demands_timeseries_list)"""
         if len(self.demand_timeseries_list) > 0:
             dem0 = self.demand_timeseries_list[0]
             return dem0.base_value
@@ -2213,6 +2209,7 @@ class Junction(Node):
 
     @property
     def demand_pattern_name(self):
+        """Returns the first base demand pattern name (first entry in demands_timeseries_list)"""
         if len(self.demand_timeseries_list) > 0:
             dem0 = self.demand_timeseries_list[0]
             return dem0.pattern_name
@@ -2248,8 +2245,8 @@ class Junction(Node):
 
         Parameters
         ----------
-        wn: WaterNetworkModel object
-           The WaterNetworkModel object containing the junction with
+        wn: wntr WaterNetworkModel
+           Water network model containing the junction with
            the leak. This information is needed because the
            WaterNetworkModel object stores all controls, including
            when the leak starts and stops.
@@ -2288,7 +2285,8 @@ class Junction(Node):
 
         Parameters
         ----------
-        wn: WaterNetworkModel object
+        wn: wntr WaterNetworkModel
+           Water network model
         """
         self._leak = False
         wn._discard_control(self._leak_start_control_name)
@@ -2317,9 +2315,10 @@ class Junction(Node):
 
         Parameters
         ----------
-        wn: WaterNetworkModel object
+        wn: wntr WaterNetworkModel
+           Water network model
         t: int
-           end time in seconds
+           Leak end time in seconds
         """
         # remove old control
         wn._discard_control(self._leak_start_control_name)
@@ -2340,9 +2339,10 @@ class Junction(Node):
 
         Parameters
         ----------
-        wn: WaterNetworkModel object
+        wn: wntr WaterNetworkModel
+           Water network model
         t: int
-           end time in seconds
+           Leak end time in seconds
         """
         # remove old control
         wn._discard_control(self._leak_end_control_name)
@@ -2361,7 +2361,8 @@ class Junction(Node):
 
         Parameters
         ----------
-        wn: WaterNetworkModel object
+        wn: wntr WaterNetworkModel
+           Water network model
         """
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
@@ -2422,6 +2423,7 @@ class Tank(Node):
 
     @property
     def level(self):
+        """Returns tank level (head - elevation)"""
         return self.head - self.elevation
 
     def __eq__(self, other):
@@ -2500,7 +2502,8 @@ class Tank(Node):
 
         Parameters
         ----------
-        wn: WaterNetworkModel object
+        wn: wntr WaterNetworkModel
+           Water network model
         """
         self._leak = False
         wn._discard_control(self._leak_start_control_name)
@@ -2529,7 +2532,8 @@ class Tank(Node):
 
         Parameters
         ----------
-        wn: WaterNetworkModel object
+        wn: wntr WaterNetworkModel
+           Water network model
         t: int
            start time in seconds
         """
@@ -2552,7 +2556,8 @@ class Tank(Node):
 
         Parameters
         ----------
-        wn: WaterNetworkModel object
+        wn: wntr WaterNetworkModel
+           Water network model
         t: int
            end time in seconds
         """
@@ -2573,7 +2578,8 @@ class Tank(Node):
 
         Parameters
         ----------
-        wn: WaterNetworkModel object
+        wn: wntr WaterNetworkModel
+           Water network model
         """
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
@@ -2731,6 +2737,7 @@ class Pump(Link):
 
     @property
     def curve_name(self):
+        """Returns the pump curve name"""
         if self.curve:
             return self.curve.name
         return None
