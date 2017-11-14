@@ -2367,7 +2367,7 @@ class BinFile(object):
             
         """
         logger.debug('Read binary EPANET data from %s',filename)
-        dt_str = 'S{}'.format(self.idlen)
+        dt_str = '|S{}'.format(self.idlen)
         with open(filename, 'rb') as fin:
             ftype = self.ftype
             idlen = self.idlen
@@ -2426,8 +2426,8 @@ class BinFile(object):
             self.rpt_file = rptfile
             nodenames = []
             linknames = []
-            nodenames = np.fromfile(fin, dtype=dt_str, count=nnodes).tolist()
-            linknames = np.fromfile(fin, dtype=dt_str, count=nlinks).tolist()
+            nodenames = np.array(np.fromfile(fin, dtype=dt_str, count=nnodes), dtype=str).tolist()
+            linknames = np.array(np.fromfile(fin, dtype=dt_str, count=nlinks), dtype=str).tolist()
             self.node_names = nodenames
             self.link_names = linknames
             linkstart = np.fromfile(fin, dtype=np.int32, count=nlinks)
