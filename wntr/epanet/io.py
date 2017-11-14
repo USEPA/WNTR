@@ -2400,9 +2400,9 @@ class BinFile(object):
             np.fromfile(fin, dtype=np.uint8, count=240)
             inpfile = np.fromfile(fin, dtype=np.uint8, count=260)
             rptfile = np.fromfile(fin, dtype=np.uint8, count=260)
-            chemical = np.fromfile(fin, dtype=dt_str, count=1)[0]
+            chemical = str(np.fromfile(fin, dtype=dt_str, count=1)[0])
 #            wqunits = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
-            wqunits = np.fromfile(fin, dtype=dt_str, count=1)[0]
+            wqunits = str(np.fromfile(fin, dtype=dt_str, count=1)[0])
             mass = wqunits.split('/',1)[0]
             if mass in ['mg', 'ug', u'mg', u'ug']:
                 massunits = MassUnits[mass]
