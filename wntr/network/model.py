@@ -134,7 +134,7 @@ class WaterNetworkModel(object):
         """
         base_demand = float(base_demand)
         elevation = float(elevation)
-        if demand_pattern and isinstance(demand_pattern, six.string_types):
+        if not isinstance(demand_pattern, Pattern):
             demand_pattern = self.get_pattern(demand_pattern)
         junction = Junction(name, base_demand, demand_pattern, elevation)
         self._nodes[name] = junction
@@ -1089,9 +1089,12 @@ class WaterNetworkModel(object):
         Pattern object, the pattern does not exist, returns [1.0] (constant pattern)
         """
         try:
-            return self._patterns[name]
+            if name in self._patterns:
+                return self._patterns[name]
+            else:
+                return self._patterns[self.options.hydraulic.pattern]
         except:
-            return [1.0]
+            return Pattern('_const',[1.0])
 
     def get_curve(self, name):
         """
