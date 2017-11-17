@@ -30,6 +30,7 @@ def test_setpoint_waterquality_simulation():
     results = sim.run_sim()
 
     expected = 91661.72*(1e-6/0.001) # Node '159' at hour 6
+    print(results.node)
     error = abs((results.node['quality'].loc[6*3600, '159'] - expected)/expected)
     assert_less(error, 0.0001) # 0.01% error
 
