@@ -1094,7 +1094,7 @@ class WaterNetworkModel(object):
             else:
                 return self._patterns[self.options.hydraulic.pattern]
         except:
-            return Pattern('_const',[1.0])
+            return None
 
     def get_curve(self, name):
         """
