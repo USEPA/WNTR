@@ -9,6 +9,7 @@ import networkx as nx
 import numpy as np
 import six
 from scipy.optimize import fsolve
+import abc
 
 from .graph import WntrMultiDiGraph
 from .controls import IfThenElseControl, ControlAction, _FCVControl, ConditionalControl, TimeControl
@@ -2012,12 +2013,9 @@ class Node(object):
     """
     def __init__(self, name):
         self._name = name
-        self._prev_head = None
         self.head = None
-        self._prev_demand = None
         self.demand = None
         self.leak_demand = None
-        self._prev_leak_demand = None
         self._initial_quality = None
         self.tag = None
 
@@ -2061,7 +2059,7 @@ class Node(object):
         self._initial_quality = value
 
 
-class Link(object):
+class Link(six.with_metaclass(abc.ABCMeta, object)):
     """
     The base link class.
 
@@ -2080,13 +2078,41 @@ class Link(object):
         self._link_name = link_name
         self._start_node_name = start_node_name
         self._end_node_name = end_node_name
-        self._prev_status = None
-        self._base_status = LinkStatus.opened
-        self.status = LinkStatus.opened
-        self._prev_flow = None
+        self._base_status = LinkStatus.Open
+        self._user_status = LinkStatus.Open
+        self._internal_status = LinkStatus.Open
         self.flow = None
         self.tag = None
         self._vertices = []
+
+    @property
+    @abc.abstractmethod
+    def status(self):
+        """
+        Returns the actual status of the link based on the _user_status and the _internal_status. The acutal status
+        may be different that the user status because, for example, the user may set a valve to Active, but the
+        valve may have to close if reverse flow is not allowed. This property returns the actual status.
+
+        Subclasses should implement this method.
+
+        Returns
+        -------
+        status: LinkStatus
+        """
+        pass
+
+    @status.setter
+    def status(self, value):
+        """
+        Sets the _user_status attribute. The actual status may differ from the _user_status because, for example, the
+        user may set a valve to Active, but the valve may have to close if reverse flow is not allowed.
+
+        Parameters
+        ----------
+        value: LinkStatus
+        """
+        assert value in LinkStatus
+        self._user_status = value
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2366,6 +2392,7 @@ class Junction(Node):
         """
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
+
 
 class Tank(Node):
     """
@@ -2675,7 +2702,7 @@ class Pipe(Link):
                 self.status = LinkStatus[status]
             else:
                 self.status = status
-            self._base_status = self.status
+            self._base_status = self._user_status
         self.bulk_rxn_coeff = None
         self.wall_rxn_coeff = None
 
