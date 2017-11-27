@@ -23,6 +23,8 @@ import logging
 import numpy as np
 import pandas as pd
 
+#from .time_utils import run_lineprofile
+
 import wntr
 import wntr.network
 from wntr.network.model import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
@@ -2338,6 +2340,7 @@ class BinFile(object):
         """
         pass
 
+#    @run_lineprofile()
     def read(self, filename, custom_handlers=False):
         """Read a binary file and create a results object.
 
@@ -2364,6 +2367,7 @@ class BinFile(object):
             
         """
         logger.debug('Read binary EPANET data from %s',filename)
+        dt_str = '|S{}'.format(self.idlen)
         with open(filename, 'rb') as fin:
             ftype = self.ftype
             idlen = self.idlen
@@ -2396,8 +2400,9 @@ class BinFile(object):
             np.fromfile(fin, dtype=np.uint8, count=240)
             inpfile = np.fromfile(fin, dtype=np.uint8, count=260)
             rptfile = np.fromfile(fin, dtype=np.uint8, count=260)
-            chemical = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
-            wqunits = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
+            chemical = str(np.fromfile(fin, dtype=dt_str, count=1)[0])
+#            wqunits = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
+            wqunits = str(np.fromfile(fin, dtype=dt_str, count=1)[0])
             mass = wqunits.split('/',1)[0]
             if mass in ['mg', 'ug', u'mg', u'ug']:
                 massunits = MassUnits[mass]
@@ -2421,12 +2426,8 @@ class BinFile(object):
             self.rpt_file = rptfile
             nodenames = []
             linknames = []
-            for i in range(nnodes):
-                name = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
-                nodenames.append(name)
-            for i in range(nlinks):
-                name = ''.join([chr(f) for f in np.fromfile(fin, dtype=np.uint8, count=idlen) if f!=0 ])
-                linknames.append(name)
+            nodenames = np.array(np.fromfile(fin, dtype=dt_str, count=nnodes), dtype=str).tolist()
+            linknames = np.array(np.fromfile(fin, dtype=dt_str, count=nlinks), dtype=str).tolist()
             self.node_names = nodenames
             self.link_names = linknames
             linkstart = np.fromfile(fin, dtype=np.int32, count=nlinks)
@@ -2540,8 +2541,9 @@ class BinFile(object):
                 name_list = nodenames*4 + linknames*8
                 valuetype = nnodes*['demand']+nnodes*['head']+nnodes*['pressure']+nnodes*['quality'] + nlinks*['flow']+nlinks*['velocity']+nlinks*['headloss']+nlinks*['linkquality']+nlinks*['linkstatus']+nlinks*['linksetting']+nlinks*['reactionrate']+nlinks*['frictionfactor']
                 
-#                tuples = list(zip(type_list, valuetype, name_list))
+#                tuples = zip(type_list, valuetype, name_list)
                 tuples = list(zip(valuetype, name_list))
+#                tuples = [(valuetype[i], v) for i, v in enumerate(name_list)]
                 index = pd.MultiIndex.from_tuples(tuples, names=['value','name'])          
                 try:
                     data = np.fromfile(fin, dtype = np.dtype(ftype), count = (4*nnodes+8*nlinks)*nrptsteps)
@@ -2601,4 +2603,5 @@ class BinFile(object):
             if warnflag != 0:
                 logger.warning('Warnings were issued during simulation')
         self.finalize_save(magic1==magic2, warnflag)
+        
         return self.results
