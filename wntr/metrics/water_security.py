@@ -53,7 +53,7 @@ def volume_contaminant_consumed(node_results, detection_limit):
     VC = node_results['demand']*deltaT*maskQ*maskD # m3/s * s * bool - > m3
     
     return VC
-    
+
 def extent_contaminant(node_results, link_results, wn, detection_limit):
     """ Extent of contaminant in the pipes, equation from [1].
     
@@ -75,34 +75,33 @@ def extent_contaminant(node_results, link_results, wn, detection_limit):
         Extent of contaminantion (m)
     
      References
-    ----------
+    -----------
     [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
     Technical report, U.S. Environmental Protection Agency
     """
-    G = wn.get_graph_deep_copy()
-    EC = pd.DataFrame(index = node_results['quality'].index, columns = node_results['quality'].columns, data = 0)
-    L = pd.DataFrame(index = node_results['quality'].index, columns = node_results['quality'].columns, data = 0)
-
-    for t in node_results['quality'].index:
-        # Weight the graph
-        attr = link_results['flowrate'].loc[t, :]   
-        G.weight_graph(link_attribute=attr)  
-        
-        # Compute pipe_length associated with each node at time t
-        for node_name in G.nodes():
-            for downstream_node in G.successors(node_name):
-                for link_name in G[node_name][downstream_node].keys():
-                    link = wn.get_link(link_name)
-                    if isinstance(link, wntr.network.Pipe):
-                        L.loc[t,node_name] = L.loc[t,node_name] + link.length
-                    
-    mask = np.greater(node_results['quality'], detection_limit)
-    EC = L*mask
-        
-    #total_length = [link.length for link_name, link in wn.links(wntr.network.Pipe)]
-    #sum(total_length)
-    #L.sum(axis=1)
-        
+    flow_rate = link_results['flowrate']
+    pipe_names = wn.pipe_name_list
+    node_quality = node_results['quality']
+    link_length = []
+    link_start_node = []
+    link_end_node = []
+    for name in pipe_names:
+        link = wn.get_link(name)
+        link_start_node.append(link.start_node)
+        link_end_node.append(link.end_node)
+        link_length.append(link.length)
+    link_start_node = pd.Series(index=pipe_names, data=link_start_node)
+    link_end_node = pd.Series(index=pipe_names, data=link_end_node)
+    link_length = pd.Series(index=pipe_names, data=link_length)
+    
+    flow_dir = np.sign(flow_rate.loc[:,pipe_names])
+    node_contam = node_quality > detection_limit
+    pos_flow = np.array(node_contam.loc[:,link_start_node])
+    neg_flow = np.array(node_contam.loc[:,link_end_node])
+    link_contam = ((flow_dir>0)&pos_flow) | ((flow_dir<0)&neg_flow)
+    contam_len = (link_contam * link_length).cummax()
+    EC = contam_len.sum(axis=1)
+    
     return EC
     
 #def cumulative_dose():
