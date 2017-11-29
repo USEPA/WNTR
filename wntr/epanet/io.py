@@ -1034,6 +1034,7 @@ class InpFile(object):
                                         'the link status. Control: {0}'.format(line)))
 
             # Create the control object
+            control_name = ''
             if 'TIME' not in current and 'CLOCKTIME' not in current:
                 if 'IF' in current:
                     node = self.wn.get_node(node_name)
@@ -1075,6 +1076,10 @@ class InpFile(object):
                 elif len(current) == 7:  # at clocktime
                     run_at_time = int(_clock_time_to_sec(current[5], current[6]))
                     control_obj = wntr.network.TimeControl(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj)
+                    control_name = ''
+                    for i in range(len(current)-1):
+                        control_name = control_name + '/' + current[i]
+                    control_name = control_name + '/' + str(run_at_time)
             if control_name in self.wn.control_name_list:
                 warnings.warn('One or more [CONTROLS] were duplicated in "{}"; duplicates are ignored.'.format(self.wn.name), stacklevel=0)
                 logger.warning('Control already exists: "{}"'.format(control_name))
@@ -1091,7 +1096,6 @@ class InpFile(object):
                 setting = str(value)
             elif attribute == 'setting' and isinstance(control._control_action._target_obj_ref, Valve):
                 valve = control._control_action._target_obj_ref
-#                assert isinstance(valve, wntr.network.Valve), 'Could not write control '+str(control_name)
                 valve_type = valve.valve_type
                 if valve_type == 'PRV' or valve_type == 'PSV' or valve_type == 'PBV':
                     setting = str(from_si(self.flow_units, value, HydParam.Pressure))
@@ -1974,11 +1978,13 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
-#                assert isinstance(condition._source_obj, Valve)
-                if condition._source_obj.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
-                    value = from_si(self.inp_units, val_si, HydParam.Pressure)
-                elif condition._source_obj.valve_type.upper() in ['FCV']:
-                    value = from_si(self.inp_units, val_si, HydParam.Flow)
+                if isinstance(condition._source_obj, Valve):
+                    if condition._source_obj.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                        value = from_si(self.inp_units, val_si, HydParam.Pressure)
+                    elif condition._source_obj.valve_type.upper() in ['FCV']:
+                        value = from_si(self.inp_units, val_si, HydParam.Flow)
+                    else:
+                        value = val_si
                 else:
                     value = val_si
                 value = '{:.6g}'.format(value)
@@ -2046,11 +2052,13 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
-#                assert isinstance(action._target_obj_ref, Valve)
-                if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
-                    value = from_si(self.inp_units, val_si, HydParam.Pressure)
-                elif action._target_obj_ref.valve_type.upper() in ['FCV']:
-                    value = from_si(self.inp_units, val_si, HydParam.Flow)
+                if isinstance(action._target_obj_ref, Valve):
+                    if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                        value = from_si(self.inp_units, val_si, HydParam.Pressure)
+                    elif action._target_obj_ref.valve_type.upper() in ['FCV']:
+                        value = from_si(self.inp_units, val_si, HydParam.Flow)
+                    else:
+                        value = val_si
                 else:
                     value = val_si
                 value = '{:.6g}'.format(value)
@@ -2176,11 +2184,11 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = to_si(self.inp_units, value, HydParam.Pressure)
             elif attr.lower() in ['setting']:
-#                assert isinstance(link, Valve)
-                if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
-                    value = to_si(self.inp_units, value, HydParam.Pressure)
-                elif link.valve_type.upper() in ['FCV']:
-                    value = to_si(self.inp_units, value, HydParam.Flow)
+                if isinstance(link, Valve):
+                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                        value = to_si(self.inp_units, value, HydParam.Pressure)
+                    elif link.valve_type.upper() in ['FCV']:
+                        value = to_si(self.inp_units, value, HydParam.Flow)
             else_acts.append(ControlAction(link, attr, value))
         return IfThenElseControl(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)
 
