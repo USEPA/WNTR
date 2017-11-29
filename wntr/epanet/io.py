@@ -20,6 +20,7 @@ import re
 import io
 import os, sys
 import logging
+import warnings
 import numpy as np
 import pandas as pd
 
@@ -392,8 +393,8 @@ class InpFile(object):
             self.flow_units = FlowUnits(units)
         elif self.flow_units is not None:
             self.flow_units = self.flow_units
-        elif isinstance(wn.options.hydraulic.units, str):
-            units = wn.options.hydraulic.units.upper()
+        elif isinstance(wn.options.hydraulic.en2_units, str):
+            units = wn.options.hydraulic.en2_units.upper()
             self.flow_units = FlowUnits[units]
         else:
             self.flow_units = FlowUnits.GPM
@@ -652,18 +653,18 @@ class InpFile(object):
 
             for i in range(3, len(current), 2):
                 if current[i].upper() == 'HEAD':
-                    assert pump_type is None, 'In [PUMPS] entry, specify either HEAD or POWER once.'
+#                    assert pump_type is None, 'In [PUMPS] entry, specify either HEAD or POWER once.'
                     pump_type = 'HEAD'
                     value = create_curve(current[i+1])
                 elif current[i].upper() == 'POWER':
-                    assert pump_type is None, 'In [PUMPS] entry, specify either HEAD or POWER once.'
+#                    assert pump_type is None, 'In [PUMPS] entry, specify either HEAD or POWER once.'
                     pump_type = 'POWER'
                     value = to_si(self.flow_units, float(current[i+1]), HydParam.Power)
                 elif current[i].upper() == 'SPEED':
-                    assert speed is None, 'In [PUMPS] entry, SPEED may only be specified once.'
+#                    assert speed is None, 'In [PUMPS] entry, SPEED may only be specified once.'
                     speed = float(current[i+1])
                 elif current[i].upper() == 'PATTERN':
-                    assert pattern is None, 'In [PUMPS] entry, PATTERN may only be specified once.'
+#                    assert pattern is None, 'In [PUMPS] entry, PATTERN may only be specified once.'
                     pattern = self.wn.get_pattern(current[i+1])
                 else:
                     raise RuntimeError('Pump keyword in inp file not recognized.')
@@ -816,7 +817,10 @@ class InpFile(object):
     def _write_curves(self, f, wn):
         f.write('[CURVES]\n'.encode('ascii'))
         f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value').encode('ascii'))
-        for curve_name, curve in wn._curves.items():
+        curves = list(wn._curves.keys())
+        curves.sort()
+        for curve_name in curves:
+            curve = wn.get_curve(curve_name)
             if curve.curve_type == 'VOLUME':
                 f.write(';VOLUME: {}\n'.format(curve_name).encode('ascii'))
                 for point in curve.points:
@@ -878,7 +882,10 @@ class InpFile(object):
         num_columns = 8
         f.write('[PATTERNS]\n'.encode('ascii'))
         f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers').encode('ascii'))
-        for pattern_name, pattern in wn._patterns.items():
+        patterns = list(wn._patterns.keys())
+        patterns.sort()
+        for pattern_name in patterns:
+            pattern = wn.get_pattern(pattern_name)
             count = 0
             for i in pattern.multipliers:
                 if count % num_columns == 0:
@@ -923,7 +930,7 @@ class InpFile(object):
                         curve_points.append((x, y))
                     self.wn.add_curve(curve_name, 'EFFICIENCY', curve_points)
                     curve = self.wn.get_curve(curve_name)
-                    pump.efficiency = curve_name
+                    pump.efficiency = curve
                 else:
                     logger.warning('Unknown entry in ENERGY section: %s', line)
             else:
@@ -945,7 +952,7 @@ class InpFile(object):
         for pump_name in lnames:
             pump = wn._pumps[pump_name]
             if pump.efficiency is not None:
-                f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump.efficiency).encode('ascii'))
+                f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump.efficiency.name).encode('ascii'))
             if pump.energy_price is not None:
                 f.write('PUMP {:10s} PRICE   {:s}\n'.format(pump_name, to_si(self.flow_units, pump.energy_price, HydParam.Energy)).encode('ascii'))
             if pump.energy_pattern is not None:
@@ -958,7 +965,7 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
-            assert(len(current) == 2), ("Error reading [STATUS] block, Check format.")
+#            assert(len(current) == 2), ("Error reading [STATUS] block, Check format.")
             link = self.wn.get_link(current[0])
             if (current[1].upper() == 'OPEN' or
                     current[1].upper() == 'CLOSED' or
@@ -1052,8 +1059,8 @@ class InpFile(object):
                     raise RuntimeError("The following control is not recognized: " + line)
                 control_name = ''
                 for i in range(len(current)-1):
-                    control_name = control_name + current[i]
-                control_name = control_name + str(round(threshold, 2))
+                    control_name = control_name + '/' + current[i]
+                control_name = control_name + '/' + str(round(threshold, 2))
             else:
                 if len(current) == 6:  # at time
                     if ':' in current[5]:
@@ -1063,12 +1070,16 @@ class InpFile(object):
                     control_obj = wntr.network.TimeControl(self.wn, run_at_time, 'SIM_TIME', False, action_obj)
                     control_name = ''
                     for i in range(len(current)-1):
-                        control_name = control_name + current[i]
-                    control_name = control_name + str(run_at_time)
+                        control_name = control_name + '/' + current[i]
+                    control_name = control_name + '/' + str(run_at_time)
                 elif len(current) == 7:  # at clocktime
                     run_at_time = int(_clock_time_to_sec(current[5], current[6]))
                     control_obj = wntr.network.TimeControl(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj)
-            self.wn.add_control(control_name, control_obj)
+            if control_name in self.wn.control_name_list:
+                warnings.warn('One or more [CONTROLS] were duplicated in "{}"; duplicates are ignored.'.format(self.wn.name), stacklevel=0)
+                logger.warning('Control already exists: "{}"'.format(control_name))
+            else:
+                self.wn.add_control(control_name, control_obj)
 
     def _write_controls(self, f, wn):
         def get_setting(control, control_name):
@@ -1078,9 +1089,9 @@ class InpFile(object):
                 setting = LinkStatus(value).name
             elif attribute == 'speed':
                 setting = str(value)
-            elif attribute == 'setting':
+            elif attribute == 'setting' and isinstance(control._control_action._target_obj_ref, Valve):
                 valve = control._control_action._target_obj_ref
-                assert isinstance(valve, wntr.network.Valve), 'Could not write control '+str(control_name)
+#                assert isinstance(valve, wntr.network.Valve), 'Could not write control '+str(control_name)
                 valve_type = valve.valve_type
                 if valve_type == 'PRV' or valve_type == 'PSV' or valve_type == 'PBV':
                     setting = str(from_si(self.flow_units, value, HydParam.Pressure))
@@ -1092,6 +1103,8 @@ class InpFile(object):
                     setting = value
                 else:
                     raise ValueError('Valve type not recognized' + str(valve_type))
+            elif attribute == 'setting':
+                setting = value
             else:
                 setting = None
                 logger.warning('Could not write control '+str(control_name)+' - skipping')
@@ -1100,7 +1113,10 @@ class InpFile(object):
 
         f.write('[CONTROLS]\n'.encode('ascii'))
         # Time controls and conditional controls only
-        for text, all_control in wn._controls.items():
+        controls = list(wn._controls.keys())
+        controls.sort()
+        for text in controls:
+            all_control = wn.get_control(text)
             if isinstance(all_control, wntr.network.TimeControl):
                 entry = 'Link {link} {setting} AT {compare} {time:g}\n'
                 vals = {'link': all_control._control_action._target_obj_ref.name,
@@ -1195,7 +1211,10 @@ class InpFile(object):
 
     def _write_rules(self, f, wn):
         f.write('[RULES]\n'.encode('ascii'))
-        for text, all_control in wn._controls.items():
+        controls = list(wn._controls.keys())
+        controls.sort()
+        for text in controls:
+            all_control = wn.get_control(text)
             entry = '{}\n'
             if isinstance(all_control, wntr.network.controls.IfThenElseControl):
                 rule = _EpanetRule('blah', self.flow_units, self.mass_units)
@@ -1287,8 +1306,8 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
-            assert len(current) == 3, ('INP file option in [REACTIONS] block '
-                                       'not recognized: ' + line)
+#            assert len(current) == 3, ('INP file option in [REACTIONS] block '
+#                                       'not recognized: ' + line)
             key1 = current[0].upper()
             key2 = current[1].upper()
             val3 = float(current[2])
@@ -1385,7 +1404,7 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
-            assert(len(current) >= 3), ("Error reading sources. Check format.")
+#            assert(len(current) >= 3), ("Error reading sources. Check format.")
             source_num = source_num + 1
             if current[0].upper() == 'MASS':
                 strength = to_si(self.flow_units, float(current[2]), QualParam.SourceMassInject, self.mass_units)
@@ -1482,7 +1501,7 @@ class InpFile(object):
                 key = words[0].upper()
                 if key == 'UNITS':
                     self.flow_units = FlowUnits[words[1].upper()]
-                    opts.hydraulic.units = words[1].upper()
+                    opts.hydraulic.en2_units = words[1].upper()
                 elif key == 'HEADLOSS':
                     opts.hydraulic.headloss = words[1].upper()
                 elif key == 'HYDRAULICS':
@@ -1563,7 +1582,7 @@ class InpFile(object):
                 raise RuntimeError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
             if opts.time.report_timestep % opts.time.hydraulic_timestep != 0:
                 raise RuntimeError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
-
+            opts.hydraulic.emitter_exponent = to_si(self.flow_units, opts.hydraulic.emitter_exponent, HydParam.EmitterCoeff)
 
     def _write_options(self, f, wn):
         f.write('[OPTIONS]\n'.encode('ascii'))
@@ -1592,7 +1611,7 @@ class InpFile(object):
         if wn.options.hydraulic.pattern is not None:
             f.write(entry_string.format('PATTERN', wn.options.hydraulic.pattern).encode('ascii'))
         f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.hydraulic.demand_multiplier).encode('ascii'))
-        f.write(entry_float.format('EMITTER EXPONENT', wn.options.hydraulic.emitter_exponent).encode('ascii'))
+        f.write(entry_float.format('EMITTER EXPONENT', from_si(self.flow_units, wn.options.hydraulic.emitter_exponent, HydParam.EmitterCoeff)).encode('ascii'))
         f.write(entry_float.format('TOLERANCE', wn.options.solver.tolerance).encode('ascii'))
         if wn.options.graphics.map_filename is not None:
             f.write(entry_string.format('MAP', wn.options.graphics.map_filename).encode('ascii'))
@@ -1771,7 +1790,7 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
-            assert(len(current) == 3), ("Error reading node coordinates. Check format.")
+#            assert(len(current) == 3), ("Error reading node coordinates. Check format.")
             self.wn.set_node_coordinates(current[0], (float(current[1]), float(current[2])))
 
     def _write_coordinates(self, f, wn):
@@ -1780,7 +1799,10 @@ class InpFile(object):
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
         coord = nx.get_node_attributes(wn._graph, 'pos')
-        for key, val in coord.items():
+        keys = list(coord.keys())
+        keys.sort()
+        for key in keys:
+            val = coord[key]
             f.write(entry.format(key, val[0], val[1]).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -1952,7 +1974,7 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
-                assert isinstance(condition._source_obj, Valve)
+#                assert isinstance(condition._source_obj, Valve)
                 if condition._source_obj.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
                     value = from_si(self.inp_units, val_si, HydParam.Pressure)
                 elif condition._source_obj.valve_type.upper() in ['FCV']:
@@ -1988,11 +2010,13 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
-                assert isinstance(action._target_obj_ref, Valve)
-                if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
-                    value = from_si(self.inp_units, val_si, HydParam.Pressure)
-                elif action._target_obj_ref.valve_type.upper() in ['FCV']:
-                    value = from_si(self.inp_units, val_si, HydParam.Flow)
+                if isinstance(action._target_obj_ref, Valve):
+                    if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                        value = from_si(self.inp_units, val_si, HydParam.Pressure)
+                    elif action._target_obj_ref.valve_type.upper() in ['FCV']:
+                        value = from_si(self.inp_units, val_si, HydParam.Flow)
+                    else:
+                        value = val_si
                 else:
                     value = val_si
                 value = '{:.6g}'.format(value)
@@ -2022,7 +2046,7 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
-                assert isinstance(action._target_obj_ref, Valve)
+#                assert isinstance(action._target_obj_ref, Valve)
                 if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
                     value = from_si(self.inp_units, val_si, HydParam.Pressure)
                 elif action._target_obj_ref.valve_type.upper() in ['FCV']:
@@ -2128,11 +2152,11 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = to_si(self.inp_units, value, HydParam.Pressure)
             elif attr.lower() in ['setting']:
-                assert isinstance(link, Valve)
-                if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
-                    value = to_si(self.inp_units, value, HydParam.Pressure)
-                elif link.valve_type.upper() in ['FCV']:
-                    value = to_si(self.inp_units, value, HydParam.Flow)
+                if isinstance(link, Valve):
+                    if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                        value = to_si(self.inp_units, value, HydParam.Pressure)
+                    elif link.valve_type.upper() in ['FCV']:
+                        value = to_si(self.inp_units, value, HydParam.Flow)
             then_acts.append(ControlAction(link, attr, value))
         else_acts = []
         for act in self._else_clauses:
@@ -2152,7 +2176,7 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = to_si(self.inp_units, value, HydParam.Pressure)
             elif attr.lower() in ['setting']:
-                assert isinstance(link, Valve)
+#                assert isinstance(link, Valve)
                 if link.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
                     value = to_si(self.inp_units, value, HydParam.Pressure)
                 elif link.valve_type.upper() in ['FCV']:
@@ -2304,8 +2328,7 @@ class BinFile(object):
             the values that go with the information
 
         """
-        #print('    Network: {} = {}'.format(element, values))
-        pass
+        self.results.meta[element] = values
 
     def save_energy_line(self, pump_idx, pump_name, values):
         """Save pump energy from the output file.
@@ -2430,8 +2453,8 @@ class BinFile(object):
             linknames = np.array(np.fromfile(fin, dtype=dt_str, count=nlinks), dtype=str).tolist()
             self.node_names = nodenames
             self.link_names = linknames
-            linkstart = np.fromfile(fin, dtype=np.int32, count=nlinks)
-            linkend = np.fromfile(fin, dtype=np.int32, count=nlinks)
+            linkstart = np.array(np.fromfile(fin, dtype=np.int32, count=nlinks), dtype=int)
+            linkend = np.array(np.fromfile(fin, dtype=np.int32, count=nlinks), dtype=int)
             linktype = np.fromfile(fin, dtype=np.int32, count=nlinks)
             tankidxs = np.fromfile(fin, dtype=np.int32, count=ntanks)
             tankarea = np.fromfile(fin, dtype=np.dtype(ftype), count=ntanks)
@@ -2478,19 +2501,19 @@ class BinFile(object):
                 self.results.meta['quality_units'] = wqunits
                 self.results.meta['quality_chem'] = chemical
             self.results.time = reporttimes
-            self.results.meta['report_times'] = reporttimes
-            self.results.meta['node_elevation'] = pd.Series(data=elevation, index=nodenames)
-            self.results.meta['link_length'] = pd.Series(data=linklen, index=linknames)
-            self.results.meta['link_diameter'] = pd.Series(data=diameter, index=linknames)
-            self.results.meta['stats_mode'] = statsflag
-            self.results.meta['stats_N'] = statsN
+            self.save_network_desc_line('report_times', reporttimes)
+            self.save_network_desc_line('node_elevation', pd.Series(data=elevation, index=nodenames))
+            self.save_network_desc_line('link_length', pd.Series(data=linklen, index=linknames))
+            self.save_network_desc_line('link_diameter', pd.Series(data=diameter, index=linknames))
+            self.save_network_desc_line('stats_mode', statsflag)
+            self.save_network_desc_line('stats_N', statsN)
             nodetypes = np.array(['Junction']*self.num_nodes, dtype='|S10')
             nodetypes[tankidxs-1] = 'Tank'
             nodetypes[tankidxs[tankarea==0]-1] = 'Reservoir'
             linktypes = np.array(['Pipe']*self.num_links)
             linktypes[ linktype == EN.PUMP ] = 'Pump'
             linktypes[ linktype > EN.PUMP ] = 'Valve'
-            self.results.meta['link_type'] = pd.Series(data=linktypes, index=linknames, copy=True)
+            self.save_network_desc_line('link_type', pd.Series(data=linktypes, index=linknames, copy=True))
             linktypes[ linktype == EN.CVPIPE ] = 'CV'
             linktypes[ linktype == EN.FCV ] = 'FCV'
             linktypes[ linktype == EN.PRV ] = 'PRV'
@@ -2498,10 +2521,13 @@ class BinFile(object):
             linktypes[ linktype == EN.PBV ] = 'PBV'
             linktypes[ linktype == EN.TCV ] = 'TCV'
             linktypes[ linktype == EN.GPV ] = 'GPV'
-            self.results.meta['link_subtype'] = pd.Series(data=linktypes, index=linknames, copy=True)
-            self.results.meta['node_type'] = pd.Series(data=nodetypes, index=nodenames, copy=True)
-            self.results.meta['node_names'] = nodenames
-            self.results.meta['link_names'] = linknames
+            self.save_network_desc_line('link_subtype', pd.Series(data=linktypes, index=linknames, copy=True))
+            self.save_network_desc_line('node_type', pd.Series(data=nodetypes, index=nodenames, copy=True))
+            self.save_network_desc_line('node_names', np.array(nodenames, dtype=str))
+            self.save_network_desc_line('link_names', np.array(linknames, dtype=str))
+            names = np.array(nodenames, dtype=str)
+            self.save_network_desc_line('link_start', pd.Series(data=names[linkstart-1], index=linknames, copy=True))
+            self.save_network_desc_line('link_end', pd.Series(data=names[linkend-1], index=linknames, copy=True))
 
             if custom_handlers is True:
                 logger.debug('... set up results object ...')
