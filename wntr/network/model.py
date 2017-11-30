@@ -2194,8 +2194,11 @@ class Junction(Node):
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
         self._emitter_coefficient = None
 
+    def __str__(self):
+        return '<Junction "{}">'.format(self._name)
+
     def __repr__(self):
-        return "<Junction '{}'>".format(self._name)
+        return "<Junction '{}', elevation={}, demand_timeseries_list={}>".format(self._name, self.elevation, repr(self.demand_timeseries_list))
 
     @property
     def pressure(self):
@@ -2447,8 +2450,11 @@ class Tank(Node):
     def __hash__(self):
         return id(self)
 
+    def __str__(self):
+        return '<Tank "{}">'.format(self._name)
+
     def __repr__(self):
-        return "<Tank '{}'>".format(self._name)
+        return "<Tank '{}', elevation={}, min_level={}, max_level={}, diameter={}, min_vol={}, vol_curve='{}'>".format(self._name, self.elevation, self.min_level, self.max_level, self.diameter, self.min_vol, (self.vol_curve.name if self.vol_curve else None))
 
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
@@ -2616,8 +2622,11 @@ class Reservoir(Node):
             return True
         return False
 
+    def __str__(self):
+        return '<Reservoir "{}">'.format(self._name)
+
     def __repr__(self):
-        return "<Reservoir '{}'>".format(self._name)
+        return "<Reservoir '{}', head={}>".format(self._name, self.head_timeseries)
 
     def __hash__(self):
         return id(self)
@@ -2698,7 +2707,12 @@ class Pipe(Link):
         return False
 
     def __repr__(self):
-        return "<Pipe '{}'>".format(self._link_name)
+        return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
+                       self.start_node, self.end_node, self.length, self.diameter, 
+                       self.roughness, self.minor_loss, self.cv, str(self.status))
+
+    def __str__(self):
+        return '<Pipe "{}">'.format(self._link_name)
 
     def __hash__(self):
         return id(self)
@@ -2757,8 +2771,18 @@ class Pump(Link):
             return self.curve.name
         return None
 
+    def __str__(self):
+        return '<Pump "{}">'.format(self._link_name)
+
     def __repr__(self):
-        return "<Pump '{}'>".format(self._link_name)
+        if self.info_type == 'HEAD':
+            return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
+                       self.start_node, self.end_node, self.info_type, self.curve.name, 
+                       self.speed_timeseries, str(self.status))
+        else:
+            return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._link_name,
+                       self.start_node, self.end_node, self.info_type, self.power, 
+                       self.speed_timeseries, str(self.status))
 
     @property
     def setting(self):
@@ -2915,8 +2939,13 @@ class Valve(Link):
             return True
         return False
 
+    def __str__(self):
+        return '<Pump/{} "{}">'.format(self.valve_type, self._link_name)
+
     def __repr__(self):
-        return "<Valve: '{}', '{}'>".format(self._link_name, self.valve_type)
+            return "<Pump '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>".format(self._link_name,
+                       self.start_node, self.end_node, self.valve_type, self.diameter, 
+                       self.minor_loss, self.setting, str(self.status))
 
     def __hash__(self):
         return id(self)
