@@ -2622,6 +2622,18 @@ class Reservoir(Node):
     def __hash__(self):
         return id(self)
 
+    @property
+    def base_head(self):
+        return self.expected_head.base_value
+
+    @base_head.setter
+    def base_head(self, value):
+        self.expected_head.base_value = value
+
+    @property
+    def head_pattern_name(self):
+        return self.expected_head.pattern_name
+
 
 class Pipe(Link):
     """
