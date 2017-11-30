@@ -369,6 +369,10 @@ class InpFile(object):
 
         # Set the _inpfile io data inside the water network, so it is saved somewhere
         wn._inpfile = self
+        
+        ### Finish tags
+        self._read_end()
+        
         return self.wn
 
     def write(self, filename, wn, units=None):
@@ -844,6 +848,12 @@ class InpFile(object):
                 for point in curve.points:
                     x = from_si(self.flow_units, point[0], HydParam.Flow)
                     y = from_si(self.flow_units, point[1], HydParam.HeadLoss)
+                    f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
+            else:
+                f.write(';UNKNOWN: {}\n'.format(curve_name).encode('ascii'))
+                for point in curve.points:
+                    x = point[0]
+                    y = point[1]
                     f.write(_CURVE_ENTRY.format(name=curve_name, x=x, y=y, com=';').encode('ascii'))
             f.write('\n'.encode('ascii'))
         f.write('\n'.encode('ascii'))
@@ -1910,6 +1920,26 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     ### End of File
+
+    def _read_end(self):
+        """Finalize read by verifying that all curves have been dealt with"""
+        def create_curve(curve_name):
+            curve_points = []
+            if curve_name not in self.wn.curve_name_list:
+                for point in self.curves[curve_name]:
+                    x = to_si(self.flow_units, point[0], HydParam.Flow)
+                    y = to_si(self.flow_units, point[1], HydParam.HydraulicHead)
+                    curve_points.append((x,y))
+                self.wn.add_curve(curve_name, None, curve_points)
+            curve = self.wn.get_curve(curve_name)
+            return curve
+
+        curve_name_list = self.wn.curve_name_list
+        for name, curvedata in self.curves.items():
+            if name not in curve_name_list:
+                warnings.warn('Not all curves were used in "{}"; added with type None, units conversion left to user'.format(self.wn.name))
+                logger.warning('Curve was not used: "{}"; saved as curve type None and unit conversion not performed'.format(name))
+                create_curve(name)
 
     def _write_end(self, f, wn):
         f.write('[END]\n'.encode('ascii'))
