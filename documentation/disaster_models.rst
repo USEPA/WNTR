@@ -108,7 +108,7 @@ Pressure dependent demand simulation is recommended in cases where fire fighting
 To model the impact of fire conditions at a specific node:
 
 .. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 33-43
+   :lines: 33-41
 
 Environmental change
 ---------------------
@@ -130,7 +130,7 @@ Changes to supply and demand can be simple (i.e., changing all nodes by a certai
 To model simple changes in supply and demand:
 
 .. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 46-49
+   :lines: 44-48
    
 Contamination
 --------------------

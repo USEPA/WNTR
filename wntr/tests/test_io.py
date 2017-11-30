@@ -44,21 +44,22 @@ class TestWriter(unittest.TestCase):
         self.assertEqual(p1.end_node, 'j3')
         self.assertEqual(p1.info_type, 'HEAD')
         self.assertEqual(p1.curve, p11.curve)
-        self.assertEqual(p1.curve.name, 'curve1')
-        self.assertAlmostEqual(p1.speed, 1.2, 6)
-        self.assertEqual(p1.pattern, 'pattern1')
+        self.assertEqual(p1.curve_name, 'curve1')
+        self.assertAlmostEqual(p1.speed_timeseries.base_value, 1.2, 6)
+        self.assertEqual(p1.speed_timeseries, p11.speed_timeseries)
+        self.assertEqual(p1.speed_timeseries.pattern_name, 'pattern1')
 
         p2 = self.wn2.get_link('pump2')
         self.assertEqual(p2.info_type, 'POWER')
         self.assertAlmostEqual(p2._base_power, 16629.107, 2)
 
     def test_valve_setting_control(self):
-        control = self.wn2.get_control('LINKv10.82ATTIME12240')
+        control = self.wn2.get_control('/LINK/v1/0.82/AT/TIME/12240')
         run_time = control._run_at_time
         self.assertAlmostEqual(run_time, 3600.0*3.4, 6)
         value = control._control_action._value
         self.assertAlmostEqual(value, 0.82, 6)
 
-        control = self.wn2.get_control('LINKv22.61IFNODET1BELOW1.53')
+        control = self.wn2.get_control('/LINK/v2/2.61/IF/NODE/T1/BELOW/1.53')
         value = control._control_action._value
         self.assertAlmostEqual(value, 1.83548, 4)

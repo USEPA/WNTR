@@ -35,11 +35,11 @@ res2 = sim.run_sim()
 
 # Stop and restart a simulation
 wn = wntr.network.WaterNetworkModel(inp_file)
-wn.options.duration = 10*3600
-wn.options.hydraulic_timestep = 3600
+wn.options.time.duration = 10*3600
+wn.options.time.hydraulic_timestep = 3600
 sim = wntr.sim.WNTRSimulator(wn)
 first_10_hours_of_results = sim.run_sim()
-wn.options.duration = 24*3600
+wn.options.time.duration = 24*3600
 print('running last 14 hours')
 last_14_hours_of_results = sim.run_sim()
 node_results = pd.concat([first_10_hours_of_results.node,last_14_hours_of_results.node],axis=1)
@@ -50,8 +50,8 @@ link_results = pd.concat([first_10_hours_of_results.link,last_14_hours_of_result
 # Stop a simulation and save the water network model to a file
 # Open the file and continue running
 wn = wntr.network.WaterNetworkModel(inp_file)
-wn.options.duration = 10*3600
-wn.options.hydraulic_timestep = 3600
+wn.options.time.duration = 10*3600
+wn.options.time.hydraulic_timestep = 3600
 sim = wntr.sim.WNTRSimulator(wn)
 first_10_hours_of_results = sim.run_sim()
 f=open('pickle_example.pickle','wb')
@@ -60,7 +60,7 @@ f.close()
 f=open('pickle_example.pickle','rb')
 new_wn = pickle.load(f)
 f.close()
-new_wn.options.duration = 24*3600
+new_wn.options.time.duration = 24*3600
 sim = wntr.sim.WNTRSimulator(new_wn)
 print('running last 14 hours')
 last_14_hours_of_results = sim.run_sim()

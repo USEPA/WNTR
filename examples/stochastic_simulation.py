@@ -10,9 +10,9 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 
 ### SIMULATION ###
 # Modify the water network model
-wn.options.duration = 48*3600
-wn.options.hydraulic_timestep = 1800
-wn.options.report_timestep = 1800
+wn.options.time.duration = 48*3600
+wn.options.time.hydraulic_timestep = 1800
+wn.options.time.report_timestep = 1800
 
 # Set nominal pressures
 for name, node in wn.junctions():

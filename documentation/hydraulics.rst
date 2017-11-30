@@ -33,7 +33,7 @@ More information on the simulators can be found in the API documentation, under
 
 Options
 ----------
-Hydraulic simulation options are defined in the :class:`~wntr.network.model.WaterNetworkOptions` class.
+Hydraulic simulation options are defined in the :class:`~wntr.network.options.WaterNetworkOptions` class.
 These options include 
 duration, 
 hydraulic timestep, 

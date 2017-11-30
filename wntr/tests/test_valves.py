@@ -14,7 +14,7 @@ class TestTCVs(unittest.TestCase):
 
     def test_pipe_minor_loss(self):
         wn = wntr.network.WaterNetworkModel()
-        wn.options.duration = 3600 * 4
+        wn.options.time.duration = 3600 * 4
         wn.add_reservoir(name='r1', base_head=20.0)
         wn.add_junction(name='j1', base_demand=0.0)
         wn.add_junction(name='j2', base_demand=0.1)
@@ -36,8 +36,8 @@ class TestTCVs(unittest.TestCase):
         results2 = sim.run_sim()
 
         for t in results2.time:
-            head1 = results1.node['head', t, 'j2']
-            head2 = results2.node['head', t, 'j2']
+            head1 = results1.node['head'].loc[t, 'j2']
+            head2 = results2.node['head'].loc[t, 'j2']
             head_diff = abs(head1 - head2)
             self.assertLess(head_diff, 0.01)
 
@@ -54,7 +54,7 @@ class TestFCVs(unittest.TestCase):
 
     def test_active_FCV(self):
         wn = wntr.network.WaterNetworkModel()
-        wn.options.duration = 3600 * 4
+        wn.options.time.duration = 3600 * 4
         wn.add_reservoir(name='r1', base_head=20.0)
         wn.add_junction(name='j1', base_demand=0.0)
         wn.add_junction(name='j2', base_demand=0.0)
@@ -73,12 +73,12 @@ class TestFCVs(unittest.TestCase):
         results2 = sim.run_sim()
 
         for t in results2.time:
-            self.assertAlmostEqual(results1.link['flowrate', t, 'v1'], 0.01, 7)
-            self.assertAlmostEqual(results2.link['flowrate', t, 'v1'], 0.01, 7)
+            self.assertAlmostEqual(results1.link['flowrate'].loc[t, 'v1'], 0.01, 7)
+            self.assertAlmostEqual(results2.link['flowrate'].loc[t, 'v1'], 0.01, 7)
 
     def test_open_FCV(self):
         wn = wntr.network.WaterNetworkModel()
-        wn.options.duration = 3600 * 4
+        wn.options.time.duration = 3600 * 4
         wn.add_reservoir(name='r1', base_head=20.0)
         wn.add_junction(name='j1', base_demand=0.0)
         wn.add_junction(name='j2', base_demand=0.0)
@@ -97,12 +97,12 @@ class TestFCVs(unittest.TestCase):
         results2 = sim.run_sim()
 
         for t in results2.time:
-            self.assertLess(abs(results1.link['flowrate', t, 'v1'] - results2.link['flowrate', t, 'v1']), 1e-5)
-            self.assertLess(results1.link['flowrate', t, 'v1'], 0.09)
+            self.assertLess(abs(results1.link['flowrate'].loc[t, 'v1'] - results2.link['flowrate'].loc[t, 'v1']), 1e-5)
+            self.assertLess(results1.link['flowrate'].loc[t, 'v1'], 0.09)
 
     def test_open_to_active_FCV(self):
         wn = wntr.network.WaterNetworkModel()
-        wn.options.duration = 3600 * 10
+        wn.options.time.duration = 3600 * 10
         wn.add_reservoir(name='r1', base_head=20.0)
         wn.add_tank(name='t1', init_level=10.0, max_level=25.0, min_vol=0.0)
         wn.add_junction(name='j1', base_demand=0.0)
@@ -124,10 +124,10 @@ class TestFCVs(unittest.TestCase):
         results2 = sim.run_sim()
 
         for t in results2.time:
-            self.assertLess(abs(results1.link['flowrate', t, 'v1'] - results2.link['flowrate', t, 'v1']), 1e-4)
+            self.assertLess(abs(results1.link['flowrate'].loc[t, 'v1'] - results2.link['flowrate'].loc[t, 'v1']), 1e-4)
             if t > 7200:
-                self.assertLess(abs(results1.link['flowrate', t, 'v1'] - 0.03), 1e-8)
-
-        self.assertLess(abs(results1.link['flowrate', 0, 'v1'] - 0.0), 1e-5)
-        self.assertLess(abs(results1.link['flowrate', 3600, 'v1'] - 0.0245344210416), 1e-5)
-        self.assertLess(abs(results1.link['flowrate', 7200, 'v1'] - 0.0293480847031), 1e-5)
+                self.assertLess(abs(results1.link['flowrate'].loc[t, 'v1'] - 0.03), 1e-8)
+                
+        self.assertLess(abs(results1.link['flowrate'].loc[0, 'v1'] - 0.0), 1e-5)
+        self.assertLess(abs(results1.link['flowrate'].loc[3600, 'v1'] - 0.0245344210416), 1e-5)
+        self.assertLess(abs(results1.link['flowrate'].loc[7200, 'v1'] - 0.0293480847031), 1e-5)

@@ -1,7 +1,6 @@
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
-#from sympy.physics import units
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
@@ -28,7 +27,6 @@ def test_Net1():
     length = wn.query_link_attribute('length')
 
     # Data from the INP file, converted using flowunits
-    flowunits = epanet_unit_id[wn.options.units]
     expected_node = {'11': {'type': 'junction', 'pos': (30.0, 70.0)},
                      '10': {'type': 'junction', 'pos': (20.0, 70.0)},
                      '13': {'type': 'junction', 'pos': (70.0, 70.0)},
@@ -154,5 +152,83 @@ def test_nzd_nodes():
 
     assert_set_equal(set(nzd_nodes.keys()), expected_nodes)
 
-if __name__ == '__main__':
-    test_Net1()
+def test_name_list():
+    inp_file = join(net1dir,'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    
+    assert_in('10', wn.junction_name_list)
+    assert_in('1', wn.tank_name_list)
+    assert_in('River', wn.reservoir_name_list)
+    assert_in('20', wn.pipe_name_list)
+    assert_in('10', wn.pump_name_list)
+    assert_equal(0, len(wn.valve_name_list))
+    assert_in('1', wn.pattern_name_list)
+    assert_in('1', wn.curve_name_list)
+    assert_equal(0, len(wn.source_name_list))
+#    assert_equal(0, len(wn._demand_name_list))
+    assert_in('/LINK/10/OPEN/AT/TIME/3600', wn.control_name_list)
+
+def test_add_get_remove_num():
+    inp_file = join(net1dir,'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    
+    wn.add_junction('new_junc')
+    wn.get_node('new_junc')
+    
+    wn.add_tank('new_tank')
+    wn.get_node('new_tank')
+    
+    wn.add_reservoir('new_reservoir')
+    wn.get_node('new_reservoir')
+    
+    wn.add_pipe('new_pipe', '139', '131')
+    wn.get_link('new_pipe')
+    
+    wn.add_pump('new_pump', '139', '131')
+    wn.get_link('new_pump')
+    
+    wn.add_valve('new_valve', '139', '131')
+    wn.get_link('new_valve')
+    
+    wn.add_pattern('new_pattern', [])
+    wn.get_pattern('new_pattern')
+    
+    wn.add_curve('new_curve', 'HEAD', [])
+    wn.get_curve('new_curve')
+    
+    wn.add_source('new_source', 'new_junc', 'CONCEN', 1, 'new_pattern')
+    wn.get_source('new_source')
+    
+    nums = [wn.num_junctions,
+           wn.num_tanks,
+           wn.num_reservoirs,
+           wn.num_pipes,
+           wn.num_pumps,
+           wn.num_valves,
+           wn.num_patterns,
+           wn.num_curves,
+           wn.num_sources]
+    expected = [93,4,3,118,3,1,6,3,1]
+    assert_list_equal(nums, expected)
+    
+    wn.remove_node('new_junc')
+    wn.remove_node('new_tank')
+    wn.remove_node('new_reservoir')
+    wn.remove_link('new_pipe')
+    wn.remove_link('new_pump')
+    wn.remove_link('new_valve')
+    wn.remove_pattern('new_pattern')
+    wn.remove_curve('new_curve')
+    wn.remove_source('new_source')
+    
+    nums = [wn.num_junctions,
+           wn.num_tanks,
+           wn.num_reservoirs,
+           wn.num_pipes,
+           wn.num_pumps,
+           wn.num_valves,
+           wn.num_patterns,
+           wn.num_curves,
+           wn.num_sources]
+    expected = [92,3,2,117,2,0,5,2,0]
+    assert_list_equal(nums, expected)
