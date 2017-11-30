@@ -9,6 +9,7 @@ import enum
 import numpy as np
 import logging
 import six
+from .elements import LinkStatus
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +174,7 @@ class ControlCondition(object):
 
     def _repr_value(self, attr, value):
         if attr.lower() in ['status'] and int(value) == value:
-            return wntr.network.model.LinkStatus(int(value)).name
+            return LinkStatus(int(value)).name
         return value
 
     @classmethod
@@ -255,7 +256,7 @@ class SimpleNodeCondition(ControlCondition):
         return '/'.join([obj, self._source_attr, self._relation.symbol, self._threshold])
 
     def __repr__(self):
-        return "${}".format(self.name)
+        return "<SimpleNodeCondition: {}>".format(self.name)
 
     def __str__(self):
         typ = self._source_obj.__class__.__name__
@@ -532,10 +533,10 @@ class ValueCondition(ControlCondition):
                                 self._relation.symbol, self._threshold)
 
     def __repr__(self):
-        return "<ValueCondition: {}, {}, {}, {}>".format(repr(self._source_obj),
-                                                       repr(self._source_attr),
-                                                       repr(self._relation.symbol),
-                                                       repr(self._threshold))
+        return "<ValueCondition: {}, {}, {}, {}>".format(str(self._source_obj),
+                                                       str(self._source_attr),
+                                                       str(self._relation.symbol),
+                                                       str(self._threshold))
 
     def __str__(self):
         typ = self._source_obj.__class__.__name__
@@ -603,11 +604,11 @@ class RelativeCondition(ControlCondition):
         return [self._source_obj, self._threshold_obj]
 
     def __repr__(self):
-        return "RelativeCondition({}, {}, {}, {}, {})".format(repr(self._source_obj),
-                                                              repr(self._source_attr),
-                                                              repr(self._relation),
-                                                              repr(self._threshold_obj),
-                                                              repr(self._threshold_attr))
+        return "RelativeCondition({}, {}, {}, {}, {})".format(str(self._source_obj),
+                                                              str(self._source_attr),
+                                                              str(self._relation),
+                                                              str(self._threshold_obj),
+                                                              str(self._threshold_attr))
 
     def __str__(self):
         typ = self._source_obj.__class__.__name__
@@ -766,7 +767,7 @@ class ControlAction(BaseControlAction):
         return [self._target_obj_ref]
 
     def __repr__(self):
-        return '<ControlAction: {}, {}, {}>'.format(repr(self._target_obj_ref), repr(self._attribute), repr(self._repr_value()))
+        return '<ControlAction: {}, {}, {}>'.format(str(self._target_obj_ref), str(self._attribute), str(self._repr_value()))
 
     def __str__(self):
         return "set {}('{}').{} to {}".format(self._target_obj_ref.__class__.__name__,
@@ -1107,7 +1108,7 @@ class TimeControl(Control):
 
     def __repr__(self):
         fmt = '<TimeControl: model, {}, {}, {}, {}>'
-        return fmt.format(repr(self._run_at_time), repr(self._time_flag), repr(self._daily_flag), repr(self._control_action))
+        return fmt.format(str(self._run_at_time), str(self._time_flag), str(self._daily_flag), repr(self._control_action))
 
     def __eq__(self, other):
         if self._run_at_time      == other._run_at_time      and \
@@ -1223,8 +1224,8 @@ class ConditionalControl(Control):
                           self._threshold)
 
     def __repr__(self):
-        fmt = '<ConditionalControl: {}, {}), {}, {}, {}>'
-        return fmt.format(repr(self._source_obj), repr(self._source_attr), repr(self._operation), repr(self._threshold), repr(self._control_action))
+        fmt = '<ConditionalControl: {}, {}, {}, {}, {}>'
+        return fmt.format(str(self._source_obj), str(self._source_attr), str(self._operation), str(self._threshold), repr(self._control_action))
 
     def __eq__(self, other):
         if self._priority               == other._priority               and \

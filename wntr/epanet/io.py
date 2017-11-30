@@ -1349,7 +1349,7 @@ class InpFile(object):
             elif key1 == 'LIMITING':
                 self.wn.options.quality.limiting_potential = float(current[2])
             elif key1 == 'ROUGHNESS':
-                self.wn.options.quality.roughness_correlation = float(current[2])
+                self.wn.options.quality.roughness_correl = float(current[2])
             else:
                 raise RuntimeError('Reaction option not recognized: %s'%key1)
 
@@ -1374,8 +1374,8 @@ class InpFile(object):
                                            reaction_order=wn.options.quality.wall_rxn_order)).encode('ascii'))
         if wn.options.quality.limiting_potential is not None:
             f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.quality.limiting_potential).encode('ascii'))
-        if wn.options.quality.roughness_correlation is not None:
-            f.write(entry_float.format('ROUGHNESS','CORRELATION',wn.options.quality.roughness_correlation).encode('ascii'))
+        if wn.options.quality.roughness_correl is not None:
+            f.write(entry_float.format('ROUGHNESS','CORRELATION',wn.options.quality.roughness_correl).encode('ascii'))
         for tank_name, tank in wn.nodes(Tank):
             if tank.bulk_rxn_coeff is not None:
                 f.write(entry_float.format('TANK',tank_name,
@@ -1586,7 +1586,7 @@ class InpFile(object):
                 raise RuntimeError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
             if opts.time.report_timestep % opts.time.hydraulic_timestep != 0:
                 raise RuntimeError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
-            opts.hydraulic.emitter_exponent = to_si(self.flow_units, opts.hydraulic.emitter_exponent, HydParam.EmitterCoeff)
+#            opts.hydraulic.emitter_exponent = to_si(self.flow_units, opts.hydraulic.emitter_exponent, HydParam.EmitterCoeff)
 
     def _write_options(self, f, wn):
         f.write('[OPTIONS]\n'.encode('ascii'))
@@ -1615,7 +1615,7 @@ class InpFile(object):
         if wn.options.hydraulic.pattern is not None:
             f.write(entry_string.format('PATTERN', wn.options.hydraulic.pattern).encode('ascii'))
         f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.hydraulic.demand_multiplier).encode('ascii'))
-        f.write(entry_float.format('EMITTER EXPONENT', from_si(self.flow_units, wn.options.hydraulic.emitter_exponent, HydParam.EmitterCoeff)).encode('ascii'))
+        f.write(entry_float.format('EMITTER EXPONENT',  wn.options.hydraulic.emitter_exponent).encode('ascii'))
         f.write(entry_float.format('TOLERANCE', wn.options.solver.tolerance).encode('ascii'))
         if wn.options.graphics.map_filename is not None:
             f.write(entry_string.format('MAP', wn.options.graphics.map_filename).encode('ascii'))

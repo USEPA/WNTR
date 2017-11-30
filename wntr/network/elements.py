@@ -53,7 +53,7 @@ class Curve(object):
         return True
 
     def __repr__(self):
-        return '<Curve: {}, curve_type={}, points={}>'.format(repr(self.name), repr(self.curve_type), repr(self.points))
+        return "<Curve: '{}', curve_type='{}', points={}>".format(repr(self.name), repr(self.curve_type), repr(self.points))
 
     def __hash__(self):
         return id(self)
@@ -160,6 +160,9 @@ class Pattern(object):
         
     def __str__(self):
         return '<Pattern "%s">'%self.name
+
+    def __repr__(self):
+        return "<Pattern '{}', multipliers={}>".format(self.name, repr(self.multipliers))
         
     def __len__(self):
         return len(self._multipliers)
@@ -263,8 +266,10 @@ class TimeSeries(object):
         return repr(self)
 
     def __repr__(self):
-        fmt = "<TimeSeries: base={}, pattern={}, category={}>"
-        return fmt.format(self._base, self._pattern, repr(self._category))
+        fmt = "<TimeSeries: base={}, pattern='{}', category='{}'>"
+        return fmt.format(self._base, 
+                          (self._pattern.name if self.pattern else None),
+                          str(self._category))
     
     def __eq__(self, other):
         if type(self) == type(other) and \
