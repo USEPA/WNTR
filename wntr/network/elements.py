@@ -416,7 +416,7 @@ class Demands(MutableSequence):
     >>> len(dl)
     1
     >>> dl[0]
-    <TimeSeries: base=0.5, pattern=None, category=None>
+    <TimeSeries: base=0.5, pattern='None', category='None'>
     
     The demand list does not have any attributes, but can be created by passing 
     in demand objects or demand tuples as ``(base_demand, pattern, category_name)``
