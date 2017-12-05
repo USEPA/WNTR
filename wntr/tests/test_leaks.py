@@ -1,6 +1,7 @@
 import unittest
 import math
 from os.path import abspath, dirname, join
+from nose import SkipTest
 
 testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir,'networks_for_testing')
@@ -65,9 +66,9 @@ class TestLeakResults(unittest.TestCase):
         active_control_action = self.wntr.network.ControlAction(leak1, 'leak_status', True)
         inactive_control_action = self.wntr.network.ControlAction(leak1, 'leak_status', False)
         control = self.wntr.network.TimeControl(wn, 4*3600, 'SIM_TIME', False, active_control_action)
-        wn.add_control('control1',control)
+        wn.add_control('control1', control)
         control = self.wntr.network.TimeControl(wn, 8*3600, 'SIM_TIME', False, inactive_control_action)
-        wn.add_control('control2',control)
+        wn.add_control('control2', control)
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
@@ -78,6 +79,7 @@ class TestLeakResults(unittest.TestCase):
                 self.assertAlmostEqual(results.node['leak_demand'].loc[t,'leak1'], 0.75*math.pi/4.0*0.01**2.0*math.sqrt(2*9.81*results.node['pressure'].loc[t,'leak1']))
 
     def test_leak_against_epanet(self):
+#        raise SkipTest
         inp_file = join(test_datadir, 'leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.split_pipe('pipe2','pipe2__B','leak1')
@@ -88,6 +90,7 @@ class TestLeakResults(unittest.TestCase):
 
         inp_file = join(test_datadir, 'epanet_leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
+        wn.options.hydraulic.en2_units = self.wntr.epanet.util.FlowUnits.CMH
         sim = self.wntr.sim.EpanetSimulator(wn)
         epanet_results = sim.run_sim()
 
