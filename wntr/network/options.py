@@ -30,6 +30,18 @@ class WaterNetworkOptions(object):
         self._graphics = GraphicsOptions()
         self._user = UserOptions()
         
+    def __repr__(self):
+        s = ''
+        s += repr(self.time)
+        s += repr(self.hydraulic)
+        s += repr(self.quality)
+        s += repr(self.energy)
+        s += repr(self.solver)
+        s += repr(self.results)
+        s += repr(self.graphics)
+        s += repr(self.user)
+        return s
+        
     def __getstate__(self):
         """Allow pickling with the __slots__ construct"""
         return self._time, self._hydraulic, self._results, self._quality, self._energy, self._solver, self._graphics, self._user
@@ -200,15 +212,15 @@ class TimeOptions(object):
 
     def __repr__(self):
         s = 'Time options:\n'
-        s += '\t{0:<20}: {1:<20}\n'.format('duration', self.duration)
-        s += '\t{0:<20}: {1:<20}\n'.format('hydraulic_timestep', self.hydraulic_timestep)
-        s += '\t{0:<20}: {1:<20}\n'.format('quality_timestep', self.quality_timestep)
-        s += '\t{0:<20}: {1:<20}\n'.format('rule_timestep', self.rule_timestep)
-        s += '\t{0:<20}: {1:<20}\n'.format('pattern_timestep', self.pattern_timestep)
-        s += '\t{0:<20}: {1:<20}\n'.format('pattern_start', self.pattern_start)
-        s += '\t{0:<20}: {1:<20}\n'.format('report_timestep', self.report_timestep)
-        s += '\t{0:<20}: {1:<20}\n'.format('report_start', self.report_start)
-        s += '\t{0:<20}: {1:<20}\n'.format('start_clocktime', self.start_clocktime)
+        s += '  {0:<20}: {1:<20}\n'.format('duration', self.duration)
+        s += '  {0:<20}: {1:<20}\n'.format('hydraulic_timestep', self.hydraulic_timestep)
+        s += '  {0:<20}: {1:<20}\n'.format('quality_timestep', self.quality_timestep)
+        s += '  {0:<20}: {1:<20}\n'.format('rule_timestep', self.rule_timestep)
+        s += '  {0:<20}: {1:<20}\n'.format('pattern_timestep', self.pattern_timestep)
+        s += '  {0:<20}: {1:<20}\n'.format('pattern_start', self.pattern_start)
+        s += '  {0:<20}: {1:<20}\n'.format('report_timestep', self.report_timestep)
+        s += '  {0:<20}: {1:<20}\n'.format('report_start', self.report_start)
+        s += '  {0:<20}: {1:<20}\n'.format('start_clocktime', self.start_clocktime)
         return s
 
     def __str__(self):
@@ -244,6 +256,15 @@ class GraphicsOptions(object):
         self.offset = None
         self.image_filename = None
         self.map_filename = None
+
+    def __repr__(self):
+        s = 'Graphics options:\n'
+        s += '  {0:<20}: {1:<20}\n'.format('dimensions', str(self.dimensions))
+        s += '  {0:<20}: {1:<20}\n'.format('units', str(self.units))
+        s += '  {0:<20}: {1:<20}\n'.format('offset', str(self.offset))
+        s += '  {0:<20}: {1:<20}\n'.format('image_filename', str(self.image_filename))
+        s += '  {0:<20}: {1:<20}\n'.format('map_filename', str(self.map_filename))
+        return s
 
     def __str__(self):
         text = ""
@@ -294,7 +315,7 @@ class HydraulicOptions(object):
     """
     def __init__(self):
         # General options
-        self.units = 'GPM'
+        self.en2_units = 'GPM'
         self.headloss = 'H-W'
         self.hydraulics = None #string
         self.hydraulics_filename = None #string
@@ -303,6 +324,19 @@ class HydraulicOptions(object):
         self.pattern = None
         self.demand_multiplier = 1.0
         self.emitter_exponent = 0.5
+
+    def __repr__(self):
+        s = 'Hydraulic options:\n'
+        s += '  {0:<20}: {1:<20}\n'.format('en2_units', self.en2_units)
+        s += '  {0:<20}: {1:<20}\n'.format('headloss', self.headloss)
+        s += '  {0:<20}: {1:<20}\n'.format('hydraulics', self.hydraulics)
+        s += '  {0:<20}: {1:<20}\n'.format('hydraulics_filename', self.hydraulics_filename)
+        s += '  {0:<20}: {1:<20}\n'.format('viscosity', self.viscosity)
+        s += '  {0:<20}: {1:<20}\n'.format('specific_gravity', self.specific_gravity)
+        s += '  {0:<20}: {1:<20}\n'.format('pattern', self.pattern)
+        s += '  {0:<20}: {1:<20}\n'.format('demand_multiplier', self.demand_multiplier)
+        s += '  {0:<20}: {1:<20}\n'.format('emitter_exponent', self.emitter_exponent)
+        return s
         
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -406,6 +440,11 @@ class ResultsOptions(object):
                            'f-factor': {},
                            }        
         
+    def __repr__(self):
+        s = 'Report options:\n'
+        s += '  {0:<20}: {1:<20}\n'.format('statistic', str(self.statistic))
+        return s
+
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -458,7 +497,7 @@ class QualityOptions(object):
         Specifies that reaction rates are proportional to the difference 
         between the current concentration and some limiting potential value, 
         off if None
-    roughness_correlation : float, default None
+    roughness_correl : float, default None
         Makes all default pipe wall reaction coefficients related to pipe 
         roughness, off if None
         
@@ -475,7 +514,23 @@ class QualityOptions(object):
         self.bulk_rxn_coeff = 0.0
         self.wall_rxn_coeff = 0.0
         self.limiting_potential = None
-        self.roughness_correlation = None
+        self.roughness_correl = None
+
+    def __repr__(self):
+        s = 'Water quality options:\n'
+        s += '  {0:<20}: {1:<20}\n'.format('mode', self.mode)
+        s += '  {0:<20}: {1:<20}\n'.format('trace_node', self.trace_node)
+        s += '  {0:<20}: {1:<20}\n'.format('wq_units', self.wq_units)
+        s += '  {0:<20}: {1:<20}\n'.format('chemical_name', self.chemical_name)
+        s += '  {0:<20}: {1:<20}\n'.format('diffusivity', self.diffusivity)
+        s += '  {0:<20}: {1:<20}\n'.format('bulk_rxn_order', self.bulk_rxn_order)
+        s += '  {0:<20}: {1:<20}\n'.format('wall_rxn_order', self.wall_rxn_order)
+        s += '  {0:<20}: {1:<20}\n'.format('tank_rxn_order', self.tank_rxn_order)
+        s += '  {0:<20}: {1:<20}\n'.format('bulk_rxn_coeff', self.bulk_rxn_coeff)
+        s += '  {0:<20}: {1:<20}\n'.format('wall_rxn_coeff', self.bulk_rxn_coeff)
+        s += '  {0:<20}: {1:<20}\n'.format('limiting_potential', self.limiting_potential)
+        s += '  {0:<20}: {1:<20}\n'.format('roughness_correl', self.roughness_correl)
+        return s
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -492,7 +547,7 @@ class QualityOptions(object):
            abs(self.bulk_rxn_coeff - other.bulk_rxn_coeff)<1e-10 and \
            abs(self.wall_rxn_coeff - other.wall_rxn_coeff)<1e-10 and \
            abs(self.limiting_potential - other.limiting_potential)<1e-10 and \
-           abs(self.roughness_correlation - other.roughness_correlation)<1e-10:
+           abs(self.roughness_correl - other.roughness_correl)<1e-10:
                return True
         return False
 
@@ -521,6 +576,14 @@ class EnergyOptions(object):
         self.global_pattern = None
         self.global_efficiency = 75.0
         self.demand_charge = None
+
+    def __repr__(self):
+        s = 'Energy options:\n'
+        s += '  {0:<20}: {1:<20}\n'.format('global_price', self.global_price)
+        s += '  {0:<20}: {1:<20}\n'.format('global_pattern', self.global_pattern)
+        s += '  {0:<20}: {1:<20}\n'.format('global_efficiency', self.global_efficiency)
+        s += '  {0:<20}: {1:<20}\n'.format('demand_charge', self.demand_charge)
+        return s
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -572,6 +635,18 @@ class SolverOptions(object):
         self.maxcheck = 10
         self.damplimit = 0
 
+    def __repr__(self):
+        s = 'Solver options:\n'
+        s += '  {0:<20}: {1:<20}\n'.format('trials', self.trials)
+        s += '  {0:<20}: {1:<20}\n'.format('accuracy', self.accuracy)
+        s += '  {0:<20}: {1:<20}\n'.format('unbalanced', self.unbalanced)
+        s += '  {0:<20}: {1:<20}\n'.format('unbalanced_value', self.unbalanced_value)
+        s += '  {0:<20}: {1:<20}\n'.format('tolerance', self.tolerance)
+        s += '  {0:<20}: {1:<20}\n'.format('checkfreq', self.checkfreq)
+        s += '  {0:<20}: {1:<20}\n'.format('maxcheck', self.maxcheck)
+        s += '  {0:<20}: {1:<20}\n'.format('damplimit', self.damplimit)
+        return s
+
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -603,3 +678,9 @@ class UserOptions(object):
     """
     def __init__(self):
         pass
+
+    def __repr__(self):
+        s = 'User options:\n'
+        for key, value in self.__dict__.items():
+            s += '  {0:<20}: {1:<20}\n'.format(key, value)
+        return s

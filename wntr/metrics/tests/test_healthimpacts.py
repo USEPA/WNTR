@@ -35,21 +35,16 @@ def test_mass_consumed():
     wn = wntr.network.WaterNetworkModel(inp_file)
 
     wn.options.quality.mode = 'CHEMICAL'
-    wn.options.hydraulic.units = 'LPS'
     newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
     wn.add_pattern(newpat.name, newpat)
-    
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
-    #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
-    junctions = [junction_name for junction_name, junction in wn.junctions()]
-    node_results = {} #results.node #.loc[:, :, junctions]
-    node_results['quality'] = results.node['quality'].loc[:, junctions]
-    node_results['demand'] = results.node['demand'].loc[:, junctions]
-    MC = wntr.metrics.mass_contaminant_consumed(node_results)
+    junc_results = results.node.loc[:, :, wn.junction_name_list]
+    
+    MC = wntr.metrics.mass_contaminant_consumed(junc_results)
     MC_timeseries = MC.sum(axis=1)
     MC_cumsum = MC_timeseries.cumsum()
     #MC_timeseries.to_csv('MC.txt')
@@ -65,7 +60,6 @@ def test_mass_consumed():
     assert_less(error, 0.01) # 1% error
 
 def test_volume_consumed():
-    raise SkipTest
 
     inp_file = join(net3dir,'Net3.inp')
 
@@ -75,31 +69,28 @@ def test_volume_consumed():
     newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
     wn.add_pattern(newpat.name, newpat)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
-    #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
-    junctions = [junction_name for junction_name, junction in wn.junctions()]
-    node_results = results.node.loc[:, :, junctions]
+    junc_results = results.node.loc[:, :, wn.junction_name_list]
 
-    VC = wntr.metrics.volume_contaminant_consumed(node_results, 0)
+    VC = wntr.metrics.volume_contaminant_consumed(junc_results, 0)
     VC_timeseries = VC.sum(axis=1)
     VC_cumsum = VC_timeseries.cumsum()
     #VC_timeseries.to_csv('VC.txt')
 
-    expected = float(156760/35.3147) # hour 2
+    expected = float(156760/264.172) # hour 2, convert gallons to m3
     error = abs((VC_cumsum[2*3600] - expected)/expected)
     print(VC_cumsum[2*3600], expected, error)
-    assert_less(error, 0.01) # 1% error
+    assert_less(error, 0.02) # 2% error
 
-    expected = float(4867920/35.3147) # hour 12
+    expected = float(4867920/264.172) # hour 12, convert gallons to m3
     error = abs((VC_cumsum[12*3600] - expected)/expected)
     print(VC_cumsum[12*3600], expected, error)
     assert_less(error, 0.01) # 1% error
 
 def test_extent_contaminated():
-    raise SkipTest
 
     inp_file = join(net3dir,'Net3.inp')
 
@@ -109,27 +100,18 @@ def test_extent_contaminated():
     newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
     wn.add_pattern(newpat.name, newpat)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
-    #WQ = wntr.scenario.Waterquality('CHEM', ['121'], 'SETPOINT', 100, 0, 24*3600)
 
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
-    #junctions = [junction_name for junction_name, junction in wn.junctions]
-    #node_results = results.node.loc[:, :, junctions]
-
-    EC = wntr.metrics.extent_contaminant(results.node, results.link, wn, 0)
-    EC_timeseries = EC.sum(axis=1)
-    EC_cummax = EC_timeseries.cummax()
-    #EC_timeseries.to_csv('EC.txt')
+    EC_cummax = wntr.metrics.extent_contaminant(results.node, results.link, wn, 0)
 
     expected = float(80749.9*0.3048) # hour 2
     error = abs((EC_cummax[2*3600] - expected)/expected)
-    # print(EC_cummax[2*3600], expected, error)
     assert_less(error, 0.01) # 1% error
 
     expected = float(135554*0.3048) # hour 12
     error = abs((EC_cummax[12*3600] - expected)/expected)
-    # print(EC_cummax[12*3600], expected, error)
     assert_less(error, 0.01) # 1% error
 
 if __name__ == '__main__':

@@ -77,8 +77,9 @@ The control action `act1` from above is used in the conditional control:
     >>> thresh1 = 46.0248
     >>> ctrl1 = controls.ConditionalControl( (n1, 'level'), np.greater, thresh1, act1)
     >>> ctrl1
-    <ConditionalControl: <Tank '1'>, 'level'), <ufunc 'greater'>, 46.0248, <ControlAction: <Pipe '330'>, 'status', 'Open'>>
-
+    <ConditionalControl: <Tank "1">, level, <ufunc 'greater'>, 46.0248, <ControlAction: <Pipe "330">, status, Open>>
+    
+    
 To get an EPANET-like description of this control, use the print function:
 
 .. doctest::
@@ -192,7 +193,7 @@ The control should be named so that it can be retrieved and modified if desired:
 
     >>> wn.add_control('NewTimeControl', ctrl2)
     >>> wn.get_control('NewTimeControl')
-    <TimeControl: model, 435600, 'SIM_TIME', False, <ControlAction: <Pump '10'>, 'status', 'Open'>>
+    <TimeControl: model, 435600, SIM_TIME, False, <ControlAction: <Pump "10">, status, Open>>
 
 ..
 	If a control of that name already exists, an error will occur. In this case, the control will need to be deleted first.

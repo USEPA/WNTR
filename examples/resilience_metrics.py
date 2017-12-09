@@ -297,7 +297,7 @@ def water_security_metrics(wn):
                           title='Total mass consumed')
 
     plt.figure()
-    EC.sum(axis=1).plot(title='Extent of contamination')
+    EC.plot(title='Extent of contamination')
 
 
 def population_impacted_metrics(wn):
