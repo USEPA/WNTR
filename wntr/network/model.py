@@ -2083,7 +2083,6 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._end_node_name = end_node_name
         self._base_status = LinkStatus.Open
         self._user_status = LinkStatus.Open
-        self._internal_status = LinkStatus.Open
         self.flow = None
         self.tag = None
         self._vertices = []
@@ -2092,9 +2091,10 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def status(self):
         """
-        Returns the actual status of the link based on the _user_status and the _internal_status. The acutal status
-        may be different that the user status because, for example, the user may set a valve to Active, but the
-        valve may have to close if reverse flow is not allowed. This property returns the actual status.
+        Returns the actual status of the link based on the _user_status and any status internal to the link.
+        The acutal status may be different that the user status because, for example, the user may set a valve
+        to Active, but the valve may have to close if reverse flow is not allowed. This property returns the
+        actual status.
 
         Subclasses should implement this method.
 
@@ -2114,7 +2114,8 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         ----------
         value: LinkStatus
         """
-        assert value in LinkStatus
+        if not isinstance(value, LinkStatus):
+            value = LinkStatus[value]
         self._user_status = value
 
     def __eq__(self, other):
@@ -2713,10 +2714,22 @@ class Pipe(Link):
             if isinstance(status, str):
                 self.status = LinkStatus[status]
             else:
+                assert status in LinkStatus
                 self.status = status
             self._base_status = self._user_status
         self.bulk_rxn_coeff = None
         self.wall_rxn_coeff = None
+
+    @property
+    def status(self):
+        """
+        Returns the actual status of the link based on the _user_status and any status internal to the link.
+
+        Returns
+        -------
+        status: LinkStatus
+        """
+        return self._user_status
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -2790,6 +2803,15 @@ class Pump(Link):
             self._base_power = info_value
         else:
             raise RuntimeError('Pump info type not recognized. Options are HEAD or POWER.')
+
+    @property
+    def status(self):
+        if self._cv_status == LinkStatus.Closed:
+            return LinkStatus.Closed
+        elif self._power_outage is True:
+            return LinkStatus.Closed
+        else:
+            return self._user_status
 
     @property
     def curve_name(self):
@@ -2952,8 +2974,17 @@ class Valve(Link):
         self.setting = setting
         self._base_setting = setting
         self._base_status = LinkStatus.active
-        self.status = LinkStatus.active
-        self._status = LinkStatus.active
+        self._user_status = LinkStatus.active
+        self._internal_status = LinkStatus.active
+
+    @property
+    def status(self):
+        if self._user_status == LinkStatus.Closed:
+            return LinkStatus.Closed
+        elif self._user_status == LinkStatus.Open:
+            return LinkStatus.Open
+        else:
+            return self._internal_status
 
     def __eq__(self, other):
         if not type(self) == type(other):
