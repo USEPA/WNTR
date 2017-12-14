@@ -54,12 +54,12 @@ class TestWriter(unittest.TestCase):
         self.assertAlmostEqual(p2._base_power, 16629.107, 2)
 
     def test_valve_setting_control(self):
-        control = self.wn2.get_control('/LINK/v1/0.82/AT/TIME/12240')
+        control = self.wn2.get_control('IF/time/AT/12240//THEN/Valve/v1/0.82')
         run_time = control._run_at_time
         self.assertAlmostEqual(run_time, 3600.0*3.4, 6)
         value = control._control_action._value
         self.assertAlmostEqual(value, 0.82, 6)
 
-        control = self.wn2.get_control('/LINK/v2/2.61/IF/NODE/T1/BELOW/1.53')
+        control = self.wn2.get_control('IF/Tank/T1/000000000153/BELOW/THEN/Valve/v2/2.61')
         value = control._control_action._value
         self.assertAlmostEqual(value, 1.83548, 4)

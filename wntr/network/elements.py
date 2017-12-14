@@ -13,9 +13,11 @@ from .options import TimeOptions
 logger = logging.getLogger(__name__)
 
 if sys.version_info[0] == 2:
-    from collections import MutableSequence
+    from collections import MutableSequence, MutableMapping
 else:
-    from collections.abc import MutableSequence
+    from collections.abc import MutableSequence, MutableMapping
+from collections import OrderedDict    
+from six import string_types
 
 class Curve(object):
     """
@@ -654,3 +656,81 @@ class LinkStatus(enum.IntEnum):
         return int(self) == int(other) and (isinstance(other, int) or \
                self.__class__.__name__ == other.__class__.__name__)
 
+
+class Registry(MutableMapping):
+    """Defined a dictionary-like mapping of key->value pairs for a specific class of elements.
+    
+    Parameters
+    ----------
+    options : WaterNetworkOptions
+        Requires the appropriate WaterNetworkOptions object to be passed in so that it
+        can be used for things like timing, defaults, etc.
+    
+    """
+    def __init__(self, options):
+        self._options = options
+        self._data = OrderedDict()
+        self._usage = OrderedDict()
+
+    def __getitem__(self, key):
+        if not key:
+            return None
+        try:
+            return self._data[key]
+        except KeyError:
+            return self._data[str(key)]
+
+    def __setitem__(self, key, value):
+        if not isinstance(key, string_types):
+            raise ValueError('Registry keys must be strings')
+        self._data[key] = value
+        if not key in self.usage:
+            self._usage[key] = set()
+    
+    def __delitem__(self, key):
+        try:
+            self._data.pop(key)
+        except KeyError:
+            return
+    
+    def __iter__(self):
+        return self._data.__iter__()
+    
+    def __len__(self):
+        return len(self._data)
+
+    def __call__(self):
+        for key, value in self._data.items():
+            yield key, value
+    
+    def get_usage(self, key):
+        """get a list of elements that use the key'd object"""
+        try:
+            return self._data[key]
+        except KeyError:
+            return self._data[str(key)]
+        return None
+
+    def orphaned(self):
+        """get a list of keys that are used but undefined"""
+        defined = set(self._data.keys())
+        assigned = set(self._usage.keys())
+        return assigned.difference(defined)
+    
+    def unused(self):
+        """get a list of keys that have not been used"""
+        defined = set(self._data.keys())
+        assigned = set(self._usage.keys())
+        return defined.difference(assigned)
+
+    def clear_usage(self, key):
+        """if key in usage, clear usage[key]"""
+        pass
+    
+    def add_usage(self, key, *args):
+        """add args to usage[key]"""
+        pass
+    
+    def remove_usage(self, key, *args):
+        """remove args from usage[key]"""
+        pass
