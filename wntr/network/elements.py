@@ -55,7 +55,7 @@ class Curve(object):
         return True
 
     def __repr__(self):
-        return "<Curve: '{}', curve_type='{}', points={}>".format(repr(self.name), repr(self.curve_type), repr(self.points))
+        return "<Curve: {}, curve_type={}, points={}>".format(repr(self.name), repr(self.curve_type), repr(self.points))
 
     def __hash__(self):
         return id(self)
