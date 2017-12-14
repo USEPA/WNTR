@@ -166,7 +166,7 @@ def test_name_list():
     assert_in('1', wn.curve_name_list)
     assert_equal(0, len(wn.source_name_list))
 #    assert_equal(0, len(wn._demand_name_list))
-    assert_in('/LINK/10/OPEN/AT/TIME/3600', wn.control_name_list)
+    assert_in('IF/time/AT/3600//THEN/Pump/10/OPEN', wn.control_name_list)
 
 def test_add_get_remove_num():
     inp_file = join(net1dir,'Net3.inp')

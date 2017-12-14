@@ -18,7 +18,7 @@ def test_Curve():
     pts1 = [[3,5]]
     pts2 = [[3, 6], [7, 2], [10, 0]]
     pts3 = [[3, 6], [7, 2], [10, 1]]
-    expected_str = "<Curve: ''curve2'', curve_type=''HEAD'', points=[[3, 6], [7, 2], [10, 0]]>"
+    expected_str = "<Curve: 'curve2', curve_type='HEAD', points=[[3, 6], [7, 2], [10, 0]]>"
     # Create the curves
     curve1 = elements.Curve('curve1', 'PUMP', pts1)
     curve2a = elements.Curve('curve2', 'HEAD', pts2)
