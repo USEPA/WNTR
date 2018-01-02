@@ -30,7 +30,8 @@ class WaterNetworkOptions(object):
         self._graphics = GraphicsOptions()
         self._user = UserOptions()
         
-    def __repr__(self):
+    def tostring(self):
+        """Present the options in a human-readable paragraph."""
         s = ''
         s += repr(self.time)
         s += repr(self.hydraulic)
@@ -41,6 +42,18 @@ class WaterNetworkOptions(object):
         s += repr(self.graphics)
         s += repr(self.user)
         return s
+    __repr__ = tostring
+
+    def todict(self):
+        """Returns a COPY of the currently specified options"""
+        return dict(time=self._time.todict(),
+                    hydraulic=self._hydraulic.todict(),
+                    quality=self._quality.todict(),
+                    energy=self._energy.todict(),
+                    solver=self._solver.todict(),
+                    results=self._results.todict(),
+                    graphics=self._graphics.todict(),
+                    user=self._user.todict())
         
     def __getstate__(self):
         """Allow pickling with the __slots__ construct"""
@@ -210,7 +223,8 @@ class TimeOptions(object):
                return True
         return False
 
-    def __repr__(self):
+    def tostring(self):
+        """Present the options in a human-readable paragraph."""
         s = 'Time options:\n'
         s += '  {0:<20}: {1:<20}\n'.format('duration', self.duration)
         s += '  {0:<20}: {1:<20}\n'.format('hydraulic_timestep', self.hydraulic_timestep)
@@ -222,12 +236,17 @@ class TimeOptions(object):
         s += '  {0:<20}: {1:<20}\n'.format('report_start', self.report_start)
         s += '  {0:<20}: {1:<20}\n'.format('start_clocktime', self.start_clocktime)
         return s
+    __repr__ = tostring
 
     def __str__(self):
         return self.__repr__()
 
     def __ne__(self, other):
         return not self == other
+
+    def todict(self):
+        """Returns a COPY of the currently specified options"""
+        return self.__dict__.copy()
 
 
 class GraphicsOptions(object):
@@ -257,7 +276,8 @@ class GraphicsOptions(object):
         self.image_filename = None
         self.map_filename = None
 
-    def __repr__(self):
+    def tostring(self):
+        """Present the options in a human-readable paragraph."""
         s = 'Graphics options:\n'
         s += '  {0:<20}: {1:<20}\n'.format('dimensions', str(self.dimensions))
         s += '  {0:<20}: {1:<20}\n'.format('units', str(self.units))
@@ -265,6 +285,7 @@ class GraphicsOptions(object):
         s += '  {0:<20}: {1:<20}\n'.format('image_filename', str(self.image_filename))
         s += '  {0:<20}: {1:<20}\n'.format('map_filename', str(self.map_filename))
         return s
+    __repr__ = tostring
 
     def __str__(self):
         text = ""
@@ -282,6 +303,11 @@ class GraphicsOptions(object):
         if self.map_filename is not None:
             text += "MAP {}\n".format(self.map_filename)
         return text
+
+    def todict(self):
+        """Returns a COPY of the currently specified options"""
+        return self.__dict__.copy()
+
 
 class HydraulicOptions(object): 
     """
@@ -321,11 +347,12 @@ class HydraulicOptions(object):
         self.hydraulics_filename = None #string
         self.viscosity = 1.0
         self.specific_gravity = 1.0
-        self.pattern = None
+        self.pattern = '1'
         self.demand_multiplier = 1.0
         self.emitter_exponent = 0.5
 
-    def __repr__(self):
+    def tostring(self):
+        """Present the options in a human-readable paragraph."""
         s = 'Hydraulic options:\n'
         s += '  {0:<20}: {1:<20}\n'.format('en2_units', self.en2_units)
         s += '  {0:<20}: {1:<20}\n'.format('headloss', self.headloss)
@@ -337,6 +364,7 @@ class HydraulicOptions(object):
         s += '  {0:<20}: {1:<20}\n'.format('demand_multiplier', self.demand_multiplier)
         s += '  {0:<20}: {1:<20}\n'.format('emitter_exponent', self.emitter_exponent)
         return s
+    __repr__ = tostring
         
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -356,6 +384,9 @@ class HydraulicOptions(object):
     def __ne__(self, other):
         return not self == other
 
+    def todict(self):
+        """Returns a COPY of the currently specified options"""
+        return self.__dict__.copy()
 
 
 class ResultsOptions(object):
@@ -392,21 +423,21 @@ class ResultsOptions(object):
         self.energy = 'NO'
         self.nodes = False
         self.links = False
-        self.rpt_params = { # param name: [Default, Setting]
-                           'elevation': [False, False],
-                           'demand': [True, True],
-                           'head': [True, True],
-                           'pressure': [True, True],
-                           'quality': [True, True],
-                           'length': [False, False],
-                           'diameter': [False, False],
-                           'flow': [True, True],
-                           'velocity': [True, True],
-                           'headloss': [True, True],
-                           'position': [False, False],
-                           'setting': [False, False],
-                           'reaction': [False, False],
-                           'f-factor': [False, False],
+        self.rpt_params = { 
+                           'elevation': False,
+                           'demand': True,
+                           'head': True,
+                           'pressure': True,
+                           'quality': True,
+                           'length': False,
+                           'diameter': False,
+                           'flow': True,
+                           'velocity': True,
+                           'headloss': True,
+                           'position': False,
+                           'setting': False,
+                           'reaction': False,
+                           'f-factor': False,
                            }
         self.results_obj = { # Node extended period results
                            'demand': True,     #node demand (actual)
@@ -440,10 +471,12 @@ class ResultsOptions(object):
                            'f-factor': {},
                            }        
         
-    def __repr__(self):
+    def tostring(self):
+        """Present the options in a human-readable paragraph."""
         s = 'Report options:\n'
         s += '  {0:<20}: {1:<20}\n'.format('statistic', str(self.statistic))
         return s
+    __repr__ = tostring
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -463,6 +496,9 @@ class ResultsOptions(object):
     def __ne__(self, other):
         return not self == other
 
+    def todict(self):
+        """Returns a COPY of the currently specified options"""
+        return self.__dict__.copy()
         
         
 class QualityOptions(object):
@@ -516,7 +552,8 @@ class QualityOptions(object):
         self.limiting_potential = None
         self.roughness_correl = None
 
-    def __repr__(self):
+    def tostring(self):
+        """Present the options in a human-readable paragraph."""
         s = 'Water quality options:\n'
         s += '  {0:<20}: {1:<20}\n'.format('mode', self.mode)
         s += '  {0:<20}: {1:<20}\n'.format('trace_node', self.trace_node)
@@ -531,6 +568,7 @@ class QualityOptions(object):
         s += '  {0:<20}: {1:<20}\n'.format('limiting_potential', self.limiting_potential)
         s += '  {0:<20}: {1:<20}\n'.format('roughness_correl', self.roughness_correl)
         return s
+    __repr__ = tostring
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -553,6 +591,10 @@ class QualityOptions(object):
 
     def __ne__(self, other):
         return not self == other
+
+    def todict(self):
+        """Returns a COPY of the currently specified options"""
+        return self.__dict__.copy()
 
 
 class EnergyOptions(object):
@@ -577,13 +619,15 @@ class EnergyOptions(object):
         self.global_efficiency = 75.0
         self.demand_charge = None
 
-    def __repr__(self):
+    def tostring(self):
+        """Present the options in a human-readable paragraph."""
         s = 'Energy options:\n'
         s += '  {0:<20}: {1:<20}\n'.format('global_price', self.global_price)
         s += '  {0:<20}: {1:<20}\n'.format('global_pattern', self.global_pattern)
         s += '  {0:<20}: {1:<20}\n'.format('global_efficiency', self.global_efficiency)
         s += '  {0:<20}: {1:<20}\n'.format('demand_charge', self.demand_charge)
         return s
+    __repr__ = tostring
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -598,6 +642,10 @@ class EnergyOptions(object):
 
     def __ne__(self, other):
         return not self == other
+
+    def todict(self):
+        """Returns a COPY of the currently specified options"""
+        return self.__dict__.copy()
 
 
 class SolverOptions(object):
@@ -635,7 +683,8 @@ class SolverOptions(object):
         self.maxcheck = 10
         self.damplimit = 0
 
-    def __repr__(self):
+    def tostring(self):
+        """Present the options in a human-readable paragraph."""
         s = 'Solver options:\n'
         s += '  {0:<20}: {1:<20}\n'.format('trials', self.trials)
         s += '  {0:<20}: {1:<20}\n'.format('accuracy', self.accuracy)
@@ -646,6 +695,7 @@ class SolverOptions(object):
         s += '  {0:<20}: {1:<20}\n'.format('maxcheck', self.maxcheck)
         s += '  {0:<20}: {1:<20}\n'.format('damplimit', self.damplimit)
         return s
+    __repr__ = tostring
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -664,6 +714,10 @@ class SolverOptions(object):
     def __ne__(self, other):
         return not self == other
 
+    def todict(self):
+        """Returns a COPY of the currently specified options"""
+        return self.__dict__.copy()
+
 
 class UserOptions(object):
     """
@@ -679,8 +733,14 @@ class UserOptions(object):
     def __init__(self):
         pass
 
-    def __repr__(self):
+    def tostring(self):
+        """Present the options in a human-readable paragraph."""
         s = 'User options:\n'
         for key, value in self.__dict__.items():
             s += '  {0:<20}: {1:<20}\n'.format(key, value)
         return s
+    __repr__ = tostring
+
+    def todict(self):
+        """Returns a COPY of the currently specified options"""
+        return self.__dict__.copy()

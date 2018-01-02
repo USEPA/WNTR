@@ -1111,7 +1111,7 @@ class TimeControl(Control):
         return fmt.format(str(self._run_at_time), str(self._time_flag), str(self._daily_flag), repr(self._control_action))
 
     def __eq__(self, other):
-        if self._run_at_time      == other._run_at_time      and \
+        if self._run_at_time    == other._run_at_time      and \
            self.name            == other.name            and \
            self._time_flag      == other._time_flag      and \
            self._daily_flag     == other._daily_flag     and \

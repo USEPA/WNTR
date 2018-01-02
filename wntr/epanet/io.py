@@ -69,6 +69,22 @@ _VALVE_LABEL = ';{:32s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
 _CURVE_ENTRY = ' {name:32s} {x:12f} {y:12f} {com:>3s}\n'
 _CURVE_LABEL = ';{:32s} {:12s} {:12s}\n'
 
+_DEFAULT_RPT = {'elevation': False,
+                'demand': True,
+                'head': True,
+                'pressure': True,
+                'quality': True,
+                'length': False,
+                'diameter': False,
+                'flow': True,
+                'velocity': True,
+                'headloss': True,
+                'position': False,
+                'setting': False,
+                'reaction': False,
+                'f-factor': False,
+                }
+
 def _split_line(line):
     _vc = line.split(';', 1)
     _cmnt = None
@@ -395,7 +411,7 @@ class InpFile(object):
         wn._inpfile = self
         
         ### Finish tags
-        self._read_end()
+        self._finalize_read()
         
         return self.wn
 
@@ -461,7 +477,7 @@ class InpFile(object):
             self._write_backdrop(f, wn)
             self._write_tags(f, wn)
 
-            self._write_end(f, wn)
+            self._finalize_write(f, wn)
 
     ### Network Components
 
@@ -1061,9 +1077,11 @@ class InpFile(object):
                 setting = LinkStatus[status].value
                 action_obj = wntr.network.ControlAction(link, 'status', setting)
             else:
-                if isinstance(link, wntr.network.Pump):
+                if link_name in self.wn.pump_name_list:
+#                    isinstance(link, wntr.network.Pump):
                     action_obj = wntr.network.ControlAction(link, 'speed', float(current[2]))
-                elif isinstance(link, wntr.network.Valve):
+                elif link_name in self.wn.valve_name_list:
+#                    isinstance(link, wntr.network.Valve):
                     if link.valve_type == 'PRV' or link.valve_type == 'PSV' or link.valve_type == 'PBV':
                         setting = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
                     elif link.valve_type == 'FCV':
@@ -1094,14 +1112,18 @@ class InpFile(object):
                     # IN THE INP WRITER. Now that we know, we can fix it, but
                     # if this changes, it will affect multiple pieces, just an
                     # FYI.
-                    if isinstance(node, wntr.network.Junction):
+                    if node_name in self.wn.junction_name_list:
+#                        isinstance(node, wntr.network.Junction):
                         threshold = to_si(self.flow_units,
                                           float(current[7]), HydParam.Pressure)# + node.elevation
                         control_obj = wntr.network.ConditionalControl((node, 'pressure'), oper, threshold, action_obj)
-                    elif isinstance(node, wntr.network.Tank):
+                    elif node_name in self.wn.tank_name_list:
+#                        isinstance(node, wntr.network.Tank):
                         threshold = to_si(self.flow_units, 
                                           float(current[7]), HydParam.HydraulicHead)# + node.elevation
                         control_obj = wntr.network.ConditionalControl((node, 'level'), oper, threshold, action_obj)
+                    else:
+                        raise RuntimeError("The following control is not recognized: " + line)
                 else:
                     raise RuntimeError("The following control is not recognized: " + line)
                 control_name = ('IF/'+node.__class__.__name__+'/'+current[5]+'/'
@@ -1121,6 +1143,8 @@ class InpFile(object):
                     control_obj = wntr.network.TimeControl(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj)
                     control_name = ('IF/time/AT/'+str(run_at_time)+'/'+
                                     '/THEN/'+link.__class__.__name__+'/'+current[1]+'/'+current[2])
+                else:
+                    raise RuntimeError("The following control is not recognized: " + line)                    
             if control_name in self.wn.control_name_list:
                 warnings.warn('One or more [CONTROLS] were duplicated in "{}"; duplicates are ignored.'.format(self.wn.name), stacklevel=0)
                 logger.warning('Control already exists: "{}"'.format(control_name))
@@ -1332,12 +1356,12 @@ class InpFile(object):
             if current == []:
                 continue
             node = self.wn.get_node(current[0])
-            if self.wn.options.quality.mode == 'CHEMICAL':
-                quality = to_si(self.flow_units, float(current[1]), QualParam.Concentration, mass_units=self.mass_units)
-            elif self.wn.options.quality.mode == 'AGE':
+            if self.wn.options.quality.mode == 'AGE':
                 quality = to_si(self.flow_units, float(current[1]), QualParam.WaterAge)
-            else :
+            elif self.wn.options.quality.mode in ['TRACE', 'NONE', None] :
                 quality = float(current[1])
+            else: # CHEMICAL or chemical name
+                quality = to_si(self.flow_units, float(current[1]), QualParam.Concentration, mass_units=self.mass_units)
             node.initial_quality = quality
 
     def _write_quality(self, f, wn):
@@ -1798,9 +1822,9 @@ class InpFile(object):
                     logger.warning('Unknown report parameter: %s', current[0])
                     continue
                 elif current[1].upper() in ['YES']:
-                    self.wn.options.results.rpt_params[current[0].lower()][1] = True
+                    self.wn.options.results.rpt_params[current[0].lower()] = True
                 elif current[1].upper() in ['NO']:
-                    self.wn.options.results.rpt_params[current[0].lower()][1] = False
+                    self.wn.options.results.rpt_params[current[0].lower()] = False
                 else:
                     self.wn.options.results.param_opts[current[0].lower()][current[1].upper()] = float(current[2])
 
@@ -1844,7 +1868,7 @@ class InpFile(object):
                     f.write(' {}'.format(link).encode('ascii'))
             f.write('\n'.encode('ascii'))
         for key, item in report.rpt_params.items():
-            if item[1] != item[0]:
+            if item != _DEFAULT_RPT[key]:
                 f.write(' {:10s} {}\n'.format(key.upper(), item[1]).encode('ascii'))
         for key, item in report.param_opts.items():
             for opt, val in item.items():
@@ -1976,7 +2000,7 @@ class InpFile(object):
 
     ### End of File
 
-    def _read_end(self):
+    def _finalize_read(self):
         """Finalize read by verifying that all curves have been dealt with"""
         def create_curve(curve_name):
             curve_points = []
@@ -1996,7 +2020,7 @@ class InpFile(object):
                 logger.warning('Curve was not used: "{}"; saved as curve type None and unit conversion not performed'.format(name))
                 create_curve(name)
 
-    def _write_end(self, f, wn):
+    def _finalize_write(self, f, wn):
         f.write('[END]\n'.encode('ascii'))
 
 

@@ -2946,7 +2946,3 @@ class Valve(Link):
             return "<Pump '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>".format(self._link_name,
                        self.start_node, self.end_node, self.valve_type, self.diameter, 
                        self.minor_loss, self.setting, str(self.status))
-
-    def __hash__(self):
-        return id(self)
-
