@@ -12,13 +12,12 @@ from scipy.optimize import fsolve
 import abc
 
 from .graph import WntrMultiDiGraph
-from .controls import IfThenElseControl, ControlAction, _FCVControl, ConditionalControl, TimeControl
-from .controls import _MultiConditionalControl, _PRVControl, _CheckValveHeadControl, _ValveNewSettingControl
 from .options import WaterNetworkOptions
 from .elements import Curve, Pattern, Source
 from .elements import LinkStatus
 from .elements import Demands, TimeSeries
 import wntr.epanet
+import wntr.network.controls as controls
 
 logger = logging.getLogger(__name__)
 
@@ -69,8 +68,11 @@ class WaterNetworkModel(object):
         self._curves = {}
         self._sources = {}
         self._demands = {}
-        self._controls = {}
-        
+
+        self._presolve_controls = ControlManager()
+        self._postsolve_controls = ControlManager()
+        self._rules = ControlManager()
+
         # Initialize options object
         self.options = WaterNetworkOptions()
 
@@ -114,7 +116,7 @@ class WaterNetworkModel(object):
 
     def __hash__(self):
         return id(self)
-            
+
     def add_junction(self, name, base_demand=0.0, demand_pattern=None, elevation=0.0, coordinates=None):
         """
         Adds a junction to the water network model.
@@ -268,6 +270,13 @@ class WaterNetworkModel(object):
         # Add to list of cv
         if check_valve_flag:
             self._check_valves.append(name)
+            open_condition = controls._OpenCVCondition(self, pipe)
+            close_condition = controls._CloseCVCondition(self, pipe)
+            open_action = controls._InternalControlAction(pipe, '_internal_status', LinkStatus.Open, 'status')
+            close_action = controls._InternalControlAction(pipe, '_internal_status', LinkStatus.Closed, 'status')
+            open_control = controls.Control(open_condition, [open_action], [], controls.ControlPriority.very_low)
+            close_control = controls.Control(close_condition, [close_action], [], controls.ControlPriority.very_high)
+            self.add_control()
 
         self._links[name] = pipe
         self._pipes[name] = pipe
