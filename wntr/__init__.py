@@ -1,10 +1,10 @@
-from wntr import epanet
-from wntr import network
-from wntr import metrics
-from wntr import sim
-from wntr import scenario
-from wntr import graphics
-from wntr import utils
+import epanet
+import network
+import metrics
+import sim
+import scenario
+import graphics
+import utils
 
 __version__ = '0.1.4'
 

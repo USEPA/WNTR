@@ -2,13 +2,12 @@
 The wntr.network.elements module includes elements of a water network model, 
 such as curves, patterns, sources, and demands.
 """
-import enum
 import numpy as np
 import sys
-import copy
 import logging
-
-from .options import TimeOptions
+import math
+import six
+from scipy.optimize import fsolve
 
 logger = logging.getLogger(__name__)
 
@@ -17,207 +16,706 @@ if sys.version_info[0] == 2:
 else:
     from collections.abc import MutableSequence
 
-class Curve(object):
+from .base import Node, Link, Registry, LinkStatus
+
+class Junction(Node):
     """
-    Curve class.
+    Junction class that is inherited from Node
 
     Parameters
     ----------
     name : string
-         Name of the curve.
-    curve_type : string
-         Type of curve. Options are Volume, Pump, Efficiency, Headloss.
-    points : list
-         List of tuples with X-Y points.
+        Name of the junction.
+    base_demand : float, optional
+        Base demand at the junction.
+        Internal units must be cubic meters per second (m^3/s).
+    demand_pattern : Pattern object, optional
+        Demand pattern.
+    elevation : float, optional
+        Elevation of the junction.
+        Internal units must be meters (m).
+
     """
-    def __init__(self, name, curve_type, points):
-        self.name = name
-        self.curve_type = curve_type
-        self.points = copy.deepcopy(points)
-        self.points.sort()
-        self._headloss_function = None
 
-    def __eq__(self, other):
-        if type(self) != type(other):
-            return False
-        if self.name != other.name:
-            return False
-        if self.curve_type != other.curve_type:
-            return False
-        if self.num_points != other.num_points:
-            return False
-        for point1, point2 in zip(self.points, other.points):
-            for value1, value2 in zip(point1, point2):
-                if abs(value1 - value2) > 1e-8:
-                    return False
-        return True
+    def __init__(self, name, model):
+        super(Junction, self).__init__(model, name)
+        self.demand_timeseries_list = Demands(model)
+        self.elevation = 0.0
 
-    def __repr__(self):
-        return "<Curve: '{}', curve_type='{}', points={}>".format(repr(self.name), repr(self.curve_type), repr(self.points))
+        self.nominal_pressure = 20.0
+        """The nominal pressure attribute is used for pressure-dependent demand. This is the lowest pressure at
+        which the customer receives the full requested demand."""
 
-    def __hash__(self):
-        return id(self)
-    
-    def __getitem__(self, index):
-        return self.points.__getitem__(index)
+        self.minimum_pressure = 0.0
+        """The minimum pressure attribute is used for pressure-dependent demand simulations. Below this pressure,
+        the customer will not receive any water."""
 
-    def __getslice__(self, i, j):
-        return self.points.__getslice__(i, j)
-
-    def __len__(self):
-        return len(self.points)
+        self._emitter_coefficient = None
 
     @property
-    def num_points(self):
-        """Returns the number of points in the curve."""
-        return len(self.points)
+    def node_type(self):
+        return 'Junction'
 
-class Pattern(object):
-    """
-    Pattern class.
-    
-    Parameters
-    ----------
-    name : string
-        Name of the pattern.
-    multipliers : list
-        A list of multipliers that makes up the pattern.
-    time_options : wntr TimeOptions or tuple
-        The water network model options.time object or a tuple of (pattern_start, 
-        pattern_timestep) in seconds.
-    wrap : bool, optional
-        Boolean indicating if the pattern should be wrapped.
-        If True (the default), then the pattern repeats itself forever; if 
-        False, after the pattern has been exhausted, it will return 0.0.
-    """
-    
-    def __init__(self, name, multipliers=[], time_options=None, wrap=True):
-        self.name = name
-        if isinstance(multipliers, (int, float)):
-            multipliers = [multipliers]
-        self._multipliers = np.array(multipliers)
-        if time_options:
-            if isinstance(time_options, (tuple, list)) and len(time_options) >= 2:
-                tmp = TimeOptions()
-                tmp.pattern_start = time_options[0]
-                tmp.pattern_timestep = time_options[1]
-                time_options = tmp
-            elif not isinstance(time_options, TimeOptions):
-                raise ValueError('Pattern->time_options must be a TimeOptions class or null')
-        self._time_options = time_options
-        self.wrap = wrap
+    def todict(self):
+        d = super(Junction, self).todict()
+        d['properties'] = dict(elevation=self.elevation,
+                               demands=self.demand_timeseries_list.tolist())
+        return d
 
-    @classmethod
-    def BinaryPattern(cls, name, start_time, end_time, step_size, duration, wrap=False):
-        """
-        Creates a binary pattern (single instance of step up, step down).
-        
-        Parameters
-        ----------
-        name : string
-            Name of the pattern.
-        start_time : int
-            The time at which the pattern turns "on" (1.0).
-        end_time : int
-            The time at which the pattern turns "off" (0.0).
-        step_size : int
-            Pattern step size.
-        duration : int
-            Total length of the pattern.
-        wrap : bool, optional
-            Boolean indicating if the pattern should be wrapped.
-            If True, then the pattern repeats itself forever; if 
-            False (the default), after the pattern has been exhausted, it will return 0.0.
-        
-        Returns
-        -------
-        A new pattern object with a list of 1's and 0's as multipliers. 
-        """
-        tmp = TimeOptions()
-        tmp.pattern_start = 0
-        tmp.pattern_timestep = step_size
-        time_options = tmp
-        patternstep = time_options.pattern_timestep
-        patternstart = int(start_time/time_options.pattern_timestep)
-        patternend = int(end_time/patternstep)
-        patterndur = int(duration/patternstep)
-        pattern_list = [0.0]*patterndur
-        pattern_list[patternstart:patternend] = [1.0]*(patternend-patternstart)
-        return cls(name, multipliers=pattern_list, time_options=None, wrap=wrap)
-    
+    def add_demand(self, base, pattern_name, category=None):
+        if pattern_name is not None:
+            self._pattern_reg.add_usage(pattern_name, (self.name, 'Junction'))
+        self.demand_timeseries_list.append((base, pattern_name, category))
+
+    def __repr__(self):
+        return "<Junction '{}', elevation={}, demand_timeseries_list={}>".format(self._name, self.elevation, repr(self.demand_timeseries_list))
+
     def __eq__(self, other):
-        if type(self) == type(other) and \
-          self.name == other.name and \
-          len(self._multipliers) == len(other._multipliers) and \
-          self._time_options == other._time_options and \
-          self.wrap == other.wrap and \
-          np.all(np.abs(np.array(self._multipliers)-np.array(other._multipliers))<1.0e-10):
+        if not type(self) == type(other):
+            return False
+        if not super(Junction, self).__eq__(other):
+            return False
+        if abs(self.base_demand - other.base_demand)<1e-10 and \
+           self.demand_pattern_name == other.demand_pattern_name and \
+           abs(self.elevation - other.elevation)<1e-10 and \
+           abs(self.nominal_pressure - other.nominal_pressure)<1e-10 and \
+           abs(self.minimum_pressure - other.minimum_pressure)<1e-10 and \
+           self._emitter_coefficient == other._emitter_coefficient:
             return True
         return False
 
-    def __hash__(self):
-        return hash(self.name)
-        
-    def __str__(self):
-        return '<Pattern "%s">'%self.name
+
+class Tank(Node):
+    """
+    Tank class that is inherited from Node
+
+    Parameters
+    ----------
+    name : string
+        Name of the tank.
+    elevation : float, optional
+        Elevation at the Tank.
+        Internal units must be meters (m).
+    init_level : float, optional
+        Initial tank level.
+        Internal units must be meters (m).
+    min_level : float, optional
+        Minimum tank level.
+        Internal units must be meters (m)
+    max_level : float, optional
+        Maximum tank level.
+        Internal units must be meters (m)
+    diameter : float, optional
+        Tank diameter.
+        Internal units must be meters (m)
+    min_vol : float, optional
+        Minimum tank volume.
+        Internal units must be cubic meters (m^3)
+    vol_curve : Curve object, optional
+        Curve object
+    """
+
+    def __init__(self, name, model):
+        super(Tank, self).__init__(model, name)
+        self.elevation=0.0
+        self._init_level=3.048
+        self.min_level=0.0
+        self.max_level=6.096
+        self.diameter=15.24,
+        self.head = self.elevation + self._init_level
+        self.min_vol=0
+        self._vol_curve_name = None
+        self._mix_model = None
+        self._mix_frac = None
+        self.bulk_rxn_coeff = None
+
+    @property
+    def init_level(self):
+        return self._init_level
+    @init_level.setter
+    def init_level(self, value):
+        self._init_level = value
+        self.head = self.elevation+self._init_level
+
+    @property
+    def node_type(self):
+        return 'Tank'
+
+    @property
+    def vol_curve(self):
+        return self._curve_reg[self._vol_curve_name]
+
+    @property
+    def vol_curve_name(self):
+        """Name of the volume to use, or None"""
+        return self._vol_curve_name
+    @vol_curve_name.setter
+    def vol_curve_name(self, name):
+        self._curve_reg.remove_usage(self._vol_curve_name, (self._name, 'Tank'))
+        self._curve_reg.add_usage(name, (self._name, 'Tank'))
+        self._vol_curve_name = name
+
+    @property
+    def level(self):
+        """Returns tank level (head - elevation)"""
+        return self.head - self.elevation
+
+    def todict(self):
+        d = super(Tank, self).todict()
+        d['properties'] = dict(elevation=self.elevation,
+                              init_level=self.init_level,
+                              min_level=self.min_level,
+                              max_level=self.max_level,
+                              min_vol=self.min_vol,
+                              diameter=self.diameter)
+        if self._vol_curve_name is not None:
+            d['properties']['vol_curve'] = self._vol_curve_name
+        if self.bulk_rxn_coeff is not None:
+            d['properties']['bulk_rxn_coeff'] = self.bulk_rxn_coeff
+        if self._mix_model is not None:
+            d['properties']['mix_model'] = self._mix_model
+        if self._mix_frac is not None:
+            d['properties']['mix_frac'] = self._mix_frac
+        return d
+
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Tank, self).__eq__(other):
+            return False
+        if abs(self.elevation   - other.elevation)<1e-10 and \
+           abs(self.min_level   - other.min_level)<1e-10 and \
+           abs(self.max_level   - other.max_level)<1e-10 and \
+           abs(self.diameter    - other.diameter)<1e-10  and \
+           abs(self.min_vol     - other.min_vol)<1e-10   and \
+           self.bulk_rxn_coeff == other.bulk_rxn_coeff   and \
+           self.vol_curve      == other.vol_curve:
+            return True
+        return False
 
     def __repr__(self):
-        return "<Pattern '{}', multipliers={}>".format(self.name, repr(self.multipliers))
+        return "<Tank '{}', elevation={}, min_level={}, max_level={}, diameter={}, min_vol={}, vol_curve='{}'>".format(self._name, self.elevation, self.min_level, self.max_level, self.diameter, self.min_vol, (self.vol_curve.name if self.vol_curve else None))
+
+
+class Reservoir(Node):
+    """
+    Reservoir class that is inherited from Node
+
+    Parameters
+    ----------
+    name : string
+        Name of the reservoir.
+    pattern_registry : PatternRegistry
+        A registry for patterns must be provided
+    base_head : float, optional
+        Base head at the reservoir.
+        Internal units must be meters (m).
+    head_pattern : str, optional
+        Head pattern.
+    """
+    def __init__(self, name, model, base_head=0.0, head_pattern=None):
+        super(Reservoir, self).__init__(model, name)
+        self._head_timeseries = TimeSeries(model, base_head)
+        self.head_pattern_name = head_pattern
+
+    @property
+    def node_type(self):
+        return 'Reservoir'
+
+    def todict(self):
+        d = super(Reservoir, self).todict()
+        d['properties'] = dict(head=self._head_timeseries.todict())
+        return d
+
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Reservoir, self).__eq__(other):
+            return False
+        if self._head_timeseries == other._head_timeseries:
+            return True
+        return False
+
+    def __repr__(self):
+        return "<Reservoir '{}', head={}>".format(self._name, self._head_timeseries)
+
+    @property
+    def head_timeseries(self):
+        return self._head_timeseries
+
+    @property
+    def base_head(self):
+        return self._head_timeseries.base_value
+
+    @base_head.setter
+    def base_head(self, value):
+        self._head_timeseries.base_value = value
+
+    @property
+    def head_pattern_name(self):
+        return self._head_timeseries.pattern_name
+    
+    @head_pattern_name.setter
+    def head_pattern_name(self, name):
+        self._pattern_reg.remove_usage(self._head_timeseries.pattern_name, (self.name, 'Reservoir'))
+        if name is not None:
+            self._pattern_reg.add_usage(name, (self.name, 'Reservoir'))
+        self._head_timeseries.pattern_name = name
         
-    def __len__(self):
-        return len(self._multipliers)
+
+class Pipe(Link):
+    """
+    Pipe class that is inherited from Link
+
+    Parameters
+    ----------
+    name : string
+        Name of the pipe
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    length : float, optional
+        Length of the pipe.
+        Internal units must be meters (m)
+    diameter : float, optional
+        Diameter of the pipe.
+        Internal units must be meters (m)
+    roughness : float, optional
+        Pipe roughness coefficient
+    minor_loss : float, optional
+        Pipe minor loss coefficient
+    status : string, optional
+        Pipe status. Options are 'Open' or 'Closed'
+    check_valve_flag : bool, optional
+        True if the pipe has a check valve
+        False if the pipe does not have a check valve
+    """
+
+    def __init__(self, name, start_node_name, end_node_name, model):
+        super(Pipe, self).__init__(model, name, start_node_name, end_node_name)
+        self.length = 304.8
+        self.diameter = 0.3048
+        self.roughness = 100
+        self.minor_loss = 0.0
+        self.cv = False
+        self.bulk_rxn_coeff = None
+        self.wall_rxn_coeff = None
+
+    @property
+    def link_type(self):
+        return 'Pipe'
     
     @property
-    def multipliers(self):
-        """Returns the pattern multiplier values."""
-        return self._multipliers
-    
-    @multipliers.setter
-    def multipliers(self, values):
-        if isinstance(values, (int, float, complex)):
-            self._multipliers = np.array([values])
+    def status(self):
+        return self._user_status
+
+    def todict(self):
+        d = super(Pipe, self).todict()
+        d['properties'] = dict(length=self.length,
+                               diameter=self.diameter,
+                               roughness=self.roughness,
+                               minor_loss=self.minor_loss)
+        if self.cv:
+            d['properties']['cv'] = self.cv
+        if self.wall_rxn_coeff:
+            d['properties']['wall_rxn_coeff'] = self.wall_rxn_coeff
+        if self.bulk_rxn_coeff:
+            d['properties']['bulk_rxn_coeff'] = self.bulk_rxn_coeff
+        return d
+
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Pipe, self).__eq__(other):
+            return False
+        if abs(self.length        - other.length)<1e-10     and \
+           abs(self.diameter      - other.diameter)<1e-10   and \
+           abs(self.roughness     - other.roughness)<1e-10  and \
+           abs(self.minor_loss    - other.minor_loss)<1e-10 and \
+           self.cv               == other.cv                and \
+           self.bulk_rxn_coeff   == other.bulk_rxn_coeff    and \
+           self.wall_rxn_coeff   == other.wall_rxn_coeff:
+            return True
+        return False
+
+    def __repr__(self):
+        return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
+                       self.start_node, self.end_node, self.length, self.diameter, 
+                       self.roughness, self.minor_loss, self.cv, str(self.status))
+
+
+class Pump(Link):
+    """
+    Pump class that is inherited from Link
+
+    Parameters
+    ----------
+    name : string
+        Name of the pump
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    info_type : string, optional
+        Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
+    info_value : float or curve type, optional
+        Where power is a fixed value in KW, while a head curve is a Curve object.
+    base_speed: float
+        Relative speed setting (1.0 is normal speed)
+    speed_pattern: Pattern object, optional
+        Speed pattern
+    """
+
+    def __init__(self, name, start_node_name, end_node_name, model):
+        super(Pump, self).__init__(model, name, start_node_name, end_node_name)
+        self._cv_status = LinkStatus.opened
+        self._speed_timeseries = TimeSeries(model, 1.0)
+        self._base_power = None
+        self._pump_curve_name = None
+        self.efficiency = None
+        self.energy_price = None
+        self.energy_pattern = None
+        self._power_outage = False
+        self._prev_power_outage = False
+
+    @property
+    def status(self):
+        if self._cv_status == LinkStatus.Closed:
+            return LinkStatus.Closed
+        elif self._power_outage is True:
+            return LinkStatus.Closed
         else:
-            self._multipliers = np.array(values)
+            return self._user_status
 
     @property
-    def time_options(self):
-        """Returns the TimeOptions object."""
-        return self._time_options
+    def link_type(self):
+        return 'Pump'
+
+    def todict(self):
+        d = super(Pump, self).todict()
+        d['properties'] = dict(pump_type=self.pump_type,
+                               speed=self._speed_timeseries.todict())
+        return d
+
+    @property
+    def speed_timeseries(self):
+        return self._speed_timeseries
+
+    @property
+    def base_speed(self):
+        return self._speed_timeseries.base_value
     
-    @time_options.setter
-    def time_options(self, object):
-        if object and not isinstance(object, TimeOptions):
-            raise ValueError('Pattern->time_options must be a TimeOptions or null')
-        self._time_options = object
-
-    def __getitem__(self, index):
-        """Returns the pattern value at a specific index (not time!)"""
-        nmult = len(self._multipliers)
-        if nmult == 0:                          return 1.0
-        elif self.wrap:                         return self._multipliers[int(index%nmult)]
-        elif index < 0 or index >= nmult:         return 0.0
-        return self._multipliers[index]
-
-    def at(self, time):
-        """
-        Returns the pattern value at a specific time.
+    @base_speed.setter
+    def base_speed(self, value):
+        self._speed_timeseries.base_value = value
         
+    @property
+    def speed_pattern_name(self):
+        return self._speed_timeseries.pattern_name
+    @speed_pattern_name.setter
+    def speed_pattern_name(self, name):
+        self._pattern_reg.remove_usage(self._speed_timeseries.pattern_name, (self.name, 'Pump'))
+        self._pattern_reg.add_usage(name, (self.name, 'Pump'))
+        self._speed_timeseries.pattern_name = name
+
+    @property
+    def setting(self):
+        """Alias to speed for consistency with other link types"""
+        return self._speed_timeseries
+
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Pump, self).__eq__(other):
+            return False
+        if self.info_type == other.info_type and \
+           self.curve == other.curve:
+            return True
+        return False
+
+
+class HeadPump(Pump):
+    @property
+    def pump_type(self): return 'HEAD'
+    
+    @property
+    def pump_curve_name(self):
+        """Returns the pump curve name if info_type is 'HEAD', otherwise returns None"""
+        return self._pump_curve_name
+    @pump_curve_name.setter
+    def pump_curve_name(self, name):
+        self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
+        self._curve_reg.add_usage(name, (self._link_name, 'Pump'))
+        self._curve_reg.set_curve_type(name, 'HEAD')
+        self._pump_curve_name = name
+
+    def todict(self):
+        d = super(HeadPump, self).todict()
+        d['properties']['pump_curve'] = self._pump_curve_name
+        return d
+
+    def __repr__(self):
+        return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
+                   self.start_node, self.end_node, 'HEAD', self.pump_curve_name, 
+                   self.speed_timeseries, str(self.status))
+
+    def get_head_curve_coefficients(self):
+        """
+        Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
+        Coefficient can only be calculated for pump curves.
+
+        For a single point curve the coefficients are generated according to the following equation:
+
+        A = 4/3 * H_1
+        B = 1/3 * H_1/Q_1^2
+        C = 2
+
+        For a three point curve the coefficients are generated according to the following equation:
+             When the first point is a zero flow: (All INP files we have come across)
+
+             A = H_1
+             C = ln((H_1 - H_2)/(H_1 - H_3))/ln(Q_2/Q_3)
+             B = (H_1 - H_2)/Q_2^C
+
+             When the first point is not zero, numpy fsolve is called to solve the following system of
+             equation:
+
+             H_1 = A - B*Q_1^C
+             H_2 = A - B*Q_2^C
+             H_3 = A - B*Q_3^C
+
+        Multi point curves are currently not supported
+
         Parameters
         ----------
-        time : int
-            Time in seconds        
-        """
-        nmult = len(self._multipliers)
-        if nmult == 0: return 1.0
-        if nmult == 1: return self._multipliers[0]
-        if self._time_options is None:
-            raise RuntimeError('Pattern->time_options cannot be None at runtime')
-        step = int((time+self._time_options.pattern_start)//self._time_options.pattern_timestep)
-        if self.wrap:                         return self._multipliers[int(step%nmult)]
-        elif step < 0 or step >= nmult:         return 0.0
-        return self._multipliers[step]
-    __call__ = at
+        pump_name : string
+            Name of the pump
 
+        Returns
+        -------
+        Tuple of pump curve coefficient (A, B, C). All floats.
+        """
+
+
+        # 1-Point curve
+        if self.curve.num_points == 1:
+            H_1 = self.curve.points[0][1]
+            Q_1 = self.curve.points[0][0]
+            A = (4.0/3.0)*H_1
+            B = (1.0/3.0)*(H_1/(Q_1**2))
+            C = 2
+        # 3-Point curve
+        elif self.curve.num_points == 3:
+            Q_1 = self.curve.points[0][0]
+            H_1 = self.curve.points[0][1]
+            Q_2 = self.curve.points[1][0]
+            H_2 = self.curve.points[1][1]
+            Q_3 = self.curve.points[2][0]
+            H_3 = self.curve.points[2][1]
+
+            # When the first points is at zero flow
+            if Q_1 == 0.0:
+                A = H_1
+                C = math.log((H_1 - H_2)/(H_1 - H_3))/math.log(Q_2/Q_3)
+                B = (H_1 - H_2)/(Q_2**C)
+            else:
+                def curve_fit(x):
+                    eq_array = [H_1 - x[0] + x[1]*Q_1**x[2],
+                                H_2 - x[0] + x[1]*Q_2**x[2],
+                                H_3 - x[0] + x[1]*Q_3**x[2]]
+                    return eq_array
+                coeff = fsolve(curve_fit, [200, 1e-3, 1.5])
+                A = coeff[0]
+                B = coeff[1]
+                C = coeff[2]
+
+        # Multi-point curve
+        else:
+            raise RuntimeError('Coefficient for Multipoint pump curves cannot be generated. ')
+
+        if A<=0 or B<0 or C<=0:
+            raise RuntimeError('Value of pump head curve coefficient is negative, which is not allowed. \nPump: {0} \nA: {1} \nB: {2} \nC:{3}'.format(self.name,A,B,C))
+        return (A, B, C)
+
+    def get_design_flow(self):
+        """
+        Returns the design flow value for the pump.
+        Equals to the first point on the pump curve.
+
+        """
+        try:
+            return self.curve.points[-1][0]
+        except IndexError:
+            raise IndexError("Curve point does not exist")
+
+
+
+class PowerPump(Pump):
+    @property
+    def pump_type(self): return 'POWER'
+    
+    @property
+    def power(self):
+        """Returns the fixed_power value if info_type is 'POWER', otherwise returns None"""
+        return self._base_power
+    @power.setter
+    def power(self, kW):
+        self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
+        self._base_power = kW
+
+    def todict(self):
+        d = super(PowerPump, self).todict()
+        d['properties']['base_power'] = self._base_power
+        return d
+
+    def __repr__(self):
+        return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._link_name,
+                   self.start_node, self.end_node, 'POWER', self._base_power, 
+                   self.speed_timeseries, str(self.status))
+
+
+class Valve(Link):
+    """
+    Valve class that is inherited from Link
+
+    Parameters
+    ----------
+    name : string
+        Name of the valve
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    diameter : float, optional
+        Diameter of the valve.
+        Internal units must be meters (m)
+    valve_type : string, optional
+        Type of valve. Options are 'PRV', etc
+    minor_loss : float, optional
+        Pipe minor loss coefficient
+    setting : float or string, optional
+        Valve setting or name of headloss curve for GPV
+    """
+    def __init__(self, name, start_node_name, end_node_name, model):
+        super(Valve, self).__init__(model, name, start_node_name, end_node_name)
+        self.diameter = 0.3048
+        self.minor_loss = 0.0
+        self._initial_status = LinkStatus.active
+        self._initial_setting = 0.0
+
+    def todict(self):
+        d = super(Valve, self).todict()
+        d['properties'] = dict(diameter=self.diameter,
+                               valve_type=self.valve_type,
+                               minor_loss=self.minor_loss)
+        return d
+
+    @property
+    def status(self):
+        if self._user_status == LinkStatus.Closed:
+            return LinkStatus.Closed
+        elif self._user_status == LinkStatus.Open:
+            return LinkStatus.Open
+        else:
+            return self._internal_status
+
+    @property
+    def link_type(self):
+        return 'Valve'
+
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Valve, self).__eq__(other):
+            return False
+        if abs(self.diameter   - other.diameter)<1e-10 and \
+           self.valve_type    == other.valve_type      and \
+           abs(self.minor_loss - other.minor_loss)<1e-10:
+            return True
+        return False
+
+    def __repr__(self):
+        fmt = "<Pump '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>"
+        return fmt.format(self._link_name,
+                          self.start_node, self.end_node, self.__class__.__name__,
+                          self.diameter, 
+                          self.minor_loss, self.setting, str(self.status))
+
+class PRValve(Valve):
+    """Pressure reducting valve"""
+    def __init__(self, name, start_node_name, end_node_name, model):
+        super(PRValve, self).__init__(name, start_node_name, end_node_name, model)
+
+    @property
+    def valve_type(self): return 'PRV'
+
+
+class PSValve(Valve):
+    """Pressure sustaining valve"""
+    def __init__(self, name, start_node_name, end_node_name, model):
+        super(PSValve, self).__init__(name, start_node_name, end_node_name, model)
+
+    @property
+    def valve_type(self): return 'PSV'
+
+
+class PBValve(Valve):
+    """Pressure breaker valve"""
+    def __init__(self, name, start_node_name, end_node_name, model):
+        super(PBValve, self).__init__(name, start_node_name, end_node_name, model)
+
+    @property
+    def valve_type(self): return 'PBV'
+
+
+class FCValve(Valve):
+    """Flow control valve"""
+    def __init__(self, name, start_node_name, end_node_name, model):
+        super(FCValve, self).__init__(name, start_node_name, end_node_name, model)
+
+    @property
+    def valve_type(self): return 'FCV'
+
+
+class TCValve(Valve):
+    """Throttle control valve"""
+    def __init__(self, name, start_node_name, end_node_name, model):
+        super(TCValve, self).__init__(name, start_node_name, end_node_name, model)
+
+    @property
+    def valve_type(self): return 'TCV'
+
+
+class GPValve(Valve):
+    """General purpose valve"""
+    def __init__(self, name, start_node_name, end_node_name, model):
+        super(GPValve, self).__init__(name, start_node_name, end_node_name, model)
+        self._headloss_curve_name = None
+
+    @property
+    def valve_type(self): return 'GPV'
+
+    @property
+    def headloss_curve(self):
+        return self._curve_reg[self._headloss_curve_name]
+
+    @property
+    def headloss_curve_name(self):
+        """Returns the pump curve name if info_type is 'HEAD', otherwise returns None"""
+        return self._headloss_curve_name
+    @headloss_curve_name.setter
+    def headloss_curve_name(self, name):
+        self._curve_reg.remove_usage(self._headloss_curve_name, (self._link_name, 'Valve'))
+        self._curve_reg.add_usage(name, (self._link_name, 'Valve'))
+        self._curve_reg.set_curve_type(name, 'HEADLOSS')
+        self._headloss_curve_name = name
+
+    def todict(self):
+        d = super(GPValve, self).todict()
+        d['properties']['headloss_curve'] = self._headloss_curve_name        
+        return d
+    
 
 class TimeSeries(object): 
     """
@@ -232,7 +730,9 @@ class TimeSeries(object):
     ----------
     base : number
         A number that represents the baseline value.
-    pattern : Pattern, optional
+    pattern_registry : PatternRegistry
+        The pattern registry for looking up patterns
+    pattern : str, optional
         If None, then the value will be constant. Otherwise, the Pattern will be used.
         (default = None)
     category : string, optional
@@ -245,15 +745,14 @@ class TimeSeries(object):
         If `base` or `pattern` are invalid types
     
     """
-    def __init__(self, base, pattern=None, category=None):
+    def __init__(self, model, base, pattern_name=None, category=None):
         if not isinstance(base, (int, float, complex)):
             raise ValueError('TimeSeries->base must be a number')
-        if isinstance(pattern, Pattern):
-            self._pattern = pattern
-        elif pattern is None:
-            self._pattern = None
+        if isinstance(model, Registry):
+            self._pattern_reg = model
         else:
-            raise ValueError('TimeSeries->pattern must be a Pattern object or None')
+            self._pattern_reg = model.patterns
+        self._pattern = pattern_name
         if base is None: base = 0.0
         self._base = base
         self._category = category
@@ -268,8 +767,20 @@ class TimeSeries(object):
     def __repr__(self):
         fmt = "<TimeSeries: base={}, pattern='{}', category='{}'>"
         return fmt.format(self._base, 
-                          (self._pattern.name if self.pattern else None),
+                          (self._pattern if self.pattern else None),
                           str(self._category))
+    
+    def tostring(self):
+        fmt = ' {:12.6g}   {:20s}   {:14s}\n'
+        return fmt.format(self._base, self._pattern, self._category)
+    
+    def todict(self):
+        d = dict(base_val=self._base)
+        if isinstance(self._pattern, six.string_types):
+            d['pattern_name'] = self._pattern
+        if self._category:
+            d['category'] = self._category
+        return d
     
     def __eq__(self, other):
         if type(self) == type(other) and \
@@ -295,30 +806,28 @@ class TimeSeries(object):
         if not isinstance(value, (int, float, complex)):
             raise ValueError('TimeSeries->base_value must be a number')
         self._base = value
-        
+
     @property
     def pattern(self):
         """Returns the Pattern object."""
-        return self._pattern
-    
-    @pattern.setter
-    def pattern(self, pattern):
-        if not isinstance(pattern, Pattern):
-            raise ValueError('TimeSeries->pattern must be a Pattern object')
-        self._pattern = pattern
+        return self._pattern_reg[self._pattern]
 
     @property
     def pattern_name(self):
         """Returns the name of the pattern."""
         if self._pattern:
-            return self._pattern.name
+            return self._pattern
         return None
-                    
+
+    @pattern_name.setter
+    def pattern_name(self, pattern_name):
+        self._pattern = pattern_name
+
     @property
     def category(self):
         """Returns the category."""
         return self._category
-    
+
     @category.setter
     def category(self, category):
         self._category = category
@@ -332,9 +841,9 @@ class TimeSeries(object):
         time : int
             Time in seconds
         """
-        if not self._pattern:
+        if not self.pattern:
             return self._base
-        return self._base * self._pattern.at(time)
+        return self._base * self.pattern.at(time)
     __call__ = at
     
     def get_values(self, start_time, end_time, time_step):
@@ -356,6 +865,7 @@ class TimeSeries(object):
             demand_values[ct] = self.at(t)
         return demand_values
 
+
 class Source(object):
     """
     Water quality source class.
@@ -376,11 +886,19 @@ class Source(object):
         (default = None).
     """
 
-    def __init__(self, name, node_name, source_type, strength, pattern=None):
-        self.strength_timeseries = TimeSeries(strength, pattern, name)
+#    def __init__(self, name, node_registry, pattern_registry):
+    def __init__(self, model, name, node_name, source_type, strength, pattern=None):
+        self._strength_timeseries = TimeSeries(model, strength, pattern, name)
+        self._pattern_reg = model.patterns
+        self._pattern_reg.add_usage(pattern, (name, 'Source'))
+        self._node_reg = model.nodes
+        self._node_reg.add_usage(node_name, (name, 'Source'))
         self.name = name
         self.node_name = node_name
         self.source_type = source_type
+
+    @property
+    def strength_timeseries(self): return self._strength_timeseries
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -422,8 +940,9 @@ class Demands(MutableSequence):
     in demand objects or demand tuples as ``(base_demand, pattern, category_name)``
     """
     
-    def __init__(self, *args):
+    def __init__(self, model, *args):
         self._list = []
+        self._pattern_reg = model.patterns
         for object in args:
             self.append(object)
 
@@ -431,13 +950,9 @@ class Demands(MutableSequence):
         """Get the demand at index <==> y = S[index]"""
         return self._list.__getitem__(index)
     
-    def __setitem__(self, index, object):
+    def __setitem__(self, index, obj):
         """Set demand and index <==> S[index] = object"""
-        if isinstance(object, (list, tuple)) and len(object) in [2,3]:
-            object = TimeSeries(*object)
-        elif not isinstance(object, TimeSeries):
-            raise ValueError('object must be a TimeSeries or demand tuple')
-        return self._list.__setitem__(index, object)
+        return self._list.__setitem__(index, self.to_ts(obj))
     
     def __delitem__(self, index):
         """Remove demand at index <==> del S[index]"""
@@ -455,30 +970,59 @@ class Demands(MutableSequence):
     def __repr__(self):
         return '<Demands: {}>'.format(repr(self._list))
     
-    def insert(self, index, object):
-        """S.insert(index, object) - insert object before index"""
-        if isinstance(object, (list, tuple)) and len(object) in [2,3]:
-            object = TimeSeries(*object)
-        elif not isinstance(object, TimeSeries):
-            raise ValueError('object must be a TimeSeries or demand tuple')
-        self._list.insert(index, object)
+    def tostring(self):
+        if len(self._list) == 0:
+            s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
+            s += '    None\n'
+            return s
+#        elif len(self._list) == 1:
+#            s  = '  ========   ============   ====================   ==============\n'
+#            s += '  Demand:    {:12.6g}   {:20s}   {:14s}\n'.format(self._list[0].base_value,
+#                                                                    self._list[0].pattern_name,
+#                                                                    self._list[0].category)
+#            s += '  ========   ============   ====================   ==============\n'
+#            return s
+#        s  = '  ========   ============   ====================   ==============\n'
+#        s += '  Demand #   Base Value     Pattern Name           Category      \n'
+#        s += '  --------   ------------   --------------------   --------------\n'
+        s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
+        lf = '  [{:5d} ]  {}'
+        for ct, dem in enumerate(self._list):
+            s += lf.format(ct+1, dem.tostring())
+#        s += '  ========   ============   ====================   ==============\n'
+        return s
     
-    def append(self, object):
-        """S.append(object) - append object to the end"""
-        if isinstance(object, (list, tuple)) and len(object) in [2,3]:
-            object = TimeSeries(*object)
-        elif not isinstance(object, TimeSeries):
+    def tolist(self):
+        if len(self._list) == 0: return None
+        d = []
+        for demand in self._list:
+            d.append(demand.todict())
+        return d
+    
+    def to_ts(self, obj):
+        if isinstance(obj, (list, tuple)) and len(obj) >= 2:
+            o1 = obj[0]
+            o2 = self._pattern_reg.default_pattern if obj[1] is None else obj[1]
+            o3 = obj[2] if len(obj) >= 3 else None
+            obj = TimeSeries(self._pattern_reg, o1, o2, o3)
+        elif isinstance(obj, TimeSeries):
+            obj._pattern_reg = self._pattern_reg
+        else:
             raise ValueError('object must be a TimeSeries or demand tuple')
-        self._list.append(object)
+        return obj
+    
+    def insert(self, index, obj):
+        """S.insert(index, object) - insert object before index"""
+        self._list.insert(index, self.to_ts(obj))
+    
+    def append(self, obj):
+        """S.append(object) - append object to the end"""
+        self._list.append(self.to_ts(obj))
     
     def extend(self, iterable):
         """S.extend(iterable) - extend list by appending elements from the iterable"""
-        for object in iterable:
-            if isinstance(object, (list, tuple)) and len(object) in [2,3]:
-                object = TimeSeries(*object)
-            elif not isinstance(object, TimeSeries):
-                raise ValueError('object must be a TimeSeries or demand tuple')
-            self._list.append(object)
+        for obj in iterable:
+            self._list.append(self.to_ts(obj))
 
     def clear(self):
         """S.clear() - remove all entries"""
@@ -539,118 +1083,4 @@ class Demands(MutableSequence):
             for ct, t in enumerate(demand_times):
                 demand_values[ct] += dem(t)
         return demand_values
-
-
-class NodeType(enum.IntEnum):
-    """
-    An enum class for types of nodes.
-
-    .. rubric:: Enum Members
-
-    ==================  ==================================================================
-    :attr:`~Junction`   Node is a :class:`~wntr.network.model.Junction`
-    :attr:`~Reservoir`  Node is a :class:`~wntr.network.model.Reservoir`
-    :attr:`~Tank`       Node is a :class:`~wntr.network.model.Tank`
-    ==================  ==================================================================
-
-    """
-    Junction = 0
-    Reservoir = 1
-    Tank = 2
-
-    def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
-
-    def __str__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return int(self) == int(other) and (isinstance(other, int) or \
-               self.__class__.__name__ == other.__class__.__name__)
-
-
-class LinkType(enum.IntEnum):
-    """
-    An enum class for types of links.
-
-    .. rubric:: Enum Members
-
-    ===============  ==================================================================
-    :attr:`~CV`      Pipe with check valve
-    :attr:`~Pipe`    Regular pipe
-    :attr:`~Pump`    Pump
-    :attr:`~Valve`   Any valve type (see following)
-    :attr:`~PRV`     Pressure reducing valve
-    :attr:`~PSV`     Pressure sustaining valve
-    :attr:`~PBV`     Pressure breaker valve
-    :attr:`~FCV`     Flow control valve
-    :attr:`~TCV`     Throttle control valve
-    :attr:`~GPV`     General purpose valve
-    ===============  ==================================================================
-
-    """
-    CV = 0
-    Pipe = 1
-    Pump = 2
-    PRV = 3
-    PSV = 4
-    PBV = 5
-    FCV = 6
-    TCV = 7
-    GPV = 8
-    Valve = 9
-
-    def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
-
-    def __str__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return int(self) == int(other) and (isinstance(other, int) or \
-               self.__class__.__name__ == other.__class__.__name__)
-
-
-class LinkStatus(enum.IntEnum):
-    """
-    An enum class for link statuses.
-    
-    .. warning:: 
-        This is NOT the class for determining output status from an EPANET binary file.
-        The class for output status is wntr.epanet.util.LinkTankStatus.
-
-    .. rubric:: Enum Members
-
-    ===============  ==================================================================
-    :attr:`~Closed`  Pipe/valve/pump is closed.
-    :attr:`~Opened`  Pipe/valve/pump is open.
-    :attr:`~Open`    Alias to "Opened"
-    :attr:`~Active`  Valve is partially open.
-    ===============  ==================================================================
-
-    """
-    Closed = 0
-    Open = 1
-    Opened = 1
-    Active = 2
-    CV = 3
-
-    def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
-
-    def __str__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return int(self) == int(other) and (isinstance(other, int) or \
-               self.__class__.__name__ == other.__class__.__name__)
-
+        

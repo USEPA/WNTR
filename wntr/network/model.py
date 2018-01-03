@@ -13,11 +13,11 @@ import abc
 
 from .graph import WntrMultiDiGraph
 from .options import WaterNetworkOptions
-from .elements import Curve, Pattern, Source
-from .elements import LinkStatus
-from .elements import Demands, TimeSeries
+from .base import Curve, Pattern
+from .base import LinkStatus
+from .elements import Demands, TimeSeries, Source
 import wntr.epanet
-import wntr.network.controls as controls
+import controls
 
 logger = logging.getLogger(__name__)
 

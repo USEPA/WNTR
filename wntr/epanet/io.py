@@ -30,14 +30,13 @@ import wntr
 import wntr.network
 from wntr.network.model import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
 from wntr.network.options import WaterNetworkOptions
-from wntr.network.elements import Pattern, LinkStatus, Curve, Demands, Source
+from wntr.network.model import Pattern, LinkStatus, Curve, Demands, Source
 from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition, Comparison
-from wntr.network.controls import OrCondition, AndCondition, IfThenElseControl, ControlAction
+from wntr.network.controls import OrCondition, AndCondition, Control, ControlAction
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam, MixType, ResultType, EN
 from .util import to_si, from_si
 from .util import StatisticsType, QualType, PressureUnits
-
 
 logger = logging.getLogger(__name__)
 
@@ -981,7 +980,7 @@ class InpFile(object):
                     current[1].upper() == 'CLOSED' or
                     current[1].upper() == 'ACTIVE'):
                 new_status = LinkStatus[current[1].upper()].value
-                link.status = new_status
+                link._user_status = new_status
                 link._base_status = new_status
             else:
                 if isinstance(link, wntr.network.Valve):
@@ -1006,6 +1005,7 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_controls(self):
+        control_count = 0
         for lnum, line in self.sections['[CONTROLS]']:
             line = line.split(';')[0]
             current = line.split()
@@ -1044,8 +1044,10 @@ class InpFile(object):
                                         'the link status. Control: {0}'.format(line)))
 
             # Create the control object
-            control_name = ''
+            control_count += 1
+            control_name = 'control '+str(control_count)
             if 'TIME' not in current and 'CLOCKTIME' not in current:
+                threshold = None
                 if 'IF' in current:
                     node = self.wn.get_node(node_name)
                     if current[6] == 'ABOVE':
@@ -1058,38 +1060,38 @@ class InpFile(object):
                     # IN THE INP WRITER. Now that we know, we can fix it, but
                     # if this changes, it will affect multiple pieces, just an
                     # FYI.
-                    if isinstance(node, wntr.network.Junction):
+                    if node.node_type == 'Junction':
                         threshold = to_si(self.flow_units,
                                           float(current[7]), HydParam.Pressure)# + node.elevation
-                        control_obj = wntr.network.ConditionalControl((node, 'pressure'), oper, threshold, action_obj)
-                    elif isinstance(node, wntr.network.Tank):
+                        control_obj = Control.conditional_control(node, 'pressure', oper, threshold, action_obj, control_name)
+                    elif node.node_type == 'Tank':
                         threshold = to_si(self.flow_units, 
                                           float(current[7]), HydParam.HydraulicHead)# + node.elevation
-                        control_obj = wntr.network.ConditionalControl((node, 'level'), oper, threshold, action_obj)
+                        control_obj = Control.conditional_control(node, 'level', oper, threshold, action_obj, control_name)
                 else:
                     raise RuntimeError("The following control is not recognized: " + line)
-                control_name = ''
-                for i in range(len(current)-1):
-                    control_name = control_name + '/' + current[i]
-                control_name = control_name + '/' + str(round(threshold, 2))
+#                control_name = ''
+#                for i in range(len(current)-1):
+#                    control_name = control_name + '/' + current[i]
+#                control_name = control_name + '/' + str(round(threshold, 2))
             else:
                 if len(current) == 6:  # at time
                     if ':' in current[5]:
                         run_at_time = int(_str_time_to_sec(current[5]))
                     else:
                         run_at_time = int(float(current[5])*3600)
-                    control_obj = wntr.network.TimeControl(self.wn, run_at_time, 'SIM_TIME', False, action_obj)
-                    control_name = ''
-                    for i in range(len(current)-1):
-                        control_name = control_name + '/' + current[i]
-                    control_name = control_name + '/' + str(run_at_time)
+                    control_obj = Control.time_control(self.wn, run_at_time, 'SIM_TIME', False, action_obj, control_name)
+#                    control_name = ''
+#                    for i in range(len(current)-1):
+#                        control_name = control_name + '/' + current[i]
+#                    control_name = control_name + '/' + str(run_at_time)
                 elif len(current) == 7:  # at clocktime
                     run_at_time = int(_clock_time_to_sec(current[5], current[6]))
-                    control_obj = wntr.network.TimeControl(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj)
-                    control_name = ''
-                    for i in range(len(current)-1):
-                        control_name = control_name + '/' + current[i]
-                    control_name = control_name + '/' + str(run_at_time)
+                    control_obj = Control.time_control(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj, control_name)
+#                    control_name = ''
+#                    for i in range(len(current)-1):
+#                        control_name = control_name + '/' + current[i]
+#                    control_name = control_name + '/' + str(run_at_time)
             if control_name in self.wn.control_name_list:
                 warnings.warn('One or more [CONTROLS] were duplicated in "{}"; duplicates are ignored.'.format(self.wn.name), stacklevel=0)
                 logger.warning('Control already exists: "{}"'.format(control_name))
@@ -1131,7 +1133,7 @@ class InpFile(object):
         controls.sort()
         for text in controls:
             all_control = wn.get_control(text)
-            if isinstance(all_control, wntr.network.TimeControl):
+            if all_control.epanet_control_type == 'time_control':
                 entry = 'Link {link} {setting} AT {compare} {time:g}\n'
                 vals = {'link': all_control._control_action._target_obj_ref.name,
                         'setting': get_setting(all_control, text),
@@ -1142,7 +1144,7 @@ class InpFile(object):
                 if all_control._daily_flag:
                     vals['compare'] = 'CLOCKTIME'
                 f.write(entry.format(**vals).encode('ascii'))
-            elif isinstance(all_control, wntr.network.ConditionalControl):
+            elif all_control.epanet_control_type == 'conditional_control':
                 entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
                 vals = {'link': all_control._control_action._target_obj_ref.name,
                         'setting': get_setting(all_control, text),
@@ -1161,7 +1163,7 @@ class InpFile(object):
                 else: 
                     raise RuntimeError('Unknown control for EPANET INP files: %s' %type(all_control))
                 f.write(entry.format(**vals).encode('ascii'))
-            elif not isinstance(all_control, wntr.network.controls.IfThenElseControl):
+            elif not isinstance(all_control, Control):
                 raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
         f.write('\n'.encode('ascii'))
 
@@ -1230,7 +1232,7 @@ class InpFile(object):
         for text in controls:
             all_control = wn.get_control(text)
             entry = '{}\n'
-            if isinstance(all_control, wntr.network.controls.IfThenElseControl):
+            if all_control.epanet_control_type == 'rule':
                 rule = _EpanetRule('blah', self.flow_units, self.mass_units)
                 rule.from_if_then_else(all_control)
                 f.write(entry.format(str(rule)).encode('ascii'))
@@ -2220,7 +2222,7 @@ class _EpanetRule(object):
                     elif link.valve_type.upper() in ['FCV']:
                         value = to_si(self.inp_units, value, HydParam.Flow)
             else_acts.append(ControlAction(link, attr, value))
-        return IfThenElseControl(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)
+        return Control(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID, control_type='rule')
 
 
 class BinFile(object):

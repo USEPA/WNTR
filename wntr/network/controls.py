@@ -3,7 +3,6 @@ The wntr.network.controls module includes methods to define network controls
 and control actions.  These controls modify parameters in the network during
 simulation.
 """
-import wntr
 import math
 import enum
 import numpy as np
@@ -13,6 +12,7 @@ from .elements import LinkStatus
 import abc
 from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict, Iterable
+from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
 import warnings
 
 logger = logging.getLogger(__name__)
@@ -123,6 +123,8 @@ class Comparison(enum.Enum):
     def parse(cls, func):
         if isinstance(func, six.string_types):
             func = func.lower().strip()
+        elif isinstance(func, cls):
+            func = func.func
         if func in [np.equal, '=', 'eq', '-eq', '==', 'is', 'equal', 'equal to']:
             return cls.eq
         elif func in [np.not_equal, '<>', 'ne', '-ne', '!=', 'not', 'not_equal', 'not equal to']:
@@ -315,6 +317,10 @@ class TimeOfDayCondition(ControlCondition):
                                              self._sec_to_hours_min_sec(self._threshold),
                                              rep, start)
 
+    def requires(self):
+        """Returns a list of objects required to evaluate this condition"""
+        return []
+
     def __repr__(self):
         fmt = '<TimeOfDayCondition: model, {}, {}, {}, {}>'
         return fmt.format(repr(self._relation.text), repr(self._sec_to_clock(self._threshold)),
@@ -441,6 +447,10 @@ class SimTimeCondition(ControlCondition):
             fmt = 'sim_time ' + fmt
         return fmt
 
+    def requires(self):
+        """Returns a list of objects required to evaluate this condition"""
+        return []
+
     def evaluate(self):
         cur_time = self._model.sim_time
         prev_time = self._model._prev_sim_time
@@ -486,7 +496,7 @@ class ValueCondition(ControlCondition):
         A value to compare the source object attribute against
     """
     def __new__(cls, source_obj, source_attr, relation, threshold):
-        if isinstance(source_obj, wntr.network.Tank) and source_attr in {'level',  'pressure', 'head'}:
+        if isinstance(source_obj, Tank) and source_attr in {'level',  'pressure', 'head'}:
             return object.__new__(TankLevelCondition)
         else:
             return object.__new__(ValueCondition)
@@ -916,15 +926,15 @@ class _ClosePRVCondition(ControlCondition):
         return [self._prv]
 
     def evaluate(self):
-        if self._prv._internal_status == wntr.network.LinkStatus.Active:
+        if self._prv._internal_status == LinkStatus.Active:
             if self._prv.flow < -self._Qtol:
                 return True
             return False
-        elif self._prv._internal_status == wntr.network.LinkStatus.Open:
+        elif self._prv._internal_status == LinkStatus.Open:
             if self._prv.flow < -self._Qtol:
                 return True
             return False
-        elif self._prv._internal_status == wntr.network.LinkStatus.Closed:
+        elif self._prv._internal_status == LinkStatus.Closed:
             return False
         else:
             raise RuntimeError('Unexpected PRV _internal_status for valve {0}: {1}.'.format(self._prv,
@@ -952,15 +962,15 @@ class _OpenPRVCondition(ControlCondition):
         return [self._prv, self._start_node, self._end_node]
 
     def evaluate(self):
-        if self._prv._internal_status == wntr.network.LinkStatus.Active:
+        if self._prv._internal_status == LinkStatus.Active:
             if self._prv.flow < -self._Qtol:
                 return False
             elif self._start_node.head < self._prv.setting + self._end_node.elevation  + self._r * abs(self._prv.flow)**2 - self._Htol:
                 return True
             return False
-        elif self._prv._internal_status == wntr.network.LinkStatus.Open:
+        elif self._prv._internal_status == LinkStatus.Open:
             return False
-        elif self._prv._internal_status == wntr.network.LinkStatus.Closed:
+        elif self._prv._internal_status == LinkStatus.Closed:
             if ((self._start_node.head > self._end_node.head + self._Htol) and
                     (self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
                 return True
@@ -991,16 +1001,16 @@ class _ActivePRVCondition(ControlCondition):
         return [self._prv, self._start_node, self._end_node]
 
     def evaluate(self):
-        if self._prv._internal_status == wntr.network.LinkStatus.Active:
+        if self._prv._internal_status == LinkStatus.Active:
             return False
-        elif self._prv._internal_status == wntr.network.LinkStatus.Open:
+        elif self._prv._internal_status == LinkStatus.Open:
             if self._prv.flow < -self._Qtol:
                 return False
             elif (self._start_node.head > self._prv.setting + self._end_node.elevation +
                   self._r * abs(self._prv.flow)**2 + self._Htol):
                 return True
             return False
-        elif self._prv._internal_status == wntr.network.LinkStatus.Closed:
+        elif self._prv._internal_status == LinkStatus.Closed:
             if ((self._start_node.head > self._end_node.head + self._Htol) and
                     (self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
                 return False
@@ -1065,7 +1075,7 @@ class _ActiveFCVCondition(ControlCondition):
             return False
         elif self._fcv.flow < -self._Qtol:
             return False
-        elif self._fcv._internal_status == wntr.network.LinkStatus.Open and self._fcv.flow >= self._fcv.setting:
+        elif self._fcv._internal_status == LinkStatus.Open and self._fcv.flow >= self._fcv.setting:
             return True
         else:
             return False
@@ -1154,7 +1164,7 @@ class ControlAction(BaseControlAction):
 
     def _repr_value(self):
         if self._attribute.lower() in ['status']:
-            return wntr.network.model.LinkStatus(int(self._value)).name
+            return LinkStatus(int(self._value)).name
         return self._value
 
     def __eq__(self, other):
@@ -1334,7 +1344,7 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
 class Control(ControlBase):
     """If-Then[-Else] contol
     """
-    def __init__(self, condition, then_actions, else_actions=None, priority=ControlPriority.very_low, name=None):
+    def __init__(self, condition, then_actions, else_actions=None, priority=ControlPriority.very_low, name=None, control_type='wntr'):
         if not isinstance(condition, ControlCondition):
             raise ValueError('The conditions argument must be a ControlCondition instance')
         self._condition = condition
@@ -1353,8 +1363,15 @@ class Control(ControlBase):
         self._which = None
         self._priority = priority
         self._name = name
+        self._control_type = control_type
         if self._name is None:
             self._name = ''
+
+    @property
+    def epanet_control_type(self):
+        if self._control_type.lower() in ['rule','conditional_control','time_control']:
+            return self._control_type
+        return None
 
     def requires(self):
         req = self._condition.requires()
@@ -1448,7 +1465,7 @@ class Control(ControlBase):
             raise RuntimeError('control actions called even though if-then statement was False')
 
     @classmethod
-    def time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action):
+    def time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action, name=None):
         """
         Parameters
         ----------
@@ -1467,20 +1484,23 @@ class Control(ControlBase):
         else:
             raise ValueError("time_flag not recognized; expected either 'sim_time' or 'clock_time'")
 
-        return Control(condition=condition, then_actions=[control_action], else_actions=[])
+        return Control(condition=condition, then_actions=[control_action], else_actions=[], control_type='time_control', name=name)
 
     @classmethod
-    def conditional_control(cls, source_obj, source_attr, operation, threshold, control_action):
+    def conditional_control(cls, source_obj, source_attr, operation, threshold, control_action, name=None):
+        """Create an EPANET Simple conditional control"""
         condition = ValueCondition(source_obj=source_obj, source_attr=source_attr, relation=operation,
                                    threshold=threshold)
-        return Control(condition=condition, then_actions=[control_action], else_actions=[])
+        return Control(condition=condition, then_actions=[control_action], else_actions=[], control_type='conditional_control', name=name)
 
 
 class ControlManager(Observer):
-    def __init__(self):
+    def __init__(self, model):
         self._controls = OrderedSet()
         self._previous_values = OrderedDict()  # {(obj, attr): value}
         self._changed = OrderedSet()  # set of (obj, attr) that has been changed from _previous_values
+        self._node_reg = model.nodes
+        self._link_reg = model.links
 
     def update(self, subject):
         """
@@ -1505,10 +1525,15 @@ class ControlManager(Observer):
         control: Control
         """
         self._controls.add(control)
-        for action in control.actions():
-            action.subscribe(self)
-            for obj, attr in action.targets():
-                self._previous_values[(obj, attr)] = getattr(obj, attr)
+#        for action in control.actions():
+#            action.subscribe(self)
+#            for obj, attr in action.targets():
+#                self._previous_values[(obj, attr)] = getattr(obj, attr)
+        for elem in control.requires():
+            if isinstance(elem, (Tank, Junction, Reservoir)):
+                self._node_reg.add_usage(elem.name, (control.name, 'Control'))
+            elif isinstance(elem, (Pipe, Pump, Valve)):
+                self._link_reg.add_usage(elem.name, (control.name, 'Control'))
 
     def reset(self):
         self._previous_values = OrderedDict()
