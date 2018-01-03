@@ -15,6 +15,8 @@ else:
 
 logger = logging.getLogger(__name__)
 
+import numpy as np
+
 from .options import WaterNetworkOptions
 from .base import Link, Curve, Pattern, Registry, LinkStatus, AbstractModel
 from .elements import Junction, Reservoir, Tank
@@ -41,11 +43,11 @@ class WaterNetworkModel(AbstractModel):
         self.name = None
 
         self._options = WaterNetworkOptions()
-        self._node_reg = NodeRegistry(self._options)
-        self._link_reg = LinkRegistry(self._options)
-        self._pattern_reg = PatternRegistry(self._options)
-        self._curve_reg = CurveRegistry(self._options)
-        self._control_reg = ControlRegistry(self._options, self)
+        self._node_reg = NodeRegistry(self)
+        self._link_reg = LinkRegistry(self)
+        self._pattern_reg = PatternRegistry(self)
+        self._curve_reg = CurveRegistry(self)
+        self._control_reg = ControlRegistry(self)
         self._sources = {}
 
         # Name of pipes that are check valves
@@ -65,16 +67,7 @@ class WaterNetworkModel(AbstractModel):
         # To be deleted and/or renamed and/or moved
         self.sim_time = 0
     
-    def todict(self):
-        d = dict(options=self._options.todict(),
-                 nodes=self._node_reg.tolist(),
-                 links=self._link_reg.tolist(),
-                 curves=self._curve_reg.tolist(),
-                 controls=self._control_reg.todict(),
-                 patterns=self._pattern_reg.tolist()
-                 )
-        return d
-    
+    ### # 
     ### Iteratable attributes
     @property
     def options(self): return self._options
@@ -97,6 +90,7 @@ class WaterNetworkModel(AbstractModel):
     @property    
     def sources(self): return self._sources
 
+    ### # 
     ### Element iterators
     @property
     def junctions(self): return self._node_reg.junctions
@@ -116,6 +110,7 @@ class WaterNetworkModel(AbstractModel):
     @property
     def valves(self): return self._link_reg.valves
     
+    ### # 
     ### Create blank, unregistered objects (for direct assignment)
     def new_demand_timeseries_list(self):
         return Demands(self) 
@@ -126,6 +121,7 @@ class WaterNetworkModel(AbstractModel):
     def new_pattern(self):
         return Pattern(None, time_options=self._options.time)
     
+    ### # 
     ### Adding elements to the model
     def add_junction(self, name, base_demand=0.0, demand_pattern=None, 
                      elevation=0.0, coordinates=None, demand_category=None):
@@ -146,15 +142,7 @@ class WaterNetworkModel(AbstractModel):
             X-Y coordinates of the node location.
                 
         """
-        base_demand = float(base_demand)
-        elevation = float(elevation)
-        junction = Junction(name, self)
-        junction.elevation = elevation
-        if base_demand:
-            junction.add_demand(base_demand, demand_pattern, demand_category)
-        self._node_reg[name] = junction
-        if coordinates is not None:
-            junction.coordinates = coordinates
+        self._node_reg.add_junction(name, base_demand, demand_pattern, elevation, coordinates, demand_category)
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
@@ -189,30 +177,7 @@ class WaterNetworkModel(AbstractModel):
             If `init_level` greater than `max_level` or less than `min_level`
             
         """
-        elevation = float(elevation)
-        init_level = float(init_level)
-        min_level = float(min_level)
-        max_level = float(max_level)
-        diameter = float(diameter)
-        if min_vol is not None:
-            min_vol = float(min_vol)
-        if init_level < min_level:
-            raise ValueError("Initial tank level must be greater than or equal to the tank minimum level.")
-        if init_level > max_level:
-            raise ValueError("Initial tank level must be less than or equal to the tank maximum level.")
-        if vol_curve and not isinstance(vol_curve, six.string_types):
-            raise ValueError('Volume curve name must be a string')
-        tank = Tank(name, self)
-        tank.elevation = elevation
-        tank.init_level = init_level
-        tank.min_level = min_level
-        tank.max_level = max_level
-        tank.diameter = diameter
-        tank.min_vol = min_vol
-        tank.vol_curve_name = vol_curve
-        self._node_reg[name] = tank
-        if coordinates is not None:
-            tank.coordinates = coordinates
+        self._node_reg.add_tank(name, elevation, init_level, min_level, max_level, diameter, min_vol, vol_curve, coordinates)
 
     def add_reservoir(self, name, base_head=0.0, head_pattern=None, coordinates=None):
         """
@@ -230,15 +195,7 @@ class WaterNetworkModel(AbstractModel):
             X-Y coordinates of the node location.
         
         """
-        base_head = float(base_head)
-        if head_pattern and not isinstance(head_pattern, six.string_types):
-            raise ValueError('Head pattern must be a string')
-        reservoir = Reservoir(name, self)
-        reservoir.base_head = base_head
-        reservoir.head_pattern_name = head_pattern
-        self._node_reg[name] = reservoir
-        if coordinates is not None:
-            reservoir.coordinates = coordinates
+        self._node_reg.add_reservoir(name, base_head, head_pattern, coordinates)
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
                  diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN', check_valve_flag=False):
@@ -268,24 +225,7 @@ class WaterNetworkModel(AbstractModel):
             False if the pipe does not have a check valve.
         
         """
-        length = float(length)
-        diameter = float(diameter)
-        roughness = float(roughness)
-        minor_loss = float(minor_loss)
-        if isinstance(status, str):
-            status = LinkStatus[status]
-        pipe = Pipe(name, start_node_name, end_node_name, self)
-        pipe.length = length
-        pipe.diameter = diameter
-        pipe.roughness = roughness
-        pipe.minor_loss = minor_loss
-        pipe.intial_status = status
-        pipe.cv = check_valve_flag
-        # Add to list of cv
-        if check_valve_flag:
-            self._check_valves.append(name)
-
-        self._link_reg[name] = pipe
+        self._link_reg.add_pipe(name, start_node_name, end_node_name, length, diameter, roughness, minor_loss, status, check_valve_flag)
 
     def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
                  pump_parameter=50.0, speed=1.0, pattern=None):
@@ -310,23 +250,7 @@ class WaterNetworkModel(AbstractModel):
             ID of pattern for speed setting
         
         """
-        if pump_type.upper() == 'POWER':
-            pump = PowerPump(name, start_node_name, end_node_name, self)
-            pump.power = pump_parameter
-        elif pump_type.upper() == 'HEAD':
-            pump = HeadPump(name, start_node_name, end_node_name, self)
-            if not isinstance(pump_parameter, six.string_types):
-                pump.pump_curve_name = pump_parameter.name
-            else:
-                pump.pump_curve_name = pump_parameter
-        else:
-            raise ValueError('pump_type must be "POWER" or "HEAD"')
-        pump.base_speed = speed
-        if isinstance(pattern, Pattern):
-            pump.speed_pattern = pattern.name
-        else:
-            pump.speed_pattern_name = pattern
-        self._link_reg[name] = pump
+        self._link_reg.add_pump(name, start_node_name, end_node_name, pump_type, pump_parameter, speed, pattern)
     
     def add_valve(self, name, start_node_name, end_node_name,
                  diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
@@ -354,32 +278,7 @@ class WaterNetworkModel(AbstractModel):
             name of headloss curve for GPV.
         
         """
-        start_node = self.get_node(start_node_name)
-        end_node = self.get_node(end_node_name)
-        if type(start_node)==Tank or type(end_node)==Tank:
-            logger.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
-        valve_type = valve_type.upper()
-        if valve_type == 'PRV':
-            valve = PRValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-        elif valve_type == 'PSV':
-            valve = PSValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-        elif valve_type == 'PBV':
-            valve = PBValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-        elif valve_type == 'FCV':
-            valve = FCValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-        elif valve_type == 'TCV':
-            valve = TCValve(name, start_node_name, end_node_name, self)
-            valve.initial_setting = setting
-        elif valve_type == 'GPV':
-            valve = GPValve(name, start_node_name, end_node_name, self)
-            valve.headloss_curve_name = setting
-        valve.diameter = diameter
-        valve.minor_loss = minor_loss
-        self._link_reg[name] = valve
+        self._link_reg.add_valve(name, start_node_name, end_node_name, diameter, valve_type, minor_loss, setting)
 
     def add_pattern(self, name, pattern=None):
         """
@@ -419,13 +318,7 @@ class WaterNetworkModel(AbstractModel):
 
         
         """
-        if not isinstance(pattern, Pattern):
-            pattern = Pattern(name, multipliers=pattern, time_options=self.options.time)            
-        else: #elif pattern.time_options is None:
-            pattern.time_options = self.options.time
-        if pattern.name in self._pattern_reg.keys():
-            raise ValueError('Pattern name already exists')
-        self._pattern_reg[pattern.name] = pattern
+        self._pattern_reg.add_pattern(name, pattern)
             
     def add_curve(self, name, curve_type, xy_tuples_list):
         """
@@ -440,8 +333,7 @@ class WaterNetworkModel(AbstractModel):
         xy_tuples_list : list of (x, y) tuples
             List of X-Y coordinate tuples on the curve.
         """
-        curve = Curve(name, curve_type, xy_tuples_list)
-        self._curve_reg[curve.name] = curve
+        self._curve_reg.add_curve(name, curve_type, xy_tuples_list)
         
     def add_source(self, name, node_name, source_type, quality, pattern=None):
         """
@@ -534,6 +426,7 @@ class WaterNetworkModel(AbstractModel):
         control._priority = 0
         self.add_control(pump_name+'PowerOnStatus'+str(start_time),control)
 
+    ### # 
     ### Removing elements from the model
     def remove_node(self, name): 
         """"""
@@ -640,6 +533,7 @@ class WaterNetworkModel(AbstractModel):
         """"""
         self._control_reg.__delitem__(name)
     
+    ### # 
     ### Getting elements from the model
     def get_node(self, name): 
         """"""
@@ -665,6 +559,7 @@ class WaterNetworkModel(AbstractModel):
         """"""
         return self._control_reg[name]
 
+    ### #
     ### Name lists
     @property
     def node_name_list(self): 
@@ -726,6 +621,7 @@ class WaterNetworkModel(AbstractModel):
         """"""
         return list(self._control_reg.keys())
     
+    ### # 
     ### Counts
     @property
     def num_nodes(self): 
@@ -786,6 +682,19 @@ class WaterNetworkModel(AbstractModel):
     def num_controls(self): 
         """"""
         return len(self._control_reg)
+    
+    ### #
+    ### Helper functions
+    
+    def todict(self):
+        d = dict(options=self._options.todict(),
+                 nodes=self._node_reg.tolist(),
+                 links=self._link_reg.tolist(),
+                 curves=self._curve_reg.tolist(),
+                 controls=self._control_reg.todict(),
+                 patterns=self._pattern_reg.tolist()
+                 )
+        return d
     
     def set_node_coordinates(self, name, coordinates):
         """
@@ -1242,6 +1151,10 @@ class WaterNetworkModel(AbstractModel):
     
 class PatternRegistry(Registry):
 
+    @property
+    def _patterns(self):
+        raise UnboundLocalError('registries are not reentrant')
+
     class DefaultPattern(object):
         def __init__(self, options):
             self._options = options
@@ -1256,10 +1169,56 @@ class PatternRegistry(Registry):
             return super(PatternRegistry, self).__getitem__(key)
         except KeyError:
             return None
+
+    def add_pattern(self, name, pattern=None):
+        """
+        Adds a pattern to the water network model.
+        
+        The pattern can be either a list of values (list, numpy array, etc.) or a 
+        :class:`~wntr.network.elements.Pattern` object. The Pattern class has options to automatically
+        create certain types of patterns, such as a single, on/off pattern (previously created using
+        the start_time and stop_time arguments to this function) -- see the class documentation for
+        examples.
+
+        
+        .. warning::
+            Patterns **must** be added to the model prior to adding any model element that uses the pattern,
+            such as junction demands, sources, etc. Patterns are linked by reference, so changes to a 
+            pattern affects all elements using that pattern. 
+
+            
+        .. warning::
+            Patterns **always** use the global water network model options.time values.
+            Patterns **will not** be resampled to match these values, it is assumed that 
+            patterns created using Pattern(...) or Pattern.BinaryPattern(...) object used the same 
+            pattern timestep value as the global value, and they will be treated accordingly.
+
+
+        Parameters
+        ----------
+        name : string
+            Name of the pattern.
+        pattern : list of floats or Pattern
+            A list of floats that make up the pattern, or a :class:`~wntr.network.elements.Pattern` object.
+
+        Raises
+        ------
+        ValueError
+            If adding a pattern with `name` that already exists.
+
+        
+        """
+        if not isinstance(pattern, Pattern):
+            pattern = Pattern(name, multipliers=pattern, time_options=self._options.time)            
+        else: #elif pattern.time_options is None:
+            pattern.time_options = self._options.time
+        if pattern.name in self._data.keys():
+            raise ValueError('Pattern name already exists')
+        self[name] = pattern
     
     @property
     def default_pattern(self):
-        return self.DefaultPattern(self._options)
+        return self.DefaultPattern(self._m.options)
     
     def tostring(self):
         s  = 'Pattern Registry:\n'
@@ -1273,27 +1232,34 @@ class PatternRegistry(Registry):
         
 
 class ControlRegistry(Registry):
-    def __init__(self, options, model):
-        super(ControlRegistry, self).__init__(options)        
+    def __init__(self, model):
+        super(ControlRegistry, self).__init__(model)
         self._presolve_controls = ControlManager(model)
         self._postsolve_controls = ControlManager(model)
         self._rules = ControlManager(model)
-    
+
+    @property
+    def _controls(self):
+        raise UnboundLocalError('registries are not reentrant')
+
+
 class CurveRegistry(Registry):
-    def __init__(self, options):
-        super(CurveRegistry, self).__init__(options)
+    def __init__(self, model):
+        super(CurveRegistry, self).__init__(model)
         self._pump_curves = set()
         self._efficiency_curves = set()
         self._headloss_curves = set()
         self._volume_curves = set()
+
+    @property
+    def _curves(self):
+        raise UnboundLocalError('registries are not reentrant')
 
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
             raise ValueError('Registry keys must be strings')
         self._data[key] = value
         self.set_curve_type(key, value.curve_type)
-        if not key in self._usage:
-            self._usage[key] = set()
     
     def set_curve_type(self, key, curve_type):
         """WARNING -- does not check to make sure key is typed before assining it - you could end up
@@ -1311,6 +1277,22 @@ class CurveRegistry(Registry):
             self._efficiency_curves.add(key)
         else:
             raise ValueError('curve_type must be HEAD, HEADLOSS, VOLUME, or EFFICIENCY')
+        
+    def add_curve(self, name, curve_type, xy_tuples_list):
+        """
+        Adds a curve to the water network model.
+
+        Parameters
+        ----------
+        name : string
+            Name of the curve.
+        curve_type : string
+            Type of curve. Options are HEAD, EFFICIENCY, VOLUME, HEADLOSS.
+        xy_tuples_list : list of (x, y) tuples
+            List of X-Y coordinate tuples on the curve.
+        """
+        curve = Curve(name, curve_type, xy_tuples_list)
+        self[name] = curve
         
     def untyped_curves(self):
         defined = set(self._data.keys())
@@ -1375,16 +1357,22 @@ class CurveRegistry(Registry):
 
 
 class SourceRegistry(Registry):
-    pass
+    @property
+    def _sources(self):
+        raise UnboundLocalError('registries are not reentrant')
 
 
 class NodeRegistry(Registry):
 
-    def __init__(self, options):
-        super(NodeRegistry, self).__init__(options)
+    def __init__(self, model):
+        super(NodeRegistry, self).__init__(model)
         self._junctions = set()
         self._reservoirs = set()
         self._tanks = set()
+    
+    @property
+    def _nodes(self):
+        raise UnboundLocalError('registries are not reentrant')
     
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
@@ -1396,15 +1384,20 @@ class NodeRegistry(Registry):
             self._tanks.add(key)
         elif isinstance(value, Reservoir):
             self._reservoirs.add(key)
-        if not key in self._usage:
-            self._usage[key] = set()
     
     def __delitem__(self, key):
         try:
-            self._data.pop(key)
+            if self._usage and len(self._usage[key]) > 0:
+                raise RuntimeError('cannot remove %s %s, still used by %s', 
+                                   self.__class__.__name__,
+                                   key,
+                                   self._usage[key])
+            elif self._usage:
+                self._usage.pop(key)
             self._junctions.discard(key)
             self._reservoirs.discard(key)
             self._tanks.discard(key)
+            return self._data.pop(key)
         except KeyError:
             return
     
@@ -1441,6 +1434,119 @@ class NodeRegistry(Registry):
                 yield node_name, self._data[node_name]
         else:
             raise RuntimeError('node_type, '+str(node_type)+', not recognized.')
+
+    def add_junction(self, name, base_demand=0.0, demand_pattern=None, 
+                     elevation=0.0, coordinates=None, demand_category=None):
+        """
+        Adds a junction to the water network model.
+
+        Parameters
+        -------------------
+        name : string
+            Name of the junction.
+        base_demand : float
+            Base demand at the junction.
+        demand_pattern : string or Pattern
+            Name of the demand pattern or the actual Pattern object
+        elevation : float
+            Elevation of the junction.
+        coordinates : tuple of floats
+            X-Y coordinates of the node location.
+                
+        """
+        base_demand = float(base_demand)
+        elevation = float(elevation)
+        junction = Junction(name, self._m)
+        junction.elevation = elevation
+        if base_demand:
+            junction.add_demand(base_demand, demand_pattern, demand_category)
+        self[name] = junction
+        if coordinates is not None:
+            junction.coordinates = coordinates
+
+    def add_tank(self, name, elevation=0.0, init_level=3.048,
+                 min_level=0.0, max_level=6.096, diameter=15.24,
+                 min_vol=None, vol_curve=None, coordinates=None):
+        """
+        Adds a tank to the water network model.
+
+        Parameters
+        -------------------
+        name : string
+            Name of the tank.
+        elevation : float
+            Elevation at the Tank.
+        init_level : float
+            Initial tank level.
+        min_level : float
+            Minimum tank level.
+        max_level : float
+            Maximum tank level.
+        diameter : float
+            Tank diameter.
+        min_vol : float
+            Minimum tank volume.
+        vol_curve : str
+            Name of a volume curve (optional)
+        coordinates : tuple of floats
+            X-Y coordinates of the node location.
+            
+        Raises
+        ------
+        ValueError
+            If `init_level` greater than `max_level` or less than `min_level`
+            
+        """
+        elevation = float(elevation)
+        init_level = float(init_level)
+        min_level = float(min_level)
+        max_level = float(max_level)
+        diameter = float(diameter)
+        if min_vol is not None:
+            min_vol = float(min_vol)
+        if init_level < min_level:
+            raise ValueError("Initial tank level must be greater than or equal to the tank minimum level.")
+        if init_level > max_level:
+            raise ValueError("Initial tank level must be less than or equal to the tank maximum level.")
+        if vol_curve and not isinstance(vol_curve, six.string_types):
+            raise ValueError('Volume curve name must be a string')
+        tank = Tank(name, self._m)
+        tank.elevation = elevation
+        tank.init_level = init_level
+        tank.min_level = min_level
+        tank.max_level = max_level
+        tank.diameter = diameter
+        tank.min_vol = min_vol
+        tank.vol_curve_name = vol_curve
+        self[name] = tank
+        if coordinates is not None:
+            tank.coordinates = coordinates
+
+    def add_reservoir(self, name, base_head=0.0, head_pattern=None, coordinates=None):
+        """
+        Adds a reservoir to the water network model.
+
+        Parameters
+        ----------
+        name : string
+            Name of the reservoir.
+        base_head : float, optional
+            Base head at the reservoir.
+        head_pattern : string
+            Name of the head pattern (optional)
+        coordinates : tuple of floats, optional
+            X-Y coordinates of the node location.
+        
+        """
+        base_head = float(base_head)
+        if head_pattern and not isinstance(head_pattern, six.string_types):
+            raise ValueError('Head pattern must be a string')
+        reservoir = Reservoir(name, self._m)
+        reservoir.base_head = base_head
+        reservoir.head_pattern_name = head_pattern
+        self[name] = reservoir
+        if coordinates is not None:
+            reservoir.coordinates = coordinates
 
     @property
     def junction_names(self):
@@ -1480,13 +1586,26 @@ class NodeRegistry(Registry):
 
 
 class LinkRegistry(Registry):
+    __subsets = ['_pipes', '_pumps', '_head_pumps', '_power_pumps', '_prvs', '_psvs', '_pbvs', '_tcvs', '_fcvs', '_gpvs', '_valves']
 
-    def __init__(self, options):
-        super(LinkRegistry, self).__init__(options)
+    def __init__(self, model):
+        super(LinkRegistry, self).__init__(model)
         self._pipes = set()
         self._pumps = set()
+        self._head_pumps = set()
+        self._power_pumps = set()
+        self._prvs = set()
+        self._psvs = set()
+        self._pbvs = set()
+        self._tcvs = set()
+        self._fcvs = set()
+        self._gpvs = set()
         self._valves = set()
     
+    @property
+    def _links(self):
+        raise UnboundLocalError('registries are not reentrant')
+
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
             raise ValueError('Registry keys must be strings')
@@ -1495,17 +1614,37 @@ class LinkRegistry(Registry):
             self._pipes.add(key)
         elif isinstance(value, Pump):
             self._pumps.add(key)
+            if isinstance(value, HeadPump):
+                self._head_pumps.add(key)
+            elif isinstance(value, PowerPump):
+                self._power_pumps.add(key)
         elif isinstance(value, Valve):
             self._valves.add(key)
-        if not key in self._usage:
-            self._usage[key] = set()
+            if isinstance(value, PRValve):
+                self._prvs.add(key)
+            elif isinstance(value, PSValve):
+                self._psvs.add(key)
+            elif isinstance(value, PBValve):
+                self._pbvs.add(key)
+            elif isinstance(value, TCValve):
+                self._tcvs.add(key)
+            elif isinstance(value, FCValve):
+                self._fcvs.add(key)
+            elif isinstance(value, GPValve):
+                self._gpvs.add(key)
     
     def __delitem__(self, key):
         try:
-            self._data.pop(key)
-            self._pipes.discard(key)
-            self._pumps.discard(key)
-            self._tanks.discard(key)
+            if self._usage and len(self._usage[key]) > 0:
+                raise RuntimeError('cannot remove %s %s, still used by %s', 
+                                   self.__class__.__name__,
+                                   key,
+                                   self._usage[key])
+            elif self._usage:
+                self._usage.pop(key)
+            for ss in self.__subsets:
+                getattr(self, ss).discard(key)
+            return self._data.pop(key)
         except KeyError:
             return
     
@@ -1543,6 +1682,148 @@ class LinkRegistry(Registry):
         else:
             raise RuntimeError('link_type, '+str(link_type)+', not recognized.')
 
+    def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
+                 diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN', check_valve_flag=False):
+        """
+        Adds a pipe to the water network model.
+
+        Parameters
+        ----------
+        name : string
+            Name of the pipe.
+        start_node_name : string
+             Name of the start node.
+        end_node_name : string
+             Name of the end node.
+        length : float, optional
+            Length of the pipe.
+        diameter : float, optional
+            Diameter of the pipe.
+        roughness : float, optional
+            Pipe roughness coefficient.
+        minor_loss : float, optional
+            Pipe minor loss coefficient.
+        status : string, optional
+            Pipe status. Options are 'Open' or 'Closed'.
+        check_valve_flag : bool, optional
+            True if the pipe has a check valve.
+            False if the pipe does not have a check valve.
+        
+        """
+        length = float(length)
+        diameter = float(diameter)
+        roughness = float(roughness)
+        minor_loss = float(minor_loss)
+        if isinstance(status, str):
+            status = LinkStatus[status]
+        pipe = Pipe(name, start_node_name, end_node_name, self._m)
+        pipe.length = length
+        pipe.diameter = diameter
+        pipe.roughness = roughness
+        pipe.minor_loss = minor_loss
+        pipe.intial_status = status
+        pipe.cv = check_valve_flag
+        self[name] = pipe
+
+    def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
+                 pump_parameter=50.0, speed=1.0, pattern=None):
+        """
+        Adds a pump to the water network model.
+
+        Parameters
+        ----------
+        name : string
+            Name of the pump.
+        start_node_name : string
+             Name of the start node.
+        end_node_name : string
+             Name of the end node.
+        info_type : string, optional
+            Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
+        info_value : float or str object
+            Float value of power in KW. Head curve name.
+        speed: float
+            Relative speed setting (1.0 is normal speed)
+        pattern: str
+            ID of pattern for speed setting
+        
+        """
+        if pump_type.upper() == 'POWER':
+            pump = PowerPump(name, start_node_name, end_node_name, self._m)
+            pump.power = pump_parameter
+        elif pump_type.upper() == 'HEAD':
+            pump = HeadPump(name, start_node_name, end_node_name, self._m)
+            if not isinstance(pump_parameter, six.string_types):
+                pump.pump_curve_name = pump_parameter.name
+            else:
+                pump.pump_curve_name = pump_parameter
+        else:
+            raise ValueError('pump_type must be "POWER" or "HEAD"')
+        pump.base_speed = speed
+        if isinstance(pattern, Pattern):
+            pump.speed_pattern = pattern.name
+        else:
+            pump.speed_pattern_name = pattern
+        self[name] = pump
+    
+    def add_valve(self, name, start_node_name, end_node_name,
+                 diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
+        """
+        Adds a valve to the water network model.
+
+        Parameters
+        ----------
+        name : string
+            Name of the valve.
+        start_node_name : string
+             Name of the start node.
+        end_node_name : string
+             Name of the end node.
+        diameter : float, optional
+            Diameter of the valve.
+        valve_type : string, optional
+            Type of valve. Options are 'PRV', etc.
+        minor_loss : float, optional
+            Pipe minor loss coefficient.
+        setting : float or string, optional
+            pressure setting for PRV, PSV, or PBV,
+            flow setting for FCV,
+            loss coefficient for TCV,
+            name of headloss curve for GPV.
+        
+        """
+        start_node = self._nodes[start_node_name]
+        end_node = self._nodes[end_node_name]
+        if type(start_node)==Tank or type(end_node)==Tank:
+            logger.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
+        valve_type = valve_type.upper()
+        if valve_type == 'PRV':
+            valve = PRValve(name, start_node_name, end_node_name, self._m)
+            valve.initial_setting = setting
+        elif valve_type == 'PSV':
+            valve = PSValve(name, start_node_name, end_node_name, self._m)
+            valve.initial_setting = setting
+        elif valve_type == 'PBV':
+            valve = PBValve(name, start_node_name, end_node_name, self._m)
+            valve.initial_setting = setting
+        elif valve_type == 'FCV':
+            valve = FCValve(name, start_node_name, end_node_name, self._m)
+            valve.initial_setting = setting
+        elif valve_type == 'TCV':
+            valve = TCValve(name, start_node_name, end_node_name, self._m)
+            valve.initial_setting = setting
+        elif valve_type == 'GPV':
+            valve = GPValve(name, start_node_name, end_node_name, self._m)
+            valve.headloss_curve_name = setting
+        valve.diameter = diameter
+        valve.minor_loss = minor_loss
+        self[name] = valve
+
+    def check_valves(self):
+        for name in self._pipes:
+            if self._data[name].cv:
+                yield name
+
     @property
     def pipe_names(self):
         return self._pipes
@@ -1571,30 +1852,23 @@ class LinkRegistry(Registry):
         s  = 'Link Registry:\n'
         s += '  Total number of links defined:     {}\n'.format(len(self._data))
         s += '    Pipes:                     {}\n'.format(len(self.pipe_names))
-        ct_cv = sum([ 1 if p.cv else 0 for n, p in self.pipes()])
+        ct_cv = sum([ 1 for n in self.check_valves()])
         if ct_cv:
             s += '      Check valves:     {}\n'.format(ct_cv)
         s += '    Pumps:                     {}\n'.format(len(self.pump_names))
-        ct_cp = sum([ 1 if t.pump_type == 'POWER' else 0 for n, t in self.pumps()])
-        ct_hc = len(self.pump_names) - ct_cp
+        ct_cp = len(self._power_pumps)
+        ct_hc = len(self._head_pumps)
         if ct_cp:
             s += '      Constant power:   {}\n'.format(ct_cp)
         if ct_hc:
             s += '      Head/pump curve:  {}\n'.format(ct_hc)
         s += '    Valves:                    {}\n'.format(len(self.valve_names))
-        PRV = 0
-        PSV = 0
-        PBV = 0
-        FCV = 0
-        TCV = 0
-        GPV = 0
-        for n, v in self.valves():
-            if v.valve_type == 'PRV':   PRV += 1
-            elif v.valve_type == 'PSV':   PSV += 1
-            elif v.valve_type == 'PBV':   PBV += 1
-            elif v.valve_type == 'FCV':   FCV += 1
-            elif v.valve_type == 'TCV':   TCV += 1
-            elif v.valve_type == 'GPV':   GPV += 1
+        PRV = len(self._prvs)
+        PSV = len(self._psvs)
+        PBV = len(self._pbvs)
+        FCV = len(self._fcvs)
+        TCV = len(self._tcvs)
+        GPV = len(self._gpvs)
         if PRV:
             s += '      Pres. reducing:   {}\n'.format(PRV)
         if PSV:

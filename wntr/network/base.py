@@ -25,7 +25,6 @@ import numpy as np
 import networkx as nx
 
 from .options import TimeOptions, HydraulicOptions, WaterNetworkOptions
-from .graph import WntrMultiDiGraph
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +108,10 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self.leak_status = False
         self.leak_area = 0.0
         self.leak_discharge_coeff = 0.0
+        self._options = model.options
+        self._node_reg = model.nodes
+        self._link_reg = model.links
+        self._control_reg = model.controls
         self._pattern_reg = model.patterns
         self._curve_reg = model.curves
         self._coordinates = [0,0]
@@ -206,7 +209,10 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
             raise ValueError('valid model must be passed as first argument')
 
         # Set the registries
+        self._options = model.options
         self._node_reg = model.nodes
+        self._link_reg = model.links
+        self._control_reg = model.controls
         self._pattern_reg = model.patterns
         self._curve_reg = model.curves
         # Set the link name
@@ -582,7 +588,7 @@ class Pattern(object):
         return hash('Pattern/'+self._name)
         
     def __str__(self):
-        return '<Pattern "%s">'%self.name
+        return '%s'%self.name
 
     def __repr__(self):
         return "<Pattern '{}', multipliers={}>".format(self.name, repr(self.multipliers))
@@ -643,10 +649,40 @@ class Pattern(object):
 
 
 class Registry(MutableMapping):
-    def __init__(self, options):
-        self._options = options
+    def __init__(self, model):
+        if not isinstance(model, AbstractModel):
+            raise ValueError('Registry must be initialized with a model')
+        self._m = model
         self._data = OrderedDict()
         self._usage = OrderedDict()
+
+    @property
+    def _options(self):
+        return self._m.options
+    
+    @property
+    def _patterns(self):
+        return self._m.patterns
+    
+    @property
+    def _curves(self):
+        return self._m.curves
+
+    @property
+    def _nodes(self):
+        return self._m.nodes
+    
+    @property
+    def _links(self):
+        return self._m.links
+
+    @property
+    def _controls(self):
+        return self._m.controls
+    
+    @property
+    def _sources(self):
+        return self._m.sources
 
     def __getitem__(self, key):
         if not key:
@@ -660,17 +696,16 @@ class Registry(MutableMapping):
         if not isinstance(key, string_types):
             raise ValueError('Registry keys must be strings')
         self._data[key] = value
-        if not key in self._usage:
-            self._usage[key] = set()
     
     def __delitem__(self, key):
         try:
-            if len(self._usage[key]) > 0:
+            if self._usage and len(self._usage[key]) > 0:
                 raise RuntimeError('cannot remove %s %s, still used by %s', 
                                    self.__class__.__name__,
                                    key,
                                    self._usage[key])
-            self._usage.pop(key)
+            elif self._usage:
+                self._usage.pop(key)
             return self._data.pop(key)
         except KeyError:
             return
@@ -692,7 +727,10 @@ class Registry(MutableMapping):
         try:
             return self._usage[key]
         except KeyError:
-            return self._usage[str(key)]
+            try:
+                return self._usage[str(key)]
+            except KeyError:
+                return None
         return None
 
     def orphaned(self):
@@ -715,6 +753,8 @@ class Registry(MutableMapping):
         """add args to usage[key]"""
         if not key:
             return
+        if not key in self._usage:
+            self._usage[key] = set()
         for arg in args:
             self._usage[key].add(arg)
     
@@ -724,6 +764,8 @@ class Registry(MutableMapping):
             return
         for arg in args:
             self._usage[key].discard(arg)
+        if len(self._usage[key]) < 1:
+            self._usage.pop(key)
             
     def tostring(self):
         s = 'Registry: {}\n'.format(self.__class__.__name__)
