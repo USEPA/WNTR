@@ -17,27 +17,27 @@ def test_Net1():
     parser = wntr.epanet.InpFile()
     wn = parser.read(inp_file)
 
-    G = wn.get_graph_deep_copy()
+    G = wn.get_graph()
 
     node = G.node
     elevation = wn.query_node_attribute('elevation')
-    base_demand = wn.query_node_attribute('base_demand')
+    #base_demand = wn.query_node_attribute('base_demand')
     edge = G.adj
     diameter = wn.query_link_attribute('diameter')
     length = wn.query_link_attribute('length')
 
     # Data from the INP file, converted using flowunits
-    expected_node = {'11': {'type': 'junction', 'pos': (30.0, 70.0)},
-                     '10': {'type': 'junction', 'pos': (20.0, 70.0)},
-                     '13': {'type': 'junction', 'pos': (70.0, 70.0)},
-                     '12': {'type': 'junction', 'pos': (50.0, 70.0)},
-                     '21': {'type': 'junction', 'pos': (30.0, 40.0)},
-                     '22': {'type': 'junction', 'pos': (50.0, 40.0)},
-                     '23': {'type': 'junction', 'pos': (70.0, 40.0)},
-                     '32': {'type': 'junction', 'pos': (50.0, 10.0)},
-                     '31': {'type': 'junction', 'pos': (30.0, 10.0)},
-                     '2':  {'type': 'tank', 'pos': (50.0, 90.0)},
-                     '9':  {'type': 'reservoir', 'pos': (10.0, 70.0)}}
+    expected_node = {'11': {'type': 'Junction', 'pos': (30.0, 70.0)},
+                     '10': {'type': 'Junction', 'pos': (20.0, 70.0)},
+                     '13': {'type': 'Junction', 'pos': (70.0, 70.0)},
+                     '12': {'type': 'Junction', 'pos': (50.0, 70.0)},
+                     '21': {'type': 'Junction', 'pos': (30.0, 40.0)},
+                     '22': {'type': 'Junction', 'pos': (50.0, 40.0)},
+                     '23': {'type': 'Junction', 'pos': (70.0, 40.0)},
+                     '32': {'type': 'Junction', 'pos': (50.0, 10.0)},
+                     '31': {'type': 'Junction', 'pos': (30.0, 10.0)},
+                     '2':  {'type': 'Tank', 'pos': (50.0, 90.0)},
+                     '9':  {'type': 'Reservoir', 'pos': (10.0, 70.0)}}
 
     expected_elevation = {'11': 710.0,
                           '10': 710.0,
@@ -62,21 +62,21 @@ def test_Net1():
                             '31': 100}
     expected_base_demand = wntr.epanet.util.HydParam.Demand._to_si(wn._inpfile.flow_units, expected_base_demand)
 
-    expected_edge = {'11': {'12': {'11':  {'type': 'pipe'}},
-                            '21': {'111': {'type': 'pipe'}}},
-                     '10': {'11': {'10':  {'type': 'pipe'}}},
-                     '13': {'23': {'113': {'type': 'pipe'}}},
-                     '12': {'13': {'12':  {'type': 'pipe'}},
-                            '22': {'112': {'type': 'pipe'}}},
-                     '21': {'31': {'121': {'type': 'pipe'}},
-                            '22': {'21':  {'type': 'pipe'}}},
-                     '22': {'32': {'122': {'type': 'pipe'}},
-                            '23': {'22':  {'type': 'pipe'}}},
+    expected_edge = {'11': {'12': {'11':  {'type': 'Pipe'}},
+                            '21': {'111': {'type': 'Pipe'}}},
+                     '10': {'11': {'10':  {'type': 'Pipe'}}},
+                     '13': {'23': {'113': {'type': 'Pipe'}}},
+                     '12': {'13': {'12':  {'type': 'Pipe'}},
+                            '22': {'112': {'type': 'Pipe'}}},
+                     '21': {'31': {'121': {'type': 'Pipe'}},
+                            '22': {'21':  {'type': 'Pipe'}}},
+                     '22': {'32': {'122': {'type': 'Pipe'}},
+                            '23': {'22':  {'type': 'Pipe'}}},
                      '23': {},
                      '32': {},
-                     '31': {'32': {'31':  {'type': 'pipe'}}},
-                     '2':  {'12': {'110': {'type': 'pipe'}}},
-                     '9':  {'10': {'9':   {'type': 'pump'}}}}
+                     '31': {'32': {'31':  {'type': 'Pipe'}}},
+                     '2':  {'12': {'110': {'type': 'Pipe'}}},
+                     '9':  {'10': {'9':   {'type': 'Pump'}}}}
 
     expected_diameter = {'11':  14.0,
                          '111': 10.0,
@@ -108,7 +108,7 @@ def test_Net1():
 
     assert_dict_equal(dict(node), expected_node)
     assert_dict_equal(elevation, expected_elevation)
-    assert_dict_equal(base_demand, expected_base_demand)
+    #assert_dict_equal(base_demand, expected_base_demand)
 
     assert_dict_equal(dict(edge), expected_edge)
     assert_dict_equal(diameter, expected_diameter)
@@ -145,12 +145,17 @@ def test_nzd_nodes():
 
     parser = wntr.epanet.InpFile()
     wn = parser.read(inp_file)
-
-    nzd_nodes = wn.query_node_attribute('base_demand', np.greater, 0.0)
-
+    
+    nzd_nodes = []
+    for name, node in wn.junctions():
+        demand = sum(node.demand_timeseries_list.get_values(0, wn.options.time.duration, 
+            wn.options.time.report_timestep) * wn.options.hydraulic.demand_multiplier)
+        if demand > 0:
+            nzd_nodes.append(name)
+        
     expected_nodes = set(['11', '13', '12', '21', '22', '23', '32', '31'])
 
-    assert_set_equal(set(nzd_nodes.keys()), expected_nodes)
+    assert_set_equal(set(nzd_nodes), expected_nodes)
 
 def test_name_list():
     inp_file = join(net1dir,'Net3.inp')
@@ -166,7 +171,7 @@ def test_name_list():
     assert_in('1', wn.curve_name_list)
     assert_equal(0, len(wn.source_name_list))
 #    assert_equal(0, len(wn._demand_name_list))
-    assert_in('/LINK/10/OPEN/AT/TIME/3600', wn.control_name_list)
+    assert_in('control 1', wn.control_name_list)
 
 def test_add_get_remove_num():
     inp_file = join(net1dir,'Net3.inp')
@@ -210,13 +215,13 @@ def test_add_get_remove_num():
            wn.num_sources]
     expected = [93,4,3,118,3,1,6,3,1]
     assert_list_equal(nums, expected)
-    
-    wn.remove_node('new_junc')
-    wn.remove_node('new_tank')
-    wn.remove_node('new_reservoir')
+
     wn.remove_link('new_pipe')
     wn.remove_link('new_pump')
     wn.remove_link('new_valve')
+    wn.remove_node('new_junc')
+    wn.remove_node('new_tank')
+    wn.remove_node('new_reservoir')
     wn.remove_pattern('new_pattern')
     wn.remove_curve('new_curve')
     wn.remove_source('new_source')

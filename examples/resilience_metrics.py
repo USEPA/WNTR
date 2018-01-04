@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 def topographic_metrics(wn):
     # Get a copy of the graph
-    G = wn.get_graph_deep_copy()
+    G = wn.get_graph()
 
     # Print general topographic information
     print(nx.info(G))
@@ -34,13 +34,6 @@ def topographic_metrics(wn):
                           title='Terminal nodes', node_size=40, node_range=[0,1])
     print("Number of terminal nodes: " + str(len(terminal_nodes)))
     print("   " + str(terminal_nodes))
-
-    # Compute number of non-zero demand (NZD) nodes
-    nzd_nodes = wn.query_node_attribute('base_demand', np.greater, 0.0)
-    wntr.graphics.plot_network(wn, node_attribute=list(nzd_nodes.keys()),
-                          title='NZD nodes', node_size=40, node_range=[0,1])
-    print("Number of NZD nodes: " + str(len(nzd_nodes)))
-    print("   " + str(nzd_nodes.keys()))
 
     # Compute pipes with diameter > threshold
     diameter = 0.508 # m (20 inches)
@@ -156,7 +149,7 @@ def hydraulic_metrics(wn):
     # Create a weighted graph for flowrate at time 36 hours
     t = 36*3600
     attr = results.link.loc['flowrate',t,:]
-    G_flowrate_36hrs = wn.get_graph_deep_copy()
+    G_flowrate_36hrs = wn.get_graph()
     G_flowrate_36hrs.weight_graph(link_attribute=attr)
 
     # Compute betweenness-centrality at time 36 hours
@@ -177,7 +170,7 @@ def hydraulic_metrics(wn):
 
     # Calculate entropy for 1 day, all nodes
     shat = []
-    G_flowrate_t = wn.get_graph_deep_copy()
+    G_flowrate_t = wn.get_graph()
     for t in np.arange(0, 24*3600+1,3600):
         attr = results.link.loc['flowrate',t,:]
         G_flowrate_t.weight_graph(link_attribute=attr)

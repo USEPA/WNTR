@@ -109,7 +109,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         ax = plt.gca()
         
     # Graph
-    G = wn.get_graph_deep_copy()
+    G = wn.get_graph()
     if not directed:
         G = G.to_undirected()
 
@@ -280,7 +280,7 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
     """
 
     # Graph
-    G = wn.get_graph_deep_copy()
+    G = wn.get_graph()
     
     # Node attribute
     if isinstance(node_attribute, str):

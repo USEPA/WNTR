@@ -1,7 +1,6 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
 """
-
+The wntr.network.model module includes methods to build a water network
+model.
 """
 import logging
 import copy
@@ -13,9 +12,8 @@ if sys.version_info[0] == 2:
 else:
     from collections.abc import MutableSequence
 
-logger = logging.getLogger(__name__)
-
 import numpy as np
+import networkx as nx
 
 from .options import WaterNetworkOptions
 from .base import Link, Curve, Pattern, Registry, LinkStatus, AbstractModel
@@ -24,7 +22,10 @@ from .elements import Pipe, Pump, HeadPump, PowerPump
 from .elements import Valve, PRValve, PSValve, PBValve, TCValve, FCValve, GPValve
 from .elements import Demands, TimeSeries, Source
 from .controls import ControlManager, Control
+from .graph import WntrMultiDiGraph
 import wntr.epanet
+
+logger = logging.getLogger(__name__)
 
 class WaterNetworkModel(AbstractModel):
     """
@@ -67,6 +68,44 @@ class WaterNetworkModel(AbstractModel):
         # To be deleted and/or renamed and/or moved
         self.sim_time = 0
     
+    def _sec_to_string(self, sec):
+        hours = int(sec/3600.)
+        sec -= hours*3600
+        mm = int(sec/60.)
+        sec -= mm*60
+        return (hours, mm, int(sec))
+    
+    @property
+    def _shifted_time(self):
+        """
+        Return the time in seconds shifted by the
+        simulation start time (e.g. as specified in the
+        inp file). This is, this is the time since 12 AM
+        on the first day.
+        """
+        return self.sim_time + self.options.time.start_clocktime
+
+    @property
+    def _prev_shifted_time(self):
+        """
+        Return the time in seconds of the previous solve shifted by
+        the simulation start time. That is, this is the time from 12
+        AM on the first day to the time at the prevous hydraulic
+        timestep.
+        """
+        return self._prev_sim_time + self.options.time.start_clocktime
+
+    @property
+    def _clock_time(self):
+        """
+        Return the current time of day in seconds from 12 AM
+        """
+        return self.shifted_time % (24*3600)
+
+    @property
+    def _clock_day(self):
+        return int(self.shifted_time / 86400)
+    
     ### # 
     ### Iteratable attributes
     @property
@@ -84,12 +123,13 @@ class WaterNetworkModel(AbstractModel):
     @property
     def curves(self): return self._curve_reg
     
-    @property
-    def controls(self): return self._control_reg
-
     @property    
     def sources(self): return self._sources
-
+    
+    @property
+    def controls(self): return self._control_reg
+    
+                
     ### # 
     ### Element iterators
     @property
@@ -110,6 +150,7 @@ class WaterNetworkModel(AbstractModel):
     @property
     def valves(self): return self._link_reg.valves
     
+    """
     ### # 
     ### Create blank, unregistered objects (for direct assignment)
     def new_demand_timeseries_list(self):
@@ -120,9 +161,10 @@ class WaterNetworkModel(AbstractModel):
     
     def new_pattern(self):
         return Pattern(None, time_options=self._options.time)
+    """
     
     ### # 
-    ### Adding elements to the model
+    ### Add elements to the model
     def add_junction(self, name, base_demand=0.0, demand_pattern=None, 
                      elevation=0.0, coordinates=None, demand_category=None):
         """
@@ -140,9 +182,11 @@ class WaterNetworkModel(AbstractModel):
             Elevation of the junction.
         coordinates : tuple of floats
             X-Y coordinates of the node location.
-                
+        demand_category  : string
+            Name of the demand category
         """
-        self._node_reg.add_junction(name, base_demand, demand_pattern, elevation, coordinates, demand_category)
+        self._node_reg.add_junction(name, base_demand, demand_pattern, 
+                                    elevation, coordinates, demand_category)
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
@@ -177,7 +221,9 @@ class WaterNetworkModel(AbstractModel):
             If `init_level` greater than `max_level` or less than `min_level`
             
         """
-        self._node_reg.add_tank(name, elevation, init_level, min_level, max_level, diameter, min_vol, vol_curve, coordinates)
+        self._node_reg.add_tank(name, elevation, init_level, min_level, 
+                                max_level, diameter, min_vol, vol_curve, 
+                                coordinates)
 
     def add_reservoir(self, name, base_head=0.0, head_pattern=None, coordinates=None):
         """
@@ -198,7 +244,8 @@ class WaterNetworkModel(AbstractModel):
         self._node_reg.add_reservoir(name, base_head, head_pattern, coordinates)
 
     def add_pipe(self, name, start_node_name, end_node_name, length=304.8,
-                 diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN', check_valve_flag=False):
+                 diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN', 
+                 check_valve_flag=False):
         """
         Adds a pipe to the water network model.
 
@@ -225,7 +272,9 @@ class WaterNetworkModel(AbstractModel):
             False if the pipe does not have a check valve.
         
         """
-        self._link_reg.add_pipe(name, start_node_name, end_node_name, length, diameter, roughness, minor_loss, status, check_valve_flag)
+        self._link_reg.add_pipe(name, start_node_name, end_node_name, length, 
+                                diameter, roughness, minor_loss, status, 
+                                check_valve_flag)
 
     def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
                  pump_parameter=50.0, speed=1.0, pattern=None):
@@ -250,7 +299,8 @@ class WaterNetworkModel(AbstractModel):
             ID of pattern for speed setting
         
         """
-        self._link_reg.add_pump(name, start_node_name, end_node_name, pump_type, pump_parameter, speed, pattern)
+        self._link_reg.add_pump(name, start_node_name, end_node_name, pump_type, 
+                                pump_parameter, speed, pattern)
     
     def add_valve(self, name, start_node_name, end_node_name,
                  diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
@@ -278,7 +328,8 @@ class WaterNetworkModel(AbstractModel):
             name of headloss curve for GPV.
         
         """
-        self._link_reg.add_valve(name, start_node_name, end_node_name, diameter, valve_type, minor_loss, setting)
+        self._link_reg.add_valve(name, start_node_name, end_node_name, diameter, 
+                                 valve_type, minor_loss, setting)
 
     def add_pattern(self, name, pattern=None):
         """
@@ -351,7 +402,8 @@ class WaterNetworkModel(AbstractModel):
             Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT
 
         quality: float
-            Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, FLOWPACED, or SETPOINT
+            Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, 
+            FLOWPACED, or SETPOINT
 
         pattern: string or Pattern object
             Pattern name or object
@@ -387,59 +439,23 @@ class WaterNetworkModel(AbstractModel):
             control_object.name = name
         self._control_reg[name] = control_object
         self._control_reg._rules.register_control(control_object)
-
-    def add_pump_outage(self, pump_name, start_time, end_time):
-        """
-        Adds a pump outage to the water network model.
-
-        Parameters
-        ----------
-        pump_name : string
-           The name of the pump to be affected by an outage.
-        start_time : int
-           The time at which the outage starts.
-        end_time : int
-           The time at which the outage stops.
-        """
-        pump = self.get_link(pump_name)
-
-        end_power_outage_action = ControlAction(pump, '_power_outage', False)
-        start_power_outage_action = ControlAction(pump, '_power_outage', True)
-
-        control = TimeControl(self, end_time, 'SIM_TIME', False, end_power_outage_action)
-        control._priority = 0
-        self.add_control(pump_name+'PowerOn'+str(end_time),control)
-
-        control = TimeControl(self, start_time, 'SIM_TIME', False, start_power_outage_action)
-        control._priority = 3
-        self.add_control(pump_name+'PowerOff'+str(start_time),control)
-
-
-        opened_action_obj = ControlAction(pump, 'status', LinkStatus.opened)
-        closed_action_obj = ControlAction(pump, 'status', LinkStatus.closed)
-
-        control = _MultiConditionalControl([(pump,'_power_outage')],[np.equal],[True], closed_action_obj)
-        control._priority = 3
-        self.add_control(pump_name+'PowerOffStatus'+str(end_time),control)
-
-        control = _MultiConditionalControl([(pump,'_prev_power_outage'),(pump,'_power_outage')],[np.equal,np.equal],[True,False],opened_action_obj)
-        control._priority = 0
-        self.add_control(pump_name+'PowerOnStatus'+str(start_time),control)
-
+    
+    
     ### # 
-    ### Removing elements from the model
+    ### Remove elements from the model
     def remove_node(self, name): 
         """"""
-        node = self.get_node(name)
         self._node_reg.__delitem__(name)
+        """
+        node = self.get_node(name)
         if isinstance(node, Junction):
-            self._num_junctions -= 1
+            self.num_junctions -= 1
             self._junctions.pop(name)
         elif isinstance(node, Tank):
-            self._num_tanks -= 1
+            self.num_tanks -= 1
             self._tanks.pop(name)
         elif isinstance(node, Reservoir):
-            self._num_reservoirs -= 1
+            self.num_reservoirs -= 1
             self._reservoirs.pop(name)
         else:
             raise RuntimeError('Node type is not recognized.')
@@ -465,22 +481,23 @@ class WaterNetworkModel(AbstractModel):
                 else:
                     if node == control._control_action._target_obj_ref:
                         logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
-        
+        """
     def remove_link(self, name): 
         """"""
-        link = self.get_link(name)
         self._link_reg.__delitem__(name)
+        """
+        link = self.get_link(name)
         if isinstance(link, Pipe):
             if link.cv:
                 self._check_valves.remove(name)
                 logger.warn('You are removing a pipe with a check valve.')
-            self._num_pipes -= 1
+            self.num_pipes -= 1
             self._pipes.pop(name)
         elif isinstance(link, Pump):
-            self._num_pumps -= 1
+            self.num_pumps -= 1
             self._pumps.pop(name)
         elif isinstance(link, Valve):
-            self._num_valves -= 1
+            self.num_valves -= 1
             self._valves.pop(name)
         else:
             raise RuntimeError('Link Type not Recognized')
@@ -506,13 +523,18 @@ class WaterNetworkModel(AbstractModel):
                 else:
                     if link == control._control_action._target_obj_ref:
                         logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
+        """
         
     def remove_pattern(self, name): 
-        """"""
+        """
+        Removes a pattern from the water network model.
+        """
         self._pattern_reg.__delitem__(name)
         
     def remove_curve(self, name): 
-        """"""
+        """
+        Removes a curve from the water network model.
+        """
         self._curve_reg.__delitem__(name)
         
     def remove_source(self, name):
@@ -524,9 +546,9 @@ class WaterNetworkModel(AbstractModel):
         name : string
            The name of the source object to be removed.
         """
-        logger.warning('You are deleting a source! This could have unintended \
-            side effects! If you are replacing values, use get_source(name) \
-            and modify it instead!')
+        logger.warning('You are deleting a source. This could have unintended \
+            side effects. If you are replacing values, use get_source(name) \
+            and modify it instead.')
         del self._sources[name]
         
     def remove_control(self, name): 
@@ -534,7 +556,7 @@ class WaterNetworkModel(AbstractModel):
         self._control_reg.__delitem__(name)
     
     ### # 
-    ### Getting elements from the model
+    ### Get elements from the model
     def get_node(self, name): 
         """"""
         return self._node_reg[name]
@@ -558,7 +580,191 @@ class WaterNetworkModel(AbstractModel):
     def get_control(self, name): 
         """"""
         return self._control_reg[name]
+    
+    ### # 
+    ### Get controls from the model (move?)
+    def _get_all_tank_controls(self):
 
+        tank_controls = []
+
+        for tank_name, tank in self.nodes(Tank):
+
+            # add the tank controls
+            all_links = self.get_links_for_node(tank_name, 'ALL')
+
+            # First take care of the min level
+            min_head = tank.min_level+tank.elevation
+            for link_name in all_links:
+                link = self.get_link(link_name)
+                link_has_cv = False
+                if isinstance(link, Pipe):
+                    if link.cv:
+                        if link.end_node == tank_name:
+                            continue
+                        else:
+                            link_has_cv = True
+                if isinstance(link, Pump):
+                    if link.end_node == tank_name:
+                        continue
+                    else:
+                        link_has_cv = True
+
+                close_control_action = ControlAction(link, 'status', LinkStatus.closed)
+                open_control_action = ControlAction(link, 'status', LinkStatus.opened)
+
+                control = ConditionalControl((tank,'head'), np.less_equal, min_head,close_control_action)
+                control._priority = 1
+                control.name = link_name+' closed because tank '+tank.name+' head is less than min head'
+                tank_controls.append(control)
+
+                if not link_has_cv:
+                    control = _MultiConditionalControl([(tank,'head'), (tank, '_prev_head'),
+                                                                    (self, 'sim_time')],
+                                                                   [np.greater, np.less_equal,np.greater],
+                                                                   [min_head+self._Htol, min_head+self._Htol, 0.0],
+                                                                   open_control_action)
+                    control._partial_step_for_tanks = False
+                    control._priority = 0
+                    control.name = link_name+' opened because tank '+tank.name+' head is greater than min head'
+                    tank_controls.append(control)
+
+                    if link.start_node == tank_name:
+                        other_node_name = link.end_node
+                    else:
+                        other_node_name = link.start_node
+                    other_node = self.get_node(other_node_name)
+                    control = _MultiConditionalControl([(tank,'head'),(tank,'head')],
+                                                                   [np.less_equal,np.less_equal],
+                                                                   [min_head+self._Htol,(other_node,'head')],
+                                                                   open_control_action)
+                    control._priority = 2
+                    control.name = (link_name+' opened because tank '+tank.name+
+                                    ' head is below min head but flow should be in')
+                    tank_controls.append(control)
+
+            # Now take care of the max level
+            max_head = tank.max_level+tank.elevation
+            for link_name in all_links:
+                link = self.get_link(link_name)
+                link_has_cv = False
+                if isinstance(link, Pipe):
+                    if link.cv:
+                        if link.start_node==tank_name:
+                            continue
+                        else:
+                            link_has_cv = True
+                if isinstance(link, Pump):
+                    if link.start_node==tank_name:
+                        continue
+                    else:
+                        link_has_cv = True
+
+                close_control_action = ControlAction(link, 'status', LinkStatus.closed)
+                open_control_action = ControlAction(link, 'status', LinkStatus.opened)
+
+                control = ConditionalControl((tank,'head'),np.greater_equal,max_head,close_control_action)
+                control._priority = 1
+                control.name = link_name+' closed because tank '+tank.name+' head is greater than max head'
+                tank_controls.append(control)
+
+                if not link_has_cv:
+                    control = _MultiConditionalControl([(tank,'head'),(tank,'_prev_head'),(self,'sim_time')],[np.less,np.greater_equal,np.greater],[max_head-self._Htol,max_head-self._Htol,0.0],open_control_action)
+                    control._partial_step_for_tanks = False
+                    control._priority = 0
+                    control.name = link_name+'opened because tank '+tank.name+' head is less than max head'
+                    tank_controls.append(control)
+
+                    if link.start_node == tank_name:
+                        other_node_name = link.end_node
+                    else:
+                        other_node_name = link.start_node
+                    other_node = self.get_node(other_node_name)
+                    control = _MultiConditionalControl([(tank,'head'),(tank,'head')],[np.greater_equal,np.greater_equal],[max_head-self._Htol,(other_node,'head')],open_control_action)
+                    control._priority = 2
+                    control.name = link_name+' opened because tank '+tank.name+' head above max head but flow should be out'
+                    tank_controls.append(control)
+
+                #control = _MultiConditionalControl([(tank,'head'),(other_node,'head')],[np.greater,np.greater],[max_head-self._Htol,max_head-self._Htol], close_control_action)
+                #control._priority = 2
+                #self.add_control(control)
+
+        return tank_controls
+
+    def _get_cv_controls(self):
+        cv_controls = []
+        for pipe_name in self._check_valves:
+            pipe = self.get_link(pipe_name)
+
+            close_control_action = ControlAction(pipe, 'status', LinkStatus.closed)
+            open_control_action = ControlAction(pipe, 'status', LinkStatus.opened)
+
+            control = _CheckValveHeadControl(self, pipe, np.greater, self._Htol, open_control_action)
+            control._priority = 0
+            control.name = pipe.name+'opened because of cv head control'
+            cv_controls.append(control)
+
+            control = _CheckValveHeadControl(self, pipe, np.less, -self._Htol, close_control_action)
+            control._priority = 3
+            control.name = pipe.name+' closed because of cv head control'
+            cv_controls.append(control)
+
+            control = ConditionalControl((pipe,'flow'),np.less, -self._Qtol, close_control_action)
+            control._priority = 3
+            control.name = pipe.name+' closed because negative flow in cv'
+            cv_controls.append(control)
+
+        return cv_controls
+    
+    def _get_pump_controls(self):
+        pump_controls = []
+        for pump_name, pump in self.links(Pump):
+
+            close_control_action = ControlAction(pump, '_cv_status', LinkStatus.closed)
+            open_control_action = ControlAction(pump, '_cv_status', LinkStatus.opened)
+
+            control = _CheckValveHeadControl(self, pump, np.greater, self._Htol, open_control_action)
+            control._priority = 0
+            control.name = pump.name+' opened because of cv head control'
+            pump_controls.append(control)
+
+            control = _CheckValveHeadControl(self, pump, np.less, -self._Htol, close_control_action)
+            control._priority = 3
+            control.name = pump.name+' closed because of cv head control'
+            pump_controls.append(control)
+
+            control = ConditionalControl((pump,'flow'),np.less, -self._Qtol, close_control_action)
+            control._priority = 3
+            control.name = pump.name+' closed because negative flow in pump'
+            pump_controls.append(control)
+
+        return pump_controls
+
+    def _get_valve_controls(self):
+        valve_controls = []
+        for valve_name, valve in self.links(Valve):
+
+            control = _ValveNewSettingControl(self, valve)
+            control.name = valve.name + ' new setting for valve control'
+            valve_controls.append(control)
+
+            if valve.valve_type == 'PRV':
+                close_control_action = ControlAction(valve, '_status', LinkStatus.Closed)
+                open_control_action = ControlAction(valve, '_status', LinkStatus.Opened)
+                active_control_action = ControlAction(valve, '_status', LinkStatus.Active)
+
+                control = _PRVControl(self, valve, self._Htol, self._Qtol, close_control_action, open_control_action, active_control_action)
+                control.name = valve.name+' prv control'
+                valve_controls.append(control)
+            elif valve.valve_type == 'FCV':
+                open_control_action = ControlAction(valve, '_status', LinkStatus.Opened)
+                active_control_action = ControlAction(valve, '_status', LinkStatus.Active)
+                control = _FCVControl(self, valve, self._Htol, open_control_action,
+                                                            active_control_action)
+                control.name = valve.name + ' FCV control'
+                valve_controls.append(control)
+
+        return valve_controls
+    
     ### #
     ### Name lists
     @property
@@ -614,7 +820,7 @@ class WaterNetworkModel(AbstractModel):
     @property
     def source_name_list(self): 
         """"""
-        return list(self._source_reg.keys())
+        return list(self._sources.keys())
 
     @property
     def control_name_list(self): 
@@ -651,17 +857,17 @@ class WaterNetworkModel(AbstractModel):
     @property
     def num_pipes(self): 
         """"""
-        return len(self._node_reg.pipe_names)
+        return len(self._link_reg.pipe_names)
     
     @property
     def num_pumps(self): 
         """"""
-        return len(self._node_reg.pump_names)
+        return len(self._link_reg.pump_names)
     
     @property
     def num_valves(self): 
         """"""
-        return len(self._node_reg.valve_names)
+        return len(self._link_reg.valve_names)
     
     @property
     def num_patterns(self): 
@@ -676,7 +882,7 @@ class WaterNetworkModel(AbstractModel):
     @property
     def num_sources(self): 
         """"""
-        return len(self._source_reg)
+        return len(self._sources)
     
     @property
     def num_controls(self): 
@@ -727,157 +933,33 @@ class WaterNetworkModel(AbstractModel):
         """
         return self._node_reg[name].coordinates
 
-    def get_graph_deep_copy(self):
+    def get_graph(self):
         """
-        Returns a deep copy of the WaterNetworkModel networkx graph.
+        Returns a networkx graph of the water network model
 
         Returns
         --------
         WaterNetworkModel networkx graph.
         """
-        return copy.deepcopy(self._graph)
+        graph = WntrMultiDiGraph()
+        
+        for name, node in self.nodes():
+            graph.add_node(name)
+            nx.set_node_attributes(graph, name='pos', values={name: node.coordinates})
+            nx.set_node_attributes(graph, name='type', values={name:node.node_type})
+        
+        for name, link in self.links():
+            start_node = link.start_node_name
+            end_node = link.end_node_name
+            graph.add_edge(start_node, end_node, key=name)
+            nx.set_edge_attributes(graph, name='type', 
+                        values={(start_node, end_node, name):link.link_type})
+        
+        return graph
     
-    def split_pipe(self, pipe_name_to_split, new_pipe_name, new_junction_name,
-                   add_pipe_at_node='end', split_at_point=0.5):
-        """Splits a pipe by adding a junction and one new pipe segment.
-        
-        This method is convenient when adding leaks to a pipe. It provides 
-        an initially zero-demand node at some point along the pipe and then
-        reconnects the original pipe to this node and adds a new pipe to the
-        other side. Hydraulic paths are maintained. The new junction can 
-        then have a leak added to it.
-        
-        It is important to note that check valves are not added to the new
-        pipe. By allowing the new pipe to be connected at either the start
-        or the end of the old pipe, this allows the split to occur before
-        or after the check valve. Additionally, no controls will be added
-        to the new pipe; the old pipe will keep any controls. Again, this
-        allows the split to occur before or after a "valve" that is controled
-        by opening or closing a pipe.
-        
-        This method keeps 'pipe_name_to_split', resizes it, and adds
-        a new pipe to keep total length equal. The pipe will be split at 
-        a new junction placed at a point 'split_at_point' of the way 
-        between the start and end (in that direction). The new pipe can be
-        added to 'add_pipe_at_node' of either ``start`` or ``end``. For
-        example, if ``add_pipe_at_node='start'``, then the original pipe
-        will go from the new junction to the original end node, and the
-        new pipe will go from the original start node to the new junction.
-        
-        The new pipe will have the same diameter,
-        roughness, minor loss, and base status of the original
-        pipe. The new junction will have a base demand of 0,
-        an elevation equal to the 'split_at_point' x 100% of the 
-        elevation between the
-        original start and end nodes, coordinates at 'split_at_point'
-        between the original start and end nodes, and will use the
-        default demand pattern.
-        
-        Parameters
-        ----------
-        pipe_name_to_split: string
-            The name of the pipe to split.
-
-        new_pipe_name: string
-            The name of the new pipe to be added as the split part of the pipe.
-
-        new_junction_name: string
-            The name of the new junction to be added.
-
-        add_pipe_at_node: string
-            Either 'start' or 'end', 'end' is default. The new pipe goes between this
-            original node and the new junction.
-            
-        split_at_point: float
-            Between 0 and 1, the position along the original pipe where the new 
-            junction will be located.
-                
-            
-        Returns
-        -------
-        tuple
-            returns (original_pipe, new_junction, new_pipe) objects
-            
-        Raises
-        ------
-        ValueError
-            The link is not a pipe, `split_at_point` is out of bounds, `add_pipe_at_node` is invalid.
-        RuntimeError
-            The `new_junction_name` or `new_pipe_name` is already in use.
-            
+    def assign_demand(self, demand, pattern_prefix='ResetDemand'):
         """
-        
-        # Do sanity checks
-        pipe = self.get_link(pipe_name_to_split)
-        if not isinstance(pipe, Pipe):
-            raise ValueError('You can only split pipes.')
-        if split_at_point < 0 or split_at_point > 1:
-            raise ValueError('split_at_point must be between 0 and 1')
-        if add_pipe_at_node.lower() not in ['end', 'start']:
-            raise ValueError('add_pipe_at_node must be "end" or "start"')
-        node_list = [node_name for node_name, node in self.nodes()]
-        link_list = [link_name for link_name, link in self.links()]
-        if new_junction_name in node_list:
-            raise RuntimeError('The junction name you provided is already being used for another node.')
-        if new_pipe_name in link_list:
-            raise RuntimeError('The new link name you provided is already being used for another link.')
-
-        # Get start and end node info
-        start_node = self.get_node(pipe.start_node)
-        end_node = self.get_node(pipe.end_node)
-        
-        # calculate the new elevation
-        if isinstance(start_node, Reservoir):
-            junction_elevation = end_node.elevation
-        elif isinstance(end_node, Reservoir):
-            junction_elevation = start_node.elevation
-        else:
-            e0 = start_node.elevation
-            de = end_node.elevation - e0
-            junction_elevation = e0 + de * split_at_point
-
-        # calculate the new coordinates
-        x0 = self._graph.node[pipe.start_node]['pos'][0]
-        dx = self._graph.node[pipe.end_node]['pos'][0] - x0
-        y0 = self._graph.node[pipe.start_node]['pos'][1]
-        dy = self._graph.node[pipe.end_node]['pos'][1] - y0
-        junction_coordinates = (x0 + dx * split_at_point,
-                                y0 + dy * split_at_point)
-
-        # add the new junction
-        self.add_junction(new_junction_name, base_demand=0.0, demand_pattern=None,
-                          elevation=junction_elevation, coordinates=junction_coordinates)
-        new_junction = self.get_node(new_junction_name)
-
-        # remove the original pipe from the graph (to be added back below)
-        self._graph.remove_edge(pipe.start_node, pipe.end_node, key=pipe_name_to_split)
-        original_length = pipe.length
-
-        if add_pipe_at_node.lower() == 'start':
-            # add original pipe back to graph between new junction and original end
-            pipe._start_node_name = new_junction_name
-            # add new pipe and change original length
-            self.add_pipe(new_pipe_name, start_node.name, new_junction_name,
-                          original_length*split_at_point, pipe.diameter, pipe.roughness,
-                          pipe.minor_loss, pipe.status, pipe.cv)
-            pipe.length = original_length * (1-split_at_point)
-
-        elif add_pipe_at_node.lower() == 'end':
-            # add original pipe back to graph between original start and new junction
-            pipe._end_node_name = new_junction_name            
-            # add new pipe and change original length
-            self.add_pipe(new_pipe_name, new_junction_name, end_node.name,
-                          original_length*(1-split_at_point), pipe.diameter, pipe.roughness,
-                          pipe.minor_loss, pipe.status, pipe.cv)
-            pipe.length = original_length * split_at_point
-        new_pipe = self.get_link(new_pipe_name)
-        if pipe.cv:
-            logger.warn('You are splitting a pipe with a check valve. The new pipe will not have a check valve.')
-        return (pipe, new_junction, new_pipe)
-
-    def reset_demand(self, demand, pattern_prefix='ResetDemand'):
-        """
-        Resets demands using values in a DataFrame. 
+        Assign demands using values in a DataFrame. 
         
         New demands are specified in a pandas DataFrame indexed by simulation
         time (in seconds) and one column for each node. The method resets
@@ -932,15 +1014,16 @@ class WaterNetworkModel(AbstractModel):
         -------
         A list of link names connected to the node
         """
+        graph = self.get_graph()
         if flag.upper() == 'ALL':
-            in_edges = self._graph.in_edges(node_name, data=False, keys=True)
-            out_edges = self._graph.out_edges(node_name, data=False, keys=True)
+            in_edges = graph.in_edges(node_name, data=False, keys=True)
+            out_edges = graph.out_edges(node_name, data=False, keys=True)
             edges = list(in_edges) + list(out_edges)
         if flag.upper() == 'INLET':
-            in_edges = self._graph.in_edges(node_name, data=False, keys=True)
+            in_edges = graph.in_edges(node_name, data=False, keys=True)
             edges = list(in_edges)
         if flag.upper() == 'OUTLET':
-            out_edges = self._graph.out_edges(node_name, data=False, keys=True)
+            out_edges = graph.out_edges(node_name, data=False, keys=True)
             edges = list(out_edges)
         list_of_links = []
         for edge_tuple in edges:
@@ -1141,12 +1224,351 @@ class WaterNetworkModel(AbstractModel):
             self._inpfile = wntr.epanet.InpFile()
         self._inpfile.write(filename, self, units=units)
     
-    def _sec_to_string(self, sec):
-        hours = int(sec/3600.)
-        sec -= hours*3600
-        mm = int(sec/60.)
-        sec -= mm*60
-        return (hours, mm, int(sec))
+    ### #
+    ### Move to morph
+    def scale_node_coordinates(self, scale):
+        """
+        Scales node coordinates, using 1:scale.  Scale should be in meters.
+        Parameters
+        -----------
+        scale : float
+            Coordinate scale multiplier.
+        """
+        for name, node in self.nodes():
+            pos = node.coordinates
+            self.set_node_coordinates(name, (pos[0]*scale, pos[1]*scale))
+            
+    def split_pipe(self, pipe_name_to_split, new_pipe_name, new_junction_name,
+                   add_pipe_at_node='end', split_at_point=0.5):
+        """Splits a pipe by adding a junction and one new pipe segment.
+        
+        This method is convenient when adding leaks to a pipe. It provides 
+        an initially zero-demand node at some point along the pipe and then
+        reconnects the original pipe to this node and adds a new pipe to the
+        other side. Hydraulic paths are maintained. The new junction can 
+        then have a leak added to it.
+        
+        It is important to note that check valves are not added to the new
+        pipe. By allowing the new pipe to be connected at either the start
+        or the end of the old pipe, this allows the split to occur before
+        or after the check valve. Additionally, no controls will be added
+        to the new pipe; the old pipe will keep any controls. Again, this
+        allows the split to occur before or after a "valve" that is controled
+        by opening or closing a pipe.
+        
+        This method keeps 'pipe_name_to_split', resizes it, and adds
+        a new pipe to keep total length equal. The pipe will be split at 
+        a new junction placed at a point 'split_at_point' of the way 
+        between the start and end (in that direction). The new pipe can be
+        added to 'add_pipe_at_node' of either ``start`` or ``end``. For
+        example, if ``add_pipe_at_node='start'``, then the original pipe
+        will go from the new junction to the original end node, and the
+        new pipe will go from the original start node to the new junction.
+        
+        The new pipe will have the same diameter,
+        roughness, minor loss, and base status of the original
+        pipe. The new junction will have a base demand of 0,
+        an elevation equal to the 'split_at_point' x 100% of the 
+        elevation between the
+        original start and end nodes, coordinates at 'split_at_point'
+        between the original start and end nodes, and will use the
+        default demand pattern.
+        
+        Parameters
+        ----------
+        pipe_name_to_split: string
+            The name of the pipe to split.
+
+        new_pipe_name: string
+            The name of the new pipe to be added as the split part of the pipe.
+
+        new_junction_name: string
+            The name of the new junction to be added.
+
+        add_pipe_at_node: string
+            Either 'start' or 'end', 'end' is default. The new pipe goes between this
+            original node and the new junction.
+            
+        split_at_point: float
+            Between 0 and 1, the position along the original pipe where the new 
+            junction will be located.
+                
+            
+        Returns
+        -------
+        tuple
+            returns (original_pipe, new_junction, new_pipe) objects
+            
+        Raises
+        ------
+        ValueError
+            The link is not a pipe, `split_at_point` is out of bounds, `add_pipe_at_node` is invalid.
+        RuntimeError
+            The `new_junction_name` or `new_pipe_name` is already in use.
+            
+        """
+        
+        # Do sanity checks
+        pipe = self.get_link(pipe_name_to_split)
+        if not isinstance(pipe, Pipe):
+            raise ValueError('You can only split pipes.')
+        if split_at_point < 0 or split_at_point > 1:
+            raise ValueError('split_at_point must be between 0 and 1')
+        if add_pipe_at_node.lower() not in ['end', 'start']:
+            raise ValueError('add_pipe_at_node must be "end" or "start"')
+        node_list = [node_name for node_name, node in self.nodes()]
+        link_list = [link_name for link_name, link in self.links()]
+        if new_junction_name in node_list:
+            raise RuntimeError('The junction name you provided is already being used for another node.')
+        if new_pipe_name in link_list:
+            raise RuntimeError('The new link name you provided is already being used for another link.')
+
+        # Get start and end node info
+        start_node = self.get_node(pipe.start_node)
+        end_node = self.get_node(pipe.end_node)
+        
+        # calculate the new elevation
+        if isinstance(start_node, Reservoir):
+            junction_elevation = end_node.elevation
+        elif isinstance(end_node, Reservoir):
+            junction_elevation = start_node.elevation
+        else:
+            e0 = start_node.elevation
+            de = end_node.elevation - e0
+            junction_elevation = e0 + de * split_at_point
+
+        # calculate the new coordinates
+        x0 = pipe.start_node.coordinates[0]
+        dx = pipe.end_node.coordinates[0] - x0
+        y0 = pipe.start_node.coordinates[1]
+        dy = pipe.end_node.coordinates[1] - y0
+        junction_coordinates = (x0 + dx * split_at_point,
+                                y0 + dy * split_at_point)
+
+        # add the new junction
+        self.add_junction(new_junction_name, base_demand=0.0, demand_pattern=None,
+                          elevation=junction_elevation, coordinates=junction_coordinates)
+        new_junction = self.get_node(new_junction_name)
+
+        # remove the original pipe from the graph (to be added back below)
+        #self._graph.remove_edge(pipe.start_node, pipe.end_node, key=pipe_name_to_split)
+        original_length = pipe.length
+
+        if add_pipe_at_node.lower() == 'start':
+            # add original pipe back to graph between new junction and original end
+            pipe._start_node_name = new_junction_name
+            # add new pipe and change original length
+            self.add_pipe(new_pipe_name, start_node.name, new_junction_name,
+                          original_length*split_at_point, pipe.diameter, pipe.roughness,
+                          pipe.minor_loss, pipe.status, pipe.cv)
+            pipe.length = original_length * (1-split_at_point)
+
+        elif add_pipe_at_node.lower() == 'end':
+            # add original pipe back to graph between original start and new junction
+            pipe._end_node_name = new_junction_name            
+            # add new pipe and change original length
+            self.add_pipe(new_pipe_name, new_junction_name, end_node.name,
+                          original_length*(1-split_at_point), pipe.diameter, pipe.roughness,
+                          pipe.minor_loss, pipe.status, pipe.cv)
+            pipe.length = original_length * split_at_point
+        new_pipe = self.get_link(new_pipe_name)
+        if pipe.cv:
+            logger.warn('You are splitting a pipe with a check valve. The new pipe will not have a check valve.')
+        return (pipe, new_junction, new_pipe)
+
+    def _break_pipe(self, pipe_name_to_split, new_pipe_name, new_junction_name_old_pipe,
+                   new_junction_name_new_pipe,
+                   add_pipe_at_node='end', split_at_point=0.5):
+        """BETA Breaks a pipe by adding a two unconnected junctions and one new pipe segment.
+        
+        This method provides a true broken pipe -- i.e., there is no longer flow possible 
+        from one side of the break to the other. This is more likely to break the model
+        through non-convergable hydraulics than a simple split_pipe with a leak added.
+
+        It is important to note that check valves are not added to the new
+        pipe. By allowing the new pipe to be connected at either the start
+        or the end of the old pipe, this allows the break to occur before
+        or after the check valve. This may mean that one of the junctions will
+        not have demand, as it would be inaccessible. No error checking is 
+        performed to stop such a condition, it is left to the user.
+        Additionally, no controls will be added
+        to the new pipe; the old pipe will keep any controls. Again, this
+        allows the break to occur before or after a "valve" that is controled
+        by opening or closing a pipe.
+        
+        This method keeps 'pipe_name_to_split', resizes it, and adds
+        a new pipe to keep total length equal. Two junctions are added at the same position,
+        but are not connected. The pipe will be split at 
+        a point 'split_at_point' of the way 
+        between the start and end (in that direction). The new pipe can be
+        added to 'add_pipe_at_node' of either ``start`` or ``end``. For
+        example, if ``add_pipe_at_node='start'``, then the original pipe
+        will go from the first new junction to the original end node, and the
+        new pipe will go from the original start node to the second new junction.
+        
+        The new pipe will have the same diameter,
+        roughness, minor loss, and base status of the original
+        pipe. The new junctions will have a base demand of 0,
+        an elevation equal to the 'split_at_point' x 100% of the 
+        elevation between the
+        original start and end nodes, coordinates at 'split_at_point'
+        between the original start and end nodes, and will use the
+        default demand pattern. These junctions will be returned so that 
+        a new demand (usually a leak) can be added to them.
+        
+        The original pipe will keep its controls.  
+        The new pipe _will not_ have any controls automatically added;
+        this includes not adding a check valve.
+        
+        Parameters
+        ----------
+        pipe_name_to_split: string
+            The name of the pipe to split.
+
+        new_pipe_name: string
+            The name of the new pipe to be added as the split part of the pipe.
+
+        new_junction_name_old_pipe: string
+            The name of the new junction to be added to the original pipe
+
+        new_junction_name_old_pipe: string
+            The name of the new junction to be added to the new pipe
+
+        add_pipe_at_node: string
+            Either 'start' or 'end', 'end' is default. The new pipe goes between this
+            original node and the new junction.
+            
+        split_at_point: float
+            Between 0 and 1, the position along the original pipe where the new 
+            junction will be located.
+                
+            
+        Returns
+        -------
+        tuple
+            Returns the new junctions that have been created, with the junction attached to the 
+            original pipe as the first element of the tuple
+            
+        """
+        
+        # Do sanity checks
+        pipe = self.get_link(pipe_name_to_split)
+        if not isinstance(pipe, Pipe):
+            raise ValueError('You can only split pipes.')
+        if split_at_point < 0 or split_at_point > 1:
+            raise ValueError('split_at_point must be between 0 and 1')
+        if add_pipe_at_node.lower() not in ['end', 'start']:
+            raise ValueError('add_pipe_at_node must be "end" or "start"')
+        node_list = [node_name for node_name, node in self.nodes()]
+        link_list = [link_name for link_name, link in self.links()]
+        if new_junction_name_old_pipe in node_list or new_junction_name_new_pipe in node_list:
+            raise RuntimeError('The junction name you provided is already being used for another node.')
+        if new_pipe_name in link_list:
+            raise RuntimeError('The new link name you provided is already being used for another link.')
+
+        # Get start and end node info
+        start_node = self.get_node(pipe.start_node)
+        end_node = self.get_node(pipe.end_node)
+        
+        # calculate the new elevation
+        if isinstance(start_node, Reservoir):
+            junction_elevation = end_node.elevation
+        elif isinstance(end_node, Reservoir):
+            junction_elevation = start_node.elevation
+        else:
+            e0 = start_node.elevation
+            de = end_node.elevation - e0
+            junction_elevation = e0 + de * split_at_point
+
+        # calculate the new coordinates
+        x0 = pipe.start_node.coordinates[0]
+        dx = pipe.end_node.coordinates[0] - x0
+        y0 = pipe.start_node.coordinates[1]
+        dy = pipe.end_node.coordinates[1] - y0
+        junction_coordinates = (x0 + dx * split_at_point,
+                                y0 + dy * split_at_point)
+
+        # add the new junction
+        self.add_junction(new_junction_name_old_pipe, base_demand=0.0, demand_pattern=None,
+                          elevation=junction_elevation, coordinates=junction_coordinates)
+        new_junction1 = self.get_node(new_junction_name_old_pipe)
+        self.add_junction(new_junction_name_new_pipe, base_demand=0.0, demand_pattern=None,
+                          elevation=junction_elevation, coordinates=junction_coordinates)
+        new_junction2 = self.get_node(new_junction_name_new_pipe)
+
+        # remove the original pipe from the graph (to be added back below)
+        self._graph.remove_edge(pipe.start_node, pipe.end_node, key=pipe_name_to_split)
+        original_length = pipe.length
+
+        if add_pipe_at_node.lower() == 'start':
+            # add original pipe back to graph between new junction and original end
+            pipe._start_node_name = new_junction_name_old_pipe
+            self._graph.add_edge(new_junction_name_old_pipe, end_node.name, key=pipe_name_to_split)
+            nx.set_edge_attributes(self._graph, name='type', values={(new_junction_name_old_pipe, 
+                                                          end_node.name,
+                                                          pipe_name_to_split):'pipe'})
+            # add new pipe and change original length
+            self.add_pipe(new_pipe_name, start_node.name, new_junction_name_new_pipe,
+                          original_length*split_at_point, pipe.diameter, pipe.roughness,
+                          pipe.minor_loss, pipe.status, pipe.cv)
+            pipe.length = original_length * (1-split_at_point)
+
+        elif add_pipe_at_node.lower() == 'end':
+            # add original pipe back to graph between original start and new junction
+            pipe._end_node_name = new_junction_name_old_pipe            
+            self._graph.add_edge(start_node.name, new_junction_name_old_pipe, key=pipe_name_to_split)
+            nx.set_edge_attributes(self._graph, name='type', values={(start_node.name,
+                                                          new_junction_name_old_pipe,
+                                                          pipe_name_to_split):'pipe'})
+            # add new pipe and change original length
+            self.add_pipe(new_pipe_name, new_junction_name_new_pipe, end_node.name,
+                          original_length*(1-split_at_point), pipe.diameter, pipe.roughness,
+                          pipe.minor_loss, pipe.status, pipe.cv)
+            pipe.length = original_length * split_at_point
+        new_pipe = self.get_link(new_pipe_name)
+        if pipe.cv:
+            logger.warn('You are splitting a pipe with a check valve. The new pipe will not have a check valve.')
+        return (pipe, new_junction1, new_junction2, new_pipe)
+    
+    ### # 
+    ### Move to controls
+    def add_pump_outage(self, pump_name, start_time, end_time):
+        """
+        Adds a pump outage to the water network model.
+
+        Parameters
+        ----------
+        pump_name : string
+           The name of the pump to be affected by an outage.
+        start_time : int
+           The time at which the outage starts.
+        end_time : int
+           The time at which the outage stops.
+        """
+        pump = self.get_link(pump_name)
+
+        end_power_outage_action = ControlAction(pump, '_power_outage', False)
+        start_power_outage_action = ControlAction(pump, '_power_outage', True)
+
+        control = TimeControl(self, end_time, 'SIM_TIME', False, end_power_outage_action)
+        control._priority = 0
+        self.add_control(pump_name+'PowerOn'+str(end_time),control)
+
+        control = TimeControl(self, start_time, 'SIM_TIME', False, start_power_outage_action)
+        control._priority = 3
+        self.add_control(pump_name+'PowerOff'+str(start_time),control)
+
+
+        opened_action_obj = ControlAction(pump, 'status', LinkStatus.opened)
+        closed_action_obj = ControlAction(pump, 'status', LinkStatus.closed)
+
+        control = _MultiConditionalControl([(pump,'_power_outage')],[np.equal],[True], closed_action_obj)
+        control._priority = 3
+        self.add_control(pump_name+'PowerOffStatus'+str(end_time),control)
+
+        control = _MultiConditionalControl([(pump,'_prev_power_outage'),(pump,'_power_outage')],[np.equal,np.equal],[True,False],opened_action_obj)
+        control._priority = 0
+        self.add_control(pump_name+'PowerOnStatus'+str(start_time),control)
 
     
 class PatternRegistry(Registry):

@@ -23,7 +23,7 @@ def test_central_point_dominance():
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)
 
-    G = wn.get_graph_deep_copy()
+    G = wn.get_graph()
 
     CPD = G.central_point_dominance()
 
@@ -49,7 +49,7 @@ def test_diameter():
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)
 
-    G = wn.get_graph_deep_copy()
+    G = wn.get_graph()
     udG = G.to_undirected()
 
     diameter = nx.diameter(udG)
@@ -70,7 +70,7 @@ def test_characteristic_path_length():
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)
 
-    G = wn.get_graph_deep_copy()
+    G = wn.get_graph()
     udG = G.to_undirected()
 
     CPL = nx.average_shortest_path_length(udG)
@@ -92,7 +92,7 @@ def test_algebraic_connectivity():
 
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)
-    G = wn.get_graph_deep_copy()
+    G = wn.get_graph()
     AC = G.algebraic_connectivity()
 
     print('AC = ',AC)
@@ -112,7 +112,7 @@ def test_crit_ratio_defrag():
 
     # Create a water network model for results object
     wn = wntr.network.WaterNetworkModel(inp_file)
-    G = wn.get_graph_deep_copy()
+    G = wn.get_graph()
     CRD = G.critical_ratio_defrag()
 
     print('CRD = ',CRD)

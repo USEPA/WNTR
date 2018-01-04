@@ -1,6 +1,7 @@
 """
 The wntr.network.elements module includes elements of a water network model, 
-such as curves, patterns, sources, and demands.
+including junction, tank, reservoir, pipe, pump, valve, timeseries, sources, 
+and demands.
 """
 import numpy as np
 import sys
@@ -9,8 +10,6 @@ import math
 import six
 from scipy.optimize import fsolve
 
-logger = logging.getLogger(__name__)
-
 if sys.version_info[0] == 2:
     from collections import MutableSequence
 else:
@@ -18,9 +17,11 @@ else:
 
 from .base import Node, Link, Registry, LinkStatus
 
+logger = logging.getLogger(__name__)
+
 class Junction(Node):
     """
-    Junction class that is inherited from Node
+    Junction class, inherited from Node.
 
     Parameters
     ----------
@@ -34,7 +35,6 @@ class Junction(Node):
     elevation : float, optional
         Elevation of the junction.
         Internal units must be meters (m).
-
     """
 
     def __init__(self, name, model):
@@ -52,21 +52,6 @@ class Junction(Node):
 
         self._emitter_coefficient = None
 
-    @property
-    def node_type(self):
-        return 'Junction'
-
-    def todict(self):
-        d = super(Junction, self).todict()
-        d['properties'] = dict(elevation=self.elevation,
-                               demands=self.demand_timeseries_list.tolist())
-        return d
-
-    def add_demand(self, base, pattern_name, category=None):
-        if pattern_name is not None:
-            self._pattern_reg.add_usage(pattern_name, (self.name, 'Junction'))
-        self.demand_timeseries_list.append((base, pattern_name, category))
-
     def __repr__(self):
         return "<Junction '{}', elevation={}, demand_timeseries_list={}>".format(self._name, self.elevation, repr(self.demand_timeseries_list))
 
@@ -83,11 +68,27 @@ class Junction(Node):
            self._emitter_coefficient == other._emitter_coefficient:
             return True
         return False
+    
+    @property
+    def node_type(self):
+        """Returns the node type"""
+        return 'Junction'
+
+    def add_demand(self, base, pattern_name, category=None):
+        if pattern_name is not None:
+            self._pattern_reg.add_usage(pattern_name, (self.name, 'Junction'))
+        self.demand_timeseries_list.append((base, pattern_name, category))
+
+    def todict(self):
+        d = super(Junction, self).todict()
+        d['properties'] = dict(elevation=self.elevation,
+                               demands=self.demand_timeseries_list.tolist())
+        return d
 
 
 class Tank(Node):
     """
-    Tank class that is inherited from Node
+    Tank class, inherited from Node.
 
     Parameters
     ----------
@@ -128,10 +129,29 @@ class Tank(Node):
         self._mix_model = None
         self._mix_frac = None
         self.bulk_rxn_coeff = None
+        
+    def __repr__(self):
+        return "<Tank '{}', elevation={}, min_level={}, max_level={}, diameter={}, min_vol={}, vol_curve='{}'>".format(self._name, self.elevation, self.min_level, self.max_level, self.diameter, self.min_vol, (self.vol_curve.name if self.vol_curve else None))
 
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Tank, self).__eq__(other):
+            return False
+        if abs(self.elevation   - other.elevation)<1e-10 and \
+           abs(self.min_level   - other.min_level)<1e-10 and \
+           abs(self.max_level   - other.max_level)<1e-10 and \
+           abs(self.diameter    - other.diameter)<1e-10  and \
+           abs(self.min_vol     - other.min_vol)<1e-10   and \
+           self.bulk_rxn_coeff == other.bulk_rxn_coeff   and \
+           self.vol_curve      == other.vol_curve:
+            return True
+        return False
+    
     @property
     def init_level(self):
         return self._init_level
+    
     @init_level.setter
     def init_level(self, value):
         self._init_level = value
@@ -149,6 +169,7 @@ class Tank(Node):
     def vol_curve_name(self):
         """Name of the volume to use, or None"""
         return self._vol_curve_name
+    
     @vol_curve_name.setter
     def vol_curve_name(self, name):
         self._curve_reg.remove_usage(self._vol_curve_name, (self._name, 'Tank'))
@@ -178,28 +199,9 @@ class Tank(Node):
             d['properties']['mix_frac'] = self._mix_frac
         return d
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if not super(Tank, self).__eq__(other):
-            return False
-        if abs(self.elevation   - other.elevation)<1e-10 and \
-           abs(self.min_level   - other.min_level)<1e-10 and \
-           abs(self.max_level   - other.max_level)<1e-10 and \
-           abs(self.diameter    - other.diameter)<1e-10  and \
-           abs(self.min_vol     - other.min_vol)<1e-10   and \
-           self.bulk_rxn_coeff == other.bulk_rxn_coeff   and \
-           self.vol_curve      == other.vol_curve:
-            return True
-        return False
-
-    def __repr__(self):
-        return "<Tank '{}', elevation={}, min_level={}, max_level={}, diameter={}, min_vol={}, vol_curve='{}'>".format(self._name, self.elevation, self.min_level, self.max_level, self.diameter, self.min_vol, (self.vol_curve.name if self.vol_curve else None))
-
-
 class Reservoir(Node):
     """
-    Reservoir class that is inherited from Node
+    Reservoir class, inherited from Node.
 
     Parameters
     ----------
@@ -218,14 +220,8 @@ class Reservoir(Node):
         self._head_timeseries = TimeSeries(model, base_head)
         self.head_pattern_name = head_pattern
 
-    @property
-    def node_type(self):
-        return 'Reservoir'
-
-    def todict(self):
-        d = super(Reservoir, self).todict()
-        d['properties'] = dict(head=self._head_timeseries.todict())
-        return d
+    def __repr__(self):
+        return "<Reservoir '{}', head={}>".format(self._name, self._head_timeseries)
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -236,8 +232,9 @@ class Reservoir(Node):
             return True
         return False
 
-    def __repr__(self):
-        return "<Reservoir '{}', head={}>".format(self._name, self._head_timeseries)
+    @property
+    def node_type(self):
+        return 'Reservoir'
 
     @property
     def head_timeseries(self):
@@ -261,11 +258,16 @@ class Reservoir(Node):
         if name is not None:
             self._pattern_reg.add_usage(name, (self.name, 'Reservoir'))
         self._head_timeseries.pattern_name = name
-        
+    
+    def todict(self):
+        d = super(Reservoir, self).todict()
+        d['properties'] = dict(head=self._head_timeseries.todict())
+        return d
+
 
 class Pipe(Link):
     """
-    Pipe class that is inherited from Link
+    Pipe class, inherited from Link.
 
     Parameters
     ----------
@@ -301,6 +303,26 @@ class Pipe(Link):
         self.cv = False
         self.bulk_rxn_coeff = None
         self.wall_rxn_coeff = None
+        
+    def __repr__(self):
+        return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
+                       self.start_node, self.end_node, self.length, self.diameter, 
+                       self.roughness, self.minor_loss, self.cv, str(self.status))
+    
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Pipe, self).__eq__(other):
+            return False
+        if abs(self.length        - other.length)<1e-10     and \
+           abs(self.diameter      - other.diameter)<1e-10   and \
+           abs(self.roughness     - other.roughness)<1e-10  and \
+           abs(self.minor_loss    - other.minor_loss)<1e-10 and \
+           self.cv               == other.cv                and \
+           self.bulk_rxn_coeff   == other.bulk_rxn_coeff    and \
+           self.wall_rxn_coeff   == other.wall_rxn_coeff:
+            return True
+        return False
 
     @property
     def link_type(self):
@@ -324,30 +346,9 @@ class Pipe(Link):
             d['properties']['bulk_rxn_coeff'] = self.bulk_rxn_coeff
         return d
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if not super(Pipe, self).__eq__(other):
-            return False
-        if abs(self.length        - other.length)<1e-10     and \
-           abs(self.diameter      - other.diameter)<1e-10   and \
-           abs(self.roughness     - other.roughness)<1e-10  and \
-           abs(self.minor_loss    - other.minor_loss)<1e-10 and \
-           self.cv               == other.cv                and \
-           self.bulk_rxn_coeff   == other.bulk_rxn_coeff    and \
-           self.wall_rxn_coeff   == other.wall_rxn_coeff:
-            return True
-        return False
-
-    def __repr__(self):
-        return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
-                       self.start_node, self.end_node, self.length, self.diameter, 
-                       self.roughness, self.minor_loss, self.cv, str(self.status))
-
-
 class Pump(Link):
     """
-    Pump class that is inherited from Link
+    Pump class, inherited from Link.
 
     Parameters
     ----------
@@ -379,6 +380,16 @@ class Pump(Link):
         self._power_outage = False
         self._prev_power_outage = False
 
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Pump, self).__eq__(other):
+            return False
+        if self.info_type == other.info_type and \
+           self.curve == other.curve:
+            return True
+        return False
+   
     @property
     def status(self):
         if self._cv_status == LinkStatus.Closed:
@@ -391,12 +402,6 @@ class Pump(Link):
     @property
     def link_type(self):
         return 'Pump'
-
-    def todict(self):
-        d = super(Pump, self).todict()
-        d['properties'] = dict(pump_type=self.pump_type,
-                               speed=self._speed_timeseries.todict())
-        return d
 
     @property
     def speed_timeseries(self):
@@ -424,18 +429,22 @@ class Pump(Link):
         """Alias to speed for consistency with other link types"""
         return self._speed_timeseries
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if not super(Pump, self).__eq__(other):
-            return False
-        if self.info_type == other.info_type and \
-           self.curve == other.curve:
-            return True
-        return False
+    def todict(self):
+        d = super(Pump, self).todict()
+        d['properties'] = dict(pump_type=self.pump_type,
+                               speed=self._speed_timeseries.todict())
+        return d
 
 
 class HeadPump(Pump):
+    """
+    Head pump class, inherited from Pump.
+    """
+    def __repr__(self):
+        return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
+                   self.start_node, self.end_node, 'HEAD', self.pump_curve_name, 
+                   self.speed_timeseries, str(self.status))
+    
     @property
     def pump_type(self): return 'HEAD'
     
@@ -443,22 +452,13 @@ class HeadPump(Pump):
     def pump_curve_name(self):
         """Returns the pump curve name if info_type is 'HEAD', otherwise returns None"""
         return self._pump_curve_name
+    
     @pump_curve_name.setter
     def pump_curve_name(self, name):
         self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
         self._curve_reg.add_usage(name, (self._link_name, 'Pump'))
         self._curve_reg.set_curve_type(name, 'HEAD')
         self._pump_curve_name = name
-
-    def todict(self):
-        d = super(HeadPump, self).todict()
-        d['properties']['pump_curve'] = self._pump_curve_name
-        return d
-
-    def __repr__(self):
-        return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
-                   self.start_node, self.end_node, 'HEAD', self.pump_curve_name, 
-                   self.speed_timeseries, str(self.status))
 
     def get_head_curve_coefficients(self):
         """
@@ -496,7 +496,6 @@ class HeadPump(Pump):
         -------
         Tuple of pump curve coefficient (A, B, C). All floats.
         """
-
 
         # 1-Point curve
         if self.curve.num_points == 1:
@@ -549,9 +548,20 @@ class HeadPump(Pump):
         except IndexError:
             raise IndexError("Curve point does not exist")
 
-
+    def todict(self):
+        d = super(HeadPump, self).todict()
+        d['properties']['pump_curve'] = self._pump_curve_name
+        return d
 
 class PowerPump(Pump):
+    """
+    Power pump class, inherited from Pump.
+    """
+    def __repr__(self):
+        return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._link_name,
+                   self.start_node, self.end_node, 'POWER', self._base_power, 
+                   self.speed_timeseries, str(self.status))
+        
     @property
     def pump_type(self): return 'POWER'
     
@@ -569,15 +579,9 @@ class PowerPump(Pump):
         d['properties']['base_power'] = self._base_power
         return d
 
-    def __repr__(self):
-        return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._link_name,
-                   self.start_node, self.end_node, 'POWER', self._base_power, 
-                   self.speed_timeseries, str(self.status))
-
-
 class Valve(Link):
     """
-    Valve class that is inherited from Link
+    Valve class, inherited from Link.
 
     Parameters
     ----------
@@ -604,13 +608,24 @@ class Valve(Link):
         self._initial_status = LinkStatus.active
         self._initial_setting = 0.0
 
-    def todict(self):
-        d = super(Valve, self).todict()
-        d['properties'] = dict(diameter=self.diameter,
-                               valve_type=self.valve_type,
-                               minor_loss=self.minor_loss)
-        return d
-
+    def __repr__(self):
+        fmt = "<Pump '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>"
+        return fmt.format(self._link_name,
+                          self.start_node, self.end_node, self.__class__.__name__,
+                          self.diameter, 
+                          self.minor_loss, self.setting, str(self.status))
+    
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if not super(Valve, self).__eq__(other):
+            return False
+        if abs(self.diameter   - other.diameter)<1e-10 and \
+           self.valve_type    == other.valve_type      and \
+           abs(self.minor_loss - other.minor_loss)<1e-10:
+            return True
+        return False
+   
     @property
     def status(self):
         if self._user_status == LinkStatus.Closed:
@@ -624,26 +639,18 @@ class Valve(Link):
     def link_type(self):
         return 'Valve'
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if not super(Valve, self).__eq__(other):
-            return False
-        if abs(self.diameter   - other.diameter)<1e-10 and \
-           self.valve_type    == other.valve_type      and \
-           abs(self.minor_loss - other.minor_loss)<1e-10:
-            return True
-        return False
+    def todict(self):
+        d = super(Valve, self).todict()
+        d['properties'] = dict(diameter=self.diameter,
+                               valve_type=self.valve_type,
+                               minor_loss=self.minor_loss)
+        return d
 
-    def __repr__(self):
-        fmt = "<Pump '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>"
-        return fmt.format(self._link_name,
-                          self.start_node, self.end_node, self.__class__.__name__,
-                          self.diameter, 
-                          self.minor_loss, self.setting, str(self.status))
 
 class PRValve(Valve):
-    """Pressure reducting valve"""
+    """
+    Pressure reducting valve class, inherited from Valve.
+    """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(PRValve, self).__init__(name, start_node_name, end_node_name, model)
 
@@ -652,7 +659,9 @@ class PRValve(Valve):
 
 
 class PSValve(Valve):
-    """Pressure sustaining valve"""
+    """
+    Pressure sustaining valve class, inherited from Valve.
+    """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(PSValve, self).__init__(name, start_node_name, end_node_name, model)
 
@@ -661,7 +670,9 @@ class PSValve(Valve):
 
 
 class PBValve(Valve):
-    """Pressure breaker valve"""
+    """
+    Pressure breaker valve class, inherited from Valve.
+    """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(PBValve, self).__init__(name, start_node_name, end_node_name, model)
 
@@ -670,7 +681,9 @@ class PBValve(Valve):
 
 
 class FCValve(Valve):
-    """Flow control valve"""
+    """
+    Flow control valve class, inherited from Valve.
+    """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(FCValve, self).__init__(name, start_node_name, end_node_name, model)
 
@@ -679,7 +692,9 @@ class FCValve(Valve):
 
 
 class TCValve(Valve):
-    """Throttle control valve"""
+    """
+    Throttle control valve class, inherited from Valve.
+    """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(TCValve, self).__init__(name, start_node_name, end_node_name, model)
 
@@ -688,7 +703,9 @@ class TCValve(Valve):
 
 
 class GPValve(Valve):
-    """General purpose valve"""
+    """
+    General purpose valve class, inherited from Valve.
+    """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(GPValve, self).__init__(name, start_node_name, end_node_name, model)
         self._headloss_curve_name = None
@@ -924,17 +941,6 @@ class Demands(MutableSequence):
     
     A demand list is a list of demands and can be used with all normal list-
     like commands.
-    For example,
-    
-    >>> from wntr.network.elements import Demands
-    >>> dl = Demands()
-    >>> len(dl)
-    0
-    >>> dl.append( (0.5, None, None) )
-    >>> len(dl)
-    1
-    >>> dl[0]
-    <TimeSeries: base=0.5, pattern='None', category='None'>
     
     The demand list does not have any attributes, but can be created by passing 
     in demand objects or demand tuples as ``(base_demand, pattern, category_name)``
