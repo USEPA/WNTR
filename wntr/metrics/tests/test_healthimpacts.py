@@ -35,7 +35,7 @@ def test_mass_consumed():
     wn = wntr.network.WaterNetworkModel(inp_file)
 
     wn.options.quality.mode = 'CHEMICAL'
-    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
+    newpat = wntr.network.elements.Pattern.binary_pattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
     wn.add_pattern(newpat.name, newpat)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
 
@@ -66,7 +66,7 @@ def test_volume_consumed():
     wn = wntr.network.WaterNetworkModel(inp_file)
     
     wn.options.quality.mode = 'CHEMICAL'
-    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
+    newpat = wntr.network.elements.Pattern.binary_pattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
     wn.add_pattern(newpat.name, newpat)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
 
@@ -97,7 +97,7 @@ def test_extent_contaminated():
     wn = wntr.network.WaterNetworkModel(inp_file)
     
     wn.options.quality.mode = 'CHEMICAL'
-    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
+    newpat = wntr.network.elements.Pattern.binary_pattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
     wn.add_pattern(newpat.name, newpat)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
 

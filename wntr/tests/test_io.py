@@ -30,8 +30,8 @@ class TestWriter(unittest.TestCase):
 
     def test_tcv_valve(self):
         v1 = self.wn2.get_link('v1')
-        self.assertEqual(v1.start_node, 'j1')
-        self.assertEqual(v1.end_node, 'j2')
+        self.assertEqual(v1.start_node_name, 'j1')
+        self.assertEqual(v1.end_node_name, 'j2')
         self.assertAlmostEqual(v1.diameter, 0.3048, 6)
         self.assertEqual(v1.valve_type, 'TCV')
         self.assertAlmostEqual(v1.setting, 3.52, 6)
@@ -40,8 +40,8 @@ class TestWriter(unittest.TestCase):
     def test_pump(self):
         p1 = self.wn2.get_link('pump1')
         p11 = self.wn.get_link('pump1')
-        self.assertEqual(p1.start_node, 'j2')
-        self.assertEqual(p1.end_node, 'j3')
+        self.assertEqual(p1.start_node_name, 'j2')
+        self.assertEqual(p1.end_node_name, 'j3')
         self.assertEqual(p1.info_type, 'HEAD')
         self.assertEqual(p1.curve, p11.curve)
         self.assertEqual(p1.curve_name, 'curve1')

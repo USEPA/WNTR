@@ -163,13 +163,13 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         attr = {}
         for link_name, value in link_attribute.items():
             link = wn.get_link(link_name)
-            attr[(link.start_node, link.end_node, link_name)] = value
+            attr[(link.start_node_name, link.end_node_name, link_name)] = value
         link_attribute = attr
     if type(link_width) is dict:
         attr = {}
         for link_name, value in link_width.items():
             link = wn.get_link(link_name)
-            attr[(link.start_node, link.end_node, link_name)] = value
+            attr[(link.start_node_name, link.end_node_name, link_name)] = value
         link_width = attr
     
     # Define link list, color, and colormap
@@ -206,7 +206,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         labels = {}
         for link_name in wn.link_name_list:
             link = wn.get_link(link_name)
-            labels[(link.start_node, link.end_node)] = link_name
+            labels[(link.start_node_name, link.end_node_name)] = link_name
         nx.draw_networkx_edge_labels(G, pos, labels, font_size=7, ax=ax)
     if add_colorbar and node_attribute:
         plt.colorbar(nodes, shrink=0.5, pad=0, ax=ax)

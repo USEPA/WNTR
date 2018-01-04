@@ -3,7 +3,6 @@ The wntr.network.model module includes methods to build a water network
 model.
 """
 import logging
-import copy
 import six
 
 import sys
@@ -16,12 +15,12 @@ import numpy as np
 import networkx as nx
 
 from .options import WaterNetworkOptions
-from .base import Link, Curve, Pattern, Registry, LinkStatus, AbstractModel
+from .base import Link, Registry, LinkStatus, AbstractModel
 from .elements import Junction, Reservoir, Tank
 from .elements import Pipe, Pump, HeadPump, PowerPump
 from .elements import Valve, PRValve, PSValve, PBValve, TCValve, FCValve, GPValve
-from .elements import Demands, TimeSeries, Source
-from .controls import ControlManager, Control
+from .elements import Pattern, TimeSeries, Demands, Curve, Source
+from .controls import ControlManager, Control, ControlAction
 from .graph import WntrMultiDiGraph
 import wntr.epanet
 
@@ -67,6 +66,21 @@ class WaterNetworkModel(AbstractModel):
             
         # To be deleted and/or renamed and/or moved
         self.sim_time = 0
+    
+    def __eq__(self, other):
+        #self._controls   == other._controls   and \
+        if self.num_junctions  == other.num_junctions  and \
+           self.num_reservoirs == other.num_reservoirs and \
+           self.num_tanks      == other.num_tanks      and \
+           self.num_pipes      == other.num_pipes      and \
+           self.num_pumps      == other.num_pumps      and \
+           self.num_valves     == other.num_valves     and \
+           self.nodes          == other.nodes          and \
+           self._node_reg      == other._node_reg      and \
+           self._sources       == other._sources       and \
+           self._check_valves  == other._check_valves:
+            return True
+        return False
     
     def _sec_to_string(self, sec):
         hours = int(sec/3600.)
@@ -289,9 +303,9 @@ class WaterNetworkModel(AbstractModel):
              Name of the start node.
         end_node_name : string
              Name of the end node.
-        info_type : string, optional
+        pump_type : string, optional
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
-        info_value : float or str object
+        pump_parameter : float or str object
             Float value of power in KW. Head curve name.
         speed: float
             Relative speed setting (1.0 is normal speed)
@@ -351,7 +365,7 @@ class WaterNetworkModel(AbstractModel):
         .. warning::
             Patterns **always** use the global water network model options.time values.
             Patterns **will not** be resampled to match these values, it is assumed that 
-            patterns created using Pattern(...) or Pattern.BinaryPattern(...) object used the same 
+            patterns created using Pattern(...) or Pattern.binary_pattern(...) object used the same 
             pattern timestep value as the global value, and they will be treated accordingly.
 
 
@@ -891,7 +905,6 @@ class WaterNetworkModel(AbstractModel):
     
     ### #
     ### Helper functions
-    
     def todict(self):
         d = dict(options=self._options.todict(),
                  nodes=self._node_reg.tolist(),
@@ -902,37 +915,6 @@ class WaterNetworkModel(AbstractModel):
                  )
         return d
     
-    def set_node_coordinates(self, name, coordinates):
-        """
-        Sets the node coordinates in the networkx graph.
-
-        Parameters
-        ----------
-        name : string
-            Name of the node.
-        coordinates : tuple
-            X-Y coordinates.
-        """
-        node = self._node_reg[name]
-        node.coordinates = coordinates
-
-    def get_node_coordinates(self, name):
-        """
-        Returns node coordinates.
-
-        Parameters
-        ----------
-        name: string
-            Name of the node.
-
-        Returns
-        -------
-        A tuple containing the coordinates of the specified node.
-        Note: If name is None, this method will return a dictionary
-              with the coordinates of all nodes keyed by node name.
-        """
-        return self._node_reg[name].coordinates
-
     def get_graph(self):
         """
         Returns a networkx graph of the water network model
@@ -1236,7 +1218,7 @@ class WaterNetworkModel(AbstractModel):
         """
         for name, node in self.nodes():
             pos = node.coordinates
-            self.set_node_coordinates(name, (pos[0]*scale, pos[1]*scale))
+            node.coordinates = (pos[0]*scale, pos[1]*scale)
             
     def split_pipe(self, pipe_name_to_split, new_pipe_name, new_junction_name,
                    add_pipe_at_node='end', split_at_point=0.5):
@@ -1324,8 +1306,8 @@ class WaterNetworkModel(AbstractModel):
             raise RuntimeError('The new link name you provided is already being used for another link.')
 
         # Get start and end node info
-        start_node = self.get_node(pipe.start_node)
-        end_node = self.get_node(pipe.end_node)
+        start_node = pipe.start_node
+        end_node = pipe.end_node
         
         # calculate the new elevation
         if isinstance(start_node, Reservoir):
@@ -1596,39 +1578,36 @@ class PatternRegistry(Registry):
         """
         Adds a pattern to the water network model.
         
-        The pattern can be either a list of values (list, numpy array, etc.) or a 
-        :class:`~wntr.network.elements.Pattern` object. The Pattern class has options to automatically
-        create certain types of patterns, such as a single, on/off pattern (previously created using
-        the start_time and stop_time arguments to this function) -- see the class documentation for
-        examples.
+        The pattern can be either a list of values (list, numpy array, etc.) or 
+        a :class:`~wntr.network.elements.Pattern` object. The Pattern class has 
+        options to automatically create certain types of patterns, such as a 
+        single, on/off pattern
 
-        
         .. warning::
-            Patterns **must** be added to the model prior to adding any model element that uses the pattern,
-            such as junction demands, sources, etc. Patterns are linked by reference, so changes to a 
-            pattern affects all elements using that pattern. 
+            Patterns **must** be added to the model prior to adding any model 
+            element that uses the pattern, such as junction demands, sources, 
+            etc. Patterns are linked by reference, so changes to a pattern 
+            affects all elements using that pattern. 
 
-            
         .. warning::
-            Patterns **always** use the global water network model options.time values.
-            Patterns **will not** be resampled to match these values, it is assumed that 
-            patterns created using Pattern(...) or Pattern.BinaryPattern(...) object used the same 
-            pattern timestep value as the global value, and they will be treated accordingly.
-
+            Patterns **always** use the global water network model options.time 
+            values. Patterns **will not** be resampled to match these values, 
+            it is assumed that patterns created using Pattern(...) or 
+            Pattern.binary_pattern(...) object used the same pattern timestep 
+            value as the global value, and they will be treated accordingly.
 
         Parameters
         ----------
         name : string
             Name of the pattern.
         pattern : list of floats or Pattern
-            A list of floats that make up the pattern, or a :class:`~wntr.network.elements.Pattern` object.
+            A list of floats that make up the pattern, or a 
+            :class:`~wntr.network.elements.Pattern` object.
 
         Raises
         ------
         ValueError
             If adding a pattern with `name` that already exists.
-
-        
         """
         if not isinstance(pattern, Pattern):
             pattern = Pattern(name, multipliers=pattern, time_options=self._options.time)            
@@ -2160,9 +2139,9 @@ class LinkRegistry(Registry):
              Name of the start node.
         end_node_name : string
              Name of the end node.
-        info_type : string, optional
+        pump_type : string, optional
             Type of information provided for a pump. Options are 'POWER' or 'HEAD'.
-        info_value : float or str object
+        pump_parameter : float or str object
             Float value of power in KW. Head curve name.
         speed: float
             Relative speed setting (1.0 is normal speed)

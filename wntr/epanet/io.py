@@ -515,7 +515,7 @@ class InpFile(object):
                  'pat': '',
                  'com': ';'}
             if demand_pattern is not None:
-                E['pat'] = demand_pattern
+                E['pat'] = str(demand_pattern)
             f.write(_JUNC_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -635,8 +635,8 @@ class InpFile(object):
         for pipe_name in lnames:
             pipe = wn.links[pipe_name]
             E = {'name': pipe_name,
-                 'node1': pipe.start_node,
-                 'node2': pipe.end_node,
+                 'node1': pipe.start_node_name,
+                 'node2': pipe.end_node_name,
                  'len': from_si(self.flow_units, pipe.length, HydParam.Length),
                  'diam': from_si(self.flow_units, pipe.diameter, HydParam.PipeDiameter),
                  'rough': pipe.roughness,
@@ -705,8 +705,8 @@ class InpFile(object):
         for pump_name in lnames:
             pump = wn.links[pump_name]
             E = {'name': pump_name,
-                 'node1': pump.start_node,
-                 'node2': pump.end_node,
+                 'node1': pump.start_node_name,
+                 'node2': pump.end_node_name,
                  'ptype': pump.pump_type,
                  'params': '',
                  'speed_keyword': 'SPEED',
@@ -772,8 +772,8 @@ class InpFile(object):
         for valve_name in lnames:
             valve = wn.links[valve_name]
             E = {'name': valve_name,
-                 'node1': valve.start_node,
-                 'node2': valve.end_node,
+                 'node1': valve.start_node_name,
+                 'node2': valve.end_node_name,
                  'diam': from_si(self.flow_units, valve.diameter, HydParam.PipeDiameter),
                  'vtype': valve.valve_type,
                  'set': valve._initial_setting,
@@ -1826,7 +1826,8 @@ class InpFile(object):
             if current == []:
                 continue
 #            assert(len(current) == 3), ("Error reading node coordinates. Check format.")
-            self.wn.set_node_coordinates(current[0], (float(current[1]), float(current[2])))
+            node = self.wn.get_node(current[0])
+            node.coordinates = (float(current[1]), float(current[2]))
 
     def _write_coordinates(self, f, wn):
         f.write('[COORDINATES]\n'.encode('ascii'))
@@ -1976,7 +1977,7 @@ class _EpanetRule(object):
 
     def from_if_then_else(self, control):
         """Create a rule from an IfThenElseControl object"""
-        if isinstance(control, IfThenElseControl):
+        if isinstance(control, Control):
             self.ruleID = control.name
             self.add_control_condition(control._condition)
             for ct, action in enumerate(control._then_actions):

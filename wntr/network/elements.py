@@ -1,7 +1,7 @@
 """
 The wntr.network.elements module includes elements of a water network model, 
-including junction, tank, reservoir, pipe, pump, valve, timeseries, sources, 
-and demands.
+including junction, tank, reservoir, pipe, pump, valve, pattern, timeseries, 
+demands, curves, and sources.
 """
 import numpy as np
 import sys
@@ -16,6 +16,7 @@ else:
     from collections.abc import MutableSequence
 
 from .base import Node, Link, Registry, LinkStatus
+from .options import TimeOptions
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +61,7 @@ class Junction(Node):
             return False
         if not super(Junction, self).__eq__(other):
             return False
-        if abs(self.base_demand - other.base_demand)<1e-10 and \
-           self.demand_pattern_name == other.demand_pattern_name and \
-           abs(self.elevation - other.elevation)<1e-10 and \
+        if abs(self.elevation - other.elevation)<1e-10 and \
            abs(self.nominal_pressure - other.nominal_pressure)<1e-10 and \
            abs(self.minimum_pressure - other.minimum_pressure)<1e-10 and \
            self._emitter_coefficient == other._emitter_coefficient:
@@ -151,7 +150,6 @@ class Tank(Node):
     @property
     def init_level(self):
         return self._init_level
-    
     @init_level.setter
     def init_level(self, value):
         self._init_level = value
@@ -169,7 +167,6 @@ class Tank(Node):
     def vol_curve_name(self):
         """Name of the volume to use, or None"""
         return self._vol_curve_name
-    
     @vol_curve_name.setter
     def vol_curve_name(self, name):
         self._curve_reg.remove_usage(self._vol_curve_name, (self._name, 'Tank'))
@@ -243,7 +240,6 @@ class Reservoir(Node):
     @property
     def base_head(self):
         return self._head_timeseries.base_value
-
     @base_head.setter
     def base_head(self, value):
         self._head_timeseries.base_value = value
@@ -251,7 +247,6 @@ class Reservoir(Node):
     @property
     def head_pattern_name(self):
         return self._head_timeseries.pattern_name
-    
     @head_pattern_name.setter
     def head_pattern_name(self, name):
         self._pattern_reg.remove_usage(self._head_timeseries.pattern_name, (self.name, 'Reservoir'))
@@ -410,7 +405,6 @@ class Pump(Link):
     @property
     def base_speed(self):
         return self._speed_timeseries.base_value
-    
     @base_speed.setter
     def base_speed(self, value):
         self._speed_timeseries.base_value = value
@@ -446,13 +440,13 @@ class HeadPump(Pump):
                    self.speed_timeseries, str(self.status))
     
     @property
-    def pump_type(self): return 'HEAD'
+    def pump_type(self): 
+        return 'HEAD'
     
     @property
     def pump_curve_name(self):
-        """Returns the pump curve name if info_type is 'HEAD', otherwise returns None"""
+        """Returns the pump curve name"""
         return self._pump_curve_name
-    
     @pump_curve_name.setter
     def pump_curve_name(self, name):
         self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
@@ -496,22 +490,24 @@ class HeadPump(Pump):
         -------
         Tuple of pump curve coefficient (A, B, C). All floats.
         """
-
+        
+        curve = self._curve_reg[self.pump_curve_name]
+        
         # 1-Point curve
-        if self.curve.num_points == 1:
-            H_1 = self.curve.points[0][1]
-            Q_1 = self.curve.points[0][0]
+        if curve.num_points == 1:
+            H_1 = curve.points[0][1]
+            Q_1 = curve.points[0][0]
             A = (4.0/3.0)*H_1
             B = (1.0/3.0)*(H_1/(Q_1**2))
             C = 2
         # 3-Point curve
-        elif self.curve.num_points == 3:
-            Q_1 = self.curve.points[0][0]
-            H_1 = self.curve.points[0][1]
-            Q_2 = self.curve.points[1][0]
-            H_2 = self.curve.points[1][1]
-            Q_3 = self.curve.points[2][0]
-            H_3 = self.curve.points[2][1]
+        elif curve.num_points == 3:
+            Q_1 = curve.points[0][0]
+            H_1 = curve.points[0][1]
+            Q_2 = curve.points[1][0]
+            H_2 = curve.points[1][1]
+            Q_3 = curve.points[2][0]
+            H_3 = curve.points[2][1]
 
             # When the first points is at zero flow
             if Q_1 == 0.0:
@@ -543,8 +539,10 @@ class HeadPump(Pump):
         Equals to the first point on the pump curve.
 
         """
+        curve = self._curve_reg[self.pump_curve_name]
+        
         try:
-            return self.curve.points[-1][0]
+            return curve.points[-1][0]
         except IndexError:
             raise IndexError("Curve point does not exist")
 
@@ -563,11 +561,12 @@ class PowerPump(Pump):
                    self.speed_timeseries, str(self.status))
         
     @property
-    def pump_type(self): return 'POWER'
+    def pump_type(self): 
+        return 'POWER'
     
     @property
     def power(self):
-        """Returns the fixed_power value if info_type is 'POWER', otherwise returns None"""
+        """Returns the fixed_power value"""
         return self._base_power
     @power.setter
     def power(self, kW):
@@ -734,6 +733,158 @@ class GPValve(Valve):
         return d
     
 
+class Pattern(object):
+    """
+    Pattern class.
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pattern.
+    multipliers : list
+        A list of multipliers that makes up the pattern.
+    time_options : wntr TimeOptions or tuple
+        The water network model options.time object or a tuple of (pattern_start, 
+        pattern_timestep) in seconds.
+    wrap : bool, optional
+        Boolean indicating if the pattern should be wrapped.
+        If True (the default), then the pattern repeats itself forever; if 
+        False, after the pattern has been exhausted, it will return 0.0.
+    """
+    
+    def __init__(self, name, multipliers=[], time_options=None, wrap=True):
+        self.name = name
+        if isinstance(multipliers, (int, float)):
+            multipliers = [multipliers]
+        self._multipliers = np.array(multipliers)
+        if time_options:
+            if isinstance(time_options, (tuple, list)) and len(time_options) >= 2:
+                tmp = TimeOptions()
+                tmp.pattern_start = time_options[0]
+                tmp.pattern_timestep = time_options[1]
+                time_options = tmp
+            elif not isinstance(time_options, TimeOptions):
+                raise ValueError('Pattern->time_options must be a TimeOptions class or null')
+        self._time_options = time_options
+        self.wrap = wrap
+        
+    def __eq__(self, other):
+        if type(self) == type(other) and \
+          self.name == other.name and \
+          len(self._multipliers) == len(other._multipliers) and \
+          self._time_options == other._time_options and \
+          self.wrap == other.wrap and \
+          np.all(np.abs(np.array(self._multipliers)-np.array(other._multipliers))<1.0e-10):
+            return True
+        return False
+
+    def __hash__(self):
+        return hash('Pattern/'+self.name)
+        
+    def __str__(self):
+        return '%s'%self.name
+
+    def __repr__(self):
+        return "<Pattern '{}', multipliers={}>".format(self.name, repr(self.multipliers))
+        
+    def __len__(self):
+        return len(self._multipliers)
+    
+    def __getitem__(self, index):
+        """Returns the pattern value at a specific index (not time!)"""
+        nmult = len(self._multipliers)
+        if nmult == 0:                     return 1.0
+        elif self.wrap:                    return self._multipliers[int(index%nmult)]
+        elif index < 0 or index >= nmult:  return 0.0
+        return self._multipliers[index]
+    
+    @classmethod
+    def binary_pattern(cls, name, start_time, end_time, step_size, duration, wrap=False):
+        """
+        Creates a binary pattern (single instance of step up, step down).
+        
+        Parameters
+        ----------
+        name : string
+            Name of the pattern.
+        start_time : int
+            The time at which the pattern turns "on" (1.0).
+        end_time : int
+            The time at which the pattern turns "off" (0.0).
+        step_size : int
+            Pattern step size.
+        duration : int
+            Total length of the pattern.
+        wrap : bool, optional
+            Boolean indicating if the pattern should be wrapped.
+            If True, then the pattern repeats itself forever; if 
+            False (the default), after the pattern has been exhausted, it will return 0.0.
+        
+        Returns
+        -------
+        A new pattern object with a list of 1's and 0's as multipliers. 
+        """
+        tmp = TimeOptions()
+        tmp.pattern_start = 0
+        tmp.pattern_timestep = step_size
+        time_options = tmp
+        patternstep = time_options.pattern_timestep
+        patternstart = int(start_time/time_options.pattern_timestep)
+        patternend = int(end_time/patternstep)
+        patterndur = int(duration/patternstep)
+        pattern_list = [0.0]*patterndur
+        pattern_list[patternstart:patternend] = [1.0]*(patternend-patternstart)
+        return cls(name, multipliers=pattern_list, time_options=None, wrap=wrap)
+    
+    @property
+    def multipliers(self):
+        """Returns the pattern multiplier values."""
+        return self._multipliers
+    @multipliers.setter
+    def multipliers(self, values):
+        if isinstance(values, (int, float, complex)):
+            self._multipliers = np.array([values])
+        else:
+            self._multipliers = np.array(values)
+
+    @property
+    def time_options(self):
+        """Returns the TimeOptions object."""
+        return self._time_options
+    @time_options.setter
+    def time_options(self, object):
+        if object and not isinstance(object, TimeOptions):
+            raise ValueError('Pattern->time_options must be a TimeOptions or null')
+        self._time_options = object
+
+    def todict(self):
+        d = dict(name=self.name, 
+                 multipliers=list(self._multipliers))
+        if not self.wrap:
+            d['wrap'] = False
+        return d
+    
+    def at(self, time):
+        """
+        Returns the pattern value at a specific time.
+        
+        Parameters
+        ----------
+        time : int
+            Time in seconds        
+        """
+        nmult = len(self._multipliers)
+        if nmult == 0: return 1.0
+        if nmult == 1: return self._multipliers[0]
+        if self._time_options is None:
+            raise RuntimeError('Pattern->time_options cannot be None at runtime')
+        step = int((time+self._time_options.pattern_start)//self._time_options.pattern_timestep)
+        if self.wrap:                      return self._multipliers[int(step%nmult)]
+        elif step < 0 or step >= nmult:    return 0.0
+        return self._multipliers[step]
+    __call__ = at
+    
+
 class TimeSeries(object): 
     """
     Time series class.
@@ -817,7 +968,6 @@ class TimeSeries(object):
     def base_value(self):
         """Returns the baseline value."""
         return self._base
-    
     @base_value.setter
     def base_value(self, value):
         if not isinstance(value, (int, float, complex)):
@@ -833,9 +983,8 @@ class TimeSeries(object):
     def pattern_name(self):
         """Returns the name of the pattern."""
         if self._pattern:
-            return self._pattern
+            return str(self._pattern)
         return None
-
     @pattern_name.setter
     def pattern_name(self, pattern_name):
         self._pattern = pattern_name
@@ -844,7 +993,6 @@ class TimeSeries(object):
     def category(self):
         """Returns the category."""
         return self._category
-
     @category.setter
     def category(self, category):
         self._category = category
@@ -881,54 +1029,6 @@ class TimeSeries(object):
         for ct, t in enumerate(demand_times):
             demand_values[ct] = self.at(t)
         return demand_values
-
-
-class Source(object):
-    """
-    Water quality source class.
-
-    Parameters
-    ----------
-    name : string
-         Name of the source.
-    node_name: string
-        Injection node.
-    source_type: string
-        Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT.
-    strength: float
-        Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, 
-        FLOWPACED, or SETPOINT.
-    pattern: Pattern, optional
-        If None, then the value will be constant. Otherwise, the Pattern will be used
-        (default = None).
-    """
-
-#    def __init__(self, name, node_registry, pattern_registry):
-    def __init__(self, model, name, node_name, source_type, strength, pattern=None):
-        self._strength_timeseries = TimeSeries(model, strength, pattern, name)
-        self._pattern_reg = model.patterns
-        self._pattern_reg.add_usage(pattern, (name, 'Source'))
-        self._node_reg = model.nodes
-        self._node_reg.add_usage(node_name, (name, 'Source'))
-        self.name = name
-        self.node_name = node_name
-        self.source_type = source_type
-
-    @property
-    def strength_timeseries(self): return self._strength_timeseries
-
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if self.node_name == other.node_name and \
-           self.source_type == other.source_type and \
-           self.strength_timeseries == other.strength_timeseries:
-            return True
-        return False
-
-    def __repr__(self):
-        fmt = "<Source: '{}', '{}', '{}', {}, {}>"
-        return fmt.format(self.name, self.node_name, self.source_type, self._base, self._pattern_name)
 
 
 class Demands(MutableSequence):
@@ -1090,3 +1190,177 @@ class Demands(MutableSequence):
                 demand_values[ct] += dem(t)
         return demand_values
         
+
+class Curve(object):
+    """
+    Curve base class.
+
+    Parameters
+    ----------
+    name : str
+        Name of the curve.
+    curve_type : str
+        The type of curve: None (unspecified), HEAD, HEADLOSS, VOLUME or EFFICIENCY
+    points : list
+        The points in the curve. List of 2-tuples (x,y) ordered by increasing x
+    original_units : str
+        The units the points were defined in
+    current_units : str
+        The units the points are currently defined in. This MUST be 'SI' by the time
+        one of the simulators is run.
+    options : WaterNetworkOptions, optional
+        Water network options to lookuup headloss function
+    """
+    def __init__(self, name, curve_type=None, points=[], 
+                 original_units=None, current_units='SI', options=None):
+        self._name = name
+        self._curve_type = curve_type
+        self._points = points
+        self._options = options
+        self._original_units = None
+        self._current_units = 'SI'
+    
+    def __eq__(self, other):
+        if type(self) != type(other):
+            return False
+        if self.name != other.name:
+            return False
+        if self.curve_type != other.curve_type:
+            return False
+        if self.num_points != other.num_points:
+            return False
+        for point1, point2 in zip(self.points, other.points):
+            for value1, value2 in zip(point1, point2):
+                if abs(value1 - value2) > 1e-8:
+                    return False
+        return True
+
+    def __hash__(self):
+        return hash('Curve/'+self._name)
+
+    def __repr__(self):
+        return "<Curve: '{}', curve_type='{}', points={}>".format(str(self.name), str(self.curve_type), repr(self.points))
+
+    def __getitem__(self, index):
+        return self.points.__getitem__(index)
+
+    def __getslice__(self, i, j):
+        return self.points.__getslice__(i, j)
+
+    def __len__(self):
+        return len(self.points)
+    
+    @property
+    def original_units(self):
+        """The original units the points were written in."""
+        return self._original_units
+    
+    @property
+    def current_units(self):
+        """The current units that the points are in"""
+        return self._current_units
+    
+    @property
+    def name(self):
+        """Curve names must be unique among curves"""
+        return self._name
+    
+    @property
+    def points(self):
+        """The points in the curve. List of 2-tuples (x,y) ordered by increasing x"""
+        return self._points
+    @points.setter
+    def points(self, points):
+        self._points = copy.deepcopy(points)
+        self._points.sort()
+        
+    @property
+    def curve_type(self):
+        """The type of curve: None (unspecified), HEAD, HEADLOSS, VOLUME or EFFICIENCY"""
+        return self._curve_type
+    @curve_type.setter
+    def curve_type(self, curve_type):
+        curve_type = str(curve_type)
+        curve_type = curve_type.upper()
+        if curve_type == 'HEAD':
+            self._curve_type = 'HEAD'
+        elif curve_type == 'VOLUME':
+            self._curve_type = 'VOLUME'
+        elif curve_type == 'EFFICIENCY':
+            self._curve_type = 'EFFICIENCY'
+        elif curve_type == 'HEADLOSS':
+            self._curve_type = 'HEADLOSS'
+        else:
+            raise ValueError('curve_type must be HEAD, HEADLOSS, VOLUME, or EFFICIENCY')
+
+    @property
+    def num_points(self):
+        """Returns the number of points in the curve."""
+        return len(self.points)
+    
+    def todict(self):
+        d = dict(name=self._name, 
+                 curve_type=self._curve_type,
+                 points=list(self._points))
+        return d
+    
+    def set_units(self, original=None, current=None):
+        """Set the units flags for the curve.
+        
+        Use this after converting the points, if necessary, to indicate that
+        conversion to SI units is complete.
+        """
+        if original:
+            self._original_units = original
+        if current:
+            self._current_units = current
+
+
+class Source(object):
+    """
+    Water quality source class.
+
+    Parameters
+    ----------
+    name : string
+         Name of the source.
+    node_name: string
+        Injection node.
+    source_type: string
+        Source type, options = CONCEN, MASS, FLOWPACED, or SETPOINT.
+    strength: float
+        Source strength in Mass/Time for MASS and Mass/Volume for CONCEN, 
+        FLOWPACED, or SETPOINT.
+    pattern: Pattern, optional
+        If None, then the value will be constant. Otherwise, the Pattern will be used
+        (default = None).
+    """
+
+#    def __init__(self, name, node_registry, pattern_registry):
+    def __init__(self, model, name, node_name, source_type, strength, pattern=None):
+        self._strength_timeseries = TimeSeries(model, strength, pattern, name)
+        self._pattern_reg = model.patterns
+        self._pattern_reg.add_usage(pattern, (name, 'Source'))
+        self._node_reg = model.nodes
+        self._node_reg.add_usage(node_name, (name, 'Source'))
+        self.name = name
+        self.node_name = node_name
+        self.source_type = source_type
+
+    @property
+    def strength_timeseries(self): 
+        return self._strength_timeseries
+
+    def __eq__(self, other):
+        if not type(self) == type(other):
+            return False
+        if self.node_name == other.node_name and \
+           self.source_type == other.source_type and \
+           self.strength_timeseries == other.strength_timeseries:
+            return True
+        return False
+
+    def __repr__(self):
+        fmt = "<Source: '{}', '{}', '{}', {}, {}>"
+        return fmt.format(self.name, self.node_name, self.source_type, self._base, self._pattern_name)
+

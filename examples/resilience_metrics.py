@@ -201,7 +201,7 @@ def water_quality_metrics(wn):
     # Simulate hydraulics and water quality
     sim = wntr.sim.EpanetSimulator(wn)
     wn.options.quality.mode = 'CHEMICAL'
-    source_pattern = wntr.network.elements.Pattern.BinaryPattern('SourcePattern', 
+    source_pattern = wntr.network.elements.Pattern.binary_pattern('SourcePattern', 
             start_time=2*3600, end_time=15*3600, duration=wn.options.time.duration, 
             step_size=wn.options.time.pattern_timestep)
     wn.add_pattern('SourcePattern', source_pattern)
@@ -274,7 +274,7 @@ def water_security_metrics(wn):
     # Define WQ scenario
     wn.options.quality.mode = 'CHEMICAL'
     # Source pattern already exists
-    # source_pattern = wntr.network.elements.Pattern.BinaryPattern('SourcePattern', step_size=wn.options.time.pattern_timestep, start_time=2*3600, end_time=15*3600, duration=wn.options.time.duration)
+    # source_pattern = wntr.network.elements.Pattern.binary_pattern('SourcePattern', step_size=wn.options.time.pattern_timestep, start_time=2*3600, end_time=15*3600, duration=wn.options.time.duration)
     # wn.add_pattern('SourcePattern', source_pattern)
     wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
 
