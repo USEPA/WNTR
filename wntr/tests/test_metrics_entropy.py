@@ -5,8 +5,7 @@ import numpy as np
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','tests','networks_for_testing')
-packdir = join(testdir,'..','..','..')
+datadir = join(testdir, 'networks_for_testing')
 
 def test_layout1():
     inp_file = join(datadir,'Awumah_layout1.inp')

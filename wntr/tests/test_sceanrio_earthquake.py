@@ -7,7 +7,6 @@ import wntr
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','tests','networks_for_testing')
-packdir = join(testdir,'..','..','..')
 
 def test_pga_attenuation():
     R = pd.Series({'1': 1000.0}) 

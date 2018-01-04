@@ -10,9 +10,8 @@ import wntr.network.elements as elements
 from wntr.network.options import TimeOptions
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','tests','networks_for_testing')
-net1dir = join(testdir,'..','..','..','examples','networks')
-packdir = join(testdir,'..','..','..')
+datadir = join(testdir,'networks_for_testing')
+net1dir = join(testdir,'..','..','examples','networks')
 
 def test_Curve():
     pts1 = [[3,5]]

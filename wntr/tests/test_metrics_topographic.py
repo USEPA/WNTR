@@ -7,8 +7,7 @@ import wntr
 import networkx as nx
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','tests','networks_for_testing')
-packdir = join(testdir,'..','..','..')
+datadir = join(testdir,'networks_for_testing')
 
 def test_central_point_dominance():
     """

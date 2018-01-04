@@ -4,9 +4,8 @@ import numpy as np
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','tests','networks_for_testing')
-net1dir = join(testdir,'..','..','..','examples','networks')
-packdir = join(testdir,'..','..','..')
+datadir = join(testdir,'networks_for_testing')
+net1dir = join(testdir,'..','..','examples','networks')
 
 def test_terminal_nodes():
     inp_file = join(net1dir,'Net1.inp')
