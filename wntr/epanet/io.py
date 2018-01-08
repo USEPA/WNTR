@@ -1148,7 +1148,7 @@ class InpFile(object):
 
         f.write('[CONTROLS]\n'.encode('ascii'))
         # Time controls and conditional controls only
-        for text, all_control in wn.controls.items():
+        for text, all_control in wn.controls():
             control_action = all_control._then_actions[0]
             if all_control.epanet_control_type is not _ControlType.rule:
                 if len(all_control._then_actions) != 1 or len(all_control._else_actions) != 0:
@@ -1250,7 +1250,7 @@ class InpFile(object):
 
     def _write_rules(self, f, wn):
         f.write('[RULES]\n'.encode('ascii'))
-        for text, all_control in wn.controls.items():
+        for text, all_control in wn.controls():
             entry = '{}\n'
             if all_control.epanet_control_type == _ControlType.rule:
                 rule = _EpanetRule('blah', self.flow_units, self.mass_units)

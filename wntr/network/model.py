@@ -146,12 +146,27 @@ class WaterNetworkModel(AbstractModel):
     @property
     def curves(self): return self._curve_reg
     
-    @property    
-    def sources(self): return self._sources
-    
-    @property
-    def controls(self): return self._controls
-    
+    def sources(self):
+        """
+        Returns a generator to iterate over all sources.
+
+        Returns
+        -------
+        A generator in the format (name, object).
+        """
+        for source_name, source in self._sources.items():
+            yield source_name, source
+        
+    def controls(self):
+        """
+        Returns a generator to iterate over all controls.
+
+        Returns
+        -------
+        A generator in the format (name, object).
+        """
+        for control_name, control in self._controls.items():
+            yield control_name, control
                 
     ### # 
     ### Element iterators
