@@ -228,9 +228,9 @@ class HydraulicModel(object):
             self._link_ids.append(l)
             self._pump_ids.append(l)
             self.link_types.append(LinkType.Pump)
-            if link.info_type == 'POWER':
+            if link.pump_type == 'POWER':
                 self.power_pump_ids.append(l)
-            elif link.info_type == 'HEAD':
+            elif link.pump_type == 'HEAD':
                 self.head_pump_ids.append(l)
             else:
                 raise RuntimeError('Pump type not recognized.')
@@ -387,7 +387,7 @@ class HydraulicModel(object):
             else:
                 self.pipe_resistance_coefficients[link_id] = 0
             if link_id in self._pump_ids:
-                if link.info_type == 'HEAD':
+                if link.pump_type == 'HEAD':
                     A, B, C = link.get_head_curve_coefficients()
                     self.head_curve_coefficients[link_id] = (A, B, C)
                     self.max_pump_flows[link_id] = (A/B)**(1.0/C)
@@ -397,7 +397,7 @@ class HydraulicModel(object):
                     else:
                         q_bar, h_bar = self.get_pump_line_params(A, B, C)
                         self.pump_line_params[link_id] = (q_bar, h_bar)
-                elif link.info_type == 'POWER':
+                elif link.pump_type == 'POWER':
                     self.pump_powers[link_id] = link.power
                     self.max_pump_flows[link_id] = None
 

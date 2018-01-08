@@ -630,9 +630,9 @@ class Pump(Link):
          Name of the start node
     end_node_name : string
          Name of the end node
-    info_type : string, optional
+    pump_type : string, optional
         Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
-    info_value : float or curve type, optional
+    pump_parameter : float or curve type, optional
         Where power is a fixed value in KW, while a head curve is a Curve object.
     base_speed: float
         Relative speed setting (1.0 is normal speed)
@@ -655,7 +655,7 @@ class Pump(Link):
             return False
         if not super(Pump, self).__eq__(other):
             return False
-        if self.info_type == other.info_type and \
+        if self.pump_type == other.pump_type and \
            self.curve == other.curve:
             return True
         return False
@@ -729,6 +729,10 @@ class HeadPump(Pump):
         self._curve_reg.set_curve_type(name, 'HEAD')
         self._pump_curve_name = name
 
+    def get_pump_curve(self):
+        curve = self._curve_reg[self.pump_curve_name]
+        return curve
+        
     def get_head_curve_coefficients(self):
         """
         Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
@@ -847,7 +851,7 @@ class PowerPump(Pump):
     def power(self, kW):
         self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
         self._base_power = kW
-
+        
     def todict(self):
         d = super(PowerPump, self).todict()
         d['properties']['base_power'] = self._base_power
@@ -993,7 +997,7 @@ class GPValve(Valve):
 
     @property
     def headloss_curve_name(self):
-        """Returns the pump curve name if info_type is 'HEAD', otherwise returns None"""
+        """Returns the pump curve name if pump_type is 'HEAD', otherwise returns None"""
         return self._headloss_curve_name
     @headloss_curve_name.setter
     def headloss_curve_name(self, name):
