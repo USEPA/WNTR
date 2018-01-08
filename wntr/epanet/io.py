@@ -28,11 +28,13 @@ import pandas as pd
 
 import wntr
 import wntr.network
-from wntr.network.model import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
+from wntr.network.base import Link
+from wntr.network.model import WaterNetworkModel
+from wntr.network.elements import Junction, Reservoir, Tank, Pipe, Pump, Valve
 from wntr.network.options import WaterNetworkOptions
 from wntr.network.model import Pattern, LinkStatus, Curve, Demands, Source
 from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition, Comparison
-from wntr.network.controls import OrCondition, AndCondition, Control, ControlAction
+from wntr.network.controls import OrCondition, AndCondition, Control, ControlAction, _ControlType
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam, MixType, ResultType, EN
 from .util import to_si, from_si
@@ -1146,43 +1148,46 @@ class InpFile(object):
 
         f.write('[CONTROLS]\n'.encode('ascii'))
         # Time controls and conditional controls only
-        controls = list(wn.controls.keys())
-        controls.sort()
-        for text in controls:
-            all_control = wn.get_control(text)
+        for text, all_control in wn.controls.items():
             control_action = all_control._then_actions[0]
-            if all_control.epanet_control_type == 'time_control':
-                entry = 'Link {link} {setting} AT {compare} {time:g}\n'
-                vals = {'link': control_action._target_obj.name,
-                        'setting': get_setting(control_action, text),
-                        'compare': 'TIME',
-                        'time': all_control._condition._threshold / 3600.0}
-                if vals['setting'] is None:
+            if all_control.epanet_control_type is not _ControlType.rule:
+                if len(all_control._then_actions) != 1 or len(all_control._else_actions) != 0:
+                    logger.error('Too many actions on CONTROL "%s"'%text)
+                    raise RuntimeError('Too many actions on CONTROL "%s"'%text)
+                if not isinstance(control_action.target()[0], Link):
                     continue
-                if isinstance(all_control, SimTimeCondition):
-                    vals['compare'] = 'CLOCKTIME'
-                f.write(entry.format(**vals).encode('ascii'))
-            elif all_control.epanet_control_type == 'conditional_control':
-                entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
-                vals = {'link': control_action._target_obj.name,
-                        'setting': get_setting(control_action, text),
-                        'node': all_control._condition._source_obj.name,
-                        'compare': 'above',
-                        'thresh': 0.0}
-                if vals['setting'] is None:
-                    continue
-                if all_control._condition._relation in [np.less, np.less_equal, Comparison.le, Comparison.lt]:
-                    vals['compare'] = 'below'
-                threshold = all_control._condition._threshold
-                if isinstance(all_control._condition._source_obj, Tank):
-                    vals['thresh'] = from_si(self.flow_units, threshold, HydParam.HydraulicHead)
-                elif isinstance(all_control._condition._source_obj, Junction):
-                    vals['thresh'] = from_si(self.flow_units, threshold, HydParam.Pressure) 
-                else: 
-                    raise RuntimeError('Unknown control for EPANET INP files: %s' %type(all_control))
-                f.write(entry.format(**vals).encode('ascii'))
-            elif not isinstance(all_control, Control):
-                raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
+                if isinstance(all_control._condition, (SimTimeCondition, TimeOfDayCondition)):
+                    entry = 'Link {link} {setting} AT {compare} {time:g}\n'
+                    vals = {'link': control_action._target_obj.name,
+                            'setting': get_setting(control_action, text),
+                            'compare': 'TIME',
+                            'time': all_control._condition._threshold / 3600.0}
+                    if vals['setting'] is None:
+                        continue
+                    if isinstance(all_control, SimTimeCondition):
+                        vals['compare'] = 'CLOCKTIME'
+                    f.write(entry.format(**vals).encode('ascii'))
+                elif isinstance(all_control._condition, (ValueCondition)):
+                    entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
+                    vals = {'link': control_action._target_obj.name,
+                            'setting': get_setting(control_action, text),
+                            'node': all_control._condition._source_obj.name,
+                            'compare': 'above',
+                            'thresh': 0.0}
+                    if vals['setting'] is None:
+                        continue
+                    if all_control._condition._relation in [np.less, np.less_equal, Comparison.le, Comparison.lt]:
+                        vals['compare'] = 'below'
+                    threshold = all_control._condition._threshold
+                    if isinstance(all_control._condition._source_obj, Tank):
+                        vals['thresh'] = from_si(self.flow_units, threshold, HydParam.HydraulicHead)
+                    elif isinstance(all_control._condition._source_obj, Junction):
+                        vals['thresh'] = from_si(self.flow_units, threshold, HydParam.Pressure) 
+                    else: 
+                        raise RuntimeError('Unknown control for EPANET INP files: %s' %type(all_control))
+                    f.write(entry.format(**vals).encode('ascii'))
+                elif not isinstance(all_control, Control):
+                    raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
         f.write('\n'.encode('ascii'))
 
     def _read_rules(self):
@@ -1245,12 +1250,9 @@ class InpFile(object):
 
     def _write_rules(self, f, wn):
         f.write('[RULES]\n'.encode('ascii'))
-        controls = list(wn.controls.keys())
-        controls.sort()
-        for text in controls:
-            all_control = wn.get_control(text)
+        for text, all_control in wn.controls.items():
             entry = '{}\n'
-            if all_control.epanet_control_type == 'rule':
+            if all_control.epanet_control_type == _ControlType.rule:
                 rule = _EpanetRule('blah', self.flow_units, self.mass_units)
                 rule.from_if_then_else(all_control)
                 f.write(entry.format(str(rule)).encode('ascii'))

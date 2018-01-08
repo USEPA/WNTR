@@ -152,6 +152,13 @@ class ControlPriority(enum.Enum):
     very_high = 6
 
 
+class _ControlType(enum.Enum):
+    presolve = 0
+    postsolve = 1
+    rule = 2
+    pre_and_postsolve = 3
+
+
 class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
     """A base class for control conditions"""
     def __init__(self):
@@ -159,8 +166,8 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def requires(self):
-        """Returns a list of objects required to evaluate this condition"""
-        return []
+        """Returns a set of objects required to evaluate this condition"""
+        return OrderedSet()
 
     @property
     def name(self):
@@ -508,7 +515,7 @@ class ValueCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._source_obj]
+        return OrderedSet([self._source_obj])
 
     @property
     def name(self):
@@ -612,7 +619,7 @@ class RelativeCondition(ControlCondition):
                                 tobj, self._threshold_attr)
 
     def requires(self):
-        return [self._source_obj, self._threshold_obj]
+        return OrderedSet([self._source_obj, self._threshold_obj])
 
     def __repr__(self):
         return "RelativeCondition({}, {}, {}, {}, {})".format(str(self._source_obj),
@@ -679,7 +686,7 @@ class OrCondition(ControlCondition):
         return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
 
     def requires(self):
-        return self._condition_1.requires() + self._condition_2.requires()
+        return self._condition_1.requires().update(self._condition_2.requires())
 
 
 class AndCondition(ControlCondition):
@@ -714,7 +721,7 @@ class AndCondition(ControlCondition):
         return np.min([self._condition_1.backtrack, self._condition_2.backtrack])
 
     def requires(self):
-        return self._condition_1.requires() + self._condition_2.requires()
+        return self._condition_1.requires().update(self._condition_2.requires())
 
 
 class _CloseCVCondition(ControlCondition):
@@ -728,7 +735,7 @@ class _CloseCVCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._cv, self._start_node, self._end_node]
+        return OrderedSet([self._cv, self._start_node, self._end_node])
 
     def evaluate(self):
         """
@@ -760,7 +767,7 @@ class _OpenCVCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._cv, self._start_node, self._end_node]
+        return OrderedSet([self._cv, self._start_node, self._end_node])
 
     def evaluate(self):
         """
@@ -799,7 +806,7 @@ class _ClosePowerPumpCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._pump, self._start_node, self._end_node]
+        return OrderedSet([self._pump, self._start_node, self._end_node])
 
     def evaluate(self):
         """
@@ -829,7 +836,7 @@ class _OpenPowerPumpCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._pump, self._start_node, self._end_node]
+        return OrderedSet([self._pump, self._start_node, self._end_node])
 
     def evaluate(self):
         """
@@ -860,7 +867,7 @@ class _CloseHeadPumpCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._pump, self._start_node, self._end_node]
+        return OrderedSet([self._pump, self._start_node, self._end_node])
 
     def evaluate(self):
         """
@@ -894,7 +901,7 @@ class _OpenHeadPumpCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._pump, self._start_node, self._end_node]
+        return OrderedSet([self._pump, self._start_node, self._end_node])
 
     def evaluate(self):
         """
@@ -922,7 +929,7 @@ class _ClosePRVCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._prv]
+        return OrderedSet([self._prv])
 
     def evaluate(self):
         if self._prv._internal_status == LinkStatus.Active:
@@ -958,7 +965,7 @@ class _OpenPRVCondition(ControlCondition):
         self._r = 0.0826 * 0.02 * self._prv.diameter ** (-4) * 2.0
 
     def requires(self):
-        return [self._prv, self._start_node, self._end_node]
+        return OrderedSet([self._prv, self._start_node, self._end_node])
 
     def evaluate(self):
         if self._prv._internal_status == LinkStatus.Active:
@@ -997,7 +1004,7 @@ class _ActivePRVCondition(ControlCondition):
         self._r = 0.0826 * 0.02 * self._prv.diameter ** (-4) * 2.0
 
     def requires(self):
-        return [self._prv, self._start_node, self._end_node]
+        return OrderedSet([self._prv, self._start_node, self._end_node])
 
     def evaluate(self):
         if self._prv._internal_status == LinkStatus.Active:
@@ -1039,7 +1046,7 @@ class _OpenFCVCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._fcv, self._start_node, self._end_node]
+        return OrderedSet([self._fcv, self._start_node, self._end_node])
 
     def evaluate(self):
         if self._start_node.head - self._end_node.head < -self._Htol:
@@ -1067,7 +1074,7 @@ class _ActiveFCVCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._fcv, self._start_node, self._end_node]
+        return OrderedSet([self._fcv, self._start_node, self._end_node])
 
     def evaluate(self):
         if self._start_node.head - self._end_node.head < -self._Htol:
@@ -1090,7 +1097,7 @@ class _ValveNewSettingCondition(ControlCondition):
         self._valve = valve
 
     def requires(self):
-        return [self._valve]
+        return OrderedSet([self._valve])
 
     def evaluate(self):
         if self._valve.setting != self._valve._prev_setting:
@@ -1112,7 +1119,7 @@ class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
 
     @abc.abstractmethod
     def requires(self):
-        """Returns a list of objects used to evaluate the control"""
+        """Returns a set of objects used to evaluate the control"""
         pass
 
     @abc.abstractmethod
@@ -1150,7 +1157,7 @@ class ControlAction(BaseControlAction):
         self._value = value
 
     def requires(self):
-        return [self._target_obj]
+        return OrderedSet([self._target_obj])
 
     def __repr__(self):
         return '<ControlAction: {}, {}, {}>'.format(str(self._target_obj), str(self._attribute), str(self._repr_value()))
@@ -1229,7 +1236,7 @@ class _InternalControlAction(BaseControlAction):
         -------
         required_objects: list of object
         """
-        return [self._target_obj]
+        return OrderedSet([self._target_obj])
 
     def run_control_action(self):
         """
@@ -1333,7 +1340,7 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
     @abc.abstractmethod
     def requires(self):
         """Returns a list of objects required to evaluate this control"""
-        return []
+        return OrderedSet()
 
     @abc.abstractmethod
     def actions(self):
@@ -1343,7 +1350,7 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
 class Control(ControlBase):
     """If-Then[-Else] contol
     """
-    def __init__(self, condition, then_actions, else_actions=None, priority=ControlPriority.very_low, name=None, control_type='wntr'):
+    def __init__(self, condition, then_actions, else_actions=None, priority=ControlPriority.medium, name=None):
         if not isinstance(condition, ControlCondition):
             raise ValueError('The conditions argument must be a ControlCondition instance')
         self._condition = condition
@@ -1362,22 +1369,20 @@ class Control(ControlBase):
         self._which = None
         self._priority = priority
         self._name = name
-        self._control_type = control_type
         if self._name is None:
             self._name = ''
+        self._control_type = _ControlType.rule
 
     @property
     def epanet_control_type(self):
-        if self._control_type.lower() in ['rule','conditional_control','time_control']:
-            return self._control_type
-        return None
+        return self._control_type
 
     def requires(self):
         req = self._condition.requires()
         for action in self._then_actions:
-            req += action.requires()
+            req.update(action.requires())
         for action in self._else_actions:
-            req += action.requires()
+            req.update(action.requires())
         return req
 
     def actions(self):
@@ -1416,7 +1421,7 @@ class Control(ControlBase):
             text += ' with priority {}'.format(self._priority)
         return text
 
-    def is_control_action_required(self, wnm, presolve_flag):
+    def is_control_action_required(self):
         """
         This implements the derived method from Control.
         
@@ -1430,30 +1435,19 @@ class Control(ControlBase):
         """
         do = self._condition.evaluate()
         back = self._condition.backtrack
-        if not presolve_flag:
-            back = 0
         if do:
             self._which = 'then'
             return True, back
         elif not do and self._else_actions is not None and len(self._else_actions) > 0:
             self._which = 'else'
-            return (True, back)
+            return True, back
         else:
-            return (False, None)
+            return False, None
 
-    def run_control_action(self, wnm, priority):
+    def run_control_action(self):
         """
         This implements the derived method from Control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated/modified.
-        priority : int
-            A priority value. The action is only run if priority == self._priority.
         """
-        if self._priority != priority:
-            return None
         if self._which == 'then':
             for control_action in self._then_actions:
                 control_action.run_control_action()
@@ -1483,19 +1477,29 @@ class Control(ControlBase):
         else:
             raise ValueError("time_flag not recognized; expected either 'sim_time' or 'clock_time'")
 
-        return Control(condition=condition, then_actions=[control_action], else_actions=[], control_type='time_control', name=name)
+        control = Control(condition=condition, then_actions=[control_action], else_actions=[])
+        control._control_type = _ControlType.presolve
+
+        return control
 
     @classmethod
     def conditional_control(cls, source_obj, source_attr, operation, threshold, control_action, name=None):
         """Create an EPANET Simple conditional control"""
         condition = ValueCondition(source_obj=source_obj, source_attr=source_attr, relation=operation,
                                    threshold=threshold)
-        return Control(condition=condition, then_actions=[control_action], else_actions=[], control_type='conditional_control', name=name)
+        control = Control(condition=condition, then_actions=[control_action], else_actions=[])
+        if isinstance(condition, TankLevelCondition):
+            control._control_type = _ControlType.pre_and_postsolve
+        else:
+            control._control_type = _ControlType.postsolve
+        return control
 
 
 class ControlManager(Observer):
     def __init__(self, model):
         self._controls = OrderedSet()
+        """OrderedSet of Control"""
+
         self._previous_values = OrderedDict()  # {(obj, attr): value}
         self._changed = OrderedSet()  # set of (obj, attr) that has been changed from _previous_values
         self._node_reg = model.nodes
@@ -1535,16 +1539,12 @@ class ControlManager(Observer):
                 self._link_reg.add_usage(elem.name, (control.name, 'Control'))
 
     def reset(self):
+        self._changed = OrderedSet()
         self._previous_values = OrderedDict()
         for control in self._controls:
             for action in control.actions():
                 for obj, attr in action.targets():
                     self._previous_values[(obj, attr)] = getattr(obj, attr)
-
-    def update_previous_values(self):
-        for obj, attr in self._changed:
-            self._previous_values[(obj, attr)] = getattr(obj, attr)
-        self._changed.clear()
 
     def changes_made(self):
         if len(self._changed) > 0:
@@ -1554,3 +1554,26 @@ class ControlManager(Observer):
     def get_changes(self):
         for obj, attr in self._changed:
             yield obj, attr
+
+    def deregister(self, control):
+        """
+        Deregister a control with the ControlManager
+
+        Parameters
+        ----------
+        control: Control
+        """
+        self._controls.remove(control)
+        for action in control.actions():
+            action.unsubscribe(self)
+            for obj, attr in action.targets():
+                self._previous_values.pop((obj, attr))
+                self._changed.discard((obj, attr))
+
+    def check(self):
+        controls_to_run = []
+        for c in self._controls:
+            do, back = c.is_control_action_required()
+            if do:
+                controls_to_run.append((c, back))
+        return controls_to_run

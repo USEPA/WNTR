@@ -65,18 +65,12 @@ class HydraulicModel(object):
 
         # network input objects
         # these objects use node/link ids rather than names
-        # self._prev_tank_head = {}
         self.tank_head = {}
-        # self._prev_reservoir_head = {}
         self.reservoir_head = {}
-        # self._prev_junction_demand = {}
         self.junction_demand = np.zeros(self.num_junctions)
-        # self._prev_link_status = {}
         self.link_status = {}
         self.closed_links = set()
-        # self._prev_valve_settings = {}
         self.valve_settings = {}
-        # self._prev_pump_speeds = {}
         self.pump_speeds = {}
 
         self.isolated_junction_names = []
@@ -1092,30 +1086,6 @@ class HydraulicModel(object):
                 leak_demand[self._leak_idx[node_id]] = node.leak_demand
         return leak_demand
 
-    def update_initializations(self, x):
-        #head = x[:self.num_nodes]
-        #demand = x[self.num_nodes:self.num_nodes*2]
-        #flow = x[self.num_nodes*2:(2*self.num_nodes+self.num_links)]
-        #leak_demand = x[(2*self.num_nodes+self.num_links):]
-
-        for junction_id in self.isolated_junction_ids:
-            x[junction_id] = 0.0 # head = 0
-            x[self.num_nodes+junction_id] = 0.0 # demand = 0
-        for link_id in self._pipe_ids:
-            if self.link_status[link_id]==wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
-                x[2*self.num_nodes+link_id] = 0.0 # flow = 0
-        for link_id in self._pump_ids:
-            if self.link_status[link_id]==wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
-                x[2*self.num_nodes+link_id] = 0.0 # flow = 0
-        for link_id in self._valve_ids:
-            if self.link_status[link_id]==wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
-                x[2*self.num_nodes+link_id] = 0.0 # flow = 0
-        for node_id in self._leak_ids:
-            if node_id in self.isolated_junction_ids or self.leak_status[node_id]==False:
-                leak_idx = self._leak_idx[node_id]
-                x[2*self.num_nodes+self.num_links+leak_idx] = 0.0
-        return x
-
     def initialize_results_dict(self):
         # Data for results object
         self._sim_results = {}
@@ -1272,7 +1242,6 @@ class HydraulicModel(object):
         for valve_name, valve in self._wn.links(Valve):
             valve_id = self._link_name_to_id[valve_name]
             self.valve_settings[valve_id] = valve.setting
-            self.link_status[valve_id] = valve._status
             self.pipe_minor_loss_coefficients[valve_id] = (8.0 * valve.minor_loss /
                                                            (self._g * math.pi ** 2 * valve.diameter ** 4))
             if valve.valve_type == 'TCV':
@@ -1283,8 +1252,6 @@ class HydraulicModel(object):
         for pump_name, pump in self._wn.links(Pump):
             pump_id = self._link_name_to_id[pump_name]
             self.pump_speeds[pump_id] = pump.speed_timeseries(self._wn.sim_time)
-            if pump._cv_status == wntr.network.LinkStatus.closed:
-                self.link_status[pump_id] = wntr.network.LinkStatus(pump._cv_status)
         for link_id in self._link_ids:
             if self.link_status[link_id] == wntr.network.LinkStatus.closed:
                 self.closed_links.add(link_id)
@@ -1300,7 +1267,7 @@ class HydraulicModel(object):
         self.isolated_junction_names = set()
         self.isolated_link_names = set()
 
-    def identify_isolated_junctions(self, isolated_junction_names, isolated_link_names):
+    def set_isolated_junctions_and_links(self, isolated_junction_names, isolated_link_names):
         # self.isolated_junction_names, self.isolated_link_names = self._wn._get_isolated_junctions()
         self.isolated_junction_names = isolated_junction_names
         self.isolated_link_names = isolated_link_names
@@ -1312,24 +1279,7 @@ class HydraulicModel(object):
 
     def update_network_previous_values(self):
         self._wn._prev_sim_time = self._wn.sim_time
-        for name, node in self._wn.nodes(Junction):
-            node._prev_head = node.head
-            node._prev_demand = node.demand
-            node._prev_leak_demand = node.leak_demand
-        for name, node in self._wn.nodes(Tank):
-            node._prev_head = node.head
-            node._prev_demand = node.demand
-            node._prev_leak_demand = node.leak_demand
-        for name, node in self._wn.nodes(Reservoir):
-            node._prev_head = node.head
-            node._prev_demand = node.demand
-        for link_name, link in self._wn.links(Pipe):
-            link._prev_flow = link.flow
-        for link_name, link in self._wn.links(Pump):
-            link._prev_flow = link.flow
-            link._prev_power_outage = link._power_outage
-        for link_name, link in self._wn.links(Valve):
-            link._prev_flow = link.flow
+        for link_name, link in self._wn.valves():
             link._prev_setting = link.setting
 
     def store_results_in_network(self, x):
