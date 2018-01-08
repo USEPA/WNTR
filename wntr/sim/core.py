@@ -4,6 +4,7 @@ from wntr.network.model import *
 from wntr.sim.solvers import *
 from wntr.sim.results import *
 from wntr.network.model import *
+from wntr.network.controls import ControlManager, _ControlType
 import numpy as np
 import warnings
 import time
@@ -143,12 +144,22 @@ class WNTRSimulator(WaterNetworkSimulator):
         """
         self.time_per_step = []
 
-        tank_controls = self._wn._get_all_tank_controls()
-        cv_controls = self._wn._get_cv_controls()
-        pump_controls = self._wn._get_pump_controls()
-        valve_controls = self._wn._get_valve_controls()
+        self._presolve_controls = ControlManager()
+        self._postsolve_controls = ControlManager()
+        self._rules = ControlManager()
 
-        self._controls = list(self._wn._controls.values())+tank_controls+cv_controls+pump_controls+valve_controls
+        def categorize_control(control):
+            if control._control_type in {_ControlType.presolve, _ControlType.pre_and_postsolve}:
+                self._presolve_controls.register_control(control)
+            if control._control_type in {_ControlType.postsolve, _ControlType.pre_and_postsolve}:
+                self._postsolve_controls.register_control(control)
+            if control._control_type == _ControlType.rule:
+                self._rules.register_control(control)
+
+        for c_name, c in self._wn.controls():
+            categorize_control(c)
+        for c in self._wn._get_all_tank_controls() + self._wn._get_cv_controls() + self._wn._get_pump_controls() + self._wn._get_valve_controls():
+            categorize_control(c)
 
         model = HydraulicModel(self._wn, self.mode)
         self._model = model
@@ -159,11 +170,6 @@ class WNTRSimulator(WaterNetworkSimulator):
         results = NetResults()
         results.error_code = 0
         results.time = []
-        # if self._wn.sim_time%self._wn.options.time.hydraulic_timestep!=0:
-        #     results_start_time = int(round((self._wn.options.time.hydraulic_timestep-(self._wn.sim_time%self._wn.options.time.hydraulic_timestep))+self._wn.sim_time))
-        # else:
-        #     results_start_time = int(round(self._wn.sim_time))
-        # results.time = np.arange(results_start_time, self._wn.options.time.duration+self._wn.options.time.hydraulic_timestep, self._wn.options.time.hydraulic_timestep)
 
         # Initialize X
         # Vars will be ordered:
@@ -180,18 +186,17 @@ class WNTRSimulator(WaterNetworkSimulator):
         X_init = np.concatenate((head0, demand0, flow0,leak_demand0))
 
         self._initialize_internal_graph()
-        self._control_log = wntr.network.ControlLogger()
 
-        if self._wn.sim_time==0:
+        if self._wn.sim_time == 0:
             first_step = True
         else:
             first_step = False
         trial = -1
         max_trials = self._wn.options.solver.trials
         resolve = False
+        rule_iter = 0
 
         while True:
-
             logger.debug(' ')
             logger.debug(' ')
 
@@ -200,41 +205,76 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             if not resolve:
                 trial = 0
-                #print 'presolve = True'
-                last_backup_time = np.inf
-                while True:
-                    backup_time, controls_to_activate = self._check_controls(presolve=True,last_backup_time=last_backup_time)
-                    changes_made_flag = self._run_controls(controls_to_activate)
-                    if changes_made_flag:
-                        self._wn.sim_time -= backup_time
-                        break
-                    if backup_time == 0:
-                        break
-                    last_backup_time = backup_time
+                presolve_controls_to_run = self._presolve_controls.check()
+                presolve_controls_to_run.sort(key=lambda i: i[0]._priority)
+                presolve_controls_to_run.sort(key=lambda i: i[1], reverse=True)
+                cnt = 0
+                while cnt < len(presolve_controls_to_run) or rule_iter * self._wn.options.time.rule_timestep <= self._wn.sim_time:
+                    if cnt >= len(presolve_controls_to_run):
+                        old_time = self._wn.sim_time
+                        self._wn.sim_time = rule_iter * self._wn.options.time.rule_timestep
+                        rule_iter += 1
+                        rules_to_run = self._rules.check()
+                        rules_to_run.sort(key=lambda i: i[0]._priority)
+                        for rule, rule_back in rules_to_run:
+                            rule.run_control_action()
+                        if self._rules.changes_made():
+                            break
+                        self._wn.sim_time = old_time
+                    else:
+                        control, backtrack = presolve_controls_to_run[cnt]
+                        if self._wn.sim_time - backtrack < rule_iter * self._wn.options.time.rule_timestep:
+                            control.run_control_action()
+                            cnt += 1
+                            while presolve_controls_to_run[cnt][1] == backtrack:
+                                presolve_controls_to_run[cnt][0].run_control_action()
+                                cnt += 1
+                            if self._presolve_controls.changes_made():
+                                self._wn.sim_time -= backtrack
+                                break
+                        elif self._wn.sim_time - backtrack == rule_iter * self._wn.options.time.rule_timestep:
+                            rule_iter += 1
+                            self._wn.sim_time -= backtrack
+                            rules_to_run = self._rules.check()
+                            rules_to_run.sort(key=lambda i: i[0]._priority)
+                            for rule, rule_back in rules_to_run:
+                                rule.run_control_action()
+                            control.run_control_action()
+                            cnt += 1
+                            while presolve_controls_to_run[cnt][1] == backtrack:
+                                presolve_controls_to_run[cnt][0].run_control_action()
+                                cnt += 1
+                            if self._presolve_controls.changes_made() or self._rules.changes_made():
+                                break
+                            self._wn.sim_time += backtrack
+                        else:
+                            old_time = self._wn.sim_time
+                            self._wn.sim_time = rule_iter * self._wn.options.time.rule_timestep
+                            rule_iter += 1
+                            rules_to_run = self._rules.check()
+                            rules_to_run.sort(key=lambda i: i[0]._priority)
+                            for rule, rule_back in rules_to_run:
+                                rule.run_control_action()
+                            if self._rules.changes_made():
+                                break
+                            self._wn.sim_time = old_time
+                self._update_internal_graph()
+                self._presolve_controls.reset()
+                self._rules.reset()
 
             logger.info('simulation time = %s, trial = %d',self._get_time(),trial)
 
             # Prepare for solve
-            #model.reset_isolated_junctions()
             isolated_junctions, isolated_links = self._get_isolated_junctions_and_links()
-            model.identify_isolated_junctions(isolated_junctions, isolated_links)
-            # model.identify_isolated_junctions()
+            model.set_isolated_junctions_and_links(isolated_junctions, isolated_links)
             if not first_step:
                 model.update_tank_heads()
             model.set_network_inputs_by_id()
             model.set_jacobian_constants()
 
             # Solve
-            #X_init = model.update_initializations(X_init)
             [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
-            #if solver_status == 0:
-            #    model.identify_isolated_junctions()
-            #    model.set_network_inputs_by_id()
-            #    model.set_jacobian_constants()
-            #    [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             if solver_status == 0:
-                #model.check_infeasibility(self._X)
-                #raise RuntimeError('No solution found.')
                 if convergence_error:
                     raise RuntimeError('Simulation did not converge!')
                 warnings.warn('Simulation did not converge!')
@@ -247,154 +287,46 @@ class WNTRSimulator(WaterNetworkSimulator):
             # Enter results in network and update previous inputs
             model.store_results_in_network(self._X)
 
-            #print 'presolve = False'
-            resolve, resolve_controls_to_activate = self._check_controls(presolve=False)
-            if resolve or solver_status==0:
+            postsolve_controls_to_run = self._postsolve_controls.check()
+            postsolve_controls_to_run.sort(key=lambda i: i[0]._priority)
+            for control, unused in postsolve_controls_to_run:
+                control.run_control_action()
+            if self._postsolve_controls.changes_made():
+                resolve = True
+                self._update_internal_graph()
+                self._postsolve_controls.reset()
                 trial += 1
-                all_controls_to_activate = controls_to_activate+resolve_controls_to_activate
-                changes_made_flag = self._run_controls(all_controls_to_activate)
-                if changes_made_flag:
-                    if trial > max_trials:
-                        if convergence_error:
-                            raise RuntimeError('Exceeded maximum number of trials.')
-                        results.error_code = 2
-                        warnings.warn('Exceeded maximum number of trials.')
-                        logger.warning('Exceeded maximum number of trials at time %s',self._get_time())
-                        model.get_results(results)
-                        return results
-                    continue
-                else:
-                    if solver_status==0:
-                        results.error_code = 2
-                        raise RuntimeError('failed to converge')
-                    resolve = False
+                if trial > max_trials:
+                    if convergence_error:
+                        raise RuntimeError('Exceeded maximum number of trials.')
+                    results.error_code = 2
+                    warnings.warn('Exceeded maximum number of trials.')
+                    logger.warning('Exceeded maximum number of trials at time %s', self._get_time())
+                    model.get_results(results)
+                    return results
+                continue
 
-            if type(self._wn.options.time.report_timestep)==float or type(self._wn.options.time.report_timestep)==int:
-                if self._wn.sim_time%self._wn.options.time.report_timestep == 0:
+            resolve = False
+            if type(self._wn.options.time.report_timestep) == float or type(self._wn.options.time.report_timestep) == int:
+                if self._wn.sim_time % self._wn.options.time.report_timestep == 0:
                     model.save_results(self._X, results)
                     results.time.append(int(self._wn.sim_time))
-            elif self._wn.options.time.report_timestep.upper()=='ALL':
+            elif self._wn.options.time.report_timestep.upper() == 'ALL':
                 model.save_results(self._X, results)
                 results.time.append(int(self._wn.sim_time))
             model.update_network_previous_values()
             first_step = False
             self._wn.sim_time += self._wn.options.time.hydraulic_timestep
-            overstep = float(self._wn.sim_time)%self._wn.options.time.hydraulic_timestep
+            overstep = float(self._wn.sim_time) % self._wn.options.time.hydraulic_timestep
             self._wn.sim_time -= overstep
 
             if self._wn.sim_time > self._wn.options.time.duration:
                 break
 
-            if not resolve:
-                self.time_per_step.append(time.time()-start_step_time)
+            self.time_per_step.append(time.time()-start_step_time)
 
         model.get_results(results)
         return results
-
-    def _check_controls(self, presolve, last_backup_time=None):
-        if presolve:
-            assert last_backup_time is not None
-            backup_time = 0.0
-            controls_to_activate = []
-            controls_to_activate_regardless_of_time = []
-            for i in range(len(self._controls)):
-                control = self._controls[i]
-                control_tuple = control.IsControlActionRequired(self._wn, presolve)
-                assert type(control_tuple[1]) == int or control_tuple[1] == None, 'control backup time should be an int. back up time = '+str(control_tuple[1])
-                if control_tuple[0] and control_tuple[1]==None:
-                    controls_to_activate_regardless_of_time.append(i)
-                elif control_tuple[0] and control_tuple[1] > backup_time and control_tuple[1]<last_backup_time:
-                    controls_to_activate = [i]
-                    backup_time = control_tuple[1]
-                elif control_tuple[0] and control_tuple[1] == backup_time:
-                    controls_to_activate.append(i)
-            assert backup_time <= self._wn.options.time.hydraulic_timestep, 'Backup time is larger than hydraulic timestep'
-            return backup_time, (controls_to_activate+controls_to_activate_regardless_of_time)
-
-        else:
-            resolve = False
-            resolve_controls_to_activate = []
-            for i, control in enumerate(self._controls):
-                control_tuple = control.IsControlActionRequired(self._wn, presolve)
-                if control_tuple[0]:
-                    resolve = True
-                    resolve_controls_to_activate.append(i)
-            return resolve, resolve_controls_to_activate
-
-    def _run_controls(self, controls_to_activate):
-        changes_made = False
-        change_dict = {}
-        for i in controls_to_activate:
-            control = self._controls[i]
-            change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 0)
-            if change_flag:
-                if isinstance(change_tuple, list):
-                    for ct in range(len(change_tuple)):
-                        if change_tuple[ct] not in change_dict:
-                            change_dict[change_tuple[ct]] = (orig_value[ct], control.name)
-                elif change_tuple not in change_dict:
-                    change_dict[change_tuple] = (orig_value, control.name)
-
-        for i in controls_to_activate:
-            control = self._controls[i]
-            change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 1)
-            if change_flag:
-                if isinstance(change_tuple, list):
-                    for ct in range(len(change_tuple)):
-                        if change_tuple[ct] not in change_dict:
-                            change_dict[change_tuple[ct]] = (orig_value[ct], control.name)
-                elif change_tuple not in change_dict:
-                    change_dict[change_tuple] = (orig_value, control.name)
-
-        for i in controls_to_activate:
-            control = self._controls[i]
-            change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 2)
-            if change_flag:
-                if isinstance(change_tuple, list):
-                    for ct in range(len(change_tuple)):
-                        if change_tuple[ct] not in change_dict:
-                            change_dict[change_tuple[ct]] = (orig_value[ct], control.name)
-                elif change_tuple not in change_dict:
-                    change_dict[change_tuple] = (orig_value, control.name)
-
-        for i in controls_to_activate:
-            control = self._controls[i]
-            change_flag, change_tuple, orig_value = control.RunControlAction(self._wn, 3)
-            if change_flag:
-                if isinstance(change_tuple, list):
-                    for ct in range(len(change_tuple)):
-                        if change_tuple[ct] not in change_dict:
-                            change_dict[change_tuple[ct]] = (orig_value[ct], control.name)
-                elif change_tuple not in change_dict:
-                    change_dict[change_tuple] = (orig_value, control.name)
-
-        self._control_log.reset()
-
-        self._align_valve_statuses()
-
-        for change_tuple, orig_value_control_name in change_dict.items():
-            orig_value = orig_value_control_name[0]
-            control_name = orig_value_control_name[1]
-            if orig_value!=getattr(change_tuple[0],change_tuple[1]):
-                changes_made = True
-                self._control_log.add(change_tuple[0],change_tuple[1])
-                logger.debug('setting {0} {1} to {2} because of control {3}'.format(change_tuple[0].name,change_tuple[1],getattr(change_tuple[0],change_tuple[1]),control_name))
-
-        self._update_internal_graph()
-
-        return changes_made
-
-    def _align_valve_statuses(self):
-        for valve_name, valve in self._wn.links(Valve):
-            if valve.valve_type == 'TCV':
-                valve._status = valve.status
-            else:
-                if valve.status==wntr.network.LinkStatus.opened:
-                    valve._status = valve.status
-                    #print 'setting ',valve.name(),' _status to ',valve.status
-                elif valve.status==wntr.network.LinkStatus.closed:
-                    valve._status = valve.status
-                    #print 'setting ',valve.name(),' _status to ',valve.status
 
     def _initialize_internal_graph(self):
         n_links = {}
@@ -518,70 +450,17 @@ class WNTRSimulator(WaterNetworkSimulator):
     def _update_internal_graph(self):
         data = self._internal_graph.data
         ndx_map = self._map_link_to_internal_graph_data_ndx
-        for obj_name, obj in self._control_log.changed_objects.items():
-            changed_attrs = self._control_log.changed_attributes[obj_name]
-            if type(obj) == wntr.network.Pipe:
-                if 'status' in changed_attrs:
-                    if obj.status == wntr.network.LinkStatus.opened:
-                        ndx1, ndx2 = ndx_map[obj]
-                        data[ndx1] = 1
-                        data[ndx2] = 1
-                    elif obj.status == wntr.network.LinkStatus.closed:
-                        ndx1, ndx2 = ndx_map[obj]
-                        data[ndx1] = 0
-                        data[ndx2] = 0
-                    else:
-                        raise RuntimeError('Pipe status not recognized: %s', getattr(obj, 'status'))
-            elif type(obj) == wntr.network.Pump:
-                if 'status' in changed_attrs and '_cv_status' in changed_attrs:
-                    if obj.status == wntr.network.LinkStatus.closed and obj._cv_status == wntr.network.LinkStatus.closed:
-                        ndx1, ndx2 = ndx_map[obj]
-                        data[ndx1] = 0
-                        data[ndx2] = 0
-                    elif obj.status == wntr.network.LinkStatus.opened and obj._cv_status == wntr.network.LinkStatus.opened:
-                        ndx1, ndx2 = ndx_map[obj]
-                        data[ndx1] = 1
-                        data[ndx2] = 1
-                    else:
-                        pass
-                elif 'status' in changed_attrs:
+        for mgr in [self._presolve_controls, self._rules, self._postsolve_controls]:
+            for obj, attr in mgr.get_changes():
+                if 'status' == attr:
                     if obj.status == wntr.network.LinkStatus.closed:
-                        if obj._cv_status == wntr.network.LinkStatus.opened:
-                            ndx1, ndx2 = ndx_map[obj]
-                            data[ndx1] = 0
-                            data[ndx2] = 0
-                    elif obj.status == wntr.network.LinkStatus.opened:
-                        if obj._cv_status == wntr.network.LinkStatus.opened:
-                            ndx1, ndx2 = ndx_map[obj]
-                            data[ndx1] = 1
-                            data[ndx2] = 1
-                elif '_cv_status' in changed_attrs:
-                    if obj._cv_status == wntr.network.LinkStatus.closed:
-                        if obj.status == wntr.network.LinkStatus.opened:
-                            ndx1, ndx2 = ndx_map[obj]
-                            data[ndx1] = 0
-                            data[ndx2] = 0
-                    elif obj._cv_status == wntr.network.LinkStatus.opened:
-                        if obj.status == wntr.network.LinkStatus.opened:
-                            ndx1, ndx2 = ndx_map[obj]
-                            data[ndx1] = 1
-                            data[ndx2] = 1
-            elif type(obj) == wntr.network.Valve:
-                if ((obj.status == wntr.network.LinkStatus.opened or
-                             obj.status == wntr.network.LinkStatus.active) and
-                        (obj._status == wntr.network.LinkStatus.opened or
-                                 obj._status == wntr.network.LinkStatus.active)):
-                    ndx1, ndx2 = ndx_map[obj]
-                    data[ndx1] = 1
-                    data[ndx2] = 1
-                elif obj.status == wntr.network.LinkStatus.closed:
-                    ndx1, ndx2 = ndx_map[obj]
-                    data[ndx1] = 0
-                    data[ndx2] = 0
-                elif obj.status == wntr.network.LinkStatus.active and obj._status == wntr.network.LinkStatus.closed:
-                    ndx1, ndx2 = ndx_map[obj]
-                    data[ndx1] = 0
-                    data[ndx2] = 0
+                        ndx1, ndx2 = ndx_map[obj]
+                        data[ndx1] = 0
+                        data[ndx2] = 0
+                    else:
+                        ndx1, ndx2 = ndx_map[obj]
+                        data[ndx1] = 1
+                        data[ndx2] = 1
 
         for key, link_list in self._node_pairs_with_multiple_links.items():
             from_node_id = key[0]
@@ -591,41 +470,12 @@ class WNTRSimulator(WaterNetworkSimulator):
             data[ndx1] = 0
             data[ndx2] = 0
             for link in link_list:
-                if isinstance(link, wntr.network.Pipe):
-                    if link.status != wntr.network.LinkStatus.closed:
-                        ndx1, ndx2 = ndx_map[link]
-                        data[ndx1] = 1
-                        data[ndx2] = 1
-                elif isinstance(link, wntr.network.Pump):
-                    if link.status != wntr.network.LinkStatus.closed and link._cv_status != wntr.network.LinkStatus.closed:
-                        ndx1, ndx2 = ndx_map[link]
-                        data[ndx1] = 1
-                        data[ndx2] = 1
-                elif isinstance(link, wntr.network.Valve):
-                    if link.status != wntr.network.LinkStatus.closed and link._status != wntr.network.LinkStatus.closed:
-                        ndx1, ndx2 = ndx_map[link]
-                        data[ndx1] = 1
-                        data[ndx2] = 1
-                else:
-                    raise RuntimeError('Unrecognized link type.')
+                if link.status != wntr.network.LinkStatus.closed:
+                    ndx1, ndx2 = ndx_map[link]
+                    data[ndx1] = 1
+                    data[ndx2] = 1
 
     def _get_isolated_junctions_and_links(self):
-
-        # isolated_junctions = set()
-        # isolated_links = set()
-        # n = 1
-        # for subG in nx.connected_component_subgraphs(self._internal_graph):
-        #     print 'subgraph ',n
-        #     n += 1
-        #     # print subG.nodes()
-        #     type_list = [i[1]['type'] for i in subG.nodes_iter(data=True)]
-        #     if 'tank' in type_list or 'reservoir' in type_list:
-        #         continue
-        #     else:
-        #         isolated_junctions = isolated_junctions.union(set(subG.nodes()))
-        #         for start_node, end_node, key in subG.edges_iter(keys=True):
-        #             isolated_links.add(key)
-        # return isolated_junctions, isolated_links
 
         node_set = [1 for i in range(self._model.num_nodes)]
 

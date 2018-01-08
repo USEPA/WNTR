@@ -1092,30 +1092,6 @@ class HydraulicModel(object):
                 leak_demand[self._leak_idx[node_id]] = node.leak_demand
         return leak_demand
 
-    def update_initializations(self, x):
-        #head = x[:self.num_nodes]
-        #demand = x[self.num_nodes:self.num_nodes*2]
-        #flow = x[self.num_nodes*2:(2*self.num_nodes+self.num_links)]
-        #leak_demand = x[(2*self.num_nodes+self.num_links):]
-
-        for junction_id in self.isolated_junction_ids:
-            x[junction_id] = 0.0 # head = 0
-            x[self.num_nodes+junction_id] = 0.0 # demand = 0
-        for link_id in self._pipe_ids:
-            if self.link_status[link_id]==wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
-                x[2*self.num_nodes+link_id] = 0.0 # flow = 0
-        for link_id in self._pump_ids:
-            if self.link_status[link_id]==wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
-                x[2*self.num_nodes+link_id] = 0.0 # flow = 0
-        for link_id in self._valve_ids:
-            if self.link_status[link_id]==wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
-                x[2*self.num_nodes+link_id] = 0.0 # flow = 0
-        for node_id in self._leak_ids:
-            if node_id in self.isolated_junction_ids or self.leak_status[node_id]==False:
-                leak_idx = self._leak_idx[node_id]
-                x[2*self.num_nodes+self.num_links+leak_idx] = 0.0
-        return x
-
     def initialize_results_dict(self):
         # Data for results object
         self._sim_results = {}
@@ -1300,7 +1276,7 @@ class HydraulicModel(object):
         self.isolated_junction_names = set()
         self.isolated_link_names = set()
 
-    def identify_isolated_junctions(self, isolated_junction_names, isolated_link_names):
+    def set_isolated_junctions_and_links(self, isolated_junction_names, isolated_link_names):
         # self.isolated_junction_names, self.isolated_link_names = self._wn._get_isolated_junctions()
         self.isolated_junction_names = isolated_junction_names
         self.isolated_link_names = isolated_link_names
