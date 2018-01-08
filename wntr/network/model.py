@@ -22,6 +22,7 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
     _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison
+from collections import OrderedDict
 
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ class WaterNetworkModel(object):
         self._curves = {}
         self._sources = {}
         self._demands = {}
-        self._controls = {}
+        self._controls = OrderedDict()
 
         # Initialize options object
         self.options = WaterNetworkOptions()
