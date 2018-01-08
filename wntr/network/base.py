@@ -1,14 +1,10 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
 """
-
+The wntr.network.base module includes base classes for network elements and 
+the network model.
 """
-
-import copy
 import logging
 import six
 from six import string_types
-import warnings
 
 import enum
 import sys
@@ -21,15 +17,13 @@ from wntr.utils.ordered_set import OrderedSet
 
 import abc
 
-import numpy as np
-import networkx as nx
-
-from .options import TimeOptions, HydraulicOptions, WaterNetworkOptions
-
 logger = logging.getLogger(__name__)
 
 
 class AbstractModel(six.with_metaclass(abc.ABCMeta, object)):
+    """
+    Abstract water network model class.
+    """
     @property
     @abc.abstractmethod
     def options(self): pass
@@ -61,7 +55,7 @@ class AbstractModel(six.with_metaclass(abc.ABCMeta, object)):
 
 class Subject(object):
     """
-    A subject base class for the observer design pattern
+    Subject base class for the observer design pattern.
     """
     def __init__(self):
         self._observers = OrderedSet()
@@ -78,6 +72,9 @@ class Subject(object):
 
 
 class Observer(six.with_metaclass(abc.ABCMeta, object)):
+    """
+    Observer base class for the observer design pattern.
+    """
     @abc.abstractmethod
     def update(self, subject):
         pass
@@ -85,7 +82,7 @@ class Observer(six.with_metaclass(abc.ABCMeta, object)):
 
 class Node(six.with_metaclass(abc.ABCMeta, object)):
     """
-    The base node class.
+    Node base class.
 
     Parameters
     -----------
@@ -120,10 +117,6 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     def __hash__(self):
         return hash('Node/'+self._name)
 
-    @property
-    def node_type(self):
-        return 'Node'
-
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -134,17 +127,19 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         return False
 
     def __str__(self):
-        """
-        Returns the name of the node when printing to a stream.
-        """
         return self._name
 
     def __repr__(self):
         return "<Node '{}'>".format(self._name)
 
     @property
+    def node_type(self):
+        """Returns the node type"""
+        return 'Node'
+    
+    @property
     def name(self):
-        """Returns the name of the node."""
+        """Returns the name of the node"""
         return self._name
     
     @property
@@ -153,13 +148,23 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         if not self._initial_quality:
             return 0.0
         return self._initial_quality
-
     @initial_quality.setter
     def initial_quality(self, value):
         if value and not isinstance(value, (list, float, int)):
             raise ValueError('Initial quality must be a float or a list')
         self._initial_quality = value
 
+    @property
+    def coordinates(self):
+        """Returns the node coordinates"""
+        return self._coordinates
+    @coordinates.setter
+    def coordinates(self, coordinates):
+        if isinstance(coordinates, (list, tuple)) and len(coordinates) == 2:
+            self._coordinates = tuple(coordinates)
+        else:
+            raise ValueError('coordinates must be a 2-tuple or len-2 list')
+    
     def todict(self):
         d = dict(name=self.name, 
                  node_type=self.node_type)
@@ -169,22 +174,10 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
             d['init_quality'] = self.initial_quality
         d['coordinates'] = self.coordinates
         return d
-        
-    @property
-    def coordinates(self):
-        return self._coordinates
-    
-    @coordinates.setter
-    def coordinates(self, coordinates):
-        if isinstance(coordinates, (list, tuple)) and len(coordinates) == 2:
-            self._coordinates = tuple(coordinates)
-        else:
-            raise ValueError('coordinates must be a 2-tuple or len-2 list')
-        
 
 class Link(six.with_metaclass(abc.ABCMeta, object)):
     """
-    The base link class.
+    Link base class.
 
     Parameters
     ----------
@@ -241,6 +234,12 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     def __hash__(self):
         return hash('Link/'+self._name)
+    
+    def __str__(self):
+        return self._link_name
+
+    def __repr__(self):
+        return "<Link '{}'>".format(self._link_name)
 
     @property
     def link_type(self):
@@ -264,15 +263,6 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     def initial_setting(self, setting):
         # TODO: typechecking
         self._initial_setting = setting
-
-    def __str__(self):
-        """
-        Returns the name of the link when printing to a stream.
-        """
-        return self._link_name
-
-    def __repr__(self):
-        return "<Link '{}'>".format(self._link_name)
 
     @property
     def start_node(self):
@@ -368,287 +358,10 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         return d
 
 
-class Curve(object):
-    """
-    Curve class.
-
-    Parameters
-    ----------
-    name : str
-        Name of the curve.
-    curve_type : str
-        The type of curve: None (unspecified), HEAD, HEADLOSS, VOLUME or EFFICIENCY
-    points : list
-        The points in the curve. List of 2-tuples (x,y) ordered by increasing x
-    original_units : str
-        The units the points were defined in
-    current_units : str
-        The units the points are currently defined in. This MUST be 'SI' by the time
-        one of the simulators is run.
-    options : WaterNetworkOptions, optional
-        Water network options to lookuup headloss function
-    
-    """
-    def __init__(self, name, curve_type=None, points=[], 
-                 original_units=None, current_units='SI', options=None):
-        self._name = name
-        self._curve_type = curve_type
-        self._points = points
-        self._options = options
-        self._original_units = None
-        self._current_units = 'SI'
-    
-    def todict(self):
-        d = dict(name=self._name, 
-                 curve_type=self._curve_type,
-                 points=list(self._points))
-        return d
-    
-    def set_units(self, original=None, current=None):
-        """Set the units flags for the curve.
-        
-        Use this after converting the points, if necessary, to indicate that
-        conversion to SI units is complete.
-        """
-        if original:
-            self._original_units = original
-        if current:
-            self._current_units = current
-    
-    @property
-    def original_units(self):
-        """The original units the points were written in."""
-        return self._original_units
-    
-    @property
-    def current_units(self):
-        """The current units that the points are in"""
-        return self._current_units
-    
-    @property
-    def name(self):
-        """Curve names must be unique among curves"""
-        return self._name
-    
-    @property
-    def points(self):
-        """The points in the curve. List of 2-tuples (x,y) ordered by increasing x"""
-        return self._points
-    @points.setter
-    def points(self, points):
-        self._points = copy.deepcopy(points)
-        self._points.sort()
-        
-    @property
-    def curve_type(self):
-        """The type of curve: None (unspecified), HEAD, HEADLOSS, VOLUME or EFFICIENCY"""
-        return self._curve_type
-    @curve_type.setter
-    def curve_type(self, curve_type):
-        curve_type = str(curve_type)
-        curve_type = curve_type.upper()
-        if curve_type == 'HEAD':
-            self._curve_type = 'HEAD'
-        elif curve_type == 'VOLUME':
-            self._curve_type = 'VOLUME'
-        elif curve_type == 'EFFICIENCY':
-            self._curve_type = 'EFFICIENCY'
-        elif curve_type == 'HEADLOSS':
-            self._curve_type = 'HEADLOSS'
-        else:
-            raise ValueError('curve_type must be HEAD, HEADLOSS, VOLUME, or EFFICIENCY')
-
-    def __eq__(self, other):
-        if type(self) != type(other):
-            return False
-        if self.name != other.name:
-            return False
-        if self.curve_type != other.curve_type:
-            return False
-        if self.num_points != other.num_points:
-            return False
-        for point1, point2 in zip(self.points, other.points):
-            for value1, value2 in zip(point1, point2):
-                if abs(value1 - value2) > 1e-8:
-                    return False
-        return True
-
-    def __hash__(self):
-        return hash('Curve/'+self._name)
-
-    def __repr__(self):
-        return "<Curve: '{}', curve_type='{}', points={}>".format(str(self.name), str(self.curve_type), repr(self.points))
-
-    def __getitem__(self, index):
-        return self.points.__getitem__(index)
-
-    def __getslice__(self, i, j):
-        return self.points.__getslice__(i, j)
-
-    def __len__(self):
-        return len(self.points)
-
-    @property
-    def num_points(self):
-        """Returns the number of points in the curve."""
-        return len(self.points)
-
-
-class Pattern(object):
-    """
-    Pattern class.
-    
-    Parameters
-    ----------
-    name : string
-        Name of the pattern.
-    multipliers : list
-        A list of multipliers that makes up the pattern.
-    time_options : wntr TimeOptions or tuple
-        The water network model options.time object or a tuple of (pattern_start, 
-        pattern_timestep) in seconds.
-    wrap : bool, optional
-        Boolean indicating if the pattern should be wrapped.
-        If True (the default), then the pattern repeats itself forever; if 
-        False, after the pattern has been exhausted, it will return 0.0.
-    """
-    
-    def __init__(self, name, multipliers=[], time_options=None, wrap=True):
-        self.name = name
-        if isinstance(multipliers, (int, float)):
-            multipliers = [multipliers]
-        self._multipliers = np.array(multipliers)
-        if time_options:
-            if isinstance(time_options, (tuple, list)) and len(time_options) >= 2:
-                tmp = TimeOptions()
-                tmp.pattern_start = time_options[0]
-                tmp.pattern_timestep = time_options[1]
-                time_options = tmp
-            elif not isinstance(time_options, TimeOptions):
-                raise ValueError('Pattern->time_options must be a TimeOptions class or null')
-        self._time_options = time_options
-        self.wrap = wrap
-
-    def todict(self):
-        d = dict(name=self.name, 
-                 multipliers=list(self._multipliers))
-        if not self.wrap:
-            d['wrap'] = False
-        return d
-    
-    @classmethod
-    def BinaryPattern(cls, name, start_time, end_time, step_size, duration, wrap=False):
-        """
-        Creates a binary pattern (single instance of step up, step down).
-        
-        Parameters
-        ----------
-        name : string
-            Name of the pattern.
-        start_time : int
-            The time at which the pattern turns "on" (1.0).
-        end_time : int
-            The time at which the pattern turns "off" (0.0).
-        step_size : int
-            Pattern step size.
-        duration : int
-            Total length of the pattern.
-        wrap : bool, optional
-            Boolean indicating if the pattern should be wrapped.
-            If True, then the pattern repeats itself forever; if 
-            False (the default), after the pattern has been exhausted, it will return 0.0.
-        
-        Returns
-        -------
-        A new pattern object with a list of 1's and 0's as multipliers. 
-        """
-        tmp = TimeOptions()
-        tmp.pattern_start = 0
-        tmp.pattern_timestep = step_size
-        time_options = tmp
-        patternstep = time_options.pattern_timestep
-        patternstart = int(start_time/time_options.pattern_timestep)
-        patternend = int(end_time/patternstep)
-        patterndur = int(duration/patternstep)
-        pattern_list = [0.0]*patterndur
-        pattern_list[patternstart:patternend] = [1.0]*(patternend-patternstart)
-        return cls(name, multipliers=pattern_list, time_options=None, wrap=wrap)
-    
-    def __eq__(self, other):
-        if type(self) == type(other) and \
-          self.name == other.name and \
-          len(self._multipliers) == len(other._multipliers) and \
-          self._time_options == other._time_options and \
-          self.wrap == other.wrap and \
-          np.all(np.abs(np.array(self._multipliers)-np.array(other._multipliers))<1.0e-10):
-            return True
-        return False
-
-    def __hash__(self):
-        return hash('Pattern/'+self._name)
-        
-    def __str__(self):
-        return '%s'%self.name
-
-    def __repr__(self):
-        return "<Pattern '{}', multipliers={}>".format(self.name, repr(self.multipliers))
-        
-    def __len__(self):
-        return len(self._multipliers)
-    
-    @property
-    def multipliers(self):
-        """Returns the pattern multiplier values."""
-        return self._multipliers
-    
-    @multipliers.setter
-    def multipliers(self, values):
-        if isinstance(values, (int, float, complex)):
-            self._multipliers = np.array([values])
-        else:
-            self._multipliers = np.array(values)
-
-    @property
-    def time_options(self):
-        """Returns the TimeOptions object."""
-        return self._time_options
-    
-    @time_options.setter
-    def time_options(self, object):
-        if object and not isinstance(object, TimeOptions):
-            raise ValueError('Pattern->time_options must be a TimeOptions or null')
-        self._time_options = object
-
-    def __getitem__(self, index):
-        """Returns the pattern value at a specific index (not time!)"""
-        nmult = len(self._multipliers)
-        if nmult == 0:                     return 1.0
-        elif self.wrap:                    return self._multipliers[int(index%nmult)]
-        elif index < 0 or index >= nmult:  return 0.0
-        return self._multipliers[index]
-
-    def at(self, time):
-        """
-        Returns the pattern value at a specific time.
-        
-        Parameters
-        ----------
-        time : int
-            Time in seconds        
-        """
-        nmult = len(self._multipliers)
-        if nmult == 0: return 1.0
-        if nmult == 1: return self._multipliers[0]
-        if self._time_options is None:
-            raise RuntimeError('Pattern->time_options cannot be None at runtime')
-        step = int((time+self._time_options.pattern_start)//self._time_options.pattern_timestep)
-        if self.wrap:                      return self._multipliers[int(step%nmult)]
-        elif step < 0 or step >= nmult:    return 0.0
-        return self._multipliers[step]
-    __call__ = at
-
-
 class Registry(MutableMapping):
+    """
+    Registry base class.
+    """
     def __init__(self, model):
         if not isinstance(model, AbstractModel):
             raise ValueError('Registry must be initialized with a model')

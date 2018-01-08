@@ -5,9 +5,8 @@ import numpy as np
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','tests','networks_for_testing')
-net6dir = join(testdir,'..','..','..','examples','networks')
-packdir = join(testdir,'..','..','..')
+datadir = join(testdir,'networks_for_testing')
+net6dir = join(testdir,'..','..','examples','networks')
 
 import functools
 from nose import SkipTest

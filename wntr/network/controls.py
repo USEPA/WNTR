@@ -13,7 +13,6 @@ import abc
 from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict, Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
-import warnings
 
 logger = logging.getLogger(__name__)
 

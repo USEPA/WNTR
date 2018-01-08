@@ -14,6 +14,34 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def expected_demand(wn):
+    """
+    Compute expected demand at each junction using base demands
+    and demand patterns along with the demand multiplier defined in wn.options.
+    
+    Parameters
+    -----------
+    wn : wntr WaterNetworkModel
+        Water network model
+        
+    Returns
+    -------
+    A pandas DataFrame that contains expected demand in m3/s
+    (index = times, columns = junction names).
+    """
+    
+    exp_demand = {}
+    for name, junc in wn.junctions():
+        exp_demand[name] = junc.demand_timeseries_list.get_values(0, wn.options.time.duration, 
+            wn.options.time.report_timestep) * wn.options.hydraulic.demand_multiplier
+    
+    tsteps = np.arange(0, wn.options.time.duration+wn.options.time.report_timestep, 
+                       wn.options.time.report_timestep)
+    exp_demand = pd.DataFrame(index=tsteps, data=exp_demand)
+    
+    return exp_demand
+
+
 def fdv(node_results, average_times=False, average_nodes=False):
     """
     Compute fraction delivered volume (FDV), equations modified from [1].

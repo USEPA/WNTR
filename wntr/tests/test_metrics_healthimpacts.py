@@ -5,18 +5,28 @@ from os.path import abspath, dirname, join
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','tests','networks_for_testing')
-net3dir = join(testdir,'..','..','..','examples','networks')
-packdir = join(testdir,'..','..','..')
+datadir = join(testdir,'networks_for_testing')
+net3dir = join(testdir,'..','..','examples','networks')
 
-def test_average_water_consumed_net3_node101():
+def test_average_expected_demand_net3_node101():
     inp_file = join(net3dir,'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    qbar = wntr.metrics.average_water_consumed(wn)
+    
+    expected_demand = wntr.metrics.hydraulic.expected_demand(wn)
+    ex_de101 = expected_demand['101'].mean()
+
     expected = 0.012813608
-    error = abs((qbar['101'] - expected)/expected)
+    error = abs((ex_de101 - expected)/expected)
     assert_less(error, 0.01) # 1% error
 
+def test_population_net3():
+    inp_file = join(net3dir,'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    pop = wntr.metrics.population(wn)
+    expected = 79000
+    error = abs((pop.sum() - expected)/expected)
+    assert_less(error, 0.01) # 1% error
+    
 def test_population_net6():
     inp_file = join(net3dir,'Net6.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
@@ -35,7 +45,7 @@ def test_mass_consumed():
     wn = wntr.network.WaterNetworkModel(inp_file)
 
     wn.options.quality.mode = 'CHEMICAL'
-    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
+    newpat = wntr.network.elements.Pattern.binary_pattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
     wn.add_pattern(newpat.name, newpat)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
 
@@ -66,7 +76,7 @@ def test_volume_consumed():
     wn = wntr.network.WaterNetworkModel(inp_file)
     
     wn.options.quality.mode = 'CHEMICAL'
-    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
+    newpat = wntr.network.elements.Pattern.binary_pattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
     wn.add_pattern(newpat.name, newpat)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
 
@@ -97,7 +107,7 @@ def test_extent_contaminated():
     wn = wntr.network.WaterNetworkModel(inp_file)
     
     wn.options.quality.mode = 'CHEMICAL'
-    newpat = wntr.network.elements.Pattern.BinaryPattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
+    newpat = wntr.network.elements.Pattern.binary_pattern('NewPattern', 0, 24*3600, wn.options.time.pattern_timestep, wn.options.time.duration)
     wn.add_pattern(newpat.name, newpat)
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
 

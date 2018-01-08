@@ -8,7 +8,7 @@ from os.path import isfile, abspath, dirname, join
 from subprocess import call
 
 testdir = dirname(abspath(str(__file__)))
-packdir = join(testdir,'..','..')
+examplesdir = join(testdir,'..','..','examples')
 
 class TestExamples(unittest.TestCase):
 
@@ -22,14 +22,13 @@ class TestExamples(unittest.TestCase):
         pass
 
     def test_that_examples_run(self):
-        examples_dir = join(packdir,'examples')
         cwd = os.getcwd()
-        os.chdir(examples_dir)
-        example_files = [f for f in listdir(examples_dir) if isfile(join(examples_dir,f)) and f.endswith('.py') and not f.startswith('test')]
+        os.chdir(examplesdir)
+        example_files = [f for f in listdir(examplesdir) if isfile(join(examplesdir,f)) and f.endswith('.py') and not f.startswith('test')]
         flag = 0
         failed_examples = []
         for f in example_files:
-            tmp_flag = call([sys.executable, join(packdir,'examples',f)])
+            tmp_flag = call([sys.executable, join(examplesdir,f)])
             print(f, tmp_flag)
             if tmp_flag == 1:
                 failed_examples.append(f)

@@ -7,7 +7,6 @@ import wntr
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'..','..','tests','networks_for_testing')
-packdir = join(testdir,'..','..','..')
 
 FC1 = wntr.scenario.FragilityCurve()
 FC1.add_state('Major', 2, {'Default': norm(loc=1, scale=2)})

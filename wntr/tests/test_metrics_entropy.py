@@ -5,8 +5,7 @@ import numpy as np
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','tests','networks_for_testing')
-packdir = join(testdir,'..','..','..')
+datadir = join(testdir, 'networks_for_testing')
 
 def test_layout1():
     inp_file = join(datadir,'Awumah_layout1.inp')
@@ -29,7 +28,7 @@ def test_layout1():
             '11': 100.0,
             '12': 150.0}
 
-    G_flowrate = wn.get_graph_deep_copy()
+    G_flowrate = wn.get_graph()
     G_flowrate.weight_graph(link_attribute=attr)
 
     [S, Shat] = wntr.metrics.entropy(G_flowrate)
@@ -82,7 +81,7 @@ def test_layout8():
             '15': 44.1,
             '16': 20.4}
 
-    G_flowrate = wn.get_graph_deep_copy()
+    G_flowrate = wn.get_graph()
     G_flowrate.weight_graph(link_attribute=attr)
 
     [S, Shat] = wntr.metrics.entropy(G_flowrate)
