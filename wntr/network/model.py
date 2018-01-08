@@ -483,42 +483,14 @@ class WaterNetworkModel(object):
         """
         pump = self.get_link(pump_name)
 
-        end_power_outage_action = ControlAction(pump, '_power_outage', False)
-        start_power_outage_action = ControlAction(pump, '_power_outage', True)
+        start_power_outage_action = _InternalControlAction(pump, '_power_outage', LinkStatus.Closed, 'status')
+        end_power_outage_action = _InternalControlAction(pump, '_power_outage', LinkStatus.Open, 'status')
 
-        control = TimeControl(self, end_time, 'SIM_TIME', False, end_power_outage_action)
-        control._priority = 0
-        self.add_control(pump_name+'PowerOn'+str(end_time),control)
+        start_control = Control.time_control(self, start_time, 'SIM_TIME', False, start_power_outage_action)
+        end_control = Control.time_control(self, end_time, 'SIM_TIME', False, end_power_outage_action)
 
-        control = TimeControl(self, start_time, 'SIM_TIME', False, start_power_outage_action)
-        control._priority = 3
-        self.add_control(pump_name+'PowerOff'+str(start_time),control)
-
-
-        opened_action_obj = ControlAction(pump, 'status', LinkStatus.opened)
-        closed_action_obj = ControlAction(pump, 'status', LinkStatus.closed)
-
-        control = _MultiConditionalControl([(pump,'_power_outage')],[np.equal],[True], closed_action_obj)
-        control._priority = 3
-        self.add_control(pump_name+'PowerOffStatus'+str(end_time),control)
-
-        control = _MultiConditionalControl([(pump,'_prev_power_outage'),(pump,'_power_outage')],[np.equal,np.equal],[True,False],opened_action_obj)
-        control._priority = 0
-        self.add_control(pump_name+'PowerOnStatus'+str(start_time),control)
-
-#    def all_pump_outage(self, start_time, end_time):
-#        """
-#        Add a pump outage to the water network model that affects all pumps.
-#
-#        Parameters
-#        ----------
-#        start_time : int
-#           The time at which the outage starts
-#        end_time : int
-#           The time at which the outage stops.
-#        """
-#        for pump_name, pump in self.links(Pump):
-#            self.add_pump_outage(pump_name, start_time, end_time)
+        self.add_control(pump_name+'_power_off_'+str(start_time), start_control)
+        self.add_control(pump_name+'_power_on_'+str(end_time), end_control)
 
     def remove_link(self, name, with_control=True):
         """
@@ -668,18 +640,6 @@ class WaterNetworkModel(object):
         del self._sources[name]
         self._num_sources -= 1
 
-#    def _remove_demand(self, name):
-#        """
-#        Removes a demand from the water network model.
-#
-#        Parameters
-#        ----------
-#        name : string
-#           The name of the demand object to be removed.
-#        """
-#        del self._demands[name]
-#        self._num_demands -= 1
-#    
     def remove_control(self, name):
         """
         Removes a control from the water network model.
@@ -1916,50 +1876,34 @@ class WaterNetworkModel(object):
         self._prev_sim_time = -np.inf
 
         for name, node in self.nodes(Junction):
-            node._prev_head = None
             node.head = None
-            node._prev_demand = None
             node.demand = None
-            node._prev_leak_demand = None
             node.leak_demand = None
             node.leak_status = False
 
         for name, node in self.nodes(Tank):
-            node._prev_head = None
             node.head = node.init_level+node.elevation
-            node._prev_demand = None
             node.demand = None
-            node._prev_leak_demand = None
             node.leak_demand = None
             node.leak_status = False
 
         for name, node in self.nodes(Reservoir):
-            node._prev_head = None
             node.head = node.head_timeseries.base_value
-            node._prev_demand = None
             node.demand = None
-            node._prev_leak_demand = None
             node.leak_demand = None
 
         for name, link in self.links(Pipe):
             link.status = link._base_status
-            link._prev_status = None
-            link._prev_flow = None
             link.flow = None
 
         for name, link in self.links(Pump):
             link.status = link._base_status
-            link._prev_status = None
-            link._prev_flow = None
             link.flow = None
             link.power = link._base_power
             link._power_outage = False
-            link._prev_power_outage = False
 
         for name, link in self.links(Valve):
             link.status = link._base_status
-            link._prev_status = None
-            link._prev_flow = None
             link.flow = None
             link.setting = link._base_setting
             link._prev_setting = None
@@ -2264,7 +2208,7 @@ class Junction(Node):
     def __hash__(self):
         return id(self)
 
-    def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
+    def add_leak(self, wn, area, discharge_coeff=0.75, start_time=None, end_time=None):
         """
         Add a leak to a junction. Leaks are modeled by:
 
@@ -2303,12 +2247,12 @@ class Junction(Node):
 
         if start_time is not None:
             start_control_action = ControlAction(self, 'leak_status', True)
-            control = TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
+            control = Control.time_control(wn, start_time, 'SIM_TIME', False, start_control_action)
             wn.add_control(self._leak_start_control_name, control)
 
         if end_time is not None:
             end_control_action = ControlAction(self, 'leak_status', False)
-            control = TimeControl(wn, end_time, 'SIM_TIME', False, end_control_action)
+            control = Control.time_control(wn, end_time, 'SIM_TIME', False, end_control_action)
             wn.add_control(self._leak_end_control_name, control)
 
     def remove_leak(self,wn):
@@ -2357,7 +2301,7 @@ class Junction(Node):
 
         # add new control
         start_control_action = ControlAction(self, 'leak_status', True)
-        control = TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
+        control = Control.time_control(wn, t, 'SIM_TIME', False, start_control_action)
         wn.add_control(self._leak_start_control_name, control)
 
     def set_leak_end_time(self, wn, t):
@@ -2381,7 +2325,7 @@ class Junction(Node):
 
         # add new control
         end_control_action = ControlAction(self, 'leak_status', False)
-        control = TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
+        control = Control.time_control(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
 
     def discard_leak_controls(self, wn):
@@ -2524,12 +2468,12 @@ class Tank(Node):
 
         if start_time is not None:
             start_control_action = ControlAction(self, 'leak_status', True)
-            control = TimeControl(wn, start_time, 'SIM_TIME', False, start_control_action)
+            control = Control.time_control(wn, start_time, 'SIM_TIME', False, start_control_action)
             wn.add_control(self._leak_start_control_name, control)
 
         if end_time is not None:
             end_control_action = ControlAction(self, 'leak_status', False)
-            control = TimeControl(wn, end_time, 'SIM_TIME', False, end_control_action)
+            control = Control.time_control(wn, end_time, 'SIM_TIME', False, end_control_action)
             wn.add_control(self._leak_end_control_name, control)
 
     def remove_leak(self,wn):
@@ -2578,7 +2522,7 @@ class Tank(Node):
 
         # add new control
         start_control_action = ControlAction(self, 'leak_status', True)
-        control = TimeControl(wn, t, 'SIM_TIME', False, start_control_action)
+        control = Control.time_control(wn, t, 'SIM_TIME', False, start_control_action)
         wn.add_control(self._leak_start_control_name, control)
 
     def set_leak_end_time(self, wn, t):
@@ -2602,7 +2546,7 @@ class Tank(Node):
 
         # add new control
         end_control_action = ControlAction(self, 'leak_status', False)
-        control = TimeControl(wn, t, 'SIM_TIME', False, end_control_action)
+        control = Control.time_control(wn, t, 'SIM_TIME', False, end_control_action)
         wn.add_control(self._leak_end_control_name, control)
 
     def use_external_leak_control(self, wn):
@@ -2793,8 +2737,7 @@ class Pump(Link):
         self.energy_price = None
         self.energy_pattern = None
         self.power = None
-        self._power_outage = False
-        self._prev_power_outage = False
+        self._power_outage = LinkStatus.Open
         self._base_power = None
         self.info_type = info_type.upper()
         if self.info_type == 'HEAD':
