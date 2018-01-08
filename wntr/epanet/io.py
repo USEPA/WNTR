@@ -2241,7 +2241,7 @@ class _EpanetRule(object):
                     elif link.valve_type.upper() in ['FCV']:
                         value = to_si(self.inp_units, value, HydParam.Flow)
             else_acts.append(ControlAction(link, attr, value))
-        return Control(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID, control_type='rule')
+        return Control(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)
 
 
 class BinFile(object):
