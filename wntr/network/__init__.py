@@ -6,5 +6,6 @@ from .base import Node, Link, NodeType, LinkType, LinkStatus
 from .elements import Junction, Reservoir, Tank, Pipe, Pump, Valve, Pattern, TimeSeries, Demands, Curve, Source
 from .model import WaterNetworkModel
 from .options import WaterNetworkOptions
-from .controls import ControlAction
+from .controls import Comparison, ControlPriority, TimeOfDayCondition, SimTimeCondition, ValueCondition, \
+    TankLevelCondition, RelativeCondition, OrCondition, AndCondition, ControlAction, Control, ControlManager
 from .graph import WntrMultiDiGraph

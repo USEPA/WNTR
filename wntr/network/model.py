@@ -27,6 +27,7 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
     _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison
+from collections import OrderedDict
 
 import wntr.epanet
 
