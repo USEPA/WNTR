@@ -28,16 +28,17 @@ import pandas as pd
 
 import wntr
 import wntr.network
-from wntr.network.model import WaterNetworkModel, Junction, Reservoir, Tank, Pipe, Pump, Valve
+from wntr.network.base import Link
+from wntr.network.model import WaterNetworkModel
+from wntr.network.elements import Junction, Reservoir, Tank, Pipe, Pump, Valve
 from wntr.network.options import WaterNetworkOptions
-from wntr.network.elements import Pattern, LinkStatus, Curve, Demands, Source
+from wntr.network.model import Pattern, LinkStatus, Curve, Demands, Source
 from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition, Comparison
-from wntr.network.controls import OrCondition, AndCondition, IfThenElseControl, ControlAction
+from wntr.network.controls import OrCondition, AndCondition, Control, ControlAction, _ControlType
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam, MixType, ResultType, EN
 from .util import to_si, from_si
 from .util import StatisticsType, QualType, PressureUnits
-
 
 logger = logging.getLogger(__name__)
 
@@ -462,33 +463,50 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_junctions(self):
-        for lnum, line in self.sections['[JUNCTIONS]']:
-            line = line.split(';')[0]
-            current = line.split()
-            if current == []:
-                continue
-            if len(current) > 3:
-                pat = current[3]
-            elif self.wn.options.hydraulic.pattern:
-                pat = self.wn.options.hydraulic.pattern
-            else:
-                pat = None
-            self.wn.add_junction(current[0],
-                            to_si(self.flow_units, float(current[2]), HydParam.Demand),
-                            pat,
-                            to_si(self.flow_units, float(current[1]), HydParam.Elevation))
+        try:
+            for lnum, line in self.sections['[JUNCTIONS]']:
+                line = line.split(';')[0]
+                current = line.split()
+                if current == []:
+                    continue
+                if len(current) > 3:
+                    pat = current[3]
+                elif self.wn.options.hydraulic.pattern:
+                    pat = self.wn.options.hydraulic.pattern
+                else:
+                    pat = None
+                base_demand = 0.0
+                if len(current) > 2:
+                    base_demand = to_si(self.flow_units, float(current[2]), HydParam.Demand)
+                self.wn.add_junction(current[0],
+                                base_demand,
+                                pat,
+                                to_si(self.flow_units, float(current[1]), HydParam.Elevation),
+                                demand_category='EN2 base')
+        except Exception as e:
+            print(line)
+            raise e
 
     def _write_junctions(self, f, wn):
         f.write('[JUNCTIONS]\n'.encode('ascii'))
         f.write(_JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern').encode('ascii'))
-        nnames = list(wn._junctions.keys())
+        nnames = list(wn.junction_name_list)
         nnames.sort()
         for junction_name in nnames:
-            junction = wn._junctions[junction_name]
+            junction = wn.nodes[junction_name]
             if junction.demand_timeseries_list:
-                base_demand = junction.demand_timeseries_list[0].base_value
-                demand_pattern = junction.demand_timeseries_list[0].pattern_name
-                if demand_pattern == wn.options.hydraulic.pattern:
+                base_demands = junction.demand_timeseries_list.base_demand_list(category='EN2 base')
+                demand_patterns = junction.demand_timeseries_list.pattern_list(category='EN2 base')
+                if base_demands:
+                    base_demand = base_demands[0]
+                else:
+                    base_demand = 0.0
+                if demand_patterns:
+                    if demand_patterns[0] == wn.options.hydraulic.pattern:
+                        demand_pattern = None
+                    else:
+                        demand_pattern = demand_patterns[0]
+                else:
                     demand_pattern = None
             else:
                 base_demand = 0.0
@@ -499,7 +517,7 @@ class InpFile(object):
                  'pat': '',
                  'com': ';'}
             if demand_pattern is not None:
-                E['pat'] = demand_pattern
+                E['pat'] = str(demand_pattern)
             f.write(_JUNC_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -520,10 +538,10 @@ class InpFile(object):
     def _write_reservoirs(self, f, wn):
         f.write('[RESERVOIRS]\n'.encode('ascii'))
         f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern').encode('ascii'))
-        nnames = list(wn._reservoirs.keys())
+        nnames = list(wn.reservoir_name_list)
         nnames.sort()
         for reservoir_name in nnames:
-            reservoir = wn._reservoirs[reservoir_name]
+            reservoir = wn.nodes[reservoir_name]
             E = {'name': reservoir_name,
                  'head': from_si(self.flow_units, reservoir.head_timeseries.base_value, HydParam.HydraulicHead),
                  'com': ';'}
@@ -550,7 +568,7 @@ class InpFile(object):
                 self.wn.add_curve(curve_name, 'VOLUME', curve_points)
                 curve = self.wn.get_curve(curve_name)
             elif len(current) == 7:
-                curve = None
+                curve_name = None
             else:
                 raise RuntimeError('Tank entry format not recognized.')
             self.wn.add_tank(current[0],
@@ -560,16 +578,16 @@ class InpFile(object):
                         to_si(self.flow_units, float(current[4]), HydParam.Length),
                         to_si(self.flow_units, float(current[5]), HydParam.TankDiameter),
                         to_si(self.flow_units, float(current[6]), HydParam.Volume),
-                        curve)
+                        curve_name)
 
     def _write_tanks(self, f, wn):
         f.write('[TANKS]\n'.encode('ascii'))
         f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
                                    'Diameter', 'Min Volume', 'Volume Curve').encode('ascii'))
-        nnames = list(wn._tanks.keys())
+        nnames = list(wn.tank_name_list)
         nnames.sort()
         for tank_name in nnames:
-            tank = wn._tanks[tank_name]
+            tank = wn.nodes[tank_name]
             E = {'name': tank_name,
                  'elev': from_si(self.flow_units, tank.elevation, HydParam.Elevation),
                  'initlev': from_si(self.flow_units, tank.init_level, HydParam.HydraulicHead),
@@ -614,18 +632,18 @@ class InpFile(object):
         f.write('[PIPES]\n'.encode('ascii'))
         f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
                                    'Roughness', 'Minor Loss', 'Status').encode('ascii'))
-        lnames = list(wn._pipes.keys())
+        lnames = list(wn.pipe_name_list)
         lnames.sort()
         for pipe_name in lnames:
-            pipe = wn._pipes[pipe_name]
+            pipe = wn.links[pipe_name]
             E = {'name': pipe_name,
-                 'node1': pipe.start_node,
-                 'node2': pipe.end_node,
+                 'node1': pipe.start_node_name,
+                 'node2': pipe.end_node_name,
                  'len': from_si(self.flow_units, pipe.length, HydParam.Length),
                  'diam': from_si(self.flow_units, pipe.diameter, HydParam.PipeDiameter),
                  'rough': pipe.roughness,
                  'mloss': pipe.minor_loss,
-                 'status': pipe.get_initial_status().name,
+                 'status': str(pipe.initial_status),
                  'com': ';'}
             if pipe.cv:
                 E['status'] = 'CV'
@@ -684,21 +702,21 @@ class InpFile(object):
     def _write_pumps(self, f, wn):
         f.write('[PUMPS]\n'.encode('ascii'))
         f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Properties').encode('ascii'))
-        lnames = list(wn._pumps.keys())
+        lnames = list(wn.pump_name_list)
         lnames.sort()
         for pump_name in lnames:
-            pump = wn._pumps[pump_name]
+            pump = wn.links[pump_name]
             E = {'name': pump_name,
-                 'node1': pump.start_node,
-                 'node2': pump.end_node,
-                 'ptype': pump.info_type,
+                 'node1': pump.start_node_name,
+                 'node2': pump.end_node_name,
+                 'ptype': pump.pump_type,
                  'params': '',
                  'speed_keyword': 'SPEED',
                  'speed': pump.speed_timeseries.base_value,
                  'com': ';'}
-            if pump.info_type == 'HEAD':
-                E['params'] = pump.curve.name
-            elif pump.info_type == 'POWER':
+            if pump.pump_type == 'HEAD':
+                E['params'] = pump.pump_curve_name
+            elif pump.pump_type == 'POWER':
                 E['params'] = str(from_si(self.flow_units, pump.power, HydParam.Power))
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
@@ -751,27 +769,27 @@ class InpFile(object):
     def _write_valves(self, f, wn):
         f.write('[VALVES]\n'.encode('ascii'))
         f.write(_VALVE_LABEL.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss').encode('ascii'))
-        lnames = list(wn._valves.keys())
+        lnames = list(wn.valve_name_list)
         lnames.sort()
         for valve_name in lnames:
-            valve = wn._valves[valve_name]
+            valve = wn.links[valve_name]
             E = {'name': valve_name,
-                 'node1': valve.start_node,
-                 'node2': valve.end_node,
+                 'node1': valve.start_node_name,
+                 'node2': valve.end_node_name,
                  'diam': from_si(self.flow_units, valve.diameter, HydParam.PipeDiameter),
                  'vtype': valve.valve_type,
-                 'set': valve._base_setting,
+                 'set': valve._initial_setting,
                  'mloss': valve.minor_loss,
                  'com': ';'}
             valve_type = valve.valve_type
             if valve_type in ['PRV', 'PSV', 'PBV']:
-                valve_set = from_si(self.flow_units, valve._base_setting, HydParam.Pressure)
+                valve_set = from_si(self.flow_units, valve._initial_setting, HydParam.Pressure)
             elif valve_type == 'FCV':
-                valve_set = from_si(self.flow_units, valve._base_setting, HydParam.Flow)
+                valve_set = from_si(self.flow_units, valve._initial_setting, HydParam.Flow)
             elif valve_type == 'TCV':
-                valve_set = valve._base_setting
+                valve_set = valve._initial_setting
             elif valve_type == 'GPV':
-                valve_set = valve._base_setting
+                valve_set = valve._initial_setting
             E['set'] = valve_set
             f.write(_VALVE_ENTRY.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
@@ -790,10 +808,10 @@ class InpFile(object):
         entry = '{:10s} {:10s}\n'
         label = '{:10s} {:10s}\n'
         f.write(label.format(';ID', 'Flow coefficient').encode('ascii'))
-        njunctions = list(wn._junctions.keys())
+        njunctions = list(wn.junction_name_list)
         njunctions.sort()
         for junction_name in njunctions:
-            junction = wn._junctions[junction_name]
+            junction = wn.nodes[junction_name]
             if junction._emitter_coefficient:
                 val = from_si(self.flow_units, junction._emitter_coefficient, HydParam.Flow)
                 f.write(entry.format(junction_name, str(val)).encode('ascii'))
@@ -821,7 +839,7 @@ class InpFile(object):
     def _write_curves(self, f, wn):
         f.write('[CURVES]\n'.encode('ascii'))
         f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value').encode('ascii'))
-        curves = list(wn._curves.keys())
+        curves = list(wn.curve_name_list)
         curves.sort()
         for curve_name in curves:
             curve = wn.get_curve(curve_name)
@@ -892,7 +910,7 @@ class InpFile(object):
         num_columns = 8
         f.write('[PATTERNS]\n'.encode('ascii'))
         f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers').encode('ascii'))
-        patterns = list(wn._patterns.keys())
+        patterns = list(wn.pattern_name_list)
         patterns.sort()
         for pattern_name in patterns:
             pattern = wn.get_pattern(pattern_name)
@@ -926,7 +944,7 @@ class InpFile(object):
                 self.wn.options.energy.demand_charge = float(current[2])
             elif current[0].upper() == 'PUMP':
                 pump_name = current[1]
-                pump = self.wn._pumps[pump_name]
+                pump = self.wn.links[pump_name]
                 if current[2].upper() == 'PRICE':
                     pump.energy_price = from_si(self.flow_units, float(current[2]), HydParam.Energy)
                 elif current[2].upper() == 'PATTERN':
@@ -957,10 +975,10 @@ class InpFile(object):
                 f.write('GLOBAL EFFIC   {:.4f}\n'.format(wn.options.energy.global_efficiency).encode('ascii'))
             if wn.options.energy.demand_charge is not None:
                 f.write('DEMAND CHARGE  {:.4f}\n'.format(wn.options.energy.demand_charge).encode('ascii'))
-        lnames = list(wn._pumps.keys())
+        lnames = list(wn.pump_name_list)
         lnames.sort()
         for pump_name in lnames:
-            pump = wn._pumps[pump_name]
+            pump = wn.links[pump_name]
             if pump.efficiency is not None:
                 f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump.efficiency.name).encode('ascii'))
             if pump.energy_price is not None:
@@ -981,7 +999,7 @@ class InpFile(object):
                     current[1].upper() == 'CLOSED' or
                     current[1].upper() == 'ACTIVE'):
                 new_status = LinkStatus[current[1].upper()].value
-                link.status = new_status
+                link._user_status = new_status
                 link._base_status = new_status
             else:
                 if isinstance(link, wntr.network.Valve):
@@ -996,16 +1014,17 @@ class InpFile(object):
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
         for link_name, link in wn.links(Pump):
-            if link.get_initial_status() == LinkStatus.CLOSED.value:
+            if link._initial_status == LinkStatus.CLOSED.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.get_initial_status()).name).encode('ascii'))
+                        LinkStatus(link._initial_status).name).encode('ascii'))
         for link_name, link in wn.links(Valve):
-            if link.get_initial_status() == LinkStatus.CLOSED.value or link.get_initial_status() == LinkStatus.Open.value:
+            if link._initial_status == LinkStatus.CLOSED.value or link._initial_status == LinkStatus.Open.value:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link.get_initial_status()).name).encode('ascii'))
+                        LinkStatus(link._initial_status).name).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_controls(self):
+        control_count = 0
         for lnum, line in self.sections['[CONTROLS]']:
             line = line.split(';')[0]
             current = line.split()
@@ -1044,8 +1063,10 @@ class InpFile(object):
                                         'the link status. Control: {0}'.format(line)))
 
             # Create the control object
-            control_name = ''
+            control_count += 1
+            control_name = 'control '+str(control_count)
             if 'TIME' not in current and 'CLOCKTIME' not in current:
+                threshold = None
                 if 'IF' in current:
                     node = self.wn.get_node(node_name)
                     if current[6] == 'ABOVE':
@@ -1058,38 +1079,38 @@ class InpFile(object):
                     # IN THE INP WRITER. Now that we know, we can fix it, but
                     # if this changes, it will affect multiple pieces, just an
                     # FYI.
-                    if isinstance(node, wntr.network.Junction):
+                    if node.node_type == 'Junction':
                         threshold = to_si(self.flow_units,
                                           float(current[7]), HydParam.Pressure)# + node.elevation
-                        control_obj = wntr.network.ConditionalControl((node, 'pressure'), oper, threshold, action_obj)
-                    elif isinstance(node, wntr.network.Tank):
+                        control_obj = Control.conditional_control(node, 'pressure', oper, threshold, action_obj, control_name)
+                    elif node.node_type == 'Tank':
                         threshold = to_si(self.flow_units, 
                                           float(current[7]), HydParam.HydraulicHead)# + node.elevation
-                        control_obj = wntr.network.ConditionalControl((node, 'level'), oper, threshold, action_obj)
+                        control_obj = Control.conditional_control(node, 'level', oper, threshold, action_obj, control_name)
                 else:
                     raise RuntimeError("The following control is not recognized: " + line)
-                control_name = ''
-                for i in range(len(current)-1):
-                    control_name = control_name + '/' + current[i]
-                control_name = control_name + '/' + str(round(threshold, 2))
+#                control_name = ''
+#                for i in range(len(current)-1):
+#                    control_name = control_name + '/' + current[i]
+#                control_name = control_name + '/' + str(round(threshold, 2))
             else:
                 if len(current) == 6:  # at time
                     if ':' in current[5]:
                         run_at_time = int(_str_time_to_sec(current[5]))
                     else:
                         run_at_time = int(float(current[5])*3600)
-                    control_obj = wntr.network.TimeControl(self.wn, run_at_time, 'SIM_TIME', False, action_obj)
-                    control_name = ''
-                    for i in range(len(current)-1):
-                        control_name = control_name + '/' + current[i]
-                    control_name = control_name + '/' + str(run_at_time)
+                    control_obj = Control.time_control(self.wn, run_at_time, 'SIM_TIME', False, action_obj, control_name)
+#                    control_name = ''
+#                    for i in range(len(current)-1):
+#                        control_name = control_name + '/' + current[i]
+#                    control_name = control_name + '/' + str(run_at_time)
                 elif len(current) == 7:  # at clocktime
                     run_at_time = int(_clock_time_to_sec(current[5], current[6]))
-                    control_obj = wntr.network.TimeControl(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj)
-                    control_name = ''
-                    for i in range(len(current)-1):
-                        control_name = control_name + '/' + current[i]
-                    control_name = control_name + '/' + str(run_at_time)
+                    control_obj = Control.time_control(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj, control_name)
+#                    control_name = ''
+#                    for i in range(len(current)-1):
+#                        control_name = control_name + '/' + current[i]
+#                    control_name = control_name + '/' + str(run_at_time)
             if control_name in self.wn.control_name_list:
                 warnings.warn('One or more [CONTROLS] were duplicated in "{}"; duplicates are ignored.'.format(self.wn.name), stacklevel=0)
                 logger.warning('Control already exists: "{}"'.format(control_name))
@@ -1097,15 +1118,15 @@ class InpFile(object):
                 self.wn.add_control(control_name, control_obj)
 
     def _write_controls(self, f, wn):
-        def get_setting(control, control_name):
-            value = control._control_action._value
-            attribute = control._control_action._attribute.lower()
+        def get_setting(control_action, control_name):
+            value = control_action._value
+            attribute = control_action._attribute.lower()
             if attribute == 'status':
                 setting = LinkStatus(value).name
             elif attribute == 'speed':
                 setting = str(value)
-            elif attribute == 'setting' and isinstance(control._control_action._target_obj_ref, Valve):
-                valve = control._control_action._target_obj_ref
+            elif attribute == 'setting' and isinstance(control_action._target_obj, Valve):
+                valve = control_action._target_obj
                 valve_type = valve.valve_type
                 if valve_type == 'PRV' or valve_type == 'PSV' or valve_type == 'PBV':
                     setting = str(from_si(self.flow_units, value, HydParam.Pressure))
@@ -1127,42 +1148,46 @@ class InpFile(object):
 
         f.write('[CONTROLS]\n'.encode('ascii'))
         # Time controls and conditional controls only
-        controls = list(wn._controls.keys())
-        controls.sort()
-        for text in controls:
-            all_control = wn.get_control(text)
-            if isinstance(all_control, wntr.network.TimeControl):
-                entry = 'Link {link} {setting} AT {compare} {time:g}\n'
-                vals = {'link': all_control._control_action._target_obj_ref.name,
-                        'setting': get_setting(all_control, text),
-                        'compare': 'TIME',
-                        'time': all_control._run_at_time / 3600.0}
-                if vals['setting'] is None:
+        for text, all_control in wn.controls():
+            control_action = all_control._then_actions[0]
+            if all_control.epanet_control_type is not _ControlType.rule:
+                if len(all_control._then_actions) != 1 or len(all_control._else_actions) != 0:
+                    logger.error('Too many actions on CONTROL "%s"'%text)
+                    raise RuntimeError('Too many actions on CONTROL "%s"'%text)
+                if not isinstance(control_action.target()[0], Link):
                     continue
-                if all_control._daily_flag:
-                    vals['compare'] = 'CLOCKTIME'
-                f.write(entry.format(**vals).encode('ascii'))
-            elif isinstance(all_control, wntr.network.ConditionalControl):
-                entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
-                vals = {'link': all_control._control_action._target_obj_ref.name,
-                        'setting': get_setting(all_control, text),
-                        'node': all_control._source_obj.name,
-                        'compare': 'above',
-                        'thresh': 0.0}
-                if vals['setting'] is None:
-                    continue
-                if all_control._operation in [np.less, np.less_equal, Comparison.le, Comparison.lt]:
-                    vals['compare'] = 'below'
-                threshold = all_control._threshold
-                if isinstance(all_control._source_obj, Tank):
-                    vals['thresh'] = from_si(self.flow_units, threshold, HydParam.HydraulicHead)
-                elif isinstance(all_control._source_obj, Junction):
-                    vals['thresh'] = from_si(self.flow_units, threshold, HydParam.Pressure) 
-                else: 
-                    raise RuntimeError('Unknown control for EPANET INP files: %s' %type(all_control))
-                f.write(entry.format(**vals).encode('ascii'))
-            elif not isinstance(all_control, wntr.network.controls.IfThenElseControl):
-                raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
+                if isinstance(all_control._condition, (SimTimeCondition, TimeOfDayCondition)):
+                    entry = 'Link {link} {setting} AT {compare} {time:g}\n'
+                    vals = {'link': control_action._target_obj.name,
+                            'setting': get_setting(control_action, text),
+                            'compare': 'TIME',
+                            'time': all_control._condition._threshold / 3600.0}
+                    if vals['setting'] is None:
+                        continue
+                    if isinstance(all_control, SimTimeCondition):
+                        vals['compare'] = 'CLOCKTIME'
+                    f.write(entry.format(**vals).encode('ascii'))
+                elif isinstance(all_control._condition, (ValueCondition)):
+                    entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
+                    vals = {'link': control_action._target_obj.name,
+                            'setting': get_setting(control_action, text),
+                            'node': all_control._condition._source_obj.name,
+                            'compare': 'above',
+                            'thresh': 0.0}
+                    if vals['setting'] is None:
+                        continue
+                    if all_control._condition._relation in [np.less, np.less_equal, Comparison.le, Comparison.lt]:
+                        vals['compare'] = 'below'
+                    threshold = all_control._condition._threshold
+                    if isinstance(all_control._condition._source_obj, Tank):
+                        vals['thresh'] = from_si(self.flow_units, threshold, HydParam.HydraulicHead)
+                    elif isinstance(all_control._condition._source_obj, Junction):
+                        vals['thresh'] = from_si(self.flow_units, threshold, HydParam.Pressure) 
+                    else: 
+                        raise RuntimeError('Unknown control for EPANET INP files: %s' %type(all_control))
+                    f.write(entry.format(**vals).encode('ascii'))
+                elif not isinstance(all_control, Control):
+                    raise RuntimeError('Unknown control for EPANET INP files: %s' % type(all_control))
         f.write('\n'.encode('ascii'))
 
     def _read_rules(self):
@@ -1225,12 +1250,9 @@ class InpFile(object):
 
     def _write_rules(self, f, wn):
         f.write('[RULES]\n'.encode('ascii'))
-        controls = list(wn._controls.keys())
-        controls.sort()
-        for text in controls:
-            all_control = wn.get_control(text)
+        for text, all_control in wn.controls():
             entry = '{}\n'
-            if isinstance(all_control, wntr.network.controls.IfThenElseControl):
+            if all_control.epanet_control_type == _ControlType.rule:
                 rule = _EpanetRule('blah', self.flow_units, self.mass_units)
                 rule.from_if_then_else(all_control)
                 f.write(entry.format(str(rule)).encode('ascii'))
@@ -1261,12 +1283,12 @@ class InpFile(object):
         entry = '{:10s} {:10s} {:10s}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';ID', 'Demand', 'Pattern').encode('ascii'))
-        nodes = list(wn._junctions.keys())
+        nodes = list(wn.junction_name_list)
         nodes.sort()
         for node in nodes:
             demands = wn.get_node(node).demand_timeseries_list
             for ct, demand in enumerate(demands):
-                if ct == 0: continue
+                if demand.category == 'EN2 base': continue
                 E = {'node': node,
                      'base': from_si(self.flow_units, demand.base_value, HydParam.Demand),
                      'pat': ''}
@@ -1296,10 +1318,10 @@ class InpFile(object):
         f.write('[QUALITY]\n'.encode('ascii'))
         entry = '{:10s} {:10s}\n'
         label = '{:10s} {:10s}\n'
-        nnodes = list(wn._nodes.keys())
+        nnodes = list(wn.nodes.keys())
         nnodes.sort()
         for node_name in nnodes:
-            node = wn._nodes[node_name]
+            node = wn.nodes[node_name]
             if node.initial_quality:
                 if wn.options.quality.mode == 'CHEMICAL':
                     quality = from_si(self.flow_units, node.initial_quality, QualParam.Concentration, mass_units=self.mass_units)
@@ -1477,10 +1499,10 @@ class InpFile(object):
     def _write_mixing(self, f, wn):
         f.write('[MIXING]\n'.encode('ascii'))
         f.write('{:20s} {:5s} {}\n'.format(';Tank ID', 'Model', 'Fraction').encode('ascii'))
-        lnames = list(wn._tanks.keys())
+        lnames = list(wn.tank_name_list)
         lnames.sort()
         for tank_name in lnames:
-            tank = wn._tanks[tank_name]
+            tank = wn.nodes[tank_name]
             if tank._mix_model is not None:
                 if tank._mix_model in [MixType.Mixed, MixType.Mix1, 0]:
                     f.write(' {:19s} MIXED\n'.format(tank_name).encode('ascii'))
@@ -1788,9 +1810,10 @@ class InpFile(object):
                 else:
                     f.write(' {}'.format(link).encode('ascii'))
             f.write('\n'.encode('ascii'))
-        for key, item in report.rpt_params.items():
-            if item[1] != item[0]:
-                f.write('{:10s} {}\n'.format(key.upper(), item[1]).encode('ascii'))
+        # FIXME: defaults no longer located here
+#        for key, item in report.rpt_params.items():
+#            if item[1] != item[0]:
+#                f.write('{:10s} {}\n'.format(key.upper(), item[1]).encode('ascii'))
         for key, item in report.param_opts.items():
             for opt, val in item.items():
                 f.write('{:10s} {:10s} {}\n'.format(key.upper(), opt.upper(), val).encode('ascii'))
@@ -1805,19 +1828,17 @@ class InpFile(object):
             if current == []:
                 continue
 #            assert(len(current) == 3), ("Error reading node coordinates. Check format.")
-            self.wn.set_node_coordinates(current[0], (float(current[1]), float(current[2])))
+            node = self.wn.get_node(current[0])
+            node.coordinates = (float(current[1]), float(current[2]))
 
     def _write_coordinates(self, f, wn):
         f.write('[COORDINATES]\n'.encode('ascii'))
         entry = '{:10s} {:f} {:f}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
-        coord = nx.get_node_attributes(wn._graph, 'pos')
-        keys = list(coord.keys())
-        keys.sort()
-        for key in keys:
-            val = coord[key]
-            f.write(entry.format(key, val[0], val[1]).encode('ascii'))
+        for name, node in wn.nodes():
+            val = node.coordinates
+            f.write(entry.format(name, val[0], val[1]).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_vertices(self):
@@ -1838,10 +1859,10 @@ class InpFile(object):
         entry = '{:10s} {:10g} {:10g}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Link', 'X-Coord', 'Y-Coord').encode('ascii'))
-        lnames = list(wn._pipes.keys())
+        lnames = list(wn.pipe_name_list)
         lnames.sort()
         for pipe_name in lnames:
-            pipe = wn._pipes[pipe_name]
+            pipe = wn.links[pipe_name]
             for vert in pipe._vertices:
                 f.write(entry.format(pipe_name, vert[0], vert[1]).encode('ascii'))
         f.write('\n'.encode('ascii'))
@@ -1905,16 +1926,16 @@ class InpFile(object):
         entry = '{:10s} {:10s} {:10s}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';type', 'name', 'tag').encode('ascii'))
-        nnodes = list(wn._nodes.keys())
+        nnodes = list(wn.node_name_list)
         nnodes.sort()
         for node_name in nnodes:
-            node = wn._nodes[node_name]
+            node = wn.nodes[node_name]
             if node.tag:
                 f.write(entry.format('NODE', node_name, node.tag).encode('ascii'))
-        nlinks = list(wn._links.keys())
+        nlinks = list(wn.link_name_list)
         nlinks.sort()
         for link_name in nlinks:
-            link = wn._links[link_name]
+            link = wn.links[link_name]
             if link.tag:
                 f.write(entry.format('LINK', link_name, link.tag).encode('ascii'))
         f.write('\n'.encode('ascii'))
@@ -1958,7 +1979,7 @@ class _EpanetRule(object):
 
     def from_if_then_else(self, control):
         """Create a rule from an IfThenElseControl object"""
-        if isinstance(control, IfThenElseControl):
+        if isinstance(control, Control):
             self.ruleID = control.name
             self.add_control_condition(control._condition)
             for ct, action in enumerate(control._then_actions):
@@ -2220,7 +2241,7 @@ class _EpanetRule(object):
                     elif link.valve_type.upper() in ['FCV']:
                         value = to_si(self.inp_units, value, HydParam.Flow)
             else_acts.append(ControlAction(link, attr, value))
-        return IfThenElseControl(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)
+        return Control(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID, control_type='rule')
 
 
 class BinFile(object):

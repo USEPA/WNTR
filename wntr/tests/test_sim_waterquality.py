@@ -5,8 +5,7 @@ from os.path import abspath, dirname, join
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','..','examples','networks')
-packdir = join(testdir,'..','..','..')
+datadir = join(testdir,'..','..','examples','networks')
 
 """
 Compare results to EPANET GUI using Net3 and Source Quality at

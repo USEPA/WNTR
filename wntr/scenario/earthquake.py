@@ -38,16 +38,15 @@ class Earthquake(object):
         R : pd.Series
             Distance to epicenter (m)
         """
-        G = wn.get_graph_deep_copy()
-        pos = nx.get_node_attributes(G,'pos')
+
         R = pd.Series()
 
         if element_type in [wntr.network.Link, wntr.network.Pipe, wntr.network.Pump, wntr.network.Valve]:
             # Compute pipe center position
             link_pos = {}
             for name, link in wn.links(element_type):
-                start_point = pos[link.start_node]
-                end_point = pos[link.end_node]
+                start_point = link.start_node.coordinates
+                end_point = link.end_node.coordinates
                 link_pos[name] = ((end_point[0] + start_point[0])/2,
                                   (end_point[1] + start_point[1])/2)
 
@@ -56,7 +55,7 @@ class Earthquake(object):
 
         elif element_type in [wntr.network.Node, wntr.network.Junction, wntr.network.Tank, wntr.network.Reservoir]:
             for name, node in wn.nodes(element_type):
-                R[name] = distance.euclidean(self.epicenter, pos[name]) # m
+                R[name] = distance.euclidean(self.epicenter, node.coordinates) # m
 
         return R
 

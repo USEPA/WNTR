@@ -87,8 +87,8 @@ def extent_contaminant(node_results, link_results, wn, detection_limit):
     link_end_node = []
     for name in pipe_names:
         link = wn.get_link(name)
-        link_start_node.append(link.start_node)
-        link_end_node.append(link.end_node)
+        link_start_node.append(link.start_node_name)
+        link_end_node.append(link.end_node_name)
         link_length.append(link.length)
     link_start_node = pd.Series(index=pipe_names, data=link_start_node)
     link_end_node = pd.Series(index=pipe_names, data=link_end_node)
