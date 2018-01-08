@@ -222,14 +222,10 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._vertices = []
         self._tag = None
         # Model state variables
-        self._prev_status = None
-        self._status = LinkStatus.opened
-        self._base_status = LinkStatus.opened
         self._user_status = LinkStatus.opened
         self._internal_status = LinkStatus.active
         self._prev_setting = None
         self._setting = None
-        self._prev_flow = None
         self._flow = None
 
     def __hash__(self):
