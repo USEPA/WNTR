@@ -998,8 +998,8 @@ class InpFile(object):
             if (current[1].upper() == 'OPEN' or
                     current[1].upper() == 'CLOSED' or
                     current[1].upper() == 'ACTIVE'):
-                new_status = LinkStatus[current[1].upper()].value
-                link._user_status = new_status
+                new_status = LinkStatus[current[1].upper()]
+                link.initial_status = new_status
                 link._base_status = new_status
             else:
                 if isinstance(link, wntr.network.Valve):
@@ -1014,13 +1014,13 @@ class InpFile(object):
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
         for link_name, link in wn.links(Pump):
-            if link._initial_status == LinkStatus.CLOSED.value:
+            if link.initial_status is not LinkStatus.Open:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link._initial_status).name).encode('ascii'))
+                        LinkStatus(link.initial_status).name).encode('ascii'))
         for link_name, link in wn.links(Valve):
-            if link._initial_status == LinkStatus.CLOSED.value or link._initial_status == LinkStatus.Open.value:
+            if link.initial_status is not LinkStatus.Active:
                 f.write('{:10s} {:10s}\n'.format(link_name,
-                        LinkStatus(link._initial_status).name).encode('ascii'))
+                        LinkStatus(link.initial_status).name).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_controls(self):
@@ -1639,7 +1639,12 @@ class InpFile(object):
         f.write(entry_float.format('SPECIFIC GRAVITY', wn.options.hydraulic.specific_gravity).encode('ascii'))
         f.write(entry_float.format('TRIALS', wn.options.solver.trials).encode('ascii'))
         f.write(entry_float.format('ACCURACY', wn.options.solver.accuracy).encode('ascii'))
-        f.write(entry_float.format('CHECKFREQ', wn.options.solver.checkfreq).encode('ascii'))
+        if wn.options.solver.maxcheck != 10:
+            f.write(entry_float.format('MAXCHECK', wn.options.solver.maxcheck).encode('ascii'))
+        if wn.options.solver.damplimit != 0:
+            f.write(entry_float.format('DAMPLIMIT', wn.options.solver.damplimit).encode('ascii'))
+        if wn.options.solver.checkfreq != 2:
+            f.write(entry_float.format('CHECKFREQ', wn.options.solver.checkfreq).encode('ascii'))
         if wn.options.solver.unbalanced_value is None:
             f.write(entry_string.format('UNBALANCED', wn.options.solver.unbalanced).encode('ascii'))
         else:
