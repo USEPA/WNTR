@@ -23,34 +23,52 @@ logger = logging.getLogger(__name__)
 class AbstractModel(six.with_metaclass(abc.ABCMeta, object)):
     """
     Abstract water network model class.
+    
+    A WaterNetworkModel must supply the following methods.
+    
     """
     @property
     @abc.abstractmethod
-    def options(self): pass
+    def options(self): 
+        """Return the water network options object."""
+        raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
-    def nodes(self): pass
+    def nodes(self): 
+        """Return the node registry."""
+        raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
-    def links(self): pass
+    def links(self): 
+        """Return the link registry."""
+        raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
-    def sources(self): pass
+    def sources(self): 
+        """Return the dictionary of sources."""
+        raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
-    def patterns(self): pass
+    def patterns(self): 
+        """Return the pattern registry."""
+        raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
-    def curves(self): pass
+    def curves(self): 
+        """Return the curve registry."""
+        raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
-    def controls(self): pass
+    def controls(self): 
+        """Return the controls dictionary."""
+        # TODO: Convert to a registry
+        raise NotImplementedError('This is an abstract class')
 
 
 class Subject(object):
@@ -86,8 +104,11 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     Parameters
     -----------
+    model : WaterNetworkModel
+        The model object is passed to the constructor to get the registries
     name : string
-        Name of the node
+        Name of the node (must be unique among nodes of all types within the model)
+
     """
     def __init__(self, model, name):
         if not isinstance(model, AbstractModel):
@@ -100,7 +121,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self.leak_demand = None
         self._prev_leak_demand = None
         self._initial_quality = None
-        self.tag = None
+        self._tag = None
         self._leak = False
         self.leak_status = False
         self.leak_area = 0.0
@@ -134,17 +155,27 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def node_type(self):
-        """Returns the node type"""
+        """The node type (read only)"""
         return 'Node'
     
     @property
     def name(self):
-        """Returns the name of the node"""
+        """The name of the node (read only)"""
         return self._name
     
     @property
+    def tag(self):
+        """A tag or label for this link"""
+        return self._tag
+    @tag.setter
+    def tag(self, tag):
+        self._tag = tag
+
+    @property
     def initial_quality(self):
-        """Returns the initial quality (concentration) of the node. Can be a float or list of floats."""
+        """The initial quality (concentration) at the node. 
+        
+        Can be a float or list of floats."""
         if not self._initial_quality:
             return 0.0
         return self._initial_quality
@@ -156,7 +187,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def coordinates(self):
-        """Returns the node coordinates"""
+        """The node coordinates, (x,y)"""
         return self._coordinates
     @coordinates.setter
     def coordinates(self, coordinates):
@@ -166,6 +197,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
             raise ValueError('coordinates must be a 2-tuple or len-2 list')
     
     def todict(self):
+        """Represent the node in dictionary form."""
         d = dict(name=self.name, 
                  node_type=self.node_type)
         if self.tag:
@@ -181,20 +213,14 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     Parameters
     ----------
+    model : WaterNetworkModel
+        The model object is passed to the constructor to get the registries
     link_name : string
         Name of the link
     start_node_name : string
         Name of the start node
     end_node_name : string
         Name of the end node
-    node_registry : NodeRegistry
-        The registry object for tracking node usage
-    graph : WntrNetworkDiGraph
-        The network graph (for modifying start and end nodes)
-    pattern_registry : PatternRegistry, optional
-        An optional registry object for tracking pattern usage
-    curve_registry : CurveRegistry, optional
-        An optional registry object for tracking curve usage
     
     """
     def __init__(self, model, link_name, start_node_name, end_node_name):
@@ -239,6 +265,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def link_type(self):
+        """The link type (read only)"""
         return 'Link'
 
     @property
@@ -262,7 +289,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def start_node(self):
-        """The name of the start node"""
+        """The start node object."""
         return self._start_node
     @start_node.setter
     def start_node(self, name):
@@ -272,7 +299,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def end_node(self):
-        """The name of the end node"""
+        """The end node object."""
         return self._end_node
     @end_node.setter
     def end_node(self, name):
@@ -282,10 +309,12 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def start_node_name(self):
+        """The name of the start node (read only)"""
         return self._start_node.name
     
     @property
     def end_node_name(self):
+        """The name of the end node (read only)"""
         return self._end_node.name
 
     @property
@@ -295,7 +324,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def flow(self):
-        """Current flow through the link"""
+        """Current flow through the link (read only)"""
         return self._flow
     
     @property
@@ -339,6 +368,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._vertices = points
     
     def todict(self):
+        """A dictionary representation for this link"""
         d = dict(name=self.name, 
                  start_node=self._start_node.name,
                  end_node=self._end_node.name,
@@ -367,30 +397,37 @@ class Registry(MutableMapping):
 
     @property
     def _options(self):
+        # Protected access to the model options
         return self._m.options
     
     @property
     def _patterns(self):
+        # Protected access to the pattern registry
         return self._m.patterns
     
     @property
     def _curves(self):
+        # Protected access to the curve registry
         return self._m.curves
 
     @property
     def _nodes(self):
+        # Protected access to the node registry
         return self._m.nodes
     
     @property
     def _links(self):
+        # Protected access to the link registry
         return self._m.links
 
     @property
     def _controls(self):
+        # Protected access to the control registry
         return self._m.controls
     
     @property
     def _sources(self):
+        # Protected access to the sources dictionary
         return self._m.sources
 
     def __getitem__(self, key):
@@ -417,6 +454,7 @@ class Registry(MutableMapping):
                 self._usage.pop(key)
             return self._data.pop(key)
         except KeyError:
+            # Do not raise an exception if there is no key of that name
             return
     
     def __iter__(self):
