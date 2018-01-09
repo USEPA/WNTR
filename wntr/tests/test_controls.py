@@ -228,7 +228,7 @@ class TestControlCombinations(unittest.TestCase):
         inp_file = join(test_datadir, 'control_comb.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
-        control = self.wntr.network.TimeControl(wn, 6*3600, 'SIM_TIME', False, control_action)
+        control = self.wntr.network.controls.Control.time_control(wn, 6*3600, 'SIM_TIME', False, control_action)
         wn.add_control('open_time_6',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
@@ -261,7 +261,7 @@ class TestControlCombinations(unittest.TestCase):
         pipe1 = wn.get_link('pipe1')
         pipe1.status = self.wntr.network.LinkStatus.opened
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
-        control = self.wntr.network.TimeControl(wn, 19*3600, 'SIM_TIME', False, control_action)
+        control = self.wntr.network.controls.Control.time_control(wn, 19*3600, 'SIM_TIME', False, control_action)
         wn.add_control('open_time_19',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
@@ -294,7 +294,7 @@ class TestControlCombinations(unittest.TestCase):
         pipe1 = wn.get_link('pipe1')
         pipe1.status = self.wntr.network.LinkStatus.opened
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
-        control = self.wntr.network.TimeControl(wn, 5*3600, 'SIM_TIME', False, control_action)
+        control = self.wntr.network.controls.Control.time_control(wn, 5*3600, 'SIM_TIME', False, control_action)
         wn.add_control('open_time_5',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0

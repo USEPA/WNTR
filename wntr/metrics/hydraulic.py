@@ -9,15 +9,18 @@ import pandas as pd
 import networkx as nx
 import math
 from collections import Counter
-
+import sys
+if sys.version_info >= (3,0):
+    from functools import reduce
+    
 import logging
 
 logger = logging.getLogger(__name__)
 
-def expected_demand(wn):
+def expected_demand(wn, start_time=None, end_time=None, timestep=None):
     """
-    Compute expected demand at each junction using base demands
-    and demand patterns along with the demand multiplier defined in wn.options.
+    Compute expected demand at each junction and time using base demands
+    and demand patterns along with the demand multiplier
     
     Parameters
     -----------
@@ -29,11 +32,17 @@ def expected_demand(wn):
     A pandas DataFrame that contains expected demand in m3/s
     (index = times, columns = junction names).
     """
-    
+    if start_time is None:
+        start_time = 0
+    if end_time is None:
+        end_time = wn.options.time.duration
+    if timestep is None:
+        timestep = wn.options.time.report_timestep
+        
     exp_demand = {}
     for name, junc in wn.junctions():
-        exp_demand[name] = junc.demand_timeseries_list.get_values(0, wn.options.time.duration, 
-            wn.options.time.report_timestep) * wn.options.hydraulic.demand_multiplier
+        exp_demand[name] = junc.demand_timeseries_list.get_values(start_time, end_time, 
+            timestep) * wn.options.hydraulic.demand_multiplier
     
     tsteps = np.arange(0, wn.options.time.duration+wn.options.time.report_timestep, 
                        wn.options.time.report_timestep)
@@ -41,6 +50,50 @@ def expected_demand(wn):
     
     return exp_demand
 
+def average_expected_demand(wn):
+    """
+    Compute average expected demand at each junction using base demands
+    and demand patterns along with the demand multiplier
+    
+    Parameters
+    -----------
+    wn : wntr WaterNetworkModel
+        Water network model
+        
+    Returns
+    -------
+    A pandas Series that contains average expected demand in m3/s
+    (index = junction names).
+    """
+    L = [24*3600] # start with a 24 hour pattern
+    for name, pattern in wn.patterns():
+        L.append(len(pattern.multipliers)*wn.options.time.pattern_timestep)
+    lcm = int(_lcml(L))
+    
+    start_time = wn.options.time.pattern_start
+    end_time = start_time+lcm
+    timestep = wn.options.time.pattern_timestep
+        
+    exp_demand = expected_demand(wn, start_time, end_time, timestep)
+    ave_exp_demand = exp_demand.mean(axis=0)
+
+    return ave_exp_demand
+
+def _gcd(x,y):
+  while y:
+    if y<0:
+      x,y=-x,-y
+    x,y=y,x % y
+    return x
+
+def _gcdl(*list):
+  return reduce(_gcd, *list)
+
+def _lcm(x,y):
+  return x*y / _gcd(x,y)
+
+def _lcml(*list):
+  return reduce(_lcm, *list)
 
 def fdv(node_results, average_times=False, average_nodes=False):
     """

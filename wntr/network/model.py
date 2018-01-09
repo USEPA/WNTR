@@ -745,14 +745,14 @@ class WaterNetworkModel(AbstractModel):
             close_control_action = _InternalControlAction(pump, '_internal_status', LinkStatus.Closed, 'status')
             open_control_action = _InternalControlAction(pump, '_internal_status', LinkStatus.Open, 'status')
 
-            if pump.info_type == 'HEAD':
+            if pump.pump_type == 'HEAD':
                 close_condition = _CloseHeadPumpCondition(self, pump)
                 open_condition = _OpenHeadPumpCondition(self, pump)
-            elif pump.info_type == 'POWER':
+            elif pump.pump_type == 'POWER':
                 close_condition = _ClosePowerPumpCondition(self, pump)
                 open_condition = _OpenPowerPumpCondition(self, pump)
             else:
-                raise ValueError('Unrecognized pump info_type: {0}'.format(pump.info_type))
+                raise ValueError('Unrecognized pump pump_type: {0}'.format(pump.pump_type))
 
             close_control = Control(close_condition, [close_control_action], [], ControlPriority.very_high)
             open_control = Control(open_condition, [open_control_action], [], ControlPriority.very_low)

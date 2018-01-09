@@ -42,15 +42,14 @@ class TestWriter(unittest.TestCase):
         p11 = self.wn.get_link('pump1')
         self.assertEqual(p1.start_node_name, 'j2')
         self.assertEqual(p1.end_node_name, 'j3')
-        self.assertEqual(p1.info_type, 'HEAD')
-        self.assertEqual(p1.curve, p11.curve)
+        self.assertEqual(type(p1), self.wntr.network.elements.HeadPump)
         self.assertEqual(p1.curve_name, 'curve1')
         self.assertAlmostEqual(p1.speed_timeseries.base_value, 1.2, 6)
         self.assertEqual(p1.speed_timeseries, p11.speed_timeseries)
         self.assertEqual(p1.speed_timeseries.pattern_name, 'pattern1')
 
         p2 = self.wn2.get_link('pump2')
-        self.assertEqual(p2.info_type, 'POWER')
+        self.assertEqual(type(p2), self.wntr.network.elements.PowerPump)
         self.assertAlmostEqual(p2._base_power, 16629.107, 2)
 
     def test_valve_setting_control(self):
