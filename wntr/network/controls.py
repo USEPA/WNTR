@@ -1110,6 +1110,10 @@ class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
     A base class for deriving new control actions. The control action is run by calling RunControlAction
     This class is not meant to be used directly. Derived classes must implement the RunControlAction method.
     """
+
+    def __init__(self):
+        super(BaseControlAction, self).__init__()
+
     @abc.abstractmethod
     def run_control_action(self):
         """
@@ -1147,6 +1151,7 @@ class ControlAction(BaseControlAction):
         The new value for target_obj.attribute when the control runs.
     """
     def __init__(self, target_obj, attribute, value):
+        super(ControlAction, self).__init__()
         if target_obj is None:
             raise ValueError('target_obj is None in ControlAction::__init__. A valid target_obj is needed.')
         if not hasattr(target_obj, attribute):
@@ -1218,6 +1223,7 @@ class _InternalControlAction(BaseControlAction):
         The attribute to be checked for an actual change (e.g., status)
     """
     def __init__(self, target_obj, internal_attribute, value, property_attribute):
+        super(_InternalControlAction, self).__init__()
         if not hasattr(target_obj, internal_attribute):
             raise AttributeError('{0} does not have attribute {1}'.format(target_obj, internal_attribute))
         if not hasattr(target_obj, property_attribute):
@@ -1372,6 +1378,7 @@ class Control(ControlBase):
         if self._name is None:
             self._name = ''
         self._control_type = _ControlType.rule
+        self._is_internal = False
 
     @property
     def epanet_control_type(self):
@@ -1384,6 +1391,9 @@ class Control(ControlBase):
         for action in self._else_actions:
             req.update(action.requires())
         return req
+
+    def is_internal(self):
+        return self._is_internal
 
     def actions(self):
         return self._then_actions + self._else_actions
@@ -1496,14 +1506,12 @@ class Control(ControlBase):
 
 
 class ControlManager(Observer):
-    def __init__(self, model):
+    def __init__(self):
         self._controls = OrderedSet()
         """OrderedSet of Control"""
 
         self._previous_values = OrderedDict()  # {(obj, attr): value}
         self._changed = OrderedSet()  # set of (obj, attr) that has been changed from _previous_values
-        self._node_reg = model.nodes
-        self._link_reg = model.links
 
     def update(self, subject):
         """
@@ -1528,15 +1536,10 @@ class ControlManager(Observer):
         control: Control
         """
         self._controls.add(control)
-#        for action in control.actions():
-#            action.subscribe(self)
-#            for obj, attr in action.targets():
-#                self._previous_values[(obj, attr)] = getattr(obj, attr)
-        for elem in control.requires():
-            if isinstance(elem, (Tank, Junction, Reservoir)):
-                self._node_reg.add_usage(elem.name, (control.name, 'Control'))
-            elif isinstance(elem, (Pipe, Pump, Valve)):
-                self._link_reg.add_usage(elem.name, (control.name, 'Control'))
+        for action in control.actions():
+            action.subscribe(self)
+            obj, attr = action.target()
+            self._previous_values[(obj, attr)] = getattr(obj, attr)
 
     def reset(self):
         self._changed = OrderedSet()
@@ -1566,9 +1569,9 @@ class ControlManager(Observer):
         self._controls.remove(control)
         for action in control.actions():
             action.unsubscribe(self)
-            for obj, attr in action.targets():
-                self._previous_values.pop((obj, attr))
-                self._changed.discard((obj, attr))
+            obj, attr = action.target()
+            self._previous_values.pop((obj, attr))
+            self._changed.discard((obj, attr))
 
     def check(self):
         controls_to_run = []

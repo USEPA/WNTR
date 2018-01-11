@@ -54,7 +54,6 @@ class WaterNetworkModel(AbstractModel):
         self._link_reg = LinkRegistry(self)
         self._pattern_reg = PatternRegistry(self)
         self._curve_reg = CurveRegistry(self)
-        self._control_reg = ControlRegistry(self)
         self._controls = OrderedDict()
         self._sources = {}
 
@@ -865,7 +864,7 @@ class WaterNetworkModel(AbstractModel):
     @property
     def control_name_list(self): 
         """"""
-        return list(self._control_reg.keys())
+        return list(self._controls.keys())
     
     ### # 
     ### Counts
