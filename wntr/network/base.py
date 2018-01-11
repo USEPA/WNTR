@@ -114,12 +114,9 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         if not isinstance(model, AbstractModel):
             raise ValueError('valid model must be passed as first argument')
         self._name = name
-        self._prev_head = None
         self.head = None
-        self._prev_demand = None
         self.demand = None
         self.leak_demand = None
-        self._prev_leak_demand = None
         self._initial_quality = None
         self._tag = None
         self._leak = False
@@ -345,12 +342,14 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         return self._flow
     
     @property
+    @abc.abstractmethod
     def status(self):
         """Current status of the link"""
-        return self._status
+        pass
     @status.setter
+    @abc.abstractmethod
     def status(self, status):
-        self._status = status
+        self._user_status = status
     
     @property
     def setting(self):

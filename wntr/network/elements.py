@@ -596,6 +596,10 @@ class Pipe(Link):
         else:
             return self._user_status
 
+    @status.setter
+    def status(self, status):
+        self._user_status = status
+
     def todict(self):
         d = super(Pipe, self).todict()
         d['properties'] = dict(length=self.length,
@@ -655,10 +659,14 @@ class Pump(Link):
     def status(self):
         if self._internal_status == LinkStatus.Closed:
             return LinkStatus.Closed
-        elif self._power_outage is True:
+        elif self._power_outage == LinkStatus.Closed:
             return LinkStatus.Closed
         else:
             return self._user_status
+
+    @status.setter
+    def status(self, status):
+        self._user_status = status
 
     @property
     def link_type(self):
@@ -903,6 +911,10 @@ class Valve(Link):
             return LinkStatus.Open
         else:
             return self._internal_status
+
+    @status.setter
+    def status(self, status):
+        self._user_status = status
 
     @property
     def link_type(self):

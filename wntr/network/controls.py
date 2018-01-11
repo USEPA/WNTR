@@ -142,7 +142,7 @@ class Comparison(enum.Enum):
 # Control Condition classes
 #
 
-class ControlPriority(enum.Enum):
+class ControlPriority(enum.IntEnum):
     very_low = 0
     low = 1
     medium_low = 2
@@ -843,7 +843,7 @@ class _CloseHeadPumpCondition(ControlCondition):
     """
     Prevents reverse flow in pumps.
     """
-    Htol = 0.0001524
+    _Htol = 0.0001524
 
     def __init__(self, wn, pump):
         """
@@ -856,6 +856,7 @@ class _CloseHeadPumpCondition(ControlCondition):
         self._start_node = wn.get_node(pump.start_node)
         self._end_node = wn.get_node(pump.end_node)
         self._backtrack = 0
+        self._wn = wn
 
     def requires(self):
         return OrderedSet([self._pump, self._start_node, self._end_node])
@@ -865,11 +866,11 @@ class _CloseHeadPumpCondition(ControlCondition):
         If True is returned, the pump needs to be closed
         """
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed != 1.0:
+        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         dh = self._end_node.head - self._start_node.head
-        if dh > self.Hmax + self.Htol:
+        if dh > Hmax + self._Htol:
             return True
 
 
@@ -877,7 +878,7 @@ class _OpenHeadPumpCondition(ControlCondition):
     """
     Prevents reverse flow in pumps.
     """
-    Htol = 0.0001524
+    _Htol = 0.0001524
 
     def __init__(self, wn, pump):
         """
@@ -890,6 +891,7 @@ class _OpenHeadPumpCondition(ControlCondition):
         self._start_node = wn.get_node(pump.start_node)
         self._end_node = wn.get_node(pump.end_node)
         self._backtrack = 0
+        self._wn = wn
 
     def requires(self):
         return OrderedSet([self._pump, self._start_node, self._end_node])
@@ -899,11 +901,11 @@ class _OpenHeadPumpCondition(ControlCondition):
         If True is returned, the pump needs to be closed
         """
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed != 1.0:
+        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         dh = self._end_node.head - self._start_node.head
-        if dh <= self.Hmax + self.Htol:
+        if dh <= Hmax + self._Htol:
             return True
 
 
@@ -1506,11 +1508,11 @@ class ControlManager(Observer):
         ---------
         subject: BaseControlAction
         """
-        for obj, attr in subject.targets():
-            if getattr(obj, attr) == self._previous_values[(obj, attr)]:
-                self._changed.discard((obj, attr))
-            else:
-                self._changed.add((obj, attr))
+        obj, attr = subject.target()
+        if getattr(obj, attr) == self._previous_values[(obj, attr)]:
+            self._changed.discard((obj, attr))
+        else:
+            self._changed.add((obj, attr))
 
     def register_control(self, control):
         """
@@ -1531,8 +1533,8 @@ class ControlManager(Observer):
         self._previous_values = OrderedDict()
         for control in self._controls:
             for action in control.actions():
-                for obj, attr in action.targets():
-                    self._previous_values[(obj, attr)] = getattr(obj, attr)
+                obj, attr = action.target()
+                self._previous_values[(obj, attr)] = getattr(obj, attr)
 
     def changes_made(self):
         if len(self._changed) > 0:

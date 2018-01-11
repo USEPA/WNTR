@@ -33,6 +33,7 @@ import wntr.epanet
 
 logger = logging.getLogger(__name__)
 
+
 class WaterNetworkModel(AbstractModel):
     """
     Water network model class.
@@ -187,6 +188,38 @@ class WaterNetworkModel(AbstractModel):
     
     @property
     def valves(self): return self._link_reg.valves
+
+    @property
+    def head_pumps(self):
+        return self._link_reg.head_pumps
+
+    @property
+    def power_pumps(self):
+        return self._link_reg.power_pumps
+
+    @property
+    def prvs(self):
+        return self._link_reg.prvs
+
+    @property
+    def psvs(self):
+        return self._link_reg.psvs
+
+    @property
+    def pbvs(self):
+        return self._link_reg.pbvs
+
+    @property
+    def tcvs(self):
+        return self._link_reg.tcvs
+
+    @property
+    def fcvs(self):
+        return self._link_reg.fcvs
+
+    @property
+    def gpvs(self):
+        return self._link_reg.gpvs
     
     """
     ### # 
@@ -1546,7 +1579,8 @@ class WaterNetworkModel(AbstractModel):
 
         self.add_control(pump_name+'_power_off_'+str(start_time), start_control)
         self.add_control(pump_name+'_power_on_'+str(end_time), end_control)
-    
+
+
 class PatternRegistry(Registry):
 
     @property
@@ -2241,6 +2275,38 @@ class LinkRegistry(Registry):
     
     def valves(self):
         for name in self._valves:
+            yield name, self._data[name]
+
+    def head_pumps(self):
+        for name in self._head_pumps:
+            yield name, self._data[name]
+
+    def power_pumps(self):
+        for name in self._power_pumps:
+            yield name, self._data[name]
+
+    def prvs(self):
+        for name in self._prvs:
+            yield name, self._data[name]
+
+    def psvs(self):
+        for name in self._psvs:
+            yield name, self._data[name]
+
+    def pbvs(self):
+        for name in self._pbvs:
+            yield name, self._data[name]
+
+    def tcvs(self):
+        for name in self._tcvs:
+            yield name, self._data[name]
+
+    def fcvs(self):
+        for name in self._fcvs:
+            yield name, self._data[name]
+
+    def gpvs(self):
+        for name in self._gpvs:
             yield name, self._data[name]
 
     def tostring(self):
