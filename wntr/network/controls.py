@@ -178,9 +178,6 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
         """Should be updated by the ``evaluate`` method if appropriate."""
         return self._backtrack
 
-    def __hash__(self):
-        return hash(self.name)
-
     @abc.abstractmethod
     def evaluate(self):
         pass
@@ -332,9 +329,6 @@ class TimeOfDayCondition(ControlCondition):
         return fmt.format(repr(self._relation.text), repr(self._sec_to_clock(self._threshold)),
                           repr(self._repeat), repr(self._first_day))
 
-    def __hash__(self):
-        return hash(self.name)
-
     def __str__(self):
         fmt = 'clock_time {:s} "{}"'.format(self._relation.symbol,
                                           self._sec_to_clock(self._threshold))
@@ -437,9 +431,6 @@ class SimTimeCondition(ControlCondition):
         fmt = '<SimTimeCondition: model, {}, {}, {}, {}>'
         return fmt.format(repr(self._relation.text), repr(self._sec_to_days_hours_min_sec(self._threshold)),
                           repr(self._repeat), repr(self._first_time))
-
-    def __hash__(self):
-        return hash(self.name)
 
     def __str__(self):
         fmt = '{} {} sec'.format(self._relation.symbol, self._threshold)
@@ -1178,9 +1169,9 @@ class ControlAction(BaseControlAction):
             return LinkStatus(int(self._value)).name
         return self._value
 
-    def __eq__(self, other):
+    def _compare(self, other):
         if self._target_obj == other._target_obj and \
-           self._attribute      == other._attribute:
+           self._attribute == other._attribute:
             if type(self._value) == float:
                 if abs(self._value - other._value)<1e-10:
                     return True
@@ -1191,9 +1182,6 @@ class ControlAction(BaseControlAction):
                 return False
         else:
             return False
-
-    def __hash__(self):
-        return id(self)
 
     def run_control_action(self):
         """
@@ -1274,7 +1262,7 @@ class _InternalControlAction(BaseControlAction):
                                               self._internal_attr,
                                               self._value)
 
-    def __eq__(self, other):
+    def _compare(self, other):
         if ((self._target_obj == other._target_obj) and
             (self._internal_attr == other._internal_attr) and
             (self._property_attr == other._property_attr)):
@@ -1288,9 +1276,6 @@ class _InternalControlAction(BaseControlAction):
                 return False
         else:
             return False
-
-    def __hash__(self):
-        return id(self)
 
 
 #

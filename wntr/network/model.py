@@ -76,7 +76,7 @@ class WaterNetworkModel(AbstractModel):
         self.sim_time = 0.0
         self._prev_sim_time = -np.inf  # the last time at which results were accepted
     
-    def _compare_structure(self, other):
+    def _compare(self, other):
         #self._controls   == other._controls   and \
         if self.num_junctions  == other.num_junctions  and \
            self.num_reservoirs == other.num_reservoirs and \

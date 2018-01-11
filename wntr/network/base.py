@@ -135,7 +135,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._coordinates = [0,0]
         self._source = None
 
-    def _compare_structure(self, other):
+    def _compare(self, other):
         if not type(self) == type(other):
             return False
         if self.name == other.name and \
@@ -252,7 +252,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._setting = None
         self._flow = None
 
-    def _compare_structure(self, other):
+    def _compare(self, other):
         """
         Parameters
         ----------

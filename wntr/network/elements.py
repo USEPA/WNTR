@@ -57,8 +57,8 @@ class Junction(Node):
     def __repr__(self):
         return "<Junction '{}', elevation={}, demand_timeseries_list={}>".format(self._name, self.elevation, repr(self.demand_timeseries_list))
 
-    def _compare_structure(self, other):
-        if not super(Junction, self)._compare_structure(other):
+    def _compare(self, other):
+        if not super(Junction, self)._compare(other):
             return False
         if abs(self.elevation - other.elevation)<1e-10 and \
            abs(self.nominal_pressure - other.nominal_pressure)<1e-10 and \
@@ -266,8 +266,8 @@ class Tank(Node):
     def __repr__(self):
         return "<Tank '{}', elevation={}, min_level={}, max_level={}, diameter={}, min_vol={}, vol_curve='{}'>".format(self._name, self.elevation, self.min_level, self.max_level, self.diameter, self.min_vol, (self.vol_curve.name if self.vol_curve else None))
 
-    def _compare_structure(self, other):
-        if not super(Tank, self)._compare_structure(other):
+    def _compare(self, other):
+        if not super(Tank, self)._compare(other):
             return False
         if abs(self.elevation   - other.elevation)<1e-10 and \
            abs(self.min_level   - other.min_level)<1e-10 and \
@@ -490,8 +490,8 @@ class Reservoir(Node):
     def __repr__(self):
         return "<Reservoir '{}', head={}>".format(self._name, self._head_timeseries)
 
-    def _compare_structure(self, other):
-        if not super(Reservoir, self)._compare_structure(other):
+    def _compare(self, other):
+        if not super(Reservoir, self)._compare(other):
             return False
         if self._head_timeseries == other._head_timeseries:
             return True
@@ -572,8 +572,8 @@ class Pipe(Link):
                        self.start_node, self.end_node, self.length, self.diameter, 
                        self.roughness, self.minor_loss, self.cv, str(self.status))
     
-    def _compare_structure(self, other):
-        if not super(Pipe, self)._compare_structure(other):
+    def _compare(self, other):
+        if not super(Pipe, self)._compare(other):
             return False
         if abs(self.length        - other.length)<1e-10     and \
            abs(self.diameter      - other.diameter)<1e-10   and \
@@ -643,8 +643,8 @@ class Pump(Link):
         self.energy_pattern = None
         self._power_outage = LinkStatus.Open
 
-    def _compare_structure(self, other):
-        if not super(Pump, self)._compare_structure(other):
+    def _compare(self, other):
+        if not super(Pump, self)._compare(other):
             return False
         if self.pump_type == other.pump_type and \
            self.curve == other.curve:
@@ -886,8 +886,8 @@ class Valve(Link):
                           self.diameter, 
                           self.minor_loss, self.setting, str(self.status))
     
-    def _compare_structure(self, other):
-        if not super(Valve, self)._compare_structure(other):
+    def _compare(self, other):
+        if not super(Valve, self)._compare(other):
             return False
         if abs(self.diameter   - other.diameter)<1e-10 and \
            self.valve_type    == other.valve_type      and \
