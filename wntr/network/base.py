@@ -114,13 +114,10 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._coordinates = [0,0]
         self._source = None
 
-    def __hash__(self):
-        return hash('Node/'+self._name)
-
-    def __eq__(self, other):
+    def _compare_structure(self, other):
         if not type(self) == type(other):
             return False
-        if self._name == other._name and \
+        if self.name == other.name and \
            self.initial_quality == other.initial_quality and \
            self.tag == other.tag:
                return True
@@ -175,6 +172,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         d['coordinates'] = self.coordinates
         return d
 
+
 class Link(six.with_metaclass(abc.ABCMeta, object)):
     """
     Link base class.
@@ -228,8 +226,27 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._setting = None
         self._flow = None
 
-    def __hash__(self):
-        return hash('Link/'+self._name)
+    def _compare_structure(self, other):
+        """
+        Parameters
+        ----------
+        other: Link
+
+        Returns
+        -------
+        bool
+        """
+        if not type(self) == type(other):
+            return False
+        if self.name != other.name:
+            return False
+        if self.tag != other.tag:
+            return False
+        if self.initial_status != other.initial_status:
+            return False
+        if self.initial_setting != other.initial_setting:
+            return False
+        return True
     
     def __str__(self):
         return self._link_name

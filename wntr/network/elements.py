@@ -20,6 +20,7 @@ from .options import TimeOptions
 
 logger = logging.getLogger(__name__)
 
+
 class Junction(Node):
     """
     Junction class, inherited from Node.
@@ -56,10 +57,8 @@ class Junction(Node):
     def __repr__(self):
         return "<Junction '{}', elevation={}, demand_timeseries_list={}>".format(self._name, self.elevation, repr(self.demand_timeseries_list))
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if not super(Junction, self).__eq__(other):
+    def _compare_structure(self, other):
+        if not super(Junction, self)._compare_structure(other):
             return False
         if abs(self.elevation - other.elevation)<1e-10 and \
            abs(self.nominal_pressure - other.nominal_pressure)<1e-10 and \
@@ -267,10 +266,8 @@ class Tank(Node):
     def __repr__(self):
         return "<Tank '{}', elevation={}, min_level={}, max_level={}, diameter={}, min_vol={}, vol_curve='{}'>".format(self._name, self.elevation, self.min_level, self.max_level, self.diameter, self.min_vol, (self.vol_curve.name if self.vol_curve else None))
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if not super(Tank, self).__eq__(other):
+    def _compare_structure(self, other):
+        if not super(Tank, self)._compare_structure(other):
             return False
         if abs(self.elevation   - other.elevation)<1e-10 and \
            abs(self.min_level   - other.min_level)<1e-10 and \
@@ -469,7 +466,6 @@ class Tank(Node):
         wn._discard_control(self._leak_end_control_name)
 
 
-
 class Reservoir(Node):
     """
     Reservoir class, inherited from Node.
@@ -494,10 +490,8 @@ class Reservoir(Node):
     def __repr__(self):
         return "<Reservoir '{}', head={}>".format(self._name, self._head_timeseries)
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if not super(Reservoir, self).__eq__(other):
+    def _compare_structure(self, other):
+        if not super(Reservoir, self)._compare_structure(other):
             return False
         if self._head_timeseries == other._head_timeseries:
             return True
@@ -578,10 +572,8 @@ class Pipe(Link):
                        self.start_node, self.end_node, self.length, self.diameter, 
                        self.roughness, self.minor_loss, self.cv, str(self.status))
     
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if not super(Pipe, self).__eq__(other):
+    def _compare_structure(self, other):
+        if not super(Pipe, self)._compare_structure(other):
             return False
         if abs(self.length        - other.length)<1e-10     and \
            abs(self.diameter      - other.diameter)<1e-10   and \
@@ -618,6 +610,7 @@ class Pipe(Link):
             d['properties']['bulk_rxn_coeff'] = self.bulk_rxn_coeff
         return d
 
+
 class Pump(Link):
     """
     Pump class, inherited from Link.
@@ -650,10 +643,8 @@ class Pump(Link):
         self.energy_pattern = None
         self._power_outage = LinkStatus.Open
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if not super(Pump, self).__eq__(other):
+    def _compare_structure(self, other):
+        if not super(Pump, self)._compare_structure(other):
             return False
         if self.info_type == other.info_type and \
            self.curve == other.curve:
@@ -826,6 +817,7 @@ class HeadPump(Pump):
         d['properties']['pump_curve'] = self._pump_curve_name
         return d
 
+
 class PowerPump(Pump):
     """
     Power pump class, inherited from Pump.
@@ -852,6 +844,7 @@ class PowerPump(Pump):
         d = super(PowerPump, self).todict()
         d['properties']['base_power'] = self._base_power
         return d
+
 
 class Valve(Link):
     """
@@ -889,10 +882,8 @@ class Valve(Link):
                           self.diameter, 
                           self.minor_loss, self.setting, str(self.status))
     
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if not super(Valve, self).__eq__(other):
+    def _compare_structure(self, other):
+        if not super(Valve, self)._compare_structure(other):
             return False
         if abs(self.diameter   - other.diameter)<1e-10 and \
            self.valve_type    == other.valve_type      and \
