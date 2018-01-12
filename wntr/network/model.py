@@ -1202,17 +1202,17 @@ class WaterNetworkModel(AbstractModel):
             node.leak_demand = None
 
         for name, link in self.links(Pipe):
-            link.status = link.inital_status
+            link.status = link.initial_status
             link.flow = None
 
         for name, link in self.links(Pump):
-            link.status = link.inital_status
+            link.status = link.initial_status
             link.flow = None
             link.power = link._base_power
             link._power_outage = False
 
         for name, link in self.links(Valve):
-            link.status = link.inital_status
+            link.status = link.initial_status
             link.flow = None
             link.setting = link.initial_setting
             link._prev_setting = None
