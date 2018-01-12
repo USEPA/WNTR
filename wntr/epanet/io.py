@@ -1000,7 +1000,7 @@ class InpFile(object):
                     current[1].upper() == 'ACTIVE'):
                 new_status = LinkStatus[current[1].upper()]
                 link.initial_status = new_status
-                link._base_status = new_status
+                link.status = new_status
             else:
                 if isinstance(link, wntr.network.Valve):
                     if link.valve_type != 'PRV':
@@ -1008,7 +1008,7 @@ class InpFile(object):
                     else:
                         setting = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
                         link.setting = setting
-                        link._base_setting = setting
+                        link.initial_setting = setting
 
     def _write_status(self, f, wn):
         f.write('[STATUS]\n'.encode('ascii'))

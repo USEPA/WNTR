@@ -116,10 +116,11 @@ class WNTRSimulator(WaterNetworkSimulator):
 
     def _get_time(self):
         s = int(self._wn.sim_time)
-        h = s/3600
+        h = int(s/3600)
         s -= h*3600
-        m = s/60
-        s-=m*60
+        m = int(s/60)
+        s -= m*60
+        s = int(s)
         return str(h)+':'+str(m)+':'+str(s)
 
     def run_sim(self,solver_options={}, convergence_error=True):
@@ -212,9 +213,14 @@ class WNTRSimulator(WaterNetworkSimulator):
                 presolve_controls_to_run = self._presolve_controls.check()
                 presolve_controls_to_run.sort(key=lambda i: i[0]._priority)
                 presolve_controls_to_run.sort(key=lambda i: i[1], reverse=True)
+                logger.debug('presolve_controls_to_run:')
+                if logger.getEffectiveLevel() <= logging.DEBUG:
+                    for pctr in presolve_controls_to_run:
+                        logger.debug('\t' + str(pctr[0]) + '\t' + str(pctr[1]))
                 cnt = 0
                 while cnt < len(presolve_controls_to_run) or rule_iter * self._wn.options.time.rule_timestep <= self._wn.sim_time:
                     if cnt >= len(presolve_controls_to_run):
+                        logger.debug('no presolve controls need activated; checking rules')
                         old_time = self._wn.sim_time
                         self._wn.sim_time = rule_iter * self._wn.options.time.rule_timestep
                         rule_iter += 1
@@ -223,17 +229,25 @@ class WNTRSimulator(WaterNetworkSimulator):
                         for rule, rule_back in rules_to_run:
                             rule.run_control_action()
                         if self._rules.changes_made():
+                            logger.debug('changes made by rules; solving rule timestep')
                             break
                         self._wn.sim_time = old_time
                     else:
                         control, backtrack = presolve_controls_to_run[cnt]
                         if self._wn.sim_time - backtrack < rule_iter * self._wn.options.time.rule_timestep:
+                            if logger.getEffectiveLevel() <= logging.DEBUG:
+                                logger.debug('running presolve controls:')
+                                logger.debug('\t' + str(control))
                             control.run_control_action()
                             cnt += 1
                             while cnt < len(presolve_controls_to_run) and presolve_controls_to_run[cnt][1] == backtrack:
+                                if logger.getEffectiveLevel() <= logging.DEBUG:
+                                    logger.debug('\t' + str(presolve_controls_to_run[cnt][0]))
                                 presolve_controls_to_run[cnt][0].run_control_action()
                                 cnt += 1
                             if self._presolve_controls.changes_made():
+                                if logger.getEffectiveLevel() <= logging.DEBUG:
+                                    logger.debug('\tchanges were made; backtracking by {0}'.format(backtrack))
                                 self._wn.sim_time -= backtrack
                                 break
                         elif self._wn.sim_time - backtrack == rule_iter * self._wn.options.time.rule_timestep:
@@ -296,6 +310,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             for control, unused in postsolve_controls_to_run:
                 control.run_control_action()
             if self._postsolve_controls.changes_made():
+                logger.debug('postsolve controls made changes; resolving...')
                 resolve = True
                 self._update_internal_graph()
                 self._postsolve_controls.reset()
@@ -310,6 +325,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                     return results
                 continue
 
+            logger.debug('no changes made by postsolve controls; moving to next timestep')
+
             resolve = False
             if type(self._wn.options.time.report_timestep) == float or type(self._wn.options.time.report_timestep) == int:
                 if self._wn.sim_time % self._wn.options.time.report_timestep == 0:
@@ -322,7 +339,9 @@ class WNTRSimulator(WaterNetworkSimulator):
             first_step = False
             self._wn.sim_time += self._wn.options.time.hydraulic_timestep
             overstep = float(self._wn.sim_time) % self._wn.options.time.hydraulic_timestep
+            logger.debug('overstep: {0}'.format(overstep))
             self._wn.sim_time -= overstep
+            logger.debug('new sim time: {0}'.format(self._wn.sim_time))
 
             if self._wn.sim_time > self._wn.options.time.duration:
                 break

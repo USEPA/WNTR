@@ -2229,18 +2229,23 @@ class LinkRegistry(Registry):
         if valve_type == 'PRV':
             valve = PRValve(name, start_node_name, end_node_name, self._m)
             valve.initial_setting = setting
+            valve.setting = setting
         elif valve_type == 'PSV':
             valve = PSValve(name, start_node_name, end_node_name, self._m)
             valve.initial_setting = setting
+            valve.setting = setting
         elif valve_type == 'PBV':
             valve = PBValve(name, start_node_name, end_node_name, self._m)
             valve.initial_setting = setting
+            valve.setting = setting
         elif valve_type == 'FCV':
             valve = FCValve(name, start_node_name, end_node_name, self._m)
             valve.initial_setting = setting
+            valve.setting = setting
         elif valve_type == 'TCV':
             valve = TCValve(name, start_node_name, end_node_name, self._m)
             valve.initial_setting = setting
+            valve.setting = setting
         elif valve_type == 'GPV':
             valve = GPValve(name, start_node_name, end_node_name, self._m)
             valve.headloss_curve_name = setting

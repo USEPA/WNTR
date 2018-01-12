@@ -559,8 +559,14 @@ class TankLevelCondition(ValueCondition):
         if np.isnan(self._threshold):  # what is this doing?
             relation = np.greater
             thresh_value = 0.0
+        if relation in {Comparison.le, Comparison.lt}:
+            tol = 0.0001524
+        elif relation in {Comparison.gt, Comparison.ge}:
+            tol = -0.0001524
+        else:
+            raise ValueError('unrecognized Comparison for TankLevelCondition: {0}'.format(relation))
         state = relation(cur_value, thresh_value)  # determine if the condition is satisfied
-        if state and not relation(self._last_value, thresh_value):
+        if state and not relation(self._last_value, thresh_value + tol):
             # if the condition is satisfied and the last value did not satisfy the condition, then backtracking
             # is needed
             self._backtrack = (cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand
@@ -1087,6 +1093,7 @@ class _ValveNewSettingCondition(ControlCondition):
         ----------
         valve: wntr.network.Valve
         """
+        super(_ValveNewSettingCondition, self).__init__()
         self._valve = valve
 
     def requires(self):
