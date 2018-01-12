@@ -206,6 +206,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                 start_step_time = time.time()
 
             if not resolve:
+                if not first_step:
+                    self._model.update_tank_heads()
                 trial = 0
                 presolve_controls_to_run = self._presolve_controls.check()
                 presolve_controls_to_run.sort(key=lambda i: i[0]._priority)

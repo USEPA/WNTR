@@ -1257,7 +1257,7 @@ class HydraulicModel(object):
         for tank_name, tank in self._wn.nodes(Tank):
             q_net = tank.demand
             delta_h = 4.0*q_net*(self._wn.sim_time-self._wn._prev_sim_time)/(math.pi*tank.diameter**2)
-            tank.head += delta_h
+            tank.head = tank._prev_head + delta_h
 
     def reset_isolated_junctions(self):
         self.isolated_junction_names = set()
@@ -1277,6 +1277,8 @@ class HydraulicModel(object):
         self._wn._prev_sim_time = self._wn.sim_time
         for link_name, link in self._wn.valves():
             link._prev_setting = link.setting
+        for tank_name, tank in self._wn. tanks():
+            tank._prev_head = tank.head
 
     def store_results_in_network(self, x):
         head = x[:self.num_nodes]

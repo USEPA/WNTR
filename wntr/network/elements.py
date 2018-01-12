@@ -257,6 +257,7 @@ class Tank(Node):
         self.max_level=6.096
         self.diameter=15.24,
         self.head = self.elevation + self._init_level
+        self._prev_head = self.head
         self.min_vol=0
         self._vol_curve_name = None
         self._mix_model = None

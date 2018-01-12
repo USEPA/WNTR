@@ -563,7 +563,7 @@ class TankLevelCondition(ValueCondition):
         if state and not relation(self._last_value, thresh_value):
             # if the condition is satisfied and the last value did not satisfy the condition, then backtracking
             # is needed
-            self._backtrack = -(cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand
+            self._backtrack = (cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand
         self._last_value = cur_value  # update the last value
         return state
 
@@ -1397,7 +1397,7 @@ class Control(ControlBase):
         return fmt.format(self._name, repr(self._condition), repr(self._then_actions), repr(self._else_actions), self._priority)
 
     def __str__(self):
-        text = 'Rule {} := if {}'.format(self._name, self._condition)
+        text = '{} {} := if {}'.format(self._control_type.name, self._name, self._condition)
         if self._then_actions is not None and len(self._then_actions) > 0:
             then_text = ' then '
             for ct, act in enumerate(self._then_actions):
