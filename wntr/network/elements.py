@@ -885,7 +885,8 @@ class Valve(Link):
         super(Valve, self).__init__(model, name, start_node_name, end_node_name)
         self.diameter = 0.3048
         self.minor_loss = 0.0
-        self._initial_status = LinkStatus.active
+        self._initial_status = LinkStatus.Active
+        self._user_status = LinkStatus.Active
         self._initial_setting = 0.0
 
     def __repr__(self):

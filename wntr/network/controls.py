@@ -559,17 +559,16 @@ class TankLevelCondition(ValueCondition):
         if np.isnan(self._threshold):  # what is this doing?
             relation = np.greater
             thresh_value = 0.0
-        if relation in {Comparison.le, Comparison.lt}:
-            tol = 0.0001524
-        elif relation in {Comparison.gt, Comparison.ge}:
-            tol = -0.0001524
-        else:
-            raise ValueError('unrecognized Comparison for TankLevelCondition: {0}'.format(relation))
         state = relation(cur_value, thresh_value)  # determine if the condition is satisfied
-        if state and not relation(self._last_value, thresh_value + tol):
+        if state and not relation(self._last_value, thresh_value):
             # if the condition is satisfied and the last value did not satisfy the condition, then backtracking
-            # is needed
-            self._backtrack = (cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand
+            # is needed.
+            # The math.floor is not actually needed, but I leave it here for clarity. We want the backtrack value to be
+            # slightly lower than what the floating point computation would give. This ensures the next time step will
+            # be slightly later than when the tank level hits the threshold. This ensures the tank level will go
+            # slightly beyond the threshold. This ensures that relation(self._last_value, thresh_value) will be True
+            # next time. This prevents us from computing very small backtrack values over and over.
+            self._backtrack = int(math.floor((cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand))
         self._last_value = cur_value  # update the last value
         return state
 
@@ -1507,6 +1506,9 @@ class ControlManager(Observer):
         self._previous_values = OrderedDict()  # {(obj, attr): value}
         self._changed = OrderedSet()  # set of (obj, attr) that has been changed from _previous_values
 
+    def __iter__(self):
+        return iter(self._controls)
+
     def update(self, subject):
         """
         The update method gets called when a subject (control action) is activated.
@@ -1544,9 +1546,7 @@ class ControlManager(Observer):
                 self._previous_values[(obj, attr)] = getattr(obj, attr)
 
     def changes_made(self):
-        if len(self._changed) > 0:
-            return True
-        return False
+        return len(self._changed) > 0
 
     def get_changes(self):
         for obj, attr in self._changed:

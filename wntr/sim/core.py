@@ -112,7 +112,12 @@ class WNTRSimulator(WaterNetworkSimulator):
         super(WNTRSimulator, self).__init__(wn, mode)
         self._internal_graph = None
         self._node_pairs_with_multiple_links = None
-        self._control_log = None
+        self._presolve_controls = ControlManager()
+        self._rules = ControlManager()
+        self._postsolve_controls = ControlManager()
+        self._time_per_step = []
+        self._solver = None
+        self._model = None
 
     def _get_time(self):
         s = int(self._wn.sim_time)
@@ -123,7 +128,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         s = int(s)
         return str(h)+':'+str(m)+':'+str(s)
 
-    def run_sim(self,solver_options={}, convergence_error=True):
+    def run_sim(self, solver_options={}, convergence_error=True):
         """
         Run an extended period simulation (hydraulics only).
 
@@ -145,30 +150,49 @@ class WNTRSimulator(WaterNetworkSimulator):
             a warning will be issued and results.error_code will be set to 2
             if the simulation does not converge.  Default = True.
         """
-        self.time_per_step = []
+        logger_level = logger.getEffectiveLevel()
+
+        if logger_level <= 1:
+            logger.log(1, 'beginning of run_sim')
+
+        self._time_per_step = []
 
         self._presolve_controls = ControlManager()
         self._postsolve_controls = ControlManager()
         self._rules = ControlManager()
 
         def categorize_control(control):
-            if control._control_type in {_ControlType.presolve, _ControlType.pre_and_postsolve}:
+            if control.epanet_control_type in {_ControlType.presolve, _ControlType.pre_and_postsolve}:
                 self._presolve_controls.register_control(control)
-            if control._control_type in {_ControlType.postsolve, _ControlType.pre_and_postsolve}:
+            if control.epanet_control_type in {_ControlType.postsolve, _ControlType.pre_and_postsolve}:
                 self._postsolve_controls.register_control(control)
-            if control._control_type == _ControlType.rule:
+            if control.epanet_control_type == _ControlType.rule:
                 self._rules.register_control(control)
 
         for c_name, c in self._wn.controls():
             categorize_control(c)
-        for c in self._wn._get_all_tank_controls() + self._wn._get_cv_controls() + self._wn._get_pump_controls() + self._wn._get_valve_controls():
+        for c in (self._wn._get_all_tank_controls() + self._wn._get_cv_controls() + self._wn._get_pump_controls() +
+                  self._wn._get_valve_controls()):
             categorize_control(c)
+
+        if logger_level <= 1:
+            logger.log(1, 'collected presolve controls:')
+            for c in self._presolve_controls:
+                logger.log(1, '\t' + str(c))
+            logger.log(1, 'collected rules:')
+            for c in self._rules:
+                logger.log(1, '\t' + str(c))
+            logger.log(1, 'collected postsolve controls:')
+            for c in self._postsolve_controls:
+                logger.log(1, '\t' + str(c))
+
+            logger.log(1, 'initializing hydraulic model')
 
         model = HydraulicModel(self._wn, self.mode)
         self._model = model
         model.initialize_results_dict()
 
-        self.solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, model, options=solver_options)
+        self._solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, model, options=solver_options)
 
         results = NetResults()
         results.error_code = 0
@@ -186,7 +210,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         flow0 = model.initialize_flow()
         leak_demand0 = model.initialize_leak_demand()
 
-        X_init = np.concatenate((head0, demand0, flow0,leak_demand0))
+        X_init = np.concatenate((head0, demand0, flow0, leak_demand0))
 
         self._initialize_internal_graph()
 
@@ -197,93 +221,179 @@ class WNTRSimulator(WaterNetworkSimulator):
         trial = -1
         max_trials = self._wn.options.solver.trials
         resolve = False
-        rule_iter = 0
+        rule_iter = 0  # this is used to determine the rule timestep
+
+        self._model.update_network_previous_values()
+
+        if logger_level <= 1:
+            logger.log(1, 'starting simulation')
 
         while True:
-            logger.debug(' ')
-            logger.debug(' ')
+            if logger_level <= logging.DEBUG:
+                logger.debug('\n\n')
 
             if not resolve:
-                start_step_time = time.time()
+                """
+                Within this if statement:
+                    1) Determine the next time step. This depends on both presolve controls and rules. Note that 
+                       (unless this is the first time step) the current value of wn.sim_time is the next hydraulic 
+                       timestep. If there are presolve controls or rules that need activated before the next hydraulic
+                       timestep, then the wn.sim_time will be adjusted within this if statement.
+                       
+                        a) check the presolve controls to see which ones need activated.
+                        b) if there is a presolve control(s) that need activated and it needs activated at a time
+                           that is earlier than the next rule timestep, then the next simulation time is determined
+                           by that presolve controls
+                        c) if there are any rules that need activated before the next hydraulic timestep, then 
+                           wn.sim_time will be adjusted to the appropriate rule timestep.
+                    2) Activate the appropriate controls
+                """
+                start_step_time = time.time()  # this is just for timing
 
-            if not resolve:
                 if not first_step:
+                    """
+                    The tank levels/heads must be done before checking the controls because the TankLevelControls
+                    depend on the tank levels. These will be updated again after we determine the next actual timestep.
+                    """
                     self._model.update_tank_heads()
                 trial = 0
+
+                # check which presolve controls need to be activated before the next hydraulic timestep
                 presolve_controls_to_run = self._presolve_controls.check()
-                presolve_controls_to_run.sort(key=lambda i: i[0]._priority)
+                presolve_controls_to_run.sort(key=lambda i: i[0]._priority)  # sort them by priority
+                # now sort them from largest to smallest "backtrack"; this way they are in the time-order
+                # in which they need to be activated
                 presolve_controls_to_run.sort(key=lambda i: i[1], reverse=True)
-                logger.debug('presolve_controls_to_run:')
-                if logger.getEffectiveLevel() <= logging.DEBUG:
+                if logger_level <= 1:
+                    logger.log(1, 'presolve_controls that need activated before the next hydraulic timestep:')
                     for pctr in presolve_controls_to_run:
-                        logger.debug('\t' + str(pctr[0]) + '\t' + str(pctr[1]))
+                        logger.log(1, '\tcontrol: {0} \tbacktrack: {1}'.format(pctr[0], pctr[1]))
                 cnt = 0
+
+                # loop until we have checked all of the presolve_controls_to_run and all of the rules prior to the next
+                # hydraulic timestep
                 while cnt < len(presolve_controls_to_run) or rule_iter * self._wn.options.time.rule_timestep <= self._wn.sim_time:
                     if cnt >= len(presolve_controls_to_run):
-                        logger.debug('no presolve controls need activated; checking rules')
+                        # We have already checked all of the presolve_controls_to_run, and nothing changed
+                        # Now we just need to check the rules
+                        if logger_level <= 1:
+                            logger.log(1, 'no presolve controls need activated; checking rules at rule timestep {0}'.format(rule_iter * self._wn.options.time.rule_timestep))
                         old_time = self._wn.sim_time
                         self._wn.sim_time = rule_iter * self._wn.options.time.rule_timestep
+                        if not first_step:
+                            self._model.update_tank_heads()
                         rule_iter += 1
                         rules_to_run = self._rules.check()
                         rules_to_run.sort(key=lambda i: i[0]._priority)
-                        for rule, rule_back in rules_to_run:
+                        for rule, rule_back in rules_to_run:  # rule_back is the "backtrack" which is not actually used for rules
+                            if logger_level <= 1:
+                                logger.log(1, '\tactivating rule {0}'.format(rule))
                             rule.run_control_action()
                         if self._rules.changes_made():
-                            logger.debug('changes made by rules; solving rule timestep')
+                            # If changes were made, then we found the next timestep; break
                             break
+                        # if no changes were made, then set the wn.sim_time back
+                        if logger_level <= 1:
+                            logger.log(1, 'no changes made by rules at rule timestep {0}'.format((rule_iter - 1) * self._wn.options.time.rule_timestep))
                         self._wn.sim_time = old_time
                     else:
+                        # check the next presolve control in presolve_controls_to_run
                         control, backtrack = presolve_controls_to_run[cnt]
+                        if logger_level <= 1:
+                            logger.log(1, 'checking control {0}; backtrack: {1}'.format(control, backtrack))
                         if self._wn.sim_time - backtrack < rule_iter * self._wn.options.time.rule_timestep:
-                            if logger.getEffectiveLevel() <= logging.DEBUG:
-                                logger.debug('running presolve controls:')
-                                logger.debug('\t' + str(control))
+                            # The control needs activated before the next rule timestep; Activate the control and
+                            # any controls with the samve value for backtrack
+                            if logger_level <= 1:
+                                logger.log(1, 'control {0} needs run before the next rule timestep.'.format(control))
                             control.run_control_action()
                             cnt += 1
                             while cnt < len(presolve_controls_to_run) and presolve_controls_to_run[cnt][1] == backtrack:
-                                if logger.getEffectiveLevel() <= logging.DEBUG:
-                                    logger.debug('\t' + str(presolve_controls_to_run[cnt][0]))
+                                # Also activate all of the controls that have the same value for backtrack
+                                if logger_level <= 1:
+                                    logger.log(1, '\talso activating control {0}; backtrack: {1}'.format(presolve_controls_to_run[cnt][0],
+                                                                                                   presolve_controls_to_run[cnt][1]))
                                 presolve_controls_to_run[cnt][0].run_control_action()
                                 cnt += 1
                             if self._presolve_controls.changes_made():
-                                if logger.getEffectiveLevel() <= logging.DEBUG:
-                                    logger.debug('\tchanges were made; backtracking by {0}'.format(backtrack))
+                                # changes were actually made; we found the next timestep; update wn.sim_time and break
                                 self._wn.sim_time -= backtrack
                                 break
+                            if logger_level <= 1:
+                                logger.log(1, 'controls with backtrack {0} did not make any changes'.format(backtrack))
                         elif self._wn.sim_time - backtrack == rule_iter * self._wn.options.time.rule_timestep:
+                            # the control needs activated at the same time as the next rule timestep;
+                            # activate the control, any controls with the same value for backtrack, and any rules at
+                            # this rule timestep
+                            # the rules need run first (I think to match epanet)
+                            if logger_level <= 1:
+                                logger.log(1, 'control has backtrack equivalent to next rule timestep')
                             rule_iter += 1
                             self._wn.sim_time -= backtrack
+                            if not first_step:
+                                self._model.update_tank_heads()
                             rules_to_run = self._rules.check()
                             rules_to_run.sort(key=lambda i: i[0]._priority)
                             for rule, rule_back in rules_to_run:
+                                if logger_level <= 1:
+                                    logger.log(1, '\tactivating rule {0}'.format(rule))
                                 rule.run_control_action()
+                            if logger_level <= 1:
+                                logger.log(1, '\tactivating control {0}; backtrack: {1}'.format(control, backtrack))
                             control.run_control_action()
                             cnt += 1
                             while cnt < len(presolve_controls_to_run) and presolve_controls_to_run[cnt][1] == backtrack:
+                                if logger_level <= 1:
+                                    logger.log(1, '\talso activating control {0}; backtrack: {1}'.format(presolve_controls_to_run[cnt][0], presolve_controls_to_run[cnt][1]))
                                 presolve_controls_to_run[cnt][0].run_control_action()
                                 cnt += 1
                             if self._presolve_controls.changes_made() or self._rules.changes_made():
                                 break
+                            if logger_level <= 1:
+                                logger.log(1, 'no changes made by presolve controls or rules at backtrack {0}'.format(backtrack))
                             self._wn.sim_time += backtrack
                         else:
+                            if logger_level <= 1:
+                                logger.log(1, 'The next rule timestep is before this control needs activated; checking rules')
                             old_time = self._wn.sim_time
                             self._wn.sim_time = rule_iter * self._wn.options.time.rule_timestep
                             rule_iter += 1
+                            if not first_step:
+                                self._model.update_tank_heads()
                             rules_to_run = self._rules.check()
                             rules_to_run.sort(key=lambda i: i[0]._priority)
                             for rule, rule_back in rules_to_run:
+                                if logger_level <= 1:
+                                    logger.log(1, '\tactivating rule {0}'.format(rule))
                                 rule.run_control_action()
                             if self._rules.changes_made():
                                 break
+                            if logger_level <= 1:
+                                logger.log(1, 'no changes made by rules at rule timestep {0}'.format((rule_iter - 1) * self._wn.options.time.rule_timestep))
                             self._wn.sim_time = old_time
                 self._update_internal_graph()
+                if logger_level <= logging.DEBUG:
+                    logger.debug('changes made by rules: ')
+                    for obj, attr in self._rules.get_changes():
+                        logger.debug('\t{0}.{1} changed to {2}'.format(obj, attr, getattr(obj, attr)))
+                    logger.debug('changes made by presolve controls:')
+                    for obj, attr in self._presolve_controls.get_changes():
+                        logger.debug('\t{0}.{1} changed to {2}'.format(obj, attr, getattr(obj, attr)))
                 self._presolve_controls.reset()
                 self._rules.reset()
 
-            logger.info('simulation time = %s, trial = %d',self._get_time(),trial)
+            logger.info('simulation time = %s, trial = %d', self._get_time(), trial)
 
             # Prepare for solve
+            if logger_level <= logging.DEBUG:
+                logger.debug('checking for isolated junctions and links')
             isolated_junctions, isolated_links = self._get_isolated_junctions_and_links()
+            if logger_level <= logging.DEBUG:
+                if len(isolated_junctions) > 0 or len(isolated_links) > 0:
+                    logger.debug('isolated junctions: {0}'.format(isolated_junctions))
+                    logger.debug('isolated links: {0}'.format(isolated_links))
+                else:
+                    logger.debug('no isolated junctions or links found')
             model.set_isolated_junctions_and_links(isolated_junctions, isolated_links)
             if not first_step and not resolve:
                 model.update_tank_heads()
@@ -291,9 +401,12 @@ class WNTRSimulator(WaterNetworkSimulator):
             model.set_jacobian_constants()
 
             # Solve
-            [self._X,num_iters,solver_status] = self.solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            if logger_level <= logging.DEBUG:
+                logger.debug('solving')
+            [self._X, num_iters, solver_status] = self._solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             if solver_status == 0:
                 if convergence_error:
+                    logger.error('Simulation did not converge!')
                     raise RuntimeError('Simulation did not converge!')
                 warnings.warn('Simulation did not converge!')
                 logger.warning('Simulation did not converge at time %s',self._get_time())
@@ -303,20 +416,31 @@ class WNTRSimulator(WaterNetworkSimulator):
             X_init = np.array(self._X)
 
             # Enter results in network and update previous inputs
+            if logger_level <= logging.DEBUG:
+                logger.debug('storing results in network')
             model.store_results_in_network(self._X)
 
+            if logger_level <= logging.DEBUG:
+                logger.debug('checking postsolve controls')
+            self._postsolve_controls.reset()
             postsolve_controls_to_run = self._postsolve_controls.check()
             postsolve_controls_to_run.sort(key=lambda i: i[0]._priority)
             for control, unused in postsolve_controls_to_run:
+                if logger_level <= 1:
+                    logger.log(1, '\tactivating control {0}'.format(control))
                 control.run_control_action()
             if self._postsolve_controls.changes_made():
-                logger.debug('postsolve controls made changes; resolving...')
+                if logger_level <= logging.DEBUG:
+                    logger.debug('postsolve controls made changes:')
+                    for obj, attr in self._postsolve_controls.get_changes():
+                        logger.debug('\t{0}.{1} changed to {2}'.format(obj, attr, getattr(obj, attr)))
                 resolve = True
                 self._update_internal_graph()
                 self._postsolve_controls.reset()
                 trial += 1
                 if trial > max_trials:
                     if convergence_error:
+                        logger.error('Exceeded maximum number of trials.')
                         raise RuntimeError('Exceeded maximum number of trials.')
                     results.error_code = 2
                     warnings.warn('Exceeded maximum number of trials.')
@@ -339,14 +463,12 @@ class WNTRSimulator(WaterNetworkSimulator):
             first_step = False
             self._wn.sim_time += self._wn.options.time.hydraulic_timestep
             overstep = float(self._wn.sim_time) % self._wn.options.time.hydraulic_timestep
-            logger.debug('overstep: {0}'.format(overstep))
             self._wn.sim_time -= overstep
-            logger.debug('new sim time: {0}'.format(self._wn.sim_time))
 
             if self._wn.sim_time > self._wn.options.time.duration:
                 break
 
-            self.time_per_step.append(time.time()-start_step_time)
+            self._time_per_step.append(time.time()-start_step_time)
 
         model.get_results(results)
         return results

@@ -801,7 +801,7 @@ class WaterNetworkModel(AbstractModel):
         valve_controls = []
         for valve_name, valve in self.valves():
 
-            new_setting_action = ControlAction(valve, 'status', LinkStatus.Open)
+            new_setting_action = ControlAction(valve, 'status', LinkStatus.Active)
             new_setting_condition = _ValveNewSettingCondition(valve)
             new_setting_control = Control(new_setting_condition, [new_setting_action], [], ControlPriority.very_low)
             new_setting_control._control_type = _ControlType.postsolve
