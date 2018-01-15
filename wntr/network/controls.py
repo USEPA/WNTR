@@ -542,7 +542,7 @@ class ValueCondition(ControlCondition):
             relation = np.greater
             thresh_value = 0.0
         state = relation(cur_value, thresh_value)
-        return state
+        return bool(state)
 
 
 class TankLevelCondition(ValueCondition):
@@ -568,9 +568,10 @@ class TankLevelCondition(ValueCondition):
             # be slightly later than when the tank level hits the threshold. This ensures the tank level will go
             # slightly beyond the threshold. This ensures that relation(self._last_value, thresh_value) will be True
             # next time. This prevents us from computing very small backtrack values over and over.
-            self._backtrack = int(math.floor((cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand))
+            if self._source_obj.demand != 0:
+                self._backtrack = int(math.floor((cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand))
         self._last_value = cur_value  # update the last value
-        return state
+        return bool(state)
 
 
 class RelativeCondition(ControlCondition):
@@ -647,7 +648,7 @@ class RelativeCondition(ControlCondition):
         thresh_value = getattr(self._threshold_obj, self._threshold_attr)
         relation = self._relation.func
         state = relation(cur_value, thresh_value)
-        return state
+        return bool(state)
 
 
 class OrCondition(ControlCondition):
@@ -877,6 +878,7 @@ class _CloseHeadPumpCondition(ControlCondition):
         dh = self._end_node.head - self._start_node.head
         if dh > Hmax + self._Htol:
             return True
+        return False
 
 
 class _OpenHeadPumpCondition(ControlCondition):
@@ -912,6 +914,7 @@ class _OpenHeadPumpCondition(ControlCondition):
         dh = self._end_node.head - self._start_node.head
         if dh <= Hmax + self._Htol:
             return True
+        return False
 
 
 class _ClosePRVCondition(ControlCondition):

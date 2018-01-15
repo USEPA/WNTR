@@ -706,7 +706,9 @@ class WaterNetworkModel(AbstractModel):
                     else:
                         other_node_name = link.start_node
                     other_node = self.get_node(other_node_name)
-                    open_condition_2 = RelativeCondition(tank, 'head', Comparison.le, other_node, 'head')
+                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.le, other_node, 'head')
+                    open_condition_2b = ValueCondition(tank, 'head', Comparison.le, min_head)
+                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
@@ -747,7 +749,9 @@ class WaterNetworkModel(AbstractModel):
                     else:
                         other_node_name = link.start_node
                     other_node = self.get_node(other_node_name)
-                    open_condition_2 = RelativeCondition(tank, 'head', Comparison.ge, other_node, 'head')
+                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.ge, other_node, 'head')
+                    open_condition_2b = ValueCondition(tank, 'head', Comparison.ge, max_head)
+                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)

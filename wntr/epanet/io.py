@@ -1744,11 +1744,11 @@ class InpFile(object):
                     self.wn.options.results.nodes = True
                 elif not isinstance(self.wn.options.results.nodes, list):
                     self.wn.options.results.nodes = []
-                    for ct in xrange(len(current)-2):
+                    for ct in range(len(current)-2):
                         i = ct + 2
                         self.wn.options.results.nodes.append(current[i])
                 else:
-                    for ct in xrange(len(current)-2):
+                    for ct in range(len(current)-2):
                         i = ct + 2
                         self.wn.options.results.nodes.append(current[i])
             elif current[0].upper() in ['LINKS']:
@@ -2650,7 +2650,7 @@ class BinFile(object):
                 self.results.node['demand'] = HydParam.Demand._to_si(self.flow_units, df['demand'])
                 self.results.node['head'] = HydParam.HydraulicHead._to_si(self.flow_units, df['head'])
                 self.results.node['pressure'] = HydParam.Pressure._to_si(self.flow_units, df['pressure'])
-                
+
                 # Water Quality Results (node and link)
                 if self.quality_type is QualType.Chem:
                     self.results.node['quality'] = QualParam.Concentration._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
