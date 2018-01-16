@@ -931,7 +931,7 @@ class HydraulicModel(object):
 
             for link_id in self._fcv_ids:
                 link_flow = flow[link_id]
-                if self.link_status[link_id] == wntr.network.LinkStatus.Closed or link_id in self.isolated_link_ids:
+                if self.link_status[link_id] == LinkStatus.Closed or link_id in self.isolated_link_ids:
                     self.headloss_residual[link_id] = link_flow
                 elif self.link_status[link_id] == LinkStatus.Active:
                     self.headloss_residual[link_id] = link_flow - self.valve_settings[link_id]
@@ -942,7 +942,7 @@ class HydraulicModel(object):
 
             for link_id in self._tcv_ids:
                 link_flow = flow[link_id]
-                if self.link_status[link_id] == wntr.network.LinkStatus.Closed or link_id in self.isolated_link_ids:
+                if self.link_status[link_id] == LinkStatus.Closed or link_id in self.isolated_link_ids:
                     self.headloss_residual[link_id] = link_flow
                 elif self.link_status[link_id] == LinkStatus.Active:
                     coeff = self.pipe_resistance_coefficients[link_id]
