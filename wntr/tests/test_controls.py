@@ -2,8 +2,6 @@
 import unittest
 from nose import SkipTest
 from os.path import abspath, dirname, join
-import logging
-logging.basicConfig(level=logging.DEBUG)
 
 testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir,'networks_for_testing')
