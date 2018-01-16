@@ -262,8 +262,8 @@ def todini(node_results, link_results, wn, Pstar):
         PInRes[name] = -Q*H # switch sign on Q.
 
     for name, link in wn.links(wntr.network.Pump):
-        start_node = link._start_node_name
-        end_node = link._end_node_name
+        start_node = link.start_node_name
+        end_node = link.end_node_name
         h_start = np.array(node_results['head'].loc[:,start_node]) # (m)
         h_end = np.array(node_results['head'].loc[:,end_node]) # (m)
         h = h_start - h_end # (m)

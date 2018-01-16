@@ -1207,17 +1207,17 @@ class WaterNetworkModel(AbstractModel):
 
         for name, link in self.links(Pipe):
             link.status = link.initial_status
-            link.flow = None
+            link._flow = None
 
         for name, link in self.links(Pump):
             link.status = link.initial_status
-            link.flow = None
+            link._flow = None
             link.power = link._base_power
             link._power_outage = False
 
         for name, link in self.links(Valve):
             link.status = link.initial_status
-            link.flow = None
+            link._flow = None
             link.setting = link.initial_setting
             link._prev_setting = None
 
@@ -1384,7 +1384,7 @@ class WaterNetworkModel(AbstractModel):
 
         if add_pipe_at_node.lower() == 'start':
             # add original pipe back to graph between new junction and original end
-            pipe._start_node_name = new_junction_name
+            pipe.start_node = new_junction_name
             # add new pipe and change original length
             self.add_pipe(new_pipe_name, start_node.name, new_junction_name,
                           original_length*split_at_point, pipe.diameter, pipe.roughness,
@@ -1393,7 +1393,7 @@ class WaterNetworkModel(AbstractModel):
 
         elif add_pipe_at_node.lower() == 'end':
             # add original pipe back to graph between original start and new junction
-            pipe._end_node_name = new_junction_name            
+            pipe.end_node = new_junction_name      
             # add new pipe and change original length
             self.add_pipe(new_pipe_name, new_junction_name, end_node.name,
                           original_length*(1-split_at_point), pipe.diameter, pipe.roughness,
@@ -1530,7 +1530,7 @@ class WaterNetworkModel(AbstractModel):
 
         if add_pipe_at_node.lower() == 'start':
             # add original pipe back to graph between new junction and original end
-            pipe._start_node_name = new_junction_name_old_pipe
+            pipe.start_node_name = new_junction_name_old_pipe
             self._graph.add_edge(new_junction_name_old_pipe, end_node.name, key=pipe_name_to_split)
             nx.set_edge_attributes(self._graph, name='type', values={(new_junction_name_old_pipe, 
                                                           end_node.name,
@@ -1543,7 +1543,7 @@ class WaterNetworkModel(AbstractModel):
 
         elif add_pipe_at_node.lower() == 'end':
             # add original pipe back to graph between original start and new junction
-            pipe._end_node_name = new_junction_name_old_pipe            
+            pipe.end_node_name = new_junction_name_old_pipe            
             self._graph.add_edge(start_node.name, new_junction_name_old_pipe, key=pipe_name_to_split)
             nx.set_edge_attributes(self._graph, name='type', values={(start_node.name,
                                                           new_junction_name_old_pipe,
@@ -1558,33 +1558,6 @@ class WaterNetworkModel(AbstractModel):
             logger.warn('You are splitting a pipe with a check valve. The new pipe will not have a check valve.')
         return (pipe, new_junction1, new_junction2, new_pipe)
     
-    ### # 
-    ### Move to controls
-    def add_pump_outage(self, pump_name, start_time, end_time):
-        """
-        Adds a pump outage to the water network model.
-
-        Parameters
-        ----------
-        pump_name : string
-           The name of the pump to be affected by an outage.
-        start_time : int
-           The time at which the outage starts.
-        end_time : int
-           The time at which the outage stops.
-        """
-        pump = self.get_link(pump_name)
-
-        start_power_outage_action = _InternalControlAction(pump, '_power_outage', LinkStatus.Closed, 'status')
-        end_power_outage_action = _InternalControlAction(pump, '_power_outage', LinkStatus.Open, 'status')
-
-        start_control = Control.time_control(self, start_time, 'SIM_TIME', False, start_power_outage_action)
-        end_control = Control.time_control(self, end_time, 'SIM_TIME', False, end_power_outage_action)
-
-        self.add_control(pump_name+'_power_off_'+str(start_time), start_control)
-        self.add_control(pump_name+'_power_on_'+str(end_time), end_control)
-
-
 class PatternRegistry(Registry):
 
     @property

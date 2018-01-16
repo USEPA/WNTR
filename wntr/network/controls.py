@@ -497,7 +497,10 @@ class ValueCondition(ControlCondition):
             return object.__new__(TankLevelCondition)
         else:
             return object.__new__(ValueCondition)
-
+    
+    def __getnewargs__(self):
+        return self._source_obj, self._source_attr, self._relation, self._threshold
+    
     def __init__(self, source_obj, source_attr, relation, threshold):
         self._source_obj = source_obj
         self._source_attr = source_attr
@@ -550,7 +553,7 @@ class TankLevelCondition(ValueCondition):
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
         self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
-
+        
     def evaluate(self):
         self._backtrack = 0  # no backtracking is needed unless specified in the if statement below
         cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level
