@@ -972,14 +972,15 @@ class _OpenPRVCondition(ControlCondition):
         if self._prv._internal_status == LinkStatus.Active:
             if self._prv.flow < -self._Qtol:
                 return False
-            elif self._start_node.head < self._prv.setting + self._end_node.elevation  + self._r * abs(self._prv.flow)**2 - self._Htol:
+            elif self._start_node.head < self._prv.setting + self._end_node.elevation + self._r * abs(self._prv.flow)**2 - self._Htol:
                 return True
             return False
         elif self._prv._internal_status == LinkStatus.Open:
             return False
         elif self._prv._internal_status == LinkStatus.Closed:
-            if ((self._start_node.head > self._end_node.head + self._Htol) and
-                    (self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
+            if self._start_node.head >= self._prv.setting + self._end_node.elevation + self._Htol and self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol:
+                return False
+            elif self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol and self._start_node.head > self._end_node.head + self._Htol:
                 return True
             return False
         else:
@@ -1013,16 +1014,12 @@ class _ActivePRVCondition(ControlCondition):
         elif self._prv._internal_status == LinkStatus.Open:
             if self._prv.flow < -self._Qtol:
                 return False
-            elif (self._start_node.head > self._prv.setting + self._end_node.elevation +
-                  self._r * abs(self._prv.flow)**2 + self._Htol):
+            elif (self._end_node.head >= self._prv.setting + self._end_node.elevation + self._Htol):
                 return True
             return False
         elif self._prv._internal_status == LinkStatus.Closed:
-            if ((self._start_node.head > self._end_node.head + self._Htol) and
-                    (self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
-                return False
-            elif ((self._start_node.head > self._end_node.head + self._Htol) and
-                  (self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
+            if ((self._start_node.head >= self._prv.setting + self._end_node.elevation + self._Htol) and
+                    (self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
                 return True
             return False
         else:

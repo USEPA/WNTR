@@ -701,11 +701,12 @@ class WaterNetworkModel(AbstractModel):
                     open_control_1._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_1)
 
-                    if link.start_node == tank_name:
-                        other_node_name = link.end_node
+                    if link.start_node is tank:
+                        other_node = link.end_node
+                    elif link.end_node is tank:
+                        other_node = link.start_node
                     else:
-                        other_node_name = link.start_node
-                    other_node = self.get_node(other_node_name)
+                        raise RuntimeError('Tank is neither the start node nore the end node.')
                     open_condition_2a = RelativeCondition(tank, 'head', Comparison.le, other_node, 'head')
                     open_condition_2b = ValueCondition(tank, 'head', Comparison.le, min_head)
                     open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
@@ -744,11 +745,12 @@ class WaterNetworkModel(AbstractModel):
                     open_control_1._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_1)
 
-                    if link.start_node == tank_name:
-                        other_node_name = link.end_node
+                    if link.start_node is tank:
+                        other_node = link.end_node
+                    elif link.end_node is tank:
+                        other_node = link.start_node
                     else:
-                        other_node_name = link.start_node
-                    other_node = self.get_node(other_node_name)
+                        raise RuntimeError('Tank is neither the start node nore the end node.')
                     open_condition_2a = RelativeCondition(tank, 'head', Comparison.ge, other_node, 'head')
                     open_condition_2b = ValueCondition(tank, 'head', Comparison.ge, max_head)
                     open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
