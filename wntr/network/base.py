@@ -307,7 +307,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         return self._start_node
     @start_node.setter
     def start_node(self, name):
-        self._node_reg.remove_usage(self._start_node.name, (self._link_name, self.link_type))
+        self._node_reg.remove_usage(self.start_node_name, (self._link_name, self.link_type))
         self._node_reg.add_usage(name, (self._link_name, self.link_type))
         self._start_node = self._node_reg[name]
 
@@ -317,9 +317,9 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         return self._end_node
     @end_node.setter
     def end_node(self, name):
-        self._node_reg.remove_usage(self._end_node.name, (self._link_name, self.link_type))
+        self._node_reg.remove_usage(self.end_node_name, (self._link_name, self.link_type))
         self._node_reg.add_usage(name, (self._link_name, self.link_type))
-        self._end_node_name = self._node_reg[name]
+        self._end_node = self._node_reg[name]
 
     @property
     def start_node_name(self):
@@ -386,8 +386,8 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     def todict(self):
         """A dictionary representation for this link"""
         d = dict(name=self.name, 
-                 start_node=self._start_node.name,
-                 end_node=self._end_node.name,
+                 start_node=self.start_node_name,
+                 end_node=self.end_node_name,
                  link_type=self.link_type)
         if self._tag:
             d['tag'] = self._tag

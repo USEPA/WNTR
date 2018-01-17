@@ -53,7 +53,15 @@ class Junction(Node):
         the customer will not receive any water."""
 
         self._emitter_coefficient = None
+        
+        self._leak = False
+        self.leak_status = False
+        self.leak_area = 0.0
+        self.leak_discharge_coeff = 0.0
+        self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
+        self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
 
+        
     def __repr__(self):
         return "<Junction '{}', elevation={}, demand_timeseries_list={}>".format(self._name, self.elevation, repr(self.demand_timeseries_list))
 
@@ -115,7 +123,8 @@ class Junction(Node):
            used to end the leak (otherwise, the leak will not end).
 
         """
-
+        from wntr.network.controls import ControlAction, Control
+        
         self._leak = True
         self.leak_area = area
         self.leak_discharge_coeff = discharge_coeff
@@ -142,82 +151,6 @@ class Junction(Node):
         self._leak = False
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
-
-    def leak_present(self):
-        """
-        Check if the junction has a leak or not. Note that this
-        does not check whether or not the leak is active (i.e., if the
-        current time is between leak_start_time and leak_end_time).
-
-        Returns
-        -------
-        bool: True if a leak is present, False if a leak is not present
-        """
-        return self._leak
-
-    def set_leak_start_time(self, wn, t):
-        """
-        Set a start time for the leak. This internally creates a
-        TimeControl object and adds it to the network for you. Please
-        make sure all user-defined controls for starting the leak have
-        been removed before using this method (see
-        WaterNetworkModel.remove_leak() or
-        WaterNetworkModel.discard_leak()).
-
-        Parameters
-        ----------
-        wn: wntr WaterNetworkModel
-           Water network model
-        t: int
-           Leak end time in seconds
-        """
-        # remove old control
-        wn._discard_control(self._leak_start_control_name)
-
-        # add new control
-        start_control_action = ControlAction(self, 'leak_status', True)
-        control = Control.time_control(wn, t, 'SIM_TIME', False, start_control_action)
-        wn.add_control(self._leak_start_control_name, control)
-
-    def set_leak_end_time(self, wn, t):
-        """
-        Set an end time for the leak. This internally creates a
-        TimeControl object and adds it to the network for you. Please
-        make sure all user-defined controls for ending the leak have
-        been removed before using this method (see
-        WaterNetworkModel.remove_leak() or
-        WaterNetworkModel.discard_leak()).
-
-        Parameters
-        ----------
-        wn: wntr WaterNetworkModel
-           Water network model
-        t: int
-           Leak end time in seconds
-        """
-        # remove old control
-        wn._discard_control(self._leak_end_control_name)
-
-        # add new control
-        end_control_action = ControlAction(self, 'leak_status', False)
-        control = Control.time_control(wn, t, 'SIM_TIME', False, end_control_action)
-        wn.add_control(self._leak_end_control_name, control)
-
-    def discard_leak_controls(self, wn):
-        """
-        Specify that user-defined controls will be used to
-        start and stop the leak. This will remove any controls set up
-        through Junction.add_leak(), Junction.set_leak_start_time(),
-        or Junction.set_leak_end_time().
-
-        Parameters
-        ----------
-        wn: wntr WaterNetworkModel
-           Water network model
-        """
-        wn._discard_control(self._leak_start_control_name)
-        wn._discard_control(self._leak_end_control_name)
-
 
 class Tank(Node):
     """
@@ -263,6 +196,13 @@ class Tank(Node):
         self._mix_model = None
         self._mix_frac = None
         self.bulk_rxn_coeff = None
+        
+        self._leak = False
+        self.leak_status = False
+        self.leak_area = 0.0
+        self.leak_discharge_coeff = 0.0
+        self._leak_start_control_name = 'tank'+self._name+'start_leak_control'
+        self._leak_end_control_name = 'tank'+self._name+'end_leak_control'
         
     def __repr__(self):
         return "<Tank '{}', elevation={}, min_level={}, max_level={}, diameter={}, min_vol={}, vol_curve='{}'>".format(self._name, self.elevation, self.min_level, self.max_level, self.diameter, self.min_vol, (self.vol_curve.name if self.vol_curve else None))
@@ -363,7 +303,8 @@ class Tank(Node):
            used to end the leak (otherwise, the leak will not end).
 
         """
-
+        from wntr.network.controls import ControlAction, Control
+        
         self._leak = True
         self.leak_area = area
         self.leak_discharge_coeff = discharge_coeff
@@ -390,82 +331,6 @@ class Tank(Node):
         self._leak = False
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
-
-    def leak_present(self):
-        """
-        Check if the tank has a leak or not. Note that this
-        does not check whether or not the leak is active (i.e., if the
-        current time is between leak_start_time and leak_end_time).
-
-        Returns
-        -------
-        bool: True if a leak is present, False if a leak is not present
-        """
-        return self._leak
-
-    def set_leak_start_time(self, wn, t):
-        """
-        Set a start time for the leak. This internally creates a
-        TimeControl object and adds it to the network for you. Please
-        make sure all user-defined controls for starting the leak have
-        been removed before using this method (see
-        WaterNetworkModel.remove_leak() or
-        WaterNetworkModel.discard_leak()).
-
-        Parameters
-        ----------
-        wn: wntr WaterNetworkModel
-           Water network model
-        t: int
-           start time in seconds
-        """
-        # remove old control
-        wn._discard_control(self._leak_start_control_name)
-
-        # add new control
-        start_control_action = ControlAction(self, 'leak_status', True)
-        control = Control.time_control(wn, t, 'SIM_TIME', False, start_control_action)
-        wn.add_control(self._leak_start_control_name, control)
-
-    def set_leak_end_time(self, wn, t):
-        """
-        Set an end time for the leak. This internally creates a
-        TimeControl object and adds it to the network for you. Please
-        make sure all user-defined controls for ending the leak have
-        been removed before using this method (see
-        WaterNetworkModel.remove_leak() or
-        WaterNetworkModel.discard_leak()).
-
-        Parameters
-        ----------
-        wn: wntr WaterNetworkModel
-           Water network model
-        t: int
-           end time in seconds
-        """
-        # remove old control
-        wn._discard_control(self._leak_end_control_name)
-
-        # add new control
-        end_control_action = ControlAction(self, 'leak_status', False)
-        control = Control.time_control(wn, t, 'SIM_TIME', False, end_control_action)
-        wn.add_control(self._leak_end_control_name, control)
-
-    def use_external_leak_control(self, wn):
-        """
-        Specify that user-defined controls will be used to
-        start and stop the leak. This will remove any controls set up
-        through Tank.add_leak(), Tank.set_leak_start_time(),
-        or Tank.set_leak_end_time().
-
-        Parameters
-        ----------
-        wn: wntr WaterNetworkModel
-           Water network model
-        """
-        wn._discard_control(self._leak_start_control_name)
-        wn._discard_control(self._leak_end_control_name)
-
 
 class Reservoir(Node):
     """
@@ -697,6 +562,30 @@ class Pump(Link):
     def setting(self):
         """Alias to speed for consistency with other link types"""
         return self._speed_timeseries
+    
+    def add_outage(self, wn, start_time, end_time):
+        """
+        Adds a pump outage to the water network model.
+
+        Parameters
+        ----------
+        pump_name : string
+           The name of the pump to be affected by an outage.
+        start_time : int
+           The time at which the outage starts.
+        end_time : int
+           The time at which the outage stops.
+        """
+        from wntr.network.controls import _InternalControlAction, Control
+
+        start_power_outage_action = _InternalControlAction(self, '_power_outage', LinkStatus.Closed, 'status')
+        end_power_outage_action = _InternalControlAction(self, '_power_outage', LinkStatus.Open, 'status')
+
+        start_control = Control.time_control(wn, start_time, 'SIM_TIME', False, start_power_outage_action)
+        end_control = Control.time_control(wn, end_time, 'SIM_TIME', False, end_power_outage_action)
+
+        wn.add_control(self.name+'_power_off_'+str(start_time), start_control)
+        wn.add_control(self.name+'_power_on_'+str(end_time), end_control)
 
     def todict(self):
         d = super(Pump, self).todict()
