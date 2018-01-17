@@ -26,7 +26,8 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison
+    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison, \
+    _TankMinLevelOpenCondition, _TankMaxLevelOpenCondition
 from collections import OrderedDict
 
 import wntr.epanet
@@ -707,9 +708,7 @@ class WaterNetworkModel(AbstractModel):
                         other_node = link.start_node
                     else:
                         raise RuntimeError('Tank is neither the start node nore the end node.')
-                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.le, other_node, 'head')
-                    open_condition_2b = ValueCondition(tank, 'head', Comparison.le, min_head)
-                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
+                    open_condition_2 = _TankMinLevelOpenCondition(tank, other_node)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
@@ -751,9 +750,7 @@ class WaterNetworkModel(AbstractModel):
                         other_node = link.start_node
                     else:
                         raise RuntimeError('Tank is neither the start node nore the end node.')
-                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.ge, other_node, 'head')
-                    open_condition_2b = ValueCondition(tank, 'head', Comparison.ge, max_head)
-                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
+                    open_condition_2 = _TankMaxLevelOpenCondition(tank, other_node)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
