@@ -10,7 +10,6 @@ if sys.version_info[0] == 2:
     from collections import MutableSequence
 else:
     from collections.abc import MutableSequence
-from collections import OrderedDict
 
 import numpy as np
 import networkx as nx
@@ -26,9 +25,9 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison, \
-    _TankMinLevelOpenCondition, _TankMaxLevelOpenCondition
+    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison
 from collections import OrderedDict
+from wntr.utils.ordered_set import OrderedSet
 
 import wntr.epanet
 
@@ -708,7 +707,9 @@ class WaterNetworkModel(AbstractModel):
                         other_node = link.start_node
                     else:
                         raise RuntimeError('Tank is neither the start node nore the end node.')
-                    open_condition_2 = _TankMinLevelOpenCondition(tank, other_node)
+                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.le, other_node, 'head')
+                    open_condition_2b = ValueCondition(tank, 'head', Comparison.le, min_head+self._Htol)
+                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
@@ -750,7 +751,9 @@ class WaterNetworkModel(AbstractModel):
                         other_node = link.start_node
                     else:
                         raise RuntimeError('Tank is neither the start node nore the end node.')
-                    open_condition_2 = _TankMaxLevelOpenCondition(tank, other_node)
+                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.ge, other_node, 'head')
+                    open_condition_2b = ValueCondition(tank, 'head', Comparison.ge, max_head-self._Htol)
+                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
@@ -1114,7 +1117,7 @@ class WaterNetworkModel(AbstractModel):
         for all nodes with the specified attribute.
 
         """
-        node_attribute_dict = {}
+        node_attribute_dict = OrderedDict()
         for name, node in self.nodes(node_type):
             try:
                 if operation == None and value == None:
@@ -1651,10 +1654,10 @@ class ControlRegistry(Registry):
 class CurveRegistry(Registry):
     def __init__(self, model):
         super(CurveRegistry, self).__init__(model)
-        self._pump_curves = set()
-        self._efficiency_curves = set()
-        self._headloss_curves = set()
-        self._volume_curves = set()
+        self._pump_curves = OrderedSet()
+        self._efficiency_curves = OrderedSet()
+        self._headloss_curves = OrderedSet()
+        self._volume_curves = OrderedSet()
 
     @property
     def _curves(self):
@@ -1771,9 +1774,9 @@ class NodeRegistry(Registry):
 
     def __init__(self, model):
         super(NodeRegistry, self).__init__(model)
-        self._junctions = set()
-        self._reservoirs = set()
-        self._tanks = set()
+        self._junctions = OrderedSet()
+        self._reservoirs = OrderedSet()
+        self._tanks = OrderedSet()
     
     @property
     def _nodes(self):
@@ -1995,17 +1998,17 @@ class LinkRegistry(Registry):
 
     def __init__(self, model):
         super(LinkRegistry, self).__init__(model)
-        self._pipes = set()
-        self._pumps = set()
-        self._head_pumps = set()
-        self._power_pumps = set()
-        self._prvs = set()
-        self._psvs = set()
-        self._pbvs = set()
-        self._tcvs = set()
-        self._fcvs = set()
-        self._gpvs = set()
-        self._valves = set()
+        self._pipes = OrderedSet()
+        self._pumps = OrderedSet()
+        self._head_pumps = OrderedSet()
+        self._power_pumps = OrderedSet()
+        self._prvs = OrderedSet()
+        self._psvs = OrderedSet()
+        self._pbvs = OrderedSet()
+        self._tcvs = OrderedSet()
+        self._fcvs = OrderedSet()
+        self._gpvs = OrderedSet()
+        self._valves = OrderedSet()
     
     @property
     def _links(self):
