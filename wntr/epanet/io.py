@@ -1292,7 +1292,7 @@ class InpFile(object):
                 E = {'node': node,
                      'base': from_si(self.flow_units, demand.base_value, HydParam.Demand),
                      'pat': ''}
-                if demand.pattern_name is not None:
+                if demand.pattern_name in wn.pattern_name_list:
                     E['pat'] = demand.pattern_name
                 f.write(entry.format(E['node'], str(E['base']), E['pat']).encode('ascii'))
         f.write('\n'.encode('ascii'))
