@@ -697,7 +697,7 @@ class WaterNetworkModel(AbstractModel):
                 tank_controls.append(close_control_1)
 
                 if not link_has_cv:
-                    open_condition_1 = ValueCondition(tank, 'head', Comparison.gt, min_head+self._Htol)
+                    open_condition_1 = ValueCondition(tank, 'head', Comparison.ge, min_head+self._Htol)
                     open_control_1 = Control(open_condition_1, [open_control_action], [], ControlPriority.low)
                     open_control_1._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_1)
@@ -739,7 +739,7 @@ class WaterNetworkModel(AbstractModel):
                 tank_controls.append(close_control)
 
                 if not link_has_cv:
-                    open_condition_1 = ValueCondition(tank, 'head', Comparison.lt, max_head - self._Htol)
+                    open_condition_1 = ValueCondition(tank, 'head', Comparison.le, max_head - self._Htol)
                     open_control_1 = Control(open_condition_1, [open_control_action], [], ControlPriority.low)
                     open_control_1._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_1)
@@ -2127,6 +2127,7 @@ class LinkRegistry(Registry):
         pipe.roughness = roughness
         pipe.minor_loss = minor_loss
         pipe.intial_status = status
+        pipe.status = status
         pipe.cv = check_valve_flag
         self[name] = pipe
 

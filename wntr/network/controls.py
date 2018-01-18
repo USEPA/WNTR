@@ -550,6 +550,9 @@ class ValueCondition(ControlCondition):
 
 class TankLevelCondition(ValueCondition):
     def __init__(self, source_obj, source_attr, relation, threshold):
+        relation = Comparison.parse(relation)
+        if relation not in {Comparison.ge, Comparison.le}:
+            raise ValueError('TankLevelConditions only support <= and >= relations.')
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
         self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
