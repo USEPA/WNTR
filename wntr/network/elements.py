@@ -93,7 +93,9 @@ class Junction(Node):
 
     def add_leak(self, wn, area, discharge_coeff=0.75, start_time=None, end_time=None):
         """
-        Add a leak to a junction. Leaks are modeled by:
+        Add a leak control to the water network model. 
+        
+        Leaks are modeled by:
 
         Q = discharge_coeff*area*sqrt(2*g*h)
 
@@ -141,7 +143,7 @@ class Junction(Node):
 
     def remove_leak(self,wn):
         """
-        Remove a leak from a junction.
+        Remove a leak control from the water network model. 
 
         Parameters
         ----------
@@ -565,7 +567,7 @@ class Pump(Link):
     
     def add_outage(self, wn, start_time, end_time):
         """
-        Adds a pump outage to the water network model.
+        Adds a pump outage control to the water network model.
 
         Parameters
         ----------
