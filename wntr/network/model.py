@@ -26,7 +26,8 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison
+    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison, \
+    _TankMinLevelOpenCondition, _TankMaxLevelOpenCondition
 from collections import OrderedDict
 
 import wntr.epanet
@@ -696,19 +697,18 @@ class WaterNetworkModel(AbstractModel):
                 tank_controls.append(close_control_1)
 
                 if not link_has_cv:
-                    open_condition_1 = ValueCondition(tank, 'head', Comparison.gt, min_head+self._Htol)
+                    open_condition_1 = ValueCondition(tank, 'head', Comparison.ge, min_head+self._Htol)
                     open_control_1 = Control(open_condition_1, [open_control_action], [], ControlPriority.low)
                     open_control_1._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_1)
 
-                    if link.start_node == tank_name:
-                        other_node_name = link.end_node
+                    if link.start_node is tank:
+                        other_node = link.end_node
+                    elif link.end_node is tank:
+                        other_node = link.start_node
                     else:
-                        other_node_name = link.start_node
-                    other_node = self.get_node(other_node_name)
-                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.le, other_node, 'head')
-                    open_condition_2b = ValueCondition(tank, 'head', Comparison.le, min_head)
-                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
+                        raise RuntimeError('Tank is neither the start node nore the end node.')
+                    open_condition_2 = _TankMinLevelOpenCondition(tank, other_node)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
@@ -739,19 +739,18 @@ class WaterNetworkModel(AbstractModel):
                 tank_controls.append(close_control)
 
                 if not link_has_cv:
-                    open_condition_1 = ValueCondition(tank, 'head', Comparison.lt, max_head - self._Htol)
+                    open_condition_1 = ValueCondition(tank, 'head', Comparison.le, max_head - self._Htol)
                     open_control_1 = Control(open_condition_1, [open_control_action], [], ControlPriority.low)
                     open_control_1._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_1)
 
-                    if link.start_node == tank_name:
-                        other_node_name = link.end_node
+                    if link.start_node is tank:
+                        other_node = link.end_node
+                    elif link.end_node is tank:
+                        other_node = link.start_node
                     else:
-                        other_node_name = link.start_node
-                    other_node = self.get_node(other_node_name)
-                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.ge, other_node, 'head')
-                    open_condition_2b = ValueCondition(tank, 'head', Comparison.ge, max_head)
-                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
+                        raise RuntimeError('Tank is neither the start node nore the end node.')
+                    open_condition_2 = _TankMaxLevelOpenCondition(tank, other_node)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
@@ -2128,6 +2127,7 @@ class LinkRegistry(Registry):
         pipe.roughness = roughness
         pipe.minor_loss = minor_loss
         pipe.intial_status = status
+        pipe.status = status
         pipe.cv = check_valve_flag
         self[name] = pipe
 

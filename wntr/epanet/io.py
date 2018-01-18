@@ -1070,9 +1070,9 @@ class InpFile(object):
                 if 'IF' in current:
                     node = self.wn.get_node(node_name)
                     if current[6] == 'ABOVE':
-                        oper = np.greater
+                        oper = np.greater_equal
                     elif current[6] == 'BELOW':
-                        oper = np.less
+                        oper = np.less_equal
                     else:
                         raise RuntimeError("The following control is not recognized: " + line)
                     # OKAY - we are adding in the elevation. This is A PROBLEM

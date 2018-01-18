@@ -455,9 +455,13 @@ class WNTRSimulator(WaterNetworkSimulator):
             if type(self._wn.options.time.report_timestep) == float or type(self._wn.options.time.report_timestep) == int:
                 if self._wn.sim_time % self._wn.options.time.report_timestep == 0:
                     model.save_results(self._X, results)
+                    if len(results.time) > 0 and int(self._wn.sim_time) == results.time[-1]:
+                        raise RuntimeError('Simulation already solved this timestep')
                     results.time.append(int(self._wn.sim_time))
             elif self._wn.options.time.report_timestep.upper() == 'ALL':
                 model.save_results(self._X, results)
+                if len(results.time) > 0 and int(self._wn.sim_time) == results.time[-1]:
+                    raise RuntimeError('Simulation already solved this timestep')
                 results.time.append(int(self._wn.sim_time))
             model.update_network_previous_values()
             first_step = False

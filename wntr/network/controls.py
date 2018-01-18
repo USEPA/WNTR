@@ -550,6 +550,9 @@ class ValueCondition(ControlCondition):
 
 class TankLevelCondition(ValueCondition):
     def __init__(self, source_obj, source_attr, relation, threshold):
+        relation = Comparison.parse(relation)
+        if relation not in {Comparison.ge, Comparison.le}:
+            raise ValueError('TankLevelConditions only support <= and >= relations.')
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
         self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
@@ -962,6 +965,7 @@ class _OpenPRVCondition(ControlCondition):
         wn: wntr.network.WaterNetworkModel
         prv: wntr.network.Valve
         """
+        super(_OpenPRVCondition, self).__init__()
         self._prv = prv
         self._start_node = wn.get_node(self._prv.start_node)
         self._end_node = wn.get_node(self._prv.end_node)
@@ -975,14 +979,15 @@ class _OpenPRVCondition(ControlCondition):
         if self._prv._internal_status == LinkStatus.Active:
             if self._prv.flow < -self._Qtol:
                 return False
-            elif self._start_node.head < self._prv.setting + self._end_node.elevation  + self._r * abs(self._prv.flow)**2 - self._Htol:
+            elif self._start_node.head < self._prv.setting + self._end_node.elevation + self._r * abs(self._prv.flow)**2 - self._Htol:
                 return True
             return False
         elif self._prv._internal_status == LinkStatus.Open:
             return False
         elif self._prv._internal_status == LinkStatus.Closed:
-            if ((self._start_node.head > self._end_node.head + self._Htol) and
-                    (self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
+            if self._start_node.head >= self._prv.setting + self._end_node.elevation + self._Htol and self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol:
+                return False
+            elif self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol and self._start_node.head > self._end_node.head + self._Htol:
                 return True
             return False
         else:
@@ -1016,16 +1021,12 @@ class _ActivePRVCondition(ControlCondition):
         elif self._prv._internal_status == LinkStatus.Open:
             if self._prv.flow < -self._Qtol:
                 return False
-            elif (self._start_node.head > self._prv.setting + self._end_node.elevation +
-                  self._r * abs(self._prv.flow)**2 + self._Htol):
+            elif (self._end_node.head >= self._prv.setting + self._end_node.elevation + self._Htol):
                 return True
             return False
         elif self._prv._internal_status == LinkStatus.Closed:
-            if ((self._start_node.head > self._end_node.head + self._Htol) and
-                    (self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
-                return False
-            elif ((self._start_node.head > self._end_node.head + self._Htol) and
-                  (self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
+            if ((self._start_node.head >= self._prv.setting + self._end_node.elevation + self._Htol) and
+                    (self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
                 return True
             return False
         else:
@@ -1108,6 +1109,62 @@ class _ValveNewSettingCondition(ControlCondition):
         if self._valve.setting != self._valve._prev_setting:
             return True
         return False
+
+
+class _TankMinLevelOpenCondition(ControlCondition):
+    _Htol = 0.0001524
+
+    def __init__(self, tank, other_node):
+        """
+        Parameters
+        ----------
+        tank: wntr.network.Tank
+        other_node: wntr.network.Junction
+        """
+        super(_TankMinLevelOpenCondition, self).__init__()
+        self._tank = tank
+        self._other_node = other_node
+        self._min_head = tank.min_level + tank.elevation
+
+    def requires(self):
+        return OrderedSet([self._tank, self._other_node])
+
+    def evaluate(self):
+        if self._tank.head <= self._min_head:
+            if self._tank.head <= self._other_node.head - self._Htol:
+                return True
+        return False
+
+    def __str__(self):
+        return 'if {0}.level <= {1} and {0}.head <= {2}.head - {3}'.format(self._tank, self._tank.min_level, self._other_node, self._Htol)
+
+
+class _TankMaxLevelOpenCondition(ControlCondition):
+    _Htol = 0.0001524
+
+    def __init__(self, tank, other_node):
+        """
+        Parameters
+        ----------
+        tank: wntr.network.Tank
+        other_node: wntr.network.Junction
+        """
+        super(_TankMaxLevelOpenCondition, self).__init__()
+        self._tank = tank
+        self._other_node = other_node
+        self._max_head = tank.max_level + tank.elevation
+
+    def requires(self):
+        return OrderedSet([self._tank, self._other_node])
+
+    def evaluate(self):
+        if self._tank.head >= self._max_head:
+            if self._tank.head >= self._other_node.head + self._Htol:
+                return True
+        return False
+
+    def __str__(self):
+        return 'if {0}.level >= {1} and {0}.head >= {2}.head + {3}'.format(self._tank, self._tank.max_level, self._other_node, self._Htol)
 
 
 class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
