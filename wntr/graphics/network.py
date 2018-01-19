@@ -18,8 +18,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
-               node_size=20, node_range = [None,None], node_cmap=plt.cm.jet, node_labels=False,
-               link_width=1, link_range = [None,None], link_cmap=plt.cm.jet, link_labels=False,
+               node_size=20, node_range = [None,None], node_cmap=None, node_labels=False,
+               link_width=1, link_range = [None,None], link_cmap=None, link_labels=False,
                add_colorbar=True, directed=False, ax=None):
     """
     Plot network graphic using networkx. 
@@ -103,7 +103,11 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     -----
     For more network draw options, see nx.draw_networkx
     """
-
+    if node_cmap is None:
+        node_cmap = plt.cm.jet
+    if link_cmap is None:
+        link_cmap = plt.cm.jet
+        
     if ax is None: # create a new figure
         plt.figure(facecolor='w', edgecolor='k')
         ax = plt.gca()
