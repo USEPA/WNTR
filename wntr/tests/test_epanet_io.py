@@ -43,7 +43,7 @@ class TestWriter(unittest.TestCase):
         self.assertEqual(p1.start_node_name, 'j2')
         self.assertEqual(p1.end_node_name, 'j3')
         self.assertEqual(type(p1), self.wntr.network.elements.HeadPump)
-        self.assertEqual(p1.curve_name, 'curve1')
+        self.assertEqual(p1.pump_curve_name, 'curve1')
         self.assertAlmostEqual(p1.speed_timeseries.base_value, 1.2, 6)
         self.assertEqual(p1.speed_timeseries, p11.speed_timeseries)
         self.assertEqual(p1.speed_timeseries.pattern_name, 'pattern1')
@@ -53,13 +53,13 @@ class TestWriter(unittest.TestCase):
         self.assertAlmostEqual(p2._base_power, 16629.107, 2)
 
     def test_valve_setting_control(self):
-        control = self.wn2.get_control('/LINK/v1/0.82/AT/TIME/12240')
+        control = self.wn2.get_control('control 1')
         run_time = control._run_at_time
         self.assertAlmostEqual(run_time, 3600.0*3.4, 6)
         value = control._control_action._value
         self.assertAlmostEqual(value, 0.82, 6)
 
-        control = self.wn2.get_control('/LINK/v2/2.61/IF/NODE/T1/BELOW/1.53')
+        control = self.wn2.get_control('control 2')
         value = control._control_action._value
         self.assertAlmostEqual(value, 1.83548, 4)
 
@@ -211,4 +211,3 @@ class TestNet3InpUnitsResults(unittest.TestCase):
         for link_name, link in self.wn.links():
             for t in self.results2.time:
                 self.assertLessEqual(abs(self.results2.link['flowrate'].loc[t,link_name] - self.results.link['flowrate'].loc[t,link_name]), 0.00001)
-

@@ -1,13 +1,14 @@
 from __future__ import print_function
-from wntr import *
-from wntr.network.model import *
-from wntr.network.elements import *
 import pandas as pd
 import numpy as np
 import scipy.sparse as sparse
 import math
 import warnings
 import logging
+from wntr.network.model import WaterNetworkModel
+from wntr.network.base import NodeType, LinkType, LinkStatus
+from wntr.network.elements import Junction, Tank, Reservoir, Pipe, HeadPump, PowerPump, PRValve, PSValve, FCValve, \
+    TCValve, GPValve, PBValve
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +27,12 @@ class HydraulicModel(object):
     """
 
     def __init__(self, wn, mode='DD'):
+        """
+        Parameters
+        ----------
+        wn: WaterNetworkModel
+        mode: str
+        """
 
         self._wn = wn
         self.mode = mode
@@ -33,19 +40,20 @@ class HydraulicModel(object):
         # Global constants
         self._initialize_global_constants()
 
-        # Initialize dictionaries to map between node/link names and ids
-        self._initialize_name_id_maps()
-
         # Number of nodes and links
         self.num_nodes = self._wn.num_nodes
         self.num_links = self._wn.num_links
-        self.num_leaks = len(self._leak_ids)
         self.num_junctions = self._wn.num_junctions
         self.num_tanks = self._wn.num_tanks
         self.num_reservoirs = self._wn.num_reservoirs
         self.num_pipes = self._wn.num_pipes
         self.num_pumps = self._wn.num_pumps
         self.num_valves = self._wn.num_valves
+
+        # Initialize dictionaries to map between node/link names and ids
+        self._initialize_name_id_maps()
+
+        self.num_leaks = len(self._leak_ids)
 
         # Initialize residuals
         # Equations will be ordered:
@@ -128,6 +136,8 @@ class HydraulicModel(object):
         self._node_name_to_id = {}  # {name1: id1, name2: id2, etc.}
         self._link_id_to_name = {}  # {id1: name1, id2: name2, etc.}
         self._link_name_to_id = {}  # {name1: id1, name2: id2, etc.}
+        self.out_link_ids_for_nodes = [[] for i in range(self.num_nodes)]
+        self.in_link_ids_for_nodes = [[] for i in range(self.num_nodes)]
 
         # Lists of types of nodes
         # self._node_ids is ordered by increasing id. In fact, the index equals the id.
@@ -214,15 +224,21 @@ class HydraulicModel(object):
             n += 1
 
         l = 0
-        for link_name, link in self._wn.links(Pipe):
+        for link_name, link in self._wn.pipes():
             self._link_id_to_name[l] = link_name
             self._link_name_to_id[link_name] = l
             self._link_ids.append(l)
             self._pipe_ids.append(l)
             self.link_types.append(LinkType.Pipe)
+            start_node_name = link.start_node_name
+            end_node_name = link.end_node_name
+            start_node_id = self._node_name_to_id[start_node_name]
+            end_node_id = self._node_name_to_id[end_node_name]
+            self.out_link_ids_for_nodes[start_node_id].append(l)
+            self.in_link_ids_for_nodes[end_node_id].append(l)
             l += 1
 
-        for link_name, link in self._wn.links(Pump):
+        for link_name, link in self._wn.pumps():
             self._link_id_to_name[l] = link_name
             self._link_name_to_id[link_name] = l
             self._link_ids.append(l)
@@ -234,9 +250,15 @@ class HydraulicModel(object):
                 self.head_pump_ids.append(l)
             else:
                 raise RuntimeError('Pump type not recognized.')
+            start_node_name = link.start_node_name
+            end_node_name = link.end_node_name
+            start_node_id = self._node_name_to_id[start_node_name]
+            end_node_id = self._node_name_to_id[end_node_name]
+            self.out_link_ids_for_nodes[start_node_id].append(l)
+            self.in_link_ids_for_nodes[end_node_id].append(l)
             l += 1
 
-        for link_name, link in self._wn.links(Valve):
+        for link_name, link in self._wn.valves():
             self._link_id_to_name[l] = link_name
             self._link_name_to_id[link_name] = l
             self._link_ids.append(l)
@@ -254,11 +276,15 @@ class HydraulicModel(object):
                 self._tcv_ids.append(l)
             else:
                 raise RuntimeError('Valve type not recognized: '+link.valve_type)
+            start_node_name = link.start_node_name
+            end_node_name = link.end_node_name
+            start_node_id = self._node_name_to_id[start_node_name]
+            end_node_id = self._node_name_to_id[end_node_name]
+            self.out_link_ids_for_nodes[start_node_id].append(l)
+            self.in_link_ids_for_nodes[end_node_id].append(l)
             l += 1
 
     def _set_node_attributes(self):
-        self.out_link_ids_for_nodes = [[] for i in range(self.num_nodes)]
-        self.in_link_ids_for_nodes = [[] for i in range(self.num_nodes)]
         self.node_elevations = np.zeros(self.num_nodes)
         self.nominal_pressures = np.ones(self.num_junctions)
         self.minimum_pressures = np.zeros(self.num_junctions)
@@ -281,18 +307,8 @@ class HydraulicModel(object):
         # {node_id: (a,b,c,d)} where the ordering of the coefficients goes from the 3rd order term to the 0th order term
         self.leak_poly_coeffs = {}
 
-        for node_name, node in self._wn.nodes(wntr.network.Junction):
+        for node_name, node in self._wn.junctions():
             node_id = self._node_name_to_id[node_name]
-            connected_links = self._wn.get_links_for_node(node_name)
-            for link_name in connected_links:
-                link = self._wn.get_link(link_name)
-                link_id = self._link_name_to_id[link_name]
-                if link.start_node == node_name:
-                    self.out_link_ids_for_nodes[node_id].append(link_id)
-                elif link.end_node == node_name:
-                    self.in_link_ids_for_nodes[node_id].append(link_id)
-                else:
-                    raise RuntimeError('Node is neither start nor end node.')
             self.node_elevations[node_id] = node.elevation
             self.nominal_pressures[node_id] = node.nominal_pressure
             self.minimum_pressures[node_id] = node.minimum_pressure
@@ -303,36 +319,16 @@ class HydraulicModel(object):
                 self.leak_area[node_id] = node.leak_area
                 self.get_leak_poly_coeffs(node, node_id)
 
-        for node_name, node in self._wn.nodes(wntr.network.Tank):
+        for node_name, node in self._wn.nodes(Tank):
             node_id = self._node_name_to_id[node_name]
-            connected_links = self._wn.get_links_for_node(node_name)
-            for link_name in connected_links:
-                link = self._wn.get_link(link_name)
-                link_id = self._link_name_to_id[link_name]
-                if link.start_node == node_name:
-                    self.out_link_ids_for_nodes[node_id].append(link_id)
-                elif link.end_node == node_name:
-                    self.in_link_ids_for_nodes[node_id].append(link_id)
-                else:
-                    raise RuntimeError('Node is neither start nor end node.')
             self.node_elevations[node_id] = node.elevation
             if node._leak:
                 self.leak_Cd[node_id] = node.leak_discharge_coeff
                 self.leak_area[node_id] = node.leak_area
                 self.get_leak_poly_coeffs(node, node_id)
 
-        for node_name, node in self._wn.nodes(wntr.network.Reservoir):
+        for node_name, node in self._wn.nodes(Reservoir):
             node_id = self._node_name_to_id[node_name]
-            connected_links = self._wn.get_links_for_node(node_name)
-            for link_name in connected_links:
-                link = self._wn.get_link(link_name)
-                link_id = self._link_name_to_id[link_name]
-                if link.start_node == node_name:
-                    self.out_link_ids_for_nodes[node_id].append(link_id)
-                elif link.end_node == node_name:
-                    self.in_link_ids_for_nodes[node_id].append(link_id)
-                else:
-                    raise RuntimeError('Node is neither start nor end node.')
             self.node_elevations[node_id] = 0.0
 
     def _set_link_attributes(self):
@@ -349,9 +345,9 @@ class HydraulicModel(object):
 
         for link_name, link in self._wn.links():
             link_id = self._link_name_to_id[link_name]
-            start_node_name = link.start_node
+            start_node_name = link.start_node_name
             start_node_id = self._node_name_to_id[start_node_name]
-            end_node_name = link.end_node
+            end_node_name = link.end_node_name
             end_node_id = self._node_name_to_id[end_node_name]
             self.link_start_nodes[link_id] = start_node_id
             self.link_end_nodes[link_id] = end_node_id
@@ -891,7 +887,7 @@ class HydraulicModel(object):
         def get_pump_headloss_residual():
             for link_id in self._pump_ids:
                 link_flow = flow[link_id]
-                if self.link_status[link_id] == wntr.network.LinkStatus.closed or link_id in self.isolated_link_ids:
+                if self.link_status[link_id] == LinkStatus.closed or link_id in self.isolated_link_ids:
                     self.headloss_residual[link_id] = link_flow
                 else:
                     start_node_id = self.link_start_nodes[link_id]
@@ -924,7 +920,7 @@ class HydraulicModel(object):
             for link_id in self._prv_ids:
                 link_flow = flow[link_id]
                 end_node_id = self.link_end_nodes[link_id]
-                if self.link_status[link_id] == wntr.network.LinkStatus.Closed or link_id in self.isolated_link_ids:
+                if self.link_status[link_id] == LinkStatus.Closed or link_id in self.isolated_link_ids:
                     self.headloss_residual[link_id] = link_flow
                 elif self.link_status[link_id] == LinkStatus.Active:
                     self.headloss_residual[link_id] = head[end_node_id] - (self.valve_settings[link_id]+self.node_elevations[end_node_id])
@@ -935,7 +931,7 @@ class HydraulicModel(object):
 
             for link_id in self._fcv_ids:
                 link_flow = flow[link_id]
-                if self.link_status[link_id] == wntr.network.LinkStatus.Closed or link_id in self.isolated_link_ids:
+                if self.link_status[link_id] == LinkStatus.Closed or link_id in self.isolated_link_ids:
                     self.headloss_residual[link_id] = link_flow
                 elif self.link_status[link_id] == LinkStatus.Active:
                     self.headloss_residual[link_id] = link_flow - self.valve_settings[link_id]
@@ -946,7 +942,7 @@ class HydraulicModel(object):
 
             for link_id in self._tcv_ids:
                 link_flow = flow[link_id]
-                if self.link_status[link_id] == wntr.network.LinkStatus.Closed or link_id in self.isolated_link_ids:
+                if self.link_status[link_id] == LinkStatus.Closed or link_id in self.isolated_link_ids:
                     self.headloss_residual[link_id] = link_flow
                 elif self.link_status[link_id] == LinkStatus.Active:
                     coeff = self.pipe_resistance_coefficients[link_id]
@@ -1162,8 +1158,8 @@ class HydraulicModel(object):
                 if flow[link_id]>self.max_pump_flows[link_id]:
                     link_name = self._link_id_to_name[link_id]
                     link = self._wn.get_link(link_name)
-                    start_node_name = link.start_node
-                    end_node_name = link.end_node
+                    start_node_name = link.start_node_name
+                    end_node_name = link.end_node_name
                     start_node_id = self._node_name_to_id[start_node_name]
                     end_node_id = self._node_name_to_id[end_node_name]
                     start_head = head[start_node_id]
@@ -1239,7 +1235,7 @@ class HydraulicModel(object):
         for pipe_name, pipe in self._wn.links(Pipe):
             pipe_id = self._link_name_to_id[pipe_name]
             self.pipe_minor_loss_coefficients[pipe_id] = 8.0*pipe.minor_loss/(self._g*math.pi**2*pipe.diameter**4)
-        for valve_name, valve in self._wn.links(Valve):
+        for valve_name, valve in self._wn.valves():
             valve_id = self._link_name_to_id[valve_name]
             self.valve_settings[valve_id] = valve.setting
             self.pipe_minor_loss_coefficients[valve_id] = (8.0 * valve.minor_loss /
@@ -1249,17 +1245,17 @@ class HydraulicModel(object):
                                                                (self._g * math.pi ** 2 * valve.diameter ** 4))
             else:
                 self.pipe_resistance_coefficients[valve_id] = 0.0
-        for pump_name, pump in self._wn.links(Pump):
+        for pump_name, pump in self._wn.pumps():
             pump_id = self._link_name_to_id[pump_name]
             self.pump_speeds[pump_id] = pump.speed_timeseries(self._wn.sim_time)
         for link_id in self._link_ids:
-            if self.link_status[link_id] == wntr.network.LinkStatus.closed:
+            if self.link_status[link_id] == LinkStatus.closed:
                 self.closed_links.add(link_id)
                 self.closed_link_array[link_id] = 0.0
 
     def update_tank_heads(self):
         for tank_name, tank in self._wn.nodes(Tank):
-            q_net = tank._prev_demand
+            q_net = tank.demand
             delta_h = 4.0*q_net*(self._wn.sim_time-self._wn._prev_sim_time)/(math.pi*tank.diameter**2)
             tank.head = tank._prev_head + delta_h
 
@@ -1281,6 +1277,8 @@ class HydraulicModel(object):
         self._wn._prev_sim_time = self._wn.sim_time
         for link_name, link in self._wn.valves():
             link._prev_setting = link.setting
+        for tank_name, tank in self._wn. tanks():
+            tank._prev_head = tank.head
 
     def store_results_in_network(self, x):
         head = x[:self.num_nodes]
@@ -1314,7 +1312,7 @@ class HydraulicModel(object):
             node.leak_demand = 0.0
         for link_name, link in self._wn.links():
             link_id = link_name_to_id[link_name]
-            link.flow = flow[link_id]
+            link._flow = flow[link_id]
 
     def compute_polynomial_coefficients(self, x1, x2, f1, f2, df1, df2):
         """

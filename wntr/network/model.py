@@ -26,12 +26,14 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison
+    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison, \
+    _TankMinLevelOpenCondition, _TankMaxLevelOpenCondition
 from collections import OrderedDict
 
 import wntr.epanet
 
 logger = logging.getLogger(__name__)
+
 
 class WaterNetworkModel(AbstractModel):
     """
@@ -54,7 +56,6 @@ class WaterNetworkModel(AbstractModel):
         self._link_reg = LinkRegistry(self)
         self._pattern_reg = PatternRegistry(self)
         self._curve_reg = CurveRegistry(self)
-        self._control_reg = ControlRegistry(self)
         self._controls = OrderedDict()
         self._sources = {}
 
@@ -77,7 +78,7 @@ class WaterNetworkModel(AbstractModel):
         self.sim_time = 0.0
         self._prev_sim_time = -np.inf  # the last time at which results were accepted
     
-    def __eq__(self, other):
+    def _compare(self, other):
         #self._controls   == other._controls   and \
         if self.num_junctions  == other.num_junctions  and \
            self.num_reservoirs == other.num_reservoirs and \
@@ -188,6 +189,38 @@ class WaterNetworkModel(AbstractModel):
     
     @property
     def valves(self): return self._link_reg.valves
+
+    @property
+    def head_pumps(self):
+        return self._link_reg.head_pumps
+
+    @property
+    def power_pumps(self):
+        return self._link_reg.power_pumps
+
+    @property
+    def prvs(self):
+        return self._link_reg.prvs
+
+    @property
+    def psvs(self):
+        return self._link_reg.psvs
+
+    @property
+    def pbvs(self):
+        return self._link_reg.pbvs
+
+    @property
+    def tcvs(self):
+        return self._link_reg.tcvs
+
+    @property
+    def fcvs(self):
+        return self._link_reg.fcvs
+
+    @property
+    def gpvs(self):
+        return self._link_reg.gpvs
     
     """
     ### # 
@@ -664,17 +697,18 @@ class WaterNetworkModel(AbstractModel):
                 tank_controls.append(close_control_1)
 
                 if not link_has_cv:
-                    open_condition_1 = ValueCondition(tank, 'head', Comparison.gt, min_head+self._Htol)
+                    open_condition_1 = ValueCondition(tank, 'head', Comparison.ge, min_head+self._Htol)
                     open_control_1 = Control(open_condition_1, [open_control_action], [], ControlPriority.low)
                     open_control_1._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_1)
 
-                    if link.start_node == tank_name:
-                        other_node_name = link.end_node
+                    if link.start_node is tank:
+                        other_node = link.end_node
+                    elif link.end_node is tank:
+                        other_node = link.start_node
                     else:
-                        other_node_name = link.start_node
-                    other_node = self.get_node(other_node_name)
-                    open_condition_2 = RelativeCondition(tank, 'head', Comparison.le, other_node, 'head')
+                        raise RuntimeError('Tank is neither the start node nore the end node.')
+                    open_condition_2 = _TankMinLevelOpenCondition(tank, other_node)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
@@ -705,17 +739,18 @@ class WaterNetworkModel(AbstractModel):
                 tank_controls.append(close_control)
 
                 if not link_has_cv:
-                    open_condition_1 = ValueCondition(tank, 'head', Comparison.lt, max_head - self._Htol)
+                    open_condition_1 = ValueCondition(tank, 'head', Comparison.le, max_head - self._Htol)
                     open_control_1 = Control(open_condition_1, [open_control_action], [], ControlPriority.low)
                     open_control_1._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_1)
 
-                    if link.start_node == tank_name:
-                        other_node_name = link.end_node
+                    if link.start_node is tank:
+                        other_node = link.end_node
+                    elif link.end_node is tank:
+                        other_node = link.start_node
                     else:
-                        other_node_name = link.start_node
-                    other_node = self.get_node(other_node_name)
-                    open_condition_2 = RelativeCondition(tank, 'head', Comparison.ge, other_node, 'head')
+                        raise RuntimeError('Tank is neither the start node nore the end node.')
+                    open_condition_2 = _TankMaxLevelOpenCondition(tank, other_node)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
@@ -769,7 +804,7 @@ class WaterNetworkModel(AbstractModel):
         valve_controls = []
         for valve_name, valve in self.valves():
 
-            new_setting_action = ControlAction(valve, 'status', LinkStatus.Open)
+            new_setting_action = ControlAction(valve, 'status', LinkStatus.Active)
             new_setting_condition = _ValveNewSettingCondition(valve)
             new_setting_control = Control(new_setting_condition, [new_setting_action], [], ControlPriority.very_low)
             new_setting_control._control_type = _ControlType.postsolve
@@ -865,7 +900,7 @@ class WaterNetworkModel(AbstractModel):
     @property
     def control_name_list(self): 
         """"""
-        return list(self._control_reg.keys())
+        return list(self._controls.keys())
     
     ### # 
     ### Counts
@@ -1170,18 +1205,18 @@ class WaterNetworkModel(AbstractModel):
             node.leak_demand = None
 
         for name, link in self.links(Pipe):
-            link.status = link.inital_status
-            link.flow = None
+            link.status = link.initial_status
+            link._flow = None
 
         for name, link in self.links(Pump):
-            link.status = link.inital_status
-            link.flow = None
+            link.status = link.initial_status
+            link._flow = None
             link.power = link._base_power
             link._power_outage = False
 
         for name, link in self.links(Valve):
-            link.status = link.inital_status
-            link.flow = None
+            link.status = link.initial_status
+            link._flow = None
             link.setting = link.initial_setting
             link._prev_setting = None
 
@@ -1348,7 +1383,7 @@ class WaterNetworkModel(AbstractModel):
 
         if add_pipe_at_node.lower() == 'start':
             # add original pipe back to graph between new junction and original end
-            pipe._start_node_name = new_junction_name
+            pipe.start_node = new_junction_name
             # add new pipe and change original length
             self.add_pipe(new_pipe_name, start_node.name, new_junction_name,
                           original_length*split_at_point, pipe.diameter, pipe.roughness,
@@ -1357,7 +1392,7 @@ class WaterNetworkModel(AbstractModel):
 
         elif add_pipe_at_node.lower() == 'end':
             # add original pipe back to graph between original start and new junction
-            pipe._end_node_name = new_junction_name            
+            pipe.end_node = new_junction_name      
             # add new pipe and change original length
             self.add_pipe(new_pipe_name, new_junction_name, end_node.name,
                           original_length*(1-split_at_point), pipe.diameter, pipe.roughness,
@@ -1494,7 +1529,7 @@ class WaterNetworkModel(AbstractModel):
 
         if add_pipe_at_node.lower() == 'start':
             # add original pipe back to graph between new junction and original end
-            pipe._start_node_name = new_junction_name_old_pipe
+            pipe.start_node_name = new_junction_name_old_pipe
             self._graph.add_edge(new_junction_name_old_pipe, end_node.name, key=pipe_name_to_split)
             nx.set_edge_attributes(self._graph, name='type', values={(new_junction_name_old_pipe, 
                                                           end_node.name,
@@ -1507,7 +1542,7 @@ class WaterNetworkModel(AbstractModel):
 
         elif add_pipe_at_node.lower() == 'end':
             # add original pipe back to graph between original start and new junction
-            pipe._end_node_name = new_junction_name_old_pipe            
+            pipe.end_node_name = new_junction_name_old_pipe            
             self._graph.add_edge(start_node.name, new_junction_name_old_pipe, key=pipe_name_to_split)
             nx.set_edge_attributes(self._graph, name='type', values={(start_node.name,
                                                           new_junction_name_old_pipe,
@@ -1521,32 +1556,6 @@ class WaterNetworkModel(AbstractModel):
         if pipe.cv:
             logger.warn('You are splitting a pipe with a check valve. The new pipe will not have a check valve.')
         return (pipe, new_junction1, new_junction2, new_pipe)
-    
-    ### # 
-    ### Move to controls
-    def add_pump_outage(self, pump_name, start_time, end_time):
-        """
-        Adds a pump outage to the water network model.
-
-        Parameters
-        ----------
-        pump_name : string
-           The name of the pump to be affected by an outage.
-        start_time : int
-           The time at which the outage starts.
-        end_time : int
-           The time at which the outage stops.
-        """
-        pump = self.get_link(pump_name)
-
-        start_power_outage_action = _InternalControlAction(pump, '_power_outage', LinkStatus.Closed, 'status')
-        end_power_outage_action = _InternalControlAction(pump, '_power_outage', LinkStatus.Open, 'status')
-
-        start_control = Control.time_control(self, start_time, 'SIM_TIME', False, start_power_outage_action)
-        end_control = Control.time_control(self, end_time, 'SIM_TIME', False, end_power_outage_action)
-
-        self.add_control(pump_name+'_power_off_'+str(start_time), start_control)
-        self.add_control(pump_name+'_power_on_'+str(end_time), end_control)
     
 class PatternRegistry(Registry):
 
@@ -2118,6 +2127,7 @@ class LinkRegistry(Registry):
         pipe.roughness = roughness
         pipe.minor_loss = minor_loss
         pipe.intial_status = status
+        pipe.status = status
         pipe.cv = check_valve_flag
         self[name] = pipe
 
@@ -2196,18 +2206,23 @@ class LinkRegistry(Registry):
         if valve_type == 'PRV':
             valve = PRValve(name, start_node_name, end_node_name, self._m)
             valve.initial_setting = setting
+            valve.setting = setting
         elif valve_type == 'PSV':
             valve = PSValve(name, start_node_name, end_node_name, self._m)
             valve.initial_setting = setting
+            valve.setting = setting
         elif valve_type == 'PBV':
             valve = PBValve(name, start_node_name, end_node_name, self._m)
             valve.initial_setting = setting
+            valve.setting = setting
         elif valve_type == 'FCV':
             valve = FCValve(name, start_node_name, end_node_name, self._m)
             valve.initial_setting = setting
+            valve.setting = setting
         elif valve_type == 'TCV':
             valve = TCValve(name, start_node_name, end_node_name, self._m)
             valve.initial_setting = setting
+            valve.setting = setting
         elif valve_type == 'GPV':
             valve = GPValve(name, start_node_name, end_node_name, self._m)
             valve.headloss_curve_name = setting
@@ -2242,6 +2257,38 @@ class LinkRegistry(Registry):
     
     def valves(self):
         for name in self._valves:
+            yield name, self._data[name]
+
+    def head_pumps(self):
+        for name in self._head_pumps:
+            yield name, self._data[name]
+
+    def power_pumps(self):
+        for name in self._power_pumps:
+            yield name, self._data[name]
+
+    def prvs(self):
+        for name in self._prvs:
+            yield name, self._data[name]
+
+    def psvs(self):
+        for name in self._psvs:
+            yield name, self._data[name]
+
+    def pbvs(self):
+        for name in self._pbvs:
+            yield name, self._data[name]
+
+    def tcvs(self):
+        for name in self._tcvs:
+            yield name, self._data[name]
+
+    def fcvs(self):
+        for name in self._fcvs:
+            yield name, self._data[name]
+
+    def gpvs(self):
+        for name in self._gpvs:
             yield name, self._data[name]
 
     def tostring(self):

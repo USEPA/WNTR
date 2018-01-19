@@ -262,8 +262,8 @@ def todini(node_results, link_results, wn, Pstar):
         PInRes[name] = -Q*H # switch sign on Q.
 
     for name, link in wn.links(wntr.network.Pump):
-        start_node = link._start_node_name
-        end_node = link._end_node_name
+        start_node = link.start_node_name
+        end_node = link.end_node_name
         h_start = np.array(node_results['head'].loc[:,start_node]) # (m)
         h_end = np.array(node_results['head'].loc[:,end_node]) # (m)
         h = h_start - h_end # (m)
@@ -304,7 +304,7 @@ def entropy(G, sources=None, sinks=None):
     S : dict
         Node entropy, {node name: entropy value}
 
-    Shat : float
+    S_ave : float
         System entropy
 
     References
@@ -318,7 +318,7 @@ def entropy(G, sources=None, sinks=None):
         return
 
     if sources is None:
-        sources = [key for key,value in nx.get_node_attributes(G,'type').items() if value == 'reservoir' ]
+        sources = [key for key,value in nx.get_node_attributes(G,'type').items() if value == 'Reservoir' ]
 
     if sinks is None:
         sinks = G.nodes()
@@ -331,7 +331,7 @@ def entropy(G, sources=None, sinks=None):
             continue
 
         sp = [] # simple path
-        if G.node[nodej]['type']  == 'junction':
+        if G.node[nodej]['type']  == 'Junction':
             for source in sources:
                 if nx.has_path(G, source, nodej):
                     simple_paths = _all_simple_paths(G,source,target=nodej)
@@ -391,13 +391,13 @@ def entropy(G, sources=None, sinks=None):
     Q0 = sum(nx.get_edge_attributes(G, 'weight').values())
 
     # Equation 3
-    Shat = 0
+    S_ave = 0
     for nodej in sinks:
         if not np.isnan(S[nodej]):
             if nodej not in sources:
                 if Q[nodej]/Q0 > 0:
-                    Shat = Shat + \
+                    S_ave = S_ave + \
                         (Q[nodej]*S[nodej])/Q0 - \
                         Q[nodej]/Q0*math.log(Q[nodej]/Q0)
 
-    return [S, Shat]
+    return [S, S_ave]

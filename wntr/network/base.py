@@ -114,12 +114,9 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         if not isinstance(model, AbstractModel):
             raise ValueError('valid model must be passed as first argument')
         self._name = name
-        self._prev_head = None
         self.head = None
-        self._prev_demand = None
         self.demand = None
         self.leak_demand = None
-        self._prev_leak_demand = None
         self._initial_quality = None
         self._tag = None
         self._leak = False
@@ -135,13 +132,10 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._coordinates = [0,0]
         self._source = None
 
-    def __hash__(self):
-        return hash('Node/'+self._name)
-
-    def __eq__(self, other):
+    def _compare(self, other):
         if not type(self) == type(other):
             return False
-        if self._name == other._name and \
+        if self.name == other.name and \
            self.initial_quality == other.initial_quality and \
            self.tag == other.tag:
                return True
@@ -207,6 +201,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         d['coordinates'] = self.coordinates
         return d
 
+
 class Link(six.with_metaclass(abc.ABCMeta, object)):
     """
     Link base class.
@@ -254,8 +249,27 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._setting = None
         self._flow = None
 
-    def __hash__(self):
-        return hash('Link/'+self._name)
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: Link
+
+        Returns
+        -------
+        bool
+        """
+        if not type(self) == type(other):
+            return False
+        if self.name != other.name:
+            return False
+        if self.tag != other.tag:
+            return False
+        if self.initial_status != other.initial_status:
+            return False
+        if self.initial_setting != other.initial_setting:
+            return False
+        return True
     
     def __str__(self):
         return self._link_name
@@ -293,7 +307,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         return self._start_node
     @start_node.setter
     def start_node(self, name):
-        self._node_reg.remove_usage(self._start_node.name, (self._link_name, self.link_type))
+        self._node_reg.remove_usage(self.start_node_name, (self._link_name, self.link_type))
         self._node_reg.add_usage(name, (self._link_name, self.link_type))
         self._start_node = self._node_reg[name]
 
@@ -303,9 +317,9 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         return self._end_node
     @end_node.setter
     def end_node(self, name):
-        self._node_reg.remove_usage(self._end_node.name, (self._link_name, self.link_type))
+        self._node_reg.remove_usage(self.end_node_name, (self._link_name, self.link_type))
         self._node_reg.add_usage(name, (self._link_name, self.link_type))
-        self._end_node_name = self._node_reg[name]
+        self._end_node = self._node_reg[name]
 
     @property
     def start_node_name(self):
@@ -328,12 +342,14 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         return self._flow
     
     @property
+    @abc.abstractmethod
     def status(self):
         """Current status of the link"""
-        return self._status
+        pass
     @status.setter
+    @abc.abstractmethod
     def status(self, status):
-        self._status = status
+        self._user_status = status
     
     @property
     def setting(self):
@@ -370,8 +386,8 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     def todict(self):
         """A dictionary representation for this link"""
         d = dict(name=self.name, 
-                 start_node=self._start_node.name,
-                 end_node=self._end_node.name,
+                 start_node=self.start_node_name,
+                 end_node=self.end_node_name,
                  link_type=self.link_type)
         if self._tag:
             d['tag'] = self._tag

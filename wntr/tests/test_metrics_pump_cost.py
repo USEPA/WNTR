@@ -40,3 +40,6 @@ class TestPumpCost(unittest.TestCase):
         avg_cost_sum = avg_cost.sum()
 
         self.assertAlmostEqual(avg_cost_sum, 0.070484, 5)
+
+if __name__ == '__main__':
+    unittest.main()

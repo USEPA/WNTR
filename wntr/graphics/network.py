@@ -8,18 +8,18 @@ from wntr.graphics.color import custom_colormap
 try:
     import matplotlib.pyplot as plt
 except:
-    pass
+    plt = None
 try:
     import plotly
 except:
-    pass
+    plotly = None
 import logging
 
 logger = logging.getLogger(__name__)
 
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
-               node_size=20, node_range = [None,None], node_cmap=plt.cm.jet, node_labels=False,
-               link_width=1, link_range = [None,None], link_cmap=plt.cm.jet, link_labels=False,
+               node_size=20, node_range = [None,None], node_cmap=None, node_labels=False,
+               link_width=1, link_range = [None,None], link_cmap=None, link_labels=False,
                add_colorbar=True, directed=False, ax=None):
     """
     Plot network graphic using networkx. 
@@ -103,6 +103,14 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     -----
     For more network draw options, see nx.draw_networkx
     """
+
+    if plt is None:
+        raise ImportError('matplotlib is required for the plot_network function. Please install matplotlib.')
+
+    if node_cmap is None:
+        node_cmap = plt.cm.jet
+    if link_cmap is None:
+        link_cmap = plt.cm.jet
 
     if ax is None: # create a new figure
         plt.figure(facecolor='w', edgecolor='k')
@@ -278,6 +286,8 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
     filename : string, optional
         HTML file name (default=None, temp-plot.html)
     """
+    if plotly is None:
+        raise ImportError('plotly is required for the plot_interactive_network function. Please install plotly.')
 
     # Graph
     G = wn.get_graph()

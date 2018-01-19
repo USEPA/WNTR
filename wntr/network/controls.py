@@ -142,7 +142,7 @@ class Comparison(enum.Enum):
 # Control Condition classes
 #
 
-class ControlPriority(enum.Enum):
+class ControlPriority(enum.IntEnum):
     very_low = 0
     low = 1
     medium_low = 2
@@ -177,9 +177,6 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
     def backtrack(self):
         """Should be updated by the ``evaluate`` method if appropriate."""
         return self._backtrack
-
-    def __hash__(self):
-        return hash(self.name)
 
     @abc.abstractmethod
     def evaluate(self):
@@ -332,9 +329,6 @@ class TimeOfDayCondition(ControlCondition):
         return fmt.format(repr(self._relation.text), repr(self._sec_to_clock(self._threshold)),
                           repr(self._repeat), repr(self._first_day))
 
-    def __hash__(self):
-        return hash(self.name)
-
     def __str__(self):
         fmt = 'clock_time {:s} "{}"'.format(self._relation.symbol,
                                           self._sec_to_clock(self._threshold))
@@ -438,9 +432,6 @@ class SimTimeCondition(ControlCondition):
         return fmt.format(repr(self._relation.text), repr(self._sec_to_days_hours_min_sec(self._threshold)),
                           repr(self._repeat), repr(self._first_time))
 
-    def __hash__(self):
-        return hash(self.name)
-
     def __str__(self):
         fmt = '{} {} sec'.format(self._relation.symbol, self._threshold)
         if self._repeat is True:
@@ -506,7 +497,10 @@ class ValueCondition(ControlCondition):
             return object.__new__(TankLevelCondition)
         else:
             return object.__new__(ValueCondition)
-
+    
+    def __getnewargs__(self):
+        return self._source_obj, self._source_attr, self._relation, self._threshold
+    
     def __init__(self, source_obj, source_attr, relation, threshold):
         self._source_obj = source_obj
         self._source_attr = source_attr
@@ -551,15 +545,18 @@ class ValueCondition(ControlCondition):
             relation = np.greater
             thresh_value = 0.0
         state = relation(cur_value, thresh_value)
-        return state
+        return bool(state)
 
 
 class TankLevelCondition(ValueCondition):
     def __init__(self, source_obj, source_attr, relation, threshold):
+        relation = Comparison.parse(relation)
+        if relation not in {Comparison.ge, Comparison.le}:
+            raise ValueError('TankLevelConditions only support <= and >= relations.')
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
         self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
-
+        
     def evaluate(self):
         self._backtrack = 0  # no backtracking is needed unless specified in the if statement below
         cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level
@@ -571,10 +568,16 @@ class TankLevelCondition(ValueCondition):
         state = relation(cur_value, thresh_value)  # determine if the condition is satisfied
         if state and not relation(self._last_value, thresh_value):
             # if the condition is satisfied and the last value did not satisfy the condition, then backtracking
-            # is needed
-            self._backtrack = -(cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand
+            # is needed.
+            # The math.floor is not actually needed, but I leave it here for clarity. We want the backtrack value to be
+            # slightly lower than what the floating point computation would give. This ensures the next time step will
+            # be slightly later than when the tank level hits the threshold. This ensures the tank level will go
+            # slightly beyond the threshold. This ensures that relation(self._last_value, thresh_value) will be True
+            # next time. This prevents us from computing very small backtrack values over and over.
+            if self._source_obj.demand != 0:
+                self._backtrack = int(math.floor((cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand))
         self._last_value = cur_value  # update the last value
-        return state
+        return bool(state)
 
 
 class RelativeCondition(ControlCondition):
@@ -651,7 +654,7 @@ class RelativeCondition(ControlCondition):
         thresh_value = getattr(self._threshold_obj, self._threshold_attr)
         relation = self._relation.func
         state = relation(cur_value, thresh_value)
-        return state
+        return bool(state)
 
 
 class OrCondition(ControlCondition):
@@ -852,7 +855,7 @@ class _CloseHeadPumpCondition(ControlCondition):
     """
     Prevents reverse flow in pumps.
     """
-    Htol = 0.0001524
+    _Htol = 0.0001524
 
     def __init__(self, wn, pump):
         """
@@ -865,6 +868,7 @@ class _CloseHeadPumpCondition(ControlCondition):
         self._start_node = wn.get_node(pump.start_node)
         self._end_node = wn.get_node(pump.end_node)
         self._backtrack = 0
+        self._wn = wn
 
     def requires(self):
         return OrderedSet([self._pump, self._start_node, self._end_node])
@@ -874,19 +878,20 @@ class _CloseHeadPumpCondition(ControlCondition):
         If True is returned, the pump needs to be closed
         """
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed != 1.0:
+        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         dh = self._end_node.head - self._start_node.head
-        if dh > self.Hmax + self.Htol:
+        if dh > Hmax + self._Htol:
             return True
+        return False
 
 
 class _OpenHeadPumpCondition(ControlCondition):
     """
     Prevents reverse flow in pumps.
     """
-    Htol = 0.0001524
+    _Htol = 0.0001524
 
     def __init__(self, wn, pump):
         """
@@ -899,6 +904,7 @@ class _OpenHeadPumpCondition(ControlCondition):
         self._start_node = wn.get_node(pump.start_node)
         self._end_node = wn.get_node(pump.end_node)
         self._backtrack = 0
+        self._wn = wn
 
     def requires(self):
         return OrderedSet([self._pump, self._start_node, self._end_node])
@@ -908,12 +914,13 @@ class _OpenHeadPumpCondition(ControlCondition):
         If True is returned, the pump needs to be closed
         """
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed != 1.0:
+        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         dh = self._end_node.head - self._start_node.head
-        if dh <= self.Hmax + self.Htol:
+        if dh <= Hmax + self._Htol:
             return True
+        return False
 
 
 class _ClosePRVCondition(ControlCondition):
@@ -958,6 +965,7 @@ class _OpenPRVCondition(ControlCondition):
         wn: wntr.network.WaterNetworkModel
         prv: wntr.network.Valve
         """
+        super(_OpenPRVCondition, self).__init__()
         self._prv = prv
         self._start_node = wn.get_node(self._prv.start_node)
         self._end_node = wn.get_node(self._prv.end_node)
@@ -971,14 +979,15 @@ class _OpenPRVCondition(ControlCondition):
         if self._prv._internal_status == LinkStatus.Active:
             if self._prv.flow < -self._Qtol:
                 return False
-            elif self._start_node.head < self._prv.setting + self._end_node.elevation  + self._r * abs(self._prv.flow)**2 - self._Htol:
+            elif self._start_node.head < self._prv.setting + self._end_node.elevation + self._r * abs(self._prv.flow)**2 - self._Htol:
                 return True
             return False
         elif self._prv._internal_status == LinkStatus.Open:
             return False
         elif self._prv._internal_status == LinkStatus.Closed:
-            if ((self._start_node.head > self._end_node.head + self._Htol) and
-                    (self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
+            if self._start_node.head >= self._prv.setting + self._end_node.elevation + self._Htol and self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol:
+                return False
+            elif self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol and self._start_node.head > self._end_node.head + self._Htol:
                 return True
             return False
         else:
@@ -1012,16 +1021,12 @@ class _ActivePRVCondition(ControlCondition):
         elif self._prv._internal_status == LinkStatus.Open:
             if self._prv.flow < -self._Qtol:
                 return False
-            elif (self._start_node.head > self._prv.setting + self._end_node.elevation +
-                  self._r * abs(self._prv.flow)**2 + self._Htol):
+            elif (self._end_node.head >= self._prv.setting + self._end_node.elevation + self._Htol):
                 return True
             return False
         elif self._prv._internal_status == LinkStatus.Closed:
-            if ((self._start_node.head > self._end_node.head + self._Htol) and
-                    (self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
-                return False
-            elif ((self._start_node.head > self._end_node.head + self._Htol) and
-                  (self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
+            if ((self._start_node.head >= self._prv.setting + self._end_node.elevation + self._Htol) and
+                    (self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
                 return True
             return False
         else:
@@ -1094,6 +1099,7 @@ class _ValveNewSettingCondition(ControlCondition):
         ----------
         valve: wntr.network.Valve
         """
+        super(_ValveNewSettingCondition, self).__init__()
         self._valve = valve
 
     def requires(self):
@@ -1105,11 +1111,71 @@ class _ValveNewSettingCondition(ControlCondition):
         return False
 
 
+class _TankMinLevelOpenCondition(ControlCondition):
+    _Htol = 0.0001524
+
+    def __init__(self, tank, other_node):
+        """
+        Parameters
+        ----------
+        tank: wntr.network.Tank
+        other_node: wntr.network.Junction
+        """
+        super(_TankMinLevelOpenCondition, self).__init__()
+        self._tank = tank
+        self._other_node = other_node
+        self._min_head = tank.min_level + tank.elevation
+
+    def requires(self):
+        return OrderedSet([self._tank, self._other_node])
+
+    def evaluate(self):
+        if self._tank.head <= self._min_head:
+            if self._tank.head <= self._other_node.head - self._Htol:
+                return True
+        return False
+
+    def __str__(self):
+        return 'if {0}.level <= {1} and {0}.head <= {2}.head - {3}'.format(self._tank, self._tank.min_level, self._other_node, self._Htol)
+
+
+class _TankMaxLevelOpenCondition(ControlCondition):
+    _Htol = 0.0001524
+
+    def __init__(self, tank, other_node):
+        """
+        Parameters
+        ----------
+        tank: wntr.network.Tank
+        other_node: wntr.network.Junction
+        """
+        super(_TankMaxLevelOpenCondition, self).__init__()
+        self._tank = tank
+        self._other_node = other_node
+        self._max_head = tank.max_level + tank.elevation
+
+    def requires(self):
+        return OrderedSet([self._tank, self._other_node])
+
+    def evaluate(self):
+        if self._tank.head >= self._max_head:
+            if self._tank.head >= self._other_node.head + self._Htol:
+                return True
+        return False
+
+    def __str__(self):
+        return 'if {0}.level >= {1} and {0}.head >= {2}.head + {3}'.format(self._tank, self._tank.max_level, self._other_node, self._Htol)
+
+
 class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
     """
     A base class for deriving new control actions. The control action is run by calling RunControlAction
     This class is not meant to be used directly. Derived classes must implement the RunControlAction method.
     """
+
+    def __init__(self):
+        super(BaseControlAction, self).__init__()
+
     @abc.abstractmethod
     def run_control_action(self):
         """
@@ -1147,6 +1213,7 @@ class ControlAction(BaseControlAction):
         The new value for target_obj.attribute when the control runs.
     """
     def __init__(self, target_obj, attribute, value):
+        super(ControlAction, self).__init__()
         if target_obj is None:
             raise ValueError('target_obj is None in ControlAction::__init__. A valid target_obj is needed.')
         if not hasattr(target_obj, attribute):
@@ -1173,9 +1240,9 @@ class ControlAction(BaseControlAction):
             return LinkStatus(int(self._value)).name
         return self._value
 
-    def __eq__(self, other):
+    def _compare(self, other):
         if self._target_obj == other._target_obj and \
-           self._attribute      == other._attribute:
+           self._attribute == other._attribute:
             if type(self._value) == float:
                 if abs(self._value - other._value)<1e-10:
                     return True
@@ -1186,9 +1253,6 @@ class ControlAction(BaseControlAction):
                 return False
         else:
             return False
-
-    def __hash__(self):
-        return id(self)
 
     def run_control_action(self):
         """
@@ -1218,6 +1282,7 @@ class _InternalControlAction(BaseControlAction):
         The attribute to be checked for an actual change (e.g., status)
     """
     def __init__(self, target_obj, internal_attribute, value, property_attribute):
+        super(_InternalControlAction, self).__init__()
         if not hasattr(target_obj, internal_attribute):
             raise AttributeError('{0} does not have attribute {1}'.format(target_obj, internal_attribute))
         if not hasattr(target_obj, property_attribute):
@@ -1268,7 +1333,7 @@ class _InternalControlAction(BaseControlAction):
                                               self._internal_attr,
                                               self._value)
 
-    def __eq__(self, other):
+    def _compare(self, other):
         if ((self._target_obj == other._target_obj) and
             (self._internal_attr == other._internal_attr) and
             (self._property_attr == other._property_attr)):
@@ -1282,9 +1347,6 @@ class _InternalControlAction(BaseControlAction):
                 return False
         else:
             return False
-
-    def __hash__(self):
-        return id(self)
 
 
 #
@@ -1372,6 +1434,7 @@ class Control(ControlBase):
         if self._name is None:
             self._name = ''
         self._control_type = _ControlType.rule
+        self._is_internal = False
 
     @property
     def epanet_control_type(self):
@@ -1384,6 +1447,9 @@ class Control(ControlBase):
         for action in self._else_actions:
             req.update(action.requires())
         return req
+
+    def is_internal(self):
+        return self._is_internal
 
     def actions(self):
         return self._then_actions + self._else_actions
@@ -1400,7 +1466,7 @@ class Control(ControlBase):
         return fmt.format(self._name, repr(self._condition), repr(self._then_actions), repr(self._else_actions), self._priority)
 
     def __str__(self):
-        text = 'Rule {} := if {}'.format(self._name, self._condition)
+        text = '{} {} := if {}'.format(self._control_type.name, self._name, self._condition)
         if self._then_actions is not None and len(self._then_actions) > 0:
             then_text = ' then '
             for ct, act in enumerate(self._then_actions):
@@ -1496,14 +1562,15 @@ class Control(ControlBase):
 
 
 class ControlManager(Observer):
-    def __init__(self, model):
+    def __init__(self):
         self._controls = OrderedSet()
         """OrderedSet of Control"""
 
         self._previous_values = OrderedDict()  # {(obj, attr): value}
         self._changed = OrderedSet()  # set of (obj, attr) that has been changed from _previous_values
-        self._node_reg = model.nodes
-        self._link_reg = model.links
+
+    def __iter__(self):
+        return iter(self._controls)
 
     def update(self, subject):
         """
@@ -1513,11 +1580,11 @@ class ControlManager(Observer):
         ---------
         subject: BaseControlAction
         """
-        for obj, attr in subject.targets():
-            if getattr(obj, attr) == self._previous_values[(obj, attr)]:
-                self._changed.discard((obj, attr))
-            else:
-                self._changed.add((obj, attr))
+        obj, attr = subject.target()
+        if getattr(obj, attr) == self._previous_values[(obj, attr)]:
+            self._changed.discard((obj, attr))
+        else:
+            self._changed.add((obj, attr))
 
     def register_control(self, control):
         """
@@ -1528,28 +1595,21 @@ class ControlManager(Observer):
         control: Control
         """
         self._controls.add(control)
-#        for action in control.actions():
-#            action.subscribe(self)
-#            for obj, attr in action.targets():
-#                self._previous_values[(obj, attr)] = getattr(obj, attr)
-        for elem in control.requires():
-            if isinstance(elem, (Tank, Junction, Reservoir)):
-                self._node_reg.add_usage(elem.name, (control.name, 'Control'))
-            elif isinstance(elem, (Pipe, Pump, Valve)):
-                self._link_reg.add_usage(elem.name, (control.name, 'Control'))
+        for action in control.actions():
+            action.subscribe(self)
+            obj, attr = action.target()
+            self._previous_values[(obj, attr)] = getattr(obj, attr)
 
     def reset(self):
         self._changed = OrderedSet()
         self._previous_values = OrderedDict()
         for control in self._controls:
             for action in control.actions():
-                for obj, attr in action.targets():
-                    self._previous_values[(obj, attr)] = getattr(obj, attr)
+                obj, attr = action.target()
+                self._previous_values[(obj, attr)] = getattr(obj, attr)
 
     def changes_made(self):
-        if len(self._changed) > 0:
-            return True
-        return False
+        return len(self._changed) > 0
 
     def get_changes(self):
         for obj, attr in self._changed:
@@ -1566,9 +1626,9 @@ class ControlManager(Observer):
         self._controls.remove(control)
         for action in control.actions():
             action.unsubscribe(self)
-            for obj, attr in action.targets():
-                self._previous_values.pop((obj, attr))
-                self._changed.discard((obj, attr))
+            obj, attr = action.target()
+            self._previous_values.pop((obj, attr))
+            self._changed.discard((obj, attr))
 
     def check(self):
         controls_to_run = []

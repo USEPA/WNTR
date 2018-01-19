@@ -1000,7 +1000,7 @@ class InpFile(object):
                     current[1].upper() == 'ACTIVE'):
                 new_status = LinkStatus[current[1].upper()]
                 link.initial_status = new_status
-                link._base_status = new_status
+                link.status = new_status
             else:
                 if isinstance(link, wntr.network.Valve):
                     if link.valve_type != 'PRV':
@@ -1008,7 +1008,7 @@ class InpFile(object):
                     else:
                         setting = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
                         link.setting = setting
-                        link._base_setting = setting
+                        link.initial_setting = setting
 
     def _write_status(self, f, wn):
         f.write('[STATUS]\n'.encode('ascii'))
@@ -1070,9 +1070,9 @@ class InpFile(object):
                 if 'IF' in current:
                     node = self.wn.get_node(node_name)
                     if current[6] == 'ABOVE':
-                        oper = np.greater
+                        oper = np.greater_equal
                     elif current[6] == 'BELOW':
-                        oper = np.less
+                        oper = np.less_equal
                     else:
                         raise RuntimeError("The following control is not recognized: " + line)
                     # OKAY - we are adding in the elevation. This is A PROBLEM
@@ -1292,7 +1292,7 @@ class InpFile(object):
                 E = {'node': node,
                      'base': from_si(self.flow_units, demand.base_value, HydParam.Demand),
                      'pat': ''}
-                if demand.pattern_name is not None:
+                if demand.pattern_name in wn.pattern_name_list:
                     E['pat'] = demand.pattern_name
                 f.write(entry.format(E['node'], str(E['base']), E['pat']).encode('ascii'))
         f.write('\n'.encode('ascii'))
@@ -1744,11 +1744,11 @@ class InpFile(object):
                     self.wn.options.results.nodes = True
                 elif not isinstance(self.wn.options.results.nodes, list):
                     self.wn.options.results.nodes = []
-                    for ct in xrange(len(current)-2):
+                    for ct in range(len(current)-2):
                         i = ct + 2
                         self.wn.options.results.nodes.append(current[i])
                 else:
-                    for ct in xrange(len(current)-2):
+                    for ct in range(len(current)-2):
                         i = ct + 2
                         self.wn.options.results.nodes.append(current[i])
             elif current[0].upper() in ['LINKS']:
@@ -2650,7 +2650,7 @@ class BinFile(object):
                 self.results.node['demand'] = HydParam.Demand._to_si(self.flow_units, df['demand'])
                 self.results.node['head'] = HydParam.HydraulicHead._to_si(self.flow_units, df['head'])
                 self.results.node['pressure'] = HydParam.Pressure._to_si(self.flow_units, df['pressure'])
-                
+
                 # Water Quality Results (node and link)
                 if self.quality_type is QualType.Chem:
                     self.results.node['quality'] = QualParam.Concentration._to_si(self.flow_units, df['quality'], mass_units=self.mass_units)
