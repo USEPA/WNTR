@@ -1111,62 +1111,6 @@ class _ValveNewSettingCondition(ControlCondition):
         return False
 
 
-class _TankMinLevelOpenCondition(ControlCondition):
-    _Htol = 0.0001524
-
-    def __init__(self, tank, other_node):
-        """
-        Parameters
-        ----------
-        tank: wntr.network.Tank
-        other_node: wntr.network.Junction
-        """
-        super(_TankMinLevelOpenCondition, self).__init__()
-        self._tank = tank
-        self._other_node = other_node
-        self._min_head = tank.min_level + tank.elevation
-
-    def requires(self):
-        return OrderedSet([self._tank, self._other_node])
-
-    def evaluate(self):
-        if self._tank.head <= self._min_head:
-            if self._tank.head <= self._other_node.head - self._Htol:
-                return True
-        return False
-
-    def __str__(self):
-        return 'if {0}.level <= {1} and {0}.head <= {2}.head - {3}'.format(self._tank, self._tank.min_level, self._other_node, self._Htol)
-
-
-class _TankMaxLevelOpenCondition(ControlCondition):
-    _Htol = 0.0001524
-
-    def __init__(self, tank, other_node):
-        """
-        Parameters
-        ----------
-        tank: wntr.network.Tank
-        other_node: wntr.network.Junction
-        """
-        super(_TankMaxLevelOpenCondition, self).__init__()
-        self._tank = tank
-        self._other_node = other_node
-        self._max_head = tank.max_level + tank.elevation
-
-    def requires(self):
-        return OrderedSet([self._tank, self._other_node])
-
-    def evaluate(self):
-        if self._tank.head >= self._max_head:
-            if self._tank.head >= self._other_node.head + self._Htol:
-                return True
-        return False
-
-    def __str__(self):
-        return 'if {0}.level >= {1} and {0}.head >= {2}.head + {3}'.format(self._tank, self._tank.max_level, self._other_node, self._Htol)
-
-
 class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
     """
     A base class for deriving new control actions. The control action is run by calling RunControlAction
