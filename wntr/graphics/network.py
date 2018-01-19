@@ -103,15 +103,12 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     -----
     For more network draw options, see nx.draw_networkx
     """
-
     if plt is None:
         raise ImportError('matplotlib is required for the plot_network function. Please install matplotlib.')
-
     if node_cmap is None:
         node_cmap = plt.cm.jet
     if link_cmap is None:
         link_cmap = plt.cm.jet
-
     if ax is None: # create a new figure
         plt.figure(facecolor='w', edgecolor='k')
         ax = plt.gca()
