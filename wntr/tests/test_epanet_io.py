@@ -22,7 +22,7 @@ class TestWriter(unittest.TestCase):
         pass
 
     def test_all(self):
-        self.assertEqual(self.wn, self.wn2)
+        self.assertTrue(self.wn._compare(self.wn2))
 
     def test_pipe_minor_loss(self):
         p1 = self.wn2.get_link('p1')
@@ -54,13 +54,13 @@ class TestWriter(unittest.TestCase):
 
     def test_valve_setting_control(self):
         control = self.wn2.get_control('control 1')
-        run_time = control._run_at_time
+        run_time = control._condition._threshold
         self.assertAlmostEqual(run_time, 3600.0*3.4, 6)
-        value = control._control_action._value
+        value = control.actions()[0]._value
         self.assertAlmostEqual(value, 0.82, 6)
 
         control = self.wn2.get_control('control 2')
-        value = control._control_action._value
+        value = control.actions()[0]._value
         self.assertAlmostEqual(value, 1.83548, 4)
 
 class TestInpFileWriter(unittest.TestCase):
@@ -79,41 +79,41 @@ class TestInpFileWriter(unittest.TestCase):
         pass
 
     def test_wn(self):
-        self.assertEqual(self.wn == self.wn2, True)
+        self.assertTrue(self.wn._compare(self.wn2))
 
     def test_junctions(self):
         for name, node in self.wn.nodes(self.wntr.network.Junction):
             node2 = self.wn2.get_node(name)
-            self.assertEqual(node == node2, True)
+            self.assertTrue(node._compare(node2))
             #self.assertAlmostEqual(node.base_demand, node2.base_demand, 5)
 
     def test_reservoirs(self):
         for name, node in self.wn.nodes(self.wntr.network.Reservoir):
             node2 = self.wn2.get_node(name)
-            self.assertEqual(node == node2, True)
+            self.assertTrue(node._compare(node2))
             self.assertAlmostEqual(node.head_timeseries.base_value, node2.head_timeseries.base_value, 5)
 
     def test_tanks(self):
         for name, node in self.wn.nodes(self.wntr.network.Tank):
             node2 = self.wn2.get_node(name)
-            self.assertEqual(node == node2, True)
+            self.assertTrue(node._compare(node2))
             self.assertAlmostEqual(node.init_level, node2.init_level, 5)
 
     def test_pipes(self):
         for name, link in self.wn.links(self.wntr.network.Pipe):
             link2 = self.wn2.get_link(name)
-            self.assertEqual(link == link2, True)
+            self.assertTrue(link._compare(link2))
             self.assertEqual(link.initial_status, link2.initial_status)
 
     def test_pumps(self):
         for name, link in self.wn.links(self.wntr.network.Pump):
             link2 = self.wn2.get_link(name)
-            self.assertEqual(link == link2, True)
+            self.assertTrue(link._compare(link2))
 
     def test_valves(self):
         for name, link in self.wn.links(self.wntr.network.Valve):
             link2 = self.wn2.get_link(name)
-            self.assertEqual(link == link2, True)
+            self.assertTrue(link._compare(link2))
             self.assertAlmostEqual(link.setting, link2.setting, 5)
 
     def test_curves(self):
@@ -125,9 +125,11 @@ class TestInpFileWriter(unittest.TestCase):
             self.assertEqual(source == source2, True)
 
     def test_demands(self):
-        for name, demand in self.wn._demands.items():
-            demand2 = self.wn2._demands[name]
-            self.assertEqual(demand == demand2, True)
+        for j_name, j in self.wn.junctions():
+            j2 = self.wn2.get_node(j_name)
+            assert len(j.demand_timeseries_list) == len(j2.demand_timeseries_list)
+            for d, d2 in zip(j.demand_timeseries_list, j2.demand_timeseries_list):
+                self.assertEqual(d, d2)
 
     ### TODO
 #    def test_controls(self):

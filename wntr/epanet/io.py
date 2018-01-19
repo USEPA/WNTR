@@ -2072,10 +2072,10 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
-                if isinstance(action._target_obj_ref, Valve):
-                    if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                if isinstance(action.target()[0], Valve):
+                    if action.target()[0].valve_type.upper() in ['PRV', 'PBV', 'PSV']:
                         value = from_si(self.inp_units, val_si, HydParam.Pressure)
-                    elif action._target_obj_ref.valve_type.upper() in ['FCV']:
+                    elif action.target()[0].valve_type.upper() in ['FCV']:
                         value = from_si(self.inp_units, val_si, HydParam.Flow)
                     else:
                         value = val_si
@@ -2084,8 +2084,8 @@ class _EpanetRule(object):
                 value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
-            clause = fmt.format(prefix, action._target_obj_ref.__class__.__name__,
-                                action._target_obj_ref.name, action._attribute,
+            clause = fmt.format(prefix, action.target()[0].__class__.__name__,
+                                action.target()[0].name, action.target()[1],
                                 value)
             self.add_then(clause)
 
@@ -2108,10 +2108,10 @@ class _EpanetRule(object):
             elif attr.lower() in ['pressure']:
                 value = '{:.6g}'.format(from_si(self.inp_units, val_si, HydParam.Pressure))
             elif attr.lower() in ['setting']:
-                if isinstance(action._target_obj_ref, Valve):
-                    if action._target_obj_ref.valve_type.upper() in ['PRV', 'PBV', 'PSV']:
+                if isinstance(action.target()[0], Valve):
+                    if action.target()[0].valve_type.upper() in ['PRV', 'PBV', 'PSV']:
                         value = from_si(self.inp_units, val_si, HydParam.Pressure)
-                    elif action._target_obj_ref.valve_type.upper() in ['FCV']:
+                    elif action.target()[0].valve_type.upper() in ['FCV']:
                         value = from_si(self.inp_units, val_si, HydParam.Flow)
                     else:
                         value = val_si
@@ -2120,8 +2120,8 @@ class _EpanetRule(object):
                 value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
-            clause = fmt.format(prefix, action._target_obj_ref.__class__.__name__,
-                                action._target_obj_ref.name, action._attribute,
+            clause = fmt.format(prefix, action.target()[0].__class__.__name__,
+                                action.target()[0].name, action.target()[1],
                                 value)
             self.add_else(clause)
 
