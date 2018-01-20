@@ -224,6 +224,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         rule_iter = 0  # this is used to determine the rule timestep
 
         self._model.update_network_previous_values()
+        self._wn._prev_sim_time = -1
 
         if logger_level <= 1:
             logger.log(1, 'starting simulation')
@@ -264,6 +265,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                 # now sort them from largest to smallest "backtrack"; this way they are in the time-order
                 # in which they need to be activated
                 presolve_controls_to_run.sort(key=lambda i: i[1], reverse=True)
+                if first_step:  # we don't want to backtrack if the sim time is 0
+                    presolve_controls_to_run = [(c, 0) for c, b in presolve_controls_to_run]
                 if logger_level <= 1:
                     logger.log(1, 'presolve_controls that need activated before the next hydraulic timestep:')
                     for pctr in presolve_controls_to_run:
