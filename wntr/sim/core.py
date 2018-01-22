@@ -225,7 +225,6 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         if first_step:
             self._model.update_network_previous_values()
-        if self._wn._prev_sim_time is None:
             self._wn._prev_sim_time = -1
 
         if logger_level <= 1:
