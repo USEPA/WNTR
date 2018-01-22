@@ -26,8 +26,9 @@ When setting up analysis in WNTR, all input values should be specified in SI uni
 All simulation results are also stored in SI units and can be converted to other units if desired.
 The SymPy Python package can be used to convert between units [JCMG11]_.  
 
-WNTR is compatible with all EPANET unit conventions.  When using an EPANET INP file to 
-generate a water network model, WNTR converts model parameters using the units defined in the 
+WNTR can generate water network models from EPANET INP files using all EPANET unit conventions. 
+When using an EPANET INP file to generate a water network model, 
+WNTR converts model parameters using the units defined in the 
 **Units** and **Quality** options of the EPANET INP file.  
 These options define the mass and flow units for the model.
 Some units also depend on the equation used
@@ -39,18 +40,17 @@ For reference, :numref:`table-epanet-units` includes EPANET unit conventions [Ro
 
    +----------------------+-------------------------------------+------------------------------------+
    |   Parameter          |   US customary units                |   SI-based units                   |
-   |                      |                                     |                                    |
    +======================+=====================================+====================================+
    | Concentration        |  *mass* /L where *mass* can be      |  *mass* /L where *mass* can be     |
    |                      |  defined as mg or ug                |  defined as mg or ug               |
    +----------------------+-------------------------------------+------------------------------------+
    | Demand               |   Same as *flow*                    |   Same as *flow*                   |
    +----------------------+-------------------------------------+------------------------------------+
-   | Diameter: pipes      |   in                                |   mm                               |
+   | Diameter (Pipes)     |   in                                |   mm                               |
    +----------------------+-------------------------------------+------------------------------------+
-   | Diameter: tanks      |   ft                                |   m                                |
+   | Diameter (Tanks)     |   ft                                |   m                                |
    +----------------------+-------------------------------------+------------------------------------+
-   | Efficiency (pumps)   |   percent                           | percent                            |
+   | Efficiency (Pumps)   |   percent                           | percent                            |
    +----------------------+-------------------------------------+------------------------------------+
    | Elevation            |   ft                                |   m                                |
    +----------------------+-------------------------------------+------------------------------------+
@@ -80,13 +80,11 @@ For reference, :numref:`table-epanet-units` includes EPANET unit conventions [Ro
    | Reaction             |   1/day (1st-order)                 |  1/day (1st-order)                 |
    | coefficient (Bulk)   |                                     |                                    |
    +----------------------+-------------------------------------+------------------------------------+
-   | Reaction             | - *mass* /ft :sup:`2` /day (0-order)| - *mass* /m :sup:`2` /day (0-order)|
+   | Reaction             | - *mass* /ft/day (0-order)          | - *mass* /m/day (0-order)          |
    | coefficient (Wall)   | - ft/day (1st-order)                | - m/day (1st-order)                |
    +----------------------+-------------------------------------+------------------------------------+
    | Roughness            | - 10 :sup:`-3` ft (Darcy-Weisbach)  | - mm (Darcy-Weisbach)              |
    | coefficient          | - unitless (otherwise)              | - unitless (otherwise)             |
-   +----------------------+-------------------------------------+------------------------------------+
-   | Reaction rate        |   *mass* /L/day                     | *mass* /L/day                      |
    +----------------------+-------------------------------------+------------------------------------+
    | Source mass          |   *mass* /min                       | *mass* /min                        |
    | injection rate       |                                     |                                    |
