@@ -1215,7 +1215,7 @@ class WaterNetworkModel(AbstractModel):
             link.status = link.initial_status
             link._flow = None
             link.power = link._base_power
-            link._power_outage = False
+            link._power_outage = LinkStatus.Open
 
         for name, link in self.links(Valve):
             link.status = link.initial_status
