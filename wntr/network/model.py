@@ -505,88 +505,40 @@ class WaterNetworkModel(AbstractModel):
     
     ### # 
     ### Remove elements from the model
-    def remove_node(self, name): 
+    def remove_node(self, name, with_control=True):
         """"""
-        self._node_reg.__delitem__(name)
-        """
         node = self.get_node(name)
-        if isinstance(node, Junction):
-            self.num_junctions -= 1
-            self._junctions.pop(name)
-        elif isinstance(node, Tank):
-            self.num_tanks -= 1
-            self._tanks.pop(name)
-        elif isinstance(node, Reservoir):
-            self.num_reservoirs -= 1
-            self._reservoirs.pop(name)
-        else:
-            raise RuntimeError('Node type is not recognized.')
-
-        if with_control:
-            x = []
-            for control_name, control in self._controls.items():
-                if type(control)==_PRVControl:
-                    if node==control._close_control_action._target_obj_ref:
-                        logger.warn('Control '+control_name+' is being removed along with node '+name)
-                        x.append(control_name)
-                else:
-                    if node == control._control_action._target_obj_ref:
-                        logger.warn('Control '+control_name+' is being removed along with node '+name)
-                        x.append(control_name)
-            for i in x:
-                self.remove_control(i)
-        else:
-            for control_name, control in self._controls.items():
-                if type(control)==_PRVControl:
-                    if node==control._close_control_action._target_obj_ref:
-                        logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
-                else:
-                    if node == control._control_action._target_obj_ref:
-                        logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
-        """
-    def remove_link(self, name): 
-        """"""
-        self._link_reg.__delitem__(name)
-        """
-        link = self.get_link(name)
-        if isinstance(link, Pipe):
-            if link.cv:
-                self._check_valves.remove(name)
-                logger.warn('You are removing a pipe with a check valve.')
-            self.num_pipes -= 1
-            self._pipes.pop(name)
-        elif isinstance(link, Pump):
-            self.num_pumps -= 1
-            self._pumps.pop(name)
-        elif isinstance(link, Valve):
-            self.num_valves -= 1
-            self._valves.pop(name)
-        else:
-            raise RuntimeError('Link Type not Recognized')
-
+        self._node_reg.__delitem__(name)
         if with_control:
             x=[]
             for control_name, control in self._controls.items():
-                if type(control)==_PRVControl:
-                    if link==control._close_control_action._target_obj_ref:
-                        logger.warn('Control '+control_name+' is being removed along with link '+name)
-                        x.append(control_name)
-                else:
-                    if link == control._control_action._target_obj_ref:
-                        logger.warn('Control '+control_name+' is being removed along with link '+name)
-                        x.append(control_name)
+                if node in control.requires():
+                    logger.warning('Control '+control_name+' is being removed along with node '+name)
+                    x.append(control_name)
             for i in x:
                 self.remove_control(i)
         else:
             for control_name, control in self._controls.items():
-                if type(control)==_PRVControl:
-                    if link==control._close_control_action._target_obj_ref:
-                        logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
-                else:
-                    if link == control._control_action._target_obj_ref:
-                        logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
-        """
-        
+                if node in control.requires():
+                    raise RuntimeError('Cannot remove node {0} without first removing control {1}'.format(name, control_name))
+
+    def remove_link(self, name, with_control=True):
+        """"""
+        link = self.get_link(name)
+        self._link_reg.__delitem__(name)
+        if with_control:
+            x=[]
+            for control_name, control in self._controls.items():
+                if link in control.requires():
+                    logger.warning('Control '+control_name+' is being removed along with link '+name)
+                    x.append(control_name)
+            for i in x:
+                self.remove_control(i)
+        else:
+            for control_name, control in self._controls.items():
+                if link in control.requires():
+                    raise RuntimeError('Cannot remove link {0} without first removing control {1}'.format(name, control_name))
+
     def remove_pattern(self, name): 
         """
         Removes a pattern from the water network model.
@@ -1559,7 +1511,8 @@ class WaterNetworkModel(AbstractModel):
         if pipe.cv:
             logger.warn('You are splitting a pipe with a check valve. The new pipe will not have a check valve.')
         return (pipe, new_junction1, new_junction2, new_pipe)
-    
+
+
 class PatternRegistry(Registry):
 
     @property
@@ -1638,18 +1591,6 @@ class PatternRegistry(Registry):
                 s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
         return s
         
-
-class ControlRegistry(Registry):
-    def __init__(self, model):
-        super(ControlRegistry, self).__init__(model)
-        self._presolve_controls = ControlManager(model)
-        self._postsolve_controls = ControlManager(model)
-        self._rules = ControlManager(model)
-
-    @property
-    def _controls(self):
-        raise UnboundLocalError('registries are not reentrant')
-
 
 class CurveRegistry(Registry):
     def __init__(self, model):

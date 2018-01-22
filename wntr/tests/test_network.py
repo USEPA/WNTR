@@ -227,17 +227,16 @@ class TestNetworkMethods(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         control_action = self.wntr.network.ControlAction(wn.get_link('21'), 'status', self.wntr.network.LinkStatus.opened)
-        control = self.wntr.network.controls.Control.conditional_control((wn.get_node('2'),'head'), np.greater, 10.0, control_action)
+        control = self.wntr.network.controls.Control.conditional_control(wn.get_node('2'), 'head', np.greater_equal, 10.0, control_action)
         wn.add_control('control_1',control)
 
-        import copy
-        controls_1 = copy.deepcopy(wn.controls)
+        controls_1 = {c_name for c_name, c in wn.controls()}
 
         wn.remove_link('21')
 
-        controls_2 = copy.deepcopy(wn.controls)
-        self.assertEqual(True, 'control_1' in controls_1.keys())
-        self.assertEqual(False, 'control_1' in controls_2.keys())
+        controls_2 = {c_name for c_name, c in wn.controls()}
+        self.assertTrue('control_1' in controls_1)
+        self.assertFalse('control_1' in controls_2)
 
     def test_nodes(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -267,6 +266,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction('j1')
         wn.add_junction('j2')
         wn.add_tank('t1')
+        wn.add_tank('t2')
         wn.add_reservoir('r1')
         wn.add_reservoir('r2')
         wn.add_junction('j3')

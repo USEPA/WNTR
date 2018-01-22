@@ -322,7 +322,7 @@ class TimeOfDayCondition(ControlCondition):
 
     def requires(self):
         """Returns a list of objects required to evaluate this condition"""
-        return []
+        return OrderedSet()
 
     def __repr__(self):
         fmt = '<TimeOfDayCondition: model, {}, {}, {}, {}>'
@@ -446,7 +446,7 @@ class SimTimeCondition(ControlCondition):
 
     def requires(self):
         """Returns a list of objects required to evaluate this condition"""
-        return []
+        return OrderedSet()
 
     def evaluate(self):
         cur_time = self._model.sim_time
