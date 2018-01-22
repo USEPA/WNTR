@@ -223,8 +223,10 @@ class WNTRSimulator(WaterNetworkSimulator):
         resolve = False
         rule_iter = 0  # this is used to determine the rule timestep
 
-        self._model.update_network_previous_values()
-        self._wn._prev_sim_time = -1
+        if first_step:
+            self._model.update_network_previous_values()
+        if self._wn._prev_sim_time is None:
+            self._wn._prev_sim_time = -1
 
         if logger_level <= 1:
             logger.log(1, 'starting simulation')

@@ -75,7 +75,7 @@ class WaterNetworkModel(AbstractModel):
         # To be deleted and/or renamed and/or moved
         # Time parameters
         self.sim_time = 0.0
-        self._prev_sim_time = -np.inf  # the last time at which results were accepted
+        self._prev_sim_time = None  # the last time at which results were accepted
     
     def _compare(self, other):
         #self._controls   == other._controls   and \
@@ -1188,7 +1188,7 @@ class WaterNetworkModel(AbstractModel):
         Resets all initial values in the network.
         """
         self.sim_time = 0.0
-        self._prev_sim_time = -np.inf
+        self._prev_sim_time = None
 
         for name, node in self.nodes(Junction):
             node.head = None
