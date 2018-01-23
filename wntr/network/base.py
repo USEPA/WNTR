@@ -466,12 +466,12 @@ class Registry(MutableMapping):
     
     def __delitem__(self, key):
         try:
-            if self._usage and len(self._usage[key]) > 0:
+            if self._usage and key in self._usage and len(self._usage[key]) > 0:
                 raise RuntimeError('cannot remove %s %s, still used by %s', 
                                    self.__class__.__name__,
                                    key,
                                    self._usage[key])
-            elif self._usage:
+            elif key in self._usage:
                 self._usage.pop(key)
             return self._data.pop(key)
         except KeyError:
@@ -489,8 +489,9 @@ class Registry(MutableMapping):
             yield key, value
 
     def usage(self):
-        return self._usage
-
+        for k, v in self._usage.items():
+            yield k, v
+        
     def get_usage(self, key):
         try:
             return self._usage[key]
