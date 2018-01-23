@@ -1122,9 +1122,9 @@ class TimeSeries(object):
         return repr(self)
 
     def __repr__(self):
-        fmt = "<TimeSeries: base={}, pattern='{}', category='{}'>"
+        fmt = "<TimeSeries: base={}, pattern={}, category='{}'>"
         return fmt.format(self._base, 
-                          (self._pattern if self.pattern else None),
+                          (repr(self._pattern) if self.pattern else None),
                           str(self._category))
     
     def tostring(self):
