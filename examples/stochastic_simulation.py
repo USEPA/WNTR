@@ -84,8 +84,7 @@ for i in range(Imax):
     f.close()
 
 ### ANALYSIS ###
-nzd_junctions = wn.query_node_attribute('base_demand', np.greater, 0,
-                                        node_type=wntr.network.Junction).keys()
+nzd_junctions = [j_name for j_name, j in wn.junctions() if sum(d.base_value for d in j.demand_timeseries_list) != 0]
 
 result_names = results.keys()
 for name in result_names:

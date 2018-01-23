@@ -10,7 +10,6 @@ if sys.version_info[0] == 2:
     from collections import MutableSequence
 else:
     from collections.abc import MutableSequence
-from collections import OrderedDict
 
 import numpy as np
 import networkx as nx
@@ -26,9 +25,9 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison, \
-    _TankMinLevelOpenCondition, _TankMaxLevelOpenCondition
+    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison
 from collections import OrderedDict
+from wntr.utils.ordered_set import OrderedSet
 
 import wntr.epanet
 
@@ -76,7 +75,7 @@ class WaterNetworkModel(AbstractModel):
         # To be deleted and/or renamed and/or moved
         # Time parameters
         self.sim_time = 0.0
-        self._prev_sim_time = -np.inf  # the last time at which results were accepted
+        self._prev_sim_time = None  # the last time at which results were accepted
     
     def _compare(self, other):
         #self._controls   == other._controls   and \
@@ -506,88 +505,40 @@ class WaterNetworkModel(AbstractModel):
     
     ### # 
     ### Remove elements from the model
-    def remove_node(self, name): 
+    def remove_node(self, name, with_control=True):
         """"""
-        self._node_reg.__delitem__(name)
-        """
         node = self.get_node(name)
-        if isinstance(node, Junction):
-            self.num_junctions -= 1
-            self._junctions.pop(name)
-        elif isinstance(node, Tank):
-            self.num_tanks -= 1
-            self._tanks.pop(name)
-        elif isinstance(node, Reservoir):
-            self.num_reservoirs -= 1
-            self._reservoirs.pop(name)
-        else:
-            raise RuntimeError('Node type is not recognized.')
-
-        if with_control:
-            x = []
-            for control_name, control in self._controls.items():
-                if type(control)==_PRVControl:
-                    if node==control._close_control_action._target_obj_ref:
-                        logger.warn('Control '+control_name+' is being removed along with node '+name)
-                        x.append(control_name)
-                else:
-                    if node == control._control_action._target_obj_ref:
-                        logger.warn('Control '+control_name+' is being removed along with node '+name)
-                        x.append(control_name)
-            for i in x:
-                self.remove_control(i)
-        else:
-            for control_name, control in self._controls.items():
-                if type(control)==_PRVControl:
-                    if node==control._close_control_action._target_obj_ref:
-                        logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
-                else:
-                    if node == control._control_action._target_obj_ref:
-                        logger.warn('A node is being removed that is the target object of a control. However, the control is not being removed.')
-        """
-    def remove_link(self, name): 
-        """"""
-        self._link_reg.__delitem__(name)
-        """
-        link = self.get_link(name)
-        if isinstance(link, Pipe):
-            if link.cv:
-                self._check_valves.remove(name)
-                logger.warn('You are removing a pipe with a check valve.')
-            self.num_pipes -= 1
-            self._pipes.pop(name)
-        elif isinstance(link, Pump):
-            self.num_pumps -= 1
-            self._pumps.pop(name)
-        elif isinstance(link, Valve):
-            self.num_valves -= 1
-            self._valves.pop(name)
-        else:
-            raise RuntimeError('Link Type not Recognized')
-
+        self._node_reg.__delitem__(name)
         if with_control:
             x=[]
             for control_name, control in self._controls.items():
-                if type(control)==_PRVControl:
-                    if link==control._close_control_action._target_obj_ref:
-                        logger.warn('Control '+control_name+' is being removed along with link '+name)
-                        x.append(control_name)
-                else:
-                    if link == control._control_action._target_obj_ref:
-                        logger.warn('Control '+control_name+' is being removed along with link '+name)
-                        x.append(control_name)
+                if node in control.requires():
+                    logger.warning('Control '+control_name+' is being removed along with node '+name)
+                    x.append(control_name)
             for i in x:
                 self.remove_control(i)
         else:
             for control_name, control in self._controls.items():
-                if type(control)==_PRVControl:
-                    if link==control._close_control_action._target_obj_ref:
-                        logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
-                else:
-                    if link == control._control_action._target_obj_ref:
-                        logger.warn('A link is being removed that is the target object of a control. However, the control is not being removed.')
-        """
-        
+                if node in control.requires():
+                    raise RuntimeError('Cannot remove node {0} without first removing control {1}'.format(name, control_name))
+
+    def remove_link(self, name, with_control=True):
+        """"""
+        link = self.get_link(name)
+        self._link_reg.__delitem__(name)
+        if with_control:
+            x=[]
+            for control_name, control in self._controls.items():
+                if link in control.requires():
+                    logger.warning('Control '+control_name+' is being removed along with link '+name)
+                    x.append(control_name)
+            for i in x:
+                self.remove_control(i)
+        else:
+            for control_name, control in self._controls.items():
+                if link in control.requires():
+                    raise RuntimeError('Cannot remove link {0} without first removing control {1}'.format(name, control_name))
+
     def remove_pattern(self, name): 
         """
         Removes a pattern from the water network model.
@@ -708,7 +659,9 @@ class WaterNetworkModel(AbstractModel):
                         other_node = link.start_node
                     else:
                         raise RuntimeError('Tank is neither the start node nore the end node.')
-                    open_condition_2 = _TankMinLevelOpenCondition(tank, other_node)
+                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.le, other_node, 'head')
+                    open_condition_2b = ValueCondition(tank, 'head', Comparison.le, min_head+self._Htol)
+                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
@@ -750,7 +703,9 @@ class WaterNetworkModel(AbstractModel):
                         other_node = link.start_node
                     else:
                         raise RuntimeError('Tank is neither the start node nore the end node.')
-                    open_condition_2 = _TankMaxLevelOpenCondition(tank, other_node)
+                    open_condition_2a = RelativeCondition(tank, 'head', Comparison.ge, other_node, 'head')
+                    open_condition_2b = ValueCondition(tank, 'head', Comparison.ge, max_head-self._Htol)
+                    open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
                     open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
@@ -1114,7 +1069,7 @@ class WaterNetworkModel(AbstractModel):
         for all nodes with the specified attribute.
 
         """
-        node_attribute_dict = {}
+        node_attribute_dict = OrderedDict()
         for name, node in self.nodes(node_type):
             try:
                 if operation == None and value == None:
@@ -1185,7 +1140,7 @@ class WaterNetworkModel(AbstractModel):
         Resets all initial values in the network.
         """
         self.sim_time = 0.0
-        self._prev_sim_time = -np.inf
+        self._prev_sim_time = None
 
         for name, node in self.nodes(Junction):
             node.head = None
@@ -1212,7 +1167,7 @@ class WaterNetworkModel(AbstractModel):
             link.status = link.initial_status
             link._flow = None
             link.power = link._base_power
-            link._power_outage = False
+            link._power_outage = LinkStatus.Open
 
         for name, link in self.links(Valve):
             link.status = link.initial_status
@@ -1556,7 +1511,8 @@ class WaterNetworkModel(AbstractModel):
         if pipe.cv:
             logger.warn('You are splitting a pipe with a check valve. The new pipe will not have a check valve.')
         return (pipe, new_junction1, new_junction2, new_pipe)
-    
+
+
 class PatternRegistry(Registry):
 
     @property
@@ -1636,25 +1592,13 @@ class PatternRegistry(Registry):
         return s
         
 
-class ControlRegistry(Registry):
-    def __init__(self, model):
-        super(ControlRegistry, self).__init__(model)
-        self._presolve_controls = ControlManager(model)
-        self._postsolve_controls = ControlManager(model)
-        self._rules = ControlManager(model)
-
-    @property
-    def _controls(self):
-        raise UnboundLocalError('registries are not reentrant')
-
-
 class CurveRegistry(Registry):
     def __init__(self, model):
         super(CurveRegistry, self).__init__(model)
-        self._pump_curves = set()
-        self._efficiency_curves = set()
-        self._headloss_curves = set()
-        self._volume_curves = set()
+        self._pump_curves = OrderedSet()
+        self._efficiency_curves = OrderedSet()
+        self._headloss_curves = OrderedSet()
+        self._volume_curves = OrderedSet()
 
     @property
     def _curves(self):
@@ -1771,9 +1715,9 @@ class NodeRegistry(Registry):
 
     def __init__(self, model):
         super(NodeRegistry, self).__init__(model)
-        self._junctions = set()
-        self._reservoirs = set()
-        self._tanks = set()
+        self._junctions = OrderedSet()
+        self._reservoirs = OrderedSet()
+        self._tanks = OrderedSet()
     
     @property
     def _nodes(self):
@@ -1995,17 +1939,17 @@ class LinkRegistry(Registry):
 
     def __init__(self, model):
         super(LinkRegistry, self).__init__(model)
-        self._pipes = set()
-        self._pumps = set()
-        self._head_pumps = set()
-        self._power_pumps = set()
-        self._prvs = set()
-        self._psvs = set()
-        self._pbvs = set()
-        self._tcvs = set()
-        self._fcvs = set()
-        self._gpvs = set()
-        self._valves = set()
+        self._pipes = OrderedSet()
+        self._pumps = OrderedSet()
+        self._head_pumps = OrderedSet()
+        self._power_pumps = OrderedSet()
+        self._prvs = OrderedSet()
+        self._psvs = OrderedSet()
+        self._pbvs = OrderedSet()
+        self._tcvs = OrderedSet()
+        self._fcvs = OrderedSet()
+        self._gpvs = OrderedSet()
+        self._valves = OrderedSet()
     
     @property
     def _links(self):

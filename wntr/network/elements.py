@@ -154,6 +154,7 @@ class Junction(Node):
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
 
+
 class Tank(Node):
     """
     Tank class, inherited from Node.
