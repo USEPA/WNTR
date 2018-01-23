@@ -508,7 +508,6 @@ class WaterNetworkModel(AbstractModel):
     def remove_node(self, name, with_control=True):
         """"""
         node = self.get_node(name)
-        self._node_reg.__delitem__(name)
         if with_control:
             x=[]
             for control_name, control in self._controls.items():
@@ -521,11 +520,11 @@ class WaterNetworkModel(AbstractModel):
             for control_name, control in self._controls.items():
                 if node in control.requires():
                     raise RuntimeError('Cannot remove node {0} without first removing control {1}'.format(name, control_name))
+        self._node_reg.__delitem__(name)
 
     def remove_link(self, name, with_control=True):
         """"""
         link = self.get_link(name)
-        self._link_reg.__delitem__(name)
         if with_control:
             x=[]
             for control_name, control in self._controls.items():
@@ -538,6 +537,7 @@ class WaterNetworkModel(AbstractModel):
             for control_name, control in self._controls.items():
                 if link in control.requires():
                     raise RuntimeError('Cannot remove link {0} without first removing control {1}'.format(name, control_name))
+        self._link_reg.__delitem__(name)
 
     def remove_pattern(self, name): 
         """
@@ -563,6 +563,9 @@ class WaterNetworkModel(AbstractModel):
         logger.warning('You are deleting a source. This could have unintended \
             side effects. If you are replacing values, use get_source(name) \
             and modify it instead.')
+        source = self._sources[name]
+        self._pattern_reg.remove_usage(source.strength_timeseries.pattern_name, (source.name, 'Source'))
+        self._node_reg.remove_usage(source.node_name, (source.name, 'Source'))            
         del self._sources[name]
         
     def remove_control(self, name): 
@@ -1522,11 +1525,16 @@ class PatternRegistry(Registry):
     class DefaultPattern(object):
         def __init__(self, options):
             self._options = options
+        
         def __str__(self):
-            return self._options.hydraulic.pattern
+            return str(self._options.hydraulic.pattern) if self._options.hydraulic.pattern is not None else ''
+        
+        def __repr__(self):
+            return 'DefaultPattern()'
+        
         @property
         def name(self):
-            return None
+            return str(self._options.hydraulic.pattern) if self._options.hydraulic.pattern is not None else ''
 
     def __getitem__(self, key):
         try:
@@ -1710,6 +1718,22 @@ class SourceRegistry(Registry):
     def _sources(self):
         raise UnboundLocalError('registries are not reentrant')
 
+    def __delitem__(self, key):
+        try:
+            if self._usage and key in self._usage and len(self._usage[key]) > 0:
+                raise RuntimeError('cannot remove %s %s, still used by %s'%( 
+                                   self.__class__.__name__,
+                                   key,
+                                   self._usage[key]))
+            elif key in self._usage:
+                self._usage.pop(key)
+            source = self._data.pop(key)
+            self._patterns.remove_usage(source.strength_timeseries.pattern_name, (source.name, 'Source'))
+            self._nodes.remove_usage(source.node_name, (source.name, 'Source'))            
+            return source
+        except KeyError:
+            # Do not raise an exception if there is no key of that name
+            return
 
 class NodeRegistry(Registry):
 
@@ -1736,19 +1760,28 @@ class NodeRegistry(Registry):
     
     def __delitem__(self, key):
         try:
-            if self._usage and len(self._usage[key]) > 0:
-                raise RuntimeError('cannot remove %s %s, still used by %s', 
+            if self._usage and key in self._usage and len(self._usage[key]) > 0:
+                raise RuntimeError('cannot remove %s %s, still used by %s'%(
                                    self.__class__.__name__,
                                    key,
-                                   self._usage[key])
-            elif self._usage:
+                                   str(self._usage[key])))
+            elif key in self._usage:
                 self._usage.pop(key)
+            node = self._data.pop(key)
             self._junctions.discard(key)
             self._reservoirs.discard(key)
             self._tanks.discard(key)
-            return self._data.pop(key)
+            if isinstance(node, Junction):
+                for pat_name in node.demand_timeseries_list.pattern_list():
+                    if pat_name:
+                        self._curves.remove_usage(pat_name, (node.name, 'Junction'))
+            if isinstance(node, Reservoir) and node.head_pattern_name:
+                self._curves.remove_usage(node.head_pattern_name, (node.name, 'Reservoir'))
+            if isinstance(node, Reservoir) and node.vol_curve_name:
+                self._curves.remove_usage(node.vol_curve_name, (node.name, 'Tank'))
+            return node
         except KeyError:
-            return
+            return 
     
     def __call__(self, node_type=None):
         """
@@ -1984,16 +2017,26 @@ class LinkRegistry(Registry):
     
     def __delitem__(self, key):
         try:
-            if self._usage and len(self._usage[key]) > 0:
+            if self._usage and key in self._usage and len(self._usage[key]) > 0:
                 raise RuntimeError('cannot remove %s %s, still used by %s', 
                                    self.__class__.__name__,
                                    key,
                                    self._usage[key])
-            elif self._usage:
+            elif key in self._usage:
                 self._usage.pop(key)
+            link = self._data.pop(key)
+            self._nodes.remove_usage(link.start_node_name, (link.name, link.link_type))
+            self._nodes.remove_usage(link.end_node_name, (link.name, link.link_type))
+            if isinstance(link, GPValve):
+                self._curves.remove_usage(link.headloss_curve_name, (link.name, 'Valve'))
+            if isinstance(link, Pump):
+                self._curves.remove_usage(link.speed_pattern_name, (link.name, 'Pump'))
+            if isinstance(link, HeadPump):
+                self._curves.remove_usage(link.pump_curve_name, (link.name, 'Pump'))
             for ss in self.__subsets:
+                # Go through the _pipes, _prvs, ..., and remove this link
                 getattr(self, ss).discard(key)
-            return self._data.pop(key)
+            return link
         except KeyError:
             return
     

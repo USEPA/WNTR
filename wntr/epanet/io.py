@@ -474,7 +474,7 @@ class InpFile(object):
                 elif self.wn.options.hydraulic.pattern:
                     pat = self.wn.options.hydraulic.pattern
                 else:
-                    pat = None
+                    pat = self.wn.patterns.default_pattern
                 base_demand = 0.0
                 if len(current) > 2:
                     base_demand = to_si(self.flow_units, float(current[2]), HydParam.Demand)
