@@ -2157,7 +2157,6 @@ class LinkRegistry(Registry):
             pump.speed_pattern_name = pattern.name
         else:
             pump.speed_pattern_name = pattern
-        print(pattern, pump)
         self[name] = pump
     
     def add_valve(self, name, start_node_name, end_node_name,
