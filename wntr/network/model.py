@@ -1017,7 +1017,7 @@ class WaterNetworkModel(AbstractModel):
             return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name in {self.get_link(link_name).start_node_name, self.get_link(link_name).end_node_name}]
         elif flag.upper() == 'INLET':
             return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name == self.get_link(link_name).end_node_name]
-        elif flag.upper() == 'INLET':
+        elif flag.upper() == 'OUTLET':
             return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name == self.get_link(link_name).start_node_name]
         else:
             logger.error('Unrecognized flag: {0}'.format(flag))
