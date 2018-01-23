@@ -519,10 +519,7 @@ class Pump(Link):
     def _compare(self, other):
         if not super(Pump, self)._compare(other):
             return False
-        if self.pump_type == other.pump_type and \
-           self.curve == other.curve:
-            return True
-        return False
+        return True
    
     @property
     def status(self):
@@ -605,6 +602,14 @@ class HeadPump(Pump):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
                    self.start_node, self.end_node, 'HEAD', self.pump_curve_name, 
                    self.speed_timeseries, str(self.status))
+    
+    def _compare(self, other):
+        if not super(HeadPump, self)._compare(other):
+            return False
+        if self.pump_type == other.pump_type and \
+           self.get_pump_curve() == other.get_pump_curve():
+            return True
+        return False
     
     @property
     def pump_type(self): 
@@ -731,7 +736,15 @@ class PowerPump(Pump):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._link_name,
                    self.start_node, self.end_node, 'POWER', self._base_power, 
                    self.speed_timeseries, str(self.status))
-        
+    
+    def _compare(self, other):
+        if not super(PowerPump, self)._compare(other):
+            return False
+        if self.pump_type == other.pump_type and \
+           self.power == other.power:
+            return True
+        return False
+    
     @property
     def pump_type(self): 
         return 'POWER'
