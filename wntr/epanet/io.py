@@ -696,7 +696,6 @@ class InpFile(object):
 
             if pump_type is None:
                 raise RuntimeError('Either head curve id or pump power must be specified for all pumps.')
-
             self.wn.add_pump(current[0], current[1], current[2], pump_type, value, speed, pattern)
 
     def _write_pumps(self, f, wn):

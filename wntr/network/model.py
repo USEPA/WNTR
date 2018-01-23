@@ -2158,7 +2158,7 @@ class LinkRegistry(Registry):
             raise ValueError('pump_type must be "POWER" or "HEAD"')
         pump.base_speed = speed
         if isinstance(pattern, Pattern):
-            pump.speed_pattern = pattern.name
+            pump.speed_pattern_name = pattern.name
         else:
             pump.speed_pattern_name = pattern
         self[name] = pump
