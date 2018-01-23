@@ -5,6 +5,7 @@ the network model.
 import logging
 import six
 from six import string_types
+from wntr.utils.ordered_set import OrderedSet
 
 import enum
 import sys
@@ -517,7 +518,7 @@ class Registry(MutableMapping):
         if not key:
             return
         if not key in self._usage:
-            self._usage[key] = set()
+            self._usage[key] = OrderedSet()
         for arg in args:
             self._usage[key].add(arg)
     
