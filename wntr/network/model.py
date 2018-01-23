@@ -515,7 +515,7 @@ class WaterNetworkModel(AbstractModel):
     
     ### # 
     ### Remove elements from the model
-    def remove_node(self, name, with_control=True):
+    def remove_node(self, name, with_control=False):
         """"""
         node = self.get_node(name)
         if with_control:
@@ -532,7 +532,7 @@ class WaterNetworkModel(AbstractModel):
                     raise RuntimeError('Cannot remove node {0} without first removing control {1}'.format(name, control_name))
         self._node_reg.__delitem__(name)
 
-    def remove_link(self, name, with_control=True):
+    def remove_link(self, name, with_control=False):
         """"""
         link = self.get_link(name)
         if with_control:
