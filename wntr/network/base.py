@@ -270,6 +270,10 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
             return False
         if self.initial_setting != other.initial_setting:
             return False
+        if self.start_node_name != other.start_node_name:
+            return False
+        if self.end_node_name != other.end_node_name:
+            return False
         return True
     
     def __str__(self):
@@ -483,10 +487,10 @@ class Registry(MutableMapping):
     def __call__(self):
         for key, value in self._data.items():
             yield key, value
-    
+
     def usage(self):
         return self._usage
-        
+
     def get_usage(self, key):
         try:
             return self._usage[key]
