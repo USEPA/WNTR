@@ -154,14 +154,6 @@ class Junction(Node):
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
 
-    @property
-    def base_demand(self):
-        """Returns the first base demand (first entry in demands_timeseries_list)"""
-        if len(self.demand_timeseries_list) > 0:
-            dem0 = self.demand_timeseries_list[0]
-            return dem0.base_value
-        return 0
-
 
 class Tank(Node):
     """
