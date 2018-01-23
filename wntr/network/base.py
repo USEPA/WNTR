@@ -5,6 +5,7 @@ the network model.
 import logging
 import six
 from six import string_types
+from wntr.utils.ordered_set import OrderedSet
 
 import enum
 import sys
@@ -269,6 +270,10 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
             return False
         if self.initial_setting != other.initial_setting:
             return False
+        if self.start_node_name != other.start_node_name:
+            return False
+        if self.end_node_name != other.end_node_name:
+            return False
         return True
     
     def __str__(self):
@@ -482,7 +487,7 @@ class Registry(MutableMapping):
     def __call__(self):
         for key, value in self._data.items():
             yield key, value
-    
+
     def usage(self):
         for k, v in self._usage.items():
             yield k, v
@@ -518,7 +523,7 @@ class Registry(MutableMapping):
         if not key:
             return
         if not key in self._usage:
-            self._usage[key] = set()
+            self._usage[key] = OrderedSet()
         for arg in args:
             self._usage[key].add(arg)
     

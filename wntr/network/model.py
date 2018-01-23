@@ -515,7 +515,7 @@ class WaterNetworkModel(AbstractModel):
     
     ### # 
     ### Remove elements from the model
-    def remove_node(self, name, with_control=True):
+    def remove_node(self, name, with_control=False):
         """"""
         node = self.get_node(name)
         if with_control:
@@ -532,7 +532,7 @@ class WaterNetworkModel(AbstractModel):
                     raise RuntimeError('Cannot remove node {0} without first removing control {1}'.format(name, control_name))
         self._node_reg.__delitem__(name)
 
-    def remove_link(self, name, with_control=True):
+    def remove_link(self, name, with_control=False):
         """"""
         link = self.get_link(name)
         if with_control:
@@ -1025,22 +1025,16 @@ class WaterNetworkModel(AbstractModel):
         -------
         A list of link names connected to the node
         """
-        graph = self.get_graph()
+        link_types = {'Pipe', 'Pump', 'Valve'}
         if flag.upper() == 'ALL':
-            in_edges = graph.in_edges(node_name, data=False, keys=True)
-            out_edges = graph.out_edges(node_name, data=False, keys=True)
-            edges = list(in_edges) + list(out_edges)
-        if flag.upper() == 'INLET':
-            in_edges = graph.in_edges(node_name, data=False, keys=True)
-            edges = list(in_edges)
-        if flag.upper() == 'OUTLET':
-            out_edges = graph.out_edges(node_name, data=False, keys=True)
-            edges = list(out_edges)
-        list_of_links = []
-        for edge_tuple in edges:
-            list_of_links.append(edge_tuple[2])
-
-        return list_of_links
+            return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name in {self.get_link(link_name).start_node_name, self.get_link(link_name).end_node_name}]
+        elif flag.upper() == 'INLET':
+            return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name == self.get_link(link_name).end_node_name]
+        elif flag.upper() == 'OUTLET':
+            return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name == self.get_link(link_name).start_node_name]
+        else:
+            logger.error('Unrecognized flag: {0}'.format(flag))
+            raise ValueError('Unrecognized flag: {0}'.format(flag))
 
     def query_node_attribute(self, attribute, operation=None, value=None, node_type=None):
         """
