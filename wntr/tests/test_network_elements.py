@@ -6,6 +6,7 @@ import nose.tools
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
+import wntr
 import wntr.network.elements as elements
 from wntr.network.options import TimeOptions
 
@@ -92,14 +93,16 @@ def test_Pattern():
     
 
 def test_TimeSeries():
+    wn = wntr.network.WaterNetworkModel()
+    
     pattern_points2 = [1.0, 1.2, 1.0 ]
     pattern2 = elements.Pattern('oops', multipliers=pattern_points2, time_options=(0,10))
     pattern5 = elements.Pattern.binary_pattern('binary', step_size=1, start_time=2, end_time=6, duration=9)
     base1 = 2.0
     
     # test constructor and setters, getters
-    tvv1 = elements.TimeSeries(base1, None, None)
-    tvv2 = elements.TimeSeries(base1, pattern2, 'tvv2')
+    tvv1 = elements.TimeSeries(wn, base1, None, None)
+    tvv2 = elements.TimeSeries(wn, base1, pattern2, 'tvv2')
     nose.tools.assert_raises(ValueError, elements.TimeSeries, *('A', None, None))
     nose.tools.assert_raises(ValueError, elements.TimeSeries, *(1.0, 'A', None))
     nose.tools.assert_equals(tvv1._base, base1)
@@ -109,37 +112,38 @@ def test_TimeSeries():
     nose.tools.assert_equals(tvv1.category, None)
     tvv1.base_value = 3.0
     nose.tools.assert_equals(tvv1.base_value, 3.0)
-    tvv1.pattern = pattern5
+    tvv1.pattern_name = 'binary'
     nose.tools.assert_equals(tvv1.pattern_name, 'binary')
     tvv1.category ='binary'
     nose.tools.assert_equals(tvv1.category, 'binary')
     
     # Test getitem
-    nose.tools.assert_equals(tvv1[1], 0.0)
-    nose.tools.assert_equals(tvv1[2], 3.0)
-    nose.tools.assert_equals(tvv2[1], 2.4)
-    nose.tools.assert_equals(tvv2(16), 2.4)
+    print(tvv1)
+    nose.tools.assert_equals(tvv1.at(1), 0.0)
+    nose.tools.assert_equals(tvv1.at(2), 3.0)
+    nose.tools.assert_equals(tvv2.at(1), 2.4)
+    nose.tools.assert_equals(tvv2.at(16), 2.4)
     
-    price1 = elements.TimeSeries(base=35.0, pattern=None, category="base")
-    price2 = elements.TimeSeries(base=35.0, pattern=None, category="base")
+    price1 = elements.TimeSeries(wn, base=35.0, pattern=None, category="base")
+    price2 = elements.TimeSeries(wn, base=35.0, pattern=None, category="base")
     nose.tools.assert_equal(price1, price2)
     nose.tools.assert_equal(price1.base_value, 35.0)
     nose.tools.assert_equal(price1.category, 'base')
     
-    speed1 = elements.TimeSeries(base=35.0, pattern=pattern5, category="base")
-    speed2 = elements.TimeSeries(base=35.0, pattern=pattern5, category="base")
+    speed1 = elements.TimeSeries(wn, base=35.0, pattern=pattern5, category="base")
+    speed2 = elements.TimeSeries(wn, base=35.0, pattern=pattern5, category="base")
     nose.tools.assert_equal(speed1, speed2)
     nose.tools.assert_equal(speed1.base_value, 35.0)
     nose.tools.assert_equal(speed1.category, 'base')
     
-    head1 = elements.TimeSeries(base=35.0, pattern=pattern2, category="base")
-    head2 = elements.TimeSeries(base=35.0, pattern=pattern2, category="base")
+    head1 = elements.TimeSeries(wn, base=35.0, pattern=pattern2, category="base")
+    head2 = elements.TimeSeries(wn, base=35.0, pattern=pattern2, category="base")
     nose.tools.assert_equal(head1, head2)
     nose.tools.assert_equal(head1.base_value, 35.0)
     nose.tools.assert_equal(head1.category, 'base')
 
-    demand1 = elements.TimeSeries(base=1.35, pattern=pattern2, category="base")
-    demand2 = elements.TimeSeries(base=1.35, pattern=pattern2, category="base")
+    demand1 = elements.TimeSeries(wn, base=1.35, pattern=pattern2, category="base")
+    demand2 = elements.TimeSeries(wn, base=1.35, pattern=pattern2, category="base")
     nose.tools.assert_equal(demand1, demand2)
     nose.tools.assert_equal(demand1.base_value, 1.35)
     nose.tools.assert_equal(demand1.category, 'base')
@@ -157,25 +161,29 @@ def test_TimeSeries():
     
 
 def test_Demands():
+    wn = wntr.network.WaterNetworkModel()
+    
     pattern_points1 = [0.5, 1.0, 0.4, 0.2 ]
     pattern1 = elements.Pattern('1', multipliers=pattern_points1, time_options=(0,10))
     pattern_points2 = [1.0, 1.2, 1.0 ]
     pattern2 = elements.Pattern('2', multipliers=pattern_points2, time_options=(0,10))
-    demand1 = elements.TimeSeries( 2.5, pattern1, '_base_demand')
-    demand2 = elements.TimeSeries( 1.0, pattern2, 'residential')
-    demand3 = elements.TimeSeries( 0.8, pattern2, 'residential')
+    demand1 = elements.TimeSeries(wn, 2.5, pattern1, '_base_demand')
+    demand2 = elements.TimeSeries(wn, 1.0, pattern2, 'residential')
+    demand3 = elements.TimeSeries(wn, 0.8, pattern2, 'residential')
+    
     expected1 = 2.5 * np.array(pattern_points1*3)
     expected2 = 1.0 * np.array(pattern_points2*4)
     expected3 = 0.8 * np.array(pattern_points2*4)
     expectedtotal = expected1 + expected2 + expected3
     expectedresidential = expected2 + expected3
-    demandlist1 = elements.Demands( demand1, demand2, demand3 )
-    demandlist2 = elements.Demands()
+    demandlist1 = elements.Demands(wn, demand1, demand2, demand3 )
+    demandlist2 = elements.Demands(wn)
     demandlist2.append(demand1)
     demandlist2.append(demand1)
     demandlist2[1] = demand2
     demandlist2.append((0.8, pattern2, 'residential'))
     nose.tools.assert_list_equal(list(demandlist1), list(demandlist2))
+    
     demandlist2.extend(demandlist1)
     nose.tools.assert_equal(len(demandlist1), 3)
     nose.tools.assert_equal(len(demandlist2), 6)
