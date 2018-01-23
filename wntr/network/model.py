@@ -78,19 +78,29 @@ class WaterNetworkModel(AbstractModel):
         self._prev_sim_time = None  # the last time at which results were accepted
     
     def _compare(self, other):
-        #self._controls   == other._controls   and \
-        if self.num_junctions  == other.num_junctions  and \
-           self.num_reservoirs == other.num_reservoirs and \
-           self.num_tanks      == other.num_tanks      and \
-           self.num_pipes      == other.num_pipes      and \
-           self.num_pumps      == other.num_pumps      and \
-           self.num_valves     == other.num_valves     and \
-           self.nodes          == other.nodes          and \
-           self._node_reg      == other._node_reg      and \
-           self._sources       == other._sources       and \
-           self._check_valves  == other._check_valves:
-            return True
-        return False
+        if self.num_junctions  != other.num_junctions  or \
+           self.num_reservoirs != other.num_reservoirs or \
+           self.num_tanks      != other.num_tanks      or \
+           self.num_pipes      != other.num_pipes      or \
+           self.num_pumps      != other.num_pumps      or \
+           self.num_valves     != other.num_valves:
+            return False
+        for name, node in self.nodes():
+            if not node._compare(other.get_node(name)):
+                return False
+        for name, link in self.links():
+            if not link._compare(other.get_link(name)):
+                return False
+        for name, pat in self.patterns():
+            if pat != other.get_pattern(name):
+                return False
+        for name, curve in self.curves():
+            if curve != other.get_curve(name):
+                return False
+        for name, source in self.sources():
+            if source != other.get_source(name):
+                return False
+        return True
     
     def _sec_to_string(self, sec):
         hours = int(sec/3600.)

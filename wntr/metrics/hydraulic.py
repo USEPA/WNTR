@@ -44,8 +44,7 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None):
         exp_demand[name] = junc.demand_timeseries_list.get_values(start_time, end_time, 
             timestep) * wn.options.hydraulic.demand_multiplier
     
-    tsteps = np.arange(0, wn.options.time.duration+wn.options.time.report_timestep, 
-                       wn.options.time.report_timestep)
+    tsteps = np.arange(start_time, end_time+timestep, timestep)
     exp_demand = pd.DataFrame(index=tsteps, data=exp_demand)
     
     return exp_demand
