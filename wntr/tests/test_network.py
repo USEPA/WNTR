@@ -197,8 +197,8 @@ class TestNetworkMethods(unittest.TestCase):
 
         links_to_remove = wn.get_links_for_node('TANK-3326')
         for l in links_to_remove:
-            wn.remove_link(l)
-        wn.remove_node('TANK-3326')
+            wn.remove_link(l, with_control=True)
+        wn.remove_node('TANK-3326', with_control=True)
 
         self.assertNotIn('TANK-3326',{name for name, node in wn.nodes()})
         self.assertNotIn('TANK-3326',wn.node_name_list)
