@@ -2117,7 +2117,7 @@ class LinkRegistry(Registry):
         pipe.diameter = diameter
         pipe.roughness = roughness
         pipe.minor_loss = minor_loss
-        pipe.intial_status = status
+        pipe.initial_status = status
         pipe.status = status
         pipe.cv = check_valve_flag
         self[name] = pipe
