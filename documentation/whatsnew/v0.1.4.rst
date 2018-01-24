@@ -10,8 +10,9 @@ v0.1.4 (Master branch)
 * Created a TimeSeries object that contains a base value, Pattern object, and category.  The object can be called to get its value at a specific time.
   TimeSeries are used to store junction demand, source injection, pricing, pump speed, and reservoir head. (see :class:`~wntr.network.elements.TimeSeries`)
 * Created a Demands object that contains multiple demands for a single junction and can 
-  calculate demand values at a specific time.  Change to the way multiple demands are stored makes the 
-  Junction.base_demand and Junction.demand_pattern_name *read-only* attributes (API change).
+  calculate demand values at a specific time.  The ability to store multiple demands per junction means that
+  'base_demand' is no longer a Junction attribute (API change). The Demands object can be used to extract the base value per demand.  
+  Expected demand and average daily expected demand can also be calculated using new metrics (see :class:`~wntr.metrics.hydraulic.expected_demand` and :class:`~wntr.metrics.hydraulic.average_expected_demand`).
 * Added support for flow control valves (FCV), multiple demands at a junction, and variable reservoir head in the WNTRSimulator
 * Modified the WaterNetworkModel.add_pattern() to no longer accept start_time and end_time options.  
   Binary patterns can be created using the Patterns object (API change, see :class:`~wntr.network.elements.Pattern.binary_pattern`).
