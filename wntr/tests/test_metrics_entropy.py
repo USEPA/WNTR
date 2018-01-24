@@ -1,12 +1,10 @@
-from __future__ import print_function
 from nose.tools import *
 from os.path import abspath, dirname, join
 import numpy as np
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','tests','networks_for_testing')
-packdir = join(testdir,'..','..','..')
+datadir = join(testdir, 'networks_for_testing')
 
 def test_layout1():
     inp_file = join(datadir,'Awumah_layout1.inp')
@@ -29,19 +27,14 @@ def test_layout1():
             '11': 100.0,
             '12': 150.0}
 
-    G_flowrate = wn.get_graph_deep_copy()
+    G_flowrate = wn.get_graph()
     G_flowrate.weight_graph(link_attribute=attr)
 
-    [S, Shat] = wntr.metrics.entropy(G_flowrate)
+    [S, S_ave] = wntr.metrics.entropy(G_flowrate)
     
     Saverage = np.mean(list(S.values()))
     Smax = max(list(S.values()))
     Smin = min(list(S.values()))
-    # print('Entropy: Layout 1')
-    # print('  S mean: ' + repr(Saverage))
-    # print('  S max: ' + repr(Smax))
-    # print('  S min: ' + repr(Smin))
-    # print('  Shat: ' + repr(Shat))
     
     # The values in the paper are different, perhaps due to significant figure
     # rounding during the calculation
@@ -52,8 +45,8 @@ def test_layout1():
     expected_Smax = 0.5108 # 0.5130
     error = abs((Smax - expected_Smax)/expected_Smax)
 
-    expected_Shat = 2.289 # 2.280
-    error = abs((Shat - expected_Shat)/expected_Shat)
+    expected_S_ave = 2.289 # 2.280
+    error = abs((S_ave - expected_S_ave)/expected_S_ave)
     assert_less(error, 0.05) # 5% error
 
 
@@ -82,7 +75,7 @@ def test_layout8():
             '15': 44.1,
             '16': 20.4}
 
-    G_flowrate = wn.get_graph_deep_copy()
+    G_flowrate = wn.get_graph()
     G_flowrate.weight_graph(link_attribute=attr)
 
     [S, Shat] = wntr.metrics.entropy(G_flowrate)
@@ -90,11 +83,6 @@ def test_layout8():
     Saverage = np.mean(list(S.values()))
     Smax = max(list(S.values()))
     Smin = min(list(S.values()))
-    # print('Entropy: Layout 8')
-    # print('  S mean: ' + repr(Saverage))
-    # print('  S max: ' + repr(Smax))
-    # print('  S min: ' + repr(Smin))
-    # print('  Shat: ' + repr(Shat))
     
     # The values in the paper are different, perhaps due to significant figure
     # rounding during the calculation
@@ -111,4 +99,5 @@ def test_layout8():
     assert_less(error, 0.05) # 5% error
 
 if __name__ == '__main__':
+    test_layout1()
     test_layout8()

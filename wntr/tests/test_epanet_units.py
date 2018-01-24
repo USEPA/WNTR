@@ -5,8 +5,6 @@ import wntr
 import unittest
 
 testdir = dirname(abspath(str(__file__)))
-datadir = join(testdir,'..','..','..','networks')
-packdir = join(testdir,'..','..','..')
 
 def test_Concentration():
     typestring = 'Concentration'

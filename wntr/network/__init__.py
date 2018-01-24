@@ -2,9 +2,11 @@
 The wntr.network package contains methods to define a water network model,
 network controls, and graph representation of the network.
 """
-from .model import WaterNetworkModel, Node, Link, Junction, Reservoir, Tank, Pipe, Pump, Valve
-from .elements import Curve, Pattern, Demands, Source, NodeType, LinkType, LinkStatus
+from .base import Node, Link, NodeType, LinkType, LinkStatus
+from .elements import Junction, Reservoir, Tank, Pipe, Pump, Valve, Pattern, TimeSeries, Demands, Curve, Source
+from .model import WaterNetworkModel
 from .options import WaterNetworkOptions
-from .controls import ControlLogger, ControlAction, TimeControl, ConditionalControl, _CheckValveHeadControl, _MultiConditionalControl, _PRVControl, _FCVControl
+from .controls import Comparison, ControlPriority, TimeOfDayCondition, SimTimeCondition, ValueCondition, \
+    TankLevelCondition, RelativeCondition, OrCondition, AndCondition, ControlAction, Control, ControlManager
 from .graph import WntrMultiDiGraph
 from .morph import Skeletonize

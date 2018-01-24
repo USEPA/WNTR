@@ -25,7 +25,7 @@ class TestTCVs(unittest.TestCase):
 
         valve = wn.get_link('v1')
         open_action = wntr.network.ControlAction(valve, 'status', wntr.network.LinkStatus.Opened)
-        control = wntr.network.TimeControl(wn, 7200, time_flag='SIM_TIME', daily_flag=False, control_action=open_action)
+        control = wntr.network.controls.Control.time_control(wn, 7200, time_flag='SIM_TIME', daily_flag=False, control_action=open_action)
         wn.add_control('c1', control)
 
         sim = wntr.sim.WNTRSimulator(wn, mode='DD')
