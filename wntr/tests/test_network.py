@@ -195,9 +195,12 @@ class TestNetworkMethods(unittest.TestCase):
         inp_file = join(ex_datadir,'Net6.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
-        wn.remove_node('TANK-3326')
+        links_to_remove = wn.get_links_for_node('TANK-3326')
+        for l in links_to_remove:
+            wn.remove_link(l, with_control=True)
+        wn.remove_node('TANK-3326', with_control=True)
 
-        self.assertNotIn('TANK-3326',wn._nodes.keys())
+        self.assertNotIn('TANK-3326',{name for name, node in wn.nodes()})
         self.assertNotIn('TANK-3326',wn.node_name_list)
 
         inp_file = join(test_datadir,'conditional_controls_1.inp')
@@ -208,19 +211,22 @@ class TestNetworkMethods(unittest.TestCase):
         control = self.TimeControl(wn, 3652, 'SIM_TIME', False, action)
         wn.add_control('tank_control', control)
 
-        controls_1 = copy.deepcopy(wn.controls)
+        controls_1 = {c_name for c_name, c in wn.controls()}
 
-        wn.remove_node('tank1')
+        links_to_remove = wn.get_links_for_node('tank1')
+        for l in links_to_remove:
+            wn.remove_link(l, with_control=True)
+        wn.remove_node('tank1', with_control=True)
 
-        controls_2 = copy.deepcopy(wn.controls)
+        controls_2 = {c_name for c_name, c in wn.controls()}
 
-        self.assertEqual(True, 'tank_control' in controls_1.keys())
-        self.assertEqual(False, 'tank_control' in controls_2.keys())
+        self.assertTrue('tank_control' in controls_1)
+        self.assertFalse('tank_control' in controls_2)
 
-        self.assertNotIn('tank1',wn._nodes.keys())
-        self.assertNotIn('tank1',wn.node_name_list)
-        expected_nodes = set(['junction1','res1'])
-        self.assertSetEqual(set(wn._nodes.keys()), expected_nodes)
+        self.assertNotIn('tank1', {name for name, node in wn.nodes()})
+        self.assertNotIn('tank1', wn.node_name_list)
+        expected_nodes = {'junction1', 'res1'}
+        self.assertSetEqual({name for name, node in wn.nodes()}, expected_nodes)
 
     def test_remove_controls_for_removing_link(self):
         inp_file = join(ex_datadir, 'Net1.inp')
@@ -232,7 +238,7 @@ class TestNetworkMethods(unittest.TestCase):
 
         controls_1 = {c_name for c_name, c in wn.controls()}
 
-        wn.remove_link('21')
+        wn.remove_link('21', with_control=True)
 
         controls_2 = {c_name for c_name, c in wn.controls()}
         self.assertTrue('control_1' in controls_1)
@@ -661,15 +667,15 @@ def test_add_get_remove_num():
     expected = [93,4,3,118,3,1,6,3,1]
     assert_list_equal(nums, expected)
 
+    wn.remove_source('new_source')
+    wn.remove_curve('new_curve')
+    wn.remove_pattern('new_pattern')
     wn.remove_link('new_pipe')
     wn.remove_link('new_pump')
     wn.remove_link('new_valve')
     wn.remove_node('new_junc')
     wn.remove_node('new_tank')
     wn.remove_node('new_reservoir')
-    wn.remove_pattern('new_pattern')
-    wn.remove_curve('new_curve')
-    wn.remove_source('new_source')
     
     nums = [wn.num_junctions,
            wn.num_tanks,

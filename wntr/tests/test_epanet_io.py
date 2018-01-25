@@ -213,3 +213,6 @@ class TestNet3InpUnitsResults(unittest.TestCase):
         for link_name, link in self.wn.links():
             for t in self.results2.time:
                 self.assertLessEqual(abs(self.results2.link['flowrate'].loc[t,link_name] - self.results.link['flowrate'].loc[t,link_name]), 0.00001)
+
+if __name__ == '__main__':
+    unittest.main()

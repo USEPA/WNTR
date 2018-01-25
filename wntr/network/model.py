@@ -78,19 +78,29 @@ class WaterNetworkModel(AbstractModel):
         self._prev_sim_time = None  # the last time at which results were accepted
     
     def _compare(self, other):
-        #self._controls   == other._controls   and \
-        if self.num_junctions  == other.num_junctions  and \
-           self.num_reservoirs == other.num_reservoirs and \
-           self.num_tanks      == other.num_tanks      and \
-           self.num_pipes      == other.num_pipes      and \
-           self.num_pumps      == other.num_pumps      and \
-           self.num_valves     == other.num_valves     and \
-           self.nodes          == other.nodes          and \
-           self._node_reg      == other._node_reg      and \
-           self._sources       == other._sources       and \
-           self._check_valves  == other._check_valves:
-            return True
-        return False
+        if self.num_junctions  != other.num_junctions  or \
+           self.num_reservoirs != other.num_reservoirs or \
+           self.num_tanks      != other.num_tanks      or \
+           self.num_pipes      != other.num_pipes      or \
+           self.num_pumps      != other.num_pumps      or \
+           self.num_valves     != other.num_valves:
+            return False
+        for name, node in self.nodes():
+            if not node._compare(other.get_node(name)):
+                return False
+        for name, link in self.links():
+            if not link._compare(other.get_link(name)):
+                return False
+        for name, pat in self.patterns():
+            if pat != other.get_pattern(name):
+                return False
+        for name, curve in self.curves():
+            if curve != other.get_curve(name):
+                return False
+        for name, source in self.sources():
+            if source != other.get_source(name):
+                return False
+        return True
     
     def _sec_to_string(self, sec):
         hours = int(sec/3600.)
@@ -505,7 +515,7 @@ class WaterNetworkModel(AbstractModel):
     
     ### # 
     ### Remove elements from the model
-    def remove_node(self, name, with_control=True):
+    def remove_node(self, name, with_control=False):
         """"""
         node = self.get_node(name)
         if with_control:
@@ -522,7 +532,7 @@ class WaterNetworkModel(AbstractModel):
                     raise RuntimeError('Cannot remove node {0} without first removing control {1}'.format(name, control_name))
         self._node_reg.__delitem__(name)
 
-    def remove_link(self, name, with_control=True):
+    def remove_link(self, name, with_control=False):
         """"""
         link = self.get_link(name)
         if with_control:
@@ -1015,22 +1025,16 @@ class WaterNetworkModel(AbstractModel):
         -------
         A list of link names connected to the node
         """
-        graph = self.get_graph()
+        link_types = {'Pipe', 'Pump', 'Valve'}
         if flag.upper() == 'ALL':
-            in_edges = graph.in_edges(node_name, data=False, keys=True)
-            out_edges = graph.out_edges(node_name, data=False, keys=True)
-            edges = list(in_edges) + list(out_edges)
-        if flag.upper() == 'INLET':
-            in_edges = graph.in_edges(node_name, data=False, keys=True)
-            edges = list(in_edges)
-        if flag.upper() == 'OUTLET':
-            out_edges = graph.out_edges(node_name, data=False, keys=True)
-            edges = list(out_edges)
-        list_of_links = []
-        for edge_tuple in edges:
-            list_of_links.append(edge_tuple[2])
-
-        return list_of_links
+            return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name in {self.get_link(link_name).start_node_name, self.get_link(link_name).end_node_name}]
+        elif flag.upper() == 'INLET':
+            return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name == self.get_link(link_name).end_node_name]
+        elif flag.upper() == 'OUTLET':
+            return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name == self.get_link(link_name).start_node_name]
+        else:
+            logger.error('Unrecognized flag: {0}'.format(flag))
+            raise ValueError('Unrecognized flag: {0}'.format(flag))
 
     def query_node_attribute(self, attribute, operation=None, value=None, node_type=None):
         """
@@ -2113,7 +2117,7 @@ class LinkRegistry(Registry):
         pipe.diameter = diameter
         pipe.roughness = roughness
         pipe.minor_loss = minor_loss
-        pipe.intial_status = status
+        pipe.initial_status = status
         pipe.status = status
         pipe.cv = check_valve_flag
         self[name] = pipe
