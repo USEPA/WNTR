@@ -1781,7 +1781,7 @@ class NodeRegistry(Registry):
                         self._curves.remove_usage(pat_name, (node.name, 'Junction'))
             if isinstance(node, Reservoir) and node.head_pattern_name:
                 self._curves.remove_usage(node.head_pattern_name, (node.name, 'Reservoir'))
-            if isinstance(node, Reservoir) and node.vol_curve_name:
+            if isinstance(node, Tank) and node.vol_curve_name:
                 self._curves.remove_usage(node.vol_curve_name, (node.name, 'Tank'))
             return node
         except KeyError:
