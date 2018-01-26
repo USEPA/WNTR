@@ -2926,7 +2926,7 @@ def _clean_line(wn, sec, line):
     return line
 
 
-def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=None):
+def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=20):
     """
     Parameters
     ----------
@@ -2944,8 +2944,6 @@ def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=
     different_lines_1 = []
     different_lines_2 = []
     
-    if not print_max:
-        print_max = np.inf
     for section in _INP_SECTIONS:
         print_counter = 0
         if not f1.contains_section(section):
