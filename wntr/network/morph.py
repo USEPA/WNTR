@@ -18,7 +18,7 @@ class Skeletonize(object):
         self.wn = copy.deepcopy(wn)
         
         # Get a copy of the graph
-        G = self.wn.get_graph_deep_copy()
+        G = self.wn.get_graph()
         G = G.to_undirected()
         self.G = G
         
@@ -43,7 +43,7 @@ class Skeletonize(object):
         head = results.node['head']
         headloss = {}
         for link_name, link in self.wn.links():
-            headloss[link_name] = float(abs(head[link.start_node] - head[link.end_node]))
+            headloss[link_name] = float(abs(head[link.start_node_name] - head[link.end_node_name]))
         self.headloss = headloss
         self.wn.options.time.duration = duration
     

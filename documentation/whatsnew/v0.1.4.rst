@@ -16,3 +16,4 @@ v0.1.4 (Master branch)
 * Added support for flow control valves (FCV), multiple demands at a junction, and variable reservoir head in the WNTRSimulator
 * Modified the WaterNetworkModel.add_pattern() to no longer accept start_time and end_time options.  
   Binary patterns can be created using the Patterns object (API change, see :class:`~wntr.network.elements.Pattern.binary_pattern`).
+* The WaterNetworkModel method get_graph_deep_copy() was replaced with get_graph() (API change, see )
