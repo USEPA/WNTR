@@ -1007,25 +1007,59 @@ class InpFile(object):
                 link.status = new_status
             else:
                 if isinstance(link, wntr.network.Valve):
-                    if link.valve_type != 'PRV':
-                        continue
+                    new_status = LinkStatus.Active
+                    valve_type = link.valve_type
+                    if valve_type in ['PRV', 'PSV', 'PBV']:
+                        setting = to_si(self.flow_units, float(current[1]), HydParam.Pressure)
+                    elif valve_type == 'FCV':
+                        setting = to_si(self.flow_units, float(current[1]), HydParam.Flow)
+                    elif valve_type == 'TCV':
+                        setting = float(current[1])
                     else:
-                        setting = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
-                        link.setting = setting
-                        link.initial_setting = setting
+                        continue
+                else:
+                    new_status = LinkStatus.Open
+                    setting = float(current[1])
+#                link.setting = setting
+                link.initial_setting = setting
+                link.status = new_status
+                link.initial_status = new_status
 
     def _write_status(self, f, wn):
         f.write('[STATUS]\n'.encode('ascii'))
         f.write( '{:10s} {:10s}\n'.format(';ID', 'Setting').encode('ascii'))
-        for link_name, link in wn.links(Pump):
-            if link.initial_status is not LinkStatus.Open:
+        for link_name, link in wn.links():
+            if isinstance(link, Pipe):
+                continue
+            if isinstance(link, Pump):
+                setting = link.initial_setting
+                if type(setting) is float and setting != 1.0:
+                    f.write('{:10s} {:10.10g}\n'.format(link_name,
+                            setting).encode('ascii'))
+            if link.initial_status in (LinkStatus.Closed,):
                 f.write('{:10s} {:10s}\n'.format(link_name,
                         LinkStatus(link.initial_status).name).encode('ascii'))
-        for link_name, link in wn.links(Valve):
-            if link.initial_status is not LinkStatus.Active:
+            if isinstance(link, wntr.network.Valve) and link.initial_status in (LinkStatus.Open, LinkStatus.Opened):
+#           if link.initial_status in (LinkStatus.Closed,):
                 f.write('{:10s} {:10s}\n'.format(link_name,
                         LinkStatus(link.initial_status).name).encode('ascii'))
-        f.write('\n'.encode('ascii'))
+#                if link.initial_status is LinkStatus.Active:
+#                    valve_type = link.valve_type
+#                    if valve_type in ['PRV', 'PSV', 'PBV']:
+#                        setting = from_si(self.flow_units, link.initial_setting, HydParam.Pressure)
+#                    elif valve_type == 'FCV':
+#                        setting = from_si(self.flow_units, link.initial_setting, HydParam.Flow)
+#                    elif valve_type == 'TCV':
+#                        setting = link.initial_setting
+#                    else:
+#                        continue
+#                    continue
+#                elif isinstance(link, wntr.network.Pump):
+#                    setting = link.initial_setting
+#                else: continue
+#                f.write('{:10s} {:10.10g}\n'.format(link_name,
+#                        setting).encode('ascii'))
+#        f.write('\n'.encode('ascii'))
 
     def _read_controls(self):
         control_count = 0
@@ -1842,7 +1876,7 @@ class InpFile(object):
 
     def _write_coordinates(self, f, wn):
         f.write('[COORDINATES]\n'.encode('ascii'))
-        entry = '{:10s} {:f} {:f}\n'
+        entry = '{:10s} {:g} {:g}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
         for name, node in wn.nodes():
