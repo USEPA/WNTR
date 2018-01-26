@@ -795,7 +795,7 @@ class Valve(Link):
         self._initial_setting = 0.0
 
     def __repr__(self):
-        fmt = "<Pump '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>"
+        fmt = "<Valve '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>"
         return fmt.format(self._link_name,
                           self.start_node, self.end_node, self.__class__.__name__,
                           self.diameter, 
