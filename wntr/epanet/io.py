@@ -24,6 +24,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import difflib
+from collections import OrderedDict
 
 #from .time_utils import run_lineprofile
 
@@ -228,7 +229,7 @@ class InpFile(object):
         self.mass_units = None
         self.flow_units = None
         self.top_comments = []
-        self.curves = {}
+        self.curves = OrderedDict()
 
     def read(self, inp_files, wn=None):
         """Method to read EPANET INP file and load data into a water network model object.
@@ -567,7 +568,7 @@ class InpFile(object):
                     y = to_si(self.flow_units, point[1], HydParam.Volume)
                     curve_points.append((x, y))
                 self.wn.add_curve(curve_name, 'VOLUME', curve_points)
-                curve = self.wn.get_curve(curve_name)
+#                curve = self.wn.get_curve(curve_name)
             elif len(current) == 7:
                 curve_name = None
             else:
@@ -654,7 +655,8 @@ class InpFile(object):
     def _read_pumps(self):
         def create_curve(curve_name):
             curve_points = []
-            if curve_name not in self.wn.curve_name_list:
+            if curve_name not in self.wn.curve_name_list or \
+                    self.wn.get_curve(curve_name) is None:
                 for point in self.curves[curve_name]:
                     x = to_si(self.flow_units, point[0], HydParam.Flow)
                     y = to_si(self.flow_units, point[1], HydParam.HydraulicHead)
@@ -835,6 +837,8 @@ class InpFile(object):
                 self.curves[curve_name] = []
             self.curves[curve_name].append((float(current[1]),
                                              float(current[2])))
+            self.wn.curves[curve_name] = None
+            
 
     def _write_curves(self, f, wn):
         f.write('[CURVES]\n'.encode('ascii'))
@@ -1951,7 +1955,7 @@ class InpFile(object):
         """Finalize read by verifying that all curves have been dealt with"""
         def create_curve(curve_name):
             curve_points = []
-            if curve_name not in self.wn.curve_name_list:
+            if curve_name not in self.wn.curve_name_list or self.wn.get_curve(curve_name) is None:
                 for point in self.curves[curve_name]:
                     x = to_si(self.flow_units, point[0], HydParam.Flow)
                     y = to_si(self.flow_units, point[1], HydParam.HydraulicHead)
@@ -1962,7 +1966,7 @@ class InpFile(object):
 
         curve_name_list = self.wn.curve_name_list
         for name, curvedata in self.curves.items():
-            if name not in curve_name_list:
+            if name not in curve_name_list or self.wn.get_curve(name) is None:
                 warnings.warn('Not all curves were used in "{}"; added with type None, units conversion left to user'.format(self.wn.name))
                 logger.warning('Curve was not used: "{}"; saved as curve type None and unit conversion not performed'.format(name))
                 create_curve(name)
