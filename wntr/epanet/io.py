@@ -2886,8 +2886,8 @@ def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False):
     different_lines_2 = []
 
     for section in _INP_SECTIONS:
-        #if section == '[VERTICES]':
-        #    continue
+        if section == '[VERTICES]':
+            continue
         if not f1.contains_section(section):
             if f2.contains_section(section):
                 print('\tfile1 does not contain section {0} but file2 does.'.format(section))
