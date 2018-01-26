@@ -1845,8 +1845,8 @@ class NodeRegistry(Registry):
         elevation = float(elevation)
         junction = Junction(name, self._m)
         junction.elevation = elevation
-        if base_demand:
-            junction.add_demand(base_demand, demand_pattern, demand_category)
+#        if base_demand:
+        junction.add_demand(base_demand, demand_pattern, demand_category)
         self[name] = junction
         if coordinates is not None:
             junction.coordinates = coordinates
