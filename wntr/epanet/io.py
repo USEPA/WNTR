@@ -23,6 +23,7 @@ import logging
 import warnings
 import numpy as np
 import pandas as pd
+import difflib
 
 #from .time_utils import run_lineprofile
 
@@ -491,7 +492,7 @@ class InpFile(object):
         f.write('[JUNCTIONS]\n'.encode('ascii'))
         f.write(_JUNC_LABEL.format(';ID', 'Elevation', 'Demand', 'Pattern').encode('ascii'))
         nnames = list(wn.junction_name_list)
-        nnames.sort()
+        # nnames.sort()
         for junction_name in nnames:
             junction = wn.nodes[junction_name]
             if junction.demand_timeseries_list:
@@ -539,7 +540,7 @@ class InpFile(object):
         f.write('[RESERVOIRS]\n'.encode('ascii'))
         f.write(_RES_LABEL.format(';ID', 'Head', 'Pattern').encode('ascii'))
         nnames = list(wn.reservoir_name_list)
-        nnames.sort()
+        # nnames.sort()
         for reservoir_name in nnames:
             reservoir = wn.nodes[reservoir_name]
             E = {'name': reservoir_name,
@@ -585,7 +586,7 @@ class InpFile(object):
         f.write(_TANK_LABEL.format(';ID', 'Elevation', 'Init Level', 'Min Level', 'Max Level',
                                    'Diameter', 'Min Volume', 'Volume Curve').encode('ascii'))
         nnames = list(wn.tank_name_list)
-        nnames.sort()
+        # nnames.sort()
         for tank_name in nnames:
             tank = wn.nodes[tank_name]
             E = {'name': tank_name,
@@ -633,7 +634,7 @@ class InpFile(object):
         f.write(_PIPE_LABEL.format(';ID', 'Node1', 'Node2', 'Length', 'Diameter',
                                    'Roughness', 'Minor Loss', 'Status').encode('ascii'))
         lnames = list(wn.pipe_name_list)
-        lnames.sort()
+        # lnames.sort()
         for pipe_name in lnames:
             pipe = wn.links[pipe_name]
             E = {'name': pipe_name,
@@ -702,7 +703,7 @@ class InpFile(object):
         f.write('[PUMPS]\n'.encode('ascii'))
         f.write(_PUMP_LABEL.format(';ID', 'Node1', 'Node2', 'Properties').encode('ascii'))
         lnames = list(wn.pump_name_list)
-        lnames.sort()
+        # lnames.sort()
         for pump_name in lnames:
             pump = wn.links[pump_name]
             E = {'name': pump_name,
@@ -769,7 +770,7 @@ class InpFile(object):
         f.write('[VALVES]\n'.encode('ascii'))
         f.write(_VALVE_LABEL.format(';ID', 'Node1', 'Node2', 'Diameter', 'Type', 'Setting', 'Minor Loss').encode('ascii'))
         lnames = list(wn.valve_name_list)
-        lnames.sort()
+        # lnames.sort()
         for valve_name in lnames:
             valve = wn.links[valve_name]
             E = {'name': valve_name,
@@ -808,7 +809,7 @@ class InpFile(object):
         label = '{:10s} {:10s}\n'
         f.write(label.format(';ID', 'Flow coefficient').encode('ascii'))
         njunctions = list(wn.junction_name_list)
-        njunctions.sort()
+        # njunctions.sort()
         for junction_name in njunctions:
             junction = wn.nodes[junction_name]
             if junction._emitter_coefficient:
@@ -839,7 +840,7 @@ class InpFile(object):
         f.write('[CURVES]\n'.encode('ascii'))
         f.write(_CURVE_LABEL.format(';ID', 'X-Value', 'Y-Value').encode('ascii'))
         curves = list(wn.curve_name_list)
-        curves.sort()
+        # curves.sort()
         for curve_name in curves:
             curve = wn.get_curve(curve_name)
             if curve.curve_type == 'VOLUME':
@@ -910,7 +911,7 @@ class InpFile(object):
         f.write('[PATTERNS]\n'.encode('ascii'))
         f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers').encode('ascii'))
         patterns = list(wn.pattern_name_list)
-        patterns.sort()
+        # patterns.sort()
         for pattern_name in patterns:
             pattern = wn.get_pattern(pattern_name)
             count = 0
@@ -2694,3 +2695,219 @@ class BinFile(object):
         self.finalize_save(magic1==magic2, warnflag)
         
         return self.results
+
+
+class NoSectionError(Exception):
+    pass
+
+
+class _InpFileDifferHelper(object):
+    def __init__(self, f):
+        """
+        Parameters
+        ----------
+        f: str
+        """
+        self._f = open(f, 'r')
+        self._num_lines = len(self._f.readlines())
+        self._end = self._f.tell()
+        self._f.seek(0)
+
+    @property
+    def f(self):
+        return self._f
+
+    def iter(self, start=0, stop=None, skip_section_headings=True):
+        if stop is None:
+            stop = self._end
+        f = self.f
+        f.seek(start)
+        while f.tell() != stop:
+            loc = f.tell()
+            line = f.readline()
+            if line.startswith(';'):
+                continue
+            if skip_section_headings:
+                if line.startswith('['):
+                    continue
+            if len(line.split()) == 0:
+                continue
+            line = line.split(';')[0]
+            yield loc, line
+
+    def get_section(self, sec):
+        """
+        Parameters
+        ----------
+        sec: str
+            The section
+
+        Returns
+        -------
+        start: int
+            The starting point in the file for sec
+        end: int
+            The ending point in the file for sec
+        """
+        start = None
+        end = None
+        in_sec = False
+        for loc, line in self.iter(0, None, skip_section_headings=False):
+            line = line.split(';')[0]
+            if sec in line:
+                start = loc
+                in_sec = True
+            elif '[' in line:
+                if in_sec:
+                    end = loc
+                    in_sec = False
+                    break
+        if start is None:
+            raise NoSectionError('Could not find section ' + sec)
+        if end is None:
+            end = self._end
+        return start, end
+
+    def contains_section(self, sec):
+        """
+        Parameters
+        ----------
+        sec: str
+        """
+        try:
+            self.get_section(sec)
+            return True
+        except NoSectionError:
+            return False
+
+
+def _convert_line(line):
+    """
+    Parameters
+    ----------
+    line: str
+
+    Returns
+    -------
+    list
+    """
+    line = line.upper().split()
+    tmp = []
+    for i in line:
+        if '.' in i:
+            if "".join(i.split('.')).isnumeric():
+                tmp.append(float(i))
+            else:
+                tmp.append(i)
+        elif i.isnumeric():
+            tmp.append(int(i))
+        else:
+            tmp.append(i)
+    return tmp
+
+
+def _compare_lines(line1, line2, tol=1e-6):
+    """
+    Parameters
+    ----------
+    line1: list of str
+    line2: list of str
+
+    Returns
+    -------
+    bool
+    """
+    if len(line1) != len(line2):
+        return False
+
+    for i, a in enumerate(line1):
+        b = line2[i]
+        if type(a) is str:
+            if a != b:
+                return False
+        elif type(a) is int and type(b) is int:
+            if a != b:
+                return False
+        elif type(a) in {int, float}:
+            if abs(a - b) > tol:
+                return False
+        else:
+            raise TypeError('Unexpected type: {0}'.format(type(a)))
+
+    return True
+
+
+def _clean_line(wn, sec, line):
+    """
+    Parameters
+    ----------
+    wn: wntr.network.WaterNetworkModel
+    sec: str
+    line: list of str
+
+    Returns
+    -------
+    new_list: list of str
+    """
+    if sec == '[JUNCTIONS]':
+        if len(line) == 4:
+            other = wn.options.hydraulic.pattern
+            if type(line[3]) is int:
+                other = int(other)
+            if line[3] == other:
+                return line[:3]
+
+    return line
+
+
+def diff_inp_files(file1, file2=None, float_tol=1e-14):
+    """
+    Parameters
+    ----------
+    file1: str
+    file2: str
+    float_tol: float
+    """
+    wn = InpFile().read(file1)
+    f1 = _InpFileDifferHelper(file1)
+    if file2 is None:
+        file2 = 'temp.inp'
+        InpFile().write(file2, wn)
+    f2 = _InpFileDifferHelper(file2)
+
+    different_lines_1 = []
+    different_lines_2 = []
+
+    for section in _INP_SECTIONS:
+        if not f1.contains_section(section):
+            if f2.contains_section(section):
+                print('\tfile1 does not contain section {0} but file2 does.'.format(section))
+            continue
+        start1, stop1 = f1.get_section(section)
+        start2, stop2 = f2.get_section(section)
+
+        if len(list(f1.iter(start1, stop1))) != len(list(f2.iter(start2, stop2))):
+            print('\tdifferent number of lines in section {0}'.format(section))
+            continue
+
+        different_lines_1.append(section)
+        different_lines_2.append(section)
+
+        f2_iter = f2.iter(start2, stop2)
+        for loc1, line1 in f1.iter(start1, stop1):
+            orig_line_1 = line1
+            loc2, line2 = next(f2_iter)
+            orig_line_2 = line2
+            line1 = _convert_line(line1)
+            line2 = _convert_line(line2)
+            line1 = _clean_line(wn, section, line1)
+            line2 = _clean_line(wn, section, line2)
+            if not _compare_lines(line1, line2):
+                different_lines_1.append(orig_line_1)
+                different_lines_2.append(orig_line_2)
+
+    differ = difflib.HtmlDiff()
+    html_diff = differ.make_file(different_lines_1, different_lines_2)
+    g = open('diff.html', 'w')
+    g.write(html_diff)
+    g.close()
