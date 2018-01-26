@@ -2852,6 +2852,8 @@ def _clean_line(wn, sec, line):
     if sec == '[JUNCTIONS]':
         if len(line) == 4:
             other = wn.options.hydraulic.pattern
+            if other is None:
+                other = 1
             if type(line[3]) is int:
                 other = int(other)
             if line[3] == other:
