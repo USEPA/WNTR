@@ -1620,7 +1620,8 @@ class CurveRegistry(Registry):
         if not isinstance(key, six.string_types):
             raise ValueError('Registry keys must be strings')
         self._data[key] = value
-        self.set_curve_type(key, value.curve_type)
+        if value is not None:
+            self.set_curve_type(key, value.curve_type)
     
     def set_curve_type(self, key, curve_type):
         """WARNING -- does not check to make sure key is typed before assining it - you could end up
