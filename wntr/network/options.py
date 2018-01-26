@@ -211,15 +211,15 @@ class TimeOptions(object):
         if not type(self) == type(other):
             return False
         ###  self.units == other.units and \
-        if abs(self.duration - other.duration)<1e-10 and \
-           abs(self.hydraulic_timestep - other.hydraulic_timestep)<1e-10 and \
-           abs(self.quality_timestep - other.quality_timestep)<1e-10 and \
-           abs(self.rule_timestep - other.rule_timestep)<1e-10 and \
-           abs(self.pattern_timestep - other.pattern_timestep)<1e-10 and \
-           abs(self.pattern_start - other.pattern_start)<1e-10 and \
-           abs(self.report_timestep - other.report_timestep)<1e-10 and \
-           abs(self.report_start - other.report_start)<1e-10 and \
-           abs(self.start_clocktime - other.start_clocktime)<1e-10:
+        if abs(self.duration - other.duration)<1e-9 and \
+           abs(self.hydraulic_timestep - other.hydraulic_timestep)<1e-9 and \
+           abs(self.quality_timestep - other.quality_timestep)<1e-9 and \
+           abs(self.rule_timestep - other.rule_timestep)<1e-9 and \
+           abs(self.pattern_timestep - other.pattern_timestep)<1e-9 and \
+           abs(self.pattern_start - other.pattern_start)<1e-9 and \
+           abs(self.report_timestep - other.report_timestep)<1e-9 and \
+           abs(self.report_start - other.report_start)<1e-9 and \
+           abs(self.start_clocktime - other.start_clocktime)<1e-9:
                return True
         return False
 
@@ -374,10 +374,10 @@ class HydraulicOptions(object):
            self.hydraulics == other.hydraulics and \
            self.hydraulics_filename == other.hydraulics_filename and \
            abs(self.viscosity - other.viscosity)<1e-10 and \
-           abs(self.specific_gravity - other.specific_gravity)<1e-10 and \
+           abs(self.specific_gravity - other.specific_gravity)<1e-9 and \
            self.pattern == other.pattern and \
-           abs(self.demand_multiplier - other.demand_multiplier)<1e-10 and \
-           abs(self.emitter_exponent - other.emitter_exponent)<1e-10:
+           abs(self.demand_multiplier - other.demand_multiplier)<1e-9 and \
+           abs(self.emitter_exponent - other.emitter_exponent)<1e-9:
                return True
         return False
 
@@ -578,14 +578,14 @@ class QualityOptions(object):
            self.trace_node == other.trace_node and \
            self.wq_units == other.wq_units and \
            self.chemical_name == other.chemical_name and \
-           abs(self.diffusivity - other.diffusivity)<1e-10 and \
-           abs(self.bulk_rxn_order - other.bulk_rxn_order)<1e-10 and \
-           abs(self.wall_rxn_order - other.wall_rxn_order)<1e-10 and \
-           abs(self.tank_rxn_order - other.tank_rxn_order)<1e-10 and \
-           abs(self.bulk_rxn_coeff - other.bulk_rxn_coeff)<1e-10 and \
-           abs(self.wall_rxn_coeff - other.wall_rxn_coeff)<1e-10 and \
-           abs(self.limiting_potential - other.limiting_potential)<1e-10 and \
-           abs(self.roughness_correl - other.roughness_correl)<1e-10:
+           abs(self.diffusivity - other.diffusivity)<1e-9 and \
+           abs(self.bulk_rxn_order - other.bulk_rxn_order)<1e-9 and \
+           abs(self.wall_rxn_order - other.wall_rxn_order)<1e-9 and \
+           abs(self.tank_rxn_order - other.tank_rxn_order)<1e-9 and \
+           abs(self.bulk_rxn_coeff - other.bulk_rxn_coeff)<1e-9 and \
+           abs(self.wall_rxn_coeff - other.wall_rxn_coeff)<1e-9 and \
+           abs(self.limiting_potential - other.limiting_potential)<1e-9 and \
+           abs(self.roughness_correl - other.roughness_correl)<1e-9:
                return True
         return False
 
@@ -633,10 +633,10 @@ class EnergyOptions(object):
         if not type(self) == type(other):
             return False
         ###  self.units == other.units and \
-        if abs(self.global_price - other.global_price)<1e-10 and \
+        if abs(self.global_price - other.global_price)<1e-9 and \
            self.global_pattern == other.global_pattern and \
-           abs(self.global_efficiency - other.global_efficiency)<1e-10 and \
-           abs(self.demand_charge - other.demand_charge)<1e-10:
+           abs(self.global_efficiency - other.global_efficiency)<1e-9 and \
+           abs(self.demand_charge - other.demand_charge)<1e-9:
                return True
         return False
 
@@ -701,13 +701,13 @@ class SolverOptions(object):
         if not type(self) == type(other):
             return False
         ###  self.units == other.units and \
-        if abs(self.trials - other.trials)<1e-10 and \
-           abs(self.accuracy - other.accuracy)<1e-10 and \
+        if abs(self.trials - other.trials)<1e-9 and \
+           abs(self.accuracy - other.accuracy)<1e-9 and \
            self.unbalanced == other.unbalanced and \
-           abs(self.tolerance - other.tolerance)<1e-10 and \
-           abs(self.checkfreq - other.checkfreq)<1e-10 and \
-           abs(self.maxcheck - other.maxcheck)<1e-10 and \
-           abs(self.damplimit - other.damplimit)<1e-10:
+           abs(self.tolerance - other.tolerance)<1e-9 and \
+           abs(self.checkfreq - other.checkfreq)<1e-9 and \
+           abs(self.maxcheck - other.maxcheck)<1e-9 and \
+           abs(self.damplimit - other.damplimit)<1e-9:
                return True
         return False
 
