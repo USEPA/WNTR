@@ -2806,7 +2806,7 @@ def _convert_line(line):
     return tmp
 
 
-def _compare_lines(line1, line2, tol=1e-6):
+def _compare_lines(line1, line2, tol=1e-14):
     """
     Parameters
     ----------
@@ -2822,17 +2822,18 @@ def _compare_lines(line1, line2, tol=1e-6):
 
     for i, a in enumerate(line1):
         b = line2[i]
-        if type(a) is str:
+        if type(a) not in {int, float}:
             if a != b:
                 return False
         elif type(a) is int and type(b) is int:
             if a != b:
                 return False
-        elif type(a) in {int, float}:
+        elif type(a) in {int, float} and type(b) in {int, float}:
             if abs(a - b) > tol:
                 return False
         else:
-            raise TypeError('Unexpected type: {0}'.format(type(a)))
+            if a != b:
+                return False
 
     return True
 
@@ -2904,7 +2905,7 @@ def diff_inp_files(file1, file2=None, float_tol=1e-14):
             line2 = _convert_line(line2)
             line1 = _clean_line(wn, section, line1)
             line2 = _clean_line(wn, section, line2)
-            if not _compare_lines(line1, line2):
+            if not _compare_lines(line1, line2, tol=float_tol):
                 different_lines_1.append(orig_line_1)
                 different_lines_2.append(orig_line_2)
 
