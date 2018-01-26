@@ -100,6 +100,8 @@ class WaterNetworkModel(AbstractModel):
         for name, source in self.sources():
             if source != other.get_source(name):
                 return False
+        if self.options != other.options:
+            return False
         return True
     
     def _sec_to_string(self, sec):
@@ -1620,7 +1622,8 @@ class CurveRegistry(Registry):
         if not isinstance(key, six.string_types):
             raise ValueError('Registry keys must be strings')
         self._data[key] = value
-        self.set_curve_type(key, value.curve_type)
+        if value is not None:
+            self.set_curve_type(key, value.curve_type)
     
     def set_curve_type(self, key, curve_type):
         """WARNING -- does not check to make sure key is typed before assining it - you could end up
@@ -1781,7 +1784,7 @@ class NodeRegistry(Registry):
                         self._curves.remove_usage(pat_name, (node.name, 'Junction'))
             if isinstance(node, Reservoir) and node.head_pattern_name:
                 self._curves.remove_usage(node.head_pattern_name, (node.name, 'Reservoir'))
-            if isinstance(node, Reservoir) and node.vol_curve_name:
+            if isinstance(node, Tank) and node.vol_curve_name:
                 self._curves.remove_usage(node.vol_curve_name, (node.name, 'Tank'))
             return node
         except KeyError:
@@ -1844,8 +1847,8 @@ class NodeRegistry(Registry):
         elevation = float(elevation)
         junction = Junction(name, self._m)
         junction.elevation = elevation
-        if base_demand:
-            junction.add_demand(base_demand, demand_pattern, demand_category)
+#        if base_demand:
+        junction.add_demand(base_demand, demand_pattern, demand_category)
         self[name] = junction
         if coordinates is not None:
             junction.coordinates = coordinates
