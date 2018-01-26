@@ -68,9 +68,9 @@ class Junction(Node):
     def _compare(self, other):
         if not super(Junction, self)._compare(other):
             return False
-        if abs(self.elevation - other.elevation)<1e-10 and \
-           abs(self.nominal_pressure - other.nominal_pressure)<1e-10 and \
-           abs(self.minimum_pressure - other.minimum_pressure)<1e-10 and \
+        if abs(self.elevation - other.elevation)<1e-9 and \
+           abs(self.nominal_pressure - other.nominal_pressure)<1e-9 and \
+           abs(self.minimum_pressure - other.minimum_pressure)<1e-9 and \
            self._emitter_coefficient == other._emitter_coefficient:
             return True
         return False
@@ -213,11 +213,11 @@ class Tank(Node):
     def _compare(self, other):
         if not super(Tank, self)._compare(other):
             return False
-        if abs(self.elevation   - other.elevation)<1e-10 and \
-           abs(self.min_level   - other.min_level)<1e-10 and \
-           abs(self.max_level   - other.max_level)<1e-10 and \
-           abs(self.diameter    - other.diameter)<1e-10  and \
-           abs(self.min_vol     - other.min_vol)<1e-10   and \
+        if abs(self.elevation   - other.elevation)<1e-9 and \
+           abs(self.min_level   - other.min_level)<1e-9 and \
+           abs(self.max_level   - other.max_level)<1e-9 and \
+           abs(self.diameter    - other.diameter)<1e-9  and \
+           abs(self.min_vol     - other.min_vol)<1e-9   and \
            self.bulk_rxn_coeff == other.bulk_rxn_coeff   and \
            self.vol_curve      == other.vol_curve:
             return True
@@ -444,10 +444,10 @@ class Pipe(Link):
     def _compare(self, other):
         if not super(Pipe, self)._compare(other):
             return False
-        if abs(self.length        - other.length)<1e-10     and \
-           abs(self.diameter      - other.diameter)<1e-10   and \
-           abs(self.roughness     - other.roughness)<1e-10  and \
-           abs(self.minor_loss    - other.minor_loss)<1e-10 and \
+        if abs(self.length        - other.length)<1e-9     and \
+           abs(self.diameter      - other.diameter)<1e-9   and \
+           abs(self.roughness     - other.roughness)<1e-9  and \
+           abs(self.minor_loss    - other.minor_loss)<1e-9 and \
            self.cv               == other.cv                and \
            self.bulk_rxn_coeff   == other.bulk_rxn_coeff    and \
            self.wall_rxn_coeff   == other.wall_rxn_coeff:
@@ -804,9 +804,9 @@ class Valve(Link):
     def _compare(self, other):
         if not super(Valve, self)._compare(other):
             return False
-        if abs(self.diameter   - other.diameter)<1e-10 and \
+        if abs(self.diameter   - other.diameter)<1e-9 and \
            self.valve_type    == other.valve_type      and \
-           abs(self.minor_loss - other.minor_loss)<1e-10:
+           abs(self.minor_loss - other.minor_loss)<1e-9:
             return True
         return False
    
@@ -1143,7 +1143,7 @@ class TimeSeries(object):
         if type(self) == type(other) and \
            self.pattern == other.pattern and \
            self.category == other.category and \
-           abs(self._base - other._base)<1e-10 :
+           abs(self._base - other._base)<1e-9 :
             return True
         return False
     
@@ -1420,7 +1420,7 @@ class Curve(object):
             return False
         for point1, point2 in zip(self.points, other.points):
             for value1, value2 in zip(point1, point2):
-                if abs(value1 - value2) > 1e-8:
+                if abs(value1 - value2) > 1e-9:
                     return False
         return True
 

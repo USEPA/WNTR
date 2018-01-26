@@ -100,6 +100,8 @@ class WaterNetworkModel(AbstractModel):
         for name, source in self.sources():
             if source != other.get_source(name):
                 return False
+        if self.options != other.options:
+            return False
         return True
     
     def _sec_to_string(self, sec):

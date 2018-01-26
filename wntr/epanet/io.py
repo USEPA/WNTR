@@ -1328,7 +1328,7 @@ class InpFile(object):
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';ID', 'Demand', 'Pattern').encode('ascii'))
         nodes = list(wn.junction_name_list)
-#        nodes.sort()
+        # nodes.sort()
         for node in nodes:
             demands = wn.get_node(node).demand_timeseries_list
             for ct, demand in enumerate(demands):
@@ -1363,7 +1363,7 @@ class InpFile(object):
         entry = '{:10s} {:10s}\n'
         label = '{:10s} {:10s}\n'
         nnodes = list(wn.nodes.keys())
-#        nnodes.sort()
+        # nnodes.sort()
         for node_name in nnodes:
             node = wn.nodes[node_name]
             if node.initial_quality:
@@ -1501,7 +1501,7 @@ class InpFile(object):
         label = '{:10s} {:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'Type', 'Quality', 'Pattern').encode('ascii'))
         nsources = list(wn._sources.keys())
-        nsources.sort()
+        # nsources.sort()
         for source_name in nsources:
             source = wn._sources[source_name]
 
@@ -1544,7 +1544,7 @@ class InpFile(object):
         f.write('[MIXING]\n'.encode('ascii'))
         f.write('{:20s} {:5s} {}\n'.format(';Tank ID', 'Model', 'Fraction').encode('ascii'))
         lnames = list(wn.tank_name_list)
-        lnames.sort()
+        # lnames.sort()
         for tank_name in lnames:
             tank = wn.nodes[tank_name]
             if tank._mix_model is not None:
@@ -1909,7 +1909,7 @@ class InpFile(object):
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Link', 'X-Coord', 'Y-Coord').encode('ascii'))
         lnames = list(wn.pipe_name_list)
-        lnames.sort()
+        # lnames.sort()
         for pipe_name in lnames:
             pipe = wn.links[pipe_name]
             for vert in pipe._vertices:
@@ -1976,7 +1976,7 @@ class InpFile(object):
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';type', 'name', 'tag').encode('ascii'))
         nnodes = list(wn.node_name_list)
-        nnodes.sort()
+        # nnodes.sort()
         for node_name in nnodes:
             node = wn.nodes[node_name]
             if node.tag:
@@ -2869,7 +2869,7 @@ def _convert_line(line):
     return tmp
 
 
-def _compare_lines(line1, line2, tol=1e-6):
+def _compare_lines(line1, line2, tol=1e-14):
     """
     Parameters
     ----------
@@ -2885,17 +2885,18 @@ def _compare_lines(line1, line2, tol=1e-6):
 
     for i, a in enumerate(line1):
         b = line2[i]
-        if type(a) is str:
+        if type(a) not in {int, float}:
             if a != b:
                 return False
         elif type(a) is int and type(b) is int:
             if a != b:
                 return False
-        elif type(a) in {int, float}:
+        elif type(a) in {int, float} and type(b) in {int, float}:
             if abs(a - b) > tol:
                 return False
         else:
-            raise TypeError('Unexpected type: {0}'.format(type(a)))
+            if a != b:
+                return False
 
     return True
 
@@ -2925,7 +2926,7 @@ def _clean_line(wn, sec, line):
     return line
 
 
-def diff_inp_files(file1, file2=None, float_tol=1e-14):
+def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False):
     """
     Parameters
     ----------
@@ -2944,6 +2945,8 @@ def diff_inp_files(file1, file2=None, float_tol=1e-14):
     different_lines_2 = []
 
     for section in _INP_SECTIONS:
+        if section == '[VERTICES]':
+            continue
         if not f1.contains_section(section):
             if f2.contains_section(section):
                 print('\tfile1 does not contain section {0} but file2 does.'.format(section))
@@ -2952,7 +2955,24 @@ def diff_inp_files(file1, file2=None, float_tol=1e-14):
         start2, stop2 = f2.get_section(section)
 
         if len(list(f1.iter(start1, stop1))) != len(list(f2.iter(start2, stop2))):
-            print('\tdifferent number of lines in section {0}'.format(section))
+            n1 = 0
+            n2 = 0
+            for loc1, line1 in f1.iter(start1, stop1):
+                different_lines_1.append(line1)
+                n1 += 1
+            for loc2, line2 in f2.iter(start2, stop2):
+                different_lines_2.append(line2)
+                n2 += 1
+            if n1 > n2:
+                n = n1 - n2
+                for i in range(n):
+                    different_lines_2.append("")
+            elif n2 > n1:
+                n = n2 - n1
+                for i in range(n):
+                    different_lines_1.append("")
+            else:
+                raise RuntimeError('Unexpected')
             continue
 
         different_lines_1.append(section)
@@ -2967,12 +2987,16 @@ def diff_inp_files(file1, file2=None, float_tol=1e-14):
             line2 = _convert_line(line2)
             line1 = _clean_line(wn, section, line1)
             line2 = _clean_line(wn, section, line2)
-            if not _compare_lines(line1, line2):
+            if not _compare_lines(line1, line2, tol=float_tol):
+                if not htmldiff:
+                    print(line1, line2)
                 different_lines_1.append(orig_line_1)
                 different_lines_2.append(orig_line_2)
 
-    differ = difflib.HtmlDiff()
-    html_diff = differ.make_file(different_lines_1, different_lines_2)
-    g = open('diff.html', 'w')
-    g.write(html_diff)
-    g.close()
+    if htmldiff:
+        differ = difflib.HtmlDiff()
+        html_diff = differ.make_file(different_lines_1, different_lines_2)
+        g = open('diff.html', 'w')
+        g.write(html_diff)
+        g.close()
+
