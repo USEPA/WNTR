@@ -1997,8 +1997,8 @@ class InpFile(object):
             curve_points = []
             if curve_name not in self.wn.curve_name_list or self.wn.get_curve(curve_name) is None:
                 for point in self.curves[curve_name]:
-                    x = to_si(self.flow_units, point[0], HydParam.Flow)
-                    y = to_si(self.flow_units, point[1], HydParam.HydraulicHead)
+                    x = point[0]
+                    y = point[1]
                     curve_points.append((x,y))
                 self.wn.add_curve(curve_name, None, curve_points)
             curve = self.wn.get_curve(curve_name)
