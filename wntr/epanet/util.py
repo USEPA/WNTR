@@ -536,7 +536,8 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.Pressure]:
             if flow_units.is_traditional:
-                data = data * 0.703249614902  # psi to m
+#                data = data * 0.703249614902
+                data = data * (0.3048/0.4333)  # psi * (m/ft / psi/ft)
 
         elif self in [HydParam.Volume]:
             if flow_units.is_traditional:
@@ -619,7 +620,8 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.Pressure]:
             if flow_units.is_traditional:
-                data = data / 0.703249614902  # psi from m
+#                data = data / 0.703249614902
+                data = data / (0.3048/0.4333)  # psi from mH2O, i.e. psi / (m/ft / psi/ft) )
 
         elif self in [HydParam.Volume]:
             if flow_units.is_traditional:
