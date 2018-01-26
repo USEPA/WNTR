@@ -2926,7 +2926,7 @@ def _clean_line(wn, sec, line):
     return line
 
 
-def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False):
+def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=None):
     """
     Parameters
     ----------
@@ -2943,10 +2943,11 @@ def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False):
 
     different_lines_1 = []
     different_lines_2 = []
-
+    
+    if not print_max:
+        print_max = np.inf
     for section in _INP_SECTIONS:
-        if section == '[VERTICES]':
-            continue
+        print_counter = 0
         if not f1.contains_section(section):
             if f2.contains_section(section):
                 print('\tfile1 does not contain section {0} but file2 does.'.format(section))
@@ -2988,8 +2989,9 @@ def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False):
             line1 = _clean_line(wn, section, line1)
             line2 = _clean_line(wn, section, line2)
             if not _compare_lines(line1, line2, tol=float_tol):
-                if not htmldiff:
+                if (not htmldiff) and (print_counter < print_max):
                     print(line1, line2)
+                    print_counter = print_counter+1
                 different_lines_1.append(orig_line_1)
                 different_lines_2.append(orig_line_2)
 
