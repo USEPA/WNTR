@@ -667,15 +667,15 @@ def test_add_get_remove_num():
     expected = [93,4,3,118,3,1,6,3,1]
     assert_list_equal(nums, expected)
 
+    wn.remove_source('new_source')
+    wn.remove_curve('new_curve')
+    wn.remove_pattern('new_pattern')
     wn.remove_link('new_pipe')
     wn.remove_link('new_pump')
     wn.remove_link('new_valve')
     wn.remove_node('new_junc')
     wn.remove_node('new_tank')
     wn.remove_node('new_reservoir')
-    wn.remove_pattern('new_pattern')
-    wn.remove_curve('new_curve')
-    wn.remove_source('new_source')
     
     nums = [wn.num_junctions,
            wn.num_tanks,
