@@ -1876,7 +1876,7 @@ class InpFile(object):
 
     def _write_coordinates(self, f, wn):
         f.write('[COORDINATES]\n'.encode('ascii'))
-        entry = '{:10s} {:g} {:g}\n'
+        entry = '{:10s} {:12.12g} {:12.12g}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
         for name, node in wn.nodes():
@@ -1899,7 +1899,7 @@ class InpFile(object):
 
     def _write_vertices(self, f, wn):
         f.write('[VERTICES]\n'.encode('ascii'))
-        entry = '{:10s} {:10g} {:10g}\n'
+        entry = '{:10s} {:12.12g} {:12.12g}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Link', 'X-Coord', 'Y-Coord').encode('ascii'))
         lnames = list(wn.pipe_name_list)
