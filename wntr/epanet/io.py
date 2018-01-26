@@ -1328,7 +1328,7 @@ class InpFile(object):
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';ID', 'Demand', 'Pattern').encode('ascii'))
         nodes = list(wn.junction_name_list)
-        nodes.sort()
+#        nodes.sort()
         for node in nodes:
             demands = wn.get_node(node).demand_timeseries_list
             for ct, demand in enumerate(demands):
@@ -1363,7 +1363,7 @@ class InpFile(object):
         entry = '{:10s} {:10s}\n'
         label = '{:10s} {:10s}\n'
         nnodes = list(wn.nodes.keys())
-        nnodes.sort()
+#        nnodes.sort()
         for node_name in nnodes:
             node = wn.nodes[node_name]
             if node.initial_quality:
@@ -1882,7 +1882,7 @@ class InpFile(object):
 
     def _write_coordinates(self, f, wn):
         f.write('[COORDINATES]\n'.encode('ascii'))
-        entry = '{:10s} {:20.9g} {:20.9g}\n'
+        entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
         for name, node in wn.nodes():
