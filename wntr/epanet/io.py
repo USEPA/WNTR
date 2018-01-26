@@ -1905,7 +1905,7 @@ class InpFile(object):
 
     def _write_vertices(self, f, wn):
         f.write('[VERTICES]\n'.encode('ascii'))
-        entry = '{:10s} {:12.12g} {:12.12g}\n'
+        entry = '{:10s} {:20.9g} {:20.9g}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Link', 'X-Coord', 'Y-Coord').encode('ascii'))
         lnames = list(wn.pipe_name_list)
