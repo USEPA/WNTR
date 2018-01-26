@@ -1882,7 +1882,7 @@ class InpFile(object):
 
     def _write_coordinates(self, f, wn):
         f.write('[COORDINATES]\n'.encode('ascii'))
-        entry = '{:10s} {:20.9g} {:20.9g}\n'
+        entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
         for name, node in wn.nodes():
@@ -1905,7 +1905,7 @@ class InpFile(object):
 
     def _write_vertices(self, f, wn):
         f.write('[VERTICES]\n'.encode('ascii'))
-        entry = '{:10s} {:20.9g} {:20.9g}\n'
+        entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Link', 'X-Coord', 'Y-Coord').encode('ascii'))
         lnames = list(wn.pipe_name_list)
@@ -1997,8 +1997,8 @@ class InpFile(object):
             curve_points = []
             if curve_name not in self.wn.curve_name_list or self.wn.get_curve(curve_name) is None:
                 for point in self.curves[curve_name]:
-                    x = to_si(self.flow_units, point[0], HydParam.Flow)
-                    y = to_si(self.flow_units, point[1], HydParam.HydraulicHead)
+                    x = point[0]
+                    y = point[1]
                     curve_points.append((x,y))
                 self.wn.add_curve(curve_name, None, curve_points)
             curve = self.wn.get_curve(curve_name)
