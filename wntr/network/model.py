@@ -56,7 +56,7 @@ class WaterNetworkModel(AbstractModel):
         self._pattern_reg = PatternRegistry(self)
         self._curve_reg = CurveRegistry(self)
         self._controls = OrderedDict()
-        self._sources = {}
+        self._sources = OrderedDict()
 
         # Name of pipes that are check valves
         self._check_valves = []
