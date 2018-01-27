@@ -58,6 +58,11 @@ class WaterNetworkModel(AbstractModel):
         self._controls = OrderedDict()
         self._sources = OrderedDict()
 
+        self._node_reg._finalize_(self)
+        self._link_reg._finalize_(self)
+        self._pattern_reg._finalize_(self)
+        self._curve_reg._finalize_(self)
+
         # Name of pipes that are check valves
         self._check_valves = []
 
@@ -932,7 +937,7 @@ class WaterNetworkModel(AbstractModel):
     @property
     def num_controls(self): 
         """"""
-        return len(self._control_reg)
+        return len(self._controls)
     
     ### #
     ### Helper functions
@@ -941,7 +946,7 @@ class WaterNetworkModel(AbstractModel):
                  nodes=self._node_reg.tolist(),
                  links=self._link_reg.tolist(),
                  curves=self._curve_reg.tolist(),
-                 controls=self._control_reg.todict(),
+                 controls=self._controls,
                  patterns=self._pattern_reg.tolist()
                  )
         return d
@@ -1524,9 +1529,9 @@ class WaterNetworkModel(AbstractModel):
 
 class PatternRegistry(Registry):
 
-    @property
-    def _patterns(self):
-        raise UnboundLocalError('registries are not reentrant')
+    def _finalize_(self, model):
+        super(self.__class__, self)._finalize_(model)
+        self._pattern_reg = None
 
     class DefaultPattern(object):
         def __init__(self, options):
@@ -1593,7 +1598,7 @@ class PatternRegistry(Registry):
     
     @property
     def default_pattern(self):
-        return self.DefaultPattern(self._m.options)
+        return self.DefaultPattern(self._options)
     
     def tostring(self):
         s  = 'Pattern Registry:\n'
@@ -1614,9 +1619,9 @@ class CurveRegistry(Registry):
         self._headloss_curves = OrderedSet()
         self._volume_curves = OrderedSet()
 
-    @property
-    def _curves(self):
-        raise UnboundLocalError('registries are not reentrant')
+    def _finalize_(self, model):
+        super(self.__class__, self)._finalize_(model)
+        self._curve_reg = None
 
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
@@ -1721,9 +1726,9 @@ class CurveRegistry(Registry):
 
 
 class SourceRegistry(Registry):
-    @property
-    def _sources(self):
-        raise UnboundLocalError('registries are not reentrant')
+    def _finalize_(self, model):
+        super(self.__class__, self)._finalize_(model)
+        self._sources = None
 
     def __delitem__(self, key):
         try:
@@ -1735,8 +1740,8 @@ class SourceRegistry(Registry):
             elif key in self._usage:
                 self._usage.pop(key)
             source = self._data.pop(key)
-            self._patterns.remove_usage(source.strength_timeseries.pattern_name, (source.name, 'Source'))
-            self._nodes.remove_usage(source.node_name, (source.name, 'Source'))            
+            self._pattern_reg.remove_usage(source.strength_timeseries.pattern_name, (source.name, 'Source'))
+            self._node_reg.remove_usage(source.node_name, (source.name, 'Source'))            
             return source
         except KeyError:
             # Do not raise an exception if there is no key of that name
@@ -1750,9 +1755,9 @@ class NodeRegistry(Registry):
         self._reservoirs = OrderedSet()
         self._tanks = OrderedSet()
     
-    @property
-    def _nodes(self):
-        raise UnboundLocalError('registries are not reentrant')
+    def _finalize_(self, model):
+        super(self.__class__, self)._finalize_(model)
+        self._node_reg = None
     
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
@@ -1781,11 +1786,11 @@ class NodeRegistry(Registry):
             if isinstance(node, Junction):
                 for pat_name in node.demand_timeseries_list.pattern_list():
                     if pat_name:
-                        self._curves.remove_usage(pat_name, (node.name, 'Junction'))
+                        self._curve_reg.remove_usage(pat_name, (node.name, 'Junction'))
             if isinstance(node, Reservoir) and node.head_pattern_name:
-                self._curves.remove_usage(node.head_pattern_name, (node.name, 'Reservoir'))
+                self._curve_reg.remove_usage(node.head_pattern_name, (node.name, 'Reservoir'))
             if isinstance(node, Tank) and node.vol_curve_name:
-                self._curves.remove_usage(node.vol_curve_name, (node.name, 'Tank'))
+                self._curve_reg.remove_usage(node.vol_curve_name, (node.name, 'Tank'))
             return node
         except KeyError:
             return 
@@ -1845,7 +1850,7 @@ class NodeRegistry(Registry):
         """
         base_demand = float(base_demand)
         elevation = float(elevation)
-        junction = Junction(name, self._m)
+        junction = Junction(name, self)
         junction.elevation = elevation
 #        if base_demand:
         junction.add_demand(base_demand, demand_pattern, demand_category)
@@ -1899,7 +1904,7 @@ class NodeRegistry(Registry):
             raise ValueError("Initial tank level must be less than or equal to the tank maximum level.")
         if vol_curve and not isinstance(vol_curve, six.string_types):
             raise ValueError('Volume curve name must be a string')
-        tank = Tank(name, self._m)
+        tank = Tank(name, self)
         tank.elevation = elevation
         tank.init_level = init_level
         tank.min_level = min_level
@@ -1930,7 +1935,7 @@ class NodeRegistry(Registry):
         base_head = float(base_head)
         if head_pattern and not isinstance(head_pattern, six.string_types):
             raise ValueError('Head pattern must be a string')
-        reservoir = Reservoir(name, self._m)
+        reservoir = Reservoir(name, self)
         reservoir.base_head = base_head
         reservoir.head_pattern_name = head_pattern
         self[name] = reservoir
@@ -1991,9 +1996,9 @@ class LinkRegistry(Registry):
         self._gpvs = OrderedSet()
         self._valves = OrderedSet()
     
-    @property
-    def _links(self):
-        raise UnboundLocalError('registries are not reentrant')
+    def _finalize_(self, model):
+        super(self.__class__, self)._finalize_(model)
+        self._link_reg = None
 
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
@@ -2032,14 +2037,14 @@ class LinkRegistry(Registry):
             elif key in self._usage:
                 self._usage.pop(key)
             link = self._data.pop(key)
-            self._nodes.remove_usage(link.start_node_name, (link.name, link.link_type))
-            self._nodes.remove_usage(link.end_node_name, (link.name, link.link_type))
+            self._node_reg.remove_usage(link.start_node_name, (link.name, link.link_type))
+            self._node_reg.remove_usage(link.end_node_name, (link.name, link.link_type))
             if isinstance(link, GPValve):
-                self._curves.remove_usage(link.headloss_curve_name, (link.name, 'Valve'))
+                self._curve_reg.remove_usage(link.headloss_curve_name, (link.name, 'Valve'))
             if isinstance(link, Pump):
-                self._curves.remove_usage(link.speed_pattern_name, (link.name, 'Pump'))
+                self._curve_reg.remove_usage(link.speed_pattern_name, (link.name, 'Pump'))
             if isinstance(link, HeadPump):
-                self._curves.remove_usage(link.pump_curve_name, (link.name, 'Pump'))
+                self._curve_reg.remove_usage(link.pump_curve_name, (link.name, 'Pump'))
             for ss in self.__subsets:
                 # Go through the _pipes, _prvs, ..., and remove this link
                 getattr(self, ss).discard(key)
@@ -2115,7 +2120,7 @@ class LinkRegistry(Registry):
         minor_loss = float(minor_loss)
         if isinstance(status, str):
             status = LinkStatus[status]
-        pipe = Pipe(name, start_node_name, end_node_name, self._m)
+        pipe = Pipe(name, start_node_name, end_node_name, self)
         pipe.length = length
         pipe.diameter = diameter
         pipe.roughness = roughness
@@ -2149,10 +2154,10 @@ class LinkRegistry(Registry):
         
         """
         if pump_type.upper() == 'POWER':
-            pump = PowerPump(name, start_node_name, end_node_name, self._m)
+            pump = PowerPump(name, start_node_name, end_node_name, self)
             pump.power = pump_parameter
         elif pump_type.upper() == 'HEAD':
-            pump = HeadPump(name, start_node_name, end_node_name, self._m)
+            pump = HeadPump(name, start_node_name, end_node_name, self)
             if not isinstance(pump_parameter, six.string_types):
                 pump.pump_curve_name = pump_parameter.name
             else:
@@ -2192,33 +2197,33 @@ class LinkRegistry(Registry):
             name of headloss curve for GPV.
         
         """
-        start_node = self._nodes[start_node_name]
-        end_node = self._nodes[end_node_name]
+        start_node = self._node_reg[start_node_name]
+        end_node = self._node_reg[end_node_name]
         if type(start_node)==Tank or type(end_node)==Tank:
             logger.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
         valve_type = valve_type.upper()
         if valve_type == 'PRV':
-            valve = PRValve(name, start_node_name, end_node_name, self._m)
+            valve = PRValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
             valve.setting = setting
         elif valve_type == 'PSV':
-            valve = PSValve(name, start_node_name, end_node_name, self._m)
+            valve = PSValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
             valve.setting = setting
         elif valve_type == 'PBV':
-            valve = PBValve(name, start_node_name, end_node_name, self._m)
+            valve = PBValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
             valve.setting = setting
         elif valve_type == 'FCV':
-            valve = FCValve(name, start_node_name, end_node_name, self._m)
+            valve = FCValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
             valve.setting = setting
         elif valve_type == 'TCV':
-            valve = TCValve(name, start_node_name, end_node_name, self._m)
+            valve = TCValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
             valve.setting = setting
         elif valve_type == 'GPV':
-            valve = GPValve(name, start_node_name, end_node_name, self._m)
+            valve = GPValve(name, start_node_name, end_node_name, self)
             valve.headloss_curve_name = setting
         valve.diameter = diameter
         valve.minor_loss = minor_loss

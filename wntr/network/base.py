@@ -112,8 +112,6 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     """
     def __init__(self, model, name):
-        if not isinstance(model, AbstractModel):
-            raise ValueError('valid model must be passed as first argument')
         self._name = name
         self.head = None
         self.demand = None
@@ -124,12 +122,12 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self.leak_status = False
         self.leak_area = 0.0
         self.leak_discharge_coeff = 0.0
-        self._options = model.options
-        self._node_reg = model.nodes
-        self._link_reg = model.links
-        self._control_reg = model.controls
-        self._pattern_reg = model.patterns
-        self._curve_reg = model.curves
+        self._options = model._options
+        self._node_reg = model._node_reg
+        self._link_reg = model._link_reg
+        self._controls = model._controls
+        self._pattern_reg = model._pattern_reg
+        self._curve_reg = model._curve_reg
         self._coordinates = [0,0]
         self._source = None
 
@@ -220,16 +218,13 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     
     """
     def __init__(self, model, link_name, start_node_name, end_node_name):
-        if not isinstance(model, AbstractModel):
-            raise ValueError('valid model must be passed as first argument')
-
         # Set the registries
-        self._options = model.options
-        self._node_reg = model.nodes
-        self._link_reg = model.links
-        self._control_reg = model.controls
-        self._pattern_reg = model.patterns
-        self._curve_reg = model.curves
+        self._options = model._options
+        self._node_reg = model._node_reg
+        self._link_reg = model._link_reg
+        self._controls = model._controls
+        self._pattern_reg = model._pattern_reg
+        self._curve_reg = model._curve_reg
         # Set the link name
         self._link_name = link_name
         # Set and register the starting node
@@ -412,44 +407,43 @@ class Registry(MutableMapping):
     def __init__(self, model):
         if not isinstance(model, AbstractModel):
             raise ValueError('Registry must be initialized with a model')
-        self._m = model
+#        self._m = model
         self._data = OrderedDict()
         self._usage = OrderedDict()
 
-    @property
-    def _options(self):
-        # Protected access to the model options
-        return self._m.options
+    def _finalize_(self, model):
+        self._options = model._options
+        self._pattern_reg = model._pattern_reg
+        self._curve_reg = model._curve_reg
+        self._node_reg = model._node_reg
+        self._link_reg = model._link_reg
+        self._controls = model._controls
+        self._sources = model._sources
     
-    @property
-    def _patterns(self):
-        # Protected access to the pattern registry
-        return self._m.patterns
-    
-    @property
-    def _curves(self):
-        # Protected access to the curve registry
-        return self._m.curves
-
-    @property
-    def _nodes(self):
-        # Protected access to the node registry
-        return self._m.nodes
-    
-    @property
-    def _links(self):
-        # Protected access to the link registry
-        return self._m.links
-
-    @property
-    def _controls(self):
-        # Protected access to the control registry
-        return self._m.controls
-    
-    @property
-    def _sources(self):
-        # Protected access to the sources dictionary
-        return self._m.sources
+#    @property
+#    def _curves(self):
+#        # Protected access to the curve registry
+#        return self._m.curves
+#
+#    @property
+#    def _nodes(self):
+#        # Protected access to the node registry
+#        return self._m.nodes
+#    
+#    @property
+#    def _links(self):
+#        # Protected access to the link registry
+#        return self._m.links
+#
+#    @property
+#    def _controls(self):
+#        # Protected access to the control registry
+#        return self._m.controls
+#    
+#    @property
+#    def _sources(self):
+#        # Protected access to the sources dictionary
+#        return self._m.sources
 
     def __getitem__(self, key):
         if not key:
@@ -457,7 +451,11 @@ class Registry(MutableMapping):
         try:
             return self._data[key]
         except KeyError:
-            return self._data[str(key)]
+            try:
+                return self._data[key.name]
+            except:
+                return self._data[str(key)]
+            
 
     def __setitem__(self, key, value):
         if not isinstance(key, string_types):

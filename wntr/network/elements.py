@@ -41,7 +41,7 @@ class Junction(Node):
 
     def __init__(self, name, model):
         super(Junction, self).__init__(model, name)
-        self.demand_timeseries_list = Demands(model)
+        self.demand_timeseries_list = Demands(self._pattern_reg)
         self.elevation = 0.0
 
         self.nominal_pressure = 20.0
@@ -1108,7 +1108,7 @@ class TimeSeries(object):
         if isinstance(model, Registry):
             self._pattern_reg = model
         else:
-            self._pattern_reg = model.patterns
+            self._pattern_reg = model._pattern_reg
         self._pattern = pattern_name
         if base is None: base = 0.0
         self._base = base
@@ -1235,9 +1235,9 @@ class Demands(MutableSequence):
     in demand objects or demand tuples as ``(base_demand, pattern, category_name)``
     """
     
-    def __init__(self, model, *args):
+    def __init__(self, patterns, *args):
         self._list = []
-        self._pattern_reg = model.patterns
+        self._pattern_reg = patterns
         for object in args:
             self.append(object)
 
@@ -1528,9 +1528,9 @@ class Source(object):
 #    def __init__(self, name, node_registry, pattern_registry):
     def __init__(self, model, name, node_name, source_type, strength, pattern=None):
         self._strength_timeseries = TimeSeries(model, strength, pattern, name)
-        self._pattern_reg = model.patterns
+        self._pattern_reg = model._pattern_reg
         self._pattern_reg.add_usage(pattern, (name, 'Source'))
-        self._node_reg = model.nodes
+        self._node_reg = model._node_reg
         self._node_reg.add_usage(node_name, (name, 'Source'))
         self.name = name
         self.node_name = node_name
