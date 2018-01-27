@@ -1,7 +1,7 @@
-wntr.network.elements module
+wntr.network.base module
 =====================================
 
-.. automodule:: wntr.network.elements
+.. automodule:: wntr.network.base
     :members:
     :inherited-members:
     :no-undoc-members:

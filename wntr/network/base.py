@@ -31,44 +31,36 @@ class AbstractModel(six.with_metaclass(abc.ABCMeta, object)):
     @property
     @abc.abstractmethod
     def options(self): 
-        """Return the water network options object."""
         raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
     def nodes(self): 
-        """Return the node registry."""
         raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
     def links(self): 
-        """Return the link registry."""
         raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
     def sources(self): 
-        """Return the dictionary of sources."""
         raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
     def patterns(self): 
-        """Return the pattern registry."""
         raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
     def curves(self): 
-        """Return the curve registry."""
         raise NotImplementedError('This is an abstract class')
 
     @property
     @abc.abstractmethod
     def controls(self): 
-        """Return the controls dictionary."""
-        # TODO: Convert to a registry
         raise NotImplementedError('This is an abstract class')
 
 
@@ -100,8 +92,7 @@ class Observer(six.with_metaclass(abc.ABCMeta, object)):
 
 
 class Node(six.with_metaclass(abc.ABCMeta, object)):
-    """
-    Node base class.
+    """Base class for nodes.
 
     Parameters
     -----------
@@ -113,15 +104,15 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     """
     def __init__(self, model, name):
         self._name = name
-        self.head = None
-        self.demand = None
-        self.leak_demand = None
+        self._head = None
+        self._demand = None  
+        self._leak_demand = None
         self._initial_quality = None
         self._tag = None
         self._leak = False
-        self.leak_status = False
-        self.leak_area = 0.0
-        self.leak_discharge_coeff = 0.0
+        self._leak_status = False
+        self._leak_area = 0.0
+        self._leak_discharge_coeff = 0.0
         self._options = model._options
         self._node_reg = model._node_reg
         self._link_reg = model._link_reg
@@ -147,18 +138,66 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         return "<Node '{}'>".format(self._name)
 
     @property
+    def head(self):
+        """float: The current head at the node"""
+        return self._head
+    @head.setter
+    def head(self, value):
+        self._head = value
+
+    @property
+    def demand(self):
+        """float: The current demand at the node"""
+        return self._demand
+    @demand.setter
+    def demand(self, value):
+        self._demand = value
+
+    @property
+    def leak_demand(self):
+        """float: The current demand at the node"""
+        return self._leak_demand
+    @leak_demand.setter
+    def leak_demand(self, value):
+        self._leak_demand = value
+
+    @property
+    def leak_status(self):
+        """bool: The current leak status at the node"""
+        return self._leak_status
+    @leak_status.setter
+    def leak_status(self, value):
+        self._leak_status = value
+
+    @property
+    def leak_area(self):
+        """float: The leak area at the node"""
+        return self._leak_area
+    @leak_area.setter
+    def leak_area(self, value):
+        self._leak_area = value
+
+    @property
+    def leak_discharge_coeff(self):
+        """float: The leak discharge coefficient"""
+        return self._leak_discharge_coeff
+    @leak_discharge_coeff.setter
+    def leak_discharge_coeff(self, value):
+        self._leak_discharge_coeff = value
+
+    @property
     def node_type(self):
-        """The node type (read only)"""
+        """str: The node type"""
         return 'Node'
     
     @property
     def name(self):
-        """The name of the node (read only)"""
+        """str: The name of the node"""
         return self._name
     
     @property
     def tag(self):
-        """A tag or label for this link"""
+        """str: A tag or label for this node"""
         return self._tag
     @tag.setter
     def tag(self, tag):
@@ -166,9 +205,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def initial_quality(self):
-        """The initial quality (concentration) at the node. 
-        
-        Can be a float or list of floats."""
+        """float: The initial quality (concentration) at the node"""
         if not self._initial_quality:
             return 0.0
         return self._initial_quality
@@ -180,7 +217,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def coordinates(self):
-        """The node coordinates, (x,y)"""
+        """tuple: The node coordinates, (x,y)"""
         return self._coordinates
     @coordinates.setter
     def coordinates(self, coordinates):
@@ -279,12 +316,12 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def link_type(self):
-        """The link type (read only)"""
+        """str: The link type"""
         return 'Link'
 
     @property
     def initial_status(self):
-        """The initial status (Opened, Closed, Active) of the Link"""
+        """LinkStatus: The initial status (`Opened`, `Closed`, `Active`) of the Link"""
         return self._initial_status
     @initial_status.setter
     def initial_status(self, status):
@@ -294,7 +331,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         
     @property
     def initial_setting(self):
-        """The initial setting for the link (if Active)"""
+        """float: The initial setting for the link (if `Active`)"""
         return self._initial_setting
     @initial_setting.setter
     def initial_setting(self, setting):
@@ -303,7 +340,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def start_node(self):
-        """The start node object."""
+        """:class:`Node`: The start node object."""
         return self._start_node
     @start_node.setter
     def start_node(self, name):
@@ -313,7 +350,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def end_node(self):
-        """The end node object."""
+        """:class:`Node`: The end node object."""
         return self._end_node
     @end_node.setter
     def end_node(self, name):
@@ -323,28 +360,28 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def start_node_name(self):
-        """The name of the start node (read only)"""
+        """str: The name of the start node (read only)"""
         return self._start_node.name
     
     @property
     def end_node_name(self):
-        """The name of the end node (read only)"""
+        """str: The name of the end node (read only)"""
         return self._end_node.name
 
     @property
     def name(self):
-        """The link name (read-only)"""
+        """str: The link name (read-only)"""
         return self._link_name
 
     @property
     def flow(self):
-        """Current flow through the link (read only)"""
+        """float: Current flow through the link (read only)"""
         return self._flow
     
     @property
     @abc.abstractmethod
     def status(self):
-        """Current status of the link"""
+        """:class:`LinkStatus`: Current status of the link"""
         pass
     @status.setter
     @abc.abstractmethod
@@ -353,7 +390,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     
     @property
     def setting(self):
-        """The current setting of the link"""
+        """float: The current setting of the link"""
         return self._setting
     @setting.setter
     def setting(self, setting):
@@ -361,7 +398,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     
     @property
     def tag(self):
-        """A tag or label for this link"""
+        """str: A tag or label for this link"""
         return self._tag
     @tag.setter
     def tag(self, tag):
@@ -487,10 +524,27 @@ class Registry(MutableMapping):
             yield key, value
 
     def usage(self):
+        """Generator to get the usage for all objects in the registry
+        
+        Yields
+        ------
+        key : str
+            The name of the object in the registry
+        value : tuple of (str, str)
+            Tuple of (name, typestr) of the external items using the object
+        """
         for k, v in self._usage.items():
             yield k, v
         
     def get_usage(self, key):
+        """Get a set of items using an object by key.
+        
+        Returns
+        -------
+        set of 2-tuples
+            Set of (name, typestr) of the external object using the item
+            
+        """
         try:
             return self._usage[key]
         except KeyError:
@@ -501,11 +555,38 @@ class Registry(MutableMapping):
         return None
 
     def orphaned(self):
+        """Get a list of orphaned usages.
+        
+        If removed without appropriate checks, it is possible that a some other 
+        item will point to an object that has been deleted. (This is why the user
+        should always use the "remove_*" methods). This method returns a list of 
+        names for objects that are referened, but no longer exist.
+        
+        Returns
+        -------
+        set
+            The names of any orphaned items
+        
+        """
         defined = set(self._data.keys())
         assigned = set(self._usage.keys())
         return assigned.difference(defined)
     
     def unused(self):
+        """Get a list of items which are unused by other objects in the model.
+        
+        In most cases, this method will give little information. For nodes, however,
+        this method could be important to identify a node which has become completely 
+        disconnected from the network. For patterns or curves, it may be used to find
+        extra patterns or curves that are no longer necessary (or which the user 
+        forgot ot assign). It is not terribly useful for links.
+        
+        Returns
+        -------
+        set
+            The names of any unused objects in the registry
+            
+        """
         defined = set(self._data.keys())
         assigned = set(self._usage.keys())
         return defined.difference(assigned)
@@ -535,6 +616,7 @@ class Registry(MutableMapping):
             self._usage.pop(key)
             
     def tostring(self):
+        """Provide a formatted string representation of the registry"""
         s = 'Registry: {}\n'.format(self.__class__.__name__)
         s += '  Total entries defined: {}\n'.format(len(self._data))
         s += '  Total registered as used: {}\n'.format(len(self._usage))
@@ -543,12 +625,14 @@ class Registry(MutableMapping):
         return s
         
     def todict(self):
+        """Create a dictionary representation of the registry's contents"""
         d = dict()
         for k, v in self._data.items():
             d[k] = v.todict()
         return d
     
     def tolist(self):
+        """Create a list representation of the registry's contents"""
         l = list()
         for k, v in self._data.items():
             l.append(v.todict())
