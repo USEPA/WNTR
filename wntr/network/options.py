@@ -573,21 +573,28 @@ class QualityOptions(object):
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
-        ###  self.units == other.units and \
-        if self.mode == other.mode and \
-           self.trace_node == other.trace_node and \
-           self.wq_units == other.wq_units and \
-           self.chemical_name == other.chemical_name and \
-           abs(self.diffusivity - other.diffusivity)<1e-9 and \
-           abs(self.bulk_rxn_order - other.bulk_rxn_order)<1e-9 and \
-           abs(self.wall_rxn_order - other.wall_rxn_order)<1e-9 and \
-           abs(self.tank_rxn_order - other.tank_rxn_order)<1e-9 and \
-           abs(self.bulk_rxn_coeff - other.bulk_rxn_coeff)<1e-9 and \
-           abs(self.wall_rxn_coeff - other.wall_rxn_coeff)<1e-9 and \
-           abs(self.limiting_potential - other.limiting_potential)<1e-9 and \
-           abs(self.roughness_correl - other.roughness_correl)<1e-9:
-               return True
-        return False
+        if self.mode != other.mode and \
+           self.trace_node != other.trace_node and \
+           self.wq_units != other.wq_units and \
+           self.chemical_name != other.chemical_name and \
+           abs(self.diffusivity - other.diffusivity)>1e-9 and \
+           abs(self.bulk_rxn_order - other.bulk_rxn_order)>1e-9 and \
+           abs(self.wall_rxn_order - other.wall_rxn_order)>1e-9 and \
+           abs(self.tank_rxn_order - other.tank_rxn_order)>1e-9 and \
+           abs(self.bulk_rxn_coeff - other.bulk_rxn_coeff)>1e-9 and \
+           abs(self.wall_rxn_coeff - other.wall_rxn_coeff)>1e-9:
+               return False
+        if self.limiting_potential and other.limiting_potential:
+            if abs(self.limiting_potential - other.limiting_potential)>1e-9:
+                return False
+        if self.limiting_potential or other.limiting_potential:
+            return False
+        if self.roughness_correl and other.roughness_correl:
+            if abs(self.roughness_correl - other.roughness_correl)>1e-9:
+                return False
+        if self.roughness_correl or other.roughness_correl:
+            return False
+        return True
 
     def __ne__(self, other):
         return not self == other
@@ -633,12 +640,16 @@ class EnergyOptions(object):
         if not type(self) == type(other):
             return False
         ###  self.units == other.units and \
-        if abs(self.global_price - other.global_price)<1e-9 and \
-           self.global_pattern == other.global_pattern and \
-           abs(self.global_efficiency - other.global_efficiency)<1e-9 and \
-           abs(self.demand_charge - other.demand_charge)<1e-9:
-               return True
-        return False
+        if abs(self.global_price - other.global_price)>1e-9 and \
+           self.global_pattern != other.global_pattern and \
+           abs(self.global_efficiency - other.global_efficiency)>1e-9:
+               return False
+        if self.demand_charge and other.demand_charge:
+            if abs(self.demand_charge - other.demand_charge)>1e-9:
+               return False
+        if self.demand_charge and other.demand_charge:
+            return False
+        return True
 
     def __ne__(self, other):
         return not self == other
