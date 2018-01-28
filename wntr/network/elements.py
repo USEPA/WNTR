@@ -41,7 +41,7 @@ class Junction(Node):
 
     def __init__(self, name, model):
         super(Junction, self).__init__(model, name)
-        self.demand_timeseries_list = Demands(model)
+        self.demand_timeseries_list = Demands(self._pattern_reg)
         self.elevation = 0.0
 
         self.nominal_pressure = 20.0
@@ -77,10 +77,23 @@ class Junction(Node):
     
     @property
     def node_type(self):
-        """Returns the node type"""
+        # Docstring inherited
         return 'Junction'
 
     def add_demand(self, base, pattern_name, category=None):
+        """Add a new demand entry to the Junction.
+        
+        Parameters
+        ----------
+        base : float
+            The base demand value for this new entry
+        pattern_name : str, DefaultDmand, or None
+            The name of the pattern to use; a DefaultDeamnd object to use the default
+            pattern; or ``None`` for a constant value
+        category : str, optional
+            A category name for this demand
+        
+        """
         if pattern_name is not None:
             self._pattern_reg.add_usage(pattern_name, (self.name, 'Junction'))
         self.demand_timeseries_list.append((base, pattern_name, category))
@@ -225,6 +238,7 @@ class Tank(Node):
     
     @property
     def init_level(self):
+        """The initial tank level at the start of simulation"""
         return self._init_level
     @init_level.setter
     def init_level(self, value):
@@ -233,15 +247,17 @@ class Tank(Node):
 
     @property
     def node_type(self):
+        # Docstring inherited
         return 'Tank'
 
     @property
     def vol_curve(self):
+        """The volume curve, if defined"""
         return self._curve_reg[self._vol_curve_name]
 
     @property
     def vol_curve_name(self):
-        """Name of the volume to use, or None"""
+        """Name of the volume curve to use, or None"""
         return self._vol_curve_name
     @vol_curve_name.setter
     def vol_curve_name(self, name):
@@ -353,7 +369,7 @@ class Reservoir(Node):
     """
     def __init__(self, name, model, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(model, name)
-        self._head_timeseries = TimeSeries(model, base_head)
+        self._head_timeseries = TimeSeries(model._pattern_reg, base_head)
         self.head_pattern_name = head_pattern
 
     def __repr__(self):
@@ -368,14 +384,17 @@ class Reservoir(Node):
 
     @property
     def node_type(self):
+        # Docstring inherited
         return 'Reservoir'
 
     @property
     def head_timeseries(self):
+        """The head timeseries for the reservoir"""
         return self._head_timeseries
 
     @property
     def base_head(self):
+        """The constant head (elevation) for the reservoir, or the base value for a head timeseries"""
         return self._head_timeseries.base_value
     @base_head.setter
     def base_head(self, value):
@@ -383,6 +402,7 @@ class Reservoir(Node):
 
     @property
     def head_pattern_name(self):
+        """The name of the multiplier pattern to use for the head timeseries"""
         return self._head_timeseries.pattern_name
     @head_pattern_name.setter
     def head_pattern_name(self, name):
@@ -456,15 +476,16 @@ class Pipe(Link):
 
     @property
     def link_type(self):
+        # Docstring inherited
         return 'Pipe'
     
     @property
     def status(self):
+        """The current status of the pipe"""
         if self._internal_status == LinkStatus.Closed:
             return LinkStatus.Closed
         else:
             return self._user_status
-
     @status.setter
     def status(self, status):
         self._user_status = status
@@ -508,7 +529,7 @@ class Pump(Link):
 
     def __init__(self, name, start_node_name, end_node_name, model):
         super(Pump, self).__init__(model, name, start_node_name, end_node_name)
-        self._speed_timeseries = TimeSeries(model, 1.0)
+        self._speed_timeseries = TimeSeries(model._pattern_reg, 1.0)
         self._base_power = None
         self._pump_curve_name = None
         self.efficiency = None
@@ -523,19 +544,20 @@ class Pump(Link):
    
     @property
     def status(self):
+        """The current status of the pump"""
         if self._internal_status == LinkStatus.Closed:
             return LinkStatus.Closed
         elif self._power_outage == LinkStatus.Closed:
             return LinkStatus.Closed
         else:
             return self._user_status
-
     @status.setter
     def status(self, status):
         self._user_status = status
 
     @property
     def link_type(self):
+        # Docstring inherited
         return 'Pump'
 
     @property
@@ -795,7 +817,7 @@ class Valve(Link):
         self._initial_setting = 0.0
 
     def __repr__(self):
-        fmt = "<Pump '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>"
+        fmt = "<Valve '{}' from '{}' to '{}', valve_type='{}', diameter={}, minor_loss={}, setting={}, status={}>"
         return fmt.format(self._link_name,
                           self.start_node, self.end_node, self.__class__.__name__,
                           self.diameter, 
@@ -1108,7 +1130,7 @@ class TimeSeries(object):
         if isinstance(model, Registry):
             self._pattern_reg = model
         else:
-            self._pattern_reg = model.patterns
+            raise ValueError('Must pass in a pattern registry')
         self._pattern = pattern_name
         if base is None: base = 0.0
         self._base = base
@@ -1235,9 +1257,9 @@ class Demands(MutableSequence):
     in demand objects or demand tuples as ``(base_demand, pattern, category_name)``
     """
     
-    def __init__(self, model, *args):
+    def __init__(self, patterns, *args):
         self._list = []
-        self._pattern_reg = model.patterns
+        self._pattern_reg = patterns
         for object in args:
             self.append(object)
 
@@ -1404,7 +1426,7 @@ class Curve(object):
                  original_units=None, current_units='SI', options=None):
         self._name = name
         self._curve_type = curve_type
-        self._points = points
+        self._points = list(points)
         self._options = options
         self._original_units = None
         self._current_units = 'SI'
@@ -1527,10 +1549,10 @@ class Source(object):
 
 #    def __init__(self, name, node_registry, pattern_registry):
     def __init__(self, model, name, node_name, source_type, strength, pattern=None):
-        self._strength_timeseries = TimeSeries(model, strength, pattern, name)
-        self._pattern_reg = model.patterns
+        self._strength_timeseries = TimeSeries(model._pattern_reg, strength, pattern, name)
+        self._pattern_reg = model._pattern_reg
         self._pattern_reg.add_usage(pattern, (name, 'Source'))
-        self._node_reg = model.nodes
+        self._node_reg = model._node_reg
         self._node_reg.add_usage(node_name, (name, 'Source'))
         self.name = name
         self.node_name = node_name

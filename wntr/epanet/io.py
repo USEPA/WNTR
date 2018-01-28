@@ -20,6 +20,7 @@ import re
 import io
 import os, sys
 import logging
+import six
 import warnings
 import numpy as np
 import pandas as pd
@@ -64,7 +65,7 @@ _TANK_LABEL = '{:21s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
 _PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:12.12g} {diam:12.12g} {rough:12.12g} {mloss:12.12g} {status:>20s} {com:>3s}\n'
 _PIPE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
 
-_PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {speed_keyword:8s} {speed:12.12g} {com:>3s}\n'
+_PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:>3s}\n'
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
 _VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:12.12g} {vtype:4s} {set:12.12g} {mloss:12.12g} {com:>3s}\n'
@@ -465,7 +466,7 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_junctions(self):
-        try:
+#        try:
             for lnum, line in self.sections['[JUNCTIONS]']:
                 line = line.split(';')[0]
                 current = line.split()
@@ -485,9 +486,9 @@ class InpFile(object):
                                 pat,
                                 to_si(self.flow_units, float(current[1]), HydParam.Elevation),
                                 demand_category='EN2 base')
-        except Exception as e:
-            print(line)
-            raise e
+#        except Exception as e:
+#            print(line)
+#            raise e
 
     def _write_junctions(self, f, wn):
         f.write('[JUNCTIONS]\n'.encode('ascii'))
@@ -713,8 +714,8 @@ class InpFile(object):
                  'node2': pump.end_node_name,
                  'ptype': pump.pump_type,
                  'params': '',
-                 'speed_keyword': 'SPEED',
-                 'speed': pump.speed_timeseries.base_value,
+#                 'speed_keyword': 'SPEED',
+#                 'speed': pump.speed_timeseries.base_value,
                  'com': ';'}
             if pump.pump_type == 'HEAD':
                 E['params'] = pump.pump_curve_name
@@ -723,6 +724,11 @@ class InpFile(object):
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
             tmp_entry = _PUMP_ENTRY
+            if True: #  pump.speed_timeseries.base_value != 1:
+                E['speed_keyword'] = 'SPEED'
+                E['speed'] = pump.speed_timeseries.base_value
+                tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
+                             ' {speed_keyword:8s} {speed:12.12g} {com:>3s}\n')
             if pump.speed_timeseries.pattern is not None:
                 tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
                              ' {pattern_keyword:10s} {pattern:20s} {com:>3s}\n')
@@ -1876,7 +1882,7 @@ class InpFile(object):
 
     def _write_coordinates(self, f, wn):
         f.write('[COORDINATES]\n'.encode('ascii'))
-        entry = '{:10s} {:g} {:g}\n'
+        entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Node', 'X-Coord', 'Y-Coord').encode('ascii'))
         for name, node in wn.nodes():
@@ -1899,7 +1905,7 @@ class InpFile(object):
 
     def _write_vertices(self, f, wn):
         f.write('[VERTICES]\n'.encode('ascii'))
-        entry = '{:10s} {:10g} {:10g}\n'
+        entry = '{:10s} {:20.9f} {:20.9f}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';Link', 'X-Coord', 'Y-Coord').encode('ascii'))
         lnames = list(wn.pipe_name_list)
@@ -1991,8 +1997,8 @@ class InpFile(object):
             curve_points = []
             if curve_name not in self.wn.curve_name_list or self.wn.get_curve(curve_name) is None:
                 for point in self.curves[curve_name]:
-                    x = to_si(self.flow_units, point[0], HydParam.Flow)
-                    y = to_si(self.flow_units, point[1], HydParam.HydraulicHead)
+                    x = point[0]
+                    y = point[1]
                     curve_points.append((x,y))
                 self.wn.add_curve(curve_name, None, curve_points)
             curve = self.wn.get_curve(curve_name)
@@ -2084,7 +2090,13 @@ class _EpanetRule(object):
                 value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
-            clause = fmt.format(prefix, condition._source_obj.__class__.__name__,
+            if isinstance(condition._source_obj, Valve):
+                cls = 'Valve'
+            elif isinstance(condition._source_obj, Pump):
+                cls = 'Pump'
+            else:
+                cls = condition._source_obj.__class__.__name__
+            clause = fmt.format(prefix, cls,
                                 condition._source_obj.name, condition._source_attr,
                                 condition._relation.symbol, value)
             self.add_if(clause)
@@ -2122,7 +2134,13 @@ class _EpanetRule(object):
                 value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
-            clause = fmt.format(prefix, action.target()[0].__class__.__name__,
+            if isinstance(action.target()[0], Valve):
+                cls = 'Valve'
+            elif isinstance(action.target()[0], Pump):
+                cls = 'Pump'
+            else:
+                cls = action.target()[0].__class__.__name__
+            clause = fmt.format(prefix, cls,
                                 action.target()[0].name, action.target()[1],
                                 value)
             self.add_then(clause)
@@ -2158,7 +2176,13 @@ class _EpanetRule(object):
                 value = '{:.6g}'.format(value)
             else: # status
                 value = val_si
-            clause = fmt.format(prefix, action.target()[0].__class__.__name__,
+            if isinstance(action.target()[0], Valve):
+                cls = 'Valve'
+            elif isinstance(action.target()[0], Pump):
+                cls = 'Pump'
+            else:
+                cls = action.target()[0].__class__.__name__
+            clause = fmt.format(prefix, cls,
                                 action.target()[0].name, action.target()[1],
                                 value)
             self.add_else(clause)
@@ -2833,14 +2857,15 @@ def _convert_line(line):
     tmp = []
     for i in line:
         if '.' in i:
-            if "".join(i.split('.')).isnumeric():
+            try:
                 tmp.append(float(i))
-            else:
+            except:
                 tmp.append(i)
-        elif i.isnumeric():
-            tmp.append(int(i))
         else:
-            tmp.append(i)
+            try:
+                tmp.append(int(i))
+            except:
+                tmp.append(i)
     return tmp
 
 
