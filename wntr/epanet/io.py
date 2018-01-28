@@ -466,7 +466,7 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_junctions(self):
-        try:
+#        try:
             for lnum, line in self.sections['[JUNCTIONS]']:
                 line = line.split(';')[0]
                 current = line.split()
@@ -486,9 +486,9 @@ class InpFile(object):
                                 pat,
                                 to_si(self.flow_units, float(current[1]), HydParam.Elevation),
                                 demand_category='EN2 base')
-        except Exception as e:
-            print(line)
-            raise e
+#        except Exception as e:
+#            print(line)
+#            raise e
 
     def _write_junctions(self, f, wn):
         f.write('[JUNCTIONS]\n'.encode('ascii'))
@@ -724,9 +724,9 @@ class InpFile(object):
             else:
                 raise RuntimeError('Only head or power info is supported of pumps.')
             tmp_entry = _PUMP_ENTRY
-            if pump.speed_timeseries.base_value != 1:
-                E['speed_keyword'] = pump.speed_timeseries.base_value;
-                E['speed'] = 'SPEED'                    
+            if True: #  pump.speed_timeseries.base_value != 1:
+                E['speed_keyword'] = 'SPEED'
+                E['speed'] = pump.speed_timeseries.base_value
                 tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
                              ' {speed_keyword:8s} {speed:12.12g} {com:>3s}\n')
             if pump.speed_timeseries.pattern is not None:

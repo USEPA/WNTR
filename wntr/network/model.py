@@ -58,6 +58,11 @@ class WaterNetworkModel(AbstractModel):
         self._controls = OrderedDict()
         self._sources = OrderedDict()
 
+        self._node_reg._finalize_(self)
+        self._link_reg._finalize_(self)
+        self._pattern_reg._finalize_(self)
+        self._curve_reg._finalize_(self)
+
         # Name of pipes that are check valves
         self._check_valves = []
 
@@ -78,6 +83,7 @@ class WaterNetworkModel(AbstractModel):
         self._prev_sim_time = None  # the last time at which results were accepted
     
     def _compare(self, other):
+        """Comare the details of two models"""
         if self.num_junctions  != other.num_junctions  or \
            self.num_reservoirs != other.num_reservoirs or \
            self.num_tanks      != other.num_tanks      or \
@@ -105,6 +111,7 @@ class WaterNetworkModel(AbstractModel):
         return True
     
     def _sec_to_string(self, sec):
+        """Convert seconds to a time tuple"""
         hours = int(sec/3600.)
         sec -= hours*3600
         mm = int(sec/60.)
@@ -140,24 +147,65 @@ class WaterNetworkModel(AbstractModel):
 
     @property
     def _clock_day(self):
+        """Return the clock-time day of the simulation"""
         return int(self.shifted_time / 86400)
 
     ### # 
     ### Iteratable attributes
     @property
-    def options(self): return self._options
+    def options(self): 
+        """The model's options object
+        
+        Returns
+        -------
+        WaterNetworkOptions
+        
+        """
+        return self._options
     
     @property
-    def nodes(self): return self._node_reg
+    def nodes(self): 
+        """The node registry (as property) or a generator for iteration (as function call)
+        
+        Returns
+        -------
+        NodeRegistry
+        
+        """
+        return self._node_reg
     
     @property
-    def links(self): return self._link_reg
+    def links(self): 
+        """The link registry (as property) or a generator for iteration (as function call)
+        
+        Returns
+        -------
+        LinkRegistry
+        
+        """
+        return self._link_reg
     
     @property
-    def patterns(self): return self._pattern_reg
+    def patterns(self): 
+        """The pattern registry (as property) or a generator for iteration (as function call)
+
+        Returns
+        -------
+        PatternRegistry
+
+        """
+        return self._pattern_reg
     
     @property
-    def curves(self): return self._curve_reg
+    def curves(self): 
+        """The curve registry (as property) or a generator for iteration (as function call).
+        
+        Returns
+        -------
+        CurveRegistry        
+        
+        """
+        return self._curve_reg
     
     def sources(self):
         """
@@ -184,53 +232,73 @@ class WaterNetworkModel(AbstractModel):
     ### # 
     ### Element iterators
     @property
-    def junctions(self): return self._node_reg.junctions
+    def junctions(self): 
+        """Iterator over all junctions"""
+        return self._node_reg.junctions
     
     @property
-    def tanks(self): return self._node_reg.tanks
+    def tanks(self): 
+        """Iterator over all tanks"""
+        return self._node_reg.tanks
     
     @property
-    def reservoirs(self): return self._node_reg.reservoirs
+    def reservoirs(self): 
+        """Iterator over all reservoirs"""        
+        return self._node_reg.reservoirs
     
     @property
-    def pipes(self): return self._link_reg.pipes
+    def pipes(self): 
+        """Iterator over all pipes"""        
+        return self._link_reg.pipes
     
     @property
-    def pumps(self): return self._link_reg.pumps
+    def pumps(self): 
+        """Iterator over all pumps"""        
+        return self._link_reg.pumps
     
     @property
-    def valves(self): return self._link_reg.valves
+    def valves(self): 
+        """Iterator over all valves"""        
+        return self._link_reg.valves
 
     @property
     def head_pumps(self):
+        """Iterator over all head-beased pumps"""
         return self._link_reg.head_pumps
 
     @property
     def power_pumps(self):
+        """Iterator over all power pumps"""
         return self._link_reg.power_pumps
 
     @property
     def prvs(self):
+        """Iterator over all pressure reducing valves (PRVs)"""        
         return self._link_reg.prvs
 
     @property
     def psvs(self):
+        """Iterator over all pressure sustaining valves (PSVs)"""        
         return self._link_reg.psvs
 
     @property
     def pbvs(self):
+        """Iterator over all pressure breaker valves (PBVs)"""        
         return self._link_reg.pbvs
 
     @property
     def tcvs(self):
+        """Iterator over all throttle control valves (TCVs)"""        
         return self._link_reg.tcvs
 
     @property
     def fcvs(self):
+        """Iterator over all flow control valves (FCVs)"""        
         return self._link_reg.fcvs
 
     @property
     def gpvs(self):
+        """Iterator over all general purpose valves (GPVs)"""        
         return self._link_reg.gpvs
     
     """
@@ -603,27 +671,93 @@ class WaterNetworkModel(AbstractModel):
     ### # 
     ### Get elements from the model
     def get_node(self, name): 
-        """"""
+        """Get a specific node
+        
+        Parameters
+        ----------
+        name : str
+            The node name
+            
+        Returns
+        -------
+        Junction, Tank, or Reservoir
+        
+        """
         return self._node_reg[name]
     
     def get_link(self, name): 
-        """"""
+        """Get a specific link
+        
+        Parameters
+        ----------
+        name : str
+            The link name
+            
+        Returns
+        -------
+        Pipe, Pump, or Valve
+        
+        """
         return self._link_reg[name]
     
     def get_pattern(self, name): 
-        """"""
+        """Get a specific pattern
+        
+        Parameters
+        ----------
+        name : str
+            The pattern name
+            
+        Returns
+        -------
+        Pattern
+        
+        """
         return self._pattern_reg[name]
     
     def get_curve(self, name): 
-        """"""
+        """Get a specific curve
+        
+        Parameters
+        ----------
+        name : str
+            The curve name
+            
+        Returns
+        -------
+        Curve
+        
+        """
         return self._curve_reg[name]
     
     def get_source(self, name):
-        """"""
+        """Get a specific source
+        
+        Parameters
+        ----------
+        name : str
+            The sourve name
+            
+        Returns
+        -------
+        Source
+        
+        """
         return self._sources[name]
     
     def get_control(self, name): 
-        """"""
+        """Get a specific control
+        
+        Parameters
+        ----------
+        name : str
+            The control name
+            
+        Returns
+        -------
+        Control
+        
+        """
         return self._controls[name]
     
     ### # 
@@ -814,134 +948,216 @@ class WaterNetworkModel(AbstractModel):
     ### Name lists
     @property
     def node_name_list(self): 
-        """"""
+        """Get a list of node names
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._node_reg.keys())
 
     @property
     def junction_name_list(self): 
-        """"""
+        """Get a list of junction names
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._node_reg.junction_names)
 
     @property
     def tank_name_list(self): 
-        """"""
+        """Get a list of tanks names
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._node_reg.tank_names)
 
     @property
     def reservoir_name_list(self): 
-        """"""
+        """Get a list of reservoir names
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._node_reg.reservoir_names)
 
     @property
     def link_name_list(self): 
-        """"""
+        """Get a list of link names
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._link_reg.keys())
 
     @property
     def pipe_name_list(self): 
-        """"""
+        """Get a list of pipe names
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._link_reg.pipe_names)
 
     @property
     def pump_name_list(self): 
-        """"""
+        """Get a list of pump names (both types included)
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._link_reg.pump_names)
 
     @property
     def valve_name_list(self): 
-        """"""
+        """Get a list of valve names (all types included)
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._link_reg.valve_names)
 
     @property
     def pattern_name_list(self): 
-        """"""
+        """Get a list of pattern names
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._pattern_reg.keys())
 
     @property
     def curve_name_list(self): 
-        """"""
+        """Get a list of curve names
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._curve_reg.keys())
 
     @property
     def source_name_list(self): 
-        """"""
+        """Get a list of source names
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._sources.keys())
 
     @property
     def control_name_list(self): 
-        """"""
+        """Get a list of control/rule names
+        
+        Returns
+        -------
+        list of strings
+        
+        """
         return list(self._controls.keys())
     
     ### # 
     ### Counts
     @property
     def num_nodes(self): 
-        """"""
+        """The number of nodes"""
         return len(self._node_reg)
     
     @property
     def num_junctions(self): 
-        """"""
+        """The number of junctions"""
         return len(self._node_reg.junction_names)
     
     @property
     def num_tanks(self): 
-        """"""
+        """The number of tanks"""
         return len(self._node_reg.tank_names)
     
     @property
     def num_reservoirs(self): 
-        """"""
+        """The number of reservoirs"""
         return len(self._node_reg.reservoir_names)
     
     @property
     def num_links(self): 
-        """"""
+        """The number of links"""
         return len(self._link_reg)
     
     @property
     def num_pipes(self): 
-        """"""
+        """The number of pipes"""
         return len(self._link_reg.pipe_names)
     
     @property
     def num_pumps(self): 
-        """"""
+        """The number of pumps"""
         return len(self._link_reg.pump_names)
     
     @property
     def num_valves(self): 
-        """"""
+        """The number of valves"""
         return len(self._link_reg.valve_names)
     
     @property
     def num_patterns(self): 
-        """"""
+        """The number of patterns"""
         return len(self._pattern_reg)
     
     @property
     def num_curves(self): 
-        """"""
+        """The number of curves"""
         return len(self._curve_reg)
     
     @property
     def num_sources(self): 
-        """"""
+        """The number of sources"""
         return len(self._sources)
     
     @property
     def num_controls(self): 
-        """"""
-        return len(self._control_reg)
+        """The number of controls"""
+        return len(self._controls)
     
     ### #
     ### Helper functions
     def todict(self):
+        """Create a dictionary representation of the model.
+        
+        This method is useful for passing between software where pickling is not an option.
+        It also can be used as input to create a JSON or YAML representation of the model.
+        
+        Returns
+        -------
+        dict
+        
+        """
         d = dict(options=self._options.todict(),
                  nodes=self._node_reg.tolist(),
                  links=self._link_reg.tolist(),
                  curves=self._curve_reg.tolist(),
-                 controls=self._control_reg.todict(),
+                 controls=self._controls,
                  patterns=self._pattern_reg.tolist()
                  )
         return d
@@ -1524,11 +1740,12 @@ class WaterNetworkModel(AbstractModel):
 
 class PatternRegistry(Registry):
 
-    @property
-    def _patterns(self):
-        raise UnboundLocalError('registries are not reentrant')
+    def _finalize_(self, model):
+        super(self.__class__, self)._finalize_(model)
+        self._pattern_reg = None
 
     class DefaultPattern(object):
+        """An object that always points to the current default pattern for a model"""
         def __init__(self, options):
             self._options = options
         
@@ -1540,6 +1757,7 @@ class PatternRegistry(Registry):
         
         @property
         def name(self):
+            """The name of the default pattern, or ``None`` if no pattern is assigned"""
             return str(self._options.hydraulic.pattern) if self._options.hydraulic.pattern is not None else ''
 
     def __getitem__(self, key):
@@ -1593,7 +1811,8 @@ class PatternRegistry(Registry):
     
     @property
     def default_pattern(self):
-        return self.DefaultPattern(self._m.options)
+        """A new default pattern object"""
+        return self.DefaultPattern(self._options)
     
     def tostring(self):
         s  = 'Pattern Registry:\n'
@@ -1614,9 +1833,9 @@ class CurveRegistry(Registry):
         self._headloss_curves = OrderedSet()
         self._volume_curves = OrderedSet()
 
-    @property
-    def _curves(self):
-        raise UnboundLocalError('registries are not reentrant')
+    def _finalize_(self, model):
+        super(self.__class__, self)._finalize_(model)
+        self._curve_reg = None
 
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
@@ -1659,6 +1878,16 @@ class CurveRegistry(Registry):
         self[name] = curve
         
     def untyped_curves(self):
+        """Generator to get all curves without type
+        
+        Yields
+        ------
+        name : str
+            The name of the curve
+        curve : Curve
+            The untyped curve object    
+            
+        """
         defined = set(self._data.keys())
         untyped = defined.difference(self._pump_curves, self._efficiency_curves, 
                                      self._headloss_curves, self._volume_curves)
@@ -1667,41 +1896,86 @@ class CurveRegistry(Registry):
 
     @property    
     def untyped_curve_names(self):
+        """List of names of all curves without types"""
         defined = set(self._data.keys())
         untyped = defined.difference(self._pump_curves, self._efficiency_curves, 
                                      self._headloss_curves, self._volume_curves)
         return list(untyped)
 
     def pump_curves(self):
+        """Generator to get all pump curves
+        
+        Yields
+        ------
+        name : str
+            The name of the curve
+        curve : Curve
+            The pump curve object    
+            
+        """
         for key in self._pump_curves:
             yield key, self._data[key]
     
     @property
     def pump_curve_names(self):
+        """List of names of all pump curves"""
         return list(self._pump_curves)
 
     def efficiency_curves(self):
+        """Generator to get all efficiency curves
+        
+        Yields
+        ------
+        name : str
+            The name of the curve
+        curve : Curve
+            The efficiency curve object    
+            
+        """
         for key in self._efficiency_curves:
             yield key, self._data[key]
 
     @property
     def efficiency_curve_names(self):
+        """List of names of all efficiency curves"""
         return list(self._efficiency_curves)
 
     def headloss_curves(self):
+        """Generator to get all headloss curves
+        
+        Yields
+        ------
+        name : str
+            The name of the curve
+        curve : Curve
+            The headloss curve object    
+            
+        """
         for key in self._headloss_curves:
             yield key, self._data[key]
 
     @property
     def headloss_curve_names(self):
+        """List of names of all headloss curves"""
         return list(self._headloss_curves)
 
     def volume_curves(self):
+        """Generator to get all volume curves
+        
+        Yields
+        ------
+        name : str
+            The name of the curve
+        curve : Curve
+            The volume curve object    
+            
+        """
         for key in self._volume_curves:
             yield key, self._data[key]
     
     @property
     def volume_curve_names(self):
+        """List of names of all volume curves"""
         return list(self._volume_curves)
 
     def tostring(self):
@@ -1721,9 +1995,10 @@ class CurveRegistry(Registry):
 
 
 class SourceRegistry(Registry):
-    @property
-    def _sources(self):
-        raise UnboundLocalError('registries are not reentrant')
+    """A registry for sources"""
+    def _finalize_(self, model):
+        super(self.__class__, self)._finalize_(model)
+        self._sources = None
 
     def __delitem__(self, key):
         try:
@@ -1735,24 +2010,24 @@ class SourceRegistry(Registry):
             elif key in self._usage:
                 self._usage.pop(key)
             source = self._data.pop(key)
-            self._patterns.remove_usage(source.strength_timeseries.pattern_name, (source.name, 'Source'))
-            self._nodes.remove_usage(source.node_name, (source.name, 'Source'))            
+            self._pattern_reg.remove_usage(source.strength_timeseries.pattern_name, (source.name, 'Source'))
+            self._node_reg.remove_usage(source.node_name, (source.name, 'Source'))            
             return source
         except KeyError:
             # Do not raise an exception if there is no key of that name
             return
 
 class NodeRegistry(Registry):
-
+    """The registry containing the model's nodes"""
     def __init__(self, model):
         super(NodeRegistry, self).__init__(model)
         self._junctions = OrderedSet()
         self._reservoirs = OrderedSet()
         self._tanks = OrderedSet()
     
-    @property
-    def _nodes(self):
-        raise UnboundLocalError('registries are not reentrant')
+    def _finalize_(self, model):
+        super(self.__class__, self)._finalize_(model)
+        self._node_reg = None
     
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
@@ -1781,11 +2056,11 @@ class NodeRegistry(Registry):
             if isinstance(node, Junction):
                 for pat_name in node.demand_timeseries_list.pattern_list():
                     if pat_name:
-                        self._curves.remove_usage(pat_name, (node.name, 'Junction'))
+                        self._curve_reg.remove_usage(pat_name, (node.name, 'Junction'))
             if isinstance(node, Reservoir) and node.head_pattern_name:
-                self._curves.remove_usage(node.head_pattern_name, (node.name, 'Reservoir'))
+                self._curve_reg.remove_usage(node.head_pattern_name, (node.name, 'Reservoir'))
             if isinstance(node, Tank) and node.vol_curve_name:
-                self._curves.remove_usage(node.vol_curve_name, (node.name, 'Tank'))
+                self._curve_reg.remove_usage(node.vol_curve_name, (node.name, 'Tank'))
             return node
         except KeyError:
             return 
@@ -1845,7 +2120,7 @@ class NodeRegistry(Registry):
         """
         base_demand = float(base_demand)
         elevation = float(elevation)
-        junction = Junction(name, self._m)
+        junction = Junction(name, self)
         junction.elevation = elevation
 #        if base_demand:
         junction.add_demand(base_demand, demand_pattern, demand_category)
@@ -1899,7 +2174,7 @@ class NodeRegistry(Registry):
             raise ValueError("Initial tank level must be less than or equal to the tank maximum level.")
         if vol_curve and not isinstance(vol_curve, six.string_types):
             raise ValueError('Volume curve name must be a string')
-        tank = Tank(name, self._m)
+        tank = Tank(name, self)
         tank.elevation = elevation
         tank.init_level = init_level
         tank.min_level = min_level
@@ -1930,7 +2205,7 @@ class NodeRegistry(Registry):
         base_head = float(base_head)
         if head_pattern and not isinstance(head_pattern, six.string_types):
             raise ValueError('Head pattern must be a string')
-        reservoir = Reservoir(name, self._m)
+        reservoir = Reservoir(name, self)
         reservoir.base_head = base_head
         reservoir.head_pattern_name = head_pattern
         self[name] = reservoir
@@ -1939,25 +2214,58 @@ class NodeRegistry(Registry):
 
     @property
     def junction_names(self):
+        """List of names of all junctions"""
         return self._junctions
     
     @property
     def tank_names(self):
+        """List of names of all junctions"""
         return self._tanks
     
     @property
     def reservoir_names(self):
+        """List of names of all junctions"""
         return self._reservoirs
     
     def junctions(self):
+        """Generator to get all junctions
+        
+        Yields
+        ------
+        name : str
+            The name of the junction
+        node : Junction
+            The junction object    
+            
+        """
         for node_name in self._junctions:
             yield node_name, self._data[node_name]
     
     def tanks(self):
+        """Generator to get all tanks
+        
+        Yields
+        ------
+        name : str
+            The name of the tank
+        node : Tank
+            The tank object    
+            
+        """
         for node_name in self._tanks:
             yield node_name, self._data[node_name]
     
     def reservoirs(self):
+        """Generator to get all reservoirs
+        
+        Yields
+        ------
+        name : str
+            The name of the reservoir
+        node : Reservoir
+            The reservoir object    
+            
+        """
         for node_name in self._reservoirs:
             yield node_name, self._data[node_name]
 
@@ -1991,9 +2299,9 @@ class LinkRegistry(Registry):
         self._gpvs = OrderedSet()
         self._valves = OrderedSet()
     
-    @property
-    def _links(self):
-        raise UnboundLocalError('registries are not reentrant')
+    def _finalize_(self, model):
+        super(self.__class__, self)._finalize_(model)
+        self._link_reg = None
 
     def __setitem__(self, key, value):
         if not isinstance(key, six.string_types):
@@ -2032,14 +2340,14 @@ class LinkRegistry(Registry):
             elif key in self._usage:
                 self._usage.pop(key)
             link = self._data.pop(key)
-            self._nodes.remove_usage(link.start_node_name, (link.name, link.link_type))
-            self._nodes.remove_usage(link.end_node_name, (link.name, link.link_type))
+            self._node_reg.remove_usage(link.start_node_name, (link.name, link.link_type))
+            self._node_reg.remove_usage(link.end_node_name, (link.name, link.link_type))
             if isinstance(link, GPValve):
-                self._curves.remove_usage(link.headloss_curve_name, (link.name, 'Valve'))
+                self._curve_reg.remove_usage(link.headloss_curve_name, (link.name, 'Valve'))
             if isinstance(link, Pump):
-                self._curves.remove_usage(link.speed_pattern_name, (link.name, 'Pump'))
+                self._curve_reg.remove_usage(link.speed_pattern_name, (link.name, 'Pump'))
             if isinstance(link, HeadPump):
-                self._curves.remove_usage(link.pump_curve_name, (link.name, 'Pump'))
+                self._curve_reg.remove_usage(link.pump_curve_name, (link.name, 'Pump'))
             for ss in self.__subsets:
                 # Go through the _pipes, _prvs, ..., and remove this link
                 getattr(self, ss).discard(key)
@@ -2115,7 +2423,7 @@ class LinkRegistry(Registry):
         minor_loss = float(minor_loss)
         if isinstance(status, str):
             status = LinkStatus[status]
-        pipe = Pipe(name, start_node_name, end_node_name, self._m)
+        pipe = Pipe(name, start_node_name, end_node_name, self)
         pipe.length = length
         pipe.diameter = diameter
         pipe.roughness = roughness
@@ -2149,10 +2457,10 @@ class LinkRegistry(Registry):
         
         """
         if pump_type.upper() == 'POWER':
-            pump = PowerPump(name, start_node_name, end_node_name, self._m)
+            pump = PowerPump(name, start_node_name, end_node_name, self)
             pump.power = pump_parameter
         elif pump_type.upper() == 'HEAD':
-            pump = HeadPump(name, start_node_name, end_node_name, self._m)
+            pump = HeadPump(name, start_node_name, end_node_name, self)
             if not isinstance(pump_parameter, six.string_types):
                 pump.pump_curve_name = pump_parameter.name
             else:
@@ -2192,96 +2500,219 @@ class LinkRegistry(Registry):
             name of headloss curve for GPV.
         
         """
-        start_node = self._nodes[start_node_name]
-        end_node = self._nodes[end_node_name]
+        start_node = self._node_reg[start_node_name]
+        end_node = self._node_reg[end_node_name]
         if type(start_node)==Tank or type(end_node)==Tank:
             logger.warn('Valves should not be connected to tanks! Please add a pipe between the tank and valve. Note that this will be an error in the next release.')
         valve_type = valve_type.upper()
         if valve_type == 'PRV':
-            valve = PRValve(name, start_node_name, end_node_name, self._m)
+            valve = PRValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
             valve.setting = setting
         elif valve_type == 'PSV':
-            valve = PSValve(name, start_node_name, end_node_name, self._m)
+            valve = PSValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
             valve.setting = setting
         elif valve_type == 'PBV':
-            valve = PBValve(name, start_node_name, end_node_name, self._m)
+            valve = PBValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
             valve.setting = setting
         elif valve_type == 'FCV':
-            valve = FCValve(name, start_node_name, end_node_name, self._m)
+            valve = FCValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
             valve.setting = setting
         elif valve_type == 'TCV':
-            valve = TCValve(name, start_node_name, end_node_name, self._m)
+            valve = TCValve(name, start_node_name, end_node_name, self)
             valve.initial_setting = setting
             valve.setting = setting
         elif valve_type == 'GPV':
-            valve = GPValve(name, start_node_name, end_node_name, self._m)
+            valve = GPValve(name, start_node_name, end_node_name, self)
             valve.headloss_curve_name = setting
         valve.diameter = diameter
         valve.minor_loss = minor_loss
         self[name] = valve
 
     def check_valves(self):
+        """Generator to get all pipes with check valves
+        
+        Yields
+        ------
+        name : str
+            The name of the pipe
+        link : Pipe
+            The pipe object    
+            
+        """
         for name in self._pipes:
             if self._data[name].cv:
                 yield name
 
     @property
     def pipe_names(self):
+        """A list of all pipe names"""
         return self._pipes
     
     @property
     def valve_names(self):
+        """A list of all valve names"""
         return self._valves
     
     @property
     def pump_names(self):
+        """A list of all pump names"""
         return self._pumps
 
     def pipes(self):
+        """Generator to get all pipes
+        
+        Yields
+        ------
+        name : str
+            The name of the pipe
+        link : Pipe
+            The pipe object    
+            
+        """
         for name in self._pipes:
             yield name, self._data[name]
     
     def pumps(self):
+        """Generator to get all pumps
+        
+        Yields
+        ------
+        name : str
+            The name of the pump
+        link : Pump
+            The pump object    
+            
+        """
         for name in self._pumps:
             yield name, self._data[name]
     
     def valves(self):
+        """Generator to get all valves
+        
+        Yields
+        ------
+        name : str
+            The name of the valve
+        link : Valve
+            The valve object    
+            
+        """
         for name in self._valves:
             yield name, self._data[name]
 
     def head_pumps(self):
+        """Generator to get all head pumps
+        
+        Yields
+        ------
+        name : str
+            The name of the pump
+        link : HeadPump
+            The pump object    
+            
+        """
         for name in self._head_pumps:
             yield name, self._data[name]
 
     def power_pumps(self):
+        """Generator to get all power pumps
+        
+        Yields
+        ------
+        name : str
+            The name of the pump
+        link : PowerPump
+            The pump object    
+            
+        """
         for name in self._power_pumps:
             yield name, self._data[name]
 
     def prvs(self):
+        """Generator to get all PRVs
+        
+        Yields
+        ------
+        name : str
+            The name of the valve
+        link : PRValve
+            The valve object
+            
+        """
         for name in self._prvs:
             yield name, self._data[name]
 
     def psvs(self):
+        """Generator to get all PSVs
+        
+        Yields
+        ------
+        name : str
+            The name of the valve
+        link : PSValve
+            The valve object
+            
+        """
         for name in self._psvs:
             yield name, self._data[name]
 
     def pbvs(self):
+        """Generator to get all PBVs
+        
+        Yields
+        ------
+        name : str
+            The name of the valve
+        link : PBValve
+            The valve object
+            
+        """
         for name in self._pbvs:
             yield name, self._data[name]
 
     def tcvs(self):
+        """Generator to get all TCVs
+        
+        Yields
+        ------
+        name : str
+            The name of the valve
+        link : TCValve
+            The valve object
+            
+        """
         for name in self._tcvs:
             yield name, self._data[name]
 
     def fcvs(self):
+        """Generator to get all FCVs
+        
+        Yields
+        ------
+        name : str
+            The name of the valve
+        link : FCValve
+            The valve object
+            
+        """
         for name in self._fcvs:
             yield name, self._data[name]
 
     def gpvs(self):
+        """Generator to get all GPVs
+        
+        Yields
+        ------
+        name : str
+            The name of the valve
+        link : GPValve
+            The valve object
+            
+        """
         for name in self._gpvs:
             yield name, self._data[name]
 
