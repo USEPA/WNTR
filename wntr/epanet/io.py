@@ -2357,6 +2357,10 @@ class BinFile(object):
     statistics : bool
         Save the statistics lines (different from the stats flag in the inp file) that are
         automatically calculated regarding hydraulic conditions.
+    convert_status : bool, default=``True``
+        Convert the EPANET link status (8 values) to simpler WNTR status (3 valuees). By 
+        default, this is done, and the encoded-cause status values are converted simple state
+        values, instead.
 
     Attributes
     ----------
@@ -2365,12 +2369,14 @@ class BinFile(object):
 
 
     """
-    def __init__(self, result_types=None, network=False, energy=False, statistics=False):
+    def __init__(self, result_types=None, network=False, energy=False, statistics=False,
+                 convert_status=True):
         if os.name in ['nt', 'dos'] or sys.platform in ['darwin']:
             self.ftype = '=f4'
         else:
             self.ftype = '=f4'
         self.idlen = 32
+        self.convert_status = convert_status
         self.hydraulic_id = None
         self.quality_id = None
         self.node_names = None
@@ -2753,7 +2759,16 @@ class BinFile(object):
                 self.results.link['flowrate'] = HydParam.Flow._to_si(self.flow_units, df['flow'])
                 self.results.link['headloss'] = df['headloss']  # Unit is per 1000
                 self.results.link['velocity'] = HydParam.Velocity._to_si(self.flow_units, df['velocity'])
-                self.results.link['status'] = df['linkstatus']
+                
+#                self.results.link['status'] = df['linkstatus']
+                status = np.array(df['linkstatus'])
+                if self.convert_status:
+                    status[status <= 2] = 0
+                    status[status == 3] = 1
+                    status[status >= 5] = 1
+                    status[status == 4] = 2
+                self.results.link['status'] = pd.DataFrame(data=status, columns=linknames, index=reporttimes)
+                
                 settings = np.array(df['linksetting'])
                 settings[:, linktype == EN.PRV] = to_si(self.flow_units, settings[:, linktype == EN.PRV], HydParam.Pressure)
                 settings[:, linktype == EN.PSV] = to_si(self.flow_units, settings[:, linktype == EN.PSV], HydParam.Pressure)
