@@ -347,6 +347,7 @@ class Reservoir(Node):
         Internal units must be meters (m).
     head_pattern : str, optional
         Head pattern.
+        
     """
     def __init__(self, name, model, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(model, name)

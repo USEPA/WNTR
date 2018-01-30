@@ -5,6 +5,7 @@ EPANET toolkit functions.
 from __future__ import print_function
 import ctypes, os, sys
 from ctypes import byref
+import os.path
 from pkg_resources import resource_filename
 import platform
 epanet_toolkit = 'wntr.epanet.toolkit'
@@ -49,6 +50,27 @@ def ENgetwarning(code, sec=-1):
     else:
         return header+'Unknown warning: %d'%code
 
+def runepanet(inpfile):
+    """Run an epanet command-line simulation.
+    
+    Parameters
+    ----------
+    inpfile : str
+        The input file name
+
+    """
+    file_prefix, file_ext = os.path.splitext(inpfile)
+    enData = ENepanet()
+    rptfile = file_prefix + '.rpt'
+    outfile = file_prefix + '.bin'
+    enData.ENopen(inpfile, rptfile, outfile)
+    enData.ENsolveH()
+    enData.ENsolveQ()
+    try:
+        enData.ENreport()
+    except:
+        pass
+    enData.ENclose()
 
 
 class ENepanet():
