@@ -2958,7 +2958,7 @@ def _clean_line(wn, sec, line):
             other = wn.options.hydraulic.pattern
             if other is None:
                 other = 1
-            if type(line[3]) is int:
+            if (type(line[3]) is int) and (other is int):
                 other = int(other)
             if line[3] == other:
                 return line[:3]
