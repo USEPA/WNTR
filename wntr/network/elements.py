@@ -8,6 +8,7 @@ import sys
 import logging
 import math
 import six
+import copy
 from scipy.optimize import fsolve
 
 if sys.version_info[0] == 2:
@@ -29,14 +30,9 @@ class Junction(Node):
     ----------
     name : string
         Name of the junction.
-    base_demand : float, optional
-        Base demand at the junction.
-        Internal units must be cubic meters per second (m^3/s).
-    demand_pattern : Pattern object, optional
-        Demand pattern.
-    elevation : float, optional
-        Elevation of the junction.
-        Internal units must be meters (m).
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+
     """
 
     def __init__(self, name, model):
@@ -77,7 +73,7 @@ class Junction(Node):
     
     @property
     def node_type(self):
-        # Docstring inherited
+        """returns ``"Junction"``"""
         return 'Junction'
 
     def add_demand(self, base, pattern_name, category=None):
@@ -176,26 +172,9 @@ class Tank(Node):
     ----------
     name : string
         Name of the tank.
-    elevation : float, optional
-        Elevation at the Tank.
-        Internal units must be meters (m).
-    init_level : float, optional
-        Initial tank level.
-        Internal units must be meters (m).
-    min_level : float, optional
-        Minimum tank level.
-        Internal units must be meters (m)
-    max_level : float, optional
-        Maximum tank level.
-        Internal units must be meters (m)
-    diameter : float, optional
-        Tank diameter.
-        Internal units must be meters (m)
-    min_vol : float, optional
-        Minimum tank volume.
-        Internal units must be cubic meters (m^3)
-    vol_curve : Curve object, optional
-        Curve object
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+
     """
 
     def __init__(self, name, model):
@@ -247,7 +226,7 @@ class Tank(Node):
 
     @property
     def node_type(self):
-        # Docstring inherited
+        """returns ``"Tank"``"""
         return 'Tank'
 
     @property
@@ -361,11 +340,14 @@ class Reservoir(Node):
         Name of the reservoir.
     pattern_registry : PatternRegistry
         A registry for patterns must be provided
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this reservoir will belong to.
     base_head : float, optional
         Base head at the reservoir.
         Internal units must be meters (m).
     head_pattern : str, optional
         Head pattern.
+        
     """
     def __init__(self, name, model, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(model, name)
@@ -384,7 +366,7 @@ class Reservoir(Node):
 
     @property
     def node_type(self):
-        # Docstring inherited
+        """returns ``"Reservoir"``"""
         return 'Reservoir'
 
     @property
@@ -429,21 +411,9 @@ class Pipe(Link):
          Name of the start node
     end_node_name : string
          Name of the end node
-    length : float, optional
-        Length of the pipe.
-        Internal units must be meters (m)
-    diameter : float, optional
-        Diameter of the pipe.
-        Internal units must be meters (m)
-    roughness : float, optional
-        Pipe roughness coefficient
-    minor_loss : float, optional
-        Pipe minor loss coefficient
-    status : string, optional
-        Pipe status. Options are 'Open' or 'Closed'
-    check_valve_flag : bool, optional
-        True if the pipe has a check valve
-        False if the pipe does not have a check valve
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+
     """
 
     def __init__(self, name, start_node_name, end_node_name, model):
@@ -476,7 +446,7 @@ class Pipe(Link):
 
     @property
     def link_type(self):
-        # Docstring inherited
+        """returns ``"Pipe"``"""
         return 'Pipe'
     
     @property
@@ -509,6 +479,10 @@ class Pump(Link):
     """
     Pump class, inherited from Link.
 
+    For details about the different subclasses, please see one of the following:
+    :class:`~wntr.network.elements.HeadPump` and :class:`~wntr.network.elements.PowerPump`
+    
+
     Parameters
     ----------
     name : string
@@ -517,14 +491,9 @@ class Pump(Link):
          Name of the start node
     end_node_name : string
          Name of the end node
-    pump_type : string, optional
-        Type of information provided about the pump. Options are 'POWER' or 'HEAD'.
-    pump_parameter : float or curve type, optional
-        Where power is a fixed value in KW, while a head curve is a Curve object.
-    base_speed: float
-        Relative speed setting (1.0 is normal speed)
-    speed_pattern: Pattern object, optional
-        Speed pattern
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+
     """
 
     def __init__(self, name, start_node_name, end_node_name, model):
@@ -557,7 +526,7 @@ class Pump(Link):
 
     @property
     def link_type(self):
-        # Docstring inherited
+        """returns ``"Pump"``"""
         return 'Pump'
 
     @property
@@ -591,12 +560,13 @@ class Pump(Link):
 
         Parameters
         ----------
-        pump_name : string
-           The name of the pump to be affected by an outage.
+        model : :class:`~wntr.network.model.WaterNetworkModel`
+            The water network model this link will belong to.
         start_time : int
            The time at which the outage starts.
         end_time : int
            The time at which the outage stops.
+           
         """
         from wntr.network.controls import _InternalControlAction, Control
 
@@ -619,6 +589,18 @@ class Pump(Link):
 class HeadPump(Pump):
     """
     Head pump class, inherited from Pump.
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pump
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+
     """
     def __repr__(self):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
@@ -635,6 +617,7 @@ class HeadPump(Pump):
     
     @property
     def pump_type(self): 
+        """returns ``"HEAD"``"""
         return 'HEAD'
     
     @property
@@ -753,7 +736,20 @@ class HeadPump(Pump):
 class PowerPump(Pump):
     """
     Power pump class, inherited from Pump.
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pump
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+
     """
+    
     def __repr__(self):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', power={}, speed={}, status={}>".format(self._link_name,
                    self.start_node, self.end_node, 'POWER', self._base_power, 
@@ -769,6 +765,7 @@ class PowerPump(Pump):
     
     @property
     def pump_type(self): 
+        """returns ``"POWER"``"""
         return 'POWER'
     
     @property
@@ -790,6 +787,12 @@ class Valve(Link):
     """
     Valve class, inherited from Link.
 
+    For details about the different subclasses, please see one of the following:
+    :class:`~wntr.network.elements.PRValve`, :class:`~wntr.network.elements.PSValve`,
+    :class:`~wntr.network.elements.PBValve`, :class:`~wntr.network.elements.FCValve`,
+    :class:`~wntr.network.elements.TCValve`, and :class:`~wntr.network.elements.GPValve`.
+
+
     Parameters
     ----------
     name : string
@@ -798,15 +801,9 @@ class Valve(Link):
          Name of the start node
     end_node_name : string
          Name of the end node
-    diameter : float, optional
-        Diameter of the valve.
-        Internal units must be meters (m)
-    valve_type : string, optional
-        Type of valve. Options are 'PRV', etc
-    minor_loss : float, optional
-        Pipe minor loss coefficient
-    setting : float or string, optional
-        Valve setting or name of headloss curve for GPV
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+
     """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(Valve, self).__init__(model, name, start_node_name, end_node_name)
@@ -847,6 +844,7 @@ class Valve(Link):
 
     @property
     def link_type(self):
+        """returns ``"Valve"``"""
         return 'Valve'
 
     def todict(self):
@@ -860,68 +858,152 @@ class Valve(Link):
 class PRValve(Valve):
     """
     Pressure reducting valve class, inherited from Valve.
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pump
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+
     """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(PRValve, self).__init__(name, start_node_name, end_node_name, model)
 
     @property
-    def valve_type(self): return 'PRV'
+    def valve_type(self): 
+        """returns ``"PRV"``"""
+        return 'PRV'
 
 
 class PSValve(Valve):
     """
     Pressure sustaining valve class, inherited from Valve.
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pump
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+    
     """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(PSValve, self).__init__(name, start_node_name, end_node_name, model)
 
     @property
-    def valve_type(self): return 'PSV'
+    def valve_type(self): 
+        """returns ``"PSV"``"""
+        return 'PSV'
 
 
 class PBValve(Valve):
     """
     Pressure breaker valve class, inherited from Valve.
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pump
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+    
     """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(PBValve, self).__init__(name, start_node_name, end_node_name, model)
 
     @property
-    def valve_type(self): return 'PBV'
+    def valve_type(self): 
+        """returns ``"PBV"``"""
+        return 'PBV'
 
 
 class FCValve(Valve):
     """
     Flow control valve class, inherited from Valve.
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pump
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+    
     """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(FCValve, self).__init__(name, start_node_name, end_node_name, model)
 
     @property
-    def valve_type(self): return 'FCV'
+    def valve_type(self): 
+        """returns ``"FCV"``"""
+        return 'FCV'
 
 
 class TCValve(Valve):
     """
     Throttle control valve class, inherited from Valve.
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pump
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+    
     """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(TCValve, self).__init__(name, start_node_name, end_node_name, model)
 
     @property
-    def valve_type(self): return 'TCV'
+    def valve_type(self): 
+        """returns ``"TCV"``"""
+        return 'TCV'
 
 
 class GPValve(Valve):
     """
     General purpose valve class, inherited from Valve.
+    
+    Parameters
+    ----------
+    name : string
+        Name of the pump
+    start_node_name : string
+         Name of the start node
+    end_node_name : string
+         Name of the end node
+    model : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this link will belong to.
+    
     """
     def __init__(self, name, start_node_name, end_node_name, model):
         super(GPValve, self).__init__(name, start_node_name, end_node_name, model)
         self._headloss_curve_name = None
 
     @property
-    def valve_type(self): return 'GPV'
+    def valve_type(self): 
+        """returns ``"GPV"``"""
+        return 'GPV'
 
     @property
     def headloss_curve(self):

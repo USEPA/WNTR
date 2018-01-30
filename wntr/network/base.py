@@ -93,6 +93,12 @@ class Observer(six.with_metaclass(abc.ABCMeta, object)):
 
 class Node(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for nodes.
+    
+
+    For details about the different subclasses, please see one of the following:
+    :class:`~wntr.network.elements.Junction`, :class:`~wntr.network.elements.Tank`, and
+    :class:`~wntr.network.elements.Reservoir`
+
 
     Parameters
     -----------
@@ -100,6 +106,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         The model object is passed to the constructor to get the registries
     name : string
         Name of the node (must be unique among nodes of all types within the model)
+
 
     """
     def __init__(self, model, name):
@@ -242,6 +249,10 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     """
     Link base class.
 
+    For details about the different subclasses, please see one of the following:
+    :class:`~wntr.network.elements.Pipe`, :class:`~wntr.network.elements.Pump`, and
+    :class:`~wntr.network.elements.Valve`
+
     Parameters
     ----------
     model : WaterNetworkModel
@@ -321,7 +332,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def initial_status(self):
-        """LinkStatus: The initial status (`Opened`, `Closed`, `Active`) of the Link"""
+        """:class:`~wntr.network.base.LinkStatus`: The initial status (`Opened`, `Closed`, `Active`) of the Link"""
         return self._initial_status
     @initial_status.setter
     def initial_status(self, status):
@@ -340,7 +351,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def start_node(self):
-        """:class:`Node`: The start node object."""
+        """:class:`~wntr.network.base.Node`: The start node object."""
         return self._start_node
     @start_node.setter
     def start_node(self, name):
@@ -350,7 +361,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def end_node(self):
-        """:class:`Node`: The end node object."""
+        """:class:`~wntr.network.base.Node`: The end node object."""
         return self._end_node
     @end_node.setter
     def end_node(self, name):
@@ -381,7 +392,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     @property
     @abc.abstractmethod
     def status(self):
-        """:class:`LinkStatus`: Current status of the link"""
+        """:class:`~wntr.network.base.LinkStatus`: Current status of the link"""
         pass
     @status.setter
     @abc.abstractmethod
@@ -457,31 +468,6 @@ class Registry(MutableMapping):
         self._controls = model._controls
         self._sources = model._sources
     
-#    @property
-#    def _curves(self):
-#        # Protected access to the curve registry
-#        return self._m.curves
-#
-#    @property
-#    def _nodes(self):
-#        # Protected access to the node registry
-#        return self._m.nodes
-#    
-#    @property
-#    def _links(self):
-#        # Protected access to the link registry
-#        return self._m.links
-#
-#    @property
-#    def _controls(self):
-#        # Protected access to the control registry
-#        return self._m.controls
-#    
-#    @property
-#    def _sources(self):
-#        # Protected access to the sources dictionary
-#        return self._m.sources
-
     def __getitem__(self, key):
         if not key:
             return None
