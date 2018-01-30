@@ -946,8 +946,6 @@ class _ClosePRVCondition(ControlCondition):
         if self._prv._internal_status == LinkStatus.Active:
             if self._prv.flow < -self._Qtol:
                 return True
-            elif self._start_node.head <= self._end_node.head:
-                return True
             return False
         elif self._prv._internal_status == LinkStatus.Open:
             if self._prv.flow < -self._Qtol:
@@ -984,8 +982,6 @@ class _OpenPRVCondition(ControlCondition):
     def evaluate(self):
         if self._prv._internal_status == LinkStatus.Active:
             if self._prv.flow < -self._Qtol:
-                return False
-            elif self._start_node.head <= self._end_node.head:
                 return False
             elif self._start_node.head < self._prv.setting + self._end_node.elevation + self._r * abs(self._prv.flow)**2 - self._Htol:
                 return True
