@@ -2990,6 +2990,9 @@ def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=
                 if (not htmldiff) and (print_counter < print_max):
                     print(line1, line2)
                     print_counter = print_counter+1
+                if print_counter >= print_max:
+                    print('...')
+                    break
                 different_lines_1.append(orig_line_1)
                 different_lines_2.append(orig_line_2)
 
