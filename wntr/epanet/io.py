@@ -1089,7 +1089,7 @@ class InpFile(object):
                 action_obj = wntr.network.ControlAction(link, 'status', setting)
             else:
                 if isinstance(link, wntr.network.Pump):
-                    action_obj = wntr.network.ControlAction(link, 'speed', float(current[2]))
+                    action_obj = wntr.network.ControlAction(link, 'base_speed', float(current[2]))
                 elif isinstance(link, wntr.network.Valve):
                     if link.valve_type == 'PRV' or link.valve_type == 'PSV' or link.valve_type == 'PBV':
                         setting = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
