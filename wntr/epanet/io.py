@@ -2953,13 +2953,51 @@ def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=
         start1, stop1 = f1.get_section(section)
         start2, stop2 = f2.get_section(section)
 
-        if len(list(f1.iter(start1, stop1))) != len(list(f2.iter(start2, stop2))):
+        if section == '[PATTERNS]':
+            new_lines_1 = []
+            new_lines_2 = []
+            label = None
+            tmp_line = None
+            tmp_loc = None
+            for loc1, line1 in f1.iter(start1, stop1):
+                tmp_label = line1.split()[0]
+                if tmp_label != label:
+                    if label is not None:
+                        new_lines_1.append((tmp_loc, tmp_line))
+                    tmp_loc = loc1
+                    tmp_line = line1
+                    label = tmp_label
+                else:
+                    tmp_line += " " + " ".join(line1.split()[1:])
+            new_lines_1.append((tmp_loc, tmp_line))
+            label = None
+            tmp_line = None
+            tmp_loc = None
+            for loc2, line2 in f2.iter(start2, stop2):
+                tmp_label = line2.split()[0]
+                if tmp_label != label:
+                    if label is not None:
+                        new_lines_2.append((tmp_loc, tmp_line))
+                    tmp_loc = loc2
+                    tmp_line = line2
+                    label = tmp_label
+                else:
+                    tmp_line += " " + " ".join(line2.split()[1:])
+            new_lines_2.append((tmp_loc, tmp_line))
+        else:
+            new_lines_1 = list(f1.iter(start1, stop1))
+            new_lines_2 = list(f2.iter(start2, stop2))
+
+        different_lines_1.append(section)
+        different_lines_2.append(section)
+
+        if len(new_lines_1) != len(new_lines_2):
             n1 = 0
             n2 = 0
-            for loc1, line1 in f1.iter(start1, stop1):
+            for loc1, line1 in new_lines_1:
                 different_lines_1.append(line1)
                 n1 += 1
-            for loc2, line2 in f2.iter(start2, stop2):
+            for loc2, line2 in new_lines_2:
                 different_lines_2.append(line2)
                 n2 += 1
             if n1 > n2:
@@ -2974,11 +3012,8 @@ def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=
                 raise RuntimeError('Unexpected')
             continue
 
-        different_lines_1.append(section)
-        different_lines_2.append(section)
-
-        f2_iter = f2.iter(start2, stop2)
-        for loc1, line1 in f1.iter(start1, stop1):
+        f2_iter = iter(new_lines_2)
+        for loc1, line1 in new_lines_1:
             orig_line_1 = line1
             loc2, line2 = next(f2_iter)
             orig_line_2 = line2
