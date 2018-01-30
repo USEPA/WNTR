@@ -926,13 +926,17 @@ class _OpenHeadPumpCondition(ControlCondition):
 class _ClosePRVCondition(ControlCondition):
     _Qtol = 2.83168e-6
 
-    def __init__(self, prv):
+    def __init__(self, wn, prv):
         """
         Parameters
         ----------
+        wn: wntr.network.WaterNetworkModel
         prv: wntr.network.Valve
         """
+        super(_ClosePRVCondition, self).__init__()
         self._prv = prv
+        self._start_node = wn.get_node(self._prv.start_node)
+        self._end_node = wn.get_node(self._prv.end_node)
         self._backtrack = 0
 
     def requires(self):
@@ -941,6 +945,8 @@ class _ClosePRVCondition(ControlCondition):
     def evaluate(self):
         if self._prv._internal_status == LinkStatus.Active:
             if self._prv.flow < -self._Qtol:
+                return True
+            elif self._start_node.head <= self._end_node.head:
                 return True
             return False
         elif self._prv._internal_status == LinkStatus.Open:
@@ -978,6 +984,8 @@ class _OpenPRVCondition(ControlCondition):
     def evaluate(self):
         if self._prv._internal_status == LinkStatus.Active:
             if self._prv.flow < -self._Qtol:
+                return False
+            elif self._start_node.head <= self._end_node.head:
                 return False
             elif self._start_node.head < self._prv.setting + self._end_node.elevation + self._r * abs(self._prv.flow)**2 - self._Htol:
                 return True

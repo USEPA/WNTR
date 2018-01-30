@@ -915,7 +915,7 @@ class WaterNetworkModel(AbstractModel):
             valve_controls.append(new_setting_control)
 
             if valve.valve_type == 'PRV':
-                close_condition = _ClosePRVCondition(valve)
+                close_condition = _ClosePRVCondition(self, valve)
                 open_condition = _OpenPRVCondition(self, valve)
                 active_condition = _ActivePRVCondition(self, valve)
                 close_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Closed, 'status')
