@@ -1167,7 +1167,7 @@ class InpFile(object):
             attribute = control_action._attribute.lower()
             if attribute == 'status':
                 setting = LinkStatus(value).name
-            elif attribute == 'speed':
+            elif attribute == 'base_speed':
                 setting = str(value)
             elif attribute == 'setting' and isinstance(control_action._target_obj, Valve):
                 valve = control_action._target_obj
