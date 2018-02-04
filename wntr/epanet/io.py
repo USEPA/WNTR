@@ -1089,7 +1089,7 @@ class InpFile(object):
                 action_obj = wntr.network.ControlAction(link, 'status', setting)
             else:
                 if isinstance(link, wntr.network.Pump):
-                    action_obj = wntr.network.ControlAction(link, 'speed', float(current[2]))
+                    action_obj = wntr.network.ControlAction(link, 'base_speed', float(current[2]))
                 elif isinstance(link, wntr.network.Valve):
                     if link.valve_type == 'PRV' or link.valve_type == 'PSV' or link.valve_type == 'PBV':
                         setting = to_si(self.flow_units, float(current[2]), HydParam.Pressure)
@@ -1167,7 +1167,7 @@ class InpFile(object):
             attribute = control_action._attribute.lower()
             if attribute == 'status':
                 setting = LinkStatus(value).name
-            elif attribute == 'speed':
+            elif attribute == 'base_speed':
                 setting = str(value)
             elif attribute == 'setting' and isinstance(control_action._target_obj, Valve):
                 valve = control_action._target_obj
@@ -2958,7 +2958,7 @@ def _clean_line(wn, sec, line):
             other = wn.options.hydraulic.pattern
             if other is None:
                 other = 1
-            if type(line[3]) is int:
+            if (type(line[3]) is int) and (other is int):
                 other = int(other)
             if line[3] == other:
                 return line[:3]

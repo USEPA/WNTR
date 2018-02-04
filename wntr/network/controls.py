@@ -551,6 +551,10 @@ class ValueCondition(ControlCondition):
 class TankLevelCondition(ValueCondition):
     def __init__(self, source_obj, source_attr, relation, threshold):
         relation = Comparison.parse(relation)
+        if relation is Comparison.gt:
+            relation = Comparison.ge
+        if relation is Comparison.lt:
+            relation = Comparison.le
         if relation not in {Comparison.ge, Comparison.le}:
             raise ValueError('TankLevelConditions only support <= and >= relations.')
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
