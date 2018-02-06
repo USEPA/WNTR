@@ -53,23 +53,23 @@ _INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
                  '[TIMES]', '[REPORT]', '[COORDINATES]', '[VERTICES]',
                  '[LABELS]', '[BACKDROP]', '[TAGS]']
 
-_JUNC_ENTRY = ' {name:20} {elev:12.12g} {dem:12.12g} {pat:24} {com:>3s}\n'
+_JUNC_ENTRY = ' {name:20} {elev:12.12f} {dem:12.12f} {pat:24} {com:>3s}\n'
 _JUNC_LABEL = '{:21} {:>12s} {:>12s} {:24}\n'
 
-_RES_ENTRY = ' {name:20s} {head:12.12g} {pat:>24s} {com:>3s}\n'
-_RES_LABEL = '{:21s} {:>12s} {:>24s}\n'
+_RES_ENTRY = ' {name:20s} {head:20.12f} {pat:>24s} {com:>3s}\n'
+_RES_LABEL = '{:21s} {:>20s} {:>24s}\n'
 
-_TANK_ENTRY = ' {name:20s} {elev:12.6g} {initlev:12.12g} {minlev:12.12g} {maxlev:12.12g} {diam:12.12g} {minvol:12.6g} {curve:20s} {com:>3s}\n'
-_TANK_LABEL = '{:21s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:>12s} {:20s}\n'
+_TANK_ENTRY = ' {name:20s} {elev:20.12f} {initlev:20.12f} {minlev:20.12f} {maxlev:20.12f} {diam:20.12f} {minvol:20.12f} {curve:20s} {com:>3s}\n'
+_TANK_LABEL = '{:21s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s} {:20s}\n'
 
-_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:12.12g} {diam:12.12g} {rough:12.12g} {mloss:12.12g} {status:>20s} {com:>3s}\n'
-_PIPE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:>12s} {:>12s} {:>12s} {:>20s}\n'
+_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:20.12f} {diam:20.12f} {rough:20.12f} {mloss:20.12f} {status:>20s} {com:>3s}\n'
+_PIPE_LABEL = '{:21s} {:20s} {:20s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s}\n'
 
 _PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:>3s}\n'
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
-_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:12.12g} {vtype:4s} {set:12.12g} {mloss:12.12g} {com:>3s}\n'
-_VALVE_LABEL = '{:21s} {:20s} {:20s} {:>12s} {:4s} {:>12s} {:>12s}\n'
+_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:20.12f} {vtype:4s} {set:20.12f} {mloss:20.12f} {com:>3s}\n'
+_VALVE_LABEL = '{:21s} {:20s} {:20s} {:>20s} {:4s} {:>20s} {:>20s}\n'
 
 _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
 _CURVE_LABEL = '{:11s} {:12s} {:12s}\n'
@@ -224,7 +224,7 @@ class InpFile(object):
     The EPANET Users Manual provides full documentation for the INP file format in its Appendix C.
     """
     def __init__(self):
-        self.sections = {}
+        self.sections = OrderedDict()
         for sec in _INP_SECTIONS:
             self.sections[sec] = []
         self.mass_units = None
@@ -253,9 +253,9 @@ class InpFile(object):
             inp_files = [inp_files]
         wn.name = inp_files[0]
 
-        self.curves = {}
+        self.curves = OrderedDict()
         self.top_comments = []
-        self.sections = {}
+        self.sections = OrderedDict()
         for sec in _INP_SECTIONS:
             self.sections[sec] = []
         self.mass_units = None
@@ -887,7 +887,7 @@ class InpFile(object):
         f.write('\n'.encode('ascii'))
 
     def _read_patterns(self):
-        _patterns = {}
+        _patterns = OrderedDict()
         for lnum, line in self.sections['[PATTERNS]']:
             # read the lines for each pattern -- patterns can be multiple lines of arbitrary length
             line = line.split(';')[0]
@@ -1319,6 +1319,7 @@ class InpFile(object):
                 pattern = None
             else:
                 pattern = self.wn.get_pattern(current[2])
+            node.demand_timeseries_list.remove_category('EN2 base')
             node.demand_timeseries_list.append((to_si(self.flow_units, float(current[1]), HydParam.Demand),
                                          pattern, category))
 
@@ -1570,7 +1571,7 @@ class InpFile(object):
     ### Options and Reporting
 
     def _read_options(self):
-        edata = {}
+        edata = OrderedDict()
         wn = self.wn
         opts = wn.options
         for lnum, line in self.sections['[OPTIONS]']:
@@ -3065,7 +3066,7 @@ def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=
                 if (not htmldiff) and (print_counter < print_max):
                     print(line1, line2)
                     print_counter = print_counter+1
-                if print_counter >= print_max:
+                if (not htmldiff) and print_counter >= print_max:
                     print('...')
                     break
                 different_lines_1.append(orig_line_1)

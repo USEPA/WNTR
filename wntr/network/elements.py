@@ -1440,6 +1440,18 @@ class Demands(MutableSequence):
         return demand
     __call__ = at
     
+    def remove_category(self, category):
+        """Remove all demands from a specific category"""
+        def search():
+            for ct, dem in enumerate(self._list):
+                if dem.category == category:
+                    return ct
+            return None
+        idx = search()
+        while idx is not None:
+            self.pop(idx)
+            idx = search()
+    
     def base_demand_list(self, category=None):
         """Returns a list of the base demands, optionally of a single category."""
         res = []
