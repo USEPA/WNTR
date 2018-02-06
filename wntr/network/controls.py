@@ -551,11 +551,7 @@ class ValueCondition(ControlCondition):
 class TankLevelCondition(ValueCondition):
     def __init__(self, source_obj, source_attr, relation, threshold):
         relation = Comparison.parse(relation)
-        if relation is Comparison.gt:
-            relation = Comparison.ge
-        if relation is Comparison.lt:
-            relation = Comparison.le
-        if relation not in {Comparison.ge, Comparison.le}:
+        if relation not in {Comparison.ge, Comparison.le, Comparison.gt, Comparison.lt}:
             raise ValueError('TankLevelConditions only support <= and >= relations.')
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
@@ -566,6 +562,10 @@ class TankLevelCondition(ValueCondition):
         cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level
         thresh_value = self._threshold
         relation = self._relation
+        if relation is Comparison.gt:
+            relation = Comparison.ge
+        if relation is Comparison.lt:
+            relation = Comparison.le
         if np.isnan(self._threshold):  # what is this doing?
             relation = np.greater
             thresh_value = 0.0
@@ -930,13 +930,17 @@ class _OpenHeadPumpCondition(ControlCondition):
 class _ClosePRVCondition(ControlCondition):
     _Qtol = 2.83168e-6
 
-    def __init__(self, prv):
+    def __init__(self, wn, prv):
         """
         Parameters
         ----------
+        wn: wntr.network.WaterNetworkModel
         prv: wntr.network.Valve
         """
+        super(_ClosePRVCondition, self).__init__()
         self._prv = prv
+        self._start_node = wn.get_node(self._prv.start_node)
+        self._end_node = wn.get_node(self._prv.end_node)
         self._backtrack = 0
 
     def requires(self):
