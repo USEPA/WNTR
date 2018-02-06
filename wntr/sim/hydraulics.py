@@ -367,6 +367,7 @@ class HydraulicModel(object):
                 The minor loss on an open valve acts just as the minor loss on a pipe.
                 """
                 self.pipe_minor_loss_coefficients[link_id] = 8.0*link.minor_loss/(self._g*math.pi**2*link.diameter**4)
+                self.pipe_diameters[link_id] = link.diameter
                 if link_id in self._tcv_ids:
                     """
                     The minor loss on a TCV is used when the valve is open; The setting is used when it is active.
@@ -1169,7 +1170,7 @@ class HydraulicModel(object):
         for link_id in self._valve_ids:
             self._sim_results['link_type'].append(self.link_types[link_id].name)
             self._sim_results['link_flowrate'].append(flow[link_id])
-            self._sim_results['link_velocity'].append(0.0)
+            self._sim_results['link_velocity'].append(abs(flow[link_id])*4.0/(math.pi*self.pipe_diameters[link_id]**2.0))
             self._sim_results['link_status'].append(self.link_status[link_id])
 
     def get_results(self,results):
