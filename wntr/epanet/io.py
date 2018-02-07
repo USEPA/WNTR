@@ -2979,7 +2979,7 @@ def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=
     f1 = _InpFileDifferHelper(file1)
     if file2 is None:
         file2 = 'temp.inp'
-        InpFile().write(file2, wn)
+        wn.write_inpfile(file2)
     f2 = _InpFileDifferHelper(file2)
 
     different_lines_1 = []
