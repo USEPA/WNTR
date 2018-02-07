@@ -13,6 +13,7 @@ import abc
 from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict, Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
+from wntr.utils.doc_inherit import doc_inherit
 
 logger = logging.getLogger(__name__)
 
@@ -53,23 +54,67 @@ class Subject(object):
         self._observers = OrderedSet()
 
     def subscribe(self, observer):
+        """
+        Subscribe observer to this subject. The update method of any observers of this subject will be called when
+        notify is called on this subject.
+
+        Parameters
+        ----------
+        observer: Observer
+        """
         self._observers.add(observer)
 
     def unsubscribe(self, observer):
+        """
+        Unsubscribe observer from this subject.
+
+        Parameters
+        ----------
+        observer: Observer
+        """
         self._observers.remove(observer)
 
     def notify(self):
+        """
+        Call the update method for all observers of this subject.
+        """
         for o in self._observers:
             o.update(self)
 
 
 class Observer(six.with_metaclass(abc.ABCMeta, object)):
+    """
+    A base class for observers in the observer design pattern.
+    """
     @abc.abstractmethod
     def update(self, subject):
+        """
+        This method is called when the subject being observed calls notify.
+
+        Parameters
+        ----------
+        subject: Subject
+            The subject that called notify.
+        """
         pass
 
 
 class Comparison(enum.Enum):
+    """
+    An enum class for comparison operators.
+
+    .. rubric:: Enum Members
+
+    ===========  ==============================================
+    :attr:`~gt`  greater than
+    :attr:`~ge`  greater than or equal to
+    :attr:`~lt`  less than
+    :attr:`~le`  less than or equal to
+    :attr:`~eq`  equal to
+    :attr:`~ne`  not equal to
+    ===========  ==============================================
+
+    """
     gt = (1, np.greater)
     ge = (2, np.greater_equal)
     lt = (3, np.less)
@@ -142,7 +187,24 @@ class Comparison(enum.Enum):
 # Control Condition classes
 #
 
+
 class ControlPriority(enum.IntEnum):
+    """
+    An enum class for control priorities.
+
+    .. rubric:: Enum Members
+
+    ====================  =====================================================
+    :attr:`~very_low`     very low priority
+    :attr:`~low`          low priority
+    :attr:`~medium_low`   medium low priority
+    :attr:`~medium`       medium priority
+    :attr:`~medium_high`  medium high priority
+    :attr:`~high`         high priority
+    :attr:`~very_high`    very high priority
+    ====================  =====================================================
+
+    """
     very_low = 0
     low = 1
     medium_low = 2
@@ -166,23 +228,57 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
 
     @abc.abstractmethod
     def requires(self):
-        """Returns a set of objects required to evaluate this condition"""
+        """
+        Returns a set of objects required to evaluate this condition
+
+        Returns
+        -------
+        required_objects: OrderedSet of object
+        """
         return OrderedSet()
 
     @property
     def name(self):
+        """
+        Returns the string representation of the condition.
+
+        Returns
+        -------
+        name: str
+        """
         return str(self)
 
     @property
     def backtrack(self):
-        """Should be updated by the ``evaluate`` method if appropriate."""
+        """
+        The amount of time by which the simulation should be backed up.
+        Should be updated by the :class:`~wntr.network.controls.ControlCondition.evaluate` method if appropriate.
+
+        Returns
+        -------
+        backtrack: int
+        """
         return self._backtrack
 
     @abc.abstractmethod
     def evaluate(self):
+        """
+        Check if the condition is satisfied.
+
+        Returns
+        -------
+        check: bool
+        """
         pass
 
     def __bool__(self):
+        """
+        Check if the condition is satisfied.
+
+        Returns
+        -------
+        check: bool
+        """
         return self.evaluate()
     __nonzero__ = __bool__
 
@@ -320,8 +416,8 @@ class TimeOfDayCondition(ControlCondition):
                                              self._sec_to_hours_min_sec(self._threshold),
                                              rep, start)
 
+    @doc_inherit
     def requires(self):
-        """Returns a list of objects required to evaluate this condition"""
         return OrderedSet()
 
     def __repr__(self):
@@ -338,6 +434,7 @@ class TimeOfDayCondition(ControlCondition):
             fmt = '( ' + ' && clock_day >= {} )'.format(self._first_day)
         return fmt
 
+    @doc_inherit
     def evaluate(self):
         cur_time = self._model._shifted_time
         prev_time = self._model._prev_shifted_time
@@ -444,10 +541,12 @@ class SimTimeCondition(ControlCondition):
             fmt = 'sim_time ' + fmt
         return fmt
 
+    @doc_inherit
     def requires(self):
         """Returns a list of objects required to evaluate this condition"""
         return OrderedSet()
 
+    @doc_inherit
     def evaluate(self):
         cur_time = self._model.sim_time
         prev_time = self._model._prev_sim_time
@@ -508,6 +607,7 @@ class ValueCondition(ControlCondition):
         self._threshold = ControlCondition._parse_value(threshold)
         self._backtrack = 0
 
+    @doc_inherit
     def requires(self):
         return OrderedSet([self._source_obj])
 
@@ -537,6 +637,7 @@ class ValueCondition(ControlCondition):
         val = self._repr_value(att, self._threshold)
         return "{}('{}').{} {} {}".format(typ, obj, att, rel, val)
 
+    @doc_inherit
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
         thresh_value = self._threshold
@@ -556,7 +657,8 @@ class TankLevelCondition(ValueCondition):
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
         self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
-        
+
+    @doc_inherit
     def evaluate(self):
         self._backtrack = 0  # no backtracking is needed unless specified in the if statement below
         cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level
@@ -625,6 +727,7 @@ class RelativeCondition(ControlCondition):
                                 self._relation.symbol,
                                 tobj, self._threshold_attr)
 
+    @doc_inherit
     def requires(self):
         return OrderedSet([self._source_obj, self._threshold_obj])
 
@@ -653,6 +756,7 @@ class RelativeCondition(ControlCondition):
                           rel,
                           ttyp, tobj, tatt)
 
+    @doc_inherit
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
         thresh_value = getattr(self._threshold_obj, self._threshold_attr)
@@ -670,10 +774,7 @@ class OrCondition(ControlCondition):
         The first condition
     cond2 : ControlCondition
         The second condition
-    Returns
-    -------
-    bool
-        True if either condition evaluates to True; otherwise False
+
     """
     def __init__(self, cond1, cond2):
         self._condition_1 = cond1
@@ -685,6 +786,7 @@ class OrCondition(ControlCondition):
     def __repr__(self):
         return 'Or({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
 
+    @doc_inherit
     def evaluate(self):
         return bool(self._condition_1) or bool(self._condition_2)
 
@@ -692,6 +794,7 @@ class OrCondition(ControlCondition):
     def backtrack(self):
         return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
 
+    @doc_inherit
     def requires(self):
         return self._condition_1.requires().update(self._condition_2.requires())
 
@@ -705,10 +808,6 @@ class AndCondition(ControlCondition):
         The first condition
     cond2 : ControlCondition
         The second condition
-    Returns
-    -------
-    bool
-        True if both conditions evaluate to True; otherwise False
     """
     def __init__(self, cond1, cond2):
         self._condition_1 = cond1
@@ -720,6 +819,7 @@ class AndCondition(ControlCondition):
     def __repr__(self):
         return 'And({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
 
+    @doc_inherit
     def evaluate(self):
         return bool(self._condition_1) and bool(self._condition_2)
 
@@ -727,6 +827,7 @@ class AndCondition(ControlCondition):
     def backtrack(self):
         return np.min([self._condition_1.backtrack, self._condition_2.backtrack])
 
+    @doc_inherit
     def requires(self):
         return self._condition_1.requires().update(self._condition_2.requires())
 
