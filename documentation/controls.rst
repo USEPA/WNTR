@@ -124,7 +124,7 @@ Actions can also be combined, as shown in the following example:
     >>> cond4 = controls.OrCondition(cond1, cond2)
     >>> rule4 = controls.Control(cond4, [act1, act2])
     >>> print(rule4)
-    rule  := if ( Tank('1').level > 46.0248 || sim_time = 435600 sec ) then set Pipe('330').status to Open and set Pump('10').status to Open with priority 3
+    rule  := if ( Tank('1').level > 46.0248 || sim_time = 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
 
 The flexibility of the :class:`~wntr.network.controls.Control` class combined with the different :class:`~wntr.network.controls.ControlCondition` classes and :class:`~wntr.network.controls.ControlAction` instances provides an extremely powerful tool for defining complex network operations.
 
@@ -153,7 +153,7 @@ The control action `act1` from above is used in the conditional control:
     >>> thresh1 = 46.0248
     >>> ctrl1 = controls.Control.conditional_control(n1, 'level', np.greater, thresh1, act1)
     >>> print(ctrl1)
-    pre_and_postsolve := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3    
+    pre_and_postsolve  := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
     
 **Time-based controls**: 
 Control objects created with the :class:`~wntr.network.controls.Control.time_control` class method define time-based controls.
@@ -172,7 +172,7 @@ A new control action is defined that opens the pump:
     >>> dailyflag2 = False
     >>> ctrl2 = controls.Control.time_control(wn, time2, timeflag2, dailyflag2, act2)
     >>> print(ctrl2)
-    presolve := if sim_time = 435600.0 sec then set HeadPump('10').status to Open with priority 3
+    presolve  := if sim_time = 435600.0 sec then set HeadPump('10').status to Open with priority 3
 
 Note that the EpanetSimulator is limited to use the following pairs: 
 time_flag='SIM_TIME' with daily_flag=False, and 
