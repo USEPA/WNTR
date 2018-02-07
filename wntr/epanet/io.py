@@ -53,22 +53,22 @@ _INP_SECTIONS = ['[OPTIONS]', '[TITLE]', '[JUNCTIONS]', '[RESERVOIRS]',
                  '[TIMES]', '[REPORT]', '[COORDINATES]', '[VERTICES]',
                  '[LABELS]', '[BACKDROP]', '[TAGS]']
 
-_JUNC_ENTRY = ' {name:20} {elev:12.12f} {dem:12.12f} {pat:24} {com:>3s}\n'
+_JUNC_ENTRY = ' {name:20} {elev:15.11g} {dem:15.11g} {pat:24} {com:>3s}\n'
 _JUNC_LABEL = '{:21} {:>12s} {:>12s} {:24}\n'
 
-_RES_ENTRY = ' {name:20s} {head:20.12f} {pat:>24s} {com:>3s}\n'
+_RES_ENTRY = ' {name:20s} {head:15.11g} {pat:>24s} {com:>3s}\n'
 _RES_LABEL = '{:21s} {:>20s} {:>24s}\n'
 
-_TANK_ENTRY = ' {name:20s} {elev:20.12f} {initlev:20.12f} {minlev:20.12f} {maxlev:20.12f} {diam:20.12f} {minvol:20.12f} {curve:20s} {com:>3s}\n'
+_TANK_ENTRY = ' {name:20s} {elev:15.11g} {initlev:15.11g} {minlev:15.11g} {maxlev:15.11g} {diam:15.11g} {minvol:15.11g} {curve:20s} {com:>3s}\n'
 _TANK_LABEL = '{:21s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s} {:20s}\n'
 
-_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:20.12f} {diam:20.12f} {rough:20.12f} {mloss:20.12f} {status:>20s} {com:>3s}\n'
+_PIPE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {len:15.11g} {diam:15.11g} {rough:15.11g} {mloss:15.11g} {status:>20s} {com:>3s}\n'
 _PIPE_LABEL = '{:21s} {:20s} {:20s} {:>20s} {:>20s} {:>20s} {:>20s} {:>20s}\n'
 
 _PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:>3s}\n'
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
-_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:20.12f} {vtype:4s} {set:20.12f} {mloss:20.12f} {com:>3s}\n'
+_VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:15.11g} {mloss:15.11g} {com:>3s}\n'
 _VALVE_LABEL = '{:21s} {:20s} {:20s} {:>20s} {:4s} {:>20s} {:>20s}\n'
 
 _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
@@ -728,7 +728,7 @@ class InpFile(object):
                 E['speed_keyword'] = 'SPEED'
                 E['speed'] = pump.speed_timeseries.base_value
                 tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
-                             ' {speed_keyword:8s} {speed:12.12g} {com:>3s}\n')
+                             ' {speed_keyword:8s} {speed:15.11g} {com:>3s}\n')
             if pump.speed_timeseries.pattern is not None:
                 tmp_entry = (tmp_entry.rstrip('\n').rstrip('}').rstrip('com:>3s').rstrip(' {') +
                              ' {pattern_keyword:10s} {pattern:20s} {com:>3s}\n')
@@ -917,7 +917,7 @@ class InpFile(object):
             self.wn.options.hydraulic.pattern = None
 
     def _write_patterns(self, f, wn):
-        num_columns = 8
+        num_columns = 6
         f.write('[PATTERNS]\n'.encode('ascii'))
         f.write('{:10s} {:10s}\n'.format(';ID', 'Multipliers').encode('ascii'))
         patterns = list(wn.pattern_name_list)
@@ -1201,8 +1201,9 @@ class InpFile(object):
                 if not isinstance(control_action.target()[0], Link):
                     continue
                 if isinstance(all_control._condition, (SimTimeCondition, TimeOfDayCondition)):
-                    entry = 'Link {link} {setting} AT {compare} {time:g}\n'
-                    vals = {'link': control_action._target_obj.name,
+                    entry = '{ltype} {link} {setting} AT {compare} {time:g}\n'
+                    vals = {'ltype': control_action._target_obj.link_type,
+                            'link': control_action._target_obj.name,
                             'setting': get_setting(control_action, text),
                             'compare': 'TIME',
                             'time': all_control._condition._threshold / 3600.0}
@@ -1212,9 +1213,11 @@ class InpFile(object):
                         vals['compare'] = 'CLOCKTIME'
                     f.write(entry.format(**vals).encode('ascii'))
                 elif isinstance(all_control._condition, (ValueCondition)):
-                    entry = 'Link {link} {setting} IF Node {node} {compare} {thresh}\n'
-                    vals = {'link': control_action._target_obj.name,
+                    entry = '{ltype} {link} {setting} IF {ntype} {node} {compare} {thresh}\n'
+                    vals = {'ltype': control_action._target_obj.link_type,
+                            'link': control_action._target_obj.name,
                             'setting': get_setting(control_action, text),
+                            'ntype': all_control._condition._source_obj.node_type,
                             'node': all_control._condition._source_obj.name,
                             'compare': 'above',
                             'thresh': 0.0}
@@ -1671,7 +1674,7 @@ class InpFile(object):
     def _write_options(self, f, wn):
         f.write('[OPTIONS]\n'.encode('ascii'))
         entry_string = '{:20s} {:20s}\n'
-        entry_float = '{:20s} {:g}\n'
+        entry_float = '{:20s} {:.11g}\n'
         f.write(entry_string.format('UNITS', self.flow_units.name).encode('ascii'))
 
         f.write(entry_string.format('HEADLOSS', wn.options.hydraulic.headloss).encode('ascii'))
