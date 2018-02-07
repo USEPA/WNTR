@@ -13,7 +13,6 @@ import abc
 from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict, Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
-from wntr.utils.doc_inherit import doc_inherit
 
 logger = logging.getLogger(__name__)
 
@@ -416,7 +415,7 @@ class TimeOfDayCondition(ControlCondition):
                                              self._sec_to_hours_min_sec(self._threshold),
                                              rep, start)
 
-    @doc_inherit
+
     def requires(self):
         return OrderedSet()
 
@@ -434,7 +433,7 @@ class TimeOfDayCondition(ControlCondition):
             fmt = '( ' + ' && clock_day >= {} )'.format(self._first_day)
         return fmt
 
-    @doc_inherit
+
     def evaluate(self):
         cur_time = self._model._shifted_time
         prev_time = self._model._prev_shifted_time
@@ -541,12 +540,12 @@ class SimTimeCondition(ControlCondition):
             fmt = 'sim_time ' + fmt
         return fmt
 
-    @doc_inherit
+
     def requires(self):
         """Returns a list of objects required to evaluate this condition"""
         return OrderedSet()
 
-    @doc_inherit
+
     def evaluate(self):
         cur_time = self._model.sim_time
         prev_time = self._model._prev_sim_time
@@ -607,7 +606,7 @@ class ValueCondition(ControlCondition):
         self._threshold = ControlCondition._parse_value(threshold)
         self._backtrack = 0
 
-    @doc_inherit
+
     def requires(self):
         return OrderedSet([self._source_obj])
 
@@ -637,7 +636,7 @@ class ValueCondition(ControlCondition):
         val = self._repr_value(att, self._threshold)
         return "{}('{}').{} {} {}".format(typ, obj, att, rel, val)
 
-    @doc_inherit
+
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
         thresh_value = self._threshold
@@ -658,7 +657,7 @@ class TankLevelCondition(ValueCondition):
         assert source_attr in {'level', 'pressure', 'head'}
         self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
 
-    @doc_inherit
+
     def evaluate(self):
         self._backtrack = 0  # no backtracking is needed unless specified in the if statement below
         cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level
@@ -727,7 +726,7 @@ class RelativeCondition(ControlCondition):
                                 self._relation.symbol,
                                 tobj, self._threshold_attr)
 
-    @doc_inherit
+
     def requires(self):
         return OrderedSet([self._source_obj, self._threshold_obj])
 
@@ -756,7 +755,7 @@ class RelativeCondition(ControlCondition):
                           rel,
                           ttyp, tobj, tatt)
 
-    @doc_inherit
+
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
         thresh_value = getattr(self._threshold_obj, self._threshold_attr)
@@ -786,7 +785,7 @@ class OrCondition(ControlCondition):
     def __repr__(self):
         return 'Or({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
 
-    @doc_inherit
+
     def evaluate(self):
         return bool(self._condition_1) or bool(self._condition_2)
 
@@ -794,7 +793,7 @@ class OrCondition(ControlCondition):
     def backtrack(self):
         return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
 
-    @doc_inherit
+
     def requires(self):
         return self._condition_1.requires().update(self._condition_2.requires())
 
@@ -819,7 +818,6 @@ class AndCondition(ControlCondition):
     def __repr__(self):
         return 'And({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
 
-    @doc_inherit
     def evaluate(self):
         return bool(self._condition_1) and bool(self._condition_2)
 
@@ -827,7 +825,6 @@ class AndCondition(ControlCondition):
     def backtrack(self):
         return np.min([self._condition_1.backtrack, self._condition_2.backtrack])
 
-    @doc_inherit
     def requires(self):
         return self._condition_1.requires().update(self._condition_2.requires())
 
