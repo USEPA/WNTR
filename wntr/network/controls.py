@@ -1414,7 +1414,7 @@ class Control(ControlBase):
             return '/'.join(str(self).split())
 
     def __repr__(self):
-        fmt = "<IfThenElseControl: '{}', {}, {}, {}, priority={}>"
+        fmt = "<Control: '{}', {}, {}, {}, priority={}>"
         return fmt.format(self._name, repr(self._condition), repr(self._then_actions), repr(self._else_actions), self._priority)
 
     def __str__(self):
