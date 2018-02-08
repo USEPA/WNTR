@@ -373,7 +373,7 @@ class HydraulicOptions(object):
         if self.headloss == other.headloss and \
            self.hydraulics == other.hydraulics and \
            self.hydraulics_filename == other.hydraulics_filename and \
-           abs(self.viscosity - other.viscosity)<1e-10 and \
+           abs(self.viscosity - other.viscosity)<1e-9 and \
            abs(self.specific_gravity - other.specific_gravity)<1e-9 and \
            self.pattern == other.pattern and \
            abs(self.demand_multiplier - other.demand_multiplier)<1e-9 and \
