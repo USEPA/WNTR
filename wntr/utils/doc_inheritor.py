@@ -17,6 +17,8 @@ class DocInheritor(object):
             if not hasattr(parent, meth):
                 raise ValueError('Parent class {0} does not have method {1}'.format(parent, meth))
             if sys.version_info.major == 2:
+                if type(getattr(cls, meth)) is property:
+                    continue
                 setattr(getattr(getattr(cls, meth), '__func__'), '__doc__', getattr(parent, meth).__doc__)
             else:
                 setattr(getattr(cls, meth), '__doc__', getattr(parent, meth).__doc__)
