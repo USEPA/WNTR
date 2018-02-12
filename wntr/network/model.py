@@ -1812,6 +1812,7 @@ class PatternRegistry(Registry):
         return self.DefaultPattern(self._options)
     
     def tostring(self):
+        """String representation of the pattern registry"""
         s  = 'Pattern Registry:\n'
         s += '  Total number of patterns defined:  {}\n'.format(len(self._data))
         s += '  Patterns used in the network:      {}\n'.format(len(self._usage))
@@ -1976,6 +1977,7 @@ class CurveRegistry(Registry):
         return list(self._volume_curves)
 
     def tostring(self):
+        """String representation of the curve registry"""
         s  = 'Curve Registry:\n'
         s += '  Total number of curves defined:    {}\n'.format(len(self._data))
         s += '    Pump Head curves:          {}\n'.format(len(self.pump_curve_names))
@@ -2268,6 +2270,7 @@ class NodeRegistry(Registry):
             yield node_name, self._data[node_name]
 
     def tostring(self):
+        """String representation of the node registry"""
         s  = 'Node Registry:\n'
         s += '  Total number of nodes defined:     {}\n'.format(len(self._data))
         s += '    Junctions:      {}\n'.format(len(self.junction_names))

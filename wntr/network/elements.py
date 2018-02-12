@@ -1182,19 +1182,6 @@ class TimeSeries(object):
                           (repr(self._pattern) if self.pattern else None),
                           str(self._category))
     
-    def tostring(self):
-        fmt = ' {:12.6g}   {:20s}   {:14s}\n'
-        return fmt.format(self._base, self._pattern, self._category)
-    
-    def todict(self):
-        """Dictionary representation of the time series"""
-        d = dict(base_val=self._base)
-        if isinstance(self._pattern, six.string_types):
-            d['pattern_name'] = self._pattern
-        if self._category:
-            d['category'] = self._category
-        return d
-    
     def __eq__(self, other):
         if type(self) == type(other) and \
            self.pattern == other.pattern and \
@@ -1274,7 +1261,21 @@ class TimeSeries(object):
         for ct, t in enumerate(demand_times):
             demand_values[ct] = self.at(t)
         return demand_values
-
+    
+    def todict(self):
+        """Dictionary representation of the time series"""
+        d = dict(base_val=self._base)
+        if isinstance(self._pattern, six.string_types):
+            d['pattern_name'] = self._pattern
+        if self._category:
+            d['category'] = self._category
+        return d
+    
+    def tostring(self):
+        """String representation of the time series"""
+        fmt = ' {:12.6g}   {:20s}   {:14s}\n'
+        return fmt.format(self._base, self._pattern, self._category)
+    
 
 class Demands(MutableSequence):
     """
@@ -1608,10 +1609,6 @@ class Source(object):
         self.node_name = node_name
         self.source_type = source_type
 
-    @property
-    def strength_timeseries(self): 
-        return self._strength_timeseries
-
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -1625,3 +1622,6 @@ class Source(object):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
         return fmt.format(self.name, self.node_name, self.source_type, self._base, self._pattern_name)
 
+    @property
+    def strength_timeseries(self): 
+        return self._strength_timeseries
