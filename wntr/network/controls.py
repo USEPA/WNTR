@@ -13,6 +13,7 @@ import abc
 from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict, Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
+from wntr.utils.doc_inheritor import DocInheritor
 
 logger = logging.getLogger(__name__)
 
@@ -358,6 +359,7 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
         return '{}:{:02d}:{:02d} {}'.format(hours, mm, int(sec), pm)
 
 
+@DocInheritor({'requires', 'evaluate'})
 class TimeOfDayCondition(ControlCondition):
     """Time-of-day or "clocktime" based condition statement.
     Resets automatically at 12 AM in clock time (shifted time) every day simulated. Evaluated
@@ -465,6 +467,7 @@ class TimeOfDayCondition(ControlCondition):
             return False
 
 
+@DocInheritor({'requires', 'evaluate'})
 class SimTimeCondition(ControlCondition):
     """Condition based on time since start of the simulation.
     Generally, the relation should be ``None`` (converted to "at") --
@@ -539,7 +542,6 @@ class SimTimeCondition(ControlCondition):
         return fmt
 
     def requires(self):
-        """Returns a list of objects required to evaluate this condition"""
         return OrderedSet()
 
     def evaluate(self):
@@ -568,6 +570,7 @@ class SimTimeCondition(ControlCondition):
             return False
 
 
+@DocInheritor({'requires', 'evaluate'})
 class ValueCondition(ControlCondition):
     """Compare a network element attribute to a set value
     This type of condition can be converted to an EPANET control or rule conditional clause.
@@ -642,6 +645,7 @@ class ValueCondition(ControlCondition):
         return bool(state)
 
 
+@DocInheritor({'requires', 'evaluate'})
 class TankLevelCondition(ValueCondition):
     def __init__(self, source_obj, source_attr, relation, threshold):
         relation = Comparison.parse(relation)
@@ -678,6 +682,7 @@ class TankLevelCondition(ValueCondition):
         return bool(state)
 
 
+@DocInheritor({'requires', 'evaluate'})
 class RelativeCondition(ControlCondition):
     """Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
     This type of condition does not work with the EpanetSimulator, only the WNTRSimulator.
@@ -755,6 +760,7 @@ class RelativeCondition(ControlCondition):
         return bool(state)
 
 
+@DocInheritor({'requires', 'evaluate'})
 class OrCondition(ControlCondition):
     """Combine two WNTR Conditions with an OR.
     
@@ -787,6 +793,7 @@ class OrCondition(ControlCondition):
         return self._condition_1.requires().update(self._condition_2.requires())
 
 
+@DocInheritor({'requires', 'evaluate'})
 class AndCondition(ControlCondition):
     """Combine two WNTR Conditions with an AND
     
