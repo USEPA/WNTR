@@ -1,6 +1,6 @@
 """
 The wntr.network.graph module includes methods to represent a water network 
-model as a MultiDiGraph, and compute topographic metrics on the graph.
+model as a NetworkX MultiDiGraph, and compute topographic metrics on the graph.
 """
 import networkx as nx
 import numpy as np
@@ -22,17 +22,16 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         Parameters
         ----------
         G : graph
-            A networkx graph
+            Networkx graph
         node_attribute :  dict or pandas Series
-            node attributes
+            Node attributes
         link_attribues : dict or pandas Series
-            link attributes
-
+            Link attributes
 
         Returns
         -------
-        G : weighted graph
-            A networkx weighted graph
+        Networkx weighted graph
+        
         """
 
         for node_name in self.nodes():
@@ -69,8 +68,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
         Returns
         -------
-        terminal_nodes : list
-            list of node indexes
+        List of terminal node names
+        
         """
 
         node_degree = dict(self.degree())
@@ -80,7 +79,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
     def bridges(self):
         """
-        Get bridge links. Uses an undirected graph.
+        Get bridge links (uses an undirected graph)
 
         Parameters
         ----------
@@ -89,8 +88,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
         Returns
         -------
-        bridges : list
-            list of link indexes
+        List of links that are bridges
+        
         """
         n = nx.number_connected_components(self.to_undirected())
         bridges = []
@@ -106,12 +105,12 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
     def central_point_dominance(self):
         """
-        Compute central point dominance.
+        Compute central point dominance
 
         Returns
         -------
-        cpd : float
-            Central point dominance
+        Central point dominance (float)
+        
         """
         bet_cen = nx.betweenness_centrality(self.to_undirected())
         bet_cen = list(bet_cen.values())
@@ -122,12 +121,12 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
     def spectral_gap(self):
         """
         Spectral gap. Difference in the first and second eigenvalue of
-        the adj matrix
+        the adjacency matrix
 
         Returns
         -------
-        spectral_gap : float
-            Spectral gap
+        Spectral gap (float)
+        
         """
 
         eig = nx.adjacency_spectrum(self)
@@ -142,8 +141,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
         Returns
         -------
-        alg_con : float
-            Algebraic connectivity
+        Algebraic connectivity (float)
+        
         """
         eig = nx.laplacian_spectrum(self.to_undirected())
         eig = np.sort(eig)
@@ -157,8 +156,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
         Returns
         -------
-        fd : float
-            Critical ratio of defragmentation
+        Critical ratio of defragmentation (float)
+        
         """
         node_degree = dict(self.degree())
         tmp = np.mean(pow(np.array(list(node_degree.values())),2))
@@ -181,8 +180,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
         Returns
         -------
-        link_count : dict
-            A dictonary with the number of times each link is involved in a path
+        Dictionary with the number of times each link is involved in a path
+        
         """
         link_names = [name for (node1, node2, name) in list(self.edges(keys=True))]
         link_count = pd.Series(data = 0, index=link_names)
@@ -202,7 +201,7 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
 
 def _all_simple_paths(G, source, target, cutoff=None):
     """
-    Adaptation of nx.all_simple_paths for mutligraphs
+    Adaptation of nx.all_simple_paths for multigraphs
     """
 
     if source not in G:

@@ -9,7 +9,7 @@ One of the key features of water network models is the ability to control pipes,
 EPANET uses "controls" and "rules" to define conditions [Ross00]_.
 A control is a single action (i.e., closing/opening a link or changing the setting) based on a single condition (i.e., time based or tank level based).
 A rule is more complex; rules take an IF-THEN-ELSE form and can have multiple conditions and multiple actions in each of the logical blocks.
-WNTR supports EPANET's rules and controls when generating a water network model from an INP file and simulating hydraulics using either the EpanetSimulator or the WNTRSimulator.
+WNTR supports EPANET's rules and controls when generating a water network model from an EPANET INP file and simulating hydraulics using either the EpanetSimulator or the WNTRSimulator.
 WNTR includes additional options to define controls that can be used by the WNTRSimulator.
 
 The basic steps to define a control for a water network model are:
@@ -61,24 +61,30 @@ Conditions define when a control action should occur. The condition classes are 
 .. _table-condition-classes:
 .. table:: Condition Classes
 
-   ===================================================  ========================================================================================
-   Condition class                                      Description
-   ===================================================  ========================================================================================
-   :class:`~wntr.network.controls.TimeOfDayCondition`	Time-of-day or “clocktime” based condition statement
-   :class:`~wntr.network.controls.SimTimeCondition`	Condition based on time since start of the simulation
-   :class:`~wntr.network.controls.ValueCondition`	Compare a network element attribute to a set value
-   :class:`~wntr.network.controls.TankLevelCondition`   Compare the level in a tank to a set value.
-   :class:`~wntr.network.controls.RelativeCondition`	Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
-   :class:`~wntr.network.controls.OrCondition`	        Combine two WNTR Conditions with an OR
-   :class:`~wntr.network.controls.AndCondition`	        Combine two WNTR Conditions with an AND
-   ===================================================  ========================================================================================
+   ====================================================  ========================================================================================
+   Condition class                                       Description
+   ====================================================  ========================================================================================
+   :class:`~wntr.network.controls.TimeOfDayCondition`	 Time-of-day or “clocktime” based condition statement
+   :class:`~wntr.network.controls.SimTimeCondition`	     Condition based on time since start of the simulation
+   :class:`~wntr.network.controls.ValueCondition`	     Compare a network element attribute to a set value
+   :class:`~wntr.network.controls.TankLevelCondition`    Compare the level in a tank to a set value.
+   :class:`~wntr.network.controls.RelativeCondition`	 Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
+   :class:`~wntr.network.controls.OrCondition`	         Combine two WNTR Conditions with an OR
+   :class:`~wntr.network.controls.AndCondition`	         Combine two WNTR Conditions with an AND
+   ====================================================  ========================================================================================
 
 All of the above conditions are valid EPANET conditions except RelativeCondition.
 
 
 General Controls and Rules
 --------------------------
-All controls and rules may be created in WNTR with the :class:`~wntr.network.controls.Control` class, which takes an instance of any of the above conditions, an iterable of :class:`~wntr.network.controls.ControlAction` instances taht should occur when the condition is true, and an optional iterable of :class:`~wntr.network.controls.ControlAction` instances that should occur when the condition is false. The :class:`~wntr.network.controls.Control` class also takes optional priority and name arguments. If multiple controls with conflicting actions should occur at the same time, the control with the highest priority will override all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` enum. The default priority is medium (3). The name argument should be a string.
+All controls and rules may be created in WNTR with the :class:`~wntr.network.controls.Control` class, which takes an instance 
+of any of the above conditions, an iterable of :class:`~wntr.network.controls.ControlAction` instances that should occur when 
+the condition is true, and an optional iterable of :class:`~wntr.network.controls.ControlAction` instances that should occur 
+when the condition is false. The :class:`~wntr.network.controls.Control` class also takes optional priority and name arguments. 
+If multiple controls with conflicting actions should occur at the same time, the control with the highest priority will override 
+all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` enum. The default 
+priority is medium (3). The name argument should be a string.
 
 The following examples illustrate the creation of controls/rules in WNTR:
 

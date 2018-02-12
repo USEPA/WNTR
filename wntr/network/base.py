@@ -1,10 +1,24 @@
 """
 The wntr.network.base module includes base classes for network elements and 
 the network model.
+
+.. rubric:: Contents
+
+- :class:`~AbstractModel`
+- :class:`~Subject`
+- :class:`~Observer`
+- :class:`~Node`
+- :class:`~Link`
+- :class:`~Registry`
+- :class:`~NodeType`
+- :class:`~LinkType`
+- :class:`~LinkStatus`
+
 """
 import logging
 import six
 from six import string_types
+import types
 from wntr.utils.ordered_set import OrderedSet
 
 import enum
@@ -23,9 +37,7 @@ logger = logging.getLogger(__name__)
 
 class AbstractModel(six.with_metaclass(abc.ABCMeta, object)):
     """
-    Abstract water network model class.
-    
-    A WaterNetworkModel must supply the following methods.
+    Base class for water network models.
     
     """
     @property
@@ -66,7 +78,7 @@ class AbstractModel(six.with_metaclass(abc.ABCMeta, object)):
 
 class Subject(object):
     """
-    Subject base class for the observer design pattern.
+    Base class for the subject in an observer design pattern.
     """
     def __init__(self):
         self._observers = OrderedSet()
@@ -84,7 +96,7 @@ class Subject(object):
 
 class Observer(six.with_metaclass(abc.ABCMeta, object)):
     """
-    Observer base class for the observer design pattern.
+    Base class for the observer in an observer design pattern.
     """
     @abc.abstractmethod
     def update(self, subject):
@@ -94,22 +106,21 @@ class Observer(six.with_metaclass(abc.ABCMeta, object)):
 class Node(six.with_metaclass(abc.ABCMeta, object)):
     """Base class for nodes.
     
-
-    For details about the different subclasses, please see one of the following:
-    :class:`~wntr.network.elements.Junction`, :class:`~wntr.network.elements.Tank`, and
+    For details about the different subclasses, see one of the following:
+    :class:`~wntr.network.elements.Junction`, 
+    :class:`~wntr.network.elements.Tank`, and
     :class:`~wntr.network.elements.Reservoir`
-
 
     Parameters
     -----------
-    model : WaterNetworkModel
-        The model object is passed to the constructor to get the registries
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        WaterNetworkModel object
     name : string
-        Name of the node (must be unique among nodes of all types within the model)
+        Name of the node (must be unique among nodes of all types)
 
 
     """
-    def __init__(self, model, name):
+    def __init__(self, wn, name):
         self._name = name
         self._head = None
         self._demand = None  
@@ -120,12 +131,12 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._leak_status = False
         self._leak_area = 0.0
         self._leak_discharge_coeff = 0.0
-        self._options = model._options
-        self._node_reg = model._node_reg
-        self._link_reg = model._link_reg
-        self._controls = model._controls
-        self._pattern_reg = model._pattern_reg
-        self._curve_reg = model._curve_reg
+        self._options = wn._options
+        self._node_reg = wn._node_reg
+        self._link_reg = wn._link_reg
+        self._controls = wn._controls
+        self._pattern_reg = wn._pattern_reg
+        self._curve_reg = wn._curve_reg
         self._coordinates = [0,0]
         self._source = None
 
@@ -204,7 +215,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
     
     @property
     def tag(self):
-        """str: A tag or label for this node"""
+        """str: A tag or label for the node"""
         return self._tag
     @tag.setter
     def tag(self, tag):
@@ -232,31 +243,30 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
             self._coordinates = tuple(coordinates)
         else:
             raise ValueError('coordinates must be a 2-tuple or len-2 list')
-    
+
     def todict(self):
-        """Represent the node in dictionary form."""
-        d = dict(name=self.name, 
-                 node_type=self.node_type)
-        if self.tag:
-            d['tag'] = self.tags
-        if self.initial_quality:
-            d['init_quality'] = self.initial_quality
-        d['coordinates'] = self.coordinates
+        """Dictionary representation of the node"""
+        d = {}
+        for k in dir(self):
+            if not k.startswith('_'):
+                val = getattr(self, k)
+                if not isinstance(val, types.MethodType):
+                    d[k] = val
         return d
 
 
 class Link(six.with_metaclass(abc.ABCMeta, object)):
-    """
-    Link base class.
+    """Base class for links.
 
-    For details about the different subclasses, please see one of the following:
-    :class:`~wntr.network.elements.Pipe`, :class:`~wntr.network.elements.Pump`, and
+    For details about the different subclasses, see one of the following:
+    :class:`~wntr.network.elements.Pipe`, 
+    :class:`~wntr.network.elements.Pump`, and
     :class:`~wntr.network.elements.Valve`
 
     Parameters
     ----------
-    model : WaterNetworkModel
-        The model object is passed to the constructor to get the registries
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        WaterNetworkModel object
     link_name : string
         Name of the link
     start_node_name : string
@@ -265,14 +275,14 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         Name of the end node
     
     """
-    def __init__(self, model, link_name, start_node_name, end_node_name):
+    def __init__(self, wn, link_name, start_node_name, end_node_name):
         # Set the registries
-        self._options = model._options
-        self._node_reg = model._node_reg
-        self._link_reg = model._link_reg
-        self._controls = model._controls
-        self._pattern_reg = model._pattern_reg
-        self._curve_reg = model._curve_reg
+        self._options = wn._options
+        self._node_reg = wn._node_reg
+        self._link_reg = wn._link_reg
+        self._controls = wn._controls
+        self._pattern_reg = wn._pattern_reg
+        self._curve_reg = wn._curve_reg
         # Set the link name
         self._link_name = link_name
         # Set and register the starting node
@@ -432,41 +442,40 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._vertices = points
     
     def todict(self):
-        """A dictionary representation for this link"""
-        d = dict(name=self.name, 
-                 start_node=self.start_node_name,
-                 end_node=self.end_node_name,
-                 link_type=self.link_type)
-        if self._tag:
-            d['tag'] = self._tag
-        if self._initial_status is not LinkStatus.opened:
-            d['init_status'] = str(self._initial_status)
-        if self._initial_setting:
-            d['init_setting'] = self._initial_setting
-        if self._vertices:
-            d['vertices'] = self._vertices
+        """Dictionary representation of the link"""
+        d = {}
+        for k in dir(self):
+            if not k.startswith('_'):
+                val = getattr(self, k)
+                if not isinstance(val, types.MethodType):
+                    d[k] = val
         return d
 
 
 class Registry(MutableMapping):
+    """Base class for registries.
+    
+    Parameters
+    ----------
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        WaterNetworkModel object
     """
-    Registry base class.
-    """
-    def __init__(self, model):
-        if not isinstance(model, AbstractModel):
+    
+    def __init__(self, wn):
+        if not isinstance(wn, AbstractModel):
             raise ValueError('Registry must be initialized with a model')
 #        self._m = model
         self._data = OrderedDict()
         self._usage = OrderedDict()
 
-    def _finalize_(self, model):
-        self._options = model._options
-        self._pattern_reg = model._pattern_reg
-        self._curve_reg = model._curve_reg
-        self._node_reg = model._node_reg
-        self._link_reg = model._link_reg
-        self._controls = model._controls
-        self._sources = model._sources
+    def _finalize_(self, wn):
+        self._options = wn._options
+        self._pattern_reg = wn._pattern_reg
+        self._curve_reg = wn._curve_reg
+        self._node_reg = wn._node_reg
+        self._link_reg = wn._link_reg
+        self._controls = wn._controls
+        self._sources = wn._sources
     
     def __getitem__(self, key):
         if not key:
@@ -546,7 +555,7 @@ class Registry(MutableMapping):
         If removed without appropriate checks, it is possible that a some other 
         item will point to an object that has been deleted. (This is why the user
         should always use the "remove_*" methods). This method returns a list of 
-        names for objects that are referened, but no longer exist.
+        names for objects that are referenced, but no longer exist.
         
         Returns
         -------
@@ -602,7 +611,7 @@ class Registry(MutableMapping):
             self._usage.pop(key)
             
     def tostring(self):
-        """Provide a formatted string representation of the registry"""
+        """String representation of the registry"""
         s = 'Registry: {}\n'.format(self.__class__.__name__)
         s += '  Total entries defined: {}\n'.format(len(self._data))
         s += '  Total registered as used: {}\n'.format(len(self._usage))
@@ -611,14 +620,14 @@ class Registry(MutableMapping):
         return s
         
     def todict(self):
-        """Create a dictionary representation of the registry's contents"""
+        """Dictionary representation of the registry"""
         d = dict()
         for k, v in self._data.items():
             d[k] = v.todict()
         return d
     
     def tolist(self):
-        """Create a list representation of the registry's contents"""
+        """List representation of the registry"""
         l = list()
         for k, v in self._data.items():
             l.append(v.todict())
@@ -627,7 +636,7 @@ class Registry(MutableMapping):
 
 class NodeType(enum.IntEnum):
     """
-    An enum class for types of nodes.
+    Enum class for node types.
 
     .. rubric:: Enum Members
 
@@ -658,7 +667,7 @@ class NodeType(enum.IntEnum):
 
 class LinkType(enum.IntEnum):
     """
-    An enum class for types of links.
+    Enum class for link types.
 
     .. rubric:: Enum Members
 
@@ -703,7 +712,7 @@ class LinkType(enum.IntEnum):
 
 class LinkStatus(enum.IntEnum):
     """
-    An enum class for link statuses.
+    Enum class for link statuses.
     
     .. warning:: 
         This is NOT the class for determining output status from an EPANET binary file.

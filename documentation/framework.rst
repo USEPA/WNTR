@@ -45,7 +45,7 @@ Additionally, EPANET INP files can be generated from water network models.
    ==================================================  =============================================================================================================================================================================================================================================================================
    Class                                               Description
    ==================================================  =============================================================================================================================================================================================================================================================================
-   :class:`~wntr.network.model.WaterNetworkModel`      Contains methods to generate water network models, including methods to read and write INP files, and access/add/remove/modify network components.  This class links to additional model classes (below) which define network components, controls, and model options.
+   :class:`~wntr.network.model.WaterNetworkModel`      Contains methods to generate water network models, including methods to read and write EPANET INP files, and access/add/remove/modify network components.  This class links to additional model classes (below) which define network components, controls, and model options.
    :class:`~wntr.network.model.Junction`	           Contains methods to define junctions. Junctions are nodes where links connect. Water can enter or leave the network at a junction.
    :class:`~wntr.network.model.Reservoir`              Contains methods to define reservoirs. Reservoirs are nodes with an infinite external source or sink.      
    :class:`~wntr.network.model.Tank`                   Contains methods to define tanks. Tanks are nodes with storage capacity.     
@@ -76,7 +76,7 @@ These classes are listed in :numref:`table-sim-subpackage`.
    =================================================  =============================================================================================================================================================================================================================================================================
    :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator uses the EPANET 2 Programmer's Toolkit [Ross00]_ to run demand-driven hydraulic simulations and water quality simulations.
                                                       When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation.
-                                                      This allows the user to read in INP files, modify the model, run 
+                                                      This allows the user to read in EPANET INP files, modify the model, run 
                                                       an EPANET simulation, and analyze results all within WNTR.
 	
 	:class:`~wntr.sim.core.WNTRSimulator`             The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulation and includes models to simulate pipe leaks. 
