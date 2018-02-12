@@ -1810,18 +1810,18 @@ class PatternRegistry(Registry):
     def default_pattern(self):
         """A new default pattern object"""
         return self.DefaultPattern(self._options)
-    
-    def tostring(self):
-        """String representation of the pattern registry"""
-        s  = 'Pattern Registry:\n'
-        s += '  Total number of patterns defined:  {}\n'.format(len(self._data))
-        s += '  Patterns used in the network:      {}\n'.format(len(self._usage))
-        if len(self.orphaned()) > 0:
-            s += '  Patterns used without definitions: {}\n'.format(len(self.orphaned()))
-            for orphan in self.orphaned():
-                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-        return s
-        
+
+#    def tostring(self):
+#        """String representation of the pattern registry"""
+#        s  = 'Pattern Registry:\n'
+#        s += '  Total number of patterns defined:  {}\n'.format(len(self._data))
+#        s += '  Patterns used in the network:      {}\n'.format(len(self._usage))
+#        if len(self.orphaned()) > 0:
+#            s += '  Patterns used without definitions: {}\n'.format(len(self.orphaned()))
+#            for orphan in self.orphaned():
+#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
+#        return s
+
 
 class CurveRegistry(Registry):
     def __init__(self, model):
@@ -1976,21 +1976,21 @@ class CurveRegistry(Registry):
         """List of names of all volume curves"""
         return list(self._volume_curves)
 
-    def tostring(self):
-        """String representation of the curve registry"""
-        s  = 'Curve Registry:\n'
-        s += '  Total number of curves defined:    {}\n'.format(len(self._data))
-        s += '    Pump Head curves:          {}\n'.format(len(self.pump_curve_names))
-        s += '    Efficiency curves:         {}\n'.format(len(self.efficiency_curve_names))
-        s += '    Headloss curves:           {}\n'.format(len(self.headloss_curve_names))
-        s += '    Volume curves:             {}\n'.format(len(self.volume_curve_names))
-        s += '  Curves used in the network:        {}\n'.format(len(self._usage))
-        s += '  Curves provided without a type:    {}\n'.format(len(self.untyped_curve_names))
-        if len(self.orphaned()) > 0:
-            s += '  Curves used without definition:    {}\n'.format(len(self.orphaned()))
-            for orphan in self.orphaned():
-                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-        return s
+#    def tostring(self):
+#        """String representation of the curve registry"""
+#        s  = 'Curve Registry:\n'
+#        s += '  Total number of curves defined:    {}\n'.format(len(self._data))
+#        s += '    Pump Head curves:          {}\n'.format(len(self.pump_curve_names))
+#        s += '    Efficiency curves:         {}\n'.format(len(self.efficiency_curve_names))
+#        s += '    Headloss curves:           {}\n'.format(len(self.headloss_curve_names))
+#        s += '    Volume curves:             {}\n'.format(len(self.volume_curve_names))
+#        s += '  Curves used in the network:        {}\n'.format(len(self._usage))
+#        s += '  Curves provided without a type:    {}\n'.format(len(self.untyped_curve_names))
+#        if len(self.orphaned()) > 0:
+#            s += '  Curves used without definition:    {}\n'.format(len(self.orphaned()))
+#            for orphan in self.orphaned():
+#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
+#        return s
 
 
 class SourceRegistry(Registry):
@@ -2269,18 +2269,18 @@ class NodeRegistry(Registry):
         for node_name in self._reservoirs:
             yield node_name, self._data[node_name]
 
-    def tostring(self):
-        """String representation of the node registry"""
-        s  = 'Node Registry:\n'
-        s += '  Total number of nodes defined:     {}\n'.format(len(self._data))
-        s += '    Junctions:      {}\n'.format(len(self.junction_names))
-        s += '    Tanks:          {}\n'.format(len(self.tank_names))
-        s += '    Reservoirs:     {}\n'.format(len(self.reservoir_names))
-        if len(self.orphaned()) > 0:
-            s += '  Nodes used without definition:     {}\n'.format(len(self.orphaned()))
-            for orphan in self.orphaned():
-                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-        return s
+#    def tostring(self):
+#        """String representation of the node registry"""
+#        s  = 'Node Registry:\n'
+#        s += '  Total number of nodes defined:     {}\n'.format(len(self._data))
+#        s += '    Junctions:      {}\n'.format(len(self.junction_names))
+#        s += '    Tanks:          {}\n'.format(len(self.tank_names))
+#        s += '    Reservoirs:     {}\n'.format(len(self.reservoir_names))
+#        if len(self.orphaned()) > 0:
+#            s += '  Nodes used without definition:     {}\n'.format(len(self.orphaned()))
+#            for orphan in self.orphaned():
+#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
+#        return s
 
 
 class LinkRegistry(Registry):
@@ -2717,43 +2717,43 @@ class LinkRegistry(Registry):
         for name in self._gpvs:
             yield name, self._data[name]
 
-    def tostring(self):
-        """String representation of the link registry"""
-        s  = 'Link Registry:\n'
-        s += '  Total number of links defined:     {}\n'.format(len(self._data))
-        s += '    Pipes:                     {}\n'.format(len(self.pipe_names))
-        ct_cv = sum([ 1 for n in self.check_valves()])
-        if ct_cv:
-            s += '      Check valves:     {}\n'.format(ct_cv)
-        s += '    Pumps:                     {}\n'.format(len(self.pump_names))
-        ct_cp = len(self._power_pumps)
-        ct_hc = len(self._head_pumps)
-        if ct_cp:
-            s += '      Constant power:   {}\n'.format(ct_cp)
-        if ct_hc:
-            s += '      Head/pump curve:  {}\n'.format(ct_hc)
-        s += '    Valves:                    {}\n'.format(len(self.valve_names))
-        PRV = len(self._prvs)
-        PSV = len(self._psvs)
-        PBV = len(self._pbvs)
-        FCV = len(self._fcvs)
-        TCV = len(self._tcvs)
-        GPV = len(self._gpvs)
-        if PRV:
-            s += '      Pres. reducing:   {}\n'.format(PRV)
-        if PSV:
-            s += '      Pres. sustaining: {}\n'.format(PSV)
-        if PBV:
-            s += '      Pres. breaker:    {}\n'.format(PBV)
-        if FCV:
-            s += '      Flow control:     {}\n'.format(FCV)
-        if TCV:
-            s += '      Throttle control: {}\n'.format(TCV)
-        if GPV:
-            s += '      General purpose:  {}\n'.format(GPV)
-        if len(self.orphaned()) > 0:
-            s += '  Links used without definition:     {}\n'.format(len(self.orphaned()))
-            for orphan in self.orphaned():
-                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-        return s
+#    def tostring(self):
+#        """String representation of the link registry"""
+#        s  = 'Link Registry:\n'
+#        s += '  Total number of links defined:     {}\n'.format(len(self._data))
+#        s += '    Pipes:                     {}\n'.format(len(self.pipe_names))
+#        ct_cv = sum([ 1 for n in self.check_valves()])
+#        if ct_cv:
+#            s += '      Check valves:     {}\n'.format(ct_cv)
+#        s += '    Pumps:                     {}\n'.format(len(self.pump_names))
+#        ct_cp = len(self._power_pumps)
+#        ct_hc = len(self._head_pumps)
+#        if ct_cp:
+#            s += '      Constant power:   {}\n'.format(ct_cp)
+#        if ct_hc:
+#            s += '      Head/pump curve:  {}\n'.format(ct_hc)
+#        s += '    Valves:                    {}\n'.format(len(self.valve_names))
+#        PRV = len(self._prvs)
+#        PSV = len(self._psvs)
+#        PBV = len(self._pbvs)
+#        FCV = len(self._fcvs)
+#        TCV = len(self._tcvs)
+#        GPV = len(self._gpvs)
+#        if PRV:
+#            s += '      Pres. reducing:   {}\n'.format(PRV)
+#        if PSV:
+#            s += '      Pres. sustaining: {}\n'.format(PSV)
+#        if PBV:
+#            s += '      Pres. breaker:    {}\n'.format(PBV)
+#        if FCV:
+#            s += '      Flow control:     {}\n'.format(FCV)
+#        if TCV:
+#            s += '      Throttle control: {}\n'.format(TCV)
+#        if GPV:
+#            s += '      General purpose:  {}\n'.format(GPV)
+#        if len(self.orphaned()) > 0:
+#            s += '  Links used without definition:     {}\n'.format(len(self.orphaned()))
+#            for orphan in self.orphaned():
+#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
+#        return s
 

@@ -609,16 +609,7 @@ class Registry(MutableMapping):
             self._usage[key].discard(arg)
         if len(self._usage[key]) < 1:
             self._usage.pop(key)
-            
-    def tostring(self):
-        """String representation of the registry"""
-        s = 'Registry: {}\n'.format(self.__class__.__name__)
-        s += '  Total entries defined: {}\n'.format(len(self._data))
-        s += '  Total registered as used: {}\n'.format(len(self._usage))
-        if len(self.orphaned()) > 0:
-            s += '  Total used but undefined: {}\n'.format(len(self.orphaned()))
-        return s
-        
+
     def todict(self):
         """Dictionary representation of the registry"""
         d = dict()

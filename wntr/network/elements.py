@@ -1271,10 +1271,10 @@ class TimeSeries(object):
             d['category'] = self._category
         return d
     
-    def tostring(self):
-        """String representation of the time series"""
-        fmt = ' {:12.6g}   {:20s}   {:14s}\n'
-        return fmt.format(self._base, self._pattern, self._category)
+#    def tostring(self):
+#        """String representation of the time series"""
+#        fmt = ' {:12.6g}   {:20s}   {:14s}\n'
+#        return fmt.format(self._base, self._pattern, self._category)
     
 
 class Demands(MutableSequence):
@@ -1322,36 +1322,36 @@ class Demands(MutableSequence):
     def __repr__(self):
         return '<Demands: {}>'.format(repr(self._list))
     
-    def tostring(self):
-        """String representation of demands"""
-        if len(self._list) == 0:
-            s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
-            s += '    None\n'
-            return s
-#        elif len(self._list) == 1:
-#            s  = '  ========   ============   ====================   ==============\n'
-#            s += '  Demand:    {:12.6g}   {:20s}   {:14s}\n'.format(self._list[0].base_value,
-#                                                                    self._list[0].pattern_name,
-#                                                                    self._list[0].category)
-#            s += '  ========   ============   ====================   ==============\n'
+#    def tostring(self):
+#        """String representation of demands"""
+#        if len(self._list) == 0:
+#            s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
+#            s += '    None\n'
 #            return s
-#        s  = '  ========   ============   ====================   ==============\n'
-#        s += '  Demand #   Base Value     Pattern Name           Category      \n'
-#        s += '  --------   ------------   --------------------   --------------\n'
-        s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
-        lf = '  [{:5d} ]  {}'
-        for ct, dem in enumerate(self._list):
-            s += lf.format(ct+1, dem.tostring())
-#        s += '  ========   ============   ====================   ==============\n'
-        return s
-    
-    def tolist(self):
-        """List representation of demands"""
-        if len(self._list) == 0: return None
-        d = []
-        for demand in self._list:
-            d.append(demand.todict())
-        return d
+##        elif len(self._list) == 1:
+##            s  = '  ========   ============   ====================   ==============\n'
+##            s += '  Demand:    {:12.6g}   {:20s}   {:14s}\n'.format(self._list[0].base_value,
+##                                                                    self._list[0].pattern_name,
+##                                                                    self._list[0].category)
+##            s += '  ========   ============   ====================   ==============\n'
+##            return s
+##        s  = '  ========   ============   ====================   ==============\n'
+##        s += '  Demand #   Base Value     Pattern Name           Category      \n'
+##        s += '  --------   ------------   --------------------   --------------\n'
+#        s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
+#        lf = '  [{:5d} ]  {}'
+#        for ct, dem in enumerate(self._list):
+#            s += lf.format(ct+1, dem.tostring())
+##        s += '  ========   ============   ====================   ==============\n'
+#        return s
+#    
+#    def tolist(self):
+#        """List representation of demands"""
+#        if len(self._list) == 0: return None
+#        d = []
+#        for demand in self._list:
+#            d.append(demand.todict())
+#        return d
     
     def to_ts(self, obj):
         """Time series representation of demands"""
