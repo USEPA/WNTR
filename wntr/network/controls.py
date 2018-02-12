@@ -572,9 +572,8 @@ class SimTimeCondition(ControlCondition):
 
 @DocInheritor({'requires', 'evaluate'})
 class ValueCondition(ControlCondition):
-    """Compare a network element attribute to a set value
-    This type of condition can be converted to an EPANET control or rule conditional clause.
-    
+    """Compare a network element attribute to a set value.
+
     Parameters
     ----------
     source_obj : object
@@ -647,6 +646,9 @@ class ValueCondition(ControlCondition):
 
 @DocInheritor({'requires', 'evaluate'})
 class TankLevelCondition(ValueCondition):
+    """
+    A special type of ValueCondition for tank levels/heads/pressures.
+    """
     def __init__(self, source_obj, source_attr, relation, threshold):
         relation = Comparison.parse(relation)
         if relation not in {Comparison.ge, Comparison.le, Comparison.gt, Comparison.lt}:
@@ -1456,7 +1458,8 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
 
 
 class Control(ControlBase):
-    """If-Then[-Else] contol
+    """
+    A very general and flexible class for defining both controls and rules.
     """
     def __init__(self, condition, then_actions, else_actions=None, priority=ControlPriority.medium, name=None):
         if not isinstance(condition, ControlCondition):
@@ -1608,6 +1611,9 @@ class Control(ControlBase):
 
 
 class ControlManager(Observer):
+    """
+    A class for managing controls and identifying changes made by those controls.
+    """
     def __init__(self):
         self._controls = OrderedSet()
         """OrderedSet of Control"""
