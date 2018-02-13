@@ -4,15 +4,38 @@ v0.1.4 (Master branch)
 ---------------------------------------------------
 
 * Added a faster EPANET binary output file reader
-* Added ability to get the names of all required objects that are queried or acted upon by the control (see :class:`~wntr.network.controls.Control.requires`)
+* Updated the order in which controls operate to match EPANET
+* Updated controls classes to include Control and Rule objects (API change, see :class:`~wntr.network.controls.Control` and :class:`~wntr.network.controls.Rule`)
+* Added ability to get the names of all required objects that are queried or acted upon by the control/rule (see :class:`~wntr.network.controls.Control.requires`)
 * Modified the structure of the WaterNetworkOptions object to group options into types (API change, see :class:`~wntr.network.options.WaterNetworkOptions`)
-* Created a Pattern object that can be called to get the pattern value at a specific time (see :class:`~wntr.network.elements.Pattern`)
-* Created a TimeSeries object that contains a base value, Pattern object, and category.  The object can be called to get its value at a specific time.
-  TimeSeries are used to store junction demand, source injection, pricing, pump speed, and reservoir head. (see :class:`~wntr.network.elements.TimeSeries`)
-* Created a Demands object that contains multiple demands for a single junction and can 
-  calculate demand values at a specific time.  The ability to store multiple demands per junction means that
-  'base_demand' is no longer a Junction attribute (API change). The Demands object can be used to extract the base value per demand.  
-  Expected demand and average daily expected demand can also be calculated using new metrics (see :class:`~wntr.metrics.hydraulic.expected_demand` and :class:`~wntr.metrics.hydraulic.average_expected_demand`).
+* Created water network model objects for different types of valves (see 
+  :class:`~wntr.network.elements.PRValve`, 
+  :class:`~wntr.network.elements.PSValve`, 
+  :class:`~wntr.network.elements.PBValve`, 
+  :class:`~wntr.network.elements.FCValve`, 
+  :class:`~wntr.network.elements.TCValve`, and
+  :class:`~wntr.network.elements.GPValve`) and pumps (see
+  :class:`~wntr.network.elements.HeadPump` and 
+  :class:`~wntr.network.elements.PowerPump`)
+* Created a Pattern object that contains a list of values (see :class:`~wntr.network.elements.Pattern`)
+
+  * A Pattern object can be called to get the pattern value at a specific time
+  
+* Created a TimeSeries object that contains a base value, Pattern object, and category (see :class:`~wntr.network.elements.TimeSeries`)
+
+  * TimeSeries are used to store junction demand, source injection, pricing, pump speed, and reservoir head
+  * A TimeSeries object can be called to get the timeseries value at a specific time 
+
+* Created a Demands object to store a list of TimeSeries objects (see :class:`~wntr.network.elements.Demands`)
+
+  * Demands are used to store multiple demands at a single junction
+  * A Demands object can be called to get the total demand at a specific time (does not include the demand multiplier)
+  * Since a junction can have multiple demands, 'base_demand' is no longer a Junction attribute (API change). The Demands object can be used to extract the base value per demand.  
+  * Expected demand and average daily expected demand can be calculated using new metrics (see :class:`~wntr.metrics.hydraulic.expected_demand` and :class:`~wntr.metrics.hydraulic.average_expected_demand`).
+
 * Added support for flow control valves (FCV), multiple demands at a junction, and variable reservoir head in the WNTRSimulator
+* Modified the dependence between the WaterNetworkModel and the NetworkX graph.  The graph is now built from scratch when WaterNetworkModel.get_graph() is called.  
+  WaterNetworkModel.get_graph_deep_copy() has been deprecated (API change, see :class:`~wntr.network.model.WaterNetworkModel.get_graph`).
 * Modified the WaterNetworkModel.add_pattern() to no longer accept start_time and end_time options.  
   Binary patterns can be created using the Patterns object (API change, see :class:`~wntr.network.elements.Pattern.binary_pattern`).
+* Updated documentation
