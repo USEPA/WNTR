@@ -1,6 +1,16 @@
 """
 The wntr.network.model module includes methods to build a water network
 model.
+
+.. rubric:: Contents
+
+- :class:`~WaterNetworkModel`
+- :class:`~PatternRegistry`
+- :class:`~CurveRegistry`
+- :class:`~SourceRegistry`
+- :class:`~NodeRegistry`
+- :class:`~LinkRegistry`
+
 """
 import logging
 import six
@@ -133,7 +143,7 @@ class WaterNetworkModel(AbstractModel):
         """
         Return the time in seconds of the previous solve shifted by
         the simulation start time. That is, this is the time from 12
-        AM on the first day to the time at the prevous hydraulic
+        AM on the first day to the time at the previous hydraulic
         timestep.
         """
         return self._prev_sim_time + self.options.time.start_clocktime
@@ -198,7 +208,7 @@ class WaterNetworkModel(AbstractModel):
     
     @property
     def curves(self): 
-        """The curve registry (as property) or a generator for iteration (as function call).
+        """The curve registry (as property) or a generator for iteration (as function call)
         
         Returns
         -------
@@ -208,8 +218,7 @@ class WaterNetworkModel(AbstractModel):
         return self._curve_reg
     
     def sources(self):
-        """
-        Returns a generator to iterate over all sources.
+        """Returns a generator to iterate over all sources
 
         Returns
         -------
@@ -219,8 +228,7 @@ class WaterNetworkModel(AbstractModel):
             yield source_name, source
         
     def controls(self):
-        """
-        Returns a generator to iterate over all controls.
+        """Returns a generator to iterate over all controls
 
         Returns
         -------
@@ -263,7 +271,7 @@ class WaterNetworkModel(AbstractModel):
 
     @property
     def head_pumps(self):
-        """Iterator over all head-beased pumps"""
+        """Iterator over all head-based pumps"""
         return self._link_reg.head_pumps
 
     @property
@@ -319,7 +327,7 @@ class WaterNetworkModel(AbstractModel):
     def add_junction(self, name, base_demand=0.0, demand_pattern=None, 
                      elevation=0.0, coordinates=None, demand_category=None):
         """
-        Adds a junction to the water network model.
+        Adds a junction to the water network model
 
         Parameters
         -------------------
@@ -343,7 +351,7 @@ class WaterNetworkModel(AbstractModel):
                  min_level=0.0, max_level=6.096, diameter=15.24,
                  min_vol=None, vol_curve=None, coordinates=None):
         """
-        Adds a tank to the water network model.
+        Adds a tank to the water network model
 
         Parameters
         -------------------
@@ -378,7 +386,7 @@ class WaterNetworkModel(AbstractModel):
 
     def add_reservoir(self, name, base_head=0.0, head_pattern=None, coordinates=None):
         """
-        Adds a reservoir to the water network model.
+        Adds a reservoir to the water network model
 
         Parameters
         ----------
@@ -398,7 +406,7 @@ class WaterNetworkModel(AbstractModel):
                  diameter=0.3048, roughness=100, minor_loss=0.0, status='OPEN', 
                  check_valve_flag=False):
         """
-        Adds a pipe to the water network model.
+        Adds a pipe to the water network model
 
         Parameters
         ----------
@@ -433,7 +441,7 @@ class WaterNetworkModel(AbstractModel):
     def add_pump(self, name, start_node_name, end_node_name, pump_type='POWER',
                  pump_parameter=50.0, speed=1.0, pattern=None):
         """
-        Adds a pump to the water network model.
+        Adds a pump to the water network model
 
         Parameters
         ----------
@@ -459,7 +467,7 @@ class WaterNetworkModel(AbstractModel):
     def add_valve(self, name, start_node_name, end_node_name,
                  diameter=0.3048, valve_type='PRV', minor_loss=0.0, setting=0.0):
         """
-        Adds a valve to the water network model.
+        Adds a valve to the water network model
 
         Parameters
         ----------
@@ -487,7 +495,7 @@ class WaterNetworkModel(AbstractModel):
 
     def add_pattern(self, name, pattern=None):
         """
-        Adds a pattern to the water network model.
+        Adds a pattern to the water network model
         
         The pattern can be either a list of values (list, numpy array, etc.) or a 
         :class:`~wntr.network.elements.Pattern` object. The Pattern class has options to automatically
@@ -527,7 +535,7 @@ class WaterNetworkModel(AbstractModel):
             
     def add_curve(self, name, curve_type, xy_tuples_list):
         """
-        Adds a curve to the water network model.
+        Adds a curve to the water network model
 
         Parameters
         ----------
@@ -542,7 +550,7 @@ class WaterNetworkModel(AbstractModel):
         
     def add_source(self, name, node_name, source_type, quality, pattern=None):
         """
-        Adds a source to the water network model.
+        Adds a source to the water network model
 
         Parameters
         ----------
@@ -569,7 +577,7 @@ class WaterNetworkModel(AbstractModel):
 
     def add_control(self, name, control_object):
         """
-        Adds a control to the water network model.
+        Adds a control to the water network model
 
         Parameters
         ----------
@@ -586,7 +594,7 @@ class WaterNetworkModel(AbstractModel):
     ### # 
     ### Remove elements from the model
     def remove_node(self, name, with_control=False):
-        """"""
+        """Removes a node from the water network model"""
         node = self.get_node(name)
         if with_control:
             x=[]
@@ -603,7 +611,7 @@ class WaterNetworkModel(AbstractModel):
         self._node_reg.__delitem__(name)
 
     def remove_link(self, name, with_control=False):
-        """"""
+        """Removes a link from the water network model"""
         link = self.get_link(name)
         if with_control:
             x=[]
@@ -620,25 +628,20 @@ class WaterNetworkModel(AbstractModel):
         self._link_reg.__delitem__(name)
 
     def remove_pattern(self, name): 
-        """
-        Removes a pattern from the water network model.
-        """
+        """Removes a pattern from the water network model"""
         self._pattern_reg.__delitem__(name)
         
     def remove_curve(self, name): 
-        """
-        Removes a curve from the water network model.
-        """
+        """Removes a curve from the water network model"""
         self._curve_reg.__delitem__(name)
         
     def remove_source(self, name):
-        """
-        Removes a source from the water network model.
+        """Removes a source from the water network model
 
         Parameters
         ----------
         name : string
-           The name of the source object to be removed.
+           The name of the source object to be removed
         """
         logger.warning('You are deleting a source. This could have unintended \
             side effects. If you are replacing values, use get_source(name) \
@@ -649,12 +652,12 @@ class WaterNetworkModel(AbstractModel):
         del self._sources[name]
         
     def remove_control(self, name): 
-        """"""
+        """Removes a control from the water network model"""
         del self._controls[name]
 
     def _discard_control(self, name):
-        """
-        Removes a control from the water network model.
+        """Removes a control from the water network model
+        
         If the control is not present, an exception is not raised.
 
         Parameters
@@ -736,7 +739,7 @@ class WaterNetworkModel(AbstractModel):
         Parameters
         ----------
         name : str
-            The sourve name
+            The source name
             
         Returns
         -------
@@ -1143,16 +1146,7 @@ class WaterNetworkModel(AbstractModel):
     ### #
     ### Helper functions
     def todict(self):
-        """Create a dictionary representation of the model.
-        
-        This method is useful for passing between software where pickling is not an option.
-        It also can be used as input to create a JSON or YAML representation of the model.
-        
-        Returns
-        -------
-        dict
-        
-        """
+        """Dictionary representation of the water network model"""
         d = dict(options=self._options.todict(),
                  nodes=self._node_reg.tolist(),
                  links=self._link_reg.tolist(),
@@ -1196,7 +1190,7 @@ class WaterNetworkModel(AbstractModel):
         resetting the base demand to 1. The demand pattern is resampled to
         match the water network model pattern timestep. This method can be
         used to reset demands in a water network model to demands from a
-        pressure dependent demand simualtion.
+        pressure dependent demand simulation.
 
         Parameters
         ----------
@@ -1226,7 +1220,7 @@ class WaterNetworkModel(AbstractModel):
 
     def get_links_for_node(self, node_name, flag='ALL'):
         """
-        Returns a list of links connected to a node.
+        Returns a list of links connected to a node
 
         Parameters
         ----------
@@ -1256,7 +1250,7 @@ class WaterNetworkModel(AbstractModel):
 
     def query_node_attribute(self, attribute, operation=None, value=None, node_type=None):
         """
-        Query node attributes, for example get all nodes with elevation <= threshold.
+        Query node attributes, for example get all nodes with elevation <= threshold
 
         Parameters
         ----------
@@ -1309,7 +1303,7 @@ class WaterNetworkModel(AbstractModel):
 
     def query_link_attribute(self, attribute, operation=None, value=None, link_type=None):
         """
-        Query link attributes, for example get all pipe diameters > threshold.
+        Query link attributes, for example get all pipe diameters > threshold
 
         Parameters
         ----------
@@ -1362,7 +1356,7 @@ class WaterNetworkModel(AbstractModel):
 
     def reset_initial_values(self):
         """
-        Resets all initial values in the network.
+        Resets all initial values in the network
         """
         self.sim_time = 0.0
         self._prev_sim_time = None
@@ -1402,7 +1396,7 @@ class WaterNetworkModel(AbstractModel):
 
     def read_inpfile(self, filename):
         """
-        Defines water network model components from an EPANET INP file.
+        Defines water network model components from an EPANET INP file
 
         Parameters
         ----------
@@ -1416,7 +1410,7 @@ class WaterNetworkModel(AbstractModel):
 
     def write_inpfile(self, filename, units=None):
         """
-        Writes the current water network model to an EPANET INP file.
+        Writes the current water network model to an EPANET INP file
 
         Parameters
         ----------
@@ -1437,7 +1431,8 @@ class WaterNetworkModel(AbstractModel):
     ### Move to morph
     def scale_node_coordinates(self, scale):
         """
-        Scales node coordinates, using 1:scale.  Scale should be in meters.
+        Scales node coordinates, using 1:scale (scale should be in meters)
+        
         Parameters
         -----------
         scale : float
@@ -1449,7 +1444,7 @@ class WaterNetworkModel(AbstractModel):
             
     def split_pipe(self, pipe_name_to_split, new_pipe_name, new_junction_name,
                    add_pipe_at_node='end', split_at_point=0.5):
-        """Splits a pipe by adding a junction and one new pipe segment.
+        """Splits a pipe by adding a junction and one new pipe segment
         
         This method is convenient when adding leaks to a pipe. It provides 
         an initially zero-demand node at some point along the pipe and then
@@ -1462,7 +1457,7 @@ class WaterNetworkModel(AbstractModel):
         or the end of the old pipe, this allows the split to occur before
         or after the check valve. Additionally, no controls will be added
         to the new pipe; the old pipe will keep any controls. Again, this
-        allows the split to occur before or after a "valve" that is controled
+        allows the split to occur before or after a "valve" that is controlled
         by opening or closing a pipe.
         
         This method keeps 'pipe_name_to_split', resizes it, and adds
@@ -1588,7 +1583,7 @@ class WaterNetworkModel(AbstractModel):
     def _break_pipe(self, pipe_name_to_split, new_pipe_name, new_junction_name_old_pipe,
                    new_junction_name_new_pipe,
                    add_pipe_at_node='end', split_at_point=0.5):
-        """BETA Breaks a pipe by adding a two unconnected junctions and one new pipe segment.
+        """BETA Breaks a pipe by adding a two unconnected junctions and one new pipe segment
         
         This method provides a true broken pipe -- i.e., there is no longer flow possible 
         from one side of the break to the other. This is more likely to break the model
@@ -1602,7 +1597,7 @@ class WaterNetworkModel(AbstractModel):
         performed to stop such a condition, it is left to the user.
         Additionally, no controls will be added
         to the new pipe; the old pipe will keep any controls. Again, this
-        allows the break to occur before or after a "valve" that is controled
+        allows the break to occur before or after a "valve" that is controlled
         by opening or closing a pipe.
         
         This method keeps 'pipe_name_to_split', resizes it, and adds
@@ -1815,17 +1810,18 @@ class PatternRegistry(Registry):
     def default_pattern(self):
         """A new default pattern object"""
         return self.DefaultPattern(self._options)
-    
-    def tostring(self):
-        s  = 'Pattern Registry:\n'
-        s += '  Total number of patterns defined:  {}\n'.format(len(self._data))
-        s += '  Patterns used in the network:      {}\n'.format(len(self._usage))
-        if len(self.orphaned()) > 0:
-            s += '  Patterns used without definitions: {}\n'.format(len(self.orphaned()))
-            for orphan in self.orphaned():
-                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-        return s
-        
+
+#    def tostring(self):
+#        """String representation of the pattern registry"""
+#        s  = 'Pattern Registry:\n'
+#        s += '  Total number of patterns defined:  {}\n'.format(len(self._data))
+#        s += '  Patterns used in the network:      {}\n'.format(len(self._usage))
+#        if len(self.orphaned()) > 0:
+#            s += '  Patterns used without definitions: {}\n'.format(len(self.orphaned()))
+#            for orphan in self.orphaned():
+#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
+#        return s
+
 
 class CurveRegistry(Registry):
     def __init__(self, model):
@@ -1847,7 +1843,7 @@ class CurveRegistry(Registry):
             self.set_curve_type(key, value.curve_type)
     
     def set_curve_type(self, key, curve_type):
-        """WARNING -- does not check to make sure key is typed before assining it - you could end up
+        """WARNING -- does not check to make sure key is typed before assigning it - you could end up
         with a curve that is used for more than one type, which would be really weird"""
         if curve_type is None:
             return
@@ -1980,20 +1976,21 @@ class CurveRegistry(Registry):
         """List of names of all volume curves"""
         return list(self._volume_curves)
 
-    def tostring(self):
-        s  = 'Curve Registry:\n'
-        s += '  Total number of curves defined:    {}\n'.format(len(self._data))
-        s += '    Pump Head curves:          {}\n'.format(len(self.pump_curve_names))
-        s += '    Efficiency curves:         {}\n'.format(len(self.efficiency_curve_names))
-        s += '    Headloss curves:           {}\n'.format(len(self.headloss_curve_names))
-        s += '    Volume curves:             {}\n'.format(len(self.volume_curve_names))
-        s += '  Curves used in the network:        {}\n'.format(len(self._usage))
-        s += '  Curves provided without a type:    {}\n'.format(len(self.untyped_curve_names))
-        if len(self.orphaned()) > 0:
-            s += '  Curves used without definition:    {}\n'.format(len(self.orphaned()))
-            for orphan in self.orphaned():
-                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-        return s
+#    def tostring(self):
+#        """String representation of the curve registry"""
+#        s  = 'Curve Registry:\n'
+#        s += '  Total number of curves defined:    {}\n'.format(len(self._data))
+#        s += '    Pump Head curves:          {}\n'.format(len(self.pump_curve_names))
+#        s += '    Efficiency curves:         {}\n'.format(len(self.efficiency_curve_names))
+#        s += '    Headloss curves:           {}\n'.format(len(self.headloss_curve_names))
+#        s += '    Volume curves:             {}\n'.format(len(self.volume_curve_names))
+#        s += '  Curves used in the network:        {}\n'.format(len(self._usage))
+#        s += '  Curves provided without a type:    {}\n'.format(len(self.untyped_curve_names))
+#        if len(self.orphaned()) > 0:
+#            s += '  Curves used without definition:    {}\n'.format(len(self.orphaned()))
+#            for orphan in self.orphaned():
+#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
+#        return s
 
 
 class SourceRegistry(Registry):
@@ -2018,6 +2015,7 @@ class SourceRegistry(Registry):
         except KeyError:
             # Do not raise an exception if there is no key of that name
             return
+
 
 class NodeRegistry(Registry):
     """The registry containing the model's nodes"""
@@ -2271,17 +2269,18 @@ class NodeRegistry(Registry):
         for node_name in self._reservoirs:
             yield node_name, self._data[node_name]
 
-    def tostring(self):
-        s  = 'Node Registry:\n'
-        s += '  Total number of nodes defined:     {}\n'.format(len(self._data))
-        s += '    Junctions:      {}\n'.format(len(self.junction_names))
-        s += '    Tanks:          {}\n'.format(len(self.tank_names))
-        s += '    Reservoirs:     {}\n'.format(len(self.reservoir_names))
-        if len(self.orphaned()) > 0:
-            s += '  Nodes used without definition:     {}\n'.format(len(self.orphaned()))
-            for orphan in self.orphaned():
-                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-        return s
+#    def tostring(self):
+#        """String representation of the node registry"""
+#        s  = 'Node Registry:\n'
+#        s += '  Total number of nodes defined:     {}\n'.format(len(self._data))
+#        s += '    Junctions:      {}\n'.format(len(self.junction_names))
+#        s += '    Tanks:          {}\n'.format(len(self.tank_names))
+#        s += '    Reservoirs:     {}\n'.format(len(self.reservoir_names))
+#        if len(self.orphaned()) > 0:
+#            s += '  Nodes used without definition:     {}\n'.format(len(self.orphaned()))
+#            for orphan in self.orphaned():
+#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
+#        return s
 
 
 class LinkRegistry(Registry):
@@ -2718,42 +2717,43 @@ class LinkRegistry(Registry):
         for name in self._gpvs:
             yield name, self._data[name]
 
-    def tostring(self):
-        s  = 'Link Registry:\n'
-        s += '  Total number of links defined:     {}\n'.format(len(self._data))
-        s += '    Pipes:                     {}\n'.format(len(self.pipe_names))
-        ct_cv = sum([ 1 for n in self.check_valves()])
-        if ct_cv:
-            s += '      Check valves:     {}\n'.format(ct_cv)
-        s += '    Pumps:                     {}\n'.format(len(self.pump_names))
-        ct_cp = len(self._power_pumps)
-        ct_hc = len(self._head_pumps)
-        if ct_cp:
-            s += '      Constant power:   {}\n'.format(ct_cp)
-        if ct_hc:
-            s += '      Head/pump curve:  {}\n'.format(ct_hc)
-        s += '    Valves:                    {}\n'.format(len(self.valve_names))
-        PRV = len(self._prvs)
-        PSV = len(self._psvs)
-        PBV = len(self._pbvs)
-        FCV = len(self._fcvs)
-        TCV = len(self._tcvs)
-        GPV = len(self._gpvs)
-        if PRV:
-            s += '      Pres. reducing:   {}\n'.format(PRV)
-        if PSV:
-            s += '      Pres. sustaining: {}\n'.format(PSV)
-        if PBV:
-            s += '      Pres. breaker:    {}\n'.format(PBV)
-        if FCV:
-            s += '      Flow control:     {}\n'.format(FCV)
-        if TCV:
-            s += '      Throttle control: {}\n'.format(TCV)
-        if GPV:
-            s += '      General purpose:  {}\n'.format(GPV)
-        if len(self.orphaned()) > 0:
-            s += '  Links used without definition:     {}\n'.format(len(self.orphaned()))
-            for orphan in self.orphaned():
-                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
-        return s
+#    def tostring(self):
+#        """String representation of the link registry"""
+#        s  = 'Link Registry:\n'
+#        s += '  Total number of links defined:     {}\n'.format(len(self._data))
+#        s += '    Pipes:                     {}\n'.format(len(self.pipe_names))
+#        ct_cv = sum([ 1 for n in self.check_valves()])
+#        if ct_cv:
+#            s += '      Check valves:     {}\n'.format(ct_cv)
+#        s += '    Pumps:                     {}\n'.format(len(self.pump_names))
+#        ct_cp = len(self._power_pumps)
+#        ct_hc = len(self._head_pumps)
+#        if ct_cp:
+#            s += '      Constant power:   {}\n'.format(ct_cp)
+#        if ct_hc:
+#            s += '      Head/pump curve:  {}\n'.format(ct_hc)
+#        s += '    Valves:                    {}\n'.format(len(self.valve_names))
+#        PRV = len(self._prvs)
+#        PSV = len(self._psvs)
+#        PBV = len(self._pbvs)
+#        FCV = len(self._fcvs)
+#        TCV = len(self._tcvs)
+#        GPV = len(self._gpvs)
+#        if PRV:
+#            s += '      Pres. reducing:   {}\n'.format(PRV)
+#        if PSV:
+#            s += '      Pres. sustaining: {}\n'.format(PSV)
+#        if PBV:
+#            s += '      Pres. breaker:    {}\n'.format(PBV)
+#        if FCV:
+#            s += '      Flow control:     {}\n'.format(FCV)
+#        if TCV:
+#            s += '      Throttle control: {}\n'.format(TCV)
+#        if GPV:
+#            s += '      General purpose:  {}\n'.format(GPV)
+#        if len(self.orphaned()) > 0:
+#            s += '  Links used without definition:     {}\n'.format(len(self.orphaned()))
+#            for orphan in self.orphaned():
+#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
+#        return s
 

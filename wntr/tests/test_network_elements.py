@@ -100,8 +100,6 @@ def test_TimeSeries():
     wn.add_pattern('binary', pattern5)
     base1 = 2.0
     
-    print(wn.patterns.tostring())
-    
     # test constructor and setters, getters
     tvv1 = elements.TimeSeries(wn.patterns, base1, None, None)
     tvv2 = elements.TimeSeries(wn.patterns, base1, 'oops', 'tvv2')

@@ -1,6 +1,6 @@
 """
-Python extensions for the EPANET Programmers Toolkit DLLs.
-EPANET toolkit functions.
+The wntr.epanet.toolkit module is a Python extensions for the EPANET 
+Programmers Toolkit DLLs.
 """
 from __future__ import print_function
 import ctypes, os, sys
@@ -51,7 +51,7 @@ def ENgetwarning(code, sec=-1):
         return header+'Unknown warning: %d'%code
 
 def runepanet(inpfile):
-    """Run an epanet command-line simulation.
+    """Run an EPANET command-line simulation
     
     Parameters
     ----------
@@ -77,7 +77,7 @@ class ENepanet():
     """Wrapper class to load the EPANET DLL object, then perform operations on
     the EPANET object that is created when a file is loaded.
     """
-
+    
     ENlib = None
     """The variable that holds the ctypes Library object"""
 
@@ -88,10 +88,10 @@ class ENepanet():
     cur_time = 0
 
     Warnflag = False
-    """A warning ocurred at some point during EPANET execution"""
+    """A warning occurred at some point during EPANET execution"""
 
     Errflag = False
-    """A fatal error ocurred at some point during EPANET execution"""
+    """A fatal error occurred at some point during EPANET execution"""
 
     inpfile = 'temp.inp'
     """The name of the EPANET input file"""
@@ -132,6 +132,7 @@ class ENepanet():
         return
 
     def isOpen(self):
+        """Checks to see if the file is open"""
         return self.fileLoaded
 
     def _error(self):
@@ -149,16 +150,19 @@ class ENepanet():
             self.errcodelist.append(ENgetwarning(self.errcode,self.cur_time))
         return
 
-
     def ENopen(self, inpfile=None, rptfile=None, binfile=None):
         """
-        Opens EPANET input file & reads in network data
+        Opens an EPANET input file and reads in network data
 
-        Arguments:
-         * inpfile = EPANET .inp input file (default to constructor value)
-         * rptfile = Output file to create (default to constructor value)
-         * binfile = Binary output file to create (default to constructor value)
-
+        Parameters
+        ----------
+        inpfile : str
+            EPANET INP file (default to constructor value)
+        rptfile : str
+            Output file to create (default to constructor value)
+        binfile : str
+            Binary output file to create (default to constructor value)
+            
         """
         if self.fileLoaded: self.ENclose()
         if self.fileLoaded:
@@ -176,7 +180,7 @@ class ENepanet():
         return
 
     def ENclose(self):
-        """frees all memory & files used by EPANET"""
+        """Frees all memory and files used by EPANET"""
         self.errcode = self.ENlib.ENclose()
         self._error()
         if self.errcode < 100:
@@ -184,16 +188,15 @@ class ENepanet():
         return
 
     def ENsolveH(self):
-        """solves for network hydraulics in all time periods"""
+        """Solves for network hydraulics in all time periods"""
         self.errcode = self.ENlib.ENsolveH()
         self._error()
         return
 
     def ENsaveH(self):
-        """
-        solves for network hydraulics in all time periods
+        """Solves for network hydraulics in all time periods
 
-        Must be called before ENreport() if no WQ simulation made.
+        Must be called before ENreport() if no water quality simulation made.
         Should not be called if ENsolveQ() will be used.
 
         """
@@ -202,36 +205,38 @@ class ENepanet():
         return
 
     def ENopenH(self):
-        """sets up data structures for hydraulic analysis"""
+        """Sets up data structures for hydraulic analysis"""
         self.errcode = self.ENlib.ENopenH()
         self._error()
         return
 
     def ENinitH(self, iFlag):
-        """
-        initializes hydraulic analysis
+        """Initializes hydraulic analysis
 
-        Arguments:
-         * iFlag   = 2-digit flag where 1st (left) digit indicates
-                     if link flows should be re-initialized (1) or
-                     not (0) and 2nd digit indicates if hydraulic
-                     results should be saved to file (1) or not (0)
+        Parameters
+        -----------
+        iFlag : 2-digit flag
+            2-digit flag where 1st (left) digit indicates
+            if link flows should be re-initialized (1) or
+            not (0) and 2nd digit indicates if hydraulic
+            results should be saved to file (1) or not (0)
+            
         """
         self.errcode = self.ENlib.ENinitH(iFlag)
         self._error()
         return
 
     def ENrunH(self):
-        """
-        solves hydraulics for conditions at time t.
-
-        Returns: long
-         * current simulation time (seconds)
-
+        """Solves hydraulics for conditions at time t
+        
         This function is used in a loop with ENnextH() to run
         an extended period hydraulic simulation.
         See ENsolveH() for an example.
-
+        
+        Returns
+        --------
+        Current simulation time (seconds)
+        
         """
         lT = ctypes.c_long()
         self.errcode = self.ENlib.ENrunH(byref(lT))
@@ -240,17 +245,16 @@ class ENepanet():
         return lT.value
 
     def ENnextH(self):
-        """
-        determines time until next hydraulic event.
-
-        Returns:
-         * time (seconds) until next hydraulic event
-           (0 marks end of simulation period)
-
+        """Determines time until next hydraulic event
+        
         This function is used in a loop with ENrunH() to run
         an extended period hydraulic simulation.
         See ENsolveH() for an example.
-
+        
+        Returns
+        ---------
+         Time (seconds) until next hydraulic event (0 marks end of simulation period)
+         
         """
         lTstep = ctypes.c_long()
         self.errcode = self.ENlib.ENnextH(byref(lTstep))
@@ -258,71 +262,73 @@ class ENepanet():
         return lTstep.value
 
     def ENcloseH(self):
-        """frees data allocated by hydraulics solver"""
+        """Frees data allocated by hydraulics solver"""
         self.errcode = self.ENlib.ENcloseH()
         self._error()
         return
 
     def ENsavehydfile(self, filename):
-        """
-        copies binary hydraulics file to disk
+        """Copies binary hydraulics file to disk
 
-        Arguments:
-         * filename= name of file
-
+        Parameters
+        -------------
+        filename : str
+            Name of file
+            
         """
         self.errcode = self.ENlib.ENsavehydfile(filename.encode('ascii'))
         self._error()
         return
 
     def ENusehydfile(self, filename):
-        """
-        opens previously saved binary hydraulics file
+        """Opens previously saved binary hydraulics file
 
-        Arguments:
-         * filename= name of file
-
+        Parameters
+        -------------
+        filename : str
+            Name of file
+            
         """
         self.errcode = self.ENlib.ENusehydfile(filename.encode('ascii'))
         self._error()
         return
 
     def ENsolveQ(self):
-        """solves for network water quality in all time periods"""
+        """Solves for network water quality in all time periods"""
         self.errcode = self.ENlib.ENsolveQ()
         self._error()
         return
 
     def ENopenQ(self):
-        """sets up data structures for WQ analysis"""
+        """Sets up data structures for water quality analysis"""
         self.errcode = self.ENlib.ENopenQ()
         self._error()
         return
 
     def ENinitQ(self, iSaveflag):
-        """
-        initializes WQ analysis
+        """Initializes water quality analysis
 
-        Arguments:
-         * saveflag= EN_SAVE (1) if results saved to file,
-                     EN_NOSAVE (0) if not
-
+        Parameters
+        -------------
+         iSaveflag : int
+             EN_SAVE (1) if results saved to file, EN_NOSAVE (0) if not
+             
         """
         self.errcode = self.ENlib.ENinitQ(iSaveflag)
         self._error()
         return
 
     def ENrunQ(self):
-        """
-        retrieves hydraulic & WQ results at time t.
-
-        Returns: long
-         * current simulation time (seconds)
-
+        """Retrieves hydraulic and water quality results at time t
+        
         This function is used in a loop with ENnextQ() to run
-        an extended period WQ simulation. See ENsolveQ() for
+        an extended period water quality simulation. See ENsolveQ() for
         an example.
-
+        
+        Returns
+        -------
+        Current simulation time (seconds)
+         
         """
         lT = ctypes.c_long()
         self.errcode = self.ENlib.ENrunQ(byref(lT))
@@ -330,17 +336,16 @@ class ENepanet():
         return lT.value
 
     def ENnextQ(self):
-        """
-        advances WQ simulation to next hydraulic event.
-
-        Returns: long
-         * time (seconds) until next hydraulic event
-           (0 marks end of simulation period)
+        """Advances water quality simulation to next hydraulic event
 
         This function is used in a loop with ENrunQ() to run
-        an extended period WQ simulation. See ENsolveQ() for
+        an extended period water quality simulation. See ENsolveQ() for
         an example.
-
+        
+        Returns
+        --------
+        Time (seconds) until next hydraulic event (0 marks end of simulation period)
+         
         """
         lTstep = ctypes.c_long()
         self.errcode = self.ENlib.ENnextQ(byref(lTstep))
@@ -348,76 +353,79 @@ class ENepanet():
         return lTstep.value
 
     def ENcloseQ(self):
-        """frees data allocated by WQ solver"""
+        """Frees data allocated by water quality solver"""
         self.errcode = self.ENlib.ENcloseQ()
         self._error()
         return
 
     def ENreport(self):
-        """writes report to report file"""
+        """Writes report to report file"""
         self.errcode = self.ENlib.ENreport()
         self._error()
         return
 
     def ENgetcount(self, iCode):
-        """
-        retrieves the number of components of a given type in the network
+        """Retrieves the number of components of a given type in the network
 
-        Arguments:
-         * iCode   = component code (see toolkit.optComponentCounts)
+        Parameters
+        -------------
+        iCode : int
+            Component code (see toolkit.optComponentCounts)
 
-        Returns:
-         * number of components in network
-
+        Returns
+        ---------
+        Number of components in network
+        
         """
         iCount = ctypes.c_int()
         self.errcode = self.ENlib.ENgetcount(iCode, byref(iCount))
         self._error()
         return iCount.value
 
-
     def ENgetflowunits(self):
-        """
-        retrieves flow units code
+        """Retrieves flow units code
 
-        Returns: int
-         * code of flow units in use (see toolkit.optFlowUnits)
-
+        Returns
+        -----------
+        Code of flow units in use (see toolkit.optFlowUnits)
+        
         """
         iCode = ctypes.c_int()
         self.errcode = self.ENlib.ENgetflowunits(byref(iCode))
         self._error()
         return iCode.value
 
-
-
     def ENgetnodeindex(self, sId):
-        """
-        retrieves index of a node with specific ID
+        """Retrieves index of a node with specific ID
 
-        Arguments:
-         * sId     = node ID
+        Parameters
+        -------------
+        sId : int
+            Node ID
 
-        Returns: int
-         * index of node in list of nodes
-
+        Returns
+        ---------
+        Index of node in list of nodes
+        
         """
         iIndex = ctypes.c_int()
         self.errcode = self.ENlib.ENgetnodeindex(sId.encode('ascii'), byref(iIndex))
         self._error()
         return iIndex.value
 
-
     def ENgetnodevalue(self, iIndex, iCode):
-        """
-        retrieves parameter value for a node
+        """Retrieves parameter value for a node
 
-        Arguments:
-         * iIndex  = node index
-         * iCode   = node parameter code (see toolkit.optNodeParams)
+        Parameters
+        -------------
+        iIndex: int
+            Node index
+        iCode : int
+            Node parameter code (see toolkit.optNodeParams)
 
-        Returns: float
-         * value of node's parameter
+        Returns
+        ---------
+        Value of node's parameter
 
         """
         fValue = ctypes.c_float()
@@ -425,16 +433,17 @@ class ENepanet():
         self._error()
         return fValue.value
 
-
     def ENgetlinkindex(self, sId):
-        """
-        retrieves index of a link with specific ID
+        """Retrieves index of a link with specific ID
 
-        Arguments:
-         * sId     = link ID
+        Parameters
+        -------------
+        sId : int
+            Link ID
 
-        Returns: int
-         * index of link in list of links
+        Returns
+        ---------
+        Index of link in list of links
 
         """
         iIndex = ctypes.c_int()
@@ -442,18 +451,19 @@ class ENepanet():
         self._error()
         return iIndex.value
 
-
-
     def ENgetlinkvalue(self, iIndex, iCode):
-        """
-        retrieves parameter value for a link
+        """Retrieves parameter value for a link
 
-        Arguments:
-         * iIndex  = link index
-         * iCode   = link parameter code (see toolkit.optLinkParams)
+        Parameters
+        -------------
+        iIndex : int
+            Link index
+        iCode : int
+            Link parameter code (see toolkit.optLinkParams)
 
-        Returns:
-         * value of link's parameter
+        Returns
+        ---------
+        Value of link's parameter
 
         """
         fValue = ctypes.c_float()
