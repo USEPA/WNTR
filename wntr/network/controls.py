@@ -13,6 +13,7 @@ import abc
 from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict, Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
+from wntr.utils.doc_inheritor import DocInheritor
 
 logger = logging.getLogger(__name__)
 
@@ -358,12 +359,13 @@ class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
         return '{}:{:02d}:{:02d} {}'.format(hours, mm, int(sec), pm)
 
 
+@DocInheritor({'requires', 'evaluate', 'name'})
 class TimeOfDayCondition(ControlCondition):
     """Time-of-day or "clocktime" based condition statement.
     Resets automatically at 12 AM in clock time (shifted time) every day simulated. Evaluated
     from 12 AM the first day of the simulation, even if this is prior to simulation start.
-    Unlike the ``SimTimeCondition``, greater-than and less-than relationships make sense, and
-    reset at midnight.
+    Unlike the :class:`~wntr.network.controls.SimTimeCondition`, greater-than and less-than
+    relationships make sense, and reset at midnight.
     
     Parameters
     ----------
@@ -415,7 +417,6 @@ class TimeOfDayCondition(ControlCondition):
                                              self._sec_to_hours_min_sec(self._threshold),
                                              rep, start)
 
-
     def requires(self):
         return OrderedSet()
 
@@ -432,7 +433,6 @@ class TimeOfDayCondition(ControlCondition):
         elif self._first_day > 0:
             fmt = '( ' + ' && clock_day >= {} )'.format(self._first_day)
         return fmt
-
 
     def evaluate(self):
         cur_time = self._model._shifted_time
@@ -467,6 +467,7 @@ class TimeOfDayCondition(ControlCondition):
             return False
 
 
+@DocInheritor({'requires', 'evaluate', 'name'})
 class SimTimeCondition(ControlCondition):
     """Condition based on time since start of the simulation.
     Generally, the relation should be ``None`` (converted to "at") --
@@ -540,11 +541,8 @@ class SimTimeCondition(ControlCondition):
             fmt = 'sim_time ' + fmt
         return fmt
 
-
     def requires(self):
-        """Returns a list of objects required to evaluate this condition"""
         return OrderedSet()
-
 
     def evaluate(self):
         cur_time = self._model.sim_time
@@ -572,10 +570,10 @@ class SimTimeCondition(ControlCondition):
             return False
 
 
+@DocInheritor({'requires', 'evaluate', 'name'})
 class ValueCondition(ControlCondition):
-    """Compare a network element attribute to a set value
-    This type of condition can be converted to an EPANET control or rule conditional clause.
-    
+    """Compare a network element attribute to a set value.
+
     Parameters
     ----------
     source_obj : object
@@ -606,7 +604,6 @@ class ValueCondition(ControlCondition):
         self._threshold = ControlCondition._parse_value(threshold)
         self._backtrack = 0
 
-
     def requires(self):
         return OrderedSet([self._source_obj])
 
@@ -636,7 +633,6 @@ class ValueCondition(ControlCondition):
         val = self._repr_value(att, self._threshold)
         return "{}('{}').{} {} {}".format(typ, obj, att, rel, val)
 
-
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
         thresh_value = self._threshold
@@ -648,7 +644,11 @@ class ValueCondition(ControlCondition):
         return bool(state)
 
 
+@DocInheritor({'requires', 'evaluate'})
 class TankLevelCondition(ValueCondition):
+    """
+    A special type of ValueCondition for tank levels/heads/pressures.
+    """
     def __init__(self, source_obj, source_attr, relation, threshold):
         relation = Comparison.parse(relation)
         if relation not in {Comparison.ge, Comparison.le, Comparison.gt, Comparison.lt}:
@@ -656,7 +656,6 @@ class TankLevelCondition(ValueCondition):
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
         self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
-
 
     def evaluate(self):
         self._backtrack = 0  # no backtracking is needed unless specified in the if statement below
@@ -685,6 +684,7 @@ class TankLevelCondition(ValueCondition):
         return bool(state)
 
 
+@DocInheritor({'requires', 'evaluate', 'name'})
 class RelativeCondition(ControlCondition):
     """Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
     This type of condition does not work with the EpanetSimulator, only the WNTRSimulator.
@@ -726,7 +726,6 @@ class RelativeCondition(ControlCondition):
                                 self._relation.symbol,
                                 tobj, self._threshold_attr)
 
-
     def requires(self):
         return OrderedSet([self._source_obj, self._threshold_obj])
 
@@ -755,7 +754,6 @@ class RelativeCondition(ControlCondition):
                           rel,
                           ttyp, tobj, tatt)
 
-
     def evaluate(self):
         cur_value = getattr(self._source_obj, self._source_attr)
         thresh_value = getattr(self._threshold_obj, self._threshold_attr)
@@ -764,6 +762,7 @@ class RelativeCondition(ControlCondition):
         return bool(state)
 
 
+@DocInheritor({'requires', 'evaluate', 'backtrack'})
 class OrCondition(ControlCondition):
     """Combine two WNTR Conditions with an OR.
     
@@ -785,7 +784,6 @@ class OrCondition(ControlCondition):
     def __repr__(self):
         return 'Or({}, {})'.format(repr(self._condition_1), repr(self._condition_2))
 
-
     def evaluate(self):
         return bool(self._condition_1) or bool(self._condition_2)
 
@@ -793,11 +791,11 @@ class OrCondition(ControlCondition):
     def backtrack(self):
         return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
 
-
     def requires(self):
         return self._condition_1.requires().update(self._condition_2.requires())
 
 
+@DocInheritor({'requires', 'evaluate', 'backtrack'})
 class AndCondition(ControlCondition):
     """Combine two WNTR Conditions with an AND
     
@@ -1219,8 +1217,9 @@ class _ValveNewSettingCondition(ControlCondition):
 
 class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
     """
-    A base class for deriving new control actions. The control action is run by calling RunControlAction
-    This class is not meant to be used directly. Derived classes must implement the RunControlAction method.
+    A base class for deriving new control actions. The control action is run by calling run_control_action.
+    This class is not meant to be used directly. Derived classes must implement the run_control_action, requires,
+    and target methods.
     """
 
     def __init__(self):
@@ -1235,7 +1234,14 @@ class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
 
     @abc.abstractmethod
     def requires(self):
-        """Returns a set of objects used to evaluate the control"""
+        """
+        Returns a set of objects used to evaluate the control
+
+        Returns
+        -------
+        req: OrderedSet
+            The objects required to run the control action.
+        """
         pass
 
     @abc.abstractmethod
@@ -1244,11 +1250,14 @@ class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
         Returns a tuple (object, attribute) containing the object and attribute that the control action may change
 
         Returns
+        -------
         target: tuple
+            A tuple containing the target object and the attribute to be changed (target, attr).
         """
         pass
 
 
+@DocInheritor({'requires', 'target', 'run_control_action'})
 class ControlAction(BaseControlAction):
     """
     A general class for specifying a control action that simply modifies the attribute of an object (target).
@@ -1305,9 +1314,6 @@ class ControlAction(BaseControlAction):
             return False
 
     def run_control_action(self):
-        """
-        Activate the control action.
-        """
         setattr(self._target_obj, self._attribute, self._value)
         self.notify()
 
@@ -1407,62 +1413,76 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
     """
     This is the base class for all control objects. Control objects are used to check the conditions under which a
     ControlAction should be run. For example, if a pump is supposed to be turned on when the simulation time
-    reaches 6 AM, the ControlAction would be "turn the pump on", and the Control would be "when the simulation
+    reaches 6 AM, the ControlAction would be "turn the pump on", and the ControlCondition would be "when the simulation
     reaches 6 AM".
-    From an implementation standpoint, derived Control classes implement a particular mechanism for monitoring state
-    (e.g. checking the simulation time to see if a change should be made). Then, they typically call RunControlAction
-    on a derived ControlAction class.
-    New Control classes (classes derived from Control) must implement the following methods:
-    - _IsControlActionRequiredImpl(self, wnm, presolve_flag)
-    - _RunControlActionImpl(self, wnm, priority)
     """
     @abc.abstractmethod
-    def is_control_action_required(self, wnm, presolve_flag):
+    def is_control_action_required(self):
         """
         This method is called to see if any action is required by this control object. This method returns a tuple
         that indicates if action is required (a bool) and a recommended time for the simulation to backup (in seconds
         as a positive int).
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated.
-        presolve_flag : bool
-            This is true if we are calling before the solve, and false if we are calling after the solve (within the
-            current timestep).
+
+        Returns
+        -------
+        req: tuple
+            A tuple (bool, int) indicating if an action should be run and how far to back up the simulation.
         """
         pass
 
     @abc.abstractmethod
-    def run_control_action(self, wnm, priority):
+    def run_control_action(self):
         """
         This method is called to run the control action after a call to IsControlActionRequired indicates that an
         action is required.
-        Note: Derived classes should not override this method, but should override _RunControlActionImpl instead.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated/modified.
-        priority : int
-            A priority value. The action is only run if priority == self._priority.
         """
         pass
 
     @abc.abstractmethod
     def requires(self):
-        """Returns a list of objects required to evaluate this control"""
+        """
+        Returns a set of objects required for this control.
+
+        Returns
+        -------
+        required_objects: OrderedSet of object
+        """
         return OrderedSet()
 
     @abc.abstractmethod
     def actions(self):
+        """
+        Returns a list of all actions used by this control.
+
+        Returns
+        -------
+        act: list of BaseControlAction
+        """
         pass
 
 
+@DocInheritor({'is_control_action_required', 'run_control_action', 'requires', 'actions'})
 class Control(ControlBase):
-    """If-Then[-Else] contol
+    """
+    A very general and flexible class for defining both controls and rules.
     """
     def __init__(self, condition, then_actions, else_actions=None, priority=ControlPriority.medium, name=None):
+        """
+        Parameters
+        ----------
+        condition: ControlCondition
+            The condition that should be used to determine when the actions need to be activated. When the condition
+            evaluates to True, the then_actions are activated. When the condition evaluates to False, the else_actions
+            are activated.
+        then_actions: Iterable of ControlAction
+            The actions that should be activated when the condition evaluates to True.
+        else_actions: Iterable of ControlAction
+            The actions that should be activated when the condition evaluates to False.
+        priority: ControlPriority
+            The priority of the control. Default is ControlPriority.medium
+        name: str
+            The name of the control
+        """
         if not isinstance(condition, ControlCondition):
             raise ValueError('The conditions argument must be a ControlCondition instance')
         self._condition = condition
@@ -1484,10 +1504,16 @@ class Control(ControlBase):
         if self._name is None:
             self._name = ''
         self._control_type = _ControlType.rule
-        self._is_internal = False
 
     @property
     def epanet_control_type(self):
+        """
+        The control type. Note that presolve and postsolve controls are both simple controls in Epanet.
+
+        Returns
+        -------
+        control_type: _ControlType
+        """
         return self._control_type
 
     def requires(self):
@@ -1498,14 +1524,14 @@ class Control(ControlBase):
             req.update(action.requires())
         return req
 
-    def is_internal(self):
-        return self._is_internal
-
     def actions(self):
         return self._then_actions + self._else_actions
 
     @property
     def name(self):
+        """
+        A string representation of the Control.
+        """
         if self._name is not None:
             return self._name
         else:
@@ -1538,17 +1564,6 @@ class Control(ControlBase):
         return text
 
     def is_control_action_required(self):
-        """
-        This implements the derived method from Control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated.
-        presolve_flag : bool
-            This is true if we are calling before the solve, and false if we are calling after the solve (within the
-            current timestep).
-        """
         do = self._condition.evaluate()
         back = self._condition.backtrack
         if do:
@@ -1561,9 +1576,6 @@ class Control(ControlBase):
             return False, None
 
     def run_control_action(self):
-        """
-        This implements the derived method from Control.
-        """
         if self._which == 'then':
             for control_action in self._then_actions:
                 control_action.run_control_action()
@@ -1576,13 +1588,27 @@ class Control(ControlBase):
     @classmethod
     def time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action, name=None):
         """
+        This is a class method for creating simple time controls.
+
         Parameters
         ----------
         wnm: wntr.network.WaterNetworkModel
+            The WaterNetworkModel instance this control will be added to.
         run_at_time: int
+            The time to activate the control action.
         time_flag: str
+            Options are 'SIM_TIME' and 'CLOCK_TIME'. SIM_TIME indicates that run_at_time is the time since the start
+            of the simulation. CLOCK_TIME indicates that run_at_time is the time of day.
         daily_flag: bool
+            If True, then the control will repeat every day.
         control_action: BaseControlAction
+            The control action that should occur at run_at_time.
+        name: str
+            An optional name for the control.
+
+        Returns
+        -------
+        ctrl: Control
         """
         if time_flag.upper() == 'SIM_TIME':
             condition = SimTimeCondition(model=wnm, relation=Comparison.eq, threshold=run_at_time, repeat=daily_flag,
@@ -1600,7 +1626,29 @@ class Control(ControlBase):
 
     @classmethod
     def conditional_control(cls, source_obj, source_attr, operation, threshold, control_action, name=None):
-        """Create an EPANET Simple conditional control"""
+        """
+        This is a class method for creating simple conditional controls.
+
+        Parameters
+        ----------
+        source_obj: object
+            The object whose source_attr attribute will be compared to threshold to determine if control_action
+            needs activated.
+        source_attr: str
+            The attribute of source_obj to compare to threshold.
+        operation: Comparison
+            The comparison function used to compare the source_attr attribute of source_obj to threshold.
+        threshold: any
+            The threshold used in the comparison.
+        control_action: ControlAction
+            The control action that should occur when operation(getattr(source_obj, source_attr), threshold) is True.
+        name: str
+            An optional name for the control
+
+        Returns
+        -------
+        ctrl: Control
+        """
         condition = ValueCondition(source_obj=source_obj, source_attr=source_attr, relation=operation,
                                    threshold=threshold)
         control = Control(condition=condition, then_actions=[control_action], else_actions=[])
@@ -1612,6 +1660,9 @@ class Control(ControlBase):
 
 
 class ControlManager(Observer):
+    """
+    A class for managing controls and identifying changes made by those controls.
+    """
     def __init__(self):
         self._controls = OrderedSet()
         """OrderedSet of Control"""
@@ -1651,6 +1702,10 @@ class ControlManager(Observer):
             self._previous_values[(obj, attr)] = getattr(obj, attr)
 
     def reset(self):
+        """
+        Reset the _previous_values. This should be called before activating any control actions so that changes made
+        by the control actions can be tracked.
+        """
         self._changed = OrderedSet()
         self._previous_values = OrderedDict()
         for control in self._controls:
@@ -1659,9 +1714,24 @@ class ControlManager(Observer):
                 self._previous_values[(obj, attr)] = getattr(obj, attr)
 
     def changes_made(self):
+        """
+        Specifies if changes were made.
+
+        Returns
+        -------
+        changes: bool
+        """
         return len(self._changed) > 0
 
     def get_changes(self):
+        """
+        A generator for iterating over the objects, attributes that were changed.
+
+        Returns
+        -------
+        changes: tuple
+            (object, attr)
+        """
         for obj, attr in self._changed:
             yield obj, attr
 
@@ -1681,6 +1751,14 @@ class ControlManager(Observer):
             self._changed.discard((obj, attr))
 
     def check(self):
+        """
+        Check which controls have actions that need activated.
+
+        Returns
+        -------
+        controls_to_run: list of tuple
+            The tuple is (Control, backtrack)
+        """
         controls_to_run = []
         for c in self._controls:
             do, back = c.is_control_action_required()
