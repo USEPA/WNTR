@@ -1,5 +1,15 @@
 """
 The wntr.metrics.economic module contains economic metrics.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    cost
+    ghg_emissions
+    pump_energy
+
+
 """
 from wntr.network import Tank, Pipe, Pump, Valve
 import numpy as np 

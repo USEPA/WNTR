@@ -5,25 +5,29 @@ demands, curves, and sources.
 
 .. rubric:: Contents
 
-- :class:`~Junction`
-- :class:`~Tank`
-- :class:`~Reservoir`
-- :class:`~Pipe`
-- :class:`~Pump`
-- :class:`~HeadPump`
-- :class:`~PowerPump`
-- :class:`~Valve`
-- :class:`~PRValve`
-- :class:`~PSValve`
-- :class:`~PBValve`
-- :class:`~FCValve`
-- :class:`~TCValve`
-- :class:`~GPValve`
-- :class:`~Pattern`
-- :class:`~TimeSeries`
-- :class:`~Demands`
-- :class:`~Curve`
-- :class:`~Source`
+.. autosummary::
+
+    Junction
+    Tank
+    Reservoir
+    Pipe
+    Pump
+    HeadPump
+    PowerPump
+    Valve
+    PRValve
+    PSValve
+    PBValve
+    FCValve
+    TCValve
+    GPValve
+    Pattern
+    TimeSeries
+    Demands
+    Curve
+    Source
+
+
 """
 import numpy as np
 import sys

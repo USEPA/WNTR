@@ -1,6 +1,7 @@
 """
 The wntr.network.graph module includes methods to represent a water network 
 model as a NetworkX MultiDiGraph, and compute topographic metrics on the graph.
+
 """
 import networkx as nx
 import numpy as np
