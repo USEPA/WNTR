@@ -3,6 +3,10 @@
 v0.1.4 (Master branch)
 ---------------------------------------------------
 
+v0.1.4 includes several changes that improve simulation stability and the ability to match EPANET simulations.
+In addition to the publicly available software tests on https://travis-ci.org/sandialabs/WNTR, 
+WNTR is also tested on private servers using several large water utility network models. 
+
 * Added a faster EPANET binary output file reader
 * Updated the order in which controls operate to match EPANET
 * Updated controls classes to include Control and Rule objects (API change, see :class:`~wntr.network.controls.Control` and :class:`~wntr.network.controls.Rule`)
