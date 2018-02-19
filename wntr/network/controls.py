@@ -1642,9 +1642,6 @@ class Control(Rule):
         name: str
             The name of the control
         """
-        if not isinstance(condition, (TimeOfDayCondition, SimTimeCondition, ValueCondition)):
-            raise ValueError('Controls only support conditions of types TimeOfDayCondition, SimTimeCondition, or '
-                                 'ValueCondition')
         if isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
             if condition._relation is not Comparison.eq:
                 raise ValueError('SimTimeConditions and TimeOfDayConditions used with Control must have a relation of '
