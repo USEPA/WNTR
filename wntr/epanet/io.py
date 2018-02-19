@@ -37,7 +37,7 @@ from wntr.network.elements import Junction, Reservoir, Tank, Pipe, Pump, Valve
 from wntr.network.options import WaterNetworkOptions
 from wntr.network.model import Pattern, LinkStatus, Curve, Demands, Source
 from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition, Comparison
-from wntr.network.controls import OrCondition, AndCondition, Control, ControlAction, _ControlType
+from wntr.network.controls import OrCondition, AndCondition, Control, ControlAction, _ControlType, Rule
 
 from .util import FlowUnits, MassUnits, HydParam, QualParam, MixType, ResultType, EN
 from .util import to_si, from_si
@@ -1128,11 +1128,11 @@ class InpFile(object):
                     if node.node_type == 'Junction':
                         threshold = to_si(self.flow_units,
                                           float(current[7]), HydParam.Pressure)# + node.elevation
-                        control_obj = Control.conditional_control(node, 'pressure', oper, threshold, action_obj, control_name)
+                        control_obj = Control._conditional_control(node, 'pressure', oper, threshold, action_obj, control_name)
                     elif node.node_type == 'Tank':
                         threshold = to_si(self.flow_units, 
                                           float(current[7]), HydParam.HydraulicHead)# + node.elevation
-                        control_obj = Control.conditional_control(node, 'level', oper, threshold, action_obj, control_name)
+                        control_obj = Control._conditional_control(node, 'level', oper, threshold, action_obj, control_name)
                 else:
                     raise RuntimeError("The following control is not recognized: " + line)
 #                control_name = ''
@@ -1145,14 +1145,14 @@ class InpFile(object):
                         run_at_time = int(_str_time_to_sec(current[5]))
                     else:
                         run_at_time = int(float(current[5])*3600)
-                    control_obj = Control.time_control(self.wn, run_at_time, 'SIM_TIME', False, action_obj, control_name)
+                    control_obj = Control._time_control(self.wn, run_at_time, 'SIM_TIME', False, action_obj, control_name)
 #                    control_name = ''
 #                    for i in range(len(current)-1):
 #                        control_name = control_name + '/' + current[i]
 #                    control_name = control_name + '/' + str(run_at_time)
                 elif len(current) == 7:  # at clocktime
                     run_at_time = int(_clock_time_to_sec(current[5], current[6]))
-                    control_obj = Control.time_control(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj, control_name)
+                    control_obj = Control._time_control(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj, control_name)
 #                    control_name = ''
 #                    for i in range(len(current)-1):
 #                        control_name = control_name + '/' + current[i]
@@ -2058,8 +2058,8 @@ class _EpanetRule(object):
         self.priority = 0
 
     def from_if_then_else(self, control):
-        """Create a rule from an IfThenElseControl object"""
-        if isinstance(control, Control):
+        """Create a rule from a Rule object"""
+        if isinstance(control, Rule):
             self.ruleID = control.name
             self.add_control_condition(control._condition)
             for ct, action in enumerate(control._then_actions):
@@ -2339,7 +2339,7 @@ class _EpanetRule(object):
                     elif link.valve_type.upper() in ['FCV']:
                         value = to_si(self.inp_units, value, HydParam.Flow)
             else_acts.append(ControlAction(link, attr, value))
-        return Control(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)
+        return Rule(final_condition, then_acts, else_acts, priority=self.priority, name=self.ruleID)
 
 
 class BinFile(object):

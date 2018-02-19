@@ -73,7 +73,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.Valve = Valve
         self.wntr = wntr
         self.ControlAction = ControlAction
-        self.TimeControl = Control.time_control
+        self.TimeControl = Control._time_control
 
     @classmethod
     def tearDownClass(self):
@@ -233,7 +233,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         control_action = self.wntr.network.ControlAction(wn.get_link('21'), 'status', self.wntr.network.LinkStatus.opened)
-        control = self.wntr.network.controls.Control.conditional_control(wn.get_node('2'), 'head', np.greater_equal, 10.0, control_action)
+        control = self.wntr.network.controls.Control._conditional_control(wn.get_node('2'), 'head', np.greater_equal, 10.0, control_action)
         wn.add_control('control_1',control)
 
         controls_1 = {c_name for c_name, c in wn.controls()}

@@ -3,8 +3,7 @@ wntr.network.controls module
 
 .. currentmodule:: wntr.network.controls
 
-Classes
--------
+.. rubric:: Contents
 
 .. autosummary::
 
