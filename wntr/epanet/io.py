@@ -109,7 +109,7 @@ def _is_number(s):
 
 def _str_time_to_sec(s):
     """
-    Converts epanet time format to seconds.
+    Converts EPANET time format to seconds.
 
 
     Parameters
@@ -146,7 +146,7 @@ def _str_time_to_sec(s):
 
 def _clock_time_to_sec(s, am_pm):
     """
-    Converts epanet clocktime format to seconds.
+    Converts EPANET clocktime format to seconds.
 
 
     Parameters
@@ -217,11 +217,10 @@ def _sec_to_string(sec):
 
 class InpFile(object):
     """
-	 EPANET INP file reader and writer class.
+	EPANET INP file reader and writer class.
 
-    This class provides read
-    and write functionality for EPANET INP files.
-    The EPANET Users Manual provides full documentation for the INP file format in its Appendix C.
+    This class provides read and write functionality for EPANET INP files.
+    The EPANET Users Manual provides full documentation for the INP file format.
     """
     def __init__(self):
         self.sections = OrderedDict()
@@ -233,7 +232,8 @@ class InpFile(object):
         self.curves = OrderedDict()
 
     def read(self, inp_files, wn=None):
-        """Method to read EPANET INP file and load data into a water network model object.
+        """
+        Method to read an EPANET INP file and load data into a water network model object.
 
         Parameters
         ----------
@@ -242,7 +242,7 @@ class InpFile(object):
 
         Returns
         -------
-        :class:`wntr.network.WaterNetworkModel.WaterNetworkModel`
+        :class:`~wntr.network.model.WaterNetworkModel`
             A water network model object
 
         """
@@ -380,15 +380,17 @@ class InpFile(object):
         return self.wn
 
     def write(self, filename, wn, units=None):
-        """Write a water network model into an EPANET INP file.
+        """
+        Write a water network model into an EPANET INP file.
 
         Parameters
         ----------
         filename : str
-            Name of the inp file.
+            Name of the EPANET INP file.
         units : str, int or FlowUnits
-            Name of the units being written to the inp file.
-        """
+            Name of the units being written to the EPANET INP file.
+        
+		"""
 
         if not isinstance(wn, WaterNetworkModel):
             raise ValueError('Must pass a WaterNetworkModel object')
@@ -2342,35 +2344,33 @@ class _EpanetRule(object):
 
 class BinFile(object):
     """
-    Read an EPANET 2.x binary output file.
-
-    Abstract class, does not save any of the data read, simply calls the
-    abstract functions at the appropriate times.
-
+    EPANET binary output file reader class.
+    
+    This class provides read functionality for EPANET binary output files.
+    
     Parameters
     ----------
-    results_type : list of ~wntr.epanet.util.ResultType
+    results_type : list of :class:`~wntr.epanet.util.ResultType`, default=None
         If ``None``, then all results will be saved (node quality, demand, link flow, etc.).
         Otherwise, a list of result types can be passed to limit the memory used. This can
         also be specified in a save_results_line call, but will default to this list.
-    network : bool
+    network : bool, default=False
         Save a new WaterNetworkModel from the description in the output binary file. Certain
         elements may be missing, such as patterns and curves, if this is done.
-    energy : bool
+    energy : bool, default=False
         Save the pump energy results.
-    statistics : bool
+    statistics : bool, default=False
         Save the statistics lines (different from the stats flag in the inp file) that are
         automatically calculated regarding hydraulic conditions.
-    convert_status : bool, default=``True``
-        Convert the EPANET link status (8 values) to simpler WNTR status (3 valuees). By 
+    convert_status : bool, default=True
+        Convert the EPANET link status (8 values) to simpler WNTR status (3 values). By 
         default, this is done, and the encoded-cause status values are converted simple state
         values, instead.
 
-    Attributes
+    Returns
     ----------
-    results : :class:`~wntr.sim.results.NetResults`
+    :class:`~wntr.sim.results.NetResults`
         A WNTR results object will be created and added to the instance after read.
-
 
     """
     def __init__(self, result_types=None, network=False, energy=False, statistics=False,
@@ -2417,7 +2417,7 @@ class BinFile(object):
         The basic implementation sets up a dictionary of pandas DataFrames with the keys
         being member names of the ResultsType class. If the items parameter is left blank,
         the function will use the items that were specified during object creation.
-        If this too, was blank, then all results parameters will be saved.
+        If this too was blank, then all results parameters will be saved.
 
         """
         if result_types is None:
@@ -2446,11 +2446,11 @@ class BinFile(object):
         Parameters
         ----------
         period : int
-            the report period
+            The report period
         result_type : str
-            one of the type strings listed above
+            One of the type strings listed above
         values : numpy.array
-            the values to save, in the node or link order specified earlier in the file
+            The values to save, in the node or link order specified earlier in the file
 
         """
         if result_type in [ResultType.quality, ResultType.linkquality]:
@@ -2484,9 +2484,9 @@ class BinFile(object):
         Parameters
         ----------
         element : str
-            the information being saved
+            The information being saved
         values : numpy.array
-            the values that go with the information
+            The values that go with the information
 
         """
         self.results.meta[element] = values
@@ -2494,8 +2494,8 @@ class BinFile(object):
     def save_energy_line(self, pump_idx, pump_name, values):
         """Save pump energy from the output file.
 
-        This method, by default, does nothing. It is available to be overloaded in
-        order to save information for pump energy calculations.
+        This method, by default, does nothing. It is available to be overloaded
+        in order to save information for pump energy calculations.
 
         Parameters
         ----------
@@ -2505,22 +2505,23 @@ class BinFile(object):
             the pump name
         values : numpy.array
             the values to save
-
+			
         """
-        #print('    Energy: {} = {}'.format(pump_name, values))
         pass
 
     def finalize_save(self, good_read, sim_warnings):
-        """Do any final post-read saves, writes, or processing.
-
+        """Post-process data before writing results.
+        
+        This method, by default, does nothing. It is available to be overloaded 
+        in order to post process data.
+        
         Parameters
         ----------
         good_read : bool
             was the full file read correctly
         sim_warnings : int
             were there warnings issued during the simulation
-
-
+			
         """
         pass
 
@@ -2541,7 +2542,6 @@ class BinFile(object):
         -------
         object
             returns a WaterNetworkResults object
-
 
         .. note:: Overloading
             This function should **not** be overloaded. Instead, overload the other functions
@@ -2854,6 +2854,7 @@ class _InpFileDifferHelper(object):
             The starting point in the file for sec
         end: int
             The ending point in the file for sec
+			
         """
         start = None
         end = None
@@ -2896,6 +2897,7 @@ def _convert_line(line):
     Returns
     -------
     list
+	
     """
     line = line.upper().split()
     tmp = []
@@ -2923,6 +2925,7 @@ def _compare_lines(line1, line2, tol=1e-14):
     Returns
     -------
     bool
+	
     """
     if len(line1) != len(line2):
         return False
@@ -2956,6 +2959,7 @@ def _clean_line(wn, sec, line):
     Returns
     -------
     new_list: list of str
+	
     """
     if sec == '[JUNCTIONS]':
         if len(line) == 4:
@@ -2970,13 +2974,14 @@ def _clean_line(wn, sec, line):
     return line
 
 
-def diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=20):
+def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=20):
     """
     Parameters
     ----------
     file1: str
     file2: str
     float_tol: float
+	
     """
     wn = InpFile().read(file1)
     f1 = _InpFileDifferHelper(file1)

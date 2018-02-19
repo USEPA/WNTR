@@ -1756,8 +1756,8 @@ class ControlManager(Observer):
         """
         The update method gets called when a subject (control action) is activated.
 
-        Paramters
-        ---------
+        Parameters
+        -----------
         subject: BaseControlAction
         """
         obj, attr = subject.target()

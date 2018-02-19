@@ -2,6 +2,28 @@
 The wntr.network.elements module includes elements of a water network model, 
 including junction, tank, reservoir, pipe, pump, valve, pattern, timeseries, 
 demands, curves, and sources.
+
+.. rubric:: Contents
+
+- :class:`~Junction`
+- :class:`~Tank`
+- :class:`~Reservoir`
+- :class:`~Pipe`
+- :class:`~Pump`
+- :class:`~HeadPump`
+- :class:`~PowerPump`
+- :class:`~Valve`
+- :class:`~PRValve`
+- :class:`~PSValve`
+- :class:`~PBValve`
+- :class:`~FCValve`
+- :class:`~TCValve`
+- :class:`~GPValve`
+- :class:`~Pattern`
+- :class:`~TimeSeries`
+- :class:`~Demands`
+- :class:`~Curve`
+- :class:`~Source`
 """
 import numpy as np
 import sys
@@ -30,23 +52,24 @@ class Junction(Node):
     ----------
     name : string
         Name of the junction.
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        WaterNetworkModel object the junction will belong to
 
     """
 
-    def __init__(self, name, model):
-        super(Junction, self).__init__(model, name)
+    def __init__(self, name, wn):
+        super(Junction, self).__init__(wn, name)
         self.demand_timeseries_list = Demands(self._pattern_reg)
         self.elevation = 0.0
 
         self.nominal_pressure = 20.0
-        """The nominal pressure attribute is used for pressure-dependent demand. This is the lowest pressure at
-        which the customer receives the full requested demand."""
+        """float: The nominal pressure attribute is used for pressure-dependent demand
+        simulations. This is the lowest pressure at which the junction receives 
+        the full requested demand."""
 
         self.minimum_pressure = 0.0
-        """The minimum pressure attribute is used for pressure-dependent demand simulations. Below this pressure,
-        the customer will not receive any water."""
+        """float: The minimum pressure attribute is used for pressure-dependent demand 
+        simulations. Below this pressure, the junction will not receive any water."""
 
         self._emitter_coefficient = None
         
@@ -77,15 +100,14 @@ class Junction(Node):
         return 'Junction'
 
     def add_demand(self, base, pattern_name, category=None):
-        """Add a new demand entry to the Junction.
+        """Add a new demand entry to the Junction
         
         Parameters
         ----------
         base : float
             The base demand value for this new entry
-        pattern_name : str, DefaultDmand, or None
-            The name of the pattern to use; a DefaultDeamnd object to use the default
-            pattern; or ``None`` for a constant value
+        pattern_name : str or None
+            The name of the pattern to use or ``None`` for a constant value
         category : str, optional
             A category name for this demand
         
@@ -94,15 +116,10 @@ class Junction(Node):
             self._pattern_reg.add_usage(pattern_name, (self.name, 'Junction'))
         self.demand_timeseries_list.append((base, pattern_name, category))
 
-    def todict(self):
-        d = super(Junction, self).todict()
-        d['properties'] = dict(elevation=self.elevation,
-                               demands=self.demand_timeseries_list.tolist())
-        return d
 
     def add_leak(self, wn, area, discharge_coeff=0.75, start_time=None, end_time=None):
         """
-        Add a leak control to the water network model. 
+        Add a leak control to the water network model
         
         Leaks are modeled by:
 
@@ -111,24 +128,24 @@ class Junction(Node):
         where:
            Q is the volumetric flow rate of water out of the leak
            g is the acceleration due to gravity
-           h is the guage head at the junction, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
+           h is the gauge head at the junction, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
 
         Parameters
         ----------
-        wn: wntr WaterNetworkModel
+        wn : :class:`~wntr.network.model.WaterNetworkModel`
            Water network model containing the junction with
            the leak. This information is needed because the
            WaterNetworkModel object stores all controls, including
            when the leak starts and stops.
-        area: float
+        area : float
            Area of the leak in m^2.
-        discharge_coeff: float
+        discharge_coeff : float
            Leak discharge coefficient; Takes on values between 0 and 1.
-        start_time: int
+        start_time : int
            Start time of the leak in seconds. If the start_time is
            None, it is assumed that an external control will be used
            to start the leak (otherwise, the leak will not start).
-        end_time: int
+        end_time : int
            Time at which the leak is fixed in seconds. If the end_time
            is None, it is assumed that an external control will be
            used to end the leak (otherwise, the leak will not end).
@@ -152,11 +169,11 @@ class Junction(Node):
 
     def remove_leak(self,wn):
         """
-        Remove a leak control from the water network model. 
+        Remove a leak control from the water network model
 
         Parameters
         ----------
-        wn: wntr WaterNetworkModel
+        wn : :class:`~wntr.network.model.WaterNetworkModel`
            Water network model
         """
         self._leak = False
@@ -172,13 +189,13 @@ class Tank(Node):
     ----------
     name : string
         Name of the tank.
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+     wn : :class:`~wntr.network.model.WaterNetworkModel`
+        WaterNetworkModel object the tank will belong to
 
     """
 
-    def __init__(self, name, model):
-        super(Tank, self).__init__(model, name)
+    def __init__(self, name, wn):
+        super(Tank, self).__init__(wn, name)
         self.elevation=0.0
         self._init_level=3.048
         self.min_level=0.0
@@ -249,24 +266,6 @@ class Tank(Node):
         """Returns tank level (head - elevation)"""
         return self.head - self.elevation
 
-    def todict(self):
-        d = super(Tank, self).todict()
-        d['properties'] = dict(elevation=self.elevation,
-                              init_level=self.init_level,
-                              min_level=self.min_level,
-                              max_level=self.max_level,
-                              min_vol=self.min_vol,
-                              diameter=self.diameter)
-        if self._vol_curve_name is not None:
-            d['properties']['vol_curve'] = self._vol_curve_name
-        if self.bulk_rxn_coeff is not None:
-            d['properties']['bulk_rxn_coeff'] = self.bulk_rxn_coeff
-        if self._mix_model is not None:
-            d['properties']['mix_model'] = self._mix_model
-        if self._mix_frac is not None:
-            d['properties']['mix_frac'] = self._mix_frac
-        return d
-
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
         Add a leak to a tank. Leaks are modeled by:
@@ -276,13 +275,13 @@ class Tank(Node):
         where:
            Q is the volumetric flow rate of water out of the leak
            g is the acceleration due to gravity
-           h is the guage head at the bottom of the tank, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
+           h is the gauge head at the bottom of the tank, P_g/(rho*g); Note that this is not the hydraulic head (P_g + elevation)
 
         Note that WNTR assumes the leak is at the bottom of the tank.
 
         Parameters
         ----------
-        wn: WaterNetworkModel object
+        wn: :class:`~wntr.network.model.WaterNetworkModel`
            The WaterNetworkModel object containing the tank with
            the leak. This information is needed because the
            WaterNetworkModel object stores all controls, including
@@ -319,11 +318,11 @@ class Tank(Node):
 
     def remove_leak(self,wn):
         """
-        Remove a leak from a tank.
+        Remove a leak from a tank
 
         Parameters
         ----------
-        wn: wntr WaterNetworkModel
+        wn: :class:`~wntr.network.model.WaterNetworkModel`
            Water network model
         """
         self._leak = False
@@ -332,15 +331,13 @@ class Tank(Node):
 
 class Reservoir(Node):
     """
-    Reservoir class, inherited from Node.
+    Reservoir class, inherited from Node
 
     Parameters
     ----------
     name : string
         Name of the reservoir.
-    pattern_registry : PatternRegistry
-        A registry for patterns must be provided
-    model : :class:`~wntr.network.model.WaterNetworkModel`
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this reservoir will belong to.
     base_head : float, optional
         Base head at the reservoir.
@@ -349,9 +346,9 @@ class Reservoir(Node):
         Head pattern.
         
     """
-    def __init__(self, name, model, base_head=0.0, head_pattern=None):
-        super(Reservoir, self).__init__(model, name)
-        self._head_timeseries = TimeSeries(model._pattern_reg, base_head)
+    def __init__(self, name, wn, base_head=0.0, head_pattern=None):
+        super(Reservoir, self).__init__(wn, name)
+        self._head_timeseries = TimeSeries(wn._pattern_reg, base_head)
         self.head_pattern_name = head_pattern
 
     def __repr__(self):
@@ -392,11 +389,6 @@ class Reservoir(Node):
         if name is not None:
             self._pattern_reg.add_usage(name, (self.name, 'Reservoir'))
         self._head_timeseries.pattern_name = name
-    
-    def todict(self):
-        d = super(Reservoir, self).todict()
-        d['properties'] = dict(head=self._head_timeseries.todict())
-        return d
 
 
 class Pipe(Link):
@@ -411,13 +403,13 @@ class Pipe(Link):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this pipe will belong to.
 
     """
 
-    def __init__(self, name, start_node_name, end_node_name, model):
-        super(Pipe, self).__init__(model, name, start_node_name, end_node_name)
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(Pipe, self).__init__(wn, name, start_node_name, end_node_name)
         self.length = 304.8
         self.diameter = 0.3048
         self.roughness = 100
@@ -460,20 +452,6 @@ class Pipe(Link):
     def status(self, status):
         self._user_status = status
 
-    def todict(self):
-        d = super(Pipe, self).todict()
-        d['properties'] = dict(length=self.length,
-                               diameter=self.diameter,
-                               roughness=self.roughness,
-                               minor_loss=self.minor_loss)
-        if self.cv:
-            d['properties']['cv'] = self.cv
-        if self.wall_rxn_coeff:
-            d['properties']['wall_rxn_coeff'] = self.wall_rxn_coeff
-        if self.bulk_rxn_coeff:
-            d['properties']['bulk_rxn_coeff'] = self.bulk_rxn_coeff
-        return d
-
 
 class Pump(Link):
     """
@@ -491,14 +469,14 @@ class Pump(Link):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this pump will belong to.
 
     """
 
-    def __init__(self, name, start_node_name, end_node_name, model):
-        super(Pump, self).__init__(model, name, start_node_name, end_node_name)
-        self._speed_timeseries = TimeSeries(model._pattern_reg, 1.0)
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(Pump, self).__init__(wn, name, start_node_name, end_node_name)
+        self._speed_timeseries = TimeSeries(wn._pattern_reg, 1.0)
         self._base_power = None
         self._pump_curve_name = None
         self.efficiency = None
@@ -556,12 +534,12 @@ class Pump(Link):
     
     def add_outage(self, wn, start_time, end_time):
         """
-        Adds a pump outage control to the water network model.
+        Adds a pump outage control to the water network model
 
         Parameters
         ----------
         model : :class:`~wntr.network.model.WaterNetworkModel`
-            The water network model this link will belong to.
+            The water network model this outage will belong to.
         start_time : int
            The time at which the outage starts.
         end_time : int
@@ -579,12 +557,6 @@ class Pump(Link):
         wn.add_control(self.name+'_power_off_'+str(start_time), start_control)
         wn.add_control(self.name+'_power_on_'+str(end_time), end_control)
 
-    def todict(self):
-        d = super(Pump, self).todict()
-        d['properties'] = dict(pump_type=self.pump_type,
-                               speed=self._speed_timeseries.todict())
-        return d
-
 
 class HeadPump(Pump):
     """
@@ -598,8 +570,8 @@ class HeadPump(Pump):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this pump will belong to.
 
     """
     def __repr__(self):
@@ -727,11 +699,6 @@ class HeadPump(Pump):
         except IndexError:
             raise IndexError("Curve point does not exist")
 
-    def todict(self):
-        d = super(HeadPump, self).todict()
-        d['properties']['pump_curve'] = self._pump_curve_name
-        return d
-
 
 class PowerPump(Pump):
     """
@@ -745,8 +712,8 @@ class PowerPump(Pump):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this pump will belong to.
 
     """
     
@@ -776,11 +743,6 @@ class PowerPump(Pump):
     def power(self, kW):
         self._curve_reg.remove_usage(self._pump_curve_name, (self._link_name, 'Pump'))
         self._base_power = kW
-        
-    def todict(self):
-        d = super(PowerPump, self).todict()
-        d['properties']['base_power'] = self._base_power
-        return d
 
 
 class Valve(Link):
@@ -801,12 +763,12 @@ class Valve(Link):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this valve will belong to.
 
     """
-    def __init__(self, name, start_node_name, end_node_name, model):
-        super(Valve, self).__init__(model, name, start_node_name, end_node_name)
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(Valve, self).__init__(wn, name, start_node_name, end_node_name)
         self.diameter = 0.3048
         self.minor_loss = 0.0
         self._initial_status = LinkStatus.Active
@@ -846,18 +808,11 @@ class Valve(Link):
     def link_type(self):
         """returns ``"Valve"``"""
         return 'Valve'
-
-    def todict(self):
-        d = super(Valve, self).todict()
-        d['properties'] = dict(diameter=self.diameter,
-                               valve_type=self.valve_type,
-                               minor_loss=self.minor_loss)
-        return d
-
+        
 
 class PRValve(Valve):
     """
-    Pressure reducting valve class, inherited from Valve.
+    Pressure reducing valve class, inherited from Valve.
     
     Parameters
     ----------
@@ -867,12 +822,12 @@ class PRValve(Valve):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this valve will belong to.
 
     """
-    def __init__(self, name, start_node_name, end_node_name, model):
-        super(PRValve, self).__init__(name, start_node_name, end_node_name, model)
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(PRValve, self).__init__(name, start_node_name, end_node_name, wn)
 
     @property
     def valve_type(self): 
@@ -892,12 +847,12 @@ class PSValve(Valve):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this valve will belong to.
     
     """
-    def __init__(self, name, start_node_name, end_node_name, model):
-        super(PSValve, self).__init__(name, start_node_name, end_node_name, model)
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(PSValve, self).__init__(name, start_node_name, end_node_name, wn)
 
     @property
     def valve_type(self): 
@@ -917,12 +872,12 @@ class PBValve(Valve):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this valve will belong to.
     
     """
-    def __init__(self, name, start_node_name, end_node_name, model):
-        super(PBValve, self).__init__(name, start_node_name, end_node_name, model)
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(PBValve, self).__init__(name, start_node_name, end_node_name, wn)
 
     @property
     def valve_type(self): 
@@ -942,12 +897,12 @@ class FCValve(Valve):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this valve will belong to
     
     """
-    def __init__(self, name, start_node_name, end_node_name, model):
-        super(FCValve, self).__init__(name, start_node_name, end_node_name, model)
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(FCValve, self).__init__(name, start_node_name, end_node_name, wn)
 
     @property
     def valve_type(self): 
@@ -967,12 +922,12 @@ class TCValve(Valve):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this valve will belong to
     
     """
-    def __init__(self, name, start_node_name, end_node_name, model):
-        super(TCValve, self).__init__(name, start_node_name, end_node_name, model)
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(TCValve, self).__init__(name, start_node_name, end_node_name, wn)
 
     @property
     def valve_type(self): 
@@ -992,12 +947,12 @@ class GPValve(Valve):
          Name of the start node
     end_node_name : string
          Name of the end node
-    model : :class:`~wntr.network.model.WaterNetworkModel`
-        The water network model this link will belong to.
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        The water network model this valve will belong to
     
     """
-    def __init__(self, name, start_node_name, end_node_name, model):
-        super(GPValve, self).__init__(name, start_node_name, end_node_name, model)
+    def __init__(self, name, start_node_name, end_node_name, wn):
+        super(GPValve, self).__init__(name, start_node_name, end_node_name, wn)
         self._headloss_curve_name = None
 
     @property
@@ -1019,11 +974,6 @@ class GPValve(Valve):
         self._curve_reg.add_usage(name, (self._link_name, 'Valve'))
         self._curve_reg.set_curve_type(name, 'HEADLOSS')
         self._headloss_curve_name = name
-
-    def todict(self):
-        d = super(GPValve, self).todict()
-        d['properties']['headloss_curve'] = self._headloss_curve_name        
-        return d
     
 
 class Pattern(object):
@@ -1131,7 +1081,7 @@ class Pattern(object):
     
     @property
     def multipliers(self):
-        """Returns the pattern multiplier values."""
+        """Returns the pattern multiplier values"""
         return self._multipliers
     @multipliers.setter
     def multipliers(self, values):
@@ -1142,7 +1092,7 @@ class Pattern(object):
 
     @property
     def time_options(self):
-        """Returns the TimeOptions object."""
+        """Returns the TimeOptions object"""
         return self._time_options
     @time_options.setter
     def time_options(self, object):
@@ -1151,6 +1101,7 @@ class Pattern(object):
         self._time_options = object
 
     def todict(self):
+        """Dictionary representation of the pattern"""
         d = dict(name=self.name, 
                  multipliers=list(self._multipliers))
         if not self.wrap:
@@ -1159,7 +1110,7 @@ class Pattern(object):
     
     def at(self, time):
         """
-        Returns the pattern value at a specific time.
+        Returns the pattern value at a specific time
         
         Parameters
         ----------
@@ -1230,18 +1181,6 @@ class TimeSeries(object):
         return fmt.format(self._base, 
                           (repr(self._pattern) if self.pattern else None),
                           str(self._category))
-    
-    def tostring(self):
-        fmt = ' {:12.6g}   {:20s}   {:14s}\n'
-        return fmt.format(self._base, self._pattern, self._category)
-    
-    def todict(self):
-        d = dict(base_val=self._base)
-        if isinstance(self._pattern, six.string_types):
-            d['pattern_name'] = self._pattern
-        if self._category:
-            d['category'] = self._category
-        return d
     
     def __eq__(self, other):
         if type(self) == type(other) and \
@@ -1322,7 +1261,21 @@ class TimeSeries(object):
         for ct, t in enumerate(demand_times):
             demand_values[ct] = self.at(t)
         return demand_values
-
+    
+    def todict(self):
+        """Dictionary representation of the time series"""
+        d = dict(base_val=self._base)
+        if isinstance(self._pattern, six.string_types):
+            d['pattern_name'] = self._pattern
+        if self._category:
+            d['category'] = self._category
+        return d
+    
+#    def tostring(self):
+#        """String representation of the time series"""
+#        fmt = ' {:12.6g}   {:20s}   {:14s}\n'
+#        return fmt.format(self._base, self._pattern, self._category)
+    
 
 class Demands(MutableSequence):
     """
@@ -1369,36 +1322,39 @@ class Demands(MutableSequence):
     def __repr__(self):
         return '<Demands: {}>'.format(repr(self._list))
     
-    def tostring(self):
-        if len(self._list) == 0:
-            s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
-            s += '    None\n'
-            return s
-#        elif len(self._list) == 1:
-#            s  = '  ========   ============   ====================   ==============\n'
-#            s += '  Demand:    {:12.6g}   {:20s}   {:14s}\n'.format(self._list[0].base_value,
-#                                                                    self._list[0].pattern_name,
-#                                                                    self._list[0].category)
-#            s += '  ========   ============   ====================   ==============\n'
+#    def tostring(self):
+#        """String representation of demands"""
+#        if len(self._list) == 0:
+#            s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
+#            s += '    None\n'
 #            return s
-#        s  = '  ========   ============   ====================   ==============\n'
-#        s += '  Demand #   Base Value     Pattern Name           Category      \n'
-#        s += '  --------   ------------   --------------------   --------------\n'
-        s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
-        lf = '  [{:5d} ]  {}'
-        for ct, dem in enumerate(self._list):
-            s += lf.format(ct+1, dem.tostring())
-#        s += '  ========   ============   ====================   ==============\n'
-        return s
-    
-    def tolist(self):
-        if len(self._list) == 0: return None
-        d = []
-        for demand in self._list:
-            d.append(demand.todict())
-        return d
+##        elif len(self._list) == 1:
+##            s  = '  ========   ============   ====================   ==============\n'
+##            s += '  Demand:    {:12.6g}   {:20s}   {:14s}\n'.format(self._list[0].base_value,
+##                                                                    self._list[0].pattern_name,
+##                                                                    self._list[0].category)
+##            s += '  ========   ============   ====================   ==============\n'
+##            return s
+##        s  = '  ========   ============   ====================   ==============\n'
+##        s += '  Demand #   Base Value     Pattern Name           Category      \n'
+##        s += '  --------   ------------   --------------------   --------------\n'
+#        s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
+#        lf = '  [{:5d} ]  {}'
+#        for ct, dem in enumerate(self._list):
+#            s += lf.format(ct+1, dem.tostring())
+##        s += '  ========   ============   ====================   ==============\n'
+#        return s
+#    
+#    def tolist(self):
+#        """List representation of demands"""
+#        if len(self._list) == 0: return None
+#        d = []
+#        for demand in self._list:
+#            d.append(demand.todict())
+#        return d
     
     def to_ts(self, obj):
+        """Time series representation of demands"""
         if isinstance(obj, (list, tuple)) and len(obj) >= 2:
             o1 = obj[0]
             o2 = self._pattern_reg.default_pattern if obj[1] is None else obj[1]
@@ -1514,7 +1470,7 @@ class Curve(object):
         The units the points are currently defined in. This MUST be 'SI' by the time
         one of the simulators is run.
     options : WaterNetworkOptions, optional
-        Water network options to lookuup headloss function
+        Water network options to lookup headloss function
     """
     def __init__(self, name, curve_type=None, points=[], 
                  original_units=None, current_units='SI', options=None):
@@ -1604,6 +1560,7 @@ class Curve(object):
         return len(self.points)
     
     def todict(self):
+        """Dictionary representation of the curve"""
         d = dict(name=self._name, 
                  curve_type=self._curve_type,
                  points=list(self._points))
@@ -1652,10 +1609,6 @@ class Source(object):
         self.node_name = node_name
         self.source_type = source_type
 
-    @property
-    def strength_timeseries(self): 
-        return self._strength_timeseries
-
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -1669,3 +1622,6 @@ class Source(object):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
         return fmt.format(self.name, self.node_name, self.source_type, self._base, self._pattern_name)
 
+    @property
+    def strength_timeseries(self): 
+        return self._strength_timeseries
