@@ -109,7 +109,7 @@ The control action `act1` from above is used in the control.
     Tank('1').level > 46.0248
     >>> ctrl1 = controls.Control(cond1, act1, name='control1')
     >>> print(ctrl1)
-    pre_and_postsolve  := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
+    Control control1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
     
 In the following example, a time-based control is defined that opens Pump 10 at hour 121.
 A new control action is defined that opens the pump.
@@ -123,7 +123,7 @@ A new control action is defined that opens the pump.
     sim_time = 435600 sec
     >>> ctrl2 = controls.Control(cond2, act2, name='control2')
     >>> print(ctrl2)
-    presolve  := if sim_time = 435600.0 sec then set HeadPump('10').status to Open with priority 3
+    Control control2 := if sim_time = 435600 sec then set HeadPump('10').status to Open with priority 3
 
 Rules
 --------------------------
@@ -141,11 +141,11 @@ The following examples illustrate the creation of a rules, using the same condit
     
     >>> rule1 = controls.Rule(cond1, [act1], name='rule1')
     >>> print(rule1)
-    rule rule1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
+    Rule rule1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
     
     >>> rule2 = controls.Rule(cond2, [act2], name='rule2')
     >>> print(rule2)
-    rule rule2 := if sim_time = 435600 sec then set HeadPump('10').status to Open with priority 3
+    Rule rule2 := if sim_time = 435600 sec then set HeadPump('10').status to Open with priority 3
 
 Since rules operate on a different timestep than controls, these rules might behave differently than the controls defined above.
 
@@ -161,7 +161,7 @@ and otherwise it will open pipe 10.
     
     >>> rule3 = controls.Rule(cond3, [act1], [act2], priority=3, name='complex_rule')
     >>> print(rule3)
-    rule complex_rule := if ( Tank('1').level > 46.0248 && sim_time = 435600 sec ) then set Pipe('330').status to Open else set HeadPump('10').status to Open with priority 3
+    Rule complex_rule := if ( Tank('1').level > 46.0248 && sim_time = 435600 sec ) then set Pipe('330').status to Open else set HeadPump('10').status to Open with priority 3
 
 Actions can also be combined, as shown in the following example:
 
@@ -170,7 +170,7 @@ Actions can also be combined, as shown in the following example:
     >>> cond4 = controls.OrCondition(cond1, cond2)
     >>> rule4 = controls.Rule(cond4, [act1, act2])
     >>> print(rule4)
-    rule  := if ( Tank('1').level > 46.0248 || sim_time = 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
+    Rule  := if ( Tank('1').level > 46.0248 || sim_time = 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
 
 The flexibility of the :class:`~wntr.network.controls.Rule` class combined with the different :class:`~wntr.network.controls.ControlCondition` classes 
 and :class:`~wntr.network.controls.ControlAction` instances provides an extremely powerful tool for defining complex network operations.
@@ -186,7 +186,7 @@ The control or rule should be named so that it can be retrieved and modified if 
 
     >>> wn.add_control('NewTimeControl', ctrl2)
     >>> wn.get_control('NewTimeControl')
-    <Control: '', <SimTimeCondition: model, 'Is', '5-01:00:00', False, 0>, [<ControlAction: 10, status, Open>], [], priority=3>
+    <Control: 'control2', <SimTimeCondition: model, 'Is', '5-01:00:00', False, 0>, [<ControlAction: 10, status, Open>], [], priority=3>
 
 ..
 	If a control of that name already exists, an error will occur. In this case, the control will need to be deleted first.
