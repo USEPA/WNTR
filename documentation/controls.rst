@@ -135,17 +135,18 @@ If rules with conflicting actions should occur at the same time, the rule with t
 all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` enum. The default 
 priority is medium (3). The name argument should be a string.
 
-The following examples illustrate the creation of a rules, using the same conditions and actions defined above.
+The following examples illustrate the creation of a rules, using conditions and actions similar to those defined above.
 
 .. doctest::
-    
+
+    >>> cond2 = controls.SimTimeCondition(wn, controls.Comparison.ge, '121:00:00')
     >>> rule1 = controls.Rule(cond1, [act1], name='rule1')
     >>> print(rule1)
     Rule rule1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
     
     >>> rule2 = controls.Rule(cond2, [act2], name='rule2')
     >>> print(rule2)
-    Rule rule2 := if sim_time = 435600 sec then set HeadPump('10').status to Open with priority 3
+    Rule rule2 := if sim_time >= 435600 sec then set HeadPump('10').status to Open with priority 3
 
 Since rules operate on a different timestep than controls, these rules might behave differently than the controls defined above.
 
@@ -157,11 +158,11 @@ and otherwise it will open pipe 10.
     
     >>> cond3 = controls.AndCondition(cond1, cond2)
     >>> print(cond3)
-    ( Tank('1').level > 46.0248 && sim_time = 435600 sec )
+    ( Tank('1').level > 46.0248 && sim_time >= 435600 sec )
     
     >>> rule3 = controls.Rule(cond3, [act1], [act2], priority=3, name='complex_rule')
     >>> print(rule3)
-    Rule complex_rule := if ( Tank('1').level > 46.0248 && sim_time = 435600 sec ) then set Pipe('330').status to Open else set HeadPump('10').status to Open with priority 3
+    Rule complex_rule := if ( Tank('1').level > 46.0248 && sim_time >= 435600 sec ) then set Pipe('330').status to Open else set HeadPump('10').status to Open with priority 3
 
 Actions can also be combined, as shown in the following example:
 
@@ -170,7 +171,7 @@ Actions can also be combined, as shown in the following example:
     >>> cond4 = controls.OrCondition(cond1, cond2)
     >>> rule4 = controls.Rule(cond4, [act1, act2])
     >>> print(rule4)
-    Rule  := if ( Tank('1').level > 46.0248 || sim_time = 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
+    Rule  := if ( Tank('1').level > 46.0248 || sim_time >= 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
 
 The flexibility of the :class:`~wntr.network.controls.Rule` class combined with the different :class:`~wntr.network.controls.ControlCondition` classes 
 and :class:`~wntr.network.controls.ControlAction` instances provides an extremely powerful tool for defining complex network operations.
