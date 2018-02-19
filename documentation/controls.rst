@@ -13,13 +13,13 @@ Controls use a single action (i.e., closing/opening a link or changing the setti
 If a time based or tank level condition is not exactly matched at a simulation timestep, controls make use of partial timesteps to match the condition before the control is deployed.
 Controls in WNTR emulate EPANET controls.
 
-**Rules** are more complex; rules are defined using an "IF condition; THEN action_1; ELSE action_2" format, where the ELSE block is optional.
+**Rules** are more complex; rules are defined using an "IF condition; THEN action1; ELSE action2" format, where the ELSE block is optional.
 Rules can use multiple conditions and multiple actions in each of the logical blocks.  Rules can also be prioritized to set the order of operation.
 If rules with conflicting actions should occur at the same time, the rule with the highest priority will override all others.
 Rules operate on a rule timestep specified by the user, which can be different from the simulation timestep.  
 Rules in WNTR emulate EPANET rules.
 
-When generating a water network model from an EPANET INP file, WNTR generates rules and controls based on input from the [CONTROLS] and [RULES] sections.  
+When generating a water network model from an EPANET INP file, WNTR generates controls and rules based on input from the [CONTROLS] and [RULES] sections.  
 These controls and rules are then used when simulating hydraulics with either the EpanetSimulator or the WNTRSimulator.
 Controls and rules can also be defined directly in WNTR using the API described below.
 WNTR includes additional options to define controls and rules that can be used by the WNTRSimulator.
@@ -67,7 +67,7 @@ The following example creates an action that opens pipe 330:
 Conditions
 ----------
 
-Conditions define when a control action should occur. The condition classes are listed in :numref:`table-condition-classes`.
+Conditions define when an action should occur. The condition classes are listed in :numref:`table-condition-classes`.
 
 .. _table-condition-classes:
 .. table:: Condition Classes
@@ -99,7 +99,7 @@ of any of the above conditions, and an action that should occur when the conditi
 In the following example, a conditional control is defined that opens pipe 330 if the level of tank 1 goes above 46.0248 m.
 The target is the tank and the attribute is the tanks level.
 To specify that the condition should be true when the level is greater than the threshold, the operation is set to > and the threshold is set to 46.0248.
-The control action `act1` from above is used in the control.
+The action `act1` from above is used in the control.
 
 .. doctest::
 	
@@ -107,12 +107,13 @@ The control action `act1` from above is used in the control.
     >>> cond1 = controls.ValueCondition(tank, 'level', '>', 46.0248)
     >>> print(cond1)
     Tank('1').level > 46.0248
+    
     >>> ctrl1 = controls.Control(cond1, act1, name='control1')
     >>> print(ctrl1)
     pre_and_postsolve  := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
     
 In the following example, a time-based control is defined that opens Pump 10 at hour 121.
-A new control action is defined that opens the pump.
+A new action is defined that opens the pump.
 
 .. doctest::
     
@@ -121,6 +122,7 @@ A new control action is defined that opens the pump.
     >>> cond2 = controls.SimTimeCondition(wn, '=', '121:00:00')
     >>> print(cond2)
     sim_time = 435600 sec
+    
     >>> ctrl2 = controls.Control(cond2, act2, name='control2')
     >>> print(ctrl2)
     presolve  := if sim_time = 435600.0 sec then set HeadPump('10').status to Open with priority 3
@@ -133,7 +135,7 @@ when the condition is false.  Multiple conditions and actions can be passed into
 Rules also take an optional priority. 
 If rules with conflicting actions should occur at the same time, the rule with the highest priority will override 
 all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` enum. The default 
-priority is medium (3). The name argument should be a string.
+priority is medium (3). 
 
 The following examples illustrate the creation of a rules, using the same conditions and actions defined above.
 
@@ -163,7 +165,7 @@ and otherwise it will open pipe 10.
     >>> print(rule3)
     rule complex_rule := if ( Tank('1').level > 46.0248 && sim_time = 435600 sec ) then set Pipe('330').status to Open else set HeadPump('10').status to Open with priority 3
 
-Actions can also be combined, as shown in the following example:
+Actions can also be combined, as shown in the following example.
 
 .. doctest::
 
@@ -172,15 +174,14 @@ Actions can also be combined, as shown in the following example:
     >>> print(rule4)
     rule  := if ( Tank('1').level > 46.0248 || sim_time = 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
 
-The flexibility of the :class:`~wntr.network.controls.Rule` class combined with the different :class:`~wntr.network.controls.ControlCondition` classes 
-and :class:`~wntr.network.controls.ControlAction` instances provides an extremely powerful tool for defining complex network operations.
+The flexibility of rules provides an extremely powerful tool for defining complex network operations.
 
 Adding controls/rules to a network
 ------------------------------------
 
 Once a control or rule is created, it can be added to the network.
 This is accomplished using the :class:`~wntr.network.model.WaterNetworkModel.add_control` method of the water network model object.
-The control or rule should be named so that it can be retrieved and modified if desired:
+The control or rule should be named so that it can be retrieved and modified if desired.
 
 .. doctest::
 
