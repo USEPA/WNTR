@@ -27,7 +27,6 @@ demands, curves, and sources.
     Curve
     Source
 
-
 """
 import numpy as np
 import sys
@@ -163,12 +162,12 @@ class Junction(Node):
 
         if start_time is not None:
             start_control_action = ControlAction(self, 'leak_status', True)
-            control = Control.time_control(wn, start_time, 'SIM_TIME', False, start_control_action)
+            control = Control._time_control(wn, start_time, 'SIM_TIME', False, start_control_action)
             wn.add_control(self._leak_start_control_name, control)
 
         if end_time is not None:
             end_control_action = ControlAction(self, 'leak_status', False)
-            control = Control.time_control(wn, end_time, 'SIM_TIME', False, end_control_action)
+            control = Control._time_control(wn, end_time, 'SIM_TIME', False, end_control_action)
             wn.add_control(self._leak_end_control_name, control)
 
     def remove_leak(self,wn):
@@ -312,12 +311,12 @@ class Tank(Node):
 
         if start_time is not None:
             start_control_action = ControlAction(self, 'leak_status', True)
-            control = Control.time_control(wn, start_time, 'SIM_TIME', False, start_control_action)
+            control = Control._time_control(wn, start_time, 'SIM_TIME', False, start_control_action)
             wn.add_control(self._leak_start_control_name, control)
 
         if end_time is not None:
             end_control_action = ControlAction(self, 'leak_status', False)
-            control = Control.time_control(wn, end_time, 'SIM_TIME', False, end_control_action)
+            control = Control._time_control(wn, end_time, 'SIM_TIME', False, end_control_action)
             wn.add_control(self._leak_end_control_name, control)
 
     def remove_leak(self,wn):
@@ -555,8 +554,8 @@ class Pump(Link):
         start_power_outage_action = _InternalControlAction(self, '_power_outage', LinkStatus.Closed, 'status')
         end_power_outage_action = _InternalControlAction(self, '_power_outage', LinkStatus.Open, 'status')
 
-        start_control = Control.time_control(wn, start_time, 'SIM_TIME', False, start_power_outage_action)
-        end_control = Control.time_control(wn, end_time, 'SIM_TIME', False, end_power_outage_action)
+        start_control = Control._time_control(wn, start_time, 'SIM_TIME', False, start_power_outage_action)
+        end_control = Control._time_control(wn, end_time, 'SIM_TIME', False, end_power_outage_action)
 
         wn.add_control(self.name+'_power_off_'+str(start_time), start_control)
         wn.add_control(self.name+'_power_on_'+str(end_time), end_control)

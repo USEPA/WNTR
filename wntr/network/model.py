@@ -13,7 +13,6 @@ model.
     NodeRegistry
     LinkRegistry
 
-
 """
 import logging
 import six
@@ -38,7 +37,7 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison
+    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison, Rule
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 
@@ -580,14 +579,14 @@ class WaterNetworkModel(AbstractModel):
 
     def add_control(self, name, control_object):
         """
-        Adds a control to the water network model
+        Adds a control or rule to the water network model
 
         Parameters
         ----------
         name : string
            control object name.
-        control_object : Control object
-            Control object.
+        control_object : Control or Rule
+            Control or Rule object.
         """
         if name in self._controls:
             raise ValueError('The name provided for the control is already used. Please either remove the control with that name first or use a different name for this control.')
@@ -603,14 +602,14 @@ class WaterNetworkModel(AbstractModel):
             x=[]
             for control_name, control in self._controls.items():
                 if node in control.requires():
-                    logger.warning('Control '+control_name+' is being removed along with node '+name)
+                    logger.warning(control._control_type_str()+' '+control_name+' is being removed along with node '+name)
                     x.append(control_name)
             for i in x:
                 self.remove_control(i)
         else:
             for control_name, control in self._controls.items():
                 if node in control.requires():
-                    raise RuntimeError('Cannot remove node {0} without first removing control {1}'.format(name, control_name))
+                    raise RuntimeError('Cannot remove node {0} without first removing control/rule {1}'.format(name, control_name))
         self._node_reg.__delitem__(name)
 
     def remove_link(self, name, with_control=False):
@@ -620,14 +619,14 @@ class WaterNetworkModel(AbstractModel):
             x=[]
             for control_name, control in self._controls.items():
                 if link in control.requires():
-                    logger.warning('Control '+control_name+' is being removed along with link '+name)
+                    logger.warning(control._control_type_str()+' '+control_name+' is being removed along with link '+name)
                     x.append(control_name)
             for i in x:
                 self.remove_control(i)
         else:
             for control_name, control in self._controls.items():
                 if link in control.requires():
-                    raise RuntimeError('Cannot remove link {0} without first removing control {1}'.format(name, control_name))
+                    raise RuntimeError('Cannot remove link {0} without first removing control/rule {1}'.format(name, control_name))
         self._link_reg.__delitem__(name)
 
     def remove_pattern(self, name): 
@@ -752,7 +751,7 @@ class WaterNetworkModel(AbstractModel):
         return self._sources[name]
     
     def get_control(self, name): 
-        """Get a specific control
+        """Get a specific control or rule
         
         Parameters
         ----------
@@ -761,7 +760,7 @@ class WaterNetworkModel(AbstractModel):
             
         Returns
         -------
-        Control
+        ctrl: Control or Rule
         
         """
         return self._controls[name]
@@ -798,13 +797,15 @@ class WaterNetworkModel(AbstractModel):
                 open_control_action = _InternalControlAction(link, '_internal_status', LinkStatus.Open, 'status')
 
                 close_condition = ValueCondition(tank, 'head', Comparison.le, min_head)
-                close_control_1 = Control(close_condition, [close_control_action], [], ControlPriority.medium)
+                close_control_1 = Control(condition=close_condition, then_action=close_control_action,
+                                          priority=ControlPriority.medium)
                 close_control_1._control_type = _ControlType.pre_and_postsolve
                 tank_controls.append(close_control_1)
 
                 if not link_has_cv:
                     open_condition_1 = ValueCondition(tank, 'head', Comparison.ge, min_head+self._Htol)
-                    open_control_1 = Control(open_condition_1, [open_control_action], [], ControlPriority.low)
+                    open_control_1 = Control(condition=open_condition_1, then_action=open_control_action,
+                                             priority=ControlPriority.low)
                     open_control_1._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_1)
 
@@ -817,7 +818,8 @@ class WaterNetworkModel(AbstractModel):
                     open_condition_2a = RelativeCondition(tank, 'head', Comparison.le, other_node, 'head')
                     open_condition_2b = ValueCondition(tank, 'head', Comparison.le, min_head+self._Htol)
                     open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
-                    open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
+                    open_control_2 = Control(condition=open_condition_2, then_action=open_control_action,
+                                             priority=ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
 
@@ -842,13 +844,15 @@ class WaterNetworkModel(AbstractModel):
                 open_control_action = _InternalControlAction(link, '_internal_status', LinkStatus.Open, 'status')
 
                 close_condition = ValueCondition(tank, 'head', Comparison.ge, max_head)
-                close_control = Control(close_condition, [close_control_action], [], ControlPriority.medium)
+                close_control = Control(condition=close_condition, then_action=close_control_action,
+                                        priority=ControlPriority.medium)
                 close_control._control_type = _ControlType.pre_and_postsolve
                 tank_controls.append(close_control)
 
                 if not link_has_cv:
                     open_condition_1 = ValueCondition(tank, 'head', Comparison.le, max_head - self._Htol)
-                    open_control_1 = Control(open_condition_1, [open_control_action], [], ControlPriority.low)
+                    open_control_1 = Control(condition=open_condition_1, then_action=open_control_action,
+                                             priority=ControlPriority.low)
                     open_control_1._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_1)
 
@@ -861,7 +865,8 @@ class WaterNetworkModel(AbstractModel):
                     open_condition_2a = RelativeCondition(tank, 'head', Comparison.ge, other_node, 'head')
                     open_condition_2b = ValueCondition(tank, 'head', Comparison.ge, max_head-self._Htol)
                     open_condition_2 = AndCondition(open_condition_2a, open_condition_2b)
-                    open_control_2 = Control(open_condition_2, [open_control_action], [], ControlPriority.high)
+                    open_control_2 = Control(condition=open_condition_2, then_action=open_control_action,
+                                             priority=ControlPriority.high)
                     open_control_2._control_type = _ControlType.postsolve
                     tank_controls.append(open_control_2)
 
@@ -875,8 +880,8 @@ class WaterNetworkModel(AbstractModel):
             close_condition = _CloseCVCondition(self, pipe)
             open_action = _InternalControlAction(pipe, '_internal_status', LinkStatus.Open, 'status')
             close_action = _InternalControlAction(pipe, '_internal_status', LinkStatus.Closed, 'status')
-            open_control = Control(open_condition, [open_action], [], ControlPriority.very_low)
-            close_control = Control(close_condition, [close_action], [], ControlPriority.very_high)
+            open_control = Control(condition=open_condition, then_action=open_action, priority=ControlPriority.very_low)
+            close_control = Control(condition=close_condition, then_action=close_action, priority=ControlPriority.very_high)
             open_control._control_type = _ControlType.postsolve
             close_control._control_type = _ControlType.postsolve
             cv_controls.append(open_control)
@@ -899,8 +904,8 @@ class WaterNetworkModel(AbstractModel):
             else:
                 raise ValueError('Unrecognized pump pump_type: {0}'.format(pump.pump_type))
 
-            close_control = Control(close_condition, [close_control_action], [], ControlPriority.very_high)
-            open_control = Control(open_condition, [open_control_action], [], ControlPriority.very_low)
+            close_control = Control(condition=close_condition, then_action=close_control_action, priority=ControlPriority.very_high)
+            open_control = Control(condition=open_condition, then_action=open_control_action, priority=ControlPriority.very_low)
 
             close_control._control_type = _ControlType.postsolve
             open_control._control_type = _ControlType.postsolve
@@ -916,7 +921,7 @@ class WaterNetworkModel(AbstractModel):
 
             new_setting_action = ControlAction(valve, 'status', LinkStatus.Active)
             new_setting_condition = _ValveNewSettingCondition(valve)
-            new_setting_control = Control(new_setting_condition, [new_setting_action], [], ControlPriority.very_low)
+            new_setting_control = Control(condition=new_setting_condition, then_action=new_setting_action, priority=ControlPriority.very_low)
             new_setting_control._control_type = _ControlType.postsolve
             valve_controls.append(new_setting_control)
 
@@ -927,9 +932,9 @@ class WaterNetworkModel(AbstractModel):
                 close_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Closed, 'status')
                 open_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
                 active_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Active, 'status')
-                close_control = Control(close_condition, [close_action], [], ControlPriority.very_high)
-                open_control = Control(open_condition, [open_action], [], ControlPriority.very_low)
-                active_control = Control(active_condition, [active_action], [], ControlPriority.very_low)
+                close_control = Control(condition=close_condition, then_action=close_action, priority=ControlPriority.very_high)
+                open_control = Control(condition=open_condition, then_action=open_action, priority=ControlPriority.very_low)
+                active_control = Control(condition=active_condition, then_action=active_action, priority=ControlPriority.very_low)
                 close_control._control_type = _ControlType.postsolve
                 open_control._control_type = _ControlType.postsolve
                 active_control._control_type = _ControlType.postsolve
@@ -941,8 +946,8 @@ class WaterNetworkModel(AbstractModel):
                 active_condition = _ActiveFCVCondition(self, valve)
                 open_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
                 active_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Active, 'status')
-                open_control = Control(open_condition, [open_action], [], ControlPriority.very_low)
-                active_control = Control(active_condition, [active_action], [], ControlPriority.very_low)
+                open_control = Control(condition=open_condition, then_action=open_action, priority=ControlPriority.very_low)
+                active_control = Control(condition=active_condition, then_action=active_action, priority=ControlPriority.very_low)
                 open_control._control_type = _ControlType.postsolve
                 active_control._control_type = _ControlType.postsolve
                 valve_controls.append(open_control)
@@ -1739,7 +1744,7 @@ class WaterNetworkModel(AbstractModel):
 
 
 class PatternRegistry(Registry):
-
+    """A registry for patterns."""
     def _finalize_(self, model):
         super(self.__class__, self)._finalize_(model)
         self._pattern_reg = None
@@ -1827,6 +1832,7 @@ class PatternRegistry(Registry):
 
 
 class CurveRegistry(Registry):
+    """A registry for curves."""
     def __init__(self, model):
         super(CurveRegistry, self).__init__(model)
         self._pump_curves = OrderedSet()
@@ -1997,7 +2003,7 @@ class CurveRegistry(Registry):
 
 
 class SourceRegistry(Registry):
-    """A registry for sources"""
+    """A registry for sources."""
     def _finalize_(self, model):
         super(self.__class__, self)._finalize_(model)
         self._sources = None
@@ -2021,7 +2027,7 @@ class SourceRegistry(Registry):
 
 
 class NodeRegistry(Registry):
-    """The registry containing the model's nodes"""
+    """A registry for nodes."""
     def __init__(self, model):
         super(NodeRegistry, self).__init__(model)
         self._junctions = OrderedSet()
@@ -2287,6 +2293,7 @@ class NodeRegistry(Registry):
 
 
 class LinkRegistry(Registry):
+    """A registry for links."""
     __subsets = ['_pipes', '_pumps', '_head_pumps', '_power_pumps', '_prvs', '_psvs', '_pbvs', '_tcvs', '_fcvs', '_gpvs', '_valves']
 
     def __init__(self, model):

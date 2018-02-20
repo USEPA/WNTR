@@ -5,24 +5,22 @@ The wntr.epanet.util module contains unit conversion utilities based on EPANET u
 
 .. autosummary::
 
-    wntr.epanet.util.FlowUnits
-    wntr.epanet.util.MassUnits
-    wntr.epanet.util.QualParam
-    wntr.epanet.util.HydParam
-    to_si
-    from_si
-    StatisticsType
-    QualType
-    SourceType
-    PressureUnits
-    FormulaType
-    ControlType
-    LinkTankStatus
-    MixType
-    ResultType
-    wntr.epanet.util.EN
-
-
+    FlowUnits
+	MassUnits
+	QualParam
+	HydParam
+	to_si
+	from_si
+	StatisticsType
+	QualType
+	SourceType
+	PressureUnits
+	FormulaType
+	ControlType
+	LinkTankStatus
+	MixType
+	ResultType
+	EN
 
 """
 import numpy as np

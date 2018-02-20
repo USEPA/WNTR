@@ -16,7 +16,6 @@ the network model.
     LinkType
     LinkStatus
 
-
 """
 import logging
 import six

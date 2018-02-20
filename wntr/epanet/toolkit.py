@@ -6,11 +6,10 @@ Programmers Toolkit DLLs.
 
 .. autosummary::
 
-    EpanetException
-    ENgetwarning
     runepanet
     ENepanet
-
+    EpanetException
+    ENgetwarning
 
 """
 from __future__ import print_function

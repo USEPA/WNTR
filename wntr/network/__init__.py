@@ -7,5 +7,5 @@ from .elements import Junction, Reservoir, Tank, Pipe, Pump, Valve, Pattern, Tim
 from .model import WaterNetworkModel
 from .options import WaterNetworkOptions
 from .controls import Comparison, ControlPriority, TimeOfDayCondition, SimTimeCondition, ValueCondition, \
-    TankLevelCondition, RelativeCondition, OrCondition, AndCondition, ControlAction, Control, ControlManager
+    TankLevelCondition, RelativeCondition, OrCondition, AndCondition, ControlAction, Control, ControlManager, Rule
 from .graph import WntrMultiDiGraph

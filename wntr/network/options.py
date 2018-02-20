@@ -15,7 +15,6 @@ The wntr.network.options module includes simulation options.
     SolverOptions
     UserOptions
 
-
 """
 import logging
 

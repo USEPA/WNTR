@@ -2,6 +2,29 @@
 The wntr.network.controls module includes methods to define network controls
 and control actions.  These controls modify parameters in the network during
 simulation.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    Subject
+    Observer
+    Comparison
+    ControlPriority
+    ControlCondition
+    TimeOfDayCondition
+    SimTimeCondition
+    ValueCondition
+    TankLevelCondition
+    RelativeCondition
+    OrCondition
+    AndCondition
+    BaseControlAction
+    ControlAction
+    ControlBase
+    Control
+    ControlManager
+	
 """
 import math
 import enum
@@ -14,6 +37,7 @@ from wntr.utils.ordered_set import OrderedSet
 from collections import OrderedDict, Iterable
 from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
 from wntr.utils.doc_inheritor import DocInheritor
+import warnings
 
 logger = logging.getLogger(__name__)
 
@@ -778,6 +802,18 @@ class OrCondition(ControlCondition):
         self._condition_1 = cond1
         self._condition_2 = cond2
 
+        if isinstance(cond1, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
+                              RelativeCondition)):
+            if cond1._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
+
+        if isinstance(cond2, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
+                              RelativeCondition)):
+            if cond2._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
+
     def __str__(self):
         return "( " + str(self._condition_1) + " || " + str(self._condition_2) + " )"
 
@@ -809,6 +845,18 @@ class AndCondition(ControlCondition):
     def __init__(self, cond1, cond2):
         self._condition_1 = cond1
         self._condition_2 = cond2
+
+        if isinstance(cond1, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
+                              RelativeCondition)):
+            if cond1._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
+
+        if isinstance(cond2, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
+                              RelativeCondition)):
+            if cond2._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
 
     def __str__(self):
         return "( "+ str(self._condition_1) + " && " + str(self._condition_2) + " )"
@@ -1460,11 +1508,17 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
         """
         pass
 
+    def _control_type_str(self):
+        if self._control_type is _ControlType.rule:
+            return 'Rule'
+        else:
+            return 'Control'
+
 
 @DocInheritor({'is_control_action_required', 'run_control_action', 'requires', 'actions'})
-class Control(ControlBase):
+class Rule(ControlBase):
     """
-    A very general and flexible class for defining both controls and rules.
+    A very general and flexible class for defining both controls rules.
     """
     def __init__(self, condition, then_actions, else_actions=None, priority=ControlPriority.medium, name=None):
         """
@@ -1505,6 +1559,12 @@ class Control(ControlBase):
             self._name = ''
         self._control_type = _ControlType.rule
 
+        if isinstance(condition, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
+                                  RelativeCondition)):
+            if condition._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
+
     @property
     def epanet_control_type(self):
         """
@@ -1542,7 +1602,7 @@ class Control(ControlBase):
         return fmt.format(self._name, repr(self._condition), repr(self._then_actions), repr(self._else_actions), self._priority)
 
     def __str__(self):
-        text = '{} {} := if {}'.format(self._control_type.name, self._name, self._condition)
+        text = '{} {} := if {}'.format(self._control_type_str(), self._name, self._condition)
         if self._then_actions is not None and len(self._then_actions) > 0:
             then_text = ' then '
             for ct, act in enumerate(self._then_actions):
@@ -1585,8 +1645,52 @@ class Control(ControlBase):
         else:
             raise RuntimeError('control actions called even though if-then statement was False')
 
+
+class Control(Rule):
+    """
+    A class for controls.
+    """
+    def __init__(self, condition, then_action, priority=ControlPriority.medium, name=None):
+        """
+        Parameters
+        ----------
+        condition: ControlCondition
+            The condition that should be used to determine when the actions need to be activated. When the condition
+            evaluates to True, the then_actions are activated. When the condition evaluates to False, the else_actions
+            are activated.
+        then_action: ControlAction
+            The action that should be activated when the condition evaluates to True.
+        priority: ControlPriority
+            The priority of the control. Default is ControlPriority.medium
+        name: str
+            The name of the control
+        """
+        if isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
+            if condition._relation is not Comparison.eq:
+                raise ValueError('SimTimeConditions and TimeOfDayConditions used with Control must have a relation of '
+                                 'Comparison.eq. Otherwise use Rule.')
+        if isinstance(condition, (ValueCondition, TankLevelCondition, RelativeCondition)):
+            if condition._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
+
+        self._condition = condition
+        self._then_actions = [then_action]
+        self._else_actions = []
+        self._which = None
+        self._priority = priority
+        self._name = name
+        if self._name is None:
+            self._name = ''
+        if isinstance(condition, TankLevelCondition):
+            self._control_type = _ControlType.pre_and_postsolve
+        elif isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
+            self._control_type = _ControlType.presolve
+        else:
+            self._control_type = _ControlType.postsolve
+
     @classmethod
-    def time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action, name=None):
+    def _time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action, name=None):
         """
         This is a class method for creating simple time controls.
 
@@ -1619,13 +1723,12 @@ class Control(ControlBase):
         else:
             raise ValueError("time_flag not recognized; expected either 'sim_time' or 'clock_time'")
 
-        control = Control(condition=condition, then_actions=[control_action], else_actions=[])
-        control._control_type = _ControlType.presolve
+        control = Control(condition=condition, then_action=control_action)
 
         return control
 
     @classmethod
-    def conditional_control(cls, source_obj, source_attr, operation, threshold, control_action, name=None):
+    def _conditional_control(cls, source_obj, source_attr, operation, threshold, control_action, name=None):
         """
         This is a class method for creating simple conditional controls.
 
@@ -1651,11 +1754,7 @@ class Control(ControlBase):
         """
         condition = ValueCondition(source_obj=source_obj, source_attr=source_attr, relation=operation,
                                    threshold=threshold)
-        control = Control(condition=condition, then_actions=[control_action], else_actions=[])
-        if isinstance(condition, TankLevelCondition):
-            control._control_type = _ControlType.pre_and_postsolve
-        else:
-            control._control_type = _ControlType.postsolve
+        control = Control(condition=condition, then_action=control_action)
         return control
 
 
@@ -1665,7 +1764,7 @@ class ControlManager(Observer):
     """
     def __init__(self):
         self._controls = OrderedSet()
-        """OrderedSet of Control"""
+        """OrderedSet of ControlBase"""
 
         self._previous_values = OrderedDict()  # {(obj, attr): value}
         self._changed = OrderedSet()  # set of (obj, attr) that has been changed from _previous_values
@@ -1677,8 +1776,8 @@ class ControlManager(Observer):
         """
         The update method gets called when a subject (control action) is activated.
 
-        Paramters
-        ---------
+        Parameters
+        -----------
         subject: BaseControlAction
         """
         obj, attr = subject.target()
@@ -1693,7 +1792,7 @@ class ControlManager(Observer):
 
         Parameters
         ----------
-        control: Control
+        control: ControlBase
         """
         self._controls.add(control)
         for action in control.actions():
@@ -1741,7 +1840,7 @@ class ControlManager(Observer):
 
         Parameters
         ----------
-        control: Control
+        control: ControlBase
         """
         self._controls.remove(control)
         for action in control.actions():
@@ -1757,7 +1856,7 @@ class ControlManager(Observer):
         Returns
         -------
         controls_to_run: list of tuple
-            The tuple is (Control, backtrack)
+            The tuple is (ControlBase, backtrack)
         """
         controls_to_run = []
         for c in self._controls:

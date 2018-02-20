@@ -38,6 +38,9 @@ Tests can be run in the WNTR directory using the following command::
 
 	nosetests -v --with-coverage --cover-package=wntr wntr
 
+In addition to the publicly available software tests run using Travis CI,
+WNTR is also tested on private servers using several large water utility network models.
+	
 Documentation
 ---------------------
 WNTR includes a user manual that is built using the Read the Docs service.
