@@ -3,15 +3,17 @@ The wntr.network.options module includes simulation options.
 
 .. rubric:: Contents
 
-- :class:`~WaterNetworkOptions`
-- :class:`~TimeOptions`
-- :class:`~GraphicsOptions`
-- :class:`~HydraulicOptions`
-- :class:`~ResultsOptions`
-- :class:`~QualityOptions`
-- :class:`~EnergyOptions`
-- :class:`~SolverOptions`
-- :class:`~UserOptions`
+.. autosummary::
+
+    WaterNetworkOptions
+	TimeOptions
+	GraphicsOptions
+	HydraulicOptions
+	ResultsOptions
+	QualityOptions
+	EnergyOptions
+	SolverOptions
+	UserOptions
 
 """
 import logging

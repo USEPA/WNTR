@@ -4,15 +4,17 @@ the network model.
 
 .. rubric:: Contents
 
-- :class:`~AbstractModel`
-- :class:`~Subject`
-- :class:`~Observer`
-- :class:`~Node`
-- :class:`~Link`
-- :class:`~Registry`
-- :class:`~NodeType`
-- :class:`~LinkType`
-- :class:`~LinkStatus`
+.. autosummary::
+
+    AbstractModel
+	Subject
+	Observer
+	Node
+	Link
+	Registry
+	NodeType
+	LinkType
+	LinkStatus
 
 """
 import logging

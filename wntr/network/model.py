@@ -4,12 +4,14 @@ model.
 
 .. rubric:: Contents
 
-- :class:`~WaterNetworkModel`
-- :class:`~PatternRegistry`
-- :class:`~CurveRegistry`
-- :class:`~SourceRegistry`
-- :class:`~NodeRegistry`
-- :class:`~LinkRegistry`
+.. autosummary::
+
+    WaterNetworkModel
+	PatternRegistry
+	CurveRegistry
+	SourceRegistry
+	NodeRegistry
+	LinkRegistry
 
 """
 import logging

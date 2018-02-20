@@ -3,25 +3,24 @@ The wntr.epanet.util module contains unit conversion utilities based on EPANET u
 
 .. rubric:: Contents
 
-- :class:`~wntr.epanet.util.FlowUnits`
-- :class:`~wntr.epanet.util.MassUnits`
-- :class:`~wntr.epanet.util.QualParam`
-- :class:`~wntr.epanet.util.HydParam`
-- :meth:`to_si`
-- :meth:`from_si`
-- :class:`~StatisticsType`
-- :class:`~QualType`
-- :class:`~SourceType`
-- :class:`~PressureUnits`
-- :class:`~FormulaType`
-- :class:`~ControlType`
-- :class:`~LinkTankStatus`
-- :class:`~MixType`
-- :class:`~ResultType`
-- :class:`~wntr.epanet.util.EN`
+.. autosummary::
 
-----
-
+    FlowUnits
+	MassUnits
+	QualParam
+	HydParam
+	to_si
+	from_si
+	StatisticsType
+	QualType
+	SourceType
+	PressureUnits
+	FormulaType
+	ControlType
+	LinkTankStatus
+	MixType
+	ResultType
+	EN
 
 """
 import numpy as np
