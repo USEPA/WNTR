@@ -3,7 +3,7 @@
 v0.1.4 (Master branch)
 ---------------------------------------------------
 
-v0.1.4 includes several changes that improve simulation stability and the ability to match EPANET simulations.
+v0.1.4 includes several changes that improve simulation stability and tests to ensure that simulations run using WNTR match EPANET simulations.
 In addition to the publicly available software tests on https://travis-ci.org/sandialabs/WNTR, 
 WNTR is also tested on private servers using several large water utility network models. 
 
@@ -36,10 +36,11 @@ WNTR is also tested on private servers using several large water utility network
   * A Demands object can be called to get the total demand at a specific time (does not include the demand multiplier)
   * Since a junction can have multiple demands, 'base_demand' is no longer a Junction attribute (API change). The Demands object can be used to extract the base value per demand.  
   * Expected demand and average daily expected demand can be calculated using new metrics (see :class:`~wntr.metrics.hydraulic.expected_demand` and :class:`~wntr.metrics.hydraulic.average_expected_demand`).
+    The metric 'average_water_consumed' has been removed.
 
-* Added support for flow control valves (FCV), multiple demands at a junction, and variable reservoir head in the WNTRSimulator
+* Added support for flow control valves (FCV), multiple demands at a junction, variable reservoir head, and rule timesteps in the WNTRSimulator
 * Modified the dependence between the WaterNetworkModel and the NetworkX graph.  The graph is now built from scratch when WaterNetworkModel.get_graph() is called.  
-  WaterNetworkModel.get_graph_deep_copy() has been deprecated (API change, see :class:`~wntr.network.model.WaterNetworkModel.get_graph`).
+  WaterNetworkModel.get_graph_deep_copy() has been removed (API change, see :class:`~wntr.network.model.WaterNetworkModel.get_graph`).
 * Modified the WaterNetworkModel.add_pattern() to no longer accept start_time and end_time options.  
   Binary patterns can be created using the Patterns object (API change, see :class:`~wntr.network.elements.Pattern.binary_pattern`).
 * Updated documentation

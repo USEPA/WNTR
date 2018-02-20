@@ -46,19 +46,18 @@ Additionally, EPANET INP files can be generated from water network models.
    Class                                               Description
    ==================================================  =============================================================================================================================================================================================================================================================================
    :class:`~wntr.network.model.WaterNetworkModel`      Contains methods to generate water network models, including methods to read and write EPANET INP files, and access/add/remove/modify network components.  This class links to additional model classes (below) which define network components, controls, and model options.
-   :class:`~wntr.network.model.Junction`	           Contains methods to define junctions. Junctions are nodes where links connect. Water can enter or leave the network at a junction.
-   :class:`~wntr.network.model.Reservoir`              Contains methods to define reservoirs. Reservoirs are nodes with an infinite external source or sink.      
-   :class:`~wntr.network.model.Tank`                   Contains methods to define tanks. Tanks are nodes with storage capacity.     
-   :class:`~wntr.network.model.Pipe`		           Contains methods to define pipes. Pipes are links that transport water. 
-   :class:`~wntr.network.model.Pump`                   Contains methods to define pumps. Pumps are links that increase hydraulic head.
-   :class:`~wntr.network.model.Energy`                 Contains attributes for specifying global energy prices and global pump efficiencies.
-   :class:`~wntr.network.model.Valve`                  Contains methods to define valves. Valves are links that limit pressure or flow. 
+   :class:`~wntr.network.elements.Junction`	           Contains methods to define junctions. Junctions are nodes where links connect. Water can enter or leave the network at a junction.
+   :class:`~wntr.network.elements.Reservoir`           Contains methods to define reservoirs. Reservoirs are nodes with an infinite external source or sink.      
+   :class:`~wntr.network.elements.Tank`                Contains methods to define tanks. Tanks are nodes with storage capacity.     
+   :class:`~wntr.network.elements.Pipe`		           Contains methods to define pipes. Pipes are links that transport water. 
+   :class:`~wntr.network.elements.Pump`                Contains methods to define pumps. Pumps are links that increase hydraulic head.
+   :class:`~wntr.network.elements.Valve`               Contains methods to define valves. Valves are links that limit pressure or flow. 
    :class:`~wntr.network.elements.Curve`               Contains methods to define curves. Curves are data pairs representing a relationship between two quantities.  Curves are used to define pump curves. 
    :class:`~wntr.network.elements.Source`              Contains methods to define sources. Sources define the location and characteristics of a substance injected directly into the network.
    :class:`~wntr.network.elements.Demands`             Contains methods to define multiple demands per junction. Demands are the rate of withdrawal from the network.
    :class:`~wntr.network.elements.Pattern`             Contains methods to define patterns. Demands, reservoir heads, pump schedules, and water quality sources can have patterns associated with them. 
-   :class:`~wntr.network.controls.TimeControl`         Contains methods to define time controls. Time controls define actions that start or stop at a particular time. 
-   :class:`~wntr.network.controls.ConditionalControl`  Contains methods to define conditional controls. Conditional controls define actions that start or stop based on a particular condition in the network. 
+   :class:`~wntr.network.controls.Control`             Contains methods to define controls. Controls define a single action based on a single condition.
+   :class:`~wntr.network.controls.Rule`                Contains methods to define rules. Rules can define multiple actions and multiple conditions.
    :class:`~wntr.network.options.WaterNetworkOptions`  Contains methods to define model options, including the simulation duration and time step.
    ==================================================  =============================================================================================================================================================================================================================================================================
 
@@ -139,7 +138,7 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * Multipoint curves in the [CURVES] section (3-point curves are supported)
 * Pump speed in the [PUMPS] section
 * Volume curves in the [TANKS] section
-* Rule timestep, pattern start, report start, start clocktime, and statistics in the [TIMES] section
+* Pattern start, report start, start clocktime, and statistics in the [TIMES] section
 * PSV, PBV, and GPV values in the [VALVES] section
 
 **Future development of WNTR will address these limitations.**

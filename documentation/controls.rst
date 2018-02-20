@@ -78,7 +78,6 @@ Conditions define when an action should occur. The condition classes are listed 
    :class:`~wntr.network.controls.TimeOfDayCondition`	 Time-of-day or “clocktime” based condition statement
    :class:`~wntr.network.controls.SimTimeCondition`	     Condition based on time since start of the simulation
    :class:`~wntr.network.controls.ValueCondition`	     Compare a network element attribute to a set value
-   :class:`~wntr.network.controls.TankLevelCondition`    Compare the level in a tank to a set value.
    :class:`~wntr.network.controls.RelativeCondition`	 Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
    :class:`~wntr.network.controls.OrCondition`	         Combine two WNTR Conditions with an OR
    :class:`~wntr.network.controls.AndCondition`	         Combine two WNTR Conditions with an AND
