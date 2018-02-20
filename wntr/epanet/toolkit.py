@@ -482,3 +482,20 @@ class ENepanet():
         return fValue.value
 
 
+    def ENsaveinpfile(self, inpfile):
+        """
+        Saves EPANET input file
+
+        Arguments:
+         * inpfile = EPANET .inp output file
+
+        """
+
+        inpfile = inpfile.encode('ascii')
+        self.errcode = self.ENlib.ENsaveinpfile(inpfile)
+        self._error()
+
+        return
+
+
+    
