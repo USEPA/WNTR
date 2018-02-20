@@ -1744,7 +1744,7 @@ class WaterNetworkModel(AbstractModel):
 
 
 class PatternRegistry(Registry):
-
+    """A registry for patterns."""
     def _finalize_(self, model):
         super(self.__class__, self)._finalize_(model)
         self._pattern_reg = None
@@ -1832,6 +1832,7 @@ class PatternRegistry(Registry):
 
 
 class CurveRegistry(Registry):
+    """A registry for curves."""
     def __init__(self, model):
         super(CurveRegistry, self).__init__(model)
         self._pump_curves = OrderedSet()
@@ -2002,7 +2003,7 @@ class CurveRegistry(Registry):
 
 
 class SourceRegistry(Registry):
-    """A registry for sources"""
+    """A registry for sources."""
     def _finalize_(self, model):
         super(self.__class__, self)._finalize_(model)
         self._sources = None
@@ -2026,7 +2027,7 @@ class SourceRegistry(Registry):
 
 
 class NodeRegistry(Registry):
-    """The registry containing the model's nodes"""
+    """A registry for nodes."""
     def __init__(self, model):
         super(NodeRegistry, self).__init__(model)
         self._junctions = OrderedSet()
@@ -2292,6 +2293,7 @@ class NodeRegistry(Registry):
 
 
 class LinkRegistry(Registry):
+    """A registry for links."""
     __subsets = ['_pipes', '_pumps', '_head_pumps', '_power_pumps', '_prvs', '_psvs', '_pbvs', '_tcvs', '_fcvs', '_gpvs', '_valves']
 
     def __init__(self, model):
