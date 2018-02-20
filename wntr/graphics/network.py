@@ -103,8 +103,10 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     -----
     For more network draw options, see nx.draw_networkx
     """
+    
     if plt is None:
-        raise ImportError('matplotlib is required for the plot_network function. Please install matplotlib.')
+        raise ImportError('matplotlib is required')
+
     if node_cmap is None:
         node_cmap = plt.cm.jet
     if link_cmap is None:
@@ -284,8 +286,8 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         HTML file name (default=None, temp-plot.html)
     """
     if plotly is None:
-        raise ImportError('plotly is required for the plot_interactive_network function. Please install plotly.')
-
+        raise ImportError('plotly is required')
+        
     # Graph
     G = wn.get_graph()
     
