@@ -1,5 +1,18 @@
 """
 The wntr.metrics.hydraulic module contains hydraulic metrics.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    expected_demand
+    average_expected_demand
+    fdv
+    fdd
+    todini
+    entropy
+
+
 """
 import wntr.network
 from wntr.network.graph import _all_simple_paths

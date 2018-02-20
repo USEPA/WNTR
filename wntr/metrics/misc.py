@@ -1,6 +1,16 @@
 """
 The wntr.metrics.misc module contains metrics that do not fall into the
 topographic, hydraulic, water quality, water security, or economic categories.
+
+.. rubric:: contents
+
+.. autosummary::
+
+    query
+    population
+    population_impacted
+
+
 """
 from wntr.network import Junction
 from wntr.metrics.hydraulic import expected_demand

@@ -2,6 +2,15 @@
 The wntr.scenario.fragility_curve module includes methods to define 
 damage states and priority and return the probability of damage 
 based on a control variable.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    FragilityCurve
+    State
+
+
 """
 import pandas as pd
 import numpy as np

@@ -1,7 +1,7 @@
 """
 The wntr.epanet.io module contains methods for reading/writing EPANET input and output files.
 
-.. rubric:: Classes
+.. rubric:: Contents
 
 .. autosummary::
 
