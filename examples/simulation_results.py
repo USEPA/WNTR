@@ -16,8 +16,8 @@ print(results.link)
 # Access the pressure and demand at node '123' at 1 hour
 print(results.node.loc['pressure',3600,'123'], results.node.loc['demand',3600,'123'])
 
-# Access the pressure for all nodes and times
-print(results.node.loc['pressure',:,:])
+# Access the pressure for all nodes and times (print first 5 rows)
+print(results.node.loc['pressure',:,:].head())
 
 # Plot time-series
 pressure_at_node123 = results.node.loc['pressure',:,'123']

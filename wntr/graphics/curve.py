@@ -6,7 +6,7 @@ import numpy as np
 try:
     import matplotlib.pyplot as plt
 except:
-    pass
+    plt = None
 import logging
 
 logger = logging.getLogger(__name__)
@@ -52,6 +52,9 @@ def plot_fragility_curve(FC, fill=True, key='Default',
     figsize : list (optional)
         Figure size (default = [8,4])
 """
+    if plt is None:
+        raise ImportError('matplotlib is required')
+    
     plt.figure(figsize=tuple(figsize))
     plt.title(title)
     x = np.linspace(xmin,xmax,npoints)
@@ -107,15 +110,24 @@ def plot_pump_curve(pump, title='Pump curve',
     figsize : list (optional)
         Figure size (default = [8,4])
     """
+    try:
+        curve = pump.get_pump_curve()
+    except:
+        print("Pump "+pump.name+" has no curve")
+        return
+
+    if plt is None:
+        raise ImportError('matplotlib is required')
+    
     plt.figure(figsize=tuple(figsize))
     plt.title(title)
     x = []
     y = []
-    for pt in pump.curve.points:
+    for pt in curve.points:
         x.append(pt[0])
         y.append(pt[1])
     plt.scatter(x,y)
-    plt.plot(x,y, label=pump.curve.name)    
+    plt.plot(x,y, label=curve.name)    
     if xmax is None:
         xmax = max(x)
     if ymax is None:

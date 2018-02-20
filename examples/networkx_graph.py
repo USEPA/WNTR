@@ -6,7 +6,7 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Get a copy of the graph
-G = wn.get_graph_deep_copy()
+G = wn.get_graph()
 
 # Extract node and link properties
 node_name = '123'

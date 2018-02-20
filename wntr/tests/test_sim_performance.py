@@ -165,38 +165,31 @@ class TestPerformance(unittest.TestCase):
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
         
-        head_diff_list = []
-        demand_diff_list = []
-        flow_diff_list = []
-        for name, node in wn.nodes():
-            for t in results.time:
-                head_diff_n = abs(results.node['head'].loc[t,name]-epa_res.node['head'].loc[t,name])
-                demand_diff_n = abs(results.node['demand'].loc[t,name]-epa_res.node['demand'].loc[t,name])
-                head_diff_list.append(head_diff_n)
-                demand_diff_list.append(demand_diff_n)
-        for name, link in wn.links():
-            for t in results.time:
-                flow_diff_l = abs(results.link['flowrate'].loc[t,name]-epa_res.link['flowrate'].loc[t,name])
-                flow_diff_list.append(flow_diff_l)
+        head_diff = abs(results.node['head', :, :] - epa_res.node['head', :, :])
+        demand_diff = abs(results.node['demand', :, wn.tank_name_list] - epa_res.node['demand', :, wn.tank_name_list])
+        flow_diff = abs(results.link['flowrate', :, :] - epa_res.link['flowrate', :, :])
 
-        self.Net1_avg_head_diff.append(np.average(head_diff_list))
-        self.Net1_avg_demand_diff.append(np.average(demand_diff_list))
-        self.Net1_avg_flow_diff.append(np.average(flow_diff_list))
+        self.Net1_avg_head_diff.append(head_diff.mean().mean())
+        self.Net1_avg_demand_diff.append(demand_diff.mean().mean())
+        self.Net1_avg_flow_diff.append(flow_diff.mean().mean())
 
-        self.Net1_head_diff_std_dev.append(np.std(head_diff_list))
-        self.Net1_demand_diff_std_dev.append(np.std(demand_diff_list))
-        self.Net1_flow_diff_std_dev.append(np.std(flow_diff_list))
+        self.Net1_head_diff_std_dev.append(head_diff.std().mean())
+        self.Net1_demand_diff_std_dev.append(demand_diff.std().mean())
+        self.Net1_flow_diff_std_dev.append(flow_diff.std().mean())
 
         self.Net1_total_sim_time.append(t1-t0)
-        self.Net1_time_per_step.append(np.average(sim.time_per_step))
-        self.Net1_num_steps.append(len(sim.time_per_step))
+        self.Net1_time_per_step.append(np.average(sim._time_per_step))
+        self.Net1_num_steps.append(len(sim._time_per_step))
 
-        self.assertLess(np.average(head_diff_list), 6e-5)
-        self.assertLess(np.average(demand_diff_list), 2.3e-8)
-        self.assertLess(np.average(flow_diff_list), 5e-8)
-        self.assertLess(np.std(head_diff_list), .00015)
-        self.assertLess(np.std(demand_diff_list), 1.1e-7)
-        self.assertLess(np.std(flow_diff_list), 1.3e-7)
+        self.assertLess(head_diff.mean().mean(), 5.7e-5)
+        self.assertLess(demand_diff.mean().mean(), 1.4e-7)
+        self.assertLess(flow_diff.mean().mean(), 4.6e-8)
+        self.assertLess(head_diff.max().max(), 6.4e-4)
+        self.assertLess(demand_diff.max().max(), 8.4e-7)
+        self.assertLess(flow_diff.max().max(), 8.4e-7)
+        self.assertLess(head_diff.std().mean(), 1.5e-4)
+        self.assertLess(demand_diff.std().mean(), 2.2e-7)
+        self.assertLess(flow_diff.std().mean(), 7.9e-8)
 
     def test_Net3_performance(self):
         t0 = time.time()
@@ -211,38 +204,31 @@ class TestPerformance(unittest.TestCase):
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
-        head_diff_list = []
-        demand_diff_list = []
-        flow_diff_list = []
-        for name, node in wn.nodes():
-            for t in results.time:
-                head_diff_n = abs(results.node['head'].loc[t,name]-epa_res.node['head'].loc[t,name])
-                demand_diff_n = abs(results.node['demand'].loc[t,name]-epa_res.node['demand'].loc[t,name])
-                head_diff_list.append(head_diff_n)
-                demand_diff_list.append(demand_diff_n)
-        for name, link in wn.links():
-            for t in results.time:
-                flow_diff_l = abs(results.link['flowrate'].loc[t,name]-epa_res.link['flowrate'].loc[t,name])
-                flow_diff_list.append(flow_diff_l)
+        head_diff = abs(results.node['head', :, :] - epa_res.node['head', :, :])
+        demand_diff = abs(results.node['demand', :, wn.tank_name_list] - epa_res.node['demand', :, wn.tank_name_list])
+        flow_diff = abs(results.link['flowrate', :, :] - epa_res.link['flowrate', :, :])
 
-        self.Net3_avg_head_diff.append(np.average(head_diff_list))
-        self.Net3_avg_demand_diff.append(np.average(demand_diff_list))
-        self.Net3_avg_flow_diff.append(np.average(flow_diff_list))
+        self.Net3_avg_head_diff.append(head_diff.mean().mean())
+        self.Net3_avg_demand_diff.append(demand_diff.mean().mean())
+        self.Net3_avg_flow_diff.append(flow_diff.mean().mean())
 
-        self.Net3_head_diff_std_dev.append(np.std(head_diff_list))
-        self.Net3_demand_diff_std_dev.append(np.std(demand_diff_list))
-        self.Net3_flow_diff_std_dev.append(np.std(flow_diff_list))
+        self.Net3_head_diff_std_dev.append(head_diff.std().mean())
+        self.Net3_demand_diff_std_dev.append(demand_diff.std().mean())
+        self.Net3_flow_diff_std_dev.append(flow_diff.std().mean())
 
         self.Net3_total_sim_time.append(t1-t0)
-        self.Net3_time_per_step.append(np.average(sim.time_per_step))
-        self.Net3_num_steps.append(len(sim.time_per_step))
+        self.Net3_time_per_step.append(np.average(sim._time_per_step))
+        self.Net3_num_steps.append(len(sim._time_per_step))
 
-        self.assertLess(np.average(head_diff_list), 3e-5)
-        self.assertLess(np.average(demand_diff_list), 1.5e-8)
-        self.assertLess(np.average(flow_diff_list), 2.0e-7)
-        self.assertLess(np.std(head_diff_list), 3e-5)
-        self.assertLess(np.std(demand_diff_list), 1.1e-7)
-        self.assertLess(np.std(flow_diff_list), 1.3e-6)
+        self.assertLess(head_diff.mean().mean(), 2.8e-5)
+        self.assertLess(demand_diff.mean().mean(), 3.4e-7)
+        self.assertLess(flow_diff.mean().mean(), 2.0e-7)
+        self.assertLess(head_diff.max().max(), 3.3e-4)
+        self.assertLess(demand_diff.max().max(), 3.1e-6)
+        self.assertLess(flow_diff.max().max(), 4.8e-5)
+        self.assertLess(head_diff.std().mean(), 2.6e-5)
+        self.assertLess(demand_diff.std().mean(), 3.6e-7)
+        self.assertLess(flow_diff.std().mean(), 5.7e-7)
 
     def test_Net6_mod_performance(self):
         t0 = time.time()
@@ -250,6 +236,7 @@ class TestPerformance(unittest.TestCase):
         inp_file = join(ex_datadir,'Net6.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.duration = 24*3600
+        wn.remove_control('control 72')  # this control never gets activated in epanet because it uses a threshold equal to the tank max level
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
@@ -258,38 +245,32 @@ class TestPerformance(unittest.TestCase):
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
-        head_diff_list = []
-        demand_diff_list = []
-        flow_diff_list = []
-        for name, node in wn.nodes():
-            for t in results.time:
-                head_diff_n = abs(results.node['head'].loc[t,name]-epa_res.node['head'].loc[t,name])
-                demand_diff_n = abs(results.node['demand'].loc[t,name]-epa_res.node['demand'].loc[t,name])
-                head_diff_list.append(head_diff_n)
-                demand_diff_list.append(demand_diff_n)
-        for name, link in wn.links():
-            for t in results.time:
-                flow_diff_l = abs(results.link['flowrate'].loc[t,name]-epa_res.link['flowrate'].loc[t,name])
-                flow_diff_list.append(flow_diff_l)
+        head_diff = abs(results.node['head', :, :] - epa_res.node['head', :, :])
+        demand_diff = abs(results.node['demand', :, wn.tank_name_list] - epa_res.node['demand', :, wn.tank_name_list])
+        flow_diff = abs(results.link['flowrate', :, :] - epa_res.link['flowrate', :, :])
 
-        self.Net6_mod_avg_head_diff.append(np.average(head_diff_list))
-        self.Net6_mod_avg_demand_diff.append(np.average(demand_diff_list))
-        self.Net6_mod_avg_flow_diff.append(np.average(flow_diff_list))
+        self.Net6_mod_avg_head_diff.append(head_diff.mean().mean())
+        self.Net6_mod_avg_demand_diff.append(demand_diff.mean().mean())
+        self.Net6_mod_avg_flow_diff.append(flow_diff.mean().mean())
 
-        self.Net6_mod_head_diff_std_dev.append(np.std(head_diff_list))
-        self.Net6_mod_demand_diff_std_dev.append(np.std(demand_diff_list))
-        self.Net6_mod_flow_diff_std_dev.append(np.std(flow_diff_list))
+        self.Net6_mod_head_diff_std_dev.append(head_diff.std().mean())
+        self.Net6_mod_demand_diff_std_dev.append(demand_diff.std().mean())
+        self.Net6_mod_flow_diff_std_dev.append(flow_diff.std().mean())
 
         self.Net6_mod_total_sim_time.append(t1-t0)
-        self.Net6_mod_time_per_step.append(np.average(sim.time_per_step))
-        self.Net6_mod_num_steps.append(len(sim.time_per_step))
+        self.Net6_mod_time_per_step.append(np.average(sim._time_per_step))
+        self.Net6_mod_num_steps.append(len(sim._time_per_step))
 
-        self.assertLess(np.average(head_diff_list), .06)
-        self.assertLess(np.average(demand_diff_list), 9e-6)
-        self.assertLess(np.average(flow_diff_list), 9e-5)
-        self.assertLess(np.std(head_diff_list), .07)
-        self.assertLess(np.std(demand_diff_list), .0009)
-        self.assertLess(np.std(flow_diff_list), .003)
+        self.assertLess(head_diff.mean().mean(), 0.0026)
+        self.assertLess(demand_diff.mean().mean(), 0.00017)
+        self.assertLess(flow_diff.mean().mean(), 2.2e-5)
+        self.assertLess(head_diff.max().max(), 0.22)
+        self.assertLess(demand_diff.max().max(), 0.01)
+        self.assertLess(flow_diff.max().max(), 0.01)
+        self.assertLess(head_diff.std().mean(), 0.003)
+        self.assertLess(demand_diff.std().mean(), 0.0003)
+        self.assertLess(flow_diff.std().mean(), 3.2e-5)
+
 
 if __name__ == '__main__':
     unittest.main()

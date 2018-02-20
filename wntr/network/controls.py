@@ -2,14 +2,42 @@
 The wntr.network.controls module includes methods to define network controls
 and control actions.  These controls modify parameters in the network during
 simulation.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    Subject
+    Observer
+    Comparison
+    ControlPriority
+    ControlCondition
+    TimeOfDayCondition
+    SimTimeCondition
+    ValueCondition
+    TankLevelCondition
+    RelativeCondition
+    OrCondition
+    AndCondition
+    BaseControlAction
+    ControlAction
+    ControlBase
+    Control
+    ControlManager
+	
 """
-import wntr
 import math
 import enum
 import numpy as np
 import logging
 import six
 from .elements import LinkStatus
+import abc
+from wntr.utils.ordered_set import OrderedSet
+from collections import OrderedDict, Iterable
+from .elements import Tank, Junction, Valve, Pump, Reservoir, Pipe
+from wntr.utils.doc_inheritor import DocInheritor
+import warnings
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +70,75 @@ logger = logging.getLogger(__name__)
 #    Close pumps without power
 
 
+class Subject(object):
+    """
+    A subject base class for the observer design pattern
+    """
+    def __init__(self):
+        self._observers = OrderedSet()
+
+    def subscribe(self, observer):
+        """
+        Subscribe observer to this subject. The update method of any observers of this subject will be called when
+        notify is called on this subject.
+
+        Parameters
+        ----------
+        observer: Observer
+        """
+        self._observers.add(observer)
+
+    def unsubscribe(self, observer):
+        """
+        Unsubscribe observer from this subject.
+
+        Parameters
+        ----------
+        observer: Observer
+        """
+        self._observers.remove(observer)
+
+    def notify(self):
+        """
+        Call the update method for all observers of this subject.
+        """
+        for o in self._observers:
+            o.update(self)
+
+
+class Observer(six.with_metaclass(abc.ABCMeta, object)):
+    """
+    A base class for observers in the observer design pattern.
+    """
+    @abc.abstractmethod
+    def update(self, subject):
+        """
+        This method is called when the subject being observed calls notify.
+
+        Parameters
+        ----------
+        subject: Subject
+            The subject that called notify.
+        """
+        pass
+
+
 class Comparison(enum.Enum):
+    """
+    An enum class for comparison operators.
+
+    .. rubric:: Enum Members
+
+    ===========  ==============================================
+    :attr:`~gt`  greater than
+    :attr:`~ge`  greater than or equal to
+    :attr:`~lt`  less than
+    :attr:`~le`  less than or equal to
+    :attr:`~eq`  equal to
+    :attr:`~ne`  not equal to
+    ===========  ==============================================
+
+    """
     gt = (1, np.greater)
     ge = (2, np.greater_equal)
     lt = (3, np.less)
@@ -95,6 +191,8 @@ class Comparison(enum.Enum):
     def parse(cls, func):
         if isinstance(func, six.string_types):
             func = func.lower().strip()
+        elif isinstance(func, cls):
+            func = func.func
         if func in [np.equal, '=', 'eq', '-eq', '==', 'is', 'equal', 'equal to']:
             return cls.eq
         elif func in [np.not_equal, '<>', 'ne', '-ne', '!=', 'not', 'not_equal', 'not equal to']:
@@ -110,35 +208,101 @@ class Comparison(enum.Enum):
         raise ValueError('Invalid Comparison name: %s'%func)
 
 #
-### Control Condition classes
+# Control Condition classes
 #
 
-class ControlCondition(object):
+
+class ControlPriority(enum.IntEnum):
+    """
+    An enum class for control priorities.
+
+    .. rubric:: Enum Members
+
+    ====================  =====================================================
+    :attr:`~very_low`     very low priority
+    :attr:`~low`          low priority
+    :attr:`~medium_low`   medium low priority
+    :attr:`~medium`       medium priority
+    :attr:`~medium_high`  medium high priority
+    :attr:`~high`         high priority
+    :attr:`~very_high`    very high priority
+    ====================  =====================================================
+
+    """
+    very_low = 0
+    low = 1
+    medium_low = 2
+    medium = 3
+    medium_high = 4
+    high = 5
+    very_high = 6
+
+
+class _ControlType(enum.Enum):
+    presolve = 0
+    postsolve = 1
+    rule = 2
+    pre_and_postsolve = 3
+
+
+class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
     """A base class for control conditions"""
     def __init__(self):
         self._backtrack = 0
 
+    @abc.abstractmethod
     def requires(self):
-        """Returns a list of objects required to evaluate this condition"""
-        return []
+        """
+        Returns a set of objects required to evaluate this condition
+
+        Returns
+        -------
+        required_objects: OrderedSet of object
+        """
+        return OrderedSet()
 
     @property
     def name(self):
+        """
+        Returns the string representation of the condition.
+
+        Returns
+        -------
+        name: str
+        """
         return str(self)
 
     @property
     def backtrack(self):
-        """Should be updated by the ``evaluate`` method if appropriate."""
+        """
+        The amount of time by which the simulation should be backed up.
+        Should be updated by the :class:`~wntr.network.controls.ControlCondition.evaluate` method if appropriate.
+
+        Returns
+        -------
+        backtrack: int
+        """
         return self._backtrack
 
-    def __hash__(self):
-        return hash(self.name)
-
+    @abc.abstractmethod
     def evaluate(self):
-        raise NotImplementedError('This is an abstract base class. It must be subclassed.')
+        """
+        Check if the condition is satisfied.
+
+        Returns
+        -------
+        check: bool
+        """
+        pass
 
     def __bool__(self):
-        """Overload a boolean based on the evaluation."""
+        """
+        Check if the condition is satisfied.
+
+        Returns
+        -------
+        check: bool
+        """
         return self.evaluate()
     __nonzero__ = __bool__
 
@@ -219,78 +383,13 @@ class ControlCondition(object):
         return '{}:{:02d}:{:02d} {}'.format(hours, mm, int(sec), pm)
 
 
-class SimpleNodeCondition(ControlCondition):
-    """Conditional based only on the pressure of a junction or the level of a tank.
-    
-    Parameters
-    ----------
-    source_obj : wntr.network.model.Junction, wntr.network.model.Tank
-        The junction or tank to use as a comparison
-    relation : 'above', 'below', or function
-        Accepts the words *above* or *below*, or accepts
-        a function taking two arguments that returns a true or false. Usually a ``numpy.ufunc``
-        such as ``np.less`` or ``np.greater_equal``
-    threshold : float
-        The pressure or tank level to use in the condition
-    """
-    def __init__(self, source_obj, relation, threshold):
-        self._source_obj = source_obj
-        if isinstance(source_obj, wntr.network.model.Tank):
-            source_attr = 'level'
-        elif isinstance(source_obj, wntr.network.model.Junction):
-            source_attr = 'pressure'
-        self._source_attr = source_attr
-        self._relation = Comparison.parse(relation)
-        if self._relation in [Comparison.eq, Comparison.ne, Comparison.le, Comparison.ge]:
-            raise ValueError('Simple conditions can only take ABOVE (>) or BELOW (<)')
-        self._threshold = self._parse_value(threshold)
-        self._backtrack = 0
-
-    @property
-    def name(self):
-        if hasattr(self._source_obj, 'name'):
-            obj = self._source_obj.name
-        else:
-            obj = str(self._source_obj)
-
-        return '/'.join([obj, self._source_attr, self._relation.symbol, self._threshold])
-
-    def __repr__(self):
-        return "<SimpleNodeCondition: {}>".format(self.name)
-
-    def __str__(self):
-        typ = self._source_obj.__class__.__name__
-        obj = str(self._source_obj)
-        if hasattr(self._source_obj, 'name'):
-            obj = self._source_obj.name
-        att = self._source_attr
-        rel = self._relation.text
-        if att == 'pressure':
-            uni = 'kPa'
-        else:
-            uni = 'm'
-        return '{} {} {} {} {:.6g} {}'.format(obj, typ, att, rel, self._threshold, uni)
-
-    def evaluate(self):
-        cur_value = getattr(self._source_obj, self._source_attr)
-        thresh_value = self._threshold
-        relation = self._relation
-        if np.isnan(self._threshold):
-            relation = np.greater
-            thresh_value = 0.0
-        state = relation(cur_value, thresh_value)
-        return state
-
-    def requires(self):
-        return [self._source_obj]
-
-
+@DocInheritor({'requires', 'evaluate', 'name'})
 class TimeOfDayCondition(ControlCondition):
     """Time-of-day or "clocktime" based condition statement.
     Resets automatically at 12 AM in clock time (shifted time) every day simulated. Evaluated
     from 12 AM the first day of the simulation, even if this is prior to simulation start.
-    Unlike the ``SimTimeCondition``, greater-than and less-than relationships make sense, and
-    reset at midnight.
+    Unlike the :class:`~wntr.network.controls.SimTimeCondition`, greater-than and less-than
+    relationships make sense, and reset at midnight.
     
     Parameters
     ----------
@@ -342,13 +441,13 @@ class TimeOfDayCondition(ControlCondition):
                                              self._sec_to_hours_min_sec(self._threshold),
                                              rep, start)
 
+    def requires(self):
+        return OrderedSet()
+
     def __repr__(self):
         fmt = '<TimeOfDayCondition: model, {}, {}, {}, {}>'
         return fmt.format(repr(self._relation.text), repr(self._sec_to_clock(self._threshold)),
                           repr(self._repeat), repr(self._first_day))
-
-    def __hash__(self):
-        return hash(self.name)
 
     def __str__(self):
         fmt = 'clock_time {:s} "{}"'.format(self._relation.symbol,
@@ -392,6 +491,7 @@ class TimeOfDayCondition(ControlCondition):
             return False
 
 
+@DocInheritor({'requires', 'evaluate', 'name'})
 class SimTimeCondition(ControlCondition):
     """Condition based on time since start of the simulation.
     Generally, the relation should be ``None`` (converted to "at") --
@@ -453,9 +553,6 @@ class SimTimeCondition(ControlCondition):
         return fmt.format(repr(self._relation.text), repr(self._sec_to_days_hours_min_sec(self._threshold)),
                           repr(self._repeat), repr(self._first_time))
 
-    def __hash__(self):
-        return hash(self.name)
-
     def __str__(self):
         fmt = '{} {} sec'.format(self._relation.symbol, self._threshold)
         if self._repeat is True:
@@ -467,6 +564,9 @@ class SimTimeCondition(ControlCondition):
         else:
             fmt = 'sim_time ' + fmt
         return fmt
+
+    def requires(self):
+        return OrderedSet()
 
     def evaluate(self):
         cur_time = self._model.sim_time
@@ -494,10 +594,10 @@ class SimTimeCondition(ControlCondition):
             return False
 
 
+@DocInheritor({'requires', 'evaluate', 'name'})
 class ValueCondition(ControlCondition):
-    """Compare a network element attribute to a set value
-    This type of condition can be converted to an EPANET control or rule conditional clause.
-    
+    """Compare a network element attribute to a set value.
+
     Parameters
     ----------
     source_obj : object
@@ -512,6 +612,15 @@ class ValueCondition(ControlCondition):
     threshold : float
         A value to compare the source object attribute against
     """
+    def __new__(cls, source_obj, source_attr, relation, threshold):
+        if isinstance(source_obj, Tank) and source_attr in {'level',  'pressure', 'head'}:
+            return object.__new__(TankLevelCondition)
+        else:
+            return object.__new__(ValueCondition)
+    
+    def __getnewargs__(self):
+        return self._source_obj, self._source_attr, self._relation, self._threshold
+    
     def __init__(self, source_obj, source_attr, relation, threshold):
         self._source_obj = source_obj
         self._source_attr = source_attr
@@ -520,7 +629,7 @@ class ValueCondition(ControlCondition):
         self._backtrack = 0
 
     def requires(self):
-        return [self._source_obj]
+        return OrderedSet([self._source_obj])
 
     @property
     def name(self):
@@ -556,9 +665,50 @@ class ValueCondition(ControlCondition):
             relation = np.greater
             thresh_value = 0.0
         state = relation(cur_value, thresh_value)
-        return state
+        return bool(state)
 
 
+@DocInheritor({'requires', 'evaluate'})
+class TankLevelCondition(ValueCondition):
+    """
+    A special type of ValueCondition for tank levels/heads/pressures.
+    """
+    def __init__(self, source_obj, source_attr, relation, threshold):
+        relation = Comparison.parse(relation)
+        if relation not in {Comparison.ge, Comparison.le, Comparison.gt, Comparison.lt}:
+            raise ValueError('TankLevelConditions only support <= and >= relations.')
+        super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
+        assert source_attr in {'level', 'pressure', 'head'}
+        self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
+
+    def evaluate(self):
+        self._backtrack = 0  # no backtracking is needed unless specified in the if statement below
+        cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level
+        thresh_value = self._threshold
+        relation = self._relation
+        if relation is Comparison.gt:
+            relation = Comparison.ge
+        if relation is Comparison.lt:
+            relation = Comparison.le
+        if np.isnan(self._threshold):  # what is this doing?
+            relation = np.greater
+            thresh_value = 0.0
+        state = relation(cur_value, thresh_value)  # determine if the condition is satisfied
+        if state and not relation(self._last_value, thresh_value):
+            # if the condition is satisfied and the last value did not satisfy the condition, then backtracking
+            # is needed.
+            # The math.floor is not actually needed, but I leave it here for clarity. We want the backtrack value to be
+            # slightly lower than what the floating point computation would give. This ensures the next time step will
+            # be slightly later than when the tank level hits the threshold. This ensures the tank level will go
+            # slightly beyond the threshold. This ensures that relation(self._last_value, thresh_value) will be True
+            # next time. This prevents us from computing very small backtrack values over and over.
+            if self._source_obj.demand != 0:
+                self._backtrack = int(math.floor((cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand))
+        self._last_value = cur_value  # update the last value
+        return bool(state)
+
+
+@DocInheritor({'requires', 'evaluate', 'name'})
 class RelativeCondition(ControlCondition):
     """Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
     This type of condition does not work with the EpanetSimulator, only the WNTRSimulator.
@@ -601,7 +751,7 @@ class RelativeCondition(ControlCondition):
                                 tobj, self._threshold_attr)
 
     def requires(self):
-        return [self._source_obj, self._threshold_obj]
+        return OrderedSet([self._source_obj, self._threshold_obj])
 
     def __repr__(self):
         return "RelativeCondition({}, {}, {}, {}, {})".format(str(self._source_obj),
@@ -633,9 +783,10 @@ class RelativeCondition(ControlCondition):
         thresh_value = getattr(self._threshold_obj, self._threshold_attr)
         relation = self._relation.func
         state = relation(cur_value, thresh_value)
-        return state
+        return bool(state)
 
 
+@DocInheritor({'requires', 'evaluate', 'backtrack'})
 class OrCondition(ControlCondition):
     """Combine two WNTR Conditions with an OR.
     
@@ -645,14 +796,23 @@ class OrCondition(ControlCondition):
         The first condition
     cond2 : ControlCondition
         The second condition
-    Returns
-    -------
-    bool
-        True if either condition evaluates to True; otherwise False
+
     """
     def __init__(self, cond1, cond2):
         self._condition_1 = cond1
         self._condition_2 = cond2
+
+        if isinstance(cond1, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
+                              RelativeCondition)):
+            if cond1._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
+
+        if isinstance(cond2, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
+                              RelativeCondition)):
+            if cond2._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
 
     def __str__(self):
         return "( " + str(self._condition_1) + " || " + str(self._condition_2) + " )"
@@ -668,9 +828,10 @@ class OrCondition(ControlCondition):
         return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
 
     def requires(self):
-        return self._condition_1.requires() + self._condition_2.requires()
+        return self._condition_1.requires().update(self._condition_2.requires())
 
 
+@DocInheritor({'requires', 'evaluate', 'backtrack'})
 class AndCondition(ControlCondition):
     """Combine two WNTR Conditions with an AND
     
@@ -680,14 +841,22 @@ class AndCondition(ControlCondition):
         The first condition
     cond2 : ControlCondition
         The second condition
-    Returns
-    -------
-    bool
-        True if both conditions evaluate to True; otherwise False
     """
     def __init__(self, cond1, cond2):
         self._condition_1 = cond1
         self._condition_2 = cond2
+
+        if isinstance(cond1, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
+                              RelativeCondition)):
+            if cond1._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
+
+        if isinstance(cond2, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
+                              RelativeCondition)):
+            if cond2._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
 
     def __str__(self):
         return "( "+ str(self._condition_1) + " && " + str(self._condition_2) + " )"
@@ -703,40 +872,440 @@ class AndCondition(ControlCondition):
         return np.min([self._condition_1.backtrack, self._condition_2.backtrack])
 
     def requires(self):
-        return self._condition_1.requires() + self._condition_2.requires()
-
-#
-### Control Action classes
-#
+        return self._condition_1.requires().update(self._condition_2.requires())
 
 
-class BaseControlAction(object):
+class _CloseCVCondition(ControlCondition):
+    Htol = 0.0001524
+    Qtol = 2.83168e-6
+
+    def __init__(self, wn, cv):
+        self._cv = cv
+        self._start_node = wn.get_node(cv.start_node)
+        self._end_node = wn.get_node(cv.end_node)
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._cv, self._start_node, self._end_node])
+
+    def evaluate(self):
+        """
+        If True is returned, the cv needs to be closed
+        """
+        dh = self._start_node.head - self._end_node.head
+        if abs(dh) > self.Htol:
+            if dh < -self.Htol:
+                return True
+            elif self._cv.flow < -self.Qtol:
+                return True
+            else:
+                return False
+        else:
+            if self._cv.flow < -self.Qtol:
+                return True
+            else:
+                return False
+
+
+class _OpenCVCondition(ControlCondition):
+    Htol = 0.0001524
+    Qtol = 2.83168e-6
+
+    def __init__(self, wn, cv):
+        self._cv = cv
+        self._start_node = wn.get_node(cv.start_node)
+        self._end_node = wn.get_node(cv.end_node)
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._cv, self._start_node, self._end_node])
+
+    def evaluate(self):
+        """
+        If True is returned, the cv needs to be closed
+        """
+        dh = self._start_node.head - self._end_node.head
+        if abs(dh) > self.Htol:
+            if dh < -self.Htol:
+                return False
+            elif self._cv.flow < -self.Qtol:
+                return False
+            else:
+                return True
+        else:
+            return False
+
+
+class _ClosePowerPumpCondition(ControlCondition):
     """
-    A base class for deriving new control actions. The control action is run by calling RunControlAction
-    This class is not meant to be used directly. Derived classes must implement the RunControlActionImpl method.
+    Prevents reverse flow in pumps.
     """
+    Htol = 0.0001524
+    Qtol = 2.83168e-6
+    Hmax = 1e10
+
+    def __init__(self, wn, pump):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        pump: wntr.network.Pump
+        """
+        self._pump = pump
+        self._start_node = wn.get_node(pump.start_node)
+        self._end_node = wn.get_node(pump.end_node)
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._pump, self._start_node, self._end_node])
+
+    def evaluate(self):
+        """
+        If True is returned, the pump needs to be closed
+        """
+        dh = self._end_node.head - self._start_node.head
+        if dh > self.Hmax + self.Htol:
+            return True
+        return False
+
+
+class _OpenPowerPumpCondition(ControlCondition):
+    Htol = 0.0001524
+    Qtol = 2.83168e-6
+    Hmax = 1e10
+
+    def __init__(self, wn, pump):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        pump: wntr.network.Pump
+        """
+        self._pump = pump
+        self._start_node = wn.get_node(pump.start_node)
+        self._end_node = wn.get_node(pump.end_node)
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._pump, self._start_node, self._end_node])
+
+    def evaluate(self):
+        """
+        If True is returned, the pump needs to be opened
+        """
+        dh = self._end_node.head - self._start_node.head
+        if dh <= self.Hmax + self.Htol:
+            return True
+        return False
+
+
+class _CloseHeadPumpCondition(ControlCondition):
+    """
+    Prevents reverse flow in pumps.
+    """
+    _Htol = 0.0001524
+
+    def __init__(self, wn, pump):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        pump: wntr.network.Pump
+        """
+        self._pump = pump
+        self._start_node = wn.get_node(pump.start_node)
+        self._end_node = wn.get_node(pump.end_node)
+        self._backtrack = 0
+        self._wn = wn
+
+    def requires(self):
+        return OrderedSet([self._pump, self._start_node, self._end_node])
+
+    def evaluate(self):
+        """
+        If True is returned, the pump needs to be closed
+        """
+        a, b, c = self._pump.get_head_curve_coefficients()
+        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+            raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
+        Hmax = a
+        dh = self._end_node.head - self._start_node.head
+        if dh > Hmax + self._Htol:
+            return True
+        return False
+
+
+class _OpenHeadPumpCondition(ControlCondition):
+    """
+    Prevents reverse flow in pumps.
+    """
+    _Htol = 0.0001524
+
+    def __init__(self, wn, pump):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        pump: wntr.network.Pump
+        """
+        self._pump = pump
+        self._start_node = wn.get_node(pump.start_node)
+        self._end_node = wn.get_node(pump.end_node)
+        self._backtrack = 0
+        self._wn = wn
+
+    def requires(self):
+        return OrderedSet([self._pump, self._start_node, self._end_node])
+
+    def evaluate(self):
+        """
+        If True is returned, the pump needs to be closed
+        """
+        a, b, c = self._pump.get_head_curve_coefficients()
+        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+            raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
+        Hmax = a
+        dh = self._end_node.head - self._start_node.head
+        if dh <= Hmax + self._Htol:
+            return True
+        return False
+
+
+class _ClosePRVCondition(ControlCondition):
+    _Qtol = 2.83168e-6
+
+    def __init__(self, wn, prv):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        prv: wntr.network.Valve
+        """
+        super(_ClosePRVCondition, self).__init__()
+        self._prv = prv
+        self._start_node = wn.get_node(self._prv.start_node)
+        self._end_node = wn.get_node(self._prv.end_node)
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._prv])
+
+    def evaluate(self):
+        if self._prv._internal_status == LinkStatus.Active:
+            if self._prv.flow < -self._Qtol:
+                return True
+            return False
+        elif self._prv._internal_status == LinkStatus.Open:
+            if self._prv.flow < -self._Qtol:
+                return True
+            return False
+        elif self._prv._internal_status == LinkStatus.Closed:
+            return False
+        else:
+            raise RuntimeError('Unexpected PRV _internal_status for valve {0}: {1}.'.format(self._prv,
+                                                                                            self._prv._internal_status))
+
+
+class _OpenPRVCondition(ControlCondition):
+    _Qtol = 2.83168e-6
+    _Htol = 0.0001524
+
+    def __init__(self, wn, prv):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        prv: wntr.network.Valve
+        """
+        super(_OpenPRVCondition, self).__init__()
+        self._prv = prv
+        self._start_node = wn.get_node(self._prv.start_node)
+        self._end_node = wn.get_node(self._prv.end_node)
+        self._backtrack = 0
+        self._r = 0.0826 * 0.02 * self._prv.diameter ** (-4) * 2.0
+
+    def requires(self):
+        return OrderedSet([self._prv, self._start_node, self._end_node])
+
+    def evaluate(self):
+        if self._prv._internal_status == LinkStatus.Active:
+            if self._prv.flow < -self._Qtol:
+                return False
+            elif self._start_node.head < self._prv.setting + self._end_node.elevation + self._r * abs(self._prv.flow)**2 - self._Htol:
+                return True
+            return False
+        elif self._prv._internal_status == LinkStatus.Open:
+            return False
+        elif self._prv._internal_status == LinkStatus.Closed:
+            if self._start_node.head >= self._prv.setting + self._end_node.elevation + self._Htol and self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol:
+                return False
+            elif self._start_node.head < self._prv.setting + self._end_node.elevation - self._Htol and self._start_node.head > self._end_node.head + self._Htol:
+                return True
+            return False
+        else:
+            raise RuntimeError('Unexpected PRV _internal_status for valve {0}: {1}.'.format(self._prv,
+                                                                                            self._prv._internal_status))
+
+
+class _ActivePRVCondition(ControlCondition):
+    _Qtol = 2.83168e-6
+    _Htol = 0.0001524
+
+    def __init__(self, wn, prv):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        prv: wntr.network.Valve
+        """
+        self._prv = prv
+        self._start_node = wn.get_node(self._prv.start_node)
+        self._end_node = wn.get_node(self._prv.end_node)
+        self._backtrack = 0
+        self._r = 0.0826 * 0.02 * self._prv.diameter ** (-4) * 2.0
+
+    def requires(self):
+        return OrderedSet([self._prv, self._start_node, self._end_node])
+
+    def evaluate(self):
+        if self._prv._internal_status == LinkStatus.Active:
+            return False
+        elif self._prv._internal_status == LinkStatus.Open:
+            if self._prv.flow < -self._Qtol:
+                return False
+            elif (self._end_node.head >= self._prv.setting + self._end_node.elevation + self._Htol):
+                return True
+            return False
+        elif self._prv._internal_status == LinkStatus.Closed:
+            if ((self._start_node.head >= self._prv.setting + self._end_node.elevation + self._Htol) and
+                    (self._end_node.head < self._prv.setting + self._end_node.elevation - self._Htol)):
+                return True
+            return False
+        else:
+            raise RuntimeError('Unexpected PRV _internal_status for valve {0}: {1}.'.format(self._prv,
+                                                                                            self._prv._internal_status))
+
+
+class _OpenFCVCondition(ControlCondition):
+    _Qtol = 2.83168e-6
+    _Htol = 0.0001524
+
+    def __init__(self, wn, fcv):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        fcv: wntr.network.Valve
+        """
+        self._fcv = fcv
+        self._start_node = wn.get_node(self._fcv.start_node)
+        self._end_node = wn.get_node(self._fcv.end_node)
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._fcv, self._start_node, self._end_node])
+
+    def evaluate(self):
+        if self._start_node.head - self._end_node.head < -self._Htol:
+            return True
+        elif self._fcv.flow < -self._Qtol:
+            return True
+        else:
+            return False
+
+
+class _ActiveFCVCondition(ControlCondition):
+    _Qtol = 2.83168e-6
+    _Htol = 0.0001524
+
+    def __init__(self, wn, fcv):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        fcv: wntr.network.Valve
+        """
+        self._fcv = fcv
+        self._start_node = wn.get_node(self._fcv.start_node)
+        self._end_node = wn.get_node(self._fcv.end_node)
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._fcv, self._start_node, self._end_node])
+
+    def evaluate(self):
+        if self._start_node.head - self._end_node.head < -self._Htol:
+            return False
+        elif self._fcv.flow < -self._Qtol:
+            return False
+        elif self._fcv._internal_status == LinkStatus.Open and self._fcv.flow >= self._fcv.setting:
+            return True
+        else:
+            return False
+
+
+class _ValveNewSettingCondition(ControlCondition):
+    def __init__(self, valve):
+        """
+        Parameters
+        ----------
+        valve: wntr.network.Valve
+        """
+        super(_ValveNewSettingCondition, self).__init__()
+        self._valve = valve
+
+    def requires(self):
+        return OrderedSet([self._valve])
+
+    def evaluate(self):
+        if self._valve.setting != self._valve._prev_setting:
+            return True
+        return False
+
+
+class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
+    """
+    A base class for deriving new control actions. The control action is run by calling run_control_action.
+    This class is not meant to be used directly. Derived classes must implement the run_control_action, requires,
+    and target methods.
+    """
+
     def __init__(self):
-        pass
+        super(BaseControlAction, self).__init__()
 
-    def RunControlAction(self, control_name):
+    @abc.abstractmethod
+    def run_control_action(self):
         """
         This method is called to run the corresponding control action.
         """
-        return self._RunControlActionImpl(control_name)
+        pass
 
-    def _RunControlActionImpl(self):
-        """
-        Implements the specific action that will be run when RunControlAction is called. This method should be
-        overridden in derived classes.
-        """
-        raise NotImplementedError('_RunActionImpl is not implemented. '
-                                  'This method must be implemented in '
-                                  'derived classes of ControlAction.')
-
+    @abc.abstractmethod
     def requires(self):
-        """Returns a list of objects used to evaluate the control"""
-        return []
+        """
+        Returns a set of objects used to evaluate the control
 
+        Returns
+        -------
+        req: OrderedSet
+            The objects required to run the control action.
+        """
+        pass
+
+    @abc.abstractmethod
+    def target(self):
+        """
+        Returns a tuple (object, attribute) containing the object and attribute that the control action may change
+
+        Returns
+        -------
+        target: tuple
+            A tuple containing the target object and the attribute to be changed (target, attr).
+        """
+        pass
+
+
+@DocInheritor({'requires', 'target', 'run_control_action'})
 class ControlAction(BaseControlAction):
     """
     A general class for specifying a control action that simply modifies the attribute of an object (target).
@@ -751,38 +1320,36 @@ class ControlAction(BaseControlAction):
         The new value for target_obj.attribute when the control runs.
     """
     def __init__(self, target_obj, attribute, value):
+        super(ControlAction, self).__init__()
         if target_obj is None:
             raise ValueError('target_obj is None in ControlAction::__init__. A valid target_obj is needed.')
         if not hasattr(target_obj, attribute):
             raise ValueError('attribute given in ControlAction::__init__ is not valid for target_obj')
 
-        self._target_obj_ref = target_obj
+        self._target_obj = target_obj
         self._attribute = attribute
         self._value = value
 
-        #if (isinstance(target_obj, wntr.network.Valve) or (isinstance(target_obj, wntr.network.Pipe) and target_obj.cv)) and attribute=='status':
-        #    raise ValueError('You may not add controls to valves or pipes with check valves.')
-
     def requires(self):
-        return [self._target_obj_ref]
+        return OrderedSet([self._target_obj])
 
     def __repr__(self):
-        return '<ControlAction: {}, {}, {}>'.format(str(self._target_obj_ref), str(self._attribute), str(self._repr_value()))
+        return '<ControlAction: {}, {}, {}>'.format(str(self._target_obj), str(self._attribute), str(self._repr_value()))
 
     def __str__(self):
-        return "set {}('{}').{} to {}".format(self._target_obj_ref.__class__.__name__,
-                                       self._target_obj_ref.name,
+        return "set {}('{}').{} to {}".format(self._target_obj.__class__.__name__,
+                                       self._target_obj.name,
                                        self._attribute,
                                        self._repr_value())
 
     def _repr_value(self):
         if self._attribute.lower() in ['status']:
-            return wntr.network.model.LinkStatus(int(self._value)).name
+            return LinkStatus(int(self._value)).name
         return self._value
 
-    def __eq__(self, other):
-        if self._target_obj_ref == other._target_obj_ref and \
-           self._attribute      == other._attribute:
+    def _compare(self, other):
+        if self._target_obj == other._target_obj and \
+           self._attribute == other._attribute:
             if type(self._value) == float:
                 if abs(self._value - other._value)<1e-10:
                     return True
@@ -794,166 +1361,248 @@ class ControlAction(BaseControlAction):
         else:
             return False
 
-    def __hash__(self):
-        return id(self)
+    def run_control_action(self):
+        setattr(self._target_obj, self._attribute, self._value)
+        self.notify()
 
-    def _RunControlActionImpl(self, control_name):
+    def target(self):
+        return self._target_obj, self._attribute
+
+
+class _InternalControlAction(BaseControlAction):
+    """
+    A control action class that modifies a private attribute in order to change a property on an object. For example,
+    a valve has a status property, but the control action must act on the _internal_status.
+
+    Parameters
+    ----------
+    target_obj: object
+        The object for which an attribute is being changed.
+    internal_attribute: str
+        The attribute being modified (e.g., _internal_stats)
+    value: any
+        The new value for the internal_attribute
+    property_attribute: str
+        The attribute to be checked for an actual change (e.g., status)
+    """
+    def __init__(self, target_obj, internal_attribute, value, property_attribute):
+        super(_InternalControlAction, self).__init__()
+        if not hasattr(target_obj, internal_attribute):
+            raise AttributeError('{0} does not have attribute {1}'.format(target_obj, internal_attribute))
+        if not hasattr(target_obj, property_attribute):
+            raise AttributeError('{0} does not have attribute {1}'.format(target_obj, property_attribute))
+
+        self._target_obj = target_obj
+        self._internal_attr = internal_attribute
+        self._value = value
+        self._property_attr = property_attribute
+
+    def requires(self):
         """
-        This method overrides the corresponding method from the BaseControlAction class. Here, it changes
-        target_obj.attribute to the provided value.
-        This method should not be called directly. Use RunControlAction of the ControlAction base class instead.
+        Return a list of objects required by the control action.
+
+        Returns
+        -------
+        required_objects: list of object
         """
-        target = self._target_obj_ref
-        if target is None:
-            raise ValueError('target is None inside TargetAttribureControlAction::_RunControlActionImpl.' +
+        return OrderedSet([self._target_obj])
+
+    def run_control_action(self):
+        """
+        Activate the control action.
+        """
+        if self._target_obj is None:
+            raise ValueError('target is None inside _InternalControlAction::RunControlAction.' +
                              'This may be because a target_obj was added, but later the object itself was deleted.')
-        if not hasattr(target, self._attribute):
-            raise ValueError('attribute specified in ControlAction is not valid for targe_obj')
+        setattr(self._target_obj, self._internal_attr, self._value)
+        self.notify()
 
-        orig_value = getattr(target, self._attribute)
-        if orig_value == self._value:
-            return False, None, None
+    def target(self):
+        """
+        Returns a tuple containing the target object and the attribute to check for modification.
+
+        Returns
+        -------
+        target: tuple
+        """
+        return self._target_obj, self._property_attr
+
+    def __repr__(self):
+        return '<_InternalControlAction: {}, {}, {}>'.format(str(self._target_obj), self._internal_attr,
+                                                             str(self._value))
+
+    def __str__(self):
+        return "set {}('{}').{} to {}".format(self._target_obj.__class__.__name__,
+                                              self._target_obj.name,
+                                              self._internal_attr,
+                                              self._value)
+
+    def _compare(self, other):
+        if ((self._target_obj == other._target_obj) and
+            (self._internal_attr == other._internal_attr) and
+            (self._property_attr == other._property_attr)):
+            if type(self._value) == float:
+                if abs(self._value - other._value)<1e-10:
+                    return True
+                return False
+            else:
+                if self._value == other._value:
+                    return True
+                return False
         else:
-            #logger.debug('control {0} setting {1} {2} to {3}'.format(control_name, target.name(),self._attribute,self._value))
-            setattr(target, self._attribute, self._value)
-            return True, (target, self._attribute), orig_value
+            return False
+
 
 #
-### Control classes
+# Control classes
 #
 
-class Control(object):
+class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
     """
     This is the base class for all control objects. Control objects are used to check the conditions under which a
     ControlAction should be run. For example, if a pump is supposed to be turned on when the simulation time
-    reaches 6 AM, the ControlAction would be "turn the pump on", and the Control would be "when the simulation
+    reaches 6 AM, the ControlAction would be "turn the pump on", and the ControlCondition would be "when the simulation
     reaches 6 AM".
-    From an implementation standpoint, derived Control classes implement a particular mechanism for monitoring state
-    (e.g. checking the simulation time to see if a change should be made). Then, they typically call RunControlAction
-    on a derived ControlAction class.
-    New Control classes (classes derived from Control) must implement the following methods:
-    - _IsControlActionRequiredImpl(self, wnm, presolve_flag)
-    - _RunControlActionImpl(self, wnm, priority)
     """
-    def __init__(self):
-        pass
-
-    def IsControlActionRequired(self, wnm, presolve_flag):
+    @abc.abstractmethod
+    def is_control_action_required(self):
         """
         This method is called to see if any action is required by this control object. This method returns a tuple
         that indicates if action is required (a bool) and a recommended time for the simulation to backup (in seconds
         as a positive int).
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated.
-        presolve_flag : bool
-            This is true if we are calling before the solve, and false if we are calling after the solve (within the
-            current timestep).
-        """
-        return self._IsControlActionRequiredImpl(wnm, presolve_flag)
 
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
+        Returns
+        -------
+        req: tuple
+            A tuple (bool, int) indicating if an action should be run and how far to back up the simulation.
         """
-        This method should be implemented in derived Control classes as the main implementation of
-        IsControlActionRequired.
-        The derived classes that override this method should return a tuple that indicates if action is required (a
-        bool) and a recommended time for the simulation to backup (in seconds as a positive int).
-        This method should not be called directly. Use IsControlActionRequired instead. For more details see
-        documentation for IsControlActionRequired.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated.
-        presolve_flag : bool
-            This is true if we are calling before the solve, and false if we are calling after the solve (within the
-            current timestep).
-        """
-        raise NotImplementedError('_IsControlActionRequiredImpl is not implemented. '
-                                  'This method must be implemented in any '
-                                  ' class derived from Control.')
+        pass
 
-    def RunControlAction(self, wnm, priority):
+    @abc.abstractmethod
+    def run_control_action(self):
         """
         This method is called to run the control action after a call to IsControlActionRequired indicates that an
         action is required.
-        Note: Derived classes should not override this method, but should override _RunControlActionImpl instead.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated/modified.
-        priority : int
-            A priority value. The action is only run if priority == self._priority.
         """
-        return self._RunControlActionImpl(wnm, priority)
+        pass
 
-    def _RunControlActionImpl(self, wnm, priority):
-        """
-        This is the method that should be overridden in derived classes to implement the action of firing the control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated/modified.
-        priority : int
-            A priority value. The action is only run if priority == self._priority.
-        """
-        raise NotImplementedError('_RunControlActionImpl is not implemented. '
-                                  'This method must be implemented in '
-                                  'derived classes of ControlAction.')
-
+    @abc.abstractmethod
     def requires(self):
-        """Returns a list of objects required to evaluate this control"""
-        return []
+        """
+        Returns a set of objects required for this control.
 
-class IfThenElseControl(Control):
-    """If-Then[-Else] contol
+        Returns
+        -------
+        required_objects: OrderedSet of object
+        """
+        return OrderedSet()
+
+    @abc.abstractmethod
+    def actions(self):
+        """
+        Returns a list of all actions used by this control.
+
+        Returns
+        -------
+        act: list of BaseControlAction
+        """
+        pass
+
+    def _control_type_str(self):
+        if self._control_type is _ControlType.rule:
+            return 'Rule'
+        else:
+            return 'Control'
+
+
+@DocInheritor({'is_control_action_required', 'run_control_action', 'requires', 'actions'})
+class Rule(ControlBase):
     """
-    def __init__(self, condition, then_actions, else_actions=None, priority=None, name=None):
+    A very general and flexible class for defining both controls rules.
+    """
+    def __init__(self, condition, then_actions, else_actions=None, priority=ControlPriority.medium, name=None):
+        """
+        Parameters
+        ----------
+        condition: ControlCondition
+            The condition that should be used to determine when the actions need to be activated. When the condition
+            evaluates to True, the then_actions are activated. When the condition evaluates to False, the else_actions
+            are activated.
+        then_actions: Iterable of ControlAction
+            The actions that should be activated when the condition evaluates to True.
+        else_actions: Iterable of ControlAction
+            The actions that should be activated when the condition evaluates to False.
+        priority: ControlPriority
+            The priority of the control. Default is ControlPriority.medium
+        name: str
+            The name of the control
+        """
         if not isinstance(condition, ControlCondition):
             raise ValueError('The conditions argument must be a ControlCondition instance')
         self._condition = condition
-        if not isinstance(then_actions, list) and then_actions is not None:
+        if isinstance(then_actions, Iterable):
+            self._then_actions = list(then_actions)
+        elif then_actions is not None:
             self._then_actions = [then_actions]
         else:
-            self._then_actions = then_actions
-        if else_actions is not None:
-            if not isinstance(else_actions, list):
-                self._else_actions = [else_actions]
-            else:
-                self._else_actions = else_actions
+            self._then_actions = []
+        if isinstance(else_actions, Iterable):
+            self._else_actions = list(else_actions)
+        elif else_actions is not None:
+            self._else_actions = [else_actions]
         else:
-            self._else_actions = None
+            self._else_actions = []
         self._which = None
         self._priority = priority
         self._name = name
         if self._name is None:
             self._name = ''
+        self._control_type = _ControlType.rule
+
+        if isinstance(condition, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
+                                  RelativeCondition)):
+            if condition._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
+
+    @property
+    def epanet_control_type(self):
+        """
+        The control type. Note that presolve and postsolve controls are both simple controls in Epanet.
+
+        Returns
+        -------
+        control_type: _ControlType
+        """
+        return self._control_type
 
     def requires(self):
         req = self._condition.requires()
         for action in self._then_actions:
-            req += action.requires()
+            req.update(action.requires())
         for action in self._else_actions:
-            req += action.requires()
+            req.update(action.requires())
         return req
+
+    def actions(self):
+        return self._then_actions + self._else_actions
 
     @property
     def name(self):
+        """
+        A string representation of the Control.
+        """
         if self._name is not None:
             return self._name
         else:
             return '/'.join(str(self).split())
 
     def __repr__(self):
-        fmt = "<IfThenElseControl: '{}', {}, {}, {}, priority={}>"
+        fmt = "<Control: '{}', {}, {}, {}, priority={}>"
         return fmt.format(self._name, repr(self._condition), repr(self._then_actions), repr(self._else_actions), self._priority)
 
     def __str__(self):
-        text = 'Rule {} := if {}'.format(self._name, self._condition)
+        text = '{} {} := if {}'.format(self._control_type_str(), self._name, self._condition)
         if self._then_actions is not None and len(self._then_actions) > 0:
             then_text = ' then '
             for ct, act in enumerate(self._then_actions):
@@ -974,746 +1623,243 @@ class IfThenElseControl(Control):
             text += ' with priority {}'.format(self._priority)
         return text
 
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
-        """
-        This implements the derived method from Control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated.
-        presolve_flag : bool
-            This is true if we are calling before the solve, and false if we are calling after the solve (within the
-            current timestep).
-        """
+    def is_control_action_required(self):
         do = self._condition.evaluate()
         back = self._condition.backtrack
-        if not presolve_flag:
-            back = 0
         if do:
             self._which = 'then'
-            return (True, back)
+            return True, back
         elif not do and self._else_actions is not None and len(self._else_actions) > 0:
             self._which = 'else'
-            return (True, back)
+            return True, back
         else:
-            return (False, None)
-        return None
+            return False, None
 
-    def _RunControlActionImpl(self, wnm, priority):
-        """
-        This implements the derived method from Control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated/modified.
-        priority : int
-            A priority value. The action is only run if priority == self._priority.
-        """
-        if self._then_actions is None:
-            raise ValueError('_control_action is None inside TimeControl')
-
-        if self._priority != priority:
-            return False, None, None
-        flags = []
-        tuples = []
-        origins = []
+    def run_control_action(self):
         if self._which == 'then':
             for control_action in self._then_actions:
-                change_flag, change_tuple, orig_value = control_action.RunControlAction(self.name)
-                flags.append(change_flag)
-                tuples.append(change_tuple)
-                origins.append(orig_value)
+                control_action.run_control_action()
         elif self._which == 'else':
             for control_action in self._else_actions:
-                change_flag, change_tuple, orig_value = control_action.RunControlAction(self.name)
-                flags.append(change_flag)
-                tuples.append(change_tuple)
-                origins.append(orig_value)
+                control_action.run_control_action()
         else:
             raise RuntimeError('control actions called even though if-then statement was False')
-        return np.max(flags), tuples, origins
 
 
-
-class TimeControl(Control):
+class Control(Rule):
     """
-    A class for creating time controls to run a control action at a particular
-    time. At the specified time, control_action will be run/activated.
-    
-    Parameters
-    ----------
-    wnm : WaterNetworkModel
-        The instance of the WaterNetworkModel class that is being simulated/modified.
-    run_at_time : int
-        Time (in seconds) when the control_action should be run.
-    time_flag : string
-        Options include SIM_TIME and SHIFTED_TIME
-        * SIM_TIME indicates that the value of run_at_time is in seconds since
-          the start of the simulation
-        * SHIFTED_TIME indicates that the value of run_at_time is shifted by the
-          start time of the simulations. That is, run_at_time is in seconds since
-          12 AM on the first day of the simulation. Therefore, 7200 refers to 2:00 AM
-          regardless of the start time of the simulation.
-    daily_flag : bool
-        * False indicates that control will execute once when time is first encountered
-        * True indicates that control will execute at the same time daily
-    control_action : An object derived from BaseControlAction
-        Examples: ControlAction
-        This is the actual change that will occur at the specified time.
-    """
-
-    def __init__(self, wnm, run_at_time, time_flag, daily_flag, control_action):
-        self.name = 'blah'
-
-        if isinstance(control_action._target_obj_ref,wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
-            self._priority = 0
-        elif isinstance(control_action._target_obj_ref,wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.closed:
-            self._priority = 3
-        else:
-            self._priority = 0
-
-        self._run_at_time = run_at_time
-        self._time_flag = time_flag
-        if time_flag != 'SIM_TIME' and time_flag != 'SHIFTED_TIME':
-            raise ValueError('In TimeControl::__init__, time_flag must be "SIM_TIME" or "SHIFTED_TIME"')
-
-        self._daily_flag = daily_flag
-        self._control_action = control_action
-
-        if daily_flag and run_at_time > 24*3600:
-            raise ValueError('In TimeControl, a daily control was requested, however, the time passed in was not between 0 and 24*3600')
-
-        if time_flag == 'SIM_TIME' and self._run_at_time < wnm.sim_time:
-            raise RuntimeError('You cannot create a time control that should be activated before the start of the simulation.')
-
-        if time_flag == 'SHIFTED_TIME' and self._run_at_time < wnm._shifted_time:
-            self._run_at_time += 24*3600
-
-    def requires(self):
-        req = self._control_action.requires()
-        return req
-
-    def __str__(self):
-        if self._time_flag == 'SIM_TIME':
-            fmt = 'LINK {} {} AT TIME {}'
-            tm = ControlCondition._sec_to_hours_min_sec(self._run_at_time)
-        else:
-            fmt = 'LINK {} {} AT CLOCKTIME {}'
-            tm = ControlCondition._sec_to_clock(self._run_at_time)
-        return fmt.format(self._control_action._target_obj_ref.name,
-                          self._control_action._repr_value(),
-                          tm)
-
-    def __repr__(self):
-        fmt = '<TimeControl: model, {}, {}, {}, {}>'
-        return fmt.format(str(self._run_at_time), str(self._time_flag), str(self._daily_flag), repr(self._control_action))
-
-    def __eq__(self, other):
-        if self._run_at_time    == other._run_at_time      and \
-           self.name            == other.name            and \
-           self._time_flag      == other._time_flag      and \
-           self._daily_flag     == other._daily_flag     and \
-           self._priority       == other._priority       and \
-           self._control_action == other._control_action:
-            return True
-        return False
-
-    def __hash__(self):
-        return id(self)
-
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
-        """
-        This implements the derived method from Control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated.
-        presolve_flag : bool
-            This is true if we are calling before the solve, and false if we are calling after the solve (within the
-            current timestep).
-        """
-        if not presolve_flag:
-            return (False, None)
-
-        if self._time_flag == 'SIM_TIME':
-            if wnm._prev_sim_time < self._run_at_time and self._run_at_time <= wnm.sim_time:
-                return (True, int(wnm.sim_time - self._run_at_time))
-        elif self._time_flag == 'SHIFTED_TIME':
-            if wnm._prev_shifted_time < self._run_at_time and self._run_at_time <= wnm.shifted_time:
-                return (True, int(round(wnm._shifted_time - self._run_at_time)))
-
-        return (False, None)
-
-    def _RunControlActionImpl(self, wnm, priority):
-        """
-        This implements the derived method from Control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated/modified.
-        priority : int
-            A priority value. The action is only run if priority == self._priority.
-        """
-        if self._control_action is None:
-            raise ValueError('_control_action is None inside TimeControl')
-
-        if self._priority != priority:
-            return False, None, None
-
-        change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
-        if self._daily_flag:
-            self._run_at_time += 24*3600
-        return change_flag, change_tuple, orig_value
-
-
-class ConditionalControl(Control):
-    """
-    A class for creating controls that run when a specified condition is satisfied. The control_action is
-    run/activated when the operation evaluated on the source object/attribute and the threshold is True.
-    
-    Parameters
-    ----------
-    source : tuple
-        A two-tuple. The first value should be an object (such as a Junction, Tank, Reservoir, Pipe, Pump, Valve,
-        WaterNetworkModel, etc.). The second value should be an attribute of the object.
-    operation : numpy comparison method
-        Examples: numpy.greater, numpy.less_equal
-    threshold : float
-        A value to compare the source object attribute against
-    control_action : An object derived from BaseControlAction
-        Examples: ControlAction
-        This object defines the actual change that will occur when the specified condition is satisfied.
-    """
-
-    def __init__(self, source, operation, threshold, control_action):
-        self.name = 'blah'
-
-        if isinstance(control_action._target_obj_ref,wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.opened:
-            self._priority = 0
-        elif isinstance(control_action._target_obj_ref,wntr.network.Link) and control_action._attribute=='status' and control_action._value==wntr.network.LinkStatus.closed:
-            self._priority = 3
-        else:
-            self._priority = 0
-
-        self._partial_step_for_tanks = True
-        self._source_obj = source[0]
-        self._source_attr = source[1]
-        self._operation = operation
-        self._control_action = control_action
-        self._threshold = threshold
-
-        if not isinstance(source,tuple):
-            raise ValueError('source must be a tuple, (source_object, source_attribute).')
-        if not isinstance(threshold,float):
-            raise ValueError('threshold must be a float.')
-
-    def requires(self):
-        req = [self._source_obj] + self._control_action.requires()
-        return req
-
-    def __str__(self):
-        fmt = 'LINK {} {} IF NODE {} {} {}'
-        return fmt.format(self._control_action._target_obj_ref.name,
-                          self._control_action._repr_value(),
-                          self._source_obj.name,
-                          Comparison.parse(self._operation).text,
-                          self._threshold)
-
-    def __repr__(self):
-        fmt = '<ConditionalControl: {}, {}, {}, {}, {}>'
-        return fmt.format(str(self._source_obj), str(self._source_attr), str(self._operation), str(self._threshold), repr(self._control_action))
-
-    def __eq__(self, other):
-        if self._priority               == other._priority               and \
-           self.name                    == other.name                    and \
-           self._partial_step_for_tanks == other._partial_step_for_tanks and \
-           self._source_obj             == other._source_obj             and \
-           self._source_attr            == other._source_attr            and \
-           self._operation              == other._operation              and \
-           self._control_action         == other._control_action         and \
-           abs(self._threshold           - other._threshold)<1e-10:
-            return True
-        return False
-
-    def __hash__(self):
-        return id(self)
-
-
-#    def to_inp_string(self, flowunit):
-#        link_name = self._control_action._target_obj_ref.name()
-#        action = 'OPEN'
-#        if self._control_action._attribute == 'status':
-#            if self._control_action._value == 1:
-#                action = 'OPEN'
-#            else:
-#                action = 'CLOSED'
-#        else:
-#            action = str(self._control_action._value)
-#        target_name = self._source_obj.name()
-#        compare = 'ABOVE'
-#        if self._relation is np.less:
-#            compare = 'BELOW'
-#        threshold = convert('Hydraulic Head',flowunit,self._threshold-self._source_obj.elevation,False)
-#        return 'Link %s %s IF Node %s %s %s'%(link_name, action, target_name, compare, threshold)
-
-
-    # @classmethod
-    # def WithTarget(self, source, operation, threshold, target_obj, target_attribute, target_value):
-    #     ca = ControlAction(target_obj, target_attribute, target_value)
-    #     return ConditionalControl(source, operation, threshold, ca)
-
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
-        """
-        This implements the derived method from Control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated.
-        presolve_flag : bool
-            This is true if we are calling before the solve, and false if we are calling after the solve (within the
-            current timestep).
-        """
-        if type(self._source_obj)==wntr.network.Tank and self._source_attr in ['head','level'] and wnm.sim_time!=0 and self._partial_step_for_tanks:
-            if presolve_flag:
-                val = getattr(self._source_obj,self._source_attr)
-                q_net = self._source_obj._prev_demand
-                delta_h = 4.0*q_net*(wnm.sim_time-wnm._prev_sim_time)/(math.pi*self._source_obj.diameter**2)
-                next_val = val+delta_h
-                if self._operation(next_val, self._threshold) and self._operation(val, self._threshold):
-                    return (False, None)
-                if self._operation(next_val, self._threshold):
-                    #if self._source_obj.name()=='TANK-3352':
-                        #print 'threshold for tank 3352 control is ',self._threshold
-
-                    m = (next_val-val)/(wnm.sim_time-wnm._prev_sim_time)
-                    b = next_val - m*wnm.sim_time
-                    new_t = (self._threshold - b)/m
-                    #print 'new time = ',new_t
-                    return (True, int(math.floor(wnm.sim_time-new_t)))
-                else:
-                    return (False, None)
-            else:
-                val = getattr(self._source_obj,self._source_attr)
-                if self._operation(val, self._threshold):
-                    return (True, 0)
-                else:
-                    return (False, None)
-        elif type(self._source_obj==wntr.network.Tank) and self._source_attr in ['head','level'] and wnm.sim_time==0 and self._partial_step_for_tanks:
-            if presolve_flag:
-                val = getattr(self._source_obj, self._source_attr)
-                if self._operation(val, self._threshold):
-                    return (True, 0)
-                else:
-                    return (False, None)
-            else:
-                return (False, None)
-        elif presolve_flag:
-            return (False, None)
-        else:
-            val = getattr(self._source_obj, self._source_attr)
-            if self._operation(val, self._threshold):
-                return (True, 0)
-            else:
-                return (False, None)
-
-    def _RunControlActionImpl(self, wnm, priority):
-        """
-        This implements the derived method from Control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated/modified.
-        priority : int
-            A priority value. The action is only run if priority == self._priority.
-        """
-        if self._priority!=priority:
-            return False, None, None
-
-        change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
-        return change_flag, change_tuple, orig_value
-
-class _MultiConditionalControl(Control):
-    """
-    TODO:  Make this class private -- used specifically for internal (valve) controls, not
-    RULES or CONTROLS section.
-    A class for creating controls that run only when a set of specified conditions are all satisfied.
-    
-    Parameters
-    ----------
-    source : list of two-tuples
-        A list of two-tuples. The first value of each tuple should be an object (e.g., Junction, Tank, Reservoir,
-        Pipe, Pump, Valve, WaterNetworkModel, etc.). The second value of each tuple should be an attribute of the
-        object.
-    operation : list of numpy comparison methods
-        Examples: [numpy.greater, numpy.greater, numpy.less_equal]
-    threshold : list of floats or two-tuples
-        Examples: [3.8, (junction1,'head'), (tank3,'head'), 0.5]
-    control_action : An object derived from BaseControlAction
-        Examples: ControlAction
-        This object defines the actual change that will occur when all specified conditions are satisfied.
-    """
-
-    def __init__(self, source, operation, threshold, control_action):
-        self.name = 'blah'
-        self._priority = 0
-        self._source = source
-        self._relation = operation
-        self._control_action = control_action
-        self._threshold = threshold
-
-        if not isinstance(source,list):
-            raise ValueError('source must be a list of tuples, (source_object, source_attribute).')
-        if not isinstance(operation,list):
-            raise ValueError('operation must be a list numpy operations (e.g.,numpy.greater).')
-        if not isinstance(threshold,list):
-            raise ValueError('threshold must be a list of floats or tuples (threshold_object, threshold_attribute).')
-        if len(source)!=len(operation):
-            raise ValueError('The length of the source list must equal the length of the operation list.')
-        if len(source)!=len(threshold):
-            raise ValueError('The length of the source list must equal the length of the threshold list.')
-
-    def requires(self):
-        req = []
-        for source, attr in self._source:
-            req += [source]
-        req += self._control_action.requires()
-        return req
-
-    def __eq__(self, other):
-        if self._control_action == other._control_action and \
-           self.name            == other.name            and \
-           self._priority       == other._priority       and \
-           self._relation      == other._relation:
-            for point1, point2 in zip(self._threshold, other._threshold):
-                if type(point1) == tuple:
-                    if not point1 == point2:
-                        return False
-                elif not abs(point1-point2)<1e-8:
-                    return False
-            return True
-        else:
-            return False
-
-    def __hash__(self):
-        return id(self)
-
-    # @classmethod
-    # def WithTarget(self, source_obj, source_attribute, source_attribute_prev, operation, threshold, target_obj, target_attribute, target_value):
-    #     ca = ControlAction(target_obj, target_attribute, target_value)
-    #     return ConditionalControl(source_obj, source_attribute, source_attribute_prev, operation, threshold, ca)
-
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
-        """
-        This implements the derived method from Control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated.
-        presolve_flag : bool
-            This is true if we are calling before the solve, and false if we are calling after the solve (within the
-            current timestep).
-        """
-        if presolve_flag:
-            return (False, None)
-
-        action_required = True
-        for ndx in range(len(self._source)):
-            src_obj = self._source[ndx][0]
-            src_attr = self._source[ndx][1]
-            src_val = getattr(src_obj, src_attr)
-            oper = self._relation[ndx]
-            if not isinstance(self._threshold[ndx],tuple):
-                threshold_val = self._threshold[ndx]
-            else:
-                threshold_obj = self._threshold[ndx][0]
-                threshold_attr = self._threshold[ndx][1]
-                threshold_val = getattr(threshold_obj, threshold_attr)
-
-            if src_val is None or not oper(src_val, threshold_val):
-                action_required = False
-                break
-
-        if action_required:
-            return (True, 0)
-        else:
-            return (False, None)
-
-    def _RunControlActionImpl(self, wnm, priority):
-        """
-        This implements the derived method from Control.
-        
-        Parameters
-        ----------
-        wnm : WaterNetworkModel
-            An instance of the current WaterNetworkModel object that is being simulated/modified.
-        priority : int
-            A priority value. The action is only run if priority == self._priority.
-        """
-        if self._priority!=priority:
-            return False, None, None
-
-        change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
-        return change_flag, change_tuple, orig_value
-
-### Valve control classes
-
-class _CheckValveHeadControl(Control):
-    """
-    """
-    def __init__(self, wnm, cv, operation, threshold, control_action):
-        self.name = 'blah'
-        self._priority = 3
-        self._cv = cv
-        self._relation = operation
-        self._threshold = threshold
-        self._control_action = control_action
-        self._start_node_name = self._cv.start_node
-        self._end_node_name = self._cv.end_node
-        self._start_node = wnm.get_node(self._start_node_name)
-        self._end_node = wnm.get_node(self._end_node_name)
-        self._pump_A = None
-
-        if isinstance(self._cv,wntr.network.Pump):
-            if self._cv.info_type == 'HEAD':
-                A,B,C = self._cv.get_head_curve_coefficients()
-                self._pump_A = A
-
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
-        if presolve_flag:
-            return (False, None)
-
-        if self._pump_A is not None:
-            headloss = self._start_node.head + self._pump_A - self._end_node.head
-        elif isinstance(self._cv,wntr.network.Pump):
-            headloss = self._end_node.head - self._start_node.head
-        else:
-            headloss = self._start_node.head - self._end_node.head
-        if self._relation(headloss, self._threshold):
-            return (True, 0)
-        return (False, None)
-
-    def _RunControlActionImpl(self, wnm, priority):
-        if self._priority!=priority:
-            return False, None, None
-
-        change_flag, change_tuple, orig_value = self._control_action.RunControlAction(self.name)
-        return change_flag, change_tuple, orig_value
-
-class _PRVControl(Control):
-    """
-    """
-    def __init__(self, wnm, valve, Htol, Qtol, close_control_action, open_control_action, active_control_action):
-        self.name = 'blah'
-        self._priority = 3
-        self._valve = valve
-        self._Htol = Htol
-        self._Qtol = Qtol
-        self._close_control_action = close_control_action
-        self._open_control_action = open_control_action
-        self._active_control_action = active_control_action
-        self._action_to_run = None
-        self._start_node_name = valve.start_node
-        self._end_node_name = valve.end_node
-        self._start_node = wnm.get_node(self._start_node_name)
-        self._end_node = wnm.get_node(self._end_node_name)
-        self._resistance_coefficient = 0.0826*0.02*self._valve.diameter**(-5)*self._valve.diameter*2.0
-
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
-        """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
-        """
-        if presolve_flag:
-            return (False, None)
-
-        head_setting = self._valve.setting + self._end_node.elevation
-
-        if self._valve._status == wntr.network.LinkStatus.active:
-            if self._valve.flow < -self._Qtol:
-                self._action_to_run = self._close_control_action
-                return (True, 0)
-            Hl = self._resistance_coefficient*abs(self._valve.flow)**2
-            if self._start_node.head < head_setting + Hl - self._Htol:
-                self._action_to_run = self._open_control_action
-                return (True, 0)
-            return (False, None)
-        elif self._valve._status == wntr.network.LinkStatus.opened:
-            if self._valve.flow < -self._Qtol:
-                self._action_to_run = self._close_control_action
-                return (True, 0)
-            Hl = self._resistance_coefficient*abs(self._valve.flow)**2
-            if self._start_node.head > head_setting + Hl + self._Htol:
-                self._action_to_run = self._active_control_action
-                return (True, 0)
-            return (False, None)
-        elif self._valve._status == wntr.network.LinkStatus.closed:
-            if self._start_node.head > self._end_node.head + self._Htol and self._start_node.head < head_setting - self._Htol:
-                self._action_to_run = self._open_control_action
-                return (True, 0)
-            if self._start_node.head > self._end_node.head + self._Htol and self._end_node.head < head_setting - self._Htol:
-                self._action_to_run = self._active_control_action
-                return (True, 0)
-            return (False, None)
-
-    def _RunControlActionImpl(self, wnm, priority):
-        """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
-        """
-        if self._priority!=priority:
-            return False, None, None
-
-        change_flag, change_tuple, orig_value = self._action_to_run.RunControlAction(self.name)
-        return change_flag, change_tuple, orig_value
-
-
-class _FCVControl(Control):
-    """
-    Parameters
-    ----------
-    wnm: wntr.network.WaterNetworkModel
-    valve: wntr.network.Valve
-    Qtol: float
-    open_control_action: ControlAction
-    active_control_action: ControlAction
-    """
-
-    def __init__(self, wnm, valve, Htol, open_control_action, active_control_action):
-        self.name = 'fcv'
-        self._priority = 3
-        self._valve = valve
-        self._Htol = Htol
-        self._open_control_action = open_control_action
-        self._active_control_action = active_control_action
-        self._action_to_run = None
-        self._start_node_name = valve.start_node
-        self._end_node_name = valve.end_node
-        self._start_node = wnm.get_node(self._start_node_name)
-        self._end_node = wnm.get_node(self._end_node_name)
-
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
-        """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
-        """
-        if presolve_flag:
-            if self._valve._status == wntr.network.LinkStatus.Active:
-                self._action_to_run = self._open_control_action
-                return True, 0
-            return False, None
-
-        if self._valve._status == wntr.network.LinkStatus.Active:
-            actual_headloss = self._start_node.head - self._end_node.head
-            if actual_headloss < 0: # flow should be negative
-                self._action_to_run = self._open_control_action
-                return True, 0
-            headloss_if_open = (8.0 * self._valve.minor_loss / (9.81 * math.pi**2 * self._valve.diameter**4) *
-                                self._valve.flow ** 2)
-            if actual_headloss + self._Htol < headloss_if_open:
-                self._action_to_run = self._open_control_action
-                return True, 0
-            return False, None
-        elif self._valve._status == wntr.network.LinkStatus.Opened:
-            if self._valve.flow > self._valve.setting:
-                self._action_to_run = self._active_control_action
-                return True, 0
-            return False, None
-        elif self._valve._status == wntr.network.LinkStatus.Closed:
-            return False, None
-        else:
-            raise ValueError('unexpected _status for valve: \n\tValve: {0}\n\t_status: {1}'.format(self._valve,
-                                                                                                   self._valve._status))
-
-    def _RunControlActionImpl(self, wnm, priority):
-        """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
-        """
-        if self._priority!=priority:
-            return False, None, None
-
-        change_flag, change_tuple, orig_value = self._action_to_run.RunControlAction(self.name)
-        return change_flag, change_tuple, orig_value
-
-
-class _ValveNewSettingControl(Control):
-    """
-    This is a control to change the valve status to active when a new setting is given to the valve (see page 73 of
-    the Epanet2 user manual).
+    A class for controls.
 
     Parameters
     ----------
-    wnm: wntr.network.WaterNetworkModel
-    valve: wntr.network.Valve
-    Qtol: float
-    open_control_action: ControlAction
-    active_control_action: ControlAction
+    condition: ControlCondition
+        The condition that should be used to determine when the actions need to be activated. When the condition
+        evaluates to True, the then_actions are activated. When the condition evaluates to False, the else_actions
+        are activated.
+    then_action: ControlAction
+        The action that should be activated when the condition evaluates to True.
+    priority: ControlPriority
+        The priority of the control. Default is ControlPriority.medium
+    name: str
+        The name of the control
     """
+    def __init__(self, condition, then_action, priority=ControlPriority.medium, name=None):
+        if isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
+            if condition._relation is not Comparison.eq:
+                raise ValueError('SimTimeConditions and TimeOfDayConditions used with Control must have a relation of '
+                                 'Comparison.eq. Otherwise use Rule.')
+        if isinstance(condition, (ValueCondition, TankLevelCondition, RelativeCondition)):
+            if condition._relation is Comparison.eq:
+                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
+                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
 
-    def __init__(self, wnm, valve):
-        self.name = 'new_valve_setting_makes_status_active'
-        self._priority = 1
-        self._valve = valve
-        valve._prev_setting = valve.setting
-        self._active_control_action = ControlAction(valve, 'status', wntr.network.LinkStatus.Active)
-        self._action_to_run = self._active_control_action
-
-    def _IsControlActionRequiredImpl(self, wnm, presolve_flag):
-        """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
-        """
-        if presolve_flag:
-            return False, None
-
-        if self._valve.status == wntr.network.LinkStatus.Closed:
-            if self._valve._prev_setting != self._valve.setting:
-                self._action_to_run = self._active_control_action
-                return True, 0
-            return False, None
-        elif self._valve.status == wntr.network.LinkStatus.Opened:
-            if self._valve._prev_setting != self._valve.setting:
-                self._action_to_run = self._active_control_action
-                return True, 0
-            return False, None
-        elif self._valve.status == wntr.network.LinkStatus.Active:
-            return False, None
+        self._condition = condition
+        self._then_actions = [then_action]
+        self._else_actions = []
+        self._which = None
+        self._priority = priority
+        self._name = name
+        if self._name is None:
+            self._name = ''
+        if isinstance(condition, TankLevelCondition):
+            self._control_type = _ControlType.pre_and_postsolve
+        elif isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
+            self._control_type = _ControlType.presolve
         else:
-            raise ValueError('unexpected status for valve: \n\tValve: {0}\n\t_status: {1}'.format(self._valve,
-                                                                                                   self._valve.status))
+            self._control_type = _ControlType.postsolve
 
-    def _RunControlActionImpl(self, wnm, priority):
+    @classmethod
+    def _time_control(cls, wnm, run_at_time, time_flag, daily_flag, control_action, name=None):
         """
-        This implements the derived method from Control. Please see
-        the Control class and the documentation for this class.
+        This is a class method for creating simple time controls.
+
+        Parameters
+        ----------
+        wnm: wntr.network.WaterNetworkModel
+            The WaterNetworkModel instance this control will be added to.
+        run_at_time: int
+            The time to activate the control action.
+        time_flag: str
+            Options are 'SIM_TIME' and 'CLOCK_TIME'. SIM_TIME indicates that run_at_time is the time since the start
+            of the simulation. CLOCK_TIME indicates that run_at_time is the time of day.
+        daily_flag: bool
+            If True, then the control will repeat every day.
+        control_action: BaseControlAction
+            The control action that should occur at run_at_time.
+        name: str
+            An optional name for the control.
+
+        Returns
+        -------
+        ctrl: Control
         """
-        if self._priority!=priority:
-            return False, None, None
+        if time_flag.upper() == 'SIM_TIME':
+            condition = SimTimeCondition(model=wnm, relation=Comparison.eq, threshold=run_at_time, repeat=daily_flag,
+                                         first_time=0)
+        elif time_flag.upper() == 'CLOCK_TIME':
+            condition = TimeOfDayCondition(model=wnm, relation=Comparison.eq, threshold=run_at_time, repeat=daily_flag,
+                                           first_day=0)
+        else:
+            raise ValueError("time_flag not recognized; expected either 'sim_time' or 'clock_time'")
 
-        change_flag, change_tuple, orig_value = self._action_to_run.RunControlAction(self.name)
-        return change_flag, change_tuple, orig_value
+        control = Control(condition=condition, then_action=control_action)
 
-### Logger
+        return control
 
-class ControlLogger(object):
+    @classmethod
+    def _conditional_control(cls, source_obj, source_attr, operation, threshold, control_action, name=None):
+        """
+        This is a class method for creating simple conditional controls.
+
+        Parameters
+        ----------
+        source_obj: object
+            The object whose source_attr attribute will be compared to threshold to determine if control_action
+            needs activated.
+        source_attr: str
+            The attribute of source_obj to compare to threshold.
+        operation: Comparison
+            The comparison function used to compare the source_attr attribute of source_obj to threshold.
+        threshold: any
+            The threshold used in the comparison.
+        control_action: ControlAction
+            The control action that should occur when operation(getattr(source_obj, source_attr), threshold) is True.
+        name: str
+            An optional name for the control
+
+        Returns
+        -------
+        ctrl: Control
+        """
+        condition = ValueCondition(source_obj=source_obj, source_attr=source_attr, relation=operation,
+                                   threshold=threshold)
+        control = Control(condition=condition, then_action=control_action)
+        return control
+
+
+class ControlManager(Observer):
+    """
+    A class for managing controls and identifying changes made by those controls.
+    """
     def __init__(self):
-        self.changed_objects = {}  # obj_name: object
-        self.changed_attributes = {}  # obj_name: attribute
+        self._controls = OrderedSet()
+        """OrderedSet of ControlBase"""
 
-    def add(self, obj, attr):
-        if obj.name in self.changed_objects:
-            self.changed_attributes[obj.name].append(attr)
+        self._previous_values = OrderedDict()  # {(obj, attr): value}
+        self._changed = OrderedSet()  # set of (obj, attr) that has been changed from _previous_values
+
+    def __iter__(self):
+        return iter(self._controls)
+
+    def update(self, subject):
+        """
+        The update method gets called when a subject (control action) is activated.
+
+        Parameters
+        -----------
+        subject: BaseControlAction
+        """
+        obj, attr = subject.target()
+        if getattr(obj, attr) == self._previous_values[(obj, attr)]:
+            self._changed.discard((obj, attr))
         else:
-            self.changed_objects[obj.name] = obj
-            self.changed_attributes[obj.name] = [attr]
+            self._changed.add((obj, attr))
+
+    def register_control(self, control):
+        """
+        Register a control with the ControlManager
+
+        Parameters
+        ----------
+        control: ControlBase
+        """
+        self._controls.add(control)
+        for action in control.actions():
+            action.subscribe(self)
+            obj, attr = action.target()
+            self._previous_values[(obj, attr)] = getattr(obj, attr)
 
     def reset(self):
-        self.changed_objects = {}
-        self.changed_attributes = {}
+        """
+        Reset the _previous_values. This should be called before activating any control actions so that changes made
+        by the control actions can be tracked.
+        """
+        self._changed = OrderedSet()
+        self._previous_values = OrderedDict()
+        for control in self._controls:
+            for action in control.actions():
+                obj, attr = action.target()
+                self._previous_values[(obj, attr)] = getattr(obj, attr)
+
+    def changes_made(self):
+        """
+        Specifies if changes were made.
+
+        Returns
+        -------
+        changes: bool
+        """
+        return len(self._changed) > 0
+
+    def get_changes(self):
+        """
+        A generator for iterating over the objects, attributes that were changed.
+
+        Returns
+        -------
+        changes: tuple
+            (object, attr)
+        """
+        for obj, attr in self._changed:
+            yield obj, attr
+
+    def deregister(self, control):
+        """
+        Deregister a control with the ControlManager
+
+        Parameters
+        ----------
+        control: ControlBase
+        """
+        self._controls.remove(control)
+        for action in control.actions():
+            action.unsubscribe(self)
+            obj, attr = action.target()
+            self._previous_values.pop((obj, attr))
+            self._changed.discard((obj, attr))
+
+    def check(self):
+        """
+        Check which controls have actions that need activated.
+
+        Returns
+        -------
+        controls_to_run: list of tuple
+            The tuple is (ControlBase, backtrack)
+        """
+        controls_to_run = []
+        for c in self._controls:
+            do, back = c.is_control_action_required()
+            if do:
+                controls_to_run.append((c, back))
+        return controls_to_run

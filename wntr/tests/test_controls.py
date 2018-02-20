@@ -2,8 +2,6 @@
 import unittest
 from nose import SkipTest
 from os.path import abspath, dirname, join
-import logging
-logging.basicConfig(level=logging.DEBUG)
 
 testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir,'networks_for_testing')
@@ -228,7 +226,7 @@ class TestControlCombinations(unittest.TestCase):
         inp_file = join(test_datadir, 'control_comb.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
-        control = self.wntr.network.TimeControl(wn, 6*3600, 'SIM_TIME', False, control_action)
+        control = self.wntr.network.controls.Control._time_control(wn, 6*3600, 'SIM_TIME', False, control_action)
         wn.add_control('open_time_6',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
@@ -241,13 +239,13 @@ class TestControlCombinations(unittest.TestCase):
         for t in results.link.major_axis:
             if t == 6*3600:
                 flag1 = True
-            if t > 0 and (results.node.at['head',t-3600,'tank1'] + (results.node.at['demand',t-3600,'tank1']*3600 * 4 / (3.14159 * wn._tanks['tank1'].diameter**2))) <= 30:
+            if t > 0 and (results.node.at['head',t-3600,'tank1'] + (results.node.at['demand',t-3600,'tank1']*3600 * 4 / (3.14159 * wn.get_node('tank1').diameter**2))) <= 30:
                 flag1 = False
                 flag2 = True
             if flag1 == False:
-                self.assertAlmostEqual(results.link.at['flowrate',t,'pipe1'], 0.0)
+                self.assertAlmostEqual(results.link.at['flowrate', t, 'pipe1'], 0.0)
             elif flag1 == True:
-                self.assertGreaterEqual(results.link.at['flowrate',t,'pipe1'], 0.001)
+                self.assertGreaterEqual(results.link.at['flowrate', t, 'pipe1'], 0.001)
 
         self.assertEqual(flag1, False)
         self.assertEqual(flag2, True)
@@ -261,7 +259,7 @@ class TestControlCombinations(unittest.TestCase):
         pipe1 = wn.get_link('pipe1')
         pipe1.status = self.wntr.network.LinkStatus.opened
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
-        control = self.wntr.network.TimeControl(wn, 19*3600, 'SIM_TIME', False, control_action)
+        control = self.wntr.network.controls.Control._time_control(wn, 19*3600, 'SIM_TIME', False, control_action)
         wn.add_control('open_time_19',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
@@ -274,7 +272,7 @@ class TestControlCombinations(unittest.TestCase):
         for t in results.link.major_axis:
             if t == 19*3600:
                 flag1 = False
-            if t > 0 and (results.node.at['head',t-3600,'tank1'] + (results.node.at['demand',t-3600,'tank1']*3600 * 4 / (3.14159 * wn._tanks['tank1'].diameter**2))) <= 30:
+            if t > 0 and (results.node.at['head',t-3600,'tank1'] + (results.node.at['demand',t-3600,'tank1']*3600 * 4 / (3.14159 * wn.get_node('tank1').diameter**2))) <= 30:
                 flag1 = True
                 flag2 = True
             if flag1 == False:
@@ -294,7 +292,7 @@ class TestControlCombinations(unittest.TestCase):
         pipe1 = wn.get_link('pipe1')
         pipe1.status = self.wntr.network.LinkStatus.opened
         control_action = self.wntr.network.ControlAction(wn.get_link('pipe1'), 'status', self.wntr.network.LinkStatus.opened)
-        control = self.wntr.network.TimeControl(wn, 5*3600, 'SIM_TIME', False, control_action)
+        control = self.wntr.network.controls.Control._time_control(wn, 5*3600, 'SIM_TIME', False, control_action)
         wn.add_control('open_time_5',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
@@ -304,7 +302,7 @@ class TestControlCombinations(unittest.TestCase):
 
         flag1 = False
         for t in results.link.major_axis:
-            if t > 0 and (results.node.at['head',t-3600,'tank1'] + (results.node.at['demand',t-3600,'tank1']*3600 * 4 / (3.14159 * wn._tanks['tank1'].diameter**2))) <= 30.0:
+            if t > 0 and (results.node.at['head',t-3600,'tank1'] + (results.node.at['demand',t-3600,'tank1']*3600 * 4 / (3.14159 * wn.get_node('tank1').diameter**2))) <= 30.0:
                 flag1 = True
             if t==5*3600:
                 flag1=False
