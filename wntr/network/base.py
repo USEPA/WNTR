@@ -37,45 +37,11 @@ import abc
 logger = logging.getLogger(__name__)
 
 
-class AbstractModel(six.with_metaclass(abc.ABCMeta, object)):
+class AbstractModel(object):
     """
     Base class for water network models.
-    
     """
-    @property
-    @abc.abstractmethod
-    def options(self): 
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def nodes(self): 
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def links(self): 
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def sources(self): 
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def patterns(self): 
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def curves(self): 
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def controls(self): 
-        raise NotImplementedError('This is an abstract class')
+    pass
 
 
 class Subject(object):
