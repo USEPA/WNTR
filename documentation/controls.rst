@@ -128,8 +128,8 @@ A new control action is defined that opens the pump.
 Rules
 --------------------------
 A rule is created in WNTR with the :class:`~wntr.network.controls.Rule` class, which takes any of the above conditions, 
-an action that should occur when the condition is true, and an optional action that should occur 
-when the condition is false.  Multiple conditions and actions can be passed into each logical block using a list of objects.
+a list of actions that should occur when the condition is true, and an optional list of actions that should occur 
+when the condition is false.  
 Rules also take an optional priority. 
 If rules with conflicting actions should occur at the same time, the rule with the highest priority will override 
 all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` enum. The default 
