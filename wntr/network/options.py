@@ -6,14 +6,14 @@ The wntr.network.options module includes simulation options.
 .. autosummary::
 
     WaterNetworkOptions
-	TimeOptions
-	GraphicsOptions
-	HydraulicOptions
-	ResultsOptions
-	QualityOptions
-	EnergyOptions
-	SolverOptions
-	UserOptions
+    TimeOptions
+    GraphicsOptions
+    HydraulicOptions
+    ResultsOptions
+    QualityOptions
+    EnergyOptions
+    SolverOptions
+    UserOptions
 
 """
 import logging

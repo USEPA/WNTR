@@ -7,11 +7,11 @@ model.
 .. autosummary::
 
     WaterNetworkModel
-	PatternRegistry
-	CurveRegistry
-	SourceRegistry
-	NodeRegistry
-	LinkRegistry
+    PatternRegistry
+    CurveRegistry
+    SourceRegistry
+    NodeRegistry
+    LinkRegistry
 
 """
 import logging

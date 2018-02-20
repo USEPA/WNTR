@@ -7,14 +7,14 @@ the network model.
 .. autosummary::
 
     AbstractModel
-	Subject
-	Observer
-	Node
-	Link
-	Registry
-	NodeType
-	LinkType
-	LinkStatus
+    Subject
+    Observer
+    Node
+    Link
+    Registry
+    NodeType
+    LinkType
+    LinkStatus
 
 """
 import logging

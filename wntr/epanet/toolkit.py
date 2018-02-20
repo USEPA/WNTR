@@ -1,6 +1,17 @@
 """
 The wntr.epanet.toolkit module is a Python extensions for the EPANET 
 Programmers Toolkit DLLs.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    EpanetException
+    ENgetwarning
+    runepanet
+    ENepanet
+
+
 """
 from __future__ import print_function
 import ctypes, os, sys
