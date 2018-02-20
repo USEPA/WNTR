@@ -1649,21 +1649,22 @@ class Rule(ControlBase):
 class Control(Rule):
     """
     A class for controls.
-
-    Parameters
-    ----------
-    condition: ControlCondition
-        The condition that should be used to determine when the actions need to be activated. When the condition
-        evaluates to True, the then_actions are activated. When the condition evaluates to False, the else_actions
-        are activated.
-    then_action: ControlAction
-        The action that should be activated when the condition evaluates to True.
-    priority: ControlPriority
-        The priority of the control. Default is ControlPriority.medium
-    name: str
-        The name of the control
     """
     def __init__(self, condition, then_action, priority=ControlPriority.medium, name=None):
+        """
+        Parameters
+        ----------
+        condition: ControlCondition
+            The condition that should be used to determine when the actions need to be activated. When the condition
+            evaluates to True, the then_actions are activated. When the condition evaluates to False, the else_actions
+            are activated.
+        then_action: ControlAction
+            The action that should be activated when the condition evaluates to True.
+        priority: ControlPriority
+            The priority of the control. Default is ControlPriority.medium
+        name: str
+            The name of the control
+        """
         if isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
             if condition._relation is not Comparison.eq:
                 raise ValueError('SimTimeConditions and TimeOfDayConditions used with Control must have a relation of '

@@ -2725,5 +2725,45 @@ class LinkRegistry(Registry):
             
         """
         for name in self._gpvs:
-            pass
-        yield name, self._data[name]
+            yield name, self._data[name]
+
+#    def tostring(self):
+#        """String representation of the link registry"""
+#        s  = 'Link Registry:\n'
+#        s += '  Total number of links defined:     {}\n'.format(len(self._data))
+#        s += '    Pipes:                     {}\n'.format(len(self.pipe_names))
+#        ct_cv = sum([ 1 for n in self.check_valves()])
+#        if ct_cv:
+#            s += '      Check valves:     {}\n'.format(ct_cv)
+#        s += '    Pumps:                     {}\n'.format(len(self.pump_names))
+#        ct_cp = len(self._power_pumps)
+#        ct_hc = len(self._head_pumps)
+#        if ct_cp:
+#            s += '      Constant power:   {}\n'.format(ct_cp)
+#        if ct_hc:
+#            s += '      Head/pump curve:  {}\n'.format(ct_hc)
+#        s += '    Valves:                    {}\n'.format(len(self.valve_names))
+#        PRV = len(self._prvs)
+#        PSV = len(self._psvs)
+#        PBV = len(self._pbvs)
+#        FCV = len(self._fcvs)
+#        TCV = len(self._tcvs)
+#        GPV = len(self._gpvs)
+#        if PRV:
+#            s += '      Pres. reducing:   {}\n'.format(PRV)
+#        if PSV:
+#            s += '      Pres. sustaining: {}\n'.format(PSV)
+#        if PBV:
+#            s += '      Pres. breaker:    {}\n'.format(PBV)
+#        if FCV:
+#            s += '      Flow control:     {}\n'.format(FCV)
+#        if TCV:
+#            s += '      Throttle control: {}\n'.format(TCV)
+#        if GPV:
+#            s += '      General purpose:  {}\n'.format(GPV)
+#        if len(self.orphaned()) > 0:
+#            s += '  Links used without definition:     {}\n'.format(len(self.orphaned()))
+#            for orphan in self.orphaned():
+#                s += '   - {}: {}\n'.format(orphan, self._usage[orphan])
+#        return s
+

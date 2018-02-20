@@ -44,7 +44,7 @@ class WaterNetworkOptions(object):
         self._solver = SolverOptions()
         self._graphics = GraphicsOptions()
         self._user = UserOptions()
-
+        
     def __getstate__(self):
         """Allow pickling with the __slots__ construct"""
         return self._time, self._hydraulic, self._results, self._quality, self._energy, self._solver, self._graphics, self._user
@@ -252,7 +252,7 @@ class TimeOptions(object):
             s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
         return s
     __repr__ = tostring
-
+    
 
 class GraphicsOptions(object):
     """
@@ -310,11 +310,7 @@ class GraphicsOptions(object):
             s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
         return s
     __repr__ = tostring
-
-    def todict(self):
-        """Returns a COPY of the currently specified options"""
-        return self.__dict__.copy()
-
+    
 
 class HydraulicOptions(object): 
     """
@@ -387,6 +383,7 @@ class HydraulicOptions(object):
             s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
         return s
     __repr__ = tostring
+    
 
 class ResultsOptions(object):
     """
@@ -469,7 +466,7 @@ class ResultsOptions(object):
                            'reaction': {},
                            'f-factor': {},
                            }        
-
+        
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -499,7 +496,7 @@ class ResultsOptions(object):
             s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
         return s
     __repr__ = tostring
-
+     
         
 class QualityOptions(object):
     """
@@ -681,7 +678,7 @@ class SolverOptions(object):
         self.checkfreq = 2
         self.maxcheck = 10
         self.damplimit = 0
-
+        
     def __eq__(self, other):
         if not type(self) == type(other):
             return False
@@ -737,3 +734,4 @@ class UserOptions(object):
             s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
         return s
     __repr__ = tostring
+    
