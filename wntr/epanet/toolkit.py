@@ -483,11 +483,12 @@ class ENepanet():
 
 
     def ENsaveinpfile(self, inpfile):
-        """
-        Saves EPANET input file
+        """Saves EPANET input file
 
-        Arguments:
-         * inpfile = EPANET .inp output file
+        Parameters
+        -------------
+        inpfile : str
+		    EPANET INP output file
 
         """
 
