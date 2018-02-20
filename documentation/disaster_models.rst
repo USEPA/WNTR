@@ -71,7 +71,7 @@ To add a leak to a specific pipe:
 .. literalinclude:: ../examples/disaster_scenarios.py
    :lines: 25-27
 
-The method :class:`~wntr.network.model.Junction.add_leak` adds time controls to a junction which includes the start and stop time for the leak.
+The method :class:`~wntr.network.elements.Junction.add_leak` adds time controls to a junction which includes the start and stop time for the leak.
 
 Power outage
 -------------
@@ -90,7 +90,7 @@ To model the impact of a power outage on a specific pump:
 .. literalinclude:: ../examples/disaster_scenarios.py
    :lines: 31
    
-The method :class:`~wntr.network.model.WaterNetworkModel.add_pump_outage` adds time controls to a pump to start and stop a power outage.
+The method :class:`~wntr.network.elements.Pump.add_outage` adds time controls to a pump to start and stop a power outage.
 When simulating power outages, consider placing check bypasses around pumps 
 and check valves next to reservoirs.
 
