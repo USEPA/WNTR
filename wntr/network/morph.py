@@ -107,6 +107,8 @@ class Skeletonize(object):
             neighbors = list(nx.neighbors(self.G,junc_name))
             if len(neighbors) > 1:
                 continue
+            if len(neighbors) == 0:
+                continue
             neigh_junc_name = neighbors[0] # only one neighbor
             nPipes = len(self.G.adj[junc_name][neigh_junc_name])
             if nPipes > 1:
@@ -284,7 +286,7 @@ class Skeletonize(object):
                     
                     logger.info('Parallel pipe merge:', junc_name, (pipe_name0, pipe_name1))
                     
-                    # Remove links from wn and G                 
+                    # Remove links from wn and G   
                     self.wn.remove_link(pipe_name0)
                     self.wn.remove_link(pipe_name1)
                     self.G.remove_edge(neighbor, junc_name, pipe_name0) 
@@ -301,15 +303,15 @@ class Skeletonize(object):
                         
                     # Add a new pipe to wn and G
                     self.wn.add_pipe(larger_pipe.name, 
-                                     start_node_name=larger_pipe.start_node, 
-                                     end_node_name=larger_pipe.end_node,
+                                     start_node_name=larger_pipe.start_node_name, 
+                                     end_node_name=larger_pipe.end_node_name,
                                      length=props['length'], 
                                      diameter=props['diameter'], 
                                      roughness=props['roughness'], 
                                      minor_loss=props['minorloss'],
                                      status=props['status']) 
-                    self.G.add_edge(larger_pipe.start_node, 
-                                    larger_pipe.end_node, 
+                    self.G.add_edge(larger_pipe.start_node_name, 
+                                    larger_pipe.end_node_name, 
                                     larger_pipe.name)
                      
                     self.num_parallel_merge +=1
