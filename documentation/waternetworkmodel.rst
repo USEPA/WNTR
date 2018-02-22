@@ -25,7 +25,7 @@ A water network model can be created by adding components to an empty model:
 A water network model can also be created directly from an EPANET INP file:
 
 .. literalinclude:: ../examples/water_network_model.py
-   :lines: 28
+   :lines: 29
    
 The water network model can be written to a file in EPANET INP format.
 By default, files are written in LPS units.  

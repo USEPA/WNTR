@@ -163,7 +163,7 @@ at https://networkx.github.io/.
 Hydraulic metrics
 ---------------------
 
-Hydraulic metrics are based upon variable flows and/or pressure. The 
+Hydraulic metrics are based on flow, demand, and/or pressure. The 
 calculation of these metrics requires simulation of network hydraulics that reflect how the
 system operates under normal or abnormal conditions.  
 Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metrics`.  
@@ -197,7 +197,15 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
 
    Fraction of delivered demand           Fraction of delivered demand is the fraction of time periods where demand is met [OsKS02]_.
                                           This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.fdd` method.
-
+	
+   Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier [USEPA15]_.
+                                          The metric can be computed using the :class:`~wntr.metrics.hydraulic.expected_demand` method.  This method does not require running 
+                                          a hydraulic simulation.
+										  
+   Average expected demand                Average expected demand per day is computed at each node based on node demand, demand pattern, and demand multiplier [USEPA15]_.
+                                          The metric can be computed using the :class:`~wntr.metrics.hydraulic.average_expected_demand` method.  This method does not require running 
+                                          a hydraulic simulation.
+    
    Population impacted                    Population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  For example, this method can be used to compute the population
                                           impacted by pressure below a specified threshold.
@@ -224,9 +232,6 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
 
    Fraction of delivered quality          Fraction of delivered quality is the fraction of time periods where water quality standards are met [OsKS02]_.
                                           This metric can be computed as a function of time or space using the :class:`~wntr.metrics.water_quality.fdq` method
-
-   Average water consumed                 Average water consumed is computed at each node, based on node demand and demand patterns [USEPA15]_.
-                                          The metric can be computed using the :class:`~wntr.metrics.misc.average_water_consumed` method.
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water quality metrics.

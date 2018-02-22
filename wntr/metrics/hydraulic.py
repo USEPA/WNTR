@@ -1,5 +1,18 @@
 """
 The wntr.metrics.hydraulic module contains hydraulic metrics.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    expected_demand
+    average_expected_demand
+    fdv
+    fdd
+    todini
+    entropy
+
+
 """
 import wntr.network
 from wntr.network.graph import _all_simple_paths
@@ -51,7 +64,7 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None):
 
 def average_expected_demand(wn):
     """
-    Compute average expected demand at each junction using base demands
+    Compute average expected demand per day at each junction using base demands
     and demand patterns along with the demand multiplier
     
     Parameters

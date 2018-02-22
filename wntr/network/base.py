@@ -1,10 +1,26 @@
 """
 The wntr.network.base module includes base classes for network elements and 
 the network model.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    AbstractModel
+    Subject
+    Observer
+    Node
+    Link
+    Registry
+    NodeType
+    LinkType
+    LinkStatus
+
 """
 import logging
 import six
 from six import string_types
+import types
 from wntr.utils.ordered_set import OrderedSet
 
 import enum
@@ -21,60 +37,16 @@ import abc
 logger = logging.getLogger(__name__)
 
 
-class AbstractModel(six.with_metaclass(abc.ABCMeta, object)):
+class AbstractModel(object):
     """
-    Abstract water network model class.
-    
-    A WaterNetworkModel must supply the following methods.
-    
+    Base class for water network models.
     """
-    @property
-    @abc.abstractmethod
-    def options(self): 
-        """Return the water network options object."""
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def nodes(self): 
-        """Return the node registry."""
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def links(self): 
-        """Return the link registry."""
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def sources(self): 
-        """Return the dictionary of sources."""
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def patterns(self): 
-        """Return the pattern registry."""
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def curves(self): 
-        """Return the curve registry."""
-        raise NotImplementedError('This is an abstract class')
-
-    @property
-    @abc.abstractmethod
-    def controls(self): 
-        """Return the controls dictionary."""
-        # TODO: Convert to a registry
-        raise NotImplementedError('This is an abstract class')
+    pass
 
 
 class Subject(object):
     """
-    Subject base class for the observer design pattern.
+    Base class for the subject in an observer design pattern.
     """
     def __init__(self):
         self._observers = OrderedSet()
@@ -92,7 +64,7 @@ class Subject(object):
 
 class Observer(six.with_metaclass(abc.ABCMeta, object)):
     """
-    Observer base class for the observer design pattern.
+    Base class for the observer in an observer design pattern.
     """
     @abc.abstractmethod
     def update(self, subject):
@@ -100,36 +72,39 @@ class Observer(six.with_metaclass(abc.ABCMeta, object)):
 
 
 class Node(six.with_metaclass(abc.ABCMeta, object)):
-    """
-    Node base class.
+    """Base class for nodes.
+    
+    For details about the different subclasses, see one of the following:
+    :class:`~wntr.network.elements.Junction`, 
+    :class:`~wntr.network.elements.Tank`, and
+    :class:`~wntr.network.elements.Reservoir`
 
     Parameters
     -----------
-    model : WaterNetworkModel
-        The model object is passed to the constructor to get the registries
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        WaterNetworkModel object
     name : string
-        Name of the node (must be unique among nodes of all types within the model)
+        Name of the node (must be unique among nodes of all types)
+
 
     """
-    def __init__(self, model, name):
-        if not isinstance(model, AbstractModel):
-            raise ValueError('valid model must be passed as first argument')
+    def __init__(self, wn, name):
         self._name = name
-        self.head = None
-        self.demand = None
-        self.leak_demand = None
+        self._head = None
+        self._demand = None  
+        self._leak_demand = None
         self._initial_quality = None
         self._tag = None
         self._leak = False
-        self.leak_status = False
-        self.leak_area = 0.0
-        self.leak_discharge_coeff = 0.0
-        self._options = model.options
-        self._node_reg = model.nodes
-        self._link_reg = model.links
-        self._control_reg = model.controls
-        self._pattern_reg = model.patterns
-        self._curve_reg = model.curves
+        self._leak_status = False
+        self._leak_area = 0.0
+        self._leak_discharge_coeff = 0.0
+        self._options = wn._options
+        self._node_reg = wn._node_reg
+        self._link_reg = wn._link_reg
+        self._controls = wn._controls
+        self._pattern_reg = wn._pattern_reg
+        self._curve_reg = wn._curve_reg
         self._coordinates = [0,0]
         self._source = None
 
@@ -149,18 +124,66 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         return "<Node '{}'>".format(self._name)
 
     @property
+    def head(self):
+        """float: The current head at the node"""
+        return self._head
+    @head.setter
+    def head(self, value):
+        self._head = value
+
+    @property
+    def demand(self):
+        """float: The current demand at the node"""
+        return self._demand
+    @demand.setter
+    def demand(self, value):
+        self._demand = value
+
+    @property
+    def leak_demand(self):
+        """float: The current demand at the node"""
+        return self._leak_demand
+    @leak_demand.setter
+    def leak_demand(self, value):
+        self._leak_demand = value
+
+    @property
+    def leak_status(self):
+        """bool: The current leak status at the node"""
+        return self._leak_status
+    @leak_status.setter
+    def leak_status(self, value):
+        self._leak_status = value
+
+    @property
+    def leak_area(self):
+        """float: The leak area at the node"""
+        return self._leak_area
+    @leak_area.setter
+    def leak_area(self, value):
+        self._leak_area = value
+
+    @property
+    def leak_discharge_coeff(self):
+        """float: The leak discharge coefficient"""
+        return self._leak_discharge_coeff
+    @leak_discharge_coeff.setter
+    def leak_discharge_coeff(self, value):
+        self._leak_discharge_coeff = value
+
+    @property
     def node_type(self):
-        """The node type (read only)"""
+        """str: The node type"""
         return 'Node'
     
     @property
     def name(self):
-        """The name of the node (read only)"""
+        """str: The name of the node"""
         return self._name
     
     @property
     def tag(self):
-        """A tag or label for this link"""
+        """str: A tag or label for the node"""
         return self._tag
     @tag.setter
     def tag(self, tag):
@@ -168,9 +191,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def initial_quality(self):
-        """The initial quality (concentration) at the node. 
-        
-        Can be a float or list of floats."""
+        """float: The initial quality (concentration) at the node"""
         if not self._initial_quality:
             return 0.0
         return self._initial_quality
@@ -182,7 +203,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def coordinates(self):
-        """The node coordinates, (x,y)"""
+        """tuple: The node coordinates, (x,y)"""
         return self._coordinates
     @coordinates.setter
     def coordinates(self, coordinates):
@@ -190,27 +211,30 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
             self._coordinates = tuple(coordinates)
         else:
             raise ValueError('coordinates must be a 2-tuple or len-2 list')
-    
+
     def todict(self):
-        """Represent the node in dictionary form."""
-        d = dict(name=self.name, 
-                 node_type=self.node_type)
-        if self.tag:
-            d['tag'] = self.tags
-        if self.initial_quality:
-            d['init_quality'] = self.initial_quality
-        d['coordinates'] = self.coordinates
+        """Dictionary representation of the node"""
+        d = {}
+        for k in dir(self):
+            if not k.startswith('_'):
+                val = getattr(self, k)
+                if not isinstance(val, types.MethodType):
+                    d[k] = val
         return d
 
 
 class Link(six.with_metaclass(abc.ABCMeta, object)):
-    """
-    Link base class.
+    """Base class for links.
+
+    For details about the different subclasses, see one of the following:
+    :class:`~wntr.network.elements.Pipe`, 
+    :class:`~wntr.network.elements.Pump`, and
+    :class:`~wntr.network.elements.Valve`
 
     Parameters
     ----------
-    model : WaterNetworkModel
-        The model object is passed to the constructor to get the registries
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        WaterNetworkModel object
     link_name : string
         Name of the link
     start_node_name : string
@@ -219,17 +243,14 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         Name of the end node
     
     """
-    def __init__(self, model, link_name, start_node_name, end_node_name):
-        if not isinstance(model, AbstractModel):
-            raise ValueError('valid model must be passed as first argument')
-
+    def __init__(self, wn, link_name, start_node_name, end_node_name):
         # Set the registries
-        self._options = model.options
-        self._node_reg = model.nodes
-        self._link_reg = model.links
-        self._control_reg = model.controls
-        self._pattern_reg = model.patterns
-        self._curve_reg = model.curves
+        self._options = wn._options
+        self._node_reg = wn._node_reg
+        self._link_reg = wn._link_reg
+        self._controls = wn._controls
+        self._pattern_reg = wn._pattern_reg
+        self._curve_reg = wn._curve_reg
         # Set the link name
         self._link_name = link_name
         # Set and register the starting node
@@ -284,12 +305,12 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def link_type(self):
-        """The link type (read only)"""
+        """str: The link type"""
         return 'Link'
 
     @property
     def initial_status(self):
-        """The initial status (Opened, Closed, Active) of the Link"""
+        """:class:`~wntr.network.base.LinkStatus`: The initial status (`Opened`, `Closed`, `Active`) of the Link"""
         return self._initial_status
     @initial_status.setter
     def initial_status(self, status):
@@ -299,7 +320,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         
     @property
     def initial_setting(self):
-        """The initial setting for the link (if Active)"""
+        """float: The initial setting for the link (if `Active`)"""
         return self._initial_setting
     @initial_setting.setter
     def initial_setting(self, setting):
@@ -308,7 +329,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def start_node(self):
-        """The start node object."""
+        """:class:`~wntr.network.base.Node`: The start node object."""
         return self._start_node
     @start_node.setter
     def start_node(self, name):
@@ -318,7 +339,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def end_node(self):
-        """The end node object."""
+        """:class:`~wntr.network.base.Node`: The end node object."""
         return self._end_node
     @end_node.setter
     def end_node(self, name):
@@ -328,28 +349,28 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
 
     @property
     def start_node_name(self):
-        """The name of the start node (read only)"""
+        """str: The name of the start node (read only)"""
         return self._start_node.name
     
     @property
     def end_node_name(self):
-        """The name of the end node (read only)"""
+        """str: The name of the end node (read only)"""
         return self._end_node.name
 
     @property
     def name(self):
-        """The link name (read-only)"""
+        """str: The link name (read-only)"""
         return self._link_name
 
     @property
     def flow(self):
-        """Current flow through the link (read only)"""
+        """float: Current flow through the link (read only)"""
         return self._flow
     
     @property
     @abc.abstractmethod
     def status(self):
-        """Current status of the link"""
+        """:class:`~wntr.network.base.LinkStatus`: Current status of the link"""
         pass
     @status.setter
     @abc.abstractmethod
@@ -358,7 +379,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     
     @property
     def setting(self):
-        """The current setting of the link"""
+        """float: The current setting of the link"""
         return self._setting
     @setting.setter
     def setting(self, setting):
@@ -366,7 +387,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
     
     @property
     def tag(self):
-        """A tag or label for this link"""
+        """str: A tag or label for this link"""
         return self._tag
     @tag.setter
     def tag(self, tag):
@@ -389,75 +410,52 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._vertices = points
     
     def todict(self):
-        """A dictionary representation for this link"""
-        d = dict(name=self.name, 
-                 start_node=self.start_node_name,
-                 end_node=self.end_node_name,
-                 link_type=self.link_type)
-        if self._tag:
-            d['tag'] = self._tag
-        if self._initial_status is not LinkStatus.opened:
-            d['init_status'] = str(self._initial_status)
-        if self._initial_setting:
-            d['init_setting'] = self._initial_setting
-        if self._vertices:
-            d['vertices'] = self._vertices
+        """Dictionary representation of the link"""
+        d = {}
+        for k in dir(self):
+            if not k.startswith('_'):
+                val = getattr(self, k)
+                if not isinstance(val, types.MethodType):
+                    d[k] = val
         return d
 
 
 class Registry(MutableMapping):
+    """Base class for registries.
+    
+    Parameters
+    ----------
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
+        WaterNetworkModel object
     """
-    Registry base class.
-    """
-    def __init__(self, model):
-        if not isinstance(model, AbstractModel):
+    
+    def __init__(self, wn):
+        if not isinstance(wn, AbstractModel):
             raise ValueError('Registry must be initialized with a model')
-        self._m = model
+#        self._m = model
         self._data = OrderedDict()
         self._usage = OrderedDict()
 
-    @property
-    def _options(self):
-        # Protected access to the model options
-        return self._m.options
+    def _finalize_(self, wn):
+        self._options = wn._options
+        self._pattern_reg = wn._pattern_reg
+        self._curve_reg = wn._curve_reg
+        self._node_reg = wn._node_reg
+        self._link_reg = wn._link_reg
+        self._controls = wn._controls
+        self._sources = wn._sources
     
-    @property
-    def _patterns(self):
-        # Protected access to the pattern registry
-        return self._m.patterns
-    
-    @property
-    def _curves(self):
-        # Protected access to the curve registry
-        return self._m.curves
-
-    @property
-    def _nodes(self):
-        # Protected access to the node registry
-        return self._m.nodes
-    
-    @property
-    def _links(self):
-        # Protected access to the link registry
-        return self._m.links
-
-    @property
-    def _controls(self):
-        # Protected access to the control registry
-        return self._m.controls
-    
-    @property
-    def _sources(self):
-        # Protected access to the sources dictionary
-        return self._m.sources
-
     def __getitem__(self, key):
         if not key:
             return None
         try:
             return self._data[key]
         except KeyError:
-            return self._data[str(key)]
+            try:
+                return self._data[key.name]
+            except:
+                return self._data[str(key)]
+            
 
     def __setitem__(self, key, value):
         if not isinstance(key, string_types):
@@ -489,10 +487,27 @@ class Registry(MutableMapping):
             yield key, value
 
     def usage(self):
+        """Generator to get the usage for all objects in the registry
+        
+        Yields
+        ------
+        key : str
+            The name of the object in the registry
+        value : tuple of (str, str)
+            Tuple of (name, typestr) of the external items using the object
+        """
         for k, v in self._usage.items():
             yield k, v
         
     def get_usage(self, key):
+        """Get a set of items using an object by key.
+        
+        Returns
+        -------
+        set of 2-tuples
+            Set of (name, typestr) of the external object using the item
+            
+        """
         try:
             return self._usage[key]
         except KeyError:
@@ -503,11 +518,38 @@ class Registry(MutableMapping):
         return None
 
     def orphaned(self):
+        """Get a list of orphaned usages.
+        
+        If removed without appropriate checks, it is possible that a some other 
+        item will point to an object that has been deleted. (This is why the user
+        should always use the "remove_*" methods). This method returns a list of 
+        names for objects that are referenced, but no longer exist.
+        
+        Returns
+        -------
+        set
+            The names of any orphaned items
+        
+        """
         defined = set(self._data.keys())
         assigned = set(self._usage.keys())
         return assigned.difference(defined)
     
     def unused(self):
+        """Get a list of items which are unused by other objects in the model.
+        
+        In most cases, this method will give little information. For nodes, however,
+        this method could be important to identify a node which has become completely 
+        disconnected from the network. For patterns or curves, it may be used to find
+        extra patterns or curves that are no longer necessary (or which the user 
+        forgot ot assign). It is not terribly useful for links.
+        
+        Returns
+        -------
+        set
+            The names of any unused objects in the registry
+            
+        """
         defined = set(self._data.keys())
         assigned = set(self._usage.keys())
         return defined.difference(assigned)
@@ -535,22 +577,16 @@ class Registry(MutableMapping):
             self._usage[key].discard(arg)
         if len(self._usage[key]) < 1:
             self._usage.pop(key)
-            
-    def tostring(self):
-        s = 'Registry: {}\n'.format(self.__class__.__name__)
-        s += '  Total entries defined: {}\n'.format(len(self._data))
-        s += '  Total registered as used: {}\n'.format(len(self._usage))
-        if len(self.orphaned()) > 0:
-            s += '  Total used but undefined: {}\n'.format(len(self.orphaned()))
-        return s
-        
+
     def todict(self):
+        """Dictionary representation of the registry"""
         d = dict()
         for k, v in self._data.items():
             d[k] = v.todict()
         return d
     
     def tolist(self):
+        """List representation of the registry"""
         l = list()
         for k, v in self._data.items():
             l.append(v.todict())
@@ -559,7 +595,7 @@ class Registry(MutableMapping):
 
 class NodeType(enum.IntEnum):
     """
-    An enum class for types of nodes.
+    Enum class for node types.
 
     .. rubric:: Enum Members
 
@@ -590,7 +626,7 @@ class NodeType(enum.IntEnum):
 
 class LinkType(enum.IntEnum):
     """
-    An enum class for types of links.
+    Enum class for link types.
 
     .. rubric:: Enum Members
 
@@ -635,7 +671,7 @@ class LinkType(enum.IntEnum):
 
 class LinkStatus(enum.IntEnum):
     """
-    An enum class for link statuses.
+    Enum class for link statuses.
     
     .. warning:: 
         This is NOT the class for determining output status from an EPANET binary file.

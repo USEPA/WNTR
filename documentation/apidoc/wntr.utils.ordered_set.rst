@@ -1,7 +1,7 @@
-wntr.network.controls module
+wntr.utils.ordered_set module
 ===================================
 
-.. automodule:: wntr.network.controls
+.. automodule:: wntr.utils.ordered_set
     :members:
     :inherited-members:
     :no-undoc-members:

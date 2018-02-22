@@ -1,5 +1,15 @@
 """
 The wntr.metrics.water_security module contains water security metrics.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    mass_contaminant_consumed
+    volume_contaminant_consumed
+    extent_contaminant
+
+
 """
 import numpy as np
 import wntr.network
@@ -94,12 +104,18 @@ def extent_contaminant(node_results, link_results, wn, detection_limit):
     link_end_node = pd.Series(index=pipe_names, data=link_end_node)
     link_length = pd.Series(index=pipe_names, data=link_length)
     
+    # flow_dir, pos_flow, neg_flow, link_contam are indexed by pipe names (col) 
+    # and times (rows)
     flow_dir = np.sign(flow_rate.loc[:,pipe_names])
     node_contam = node_quality > detection_limit
     pos_flow = np.array(node_contam.loc[:,link_start_node])
     neg_flow = np.array(node_contam.loc[:,link_end_node])
     link_contam = ((flow_dir>0)&pos_flow) | ((flow_dir<0)&neg_flow)
+    
+    # contam_len is cummax over time (has the node ever been contaminated)
     contam_len = (link_contam * link_length).cummax()
+    
+    # EC is a time series with the sum across nodes
     EC = contam_len.sum(axis=1)
     
     return EC

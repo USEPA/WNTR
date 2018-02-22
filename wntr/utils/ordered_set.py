@@ -4,9 +4,20 @@ if sys.version_info.major == 2:
 else:
     from collections.abc import MutableSet
 from collections import OrderedDict
+from collections import Iterable
+
 
 class OrderedSet(MutableSet):
+    """
+    An ordered set.
+    """
     def __init__(self, iterable=None):
+        """
+        Parameters
+        ----------
+        iterable: Iterable
+            An iterable with wich to initialize the set.
+        """
         self._data = OrderedDict()
         if iterable is not None:
             self.update(iterable)
@@ -21,12 +32,35 @@ class OrderedSet(MutableSet):
         return len(self._data)
 
     def add(self, value):
+        """
+        Add an element to the set.
+
+        Parameters
+        ----------
+        value: object
+            The object to be added to the set.
+        """
         self._data[value] = None
 
     def discard(self, value):
+        """
+        Discard and element from the set.
+
+        Parameters
+        ----------
+        value: object
+            The object to be discarded.
+        """
         self._data.pop(value, None)
 
     def update(self, iterable):
+        """
+        Update the set with the objects in iterable.
+
+        Parameters
+        ----------
+        iterable: Iterable
+        """
         for i in iterable:
             self.add(i)
 
