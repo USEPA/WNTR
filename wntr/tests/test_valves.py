@@ -1,4 +1,5 @@
 import unittest
+from nose import SkipTest
 import wntr
 
 
@@ -13,6 +14,8 @@ class TestTCVs(unittest.TestCase):
         pass
 
     def test_pipe_minor_loss(self):
+        raise SkipTest
+        
         wn = wntr.network.WaterNetworkModel()
         wn.options.time.duration = 3600 * 4
         wn.add_reservoir(name='r1', base_head=20.0)
