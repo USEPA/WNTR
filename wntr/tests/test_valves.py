@@ -33,7 +33,7 @@ class TestTCVs(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn, mode='DD')
         results1 = sim.run_sim()
         
-        raise SkipTest
+        raise SkipTest # EPANET seg faults
         
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
@@ -72,7 +72,7 @@ class TestFCVs(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
         
-        raise SkipTest
+        raise SkipTest # EPANET seg faults
 
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
@@ -98,7 +98,7 @@ class TestFCVs(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
         
-        raise SkipTest
+        raise SkipTest # EPANET seg faults
         
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
@@ -127,7 +127,7 @@ class TestFCVs(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
 
-        raise SkipTest
+        raise SkipTest # EPANET seg faults
         
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
