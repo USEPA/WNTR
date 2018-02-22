@@ -3,17 +3,20 @@ import scipy.sparse as sp
 import warnings
 import logging
 
-warnings.filterwarnings("error",'Matrix is exactly singular',sp.linalg.MatrixRankWarning)
+warnings.filterwarnings("error",'Matrix is exactly singular', sp.linalg.MatrixRankWarning)
 np.set_printoptions(precision=3, threshold=10000, linewidth=300)
 
 logger = logging.getLogger(__name__)
+
 
 class NewtonSolver(object):
     """
     Newton Solver class.
     """
     
-    def __init__(self, num_nodes, num_links, num_leaks, model, options={}):
+    def __init__(self, num_nodes, num_links, num_leaks, model, options=None):
+        if options is None:
+            options = {}
         self._options = options
         self.num_nodes = num_nodes
         self.num_links = num_links
@@ -50,7 +53,6 @@ class NewtonSolver(object):
         else:
             self.bt_start_iter = self._options['BT_START_ITER']
 
-
     def solve(self, Residual, Jacobian, x0):
 
         x = np.array(x0)
@@ -79,6 +81,7 @@ class NewtonSolver(object):
                 d = -sp.linalg.spsolve(J,r,permc_spec='COLAMD',use_umfpack=False)
             except sp.linalg.MatrixRankWarning:
                 logger.warning('Jacobian is singular.')
+                warnings.warn('Jacobian is singular.')
                 return [x, iter, 0]
 
             # Backtracking
@@ -96,14 +99,15 @@ class NewtonSolver(object):
                         alpha = alpha*self.rho
 
                 if iter_bt+1 >= self.bt_maxiter:
-                    logger.debug('Backtracking failed.')
+                    logger.warning('Line search failed.')
+                    warnings.warn('Line search failed')
                     return [x,iter,0]
                 # logger.debug('iter: {0:<4d} norm: {1:<10.2e} alpha: {2:<10.2e}'.format(iter, new_norm, alpha))
             else:
                 x += d
             
-
-        logger.debug('Reached maximum number of iterations.')
+        logger.warning('Reached maximum number of iterations.')
+        warnings.warn('Reached maximum number of iterations.')
         return [x, iter, 0]
 
 
