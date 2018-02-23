@@ -2,6 +2,8 @@ import unittest
 from os.path import abspath, dirname, join
 import copy
 import numpy as np
+from nose.tools import *
+import wntr
 
 testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir,'networks_for_testing')
@@ -22,22 +24,22 @@ class TestNetworkCreation(unittest.TestCase):
         pass
 
     def test_num_junctions(self):
-        self.assertEqual(self.wn._num_junctions, 3323)
+        self.assertEqual(self.wn.num_junctions, 3323)
 
     def test_num_reservoirs(self):
-        self.assertEqual(self.wn._num_reservoirs, 1)
+        self.assertEqual(self.wn.num_reservoirs, 1)
 
     def test_num_tanks(self):
-        self.assertEqual(self.wn._num_tanks, 34)
+        self.assertEqual(self.wn.num_tanks, 34)
 
     def test_num_pipes(self):
-        self.assertEqual(self.wn._num_pipes, 3829)
+        self.assertEqual(self.wn.num_pipes, 3829)
 
     def test_num_pumps(self):
-        self.assertEqual(self.wn._num_pumps, 61)
+        self.assertEqual(self.wn.num_pumps, 61)
 
     def test_num_valves(self):
-        self.assertEqual(self.wn._num_valves, 2)
+        self.assertEqual(self.wn.num_valves, 2)
 
     def test_num_nodes(self):
         self.assertEqual(self.wn.num_nodes, 3323+1+34)
@@ -47,8 +49,8 @@ class TestNetworkCreation(unittest.TestCase):
 
     def test_junction_attr(self):
         j = self.wn.get_node('JUNCTION-18')
-        self.assertAlmostEqual(j.base_demand, 48.56/60.0*0.003785411784)
-        self.assertEqual(j.demand_pattern_name, 'PATTERN-2')
+        #self.assertAlmostEqual(j.base_demand, 48.56/60.0*0.003785411784)
+        self.assertEqual(j.demand_timeseries_list[0].pattern_name, 'PATTERN-2')
         self.assertAlmostEqual(j.elevation, 80.0*0.3048)
 
     def test_reservoir_attr(self):
@@ -62,7 +64,7 @@ class TestNetworkMethods(unittest.TestCase):
     def setUpClass(self):
         import wntr
         from wntr.network.model import Junction, Tank, Reservoir, Pipe, Pump, Valve
-        from wntr.network.controls import ControlAction, TimeControl
+        from wntr.network.controls import ControlAction, Control
         self.Junction = Junction
         self.Tank = Tank
         self.Reservoir = Reservoir
@@ -71,7 +73,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.Valve = Valve
         self.wntr = wntr
         self.ControlAction = ControlAction
-        self.TimeControl = TimeControl
+        self.TimeControl = Control._time_control
 
     @classmethod
     def tearDownClass(self):
@@ -83,11 +85,11 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction('j1', 150, 'pattern1', 15)
         j = wn.get_node('j1')
         self.assertEqual(j._name, 'j1')
-        self.assertEqual(j.base_demand, 150.0)
-        self.assertEqual(j.demand_pattern_name, 'pattern1')
+        #self.assertEqual(j.base_demand, 150.0)
+        self.assertEqual(j.demand_timeseries_list[0].pattern_name, 'pattern1')
         self.assertEqual(j.elevation, 15.0)
-        self.assertEqual(list(wn._graph.nodes()),['j1'])
-        self.assertEqual(type(j.base_demand), float)
+        self.assertEqual(list(wn.node_name_list),['j1'])
+        #self.assertEqual(type(j.base_demand), float)
         self.assertEqual(type(j.elevation), float)
 
     def test_add_tank(self):
@@ -101,7 +103,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(n.max_level, 100.0)
         self.assertEqual(n.diameter, 10.0)
         self.assertEqual(n.min_vol, 0.0)
-        self.assertEqual(list(wn._graph.nodes()),['t1'])
+        self.assertEqual(list(wn.node_name_list),['t1'])
         self.assertEqual(type(n.elevation), float)
         self.assertEqual(type(n.init_level), float)
         self.assertEqual(type(n.min_level), float)
@@ -117,7 +119,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(n._name, 'r1')
         self.assertEqual(n.head_timeseries.base_value, 30.0)
         self.assertEqual(n.head_timeseries.pattern_name, 'pattern1')
-        self.assertEqual(list(wn._graph.nodes()),['r1'])
+        self.assertEqual(list(wn.node_name_list),['r1'])
 
     def test_add_pipe(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -125,15 +127,14 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction('j2')
         wn.add_pipe('p1', 'j1', 'j2', 1000, 1, 100, 0, 'Open')
         l = wn.get_link('p1')
-        self.assertEqual(l._link_name, 'p1')
-        self.assertEqual(l.start_node, 'j1')
-        self.assertEqual(l.end_node, 'j2')
-        self.assertEqual(l.get_initial_status(), self.wntr.network.LinkStatus.opened)
+        self.assertEqual(l.name, 'p1')
+        self.assertEqual(l.start_node_name, 'j1')
+        self.assertEqual(l.end_node_name, 'j2')
+        self.assertEqual(l.initial_status, self.wntr.network.LinkStatus.opened)
         self.assertEqual(l.length, 1000.0)
         self.assertEqual(l.diameter, 1.0)
         self.assertEqual(l.roughness, 100.0)
         self.assertEqual(l.minor_loss, 0.0)
-        self.assertEqual(list(wn._graph.edges()), [('j1','j2')])
         self.assertEqual(type(l.length), float)
         self.assertEqual(type(l.diameter), float)
         self.assertEqual(type(l.roughness), float)
@@ -145,7 +146,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.options.time.duration = 10
         wn.options.time.pattern_timestep = 1
 #        wn.add_pattern('pat1', start_time=2, end_time=4)
-        pat1 = self.wntr.network.elements.Pattern.BinaryPattern('pat1', start_time=2, end_time=4, duration=10, step_size=1)
+        pat1 = self.wntr.network.elements.Pattern.binary_pattern('pat1', start_time=2, end_time=4, duration=10, step_size=1)
         wn.add_pattern('pat1', pat1)
         wn.add_pattern('pat2', [1,2,3,4])
 
@@ -160,7 +161,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction('j1')
         wn.options.time.duration = 10
         wn.options.time.pattern_timestep = 1
-        pat1 = self.wntr.network.elements.Pattern.BinaryPattern('pat1', start_time=2, end_time=4, duration=10, step_size=wn.options.time.pattern_timestep)
+        pat1 = self.wntr.network.elements.Pattern.binary_pattern('pat1', start_time=2, end_time=4, duration=10, step_size=wn.options.time.pattern_timestep)
         wn.add_pattern('pat1', pat1)
         wn.add_source('s1', 'j1', 'SETPOINT', 100, 'pat1')
         s = wn.get_source('s1')
@@ -188,17 +189,19 @@ class TestNetworkMethods(unittest.TestCase):
         link_list = [link_name for link_name, link in wn.links()]
         self.assertEqual(link_list, ['p2'])
         self.assertEqual(wn._check_valves,[])
-        self.assertEqual(wn._num_pipes, 1)
-        self.assertEqual(list(wn._graph.edges()), [('j1','j3')])
+        self.assertEqual(wn.num_pipes, 1)
 
     def test_remove_node(self):
         inp_file = join(ex_datadir,'Net6.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
-        wn.remove_node('TANK-3326')
+        links_to_remove = wn.get_links_for_node('TANK-3326')
+        for l in links_to_remove:
+            wn.remove_link(l, with_control=True)
+        wn.remove_node('TANK-3326', with_control=True)
 
-        self.assertNotIn('TANK-3326',wn._nodes.keys())
-        self.assertNotIn('TANK-3326',wn._graph.nodes())
+        self.assertNotIn('TANK-3326',{name for name, node in wn.nodes()})
+        self.assertNotIn('TANK-3326',wn.node_name_list)
 
         inp_file = join(test_datadir,'conditional_controls_1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
@@ -208,36 +211,38 @@ class TestNetworkMethods(unittest.TestCase):
         control = self.TimeControl(wn, 3652, 'SIM_TIME', False, action)
         wn.add_control('tank_control', control)
 
-        controls_1 = copy.deepcopy(wn._controls)
+        controls_1 = {c_name for c_name, c in wn.controls()}
 
-        wn.remove_node('tank1')
+        links_to_remove = wn.get_links_for_node('tank1')
+        for l in links_to_remove:
+            wn.remove_link(l, with_control=True)
+        wn.remove_node('tank1', with_control=True)
 
-        controls_2 = copy.deepcopy(wn._controls)
+        controls_2 = {c_name for c_name, c in wn.controls()}
 
-        self.assertEqual(True, 'tank_control' in controls_1.keys())
-        self.assertEqual(False, 'tank_control' in controls_2.keys())
+        self.assertTrue('tank_control' in controls_1)
+        self.assertFalse('tank_control' in controls_2)
 
-        self.assertNotIn('tank1',wn._nodes.keys())
-        self.assertNotIn('tank1',wn._graph.nodes())
-        expected_nodes = set(['junction1','res1'])
-        self.assertSetEqual(set(wn._nodes.keys()), expected_nodes)
+        self.assertNotIn('tank1', {name for name, node in wn.nodes()})
+        self.assertNotIn('tank1', wn.node_name_list)
+        expected_nodes = {'junction1', 'res1'}
+        self.assertSetEqual({name for name, node in wn.nodes()}, expected_nodes)
 
     def test_remove_controls_for_removing_link(self):
         inp_file = join(ex_datadir, 'Net1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         control_action = self.wntr.network.ControlAction(wn.get_link('21'), 'status', self.wntr.network.LinkStatus.opened)
-        control = self.wntr.network.ConditionalControl((wn.get_node('2'),'head'), np.greater, 10.0, control_action)
+        control = self.wntr.network.controls.Control._conditional_control(wn.get_node('2'), 'head', np.greater_equal, 10.0, control_action)
         wn.add_control('control_1',control)
 
-        import copy
-        controls_1 = copy.deepcopy(wn._controls)
+        controls_1 = {c_name for c_name, c in wn.controls()}
 
-        wn.remove_link('21')
+        wn.remove_link('21', with_control=True)
 
-        controls_2 = copy.deepcopy(wn._controls)
-        self.assertEqual(True, 'control_1' in controls_1.keys())
-        self.assertEqual(False, 'control_1' in controls_2.keys())
+        controls_2 = {c_name for c_name, c in wn.controls()}
+        self.assertTrue('control_1' in controls_1)
+        self.assertFalse('control_1' in controls_2)
 
     def test_nodes(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -267,6 +272,7 @@ class TestNetworkMethods(unittest.TestCase):
         wn.add_junction('j1')
         wn.add_junction('j2')
         wn.add_tank('t1')
+        wn.add_tank('t2')
         wn.add_reservoir('r1')
         wn.add_reservoir('r2')
         wn.add_junction('j3')
@@ -434,7 +440,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l4,['p5'])
         self.assertEqual(l5,[])
 
-#    def test_reset_demand(self):
+#    def test_assign_demand(self):
 #        inp_file = join(ex_datadir, 'Net3.inp')
 #        wn = self.wntr.network.WaterNetworkModel(inp_file)
 #
@@ -442,7 +448,7 @@ class TestNetworkMethods(unittest.TestCase):
 #        results1 = sim.run_sim()
 #
 #        demand = results1.node['demand']
-#        wn.reset_demand(demand)
+#        wn.assign_demand(demand)
 #
 #        sim = self.wntr.sim.EpanetSimulator(wn)
 #        results2 = sim.run_sim()
@@ -452,155 +458,236 @@ class TestNetworkMethods(unittest.TestCase):
 #                self.assertAlmostEqual(results1.link.loc['flowrate', t, node_name],
 #                                       results2.link.loc['flowrate', t, node_name], 4)
 
-class TestInpFileWriter(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(self):
-        import wntr
-        self.wntr = wntr
-        inp_file = join(test_datadir, 'Net6_plus.inp') # UNITS = GPM
-        self.wn = wntr.network.WaterNetworkModel(inp_file)
-        self.wn.write_inpfile('tmp.inp', units='LPM')
-        self.wn2 = self.wntr.network.WaterNetworkModel(inp_file)
+epanet_unit_id = {'CFS': 0, 'GPM': 1, 'MGD': 2, 'IMGD': 3, 'AFD': 4,
+                  'LPS': 5, 'LPM': 6, 'MLD': 7, 'CMH':  8, 'CMD': 9}
 
-    @classmethod
-    def tearDownClass(self):
-        pass
+def test_Net1():
+    inp_file = join(ex_datadir,'Net1.inp')
 
-    def test_wn(self):
-        self.assertEqual(self.wn == self.wn2, True)
+    parser = wntr.epanet.InpFile()
+    wn = parser.read(inp_file)
 
-    def test_junctions(self):
-        for name, node in self.wn.nodes(self.wntr.network.Junction):
-            node2 = self.wn2.get_node(name)
-            self.assertEqual(node == node2, True)
-            self.assertAlmostEqual(node.base_demand, node2.base_demand, 5)
+    G = wn.get_graph()
 
-    def test_reservoirs(self):
-        for name, node in self.wn.nodes(self.wntr.network.Reservoir):
-            node2 = self.wn2.get_node(name)
-            self.assertEqual(node == node2, True)
-            self.assertAlmostEqual(node.head_timeseries.base_value, node2.head_timeseries.base_value, 5)
+    node = G.node
+    elevation = wn.query_node_attribute('elevation')
+    #base_demand = wn.query_node_attribute('base_demand')
+    edge = G.adj
+    diameter = wn.query_link_attribute('diameter')
+    length = wn.query_link_attribute('length')
 
-    def test_tanks(self):
-        for name, node in self.wn.nodes(self.wntr.network.Tank):
-            node2 = self.wn2.get_node(name)
-            self.assertEqual(node == node2, True)
-            self.assertAlmostEqual(node.init_level, node2.init_level, 5)
+    # Data from the INP file, converted using flowunits
+    expected_node = {'11': {'type': 'Junction', 'pos': (30.0, 70.0)},
+                     '10': {'type': 'Junction', 'pos': (20.0, 70.0)},
+                     '13': {'type': 'Junction', 'pos': (70.0, 70.0)},
+                     '12': {'type': 'Junction', 'pos': (50.0, 70.0)},
+                     '21': {'type': 'Junction', 'pos': (30.0, 40.0)},
+                     '22': {'type': 'Junction', 'pos': (50.0, 40.0)},
+                     '23': {'type': 'Junction', 'pos': (70.0, 40.0)},
+                     '32': {'type': 'Junction', 'pos': (50.0, 10.0)},
+                     '31': {'type': 'Junction', 'pos': (30.0, 10.0)},
+                     '2':  {'type': 'Tank', 'pos': (50.0, 90.0)},
+                     '9':  {'type': 'Reservoir', 'pos': (10.0, 70.0)}}
 
-    def test_pipes(self):
-        for name, link in self.wn.links(self.wntr.network.Pipe):
-            link2 = self.wn2.get_link(name)
-            self.assertEqual(link == link2, True)
-            self.assertEqual(link.get_initial_status(), link2.get_initial_status())
+    expected_elevation = {'11': 710.0,
+                          '10': 710.0,
+                          '13': 695.0,
+                          '12': 700.0,
+                          '21': 700.0,
+                          '22': 695.0,
+                          '23': 690.0,
+                          '32': 710.0,
+                          '31': 700.0,
+                          '2':  850.0}
+    expected_elevation = wntr.epanet.util.HydParam.Elevation._to_si(wn._inpfile.flow_units, expected_elevation)
 
-    def test_pumps(self):
-        for name, link in self.wn.links(self.wntr.network.Pump):
-            link2 = self.wn2.get_link(name)
-            self.assertEqual(link == link2, True)
+    expected_base_demand = {'11': 150,
+                            '10':   0,
+                            '13': 100,
+                            '12': 150,
+                            '21': 150,
+                            '22': 200,
+                            '23': 150,
+                            '32': 100,
+                            '31': 100}
+    expected_base_demand = wntr.epanet.util.HydParam.Demand._to_si(wn._inpfile.flow_units, expected_base_demand)
 
-    def test_valves(self):
-        for name, link in self.wn.links(self.wntr.network.Valve):
-            link2 = self.wn2.get_link(name)
-            self.assertEqual(link == link2, True)
-            self.assertAlmostEqual(link.setting, link2.setting, 5)
+    expected_edge = {'11': {'12': {'11':  {'type': 'Pipe'}},
+                            '21': {'111': {'type': 'Pipe'}}},
+                     '10': {'11': {'10':  {'type': 'Pipe'}}},
+                     '13': {'23': {'113': {'type': 'Pipe'}}},
+                     '12': {'13': {'12':  {'type': 'Pipe'}},
+                            '22': {'112': {'type': 'Pipe'}}},
+                     '21': {'31': {'121': {'type': 'Pipe'}},
+                            '22': {'21':  {'type': 'Pipe'}}},
+                     '22': {'32': {'122': {'type': 'Pipe'}},
+                            '23': {'22':  {'type': 'Pipe'}}},
+                     '23': {},
+                     '32': {},
+                     '31': {'32': {'31':  {'type': 'Pipe'}}},
+                     '2':  {'12': {'110': {'type': 'Pipe'}}},
+                     '9':  {'10': {'9':   {'type': 'Pump'}}}}
 
-    def test_curves(self):
-        pass
+    expected_diameter = {'11':  14.0,
+                         '111': 10.0,
+                         '10':  18.0,
+                         '113':  8.0,
+                         '12':  10.0,
+                         '112': 12.0,
+                         '121':  8.0,
+                         '21':  10.0,
+                         '122':  6.0,
+                         '22':  12.0,
+                         '31':   6.0,
+                         '110': 18.0}
+    expected_diameter = wntr.epanet.util.HydParam.PipeDiameter._to_si(wn._inpfile.flow_units, expected_diameter)
 
-    def test_sources(self):
-        for name, source in self.wn._sources.items():
-            source2 = self.wn2._sources[name]
-            self.assertEqual(source == source2, True)
+    expected_length = {'11':  5280.0,
+                       '111': 5280.0,
+                       '10': 10530.0,
+                       '113': 5280.0,
+                       '12':  5280.0,
+                       '112': 5280.0,
+                       '121': 5280.0,
+                       '21':  5280.0,
+                       '122': 5280.0,
+                       '22':  5280.0,
+                       '31':  5280.0,
+                       '110':  200.0}
+    expected_length = wntr.epanet.util.HydParam.Length._to_si(wn._inpfile.flow_units, expected_length)
 
-    def test_demands(self):
-        for name, demand in self.wn._demands.items():
-            demand2 = self.wn2._demands[name]
-            self.assertEqual(demand == demand2, True)
+    assert_dict_equal(dict(node), expected_node)
+    assert_dict_equal(elevation, expected_elevation)
+    #assert_dict_equal(base_demand, expected_base_demand)
 
-    ### TODO
-#    def test_controls(self):
-#        for name1, control1 in self.wn._controls.items():
-#            control2 = self.wn2._controls[name1]
-#            self.assertEqual(control1 == control2, True)
+    assert_dict_equal(dict(edge), expected_edge)
+    assert_dict_equal(diameter, expected_diameter)
+    assert_dict_equal(length, expected_length)
 
-    def test_options(self):
-        options1 = self.wn.options
-        options2 = self.wn2.options
-        self.assertEqual(options1 == options2, True)
+def test_query_node_attribute():
+    inp_file = join(ex_datadir,'Net1.inp')
 
-class TestNet3InpWriterResults(unittest.TestCase):
+    parser = wntr.epanet.InpFile()
+    wn = parser.read(inp_file)
 
-    @classmethod
-    def setUpClass(self):
-        import wntr
-        self.wntr = wntr
+    elevation = 213.36 #700*float(units.ft/units.m) # ft to m
+    nodes = wn.query_node_attribute('elevation', np.less, elevation)
 
-        inp_file = join(ex_datadir, 'Net3.inp')
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
+    expected_nodes = set(['13', '22', '23'])
 
-        sim = self.wntr.sim.EpanetSimulator(self.wn)
-        self.results = sim.run_sim()
+    assert_set_equal(set(nodes.keys()), expected_nodes)
 
-        self.wn.write_inpfile('tmp.inp')
-        self.wn2 = self.wntr.network.WaterNetworkModel('tmp.inp')
+def test_query_pipe_attribute():
+    inp_file = join(ex_datadir,'Net1.inp')
 
-        sim = self.wntr.sim.EpanetSimulator(self.wn2)
-        self.results2 = sim.run_sim()
+    parser = wntr.epanet.InpFile()
+    wn = parser.read(inp_file)
 
-    @classmethod
-    def tearDownClass(self):
-        pass
+    length = 1609.344 #5280*float(units.ft/units.m) # ft to m
+    pipes = wn.query_link_attribute('length', np.greater, length)
 
-    def test_link_flowrate(self):
-        for link_name, link in self.wn.links():
-            for t in self.results2.time:
-                self.assertLessEqual(abs(self.results2.link['flowrate'].loc[t,link_name] - self.results.link['flowrate'].loc[t,link_name]), 0.00001)
+    expected_pipes = set(['10'])
 
-    def test_node_demand(self):
-        for node_name, node in self.wn.nodes():
-            for t in self.results2.time:
-                self.assertAlmostEqual(self.results2.node['demand'].loc[t,node_name], self.results.node['demand'].loc[t,node_name], 4)
+    assert_set_equal(set(pipes.keys()), expected_pipes)
 
-    def test_node_head(self):
-        for node_name, node in self.wn.nodes():
-            for t in self.results2.time:
-                self.assertLessEqual(abs(self.results2.node['head'].loc[t,node_name] - self.results.node['head'].loc[t,node_name]), 0.01)
+def test_nzd_nodes():
+    inp_file = join(ex_datadir,'Net1.inp')
 
-    def test_node_pressure(self):
-        for node_name, node in self.wn.nodes():
-            for t in self.results2.time:
-                self.assertLessEqual(abs(self.results2.node['pressure'].loc[t,node_name] - self.results.node['pressure'].loc[t,node_name]), 0.05)
+    parser = wntr.epanet.InpFile()
+    wn = parser.read(inp_file)
+    
+    nzd_nodes = []
+    for name, node in wn.junctions():
+        demand = sum(node.demand_timeseries_list.get_values(0, wn.options.time.duration, 
+            wn.options.time.report_timestep) * wn.options.hydraulic.demand_multiplier)
+        if demand > 0:
+            nzd_nodes.append(name)
+        
+    expected_nodes = set(['11', '13', '12', '21', '22', '23', '32', '31'])
 
+    assert_set_equal(set(nzd_nodes), expected_nodes)
 
-class TestNet3InpUnitsResults(unittest.TestCase):
+def test_name_list():
+    inp_file = join(ex_datadir,'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    
+    assert_in('10', wn.junction_name_list)
+    assert_in('1', wn.tank_name_list)
+    assert_in('River', wn.reservoir_name_list)
+    assert_in('20', wn.pipe_name_list)
+    assert_in('10', wn.pump_name_list)
+    assert_equal(0, len(wn.valve_name_list))
+    assert_in('1', wn.pattern_name_list)
+    assert_in('1', wn.curve_name_list)
+    assert_equal(0, len(wn.source_name_list))
+#    assert_equal(0, len(wn._demand_name_list))
+    assert_in('control 1', wn.control_name_list)
 
-    @classmethod
-    def setUpClass(self):
-        import wntr
-        self.wntr = wntr
+def test_add_get_remove_num():
+    inp_file = join(ex_datadir,'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    
+    wn.add_junction('new_junc')
+    wn.get_node('new_junc')
+    
+    wn.add_tank('new_tank')
+    wn.get_node('new_tank')
+    
+    wn.add_reservoir('new_reservoir')
+    wn.get_node('new_reservoir')
+    
+    wn.add_pipe('new_pipe', '139', '131')
+    wn.get_link('new_pipe')
+    
+    wn.add_pump('new_pump', '139', '131')
+    wn.get_link('new_pump')
+    
+    wn.add_valve('new_valve', '139', '131')
+    wn.get_link('new_valve')
+    
+    wn.add_pattern('new_pattern', [])
+    wn.get_pattern('new_pattern')
+    
+    wn.add_curve('new_curve', 'HEAD', [])
+    wn.get_curve('new_curve')
+    
+    wn.add_source('new_source', 'new_junc', 'CONCEN', 1, 'new_pattern')
+    wn.get_source('new_source')
+    
+    nums = [wn.num_junctions,
+           wn.num_tanks,
+           wn.num_reservoirs,
+           wn.num_pipes,
+           wn.num_pumps,
+           wn.num_valves,
+           wn.num_patterns,
+           wn.num_curves,
+           wn.num_sources]
+    expected = [93,4,3,118,3,1,6,3,1]
+    assert_list_equal(nums, expected)
 
-        inp_file = join(ex_datadir, 'Net3.inp')
-        self.wn = self.wntr.network.WaterNetworkModel(inp_file)
-
-        sim = self.wntr.sim.EpanetSimulator(self.wn)
-        self.results = sim.run_sim()
-
-        self.wn.write_inpfile('tmp_units.inp', units='CMH')
-        self.wn2 = self.wntr.network.WaterNetworkModel('tmp_units.inp')
-
-        sim = self.wntr.sim.EpanetSimulator(self.wn2)
-        self.results2 = sim.run_sim()
-
-    @classmethod
-    def tearDownClass(self):
-        pass
-
-    def test_link_flowrate_units_convert(self):
-        for link_name, link in self.wn.links():
-            for t in self.results2.time:
-                self.assertLessEqual(abs(self.results2.link['flowrate'].loc[t,link_name] - self.results.link['flowrate'].loc[t,link_name]), 0.00001)
-
-
+    wn.remove_source('new_source')
+    wn.remove_curve('new_curve')
+    wn.remove_pattern('new_pattern')
+    wn.remove_link('new_pipe')
+    wn.remove_link('new_pump')
+    wn.remove_link('new_valve')
+    wn.remove_node('new_junc')
+    wn.remove_node('new_tank')
+    wn.remove_node('new_reservoir')
+    
+    nums = [wn.num_junctions,
+           wn.num_tanks,
+           wn.num_reservoirs,
+           wn.num_pipes,
+           wn.num_pumps,
+           wn.num_valves,
+           wn.num_patterns,
+           wn.num_curves,
+           wn.num_sources]
+    expected = [92,3,2,117,2,0,5,2,0]
+    assert_list_equal(nums, expected)
+    
 if __name__ == '__main__':
     unittest.main()

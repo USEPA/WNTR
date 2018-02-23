@@ -1,5 +1,15 @@
 """
 The wntr.metrics.economic module contains economic metrics.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    cost
+    ghg_emissions
+    pump_energy
+
+
 """
 from wntr.network import Tank, Pipe, Pump, Valve
 import numpy as np 
@@ -268,8 +278,8 @@ def pump_energy(wn, sim_results):
 
     headloss = pd.DataFrame(data=None, index=sim_results.time, columns=pumps)
     for pump_name, pump in wn.pumps():
-        start_node = pump.start_node
-        end_node = pump.end_node
+        start_node = pump.start_node_name
+        end_node = pump.end_node_name
         start_head = sim_results.node['head'].loc[:,start_node]
         end_head = sim_results.node['head'].loc[:,end_node]
         headloss.loc[:,pump_name] = end_head - start_head

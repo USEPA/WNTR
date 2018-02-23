@@ -1,8 +1,19 @@
 """
 The wntr.metrics.misc module contains metrics that do not fall into the
 topographic, hydraulic, water quality, water security, or economic categories.
+
+.. rubric:: Contents
+
+.. autosummary::
+
+    query
+    population
+    population_impacted
+
+
 """
 from wntr.network import Junction
+from wntr.metrics.hydraulic import expected_demand
 import pandas as pd
 import numpy as np
 import sys
@@ -41,9 +52,9 @@ def query(arg1, operation, arg2):
         logger.error('operation(arg1, arg2) failed')
 
     return mask
-
+"""
 def average_water_consumed(wn):
-    """
+    
     Compute average water consumed at each node, qbar, computed as follows:
 
     .. math:: qbar=\dfrac{\sum_{k=1}^{K}\sum_{t=1}^{lcm_n}qbase_n m_n(k,t mod (L(k)))}{lcm_n}
@@ -69,7 +80,6 @@ def average_water_consumed(wn):
     qbar : pd.Series
         A pandas Series that contains average water consumed per node, in m3/s
 
-    """
     qbar = pd.Series()
     for name, node in wn.nodes(Junction):
         # Future release should support mutliple base demand and demand patterns per node
@@ -110,7 +120,7 @@ def _lcm(x,y):
 
 def _lcml(*list):
   return reduce(_lcm, *list)
-
+"""
 def population(wn, R=0.00000876157):
     """
     Compute population per node, rounded to the nearest integer, equation from [1]
@@ -134,8 +144,9 @@ def population(wn, R=0.00000876157):
     [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3.
     Technical report, U.S. Environmental Protection Agency
     """
-    qbar = average_water_consumed(wn)
-    pop = qbar/R
+
+    ex_dem = expected_demand(wn)
+    pop = ex_dem.mean(axis=0)/R
 
     return pop.round()
 

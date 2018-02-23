@@ -110,6 +110,12 @@ def plot_pump_curve(pump, title='Pump curve',
     figsize : list (optional)
         Figure size (default = [8,4])
     """
+    try:
+        curve = pump.get_pump_curve()
+    except:
+        print("Pump "+pump.name+" has no curve")
+        return
+
     if plt is None:
         raise ImportError('matplotlib is required')
     
@@ -117,11 +123,11 @@ def plot_pump_curve(pump, title='Pump curve',
     plt.title(title)
     x = []
     y = []
-    for pt in pump.curve.points:
+    for pt in curve.points:
         x.append(pt[0])
         y.append(pt[1])
     plt.scatter(x,y)
-    plt.plot(x,y, label=pump.curve.name)    
+    plt.plot(x,y, label=curve.name)    
     if xmax is None:
         xmax = max(x)
     if ymax is None:

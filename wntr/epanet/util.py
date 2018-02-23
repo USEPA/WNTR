@@ -3,25 +3,24 @@ The wntr.epanet.util module contains unit conversion utilities based on EPANET u
 
 .. rubric:: Contents
 
-- :class:`~wntr.epanet.util.FlowUnits`
-- :class:`~wntr.epanet.util.MassUnits`
-- :class:`~wntr.epanet.util.QualParam`
-- :class:`~wntr.epanet.util.HydParam`
-- :meth:`to_si`
-- :meth:`from_si`
-- :class:`~StatisticsType`
-- :class:`~QualType`
-- :class:`~SourceType`
-- :class:`~PressureUnits`
-- :class:`~FormulaType`
-- :class:`~ControlType`
-- :class:`~LinkTankStatus`
-- :class:`~MixType`
-- :class:`~ResultType`
-- :class:`~wntr.epanet.util.EN`
+.. autosummary::
 
-----
-
+    FlowUnits
+	MassUnits
+	QualParam
+	HydParam
+	to_si
+	from_si
+	StatisticsType
+	QualType
+	SourceType
+	PressureUnits
+	FormulaType
+	ControlType
+	LinkTankStatus
+	MixType
+	ResultType
+	EN
 
 """
 import numpy as np
@@ -43,7 +42,7 @@ class FlowUnits(enum.Enum):
     This enumerated type class provides the appropriate values, rather than
     setting up a large number of constants. Additionally, each Enum value has
     a property that identifies it as either `traditional` or `metric` flow unit.
-    EPANET *does not* use fully SI units - these are provided for WNTR compatibilty.
+    EPANET *does not* use fully SI units - these are provided for WNTR compatibility.
 
     .. rubric:: Enum Members
 
@@ -536,7 +535,8 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.Pressure]:
             if flow_units.is_traditional:
-                data = data * 0.703249614902  # psi to m
+#                data = data * 0.703249614902
+                data = data * (0.3048/0.4333)  # psi * (m/ft / psi/ft)
 
         elif self in [HydParam.Volume]:
             if flow_units.is_traditional:
@@ -619,7 +619,8 @@ class HydParam(enum.Enum):
 
         elif self in [HydParam.Pressure]:
             if flow_units.is_traditional:
-                data = data / 0.703249614902  # psi from m
+#                data = data / 0.703249614902
+                data = data / (0.3048/0.4333)  # psi from mH2O, i.e. psi / (m/ft / psi/ft) )
 
         elif self in [HydParam.Volume]:
             if flow_units.is_traditional:
@@ -824,10 +825,9 @@ class FormulaType(enum.Enum):
     .. rubric:: Enum Members
 
     ===============  ==================================================================
-    :attr:`~HW`      Hazen-Williams headloss formula (:attr:`~str`="H-W")
-    :attr:`~DW`      Darcy-Weisbach formala; requires units conversion.
-                     (:attr:`~str`='D-W')
-    :attr:`~CM`      Chezy-Manning formula (:attr:`~str`="C-M")
+    :attr:`~HW`      Hazen-Williams headloss formula
+    :attr:`~DW`      Darcy-Weisbach formala; requires units conversion
+    :attr:`~CM`      Chezy-Manning formula
     ===============  ==================================================================
 
     """
@@ -880,16 +880,35 @@ class ControlType(enum.Enum):
 
 
 class LinkTankStatus(enum.Enum):
-    XHead = 0  #: pump cannot deliver head (closed)
-    TempClosed = 1  #: temporarily closed
-    Closed = 2 #: closed
-    Open = 3  #: open
-    Active = 4  #: valve active (partially open)
-    XFlow = 5  #: pump exceeds maximum flow
-    XFCV = 6  #: FCV cannot supply flow
-    XPressure = 7  #: valve cannot supply pressure
-    Filling = 8  #: tank filling
-    Emptying = 9  #: tank emptying
+    """The link tank status.
+
+    .. rubric:: Enum Members
+
+    ====================  ==================================================================
+    :attr:`~XHead`        Pump cannot deliver head (closed)
+    :attr:`~TempClosed`   Temporarily closed
+    :attr:`~Closed`       Closed
+    :attr:`~Open`         Open
+    :attr:`~Active`       Valve active (partially open)
+    :attr:`~XFlow`        Pump exceeds maximum flow
+    :attr:`~XFCV`         FCV cannot supply flow
+    :attr:`~XPressure`    Valve cannot supply pressure
+    :attr:`~Filling`      Tank filling
+    :attr:`~Emptying`     Tank emptying
+    ====================  ==================================================================
+
+    """
+    
+    XHead = 0  
+    TempClosed = 1  
+    Closed = 2 
+    Open = 3 
+    Active = 4  
+    XFlow = 5  
+    XFCV = 6  
+    XPressure = 7  
+    Filling = 8  
+    Emptying = 9 
 
     def __init__(self, val):
         if self.name != self.name.upper():
@@ -980,7 +999,7 @@ class EN(enum.IntEnum):
 
     For example, ``EN_LENGTH`` is accessed as ``EN.LENGTH``, instead.  Please see the EPANET
     toolkit documentation for the description of these enums. Several enums are duplicated
-    in separaet classes above for clarity during programming.
+    in separate classes above for clarity during programming.
 
     The enums can be broken in the following groups.
 
