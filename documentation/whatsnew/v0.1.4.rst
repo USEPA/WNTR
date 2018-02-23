@@ -1,6 +1,6 @@
 .. _whatsnew_0140:
 
-v0.1.4 (Master branch)
+v0.1.4 (February 23, 2018)
 ---------------------------------------------------
 
 v0.1.4 includes several changes that improve simulation stability and tests to ensure that simulations run using WNTR match EPANET simulations.
