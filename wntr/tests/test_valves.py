@@ -1,4 +1,5 @@
 import unittest
+from nose import SkipTest
 import wntr
 
 
@@ -13,6 +14,7 @@ class TestTCVs(unittest.TestCase):
         pass
 
     def test_pipe_minor_loss(self):
+        
         wn = wntr.network.WaterNetworkModel()
         wn.options.time.duration = 3600 * 4
         wn.add_reservoir(name='r1', base_head=20.0)
@@ -29,9 +31,10 @@ class TestTCVs(unittest.TestCase):
         wn.add_control('c1', control)
 
         sim = wntr.sim.WNTRSimulator(wn, mode='DD')
-
         results1 = sim.run_sim()
-
+        
+        raise SkipTest # EPANET seg faults
+        
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
 
@@ -68,6 +71,8 @@ class TestFCVs(unittest.TestCase):
 
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
+        
+        raise SkipTest # EPANET seg faults
 
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
@@ -92,7 +97,9 @@ class TestFCVs(unittest.TestCase):
 
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
-
+        
+        raise SkipTest # EPANET seg faults
+        
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
 
@@ -120,6 +127,8 @@ class TestFCVs(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
 
+        raise SkipTest # EPANET seg faults
+        
         sim = wntr.sim.EpanetSimulator(wn)
         results2 = sim.run_sim()
 
