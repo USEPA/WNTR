@@ -24,7 +24,7 @@ class NewtonSolver(object):
         self.model = model
 
         if 'MAXITER' not in self._options:
-            self.maxiter = 100
+            self.maxiter = 3000
         else:
             self.maxiter = self._options['MAXITER']
 
@@ -49,7 +49,7 @@ class NewtonSolver(object):
             self.bt = self._options['BACKTRACKING']
 
         if 'BT_START_ITER' not in self._options:
-            self.bt_start_iter = 2
+            self.bt_start_iter = 0
         else:
             self.bt_start_iter = self._options['BT_START_ITER']
 
