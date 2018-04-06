@@ -127,7 +127,7 @@ def hydraulic_metrics(wn):
     P_lower = 21.09 # m (30 psi)
 
     # Query pressure
-    pressure = results.node.loc['pressure',:,junctions]
+    pressure = results.node['pressure'].loc[:,junctions]
     mask = wntr.metrics.query(pressure, np.greater, P_lower)
     pressure_regulation = mask.all(axis=0).sum() # True over all time
     print("Fraction of nodes > 30 psi: " + str(pressure_regulation))
@@ -136,7 +136,11 @@ def hydraulic_metrics(wn):
                           title= 'Min pressure')
 
     # Compute todini index
-    todini = wntr.metrics.todini(results.node,results.link,wn, P_lower)
+    head = results.node['head']
+    pressure = results.node['pressure']
+    demand = results.node['demand']
+    flowrate = results.link['flowrate']
+    todini = wntr.metrics.todini_index(head, pressure, demand, flowrate, wn, P_lower)
     plt.figure()
     plt.plot(todini)
     plt.ylabel('Todini Index')
@@ -148,7 +152,7 @@ def hydraulic_metrics(wn):
 
     # Create a weighted graph for flowrate at time 36 hours
     t = 36*3600
-    attr = results.link.loc['flowrate',t,:]
+    attr = results.link['flowrate'].loc[t,:]
     G_flowrate_36hrs = wn.get_graph()
     G_flowrate_36hrs.weight_graph(link_attribute=attr)
 
@@ -172,7 +176,7 @@ def hydraulic_metrics(wn):
     shat = []
     G_flowrate_t = wn.get_graph()
     for t in np.arange(0, 24*3600+1,3600):
-        attr = results.link.loc['flowrate',t,:]
+        attr = results.link['flowrate'].loc[t,:]
         G_flowrate_t.weight_graph(link_attribute=attr)
         entropy = wntr.metrics.entropy(G_flowrate_t)
         shat.append(entropy[1])
@@ -185,17 +189,13 @@ def hydraulic_metrics(wn):
     print("  Max: " + str(np.nanmax(shat)))
     print("  Min: " + str(np.nanmin(shat)))
 
-    # Compute fraction delivered volume and fraction delivered demand
-    demand_factor = 0.9
-    average_times = True
-    average_nodes = False
-    fdv = wntr.metrics.fdv(results.node, average_times, average_nodes)
-    fdd = wntr.metrics.fdd(results.node, demand_factor, average_times, average_nodes)
-    wntr.graphics.plot_network(wn, node_attribute=fdv, node_size=40,
-                            node_range=[0,1], title='FDV averaged over all times')
-    wntr.graphics.plot_network(wn, node_attribute=fdd, node_size=40,
-                            node_range=[0,1], title='FDD averaged over all times')
-
+    # Compute water service availability, for each junction
+    expected_demand = wntr.metrics.expected_demand(wn)
+    demand = results.node['demand'].loc[:,wn.junction_name_list]
+    wsa = wntr.metrics.water_service_availability(expected_demand.sum(axis=0), 
+                                                  demand.sum(axis=0))
+    wntr.graphics.plot_network(wn, node_attribute=wsa, node_size=40, node_range=[0,1], 
+                               title='Water service availability, averaged over times')
 
 def water_quality_metrics(wn):
     # Simulate hydraulics and water quality
@@ -241,7 +241,7 @@ def water_quality_metrics(wn):
     TRACE_at_node.plot(title='Trace percent, node 208')
 
     # Calculate average water age (last 48 hours)
-    age = results_AGE.node.loc['quality',:,:]
+    age = results_AGE.node['quality']
     age_last_48h = age.loc[age.index[-1]-48*3600:age.index[-1]]/3600
     age_last_48h.index = age_last_48h.index/3600
     age_last_48h.plot(legend=False)
@@ -253,7 +253,7 @@ def water_quality_metrics(wn):
 
     # Query concentration
     chem_upper_bound = 750
-    chem = results_CHEM.node.loc['quality',:, :]
+    chem = results_CHEM.node['quality']
     mask = wntr.metrics.query(chem, np.greater, chem_upper_bound)
     chem_regulation = mask.any(axis=0) # True for any time
     wntr.graphics.plot_network(wn, node_attribute=chem_regulation, node_size=40,
@@ -262,13 +262,6 @@ def water_quality_metrics(wn):
                           title= 'Max concentration')
     print("Fraction of nodes > chem upper bound: " + str(chem_regulation.sum()))
     print("Average node concentration: " +str(chem.mean().mean()))
-
-    quality_upper_bound = 0.0035 # kg/m3 (3.5 mg/L)
-    average_times = True
-    average_nodes = False
-    fdq = wntr.metrics.fdq(results_CHEM.node, quality_upper_bound, average_times, average_nodes)
-    wntr.graphics.plot_network(wn, node_attribute=fdq, node_size=40,
-                            node_range=[0,1], title='FDQ averaged over all times')
 
 def water_security_metrics(wn):
     # Define WQ scenario
@@ -282,9 +275,13 @@ def water_security_metrics(wn):
     sim = wntr.sim.EpanetSimulator(wn)
     results_CHEM = sim.run_sim()
 
-    MC = wntr.metrics.mass_contaminant_consumed(results_CHEM.node)
-    VC = wntr.metrics.volume_contaminant_consumed(results_CHEM.node, 0.001)
-    EC = wntr.metrics.extent_contaminant(results_CHEM.node, results_CHEM.link, wn, 0.001)
+    demand = results_CHEM.node['demand'].loc[:,wn.junction_name_list]
+    quality = results_CHEM.node['quality'].loc[:,wn.junction_name_list]
+    flowrate = results_CHEM.link['flowrate'].loc[:,wn.pipe_name_list] 
+    
+    MC = wntr.metrics.mass_contaminant_consumed(demand, quality)
+    VC = wntr.metrics.volume_contaminant_consumed(demand, quality, 0.001)
+    EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, 0.001)
 
     wntr.graphics.plot_network(wn, node_attribute=MC.sum(axis=0), node_range = [0,400], node_size=40,
                           title='Total mass consumed')
@@ -304,21 +301,21 @@ def population_impacted_metrics(wn):
     # Find population and nodes impacted by pressure less than 40 m
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
-    junctions = [name for name, node in wn.junctions()]
-    pop_impacted = wntr.metrics.population_impacted(pop, results.node.loc['pressure',:,junctions], np.less, 40)
+    pressure = results.node['pressure'].loc[:,wn.junction_name_list]
+    pop_impacted = wntr.metrics.population_impacted(pop, pressure, np.less, 40)
     plt.figure()
     pop_impacted.sum(axis=1).plot(title='Total population with pressure < 40 m')
-    nodes_impacted = wntr.metrics.query(results.node.loc['pressure',:,junctions], np.less, 40)
+    nodes_impacted = wntr.metrics.query(pressure, np.less, 40)
     wntr.graphics.plot_network(wn, node_attribute=nodes_impacted.any(axis=0), node_size=40,
                           title='Nodes impacted')
 
 def cost_ghg_metrics(wn):
     # Copute network cost
-    network_cost = wntr.metrics.cost(wn)
+    network_cost = wntr.metrics.annual_network_cost(wn)
     print("Network cost: $" + str(round(network_cost,2)))
 
     # COmpute green house gas emissions
-    network_ghg = wntr.metrics.ghg_emissions(wn)
+    network_ghg = wntr.metrics.annual_ghg_emissions(wn)
     print("Network GHG emissions: " + str(round(network_ghg,2)))
 
 

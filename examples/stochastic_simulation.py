@@ -92,37 +92,30 @@ for name in result_names:
     # Print power outage description for each iteration
     print(name)
 
-    results[name].node.major_axis = results[name].node.major_axis/3600.0
-
-    # Isolate node results at consumer nodes
-    node_results = results[name].node.loc[:,:,nzd_junctions]
-
-    # FDV, scenario k, time t
-    FDV_kt = wntr.metrics.fdv(node_results, average_nodes=True)
-
-    # FDV, scenario k, node n, time t
-    FDV_knt = wntr.metrics.fdv(node_results)
+    # Water service availability, scenario k, time t
+    expected_demand = wntr.metrics.expected_demand(wn)
+    demand = results[name].node['demand'].loc[:,wn.junction_name_list]
+    wsa_kt = wntr.metrics.water_service_availability(expected_demand.sum(axis=1), 
+                                                  demand.sum(axis=1))
+    
+    # Water service availability, scenario k, node n, time t
+    wsa_knt = wntr.metrics.water_service_availability(expected_demand, demand)
 
     # Plot
     plt.figure()
-    plt.subplot(2,1,1)
     plt.title(str(name))
-
-    for node_name in nzd_junctions:
-        pressure = FDV_knt.loc[:,node_name]
-        pressure.plot()
-
-    FDV_knt.plot(ax=plt.gca(), legend=False)
-    FDV_kt.plot(ax=plt.gca(), label='Average', color='k', linewidth=3.0, legend=False)
+    
+    # WSA at junctions
+    plt.subplot(2,1,1)
+    wsa_knt.plot(ax=plt.gca())
+    wsa_knt.plot(ax=plt.gca(), legend=False)
+    wsa_kt.plot(ax=plt.gca(), label='Average', color='k', linewidth=3.0, legend=False)
     plt.ylim( (-0.05, 1.05) )
-    plt.ylabel('FDV')
+    plt.ylabel('Water service availability')
 
     # Pressure in the tanks
     plt.subplot(2,1,2)
-
-    for tank_name, tank in wn.tanks():
-        tank_pressure = results[name].node['pressure'][tank_name]
-        tank_pressure.plot(ax=plt.gca(),label=tank_name)
+    results[name].node['pressure'].loc[:,wn.tank_name_list].plot(ax=plt.gca())
 
     plt.ylim(ymin=0, ymax=12)
     plt.legend()

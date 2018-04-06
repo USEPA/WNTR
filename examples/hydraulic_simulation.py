@@ -42,8 +42,14 @@ first_10_hours_of_results = sim.run_sim()
 wn.options.time.duration = 24*3600
 print('running last 14 hours')
 last_14_hours_of_results = sim.run_sim()
-node_results = pd.concat([first_10_hours_of_results.node,last_14_hours_of_results.node],axis=1)
-link_results = pd.concat([first_10_hours_of_results.link,last_14_hours_of_results.link],axis=1)
+node_results = {}
+link_results = {}
+for key in first_10_hours_of_results.node.keys():
+    node_results[key] = pd.concat([first_10_hours_of_results.node[key],
+                              last_14_hours_of_results.node[key]],axis=1)
+for key in first_10_hours_of_results.link.keys():
+    link_results[key] = pd.concat([first_10_hours_of_results.link[key],
+                              last_14_hours_of_results.link[key]],axis=1)
 # node_results now has the exact same results as res1.node
 # link_results now has the exact same results as res1.link
 
@@ -64,7 +70,13 @@ new_wn.options.time.duration = 24*3600
 sim = wntr.sim.WNTRSimulator(new_wn)
 print('running last 14 hours')
 last_14_hours_of_results = sim.run_sim()
-node_results = pd.concat([first_10_hours_of_results.node,last_14_hours_of_results.node],axis=1)
-link_results = pd.concat([first_10_hours_of_results.link,last_14_hours_of_results.link],axis=1)
+node_results = {}
+link_results = {}
+for key in first_10_hours_of_results.node.keys():
+    node_results[key] = pd.concat([first_10_hours_of_results.node[key],
+                              last_14_hours_of_results.node[key]],axis=1)
+for key in first_10_hours_of_results.link.keys():
+    link_results[key] = pd.concat([first_10_hours_of_results.link[key],
+                              last_14_hours_of_results.link[key]],axis=1)
 # node_results now has the exact same results as res1.node
 # link_results now has the exact same results as res1.link

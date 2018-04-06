@@ -9,7 +9,6 @@ The wntr.metrics.water_security module contains water security metrics.
     volume_contaminant_consumed
     extent_contaminant
 
-
 """
 import numpy as np
 import wntr.network
@@ -18,80 +17,84 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def mass_contaminant_consumed(node_results):
-    """ Mass of contaminant consumed, equation from [1].
+def mass_contaminant_consumed(demand, quality):
+    """ Mass of contaminant consumed [USEPA15]_.
     
     Parameters
     ----------
-    node_results : pd.Panel
-        A pandas Panel containing node results. 
-        Items axis = attributes, Major axis = times, Minor axis = node names
-        Mass of contaminant consumed uses 'demand' and quality' attrbutes.
+    demand : pandas DataFrame
+        A pandas Dataframe containing demand 
+        (index = times, columns = junction names).
     
-     References
-    ----------
-    [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
-    Technical report, U.S. Environmental Protection Agency
+    quality : pandas DataFrame
+        A pandas Dataframe containing water quality 
+        (index = times, columns = junction names).
+    
+    Returns
+    --------
+    A pandas DataFrame containing mass consumed
     """
-    maskD = np.greater(node_results['demand'], 0) # positive demand
-    deltaT = node_results['quality'].index[1] # this assumes constant timedelta
-    MC = node_results['demand']*deltaT*node_results['quality']*maskD # m3/s * s * kg/m3 - > kg
+    
+    maskD = np.greater(demand, 0) # positive demand
+    deltaT = quality.index[1] # this assumes constant timedelta
+    MC = demand*deltaT*quality*maskD # m3/s * s * kg/m3 - > kg
     
     return MC
-     
-def volume_contaminant_consumed(node_results, detection_limit):
-    """ Volume of contaminant consumed, equation from [1].
+
+def volume_contaminant_consumed(demand, quality, detection_limit):
+    """ Volume of contaminant consumed [USEPA15]_.
     
     Parameters
     ----------
-    node_results : pd.Panel
-        A pandas Panel containing node results. 
-        Items axis = attributes, Major axis = times, Minor axis = node names
-        Volume of contaminant consumed uses 'demand' and quality' attrbutes.
+    demand : pandas DataFrame
+        A pandas Dataframe containing demand 
+        (index = times, columns = junction names).
+    
+    quality : pandas DataFrame
+        A pandas Dataframe containing water quality 
+        (index = times, columns = junction names).
     
     detection_limit : float
         Contaminant detection limit
     
-     References
-    ----------
-    [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
-    Technical report, U.S. Environmental Protection Agency
+    Returns
+    --------
+    A pandas DataFrame containing volume consumed
     """
-    maskQ = np.greater(node_results['quality'], detection_limit)
-    maskD = np.greater(node_results['demand'], 0) # positive demand
-    deltaT = node_results['quality'].index[1] # this assumes constant timedelta
-    VC = node_results['demand']*deltaT*maskQ*maskD # m3/s * s * bool - > m3
+    
+    maskQ = np.greater(quality, detection_limit)
+    maskD = np.greater(demand, 0) # positive demand
+    deltaT = quality.index[1] # this assumes constant timedelta
+    VC = demand*deltaT*maskQ*maskD # m3/s * s * bool - > m3
     
     return VC
 
-def extent_contaminant(node_results, link_results, wn, detection_limit):
-    """ Extent of contaminant in the pipes, equation from [1].
+def extent_contaminant(quality, flowrate, wn, detection_limit):
+    """ 
+    Extent of contaminant in the pipes [USEPA15]_.
     
     Parameters
     ----------
-    node_results : pd.Panel
-        A pandas Panel containing node results. 
-        Items axis = attributes, Major axis = times, Minor axis = node names
-        Extent of contamination uses the 'quality' attribute.
+    quality : pandas DataFrame
+        A pandas Dataframe containing water quality 
+        (index = times, columns = junction names).
     
-    link_results : pd.Panel
+    flowrate : pandas DataFrame
+        A pandas Dataframe containing flowrate 
+        (index = times, columns = pipe names).
+        
+    wn : wntr WaterNetworkModel
+        Water network model.  The water network model is needed to 
+        get pipe length, and pipe start and end node.
         
     detection_limit : float
         Contaminant detection limit.
     
     Returns
     -------
-    EC : pd.Series
-        Extent of contaminantion (m)
-    
-     References
-    -----------
-    [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
-    Technical report, U.S. Environmental Protection Agency
+    A pandas Series with extent of contaminantion (m)
     """
-    flow_rate = link_results['flowrate']
     pipe_names = wn.pipe_name_list
-    node_quality = node_results['quality']
     link_length = []
     link_start_node = []
     link_end_node = []
@@ -106,8 +109,8 @@ def extent_contaminant(node_results, link_results, wn, detection_limit):
     
     # flow_dir, pos_flow, neg_flow, link_contam are indexed by pipe names (col) 
     # and times (rows)
-    flow_dir = np.sign(flow_rate.loc[:,pipe_names])
-    node_contam = node_quality > detection_limit
+    flow_dir = np.sign(flowrate.loc[:,pipe_names])
+    node_contam = quality > detection_limit
     pos_flow = np.array(node_contam.loc[:,link_start_node])
     neg_flow = np.array(node_contam.loc[:,link_end_node])
     link_contam = ((flow_dir>0)&pos_flow) | ((flow_dir<0)&neg_flow)
@@ -129,7 +132,7 @@ def extent_contaminant(node_results, link_results, wn, detection_limit):
 #
 #def ingestion_model_timing(node_results, method='D24'):
 #    """
-#    Compute volume of water ingested for each node and timestep, equations from [1]
+#    Compute volume of water ingested for each node and timestep
 #   
 #    Parameters
 #    -----------
@@ -143,10 +146,6 @@ def extent_contaminant(node_results, link_results, wn, detection_limit):
 #    Vnpt : pd.Series
 #        A pandas Series that contains the volume of water ingested for each node and timestep
 #        
-#    References
-#    ----------
-#    [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3. 
-#    Technical report, U.S. Environmental Protection Agency
 #    """
 #    if method == 'D24':
 #        Vnpt = 1

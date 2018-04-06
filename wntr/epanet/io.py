@@ -15,7 +15,6 @@ The wntr.epanet.io module contains methods for reading/writing EPANET input and 
 from __future__ import absolute_import
 
 import datetime
-import networkx as nx
 import re
 import io
 import os, sys
@@ -2369,7 +2368,7 @@ class BinFile(object):
 
     Returns
     ----------
-    :class:`~wntr.sim.results.NetResults`
+    :class:`~wntr.sim.results.SimulationResults`
         A WNTR results object will be created and added to the instance after read.
 
     """
@@ -2402,7 +2401,7 @@ class BinFile(object):
         self.chem_units = None
         self.inp_file = None
         self.rpt_file = None
-        self.results = wntr.sim.NetResults()
+        self.results = wntr.sim.SimulationResults()
         if result_types is None:
             self.items = [ member for name, member in ResultType.__members__.items() ]
         else:
@@ -2422,11 +2421,13 @@ class BinFile(object):
         """
         if result_types is None:
             result_types = self.items
-        link_items = [ member.name for member in result_types if member.is_link ]
-        node_items = [ member.name for member in result_types if member.is_node ]
-        self.results.node = pd.Panel(items=node_items, major_axis=times, minor_axis=nodes)
-        self.results.link = pd.Panel(items=link_items, major_axis=times, minor_axis=links)
-        self.results.time = times
+        for member in result_types:
+            if member.is_node:
+                self.results.node[member.name] = pd.DataFrame(index=times, columns=nodes)
+            elif member.is_node:
+                self.results.link[member.name] = pd.DataFrame(index=times, columns=links)
+            else:
+                pass
         self.results.network_name = self.inp_file
 
     def save_ep_line(self, period, result_type, values):
@@ -2622,6 +2623,7 @@ class BinFile(object):
             elevation = np.fromfile(fin, dtype=np.dtype(ftype), count=nnodes)
             linklen = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
             diameter = np.fromfile(fin, dtype=np.dtype(ftype), count=nlinks)
+            """
             self.save_network_desc_line('link_start', linkstart)
             self.save_network_desc_line('link_end', linkend)
             self.save_network_desc_line('link_type', linktype)
@@ -2630,7 +2632,7 @@ class BinFile(object):
             self.save_network_desc_line('node_elevation', elevation)
             self.save_network_desc_line('link_length', linklen)
             self.save_network_desc_line('link_diameter', diameter)
-
+            """
             logger.debug('... read energy data ...')
             for i in range(npumps):
                 pidx = int(np.fromfile(fin,dtype=np.int32, count=1))
@@ -2650,6 +2652,7 @@ class BinFile(object):
             self.report_times = reporttimes
 
             # set up results metadata dictionary
+            """
             if wqopt == QualType.Age:
                 self.results.meta['quality_mode'] = 'AGE'
                 self.results.meta['quality_units'] = 's'
@@ -2689,7 +2692,7 @@ class BinFile(object):
             names = np.array(nodenames, dtype=str)
             self.save_network_desc_line('link_start', pd.Series(data=names[linkstart-1], index=linknames, copy=True))
             self.save_network_desc_line('link_end', pd.Series(data=names[linkend-1], index=linknames, copy=True))
-
+            """
             if custom_handlers is True:
                 logger.debug('... set up results object ...')
                 self.setup_ep_results(reporttimes, nodenames, linknames)
@@ -2740,8 +2743,10 @@ class BinFile(object):
                     
                 df = pd.DataFrame(data.transpose(), index =index, columns = reporttimes)
                 df = df.transpose()
+                
                 self.results.node = {}
                 self.results.link = {}
+                self.results.network_name = self.inp_file
                 
                 # Node Results
                 self.results.node['demand'] = HydParam.Demand._to_si(self.flow_units, df['demand'])
@@ -2781,10 +2786,6 @@ class BinFile(object):
                 self.results.link['setting'] = pd.DataFrame(data=settings, columns=linknames, index=reporttimes)
                 self.results.link['frictionfact'] = df['frictionfactor']
                 self.results.link['rxnrate'] = df['reactionrate']
-                
-                # Convert to panels
-                self.results.link = pd.Panel.from_dict(self.results.link)
-                self.results.node = pd.Panel.from_dict(self.results.node)
                 
             logger.debug('... read epilog ...')
             # Read the averages and then the number of periods for checks

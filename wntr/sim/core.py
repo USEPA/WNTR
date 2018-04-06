@@ -194,9 +194,10 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         self._solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, model, options=solver_options)
 
-        results = NetResults()
+        results = SimulationResults()
         results.error_code = 0
         results.time = []
+        results.network_name = model._wn.name
 
         # Initialize X
         # Vars will be ordered:

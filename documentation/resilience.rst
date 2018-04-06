@@ -181,7 +181,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           failures while still meeting demands and pressures at the nodes. The 
                                           Todini index defines resilience at a specific time as a measure of surplus 
                                           power at each node and measures relative energy redundancy. 
-                                          The Todini index can be computed using the :class:`~wntr.metrics.hydraulic.todini` method.
+                                          The Todini index can be computed using the :class:`~wntr.metrics.hydraulic.todini_index` method.
 
    Entropy                                Entropy [AwGB90]_ is a measure of uncertainty in a random variable.  
                                           In a water distribution network model, the random variable is 
@@ -284,13 +284,14 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
                                           Water Networks II [SOKZ12]_.  
                                           Default values can be included in the calculation.
                                           Network cost can be computed 
-                                          using the :class:`~wntr.metrics.economic.cost` method.
+                                          using the :class:`~wntr.metrics.economic.annual_network_cost` method.
 
    Greenhouse gas emissions               Greenhouse gas emissions is the annual emissions associated with pipes based on equations from the Battle of Water Networks II [SOKZ12]_.
                                           Default values can be included in the calculation.
                                           Greenhouse gas emissions can be computed 
-                                          using the :class:`~wntr.metrics.economic.ghg_emissions` method.
+                                          using the :class:`~wntr.metrics.economic.annual_ghg_emissions` method.
 
-   Pump operating energy and cost         The energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy` method. This
-                                          uses the flowrates and pressures from simulation results to compute pump energy and cost.
+   Pump operating energy and cost         The energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy` and 
+                                          :class:`~wntr.metrics.economic.pump_cost` methods. These
+                                          use the flowrates and pressures from simulation results to compute pump energy and cost.
    =====================================  ================================================================================================================================================

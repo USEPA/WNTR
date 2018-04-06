@@ -51,9 +51,10 @@ def test_mass_consumed():
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
-    junc_results = results.node.loc[:, :, wn.junction_name_list]
+    demand = results.node['demand'].loc[:,wn.junction_name_list]
+    quality = results.node['quality'].loc[:,wn.junction_name_list]
     
-    MC = wntr.metrics.mass_contaminant_consumed(junc_results)
+    MC = wntr.metrics.mass_contaminant_consumed(demand, quality)
     MC_timeseries = MC.sum(axis=1)
     MC_cumsum = MC_timeseries.cumsum()
     #MC_timeseries.to_csv('MC.txt')
@@ -80,9 +81,10 @@ def test_volume_consumed():
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
 
-    junc_results = results.node.loc[:, :, wn.junction_name_list]
-
-    VC = wntr.metrics.volume_contaminant_consumed(junc_results, 0)
+    demand = results.node['demand'].loc[:,wn.junction_name_list]
+    quality = results.node['quality'].loc[:,wn.junction_name_list]
+    
+    VC = wntr.metrics.volume_contaminant_consumed(demand, quality, 0)
     VC_timeseries = VC.sum(axis=1)
     VC_cumsum = VC_timeseries.cumsum()
     #VC_timeseries.to_csv('VC.txt')
@@ -108,15 +110,18 @@ def test_extent_contaminated():
 
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
-
-    EC_cummax = wntr.metrics.extent_contaminant(results.node, results.link, wn, 0)
+    
+    quality = results.node['quality'].loc[:,wn.junction_name_list]
+    flowrate = results.link['flowrate'].loc[:,wn.pipe_name_list] 
+    
+    EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, 0)
 
     expected = float(80749.9*0.3048) # hour 2
-    error = abs((EC_cummax[2*3600] - expected)/expected)
+    error = abs((EC[2*3600] - expected)/expected)
     assert_less(error, 0.01) # 1% error
 
     expected = float(135554*0.3048) # hour 12
-    error = abs((EC_cummax[12*3600] - expected)/expected)
+    error = abs((EC[12*3600] - expected)/expected)
     assert_less(error, 0.01) # 1% error
 
 if __name__ == '__main__':

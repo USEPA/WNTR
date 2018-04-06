@@ -10,7 +10,6 @@ topographic, hydraulic, water quality, water security, or economic categories.
     population
     population_impacted
 
-
 """
 from wntr.network import Junction
 from wntr.metrics.hydraulic import expected_demand
@@ -26,15 +25,16 @@ logger = logging.getLogger(__name__)
 
 def query(arg1, operation, arg2):
     """
-    Return a boolean mask using comparison operators, i.e. "arg1 operation arg2".
-    For example, find the node-time pairs when demand < 90% expected demand.
+    Returns a boolean mask using comparison operators, i.e. "arg1 operation arg2".
+    For example, this can be used to return the node-time pairs 
+    when demand < 90% expected demand.
 
     Parameters
     -----------
-    arg1 : pd.Panel, pd.DataFrame, pd.Series, np.array, list, scalar
+    arg1 : pandas DataFrame, pandas Series, numpy array, list, scalar
         Argument 1
 
-    operation : numpy.ufunc
+    operation : numpy ufunc
         Numpy universal comparison function, options = np.greater,
         np.greater_equal, np.less, np.less_equal, np.equal, np.not_equal
 
@@ -43,8 +43,7 @@ def query(arg1, operation, arg2):
 
     Returns
     -------
-    mask : same size and type as arg1
-        contains bool
+    A boolean mask (same size and type as arg1)
     """
     try:
         mask = operation(arg1, arg2)
@@ -52,97 +51,23 @@ def query(arg1, operation, arg2):
         logger.error('operation(arg1, arg2) failed')
 
     return mask
-"""
-def average_water_consumed(wn):
-    
-    Compute average water consumed at each node, qbar, computed as follows:
 
-    .. math:: qbar=\dfrac{\sum_{k=1}^{K}\sum_{t=1}^{lcm_n}qbase_n m_n(k,t mod (L(k)))}{lcm_n}
-
-    where
-    :math:`K` is the number of demand patterns at node :math:`n`,
-    :math:`L(k)` is the number of time steps in pattern :math:`k`,
-    :math:`lcm_n` is the least common multiple of the demand patterns time steps for node :math:`n`,
-    :math:`qbase_n` is the base demand at node :math:`n` and
-    :math:`m_n(k,t mod L(k))` is the demand multiplier specified in pattern :math:`k` for node :math:`n` at time :math:`t mod L(k)`.
-
-    For example, if a node has two demand patterns specified in the EPANET input (INP) file, and
-    one pattern repeats every 6 hours and the other repeats every 12 hours, the first
-    pattern will be repeated once, making its total duration effectively 12 hours.
-    If any :math:`m_n(k,t mod L(k))` value is less than 0, then that node's population is 0.
-
-    Parameters
-    -----------
-    wn : WaterNetworkModel
-
-    Returns
-    -------
-    qbar : pd.Series
-        A pandas Series that contains average water consumed per node, in m3/s
-
-    qbar = pd.Series()
-    for name, node in wn.nodes(Junction):
-        # Future release should support mutliple base demand and demand patterns per node
-        numdemands = 1
-
-        L = {}
-        pattern = {}
-        for i in range(numdemands):
-            pattern_name = node.demand_pattern_name
-            if not pattern_name:
-                pattern_name = wn.options.hydraulic.pattern
-            pattern[i] = wn.get_pattern(pattern_name)
-            L[i] = len(pattern[i])
-        lcm_n = _lcml(L.values())
-
-        qbar_n = 0
-        for i in range(numdemands):
-            base_demand = node.base_demand
-            for t in range(lcm_n):
-                m = pattern[i][np.mod(t,len(pattern[i]))]
-                qbar_n = qbar_n + base_demand*m/lcm_n
-        qbar[name] = qbar_n
-
-    return qbar
-
-def _gcd(x,y):
-  while y:
-    if y<0:
-      x,y=-x,-y
-    x,y=y,x % y
-    return x
-
-def _gcdl(*list):
-  return reduce(_gcd, *list)
-
-def _lcm(x,y):
-  return x*y / _gcd(x,y)
-
-def _lcml(*list):
-  return reduce(_lcm, *list)
-"""
 def population(wn, R=0.00000876157):
     """
-    Compute population per node, rounded to the nearest integer, equation from [1]
+    Compute population per node, rounded to the nearest integer [USEPA15]_.
 
-    .. math:: pop=\dfrac{qbar}{R}
+    .. math:: pop=\dfrac{expected_demand}{R}
 
     Parameters
     -----------
-    wn : WaterNetworkModel
+    wn : wntr WaterNetworkModel
 
     R : float (optional, default = 0.00000876157 m3/s = 200 gallons/day)
         Average volume of water consumed per capita per day in m3/s
 
     Returns
     -------
-    pop : pd.Series
-        A pandas Series that contains population per node
-
-    References
-    ----------
-    [1] EPA, U. S. (2015). Water security toolkit user manual version 1.3.
-    Technical report, U.S. Environmental Protection Agency
+    A pandas Series that contains population per node
     """
 
     ex_dem = expected_demand(wn)
@@ -153,8 +78,9 @@ def population(wn, R=0.00000876157):
 
 def population_impacted(pop, arg1, operation=None, arg2=None):
     """
-    Compute population impacted using using comparison operators.
-    For example, find the population impacted when demand < 90% expected.
+    Computes population impacted using comparison operators.
+    For example, this can be used to find the population impacted when 
+    demand < 90% expected.
 
     Parameters
     -----------
@@ -170,6 +96,10 @@ def population_impacted(pop, arg1, operation=None, arg2=None):
 
     arg2 : same size and type as arg1, or a scalar
         Argument 2
+        
+    Returns
+    --------
+    A pandas Series that contains population impacted per node
     """
     mask = query(arg1, operation, arg2)
     pop_impacted = mask.multiply(pop)
