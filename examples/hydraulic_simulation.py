@@ -46,10 +46,10 @@ node_results = {}
 link_results = {}
 for key in first_10_hours_of_results.node.keys():
     node_results[key] = pd.concat([first_10_hours_of_results.node[key],
-                              last_14_hours_of_results.node[key]],axis=1)
+                                   last_14_hours_of_results.node[key]],axis=0)
 for key in first_10_hours_of_results.link.keys():
     link_results[key] = pd.concat([first_10_hours_of_results.link[key],
-                              last_14_hours_of_results.link[key]],axis=1)
+                                   last_14_hours_of_results.link[key]],axis=0)
 # node_results now has the exact same results as res1.node
 # link_results now has the exact same results as res1.link
 
@@ -74,9 +74,9 @@ node_results = {}
 link_results = {}
 for key in first_10_hours_of_results.node.keys():
     node_results[key] = pd.concat([first_10_hours_of_results.node[key],
-                              last_14_hours_of_results.node[key]],axis=1)
+                                   last_14_hours_of_results.node[key]],axis=0)
 for key in first_10_hours_of_results.link.keys():
     link_results[key] = pd.concat([first_10_hours_of_results.link[key],
-                              last_14_hours_of_results.link[key]],axis=1)
+                                   last_14_hours_of_results.link[key]],axis=0)
 # node_results now has the exact same results as res1.node
 # link_results now has the exact same results as res1.link
