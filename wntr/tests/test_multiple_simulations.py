@@ -83,9 +83,9 @@ class TestStopStartSim(unittest.TestCase):
         node_res = {}
         link_res = {}
         for key in self.res2.node.keys():
-            node_res[key] = pd.concat([self.res2.node[key],self.res3.node[key]],axis=1)
+            node_res[key] = pd.concat([self.res2.node[key],self.res3.node[key]],axis=0)
         for key in self.res2.link.keys():
-            link_res[key] = pd.concat([self.res2.link[key],self.res3.link[key]],axis=1)
+            link_res[key] = pd.concat([self.res2.link[key],self.res3.link[key]],axis=0)
     
         self.res2.node = node_res
         self.res2.link = link_res
@@ -154,9 +154,9 @@ class TestPickle(unittest.TestCase):
         node_res = {}
         link_res = {}
         for key in self.res2.node.keys():
-            node_res[key] = pd.concat([self.res2.node[key],self.res3.node[key]],axis=1)
+            node_res[key] = pd.concat([self.res2.node[key],self.res3.node[key]],axis=0)
         for key in self.res2.link.keys():
-            link_res[key] = pd.concat([self.res2.link[key],self.res3.link[key]],axis=1)
+            link_res[key] = pd.concat([self.res2.link[key],self.res3.link[key]],axis=0)
     
         self.res2.node = node_res
         self.res2.link = link_res
