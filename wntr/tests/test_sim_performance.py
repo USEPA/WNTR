@@ -224,7 +224,7 @@ class TestPerformance(unittest.TestCase):
         self.assertLess(demand_diff.mean().mean(), 3.4e-7)
         self.assertLess(flow_diff.mean().mean(), 2.0e-7)
         self.assertLess(head_diff.max().max(), 3.3e-4)
-        self.assertLess(demand_diff.max().max(), 3.1e-6)
+        self.assertLess(demand_diff.max().max(), 3.2e-6)
         self.assertLess(flow_diff.max().max(), 4.8e-5)
         self.assertLess(head_diff.std().mean(), 2.6e-5)
         self.assertLess(demand_diff.std().mean(), 3.6e-7)
