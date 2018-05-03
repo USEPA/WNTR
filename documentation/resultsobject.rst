@@ -55,8 +55,8 @@ For example, node results generated with the EpanetSimulator have the following 
 
 .. doctest::
 
-    >>> print(results.node.keys())
-    dict_keys(['demand', 'head', 'pressure', 'quality'])
+    >>> print(list(results.node.keys()))
+    ['demand', 'head', 'pressure', 'quality']
 	
 Link results include DataFrames for each of the following attributes:
 
@@ -73,8 +73,8 @@ For example, link results generated with the EpanetSimulator have the following 
 
 .. doctest::
 
-    >>> results.link.keys()
-    dict_keys(['linkquality', 'flowrate', 'headloss', 'velocity', 'status', 'setting', 'frictionfact', 'rxnrate'])
+    >>> list(results.link.keys())
+    ['linkquality', 'flowrate', 'headloss', 'velocity', 'status', 'setting', 'frictionfact', 'rxnrate']
 
 To access node pressure over all nodes and times:
 
