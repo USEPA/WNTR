@@ -55,7 +55,16 @@ For example, node results generated with the EpanetSimulator have the following 
 
 .. doctest::
 
-    >>> print(list(results.node.keys()))
+    >>> node_keys = results.node.keys()
+
+.. doctest::
+    :hide:
+
+    >>> node_keys = list(sorted(node_keys))
+
+.. doctest::
+
+    >>> print(node_keys)
     ['demand', 'head', 'pressure', 'quality']
 	
 Link results include DataFrames for each of the following attributes:
@@ -73,8 +82,17 @@ For example, link results generated with the EpanetSimulator have the following 
 
 .. doctest::
 
-    >>> list(results.link.keys())
-    ['linkquality', 'flowrate', 'headloss', 'velocity', 'status', 'setting', 'frictionfact', 'rxnrate']
+    >>> link_keys = results.link.keys()
+
+.. doctest::
+    :hide:
+
+    >>> link_keys = list(sorted(link_keys))
+
+.. doctest::
+
+    >>> print(link_keys)
+    ['flowrate', 'frictionfact', 'headloss', 'linkquality', 'rxnrate', 'setting', 'status', 'velocity']
 
 To access node pressure over all nodes and times:
 
