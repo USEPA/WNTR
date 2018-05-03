@@ -19,6 +19,7 @@ Simulation results are stored in a :class:`~wntr.sim.results.SimulationResults` 
     >>> from __future__ import print_function, division
     >>> import pandas as pd
 	>>> import wntr
+    >>> pd.set_option('precision', 2)
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -87,12 +88,12 @@ DataFrames can be sliced to extract specific information. For example, to access
 
     >>> pressure_at_node123 = pressure.loc[:,'123']
     >>> print(pressure_at_node123.head())
-    0       47.081696
-    900     47.131065
-    1800    47.180327
-    2700    47.229439
-    3600    47.944620
-    Name: 123, dtype: float64
+    0       47.08
+    900     47.13
+    1800    47.18
+    2700    47.23
+    3600    47.94
+    Name: 123, dtype: float32
 	
 To access the pressure at time 3600 over all nodes:
 
@@ -101,12 +102,12 @@ To access the pressure at time 3600 over all nodes:
     >>> pressure_at_1hr = pressure.loc[3600,:]
     >>> print(pressure_at_1hr.head())
     name
-    10    28.253773
-    15    28.885527
-    20     9.095347
-    35    41.515290
-    40     4.182194
-    Name: 3600, dtype: float64
+    10    28.25
+    15    28.89
+    20     9.10
+    35    41.52
+    40     4.18
+    Name: 3600, dtype: float32
 	
 Data can be plotted as a time-series, as shown in :numref:`fig-plot-timeseries`:
 
