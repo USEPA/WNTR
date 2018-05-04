@@ -12,5 +12,6 @@ dependencies:
     - nose
     - xlwt
     - enum34
+    - openpyxl
     - pip:
         - coveralls
