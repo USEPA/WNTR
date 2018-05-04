@@ -11,5 +11,6 @@ dependencies:
     - plotly
     - nose
     - xlwt
+    - openpyxl
     - pip:
         - coveralls

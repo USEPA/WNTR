@@ -29,8 +29,7 @@ class TestPumpCost(unittest.TestCase):
         flowrate = self.results.link['flowrate'].loc[:,self.wn.pump_name_list]
         head = self.results.node['head'].loc[:,self.wn.node_name_list]
         
-        pump_res = self.wntr.metrics.pump_energy(flowrate, head, self.wn)
-        cost = pump_res.loc['cost',:,:]
+        cost = self.wntr.metrics.pump_cost(flowrate, head, self.wn)
 
         total_cost = 0
         times = self.results.link['flowrate'].index

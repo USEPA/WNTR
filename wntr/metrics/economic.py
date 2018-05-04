@@ -279,8 +279,8 @@ def pump_energy(flowrate, head, wn):
     
     headloss = pd.DataFrame(data=None, index=time, columns=pumps)
     for pump_name, pump in wn.pumps():
-        start_node = pump.start_node
-        end_node = pump.end_node
+        start_node = pump.start_node_name
+        end_node = pump.end_node_name
         start_head = head.loc[:,start_node]
         end_head = head.loc[:,end_node]
         headloss.loc[:,pump_name] = end_head - start_head
