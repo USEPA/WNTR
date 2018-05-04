@@ -407,13 +407,13 @@ class WNTRSimulator(WaterNetworkSimulator):
             # Solve
             if logger_level <= logging.DEBUG:
                 logger.debug('solving')
-            [self._X, num_iters, solver_status] = self._solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            [self._X, num_iters, solver_status, message] = self._solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             if solver_status == 0:
                 if convergence_error:
-                    logger.error('Simulation did not converge!')
-                    raise RuntimeError('Simulation did not converge!')
-                warnings.warn('Simulation did not converge!')
-                logger.warning('Simulation did not converge at time %s',self._get_time())
+                    logger.error('Simulation did not converge. ' + message)
+                    raise RuntimeError('Simulation did not converge. ' + message)
+                warnings.warn('Simulation did not converge. ' + message)
+                logger.warning('Simulation did not converge at time ' + str(self._get_time()) + '. ' + message)
                 model.get_results(results)
                 results.error_code = 2
                 return results
