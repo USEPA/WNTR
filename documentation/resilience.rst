@@ -176,6 +176,12 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
    =====================================  ================================================================================================================================================
    Pressure                               To determine the number of node-time pairs above or below a specified pressure threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['pressure'].  
+   
+   Demand                                 To determine the number of node-time pairs above or below a specified demand threshold, 
+                                          use the :class:`~wntr.metrics.misc.query` method on results.node['demand']. 
+										  
+   Water service availability             Water service availability is the ratio of delivered demand to the expected demand [OsKS02]_.  
+                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.water_service_availability` method.
 
    Todini index                           The Todini index [Todi00]_ is related to the capability of a system to overcome 
                                           failures while still meeting demands and pressures at the nodes. The 
@@ -191,13 +197,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           Connectivity will change at each time step, depending on the flow direction.  
                                           The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method can be used to weight the graph by a specified attribute. 
                                           Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
-
-   Fraction of delivered volume           Fraction of delivered volume is the ratio of total volume delivered to the total volume requested [OsKS02]_.  
-                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.fdv` method.
-
-   Fraction of delivered demand           Fraction of delivered demand is the fraction of time periods where demand is met [OsKS02]_.
-                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.fdd` method.
-	
+   
    Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier [USEPA15]_.
                                           The metric can be computed using the :class:`~wntr.metrics.hydraulic.expected_demand` method.  This method does not require running 
                                           a hydraulic simulation.
@@ -229,9 +229,6 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
 
    Concentration                          To determine the number of node-time pairs above or below a specified concentration threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CHEM or TRACE.
-
-   Fraction of delivered quality          Fraction of delivered quality is the fraction of time periods where water quality standards are met [OsKS02]_.
-                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.water_quality.fdq` method
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water quality metrics.
