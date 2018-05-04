@@ -163,7 +163,8 @@ at https://networkx.github.io/.
 Hydraulic metrics
 ---------------------
 
-Hydraulic metrics are based on flow, demand, and/or pressure. The 
+Hydraulic metrics are based on flow, demand, and/or pressure. With the exection of 
+expected demand and average expected demand, the
 calculation of these metrics requires simulation of network hydraulics that reflect how the
 system operates under normal or abnormal conditions.  
 Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metrics`.  

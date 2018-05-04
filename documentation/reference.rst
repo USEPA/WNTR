@@ -18,6 +18,8 @@ citations are cross referenced using a 6 digit notation [*]_.
 
 .. [ELLT12] Eto, J.H., LaCommare, K.H., Larsen, P.H., Todd, A., and Fisher, E. (2012). An Examination of Temporal Trends in Electricity Reliability Based on Reports from U.S. Electric Utilities. Lawrence Berkeley National Laboratory Report Number 5268E. Berkeley, CA: Ernest Orlando Lawrence Berkeley National Laboratory, 68p.
 
+.. [GaCl18] Gazoni, E. and Clark, C. (2018) openpyxl - A Python library to read/write Excel 2010 xlsx/xlsm files, Retrieved on May 4, 2018 from https://openpyxl.readthedocs.io.
+
 .. [HaSS08] Hagberg, A.A., Schult, D.A., and Swart P.J. (2008). Exploring network structure, dynamics, and function using NetworkX. In Proceedings of the 7th Python in Science Conference (SciPy2008), August 19-24, Pasadena, CA, USA.
 
 .. [Hunt07] Hunter, J.D. (2007). Matplotlib: A 2D graphics environment. Computing in Science and Engineering, 9(3), 90-95.
@@ -49,8 +51,6 @@ citations are cross referenced using a 6 digit notation [*]_.
 .. [WaSM88] Wagner, J.M., Shamir, U., and Marks, D.H. (1998). Water distribution reliability: Simulation methods. Journal of Water Resources Planning and Management, 114(3), 276-294.
 
 .. [WWQP06] Walk, D.J., Worden, B.C., Quitoriano, V., and Pankow, K.L. (2006). Shakemap manual, Technical manual, users guide, and software guide. United States Geologic Survey, Retrieved on April 25, 2017 from http://pubs.usgs.gov/tm/2005/12A01/
-
-.. [Xlwt16] xlwt contributors. (2016, November 18). xlwt documentation. Retrieved on April 25, 2017 from https://xlwt.readthedocs.io.
 
 .. [*] Cross reference labels begins with 4 letters:
 
