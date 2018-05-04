@@ -100,7 +100,7 @@ To access node pressure over all nodes and times:
 
     >>> pressure = results.node['pressure']
 
-DataFrames can be sliced to extract specific information. For example, to access the pressure at node '123' over all times (the "":"" notation returns all variables along the specified axis, "head" returns the first 5 rows):
+DataFrames can be sliced to extract specific information. For example, to access the pressure at node '123' over all times (the "":"" notation returns all variables along the specified axis, "head" returns the first 5 rows, values displayed to 2 decimal places):
 
 .. doctest::
 
@@ -113,7 +113,7 @@ DataFrames can be sliced to extract specific information. For example, to access
     3600    47.94
     Name: 123, dtype: float32
 	
-To access the pressure at time 3600 over all nodes:
+To access the pressure at time 3600 over all nodes (values displayed to 2 decimal places):
 
 .. doctest::
 
