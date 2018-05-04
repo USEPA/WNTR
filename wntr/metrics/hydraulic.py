@@ -106,48 +106,48 @@ def _lcml(*list):
 
 def water_service_availability(expected_demand, demand):
     """
-    Compute water service availability at junctions, defined as follows:
+    Compute water service availability (WSA) at junctions, defined as follows:
         
-    .. math:: WSA = \dfrac{actual demand}{expected demand}
+    .. math:: WSA = \dfrac{demand}{expected\_demand}
         
     where 
-    :math:`actual demand` is computed from an hydraulic simulation, and 
-    :math:`expected demand` is computed from node base demands and demand 
-    patterns.Expected demand can be computed using the 
+    :math:`demand` is the actual demand computed from a hydraulic simulation, and 
+    :math:`expected\_demand` is the expected demand computed from base demands and demand 
+    patterns. Expected demand can be computed using the 
     :class:`~wntr.metrics.hydraulic.expected_demand` method.
-    Equations modified from [OsKS02]_.
-    The metric can be averaged over times and/or nodes (see below).  If 
+
+    WSA can be averaged over times and/or nodes (see below).  If 
     expected demand is 0 for a particular junction, water service availability 
     will be set to NaN for that junction. 
 
-    To compute water service availability for each node and timestep, 
-    expected_demand and demand should be pandas DataFrames 
-    (index = times, columns = junction names). 
+    * To compute water service availability for each junction and timestep, 
+      expected_demand and demand should be pandas DataFrames (index = times, columns = junction names). 
     
-    To compute an average water service availability for each junction, 
-    expected_demand and demand should be a pandas Series, indexed by junction.  
-    To convert a DataFrame (index = times, columns = junction names) to a 
-    Series indexed by junction, use the following code:
+    * To compute an average water service availability for each junction (averaged over time), 
+      expected_demand and demand should be a pandas Series, indexed by junction.  
+      To convert a DataFrame (index = times, columns = junction names) to a 
+      Series indexed by junction, use the following code:
     
-        expected_demand.sum(axis=0)
-        demand.sum(axis=0)
+        :math:`expected\_demand.sum(axis=0)`
+		
+        :math:`demand.sum(axis=0)`
     
-    To compute an average water service availability for each timestep, 
-    expected_demand and demand should be a pandas Series, indexed by time.  
-    To convert a DataFrame (index = times, columns = junction names) to a 
-    Series indexed by time, use the following code:
+    * To compute an average water service availability for each timestep (averaged over junctions), 
+      expected_demand and demand should be a pandas Series, indexed by time.  
+      To convert a DataFrame (index = times, columns = junction names) to a 
+      Series indexed by time, use the following code:
         
-        expected_demand.sum(axis=1)
-        demand.sum(axis=1)
+        :math:`expected\_demand.sum(axis=1)`
+		
+        :math:`demand.sum(axis=1)`
         
     Parameters
     ----------
     expected_demand : pandas DataFrame or pandas Series (see note above)
-        A pandas DataFrame containing expected demand.  
+        Expected demand.  
     
     demand : pandas DataFrame or pandas Series (see note above)
-        A pandas DataFrame containing actual demand (generally from a 
-        PDD hydraulic simulation)
+        Actual demand (generally from a PDD hydraulic simulation)
 
     Returns
     -------
