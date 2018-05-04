@@ -180,11 +180,12 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
    
    Demand                                 To determine the number of node-time pairs above or below a specified demand threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['demand']. 
-										  This method can be used to compute the fraction of delivered demand, from [OsKS02]_.
+                                          This method can be used to compute the fraction of delivered demand, from [OsKS02]_.
 										  
    Water service availability             Water service availability is the ratio of delivered demand to the expected demand.  
                                           This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.water_service_availability` method.
-
+                                          This method can be used to compute the fraction of delivered volume, from [OsKS02]_.
+										  
    Todini index                           The Todini index [Todi00]_ is related to the capability of a system to overcome 
                                           failures while still meeting demands and pressures at the nodes. The 
                                           Todini index defines resilience at a specific time as a measure of surplus 
@@ -231,7 +232,7 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
 
    Concentration                          To determine the number of node-time pairs above or below a specified concentration threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CHEM or TRACE.
-										  This method can be used to compute the fraction of delivered quality, from [OsKS02]_.
+                                          This method can be used to compute the fraction of delivered quality, from [OsKS02]_.
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water quality metrics.
