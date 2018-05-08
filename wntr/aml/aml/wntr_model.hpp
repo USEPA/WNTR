@@ -1,69 +1,7 @@
 #include "expression.hpp"
 
-class ConstraintBase;
-class Constraint;
-class ConditionalConstraint;
 class CSRJacobian;
 class CoreModel;
-
-
-class ConstraintBase
-{
-public:
-    ConstraintBase() = default;
-    virtual ~ConstraintBase() = default;
-    virtual double evaluate() = 0;
-    virtual double ad(Var&) = 0;
-    virtual double ad2(Var&, Var&) = 0;
-    virtual double recursive_ad(Var&) = 0;
-    virtual double recursive_ad2(Var&, Var&) = 0;
-    virtual double recursive_evaluate() = 0;
-    virtual std::set<Var*> vars() = 0;
-    int index = -1;
-    std::string name;
-    virtual std::string _print() = 0;
-};
-
-
-class Constraint: public ConstraintBase
-{
-public:
-    Constraint() = default;
-    explicit Constraint(Expression e): expr(e) {}
-    explicit Constraint(Var &v): expr(v) {}
-    Expression expr;
-    double evaluate() override;
-    double ad(Var&) override;
-    double ad2(Var&, Var&) override;
-    std::set<Var*> vars() override;
-    std::string _print() override;
-    double recursive_ad(Var&) override;
-    double recursive_ad2(Var&, Var&) override;
-    double recursive_evaluate() override;
-};
-
-
-class ConditionalConstraint: public ConstraintBase
-{
-public:
-    ConditionalConstraint() = default;
-    std::vector<Expression> condition_exprs;
-    std::vector<Expression> exprs;
-    double evaluate() override;
-    double ad(Var&) override;
-    double ad2(Var&, Var&) override;
-    void add_condition(Expression condition, Expression expr);
-    void add_condition(Var &condition, Expression expr);
-    void add_condition(Expression condition, Var &expr);
-    void add_condition(Var &condition, Var &expr);
-    void add_final_expr(Expression expr);
-    void add_final_expr(Var &expr);
-    std::set<Var*> vars() override;
-    std::string _print() override;
-    double recursive_ad(Var&) override;
-    double recursive_ad2(Var&, Var&) override;
-    double recursive_evaluate() override;
-};
 
 
 class CSRJacobian  //  Compressed sparse row format

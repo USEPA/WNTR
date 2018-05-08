@@ -2,22 +2,6 @@
 using namespace Ipopt;
 
 
-std::shared_ptr<IpoptConstraint> create_ipopt_constraint(std::shared_ptr<Node> n)
-{
-  std::shared_ptr<IpoptConstraint> c = std::make_shared<IpoptConstraint>();
-  c->expr = n;
-  return c;
-}
-
-
-std::shared_ptr<IpoptObjective> create_ipopt_objective(std::shared_ptr<Node> n)
-{
-  std::shared_ptr<IpoptObjective> o = std::make_shared<IpoptObjective>();
-  o->expr = n;
-  return o;
-}
-
-
 void IpoptModel::add_var(std::shared_ptr<Var> v)
 {
   vars.push_back(v);
@@ -141,40 +125,4 @@ void IpoptModel::solve()
   ApplicationReturnStatus status;
   status = app->Initialize();
   status = app->OptimizeTNLP(mynlp);
-}
-
-
-std::string IpoptConstraint::_print()
-{
-  return expr->_print();
-}
-
-
-std::shared_ptr<std::set<std::shared_ptr<Var>>> IpoptConstraint::get_vars()
-{
-  return expr->get_vars();
-}
-
-
-double IpoptConstraint::evaluate()
-{
-  return expr->evaluate();
-}
-
-
-double IpoptConstraint::ad(Var &n, bool new_eval)
-{
-  return expr->ad(n, new_eval);
-}
-
-
-double IpoptConstraint::ad2(Var &n1, Var &n2, bool new_eval)
-{
-  return expr->ad2(n1, n2, new_eval);
-}
-
-
-double IpoptConstraint::get_dual()
-{
-  return dual;
 }
