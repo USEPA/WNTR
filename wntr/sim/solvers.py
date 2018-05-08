@@ -14,14 +14,10 @@ class NewtonSolver(object):
     Newton Solver class.
     """
     
-    def __init__(self, num_nodes, num_links, num_leaks, model, options=None):
+    def __init__(self, options=None):
         if options is None:
             options = {}
         self._options = options
-        self.num_nodes = num_nodes
-        self.num_links = num_links
-        self.num_leaks = num_leaks
-        self.model = model
 
         if 'MAXITER' not in self._options:
             self.maxiter = 3000

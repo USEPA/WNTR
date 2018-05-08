@@ -10,6 +10,7 @@ import warnings
 import time
 import sys
 import logging
+import scipy.optimize
 import scipy.sparse
 import scipy.sparse.csr
 import itertools
@@ -128,7 +129,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         s = int(s)
         return str(h)+':'+str(m)+':'+str(s)
 
-    def run_sim(self, solver_options={}, convergence_error=True):
+    def run_sim(self, solver=NewtonSolver, backup_solver=None, solver_options=None, backup_solver_options=None, convergence_error=True):
         """
         Run an extended period simulation (hydraulics only).
 
@@ -150,6 +151,11 @@ class WNTRSimulator(WaterNetworkSimulator):
             a warning will be issued and results.error_code will be set to 2
             if the simulation does not converge.  Default = True.
         """
+        if solver_options is None:
+            solver_options = {}
+        if backup_solver_options is None:
+            backup_solver_options = {}
+
         logger_level = logger.getEffectiveLevel()
 
         if logger_level <= 1:
@@ -192,8 +198,6 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._model = model
         model.initialize_results_dict()
 
-        self._solver = NewtonSolver(model.num_nodes, model.num_links, model.num_leaks, model, options=solver_options)
-
         results = SimulationResults()
         results.error_code = 0
         results.time = []
@@ -230,6 +234,22 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         if logger_level <= 1:
             logger.log(1, 'starting simulation')
+
+        if solver is scipy.optimize.fsolve:
+            solver_options.pop('fprime', False)
+            solver_options['full_output'] = True
+            use_jac = solver_options.pop('use_jac', False)
+            if use_jac:
+                dense_jac = _DenseJac(model)
+                solver_options['fprime'] = dense_jac.eval
+
+        if backup_solver is scipy.optimize.fsolve:
+            backup_solver_options.pop('fprime', False)
+            backup_solver_options['full_output'] = True
+            use_jac = backup_solver_options.pop('use_jac', False)
+            if use_jac:
+                dense_jac = _DenseJac(model)
+                backup_solver_options['fprime'] = dense_jac.eval
 
         while True:
             if logger_level <= logging.DEBUG:
@@ -408,16 +428,56 @@ class WNTRSimulator(WaterNetworkSimulator):
             # Solve
             if logger_level <= logging.DEBUG:
                 logger.debug('solving')
-            [self._X, num_iters, solver_status, message] = self._solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            solver_status = 1
+            if solver is NewtonSolver:
+                _solver = NewtonSolver(solver_options)
+                self._X, num_iters, solver_status, message = _solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            elif solver is scipy.optimize.fsolve:
+                self._X, infodict, ier, mesg = solver(model.get_hydraulic_equations, X_init, **solver_options)
+                if ier != 1:
+                    solver_status = 0
+                    message = mesg
+            elif solver in {scipy.optimize.newton_krylov, scipy.optimize.anderson, scipy.optimize.broyden1,
+                            scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
+                            scipy.optimize.diagbroyden}:
+                try:
+                    self._X = solver(model.get_hydraulic_equations, X_init, **solver_options)
+                except:
+                    solver_status = 0
+                    message = ''
+            else:
+                raise ValueError('Solver not recognized.')
             if solver_status == 0:
-                if convergence_error:
-                    logger.error('Simulation did not converge. ' + message)
-                    raise RuntimeError('Simulation did not converge. ' + message)
-                warnings.warn('Simulation did not converge. ' + message)
-                logger.warning('Simulation did not converge at time ' + str(self._get_time()) + '. ' + message)
-                model.get_results(results)
-                results.error_code = 2
-                return results
+                if backup_solver is not None:
+                    solver_status = 1
+                    if backup_solver is NewtonSolver:
+                        _solver = NewtonSolver(backup_solver_options)
+                        self._X, num_iters, solver_status, message = _solver.solve(model.get_hydraulic_equations,
+                                                                                   model.get_jacobian, X_init)
+                    elif backup_solver is scipy.optimize.fsolve:
+                        self._X, infodict, ier, mesg = backup_solver(model.get_hydraulic_equations, X_init, **backup_solver_options)
+                        if ier != 1:
+                            solver_status = 0
+                            message = mesg
+                    elif backup_solver in {scipy.optimize.newton_krylov, scipy.optimize.anderson, scipy.optimize.broyden1,
+                                           scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
+                                           scipy.optimize.diagbroyden}:
+                        try:
+                            self._X = backup_solver(model.get_hydraulic_equations, X_init, **backup_solver_options)
+                        except:
+                            solver_status = 0
+                            message = ''
+                    else:
+                        raise ValueError('Backup solver not recognized.')
+                if solver_status == 0:
+                    if convergence_error:
+                        logger.error('Simulation did not converge. ' + message)
+                        raise RuntimeError('Simulation did not converge. ' + message)
+                    warnings.warn('Simulation did not converge. ' + message)
+                    logger.warning('Simulation did not converge at time ' + str(self._get_time()) + '. ' + message)
+                    model.get_results(results)
+                    results.error_code = 2
+                    return results
             X_init = np.array(self._X)
 
             # Enter results in network and update previous inputs
@@ -645,3 +705,11 @@ def _get_csr_data_index(a, row, col):
             return row_indptr + n
         n += 1
     raise RuntimeError('Unable to find csr data index.')
+
+
+class _DenseJac(object):
+    def __init__(self, model):
+        self.model = model
+
+    def eval(self, x):
+        return self.model.get_jacobian(x).toarray()
