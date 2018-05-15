@@ -1,9 +1,9 @@
 #include "wntr_model.hpp"
 
-void CoreModel::get_x(double *array_out, int array_length_out)
+void WNTRModel::get_x(double *array_out, int array_length_out)
 {
     int i = 0;
-    for (Var* &v_ptr : vars)
+    for (std::shared_ptr<Var> &v_ptr : vars)
     {
         array_out[i] = v_ptr->value;
         ++i;
@@ -11,10 +11,10 @@ void CoreModel::get_x(double *array_out, int array_length_out)
 }
 
 
-void CoreModel::load_var_values_from_x(double *arrayin, int array_length_in)
+void WNTRModel::load_var_values_from_x(double *arrayin, int array_length_in)
 {
     int i = 0;
-    for (Var* &v_ptr: vars)
+    for (std::shared_ptr<Var> &v_ptr: vars)
     {
         v_ptr->value = arrayin[i];
         ++i;
@@ -22,14 +22,14 @@ void CoreModel::load_var_values_from_x(double *arrayin, int array_length_in)
 }
 
 
-void CoreModel::register_constraint(ConstraintBase *con)
+void WNTRModel::register_constraint(std::shared_ptr<Component> con)
 {
     cons.push_back(con);
     jac.register_constraint(con);
 }
 
 
-void CoreModel::remove_constraint(ConstraintBase *con)
+void WNTRModel::remove_constraint(std::shared_ptr<Component> con)
 {
     auto cons_iterator = cons.begin();
     std::advance(cons_iterator, con->index);
@@ -38,7 +38,7 @@ void CoreModel::remove_constraint(ConstraintBase *con)
 }
 
 
-void CoreModel::evaluate(double *array_out, int array_length_out)
+void WNTRModel::evaluate(double *array_out, int array_length_out)
 {
     int i = 0;
     for (auto &ptr_to_con : cons)
@@ -49,28 +49,17 @@ void CoreModel::evaluate(double *array_out, int array_length_out)
 }
 
 
-void CoreModel::recursive_evaluate(double *array_out, int array_length_out)
-{
-    int i = 0;
-    for (auto &ptr_to_con : cons)
-    {
-        array_out[i] = ptr_to_con->recursive_evaluate();
-        ++i;
-    }
-}
-
-
-bool compare_var_indices(Var *first, Var *second)
+bool compare_var_indices(std::shared_ptr<Var> first, std::shared_ptr<Var> second)
 {
     return (first->index < second->index);
 }
 
 
-void CSRJacobian::register_constraint(ConstraintBase *con)
+void CSRJacobian::register_constraint(std::shared_ptr<Component> con)
 {
     //  Gather some needed data
     int last_row_nnz = row_nnz.back();
-    int n_vars = (con->vars()).size();
+    int n_vars = (con->get_vars()).size();
 
     //  Now add the number of nonzero elements to row_nnz
     row_nnz.push_back(n_vars + last_row_nnz);
@@ -82,8 +71,8 @@ void CSRJacobian::register_constraint(ConstraintBase *con)
     }
 
     //  Now add the vars and the column indices
-    std::list<Var*> vars_to_add;
-    for (auto &v : con->vars())
+    std::list<std::shared_ptr<Var> > vars_to_add;
+    for (auto &v : con->get_vars())
     {
         vars_to_add.push_back(v);
     }
@@ -96,7 +85,7 @@ void CSRJacobian::register_constraint(ConstraintBase *con)
 }
 
 
-void CSRJacobian::remove_constraint(ConstraintBase *con)
+void CSRJacobian::remove_constraint(std::shared_ptr<Component> con)
 {
     //  First create the iterators for row_nnz, col_ndx, vars, and cons;
     auto row_nnz_iterator = row_nnz.begin();
@@ -110,7 +99,7 @@ void CSRJacobian::remove_constraint(ConstraintBase *con)
     //  Gather some needed data
     std::advance(row_nnz_iterator, con->index);
     int last_row_nnz = *row_nnz_iterator;
-    int n_vars = (con->vars()).size();
+    int n_vars = (con->get_vars()).size();
 
     //  Now remove the number of nonzero elements from row_nnz
     ++row_nnz_iterator;
@@ -152,22 +141,6 @@ void CSRJacobian::evaluate(double *array_out, int array_length_out)
 }
 
 
-void CSRJacobian::recursive_evaluate(double *array_out, int array_length_out)
-{
-    auto con_iter = cons.begin();
-    auto var_iter = vars.begin();
-    int con_size = cons.size();
-    int i = 0;
-
-    for (; i < con_size; ++i)
-    {
-        array_out[i] = (*con_iter)->recursive_ad(*(*var_iter));
-        ++con_iter;
-        ++var_iter;
-    }
-}
-
-
 std::list<int> CSRJacobian::get_col_ndx()
 {
     return col_ndx;
@@ -178,5 +151,3 @@ std::list<int> CSRJacobian::get_row_nnz()
 {
     return row_nnz;
 }
-
-
