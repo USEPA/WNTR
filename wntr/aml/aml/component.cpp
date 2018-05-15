@@ -110,6 +110,24 @@ double Constraint::ad2(Var &n1, Var &n2, bool new_eval)
 }
 
 
+double Objective::evaluate()
+{
+  return expr->evaluate();
+}
+
+
+double Objective::ad(Var &n, bool new_eval)
+{
+  return expr->ad(n, new_eval);
+}
+
+
+double Objective::ad2(Var &n1, Var &n2, bool new_eval)
+{
+  return expr->ad2(n1, n2, new_eval);
+}
+
+
 void ConditionalConstraint::add_condition(std::shared_ptr<Node> condition, std::shared_ptr<Node> expr)
 {
   condition_exprs.push_back(condition);
@@ -163,7 +181,7 @@ double ConditionalConstraint::ad2(Var &n1, Var &n2, bool new_eval)
 {
   auto condition_iter = condition_exprs.begin();
   auto expr_iter = exprs.begin();
-  
+
   while (condition_iter != condition_exprs.end())
     {
       if ((*condition_iter)->evaluate() <= 0)
@@ -187,3 +205,37 @@ double ConditionalConstraint::get_dual()
 {
   return dual;
 }
+
+
+double Constraint::has_ad2(Var &n1, Var &n2)
+{
+  return expr->has_ad2(n1, n2);
+}
+
+
+double Objective::has_ad2(Var &n1, Var &n2)
+{
+  return expr->has_ad2(n1, n2);
+}
+
+
+double ConditionalConstraint::has_ad2(Var &n1, Var &n2)
+{
+  auto expr_iter = exprs.begin();
+
+  while (expr_iter != exprs.end())
+    {
+      if ((*expr_iter)->has_ad2(n1, n2))
+      {
+	    return true;
+	  }
+      ++ expr_iter;
+    }
+  if ((*expr_iter)->has_ad2(n1, n2))
+  {
+    return true;
+  }
+  return false;
+}
+
+

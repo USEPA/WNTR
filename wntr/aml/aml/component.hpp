@@ -19,6 +19,7 @@ public:
   virtual double evaluate() = 0;
   virtual double ad(Var&, bool) = 0;
   virtual double ad2(Var&, Var&, bool) = 0;
+  virtual bool has_ad2(Var&, Var&) = 0;
   virtual std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() = 0;
   virtual std::string _print() = 0;
   int index = -1;
@@ -26,7 +27,7 @@ public:
 }
 
 
-class Objective
+class Objective: public Component
 {
 public:
   Objective() = default;
@@ -35,30 +36,41 @@ public:
   double evaluate() override;
   double ad(Var&, bool) override;
   double ad2(Var&, Var&, bool) override;
+  bool has_ad2(Var&, Var&) override;
   std::string _print() override;
   std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
 }
 
 
-class Constraint
+class ConstraintBase: public Component
+{
+public:
+  ConstraintBase() = default;
+  virtual ~ConstraintBase() = default;
+  double lb = -1.0e20;
+  double ub = 1.0e20;
+  double dual = 0.0;
+  virtual double get_dual() = 0;
+}
+
+
+class Constraint: public ConstraintBase
 {
 public:
   Constraint() = default;
   explicit Constraint(std::shared_ptr<Node> e): expr(e) {}
   std::shared_ptr<Node> expr;
-  double lb = -1.0e20;
-  double ub = 1.0e20;
-  double dual = 0.0;
-  double get_dual();
+  double get_dual() override;
   double evaluate() override;
   double ad(Var&, bool) override;
   double ad2(Var&, Var&, bool) override;
+  bool has_ad2(Var&, Var&) override;
   std::string _print() override;
   std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
 }
 
 
-class ConditionalConstraint
+class ConditionalConstraint: public ConstraintBase
 {
 public:
   ConditionalConstraint() = default;
@@ -67,12 +79,10 @@ public:
   double evaluate() override;
   double ad(Var&, bool) override;
   double ad2(Var&, Var&, bool) override;
+  bool has_ad2(Var&, Var&) override;
   void add_condition(std::shared_ptr<Node>, std::shared_ptr<Node>);
   void add_final_expr(std::shared_ptr<Node>);
-  double lb = -1.0e20;
-  double ub = 1.0e20;
-  double dual = 0.0;
-  double get_dual();
+  double get_dual() override;
   std::string _print() override;
   std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
 }

@@ -16,18 +16,18 @@ void IpoptModel::remove_var(std::shared_ptr<Var> v)
 }
 
 
-void IpoptModel::set_objective(std::shared_ptr<IpoptObjective> new_obj)
+void IpoptModel::set_objective(std::shared_ptr<Objective> new_obj)
 {
   if (obj != nullptr)
     {
-      auto obj_vars = obj->expr->get_vars();
+      auto obj_vars = obj->get_vars();
       for (auto ptr_to_var1 : (*obj_vars))
 	{
           for (auto ptr_to_var2 : (*obj_vars))
 	    {
               if (ptr_to_var2->index <= ptr_to_var1->index)
 		{
-                  if (obj->expr->has_ad2(*ptr_to_var1, *ptr_to_var2))
+                  if (obj->has_ad2(*ptr_to_var1, *ptr_to_var2))
 		    {
                       hessian_map[ptr_to_var1][ptr_to_var2]["obj"].erase(obj);
                       if (hessian_map[ptr_to_var1][ptr_to_var2]["cons"].size() == 0 &&
@@ -45,14 +45,14 @@ void IpoptModel::set_objective(std::shared_ptr<IpoptObjective> new_obj)
 	}
     }
   obj = new_obj;
-  auto obj_vars = obj->expr->get_vars();
+  auto obj_vars = obj->get_vars();
   for (auto ptr_to_var1 : (*obj_vars))
     {
       for (auto ptr_to_var2 : (*obj_vars))
 	{
           if (ptr_to_var2->index <= ptr_to_var1->index)
 	    {
-              if (obj->expr->has_ad2(*ptr_to_var1, *ptr_to_var2))
+              if (obj->has_ad2(*ptr_to_var1, *ptr_to_var2))
 		{
                   hessian_map[ptr_to_var1][ptr_to_var2]["obj"].insert(obj);
 		}
@@ -62,17 +62,17 @@ void IpoptModel::set_objective(std::shared_ptr<IpoptObjective> new_obj)
 }
 
 
-void IpoptModel::add_constraint(std::shared_ptr<IpoptConstraint> con)
+void IpoptModel::add_constraint(std::shared_ptr<Component> con)
 {
   cons.push_back(con);
-  auto con_vars = con->expr->get_vars();
+  auto con_vars = con->get_vars();
   for (auto ptr_to_var1 : (*con_vars))
   {
       for (auto ptr_to_var2 : (*con_vars))
       {
           if (ptr_to_var2->index <= ptr_to_var1->index)
           {
-              if (con->expr->has_ad2(*ptr_to_var1, *ptr_to_var2))
+              if (con->has_ad2(*ptr_to_var1, *ptr_to_var2))
               {
                   hessian_map[ptr_to_var1][ptr_to_var2]["cons"].insert(con);
               }
@@ -82,20 +82,20 @@ void IpoptModel::add_constraint(std::shared_ptr<IpoptConstraint> con)
 }
 
 
-void IpoptModel::remove_constraint(std::shared_ptr<IpoptConstraint> con)
+void IpoptModel::remove_constraint(std::shared_ptr<Component> con)
 {
   auto it = cons.begin();
   std::advance(it, con->index);
   cons.erase(it);
 
-  auto con_vars = con->expr->get_vars();
+  auto con_vars = con->get_vars();
   for (auto ptr_to_var1 : (*con_vars))
   {
       for (auto ptr_to_var2 : (*con_vars))
       {
           if (ptr_to_var2->index <= ptr_to_var1->index)
           {
-              if (con->expr->has_ad2(*ptr_to_var1, *ptr_to_var2))
+              if (con->has_ad2(*ptr_to_var1, *ptr_to_var2))
               {
                   hessian_map[ptr_to_var1][ptr_to_var2]["cons"].erase(con);
                   if (hessian_map[ptr_to_var1][ptr_to_var2]["cons"].size() == 0 &&

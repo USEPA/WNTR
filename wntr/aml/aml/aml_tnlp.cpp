@@ -23,7 +23,7 @@ bool AML_NLP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g,
   nnz_jac_g = 0;
   for (auto &ptr_to_con : get_model()->cons)
     {
-      nnz_jac_g += ptr_to_con->expr->get_vars()->size();
+      nnz_jac_g += ptr_to_con->get_vars()->size();
     }
   nnz_h_lag = 0;
   for (auto &row : get_model()->hessian_map)
