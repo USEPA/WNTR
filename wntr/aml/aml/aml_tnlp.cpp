@@ -111,10 +111,10 @@ bool AML_NLP::eval_f(Index n, const Number *x, bool new_x, Number &obj_value)
         {
 	  ptr_to_var->value = x[ptr_to_var->index];
         }
-      get_model()->obj->expr->evaluate();
+      get_model()->obj->evaluate();
       for (auto &ptr_to_con : get_model()->cons)
 	{
-	  ptr_to_con->expr->evaluate();
+	  ptr_to_con->evaluate();
 	}
     }
   
@@ -132,10 +132,10 @@ bool AML_NLP::eval_grad_f(Index n, const Number *x, bool new_x, Number *grad_f)
         {
 	  ptr_to_var->value = x[ptr_to_var->index];
         }
-      get_model()->obj->expr->evaluate();
+      get_model()->obj->evaluate();
       for (auto &ptr_to_con : get_model()->cons)
 	{
-	  ptr_to_con->expr->evaluate();
+	  ptr_to_con->evaluate();
 	}
     }
   
@@ -144,10 +144,10 @@ bool AML_NLP::eval_grad_f(Index n, const Number *x, bool new_x, Number *grad_f)
       grad_f[i] = 0.0;
     }
   
-  auto obj_vars = get_model()->obj->expr->get_vars();
+  auto obj_vars = get_model()->obj->get_vars();
   for (auto &ptr_to_var : *(obj_vars))
     {
-      grad_f[ptr_to_var->index] = get_model()->obj->expr->ad(*ptr_to_var, false);
+      grad_f[ptr_to_var->index] = get_model()->obj->ad(*ptr_to_var, false);
     }
   
   return true;
@@ -160,19 +160,19 @@ bool AML_NLP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g)
     {
       for (auto &ptr_to_var : get_model()->vars)
         {
-	  ptr_to_var->value = x[ptr_to_var->index];
+	      ptr_to_var->value = x[ptr_to_var->index];
         }
-      get_model()->obj->expr->evaluate();
+      get_model()->obj->evaluate();
       for (auto &ptr_to_con : get_model()->cons)
-	{
-	  ptr_to_con->expr->evaluate();
-	}
+	    {
+	      ptr_to_con->evaluate();
+	    }
     }
   
   int i = 0;
   for (auto &ptr_to_con : get_model()->cons)
     {
-      g[i] = ptr_to_con->expr->value;
+      g[i] = ptr_to_con->value;
       ++i;
     }
   
@@ -190,7 +190,7 @@ bool AML_NLP::eval_jac_g(Index n, const Number *x, bool new_x,
       std::shared_ptr<std::set<std::shared_ptr<Var> > > con_vars;
       for (auto &ptr_to_con : get_model()->cons)
         {
-	  con_vars = ptr_to_con->expr->get_vars();
+	  con_vars = ptr_to_con->get_vars();
 	  for (auto &ptr_to_var : (*con_vars))
             {
 	      iRow[i] = ptr_to_con->index;
@@ -207,20 +207,20 @@ bool AML_NLP::eval_jac_g(Index n, const Number *x, bool new_x,
             {
 	      ptr_to_var->value = x[ptr_to_var->index];
             }
-	  get_model()->obj->expr->evaluate();
+	  get_model()->obj->evaluate();
 	  for (auto &ptr_to_con : get_model()->cons)
 	    {
-	      ptr_to_con->expr->evaluate();
+	      ptr_to_con->evaluate();
 	    }
         }
       int i = 0;
       std::shared_ptr<std::set<std::shared_ptr<Var> > > con_vars;
       for (auto &ptr_to_con : get_model()->cons)
         {
-	  con_vars = ptr_to_con->expr->get_vars();
+	  con_vars = ptr_to_con->get_vars();
 	  for (auto &ptr_to_var : (*con_vars))
             {
-	      values[i] = ptr_to_con->expr->ad(*ptr_to_var, false);
+	      values[i] = ptr_to_con->ad(*ptr_to_var, false);
 	      ++i;
             }
         }
@@ -256,10 +256,10 @@ bool AML_NLP::eval_h(Index n, const Number *x, bool new_x,
             {
 	      ptr_to_var->value = x[ptr_to_var->index];
             }
-	  get_model()->obj->expr->evaluate();
+	  get_model()->obj->evaluate();
 	  for (auto &ptr_to_con : get_model()->cons)
 	    {
-	      ptr_to_con->expr->evaluate();
+	      ptr_to_con->evaluate();
 	    }
         }
       if (new_lambda)
@@ -277,11 +277,11 @@ bool AML_NLP::eval_h(Index n, const Number *x, bool new_x,
 	      values[i] = 0;
 	      for (auto &ptr_to_obj : col.second["obj"])
                 {
-		  values[i] += obj_factor * ptr_to_obj->expr->ad2(*row.first, *col.first, false);
+		  values[i] += obj_factor * ptr_to_obj->ad2(*row.first, *col.first, false);
                 }
 	      for (auto &ptr_to_con : col.second["cons"])
                 {
-		  values[i] += lambda[ptr_to_con->index] * ptr_to_con->expr->ad2(*row.first, *col.first, false);
+		  values[i] += lambda[ptr_to_con->index] * ptr_to_con->ad2(*row.first, *col.first, false);
                 }
 	      ++i;
             }

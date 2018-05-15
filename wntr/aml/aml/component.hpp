@@ -1,9 +1,9 @@
 #include "expression.hpp"
 
-class Component
-class Constraint
-class Objective
-class ConditionalConstraint
+class Component;
+class Constraint;
+class Objective;
+class ConditionalConstraint;
 
 
 std::shared_ptr<Constraint> create_constraint(std::shared_ptr<Node>);
@@ -23,8 +23,9 @@ public:
   virtual std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() = 0;
   virtual std::string _print() = 0;
   int index = -1;
+  double value = 0.0;
   std::string name;
-}
+};
 
 
 class Objective: public Component
@@ -39,7 +40,7 @@ public:
   bool has_ad2(Var&, Var&) override;
   std::string _print() override;
   std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
-}
+};
 
 
 class ConstraintBase: public Component
@@ -51,7 +52,7 @@ public:
   double ub = 1.0e20;
   double dual = 0.0;
   virtual double get_dual() = 0;
-}
+};
 
 
 class Constraint: public ConstraintBase
@@ -67,7 +68,7 @@ public:
   bool has_ad2(Var&, Var&) override;
   std::string _print() override;
   std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
-}
+};
 
 
 class ConditionalConstraint: public ConstraintBase
@@ -85,4 +86,4 @@ public:
   double get_dual() override;
   std::string _print() override;
   std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
-}
+};

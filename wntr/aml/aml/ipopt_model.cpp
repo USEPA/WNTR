@@ -62,7 +62,7 @@ void IpoptModel::set_objective(std::shared_ptr<Objective> new_obj)
 }
 
 
-void IpoptModel::add_constraint(std::shared_ptr<Component> con)
+void IpoptModel::add_constraint(std::shared_ptr<ConstraintBase> con)
 {
   cons.push_back(con);
   auto con_vars = con->get_vars();
@@ -82,7 +82,7 @@ void IpoptModel::add_constraint(std::shared_ptr<Component> con)
 }
 
 
-void IpoptModel::remove_constraint(std::shared_ptr<Component> con)
+void IpoptModel::remove_constraint(std::shared_ptr<ConstraintBase> con)
 {
   auto it = cons.begin();
   std::advance(it, con->index);

@@ -94,7 +94,8 @@ std::shared_ptr<std::set<std::shared_ptr<Var> > > ConditionalConstraint::get_var
 
 double Constraint::evaluate()
 {
-  return expr->evaluate();
+  value = expr->evaluate();
+  return value;
 }
 
 
@@ -112,7 +113,8 @@ double Constraint::ad2(Var &n1, Var &n2, bool new_eval)
 
 double Objective::evaluate()
 {
-  return expr->evaluate();
+  value = expr->evaluate();
+  return value;
 }
 
 
@@ -145,17 +147,24 @@ double ConditionalConstraint::evaluate()
 {
   auto condition_iter = condition_exprs.begin();
   auto expr_iter = exprs.begin();
+  bool found = false;
   
   while (condition_iter != condition_exprs.end())
+  {
+    if ((*condition_iter)->evaluate() <= 0)
     {
-      if ((*condition_iter)->evaluate() <= 0)
-        {
-	  return (*expr_iter)->evaluate();
-        }
-      ++condition_iter;
-      ++ expr_iter;
+      value = (*expr_iter)->evaluate();
+      found = true;
+      break;
     }
-  return (*expr_iter)->evaluate();
+    ++condition_iter;
+    ++ expr_iter;
+  }
+  if (!found)
+  {
+    value = (*expr_iter)->evaluate();
+  }
+  return value;
 }
 
 
@@ -207,19 +216,19 @@ double ConditionalConstraint::get_dual()
 }
 
 
-double Constraint::has_ad2(Var &n1, Var &n2)
+bool Constraint::has_ad2(Var &n1, Var &n2)
 {
   return expr->has_ad2(n1, n2);
 }
 
 
-double Objective::has_ad2(Var &n1, Var &n2)
+bool Objective::has_ad2(Var &n1, Var &n2)
 {
   return expr->has_ad2(n1, n2);
 }
 
 
-double ConditionalConstraint::has_ad2(Var &n1, Var &n2)
+bool ConditionalConstraint::has_ad2(Var &n1, Var &n2)
 {
   auto expr_iter = exprs.begin();
 
