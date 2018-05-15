@@ -59,7 +59,7 @@ void CSRJacobian::register_constraint(std::shared_ptr<ConstraintBase> con)
 {
     //  Gather some needed data
     int last_row_nnz = row_nnz.back();
-    int n_vars = (con->get_vars()).size();
+    int n_vars = (con->get_vars())->size();
 
     //  Now add the number of nonzero elements to row_nnz
     row_nnz.push_back(n_vars + last_row_nnz);
@@ -72,7 +72,7 @@ void CSRJacobian::register_constraint(std::shared_ptr<ConstraintBase> con)
 
     //  Now add the vars and the column indices
     std::list<std::shared_ptr<Var> > vars_to_add;
-    for (auto &v : con->get_vars())
+    for (auto &v : *(con->get_vars()))
     {
         vars_to_add.push_back(v);
     }
@@ -99,7 +99,7 @@ void CSRJacobian::remove_constraint(std::shared_ptr<ConstraintBase> con)
     //  Gather some needed data
     std::advance(row_nnz_iterator, con->index);
     int last_row_nnz = *row_nnz_iterator;
-    int n_vars = (con->get_vars()).size();
+    int n_vars = (con->get_vars())->size();
 
     //  Now remove the number of nonzero elements from row_nnz
     ++row_nnz_iterator;

@@ -9,6 +9,10 @@ try:
 except AttributeError:
     numpy_include = numpy.get_numpy_include()
 
+print('********************************')
+print(numpy_include)
+print('********************************')
+
 ipopt_executable = shutil.which('ipopt')
 
 if ipopt_executable is None:
@@ -67,7 +71,7 @@ wntr_model_ext = Extension("aml._wntr_model",
                            swig_opts=['-c++'])
 extension_modules.append(wntr_model_ext)
 
-ipopt_model_ext = Extension("ipaml._ipopt_model",
+ipopt_model_ext = Extension("aml._ipopt_model",
                             sources=[ipopt_model_i, ipopt_model_cxx, aml_tnlp_cxx],
                             language="c++",
                             extra_compile_args=["-std=c++11"],  # , "-stdlib=libc++"],

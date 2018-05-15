@@ -1,7 +1,8 @@
 import sys
 from collections import OrderedDict
-from ipaml.expression import Var, Param, create_var, create_param
-from ipaml.ipopt_model import IpoptConstraint, IpoptObjective, create_ipopt_constraint, create_ipopt_objective, IpoptModel
+from aml.expression import Var, Param, create_var, create_param
+from aml.component import Constraint, ConditionalConstraint, Objective, create_constraint, create_conditional_constraint, create_objective
+from aml.ipopt_model import IpoptModel
 if sys.version_info.major == 2:
     from collections import MutableSet, MutableMapping
 else:
@@ -102,7 +103,7 @@ class Model(object):
         elif isinstance(val, Var):
             val.name = name
             self._register_var(val)
-        elif isinstance(val, IpoptConstraint):
+        elif isinstance(val, Constraint):
             val.name = name
             self._register_constraint(val)
         elif isinstance(val, VarDict):
@@ -117,7 +118,7 @@ class Model(object):
             val._model = self
             for k, v in val.items():
                 self._register_constraint(v)
-        elif isinstance(val, IpoptObjective):
+        elif isinstance(val, Objective):
             print('setting objective on IpoptModel')
             self._model.set_objective(val)
             print('done setting objective on IpoptModel')
@@ -140,7 +141,7 @@ class Model(object):
         """
         # The __delattr__ of the parent class should always be called so that the attribute actually gets removed.
         val = getattr(self, name)
-        if isinstance(val, IpoptConstraint):
+        if isinstance(val, Constraint):
             self._remove_constraint(val)
             val.name = 'None'
         elif isinstance(val, ConstraintDict):

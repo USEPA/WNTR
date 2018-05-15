@@ -30,6 +30,12 @@ std::string Constraint::_print()
 }
 
 
+std::string Objective::_print()
+{
+  return expr->_print();
+}
+
+
 std::string ConditionalConstraint::_print()
 {
   std::string s = "";
