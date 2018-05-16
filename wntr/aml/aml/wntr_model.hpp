@@ -16,7 +16,7 @@ public:
 
     void add_constraint(std::shared_ptr<ConstraintBase>);
     void remove_constraint(std::shared_ptr<ConstraintBase>);
-    void evaluate(double *array_out, int array_length_out, bool new_eval);
+    void evaluate(double *array_out, int array_length_out, bool new_eval=true);
     std::list<int> get_row_nnz();
     std::list<int> get_col_ndx();
 };

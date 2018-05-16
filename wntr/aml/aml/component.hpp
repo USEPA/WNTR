@@ -17,7 +17,7 @@ public:
   Component() = default;
   virtual ~Component() = default;
   virtual double evaluate() = 0;
-  virtual double ad(Var&, bool) = 0;
+  virtual double ad(Var&, bool new_eval=true) = 0;
   virtual double ad2(Var&, Var&, bool) = 0;
   virtual bool has_ad2(Var&, Var&) = 0;
   virtual std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() = 0;
@@ -35,7 +35,7 @@ public:
   explicit Objective(std::shared_ptr<Node> e): expr(e) {}
   std::shared_ptr<Node> expr;
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad2(Var&, Var&) override;
   std::string _print() override;
@@ -63,7 +63,7 @@ public:
   std::shared_ptr<Node> expr;
   double get_dual() override;
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad2(Var&, Var&) override;
   std::string _print() override;
@@ -78,7 +78,7 @@ public:
   std::vector<std::shared_ptr<Node> > condition_exprs;
   std::vector<std::shared_ptr<Node> > exprs;
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad2(Var&, Var&) override;
   void add_condition(std::shared_ptr<Node>, std::shared_ptr<Node>);

@@ -69,7 +69,7 @@ public:
   virtual std::shared_ptr<std::map<std::shared_ptr<Node>, std::vector<int> > > get_sparsity();
   virtual std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars();
   virtual double evaluate() = 0;
-  virtual double ad(Var&, bool) = 0;
+  virtual double ad(Var&, bool new_eval=true) = 0;
   virtual double ad2(Var&, Var&, bool) = 0;
   virtual bool has_ad(Var&);
   virtual bool has_ad2(Var&, Var&) = 0;
@@ -112,7 +112,7 @@ public:
   std::shared_ptr<std::map<std::shared_ptr<Node>, std::vector<int> > > get_sparsity() override;
   std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad(Var&) override;
   bool has_ad2(Var&, Var&) override;
@@ -138,7 +138,7 @@ public:
   double ub_dual = 0.0;
   std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad2(Var&, Var&) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
@@ -152,7 +152,7 @@ class Param: public Node
 public:
   Param() = default;
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad2(Var&, Var&) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
@@ -168,7 +168,7 @@ public:
   std::shared_ptr<std::vector<std::shared_ptr<Node> > > get_nodes() override;
   std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad(Var&) override;
   bool has_ad2(Var&, Var&) override;
@@ -184,7 +184,7 @@ class VarVarMultiplyOperator: public Node
 public:
   VarVarMultiplyOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -198,7 +198,7 @@ class VarParamMultiplyOperator: public Node
 public:
   VarParamMultiplyOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -212,7 +212,7 @@ class VarOperatorMultiplyOperator: public Node
 public:
   VarOperatorMultiplyOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -226,7 +226,7 @@ class ParamVarMultiplyOperator: public Node
 public:
   ParamVarMultiplyOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -240,7 +240,7 @@ class ParamParamMultiplyOperator: public Node
 public:
   ParamParamMultiplyOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -254,7 +254,7 @@ class ParamOperatorMultiplyOperator: public Node
 public:
   ParamOperatorMultiplyOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -268,7 +268,7 @@ class OperatorVarMultiplyOperator: public Node
 public:
   OperatorVarMultiplyOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -282,7 +282,7 @@ class OperatorParamMultiplyOperator: public Node
 public:
   OperatorParamMultiplyOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -296,7 +296,7 @@ class OperatorOperatorMultiplyOperator: public Node
 public:
   OperatorOperatorMultiplyOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -310,7 +310,7 @@ class VarVarDivideOperator: public Node
 public:
   VarVarDivideOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -324,7 +324,7 @@ class VarParamDivideOperator: public Node
 public:
   VarParamDivideOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -338,7 +338,7 @@ class VarOperatorDivideOperator: public Node
 public:
   VarOperatorDivideOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -352,7 +352,7 @@ class ParamVarDivideOperator: public Node
 public:
   ParamVarDivideOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -366,7 +366,7 @@ class ParamParamDivideOperator: public Node
 public:
   ParamParamDivideOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -380,7 +380,7 @@ class ParamOperatorDivideOperator: public Node
 public:
   ParamOperatorDivideOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -394,7 +394,7 @@ class OperatorVarDivideOperator: public Node
 public:
   OperatorVarDivideOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -408,7 +408,7 @@ class OperatorParamDivideOperator: public Node
 public:
   OperatorParamDivideOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -422,7 +422,7 @@ class OperatorOperatorDivideOperator: public Node
 public:
   OperatorOperatorDivideOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -436,7 +436,7 @@ class VarVarPowerOperator: public Node
 public:
   VarVarPowerOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -450,7 +450,7 @@ class VarParamPowerOperator: public Node
 public:
   VarParamPowerOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -464,7 +464,7 @@ class VarOperatorPowerOperator: public Node
 public:
   VarOperatorPowerOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -478,7 +478,7 @@ class ParamVarPowerOperator: public Node
 public:
   ParamVarPowerOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -492,7 +492,7 @@ class ParamParamPowerOperator: public Node
 public:
   ParamParamPowerOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -506,7 +506,7 @@ class ParamOperatorPowerOperator: public Node
 public:
   ParamOperatorPowerOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -520,7 +520,7 @@ class OperatorVarPowerOperator: public Node
 public:
   OperatorVarPowerOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -534,7 +534,7 @@ class OperatorParamPowerOperator: public Node
 public:
   OperatorParamPowerOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
@@ -548,7 +548,7 @@ class OperatorOperatorPowerOperator: public Node
 public:
   OperatorOperatorPowerOperator(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2): node1(n1), node2(n2) {}
   double evaluate() override;
-  double ad(Var&, bool) override;
+  double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
