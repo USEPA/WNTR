@@ -14,7 +14,7 @@ public:
     // The constraints; Differentiate these wrt the corresponding var in vars to get the values of the CSR matrix
     std::list<std::shared_ptr<ConstraintBase> > cons;
 
-    void register_constraint(std::shared_ptr<ConstraintBase>);
+    void add_constraint(std::shared_ptr<ConstraintBase>);
     void remove_constraint(std::shared_ptr<ConstraintBase>);
     void evaluate(double *array_out, int array_length_out, bool new_eval);
     std::list<int> get_row_nnz();
@@ -30,8 +30,10 @@ public:
     CSRJacobian jac;
     void get_x(double *array_out, int array_length_out);
     void load_var_values_from_x(double *array_in, int array_length_in);
-    void register_constraint(std::shared_ptr<ConstraintBase>);
+    void add_constraint(std::shared_ptr<ConstraintBase>);
     void remove_constraint(std::shared_ptr<ConstraintBase>);
+    void add_var(std::shared_ptr<Var>);
+    void remove_var(std::shared_ptr<Var>);
     void evaluate(double *array_out, int array_length_out);
 };
 

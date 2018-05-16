@@ -1,15 +1,14 @@
 import sys
 from collections import OrderedDict
 from aml.expression import Var, Param, create_var, create_param
-from aml.component import Constraint, ConditionalConstraint, Objective, create_constraint, create_conditional_constraint, create_objective
+from aml.component import ConstraintBase, Constraint, ConditionalConstraint, Objective, create_constraint, create_conditional_constraint, create_objective
 from aml.ipopt_model import IpoptModel
+from aml.wntr_model import WNTRModel
 if sys.version_info.major == 2:
     from collections import MutableSet, MutableMapping
 else:
     from collections.abc import MutableSet, MutableMapping
-
-
-recursive = False
+import scipy
 
 
 class OrderedSet(MutableSet):
@@ -78,10 +77,15 @@ class Model(object):
     """
     A class for creating algebraic models.
     """
-    def __init__(self):
+    def __init__(self, model_type='wntr'):
         self._vars = _OrderedIndexSet()
         self._cons = _OrderedIndexSet()
-        self._model = IpoptModel()
+        if model_type.upper() == 'WNTR':
+            self._model = WNTRModel()
+        elif model_type.upper() == 'IPOPT':
+            self._model = IpoptModel()
+        else:
+            raise ValueError('Unrecognized model_type: '+model_type)
 
     def __setattr__(self, name, val):
         """
@@ -103,7 +107,7 @@ class Model(object):
         elif isinstance(val, Var):
             val.name = name
             self._register_var(val)
-        elif isinstance(val, Constraint):
+        elif isinstance(val, ConstraintBase):
             val.name = name
             self._register_constraint(val)
         elif isinstance(val, VarDict):
@@ -119,9 +123,7 @@ class Model(object):
             for k, v in val.items():
                 self._register_constraint(v)
         elif isinstance(val, Objective):
-            print('setting objective on IpoptModel')
             self._model.set_objective(val)
-            print('done setting objective on IpoptModel')
 
         # The __setattr__ of the parent class should always be called so that the attribute actually gets set.
         super(Model, self).__setattr__(name, val)
@@ -141,7 +143,7 @@ class Model(object):
         """
         # The __delattr__ of the parent class should always be called so that the attribute actually gets removed.
         val = getattr(self, name)
-        if isinstance(val, Constraint):
+        if isinstance(val, ConstraintBase):
             self._remove_constraint(val)
             val.name = 'None'
         elif isinstance(val, ConstraintDict):
@@ -174,6 +176,32 @@ class Model(object):
     def _remove_constraint(self, con):
         self._model.remove_constraint(con)
         self._cons.remove(con)
+
+    def evaluate_residuals(self, x=None):
+        if x is not None:
+            self._model.load_var_values_from_x(x)
+        r = self._model.evaluate(len(self._cons))
+        return r
+
+    def evaluate_jacobian(self, x=None, new_eval=True):
+        if x is not None:
+            self._model.load_var_values_from_x(x)
+        if new_eval:
+            self.evaluate_residuals()
+        jac_values = self._model.jac.evaluate(len(self._model.jac.cons), False)
+        n_vars = len(self._vars)
+        n_cons = len(self._cons)
+        if n_vars != n_cons:
+            raise ValueError('The number of constraints and variables must be equal.')
+        result = scipy.sparse.csr_matrix((jac_values, self._model.jac.get_col_ndx(), self._model.jac.get_row_nnz()),
+                                         shape=(n_cons, n_vars))
+        return result
+
+    def get_x(self):
+        return self._model.get_x(len(self._vars))
+
+    def load_var_values_from_x(self, x):
+        self._model.load_var_values_from_x(x)
 
     def solve(self):
         self._model.solve()

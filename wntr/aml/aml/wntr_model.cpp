@@ -22,7 +22,7 @@ void WNTRModel::load_var_values_from_x(double *arrayin, int array_length_in)
 }
 
 
-void WNTRModel::register_constraint(std::shared_ptr<ConstraintBase> con)
+void WNTRModel::add_constraint(std::shared_ptr<ConstraintBase> con)
 {
     cons.push_back(con);
     jac.register_constraint(con);
@@ -55,7 +55,7 @@ bool compare_var_indices(std::shared_ptr<Var> first, std::shared_ptr<Var> second
 }
 
 
-void CSRJacobian::register_constraint(std::shared_ptr<ConstraintBase> con)
+void CSRJacobian::add_constraint(std::shared_ptr<ConstraintBase> con)
 {
     //  Gather some needed data
     int last_row_nnz = row_nnz.back();
@@ -150,4 +150,18 @@ std::list<int> CSRJacobian::get_col_ndx()
 std::list<int> CSRJacobian::get_row_nnz()
 {
     return row_nnz;
+}
+
+
+void WNTRModel::add_var(std::shared_ptr<Var> v)
+{
+  vars.push_back(v);
+}
+
+
+void WNTRModel::remove_var(std::shared_ptr<Var> v)
+{
+  auto it = vars.begin();
+  std::advance(it, v->index);
+  vars.erase(it);
 }
