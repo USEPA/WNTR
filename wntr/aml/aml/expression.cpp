@@ -4,15 +4,21 @@
 
 #include "expression.hpp"
 
-std::shared_ptr<Var> create_var()
+std::shared_ptr<Var> create_var(double value, double lb, double ub)
 {
-  return std::make_shared<Var>();
+  std::shared_ptr<Var> v = std::make_shared<Var>();
+  v->value = value;
+  v->lb = lb;
+  v->ub = ub;
+  return v;
 }
 
 
-std::shared_ptr<Param> create_param()
+std::shared_ptr<Param> create_param(double value)
 {
-  return std::make_shared<Param>();
+  std::shared_ptr<Param> p = std::make_shared<Param>();
+  p->value = value;
+  return p;
 }
 
 

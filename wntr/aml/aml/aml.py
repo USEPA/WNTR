@@ -103,21 +103,33 @@ class Model(object):
         None
         """
         if isinstance(val, Param):
+            if hasattr(self, name):
+                raise ValueError('Model already has a parameter named {0}. If you want to replace the parameter, please remove the existing one first.'.format(name))
             val.name = name
         elif isinstance(val, Var):
+            if hasattr(self, name):
+                raise ValueError('Model already has a var named {0}. If you want to replace the var, please remove the existing one first.'.format(name))
             val.name = name
             self._register_var(val)
         elif isinstance(val, ConstraintBase):
+            if hasattr(self, name):
+                raise ValueError('Model already has a constraint named {0}. If you want to replace the constraint, please remove the existing one first.'.format(name))
             val.name = name
             self._register_constraint(val)
         elif isinstance(val, VarDict):
+            if hasattr(self, name):
+                raise ValueError('Model already has a VarDict named {0}. If you want to replace the VarDict, please remove the existing one first.'.format(name))
             val.name = name
             val._model = self
             for k, v in val.items():
                 self._register_var(v)
         elif isinstance(val, ParamDict):
+            if hasattr(self, name):
+                raise ValueError('Model already has a ParamDict named {0}. If you want to replace the ParamDict, please remove the existing one first.'.format(name))
             val.name = name
         elif isinstance(val, ConstraintDict):
+            if hasattr(self, name):
+                raise ValueError('Model already has a ConstraintDict named {0}. If you want to replace the ConstraintDict, please remove the existing one first.'.format(name))
             val.name = name
             val._model = self
             for k, v in val.items():
@@ -282,7 +294,8 @@ class VarDict(_NodeDict):
         del self._data[key]
 
     def __setitem__(self, key, val):
-        self.pop(key, default=None)
+        if hasattr(self, key):
+            raise ValueError('VarDict already has a Var named {0}. If you want to replace the Var, please remove the existing one first.'.format(key))
         if self._model is not None:
             self._model._register_var(val)
         val.name = self.name + '[' + str(key) + ']'
@@ -302,7 +315,8 @@ class ConstraintDict(_NodeDict):
         del self._data[key]
 
     def __setitem__(self, key, val):
-        self.pop(key, default=None)
+        if hasattr(self, key):
+            raise ValueError('ConstraintDict already has a Constraint named {0}. If you want to replace the Constraint, please remove the existing one first.'.format(key))
         val.name = self.name + '[' + str(key) + ']'
         if self._model is not None:
             self._model._register_constraint(val)

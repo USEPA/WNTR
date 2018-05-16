@@ -5,6 +5,8 @@
 %shared_ptr(ConstraintBase)
 %shared_ptr(Objective)
 %shared_ptr(Component)
+%feature("kwargs");
+%feature("autodoc","3");
 %{
   #include "component.hpp"
 %}

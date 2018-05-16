@@ -45,10 +45,10 @@ class OperatorParamPowerOperator;
 class OperatorOperatorPowerOperator;
 
 
-std::shared_ptr<Var> create_var();
+std::shared_ptr<Var> create_var(double value=0.0, double lb=-1.0e100, double ub=1.0e100);
 
 
-std::shared_ptr<Param> create_param();
+std::shared_ptr<Param> create_param(double value=0.0);
 
 
 class Node: public std::enable_shared_from_this<Node>

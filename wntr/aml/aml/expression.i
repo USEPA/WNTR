@@ -32,6 +32,8 @@
 %shared_ptr(OperatorParamPowerOperator)
 %shared_ptr(OperatorOperatorPowerOperator)
 %shared_ptr(Node)
+%feature("kwargs");
+%feature("autodoc","3");
 %{
   #include "expression.hpp"
 %}

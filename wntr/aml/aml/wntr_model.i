@@ -1,4 +1,6 @@
 %module wntr_model
+%feature("kwargs");
+%feature("autodoc","3");
 %{
   #define SWIG_FILE_WITH_INIT
   #include "wntr_model.hpp"

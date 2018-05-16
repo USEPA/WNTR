@@ -48,8 +48,8 @@ class ConstraintBase: public Component
 public:
   ConstraintBase() = default;
   virtual ~ConstraintBase() = default;
-  double lb = -1.0e20;
-  double ub = 1.0e20;
+  double lb = -1.0e100;
+  double ub = 1.0e100;
   double dual = 0.0;
   virtual double get_dual() = 0;
 };

@@ -25,7 +25,7 @@ void WNTRModel::load_var_values_from_x(double *arrayin, int array_length_in)
 void WNTRModel::add_constraint(std::shared_ptr<ConstraintBase> con)
 {
     cons.push_back(con);
-    jac.register_constraint(con);
+    jac.add_constraint(con);
 }
 
 

@@ -1,4 +1,6 @@
 %module ipopt_model
+%feature("kwargs");
+%feature("autodoc","3");
 %{
   #include "ipopt_model.hpp"
 %}
