@@ -3,7 +3,7 @@ from collections import OrderedDict
 from aml.expression import Var, Param, create_var, create_param
 from aml.component import ConstraintBase, Constraint, ConditionalConstraint, Objective, create_constraint, create_conditional_constraint, create_objective
 from aml.ipopt_model import IpoptModel
-from aml.wntr_model import WNTRModel
+from aml.wntr_model import WNTRModel, CSRJacobian
 if sys.version_info.major == 2:
     from collections import MutableSet, MutableMapping
 else:

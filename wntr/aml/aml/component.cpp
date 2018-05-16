@@ -84,8 +84,8 @@ std::shared_ptr<std::set<std::shared_ptr<Var> > > Constraint::get_vars()
 
 std::shared_ptr<std::set<std::shared_ptr<Var> > > ConditionalConstraint::get_vars()
 {
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > vs;
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > _vars;
+  std::shared_ptr<std::set<std::shared_ptr<Var> > > vs = std::make_shared<std::set<std::shared_ptr<Var> > >();
+  std::shared_ptr<std::set<std::shared_ptr<Var> > > _vars = std::make_shared<std::set<std::shared_ptr<Var> > >();
   for (auto &e : exprs)
     {
       _vars = e->get_vars();

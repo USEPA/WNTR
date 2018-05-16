@@ -59,7 +59,8 @@ void CSRJacobian::add_constraint(std::shared_ptr<ConstraintBase> con)
 {
     //  Gather some needed data
     int last_row_nnz = row_nnz.back();
-    int n_vars = (con->get_vars())->size();
+    auto con_vars = con->get_vars();
+    int n_vars = con_vars->size();
 
     //  Now add the number of nonzero elements to row_nnz
     row_nnz.push_back(n_vars + last_row_nnz);
@@ -72,10 +73,11 @@ void CSRJacobian::add_constraint(std::shared_ptr<ConstraintBase> con)
 
     //  Now add the vars and the column indices
     std::list<std::shared_ptr<Var> > vars_to_add;
-    for (auto &v : *(con->get_vars()))
+    for (auto &v : *(con_vars))
     {
         vars_to_add.push_back(v);
     }
+
     vars_to_add.sort(compare_var_indices);
     for (auto &v : vars_to_add)
     {
