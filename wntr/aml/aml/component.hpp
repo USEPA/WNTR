@@ -6,9 +6,9 @@ class Objective;
 class ConditionalConstraint;
 
 
-std::shared_ptr<Constraint> create_constraint(std::shared_ptr<Node>);
-std::shared_ptr<ConditionalConstraint> create_conditional_constraint();
-std::shared_ptr<Objective> create_objective(std::shared_ptr<Node>);
+std::shared_ptr<Constraint> create_constraint(std::shared_ptr<Node> expr, double lb=-1e100, double ub=1e100);
+std::shared_ptr<ConditionalConstraint> create_conditional_constraint(double lb=-1e100, double ub=1e100);
+std::shared_ptr<Objective> create_objective(std::shared_ptr<Node> expr);
 
 
 class Component

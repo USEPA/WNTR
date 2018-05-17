@@ -1,17 +1,21 @@
 #include "component.hpp"
 
 
-std::shared_ptr<Constraint> create_constraint(std::shared_ptr<Node> n)
+std::shared_ptr<Constraint> create_constraint(std::shared_ptr<Node> expr, double lb, double ub)
 {
   std::shared_ptr<Constraint> c = std::make_shared<Constraint>();
-  c->expr = n;
+  c->expr = expr;
+  c->lb = lb;
+  c->ub = ub;
   return c;
 }
 
 
-std::shared_ptr<ConditionalConstraint> create_conditional_constraint()
+std::shared_ptr<ConditionalConstraint> create_conditional_constraint(double lb, double ub)
 {
   std::shared_ptr<ConditionalConstraint> c = std::make_shared<ConditionalConstraint>();
+  c->lb = lb;
+  c->ub = ub;
   return c;
 }
 

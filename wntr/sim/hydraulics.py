@@ -1,7 +1,5 @@
 from __future__ import print_function
 import pandas as pd
-import numpy as np
-import scipy.sparse as sparse
 import math
 import warnings
 import logging
@@ -9,8 +7,131 @@ from wntr.network.model import WaterNetworkModel
 from wntr.network.base import NodeType, LinkType, LinkStatus
 from wntr.network.elements import Junction, Tank, Reservoir, Pipe, HeadPump, PowerPump, PRValve, PSValve, FCValve, \
     TCValve, GPValve, PBValve
+import wntr.aml.aml.aml as aml
+from collections import OrderedDict
+from wntr.utils.ordered_set import OrderedSet
 
 logger = logging.getLogger(__name__)
+
+
+def demand_var(m, wn, index_over=None):
+    """
+    Add a demand variable to the model
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of junction names
+    """
+    if not hasattr(m, 'demand'):
+        m.demand = aml.VarDict()
+
+    if index_over is None:
+        index_over = wn.junction_name_list
+
+    for node_name in index_over:
+        node = wn.get_node(node_name)
+        m.demand[node_name] = aml.create_var(value=node.demand_timeseries_list(wn.sim_time))
+
+
+def demand_param(m, wn, index_over=None):
+    """
+    Add a demand parameter to the model
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of junction names
+    """
+    if not hasattr(m, 'demand'):
+        m.demand = aml.ParamDict()
+
+    if index_over is None:
+        index_over = wn.junction_name_list
+
+    for node_name in index_over:
+        node = wn.get_node(node_name)
+        m.demand[node_name] = aml.create_param(value=node.demand_timeseries_list(wn.sim_time))
+
+
+def flow_var(m, wn, index_over=None):
+    """
+    Add a flow variable to the model
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of link names
+    """
+    if not hasattr(m, 'flow'):
+        m.flow = aml.VarDict()
+
+    if index_over is None:
+        index_over = wn.link_name_list
+
+    for link_name in index_over:
+        link = wn.get_link(link_name)
+        m.flow[link_name] = aml.create_var(value=0)
+
+
+def head_var(m, wn, index_over=None):
+    """
+    Add a head variable to the model
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of junction names
+    """
+    if not hasattr(m, 'head'):
+        m.head = aml.VarDict()
+
+    if index_over is None:
+        index_over = wn.junction_name_list
+
+    for node_name in index_over:
+        node = wn.get_node(node_name)
+        m.head[node_name] = aml.create_var(value=node.elevation)
+
+
+def mass_balance_constraint(m, wn, index_over=None):
+    """
+    Adds a mass balance to the model for the specified junctions.
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of junction names; default is all junctions in wn
+    """
+    if not hasattr(m, 'mass_balance'):
+        m.mass_balance = aml.ConstraintDict()
+
+    if index_over is None:
+        index_over = wn.junction_name_list
+
+    for node_name in index_over:
+        if node_name in m.mass_balance:
+            del m.mass_balance[node_name]
+        expr = m.demand[node_name]
+        for link_name in wn.get_links_for_node(node_name, flag='INLET'):
+            expr -= m.flow[link_name]
+        for link_name in wn.get_links_for_node(node_name, flag='OUTLET'):
+            expr += m.flow[link_name]
+        node = wn.get_node(node_name)
+        if node.leak_status:
+            expr += m.leak_rate[node_name]
+        m.mass_balance[node_name] = aml.create_constraint(expr=expr, lb=0, ub=0)
+
 
 class HydraulicModel(object):
     """

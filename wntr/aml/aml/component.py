@@ -97,31 +97,41 @@ except __builtin__.Exception:
 
 SHARED_PTR_DISOWN = _component.SHARED_PTR_DISOWN
 
-def create_constraint(arg1):
+def create_constraint(expr, lb=-1e100, ub=1e100):
     """
-    create_constraint(std::shared_ptr< Node > arg1) -> std::shared_ptr< Constraint >
+    create_constraint(std::shared_ptr< Node > expr, double lb=-1e100, double ub=1e100) -> std::shared_ptr< Constraint >
 
     Parameters
     ----------
-    arg1: std::shared_ptr< Node >
+    expr: std::shared_ptr< Node >
+    lb: double
+    ub: double
 
     """
-    return _component.create_constraint(arg1)
+    return _component.create_constraint(expr, lb, ub)
 
-def create_conditional_constraint():
-    """create_conditional_constraint() -> std::shared_ptr< ConditionalConstraint >"""
-    return _component.create_conditional_constraint()
-
-def create_objective(arg1):
+def create_conditional_constraint(lb=-1e100, ub=1e100):
     """
-    create_objective(std::shared_ptr< Node > arg1) -> std::shared_ptr< Objective >
+    create_conditional_constraint(double lb=-1e100, double ub=1e100) -> std::shared_ptr< ConditionalConstraint >
 
     Parameters
     ----------
-    arg1: std::shared_ptr< Node >
+    lb: double
+    ub: double
 
     """
-    return _component.create_objective(arg1)
+    return _component.create_conditional_constraint(lb, ub)
+
+def create_objective(expr):
+    """
+    create_objective(std::shared_ptr< Node > expr) -> std::shared_ptr< Objective >
+
+    Parameters
+    ----------
+    expr: std::shared_ptr< Node >
+
+    """
+    return _component.create_objective(expr)
 class Component(_object):
     """Proxy of C++ Component class."""
 

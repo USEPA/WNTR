@@ -4,53 +4,12 @@ from wntr.aml.aml.expression import Var, Param, create_var, create_param
 from wntr.aml.aml.component import ConstraintBase, Constraint, ConditionalConstraint, Objective, create_constraint, create_conditional_constraint, create_objective
 from wntr.aml.aml.ipopt_model import IpoptModel
 from wntr.aml.aml.wntr_model import WNTRModel, CSRJacobian
-if sys.version_info.major == 2:
-    from collections import MutableSet, MutableMapping
-else:
-    from collections.abc import MutableSet, MutableMapping
 import scipy
-
-
-class OrderedSet(MutableSet):
-    def __init__(self, iterable=None):
-        self._data = OrderedDict()
-
-        if iterable is not None:
-            self.update(iterable)
-
-    def __contains__(self, item):
-        return item in self._data
-
-    def __iter__(self):
-        return self._data.__iter__()
-
-    def __len__(self):
-        return len(self._data)
-
-    def add(self, item):
-        """
-        Add an element
-        """
-        self._data[item] = None
-
-    def discard(self, item):
-        """
-        Remove an element. Do not raise an exception if absent.
-        """
-        self._data.pop(item, default=None)
-
-    def __repr__(self):
-        return list(self._data.keys()).__repr__()
-
-    def __str__(self):
-        return self.__repr__()
-
-    def update(self, iterable):
-        """
-        Add items from iterable
-        """
-        for i in iterable:
-            self.add(i)
+from wntr.utils.ordered_set import OrderedSet
+if sys.version_info.major == 2:
+    from collections import MutableMapping
+else:
+    from collections.abc import MutableMapping
 
 
 class _OrderedIndexSet(OrderedSet):

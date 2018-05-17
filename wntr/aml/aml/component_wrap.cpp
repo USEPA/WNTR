@@ -3137,9 +3137,6 @@ SWIGINTERNINLINE PyObject*
 #include <string>
 
 
-  #define SWIG_From_double   PyFloat_FromDouble 
-
-
 SWIGINTERN int
 SWIG_AsVal_double (PyObject *obj, double *val)
 {
@@ -3184,6 +3181,9 @@ SWIG_AsVal_double (PyObject *obj, double *val)
 #endif
   return res;
 }
+
+
+  #define SWIG_From_double   PyFloat_FromDouble 
 
 
 #include <float.h>
@@ -3523,15 +3523,23 @@ extern "C" {
 SWIGINTERN PyObject *_wrap_create_constraint(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   SwigValueWrapper< std::shared_ptr< Node > > arg1 ;
+  double arg2 = (double) -1e100 ;
+  double arg3 = (double) 1e100 ;
   void *argp1 ;
   int res1 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  double val3 ;
+  int ecode3 = 0 ;
   PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
   char *  kwnames[] = {
-    (char *) "arg1", NULL 
+    (char *) "expr",(char *) "lb",(char *) "ub", NULL 
   };
   std::shared_ptr< Constraint > result;
   
-  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"O:create_constraint",kwnames,&obj0)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"O|OO:create_constraint",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
   {
     res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_Node_t,  0  | 0);
     if (!SWIG_IsOK(res1)) {
@@ -3545,7 +3553,21 @@ SWIGINTERN PyObject *_wrap_create_constraint(PyObject *SWIGUNUSEDPARM(self), PyO
       if (SWIG_IsNewObj(res1)) delete temp;
     }
   }
-  result = create_constraint(arg1);
+  if (obj1) {
+    ecode2 = SWIG_AsVal_double(obj1, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "create_constraint" "', argument " "2"" of type '" "double""'");
+    } 
+    arg2 = static_cast< double >(val2);
+  }
+  if (obj2) {
+    ecode3 = SWIG_AsVal_double(obj2, &val3);
+    if (!SWIG_IsOK(ecode3)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "create_constraint" "', argument " "3"" of type '" "double""'");
+    } 
+    arg3 = static_cast< double >(val3);
+  }
+  result = create_constraint(arg1,arg2,arg3);
   {
     std::shared_ptr<  Constraint > *smartresult = result ? new std::shared_ptr<  Constraint >(result) : 0;
     resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(smartresult), SWIGTYPE_p_std__shared_ptrT_Constraint_t, SWIG_POINTER_OWN);
@@ -3556,12 +3578,37 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_create_conditional_constraint(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_create_conditional_constraint(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
+  double arg1 = (double) -1e100 ;
+  double arg2 = (double) 1e100 ;
+  double val1 ;
+  int ecode1 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "lb",(char *) "ub", NULL 
+  };
   std::shared_ptr< ConditionalConstraint > result;
   
-  if (!PyArg_ParseTuple(args,(char *)":create_conditional_constraint")) SWIG_fail;
-  result = create_conditional_constraint();
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"|OO:create_conditional_constraint",kwnames,&obj0,&obj1)) SWIG_fail;
+  if (obj0) {
+    ecode1 = SWIG_AsVal_double(obj0, &val1);
+    if (!SWIG_IsOK(ecode1)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "create_conditional_constraint" "', argument " "1"" of type '" "double""'");
+    } 
+    arg1 = static_cast< double >(val1);
+  }
+  if (obj1) {
+    ecode2 = SWIG_AsVal_double(obj1, &val2);
+    if (!SWIG_IsOK(ecode2)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "create_conditional_constraint" "', argument " "2"" of type '" "double""'");
+    } 
+    arg2 = static_cast< double >(val2);
+  }
+  result = create_conditional_constraint(arg1,arg2);
   {
     std::shared_ptr<  ConditionalConstraint > *smartresult = result ? new std::shared_ptr<  ConditionalConstraint >(result) : 0;
     resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(smartresult), SWIGTYPE_p_std__shared_ptrT_ConditionalConstraint_t, SWIG_POINTER_OWN);
@@ -3579,7 +3626,7 @@ SWIGINTERN PyObject *_wrap_create_objective(PyObject *SWIGUNUSEDPARM(self), PyOb
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
   char *  kwnames[] = {
-    (char *) "arg1", NULL 
+    (char *) "expr", NULL 
   };
   std::shared_ptr< Objective > result;
   
@@ -6171,20 +6218,30 @@ SWIGINTERN PyObject *ConditionalConstraint_swigregister(PyObject *SWIGUNUSEDPARM
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
 	 { (char *)"create_constraint", (PyCFunction) _wrap_create_constraint, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"create_constraint(std::shared_ptr< Node > arg1) -> std::shared_ptr< Constraint >\n"
+		"create_constraint(std::shared_ptr< Node > expr, double lb=-1e100, double ub=1e100) -> std::shared_ptr< Constraint >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
-		"arg1: std::shared_ptr< Node >\n"
+		"expr: std::shared_ptr< Node >\n"
+		"lb: double\n"
+		"ub: double\n"
 		"\n"
 		""},
-	 { (char *)"create_conditional_constraint", _wrap_create_conditional_constraint, METH_VARARGS, (char *)"create_conditional_constraint() -> std::shared_ptr< ConditionalConstraint >"},
-	 { (char *)"create_objective", (PyCFunction) _wrap_create_objective, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"create_objective(std::shared_ptr< Node > arg1) -> std::shared_ptr< Objective >\n"
+	 { (char *)"create_conditional_constraint", (PyCFunction) _wrap_create_conditional_constraint, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"create_conditional_constraint(double lb=-1e100, double ub=1e100) -> std::shared_ptr< ConditionalConstraint >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
-		"arg1: std::shared_ptr< Node >\n"
+		"lb: double\n"
+		"ub: double\n"
+		"\n"
+		""},
+	 { (char *)"create_objective", (PyCFunction) _wrap_create_objective, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"create_objective(std::shared_ptr< Node > expr) -> std::shared_ptr< Objective >\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"expr: std::shared_ptr< Node >\n"
 		"\n"
 		""},
 	 { (char *)"delete_Component", _wrap_delete_Component, METH_VARARGS, (char *)"\n"
