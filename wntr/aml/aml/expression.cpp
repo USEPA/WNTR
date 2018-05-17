@@ -963,6 +963,12 @@ std::shared_ptr<Node> Node::__rmul__(double c)
 }
 
 
+std::shared_ptr<Node> Node::__rdiv__(double c)
+{
+  return __rtruediv__(c);
+}
+
+
 std::shared_ptr<Node> Node::__rtruediv__(double c)
 {
   std::shared_ptr<Param> p = std::make_shared<Param>();

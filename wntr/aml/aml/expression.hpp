@@ -93,6 +93,7 @@ public:
   std::shared_ptr<Node> __radd__(double);
   std::shared_ptr<Node> __rsub__(double);
   std::shared_ptr<Node> __rmul__(double);
+  std::shared_ptr<Node> __rdiv__(double);
   std::shared_ptr<Node> __rtruediv__(double);
   std::shared_ptr<Node> __rpow__(double);
 

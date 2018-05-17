@@ -1,4 +1,4 @@
-import aml.aml as aml
+import wntr.aml as aml
 import unittest
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -72,7 +72,7 @@ class TestExpression(unittest.TestCase):
         self.assertAlmostEqual(expr.ad(m.x), y*x**(y-1), 10)
         self.assertAlmostEqual(expr.ad(m.y), x**y * np.log(x), 10)
 
-    @unittest.skip
+    @unittest.skip('exp is not implemented yet')
     def test_exp(self):
         m = aml.Model()
         x = 2.5
@@ -82,7 +82,7 @@ class TestExpression(unittest.TestCase):
         self.assertAlmostEqual(aml.value(expr), np.exp(x), 10)
         self.assertAlmostEqual(aml.value(expr.ad(m.x)), np.exp(x), 10)
 
-    @unittest.skip
+    @unittest.skip('log is not implemented yet')
     def test_log(self):
         m = aml.Model()
         x = 2.5
@@ -92,7 +92,7 @@ class TestExpression(unittest.TestCase):
         self.assertAlmostEqual(aml.value(expr), np.log(x), 10)
         self.assertAlmostEqual(aml.value(expr.ad(m.x)), 1/x, 10)
 
-    @unittest.skip
+    @unittest.skip('exp is not implemented yet')
     def test_chain_rule(self):
         m = aml.Model()
         x = 1.1

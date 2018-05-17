@@ -440,6 +440,18 @@ class Node(_object):
         return _expression.Node___rmul__(self, arg2)
 
 
+    def __rdiv__(self, arg2):
+        """
+        __rdiv__(Node self, double arg2) -> std::shared_ptr< Node >
+
+        Parameters
+        ----------
+        arg2: double
+
+        """
+        return _expression.Node___rdiv__(self, arg2)
+
+
     def __rtruediv__(self, arg2):
         """
         __rtruediv__(Node self, double arg2) -> std::shared_ptr< Node >

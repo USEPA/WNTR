@@ -5841,6 +5841,55 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Node___rdiv__(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  Node *arg1 = (Node *) 0 ;
+  double arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::shared_ptr< Node > tempshared1 ;
+  std::shared_ptr< Node > *smartarg1 = 0 ;
+  double val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "arg2", NULL 
+  };
+  std::shared_ptr< Node > result;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:Node___rdiv__",kwnames,&obj0,&obj1)) SWIG_fail;
+  {
+    int newmem = 0;
+    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_Node_t, 0 |  0 , &newmem);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Node___rdiv__" "', argument " "1"" of type '" "Node *""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      tempshared1 = *reinterpret_cast< std::shared_ptr<  Node > * >(argp1);
+      delete reinterpret_cast< std::shared_ptr<  Node > * >(argp1);
+      arg1 = const_cast< Node * >(tempshared1.get());
+    } else {
+      smartarg1 = reinterpret_cast< std::shared_ptr<  Node > * >(argp1);
+      arg1 = const_cast< Node * >((smartarg1 ? smartarg1->get() : 0));
+    }
+  }
+  ecode2 = SWIG_AsVal_double(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Node___rdiv__" "', argument " "2"" of type '" "double""'");
+  } 
+  arg2 = static_cast< double >(val2);
+  result = (arg1)->__rdiv__(arg2);
+  {
+    std::shared_ptr<  Node > *smartresult = result ? new std::shared_ptr<  Node >(result) : 0;
+    resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(smartresult), SWIGTYPE_p_std__shared_ptrT_Node_t, SWIG_POINTER_OWN);
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Node___rtruediv__(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   Node *arg1 = (Node *) 0 ;
@@ -25457,6 +25506,15 @@ static PyMethodDef SwigMethods[] = {
 		""},
 	 { (char *)"Node___rmul__", (PyCFunction) _wrap_Node___rmul__, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
 		"Node___rmul__(Node self, double arg3) -> std::shared_ptr< Node >\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Node *\n"
+		"arg2: double\n"
+		"\n"
+		""},
+	 { (char *)"Node___rdiv__", (PyCFunction) _wrap_Node___rdiv__, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"Node___rdiv__(Node self, double arg3) -> std::shared_ptr< Node >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"

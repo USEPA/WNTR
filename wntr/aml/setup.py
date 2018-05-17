@@ -3,6 +3,7 @@ from setuptools.extension import Extension
 import shutil
 import numpy
 import os
+from distutils.spawn import find_executable
 
 try:
     numpy_include = numpy.get_include()
@@ -13,7 +14,7 @@ print('********************************')
 print(numpy_include)
 print('********************************')
 
-ipopt_executable = shutil.which('ipopt')
+ipopt_executable = find_executable('ipopt')
 
 if ipopt_executable is None:
     raise RuntimeError('Ipopt not in path. Installation unsuccessful')
