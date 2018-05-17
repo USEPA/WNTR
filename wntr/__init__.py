@@ -5,6 +5,7 @@ from wntr import sim
 from wntr import scenario
 from wntr import graphics
 from wntr import utils
+from wntr.aml import aml
 
 __version__ = '0.1.5'
 
