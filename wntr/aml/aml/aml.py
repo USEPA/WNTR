@@ -1,11 +1,12 @@
 import sys
 from collections import OrderedDict
-from wntr.aml.aml.expression import Var, Param, create_var, create_param
-from wntr.aml.aml.component import ConstraintBase, Constraint, ConditionalConstraint, Objective, create_constraint, create_conditional_constraint, create_objective
+from wntr.aml.aml.expression import Node, Var, Param, create_var, create_param
+from wntr.aml.aml.component import Component, ConstraintBase, Constraint, ConditionalConstraint, Objective, create_constraint, create_conditional_constraint, create_objective
 from wntr.aml.aml.ipopt_model import IpoptModel
 from wntr.aml.aml.wntr_model import WNTRModel, CSRJacobian
 import scipy
 from wntr.utils.ordered_set import OrderedSet
+from collections import OrderedDict
 if sys.version_info.major == 2:
     from collections import MutableMapping
 else:
@@ -19,17 +20,24 @@ class _OrderedIndexSet(OrderedSet):
         """
         if item not in self:
             item.index = len(self)
-            self._data[item] = None
+            self._data[item] = 1
+        else:
+            self._data[item] += 1
 
     def discard(self, item):
         """
         Remove an element. Do not raise an exception if absent.
         """
         if item in self:
-            for i in list(self._data.keys())[item.index:]:
-                i.index -= 1
-            item.index = -1
-            self._data.pop(item)
+            self._data[item] -= 1
+            if self._data[item] == 0:
+                for i in list(self._data.keys())[item.index:]:
+                    i.index -= 1
+                item.index = -1
+                self._data.pop(item)
+
+    def count(self, item):
+        return self._data[item]
 
 
 class Model(object):
@@ -39,6 +47,7 @@ class Model(object):
     def __init__(self, model_type='wntr'):
         self._vars = _OrderedIndexSet()
         self._cons = _OrderedIndexSet()
+        self._obj = None
         if model_type.upper() == 'WNTR':
             self._model = WNTRModel()
         elif model_type.upper() == 'IPOPT':
@@ -61,40 +70,22 @@ class Model(object):
         -------
         None
         """
-        if isinstance(val, Param):
+        if isinstance(val, (Node, Component, _NodeDict)):
             if hasattr(self, name):
-                raise ValueError('Model already has a parameter named {0}. If you want to replace the parameter, please remove the existing one first.'.format(name))
+                raise ValueError('Model already has a {0} named {1}. If you want to replace the {0}, please remove the existing one first.'.format(type(val), name))
+
+        if isinstance(val, (Node, VarDict, ParamDict)):
             val.name = name
-        elif isinstance(val, Var):
-            if hasattr(self, name):
-                raise ValueError('Model already has a var named {0}. If you want to replace the var, please remove the existing one first.'.format(name))
-            val.name = name
-            self._register_var(val)
         elif isinstance(val, ConstraintBase):
-            if hasattr(self, name):
-                raise ValueError('Model already has a constraint named {0}. If you want to replace the constraint, please remove the existing one first.'.format(name))
             val.name = name
             self._register_constraint(val)
-        elif isinstance(val, VarDict):
-            if hasattr(self, name):
-                raise ValueError('Model already has a VarDict named {0}. If you want to replace the VarDict, please remove the existing one first.'.format(name))
-            val.name = name
-            val._model = self
-            for k, v in val.items():
-                self._register_var(v)
-        elif isinstance(val, ParamDict):
-            if hasattr(self, name):
-                raise ValueError('Model already has a ParamDict named {0}. If you want to replace the ParamDict, please remove the existing one first.'.format(name))
-            val.name = name
         elif isinstance(val, ConstraintDict):
-            if hasattr(self, name):
-                raise ValueError('Model already has a ConstraintDict named {0}. If you want to replace the ConstraintDict, please remove the existing one first.'.format(name))
             val.name = name
             val._model = self
             for k, v in val.items():
                 self._register_constraint(v)
         elif isinstance(val, Objective):
-            self._model.set_objective(val)
+            self._register_objective(val)
 
         # The __setattr__ of the parent class should always be called so that the attribute actually gets set.
         super(Model, self).__setattr__(name, val)
@@ -114,7 +105,9 @@ class Model(object):
         """
         # The __delattr__ of the parent class should always be called so that the attribute actually gets removed.
         val = getattr(self, name)
-        if isinstance(val, ConstraintBase):
+        if isinstance(val, (Node, VarDict, ParamDict)):
+            val.name = 'None'
+        elif isinstance(val, ConstraintBase):
             self._remove_constraint(val)
             val.name = 'None'
         elif isinstance(val, ConstraintDict):
@@ -122,31 +115,46 @@ class Model(object):
             val._model = None
             for k, v in val.items():
                 self._remove_constraint(v)
-        elif isinstance(val, Var):
-            self._remove_var(val)
-            val.name = 'None'
-        elif isinstance(val, VarDict):
-            val.name = 'None'
-            val._model = None
-            for k, v in val.items():
-                self._remove_var(v)
+        elif val is self._obj:
+            self._remove_objective()
         super(Model, self).__delattr__(name)
 
     def _register_var(self, var):
-        self._vars.add(var)
-        self._model.add_var(var)
+        if var not in self._vars:
+            self._vars.add(var)
+            self._model.add_var(var)
+        else:
+            self._vars.add(var)
 
     def _remove_var(self, var):
-        self._model.remove_var(var)
+        if self._vars.count(var) == 1:
+            self._model.remove_var(var)
         self._vars.remove(var)
 
     def _register_constraint(self, con):
         self._cons.add(con)
         self._model.add_constraint(con)
+        for v in con.py_get_vars():
+            self._register_var(v)
 
     def _remove_constraint(self, con):
         self._model.remove_constraint(con)
         self._cons.remove(con)
+        for v in con.py_get_vars():
+            self._remove_var(v)
+
+    def _register_objective(self, obj):
+        if self._obj is not None:
+            raise ValueError('The model already contains an objective: {0}'.format(self._obj))
+        self._obj = obj
+        self._model.set_objective(obj)
+        for v in obj.py_get_vars():
+            self._register_var(v)
+
+    def _remove_objective(self):
+        for v in self._obj.py_get_vars():
+            self._remove_var(v)
+        self._obj = None
 
     def evaluate_residuals(self, x=None):
         if x is not None:
@@ -241,24 +249,7 @@ class ParamDict(_NodeDict):
 
 
 class VarDict(_NodeDict):
-    def __init__(self, mapping=None):
-        self._model = None
-        super(VarDict, self).__init__(mapping)
-
-    def __delitem__(self, key):
-        val = self[key]
-        if self._model is not None:
-            self._model._remove_var(val)
-        val.name = None
-        del self._data[key]
-
-    def __setitem__(self, key, val):
-        if hasattr(self, key):
-            raise ValueError('VarDict already has a Var named {0}. If you want to replace the Var, please remove the existing one first.'.format(key))
-        if self._model is not None:
-            self._model._register_var(val)
-        val.name = self.name + '[' + str(key) + ']'
-        self._data[key] = val
+    pass
 
 
 class ConstraintDict(_NodeDict):

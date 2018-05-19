@@ -1,6 +1,13 @@
 #include "component.hpp"
 
 
+std::set<std::shared_ptr<Var> > Component::py_get_vars()
+{
+  auto ptr_to_vars = get_vars();
+  return *ptr_to_vars;
+}
+
+
 std::shared_ptr<Constraint> create_constraint(std::shared_ptr<Node> expr, double lb, double ub)
 {
   std::shared_ptr<Constraint> c = std::make_shared<Constraint>();

@@ -68,6 +68,7 @@ public:
   virtual std::shared_ptr<std::vector<double> > get_coefs();
   virtual std::shared_ptr<std::map<std::shared_ptr<Node>, std::vector<int> > > get_sparsity();
   virtual std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars();
+  virtual std::set<std::shared_ptr<Var> > py_get_vars();
   virtual double evaluate() = 0;
   virtual double ad(Var&, bool new_eval=true) = 0;
   virtual double ad2(Var&, Var&, bool) = 0;

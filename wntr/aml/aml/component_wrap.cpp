@@ -3010,16 +3010,17 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_Objective swig_types[4]
 #define SWIGTYPE_p_Var swig_types[5]
 #define SWIGTYPE_p_char swig_types[6]
-#define SWIGTYPE_p_std__shared_ptrT_Component_t swig_types[7]
-#define SWIGTYPE_p_std__shared_ptrT_ConditionalConstraint_t swig_types[8]
-#define SWIGTYPE_p_std__shared_ptrT_ConstraintBase_t swig_types[9]
-#define SWIGTYPE_p_std__shared_ptrT_Constraint_t swig_types[10]
-#define SWIGTYPE_p_std__shared_ptrT_Node_t swig_types[11]
-#define SWIGTYPE_p_std__shared_ptrT_Objective_t swig_types[12]
-#define SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_t_t swig_types[13]
-#define SWIGTYPE_p_std__vectorT_std__shared_ptrT_Node_t_t swig_types[14]
-static swig_type_info *swig_types[16];
-static swig_module_info swig_module = {swig_types, 15, 0, 0, 0, 0};
+#define SWIGTYPE_p_std__setT_std__shared_ptrT_Var_t_t swig_types[7]
+#define SWIGTYPE_p_std__shared_ptrT_Component_t swig_types[8]
+#define SWIGTYPE_p_std__shared_ptrT_ConditionalConstraint_t swig_types[9]
+#define SWIGTYPE_p_std__shared_ptrT_ConstraintBase_t swig_types[10]
+#define SWIGTYPE_p_std__shared_ptrT_Constraint_t swig_types[11]
+#define SWIGTYPE_p_std__shared_ptrT_Node_t swig_types[12]
+#define SWIGTYPE_p_std__shared_ptrT_Objective_t swig_types[13]
+#define SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_t_t swig_types[14]
+#define SWIGTYPE_p_std__vectorT_std__shared_ptrT_Node_t_t swig_types[15]
+static swig_type_info *swig_types[17];
+static swig_module_info swig_module = {swig_types, 16, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3941,6 +3942,40 @@ SWIGINTERN PyObject *_wrap_Component_get_vars(PyObject *SWIGUNUSEDPARM(self), Py
   }
   result = (arg1)->get_vars();
   resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::set< std::shared_ptr< Var > > >(static_cast< const std::shared_ptr< std::set< std::shared_ptr< Var > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Component_py_get_vars(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Component *arg1 = (Component *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::shared_ptr< Component > tempshared1 ;
+  std::shared_ptr< Component > *smartarg1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::set< std::shared_ptr< Var > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Component_py_get_vars",&obj0)) SWIG_fail;
+  {
+    int newmem = 0;
+    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_Component_t, 0 |  0 , &newmem);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Component_py_get_vars" "', argument " "1"" of type '" "Component *""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      tempshared1 = *reinterpret_cast< std::shared_ptr<  Component > * >(argp1);
+      delete reinterpret_cast< std::shared_ptr<  Component > * >(argp1);
+      arg1 = const_cast< Component * >(tempshared1.get());
+    } else {
+      smartarg1 = reinterpret_cast< std::shared_ptr<  Component > * >(argp1);
+      arg1 = const_cast< Component * >((smartarg1 ? smartarg1->get() : 0));
+    }
+  }
+  result = (arg1)->py_get_vars();
+  resultobj = SWIG_NewPointerObj((new std::set< std::shared_ptr< Var > >(static_cast< const std::set< std::shared_ptr< Var > >& >(result))), SWIGTYPE_p_std__setT_std__shared_ptrT_Var_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -6299,6 +6334,14 @@ static PyMethodDef SwigMethods[] = {
 		"self: Component *\n"
 		"\n"
 		""},
+	 { (char *)"Component_py_get_vars", _wrap_Component_py_get_vars, METH_VARARGS, (char *)"\n"
+		"Component_py_get_vars(Component self) -> std::set< std::shared_ptr< Var > >\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Component *\n"
+		"\n"
+		""},
 	 { (char *)"Component__print", _wrap_Component__print, METH_VARARGS, (char *)"\n"
 		"Component__print(Component self) -> std::string\n"
 		"\n"
@@ -6796,6 +6839,7 @@ static swig_type_info _swigt__p_ConstraintBase = {"_p_ConstraintBase", "Constrai
 static swig_type_info _swigt__p_Objective = {"_p_Objective", "Objective *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Var = {"_p_Var", "Var *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__setT_std__shared_ptrT_Var_t_t = {"_p_std__setT_std__shared_ptrT_Var_t_t", "std::set< std::shared_ptr< Var > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_Component_t = {"_p_std__shared_ptrT_Component_t", "std::shared_ptr< Component > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_ConditionalConstraint_t = {"_p_std__shared_ptrT_ConditionalConstraint_t", "std::shared_ptr< ConditionalConstraint > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_ConstraintBase_t = {"_p_std__shared_ptrT_ConstraintBase_t", "std::shared_ptr< ConstraintBase > *", 0, 0, (void*)0, 0};
@@ -6813,6 +6857,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_Objective,
   &_swigt__p_Var,
   &_swigt__p_char,
+  &_swigt__p_std__setT_std__shared_ptrT_Var_t_t,
   &_swigt__p_std__shared_ptrT_Component_t,
   &_swigt__p_std__shared_ptrT_ConditionalConstraint_t,
   &_swigt__p_std__shared_ptrT_ConstraintBase_t,
@@ -6830,6 +6875,7 @@ static swig_cast_info _swigc__p_ConstraintBase[] = {  {&_swigt__p_Constraint, _p
 static swig_cast_info _swigc__p_Objective[] = {  {&_swigt__p_Objective, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Var[] = {  {&_swigt__p_Var, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__setT_std__shared_ptrT_Var_t_t[] = {  {&_swigt__p_std__setT_std__shared_ptrT_Var_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_Component_t[] = {  {&_swigt__p_std__shared_ptrT_ConstraintBase_t, _p_std__shared_ptrT_ConstraintBase_tTo_p_std__shared_ptrT_Component_t, 0, 0},  {&_swigt__p_std__shared_ptrT_Constraint_t, _p_std__shared_ptrT_Constraint_tTo_p_std__shared_ptrT_Component_t, 0, 0},  {&_swigt__p_std__shared_ptrT_ConditionalConstraint_t, _p_std__shared_ptrT_ConditionalConstraint_tTo_p_std__shared_ptrT_Component_t, 0, 0},  {&_swigt__p_std__shared_ptrT_Objective_t, _p_std__shared_ptrT_Objective_tTo_p_std__shared_ptrT_Component_t, 0, 0},  {&_swigt__p_std__shared_ptrT_Component_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_ConditionalConstraint_t[] = {  {&_swigt__p_std__shared_ptrT_ConditionalConstraint_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_ConstraintBase_t[] = {  {&_swigt__p_std__shared_ptrT_ConstraintBase_t, 0, 0, 0},  {&_swigt__p_std__shared_ptrT_Constraint_t, _p_std__shared_ptrT_Constraint_tTo_p_std__shared_ptrT_ConstraintBase_t, 0, 0},  {&_swigt__p_std__shared_ptrT_ConditionalConstraint_t, _p_std__shared_ptrT_ConditionalConstraint_tTo_p_std__shared_ptrT_ConstraintBase_t, 0, 0},{0, 0, 0, 0}};
@@ -6847,6 +6893,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_Objective,
   _swigc__p_Var,
   _swigc__p_char,
+  _swigc__p_std__setT_std__shared_ptrT_Var_t_t,
   _swigc__p_std__shared_ptrT_Component_t,
   _swigc__p_std__shared_ptrT_ConditionalConstraint_t,
   _swigc__p_std__shared_ptrT_ConstraintBase_t,

@@ -4,6 +4,14 @@
 
 #include "expression.hpp"
 
+
+std::set<std::shared_ptr<Var> > Node::py_get_vars()
+{
+  auto ptr_to_vars = get_vars();
+  return *ptr_to_vars;
+}
+
+
 std::shared_ptr<Var> create_var(double value, double lb, double ub)
 {
   std::shared_ptr<Var> v = std::make_shared<Var>();

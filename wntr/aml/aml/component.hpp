@@ -21,6 +21,7 @@ public:
   virtual double ad2(Var&, Var&, bool) = 0;
   virtual bool has_ad2(Var&, Var&) = 0;
   virtual std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() = 0;
+  virtual std::set<std::shared_ptr<Var> > py_get_vars();
   virtual std::string _print() = 0;
   int index = -1;
   double value = 0.0;

@@ -39,4 +39,6 @@
 %}
 
 %include "std_string.i"
+%include "std_set.i"
+%template(var_set) std::set<std::shared_ptr<Var> >;
 %include "expression.hpp"

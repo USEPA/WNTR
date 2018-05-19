@@ -102,6 +102,30 @@ def head_var(m, wn, index_over=None):
         m.head[node_name] = aml.create_var(value=node.elevation)
 
 
+def leak_rate_var(m, wn, index_over=None):
+    """
+    Add a variable to the model for leak flow rate
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of junction/tank names
+    """
+    if not hasattr(m, 'leak_rate'):
+        m.leak_rate = aml.VarDict()
+
+    if index_over is None:
+        index_over = [j_name for j_name, j in wn.junctions if j.leak_status]
+        index_over.extend(t_name for t_name, t in wn.tanks if t.leak_status)
+
+    for node_name in index_over:
+        node = wn.get_node(node_name)
+        # if not node.lea
+        m.demand[node_name] = aml.create_var(value=node.demand_timeseries_list(wn.sim_time))
+
+
 def mass_balance_constraint(m, wn, index_over=None):
     """
     Adds a mass balance to the model for the specified junctions.

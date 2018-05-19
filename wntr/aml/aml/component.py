@@ -210,6 +210,18 @@ class Component(_object):
         return _component.Component_get_vars(self)
 
 
+    def py_get_vars(self):
+        """
+        py_get_vars(Component self) -> std::set< std::shared_ptr< Var > >
+
+        Parameters
+        ----------
+        self: Component *
+
+        """
+        return _component.Component_py_get_vars(self)
+
+
     def _print(self):
         """
         _print(Component self) -> std::string
