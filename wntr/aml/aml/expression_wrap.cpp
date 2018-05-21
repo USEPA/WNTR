@@ -3084,10 +3084,11 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t swig_types[75]
 #define SWIGTYPE_p_std__shared_ptrT_std__vectorT_double_t_t swig_types[76]
 #define SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_t_t swig_types[77]
-#define SWIGTYPE_p_swig__SwigPyIterator swig_types[78]
-#define SWIGTYPE_p_value_type swig_types[79]
-static swig_type_info *swig_types[81];
-static swig_module_info swig_module = {swig_types, 80, 0, 0, 0, 0};
+#define SWIGTYPE_p_std__shared_ptrT_var_set_t swig_types[78]
+#define SWIGTYPE_p_swig__SwigPyIterator swig_types[79]
+#define SWIGTYPE_p_value_type swig_types[80]
+static swig_type_info *swig_types[82];
+static swig_module_info swig_module = {swig_types, 81, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -33003,6 +33004,7 @@ static swig_type_info _swigt__p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node
 static swig_type_info _swigt__p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t = {"_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t", "std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_double_t_t = {"_p_std__shared_ptrT_std__vectorT_double_t_t", "std::shared_ptr< std::vector< double > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_t_t = {"_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_t_t", "std::shared_ptr< std::vector< std::shared_ptr< Node > > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__shared_ptrT_var_set_t = {"_p_std__shared_ptrT_var_set_t", "std::shared_ptr< var_set > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_swig__SwigPyIterator = {"_p_swig__SwigPyIterator", "swig::SwigPyIterator *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_value_type = {"_p_value_type", "value_type *", 0, 0, (void*)0, 0};
 
@@ -33085,6 +33087,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t,
   &_swigt__p_std__shared_ptrT_std__vectorT_double_t_t,
   &_swigt__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_t_t,
+  &_swigt__p_std__shared_ptrT_var_set_t,
   &_swigt__p_swig__SwigPyIterator,
   &_swigt__p_value_type,
 };
@@ -33167,6 +33170,7 @@ static swig_cast_info _swigc__p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node
 static swig_cast_info _swigc__p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_double_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__vectorT_double_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__shared_ptrT_var_set_t[] = {  {&_swigt__p_std__shared_ptrT_var_set_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_swig__SwigPyIterator[] = {  {&_swigt__p_swig__SwigPyIterator, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_value_type[] = {  {&_swigt__p_value_type, 0, 0, 0},{0, 0, 0, 0}};
 
@@ -33249,6 +33253,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t,
   _swigc__p_std__shared_ptrT_std__vectorT_double_t_t,
   _swigc__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_t_t,
+  _swigc__p_std__shared_ptrT_var_set_t,
   _swigc__p_swig__SwigPyIterator,
   _swigc__p_value_type,
 };

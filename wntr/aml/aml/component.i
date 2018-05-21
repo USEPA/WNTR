@@ -5,6 +5,7 @@
 %shared_ptr(ConstraintBase)
 %shared_ptr(Objective)
 %shared_ptr(Component)
+%shared_ptr(var_set)
 %feature("kwargs");
 %feature("autodoc","3");
 %{
@@ -12,4 +13,6 @@
 %}
 
 %include "std_string.i"
+%include "std_set.i"
+%template(var_set) std::set<std::shared_ptr<Var> >;
 %include "component.hpp"

@@ -32,6 +32,7 @@
 %shared_ptr(OperatorParamPowerOperator)
 %shared_ptr(OperatorOperatorPowerOperator)
 %shared_ptr(Node)
+%shared_ptr(var_set)
 %feature("kwargs");
 %feature("autodoc","3");
 %{

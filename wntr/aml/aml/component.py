@@ -96,6 +96,560 @@ except __builtin__.Exception:
     _newclass = 0
 
 SHARED_PTR_DISOWN = _component.SHARED_PTR_DISOWN
+class SwigPyIterator(_object):
+    """Proxy of C++ swig::SwigPyIterator class."""
+
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, SwigPyIterator, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, SwigPyIterator, name)
+
+    def __init__(self, *args, **kwargs):
+        raise AttributeError("No constructor defined - class is abstract")
+    __repr__ = _swig_repr
+    __swig_destroy__ = _component.delete_SwigPyIterator
+    __del__ = lambda self: None
+
+    def value(self):
+        """
+        value(SwigPyIterator self) -> PyObject *
+
+        Parameters
+        ----------
+        self: swig::SwigPyIterator const *
+
+        """
+        return _component.SwigPyIterator_value(self)
+
+
+    def incr(self, n=1):
+        """
+        incr(SwigPyIterator self, size_t n=1) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: size_t
+
+        """
+        return _component.SwigPyIterator_incr(self, n)
+
+
+    def decr(self, n=1):
+        """
+        decr(SwigPyIterator self, size_t n=1) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: size_t
+
+        """
+        return _component.SwigPyIterator_decr(self, n)
+
+
+    def distance(self, x):
+        """
+        distance(SwigPyIterator self, SwigPyIterator x) -> ptrdiff_t
+
+        Parameters
+        ----------
+        x: swig::SwigPyIterator const &
+
+        """
+        return _component.SwigPyIterator_distance(self, x)
+
+
+    def equal(self, x):
+        """
+        equal(SwigPyIterator self, SwigPyIterator x) -> bool
+
+        Parameters
+        ----------
+        x: swig::SwigPyIterator const &
+
+        """
+        return _component.SwigPyIterator_equal(self, x)
+
+
+    def copy(self):
+        """
+        copy(SwigPyIterator self) -> SwigPyIterator
+
+        Parameters
+        ----------
+        self: swig::SwigPyIterator const *
+
+        """
+        return _component.SwigPyIterator_copy(self)
+
+
+    def next(self):
+        """
+        next(SwigPyIterator self) -> PyObject *
+
+        Parameters
+        ----------
+        self: swig::SwigPyIterator *
+
+        """
+        return _component.SwigPyIterator_next(self)
+
+
+    def __next__(self):
+        """
+        __next__(SwigPyIterator self) -> PyObject *
+
+        Parameters
+        ----------
+        self: swig::SwigPyIterator *
+
+        """
+        return _component.SwigPyIterator___next__(self)
+
+
+    def previous(self):
+        """
+        previous(SwigPyIterator self) -> PyObject *
+
+        Parameters
+        ----------
+        self: swig::SwigPyIterator *
+
+        """
+        return _component.SwigPyIterator_previous(self)
+
+
+    def advance(self, n):
+        """
+        advance(SwigPyIterator self, ptrdiff_t n) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: ptrdiff_t
+
+        """
+        return _component.SwigPyIterator_advance(self, n)
+
+
+    def __eq__(self, x):
+        """
+        __eq__(SwigPyIterator self, SwigPyIterator x) -> bool
+
+        Parameters
+        ----------
+        x: swig::SwigPyIterator const &
+
+        """
+        return _component.SwigPyIterator___eq__(self, x)
+
+
+    def __ne__(self, x):
+        """
+        __ne__(SwigPyIterator self, SwigPyIterator x) -> bool
+
+        Parameters
+        ----------
+        x: swig::SwigPyIterator const &
+
+        """
+        return _component.SwigPyIterator___ne__(self, x)
+
+
+    def __iadd__(self, n):
+        """
+        __iadd__(SwigPyIterator self, ptrdiff_t n) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: ptrdiff_t
+
+        """
+        return _component.SwigPyIterator___iadd__(self, n)
+
+
+    def __isub__(self, n):
+        """
+        __isub__(SwigPyIterator self, ptrdiff_t n) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: ptrdiff_t
+
+        """
+        return _component.SwigPyIterator___isub__(self, n)
+
+
+    def __add__(self, n):
+        """
+        __add__(SwigPyIterator self, ptrdiff_t n) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: ptrdiff_t
+
+        """
+        return _component.SwigPyIterator___add__(self, n)
+
+
+    def __sub__(self, *args):
+        """
+        __sub__(SwigPyIterator self, ptrdiff_t n) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: ptrdiff_t
+
+        __sub__(SwigPyIterator self, SwigPyIterator x) -> ptrdiff_t
+
+        Parameters
+        ----------
+        x: swig::SwigPyIterator const &
+
+        """
+        return _component.SwigPyIterator___sub__(self, *args)
+
+    def __iter__(self):
+        return self
+SwigPyIterator_swigregister = _component.SwigPyIterator_swigregister
+SwigPyIterator_swigregister(SwigPyIterator)
+
+class var_set(_object):
+    """Proxy of C++ std::set<(std::shared_ptr<(Var)>)> class."""
+
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, var_set, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, var_set, name)
+    __repr__ = _swig_repr
+
+    def iterator(self):
+        """
+        iterator(var_set self) -> SwigPyIterator
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > *
+
+        """
+        return _component.var_set_iterator(self)
+
+    def __iter__(self):
+        return self.iterator()
+
+    def __nonzero__(self):
+        """
+        __nonzero__(var_set self) -> bool
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > const *
+
+        """
+        return _component.var_set___nonzero__(self)
+
+
+    def __bool__(self):
+        """
+        __bool__(var_set self) -> bool
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > const *
+
+        """
+        return _component.var_set___bool__(self)
+
+
+    def __len__(self):
+        """
+        __len__(var_set self) -> std::set< std::shared_ptr< Var > >::size_type
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > const *
+
+        """
+        return _component.var_set___len__(self)
+
+
+    def append(self, x):
+        """
+        append(var_set self, std::set< std::shared_ptr< Var > >::value_type x)
+
+        Parameters
+        ----------
+        x: std::set< std::shared_ptr< Var > >::value_type
+
+        """
+        return _component.var_set_append(self, x)
+
+
+    def __contains__(self, x):
+        """
+        __contains__(var_set self, std::set< std::shared_ptr< Var > >::value_type x) -> bool
+
+        Parameters
+        ----------
+        x: std::set< std::shared_ptr< Var > >::value_type
+
+        """
+        return _component.var_set___contains__(self, x)
+
+
+    def __getitem__(self, i):
+        """
+        __getitem__(var_set self, std::set< std::shared_ptr< Var > >::difference_type i) -> std::set< std::shared_ptr< Var > >::value_type
+
+        Parameters
+        ----------
+        i: std::set< std::shared_ptr< Var > >::difference_type
+
+        """
+        return _component.var_set___getitem__(self, i)
+
+
+    def add(self, x):
+        """
+        add(var_set self, std::set< std::shared_ptr< Var > >::value_type x)
+
+        Parameters
+        ----------
+        x: std::set< std::shared_ptr< Var > >::value_type
+
+        """
+        return _component.var_set_add(self, x)
+
+
+    def discard(self, x):
+        """
+        discard(var_set self, std::set< std::shared_ptr< Var > >::value_type x)
+
+        Parameters
+        ----------
+        x: std::set< std::shared_ptr< Var > >::value_type
+
+        """
+        return _component.var_set_discard(self, x)
+
+
+    def __init__(self, *args):
+        """
+        __init__(std::set<(std::shared_ptr<(Var)>)> self, std::less< std::shared_ptr< Var > > const & arg2) -> var_set
+
+        Parameters
+        ----------
+        arg2: std::less< std::shared_ptr< Var > > const &
+
+        __init__(std::set<(std::shared_ptr<(Var)>)> self) -> var_set
+        __init__(std::set<(std::shared_ptr<(Var)>)> self, var_set arg2) -> var_set
+
+        Parameters
+        ----------
+        arg2: std::set< std::shared_ptr< Var > > const &
+
+        """
+        this = _component.new_var_set(*args)
+        try:
+            self.this.append(this)
+        except __builtin__.Exception:
+            self.this = this
+
+    def empty(self):
+        """
+        empty(var_set self) -> bool
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > const *
+
+        """
+        return _component.var_set_empty(self)
+
+
+    def size(self):
+        """
+        size(var_set self) -> std::set< std::shared_ptr< Var > >::size_type
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > const *
+
+        """
+        return _component.var_set_size(self)
+
+
+    def clear(self):
+        """
+        clear(var_set self)
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > *
+
+        """
+        return _component.var_set_clear(self)
+
+
+    def swap(self, v):
+        """
+        swap(var_set self, var_set v)
+
+        Parameters
+        ----------
+        v: std::set< std::shared_ptr< Var > > &
+
+        """
+        return _component.var_set_swap(self, v)
+
+
+    def count(self, x):
+        """
+        count(var_set self, std::set< std::shared_ptr< Var > >::key_type const & x) -> std::set< std::shared_ptr< Var > >::size_type
+
+        Parameters
+        ----------
+        x: std::set< std::shared_ptr< Var > >::key_type const &
+
+        """
+        return _component.var_set_count(self, x)
+
+
+    def begin(self):
+        """
+        begin(var_set self) -> std::set< std::shared_ptr< Var > >::iterator
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > *
+
+        """
+        return _component.var_set_begin(self)
+
+
+    def end(self):
+        """
+        end(var_set self) -> std::set< std::shared_ptr< Var > >::iterator
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > *
+
+        """
+        return _component.var_set_end(self)
+
+
+    def rbegin(self):
+        """
+        rbegin(var_set self) -> std::set< std::shared_ptr< Var > >::reverse_iterator
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > *
+
+        """
+        return _component.var_set_rbegin(self)
+
+
+    def rend(self):
+        """
+        rend(var_set self) -> std::set< std::shared_ptr< Var > >::reverse_iterator
+
+        Parameters
+        ----------
+        self: std::set< std::shared_ptr< Var > > *
+
+        """
+        return _component.var_set_rend(self)
+
+
+    def erase(self, *args):
+        """
+        erase(var_set self, std::set< std::shared_ptr< Var > >::key_type const & x) -> std::set< std::shared_ptr< Var > >::size_type
+
+        Parameters
+        ----------
+        x: std::set< std::shared_ptr< Var > >::key_type const &
+
+        erase(var_set self, std::set< std::shared_ptr< Var > >::iterator pos)
+
+        Parameters
+        ----------
+        pos: std::set< std::shared_ptr< Var > >::iterator
+
+        erase(var_set self, std::set< std::shared_ptr< Var > >::iterator first, std::set< std::shared_ptr< Var > >::iterator last)
+
+        Parameters
+        ----------
+        first: std::set< std::shared_ptr< Var > >::iterator
+        last: std::set< std::shared_ptr< Var > >::iterator
+
+        """
+        return _component.var_set_erase(self, *args)
+
+
+    def find(self, x):
+        """
+        find(var_set self, std::set< std::shared_ptr< Var > >::key_type const & x) -> std::set< std::shared_ptr< Var > >::iterator
+
+        Parameters
+        ----------
+        x: std::set< std::shared_ptr< Var > >::key_type const &
+
+        """
+        return _component.var_set_find(self, x)
+
+
+    def lower_bound(self, x):
+        """
+        lower_bound(var_set self, std::set< std::shared_ptr< Var > >::key_type const & x) -> std::set< std::shared_ptr< Var > >::iterator
+
+        Parameters
+        ----------
+        x: std::set< std::shared_ptr< Var > >::key_type const &
+
+        """
+        return _component.var_set_lower_bound(self, x)
+
+
+    def upper_bound(self, x):
+        """
+        upper_bound(var_set self, std::set< std::shared_ptr< Var > >::key_type const & x) -> std::set< std::shared_ptr< Var > >::iterator
+
+        Parameters
+        ----------
+        x: std::set< std::shared_ptr< Var > >::key_type const &
+
+        """
+        return _component.var_set_upper_bound(self, x)
+
+
+    def equal_range(self, x):
+        """
+        equal_range(var_set self, std::set< std::shared_ptr< Var > >::key_type const & x) -> std::pair< std::set< std::shared_ptr< Var > >::iterator,std::set< std::shared_ptr< Var > >::iterator >
+
+        Parameters
+        ----------
+        x: std::set< std::shared_ptr< Var > >::key_type const &
+
+        """
+        return _component.var_set_equal_range(self, x)
+
+
+    def insert(self, __x):
+        """
+        insert(var_set self, std::set< std::shared_ptr< Var > >::value_type const & __x) -> std::pair< std::set< std::shared_ptr< Var > >::iterator,bool >
+
+        Parameters
+        ----------
+        __x: std::set< std::shared_ptr< Var > >::value_type const &
+
+        """
+        return _component.var_set_insert(self, __x)
+
+    __swig_destroy__ = _component.delete_var_set
+    __del__ = lambda self: None
+var_set_swigregister = _component.var_set_swigregister
+var_set_swigregister(var_set)
+
 
 def create_constraint(expr, lb=-1e100, ub=1e100):
     """
@@ -200,7 +754,7 @@ class Component(_object):
 
     def get_vars(self):
         """
-        get_vars(Component self) -> std::shared_ptr< std::set< std::shared_ptr< Var > > >
+        get_vars(Component self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
 
         Parameters
         ----------
@@ -212,7 +766,7 @@ class Component(_object):
 
     def py_get_vars(self):
         """
-        py_get_vars(Component self) -> std::set< std::shared_ptr< Var > >
+        py_get_vars(Component self) -> var_set
 
         Parameters
         ----------
@@ -347,7 +901,7 @@ class Objective(Component):
 
     def get_vars(self):
         """
-        get_vars(Objective self) -> std::shared_ptr< std::set< std::shared_ptr< Var > > >
+        get_vars(Objective self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
 
         Parameters
         ----------
@@ -516,7 +1070,7 @@ class Constraint(ConstraintBase):
 
     def get_vars(self):
         """
-        get_vars(Constraint self) -> std::shared_ptr< std::set< std::shared_ptr< Var > > >
+        get_vars(Constraint self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
 
         Parameters
         ----------
@@ -662,7 +1216,7 @@ class ConditionalConstraint(ConstraintBase):
 
     def get_vars(self):
         """
-        get_vars(ConditionalConstraint self) -> std::shared_ptr< std::set< std::shared_ptr< Var > > >
+        get_vars(ConditionalConstraint self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
 
         Parameters
         ----------

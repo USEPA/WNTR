@@ -5,7 +5,10 @@ from wntr.aml.aml.component import Component, ConstraintBase, Constraint, Condit
 from wntr.aml.aml.ipopt_model import IpoptModel
 from wntr.aml.aml.wntr_model import WNTRModel, CSRJacobian
 import scipy
-from wntr.utils.ordered_set import OrderedSet
+if sys.version_info.major == 2:
+    from collections import MutableSet
+else:
+    from collections.abc import MutableSet
 from collections import OrderedDict
 if sys.version_info.major == 2:
     from collections import MutableMapping
@@ -13,31 +16,64 @@ else:
     from collections.abc import MutableMapping
 
 
-class _OrderedIndexSet(OrderedSet):
+class _OrderedIndexSet(MutableSet):
+    def __init__(self, iterable=None):
+        self._data = OrderedDict()
+        self._reversed = OrderedDict()
+        if iterable is not None:
+            self.update(iterable)
+
+    def __contains__(self, item):
+        return item.name in self._data
+
+    def __iter__(self):
+        for name in self._data:
+            yield self._reversed[name]
+
+    def __len__(self):
+        return len(self._data)
+
     def add(self, item):
         """
         Add an element
         """
         if item not in self:
             item.index = len(self)
-            self._data[item] = 1
+            self._data[item.name] = 1
+            self._reversed[item.name] = item
         else:
-            self._data[item] += 1
+            self._data[item.name] += 1
 
     def discard(self, item):
         """
         Remove an element. Do not raise an exception if absent.
         """
         if item in self:
-            self._data[item] -= 1
-            if self._data[item] == 0:
-                for i in list(self._data.keys())[item.index:]:
+            self._data[item.name] -= 1
+            if self._data[item.name] == 0:
+                for i in list(self)[item.index:]:
                     i.index -= 1
                 item.index = -1
-                self._data.pop(item)
+                self._data.pop(item.name)
+                self._reversed.pop(item.name)
+
+    def update(self, iterable):
+        for i in iterable:
+            self.add(i)
 
     def count(self, item):
-        return self._data[item]
+        return self._data[item.name]
+
+    def __repr__(self):
+        s = '{'
+        for i in self:
+            s += str(i)
+            s += ', '
+        s += '}'
+        return s
+
+    def __str__(self):
+        return self.__repr__()
 
 
 class Model(object):
@@ -132,10 +168,10 @@ class Model(object):
         self._vars.remove(var)
 
     def _register_constraint(self, con):
-        self._cons.add(con)
-        self._model.add_constraint(con)
         for v in con.py_get_vars():
             self._register_var(v)
+        self._cons.add(con)
+        self._model.add_constraint(con)
 
     def _remove_constraint(self, con):
         self._model.remove_constraint(con)
@@ -146,10 +182,10 @@ class Model(object):
     def _register_objective(self, obj):
         if self._obj is not None:
             raise ValueError('The model already contains an objective: {0}'.format(self._obj))
-        self._obj = obj
-        self._model.set_objective(obj)
         for v in obj.py_get_vars():
             self._register_var(v)
+        self._obj = obj
+        self._model.set_objective(obj)
 
     def _remove_objective(self):
         for v in self._obj.py_get_vars():
