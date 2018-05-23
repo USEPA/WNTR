@@ -6,6 +6,7 @@ from wntr import scenario
 from wntr import graphics
 from wntr import utils
 from wntr.aml import aml
+from wntr import models
 
 __version__ = '0.1.5'
 

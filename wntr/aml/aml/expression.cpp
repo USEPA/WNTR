@@ -320,7 +320,7 @@ std::shared_ptr<Node> Node::operator*(Node& n)
 	}
       else if (n.get_type() == "Summation")
 	{
-	  std::shared_ptr<OperatorOperatorMultiplyOperator> oper = std::make_shared<OperatorOperatorMultiplyOperator>(shared_from_this(), n.shared_from_this());
+	  std::shared_ptr<OperatorOperatorMultiplyOperator> oper = std::make_shared<OperatorOperatorMultiplyOperator>(get_nodes()->back()->shared_from_this(), n.shared_from_this());
 	  get_nodes()->push_back(n.shared_from_this());
 	  get_nodes()->push_back(oper);
 	  auto _n_vars = n.get_vars();

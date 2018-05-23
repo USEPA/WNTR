@@ -289,6 +289,9 @@ class VarDict(_NodeDict):
 
 
 class ConstraintDict(_NodeDict):
+    """
+    Dictionary of constraints; primarily handles registering the constraints with the model and naming
+    """
     def __init__(self, mapping=None):
         self._model = None
         super(ConstraintDict, self).__init__(mapping)
