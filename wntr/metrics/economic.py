@@ -5,8 +5,8 @@ The wntr.metrics.economic module contains economic metrics.
 
 .. autosummary::
 
-    cost
-    ghg_emissions
+    annual_network_cost
+    annual_ghg_emissions
     pump_energy
 
 
@@ -19,15 +19,19 @@ import scipy
 
 logger = logging.getLogger(__name__)
 
-def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
-    """ Compute network cost.
-    Use the closest value from the lookup tables to compute cost for each 
+def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, 
+                        pump_cost=None):
+    """ 
+    Compute annual network cost [SOKZ12]_.
+    
+    Use the closest value from the lookup tables to compute annual cost for each 
     component in the network.
     
     Parameters
     ----------
-    tank_cost : pd.Series (optional, default values below, from [1])
-        Annual tank cost indexed by volume
+    tank_cost : pandas Series, optional
+        Annual tank cost indexed by volume 
+        (default values below, from [SOKZ12]_).
     
         =============  ================================
         Volume (m3)    Annual Cost ($/yr) 
@@ -40,8 +44,9 @@ def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
         10000           174930
         =============  ================================
     
-    pipe_cost : pd.Series (optional, default values below, from [1])
+    pipe_cost : pandas Series, optional
         Annual pipe cost per pipe length indexed by diameter
+        (default values below, from [SOKZ12]_).
     
         =============  =============  ================================
         Diameter (in)   Diameter (m)  Annual Cost ($/m/yr) 
@@ -60,8 +65,9 @@ def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
         30             0.762          42.60
         =============  =============  ================================
         
-    prv_cost : pd.Series (optional, default values below, from [1])
+    prv_cost : pandas Series, optional
         Annual PRV valve cost indexed by diameter 
+        (default values below, from [SOKZ12]_).
         
         =============  =============  ================================
         Diameter (in)   Diameter (m)  Annual Cost ($/m/yr) 
@@ -80,9 +86,11 @@ def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
         30             0.762          6790
         =============  =============  ================================
     
-    pump_cost : pd.Series (optional, default values below, from [1])
-        Annual pump cost indexed by maximum power.  Maximum Power is computed 
-        from the pump curve and pump efficiency as follows:
+    pump_cost : pd.Series, optional
+        Annual pump cost indexed by maximum power 
+        (default values below, from [SOKZ12]_).
+        Maximum Power is computed from the pump curve and pump efficiency 
+        as follows:
         
         .. math:: Pmp = g*rho/eff*exp(ln(A/(B*(C+1)))/C)*(A - B*(exp(ln(A/(B*(C+1)))/C))^C)
         
@@ -109,15 +117,9 @@ def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
 
     Returns
     ----------
-    network_cost : float
-        Annual network cost in dollars
-        
-    References
-    ----------
-    [1] Salomons E, Ostfeld A, Kapelan Z, Zecchin A, Marchi A, Simpson A. (2012).
-    water networks II - Adelaide 2012 (BWN-II). In Proceedings of the 2012 Water Distribution
-    Systems Analysis Conference, September 24-27, Adelaide, South Australia, Australia.
+    Annual network cost in dollars (float)
     """
+    
     # Initialize network construction cost
     network_cost = 0
     
@@ -175,15 +177,18 @@ def cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None, pump_cost=None):
     
     return network_cost
 
-def ghg_emissions(wn, pipe_ghg=None):
-    """ Compute greenhouse gas emissions.
-    Use the closest value in the lookup table to compute GHG emissions 
+def annual_ghg_emissions(wn, pipe_ghg=None):
+    """ 
+    Compute annual greenhouse gas emissions [SOKZ12]_.
+    
+    Use the closest value in the lookup table to compute annual GHG emissions 
     for each pipe in the network.
     
     Parameters
     ----------
-    pipe_ghg : pd.Series (optional, default values below, from [1])
+    pipe_ghg : pandas Series, optional
         Annual GHG emissions indexed by pipe diameter
+        (default values below, from [SOKZ12]_).
         
         =============  ================================
         Diameter (mm)  Annualised EE (kg-CO2-e/m/yr)
@@ -204,15 +209,9 @@ def ghg_emissions(wn, pipe_ghg=None):
     
     Returns
     ----------
-    network_ghg : float
-        Annual greenhouse gas emissions
-        
-    References
-    ----------
-    [1] Salomons E, Ostfeld A, Kapelan Z, Zecchin A, Marchi A, Simpson A. (2012).
-    water networks II - Adelaide 2012 (BWN-II). In Proceedings of the 2012 Water Distribution
-    Systems Analysis Conference, September 24-27, Adelaide, South Australia, Australia.
+    Annual greenhouse gas emissions (float)
     """
+    
     # Initialize network GHG emissions
     network_ghg = 0
     
@@ -231,13 +230,14 @@ def ghg_emissions(wn, pipe_ghg=None):
     return network_ghg    
 
 
-def pump_energy(wn, sim_results):
+def pump_energy(flowrate, head, wn):
     """
-    This method takes a WaterNetworkModel object and a simulation results object and computes the required pump
-    energy and cost at each time step in the results object for each pump in the network. The computation is based
-    on the flow rate through the pump, the pump head, the pump efficiency, and the electricity price. Pump efficiency
-    curves may be specified through the "efficiency" attribute on the pump object. Alternatively, a global efficiency
-    may be set on the wn.energy object:
+    Compute the pump energy over time.
+    
+    The computation uses pump flow rate, pump head, pump efficiency, and the 
+    electricity price. Pump efficiency curves may be specified through the 
+    "efficiency" attribute on the pump object. Alternatively, a global 
+    efficiency may be set on the wn.energy object:
 
         wn.energy.global_efficiency = 75 # This means 75% or 0.75
 
@@ -252,70 +252,102 @@ def pump_energy(wn, sim_results):
 
     Parameters
     ----------
-    wn: wntr.network.WaterNetworkModel
-    sim_results: wntr.sim.results.NetResults
+    flowrate : pandas DataFrame
+        A pandas Dataframe containing pump flowrates 
+        (index = times, columns = pump names).
+    
+    head : pandas DataFrame
+        A pandas Dataframe containing node head 
+        (index = times, columns = node names).
+        
+     wn: wntr WaterNetworkModel
+        Water network model.  The water network model is needed to 
+        define energy efficiency.
 
     Returns
     -------
-    pandas.Panel
-        The items are ['energy', 'cost']
-        The major axis is equivalent to sim_results.time
-        The minor axis corresponds to pump names
-        Energy is given in Watts
-        Cost is given in $/s
-        
-        
-    ..todo:
-        
-        Need to get this unit tested and not just functionally tested
-        
+    A tuple of pandas DataFrames: the first DataFrame contains pump energy in Watts,
+    the second contains pump cost is $/s (index = times, columns = pump names).
     """
+    
+    # TODO: Need to get this unit tested and not just functionally tested
     if wn.options.energy.demand_charge is not None and wn.options.energy.demand_charge != 0:
         raise ValueError('WNTR does not support demand charge yet.')
 
     pumps = wn.pump_name_list
-    flow = sim_results.link['flowrate'].loc[:, pumps]
-
-    headloss = pd.DataFrame(data=None, index=sim_results.time, columns=pumps)
+    time = flowrate.index
+    
+    headloss = pd.DataFrame(data=None, index=time, columns=pumps)
     for pump_name, pump in wn.pumps():
         start_node = pump.start_node_name
         end_node = pump.end_node_name
-        start_head = sim_results.node['head'].loc[:,start_node]
-        end_head = sim_results.node['head'].loc[:,end_node]
+        start_head = head.loc[:,start_node]
+        end_head = head.loc[:,end_node]
         headloss.loc[:,pump_name] = end_head - start_head
 
     efficiency_dict = {}
     for pump_name, pump in wn.pumps():
         if pump.efficiency is None:
-            efficiency_dict[pump_name] = [wn.options.energy.global_efficiency/100.0 for i in sim_results.time]
+            efficiency_dict[pump_name] = [wn.options.energy.global_efficiency/100.0 for i in time]
         else:
             raise NotImplementedError('WNTR does not support pump efficiency curves yet.')
             curve = wn.get_curve(pump.efficiency)
             x = [point[0] for point in curve.points]
             y = [point[1]/100.0 for point in curve.points]
             interp = scipy.interpolate.interp1d(x, y, kind='linear')
-            efficiency_dict[pump_name] = interp(np.array(flow.loc[:, pump_name]))
+            efficiency_dict[pump_name] = interp(np.array(flowrate.loc[:, pump_name]))
 
-    efficiency = pd.DataFrame(data=efficiency_dict, index=sim_results.time, columns=pumps)
+    efficiency = pd.DataFrame(data=efficiency_dict, index=time, columns=pumps)
 
+    energy = 1000.0 * 9.81 * headloss * flowrate / efficiency
+    
+    return energy
+
+def pump_cost(flowrate, head, wn):
+    """
+    Compute the pump cost over time.
+    
+    Parameters
+    ----------
+    flowrate : pandas DataFrame
+        A pandas Dataframe containing pump flowrates 
+        (index = times, columns = pump names).
+    
+    head : pandas DataFrame
+        A pandas Dataframe containing node head 
+        (index = times, columns = node names).
+        
+    wn: wntr WaterNetworkModel
+        Water network model.  The water network model is needed to 
+        define pump enery prices and patterns.
+        
+    Returns
+    -----------
+    Pump cost (float)
+    
+    """
+    time = flowrate.index
+    pumps = wn.pump_name_list
+    energy = pump_energy(flowrate, head, wn)
+    
     price_dict = {}
     for pump_name, pump in wn.pumps():
         if pump.energy_price is None and pump.energy_pattern is None:
             if wn.options.energy.global_pattern is None:
-                price_dict[pump_name] = [wn.options.energy.global_price for i in sim_results.time]
+                price_dict[pump_name] = [wn.options.energy.global_price for i in time]
             else:
                 raise NotImplementedError('WNTR does not support price patterns yet.')
         elif pump.energy_pattern is None:
             if wn.energy.global_pattern is None:
-                price_dict[pump_name] = [pump.energy_price for i in sim_results.time]
+                price_dict[pump_name] = [pump.energy_price for i in time]
             else:
                 raise NotImplementedError('WNTR does not support price patterns yet.')
         else:
             raise NotImplementedError('WNTR does not support price patterns yet.')
-    price = pd.DataFrame(data=price_dict, index=sim_results.time, columns=pumps)
-
-    energy = 1000.0 * 9.81 * headloss * flow / efficiency
-    cost_series = energy * price
-
-    pump_energy_results = pd.Panel(data={'energy':energy, 'cost':cost_series}, items=['energy', 'cost'], major_axis=sim_results.time, minor_axis=pumps)
-    return pump_energy_results
+            
+    price = pd.DataFrame(data=price_dict, index=time, columns=pumps)
+    
+    pump_cost =energy * price
+    
+    return pump_cost
+    

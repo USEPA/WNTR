@@ -26,16 +26,19 @@ class TestPumpCost(unittest.TestCase):
         pass
 
     def test_pump_cost(self):
-        pump_res = self.wntr.metrics.pump_energy(self.wn, self.results)
-        cost = pump_res.loc['cost',:,:]
+        flowrate = self.results.link['flowrate'].loc[:,self.wn.pump_name_list]
+        head = self.results.node['head'].loc[:,self.wn.node_name_list]
+        
+        cost = self.wntr.metrics.pump_cost(flowrate, head, self.wn)
 
         total_cost = 0
-        for i in range(len(self.results.time) - 1):
-            t = self.results.time[i]
-            delta_t = self.results.time[i + 1] - t
+        times = self.results.link['flowrate'].index
+        for i in range(len(times) - 1):
+            t = times[i]
+            delta_t = times[i + 1] - t
             total_cost = total_cost + cost.loc[t, :] * delta_t
 
-        avg_cost = total_cost / (self.results.time[-1] - self.results.time[0])
+        avg_cost = total_cost / (times[-1] - times[0])
 
         avg_cost_sum = avg_cost.sum()
 

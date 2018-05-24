@@ -26,7 +26,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
 
     Parameters
     ----------
-    wn : WaterNetworkModel
+    wn : wntr WaterNetworkModel
         A WaterNetworkModel object
 
     node_attribute : str, list, pd.Series, or dict, optional
@@ -108,9 +108,9 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         raise ImportError('matplotlib is required')
 
     if node_cmap is None:
-        node_cmap = plt.cm.jet
+        node_cmap = plt.cm.Spectral_r
     if link_cmap is None:
-        link_cmap = plt.cm.jet
+        link_cmap = plt.cm.Spectral_r
     if ax is None: # create a new figure
         plt.figure(facecolor='w', edgecolor='k')
         ax = plt.gca()
@@ -232,7 +232,7 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
 
     Parameters
     ----------
-    wn : WaterNetworkModel
+    wn : wntr WaterNetworkModel
         A WaterNetworkModel object
 
     node_attribute : str, list, pd.Series, or dict, optional

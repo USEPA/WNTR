@@ -165,9 +165,9 @@ class TestPerformance(unittest.TestCase):
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
         
-        head_diff = abs(results.node['head', :, :] - epa_res.node['head', :, :])
-        demand_diff = abs(results.node['demand', :, wn.tank_name_list] - epa_res.node['demand', :, wn.tank_name_list])
-        flow_diff = abs(results.link['flowrate', :, :] - epa_res.link['flowrate', :, :])
+        head_diff = abs(results.node['head'] - epa_res.node['head'])
+        demand_diff = abs(results.node['demand'].loc[:, wn.tank_name_list] - epa_res.node['demand'].loc[:, wn.tank_name_list])
+        flow_diff = abs(results.link['flowrate'] - epa_res.link['flowrate'])
 
         self.Net1_avg_head_diff.append(head_diff.mean().mean())
         self.Net1_avg_demand_diff.append(demand_diff.mean().mean())
@@ -204,9 +204,9 @@ class TestPerformance(unittest.TestCase):
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
-        head_diff = abs(results.node['head', :, :] - epa_res.node['head', :, :])
-        demand_diff = abs(results.node['demand', :, wn.tank_name_list] - epa_res.node['demand', :, wn.tank_name_list])
-        flow_diff = abs(results.link['flowrate', :, :] - epa_res.link['flowrate', :, :])
+        head_diff = abs(results.node['head'] - epa_res.node['head'])
+        demand_diff = abs(results.node['demand'].loc[:, wn.tank_name_list] - epa_res.node['demand'].loc[:, wn.tank_name_list])
+        flow_diff = abs(results.link['flowrate'] - epa_res.link['flowrate'])
 
         self.Net3_avg_head_diff.append(head_diff.mean().mean())
         self.Net3_avg_demand_diff.append(demand_diff.mean().mean())
@@ -245,9 +245,9 @@ class TestPerformance(unittest.TestCase):
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
-        head_diff = abs(results.node['head', :, :] - epa_res.node['head', :, :])
-        demand_diff = abs(results.node['demand', :, wn.tank_name_list] - epa_res.node['demand', :, wn.tank_name_list])
-        flow_diff = abs(results.link['flowrate', :, :] - epa_res.link['flowrate', :, :])
+        head_diff = abs(results.node['head'] - epa_res.node['head'])
+        demand_diff = abs(results.node['demand'].loc[:, wn.tank_name_list] - epa_res.node['demand'].loc[:, wn.tank_name_list])
+        flow_diff = abs(results.link['flowrate'] - epa_res.link['flowrate'])
 
         self.Net6_mod_avg_head_diff.append(head_diff.mean().mean())
         self.Net6_mod_avg_demand_diff.append(demand_diff.mean().mean())

@@ -671,7 +671,6 @@ class WaterNetworkModel(AbstractModel):
         """
         try:
             del self._controls[name]
-            self._num_controls -= 1
         except KeyError:
             pass
     

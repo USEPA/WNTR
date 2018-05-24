@@ -1091,7 +1091,6 @@ class HydraulicModel(object):
         self._sim_results['node_times'] = []
         self._sim_results['node_head'] = []
         self._sim_results['node_demand'] = []
-        self._sim_results['node_expected_demand'] = []
         self._sim_results['node_pressure'] = []
         self._sim_results['leak_demand'] = []
         self._sim_results['link_name'] = []
@@ -1111,7 +1110,6 @@ class HydraulicModel(object):
             self._sim_results['node_type'].append('Junction')
             self._sim_results['node_head'].append(head_n)
             self._sim_results['node_demand'].append(demand[node_id])
-            self._sim_results['node_expected_demand'].append(self.junction_demand[node_id])
             if node_id in self.isolated_junction_ids:
                 self._sim_results['node_pressure'].append(0.0)
             else:
@@ -1128,7 +1126,6 @@ class HydraulicModel(object):
             self._sim_results['node_type'].append('Tank')
             self._sim_results['node_head'].append(head_n)
             self._sim_results['node_demand'].append(demand_n)
-            self._sim_results['node_expected_demand'].append(demand_n)
             self._sim_results['node_pressure'].append(head_n - self.node_elevations[node_id])
             if node_id in self._leak_ids:
                 leak_idx = self._leak_ids.index(node_id)
@@ -1141,7 +1138,6 @@ class HydraulicModel(object):
             self._sim_results['node_type'].append('Reservoir')
             self._sim_results['node_head'].append(head[node_id])
             self._sim_results['node_demand'].append(demand_n)
-            self._sim_results['node_expected_demand'].append(demand_n)
             self._sim_results['node_pressure'].append(0.0)
             self._sim_results['leak_demand'].append(0.0)
 
@@ -1183,23 +1179,22 @@ class HydraulicModel(object):
         link_names = [self._link_id_to_name[i] for i in tmp_link_names]
 
         node_dictionary = {'demand': self._sim_results['node_demand'],
-                           'expected_demand': self._sim_results['node_expected_demand'],
                            'head': self._sim_results['node_head'],
                            'pressure': self._sim_results['node_pressure'],
-                           'leak_demand': self._sim_results['leak_demand'],
-                           'type': self._sim_results['node_type']}
+                           'leak_demand': self._sim_results['leak_demand']}
+                           #'type': self._sim_results['node_type']}
         for key,value in node_dictionary.items():
-            node_dictionary[key] = np.array(value).reshape((ntimes,nnodes))
-        results.node = pd.Panel(node_dictionary, major_axis=results.time, minor_axis=node_names)
-
+            node_dictionary[key] = pd.DataFrame(data=np.array(value).reshape((ntimes,nnodes)), index=results.time, columns=node_names)
+        results.node = node_dictionary 
+        
         link_dictionary = {'flowrate':self._sim_results['link_flowrate'],
                            'velocity':self._sim_results['link_velocity'],
-                           'type':self._sim_results['link_type'],
+                           #'type':self._sim_results['link_type'],
                            'status':self._sim_results['link_status']}
         for key, value in link_dictionary.items():
-            link_dictionary[key] = np.array(value).reshape((ntimes, nlinks))
-        results.link = pd.Panel(link_dictionary, major_axis=results.time, minor_axis=link_names)
-
+            link_dictionary[key] = pd.DataFrame(data=np.array(value).reshape((ntimes, nlinks)), index=results.time, columns=link_names)
+        results.link = link_dictionary 
+        
     def set_network_inputs_by_id(self):
         self.isolated_junction_ids = []
         self.isolated_link_ids = []
