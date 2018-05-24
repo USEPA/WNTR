@@ -180,6 +180,9 @@ class WNTRSimulator(WaterNetworkSimulator):
         for c in (self._wn._get_all_tank_controls() + self._wn._get_cv_controls() + self._wn._get_pump_controls() +
                   self._wn._get_valve_controls()):
             categorize_control(c)
+        if self.mode == 'PDD':
+            for c in self._wn._get_demand_status_controls():
+                categorize_control(c)
 
         if logger_level <= 1:
             logger.log(1, 'collected presolve controls:')

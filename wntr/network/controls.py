@@ -942,6 +942,66 @@ class _OpenCVCondition(ControlCondition):
             return False
 
 
+class _PartialDemandStatusCondition(ControlCondition):
+    Htol = 0.0001524
+
+    def __init__(self, wn, junction):
+        self._junction = junction
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._junction])
+
+    def evaluate(self):
+        """
+        If True is returned, junction._demand_status needs to be _DemandStatus.Partial
+        """
+        p = self._junction.head - self._junction.elevation
+        if p >= self._junction.minimum_pressure + self.Htol and p <= self._junction.nominal_pressure - self.Htol:
+            return True
+        return False
+
+
+class _ZeroDemandStatusCondition(ControlCondition):
+    Htol = 0.0001524
+
+    def __init__(self, wn, junction):
+        self._junction = junction
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._junction])
+
+    def evaluate(self):
+        """
+        If True is returned, junction._demand_status needs to be _DemandStatus.Zero
+        """
+        p = self._junction.head - self._junction.elevation
+        if p <= self._junction.minimum_pressure:
+            return True
+        return False
+
+
+class _FullDemandStatusCondition(ControlCondition):
+    Htol = 0.0001524
+
+    def __init__(self, wn, junction):
+        self._junction = junction
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._junction])
+
+    def evaluate(self):
+        """
+        If True is returned, junction._demand_status needs to be _DemandStatus.Full
+        """
+        p = self._junction.head - self._junction.elevation
+        if p >= self._junction.nominal_pressure:
+            return True
+        return False
+
+
 class _ClosePowerPumpCondition(ControlCondition):
     """
     Prevents reverse flow in pumps.

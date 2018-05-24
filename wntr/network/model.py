@@ -27,7 +27,7 @@ import numpy as np
 import networkx as nx
 
 from .options import WaterNetworkOptions
-from .base import Link, Registry, LinkStatus, AbstractModel
+from .base import Link, Registry, LinkStatus, AbstractModel, _DemandStatus
 from .elements import Junction, Reservoir, Tank
 from .elements import Pipe, Pump, HeadPump, PowerPump
 from .elements import Valve, PRValve, PSValve, PBValve, TCValve, FCValve, GPValve
@@ -37,7 +37,8 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison, Rule
+    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison, Rule, \
+    _PartialDemandStatusCondition, _FullDemandStatusCondition, _ZeroDemandStatusCondition
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 
@@ -918,7 +919,7 @@ class WaterNetworkModel(AbstractModel):
 
     def _get_valve_controls(self):
         valve_controls = []
-        for valve_name, valve in self.valves():
+        for valve_name, valve in self.valves:
 
             new_setting_action = ControlAction(valve, 'status', LinkStatus.Active)
             new_setting_condition = _ValveNewSettingCondition(valve)
@@ -955,7 +956,28 @@ class WaterNetworkModel(AbstractModel):
                 valve_controls.append(active_control)
 
         return valve_controls
-    
+
+    def _get_demand_status_controls(self):
+        demand_status_controls = []
+        for node_name, node in self.junctions:
+            partial_action = ControlAction(node, '_demand_status', _DemandStatus.Partial)
+            zero_action = ControlAction(node, '_demand_status', _DemandStatus.Zero)
+            full_action = ControlAction(node, '_demand_status', _DemandStatus.Full)
+
+            partial_condition = _PartialDemandStatusCondition(self, node)
+            zero_condition = _ZeroDemandStatusCondition(self, node)
+            full_condition = _FullDemandStatusCondition(self, node)
+
+            partial_control = Control(condition=partial_condition, then_action=partial_action)
+            zero_control = Control(condition=zero_condition, then_action=zero_action)
+            full_control = Control(condition=full_condition, then_action=full_action)
+
+            demand_status_controls.append(partial_control)
+            demand_status_controls.append(zero_control)
+            demand_status_controls.append(full_control)
+
+        return demand_status_controls
+
     ### #
     ### Name lists
     @property

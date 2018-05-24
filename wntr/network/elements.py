@@ -41,7 +41,7 @@ if sys.version_info[0] == 2:
 else:
     from collections.abc import MutableSequence
 
-from .base import Node, Link, Registry, LinkStatus
+from .base import Node, Link, Registry, LinkStatus, _DemandStatus
 from .options import TimeOptions
 
 logger = logging.getLogger(__name__)
@@ -64,6 +64,7 @@ class Junction(Node):
         super(Junction, self).__init__(wn, name)
         self.demand_timeseries_list = Demands(self._pattern_reg)
         self.elevation = 0.0
+        self._demand_status = _DemandStatus.Partial
 
         self.nominal_pressure = 20.0
         """float: The nominal pressure attribute is used for pressure-dependent demand
