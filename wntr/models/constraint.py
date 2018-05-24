@@ -207,3 +207,16 @@ def head_pump_headloss_constraint(m, wn, index_over=None):
         con.add_condition(f - m.hw_q2, -status*k*(a*f**3 + b*f**2 + c*f + d) - status*minor_k*f**m.hw_minor_exp + status*start_h - status*end_h + (1-status)*f)
         con.add_final_expr(-status*k*f**m.hw_exp - status*minor_k*f**m.hw_minor_exp + status*start_h - status*end_h + (1-status)*f)
         m.hazen_williams_headloss[link_name] = con
+
+
+def plot_constraint(con, var_to_vary, lb, ub):
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    x = np.linspace(lb, ub, 10000, True)
+    y = []
+    for _x in x:
+        var_to_vary.value = _x
+        y.append(con.evaluate())
+    plt.plot(x, y)
+    plt.show()

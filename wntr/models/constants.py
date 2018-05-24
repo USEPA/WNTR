@@ -28,4 +28,4 @@ def hazen_williams_params(m):
 
 def pdd_constants(m):
     m.pdd_smoothing_delta = 0.2
-    m.pdd_slope = 1e-11
+    m.pdd_slope = 1e-3
