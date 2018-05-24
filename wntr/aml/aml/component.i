@@ -1,5 +1,6 @@
 %module component
 %include <std_shared_ptr.i>
+%shared_ptr(Var)
 %shared_ptr(Constraint)
 %shared_ptr(ConditionalConstraint)
 %shared_ptr(ConstraintBase)

@@ -1025,15 +1025,37 @@ class WaterNetworkModel(AbstractModel):
         return list(self._link_reg.pipe_names)
 
     @property
-    def pump_name_list(self): 
+    def pump_name_list(self):
         """Get a list of pump names (both types included)
-        
+
         Returns
         -------
         list of strings
-        
+
         """
         return list(self._link_reg.pump_names)
+
+    @property
+    def head_pump_name_list(self):
+        """Get a list of head pump names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.head_pump_names)
+
+    @property
+    def power_pump_name_list(self):
+        """Get a list of power pump names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.power_pump_names)
 
     @property
     def valve_name_list(self): 
@@ -2573,6 +2595,16 @@ class LinkRegistry(Registry):
     def pump_names(self):
         """A list of all pump names"""
         return self._pumps
+
+    @property
+    def head_pump_names(self):
+        """A list of all head pump names"""
+        return self._head_pumps
+
+    @property
+    def power_pump_names(self):
+        """A list of all power pump names"""
+        return self._power_pumps
 
     def pipes(self):
         """Generator to get all pipes
