@@ -24,7 +24,7 @@ if ipopt_available:
     ipopt_lib = os.path.join(ipopt_base, 'lib')
 
 # inplace extension module
-project_dir = os.path.dirname(os.path.abspath(__file__))
+project_dir = './'  # os.path.dirname(os.path.abspath(__file__))
 src_files = os.path.join(project_dir, 'wntr', 'aml', 'aml')
 expression_i = os.path.join(src_files, 'expression.i')
 expression_cxx = os.path.join(src_files, 'expression.cpp')
