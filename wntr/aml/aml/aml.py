@@ -2,7 +2,7 @@ import sys
 from collections import OrderedDict
 from wntr.aml.aml.aml_core import Node, Var, Param, create_var, create_param
 from wntr.aml.aml.aml_core import Component, ConstraintBase, Constraint, ConditionalConstraint, Objective, create_constraint, create_conditional_constraint, create_objective
-from wntr.aml.aml.ipopt_model import IpoptModel
+#from wntr.aml.aml.ipopt_model import IpoptModel
 from wntr.aml.aml.aml_core import WNTRModel, CSRJacobian
 import scipy
 if sys.version_info.major == 2:
