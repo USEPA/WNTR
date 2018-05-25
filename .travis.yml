@@ -61,6 +61,8 @@ install:
     #- pip install scipy # won't do anything if already installed
     - CC=gcc-7.3.0
     - CXX=g++-7.3.0
+    - gcc --version
+    - g++ --version
     - python setup.py install
 
 script:
