@@ -1080,15 +1080,81 @@ class WaterNetworkModel(AbstractModel):
         return list(self._link_reg.power_pump_names)
 
     @property
-    def valve_name_list(self): 
+    def valve_name_list(self):
         """Get a list of valve names (all types included)
-        
+
         Returns
         -------
         list of strings
-        
+
         """
         return list(self._link_reg.valve_names)
+
+    @property
+    def prv_name_list(self):
+        """Get a list of prv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.prv_names)
+
+    @property
+    def psv_name_list(self):
+        """Get a list of psv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.psv_names)
+
+    @property
+    def pbv_name_list(self):
+        """Get a list of pbv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.pbv_names)
+
+    @property
+    def tcv_name_list(self):
+        """Get a list of tcv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.tcv_names)
+
+    @property
+    def fcv_name_list(self):
+        """Get a list of fcv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.fcv_names)
+
+    @property
+    def gpv_name_list(self):
+        """Get a list of gpv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.gpv_names)
 
     @property
     def pattern_name_list(self): 
@@ -2627,6 +2693,36 @@ class LinkRegistry(Registry):
     def power_pump_names(self):
         """A list of all power pump names"""
         return self._power_pumps
+
+    @property
+    def prv_names(self):
+        """A list of all prv names"""
+        return self._prvs
+
+    @property
+    def psv_names(self):
+        """A list of all psv names"""
+        return self._psvs
+
+    @property
+    def pbv_names(self):
+        """A list of all pbv names"""
+        return self._pbvs
+
+    @property
+    def tcv_names(self):
+        """A list of all tcv names"""
+        return self._tcvs
+
+    @property
+    def fcv_names(self):
+        """A list of all fcv names"""
+        return self._fcvs
+
+    @property
+    def gpv_names(self):
+        """A list of all gpv names"""
+        return self._gpvs
 
     def pipes(self):
         """Generator to get all pipes

@@ -2,6 +2,8 @@ import logging
 from wntr.aml.aml import aml
 import wntr.network
 from wntr.network.base import _DemandStatus
+import warnings
+from wntr.utils.polynomial_interpolation import cubic_spline
 
 logger = logging.getLogger(__name__)
 
@@ -198,32 +200,260 @@ def head_pump_headloss_constraint(m, wn, index_over=None):
         else:
             end_h = m.source_head[end_node_name]
         f = m.flow[link_name]
-        k = m.hw_resistance[link_name]
-        minor_k = m.minor_loss[link_name]
         status = m.status[link_name]
-        a = m.hw_a
-        b = m.hw_b
-        c = m.hw_c
-        d = m.hw_d
+        A, B, C = link.get_head_curve_coefficients()
 
-        con = aml.create_conditional_constraint(lb=0, ub=0)
-        con.add_condition(f + m.hw_q2, status*k*(-f)**m.hw_exp + status*minor_k*f**m.hw_minor_exp + status*start_h - status*end_h + (1-status)*f)
-        con.add_condition(f + m.hw_q1, status*k*(-a*f**3 + b*f**2 - c*f + d) + status*minor_k*f**m.hw_minor_exp + status*start_h - status*end_h + (1-status)*f)
-        con.add_condition(f, -(status*k*m.hw_m*f) + status*minor_k*f**m.hw_minor_exp + status*start_h - status*end_h + (1-status)*f)
-        con.add_condition(f - m.hw_q1, -status*k*m.hw_m*f - status*minor_k*f**m.hw_minor_exp + status*start_h - status*end_h + (1-status)*f)
-        con.add_condition(f - m.hw_q2, -status*k*(a*f**3 + b*f**2 + c*f + d) - status*minor_k*f**m.hw_minor_exp + status*start_h - status*end_h + (1-status)*f)
-        con.add_final_expr(-status*k*f**m.hw_exp - status*minor_k*f**m.hw_minor_exp + status*start_h - status*end_h + (1-status)*f)
-        m.hazen_williams_headloss[link_name] = con
+        if C <= 1:
+            a, b, c, d = get_pump_poly_coefficients(A, B, C, m)
+            con = aml.create_conditional_constraint(lb=0, ub=0)
+            con.add_condition(f - m.pump_q1, status * (m.pump_slope * f + A - end_h + start_h) + (1-status) * f)
+            con.add_condition(f - m.pump_q2, status * (a*f**3 + b*f**2 + c*f + d - end_h + start_h) + (1-status) * f)
+            con.add_final_expr(status * (A - B*f**C - end_h + start_h) + (1-status) * f)
+        else:
+            q_bar, h_bar = get_pump_line_params(A, B, C, m)
+            con = aml.create_conditional_constraint(lb=0, ub=0)
+            con.add_condition(f - q_bar, status*(m.pump_slope*(f - q_bar) + h_bar - end_h + start_h) + (1-status) * f)
+            con.add_final_expr(status * (A - B*f**C - end_h + start_h) + (1-status) * f)
+
+        m.head_pump_headloss[link_name] = con
 
 
-def plot_constraint(con, var_to_vary, lb, ub):
+def power_pump_headloss_constraint(m, wn, index_over=None):
+    """
+    Adds a headloss constraint to the model for the power pumps.
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of powerPump names; default is all powerPumps in wn
+    """
+    if not hasattr(m, 'power_pump_headloss'):
+        m.power_pump_headloss = aml.ConstraintDict()
+
+    if index_over is None:
+        index_over = wn.power_pump_name_list
+
+    for link_name in index_over:
+        link = wn.get_link(link_name)
+        start_node_name = link.start_node_name
+        end_node_name = link.end_node_name
+        start_node = wn.get_node(start_node_name)
+        end_node = wn.get_node(end_node_name)
+        if isinstance(start_node, wntr.network.Junction):
+            start_h = m.head[start_node_name]
+        else:
+            start_h = m.source_head[start_node_name]
+        if isinstance(end_node, wntr.network.Junction):
+            end_h = m.head[end_node_name]
+        else:
+            end_h = m.source_head[end_node_name]
+        f = m.flow[link_name]
+        status = m.status[link_name]
+
+        con = aml.create_constraint(
+            status * (m.pump_power[link_name] + (start_h - end_h) * f * 9.81 * 1000.0) + (1 - status) * f, lb=0, ub=0)
+        m.power_pump_headloss[link_name] = con
+
+
+def prv_headloss_constraint(m, wn, index_over=None):
+    """
+    Adds a headloss constraint to the model for the power pumps.
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of powerPump names; default is all powerPumps in wn
+    """
+    if not hasattr(m, 'prv_headloss'):
+        m.prv_headloss = aml.ConstraintDict()
+
+    if index_over is None:
+        index_over = wn.prv_name_list
+
+    for link_name in index_over:
+        link = wn.get_link(link_name)
+        start_node_name = link.start_node_name
+        end_node_name = link.end_node_name
+        start_node = wn.get_node(start_node_name)
+        end_node = wn.get_node(end_node_name)
+        if isinstance(start_node, wntr.network.Junction):
+            start_h = m.head[start_node_name]
+        else:
+            start_h = m.source_head[start_node_name]
+        if isinstance(end_node, wntr.network.Junction):
+            end_h = m.head[end_node_name]
+        else:
+            end_h = m.source_head[end_node_name]
+        f = m.flow[link_name]
+
+        if link.status == wntr.network.LinkStatus.Active:
+            con = aml.create_constraint(end_h - m.valve_setting[link_name] - m.elevation[end_node_name], lb=0, ub=0)
+        elif link.status == wntr.network.LinkStatus.Closed:
+            con = aml.create_constraint(f, lb=0, ub=0)
+        else:
+            con = aml.create_constraint(m.minor_loss[link_name]*f**2 - start_h + end_h, lb=0, ub=0)
+        m.prv_headloss[link_name] = con
+
+
+def fcv_headloss_constraint(m, wn, index_over=None):
+    """
+    Adds a headloss constraint to the model for the power pumps.
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of powerPump names; default is all powerPumps in wn
+    """
+    if not hasattr(m, 'fcv_headloss'):
+        m.fcv_headloss = aml.ConstraintDict()
+
+    if index_over is None:
+        index_over = wn.fcv_name_list
+
+    for link_name in index_over:
+        link = wn.get_link(link_name)
+        start_node_name = link.start_node_name
+        end_node_name = link.end_node_name
+        start_node = wn.get_node(start_node_name)
+        end_node = wn.get_node(end_node_name)
+        if isinstance(start_node, wntr.network.Junction):
+            start_h = m.head[start_node_name]
+        else:
+            start_h = m.source_head[start_node_name]
+        if isinstance(end_node, wntr.network.Junction):
+            end_h = m.head[end_node_name]
+        else:
+            end_h = m.source_head[end_node_name]
+        f = m.flow[link_name]
+
+        if link.status == wntr.network.LinkStatus.Active:
+            con = aml.create_constraint(f - m.valve_setting[link_name], lb=0, ub=0)
+        elif link.status == wntr.network.LinkStatus.Closed:
+            con = aml.create_constraint(f, lb=0, ub=0)
+        else:
+            con = aml.create_conditional_constraint(lb=0, ub=0)
+            con.add_condition(f, -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
+            con.add_final_expr(m.minor_loss[link_name] * f ** 2 - start_h + end_h)
+        m.fcv_headloss[link_name] = con
+
+
+def tcv_headloss_constraint(m, wn, index_over=None):
+    """
+    Adds a headloss constraint to the model for the power pumps.
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of powerPump names; default is all powerPumps in wn
+    """
+    if not hasattr(m, 'tcv_headloss'):
+        m.tcv_headloss = aml.ConstraintDict()
+
+    if index_over is None:
+        index_over = wn.tcv_name_list
+
+    for link_name in index_over:
+        link = wn.get_link(link_name)
+        start_node_name = link.start_node_name
+        end_node_name = link.end_node_name
+        start_node = wn.get_node(start_node_name)
+        end_node = wn.get_node(end_node_name)
+        if isinstance(start_node, wntr.network.Junction):
+            start_h = m.head[start_node_name]
+        else:
+            start_h = m.source_head[start_node_name]
+        if isinstance(end_node, wntr.network.Junction):
+            end_h = m.head[end_node_name]
+        else:
+            end_h = m.source_head[end_node_name]
+        f = m.flow[link_name]
+
+        if link.status == wntr.network.LinkStatus.Active:
+            con = aml.create_conditional_constraint(lb=0, ub=0)
+            con.add_condition(f, -m.tcv_resistance[link_name] * f ** 2 - start_h + end_h)
+            con.add_final_expr(m.tcv_resistance[link_name] * f ** 2 - start_h + end_h)
+        elif link.status == wntr.network.LinkStatus.Closed:
+            con = aml.create_constraint(f, lb=0, ub=0)
+        else:
+            con = aml.create_conditional_constraint(lb=0, ub=0)
+            con.add_condition(f, -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
+            con.add_final_expr(m.minor_loss[link_name] * f ** 2 - start_h + end_h)
+        m.tcv_headloss[link_name] = con
+
+
+def plot_constraint(con, var_to_vary, lb, ub, with_derivative=True, show_plot=True):
     import numpy as np
     import matplotlib.pyplot as plt
 
     x = np.linspace(lb, ub, 10000, True)
     y = []
+    dy = []
     for _x in x:
         var_to_vary.value = _x
         y.append(con.evaluate())
+        dy.append(con.ad(var_to_vary, False))
+    plt.subplot(2, 1, 1)
     plt.plot(x, y)
-    plt.show()
+    plt.title(con.name)
+    plt.ylabel('residual')
+    plt.subplot(2, 1, 2)
+    plt.plot(x, dy)
+    plt.ylabel('derivative')
+    plt.xlabel(var_to_vary.name)
+    if show_plot:
+        plt.show()
+
+
+def get_pump_poly_coefficients(A, B, C, m):
+    q1 = m.pump_q1
+    q2 = m.pump_q2
+    m = m.pump_slope
+
+    f1 = m*q1 + A
+    f2 = A - B*q2**C
+    df1 = m
+    df2 = -B*C*q2**(C-1.0)
+
+    a,b,c,d = cubic_spline(q1, q2, f1, f2, df1, df2)
+
+    if a <= 0.0 and b <= 0.0:
+        return a, b, c, d
+    elif a > 0.0 and b > 0.0:
+        if df2 < 0.0:
+            return a, b, c, d
+        else:
+            logger.warning('Pump smoothing polynomial is not monotonically decreasing.')
+            warnings.warn('Pump smoothing polynomial is not monotonically decreasing.')
+            return a, b, c, d
+    elif a > 0.0 and b <= 0.0:
+        if df2 < 0.0:
+            return a, b, c, d
+        else:
+            logger.warning('Pump smoothing polynomial is not monotonically decreasing.')
+            warnings.warn('Pump smoothing polynomial is not monotonically decreasing.')
+            return a, b, c, d
+    elif a <= 0.0 and b > 0.0:
+        if q2 <= -2.0*b/(6.0*a) and df2 < 0.0:
+            return a, b, c, d
+        else:
+            logger.warning('Pump smoothing polynomial is not monotonically decreasing.')
+            warnings.warn('Pump smoothing polynomial is not monotonically decreasing.')
+            return a, b, c, d
+    else:
+        logger.warning('Pump smoothing polynomial is not monotonically decreasing.')
+        warnings.warn('Pump smoothing polynomial is not monotonically decreasing.')
+        return a, b, c, d
+
+
+def get_pump_line_params(A, B, C, m):
+    q_bar = (m.pump_slope/(-B*C))**(1.0/(C-1.0))
+    h_bar = A - B*q_bar**C
+    return q_bar, h_bar

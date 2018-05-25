@@ -5,6 +5,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def compare_floats(a, b, tol=1e-5, rel_tol=1e-3):
+    if abs(a) >= 1e-8:
+        if abs(a-b)/abs(a)*100 > rel_tol:
+            return False
+        return True
+    if abs(a-b) > tol:
+        return False
+    return True
+
+
 def approximate_derivative(con, var, h):
     orig_value = var.value
     var_vals = [orig_value - 2*h, orig_value - h, orig_value + h, orig_value + 2*h]
@@ -41,11 +51,13 @@ class TestHeadloss(unittest.TestCase):
         wn.add_tank('t1', 0, 10, 0, 20, 15)
         wn.add_junction('j1', 0.01)
         wn.add_pipe('p1', 't1', 'j1', minor_loss=10.0)
-
-    def test_HW_headloss(self):
-        wn = self.wn
-        m = wntr.aml.Model()
-        wntr.models.constants.hazen_williams_params(m)
+        wn.add_curve('curve1', 'HEAD', [(0, 10), (0.05, 5), (0.1, 0)])
+        wn.add_curve('curve2', 'HEAD', [(0, 10), (0.03, 5), (0.1, 0)])
+        wn.add_curve('curve3', 'HEAD', [(0, 10), (0.07, 5), (0.1, 0)])
+        wn.add_pump('pump1', 't1', 'j1', 'HEAD', 'curve1')
+        wn.add_pump('pump2', 't1', 'j1', 'POWER', 50.0)
+        cls.m = m = wntr.aml.Model()
+        wntr.models.constants.hazen_williams_constants(m)
         wntr.models.param.hw_resistance_param(m, wn)
         wntr.models.param.minor_loss_param(m, wn)
         wntr.models.param.status_param(m, wn)
@@ -53,7 +65,14 @@ class TestHeadloss(unittest.TestCase):
         wntr.models.var.flow_var(m, wn)
         wntr.models.var.head_var(m, wn)
         wntr.models.constraint.hazen_williams_headloss_constraint(m, wn)
+        wntr.models.constants.head_pump_constants(m)
+        wntr.models.constraint.head_pump_headloss_constraint(m, wn)
+        wntr.models.param.pump_power_param(m, wn)
+        wntr.models.constraint.power_pump_headloss_constraint(m, wn)
 
+    def test_HW_headloss(self):
+        wn = self.wn
+        m = self.m
         pipe = wn.get_link('p1')
 
         flows_to_test = [0, m.hw_q1/2.0, m.hw_q1, (m.hw_q1+m.hw_q2)/2.0, m.hw_q2, m.hw_q2+0.1]
@@ -89,6 +108,89 @@ class TestHeadloss(unittest.TestCase):
                 self.assertLess(rel_diff, 0.1)
                 self.assertAlmostEqual(d1, d2, 3)
                 self.assertAlmostEqual(d1, d3, 3)
+
+    def test_head_pump_headloss(self):
+        wn = self.wn
+        m = self.m
+        pump = wn.get_link('pump1')
+        curve1 = wn.get_curve('curve1')
+        curve2 = wn.get_curve('curve2')
+        curve3 = wn.get_curve('curve3')
+
+        curves_to_test = [curve1, curve2, curve3]
+        flows_to_test = [m.pump_q1 - 0.1, m.pump_q1, (m.pump_q1+m.pump_q2)/2, m.pump_q2, m.pump_q2+0.1]
+        status_to_test = [1, 0]
+
+        t1_head = 5
+        j1_head = 10
+
+        m.source_head['t1'].value = t1_head
+        m.head['j1'].value = j1_head
+
+        for curve in curves_to_test:
+            pump.pump_curve_name = curve.name
+            del m.head_pump_headloss['pump1']
+            wntr.models.constraint.head_pump_headloss_constraint(m, wn, index_over=['pump1'])
+            A, B, C = pump.get_head_curve_coefficients()
+            for status in status_to_test:
+                m.status['pump1'].value = status
+                for f in flows_to_test:
+                    m.flow['pump1'].value = f
+                    r1 = m.head_pump_headloss['pump1'].evaluate()
+                    if status == 1:
+                        if C <= 1:
+                            a, b, c, d = wntr.models.constraint.get_pump_poly_coefficients(A, B, C, m)
+                            if f <= m.pump_q1:
+                                r2 = m.pump_slope * f + A - j1_head + t1_head
+                            elif f <= m.pump_q2:
+                                r2 = a*f**3 + b*f**2 + c*f + d - j1_head + t1_head
+                            else:
+                                r2 = A - B*f**C - j1_head + t1_head
+                        else:
+                            q_bar, h_bar = wntr.models.constraint.get_pump_line_params(A, B, C, m)
+                            if f <= q_bar:
+                                r2 = m.pump_slope * (f - q_bar) + h_bar - j1_head + t1_head
+                            else:
+                                r2 = A - B*f**C - j1_head + t1_head
+                    else:
+                        r2 = f
+                    self.assertTrue(compare_floats(r1, r2, 1e-12, 1e-12))
+                    if f < m.pump_q1 or f > m.pump_q2:
+                        d1 = m.head_pump_headloss['pump1'].ad(m.flow['pump1'], False)
+                        d2 = m.head_pump_headloss['pump1'].ad(m.flow['pump1'], True)
+                        d3 = approximate_derivative(m.head_pump_headloss['pump1'], m.flow['pump1'], 1e-6)
+                        self.assertTrue(compare_floats(d1, d2, 1e-12, 1e-12))
+                        self.assertTrue(compare_floats(d1, d3, 1e-5, 1e-3))
+
+    def test_head_pump_headloss(self):
+        wn = self.wn
+        m = self.m
+        pump = wn.get_link('pump2')
+
+        flows_to_test = np.linspace(-1.0, 1.0, 10, True)
+        status_to_test = [1, 0]
+
+        t1_head = 5
+        j1_head = 10
+
+        m.source_head['t1'].value = t1_head
+        m.head['j1'].value = j1_head
+
+        for status in status_to_test:
+            m.status['pump2'].value = status
+            for f in flows_to_test:
+                m.flow['pump2'].value = f
+                r1 = m.power_pump_headloss['pump2'].evaluate()
+                if status == 1:
+                    r2 = pump.power + (t1_head - j1_head) * f * 9.81 * 1000.0
+                else:
+                    r2 = f
+                self.assertTrue(compare_floats(r1, r2, 1e-12, 1e-12))
+                d1 = m.power_pump_headloss['pump2'].ad(m.flow['pump2'], False)
+                d2 = m.power_pump_headloss['pump2'].ad(m.flow['pump2'], True)
+                d3 = approximate_derivative(m.power_pump_headloss['pump2'], m.flow['pump2'], 1e-6)
+                self.assertTrue(compare_floats(d1, d2, 1e-12, 1e-12))
+                self.assertTrue(compare_floats(d1, d3, 1e-8, 1e-6))
 
 
 class TestPDD(unittest.TestCase):

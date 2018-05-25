@@ -233,7 +233,7 @@ def minor_loss_param(m, wn, index_over=None):
         m.minor_loss = aml.ParamDict()
 
     if index_over is None:
-        index_over = wn.pipe_name_list
+        index_over = wn.pipe_name_list + wn.valve_name_list
 
     for link_name in index_over:
         link = wn.get_link(link_name)
@@ -242,6 +242,32 @@ def minor_loss_param(m, wn, index_over=None):
             m.minor_loss[link_name].value = value
         else:
             m.minor_loss[link_name] = aml.create_param(value=value)
+
+
+def tcv_resistance_param(m, wn, index_over=None):
+    """
+    Add a tcv resistance parameter to the model
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of tcv names
+    """
+    if not hasattr(m, 'tcv_resistance'):
+        m.tcv_resistance = aml.ParamDict()
+
+    if index_over is None:
+        index_over = wn.tcv_name_list
+
+    for link_name in index_over:
+        link = wn.get_link(link_name)
+        value = 8.0 * link.setting / (9.81 * math.pi**2 * link.diameter**4)
+        if link_name in m.tcv_resistance:
+            m.tcv_resistance[link_name].value = value
+        else:
+            m.tcv_resistance[link_name] = aml.create_param(value=value)
 
 
 def status_param(m, wn, index_over=None):
@@ -259,7 +285,7 @@ def status_param(m, wn, index_over=None):
         m.status = aml.ParamDict()
 
     if index_over is None:
-        index_over = wn.pipe_name_list
+        index_over = wn.pipe_name_list + wn.pump_name_list
 
     for link_name in index_over:
         link = wn.get_link(link_name)
@@ -268,3 +294,55 @@ def status_param(m, wn, index_over=None):
             m.status[link_name].value = value
         else:
             m.status[link_name] = aml.create_param(value=value)
+
+
+def pump_power_param(m, wn, index_over=None):
+    """
+    Add a power parameter to the model
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of pump names
+    """
+    if not hasattr(m, 'pump_power'):
+        m.pump_power = aml.ParamDict()
+
+    if index_over is None:
+        index_over = wn.power_pump_name_list
+
+    for link_name in index_over:
+        link = wn.get_link(link_name)
+        value = link.power
+        if link_name in m.pump_power:
+            m.pump_power[link_name].value = value
+        else:
+            m.pump_power[link_name] = aml.create_param(value=value)
+
+
+def valve_setting_param(m, wn, index_over=None):
+    """
+    Add a valve setting parameter to the model
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of valve names
+    """
+    if not hasattr(m, 'valve_setting'):
+        m.valve_setting = aml.ParamDict()
+
+    if index_over is None:
+        index_over = wn.valve_name_list
+
+    for link_name in index_over:
+        link = wn.get_link(link_name)
+        value = link.setting
+        if link_name in m.valve_setting:
+            m.valve_setting[link_name].value = value
+        else:
+            m.valve_setting[link_name] = aml.create_param(value=value)

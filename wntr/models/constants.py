@@ -4,7 +4,7 @@ from wntr.utils.polynomial_interpolation import cubic_spline
 logger = logging.getLogger(__name__)
 
 
-def hazen_williams_params(m):
+def hazen_williams_constants(m):
     m.hw_k = 10.666829500036352
     m.hw_exp = 1.852
     m.hw_minor_exp = 2
@@ -29,3 +29,9 @@ def hazen_williams_params(m):
 def pdd_constants(m):
     m.pdd_smoothing_delta = 0.2
     m.pdd_slope = 1e-3
+
+
+def head_pump_constants(m):
+    m.pump_q1 = 0.0
+    m.pump_q2 = 1e-8
+    m.pump_slope = -1e-3
