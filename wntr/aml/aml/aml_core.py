@@ -5,7 +5,37 @@
 # the SWIG interface file instead.
 
 from sys import version_info as _swig_python_version_info
-from wntr.aml.aml import _aml_core
+if _swig_python_version_info >= (2, 7, 0):
+    def swig_import_helper():
+        import importlib
+        pkg = __name__.rpartition('.')[0]
+        mname = '.'.join((pkg, '_aml_core')).lstrip('.')
+        try:
+            return importlib.import_module(mname)
+        except ImportError:
+            return importlib.import_module('_aml_core')
+    _aml_core = swig_import_helper()
+    del swig_import_helper
+elif _swig_python_version_info >= (2, 6, 0):
+    def swig_import_helper():
+        from os.path import dirname
+        import imp
+        fp = None
+        try:
+            fp, pathname, description = imp.find_module('_aml_core', [dirname(__file__)])
+        except ImportError:
+            import _aml_core
+            return _aml_core
+        try:
+            _mod = imp.load_module('_aml_core', fp, pathname, description)
+        finally:
+            if fp is not None:
+                fp.close()
+        return _mod
+    _aml_core = swig_import_helper()
+    del swig_import_helper
+else:
+    import _aml_core
 del _swig_python_version_info
 
 try:
