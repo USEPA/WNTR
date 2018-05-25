@@ -5,7 +5,7 @@
 # the SWIG interface file instead.
 
 from sys import version_info as _swig_python_version_info
-from . import _aml_core
+from wntr.aml.aml import _aml_core
 del _swig_python_version_info
 
 try:
