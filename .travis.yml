@@ -22,7 +22,6 @@ matrix:
 addons:
     apt:
         packages:
-            - gcc-7.3
             - ccache
 
 cache:
@@ -59,10 +58,6 @@ install:
     - ls -l /home/travis/miniconda/envs/test_env/lib
     #- pip install . # use pip to automatically install anything not in the yml files (i.e. numpy/scipy/pandas for py3*)
     #- pip install scipy # won't do anything if already installed
-    - CC=gcc-7.3
-    - CXX=g++-7.3
-    - gcc --version
-    - g++ --version
     - python setup.py install
 
 script:
