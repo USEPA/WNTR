@@ -26,48 +26,24 @@ if ipopt_available:
 # inplace extension module
 project_dir = './'  # os.path.dirname(os.path.abspath(__file__))
 src_files = os.path.join(project_dir, 'wntr', 'aml', 'aml')
-expression_i = os.path.join(src_files, 'expression.i')
 expression_cxx = os.path.join(src_files, 'expression.cpp')
-expression_wrap_cxx = os.path.join(src_files, 'expression_wrap.cpp')
-component_i = os.path.join(src_files, 'component.i')
 component_cxx = os.path.join(src_files, 'component.cpp')
-component_wrap_cxx = os.path.join(src_files, 'component_wrap.cpp')
-wntr_model_i = os.path.join(src_files, 'wntr_model.i')
 wntr_model_cxx = os.path.join(src_files, 'wntr_model.cpp')
-wntr_model_wrap_cxx = os.path.join(src_files, 'wntr_model_wrap.cpp')
-ipopt_model_i = os.path.join(src_files, 'ipopt_model.i')
+aml_core_wrap_cxx = os.path.join(src_files, 'aml_core_wrap.cpp')
 ipopt_model_cxx = os.path.join(src_files, 'ipopt_model.cpp')
 ipopt_model_wrap_cxx = os.path.join(src_files, 'ipopt_model_wrap.cpp')
 aml_tnlp_cxx = os.path.join(src_files, 'aml_tnlp.cpp')
 
 extension_modules = list()
 
-expression_ext = Extension("wntr.aml.aml._expression",
-                           sources=[expression_cxx, expression_wrap_cxx],
+aml_core_ext = Extension("wntr.aml.aml._aml_core",
+                           sources=[expression_cxx, component_cxx, wntr_model_cxx, aml_core_wrap_cxx],
                            language="c++",
                            extra_compile_args=["-std=c++11"],
                            include_dirs=[numpy_include, src_files],
                            library_dirs=[],
                            libraries=[])
-extension_modules.append(expression_ext)
-
-component_ext = Extension("wntr.aml.aml._component",
-                           sources=[component_cxx, component_wrap_cxx],
-                           language="c++",
-                           extra_compile_args=["-std=c++11"],
-                           include_dirs=[numpy_include, src_files],
-                           library_dirs=[],
-                           libraries=[])
-extension_modules.append(component_ext)
-
-wntr_model_ext = Extension("wntr.aml.aml._wntr_model",
-                           sources=[wntr_model_cxx, wntr_model_wrap_cxx],
-                           language="c++",
-                           extra_compile_args=["-std=c++11"],
-                           include_dirs=[numpy_include, src_files],
-                           library_dirs=[],
-                           libraries=[])
-extension_modules.append(wntr_model_ext)
+extension_modules.append(aml_core_ext)
 
 if ipopt_available:
     ipopt_model_ext = Extension("wntr.aml.aml._ipopt_model",
