@@ -58,7 +58,7 @@ install:
     - ls -l /home/travis/miniconda/envs/test_env/lib
     #- pip install . # use pip to automatically install anything not in the yml files (i.e. numpy/scipy/pandas for py3*)
     #- pip install scipy # won't do anything if already installed
-    - python setup.py install
+    - python setup.py build install
 
 script:
     - nosetests -v --nologcapture --with-coverage --with-doctest --doctest-extension=.rst --cover-package=wntr documentation/*.rst wntr 
