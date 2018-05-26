@@ -919,7 +919,7 @@ class WaterNetworkModel(AbstractModel):
 
     def _get_valve_controls(self):
         valve_controls = []
-        for valve_name, valve in self.valves:
+        for valve_name, valve in self.valves():
 
             new_setting_action = ControlAction(valve, 'status', LinkStatus.Active)
             new_setting_condition = _ValveNewSettingCondition(valve)
