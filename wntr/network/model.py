@@ -959,7 +959,7 @@ class WaterNetworkModel(AbstractModel):
 
     def _get_demand_status_controls(self):
         demand_status_controls = []
-        for node_name, node in self.junctions:
+        for node_name, node in self.junctions():
             partial_action = ControlAction(node, '_demand_status', _DemandStatus.Partial)
             zero_action = ControlAction(node, '_demand_status', _DemandStatus.Zero)
             full_action = ControlAction(node, '_demand_status', _DemandStatus.Full)
