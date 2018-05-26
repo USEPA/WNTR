@@ -1,5 +1,5 @@
 import logging
-from wntr.aml.aml import aml
+from wntr import aml
 
 logger = logging.getLogger(__name__)
 

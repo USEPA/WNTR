@@ -1,5 +1,5 @@
 import logging
-from wntr.aml.aml import aml
+from wntr import aml
 import wntr.network
 from wntr.network.base import _DemandStatus
 import warnings
@@ -387,6 +387,58 @@ def tcv_headloss_constraint(m, wn, index_over=None):
             con.add_condition(f, -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
             con.add_final_expr(m.minor_loss[link_name] * f ** 2 - start_h + end_h)
         m.tcv_headloss[link_name] = con
+
+
+def leak_constraint(m, wn, index_over=None):
+    """
+    Adds a leak constraint to the model for the specified junctions.
+
+    Parameters
+    ----------
+    m: wntr.aml.aml.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of junction names; default is all junctions in wn
+    """
+    if not hasattr(m, 'pdd'):
+        m.pdd = aml.ConstraintDict()
+
+    if index_over is None:
+        index_over = wn.junction_name_list
+
+    for node_name in index_over:
+        node = wn.get_node(node_name)
+        h = m.head[node_name]
+        d = m.demand[node_name]
+        d_expected = m.expected_demand[node_name]
+        status = node._demand_status
+
+        if status == _DemandStatus.Partial:
+            pmin = m.pmin[node_name]
+            pnom = m.pnom[node_name]
+            elev = m.elevation[node_name]
+            delta = m.pdd_smoothing_delta
+            slope = m.pdd_slope
+            a1 = m.pdd_poly1_coeffs_a[node_name]
+            b1 = m.pdd_poly1_coeffs_b[node_name]
+            c1 = m.pdd_poly1_coeffs_c[node_name]
+            d1 = m.pdd_poly1_coeffs_d[node_name]
+            a2 = m.pdd_poly2_coeffs_a[node_name]
+            b2 = m.pdd_poly2_coeffs_b[node_name]
+            c2 = m.pdd_poly2_coeffs_c[node_name]
+            d2 = m.pdd_poly2_coeffs_d[node_name]
+            con = aml.create_conditional_constraint(lb=0, ub=0)
+            con.add_condition(h - elev - pmin, d - d_expected*slope*(h-elev-pmin))
+            con.add_condition(h - elev - pmin - delta, d - d_expected*(a1*(h-elev)**3 + b1*(h-elev)**2 + c1*(h-elev) + d1))
+            con.add_condition(h - elev - pnom + delta, d - d_expected*((h-elev-pmin)/(pnom-pmin))**0.5)
+            con.add_condition(h - elev - pnom, d - d_expected*(a2*(h-elev)**3 + b2*(h-elev)**2 + c2*(h-elev) + d2))
+            con.add_final_expr(d - d_expected*(slope*(h - elev - pnom) + 1.0))
+        elif status == _DemandStatus.Full:
+            con = aml.create_constraint(d - d_expected, 0, 0)
+        else:
+            con = aml.create_constraint(d, 0, 0)
+
+        m.pdd[node_name] = con
 
 
 def plot_constraint(con, var_to_vary, lb, ub, with_derivative=True, show_plot=True):

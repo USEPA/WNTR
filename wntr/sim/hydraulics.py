@@ -7,7 +7,6 @@ from wntr.network.model import WaterNetworkModel
 from wntr.network.base import NodeType, LinkType, LinkStatus
 from wntr.network.elements import Junction, Tank, Reservoir, Pipe, HeadPump, PowerPump, PRValve, PSValve, FCValve, \
     TCValve, GPValve, PBValve
-from wntr.aml.aml import aml
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 
