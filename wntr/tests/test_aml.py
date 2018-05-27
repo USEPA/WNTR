@@ -115,22 +115,28 @@ class TestConstraint(unittest.TestCase):
         m.y = aml.create_var(y)
         m.c = aml.create_param(c)
 
-        m.con1 = aml.create_constraint(m.x + m.y + m.c)
+        m.con1 = aml.create_constraint(m.x + 2.0*m.y + m.c)
         m.con2 = aml.create_constraint(m.x**2 - m.y**2 + 10)
 
         vec = m.get_x()
         r = m.evaluate_residuals(vec)
         j = m.evaluate_jacobian().toarray()
-        true_j = [[1,1],[2*x,-2*y]]
-        self.assertTrue(np.all(r == [x+y+c, x**2-y**2+10]))
+        if m.x.index == 0:
+            true_j = [[1, 2], [2 * x, -2 * y]]
+        else:
+            true_j = [[2, 1], [-2 * y, 2 * x]]
+        self.assertTrue(np.all(r == [x+2*y+c, x**2-y**2+10]))
         self.assertTrue(np.all(j == true_j))
 
         del m.con2
         m.con3 = aml.create_constraint(m.x*m.y)
         r = m.evaluate_residuals(vec)
         j = m.evaluate_jacobian().toarray()
-        true_j = [[1, 1], [y, x]]
-        self.assertTrue(np.all(r == [x+y+c, x*y]))
+        if m.x.index == 0:
+            true_j = [[1, 2], [y, x]]
+        else:
+            true_j = [[2, 1], [x, y]]
+        self.assertTrue(np.all(r == [x+2*y+c, x*y]))
         self.assertTrue(np.all(j == true_j))
 
     def test_if_then_constraints(self):
@@ -156,7 +162,10 @@ class TestConstraint(unittest.TestCase):
         r = m.evaluate_residuals(vec)
         j = m.evaluate_jacobian().toarray()
         true_r = [-(abs(x)**1.852 + abs(x)**2) - y, -(abs(y)**1.852 + abs(y)**2) - x]
-        true_j = [[1.852*abs(x)**0.852 + 2*abs(x), -1],[-1, 1.852*abs(y)**0.852 + 2*abs(y)]]
+        if m.x.index == 0:
+            true_j = [[1.852 * abs(x) ** 0.852 + 2 * abs(x), -1], [-1, 1.852 * abs(y) ** 0.852 + 2 * abs(y)]]
+        else:
+            true_j = [[-1, 1.852 * abs(x) ** 0.852 + 2 * abs(x)], [1.852 * abs(y) ** 0.852 + 2 * abs(y), -1]]
         self.assertTrue(np.all(r==true_r))
         for i in range(len(true_j)):
             for k in range(len(true_j[i])):
@@ -164,12 +173,19 @@ class TestConstraint(unittest.TestCase):
 
         x = 0.5
         y = 0.3
-        vec[0] = x
-        vec[1] = y
+        if m.x.index == 0:
+            vec[0] = x
+            vec[1] = y
+        else:
+            vec[0] = y
+            vec[1] = x
         r = m.evaluate_residuals(vec)
         j = m.evaluate_jacobian().toarray()
         true_r = [x, y]
-        true_j = [[1, 0],[0, 1]]
+        if m.x.index == 0:
+            true_j = [[1, 0], [0, 1]]
+        else:
+            true_j = [[0, 1], [1, 0]]
         self.assertTrue(np.all(r==true_r))
         for i in range(len(true_j)):
             for k in range(len(true_j[i])):
@@ -177,12 +193,19 @@ class TestConstraint(unittest.TestCase):
 
         x = 4.5
         y = 3.7
-        vec[0] = x
-        vec[1] = y
+        if m.x.index == 0:
+            vec[0] = x
+            vec[1] = y
+        else:
+            vec[0] = y
+            vec[1] = x
         r = m.evaluate_residuals(vec)
         j = m.evaluate_jacobian().toarray()
         true_r = [x**1.852 + x**2 - y, y**1.852 + y**2 - x]
-        true_j = [[1.852*x**0.852 + 2*x, -1],[-1, 1.852*y**0.852 + 2*y]]
+        if m.x.index == 0:
+            true_j = [[1.852 * x ** 0.852 + 2 * x, -1], [-1, 1.852 * y ** 0.852 + 2 * y]]
+        else:
+            true_j = [[-1, 1.852 * x ** 0.852 + 2 * x], [1.852 * y ** 0.852 + 2 * y, -1]]
         self.assertTrue(np.all(r==true_r))
         for i in range(len(true_j)):
             for k in range(len(true_j[i])):
@@ -198,12 +221,19 @@ class TestConstraint(unittest.TestCase):
         vec = m.get_x()
         x = -4.5
         y = -3.7
-        vec[0] = x
-        vec[1] = y
+        if m.x.index == 0:
+            vec[0] = x
+            vec[1] = y
+        else:
+            vec[0] = y
+            vec[1] = x
         r = m.evaluate_residuals(vec)
         j = m.evaluate_jacobian().toarray()
         true_r = [-(abs(x)**1.852 + abs(x)**2) - y, -(abs(y)**2.852 + abs(y)**3) - x]
-        true_j = [[1.852*abs(x)**0.852 + 2*abs(x), -1],[-1, 2.852*abs(y)**1.852 + 3*abs(y)**2]]
+        if m.x.index == 0:
+            true_j = [[1.852 * abs(x) ** 0.852 + 2 * abs(x), -1], [-1, 2.852 * abs(y) ** 1.852 + 3 * abs(y) ** 2]]
+        else:
+            true_j = [[-1, 1.852 * abs(x) ** 0.852 + 2 * abs(x)], [2.852 * abs(y) ** 1.852 + 3 * abs(y) ** 2, -1]]
         self.assertTrue(np.all(r==true_r))
         for i in range(len(true_j)):
             for k in range(len(true_j[i])):
@@ -211,26 +241,40 @@ class TestConstraint(unittest.TestCase):
 
         x = 0.5
         y = 0.3
-        vec[0] = x
-        vec[1] = y
+        if m.x.index == 0:
+            vec[0] = x
+            vec[1] = y
+        else:
+            vec[0] = y
+            vec[1] = x
         r = m.evaluate_residuals(vec)
         j = m.evaluate_jacobian().toarray()
         true_r = [x, y**2]
-        true_j = [[1, 0],[0, 2*y]]
-        self.assertTrue(np.all(r==true_r))
+        if m.x.index == 0:
+            true_j = [[1, 0], [0, 2 * y]]
+        else:
+            true_j = [[0, 1], [2 * y, 0]]
+        self.assertTrue(np.all(r == true_r))
         for i in range(len(true_j)):
             for k in range(len(true_j[i])):
                 self.assertAlmostEqual(true_j[i][k], j[i,k], 10)
 
         x = 4.5
         y = 3.7
-        vec[0] = x
-        vec[1] = y
+        if m.x.index == 0:
+            vec[0] = x
+            vec[1] = y
+        else:
+            vec[0] = y
+            vec[1] = x
         r = m.evaluate_residuals(vec)
         j = m.evaluate_jacobian().toarray()
         true_r = [x**1.852 + x**2 - y, y**2.852 + y**3 - x]
-        true_j = [[1.852*x**0.852 + 2*x, -1],[-1, 2.852*y**1.852 + 3*y**2]]
-        self.assertTrue(np.all(r==true_r))
+        if m.x.index == 0:
+            true_j = [[1.852 * x ** 0.852 + 2 * x, -1], [-1, 2.852 * y ** 1.852 + 3 * y ** 2]]
+        else:
+            true_j = [[-1, 1.852 * x ** 0.852 + 2 * x], [2.852 * y ** 1.852 + 3 * y ** 2, -1]]
+        self.assertTrue(np.all(r == true_r))
         for i in range(len(true_j)):
             for k in range(len(true_j[i])):
                 self.assertAlmostEqual(true_j[i][k], j[i,k], 10)
