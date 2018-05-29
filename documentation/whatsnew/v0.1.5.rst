@@ -1,6 +1,6 @@
 .. _whatsnew_0150:
 
-v0.1.5 (Master branch)
+v0.1.5 (May 29, 2018)
 ---------------------------------------------------
 
 * Replaced the use of Pandas Panels with a dictionary of Pandas DataFrames (Pandas is deprecating Panels).
