@@ -35,7 +35,7 @@ class TestPDD(unittest.TestCase):
         results = sim.run_sim()
 
         for t in results.time:
-            self.assertEqual(results.node.at['demand',t,'junction2'], 150.0/3600.0*math.sqrt((10.0-0.0)/(15.0-0.0)))
+            self.assertEqual(results.node['demand'].at[t,'junction2'], 150.0/3600.0*math.sqrt((10.0-0.0)/(15.0-0.0)))
 
 if __name__ == '__main__':
     unittest.main()

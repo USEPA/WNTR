@@ -31,7 +31,6 @@ Additional examples, listed in :numref:`table-example`, are included in the exam
    networkx_graph.py               Generate a NetworkX graph from a water network model 
    hydraulic_simulation.py         Simulate hydraulics using the EPANET and WNTR simulators
    water_quality_simulation.py     Simulate water quality using EPANET
-   simulation_results.py           Extract information from simulation results
    disaster_scenarios.py           Define disaster scenarios, including power outage, pipe leak, and changes to supply and demand
    resilience_metrics.py           Compute resilience metrics, including topographic, hydraulic, water quality, water security, and economic metrics
    stochastic_simulation.py        Run a stochastic simulation

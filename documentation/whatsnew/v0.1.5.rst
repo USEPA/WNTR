@@ -1,0 +1,28 @@
+.. _whatsnew_0150:
+
+v0.1.5 (May 29, 2018)
+---------------------------------------------------
+
+* Replaced the use of Pandas Panels with a dictionary of Pandas DataFrames (Pandas is deprecating Panels).
+  This changes the way users interact with simulation results.
+  
+  * Removed 'expected_demand' and 'type' from simulation results.  Expected demand can be computed using :class:`~wntr.metrics.hydraulic.expected_demand`.
+    Node and link type is stored in the WaterNetworkModel and is no longer used to compute metrics.
+	
+  * Removed simulation_results example, example code is now embedded in the documentation.
+  
+* Updated metrics to use simulation results in the new format and to clarify names.  
+
+  * Input arguments are now more explicit, e.g. pass a DataFrame with junction demands instead of an entire Panel with information that might not be used.
+  
+  * Updated the following metric names: changed fdv (fraction of delivered volume) to water_service_availability,
+    todini to todini_index, cost to annual_network_cost, ghg_emissions to annual_ghg_emissions.
+  
+  * Removed the following metrics: fdd (fraction of delivered demand) and fdq (fraction of delivered quality), 
+    these can be computed with simple queries on demand and quality simulation results.
+
+* Improved error messages when simulation does not converge.
+* Updated default options for the WNTRSimulator.
+* Bug fix in node registries for the use of patterns.
+* Changed default colormap in network graphics from jet to Spectral_r.
+* Updated documentation.

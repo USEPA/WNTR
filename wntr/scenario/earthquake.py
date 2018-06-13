@@ -6,7 +6,6 @@ compute PGA, PGV, and repair rate.
 from __future__ import print_function
 import wntr
 import numpy as np
-import networkx as nx
 import pandas as pd
 from scipy.spatial import distance
 

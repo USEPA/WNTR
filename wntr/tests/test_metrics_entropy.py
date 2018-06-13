@@ -32,18 +32,14 @@ def test_layout1():
 
     [S, S_ave] = wntr.metrics.entropy(G_flowrate)
     
-    Saverage = np.mean(list(S.values()))
-    Smax = max(list(S.values()))
-    Smin = min(list(S.values()))
-    
     # The values in the paper are different, perhaps due to significant figure
     # rounding during the calculation
     expected_Saverage = 0.0805 # 0.088
-    error = abs((Saverage - expected_Saverage)/expected_Saverage)
+    error = abs((S.mean() - expected_Saverage)/expected_Saverage)
     assert_less(error, 0.05) # 5% error
 
     expected_Smax = 0.5108 # 0.5130
-    error = abs((Smax - expected_Smax)/expected_Smax)
+    error = abs((S.max() - expected_Smax)/expected_Smax)
 
     expected_S_ave = 2.289 # 2.280
     error = abs((S_ave - expected_S_ave)/expected_S_ave)
@@ -78,24 +74,20 @@ def test_layout8():
     G_flowrate = wn.get_graph()
     G_flowrate.weight_graph(link_attribute=attr)
 
-    [S, Shat] = wntr.metrics.entropy(G_flowrate)
-    
-    Saverage = np.mean(list(S.values()))
-    Smax = max(list(S.values()))
-    Smin = min(list(S.values()))
+    [S, S_ave] = wntr.metrics.entropy(G_flowrate)
     
     # The values in the paper are different, perhaps due to significant figure
     # rounding during the calculation
     expected_Saverage = 0.4391 # 0.3860
-    error = abs((Saverage - expected_Saverage)/expected_Saverage)
+    error = abs((S.mean() - expected_Saverage)/expected_Saverage)
     assert_less(error, 0.05) # 5% error
 
     expected_Smax = 1.1346 # 0.5130
-    error = abs((Smax - expected_Smax)/expected_Smax)
+    error = abs((S.max() - expected_Smax)/expected_Smax)
     assert_less(error, 0.05) # 5% error
 
-    expected_Shat = 2.544 # 2.670
-    error = abs((Shat - expected_Shat)/expected_Shat)
+    expected_S_ave = 2.544 # 2.670
+    error = abs((S_ave - expected_S_ave)/expected_S_ave)
     assert_less(error, 0.05) # 5% error
 
 if __name__ == '__main__':

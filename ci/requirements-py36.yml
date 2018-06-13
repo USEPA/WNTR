@@ -10,6 +10,6 @@ dependencies:
     - matplotlib
     - plotly
     - nose
-    - xlwt
+    - openpyxl
     - pip:
         - coveralls

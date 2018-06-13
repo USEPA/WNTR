@@ -576,6 +576,8 @@ class WaterNetworkModel(AbstractModel):
             pattern = self.get_pattern(pattern)
         source = Source(self, name, node_name, source_type, quality, pattern)
         self._sources[source.name] = source
+        self._pattern_reg.add_usage(source.strength_timeseries.pattern_name, (source.name, 'Source'))
+        self._node_reg.add_usage(source.node_name, (source.name, 'Source'))
 
     def add_control(self, name, control_object):
         """
@@ -669,7 +671,6 @@ class WaterNetworkModel(AbstractModel):
         """
         try:
             del self._controls[name]
-            self._num_controls -= 1
         except KeyError:
             pass
     

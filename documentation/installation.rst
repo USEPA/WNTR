@@ -127,8 +127,8 @@ The following Python packages are optional:
   http://matplotlib.org/
 * Plotly [SPHC16]_: used to produce interactive scalable figures, 
   https://plot.ly/
-* xlwt [Xlwt16]_: used to read/write to Microsoft® Excel® spreadsheets,
-  http://xlwt.readthedocs.io
+* openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
+  https://openpyxl.readthedocs.io
 * Numpydoc [VaCV11]_: used to build the user manual,
   https://github.com/numpy/numpydoc
 * nose: used to run software tests,

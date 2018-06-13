@@ -1,7 +1,7 @@
 import numpy as np
 import datetime
 
-class NetResults(object):
+class SimulationResults(object):
     """
     Water network simulation results class.
     """
@@ -9,12 +9,12 @@ class NetResults(object):
     def __init__(self):
 
         # Simulation time series
-        self.time = None
-        self.generated_datetime = datetime.datetime
+        self.timestamp = str(datetime.datetime.now())
         self.network_name = None
-        self.solver_statistics = {}
         self.link = None
         self.node = None
+        """
+        self.time = None
         self.meta = {'quality_mode':None,
                      'quality_chem':None,
                      'quality_units':None,
@@ -30,6 +30,7 @@ class NetResults(object):
                      'report_times':None,
                      'stats_mode':None,
                      'stats_N':None}
+        """
 
     def _adjust_demand(self, Pstar):
         """
