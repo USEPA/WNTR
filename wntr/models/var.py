@@ -88,7 +88,6 @@ def leak_rate_var(m, wn, index_over=None):
         index_over = wn.junction_name_list + wn.tank_name_list
 
     for node_name in index_over:
-        node = wn.get_node(node_name)
         m.leak_rate[node_name] = aml.create_var(value=0)
 
 

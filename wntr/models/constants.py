@@ -35,3 +35,8 @@ def head_pump_constants(m):
     m.pump_q1 = 0.0
     m.pump_q2 = 1e-8
     m.pump_slope = -1e-3
+
+
+def leak_constants(m):
+    m.leak_delta = 0.2
+    m.leak_slope = 1e-3

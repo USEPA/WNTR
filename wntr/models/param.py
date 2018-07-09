@@ -105,6 +105,56 @@ def pnom_param(m, wn, index_over=None):
             m.pnom[node_name] = aml.create_param(value=node.nominal_pressure)
 
 
+def leak_coeff_param(m, wn, index_over=None):
+    """
+    Add a leak discharge coefficient parameter to the model
+
+    Parameters
+    ----------
+    m: wntr.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of junction/tank names
+    """
+    if not hasattr(m, 'leak_coeff'):
+        m.leak_coeff = aml.ParamDict()
+
+    if index_over is None:
+        index_over = wn.junction_name_list + wn.tank_name_list
+
+    for node_name in index_over:
+        node = wn.get_node(node_name)
+        if node_name in m.leak_coeff:
+            m.leak_coeff[node_name].value = node.leak_discharge_coeff
+        else:
+            m.leak_coeff[node_name] = aml.create_param(value=node.leak_discharge_coeff)
+
+
+def leak_area_param(m, wn, index_over=None):
+    """
+    Add a leak discharge coefficient parameter to the model
+
+    Parameters
+    ----------
+    m: wntr.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of junction/tank names
+    """
+    if not hasattr(m, 'leak_area'):
+        m.leak_area = aml.ParamDict()
+
+    if index_over is None:
+        index_over = wn.junction_name_list + wn.tank_name_list
+
+    for node_name in index_over:
+        node = wn.get_node(node_name)
+        if node_name in m.leak_area:
+            m.leak_area[node_name].value = node.leak_area
+        else:
+            m.leak_area[node_name] = aml.create_param(value=node.leak_area)
+
+
 def pdd_poly_coeffs_param(m, wn, index_over=None):
     """
     Add parameters to the model for pdd smoothing polynomial coefficients
@@ -165,6 +215,47 @@ def pdd_poly_coeffs_param(m, wn, index_over=None):
             m.pdd_poly2_coeffs_b[node_name] = aml.create_param(value=b2)
             m.pdd_poly2_coeffs_c[node_name] = aml.create_param(value=c2)
             m.pdd_poly2_coeffs_d[node_name] = aml.create_param(value=d2)
+
+
+def leak_poly_coeffs_param(m, wn, index_over=None):
+    """
+    Add parameters to the model for leak smoothing polynomial coefficients
+
+    Parameters
+    ----------
+    m: wntr.aml.Model
+    wn: wntr.network.model.WaterNetworkModel
+    index_over: list of str
+        list of junction names
+    """
+    if not hasattr(m, 'leak_poly_coeffs_a'):
+        m.leak_poly_coeffs_a = aml.ParamDict()
+        m.leak_poly_coeffs_b = aml.ParamDict()
+        m.leak_poly_coeffs_c = aml.ParamDict()
+        m.leak_poly_coeffs_d = aml.ParamDict()
+
+    if index_over is None:
+        index_over = wn.junction_name_list + wn.tank_name_list
+
+    for node_name in index_over:
+        node = wn.get_node(node_name)
+        x1 = 0.0
+        f1 = 0.0
+        x2 = x1 + m.leak_delta
+        f2 = node.leak_discharge_coeff*node.leak_area*(2.0*9.81*x2)**0.5
+        df1 = m.leak_slope
+        df2 = 0.5*node.leak_discharge_coeff*node.leak_area*(2.0*9.81)**0.5*x2**(-0.5)
+        a, b, c, d = cubic_spline(x1, x2, f1, f2, df1, df2)
+        if node_name in m.leak_poly_coeffs_a:
+            m.leak_poly_coeffs_a[node_name].value = a
+            m.leak_poly_coeffs_b[node_name].value = b
+            m.leak_poly_coeffs_c[node_name].value = c
+            m.leak_poly_coeffs_d[node_name].value = d
+        else:
+            m.leak_poly_coeffs_a[node_name] = aml.create_param(value=a)
+            m.leak_poly_coeffs_b[node_name] = aml.create_param(value=b)
+            m.leak_poly_coeffs_c[node_name] = aml.create_param(value=c)
+            m.leak_poly_coeffs_d[node_name] = aml.create_param(value=d)
 
 
 def elevation_param(m, wn, index_over=None):

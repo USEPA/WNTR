@@ -395,50 +395,43 @@ def leak_constraint(m, wn, index_over=None):
 
     Parameters
     ----------
-    m: wntr.aml.aml.aml.Model
+    m: wntr.aml.Model
     wn: wntr.network.model.WaterNetworkModel
     index_over: list of str
-        list of junction names; default is all junctions in wn
+        list of junction/tank names
     """
-    if not hasattr(m, 'pdd'):
-        m.pdd = aml.ConstraintDict()
+    if not hasattr(m, 'leak'):
+        m.leak = aml.ConstraintDict()
 
     if index_over is None:
-        index_over = wn.junction_name_list
+        index_over = wn.junction_name_list + wn.tank_name_list
 
     for node_name in index_over:
         node = wn.get_node(node_name)
         h = m.head[node_name]
-        d = m.demand[node_name]
-        d_expected = m.expected_demand[node_name]
-        status = node._demand_status
+        leak_rate = m.leak_rate[node_name]
+        status = node._leak_model_status
 
         if status == _DemandStatus.Partial:
-            pmin = m.pmin[node_name]
-            pnom = m.pnom[node_name]
             elev = m.elevation[node_name]
-            delta = m.pdd_smoothing_delta
-            slope = m.pdd_slope
-            a1 = m.pdd_poly1_coeffs_a[node_name]
-            b1 = m.pdd_poly1_coeffs_b[node_name]
-            c1 = m.pdd_poly1_coeffs_c[node_name]
-            d1 = m.pdd_poly1_coeffs_d[node_name]
-            a2 = m.pdd_poly2_coeffs_a[node_name]
-            b2 = m.pdd_poly2_coeffs_b[node_name]
-            c2 = m.pdd_poly2_coeffs_c[node_name]
-            d2 = m.pdd_poly2_coeffs_d[node_name]
+            delta = m.leak_delta
+            slope = m.leak_slope
+            a = m.leak_poly_coeffs_a[node_name]
+            b = m.leak_poly_coeffs_b[node_name]
+            c = m.leak_poly_coeffs_c[node_name]
+            d = m.leak_poly_coeffs_d[node_name]
+            area = m.leak_area[node_name]
+            Cd = m.leak_coeff[node_name]
             con = aml.create_conditional_constraint(lb=0, ub=0)
-            con.add_condition(h - elev - pmin, d - d_expected*slope*(h-elev-pmin))
-            con.add_condition(h - elev - pmin - delta, d - d_expected*(a1*(h-elev)**3 + b1*(h-elev)**2 + c1*(h-elev) + d1))
-            con.add_condition(h - elev - pnom + delta, d - d_expected*((h-elev-pmin)/(pnom-pmin))**0.5)
-            con.add_condition(h - elev - pnom, d - d_expected*(a2*(h-elev)**3 + b2*(h-elev)**2 + c2*(h-elev) + d2))
-            con.add_final_expr(d - d_expected*(slope*(h - elev - pnom) + 1.0))
-        elif status == _DemandStatus.Full:
-            con = aml.create_constraint(d - d_expected, 0, 0)
+            con.add_condition(h - elev, leak_rate - slope*(h-elev))
+            con.add_condition(h - elev - delta, leak_rate - (a*(h-elev)**3 + b*(h-elev)**2 + c*(h-elev) + d))
+            con.add_final_expr(leak_rate - Cd*area*(2.0*9.81*(h-elev))**0.5)
+        elif status == _DemandStatus.Zero:
+            con = aml.create_constraint(leak_rate, 0, 0)
         else:
-            con = aml.create_constraint(d, 0, 0)
+            raise ValueError('Unrecognized _DemandStatus for node {0}: {1}'.format(node_name, status))
 
-        m.pdd[node_name] = con
+        m.leak[node_name] = con
 
 
 def plot_constraint(con, var_to_vary, lb, ub, with_derivative=True, show_plot=True):

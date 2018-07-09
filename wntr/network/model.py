@@ -978,6 +978,27 @@ class WaterNetworkModel(AbstractModel):
 
         return demand_status_controls
 
+    def _get_leak_model_status_status_controls(self):
+        demand_status_controls = []
+        for node_name, node in self.junctions():
+            partial_action = ControlAction(node, '_demand_status', _DemandStatus.Partial)
+            zero_action = ControlAction(node, '_demand_status', _DemandStatus.Zero)
+            full_action = ControlAction(node, '_demand_status', _DemandStatus.Full)
+
+            partial_condition = _PartialDemandStatusCondition(self, node)
+            zero_condition = _ZeroDemandStatusCondition(self, node)
+            full_condition = _FullDemandStatusCondition(self, node)
+
+            partial_control = Control(condition=partial_condition, then_action=partial_action)
+            zero_control = Control(condition=zero_condition, then_action=zero_action)
+            full_control = Control(condition=full_condition, then_action=full_action)
+
+            demand_status_controls.append(partial_control)
+            demand_status_controls.append(zero_control)
+            demand_status_controls.append(full_control)
+
+        return demand_status_controls
+
     ### #
     ### Name lists
     @property
