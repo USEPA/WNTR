@@ -37,7 +37,7 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison, Rule
+    ControlAction, _InternalControlAction, Control, ControlManager, Comparison, Rule
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 
@@ -918,13 +918,23 @@ class WaterNetworkModel(AbstractModel):
 
     def _get_valve_controls(self):
         valve_controls = []
-        for valve_name, valve in self.valves():
 
-            new_setting_action = ControlAction(valve, 'status', LinkStatus.Active)
-            new_setting_condition = _ValveNewSettingCondition(valve)
-            new_setting_control = Control(condition=new_setting_condition, then_action=new_setting_action, priority=ControlPriority.very_low)
-            new_setting_control._control_type = _ControlType.postsolve
-            valve_controls.append(new_setting_control)
+        for control_name, control in self.controls():
+            for action in control.actions():
+                target_obj, target_attr = action.target()
+                if target_attr == 'setting':
+                    if isinstance(target_obj, Valve):
+                        new_status = LinkStatus.Active
+                    elif isinstance(target_obj, Pump):
+                        new_status = LinkStatus.Open
+                    else:
+                        raise ValueError('Settings can only be changed on valves and pumps: ' + str(control))
+                    new_action = ControlAction(target_obj, 'status', new_status)
+                    condition = control.condition
+                    new_control = type(control)(condition, new_action, priority=control.priority)
+                    valve_controls.append(new_control)
+
+        for valve_name, valve in self.valves():
 
             if valve.valve_type == 'PRV':
                 close_condition = _ClosePRVCondition(self, valve)

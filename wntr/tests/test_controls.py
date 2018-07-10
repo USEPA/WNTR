@@ -2,10 +2,37 @@
 import unittest
 from nose import SkipTest
 from os.path import abspath, dirname, join
+import wntr
 
 testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir,'networks_for_testing')
 ex_datadir = join(testdir,'..','..','examples','networks')
+
+
+class TestValveSettingControls(unittest.TestCase):
+    def test_status_open_when_setting_changes(self):
+        wn = wntr.network.WaterNetworkModel()
+        wn.add_reservoir('r1', base_head=10)
+        wn.add_junction('j1', base_demand=0)
+        wn.add_junction('j2', base_demand=0.05)
+        wn.add_pipe('p1', 'r1', 'j1')
+        wn.add_valve('v1', 'j1', 'j2', valve_type='PRV', setting=2)
+        wn.options.time.duration = 3600*5
+
+        action = wntr.network.ControlAction(wn.get_link('v1'), 'status', wntr.network.LinkStatus.Closed)
+        condition = wntr.network.SimTimeCondition(wn, '==', 0)
+        control = wntr.network.Control(condition=condition, then_action=action)
+        wn.add_control('close_valve', control)
+
+        action = wntr.network.ControlAction(wn.get_link('v1'), 'setting', 2)
+        condition = wntr.network.SimTimeCondition(wn, '==', 7200)
+        control = wntr.network.Control(condition=condition, then_action=action)
+        wn.add_control('valve_setting', control)
+
+        sim = wntr.sim.EpanetSimulator(wn)
+        results = sim.run_sim()
+        self.assertEqual(results.link['status'].at[7200, 'v1'], wntr.network.LinkStatus.Active)
+
 
 class TestTimeControls(unittest.TestCase):
 
@@ -107,6 +134,7 @@ class TestConditionalControls(unittest.TestCase):
         self.assertEqual(results.link['status'].at[results.link['status'].index[0],'pipe1'], self.wntr.network.LinkStatus.closed) # make sure the pipe starts closed
         self.assertLessEqual(results.node['pressure'].at[results.node['pressure'].index[0],'tank1'],300.0) # make sure the pipe starts closed
 
+
 class TestTankControls(unittest.TestCase):
 
     @classmethod
@@ -161,6 +189,7 @@ class TestTankControls(unittest.TestCase):
         raise SkipTest
         self.assertEqual(True, False)
 
+
 class TestValveControls(unittest.TestCase):
     @classmethod
     def setUpClass(self):
@@ -212,6 +241,7 @@ class TestValveControls(unittest.TestCase):
 
         self.assertEqual(flag1, True)
         self.assertEqual(flag2, True)
+
 
 class TestControlCombinations(unittest.TestCase):
     @classmethod
@@ -313,6 +343,7 @@ class TestControlCombinations(unittest.TestCase):
                 self.assertAlmostEqual(results.link['flowrate'].at[t,'pipe1'], 0.0)
 
         self.assertEqual(flag1, True)
+
 
 if __name__ == '__main__':
     unittest.main()
