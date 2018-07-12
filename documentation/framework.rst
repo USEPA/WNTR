@@ -143,8 +143,6 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 
 **Future development of WNTR will address these limitations.**
 
-.. _discrepancies
-
 Known Discrepancies Between WNTR and Epanet
 -------------------------------------------
 Known differences between the WNTR and Epanet simulators are listed below.
