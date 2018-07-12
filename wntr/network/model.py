@@ -892,6 +892,19 @@ class WaterNetworkModel(AbstractModel):
     
     def _get_pump_controls(self):
         pump_controls = []
+
+        for control_name, control in self.controls():
+            for action in control.actions():
+                target_obj, target_attr = action.target()
+                if target_attr == 'base_speed':
+                    if not isinstance(target_obj, Pump):
+                        raise ValueError('base_speed can only be changed on pumps; ' + str(control))
+                    new_status = LinkStatus.Open
+                    new_action = ControlAction(target_obj, 'status', new_status)
+                    condition = control.condition
+                    new_control = type(control)(condition, new_action, priority=control.priority)
+                    pump_controls.append(new_control)
+
         for pump_name, pump in self.pumps():
             close_control_action = _InternalControlAction(pump, '_internal_status', LinkStatus.Closed, 'status')
             open_control_action = _InternalControlAction(pump, '_internal_status', LinkStatus.Open, 'status')
@@ -926,9 +939,9 @@ class WaterNetworkModel(AbstractModel):
                     if isinstance(target_obj, Valve):
                         new_status = LinkStatus.Active
                     elif isinstance(target_obj, Pump):
-                        new_status = LinkStatus.Open
+                        raise ValueError('Cannot control settings on pumps; use "base_speed"; ' + str(control))
                     else:
-                        raise ValueError('Settings can only be changed on valves and pumps: ' + str(control))
+                        raise ValueError('Settings can only be changed on valves: ' + str(control))
                     new_action = ControlAction(target_obj, 'status', new_status)
                     condition = control.condition
                     new_control = type(control)(condition, new_action, priority=control.priority)

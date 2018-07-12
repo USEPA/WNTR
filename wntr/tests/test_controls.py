@@ -29,9 +29,37 @@ class TestValveSettingControls(unittest.TestCase):
         control = wntr.network.Control(condition=condition, then_action=action)
         wn.add_control('valve_setting', control)
 
-        sim = wntr.sim.EpanetSimulator(wn)
+        sim = wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
         self.assertEqual(results.link['status'].at[7200, 'v1'], wntr.network.LinkStatus.Active)
+
+
+class TestPumpSettingControls(unittest.TestCase):
+    def test_status_open_when_setting_changes(self):
+        wn = wntr.network.WaterNetworkModel()
+        wn.add_reservoir('r1', base_head=10)
+        wn.add_junction('j1', base_demand=0)
+        wn.add_junction('j2', base_demand=0.1)
+        wn.add_junction('j3', base_demand=0.05)
+        wn.add_pipe('p1', 'r1', 'j1')
+        wn.add_pipe('p2', 'j1', 'j3')
+        wn.add_curve('pump_curve', 'HEAD', [(0.1, 3)])
+        wn.add_pump('pump1', 'j1', 'j2', pump_type='HEAD', pump_parameter='pump_curve')
+        wn.options.time.duration = 3600 * 5
+
+        action = wntr.network.ControlAction(wn.get_link('pump1'), 'status', wntr.network.LinkStatus.Closed)
+        condition = wntr.network.SimTimeCondition(wn, '==', 0)
+        control = wntr.network.Control(condition=condition, then_action=action)
+        wn.add_control('close_pump', control)
+
+        action = wntr.network.ControlAction(wn.get_link('pump1'), 'base_speed', 1)
+        condition = wntr.network.SimTimeCondition(wn, '==', 3600 * 2)
+        control = wntr.network.Control(condition=condition, then_action=action)
+        wn.add_control('pump_base_speed', control)
+
+        sim = wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
+        self.assertEqual(results.link['status'].at[7200, 'pump1'], wntr.network.LinkStatus.Open)
 
 
 class TestTimeControls(unittest.TestCase):
@@ -126,7 +154,6 @@ class TestConditionalControls(unittest.TestCase):
                 self.assertEqual(results.link['status'].at[t,'pipe1'], self.wntr.network.LinkStatus.open)
                 count +=1
             else:
-                print(t, results.node['pressure'].at[t,'tank1'], results.link['status'].at[t,'pipe1'], results.link['flowrate'].at[t,'pipe1'])
                 self.assertAlmostEqual(results.link['flowrate'].at[t,'pipe1'], 0.0)
                 self.assertEqual(results.link['status'].at[t,'pipe1'], self.wntr.network.LinkStatus.closed)
         self.assertEqual(activated_flag, True)
