@@ -2424,7 +2424,7 @@ class BinFile(object):
         for member in result_types:
             if member.is_node:
                 self.results.node[member.name] = pd.DataFrame(index=times, columns=nodes)
-            elif member.is_node:
+            elif member.is_link:
                 self.results.link[member.name] = pd.DataFrame(index=times, columns=links)
             else:
                 pass

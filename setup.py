@@ -56,7 +56,7 @@ if ipopt_available:
     extension_modules.append(ipopt_model_ext)
 
 DISTNAME = 'wntr'
-VERSION = '0.1.5'
+VERSION = '0.1.6'
 PACKAGES = find_packages()
 EXTENSIONS = extension_modules
 DESCRIPTION = 'Water Network Tool for Resilience'

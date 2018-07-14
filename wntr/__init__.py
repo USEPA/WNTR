@@ -8,7 +8,7 @@ from wntr import utils
 from wntr import aml
 from wntr import models
 
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
 __copyright__ = """Copyright 2015-2017 National Technology & Engineering 
 Solutions of Sandia, LLC (NTESS). Under the terms of Contract DE-NA0003525 

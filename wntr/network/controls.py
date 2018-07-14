@@ -1310,25 +1310,6 @@ class _ActiveFCVCondition(ControlCondition):
             return False
 
 
-class _ValveNewSettingCondition(ControlCondition):
-    def __init__(self, valve):
-        """
-        Parameters
-        ----------
-        valve: wntr.network.Valve
-        """
-        super(_ValveNewSettingCondition, self).__init__()
-        self._valve = valve
-
-    def requires(self):
-        return OrderedSet([self._valve])
-
-    def evaluate(self):
-        if self._valve.setting != self._valve._prev_setting:
-            return True
-        return False
-
-
 class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
     """
     A base class for deriving new control actions. The control action is run by calling run_control_action.
@@ -1579,6 +1560,14 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
             return 'Rule'
         else:
             return 'Control'
+
+    @property
+    def condition(self):
+        return self._condition
+
+    @property
+    def priority(self):
+        return self._priority
 
 
 @DocInheritor({'is_control_action_required', 'run_control_action', 'requires', 'actions'})

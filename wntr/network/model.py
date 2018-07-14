@@ -37,7 +37,7 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    _ValveNewSettingCondition, ControlAction, _InternalControlAction, Control, ControlManager, Comparison, Rule, \
+    ControlAction, _InternalControlAction, Control, ControlManager, Comparison, Rule, \
     _PartialDemandStatusCondition, _FullDemandStatusCondition, _ZeroDemandStatusCondition
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
@@ -893,6 +893,19 @@ class WaterNetworkModel(AbstractModel):
     
     def _get_pump_controls(self):
         pump_controls = []
+
+        for control_name, control in self.controls():
+            for action in control.actions():
+                target_obj, target_attr = action.target()
+                if target_attr == 'base_speed':
+                    if not isinstance(target_obj, Pump):
+                        raise ValueError('base_speed can only be changed on pumps; ' + str(control))
+                    new_status = LinkStatus.Open
+                    new_action = ControlAction(target_obj, 'status', new_status)
+                    condition = control.condition
+                    new_control = type(control)(condition, new_action, priority=control.priority)
+                    pump_controls.append(new_control)
+
         for pump_name, pump in self.pumps():
             close_control_action = _InternalControlAction(pump, '_internal_status', LinkStatus.Closed, 'status')
             open_control_action = _InternalControlAction(pump, '_internal_status', LinkStatus.Open, 'status')
@@ -919,13 +932,23 @@ class WaterNetworkModel(AbstractModel):
 
     def _get_valve_controls(self):
         valve_controls = []
-        for valve_name, valve in self.valves():
 
-            new_setting_action = ControlAction(valve, 'status', LinkStatus.Active)
-            new_setting_condition = _ValveNewSettingCondition(valve)
-            new_setting_control = Control(condition=new_setting_condition, then_action=new_setting_action, priority=ControlPriority.very_low)
-            new_setting_control._control_type = _ControlType.postsolve
-            valve_controls.append(new_setting_control)
+        for control_name, control in self.controls():
+            for action in control.actions():
+                target_obj, target_attr = action.target()
+                if target_attr == 'setting':
+                    if isinstance(target_obj, Valve):
+                        new_status = LinkStatus.Active
+                    elif isinstance(target_obj, Pump):
+                        raise ValueError('Cannot control settings on pumps; use "base_speed"; ' + str(control))
+                    else:
+                        raise ValueError('Settings can only be changed on valves: ' + str(control))
+                    new_action = ControlAction(target_obj, 'status', new_status)
+                    condition = control.condition
+                    new_control = type(control)(condition, new_action, priority=control.priority)
+                    valve_controls.append(new_control)
+
+        for valve_name, valve in self.valves():
 
             if valve.valve_type == 'PRV':
                 close_condition = _ClosePRVCondition(self, valve)
