@@ -26,6 +26,10 @@ def hazen_williams_constants(m):
     m.hw_d = d
 
 
+def darcy_weisbach_constants(m):
+    m.dw_k = 0.0826
+
+
 def pdd_constants(m):
     m.pdd_smoothing_delta = 0.2
     m.pdd_slope = 1e-3

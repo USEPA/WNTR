@@ -38,7 +38,8 @@ from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTime
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
     _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
     ControlAction, _InternalControlAction, Control, ControlManager, Comparison, Rule, \
-    _PartialDemandStatusCondition, _FullDemandStatusCondition, _ZeroDemandStatusCondition
+    _PartialDemandStatusCondition, _FullDemandStatusCondition, _ZeroDemandStatusCondition, \
+    _PartialLeakStatusCondition, _ZeroLeakStatusCondition
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 
@@ -1001,26 +1002,23 @@ class WaterNetworkModel(AbstractModel):
 
         return demand_status_controls
 
-    def _get_leak_model_status_status_controls(self):
-        demand_status_controls = []
-        for node_name, node in self.junctions():
-            partial_action = ControlAction(node, '_demand_status', _DemandStatus.Partial)
-            zero_action = ControlAction(node, '_demand_status', _DemandStatus.Zero)
-            full_action = ControlAction(node, '_demand_status', _DemandStatus.Full)
+    def _get_leak_model_status_controls(self):
+        leak_status_controls = []
+        for node_name in self.junction_name_list + self.tank_name_list:
+            node = self.get_node(node_name)
+            partial_action = ControlAction(node, '_leak_model_status', _DemandStatus.Partial)
+            zero_action = ControlAction(node, '_leak_model_status', _DemandStatus.Zero)
 
-            partial_condition = _PartialDemandStatusCondition(self, node)
-            zero_condition = _ZeroDemandStatusCondition(self, node)
-            full_condition = _FullDemandStatusCondition(self, node)
+            partial_condition = _PartialLeakStatusCondition(self, node)
+            zero_condition = _ZeroLeakStatusCondition(self, node)
 
             partial_control = Control(condition=partial_condition, then_action=partial_action)
             zero_control = Control(condition=zero_condition, then_action=zero_action)
-            full_control = Control(condition=full_condition, then_action=full_action)
 
-            demand_status_controls.append(partial_control)
-            demand_status_controls.append(zero_control)
-            demand_status_controls.append(full_control)
+            leak_status_controls.append(partial_control)
+            leak_status_controls.append(zero_control)
 
-        return demand_status_controls
+        return leak_status_controls
 
     ### #
     ### Name lists

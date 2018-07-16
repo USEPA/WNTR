@@ -270,6 +270,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._prev_setting = None
         self._setting = None
         self._flow = None
+        self._is_isolated = False
 
     def _compare(self, other):
         """
@@ -679,12 +680,12 @@ class LinkStatus(enum.IntEnum):
 
     .. rubric:: Enum Members
 
-    ===============  ==================================================================
-    :attr:`~Closed`  Pipe/valve/pump is closed.
-    :attr:`~Opened`  Pipe/valve/pump is open.
-    :attr:`~Open`    Alias to "Opened"
-    :attr:`~Active`  Valve is partially open.
-    ===============  ==================================================================
+    =================  ==================================================================
+    :attr:`~Closed`    Pipe/valve/pump is closed.
+    :attr:`~Opened`    Pipe/valve/pump is open.
+    :attr:`~Open`      Alias to "Opened"
+    :attr:`~Active`    Valve is partially open.
+    =================  ==================================================================
 
     """
     Closed = 0
@@ -703,7 +704,7 @@ class LinkStatus(enum.IntEnum):
         return self.name
 
     def __eq__(self, other):
-        return int(self) == int(other) and (isinstance(other, int) or \
+        return int(self) == int(other) and (isinstance(other, int) or
                                             self.__class__.__name__ == other.__class__.__name__)
 
 

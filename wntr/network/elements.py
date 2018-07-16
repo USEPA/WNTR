@@ -83,6 +83,7 @@ class Junction(Node):
         self.leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
+        self._leak_model_status = _DemandStatus.Partial
 
         
     def __repr__(self):
@@ -219,6 +220,7 @@ class Tank(Node):
         self.leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'tank'+self._name+'start_leak_control'
         self._leak_end_control_name = 'tank'+self._name+'end_leak_control'
+        self._leak_model_status = _DemandStatus.Partial
         
     def __repr__(self):
         return "<Tank '{}', elevation={}, min_level={}, max_level={}, diameter={}, min_vol={}, vol_curve='{}'>".format(self._name, self.elevation, self.min_level, self.max_level, self.diameter, self.min_vol, (self.vol_curve.name if self.vol_curve else None))

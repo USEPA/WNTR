@@ -2,6 +2,7 @@ import logging
 from wntr import aml
 from wntr.utils.polynomial_interpolation import cubic_spline
 import math
+from wntr.network import LinkStatus
 
 print(aml)
 
@@ -359,32 +360,6 @@ def tcv_resistance_param(m, wn, index_over=None):
             m.tcv_resistance[link_name].value = value
         else:
             m.tcv_resistance[link_name] = aml.create_param(value=value)
-
-
-def status_param(m, wn, index_over=None):
-    """
-    Add a status parameter to the model
-
-    Parameters
-    ----------
-    m: wntr.aml.aml.aml.Model
-    wn: wntr.network.model.WaterNetworkModel
-    index_over: list of str
-        list of pipe names
-    """
-    if not hasattr(m, 'status'):
-        m.status = aml.ParamDict()
-
-    if index_over is None:
-        index_over = wn.pipe_name_list + wn.pump_name_list
-
-    for link_name in index_over:
-        link = wn.get_link(link_name)
-        value = link.status
-        if link_name in m.status:
-            m.status[link_name].value = value
-        else:
-            m.status[link_name] = aml.create_param(value=value)
 
 
 def pump_power_param(m, wn, index_over=None):

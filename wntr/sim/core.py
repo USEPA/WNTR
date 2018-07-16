@@ -1,9 +1,6 @@
-from wntr import *
-from wntr.sim.hydraulics import *
-from wntr.network.model import *
-from wntr.sim.solvers import *
-from wntr.sim.results import *
-from wntr.network.model import *
+import wntr.sim.hydraulics
+import wntr.sim.solvers
+import wntr.sim.results
 from wntr.network.controls import ControlManager, _ControlType
 import numpy as np
 import warnings
@@ -14,8 +11,16 @@ import scipy.optimize
 import scipy.sparse
 import scipy.sparse.csr
 import itertools
+from collections import OrderedDict
+from wntr.utils.ordered_set import OrderedSet
 
 logger = logging.getLogger(__name__)
+
+
+# TODO: allow user to turn of demand status and leak model status controls
+# TODO: allow user to switch between wntr and ipopt models
+# TODO: need to add remove leak constraints for nodes when leak_status changes (between timesteps)
+# TODO: links need an is_isolated method or the status property should be adjusted to account for isolation
 
 
 class WaterNetworkSimulator(object):
@@ -93,6 +98,59 @@ class WaterNetworkSimulator(object):
             raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, reservoir, or leak.')
 
 
+def _get_control_managers(wn, pdd=False):
+    """
+
+    Parameters
+    ----------
+    wn: wntr.network.WaterNetworkModel
+    pdd: bool
+
+    Returns
+    -------
+    managers: tuple of wntr.network.ControlManager
+    """
+    presolve_controls = ControlManager()
+    postsolve_controls = ControlManager()
+    rules = ControlManager()
+
+    def categorize_control(control):
+        """
+
+        Parameters
+        ----------
+        control: wntr.network.Control or wntr.network.Rule
+
+        Returns
+        -------
+
+        """
+        if control.epanet_control_type in {_ControlType.presolve, _ControlType.pre_and_postsolve}:
+            presolve_controls.register_control(control)
+        if control.epanet_control_type in {_ControlType.postsolve, _ControlType.pre_and_postsolve}:
+            postsolve_controls.register_control(control)
+        if control.epanet_control_type == _ControlType.rule:
+            rules.register_control(control)
+
+    for c_name, c in wn.controls():
+        categorize_control(c)
+    for c in wn._get_all_tank_controls():
+        categorize_control(c)
+    for c in wn._get_cv_controls():
+        categorize_control(c)
+    for c in wn._get_pump_controls():
+        categorize_control(c)
+    for c in wn._get_valve_controls():
+        categorize_control(c)
+    if pdd:
+        for c in wn._get_demand_status_controls():
+            categorize_control(c)
+    for c in wn._get_leak_model_status_controls():
+        categorize_control(c)
+
+    return presolve_controls, postsolve_controls, rules
+
+
 class WNTRSimulator(WaterNetworkSimulator):
     """
     WNTR simulator class.
@@ -119,6 +177,13 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._time_per_step = []
         self._solver = None
         self._model = None
+        self._link_name_to_id = OrderedDict()
+        self._link_id_to_name = OrderedDict()
+        self._node_name_to_id = OrderedDict()
+        self._node_id_to_name = OrderedDict()
+
+        self._initialize_name_id_maps()
+        self._initialize_internal_graph()
 
     def _get_time(self):
         s = int(self._wn.sim_time)
@@ -129,12 +194,17 @@ class WNTRSimulator(WaterNetworkSimulator):
         s = int(s)
         return str(h)+':'+str(m)+':'+str(s)
 
-    def run_sim(self, solver=NewtonSolver, backup_solver=None, solver_options=None, backup_solver_options=None, convergence_error=True):
+    def run_sim(self, solver=wntr.sim.solvers.NewtonSolver, backup_solver=None, solver_options=None,
+                backup_solver_options=None, convergence_error=True):
         """
         Run an extended period simulation (hydraulics only).
 
         Parameters
         ----------
+        solver: object
+            wntr.sim.solvers.NewtonSolver or Scipy solver
+        backup_solver: object
+            wntr.sim.solvers.NewtonSolver or Scipy solver
         solver_options: dict
             Solver options are specified using the following dictionary keys:
 
@@ -144,7 +214,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             * BT_MAXITER: the maximum number of iterations for each line search (default = 20)
             * BACKTRACKING: whether or not to use a line search (default = True)
             * BT_START_ITER: the newton iteration at which a line search should start being used (default = 2)
-
+        backup_solver_options: dict
         convergence_error: bool (optional)
             If convergence_error is True, an error will be raised if the
             simulation does not converge. If convergence_error is False,
@@ -163,26 +233,9 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         self._time_per_step = []
 
-        self._presolve_controls = ControlManager()
-        self._postsolve_controls = ControlManager()
-        self._rules = ControlManager()
+        wn = self._wn
 
-        def categorize_control(control):
-            if control.epanet_control_type in {_ControlType.presolve, _ControlType.pre_and_postsolve}:
-                self._presolve_controls.register_control(control)
-            if control.epanet_control_type in {_ControlType.postsolve, _ControlType.pre_and_postsolve}:
-                self._postsolve_controls.register_control(control)
-            if control.epanet_control_type == _ControlType.rule:
-                self._rules.register_control(control)
-
-        for c_name, c in self._wn.controls():
-            categorize_control(c)
-        for c in (self._wn._get_all_tank_controls() + self._wn._get_cv_controls() + self._wn._get_pump_controls() +
-                  self._wn._get_valve_controls()):
-            categorize_control(c)
-        if self.mode == 'PDD':
-            for c in self._wn._get_demand_status_controls():
-                categorize_control(c)
+        self._presolve_controls, self._postsolve_controls, self._rules = _get_control_managers(wn, pdd=(self.mode == 'PDD'))
 
         if logger_level <= 1:
             logger.log(1, 'collected presolve controls:')
@@ -197,29 +250,16 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             logger.log(1, 'initializing hydraulic model')
 
-        model = HydraulicModel(self._wn, self.mode)
+        model = wntr.sim.hydraulics.create_hydraulic_model(wn=wn, mode=self.mode)
         self._model = model
-        model.initialize_results_dict()
+        results_dict = wntr.sim.hydraulics.initialize_results_dict()
 
-        results = SimulationResults()
+        results = wntr.sim.results.SimulationResults()
         results.error_code = 0
         results.time = []
-        results.network_name = model._wn.name
+        results.network_name = wn.name
 
-        # Initialize X
-        # Vars will be ordered:
-        #    1.) head
-        #    2.) demand
-        #    3.) flow
-        #    4.) leak_demand
-        model.set_network_inputs_by_id()
-        head0 = model.initialize_head()
-        demand0 = model.initialize_demand()
-        flow0 = model.initialize_flow()
-        leak_demand0 = model.initialize_leak_demand()
-
-        X_init = np.concatenate((head0, demand0, flow0, leak_demand0))
-
+        wntr.sim.hydraulics.set_network_inputs_by_id()
         self._initialize_internal_graph()
 
         if self._wn.sim_time == 0:
@@ -232,7 +272,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         rule_iter = 0  # this is used to determine the rule timestep
 
         if first_step:
-            self._model.update_network_previous_values()
+            wntr.sim.hydraulics.update_network_previous_values()
             self._wn._prev_sim_time = -1
 
         if logger_level <= 1:
@@ -281,7 +321,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                     The tank levels/heads must be done before checking the controls because the TankLevelControls
                     depend on the tank levels. These will be updated again after we determine the next actual timestep.
                     """
-                    self._model.update_tank_heads()
+                    wntr.sim.hydraulics.update_tank_heads(wn)
                 trial = 0
 
                 # check which presolve controls need to be activated before the next hydraulic timestep
@@ -309,7 +349,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                         old_time = self._wn.sim_time
                         self._wn.sim_time = rule_iter * self._wn.options.time.rule_timestep
                         if not first_step:
-                            self._model.update_tank_heads()
+                            wntr.sim.hydraulics.update_tank_heads(wn)
                         rule_iter += 1
                         rules_to_run = self._rules.check()
                         rules_to_run.sort(key=lambda i: i[0]._priority)
@@ -359,7 +399,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                             rule_iter += 1
                             self._wn.sim_time -= backtrack
                             if not first_step:
-                                self._model.update_tank_heads()
+                                wntr.sim.hydraulics.update_tank_heads(wn)
                             rules_to_run = self._rules.check()
                             rules_to_run.sort(key=lambda i: i[0]._priority)
                             for rule, rule_back in rules_to_run:
@@ -387,7 +427,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                             self._wn.sim_time = rule_iter * self._wn.options.time.rule_timestep
                             rule_iter += 1
                             if not first_step:
-                                self._model.update_tank_heads()
+                                wntr.sim.hydraulics.update_tank_heads(wn)
                             rules_to_run = self._rules.check()
                             rules_to_run.sort(key=lambda i: i[0]._priority)
                             for rule, rule_back in rules_to_run:
@@ -416,17 +456,15 @@ class WNTRSimulator(WaterNetworkSimulator):
             if logger_level <= logging.DEBUG:
                 logger.debug('checking for isolated junctions and links')
             isolated_junctions, isolated_links = self._get_isolated_junctions_and_links()
+            logger.info('Number of isolated junctions: ' + str(len(isolated_junctions)))
+            logger.info('Number of isolated links: ' + str(len(isolated_links)))
             if logger_level <= logging.DEBUG:
                 if len(isolated_junctions) > 0 or len(isolated_links) > 0:
                     logger.debug('isolated junctions: {0}'.format(isolated_junctions))
                     logger.debug('isolated links: {0}'.format(isolated_links))
-                else:
-                    logger.debug('no isolated junctions or links found')
-            model.set_isolated_junctions_and_links(isolated_junctions, isolated_links)
             if not first_step and not resolve:
-                model.update_tank_heads()
-            model.set_network_inputs_by_id()
-            model.set_jacobian_constants()
+                wntr.sim.hydraulics.update_tank_heads(wn)
+            wntr.sim.hydraulics.set_network_inputs_by_id()
 
             # Solve
             if logger_level <= logging.DEBUG:
@@ -545,6 +583,18 @@ class WNTRSimulator(WaterNetworkSimulator):
         model.get_results(results)
         return results
 
+    def _initialize_name_id_maps(self):
+        n = 0
+        for link_name, link in self._wn.links():
+            self._link_name_to_id[link_name] = n
+            self._link_id_to_name[n] = link_name
+            n += 1
+        n = 0
+        for node_name, node in self._wn.nodes():
+            self._node_name_to_id[node_name] = n
+            self._node_id_to_name[n] = node_name
+            n += 1
+
     def _initialize_internal_graph(self):
         n_links = {}
         rows = []
@@ -553,8 +603,8 @@ class WNTRSimulator(WaterNetworkSimulator):
         for link_name, link in itertools.chain(self._wn.pipes(), self._wn.pumps(), self._wn.valves()):
             from_node_name = link.start_node_name
             to_node_name = link.end_node_name
-            from_node_id = self._model._node_name_to_id[from_node_name]
-            to_node_id = self._model._node_name_to_id[to_node_name]
+            from_node_id = self._node_name_to_id[from_node_name]
+            to_node_id = self._node_name_to_id[to_node_name]
             if (from_node_id, to_node_id) not in n_links:
                 n_links[(from_node_id, to_node_id)] = 0
                 n_links[(to_node_id, from_node_id)] = 0
@@ -579,15 +629,15 @@ class WNTRSimulator(WaterNetworkSimulator):
             ndx2 = None
             from_node_name = link.start_node_name
             to_node_name = link.end_node_name
-            from_node_id = self._model._node_name_to_id[from_node_name]
-            to_node_id = self._model._node_name_to_id[to_node_name]
+            from_node_id = self._node_name_to_id[from_node_name]
+            to_node_id = self._node_name_to_id[to_node_name]
             ndx1 = _get_csr_data_index(self._internal_graph, from_node_id, to_node_id)
             ndx2 = _get_csr_data_index(self._internal_graph, to_node_id, from_node_id)
             ndx_map[link] = (ndx1, ndx2)
         self._map_link_to_internal_graph_data_ndx = ndx_map
 
-        self._number_of_connections = [0 for i in range(self._model.num_nodes)]
-        for node_id in self._model._node_ids:
+        self._number_of_connections = [0 for i in range(self._wn.node_name_list)]
+        for node_id in self._node_id_to_name.keys():
             self._number_of_connections[node_id] = self._internal_graph.indptr[node_id+1] - self._internal_graph.indptr[node_id]
 
         self._node_pairs_with_multiple_links = {}
@@ -597,8 +647,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                     continue
                 self._internal_graph[from_node_id, to_node_id] = 0
                 self._internal_graph[to_node_id, from_node_id] = 0
-                from_node_name = self._model._node_id_to_name[from_node_id]
-                to_node_name = self._model._node_id_to_name[to_node_id]
+                from_node_name = self._node_id_to_name[from_node_id]
+                to_node_name = self._node_id_to_name[to_node_id]
                 tmp_list = self._node_pairs_with_multiple_links[(from_node_id, to_node_id)] = []
                 for link_name in self._wn.get_links_for_node(from_node_name):
                     link = self._wn.get_link(link_name)
@@ -639,7 +689,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
     def _get_isolated_junctions_and_links(self):
 
-        node_set = [1 for i in range(self._model.num_nodes)]
+        node_set = [1 for i in range(len(self._wn.node_name_list))]
 
         def grab_group(node_id):
             node_set[node_id] = 0
@@ -659,29 +709,29 @@ class WNTRSimulator(WaterNetworkSimulator):
                 for i, val in enumerate(vals):
                     if val == 1:
                         col = cols[i]
-                        if node_set[col] ==1:
+                        if node_set[col] == 1:
                             node_set[col] = 0
                             nodes_to_explore.add(col)
 
-        for tank_name, tank in self._wn.nodes(wntr.network.Tank):
-            tank_id = self._model._node_name_to_id[tank_name]
+        for tank_name, tank in self._wn.tanks():
+            tank_id = self._node_name_to_id[tank_name]
             if node_set[tank_id] == 1:
                 grab_group(tank_id)
             else:
                 continue
 
-        for reservoir_name, reservoir in self._wn.nodes(wntr.network.Reservoir):
-            reservoir_id = self._model._node_name_to_id[reservoir_name]
+        for reservoir_name, reservoir in self._wn.reservoirs:
+            reservoir_id = self._node_name_to_id[reservoir_name]
             if node_set[reservoir_id] == 1:
                 grab_group(reservoir_id)
             else:
                 continue
 
         isolated_junction_ids = [i for i in range(len(node_set)) if node_set[i] == 1]
-        isolated_junctions = set()
-        isolated_links = set()
+        isolated_junctions = OrderedSet()
+        isolated_links = OrderedSet()
         for j_id in isolated_junction_ids:
-            j = self._model._node_id_to_name[j_id]
+            j = self._node_id_to_name[j_id]
             isolated_junctions.add(j)
             connected_links = self._wn.get_links_for_node(j)
             for l in connected_links:

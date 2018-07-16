@@ -942,6 +942,46 @@ class _OpenCVCondition(ControlCondition):
             return False
 
 
+class _PartialLeakStatusCondition(ControlCondition):
+    Htol = 0.0001524
+
+    def __init__(self, wn, node):
+        self._node = node
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._node])
+
+    def evaluate(self):
+        """
+        If True is returned, node._leak_model_status needs to be _DemandStatus.Partial
+        """
+        p = self._node.head - self._node.elevation
+        if p >= self.Htol:
+            return True
+        return False
+
+
+class _ZeroLeakStatusCondition(ControlCondition):
+    Htol = 0.0001524
+
+    def __init__(self, wn, node):
+        self._node = node
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._node])
+
+    def evaluate(self):
+        """
+        If True is returned, node._leak_model_status needs to be _DemandStatus.Zero
+        """
+        p = self._node.head - self._node.elevation
+        if p <= 0:
+            return True
+        return False
+
+
 class _PartialDemandStatusCondition(ControlCondition):
     Htol = 0.0001524
 
