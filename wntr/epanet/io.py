@@ -1151,7 +1151,7 @@ class InpFile(object):
 #                    control_name = control_name + '/' + str(run_at_time)
                 elif len(current) == 7:  # at clocktime
                     run_at_time = int(_clock_time_to_sec(current[5], current[6]))
-                    control_obj = Control._time_control(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj, control_name)
+                    control_obj = Control._time_control(self.wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)
 #                    control_name = ''
 #                    for i in range(len(current)-1):
 #                        control_name = control_name + '/' + current[i]
