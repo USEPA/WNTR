@@ -107,6 +107,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._curve_reg = wn._curve_reg
         self._coordinates = [0,0]
         self._source = None
+        self._is_isolated = False
 
     def _compare(self, other):
         if not type(self) == type(other):

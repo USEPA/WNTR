@@ -650,7 +650,7 @@ class HeadPump(Pump):
         Tuple of pump curve coefficient (A, B, C). All floats.
         """
         
-        curve = self._curve_reg[self.pump_curve_name]
+        curve = self.get_pump_curve()
         
         # 1-Point curve
         if curve.num_points == 1:

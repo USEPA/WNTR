@@ -19,8 +19,7 @@ logger = logging.getLogger(__name__)
 
 # TODO: allow user to turn of demand status and leak model status controls
 # TODO: allow user to switch between wntr and ipopt models
-# TODO: need to add remove leak constraints for nodes when leak_status changes (between timesteps)
-# TODO: links need an is_isolated method or the status property should be adjusted to account for isolation
+# TODO: need to add remove leak constraints (and update mass balance) for nodes when leak_status changes (between timesteps)
 
 
 class WaterNetworkSimulator(object):
@@ -470,8 +469,8 @@ class WNTRSimulator(WaterNetworkSimulator):
             if logger_level <= logging.DEBUG:
                 logger.debug('solving')
             solver_status = 1
-            if solver is NewtonSolver:
-                _solver = NewtonSolver(solver_options)
+            if solver is wntr.sim.solvers.NewtonSolver:
+                _solver = wntr.sim.solvers.NewtonSolver(solver_options)
                 self._X, num_iters, solver_status, message = _solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
             elif solver is scipy.optimize.fsolve:
                 self._X, infodict, ier, mesg = solver(model.get_hydraulic_equations, X_init, **solver_options)
