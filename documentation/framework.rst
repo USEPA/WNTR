@@ -143,8 +143,8 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 
 **Future development of WNTR will address these limitations.**
 
-Known Discrepancies Between WNTR and Epanet
+Discrepancies
 -------------------------------------------
-Known differences between the WNTR and Epanet simulators are listed below.
+Known discrepancies between the WNTRSimulator and EpanetSimulators are listed below.
 
-* WNTR has the concept of base speeds for pumps, and speed patterns scale this base speed. In Epanet, patterns specify the actual speed. Additionally, in the WNTR simulator, controls act on the base speed, whereas, in Epanet, controls act on the actual speed. Results from the two simulators can be made to match by scaling speed patterns and using controls appropriately.
+* Pumps have speed settings which are adjustable by controls and/or patterns.  With the EpanetSimulator, controls and patterns adjust the actual speed.  With the WNTRSimulator, pumps have a 'base speed' (similar to junction demand and reservoir head), controls adjust the base speed, and speed patterns are a are a multiplier on the base speed. Results from the two simulators can match by scaling speed patterns and using controls appropriately.
