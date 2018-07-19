@@ -1,5 +1,5 @@
 import wntr.sim.hydraulics
-import wntr.sim.solvers
+from wntr.sim.solvers import NewtonSolver
 import wntr.sim.results
 from wntr.network.controls import ControlManager, _ControlType
 import numpy as np
@@ -13,13 +13,13 @@ import scipy.sparse.csr
 import itertools
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
+from wntr.network import Junction, Pipe, Valve, Pump, Tank, Reservoir
 
 logger = logging.getLogger(__name__)
 
 
 # TODO: allow user to turn of demand status and leak model status controls
 # TODO: allow user to switch between wntr and ipopt models
-# TODO: need to add remove leak constraints (and update mass balance) for nodes when leak_status changes (between timesteps)
 
 
 class WaterNetworkSimulator(object):
@@ -91,8 +91,6 @@ class WaterNetworkSimulator(object):
             return 'tank'
         elif isinstance(self._wn.get_node(name), Reservoir):
             return 'reservoir'
-        elif isinstance(self._wn.get_node(name), Leak):
-            return 'leak'
         else:
             raise RuntimeError('Node name ' + name + ' was not recognised as a junction, tank, reservoir, or leak.')
 
@@ -180,6 +178,9 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._link_id_to_name = OrderedDict()
         self._node_name_to_id = OrderedDict()
         self._node_id_to_name = OrderedDict()
+        self._prev_isolated_junctions = OrderedSet()
+        self._prev_isolated_links = OrderedSet()
+        self._model_updater = None
 
         self._initialize_name_id_maps()
         self._initialize_internal_graph()
@@ -249,8 +250,9 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             logger.log(1, 'initializing hydraulic model')
 
-        model = wntr.sim.hydraulics.create_hydraulic_model(wn=wn, mode=self.mode)
+        model, model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=wn, mode=self.mode)
         self._model = model
+        self._model_updater = model_updater
         results_dict = wntr.sim.hydraulics.initialize_results_dict()
 
         results = wntr.sim.results.SimulationResults()
@@ -258,7 +260,6 @@ class WNTRSimulator(WaterNetworkSimulator):
         results.time = []
         results.network_name = wn.name
 
-        wntr.sim.hydraulics.set_network_inputs_by_id()
         self._initialize_internal_graph()
 
         if self._wn.sim_time == 0:
@@ -446,34 +447,29 @@ class WNTRSimulator(WaterNetworkSimulator):
                     logger.debug('changes made by presolve controls:')
                     for obj, attr in self._presolve_controls.get_changes():
                         logger.debug('\t{0}.{1} changed to {2}'.format(obj, attr, getattr(obj, attr)))
-                self._presolve_controls.reset()
-                self._rules.reset()
 
             logger.info('simulation time = %s, trial = %d', self._get_time(), trial)
 
             # Prepare for solve
-            if logger_level <= logging.DEBUG:
-                logger.debug('checking for isolated junctions and links')
-            isolated_junctions, isolated_links = self._get_isolated_junctions_and_links()
-            logger.info('Number of isolated junctions: ' + str(len(isolated_junctions)))
-            logger.info('Number of isolated links: ' + str(len(isolated_links)))
-            if logger_level <= logging.DEBUG:
-                if len(isolated_junctions) > 0 or len(isolated_links) > 0:
-                    logger.debug('isolated junctions: {0}'.format(isolated_junctions))
-                    logger.debug('isolated links: {0}'.format(isolated_links))
+            self._get_isolated_junctions_and_links()
             if not first_step and not resolve:
                 wntr.sim.hydraulics.update_tank_heads(wn)
-            wntr.sim.hydraulics.set_network_inputs_by_id()
+            wntr.sim.hydraulics.update_model_for_controls(model, wn, model_updater, self._presolve_controls)
+            wntr.sim.hydraulics.update_model_for_controls(model, wn, model_updater, self._rules)
+            wntr.models.param.source_head_param(model, wn)
+            wntr.models.param.expected_demand_param(model, wn)
+            self._presolve_controls.reset()
+            self._rules.reset()
 
             # Solve
             if logger_level <= logging.DEBUG:
                 logger.debug('solving')
             solver_status = 1
-            if solver is wntr.sim.solvers.NewtonSolver:
-                _solver = wntr.sim.solvers.NewtonSolver(solver_options)
-                self._X, num_iters, solver_status, message = _solver.solve(model.get_hydraulic_equations, model.get_jacobian, X_init)
+            if solver is NewtonSolver:
+                _solver = NewtonSolver(solver_options)
+                self._X, num_iters, solver_status, message = _solver.solve(model.evaluate_residuals, model.evaluate_jacobian, X_init)
             elif solver is scipy.optimize.fsolve:
-                self._X, infodict, ier, mesg = solver(model.get_hydraulic_equations, X_init, **solver_options)
+                self._X, infodict, ier, mesg = solver(model.evaluate_residuals, X_init, **solver_options)
                 if ier != 1:
                     solver_status = 0
                     message = mesg
@@ -481,7 +477,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                             scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
                             scipy.optimize.diagbroyden}:
                 try:
-                    self._X = solver(model.get_hydraulic_equations, X_init, **solver_options)
+                    self._X = solver(model.evaluate_residuals, X_init, **solver_options)
                 except:
                     solver_status = 0
                     message = ''
@@ -492,10 +488,10 @@ class WNTRSimulator(WaterNetworkSimulator):
                     solver_status = 1
                     if backup_solver is NewtonSolver:
                         _solver = NewtonSolver(backup_solver_options)
-                        self._X, num_iters, solver_status, message = _solver.solve(model.get_hydraulic_equations,
-                                                                                   model.get_jacobian, X_init)
+                        self._X, num_iters, solver_status, message = _solver.solve(model.evaluate_residuals,
+                                                                                   model.evaluate_jacobian, X_init)
                     elif backup_solver is scipy.optimize.fsolve:
-                        self._X, infodict, ier, mesg = backup_solver(model.get_hydraulic_equations, X_init, **backup_solver_options)
+                        self._X, infodict, ier, mesg = backup_solver(model.evaluate_residuals, X_init, **backup_solver_options)
                         if ier != 1:
                             solver_status = 0
                             message = mesg
@@ -503,7 +499,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                                            scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
                                            scipy.optimize.diagbroyden}:
                         try:
-                            self._X = backup_solver(model.get_hydraulic_equations, X_init, **backup_solver_options)
+                            self._X = backup_solver(model.evaluate_residuals, X_init, **backup_solver_options)
                         except:
                             solver_status = 0
                             message = ''
@@ -687,6 +683,16 @@ class WNTRSimulator(WaterNetworkSimulator):
                     data[ndx2] = 1
 
     def _get_isolated_junctions_and_links(self):
+        logger_level = logger.getEffectiveLevel()
+
+        if logger_level <= logging.DEBUG:
+            logger.debug('checking for isolated junctions and links')
+        for j in self._prev_isolated_junctions:
+            junction = self._wn.get_node(j)
+            junction._is_isolated = False
+        for l in self._prev_isolated_links:
+            link = self._wn.get_link(l)
+            link._is_isolated = False
 
         node_set = [1 for i in range(len(self._wn.node_name_list))]
 
@@ -731,14 +737,27 @@ class WNTRSimulator(WaterNetworkSimulator):
         isolated_links = OrderedSet()
         for j_id in isolated_junction_ids:
             j = self._node_id_to_name[j_id]
+            junction = self._wn.get_node(j)
+            junction._is_isolated = True
             isolated_junctions.add(j)
             connected_links = self._wn.get_links_for_node(j)
             for l in connected_links:
+                link = self._wn.get_link(l)
+                link._is_isolated = True
                 isolated_links.add(l)
-        isolated_junctions = list(isolated_junctions)
-        isolated_links = list(isolated_links)
 
-        return isolated_junctions, isolated_links
+        logger.info('Number of isolated junctions: ' + str(len(isolated_junctions)))
+        logger.info('Number of isolated links: ' + str(len(isolated_links)))
+        if logger_level <= logging.DEBUG:
+            if len(isolated_junctions) > 0 or len(isolated_links) > 0:
+                logger.debug('isolated junctions: {0}'.format(isolated_junctions))
+                logger.debug('isolated links: {0}'.format(isolated_links))
+        wntr.sim.hydraulics.update_model_for_isolated_junctions_and_links(self._model, self._wn, self._model_updater,
+                                                                          self._prev_isolated_junctions,
+                                                                          self._prev_isolated_links,
+                                                                          isolated_junctions, isolated_links)
+        self._prev_isolated_junctions = isolated_junctions
+        self._prev_isolated_links = isolated_links
 
 
 def _get_csr_data_index(a, row, col):

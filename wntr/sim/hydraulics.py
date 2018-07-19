@@ -28,7 +28,7 @@ def create_hydraulic_model(wn, mode='DD'):
     Returns
     -------
     m: wntr.aml.Model
-    update_map: dict
+    model_updater: wntr.models.utils.ModelUpdater
     """
     m = aml.Model(model_type='wntr')
     model_updater = ModelUpdater()
@@ -80,48 +80,53 @@ def create_hydraulic_model(wn, mode='DD'):
     constraint.fcv_headloss_constraint.build(m, wn, model_updater)
     constraint.leak_constraint.build(m, wn, model_updater)
 
-    # TODO: all expected_demand params need updated every timestep
-    # TODO: all source_head params need updated every timestep
     # TODO: Document that changing a curve with controls does not do anything; you have to change the pump_curve_name attribute on the pump
 
     return m, model_updater
 
 
-def initialize_results_dict():
+def update_model_for_controls(m, wn, model_updater, control_manager):
     """
 
-    Returns
-    -------
-    res: dict
+    Parameters
+    ----------
+    m: wntr.aml.Model
+    wn: wntr.network.WaterNetworkModel
+    model_updater: wntr.models.utils.ModelUpdater
+    control_manager: wntr.network.controls.ControlManager
     """
-    res = dict()
-    res['node_name'] = []
-    res['node_type'] = []
-    res['node_times'] = []
-    res['node_head'] = []
-    res['node_demand'] = []
-    res['node_pressure'] = []
-    res['leak_demand'] = []
-    res['link_name'] = []
-    res['link_type'] = []
-    res['link_times'] = []
-    res['link_flowrate'] = []
-    res['link_velocity'] = []
-    res['link_status'] = []
-    return res
-
-
-def set_network_inputs_by_id():
+    for obj, attr in control_manager.get_changes():
+        model_updater.update(m, wn, obj, attr)
     # TODO: update model for isolated junctions and links
-    # TODO: update tank and reservoir heads
-    # TODO: update leak models if leak_status changed
-    # TODO: update junction demands
-    # TODO: update link status param
-    # TODO: update link models if status changes???
-    # TODO: update pipe minor loss params
-    # TODO: update valve settings, valve minor losses, valve resistance coefficients
-    # TODO: update pump speeds
-    pass
+
+
+def update_model_for_isolated_junctions_and_links(m, wn, model_updater, prev_isolated_junctions, prev_isolated_links,
+                                                  isolated_junctions, isolated_links):
+    """
+
+    Parameters
+    ----------
+    m: wntr.aml.Model
+    wn: wntr.network.WaterNetworkModel
+    model_updater: wntr.models.utils.ModelUpdater
+    prev_isolated_junctions: set
+    prev_isolated_links: set
+    isolated_junctions: set
+    isolated_links: set
+    """
+    j1 = prev_isolated_junctions - isolated_junctions
+    j2 = isolated_junctions - prev_isolated_junctions
+    j = j1.union(j2)
+    for _j in j:
+        junction = wn.get_node(_j)
+        model_updater.update(m, wn, junction, '_is_isolated')
+
+    l1 = prev_isolated_links - isolated_links
+    l2 = isolated_links - prev_isolated_links
+    l = l1.union(l2)
+    for _l in l:
+        link = wn.get_link(_l)
+        model_updater.update(m, wn, link, '_is_isolated')
 
 
 def update_network_previous_values(wn):
@@ -149,246 +154,256 @@ def update_tank_heads(wn):
         tank.head = tank._prev_head + delta_h
 
 
-class HydraulicModel(object):
+def initialize_results_dict(wn):
     """
-    Hydraulic model class.
+    Parameters
+    ----------
+    wn: wntr.network.WaterNetworkModel
+
+    Returns
+    -------
+    res: dict
+    """
+    node_res = OrderedDict()
+    link_res = OrderedDict()
+
+    node_res['head'] = OrderedDict((name, list()) for name, obj in wn.nodes())
+    node_res['demand'] = OrderedDict((name, list()) for name, obj in wn.nodes())
+    node_res['pressure'] = OrderedDict((name, list()) for name, obj in wn.nodes())
+    node_res['leak_demand'] = OrderedDict((name, list()) for name, obj in wn.nodes())
+
+    link_res['link_flowrate'] = OrderedDict((name, list()) for name, obj in wn.links())
+    link_res['link_velocity'] = OrderedDict((name, list()) for name, obj in wn.links())
+    link_res['link_status'] = OrderedDict((name, list()) for name, obj in wn.links())
+
+    return node_res, link_res
+
+
+def save_results(wn, node_res, link_res):
+    """
+    Parameters
+    ----------
+    wn: wntr.network.WaterNetworkModel
+    node_res: OrderedDict
+    link_res: OrderedDict
+    """
+    for name, node in wn.junctions():
+        node_res['head'][name].append(node.head)
+        node_res['demand'][name].append(node.demand)
+        if node._is_isolated:
+            node_res['pressure'][name].append(0.0)
+        else:
+            node_res['pressure'][name].append(node.head - node.elevation)
+        node_res['leak_demand'][name].append(node.leak_demand)
+
+    for name, node in wn.tanks():
+        node_res['head'][name].append(node.head)
+        node_res['demand'][name].append(node.demand)
+        node_res['pressure'][name].append(node.head - node.elevation)
+        node_res['leak_demand'][name].append(node.leak_demand)
+
+    for name, node in wn.reservoirs():
+        node_res['head'][name].append(node.head)
+        node_res['demand'][name].append(node.demand)
+        node_res['pressure'][name].append(0.0)
+        node_res['leak_demand'][name].append(0.0)
+
+    for name, link in wn.pipes():
+        link_res['flowrate'][name].append(link.flow)
+        link_res['velocity'][name].append(abs(link.flow)*4.0 / (math.pi*link.diameter**2))
+        link_res['status'][name].append(link.status)
+
+    for name, link in wn.head_pumps():
+        link_res['flowrate'][name].append(link.flow)
+        link_res['velocity'][name].append(0)
+        link_res['status'][name].append(link.status)
+
+        A, B, C = link.get_head_curve_coefficients()
+        if link.flow > (A/B)**(1.0/C):
+            start_node_name = link.start_node_name
+            end_node_name = link.end_node_name
+            start_node = wn.get_node(start_node_name)
+            end_node = wn.get_node(end_node_name)
+            start_head = start_node.head
+            end_head = end_node.head
+            warnings.warn('Pump ' + name + ' has exceeded its maximum flow.')
+            logger.warning(
+                'Pump {0} has exceeded its maximum flow. Pump head: {1}; Pump flow: {2}; Max pump flow: {3}'.format(
+                    name, end_head - start_head, link.flow, (A/B)**(1.0/C)))
+
+    for name, link in wn.power_pumps():
+        link_res['flowrate'][name].append(link.flow)
+        link_res['velocity'][name].append(0)
+        link_res['status'][name].append(link.status)
+
+    for name, link in wn.valves():
+        link_res['flowrate'][name].append(link.flow)
+        link_res['velocity'][name].append(abs(link.flow)*4.0 / (math.pi*link.diameter**2))
+        link_res['status'][name].append(link.status)
+
+
+def get_results(wn, results, node_res, link_res):
+    """
+    Parameters
+    ----------
+    wn: wntr.network.WaterNetworkModel
+    results: wntr.sim.results.SimulationResults
+    node_res: OrderedDict
+    link_res: OrderedDict
+    """
+    ntimes = len(results.time)
+    nnodes = wn.num_nodes
+    nlinks = wn.num_links
+    node_names = wn.junction_name_list + wn.tank_name_list + wn.reservoir_name_list
+    link_names = wn.pipe_name_list + wn.head_pump_name_list + wn.power_pump_name_list + wn.valve_name_list
+
+    for key, value in node_res.items():
+        node_res[key] = pd.DataFrame(data=np.array([node_res[key][name] for name in node_names]).transpose(), index=results.time,
+                                     columns=node_names)
+    results.node = node_res
+
+    for key, value in link_res.items():
+        link_res[key] = pd.DataFrame(data=np.array([link_res[key][name] for name in link_names]).transpose(), index=results.time,
+                                            columns=link_names)
+    results.link = link_res
+
+
+def store_results_in_network(wn, m, mode='DD'):
+    """
 
     Parameters
     ----------
-    wn : WaterNetworkModel object
-        Water network model
-
-    mode: string (optional)
-        Specifies whether the simulation will be demand-driven (DD) or
-        pressure dependent demand (PDD), default = DD
+    wn: wntr.network.WaterNetworkModel
+    m: wntr.aml.Model
+    mode: str
     """
+    for name, node in wn.junctions():
+        node.head = m.head[name]
+        if mode == 'PDD':
+            node.demand = m.demand[name]
+        else:
+            node.demand = m.expected_demand[name]
+        if node.leak_status:
+            node.leak_demand = m.leak_rate[name]
+        else:
+            node.leak_demand = 0
 
-    def save_results(self, x, results):
-        head = x[:self.num_nodes]
-        demand = x[self.num_nodes:2*self.num_nodes]
-        flow = x[2*self.num_nodes:(2*self.num_nodes+self.num_links)]
-        leak_demand = x[(2*self.num_nodes+self.num_links):]
-        for node_id in self._junction_ids:
-            head_n = head[node_id]
-            self._sim_results['node_type'].append('Junction')
-            self._sim_results['node_head'].append(head_n)
-            self._sim_results['node_demand'].append(demand[node_id])
-            if node_id in self.isolated_junction_ids:
-                self._sim_results['node_pressure'].append(0.0)
-            else:
-                self._sim_results['node_pressure'].append(head_n - self.node_elevations[node_id])
-            if node_id in self._leak_ids:
-                leak_idx = self._leak_ids.index(node_id)
-                leak_demand_n = leak_demand[leak_idx]
-                self._sim_results['leak_demand'].append(leak_demand_n)
-            else:
-                self._sim_results['leak_demand'].append(0.0)
-        for node_id in self._tank_ids:
-            head_n = head[node_id]
-            demand_n = demand[node_id]
-            self._sim_results['node_type'].append('Tank')
-            self._sim_results['node_head'].append(head_n)
-            self._sim_results['node_demand'].append(demand_n)
-            self._sim_results['node_pressure'].append(head_n - self.node_elevations[node_id])
-            if node_id in self._leak_ids:
-                leak_idx = self._leak_ids.index(node_id)
-                leak_demand_n = leak_demand[leak_idx]
-                self._sim_results['leak_demand'].append(leak_demand_n)
-            else:
-                self._sim_results['leak_demand'].append(0.0)
-        for node_id in self._reservoir_ids:
-            demand_n = demand[node_id]
-            self._sim_results['node_type'].append('Reservoir')
-            self._sim_results['node_head'].append(head[node_id])
-            self._sim_results['node_demand'].append(demand_n)
-            self._sim_results['node_pressure'].append(0.0)
-            self._sim_results['leak_demand'].append(0.0)
+    for name, node in wn.tanks():
+        if node.leak_status:
+            node.leak_demand = m.leak_rate[name]
+        else:
+            node.leak_demand = 0
+        node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')) -
+                       sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) +
+                       node.leak_demand)
 
-        for link_id in self._pipe_ids:
-            self._sim_results['link_type'].append(self.link_types[link_id].name)
-            self._sim_results['link_flowrate'].append(flow[link_id])
-            self._sim_results['link_velocity'].append(abs(flow[link_id])*4.0/(math.pi*self.pipe_diameters[link_id]**2.0))
-            self._sim_results['link_status'].append(self.link_status[link_id])
-        for link_id in self._pump_ids:
-            self._sim_results['link_type'].append(self.link_types[link_id].name)
-            self._sim_results['link_flowrate'].append(flow[link_id])
-            self._sim_results['link_velocity'].append(0.0)
-            self._sim_results['link_status'].append(self.link_status[link_id])
-            if self.max_pump_flows[link_id] is not None:
-                if flow[link_id]>self.max_pump_flows[link_id]:
-                    link_name = self._link_id_to_name[link_id]
-                    link = self._wn.get_link(link_name)
-                    start_node_name = link.start_node_name
-                    end_node_name = link.end_node_name
-                    start_node_id = self._node_name_to_id[start_node_name]
-                    end_node_id = self._node_name_to_id[end_node_name]
-                    start_head = head[start_node_id]
-                    end_head = head[end_node_id]
-                    warnings.warn('Pump '+link_name+' has exceeded its maximum flow.')
-                    logger.warning('Pump {0} has exceeded its maximum flow. Pump head: {1}; Pump flow: {2}; Max pump flow: {3}'.format(link_name,end_head-start_head, flow[link_id], self.max_pump_flows[link_id]))
-        for link_id in self._valve_ids:
-            self._sim_results['link_type'].append(self.link_types[link_id].name)
-            self._sim_results['link_flowrate'].append(flow[link_id])
-            self._sim_results['link_velocity'].append(abs(flow[link_id])*4.0/(math.pi*self.pipe_diameters[link_id]**2.0))
-            self._sim_results['link_status'].append(self.link_status[link_id])
+    for name, node in wn.reservoirs():
+        node.head = node.head_timeseries(wn.sim_time)
+        node.leak_demand = 0
+        node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')) -
+                       sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')))
 
-    def get_results(self,results):
-        ntimes = len(results.time)
-        nnodes = self.num_nodes
-        nlinks = self.num_links
-        tmp_node_names = self._junction_ids+self._tank_ids+self._reservoir_ids
-        tmp_link_names = self._pipe_ids+self._pump_ids+self._valve_ids
-        node_names = [self._node_id_to_name[i] for i in tmp_node_names]
-        link_names = [self._link_id_to_name[i] for i in tmp_link_names]
+    for name, link in wn.links():
+        link.flow = m.flow[name]
 
-        node_dictionary = {'demand': self._sim_results['node_demand'],
-                           'head': self._sim_results['node_head'],
-                           'pressure': self._sim_results['node_pressure'],
-                           'leak_demand': self._sim_results['leak_demand']}
-                           #'type': self._sim_results['node_type']}
-        for key,value in node_dictionary.items():
-            node_dictionary[key] = pd.DataFrame(data=np.array(value).reshape((ntimes,nnodes)), index=results.time, columns=node_names)
-        results.node = node_dictionary 
-        
-        link_dictionary = {'flowrate':self._sim_results['link_flowrate'],
-                           'velocity':self._sim_results['link_velocity'],
-                           #'type':self._sim_results['link_type'],
-                           'status':self._sim_results['link_status']}
-        for key, value in link_dictionary.items():
-            link_dictionary[key] = pd.DataFrame(data=np.array(value).reshape((ntimes, nlinks)), index=results.time, columns=link_names)
-        results.link = link_dictionary 
-        
-    def store_results_in_network(self, x):
-        head = x[:self.num_nodes]
-        demand = x[self.num_nodes:self.num_nodes*2]
-        flow = x[self.num_nodes*2:(2*self.num_nodes+self.num_links)]
-        leak_demand = x[(2*self.num_nodes+self.num_links):]
-        node_name_to_id = self._node_name_to_id
-        link_name_to_id = self._link_name_to_id
-        for name, node in self._wn.nodes(Junction):
-            node_id = node_name_to_id[name]
-            node.head = head[node_id]
-            node.demand = demand[node_id]
-            if node._leak:
-                leak_idx = self._leak_ids.index(node_id)
-                node.leak_demand = leak_demand[leak_idx]
-            else:
-                node.leak_demand = 0.0
-        for name, node in self._wn.nodes(Tank):
-            node_id = node_name_to_id[name]
-            node.head = head[node_id]
-            node.demand = demand[node_id]
-            if node._leak:
-                leak_idx = self._leak_ids.index(node_id)
-                node.leak_demand = leak_demand[leak_idx]
-            else:
-                node.leak_demand = 0.0
-        for name, node in self._wn.nodes(Reservoir):
-            node_id = node_name_to_id[name]
-            node.head = head[node_id]
-            node.demand = demand[node_id]
-            node.leak_demand = 0.0
-        for link_name, link in self._wn.links():
-            link_id = link_name_to_id[link_name]
-            link._flow = flow[link_id]
 
-    def check_jac(self, x):
-        import copy
-        approx_jac = np.matrix(np.zeros((self.num_nodes*2+self.num_links+self.num_leaks, self.num_nodes*2+self.num_links+self.num_leaks)))
-
-        step = 0.00001
-
-        resids = self.get_hydraulic_equations(x)
-
-        x1 = copy.copy(x)
-        x2 = copy.copy(x)
-        print('shape = (',len(x),',',len(x),')')
-        for i in range(len(x)):
-            print('getting approximate derivative of column ',i)
-            x1[i] = x1[i] + step
-            x2[i] = x2[i] + 2*step
-            resids1 = self.get_hydraulic_equations(x1)
-            resids2 = self.get_hydraulic_equations(x2)
-            deriv_column = (-3.0*resids+4.0*resids1-resids2)/(2*step)
-            approx_jac[:,i] = np.matrix(deriv_column).transpose()
-            x1[i] = x1[i] - step
-            x2[i] = x2[i] - 2*step
-
-        #import numdifftools as adt
-        #adt_jac = adt.Jacobian(self.get_hydraulic_equations)
-        #print 'using numdifftools to get jacobian'
-        #approx_jac = adt_jac(x)
-        #print 'converting approx_jac to csr matrix'
-        #approx_jac = sparse.csr_matrix(approx_jac)
-
-        jac = self.jacobian.tocsr()
-
-        print('computing difference between jac and approx_jac')
-        difference = approx_jac - jac
-
-        success = True
-        for i in range(jac.shape[0]):
-            print('comparing values in row ',i,'with non-zeros from self.jacobain')
-            row_nnz = jac.indptr[i+1] - jac.indptr[i]
-            for k in range(row_nnz):
-                j = jac.indices[jac.indptr[i]+k]
-                if abs(approx_jac[i,j]-jac[i,j]) > 0.0001:
-                    if i < self.num_nodes:
-                        equation_type = 'node balance'
-                        node_or_link = 'node'
-                        node_or_link_name = self._node_id_to_name[i]
-                    elif i < 2*self.num_nodes:
-                        equation_type = 'demand/head equation'
-                        node_or_link = 'node'
-                        node_or_link_name = self._node_id_to_name[i - self.num_nodes]
-                    elif i < 2*self.num_nodes + self.num_links:
-                        equation_type = 'headloss'
-                        node_or_link = 'link'
-                        node_or_link_name = self._link_id_to_name[i - 2*self.num_nodes]
-                        print('flow for link ',node_or_link_name,' = ',x[i])
-                    else:
-                        equation_type = 'leak demand'
-                        node_or_link = 'node'
-                        node_or_link_name = self._node_id_to_name[self._leak_ids[i - 2*self.num_nodes - self.num_links]]
-                    if j < self.num_nodes:
-                        wrt = 'head'
-                        wrt_name = self._node_id_to_name[j]
-                    elif j< 2*self.num_nodes:
-                        wrt = 'demand'
-                        wrt_name = self._node_id_to_name[j - self.num_nodes]
-                    elif j < 2*self.num_nodes+self.num_links:
-                        wrt = 'flow'
-                        wrt_name = self._link_id_to_name[j - 2*self.num_nodes]
-                    else:
-                        wrt = 'leak_demand'
-                        wrt_name = self._node_id_to_name[self._leak_ids[j - 2*self.num-nodes - self.num_links]]
-                    print('jacobian entry for ',equation_type,' for ',node_or_link,' ',node_or_link_name,' with respect to ',wrt,wrt_name,' is incorrect.')
-                    print('error = ',abs(approx_jac[i,j]-jac[i,j]))
-                    print('approximation = ',approx_jac[i,j])
-                    print('exact = ',jac[i,j])
-                    success = False
-
-        #if not success:
-            #for node_name, node in self._wn.nodes():
-            #    print 'head for node ',node_name,' = ',x[self._node_name_to_id[node_name]]
-            #for node_name, node in self._wn.nodes():
-            #    print 'demand for node ',node_name,' = ',x[self._node_name_to_id[node_name]+self.num_nodes]
-            #for link_name, link in self._wn.links():
-            #    print 'flow for link ',link_name,' = ',x[self._link_name_to_id[link_name]+2*self.num_nodes]
-            #self.print_jacobian(self.jacobian)
-            #self.print_jacobian(approx_jac)
-            #self.print_jacobian(difference)
-
-            #raise RuntimeError('Jacobian is not correct!')
-
-    def check_infeasibility(self,x):
-        resid = self.get_hydraulic_equations(x)
-        for i in range(len(resid)):
-            r = abs(resid[i])
-            if r > 0.0001:
-                if i >= 2*self.num_nodes:
-                    print('residual for headloss equation for link ',self._link_id_to_name[i-2*self.num_nodes],' is ',r,'; flow = ',x[i])
-                elif i >= self.num_nodes:
-                    print('residual for demand/head eqn for node ',self._node_id_to_name[i-self.num_nodes],' is ',r)
-                else:
-                    print('residual for node balance for node ',self._node_id_to_name[i],' is ',r)
+# def check_jac(self, x):
+#     import copy
+#     approx_jac = np.matrix(np.zeros((self.num_nodes*2+self.num_links+self.num_leaks, self.num_nodes*2+self.num_links+self.num_leaks)))
+#
+#     step = 0.00001
+#
+#     resids = self.get_hydraulic_equations(x)
+#
+#     x1 = copy.copy(x)
+#     x2 = copy.copy(x)
+#     print('shape = (',len(x),',',len(x),')')
+#     for i in range(len(x)):
+#         print('getting approximate derivative of column ',i)
+#         x1[i] = x1[i] + step
+#         x2[i] = x2[i] + 2*step
+#         resids1 = self.get_hydraulic_equations(x1)
+#         resids2 = self.get_hydraulic_equations(x2)
+#         deriv_column = (-3.0*resids+4.0*resids1-resids2)/(2*step)
+#         approx_jac[:,i] = np.matrix(deriv_column).transpose()
+#         x1[i] = x1[i] - step
+#         x2[i] = x2[i] - 2*step
+#
+#     #import numdifftools as adt
+#     #adt_jac = adt.Jacobian(self.get_hydraulic_equations)
+#     #print 'using numdifftools to get jacobian'
+#     #approx_jac = adt_jac(x)
+#     #print 'converting approx_jac to csr matrix'
+#     #approx_jac = sparse.csr_matrix(approx_jac)
+#
+#     jac = self.jacobian.tocsr()
+#
+#     print('computing difference between jac and approx_jac')
+#     difference = approx_jac - jac
+#
+#     success = True
+#     for i in range(jac.shape[0]):
+#         print('comparing values in row ',i,'with non-zeros from self.jacobain')
+#         row_nnz = jac.indptr[i+1] - jac.indptr[i]
+#         for k in range(row_nnz):
+#             j = jac.indices[jac.indptr[i]+k]
+#             if abs(approx_jac[i,j]-jac[i,j]) > 0.0001:
+#                 if i < self.num_nodes:
+#                     equation_type = 'node balance'
+#                     node_or_link = 'node'
+#                     node_or_link_name = self._node_id_to_name[i]
+#                 elif i < 2*self.num_nodes:
+#                     equation_type = 'demand/head equation'
+#                     node_or_link = 'node'
+#                     node_or_link_name = self._node_id_to_name[i - self.num_nodes]
+#                 elif i < 2*self.num_nodes + self.num_links:
+#                     equation_type = 'headloss'
+#                     node_or_link = 'link'
+#                     node_or_link_name = self._link_id_to_name[i - 2*self.num_nodes]
+#                     print('flow for link ',node_or_link_name,' = ',x[i])
+#                 else:
+#                     equation_type = 'leak demand'
+#                     node_or_link = 'node'
+#                     node_or_link_name = self._node_id_to_name[self._leak_ids[i - 2*self.num_nodes - self.num_links]]
+#                 if j < self.num_nodes:
+#                     wrt = 'head'
+#                     wrt_name = self._node_id_to_name[j]
+#                 elif j< 2*self.num_nodes:
+#                     wrt = 'demand'
+#                     wrt_name = self._node_id_to_name[j - self.num_nodes]
+#                 elif j < 2*self.num_nodes+self.num_links:
+#                     wrt = 'flow'
+#                     wrt_name = self._link_id_to_name[j - 2*self.num_nodes]
+#                 else:
+#                     wrt = 'leak_demand'
+#                     wrt_name = self._node_id_to_name[self._leak_ids[j - 2*self.num-nodes - self.num_links]]
+#                 print('jacobian entry for ',equation_type,' for ',node_or_link,' ',node_or_link_name,' with respect to ',wrt,wrt_name,' is incorrect.')
+#                 print('error = ',abs(approx_jac[i,j]-jac[i,j]))
+#                 print('approximation = ',approx_jac[i,j])
+#                 print('exact = ',jac[i,j])
+#                 success = False
+#
+#     #if not success:
+#         #for node_name, node in self._wn.nodes():
+#         #    print 'head for node ',node_name,' = ',x[self._node_name_to_id[node_name]]
+#         #for node_name, node in self._wn.nodes():
+#         #    print 'demand for node ',node_name,' = ',x[self._node_name_to_id[node_name]+self.num_nodes]
+#         #for link_name, link in self._wn.links():
+#         #    print 'flow for link ',link_name,' = ',x[self._link_name_to_id[link_name]+2*self.num_nodes]
+#         #self.print_jacobian(self.jacobian)
+#         #self.print_jacobian(approx_jac)
+#         #self.print_jacobian(difference)
+#
+#         #raise RuntimeError('Jacobian is not correct!')
+#
+# def check_infeasibility(self,x):
+#     resid = self.get_hydraulic_equations(x)
+#     for i in range(len(resid)):
+#         r = abs(resid[i])
+#         if r > 0.0001:
+#             if i >= 2*self.num_nodes:
+#                 print('residual for headloss equation for link ',self._link_id_to_name[i-2*self.num_nodes],' is ',r,'; flow = ',x[i])
+#             elif i >= self.num_nodes:
+#                 print('residual for demand/head eqn for node ',self._node_id_to_name[i-self.num_nodes],' is ',r)
+#             else:
+#                 print('residual for node balance for node ',self._node_id_to_name[i],' is ',r)

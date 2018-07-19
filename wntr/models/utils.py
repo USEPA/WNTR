@@ -11,6 +11,11 @@ class ModelUpdater(object):
             self.update_functions[(obj, attr)] = OrderedSet()
         self.update_functions[(obj, attr)].add(func)
 
+    def update(self, m, wn, obj, attr):
+        if (obj, attr) in self.update_functions:
+            for func in self.update_functions[(obj, attr)]:
+                func(m, wn, self, obj, attr)
+
 
 class Definition(object, metaclass=abc.ABCMeta):
     @classmethod
