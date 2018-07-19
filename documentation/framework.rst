@@ -142,3 +142,9 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * PSV, PBV, and GPV values in the [VALVES] section
 
 **Future development of WNTR will address these limitations.**
+
+Discrepancies
+-------------------------------------------
+Known discrepancies between the WNTRSimulator and EpanetSimulators are listed below.
+
+* Pumps have speed settings which are adjustable by controls and/or patterns.  With the EpanetSimulator, controls and patterns adjust the actual speed.  With the WNTRSimulator, pumps have a 'base speed' (similar to junction demand and reservoir head), controls adjust the base speed, and speed patterns are a are a multiplier on the base speed. Results from the two simulators can match by scaling speed patterns and using controls appropriately.
