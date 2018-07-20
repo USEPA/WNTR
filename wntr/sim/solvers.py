@@ -82,9 +82,9 @@ class NewtonSolver(object):
                 r = model.evaluate_residuals()
                 r_norm = np.max(abs(r))
 
-            if logger_level <= logging.DEBUG:
+            if logger_level <= 1:
                 if outer_iter<self.bt_start_iter:
-                    logger.debug('iter: {0:<4d} norm: {1:<10.2e}'.format(outer_iter, r_norm))
+                    logger.log(1, 'iter: {0:<4d} norm: {1:<10.2e}'.format(outer_iter, r_norm))
 
             if r_norm < self.tol:
                 return SolverStatus.converged, 'Solved Successfully'
@@ -114,8 +114,8 @@ class NewtonSolver(object):
 
                 if iter_bt+1 >= self.bt_maxiter:
                     return SolverStatus.error, 'Line search failed at iteration ' + str(outer_iter)
-                if logger_level <= logging.DEBUG:
-                    logger.debug('iter: {0:<4d} norm: {1:<10.2e} alpha: {2:<10.2e}'.format(outer_iter, new_norm, alpha))
+                if logger_level <= 1:
+                    logger.log(1, 'iter: {0:<4d} norm: {1:<10.2e} alpha: {2:<10.2e}'.format(outer_iter, new_norm, alpha))
             else:
                 x += d
                 model.load_var_values_from_x(x)
