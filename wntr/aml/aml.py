@@ -83,7 +83,7 @@ class Model(object):
     def __init__(self, model_type='wntr'):
         self._vars = _OrderedIndexSet()
         self._cons = _OrderedIndexSet()
-        self._obj = None
+        self._obj = list()
         if model_type.upper() == 'WNTR':
             self._model = WNTRModel()
         elif model_type.upper() == 'IPOPT':
@@ -180,17 +180,17 @@ class Model(object):
             self._remove_var(v)
 
     def _register_objective(self, obj):
-        if self._obj is not None:
+        if len(self._obj) != 0:
             raise ValueError('The model already contains an objective: {0}'.format(self._obj))
         for v in obj.py_get_vars():
             self._register_var(v)
-        self._obj = obj
+        self._obj.append(obj)
         self._model.set_objective(obj)
 
     def _remove_objective(self):
         for v in self._obj.py_get_vars():
             self._remove_var(v)
-        self._obj = None
+        self._obj = list()
 
     def evaluate_residuals(self, x=None):
         if x is not None:

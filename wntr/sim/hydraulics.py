@@ -33,6 +33,8 @@ def create_hydraulic_model(wn, mode='DD', model_type='wntr'):
     model_updater: wntr.models.utils.ModelUpdater
     """
     m = aml.Model(model_type=model_type)
+    if model_type == 'ipopt':
+        m.const_obj = aml.create_objective(aml.create_param(value=1.0))
     model_updater = ModelUpdater()
 
     # Global constants
