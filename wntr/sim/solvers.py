@@ -70,6 +70,8 @@ class NewtonSolver(object):
         logger_level = logger.getEffectiveLevel()
 
         x = model.get_x()
+        if len(x) == 0:
+            return SolverStatus.converged, 'No variables or constraints'
 
         use_r_ = False
 

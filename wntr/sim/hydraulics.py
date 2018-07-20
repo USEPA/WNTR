@@ -278,18 +278,26 @@ def store_results_in_network(wn, m, mode='DD'):
     mode: str
     """
     for name, link in wn.links():
-        link._flow = m.flow[name].value
+        if link._is_isolated:
+            link._flow = 0
+        else:
+            link._flow = m.flow[name].value
 
     for name, node in wn.junctions():
-        node.head = m.head[name].value
-        if mode == 'PDD':
-            node.demand = m.demand[name].value
-        else:
-            node.demand = m.expected_demand[name].value
-        if node.leak_status:
-            node.leak_demand = m.leak_rate[name].value
-        else:
+        if node._is_isolated:
+            node.head = 0
+            node.demand = 0
             node.leak_demand = 0
+        else:
+            node.head = m.head[name].value
+            if mode == 'PDD':
+                node.demand = m.demand[name].value
+            else:
+                node.demand = m.expected_demand[name].value
+            if node.leak_status:
+                node.leak_demand = m.leak_rate[name].value
+            else:
+                node.leak_demand = 0
 
     for name, node in wn.tanks():
         if node.leak_status:
