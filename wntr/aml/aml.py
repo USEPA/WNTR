@@ -224,16 +224,16 @@ class Model(object):
     def __str__(self):
         tmp = 'cons:\n'
         for con in self._cons:
-            tmp += str(con.index)
+            tmp += str(con.name)
             tmp += ':   '
-            tmp += con.__str__()
+            tmp += con._print()
             tmp += '\n'
         tmp += '\n'
         tmp += 'vars:\n'
         for var in self._vars:
-            tmp += str(var.index)
+            tmp += str(var.name)
             tmp += ':   '
-            tmp += var.__str__()
+            tmp += var._print()
             tmp += '\n'
         return tmp
 

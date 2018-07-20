@@ -117,7 +117,7 @@ class hazen_williams_headloss_constraint(Definition):
             status = link.status
 
             if not link._is_isolated:
-                if status is LinkStatus.Closed:
+                if status == LinkStatus.Closed:
                     con = aml.create_constraint(expr=f, lb=0, ub=0)
                 else:
                     start_node_name = link.start_node_name
@@ -244,7 +244,7 @@ class head_pump_headloss_constraint(Definition):
             status = link.status
 
             if not link._is_isolated:
-                if status is LinkStatus.Closed:
+                if status == LinkStatus.Closed:
                     con = aml.create_constraint(expr=f, lb=0, ub=0)
                 else:
                     start_node_name = link.start_node_name
@@ -309,7 +309,7 @@ class power_pump_headloss_constraint(Definition):
             status = link.status
 
             if not link._is_isolated:
-                if status is LinkStatus.Closed:
+                if status == LinkStatus.Closed:
                     con = aml.create_constraint(expr=f, lb=0, ub=0)
                 else:
                     start_node_name = link.start_node_name
@@ -361,7 +361,7 @@ class prv_headloss_constraint(Definition):
             status = link.status
 
             if not link._is_isolated:
-                if status is LinkStatus.Closed:
+                if status == LinkStatus.Closed:
                     con = aml.create_constraint(f, lb=0, ub=0)
                 else:
                     start_node_name = link.start_node_name
@@ -380,7 +380,7 @@ class prv_headloss_constraint(Definition):
                     if status is wntr.network.LinkStatus.Active:
                         con = aml.create_constraint(end_h - m.valve_setting[link_name] - m.elevation[end_node_name], lb=0, ub=0)
                     else:
-                        assert status is LinkStatus.Open
+                        assert status == LinkStatus.Open
                         con = aml.create_constraint(m.minor_loss[link_name]*f**2 - start_h + end_h, lb=0, ub=0)
                 m.prv_headloss[link_name] = con
 
@@ -417,7 +417,7 @@ class fcv_headloss_constraint(Definition):
             status = link.status
 
             if not link._is_isolated:
-                if status is LinkStatus.Closed:
+                if status == LinkStatus.Closed:
                     con = aml.create_constraint(f, lb=0, ub=0)
                 else:
                     start_node_name = link.start_node_name
@@ -433,10 +433,10 @@ class fcv_headloss_constraint(Definition):
                     else:
                         end_h = m.source_head[end_node_name]
 
-                    if status is LinkStatus.Active:
+                    if status == LinkStatus.Active:
                         con = aml.create_constraint(f - m.valve_setting[link_name], lb=0, ub=0)
                     else:
-                        assert status is LinkStatus.Open
+                        assert status == LinkStatus.Open
                         con = aml.create_conditional_constraint(lb=0, ub=0)
                         con.add_condition(f, -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
                         con.add_final_expr(m.minor_loss[link_name] * f ** 2 - start_h + end_h)
@@ -475,7 +475,7 @@ class tcv_headloss_constraint(Definition):
             status = link.status
 
             if not link._is_isolated:
-                if status is LinkStatus.Closed:
+                if status == LinkStatus.Closed:
                     con = aml.create_constraint(f, lb=0, ub=0)
                 else:
                     start_node_name = link.start_node_name
@@ -491,12 +491,12 @@ class tcv_headloss_constraint(Definition):
                     else:
                         end_h = m.source_head[end_node_name]
 
-                    if status is LinkStatus.Active:
+                    if status == LinkStatus.Active:
                         con = aml.create_conditional_constraint(lb=0, ub=0)
                         con.add_condition(f, -m.tcv_resistance[link_name] * f ** 2 - start_h + end_h)
                         con.add_final_expr(m.tcv_resistance[link_name] * f ** 2 - start_h + end_h)
                     else:
-                        assert status is LinkStatus.Open
+                        assert status == LinkStatus.Open
                         con = aml.create_conditional_constraint(lb=0, ub=0)
                         con.add_condition(f, -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
                         con.add_final_expr(m.minor_loss[link_name] * f ** 2 - start_h + end_h)
