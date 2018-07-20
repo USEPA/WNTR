@@ -33,26 +33,30 @@ aml_core_wrap_cxx = os.path.join(src_files, 'aml_core_wrap.cpp')
 ipopt_model_cxx = os.path.join(src_files, 'ipopt_model.cpp')
 ipopt_model_wrap_cxx = os.path.join(src_files, 'ipopt_model_wrap.cpp')
 aml_tnlp_cxx = os.path.join(src_files, 'aml_tnlp.cpp')
+aml_core_i = os.path.join(src_files, 'aml_core.i')
+ipopt_model_i = os.path.join(src_files, 'ipopt_model.i')
 
 extension_modules = list()
 
 aml_core_ext = Extension("wntr.aml._aml_core",
-                           sources=[expression_cxx, component_cxx, wntr_model_cxx, aml_core_wrap_cxx],
+                           sources=[aml_core_i, expression_cxx, component_cxx, wntr_model_cxx],#, aml_core_wrap_cxx],
                            language="c++",
                            extra_compile_args=["-std=c++11"],
                            include_dirs=[numpy_include, src_files],
                            library_dirs=[],
-                           libraries=[])
+                           libraries=[],
+                           swig_opts = ['-c++'])
 extension_modules.append(aml_core_ext)
 
 if ipopt_available:
     ipopt_model_ext = Extension("wntr.aml._ipopt_model",
-                                sources=[ipopt_model_cxx, aml_tnlp_cxx, ipopt_model_wrap_cxx],
+                                sources=[ipopt_model_i, ipopt_model_cxx, aml_tnlp_cxx],#, ipopt_model_wrap_cxx],
                                 language="c++",
                                 extra_compile_args=["-std=c++11"],  # , "-stdlib=libc++"],
                                 include_dirs=[numpy_include, src_files, ipopt_include],
                                 library_dirs=[ipopt_lib],
-                                libraries=[os.path.join(ipopt_lib, 'ipopt')])
+                                libraries=[os.path.join(ipopt_lib, 'ipopt')],
+                                swig_opts=['-c++'])
     extension_modules.append(ipopt_model_ext)
 
 DISTNAME = 'wntr'

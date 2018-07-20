@@ -257,10 +257,6 @@ bool ConditionalConstraint::has_ad2(Var &n1, Var &n2)
 	  }
       ++ expr_iter;
     }
-  if ((*expr_iter)->has_ad2(n1, n2))
-  {
-    return true;
-  }
   return false;
 }
 
