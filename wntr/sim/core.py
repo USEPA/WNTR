@@ -250,7 +250,11 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             logger.log(1, 'initializing hydraulic model')
 
-        model, model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=wn, mode=self.mode)
+        if solver == 'ipopt':
+            model_type = 'ipopt'
+        else:
+            model_type = 'wntr'
+        model, model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=wn, mode=self.mode, model_type=model_type)
         self._model = model
         self._model_updater = model_updater
         node_res, link_res = wntr.sim.hydraulics.initialize_results_dict(wn)
@@ -751,7 +755,10 @@ def _solver_helper(model, solver, solver_options):
     message: str
     """
     logger.debug('solving')
-    if solver is NewtonSolver:
+    if solver == 'ipopt':
+        model.solve()
+        return SolverStatus.converged, ''
+    elif solver is NewtonSolver:
         _solver = NewtonSolver(solver_options)
         return _solver.solve(model)
     elif solver is scipy.optimize.fsolve:

@@ -18,19 +18,21 @@ from wntr.models.utils import ModelUpdater
 logger = logging.getLogger(__name__)
 
 
-def create_hydraulic_model(wn, mode='DD'):
+def create_hydraulic_model(wn, mode='DD', model_type='wntr'):
     """
     Parameters
     ----------
     wn: WaterNetworkModel
     mode: str
+    model_type: str
+        'wntr' or 'ipopt'
 
     Returns
     -------
     m: wntr.aml.Model
     model_updater: wntr.models.utils.ModelUpdater
     """
-    m = aml.Model(model_type='wntr')
+    m = aml.Model(model_type=model_type)
     model_updater = ModelUpdater()
 
     # Global constants
