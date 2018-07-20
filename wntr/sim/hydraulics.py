@@ -296,15 +296,15 @@ def store_results_in_network(wn, m, mode='DD'):
             node.leak_demand = m.leak_rate[name].value
         else:
             node.leak_demand = 0
-        node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')) -
-                       sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) +
+        node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) -
+                       sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')) -
                        node.leak_demand)
 
     for name, node in wn.reservoirs():
         node.head = node.head_timeseries(wn.sim_time)
         node.leak_demand = 0
-        node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')) -
-                       sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')))
+        node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) -
+                       sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')))
 
 
 # def check_jac(self, x):
