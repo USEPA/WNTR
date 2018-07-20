@@ -5,7 +5,6 @@ import math
 from wntr.network import LinkStatus
 from wntr.models.utils import ModelUpdater, Definition
 
-print(aml)
 
 logger = logging.getLogger(__name__)
 

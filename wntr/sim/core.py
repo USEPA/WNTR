@@ -1,5 +1,5 @@
 import wntr.sim.hydraulics
-from wntr.sim.solvers import NewtonSolver
+from wntr.sim.solvers import NewtonSolver, SolverStatus
 import wntr.sim.results
 from wntr.network.controls import ControlManager, _ControlType
 import numpy as np
@@ -194,7 +194,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         s = int(s)
         return str(h)+':'+str(m)+':'+str(s)
 
-    def run_sim(self, solver=wntr.sim.solvers.NewtonSolver, backup_solver=None, solver_options=None,
+    def run_sim(self, solver=NewtonSolver, backup_solver=None, solver_options=None,
                 backup_solver_options=None, convergence_error=True):
         """
         Run an extended period simulation (hydraulics only).
@@ -253,10 +253,10 @@ class WNTRSimulator(WaterNetworkSimulator):
         model, model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=wn, mode=self.mode)
         self._model = model
         self._model_updater = model_updater
-        results_dict = wntr.sim.hydraulics.initialize_results_dict()
+        node_res, link_res = wntr.sim.hydraulics.initialize_results_dict(wn)
 
         results = wntr.sim.results.SimulationResults()
-        results.error_code = 0
+        results.error_code = None
         results.time = []
         results.network_name = wn.name
 
@@ -272,7 +272,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         rule_iter = 0  # this is used to determine the rule timestep
 
         if first_step:
-            wntr.sim.hydraulics.update_network_previous_values()
+            wntr.sim.hydraulics.update_network_previous_values(wn)
             self._wn._prev_sim_time = -1
 
         if logger_level <= 1:
@@ -439,7 +439,6 @@ class WNTRSimulator(WaterNetworkSimulator):
                             if logger_level <= 1:
                                 logger.log(1, 'no changes made by rules at rule timestep {0}'.format((rule_iter - 1) * self._wn.options.time.rule_timestep))
                             self._wn.sim_time = old_time
-                self._update_internal_graph()
                 if logger_level <= logging.DEBUG:
                     logger.debug('changes made by rules: ')
                     for obj, attr in self._rules.get_changes():
@@ -451,6 +450,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             logger.info('simulation time = %s, trial = %d', self._get_time(), trial)
 
             # Prepare for solve
+            self._update_internal_graph()
             self._get_isolated_junctions_and_links()
             if not first_step and not resolve:
                 wntr.sim.hydraulics.update_tank_heads(wn)
@@ -462,67 +462,24 @@ class WNTRSimulator(WaterNetworkSimulator):
             self._rules.reset()
 
             # Solve
-            if logger_level <= logging.DEBUG:
-                logger.debug('solving')
-            solver_status = 1
-            if solver is NewtonSolver:
-                _solver = NewtonSolver(solver_options)
-                self._X, num_iters, solver_status, message = _solver.solve(model.evaluate_residuals, model.evaluate_jacobian, X_init)
-            elif solver is scipy.optimize.fsolve:
-                self._X, infodict, ier, mesg = solver(model.evaluate_residuals, X_init, **solver_options)
-                if ier != 1:
-                    solver_status = 0
-                    message = mesg
-            elif solver in {scipy.optimize.newton_krylov, scipy.optimize.anderson, scipy.optimize.broyden1,
-                            scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
-                            scipy.optimize.diagbroyden}:
-                try:
-                    self._X = solver(model.evaluate_residuals, X_init, **solver_options)
-                except:
-                    solver_status = 0
-                    message = ''
-            else:
-                raise ValueError('Solver not recognized.')
+            solver_status, mesg = _solver_helper(model, solver, solver_options)
+            if solver_status == 0 and backup_solver is not None:
+                solver_status, mesg = _solver_helper(model, backup_solver, backup_solver_options)
             if solver_status == 0:
-                if backup_solver is not None:
-                    solver_status = 1
-                    if backup_solver is NewtonSolver:
-                        _solver = NewtonSolver(backup_solver_options)
-                        self._X, num_iters, solver_status, message = _solver.solve(model.evaluate_residuals,
-                                                                                   model.evaluate_jacobian, X_init)
-                    elif backup_solver is scipy.optimize.fsolve:
-                        self._X, infodict, ier, mesg = backup_solver(model.evaluate_residuals, X_init, **backup_solver_options)
-                        if ier != 1:
-                            solver_status = 0
-                            message = mesg
-                    elif backup_solver in {scipy.optimize.newton_krylov, scipy.optimize.anderson, scipy.optimize.broyden1,
-                                           scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
-                                           scipy.optimize.diagbroyden}:
-                        try:
-                            self._X = backup_solver(model.evaluate_residuals, X_init, **backup_solver_options)
-                        except:
-                            solver_status = 0
-                            message = ''
-                    else:
-                        raise ValueError('Backup solver not recognized.')
-                if solver_status == 0:
-                    if convergence_error:
-                        logger.error('Simulation did not converge. ' + message)
-                        raise RuntimeError('Simulation did not converge. ' + message)
-                    warnings.warn('Simulation did not converge. ' + message)
-                    logger.warning('Simulation did not converge at time ' + str(self._get_time()) + '. ' + message)
-                    model.get_results(results)
-                    results.error_code = 2
-                    return results
-            X_init = np.array(self._X)
+                if convergence_error:
+                    logger.error('Simulation did not converge. ' + mesg)
+                    raise RuntimeError('Simulation did not converge. ' + mesg)
+                warnings.warn('Simulation did not converge. ' + mesg)
+                logger.warning('Simulation did not converge at time ' + str(self._get_time()) + '. ' + mesg)
+                wntr.sim.hydraulics.get_results(wn, results, node_res, link_res)
+                results.error_code = wntr.sim.results.ResultsStatus.error
+                return results
 
             # Enter results in network and update previous inputs
-            if logger_level <= logging.DEBUG:
-                logger.debug('storing results in network')
-            model.store_results_in_network(self._X)
+            logger.debug('storing results in network')
+            wntr.sim.hydraulics.store_results_in_network(wn, model, mode=self.mode)
 
-            if logger_level <= logging.DEBUG:
-                logger.debug('checking postsolve controls')
+            logger.debug('checking postsolve controls')
             self._postsolve_controls.reset()
             postsolve_controls_to_run = self._postsolve_controls.check()
             postsolve_controls_to_run.sort(key=lambda i: i[0]._priority)
@@ -537,16 +494,17 @@ class WNTRSimulator(WaterNetworkSimulator):
                         logger.debug('\t{0}.{1} changed to {2}'.format(obj, attr, getattr(obj, attr)))
                 resolve = True
                 self._update_internal_graph()
+                wntr.sim.hydraulics.update_model_for_controls(model, wn, model_updater, self._postsolve_controls)
                 self._postsolve_controls.reset()
                 trial += 1
                 if trial > max_trials:
                     if convergence_error:
                         logger.error('Exceeded maximum number of trials.')
                         raise RuntimeError('Exceeded maximum number of trials.')
-                    results.error_code = 2
+                    results.error_code = wntr.sim.results.ResultsStatus.error
                     warnings.warn('Exceeded maximum number of trials.')
                     logger.warning('Exceeded maximum number of trials at time %s', self._get_time())
-                    model.get_results(results)
+                    wntr.sim.hydraulics.get_results(wn, results, node_res, link_res)
                     return results
                 continue
 
@@ -555,16 +513,16 @@ class WNTRSimulator(WaterNetworkSimulator):
             resolve = False
             if type(self._wn.options.time.report_timestep) == float or type(self._wn.options.time.report_timestep) == int:
                 if self._wn.sim_time % self._wn.options.time.report_timestep == 0:
-                    model.save_results(self._X, results)
+                    wntr.sim.hydraulics.save_results(wn, node_res, link_res)
                     if len(results.time) > 0 and int(self._wn.sim_time) == results.time[-1]:
                         raise RuntimeError('Simulation already solved this timestep')
                     results.time.append(int(self._wn.sim_time))
             elif self._wn.options.time.report_timestep.upper() == 'ALL':
-                model.save_results(self._X, results)
+                wntr.sim.hydraulics.save_results(wn, node_res, link_res)
                 if len(results.time) > 0 and int(self._wn.sim_time) == results.time[-1]:
                     raise RuntimeError('Simulation already solved this timestep')
                 results.time.append(int(self._wn.sim_time))
-            model.update_network_previous_values()
+            wntr.sim.hydraulics.update_network_previous_values(wn)
             first_step = False
             self._wn.sim_time += self._wn.options.time.hydraulic_timestep
             overstep = float(self._wn.sim_time) % self._wn.options.time.hydraulic_timestep
@@ -575,7 +533,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             self._time_per_step.append(time.time()-start_step_time)
 
-        model.get_results(results)
+        wntr.sim.hydraulics.get_results(wn, results, node_res, link_res)
         return results
 
     def _initialize_name_id_maps(self):
@@ -631,7 +589,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             ndx_map[link] = (ndx1, ndx2)
         self._map_link_to_internal_graph_data_ndx = ndx_map
 
-        self._number_of_connections = [0 for i in range(self._wn.node_name_list)]
+        self._number_of_connections = [0 for i in range(self._wn.num_nodes)]
         for node_id in self._node_id_to_name.keys():
             self._number_of_connections[node_id] = self._internal_graph.indptr[node_id+1] - self._internal_graph.indptr[node_id]
 
@@ -725,7 +683,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             else:
                 continue
 
-        for reservoir_name, reservoir in self._wn.reservoirs:
+        for reservoir_name, reservoir in self._wn.reservoirs():
             reservoir_id = self._node_name_to_id[reservoir_name]
             if node_set[reservoir_id] == 1:
                 grab_group(reservoir_id)
@@ -776,6 +734,44 @@ def _get_csr_data_index(a, row, col):
             return row_indptr + n
         n += 1
     raise RuntimeError('Unable to find csr data index.')
+
+
+def _solver_helper(model, solver, solver_options):
+    """
+
+    Parameters
+    ----------
+    model: wntr.aml.Model
+    solver: class or function
+    solver_options: dict
+
+    Returns
+    -------
+    solver_status: int
+    message: str
+    """
+    logger.debug('solving')
+    if solver is NewtonSolver:
+        _solver = NewtonSolver(solver_options)
+        return _solver.solve(model)
+    elif solver is scipy.optimize.fsolve:
+        x, infodict, ier, mesg = solver(model.evaluate_residuals, model.get_x(), **solver_options)
+        if ier != 1:
+            return SolverStatus.error, mesg
+        else:
+            model.load_var_values_from_x(x)
+            return SolverStatus.converged, mesg
+    elif solver in {scipy.optimize.newton_krylov, scipy.optimize.anderson, scipy.optimize.broyden1,
+                            scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
+                            scipy.optimize.diagbroyden}:
+        try:
+            x = solver(model.evaluate_residuals, model.get_x(), **solver_options)
+            model.load_var_values_from_x(x)
+            return SolverStatus.converged, ''
+        except:
+            return SolverStatus.error, ''
+    else:
+        raise ValueError('Solver not recognized.')
 
 
 class _DenseJac(object):

@@ -74,3 +74,15 @@ class OrderedSet(MutableSet):
 
     def __str__(self):
         return self.__repr__()
+
+    def union(self, iterable):
+        ret = OrderedSet(self)
+        for i in iterable:
+            ret.add(i)
+        return ret
+
+    def __sub__(self, other):
+        ret = OrderedSet(self)
+        for i in other:
+            ret.discard(i)
+        return ret

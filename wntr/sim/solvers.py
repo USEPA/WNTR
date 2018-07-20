@@ -2,11 +2,17 @@ import numpy as np
 import scipy.sparse as sp
 import warnings
 import logging
+import enum
 
 warnings.filterwarnings("error",'Matrix is exactly singular', sp.linalg.MatrixRankWarning)
 np.set_printoptions(precision=3, threshold=10000, linewidth=300)
 
 logger = logging.getLogger(__name__)
+
+
+class SolverStatus(enum.IntEnum):
+    converged = 1
+    error = 0
 
 
 class NewtonSolver(object):
@@ -49,9 +55,21 @@ class NewtonSolver(object):
         else:
             self.bt_start_iter = self._options['BT_START_ITER']
 
-    def solve(self, Residual, Jacobian, x0):
+    def solve(self, model):
+        """
 
-        x = np.array(x0)
+        Parameters
+        ----------
+        model: wntr.aml.Model
+
+        Returns
+        -------
+        status: SolverStatus
+        message: str
+        """
+        logger_level = logger.getEffectiveLevel()
+
+        x = model.get_x()
 
         use_r_ = False
 
@@ -61,30 +79,32 @@ class NewtonSolver(object):
                 r = r_
                 r_norm = new_norm
             else:
-                r = Residual(x)
+                r = model.evaluate_residuals()
                 r_norm = np.max(abs(r))
 
-            # if outer_iter<self.bt_start_iter:
-            #    logger.debug('iter: {0:<4d} norm: {1:<10.2e}'.format(outer_iter, r_norm))
+            if logger_level <= logging.DEBUG:
+                if outer_iter<self.bt_start_iter:
+                    logger.debug('iter: {0:<4d} norm: {1:<10.2e}'.format(outer_iter, r_norm))
 
             if r_norm < self.tol:
-                return [x, outer_iter, 1, 'Solved Successfully']
+                return SolverStatus.converged, 'Solved Successfully'
 
-            J = Jacobian(x).tocsr()
+            J = model.evaluate_jacobian(x=None, new_eval=False)
 
             # Call Linear solver
             try:
-                d = -sp.linalg.spsolve(J,r,permc_spec='COLAMD',use_umfpack=False)
+                d = -sp.linalg.spsolve(J, r, permc_spec='COLAMD', use_umfpack=False)
             except sp.linalg.MatrixRankWarning:
-                return [x, outer_iter, 0, 'Jacobian is singular at iteration ' + str(outer_iter)]
+                return SolverStatus.error, 'Jacobian is singular at iteration ' + str(outer_iter)
 
             # Backtracking
             alpha = 1.0
-            if self.bt and outer_iter>=self.bt_start_iter:
+            if self.bt and outer_iter >= self.bt_start_iter:
                 use_r_ = True
                 for iter_bt in range(self.bt_maxiter):
                     x_ = x + alpha*d
-                    r_ = Residual(x_)
+                    model.load_var_values_from_x(x_)
+                    r_ = model.evaluate_residuals()
                     new_norm = np.max(abs(r_))
                     if new_norm < (1.0-0.0001*alpha)*r_norm:
                         x = x_
@@ -93,12 +113,14 @@ class NewtonSolver(object):
                         alpha = alpha*self.rho
 
                 if iter_bt+1 >= self.bt_maxiter:
-                    return [x,outer_iter,0, 'Line search failed at iteration ' + str(outer_iter)]
-                # logger.debug('iter: {0:<4d} norm: {1:<10.2e} alpha: {2:<10.2e}'.format(outer_iter, new_norm, alpha))
+                    return SolverStatus.error, 'Line search failed at iteration ' + str(outer_iter)
+                if logger_level <= logging.DEBUG:
+                    logger.debug('iter: {0:<4d} norm: {1:<10.2e} alpha: {2:<10.2e}'.format(outer_iter, new_norm, alpha))
             else:
                 x += d
+                model.load_var_values_from_x(x)
             
-        return [x, outer_iter, 0, 'Reached maximum number of iterations: ' + str(outer_iter)]
+        return SolverStatus.error, 'Reached maximum number of iterations: ' + str(outer_iter)
 
 
 

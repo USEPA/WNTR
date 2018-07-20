@@ -172,9 +172,9 @@ def initialize_results_dict(wn):
     node_res['pressure'] = OrderedDict((name, list()) for name, obj in wn.nodes())
     node_res['leak_demand'] = OrderedDict((name, list()) for name, obj in wn.nodes())
 
-    link_res['link_flowrate'] = OrderedDict((name, list()) for name, obj in wn.links())
-    link_res['link_velocity'] = OrderedDict((name, list()) for name, obj in wn.links())
-    link_res['link_status'] = OrderedDict((name, list()) for name, obj in wn.links())
+    link_res['flowrate'] = OrderedDict((name, list()) for name, obj in wn.links())
+    link_res['velocity'] = OrderedDict((name, list()) for name, obj in wn.links())
+    link_res['status'] = OrderedDict((name, list()) for name, obj in wn.links())
 
     return node_res, link_res
 
@@ -277,20 +277,23 @@ def store_results_in_network(wn, m, mode='DD'):
     m: wntr.aml.Model
     mode: str
     """
+    for name, link in wn.links():
+        link._flow = m.flow[name].value
+
     for name, node in wn.junctions():
-        node.head = m.head[name]
+        node.head = m.head[name].value
         if mode == 'PDD':
-            node.demand = m.demand[name]
+            node.demand = m.demand[name].value
         else:
-            node.demand = m.expected_demand[name]
+            node.demand = m.expected_demand[name].value
         if node.leak_status:
-            node.leak_demand = m.leak_rate[name]
+            node.leak_demand = m.leak_rate[name].value
         else:
             node.leak_demand = 0
 
     for name, node in wn.tanks():
         if node.leak_status:
-            node.leak_demand = m.leak_rate[name]
+            node.leak_demand = m.leak_rate[name].value
         else:
             node.leak_demand = 0
         node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')) -
@@ -302,9 +305,6 @@ def store_results_in_network(wn, m, mode='DD'):
         node.leak_demand = 0
         node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')) -
                        sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')))
-
-    for name, link in wn.links():
-        link.flow = m.flow[name]
 
 
 # def check_jac(self, x):

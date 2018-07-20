@@ -1,5 +1,12 @@
 import numpy as np
 import datetime
+import enum
+
+
+class ResultsStatus(enum.IntEnum):
+    converged = 1
+    error = 0
+
 
 class SimulationResults(object):
     """
