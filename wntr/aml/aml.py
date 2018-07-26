@@ -2,7 +2,11 @@ import sys
 from collections import OrderedDict
 from .aml_core import Node, Var, Param, create_var, create_param
 from .aml_core import Component, ConstraintBase, Constraint, ConditionalConstraint, Objective, create_constraint, create_conditional_constraint, create_objective
-from .ipopt_model import IpoptModel
+try:
+    from .ipopt_model import IpoptModel
+    ipopt_available = True
+except ImportError:
+    ipopt_available = False
 from .aml_core import WNTRModel, CSRJacobian
 import scipy
 if sys.version_info.major == 2:
@@ -87,6 +91,8 @@ class Model(object):
         if model_type.upper() == 'WNTR':
             self._model = WNTRModel()
         elif model_type.upper() == 'IPOPT':
+            if not ipopt_available:
+                raise ValueError('Ipopt is not available')
             self._model = IpoptModel()
         else:
             raise ValueError('Unrecognized model_type: '+model_type)
