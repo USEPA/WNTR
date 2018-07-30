@@ -88,12 +88,12 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
         =============  =============  ================================
     
     pump_cost : pd.Series, optional
-        Annual pump cost indexed by maximum power 
+        Annual pump cost indexed by maximum power input to water
         (default values below, from [SOKZ12]_).
-        Maximum Power for a HeadPump is computed from the pump curve and pump efficiency 
+        Maximum Power for a HeadPump is computed from the pump curve
         as follows:
         
-        .. math:: Pmp = g*rho/eff*exp(ln(A/(B*(C+1)))/C)*(A - B*(exp(ln(A/(B*(C+1)))/C))^C)
+        .. math:: Pmp = g*rho*exp(ln(A/(B*(C+1)))/C)*(A - B*(exp(ln(A/(B*(C+1)))/C))^C)
         
         where 
         :math:`Pmp` is the maximum power (W), 
@@ -164,15 +164,11 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
         A = coeff[0]
         B = coeff[1]
         C = coeff[2]
-        # TODO: efficiency should be read from the inp file
-        eff = 0.75
-        Pmax = 9.81*1000/eff*np.exp(np.log(A/(B*(C+1)))/C)*(A - B*(np.exp(np.log(A/(B*(C+1)))/C))**C)
+        Pmax = 9.81*1000*np.exp(np.log(A/(B*(C+1)))/C)*(A - B*(np.exp(np.log(A/(B*(C+1)))/C))**C)
         idx = np.argmin([np.abs(pump_cost.index - Pmax)])
         network_cost = network_cost + pump_cost.iloc[idx]
 
     for link_name, link in wn.power_pumps():
-        # TODO: efficiency should be read from the inp file
-        eff = 0.75
         Pmax = link.power
         idx = np.argmin([np.abs(pump_cost.index - Pmax)])
         network_cost = network_cost + pump_cost.iloc[idx]
