@@ -8,7 +8,6 @@ class CSRJacobian  //  Compressed sparse row format
 {
 public:
     std::list<int> row_nnz = {0};  // row_nnz[i+1] - row_nnz[i] is the number of nonzeros in row i (constraint with index i)
-    std::list<int> col_ndx;  // the column index (aka the Var index)
     std::list<std::shared_ptr<Var> > vars;  // A list of pointers to the variables with respect to which differentiation should be done.
 
     // The constraints; Differentiate these wrt the corresponding var in vars to get the values of the CSR matrix

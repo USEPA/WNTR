@@ -7052,10 +7052,6 @@ class CSRJacobian(_object):
     __swig_getmethods__["row_nnz"] = _aml_core.CSRJacobian_row_nnz_get
     if _newclass:
         row_nnz = _swig_property(_aml_core.CSRJacobian_row_nnz_get, _aml_core.CSRJacobian_row_nnz_set)
-    __swig_setmethods__["col_ndx"] = _aml_core.CSRJacobian_col_ndx_set
-    __swig_getmethods__["col_ndx"] = _aml_core.CSRJacobian_col_ndx_get
-    if _newclass:
-        col_ndx = _swig_property(_aml_core.CSRJacobian_col_ndx_get, _aml_core.CSRJacobian_col_ndx_set)
     __swig_setmethods__["vars"] = _aml_core.CSRJacobian_vars_set
     __swig_getmethods__["vars"] = _aml_core.CSRJacobian_vars_get
     if _newclass:

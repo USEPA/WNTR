@@ -40523,58 +40523,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_CSRJacobian_col_ndx_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  std::list< int,std::allocator< int > > *arg2 = (std::list< int,std::allocator< int > > *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CSRJacobian_col_ndx_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_col_ndx_set" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__listT_int_std__allocatorT_int_t_t, 0 |  0 );
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CSRJacobian_col_ndx_set" "', argument " "2"" of type '" "std::list< int,std::allocator< int > > *""'"); 
-  }
-  arg2 = reinterpret_cast< std::list< int,std::allocator< int > > * >(argp2);
-  if (arg1) (arg1)->col_ndx = *arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_col_ndx_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::list< int,std::allocator< int > > *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CSRJacobian_col_ndx_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_col_ndx_get" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  result = (std::list< int,std::allocator< int > > *)& ((arg1)->col_ndx);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__listT_int_std__allocatorT_int_t_t, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_CSRJacobian_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   CSRJacobian *arg1 = (CSRJacobian *) 0 ;
@@ -47537,23 +47485,6 @@ static PyMethodDef SwigMethods[] = {
 		""},
 	 { (char *)"CSRJacobian_row_nnz_get", _wrap_CSRJacobian_row_nnz_get, METH_VARARGS, (char *)"\n"
 		"CSRJacobian_row_nnz_get(CSRJacobian self) -> int_list\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_col_ndx_set", _wrap_CSRJacobian_col_ndx_set, METH_VARARGS, (char *)"\n"
-		"CSRJacobian_col_ndx_set(CSRJacobian self, int_list col_ndx)\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"col_ndx: std::list< int,std::allocator< int > > *\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_col_ndx_get", _wrap_CSRJacobian_col_ndx_get, METH_VARARGS, (char *)"\n"
-		"CSRJacobian_col_ndx_get(CSRJacobian self) -> int_list\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"

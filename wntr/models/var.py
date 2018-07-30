@@ -45,7 +45,7 @@ def flow_var(m, wn, index_over=None):
 
     for link_name in index_over:
         link = wn.get_link(link_name)
-        m.flow[link_name] = aml.create_var(value=0)
+        m.flow[link_name] = aml.create_var(value=0.001)
 
 
 def head_var(m, wn, index_over=None):

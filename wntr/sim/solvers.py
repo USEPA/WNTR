@@ -41,7 +41,7 @@ class NewtonSolver(object):
             self.rho = self._options['BT_RHO']
 
         if 'BT_MAXITER' not in self._options:
-            self.bt_maxiter = 20
+            self.bt_maxiter = 100
         else:
             self.bt_maxiter = self._options['BT_MAXITER']
 
