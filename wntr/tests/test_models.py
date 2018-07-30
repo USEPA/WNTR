@@ -3,6 +3,7 @@ import unittest
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from wntr.models.utils import ModelUpdater
 
 
 def compare_floats(a, b, tol=1e-5, rel_tol=1e-3):
@@ -57,18 +58,18 @@ class TestHeadloss(unittest.TestCase):
         wn.add_pump('pump1', 't1', 'j1', 'HEAD', 'curve1')
         wn.add_pump('pump2', 't1', 'j1', 'POWER', 50.0)
         cls.m = m = wntr.aml.Model()
+        cls.updater = updater = ModelUpdater()
         wntr.models.constants.hazen_williams_constants(m)
-        wntr.models.param.hw_resistance_param(m, wn)
-        wntr.models.param.minor_loss_param(m, wn)
-        wntr.models.param.status_param(m, wn)
+        wntr.models.param.hw_resistance_param.build(m, wn, updater)
+        wntr.models.param.minor_loss_param.build(m, wn, updater)
         wntr.models.param.source_head_param(m, wn)
         wntr.models.var.flow_var(m, wn)
         wntr.models.var.head_var(m, wn)
-        wntr.models.constraint.hazen_williams_headloss_constraint(m, wn)
+        wntr.models.constraint.hazen_williams_headloss_constraint.build(m, wn, updater)
         wntr.models.constants.head_pump_constants(m)
-        wntr.models.constraint.head_pump_headloss_constraint(m, wn)
-        wntr.models.param.pump_power_param(m, wn)
-        wntr.models.constraint.power_pump_headloss_constraint(m, wn)
+        wntr.models.constraint.head_pump_headloss_constraint.build(m, wn, updater)
+        wntr.models.param.pump_power_param.build(m, wn, updater)
+        wntr.models.constraint.power_pump_headloss_constraint.build(m, wn, updater)
 
     def test_HW_headloss(self):
         wn = self.wn
@@ -87,7 +88,8 @@ class TestHeadloss(unittest.TestCase):
         m.head['j1'].value = j1_head
 
         for status in status_to_test:
-            m.status['p1'].value = status
+            pipe.status = status
+            self.updater.update(m, wn, pipe, 'status')
             for f in flows_to_test:
                 m.flow['p1'].value = f
                 r1 = m.hazen_williams_headloss['p1'].evaluate()
@@ -129,11 +131,11 @@ class TestHeadloss(unittest.TestCase):
 
         for curve in curves_to_test:
             pump.pump_curve_name = curve.name
-            del m.head_pump_headloss['pump1']
-            wntr.models.constraint.head_pump_headloss_constraint(m, wn, index_over=['pump1'])
+            self.updater.update(m, wn, pump, 'pump_curve_name')
             A, B, C = pump.get_head_curve_coefficients()
             for status in status_to_test:
-                m.status['pump1'].value = status
+                pump.status = status
+                self.updater.update(m, wn, pump, 'status')
                 for f in flows_to_test:
                     m.flow['pump1'].value = f
                     r1 = m.head_pump_headloss['pump1'].evaluate()
@@ -162,7 +164,7 @@ class TestHeadloss(unittest.TestCase):
                         self.assertTrue(compare_floats(d1, d2, 1e-12, 1e-12))
                         self.assertTrue(compare_floats(d1, d3, 1e-5, 1e-3))
 
-    def test_head_pump_headloss(self):
+    def test_power_pump_headloss(self):
         wn = self.wn
         m = self.m
         pump = wn.get_link('pump2')
@@ -177,7 +179,8 @@ class TestHeadloss(unittest.TestCase):
         m.head['j1'].value = j1_head
 
         for status in status_to_test:
-            m.status['pump2'].value = status
+            pump.status = status
+            self.updater.update(m, wn, pump, 'status')
             for f in flows_to_test:
                 m.flow['pump2'].value = f
                 r1 = m.power_pump_headloss['pump2'].evaluate()
@@ -203,15 +206,16 @@ class TestPDD(unittest.TestCase):
     def test_pdd(self):
         wn = self.wn
         m = wntr.aml.Model()
+        updater = ModelUpdater()
         wntr.models.constants.pdd_constants(m)
         wntr.models.param.expected_demand_param(m, wn)
-        wntr.models.param.elevation_param(m, wn)
-        wntr.models.param.pdd_poly_coeffs_param(m, wn)
-        wntr.models.param.pmin_param(m, wn)
-        wntr.models.param.pnom_param(m, wn)
+        wntr.models.param.elevation_param.build(m, wn, updater)
+        wntr.models.param.pdd_poly_coeffs_param.build(m, wn, updater)
+        wntr.models.param.pmin_param.build(m, wn, updater)
+        wntr.models.param.pnom_param.build(m, wn, updater)
         wntr.models.var.head_var(m, wn)
         wntr.models.var.demand_var(m, wn)
-        wntr.models.constraint.pdd_constraint(m, wn)
+        wntr.models.constraint.pdd_constraint.build(m, wn, updater)
 
         node = wn.get_node('j1')
 

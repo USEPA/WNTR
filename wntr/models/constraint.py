@@ -275,7 +275,7 @@ class head_pump_headloss_constraint(Definition):
 
             updater.add(link, 'status', head_pump_headloss_constraint.update)
             updater.add(link, '_is_isolated', head_pump_headloss_constraint.update)
-            updater.add(link, 'pump_cureve_name', head_pump_headloss_constraint.update)
+            updater.add(link, 'pump_curve_name', head_pump_headloss_constraint.update)
 
 
 class power_pump_headloss_constraint(Definition):
