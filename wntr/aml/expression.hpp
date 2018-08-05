@@ -2,14 +2,16 @@
 #include <vector>
 #include <list>
 #include <cmath>
-#include <map>
+#include <unordered_map>
 #include <stdexcept>
 #include <memory>
-#include <set>
+#include <unordered_set>
 #include <sstream>
 #include <iterator>
 #include <iostream>
 #include <cassert>
+#include <stdexcept>
+#include <iterator>
 
 class Node;
 class Var;
@@ -66,15 +68,15 @@ public:
   int index = -1;
   virtual std::shared_ptr<std::vector<std::shared_ptr<Node> > > get_nodes();
   virtual std::shared_ptr<std::vector<double> > get_coefs();
-  virtual std::shared_ptr<std::map<std::shared_ptr<Node>, std::vector<int> > > get_sparsity();
-  virtual std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars();
-  virtual std::set<std::shared_ptr<Var> > py_get_vars();
+  virtual std::shared_ptr<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > > get_sparsity();
+  virtual std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > get_vars();
+  virtual std::unordered_set<std::shared_ptr<Var> > py_get_vars();
   virtual double evaluate() = 0;
   virtual double ad(Var&, bool new_eval=true) = 0;
   virtual double ad2(Var&, Var&, bool) = 0;
   virtual bool has_ad(Var&);
   virtual bool has_ad2(Var&, Var&) = 0;
-  virtual std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) = 0;
+  virtual std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) = 0;
   virtual std::string get_type();
   virtual void set_coefs(std::shared_ptr<std::vector<double> >);
 
@@ -111,20 +113,20 @@ public:
   Summation() = default;
   std::shared_ptr<std::vector<std::shared_ptr<Node> > > get_nodes() override;
   std::shared_ptr<std::vector<double> > get_coefs() override;
-  std::shared_ptr<std::map<std::shared_ptr<Node>, std::vector<int> > > get_sparsity() override;
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
+  std::shared_ptr<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > > get_sparsity() override;
+  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > get_vars() override;
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad(Var&) override;
   bool has_ad2(Var&, Var&) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::string get_type() override;
   void set_coefs(std::shared_ptr<std::vector<double> >) override;
   std::shared_ptr<std::vector<std::shared_ptr<Node> > > nodes = std::make_shared<std::vector<std::shared_ptr<Node> > >();
   std::shared_ptr<std::vector<double> > coefs = std::make_shared<std::vector<double> >();
-  std::shared_ptr<std::map<std::shared_ptr<Node>, std::vector<int> > > sparsity = std::make_shared<std::map<std::shared_ptr<Node>, std::vector<int> > >();
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > vars = std::make_shared<std::set<std::shared_ptr<Var> > >();
+  std::shared_ptr<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > > sparsity = std::make_shared<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > >();
+  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<Var> > >();
   double constant = 0.0;
   std::shared_ptr<Node> add_const(double) override;
   void multiply_const(double) override;
@@ -138,12 +140,12 @@ public:
   double ub = 1.0e20;
   double lb_dual = 0.0;
   double ub_dual = 0.0;
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
+  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > get_vars() override;
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad2(Var&, Var&) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::string get_type() override;
   std::string name;
 };
@@ -157,7 +159,7 @@ public:
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad2(Var&, Var&) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::string get_type() override;
   std::string name;
 };
@@ -168,16 +170,16 @@ class Expression: public Node
 public:
   Expression() = default;  // default constructor
   std::shared_ptr<std::vector<std::shared_ptr<Node> > > get_nodes() override;
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
+  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > get_vars() override;
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
   bool has_ad(Var&) override;
   bool has_ad2(Var&, Var&) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::string get_type() override;
   std::shared_ptr<std::vector<std::shared_ptr<Node> > > nodes = std::make_shared<std::vector<std::shared_ptr<Node> > >();
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > vars = std::make_shared<std::set<std::shared_ptr<Var> > >();
+  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<Var> > >();
 };
 
 
@@ -188,7 +190,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -202,7 +204,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -216,7 +218,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -230,7 +232,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -244,7 +246,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -258,7 +260,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -272,7 +274,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -286,7 +288,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -300,7 +302,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -314,7 +316,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -328,7 +330,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -342,7 +344,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -356,7 +358,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -370,7 +372,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -384,7 +386,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -398,7 +400,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -412,7 +414,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -426,7 +428,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -440,7 +442,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -454,7 +456,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -468,7 +470,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -482,7 +484,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -496,7 +498,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -510,7 +512,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -524,7 +526,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -538,7 +540,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;
@@ -552,7 +554,7 @@ public:
   double evaluate() override;
   double ad(Var&, bool new_eval=true) override;
   double ad2(Var&, Var&, bool) override;
-  std::string set_name(std::map<std::shared_ptr<Node>, std::string>&) override;
+  std::string set_name(std::unordered_map<std::shared_ptr<Node>, std::string>&) override;
   std::shared_ptr<Node> node1;
   std::shared_ptr<Node> node2;
   bool has_ad2(Var&, Var&) override;

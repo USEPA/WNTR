@@ -3005,14 +3005,16 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 
 #define SWIGTYPE_p_IpoptModel swig_types[0]
 #define SWIGTYPE_p_char swig_types[1]
-#define SWIGTYPE_p_std__listT_std__shared_ptrT_ConstraintBase_t_t swig_types[2]
-#define SWIGTYPE_p_std__listT_std__shared_ptrT_Var_t_t swig_types[3]
-#define SWIGTYPE_p_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__string_std__setT_std__shared_ptrT_Component_t_t_t_t_t swig_types[4]
-#define SWIGTYPE_p_std__shared_ptrT_ConstraintBase_t swig_types[5]
-#define SWIGTYPE_p_std__shared_ptrT_Objective_t swig_types[6]
-#define SWIGTYPE_p_std__shared_ptrT_Var_t swig_types[7]
-static swig_type_info *swig_types[9];
-static swig_module_info swig_module = {swig_types, 8, 0, 0, 0, 0};
+#define SWIGTYPE_p_std__shared_ptrT_ConstraintBase_t swig_types[2]
+#define SWIGTYPE_p_std__shared_ptrT_Objective_t swig_types[3]
+#define SWIGTYPE_p_std__shared_ptrT_Var_t swig_types[4]
+#define SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__string_std__unordered_setT_std__shared_ptrT_Component_t_t_t_t_t swig_types[5]
+#define SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t swig_types[6]
+#define SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_Var_t_t swig_types[7]
+#define SWIGTYPE_p_std__vectorT_std__shared_ptrT_ConstraintBase_t_t swig_types[8]
+#define SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_t swig_types[9]
+static swig_type_info *swig_types[11];
+static swig_module_info swig_module = {swig_types, 10, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3607,7 +3609,7 @@ fail:
 SWIGINTERN PyObject *_wrap_IpoptModel_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   IpoptModel *arg1 = (IpoptModel *) 0 ;
-  std::list< std::shared_ptr< Var > > arg2 ;
+  std::unordered_set< std::shared_ptr< Var > > arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 ;
@@ -3622,14 +3624,14 @@ SWIGINTERN PyObject *_wrap_IpoptModel_vars_set(PyObject *SWIGUNUSEDPARM(self), P
   }
   arg1 = reinterpret_cast< IpoptModel * >(argp1);
   {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__listT_std__shared_ptrT_Var_t_t,  0  | 0);
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_Var_t_t,  0  | 0);
     if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IpoptModel_vars_set" "', argument " "2"" of type '" "std::list< std::shared_ptr< Var > >""'"); 
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IpoptModel_vars_set" "', argument " "2"" of type '" "std::unordered_set< std::shared_ptr< Var > >""'"); 
     }  
     if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IpoptModel_vars_set" "', argument " "2"" of type '" "std::list< std::shared_ptr< Var > >""'");
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IpoptModel_vars_set" "', argument " "2"" of type '" "std::unordered_set< std::shared_ptr< Var > >""'");
     } else {
-      std::list< std::shared_ptr< Var > > * temp = reinterpret_cast< std::list< std::shared_ptr< Var > > * >(argp2);
+      std::unordered_set< std::shared_ptr< Var > > * temp = reinterpret_cast< std::unordered_set< std::shared_ptr< Var > > * >(argp2);
       arg2 = *temp;
       if (SWIG_IsNewObj(res2)) delete temp;
     }
@@ -3648,7 +3650,7 @@ SWIGINTERN PyObject *_wrap_IpoptModel_vars_get(PyObject *SWIGUNUSEDPARM(self), P
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::list< std::shared_ptr< Var > > result;
+  std::unordered_set< std::shared_ptr< Var > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:IpoptModel_vars_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
@@ -3657,7 +3659,7 @@ SWIGINTERN PyObject *_wrap_IpoptModel_vars_get(PyObject *SWIGUNUSEDPARM(self), P
   }
   arg1 = reinterpret_cast< IpoptModel * >(argp1);
   result =  ((arg1)->vars);
-  resultobj = SWIG_NewPointerObj((new std::list< std::shared_ptr< Var > >(static_cast< const std::list< std::shared_ptr< Var > >& >(result))), SWIGTYPE_p_std__listT_std__shared_ptrT_Var_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::unordered_set< std::shared_ptr< Var > >(static_cast< const std::unordered_set< std::shared_ptr< Var > >& >(result))), SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_Var_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -3667,7 +3669,7 @@ fail:
 SWIGINTERN PyObject *_wrap_IpoptModel_cons_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   IpoptModel *arg1 = (IpoptModel *) 0 ;
-  std::list< std::shared_ptr< ConstraintBase > > arg2 ;
+  std::unordered_set< std::shared_ptr< ConstraintBase > > arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 ;
@@ -3682,14 +3684,14 @@ SWIGINTERN PyObject *_wrap_IpoptModel_cons_set(PyObject *SWIGUNUSEDPARM(self), P
   }
   arg1 = reinterpret_cast< IpoptModel * >(argp1);
   {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__listT_std__shared_ptrT_ConstraintBase_t_t,  0  | 0);
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t,  0  | 0);
     if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IpoptModel_cons_set" "', argument " "2"" of type '" "std::list< std::shared_ptr< ConstraintBase > >""'"); 
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IpoptModel_cons_set" "', argument " "2"" of type '" "std::unordered_set< std::shared_ptr< ConstraintBase > >""'"); 
     }  
     if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IpoptModel_cons_set" "', argument " "2"" of type '" "std::list< std::shared_ptr< ConstraintBase > >""'");
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IpoptModel_cons_set" "', argument " "2"" of type '" "std::unordered_set< std::shared_ptr< ConstraintBase > >""'");
     } else {
-      std::list< std::shared_ptr< ConstraintBase > > * temp = reinterpret_cast< std::list< std::shared_ptr< ConstraintBase > > * >(argp2);
+      std::unordered_set< std::shared_ptr< ConstraintBase > > * temp = reinterpret_cast< std::unordered_set< std::shared_ptr< ConstraintBase > > * >(argp2);
       arg2 = *temp;
       if (SWIG_IsNewObj(res2)) delete temp;
     }
@@ -3708,7 +3710,7 @@ SWIGINTERN PyObject *_wrap_IpoptModel_cons_get(PyObject *SWIGUNUSEDPARM(self), P
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::list< std::shared_ptr< ConstraintBase > > result;
+  std::unordered_set< std::shared_ptr< ConstraintBase > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:IpoptModel_cons_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
@@ -3717,7 +3719,127 @@ SWIGINTERN PyObject *_wrap_IpoptModel_cons_get(PyObject *SWIGUNUSEDPARM(self), P
   }
   arg1 = reinterpret_cast< IpoptModel * >(argp1);
   result =  ((arg1)->cons);
-  resultobj = SWIG_NewPointerObj((new std::list< std::shared_ptr< ConstraintBase > >(static_cast< const std::list< std::shared_ptr< ConstraintBase > >& >(result))), SWIGTYPE_p_std__listT_std__shared_ptrT_ConstraintBase_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::unordered_set< std::shared_ptr< ConstraintBase > >(static_cast< const std::unordered_set< std::shared_ptr< ConstraintBase > >& >(result))), SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IpoptModel_vars_vector_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  IpoptModel *arg1 = (IpoptModel *) 0 ;
+  std::vector< std::shared_ptr< Var > > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IpoptModel_vars_vector_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IpoptModel_vars_vector_set" "', argument " "1"" of type '" "IpoptModel *""'"); 
+  }
+  arg1 = reinterpret_cast< IpoptModel * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IpoptModel_vars_vector_set" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IpoptModel_vars_vector_set" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >""'");
+    } else {
+      std::vector< std::shared_ptr< Var > > * temp = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->vars_vector = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IpoptModel_vars_vector_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  IpoptModel *arg1 = (IpoptModel *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IpoptModel_vars_vector_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IpoptModel_vars_vector_get" "', argument " "1"" of type '" "IpoptModel *""'"); 
+  }
+  arg1 = reinterpret_cast< IpoptModel * >(argp1);
+  result =  ((arg1)->vars_vector);
+  resultobj = SWIG_NewPointerObj((new std::vector< std::shared_ptr< Var > >(static_cast< const std::vector< std::shared_ptr< Var > >& >(result))), SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IpoptModel_cons_vector_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  IpoptModel *arg1 = (IpoptModel *) 0 ;
+  std::vector< std::shared_ptr< ConstraintBase > > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IpoptModel_cons_vector_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IpoptModel_cons_vector_set" "', argument " "1"" of type '" "IpoptModel *""'"); 
+  }
+  arg1 = reinterpret_cast< IpoptModel * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__shared_ptrT_ConstraintBase_t_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IpoptModel_cons_vector_set" "', argument " "2"" of type '" "std::vector< std::shared_ptr< ConstraintBase > >""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IpoptModel_cons_vector_set" "', argument " "2"" of type '" "std::vector< std::shared_ptr< ConstraintBase > >""'");
+    } else {
+      std::vector< std::shared_ptr< ConstraintBase > > * temp = reinterpret_cast< std::vector< std::shared_ptr< ConstraintBase > > * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->cons_vector = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IpoptModel_cons_vector_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  IpoptModel *arg1 = (IpoptModel *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< ConstraintBase > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IpoptModel_cons_vector_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IpoptModel_cons_vector_get" "', argument " "1"" of type '" "IpoptModel *""'"); 
+  }
+  arg1 = reinterpret_cast< IpoptModel * >(argp1);
+  result =  ((arg1)->cons_vector);
+  resultobj = SWIG_NewPointerObj((new std::vector< std::shared_ptr< ConstraintBase > >(static_cast< const std::vector< std::shared_ptr< ConstraintBase > >& >(result))), SWIGTYPE_p_std__vectorT_std__shared_ptrT_ConstraintBase_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -3786,7 +3908,7 @@ fail:
 SWIGINTERN PyObject *_wrap_IpoptModel_hessian_map_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   IpoptModel *arg1 = (IpoptModel *) 0 ;
-  std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > > arg2 ;
+  std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > > arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 ;
@@ -3801,14 +3923,14 @@ SWIGINTERN PyObject *_wrap_IpoptModel_hessian_map_set(PyObject *SWIGUNUSEDPARM(s
   }
   arg1 = reinterpret_cast< IpoptModel * >(argp1);
   {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__string_std__setT_std__shared_ptrT_Component_t_t_t_t_t,  0  | 0);
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__string_std__unordered_setT_std__shared_ptrT_Component_t_t_t_t_t,  0  | 0);
     if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IpoptModel_hessian_map_set" "', argument " "2"" of type '" "std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > >""'"); 
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IpoptModel_hessian_map_set" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > >""'"); 
     }  
     if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IpoptModel_hessian_map_set" "', argument " "2"" of type '" "std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > >""'");
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IpoptModel_hessian_map_set" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > >""'");
     } else {
-      std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > > * temp = reinterpret_cast< std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > > * >(argp2);
+      std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > > * temp = reinterpret_cast< std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > > * >(argp2);
       arg2 = *temp;
       if (SWIG_IsNewObj(res2)) delete temp;
     }
@@ -3827,7 +3949,7 @@ SWIGINTERN PyObject *_wrap_IpoptModel_hessian_map_get(PyObject *SWIGUNUSEDPARM(s
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > > result;
+  std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:IpoptModel_hessian_map_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
@@ -3836,7 +3958,127 @@ SWIGINTERN PyObject *_wrap_IpoptModel_hessian_map_get(PyObject *SWIGUNUSEDPARM(s
   }
   arg1 = reinterpret_cast< IpoptModel * >(argp1);
   result =  ((arg1)->hessian_map);
-  resultobj = SWIG_NewPointerObj((new std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > >(static_cast< const std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > >& >(result))), SWIGTYPE_p_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__string_std__setT_std__shared_ptrT_Component_t_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > >(static_cast< const std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > >& >(result))), SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__string_std__unordered_setT_std__shared_ptrT_Component_t_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IpoptModel_hessian_vector_var1_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  IpoptModel *arg1 = (IpoptModel *) 0 ;
+  std::vector< std::shared_ptr< Var > > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IpoptModel_hessian_vector_var1_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IpoptModel_hessian_vector_var1_set" "', argument " "1"" of type '" "IpoptModel *""'"); 
+  }
+  arg1 = reinterpret_cast< IpoptModel * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IpoptModel_hessian_vector_var1_set" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IpoptModel_hessian_vector_var1_set" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >""'");
+    } else {
+      std::vector< std::shared_ptr< Var > > * temp = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->hessian_vector_var1 = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IpoptModel_hessian_vector_var1_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  IpoptModel *arg1 = (IpoptModel *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IpoptModel_hessian_vector_var1_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IpoptModel_hessian_vector_var1_get" "', argument " "1"" of type '" "IpoptModel *""'"); 
+  }
+  arg1 = reinterpret_cast< IpoptModel * >(argp1);
+  result =  ((arg1)->hessian_vector_var1);
+  resultobj = SWIG_NewPointerObj((new std::vector< std::shared_ptr< Var > >(static_cast< const std::vector< std::shared_ptr< Var > >& >(result))), SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IpoptModel_hessian_vector_var2_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  IpoptModel *arg1 = (IpoptModel *) 0 ;
+  std::vector< std::shared_ptr< Var > > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IpoptModel_hessian_vector_var2_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IpoptModel_hessian_vector_var2_set" "', argument " "1"" of type '" "IpoptModel *""'"); 
+  }
+  arg1 = reinterpret_cast< IpoptModel * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IpoptModel_hessian_vector_var2_set" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IpoptModel_hessian_vector_var2_set" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >""'");
+    } else {
+      std::vector< std::shared_ptr< Var > > * temp = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->hessian_vector_var2 = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IpoptModel_hessian_vector_var2_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  IpoptModel *arg1 = (IpoptModel *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IpoptModel_hessian_vector_var2_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_IpoptModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IpoptModel_hessian_vector_var2_get" "', argument " "1"" of type '" "IpoptModel *""'"); 
+  }
+  arg1 = reinterpret_cast< IpoptModel * >(argp1);
+  result =  ((arg1)->hessian_vector_var2);
+  resultobj = SWIG_NewPointerObj((new std::vector< std::shared_ptr< Var > >(static_cast< const std::vector< std::shared_ptr< Var > >& >(result))), SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -3957,16 +4199,16 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"IpoptModel_vars_set", _wrap_IpoptModel_vars_set, METH_VARARGS, (char *)"\n"
-		"IpoptModel_vars_set(IpoptModel self, std::list< std::shared_ptr< Var > > vars)\n"
+		"IpoptModel_vars_set(IpoptModel self, std::unordered_set< std::shared_ptr< Var > > vars)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: IpoptModel *\n"
-		"vars: std::list< std::shared_ptr< Var > >\n"
+		"vars: std::unordered_set< std::shared_ptr< Var > >\n"
 		"\n"
 		""},
 	 { (char *)"IpoptModel_vars_get", _wrap_IpoptModel_vars_get, METH_VARARGS, (char *)"\n"
-		"IpoptModel_vars_get(IpoptModel self) -> std::list< std::shared_ptr< Var > >\n"
+		"IpoptModel_vars_get(IpoptModel self) -> std::unordered_set< std::shared_ptr< Var > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -3974,16 +4216,50 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"IpoptModel_cons_set", _wrap_IpoptModel_cons_set, METH_VARARGS, (char *)"\n"
-		"IpoptModel_cons_set(IpoptModel self, std::list< std::shared_ptr< ConstraintBase > > cons)\n"
+		"IpoptModel_cons_set(IpoptModel self, std::unordered_set< std::shared_ptr< ConstraintBase > > cons)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: IpoptModel *\n"
-		"cons: std::list< std::shared_ptr< ConstraintBase > >\n"
+		"cons: std::unordered_set< std::shared_ptr< ConstraintBase > >\n"
 		"\n"
 		""},
 	 { (char *)"IpoptModel_cons_get", _wrap_IpoptModel_cons_get, METH_VARARGS, (char *)"\n"
-		"IpoptModel_cons_get(IpoptModel self) -> std::list< std::shared_ptr< ConstraintBase > >\n"
+		"IpoptModel_cons_get(IpoptModel self) -> std::unordered_set< std::shared_ptr< ConstraintBase > >\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: IpoptModel *\n"
+		"\n"
+		""},
+	 { (char *)"IpoptModel_vars_vector_set", _wrap_IpoptModel_vars_vector_set, METH_VARARGS, (char *)"\n"
+		"IpoptModel_vars_vector_set(IpoptModel self, std::vector< std::shared_ptr< Var > > vars_vector)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: IpoptModel *\n"
+		"vars_vector: std::vector< std::shared_ptr< Var > >\n"
+		"\n"
+		""},
+	 { (char *)"IpoptModel_vars_vector_get", _wrap_IpoptModel_vars_vector_get, METH_VARARGS, (char *)"\n"
+		"IpoptModel_vars_vector_get(IpoptModel self) -> std::vector< std::shared_ptr< Var > >\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: IpoptModel *\n"
+		"\n"
+		""},
+	 { (char *)"IpoptModel_cons_vector_set", _wrap_IpoptModel_cons_vector_set, METH_VARARGS, (char *)"\n"
+		"IpoptModel_cons_vector_set(IpoptModel self, std::vector< std::shared_ptr< ConstraintBase > > cons_vector)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: IpoptModel *\n"
+		"cons_vector: std::vector< std::shared_ptr< ConstraintBase > >\n"
+		"\n"
+		""},
+	 { (char *)"IpoptModel_cons_vector_get", _wrap_IpoptModel_cons_vector_get, METH_VARARGS, (char *)"\n"
+		"IpoptModel_cons_vector_get(IpoptModel self) -> std::vector< std::shared_ptr< ConstraintBase > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -4008,16 +4284,50 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"IpoptModel_hessian_map_set", _wrap_IpoptModel_hessian_map_set, METH_VARARGS, (char *)"\n"
-		"IpoptModel_hessian_map_set(IpoptModel self, std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > > hessian_map)\n"
+		"IpoptModel_hessian_map_set(IpoptModel self, std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > > hessian_map)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: IpoptModel *\n"
-		"hessian_map: std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > >\n"
+		"hessian_map: std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > >\n"
 		"\n"
 		""},
 	 { (char *)"IpoptModel_hessian_map_get", _wrap_IpoptModel_hessian_map_get, METH_VARARGS, (char *)"\n"
-		"IpoptModel_hessian_map_get(IpoptModel self) -> std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > >\n"
+		"IpoptModel_hessian_map_get(IpoptModel self) -> std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > >\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: IpoptModel *\n"
+		"\n"
+		""},
+	 { (char *)"IpoptModel_hessian_vector_var1_set", _wrap_IpoptModel_hessian_vector_var1_set, METH_VARARGS, (char *)"\n"
+		"IpoptModel_hessian_vector_var1_set(IpoptModel self, std::vector< std::shared_ptr< Var > > hessian_vector_var1)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: IpoptModel *\n"
+		"hessian_vector_var1: std::vector< std::shared_ptr< Var > >\n"
+		"\n"
+		""},
+	 { (char *)"IpoptModel_hessian_vector_var1_get", _wrap_IpoptModel_hessian_vector_var1_get, METH_VARARGS, (char *)"\n"
+		"IpoptModel_hessian_vector_var1_get(IpoptModel self) -> std::vector< std::shared_ptr< Var > >\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: IpoptModel *\n"
+		"\n"
+		""},
+	 { (char *)"IpoptModel_hessian_vector_var2_set", _wrap_IpoptModel_hessian_vector_var2_set, METH_VARARGS, (char *)"\n"
+		"IpoptModel_hessian_vector_var2_set(IpoptModel self, std::vector< std::shared_ptr< Var > > hessian_vector_var2)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: IpoptModel *\n"
+		"hessian_vector_var2: std::vector< std::shared_ptr< Var > >\n"
+		"\n"
+		""},
+	 { (char *)"IpoptModel_hessian_vector_var2_get", _wrap_IpoptModel_hessian_vector_var2_get, METH_VARARGS, (char *)"\n"
+		"IpoptModel_hessian_vector_var2_get(IpoptModel self) -> std::vector< std::shared_ptr< Var > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -4042,42 +4352,50 @@ static PyMethodDef SwigMethods[] = {
 
 static swig_type_info _swigt__p_IpoptModel = {"_p_IpoptModel", "IpoptModel *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__listT_std__shared_ptrT_ConstraintBase_t_t = {"_p_std__listT_std__shared_ptrT_ConstraintBase_t_t", "std::list< std::shared_ptr< ConstraintBase > > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__listT_std__shared_ptrT_Var_t_t = {"_p_std__listT_std__shared_ptrT_Var_t_t", "std::list< std::shared_ptr< Var > > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__string_std__setT_std__shared_ptrT_Component_t_t_t_t_t = {"_p_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__string_std__setT_std__shared_ptrT_Component_t_t_t_t_t", "std::map< std::shared_ptr< Var >,std::map< std::shared_ptr< Var >,std::map< std::string,std::set< std::shared_ptr< Component > > > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_ConstraintBase_t = {"_p_std__shared_ptrT_ConstraintBase_t", "std::shared_ptr< ConstraintBase > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_Objective_t = {"_p_std__shared_ptrT_Objective_t", "std::shared_ptr< Objective > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_Var_t = {"_p_std__shared_ptrT_Var_t", "std::shared_ptr< Var > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__string_std__unordered_setT_std__shared_ptrT_Component_t_t_t_t_t = {"_p_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__string_std__unordered_setT_std__shared_ptrT_Component_t_t_t_t_t", "std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::shared_ptr< Var >,std::unordered_map< std::string,std::unordered_set< std::shared_ptr< Component > > > > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t = {"_p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t", "std::unordered_set< std::shared_ptr< ConstraintBase > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__unordered_setT_std__shared_ptrT_Var_t_t = {"_p_std__unordered_setT_std__shared_ptrT_Var_t_t", "std::unordered_set< std::shared_ptr< Var > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__vectorT_std__shared_ptrT_ConstraintBase_t_t = {"_p_std__vectorT_std__shared_ptrT_ConstraintBase_t_t", "std::vector< std::shared_ptr< ConstraintBase > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__vectorT_std__shared_ptrT_Var_t_t = {"_p_std__vectorT_std__shared_ptrT_Var_t_t", "std::vector< std::shared_ptr< Var > > *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_IpoptModel,
   &_swigt__p_char,
-  &_swigt__p_std__listT_std__shared_ptrT_ConstraintBase_t_t,
-  &_swigt__p_std__listT_std__shared_ptrT_Var_t_t,
-  &_swigt__p_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__string_std__setT_std__shared_ptrT_Component_t_t_t_t_t,
   &_swigt__p_std__shared_ptrT_ConstraintBase_t,
   &_swigt__p_std__shared_ptrT_Objective_t,
   &_swigt__p_std__shared_ptrT_Var_t,
+  &_swigt__p_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__string_std__unordered_setT_std__shared_ptrT_Component_t_t_t_t_t,
+  &_swigt__p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t,
+  &_swigt__p_std__unordered_setT_std__shared_ptrT_Var_t_t,
+  &_swigt__p_std__vectorT_std__shared_ptrT_ConstraintBase_t_t,
+  &_swigt__p_std__vectorT_std__shared_ptrT_Var_t_t,
 };
 
 static swig_cast_info _swigc__p_IpoptModel[] = {  {&_swigt__p_IpoptModel, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__listT_std__shared_ptrT_ConstraintBase_t_t[] = {  {&_swigt__p_std__listT_std__shared_ptrT_ConstraintBase_t_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__listT_std__shared_ptrT_Var_t_t[] = {  {&_swigt__p_std__listT_std__shared_ptrT_Var_t_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__string_std__setT_std__shared_ptrT_Component_t_t_t_t_t[] = {  {&_swigt__p_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__string_std__setT_std__shared_ptrT_Component_t_t_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_ConstraintBase_t[] = {  {&_swigt__p_std__shared_ptrT_ConstraintBase_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_Objective_t[] = {  {&_swigt__p_std__shared_ptrT_Objective_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_Var_t[] = {  {&_swigt__p_std__shared_ptrT_Var_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__string_std__unordered_setT_std__shared_ptrT_Component_t_t_t_t_t[] = {  {&_swigt__p_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__string_std__unordered_setT_std__shared_ptrT_Component_t_t_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t[] = {  {&_swigt__p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__unordered_setT_std__shared_ptrT_Var_t_t[] = {  {&_swigt__p_std__unordered_setT_std__shared_ptrT_Var_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__vectorT_std__shared_ptrT_ConstraintBase_t_t[] = {  {&_swigt__p_std__vectorT_std__shared_ptrT_ConstraintBase_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__vectorT_std__shared_ptrT_Var_t_t[] = {  {&_swigt__p_std__vectorT_std__shared_ptrT_Var_t_t, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_IpoptModel,
   _swigc__p_char,
-  _swigc__p_std__listT_std__shared_ptrT_ConstraintBase_t_t,
-  _swigc__p_std__listT_std__shared_ptrT_Var_t_t,
-  _swigc__p_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__shared_ptrT_Var_t_std__mapT_std__string_std__setT_std__shared_ptrT_Component_t_t_t_t_t,
   _swigc__p_std__shared_ptrT_ConstraintBase_t,
   _swigc__p_std__shared_ptrT_Objective_t,
   _swigc__p_std__shared_ptrT_Var_t,
+  _swigc__p_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__shared_ptrT_Var_t_std__unordered_mapT_std__string_std__unordered_setT_std__shared_ptrT_Component_t_t_t_t_t,
+  _swigc__p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t,
+  _swigc__p_std__unordered_setT_std__shared_ptrT_Var_t_t,
+  _swigc__p_std__vectorT_std__shared_ptrT_ConstraintBase_t_t,
+  _swigc__p_std__vectorT_std__shared_ptrT_Var_t_t,
 };
 
 

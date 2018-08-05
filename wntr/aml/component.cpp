@@ -1,10 +1,27 @@
 #include "component.hpp"
 
 
-std::set<std::shared_ptr<Var> > Component::py_get_vars()
+std::vector<std::shared_ptr<Var> > Component::py_get_vars()
 {
-  auto ptr_to_vars = get_vars();
-  return *ptr_to_vars;
+  return *(get_vars());
+}
+
+
+std::shared_ptr<std::vector<std::shared_ptr<Var> > > Objective::get_vars()
+{
+  return vars;
+}
+
+
+std::shared_ptr<std::vector<std::shared_ptr<Var> > > Constraint::get_vars()
+{
+  return vars;
+}
+
+
+std::shared_ptr<std::vector<std::shared_ptr<Var> > > ConditionalConstraint::get_vars()
+{
+  return vars;
 }
 
 
@@ -14,6 +31,7 @@ std::shared_ptr<Constraint> create_constraint(std::shared_ptr<Node> expr, double
   c->expr = expr;
   c->lb = lb;
   c->ub = ub;
+  std::copy(expr->get_vars()->begin(), expr->get_vars()->end(), back_inserter(*(c->get_vars())));
   return c;
 }
 
@@ -31,6 +49,7 @@ std::shared_ptr<Objective> create_objective(std::shared_ptr<Node> n)
 {
   std::shared_ptr<Objective> o = std::make_shared<Objective>();
   o->expr = n;
+  std::copy(n->get_vars()->begin(), n->get_vars()->end(), back_inserter(*(o->get_vars())));
   return o;
 }
 
@@ -78,34 +97,6 @@ std::string ConditionalConstraint::_print()
   s += (*expr_iterator)->_print();
   s += "\n";
   return s;
-}
-
-
-std::shared_ptr<std::set<std::shared_ptr<Var> > > Objective::get_vars()
-{
-  return expr->get_vars();
-}
-
-
-std::shared_ptr<std::set<std::shared_ptr<Var> > > Constraint::get_vars()
-{
-  return expr->get_vars();
-}
-
-
-std::shared_ptr<std::set<std::shared_ptr<Var> > > ConditionalConstraint::get_vars()
-{
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > vs = std::make_shared<std::set<std::shared_ptr<Var> > >();
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > _vars = std::make_shared<std::set<std::shared_ptr<Var> > >();
-  for (auto &e : exprs)
-    {
-      _vars = e->get_vars();
-      for (auto &ptr_to_var : (*_vars))
-        {
-     	  vs->insert(ptr_to_var);
-        }
-    }
-  return vs;
 }
 
 
@@ -157,6 +148,17 @@ void ConditionalConstraint::add_condition(std::shared_ptr<Node> condition, std::
 void ConditionalConstraint::add_final_expr(std::shared_ptr<Node> expr)
 {
   exprs.push_back(expr);
+  std::unordered_set<std::shared_ptr<Var> > all_vars;
+  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > e_vars;
+  for (auto &e : exprs)
+    {
+      e_vars = e->get_vars();
+      for (auto &v : (*e_vars))
+	{
+	  all_vars.insert(v);
+	}
+    }
+  std::copy(all_vars.begin(), all_vars.end(), back_inserter(*(get_vars())));
 }
 
 

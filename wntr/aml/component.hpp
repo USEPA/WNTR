@@ -20,8 +20,8 @@ public:
   virtual double ad(Var&, bool new_eval=true) = 0;
   virtual double ad2(Var&, Var&, bool) = 0;
   virtual bool has_ad2(Var&, Var&) = 0;
-  virtual std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() = 0;
-  virtual std::set<std::shared_ptr<Var> > py_get_vars();
+  virtual std::shared_ptr<std::vector<std::shared_ptr<Var> > > get_vars() = 0;
+  virtual std::vector<std::shared_ptr<Var> > py_get_vars();
   virtual std::string _print() = 0;
   int index = -1;
   double value = 0.0;
@@ -40,7 +40,8 @@ public:
   double ad2(Var&, Var&, bool) override;
   bool has_ad2(Var&, Var&) override;
   std::string _print() override;
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
+  std::shared_ptr<std::vector<std::shared_ptr<Var> > > vars = std::make_shared<std::vector<std::shared_ptr<Var> > >();
+  std::shared_ptr<std::vector<std::shared_ptr<Var> > > get_vars() override;
 };
 
 
@@ -68,7 +69,8 @@ public:
   double ad2(Var&, Var&, bool) override;
   bool has_ad2(Var&, Var&) override;
   std::string _print() override;
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
+  std::shared_ptr<std::vector<std::shared_ptr<Var> > > vars = std::make_shared<std::vector<std::shared_ptr<Var> > >();
+  std::shared_ptr<std::vector<std::shared_ptr<Var> > > get_vars() override;
 };
 
 
@@ -86,5 +88,6 @@ public:
   void add_final_expr(std::shared_ptr<Node>);
   double get_dual() override;
   std::string _print() override;
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > get_vars() override;
+  std::shared_ptr<std::vector<std::shared_ptr<Var> > > vars = std::make_shared<std::vector<std::shared_ptr<Var> > >();
+  std::shared_ptr<std::vector<std::shared_ptr<Var> > > get_vars() override;
 };

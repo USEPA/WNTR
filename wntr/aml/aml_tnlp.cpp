@@ -21,17 +21,31 @@ bool AML_NLP::get_nlp_info(Index &n, Index &m, Index &nnz_jac_g,
   n = (get_model()->vars).size();
   m = (get_model()->cons).size();
   nnz_jac_g = 0;
+  int _con_ndx = 0;
+  int _var_ndx = 0;
   for (auto &ptr_to_con : get_model()->cons)
     {
       nnz_jac_g += ptr_to_con->get_vars()->size();
+      (get_model()->cons_vector).push_back(ptr_to_con);
+      ptr_to_con->index = _con_ndx;
+      ++_con_ndx;
+    }
+  for (auto &ptr_to_var : get_model()->vars)
+    {
+      (get_model()->vars_vector).push_back(ptr_to_var);
+      ptr_to_var->index = _var_ndx;
+      ++_var_ndx;
     }
   nnz_h_lag = 0;
   for (auto &row : get_model()->hessian_map)
     {
       for (auto &col : row.second)
         {
-	  assert(col.second["cons"].size() > 0 || col.second["obj"].size() > 0);
-	  nnz_h_lag += 1;
+	  if (col.first->index <= row.first->index)
+	    {
+	      assert(col.second["cons"].size() > 0 || col.second["obj"].size() > 0);
+	      nnz_h_lag += 1;
+	    }
         }
     }
   index_style = TNLP::C_STYLE;
@@ -44,7 +58,7 @@ bool AML_NLP::get_bounds_info(Index n, Number *x_l, Number *x_u,
                               Index m, Number *g_l, Number *g_u)
 {
   int i = 0;
-  for (auto &ptr_to_var : get_model()->vars)
+  for (auto &ptr_to_var : get_model()->vars_vector)
     {
       x_l[i] = ptr_to_var->lb;
       x_u[i] = ptr_to_var->ub;
@@ -52,7 +66,7 @@ bool AML_NLP::get_bounds_info(Index n, Number *x_l, Number *x_u,
     }
   
   i = 0;
-  for (auto &ptr_to_con : get_model()->cons)
+  for (auto &ptr_to_con : get_model()->cons_vector)
     {
       g_l[i] = ptr_to_con->lb;
       g_u[i] = ptr_to_con->ub;
@@ -71,7 +85,7 @@ bool AML_NLP::get_starting_point(Index n, bool init_x, Number *x,
   if (init_x)
     {
       int i = 0;
-      for (auto &ptr_to_var : get_model()->vars)
+      for (auto &ptr_to_var : get_model()->vars_vector)
         {
 	  x[i] = ptr_to_var->value;
 	  ++i;
@@ -81,7 +95,7 @@ bool AML_NLP::get_starting_point(Index n, bool init_x, Number *x,
   if (init_z)
     {
       int i = 0;
-      for (auto &ptr_to_var : get_model()->vars)
+      for (auto &ptr_to_var : get_model()->vars_vector)
         {
 	  z_L[i] = ptr_to_var->lb_dual;
 	  z_U[i] = ptr_to_var->ub_dual;
@@ -92,7 +106,7 @@ bool AML_NLP::get_starting_point(Index n, bool init_x, Number *x,
   if (init_lambda)
     {
       int i = 0;
-      for (auto &ptr_to_con : get_model()->cons)
+      for (auto &ptr_to_con : get_model()->cons_vector)
         {
 	  lambda[i] = ptr_to_con->dual;
 	  ++i;
@@ -107,18 +121,20 @@ bool AML_NLP::eval_f(Index n, const Number *x, bool new_x, Number &obj_value)
 {
   if (new_x)
     {
-      for (auto &ptr_to_var : get_model()->vars)
+      for (auto &ptr_to_var : get_model()->vars_vector)
         {
 	  ptr_to_var->value = x[ptr_to_var->index];
         }
-      get_model()->obj->evaluate();
-      for (auto &ptr_to_con : get_model()->cons)
+      obj_value = get_model()->obj->evaluate();
+      for (auto &ptr_to_con : get_model()->cons_vector)
 	{
 	  ptr_to_con->evaluate();
 	}
     }
-  
-  obj_value = get_model()->obj->expr->value;
+  else
+    {
+      obj_value = get_model()->obj->expr->value;
+    }
   
   return true;
 }
@@ -128,21 +144,21 @@ bool AML_NLP::eval_grad_f(Index n, const Number *x, bool new_x, Number *grad_f)
 {
   if (new_x)
     {
-      for (auto &ptr_to_var : get_model()->vars)
+      for (auto &ptr_to_var : get_model()->vars_vector)
         {
 	  ptr_to_var->value = x[ptr_to_var->index];
         }
       get_model()->obj->evaluate();
-      for (auto &ptr_to_con : get_model()->cons)
+      for (auto &ptr_to_con : get_model()->cons_vector)
 	{
 	  ptr_to_con->evaluate();
 	}
     }
   
-  for (int i=0; i<n; ++i)
-    {
-      grad_f[i] = 0.0;
-    }
+  //for (int i=0; i<n; ++i)
+  //  {
+  //    grad_f[i] = 0.0;
+  //  }
   
   auto obj_vars = get_model()->obj->get_vars();
   for (auto &ptr_to_var : *(obj_vars))
@@ -158,24 +174,27 @@ bool AML_NLP::eval_g(Index n, const Number *x, bool new_x, Index m, Number *g)
 {
   if (new_x)
     {
-      for (auto &ptr_to_var : get_model()->vars)
+      for (auto &ptr_to_var : get_model()->vars_vector)
         {
-	      ptr_to_var->value = x[ptr_to_var->index];
+	  ptr_to_var->value = x[ptr_to_var->index];
         }
       get_model()->obj->evaluate();
-      for (auto &ptr_to_con : get_model()->cons)
-	    {
-	      ptr_to_con->evaluate();
-	    }
+      int i = 0;
+      for (auto &ptr_to_con : get_model()->cons_vector)
+	{
+	  g[i] = ptr_to_con->evaluate();
+	  ++i;
+	}
     }
-  
-  int i = 0;
-  for (auto &ptr_to_con : get_model()->cons)
+  else
     {
-      g[i] = ptr_to_con->value;
-      ++i;
+      int i = 0;
+      for (auto &ptr_to_con : get_model()->cons_vector)
+	{
+	  g[i] = ptr_to_con->value;
+	  ++i;
+	}
     }
-  
   return true;
 }
 
@@ -187,8 +206,8 @@ bool AML_NLP::eval_jac_g(Index n, const Number *x, bool new_x,
   if (values == NULL)
     {
       int i = 0;
-      std::shared_ptr<std::set<std::shared_ptr<Var> > > con_vars;
-      for (auto &ptr_to_con : get_model()->cons)
+      std::shared_ptr<std::vector<std::shared_ptr<Var> > > con_vars;
+      for (auto &ptr_to_con : get_model()->cons_vector)
         {
 	  con_vars = ptr_to_con->get_vars();
 	  for (auto &ptr_to_var : (*con_vars))
@@ -203,19 +222,19 @@ bool AML_NLP::eval_jac_g(Index n, const Number *x, bool new_x,
     {
       if (new_x)
         {
-	  for (auto &ptr_to_var : get_model()->vars)
+	  for (auto &ptr_to_var : get_model()->vars_vector)
             {
 	      ptr_to_var->value = x[ptr_to_var->index];
             }
 	  get_model()->obj->evaluate();
-	  for (auto &ptr_to_con : get_model()->cons)
+	  for (auto &ptr_to_con : get_model()->cons_vector)
 	    {
 	      ptr_to_con->evaluate();
 	    }
         }
       int i = 0;
-      std::shared_ptr<std::set<std::shared_ptr<Var> > > con_vars;
-      for (auto &ptr_to_con : get_model()->cons)
+      std::shared_ptr<std::vector<std::shared_ptr<Var> > > con_vars;
+      for (auto &ptr_to_con : get_model()->cons_vector)
         {
 	  con_vars = ptr_to_con->get_vars();
 	  for (auto &ptr_to_var : (*con_vars))
@@ -242,9 +261,14 @@ bool AML_NLP::eval_h(Index n, const Number *x, bool new_x,
         {
 	  for (auto &col : row.second)
             {
-	      iRow[i] = row.first->index;
-	      jCol[i] = col.first->index;
-	      ++i;
+	      if (col.first->index <= row.first->index)
+		{
+		  iRow[i] = row.first->index;
+		  jCol[i] = col.first->index;
+		  ++i;
+		  (get_model()->hessian_vector_var1).push_back(row.first);
+		  (get_model()->hessian_vector_var2).push_back(col.first);
+		}
             }
         }
     }
@@ -252,40 +276,39 @@ bool AML_NLP::eval_h(Index n, const Number *x, bool new_x,
     {
       if (new_x)
         {
-	  for (auto &ptr_to_var : get_model()->vars)
+	  for (auto &ptr_to_var : get_model()->vars_vector)
             {
 	      ptr_to_var->value = x[ptr_to_var->index];
             }
 	  get_model()->obj->evaluate();
-	  for (auto &ptr_to_con : get_model()->cons)
+	  for (auto &ptr_to_con : get_model()->cons_vector)
 	    {
 	      ptr_to_con->evaluate();
 	    }
         }
       if (new_lambda)
         {
-	  for (auto &ptr_to_con : get_model()->cons)
+	  for (auto &ptr_to_con : get_model()->cons_vector)
             {
 	      ptr_to_con->dual = lambda[ptr_to_con->index];
             }
         }
       int i = 0;
-      for (auto &row : get_model()->hessian_map)
-        {
-	  for (auto &col : row.second)
-            {
-	      values[i] = 0;
-	      for (auto &ptr_to_obj : col.second["obj"])
-                {
-		  values[i] += obj_factor * ptr_to_obj->ad2(*row.first, *col.first, false);
-                }
-	      for (auto &ptr_to_con : col.second["cons"])
-                {
-		  values[i] += lambda[ptr_to_con->index] * ptr_to_con->ad2(*row.first, *col.first, false);
-                }
-	      ++i;
-            }
-        }
+      std::shared_ptr<Var> ptr_to_var2;
+      for (auto &ptr_to_var1 : get_model()->hessian_vector_var1)
+	{
+	  ptr_to_var2 = get_model()->hessian_vector_var2[i];
+	  values[i] = 0;
+	  for (auto &ptr_to_obj : get_model()->hessian_map[ptr_to_var1][ptr_to_var2]["obj"])
+	    {
+	      values[i] += obj_factor * ptr_to_obj->ad2(*ptr_to_var1, *ptr_to_var2, false);
+	    }
+	  for (auto &ptr_to_con : get_model()->hessian_map[ptr_to_var1][ptr_to_var2]["cons"])
+	    {
+	      values[i] += lambda[ptr_to_con->index] * ptr_to_con->ad2(*ptr_to_var1, *ptr_to_var2, false);
+	    }
+	  ++i;
+	}
     }
   
   return true;
@@ -349,17 +372,21 @@ void AML_NLP::finalize_solution(SolverReturn status, Index n, const Number *x, c
       get_model()->solver_status = "UNKNOWN";
     }
   
-  for (auto &ptr_to_var : get_model()->vars)
+  for (auto &ptr_to_var : get_model()->vars_vector)
     {
       ptr_to_var->value = x[ptr_to_var->index];
       ptr_to_var->lb_dual = z_L[ptr_to_var->index];
       ptr_to_var->ub_dual = z_U[ptr_to_var->index];
     }
   
-  for (auto &ptr_to_con : get_model()->cons)
+  for (auto &ptr_to_con : get_model()->cons_vector)
     {
       ptr_to_con->dual = lambda[ptr_to_con->index];
     }
+  (get_model()->vars_vector).clear();
+  (get_model()->cons_vector).clear();
+  (get_model()->hessian_vector_var1).clear();
+  (get_model()->hessian_vector_var2).clear();
 }
 
 

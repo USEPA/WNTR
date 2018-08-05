@@ -13,8 +13,12 @@ public:
   void set_objective(std::shared_ptr<Objective>);
   void solve();
   std::shared_ptr<Objective> obj = nullptr;
-  std::list<std::shared_ptr<Var> > vars;
-  std::list<std::shared_ptr<ConstraintBase> > cons;
+  std::unordered_set<std::shared_ptr<Var> > vars;
+  std::unordered_set<std::shared_ptr<ConstraintBase> > cons;
+  std::vector<std::shared_ptr<Var> > vars_vector;
+  std::vector<std::shared_ptr<ConstraintBase> > cons_vector;
   std::string solver_status;
-  std::map<std::shared_ptr<Var>, std::map<std::shared_ptr<Var>, std::map<std::string, std::set<std::shared_ptr<Component> > > > > hessian_map;
+  std::unordered_map<std::shared_ptr<Var>, std::unordered_map<std::shared_ptr<Var>, std::unordered_map<std::string, std::unordered_set<std::shared_ptr<Component> > > > > hessian_map;
+  std::vector<std::shared_ptr<Var> > hessian_vector_var1;
+  std::vector<std::shared_ptr<Var> > hessian_vector_var2;
 };

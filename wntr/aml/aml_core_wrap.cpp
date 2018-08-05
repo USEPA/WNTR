@@ -3006,49 +3006,49 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define SWIGTYPE_p_CSRJacobian swig_types[0]
-#define SWIGTYPE_p_Component swig_types[1]
-#define SWIGTYPE_p_ConditionalConstraint swig_types[2]
-#define SWIGTYPE_p_Constraint swig_types[3]
-#define SWIGTYPE_p_ConstraintBase swig_types[4]
-#define SWIGTYPE_p_Expression swig_types[5]
-#define SWIGTYPE_p_Node swig_types[6]
-#define SWIGTYPE_p_Objective swig_types[7]
-#define SWIGTYPE_p_OperatorOperatorDivideOperator swig_types[8]
-#define SWIGTYPE_p_OperatorOperatorMultiplyOperator swig_types[9]
-#define SWIGTYPE_p_OperatorOperatorPowerOperator swig_types[10]
-#define SWIGTYPE_p_OperatorParamDivideOperator swig_types[11]
-#define SWIGTYPE_p_OperatorParamMultiplyOperator swig_types[12]
-#define SWIGTYPE_p_OperatorParamPowerOperator swig_types[13]
-#define SWIGTYPE_p_OperatorVarDivideOperator swig_types[14]
-#define SWIGTYPE_p_OperatorVarMultiplyOperator swig_types[15]
-#define SWIGTYPE_p_OperatorVarPowerOperator swig_types[16]
-#define SWIGTYPE_p_Param swig_types[17]
-#define SWIGTYPE_p_ParamOperatorDivideOperator swig_types[18]
-#define SWIGTYPE_p_ParamOperatorMultiplyOperator swig_types[19]
-#define SWIGTYPE_p_ParamOperatorPowerOperator swig_types[20]
-#define SWIGTYPE_p_ParamParamDivideOperator swig_types[21]
-#define SWIGTYPE_p_ParamParamMultiplyOperator swig_types[22]
-#define SWIGTYPE_p_ParamParamPowerOperator swig_types[23]
-#define SWIGTYPE_p_ParamVarDivideOperator swig_types[24]
-#define SWIGTYPE_p_ParamVarMultiplyOperator swig_types[25]
-#define SWIGTYPE_p_ParamVarPowerOperator swig_types[26]
-#define SWIGTYPE_p_Summation swig_types[27]
-#define SWIGTYPE_p_Var swig_types[28]
-#define SWIGTYPE_p_VarOperatorDivideOperator swig_types[29]
-#define SWIGTYPE_p_VarOperatorMultiplyOperator swig_types[30]
-#define SWIGTYPE_p_VarOperatorPowerOperator swig_types[31]
-#define SWIGTYPE_p_VarParamDivideOperator swig_types[32]
-#define SWIGTYPE_p_VarParamMultiplyOperator swig_types[33]
-#define SWIGTYPE_p_VarParamPowerOperator swig_types[34]
-#define SWIGTYPE_p_VarVarDivideOperator swig_types[35]
-#define SWIGTYPE_p_VarVarMultiplyOperator swig_types[36]
-#define SWIGTYPE_p_VarVarPowerOperator swig_types[37]
-#define SWIGTYPE_p_WNTRModel swig_types[38]
-#define SWIGTYPE_p_allocator_type swig_types[39]
-#define SWIGTYPE_p_char swig_types[40]
-#define SWIGTYPE_p_difference_type swig_types[41]
-#define SWIGTYPE_p_double swig_types[42]
+#define SWIGTYPE_p_Component swig_types[0]
+#define SWIGTYPE_p_ConditionalConstraint swig_types[1]
+#define SWIGTYPE_p_Constraint swig_types[2]
+#define SWIGTYPE_p_ConstraintBase swig_types[3]
+#define SWIGTYPE_p_Expression swig_types[4]
+#define SWIGTYPE_p_Node swig_types[5]
+#define SWIGTYPE_p_Objective swig_types[6]
+#define SWIGTYPE_p_OperatorOperatorDivideOperator swig_types[7]
+#define SWIGTYPE_p_OperatorOperatorMultiplyOperator swig_types[8]
+#define SWIGTYPE_p_OperatorOperatorPowerOperator swig_types[9]
+#define SWIGTYPE_p_OperatorParamDivideOperator swig_types[10]
+#define SWIGTYPE_p_OperatorParamMultiplyOperator swig_types[11]
+#define SWIGTYPE_p_OperatorParamPowerOperator swig_types[12]
+#define SWIGTYPE_p_OperatorVarDivideOperator swig_types[13]
+#define SWIGTYPE_p_OperatorVarMultiplyOperator swig_types[14]
+#define SWIGTYPE_p_OperatorVarPowerOperator swig_types[15]
+#define SWIGTYPE_p_Param swig_types[16]
+#define SWIGTYPE_p_ParamOperatorDivideOperator swig_types[17]
+#define SWIGTYPE_p_ParamOperatorMultiplyOperator swig_types[18]
+#define SWIGTYPE_p_ParamOperatorPowerOperator swig_types[19]
+#define SWIGTYPE_p_ParamParamDivideOperator swig_types[20]
+#define SWIGTYPE_p_ParamParamMultiplyOperator swig_types[21]
+#define SWIGTYPE_p_ParamParamPowerOperator swig_types[22]
+#define SWIGTYPE_p_ParamVarDivideOperator swig_types[23]
+#define SWIGTYPE_p_ParamVarMultiplyOperator swig_types[24]
+#define SWIGTYPE_p_ParamVarPowerOperator swig_types[25]
+#define SWIGTYPE_p_Summation swig_types[26]
+#define SWIGTYPE_p_Var swig_types[27]
+#define SWIGTYPE_p_VarOperatorDivideOperator swig_types[28]
+#define SWIGTYPE_p_VarOperatorMultiplyOperator swig_types[29]
+#define SWIGTYPE_p_VarOperatorPowerOperator swig_types[30]
+#define SWIGTYPE_p_VarParamDivideOperator swig_types[31]
+#define SWIGTYPE_p_VarParamMultiplyOperator swig_types[32]
+#define SWIGTYPE_p_VarParamPowerOperator swig_types[33]
+#define SWIGTYPE_p_VarVarDivideOperator swig_types[34]
+#define SWIGTYPE_p_VarVarMultiplyOperator swig_types[35]
+#define SWIGTYPE_p_VarVarPowerOperator swig_types[36]
+#define SWIGTYPE_p_WNTRModel swig_types[37]
+#define SWIGTYPE_p_allocator_type swig_types[38]
+#define SWIGTYPE_p_char swig_types[39]
+#define SWIGTYPE_p_difference_type swig_types[40]
+#define SWIGTYPE_p_double swig_types[41]
+#define SWIGTYPE_p_int swig_types[42]
 #define SWIGTYPE_p_key_type swig_types[43]
 #define SWIGTYPE_p_p_PyObject swig_types[44]
 #define SWIGTYPE_p_size_type swig_types[45]
@@ -3061,56 +3061,61 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_std__listT_int_std__allocatorT_int_t_t swig_types[52]
 #define SWIGTYPE_p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t swig_types[53]
 #define SWIGTYPE_p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t swig_types[54]
-#define SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t swig_types[55]
-#define SWIGTYPE_p_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t swig_types[56]
-#define SWIGTYPE_p_std__shared_ptrT_Component_t swig_types[57]
-#define SWIGTYPE_p_std__shared_ptrT_ConditionalConstraint_t swig_types[58]
-#define SWIGTYPE_p_std__shared_ptrT_ConstraintBase_t swig_types[59]
-#define SWIGTYPE_p_std__shared_ptrT_Constraint_t swig_types[60]
-#define SWIGTYPE_p_std__shared_ptrT_Expression_t swig_types[61]
-#define SWIGTYPE_p_std__shared_ptrT_Node_t swig_types[62]
-#define SWIGTYPE_p_std__shared_ptrT_Objective_t swig_types[63]
-#define SWIGTYPE_p_std__shared_ptrT_OperatorOperatorDivideOperator_t swig_types[64]
-#define SWIGTYPE_p_std__shared_ptrT_OperatorOperatorMultiplyOperator_t swig_types[65]
-#define SWIGTYPE_p_std__shared_ptrT_OperatorOperatorPowerOperator_t swig_types[66]
-#define SWIGTYPE_p_std__shared_ptrT_OperatorParamDivideOperator_t swig_types[67]
-#define SWIGTYPE_p_std__shared_ptrT_OperatorParamMultiplyOperator_t swig_types[68]
-#define SWIGTYPE_p_std__shared_ptrT_OperatorParamPowerOperator_t swig_types[69]
-#define SWIGTYPE_p_std__shared_ptrT_OperatorVarDivideOperator_t swig_types[70]
-#define SWIGTYPE_p_std__shared_ptrT_OperatorVarMultiplyOperator_t swig_types[71]
-#define SWIGTYPE_p_std__shared_ptrT_OperatorVarPowerOperator_t swig_types[72]
-#define SWIGTYPE_p_std__shared_ptrT_ParamOperatorDivideOperator_t swig_types[73]
-#define SWIGTYPE_p_std__shared_ptrT_ParamOperatorMultiplyOperator_t swig_types[74]
-#define SWIGTYPE_p_std__shared_ptrT_ParamOperatorPowerOperator_t swig_types[75]
-#define SWIGTYPE_p_std__shared_ptrT_ParamParamDivideOperator_t swig_types[76]
-#define SWIGTYPE_p_std__shared_ptrT_ParamParamMultiplyOperator_t swig_types[77]
-#define SWIGTYPE_p_std__shared_ptrT_ParamParamPowerOperator_t swig_types[78]
-#define SWIGTYPE_p_std__shared_ptrT_ParamVarDivideOperator_t swig_types[79]
-#define SWIGTYPE_p_std__shared_ptrT_ParamVarMultiplyOperator_t swig_types[80]
-#define SWIGTYPE_p_std__shared_ptrT_ParamVarPowerOperator_t swig_types[81]
-#define SWIGTYPE_p_std__shared_ptrT_Param_t swig_types[82]
-#define SWIGTYPE_p_std__shared_ptrT_Summation_t swig_types[83]
-#define SWIGTYPE_p_std__shared_ptrT_VarOperatorDivideOperator_t swig_types[84]
-#define SWIGTYPE_p_std__shared_ptrT_VarOperatorMultiplyOperator_t swig_types[85]
-#define SWIGTYPE_p_std__shared_ptrT_VarOperatorPowerOperator_t swig_types[86]
-#define SWIGTYPE_p_std__shared_ptrT_VarParamDivideOperator_t swig_types[87]
-#define SWIGTYPE_p_std__shared_ptrT_VarParamMultiplyOperator_t swig_types[88]
-#define SWIGTYPE_p_std__shared_ptrT_VarParamPowerOperator_t swig_types[89]
-#define SWIGTYPE_p_std__shared_ptrT_VarVarDivideOperator_t swig_types[90]
-#define SWIGTYPE_p_std__shared_ptrT_VarVarMultiplyOperator_t swig_types[91]
-#define SWIGTYPE_p_std__shared_ptrT_VarVarPowerOperator_t swig_types[92]
-#define SWIGTYPE_p_std__shared_ptrT_Var_t swig_types[93]
-#define SWIGTYPE_p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t swig_types[94]
-#define SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t swig_types[95]
-#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_double_std__allocatorT_double_t_t_t swig_types[96]
-#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t_t swig_types[97]
+#define SWIGTYPE_p_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t swig_types[55]
+#define SWIGTYPE_p_std__shared_ptrT_Component_t swig_types[56]
+#define SWIGTYPE_p_std__shared_ptrT_ConditionalConstraint_t swig_types[57]
+#define SWIGTYPE_p_std__shared_ptrT_ConstraintBase_t swig_types[58]
+#define SWIGTYPE_p_std__shared_ptrT_Constraint_t swig_types[59]
+#define SWIGTYPE_p_std__shared_ptrT_Expression_t swig_types[60]
+#define SWIGTYPE_p_std__shared_ptrT_Node_t swig_types[61]
+#define SWIGTYPE_p_std__shared_ptrT_Objective_t swig_types[62]
+#define SWIGTYPE_p_std__shared_ptrT_OperatorOperatorDivideOperator_t swig_types[63]
+#define SWIGTYPE_p_std__shared_ptrT_OperatorOperatorMultiplyOperator_t swig_types[64]
+#define SWIGTYPE_p_std__shared_ptrT_OperatorOperatorPowerOperator_t swig_types[65]
+#define SWIGTYPE_p_std__shared_ptrT_OperatorParamDivideOperator_t swig_types[66]
+#define SWIGTYPE_p_std__shared_ptrT_OperatorParamMultiplyOperator_t swig_types[67]
+#define SWIGTYPE_p_std__shared_ptrT_OperatorParamPowerOperator_t swig_types[68]
+#define SWIGTYPE_p_std__shared_ptrT_OperatorVarDivideOperator_t swig_types[69]
+#define SWIGTYPE_p_std__shared_ptrT_OperatorVarMultiplyOperator_t swig_types[70]
+#define SWIGTYPE_p_std__shared_ptrT_OperatorVarPowerOperator_t swig_types[71]
+#define SWIGTYPE_p_std__shared_ptrT_ParamOperatorDivideOperator_t swig_types[72]
+#define SWIGTYPE_p_std__shared_ptrT_ParamOperatorMultiplyOperator_t swig_types[73]
+#define SWIGTYPE_p_std__shared_ptrT_ParamOperatorPowerOperator_t swig_types[74]
+#define SWIGTYPE_p_std__shared_ptrT_ParamParamDivideOperator_t swig_types[75]
+#define SWIGTYPE_p_std__shared_ptrT_ParamParamMultiplyOperator_t swig_types[76]
+#define SWIGTYPE_p_std__shared_ptrT_ParamParamPowerOperator_t swig_types[77]
+#define SWIGTYPE_p_std__shared_ptrT_ParamVarDivideOperator_t swig_types[78]
+#define SWIGTYPE_p_std__shared_ptrT_ParamVarMultiplyOperator_t swig_types[79]
+#define SWIGTYPE_p_std__shared_ptrT_ParamVarPowerOperator_t swig_types[80]
+#define SWIGTYPE_p_std__shared_ptrT_Param_t swig_types[81]
+#define SWIGTYPE_p_std__shared_ptrT_Summation_t swig_types[82]
+#define SWIGTYPE_p_std__shared_ptrT_VarOperatorDivideOperator_t swig_types[83]
+#define SWIGTYPE_p_std__shared_ptrT_VarOperatorMultiplyOperator_t swig_types[84]
+#define SWIGTYPE_p_std__shared_ptrT_VarOperatorPowerOperator_t swig_types[85]
+#define SWIGTYPE_p_std__shared_ptrT_VarParamDivideOperator_t swig_types[86]
+#define SWIGTYPE_p_std__shared_ptrT_VarParamMultiplyOperator_t swig_types[87]
+#define SWIGTYPE_p_std__shared_ptrT_VarParamPowerOperator_t swig_types[88]
+#define SWIGTYPE_p_std__shared_ptrT_VarVarDivideOperator_t swig_types[89]
+#define SWIGTYPE_p_std__shared_ptrT_VarVarMultiplyOperator_t swig_types[90]
+#define SWIGTYPE_p_std__shared_ptrT_VarVarPowerOperator_t swig_types[91]
+#define SWIGTYPE_p_std__shared_ptrT_Var_t swig_types[92]
+#define SWIGTYPE_p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t swig_types[93]
+#define SWIGTYPE_p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t swig_types[94]
+#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_double_std__allocatorT_double_t_t_t swig_types[95]
+#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t_t swig_types[96]
+#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t swig_types[97]
 #define SWIGTYPE_p_std__shared_ptrT_var_set_t swig_types[98]
-#define SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t swig_types[99]
-#define SWIGTYPE_p_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t swig_types[100]
-#define SWIGTYPE_p_swig__SwigPyIterator swig_types[101]
-#define SWIGTYPE_p_value_type swig_types[102]
-static swig_type_info *swig_types[104];
-static swig_module_info swig_module = {swig_types, 103, 0, 0, 0, 0};
+#define SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t swig_types[99]
+#define SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t swig_types[100]
+#define SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_Var_t_t swig_types[101]
+#define SWIGTYPE_p_std__vectorT_double_std__allocatorT_double_t_t swig_types[102]
+#define SWIGTYPE_p_std__vectorT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t swig_types[103]
+#define SWIGTYPE_p_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t swig_types[104]
+#define SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t swig_types[105]
+#define SWIGTYPE_p_swig__SwigPyIterator swig_types[106]
+#define SWIGTYPE_p_value_type swig_types[107]
+static swig_type_info *swig_types[109];
+static swig_module_info swig_module = {swig_types, 108, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -5489,6 +5494,107 @@ SWIGINTERN std::list< int >::iterator std_list_Sl_int_Sg__erase__SWIG_0(std::lis
 SWIGINTERN std::list< int >::iterator std_list_Sl_int_Sg__erase__SWIG_1(std::list< int > *self,std::list< int >::iterator first,std::list< int >::iterator last){ return self->erase(first, last); }
 SWIGINTERN std::list< int >::iterator std_list_Sl_int_Sg__insert__SWIG_0(std::list< int > *self,std::list< int >::iterator pos,std::list< int >::value_type const &x){ return self->insert(pos, x); }
 SWIGINTERN void std_list_Sl_int_Sg__insert__SWIG_1(std::list< int > *self,std::list< int >::iterator pos,std::list< int >::size_type n,std::list< int >::value_type const &x){ self->insert(pos, n, x); }
+
+      namespace swig {
+	template <>  struct traits<std::vector< std::shared_ptr< Var >, std::allocator< std::shared_ptr< Var > > > > {
+	  typedef pointer_category category;
+	  static const char* type_name() {
+	    return "std::vector<" "std::shared_ptr< Var >" "," "std::allocator< std::shared_ptr< Var > >" " >";
+	  }
+	};
+      }
+    
+SWIGINTERN swig::SwigPyIterator *std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__iterator(std::vector< std::shared_ptr< Var > > *self,PyObject **PYTHON_SELF){
+      return swig::make_output_iterator(self->begin(), self->begin(), self->end(), *PYTHON_SELF);
+    }
+SWIGINTERN bool std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____nonzero__(std::vector< std::shared_ptr< Var > > const *self){
+      return !(self->empty());
+    }
+SWIGINTERN bool std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____bool__(std::vector< std::shared_ptr< Var > > const *self){
+      return !(self->empty());
+    }
+SWIGINTERN std::vector< std::shared_ptr< Var > >::size_type std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____len__(std::vector< std::shared_ptr< Var > > const *self){
+      return self->size();
+    }
+SWIGINTERN std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____getslice__(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::difference_type i,std::vector< std::shared_ptr< Var > >::difference_type j){
+      return swig::getslice(self, i, j, 1);
+    }
+SWIGINTERN void std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____setslice____SWIG_0(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::difference_type i,std::vector< std::shared_ptr< Var > >::difference_type j){
+      swig::setslice(self, i, j, 1, std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >());
+    }
+SWIGINTERN void std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____setslice____SWIG_1(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::difference_type i,std::vector< std::shared_ptr< Var > >::difference_type j,std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &v){
+      swig::setslice(self, i, j, 1, v);
+    }
+SWIGINTERN void std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____delslice__(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::difference_type i,std::vector< std::shared_ptr< Var > >::difference_type j){
+      swig::delslice(self, i, j, 1);
+    }
+SWIGINTERN void std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____delitem____SWIG_0(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::difference_type i){
+      swig::erase(self, swig::getpos(self, i));
+    }
+SWIGINTERN std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____getitem____SWIG_0(std::vector< std::shared_ptr< Var > > *self,PySliceObject *slice){
+      Py_ssize_t i, j, step;
+      if( !PySlice_Check(slice) ) {
+        SWIG_Error(SWIG_TypeError, "Slice object expected.");
+        return NULL;
+      }
+      PySlice_GetIndices(SWIGPY_SLICE_ARG(slice), (Py_ssize_t)self->size(), &i, &j, &step);
+      std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >::difference_type id = i;
+      std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >::difference_type jd = j;
+      return swig::getslice(self, id, jd, step);
+    }
+SWIGINTERN void std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____setitem____SWIG_0(std::vector< std::shared_ptr< Var > > *self,PySliceObject *slice,std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &v){
+      Py_ssize_t i, j, step;
+      if( !PySlice_Check(slice) ) {
+        SWIG_Error(SWIG_TypeError, "Slice object expected.");
+        return;
+      }
+      PySlice_GetIndices(SWIGPY_SLICE_ARG(slice), (Py_ssize_t)self->size(), &i, &j, &step);
+      std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >::difference_type id = i;
+      std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >::difference_type jd = j;
+      swig::setslice(self, id, jd, step, v);
+    }
+SWIGINTERN void std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____setitem____SWIG_1(std::vector< std::shared_ptr< Var > > *self,PySliceObject *slice){
+      Py_ssize_t i, j, step;
+      if( !PySlice_Check(slice) ) {
+        SWIG_Error(SWIG_TypeError, "Slice object expected.");
+        return;
+      }
+      PySlice_GetIndices(SWIGPY_SLICE_ARG(slice), (Py_ssize_t)self->size(), &i, &j, &step);
+      std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >::difference_type id = i;
+      std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >::difference_type jd = j;
+      swig::delslice(self, id, jd, step);
+    }
+SWIGINTERN void std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____delitem____SWIG_1(std::vector< std::shared_ptr< Var > > *self,PySliceObject *slice){
+      Py_ssize_t i, j, step;
+      if( !PySlice_Check(slice) ) {
+        SWIG_Error(SWIG_TypeError, "Slice object expected.");
+        return;
+      }
+      PySlice_GetIndices(SWIGPY_SLICE_ARG(slice), (Py_ssize_t)self->size(), &i, &j, &step);
+      std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >::difference_type id = i;
+      std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >::difference_type jd = j;
+      swig::delslice(self, id, jd, step);
+    }
+SWIGINTERN std::vector< std::shared_ptr< Var > >::value_type const &std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____getitem____SWIG_1(std::vector< std::shared_ptr< Var > > const *self,std::vector< std::shared_ptr< Var > >::difference_type i){
+      return *(swig::cgetpos(self, i));
+    }
+SWIGINTERN void std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____setitem____SWIG_2(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::difference_type i,std::vector< std::shared_ptr< Var > >::value_type const &x){
+      *(swig::getpos(self,i)) = x;
+    }
+SWIGINTERN std::vector< std::shared_ptr< Var > >::value_type std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__pop(std::vector< std::shared_ptr< Var > > *self){
+      if (self->size() == 0)
+	throw std::out_of_range("pop from empty container");
+      std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >::value_type x = self->back();
+      self->pop_back();
+      return x;
+    }
+SWIGINTERN void std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__append(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::value_type const &x){
+      self->push_back(x);
+    }
+SWIGINTERN std::vector< std::shared_ptr< Var > >::iterator std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__erase__SWIG_0(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::iterator pos){ return self->erase(pos); }
+SWIGINTERN std::vector< std::shared_ptr< Var > >::iterator std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__erase__SWIG_1(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::iterator first,std::vector< std::shared_ptr< Var > >::iterator last){ return self->erase(first, last); }
+SWIGINTERN std::vector< std::shared_ptr< Var > >::iterator std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__insert__SWIG_0(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::iterator pos,std::vector< std::shared_ptr< Var > >::value_type const &x){ return self->insert(pos, x); }
+SWIGINTERN void std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__insert__SWIG_1(std::vector< std::shared_ptr< Var > > *self,std::vector< std::shared_ptr< Var > >::iterator pos,std::vector< std::shared_ptr< Var > >::size_type n,std::vector< std::shared_ptr< Var > >::value_type const &x){ self->insert(pos, n, x); }
 
 SWIGINTERN int
 SWIG_AsVal_bool (PyObject *obj, bool *val)
@@ -15968,6 +16074,2011 @@ SWIGINTERN PyObject *int_list_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObj
   return SWIG_Py_Void();
 }
 
+SWIGINTERN PyObject *_wrap_var_vec_iterator(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  PyObject **arg2 = (PyObject **) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  swig::SwigPyIterator *result = 0 ;
+  
+  arg2 = &obj0;
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_iterator",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_iterator" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = (swig::SwigPyIterator *)std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__iterator(arg1,arg2);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_swig__SwigPyIterator, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___nonzero__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec___nonzero__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___nonzero__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = (bool)std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____nonzero__((std::vector< std::shared_ptr< Var > > const *)arg1);
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___bool__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec___bool__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___bool__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = (bool)std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____bool__((std::vector< std::shared_ptr< Var > > const *)arg1);
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___len__(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > >::size_type result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec___len__",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___len__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____len__((std::vector< std::shared_ptr< Var > > const *)arg1);
+  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___getslice__(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg2 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  ptrdiff_t val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "i",(char *) "j", NULL 
+  };
+  std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *result = 0 ;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:var_vec___getslice__",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___getslice__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec___getslice__" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val2);
+  ecode3 = SWIG_AsVal_ptrdiff_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "var_vec___getslice__" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg3 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val3);
+  try {
+    result = (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *)std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____getslice__(arg1,arg2,arg3);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  catch(std::invalid_argument &_e) {
+    SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+  }
+  
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___setslice____SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg2 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  ptrdiff_t val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:var_vec___setslice__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___setslice__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec___setslice__" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val2);
+  ecode3 = SWIG_AsVal_ptrdiff_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "var_vec___setslice__" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg3 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val3);
+  try {
+    std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____setslice____SWIG_0(arg1,arg2,arg3);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  catch(std::invalid_argument &_e) {
+    SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+  }
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___setslice____SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg2 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg3 ;
+  std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *arg4 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  ptrdiff_t val3 ;
+  int ecode3 = 0 ;
+  int res4 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:var_vec___setslice__",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___setslice__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec___setslice__" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val2);
+  ecode3 = SWIG_AsVal_ptrdiff_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "var_vec___setslice__" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg3 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val3);
+  {
+    std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *ptr = (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *)0;
+    res4 = swig::asptr(obj3, &ptr);
+    if (!SWIG_IsOK(res4)) {
+      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "var_vec___setslice__" "', argument " "4"" of type '" "std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "var_vec___setslice__" "', argument " "4"" of type '" "std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &""'"); 
+    }
+    arg4 = ptr;
+  }
+  try {
+    std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____setslice____SWIG_1(arg1,arg2,arg3,(std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &)*arg4);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  catch(std::invalid_argument &_e) {
+    SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+  }
+  
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsNewObj(res4)) delete arg4;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res4)) delete arg4;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___setslice__(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[5] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 4) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_ptrdiff_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_ptrdiff_t(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          return _wrap_var_vec___setslice____SWIG_0(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_ptrdiff_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        {
+          int res = SWIG_AsVal_ptrdiff_t(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          int res = swig::asptr(argv[3], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            return _wrap_var_vec___setslice____SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'var_vec___setslice__'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< std::shared_ptr< Var > >::__setslice__(std::vector< std::shared_ptr< Var > >::difference_type,std::vector< std::shared_ptr< Var > >::difference_type)\n"
+    "    std::vector< std::shared_ptr< Var > >::__setslice__(std::vector< std::shared_ptr< Var > >::difference_type,std::vector< std::shared_ptr< Var > >::difference_type,std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___delslice__(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg2 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  ptrdiff_t val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "i",(char *) "j", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:var_vec___delslice__",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___delslice__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec___delslice__" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val2);
+  ecode3 = SWIG_AsVal_ptrdiff_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "var_vec___delslice__" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg3 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val3);
+  try {
+    std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____delslice__(arg1,arg2,arg3);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  catch(std::invalid_argument &_e) {
+    SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+  }
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___delitem____SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:var_vec___delitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___delitem__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec___delitem__" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val2);
+  try {
+    std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____delitem____SWIG_0(arg1,arg2);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  catch(std::invalid_argument &_e) {
+    SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+  }
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___getitem____SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  PySliceObject *arg2 = (PySliceObject *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:var_vec___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___getitem__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  {
+    if (!PySlice_Check(obj1)) {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec___getitem__" "', argument " "2"" of type '" "PySliceObject *""'");
+    }
+    arg2 = (PySliceObject *) obj1;
+  }
+  try {
+    result = (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *)std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____getitem____SWIG_0(arg1,arg2);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  catch(std::invalid_argument &_e) {
+    SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+  }
+  
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___setitem____SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  PySliceObject *arg2 = (PySliceObject *) 0 ;
+  std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int res3 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:var_vec___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___setitem__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  {
+    if (!PySlice_Check(obj1)) {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec___setitem__" "', argument " "2"" of type '" "PySliceObject *""'");
+    }
+    arg2 = (PySliceObject *) obj1;
+  }
+  {
+    std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *ptr = (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *)0;
+    res3 = swig::asptr(obj2, &ptr);
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "var_vec___setitem__" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "var_vec___setitem__" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &""'"); 
+    }
+    arg3 = ptr;
+  }
+  try {
+    std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____setitem____SWIG_0(arg1,arg2,(std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &)*arg3);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  catch(std::invalid_argument &_e) {
+    SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+  }
+  
+  resultobj = SWIG_Py_Void();
+  if (SWIG_IsNewObj(res3)) delete arg3;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res3)) delete arg3;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___setitem____SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  PySliceObject *arg2 = (PySliceObject *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:var_vec___setitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___setitem__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  {
+    if (!PySlice_Check(obj1)) {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec___setitem__" "', argument " "2"" of type '" "PySliceObject *""'");
+    }
+    arg2 = (PySliceObject *) obj1;
+  }
+  try {
+    std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____setitem____SWIG_1(arg1,arg2);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  catch(std::invalid_argument &_e) {
+    SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+  }
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___delitem____SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  PySliceObject *arg2 = (PySliceObject *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:var_vec___delitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___delitem__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  {
+    if (!PySlice_Check(obj1)) {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec___delitem__" "', argument " "2"" of type '" "PySliceObject *""'");
+    }
+    arg2 = (PySliceObject *) obj1;
+  }
+  try {
+    std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____delitem____SWIG_1(arg1,arg2);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  catch(std::invalid_argument &_e) {
+    SWIG_exception_fail(SWIG_ValueError, (&_e)->what());
+  }
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___delitem__(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[3] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 2) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        _v = PySlice_Check(argv[1]);
+      }
+      if (_v) {
+        return _wrap_var_vec___delitem____SWIG_1(self, args);
+      }
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_ptrdiff_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_var_vec___delitem____SWIG_0(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'var_vec___delitem__'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< std::shared_ptr< Var > >::__delitem__(std::vector< std::shared_ptr< Var > >::difference_type)\n"
+    "    std::vector< std::shared_ptr< Var > >::__delitem__(PySliceObject *)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___getitem____SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:var_vec___getitem__",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___getitem__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec___getitem__" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val2);
+  try {
+    result = (std::vector< std::shared_ptr< Var > >::value_type *) &std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____getitem____SWIG_1((std::vector< std::shared_ptr< Var > > const *)arg1,arg2);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  
+  {
+    std::shared_ptr<  Var > *smartresult = *result ? new std::shared_ptr<  Var >(*result) : 0;
+    resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(smartresult), SWIGTYPE_p_std__shared_ptrT_Var_t, SWIG_POINTER_OWN);
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___getitem__(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[3] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 2) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        _v = PySlice_Check(argv[1]);
+      }
+      if (_v) {
+        return _wrap_var_vec___getitem____SWIG_0(self, args);
+      }
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_ptrdiff_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_var_vec___getitem____SWIG_1(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'var_vec___getitem__'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< std::shared_ptr< Var > >::__getitem__(PySliceObject *)\n"
+    "    std::vector< std::shared_ptr< Var > >::__getitem__(std::vector< std::shared_ptr< Var > >::difference_type) const\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___setitem____SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::difference_type arg2 ;
+  std::vector< std::shared_ptr< Var > >::value_type *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  ptrdiff_t val2 ;
+  int ecode2 = 0 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type tempshared3 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:var_vec___setitem__",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec___setitem__" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_ptrdiff_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec___setitem__" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::difference_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::difference_type >(val2);
+  {
+    int newmem = 0;
+    res3 = SWIG_ConvertPtrAndOwn(obj2, &argp3, SWIGTYPE_p_std__shared_ptrT_Var_t,  0 , &newmem);
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "var_vec___setitem__" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::value_type const &""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      if (argp3) tempshared3 = *reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3);
+      delete reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3);
+      arg3 = &tempshared3;
+    } else {
+      arg3 = (argp3) ? reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3) : &tempshared3;
+    }
+  }
+  try {
+    std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg____setitem____SWIG_2(arg1,arg2,(std::shared_ptr< Var > const &)*arg3);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec___setitem__(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[4] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 3) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        _v = PySlice_Check(argv[1]);
+      }
+      if (_v) {
+        return _wrap_var_vec___setitem____SWIG_1(self, args);
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        _v = PySlice_Check(argv[1]);
+      }
+      if (_v) {
+        int res = swig::asptr(argv[2], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          return _wrap_var_vec___setitem____SWIG_0(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_ptrdiff_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__shared_ptrT_Var_t, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          return _wrap_var_vec___setitem____SWIG_2(self, args);
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'var_vec___setitem__'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< std::shared_ptr< Var > >::__setitem__(PySliceObject *,std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &)\n"
+    "    std::vector< std::shared_ptr< Var > >::__setitem__(PySliceObject *)\n"
+    "    std::vector< std::shared_ptr< Var > >::__setitem__(std::vector< std::shared_ptr< Var > >::difference_type,std::vector< std::shared_ptr< Var > >::value_type const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_pop(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_pop",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_pop" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  try {
+    result = std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__pop(arg1);
+  }
+  catch(std::out_of_range &_e) {
+    SWIG_exception_fail(SWIG_IndexError, (&_e)->what());
+  }
+  
+  {
+    std::shared_ptr<  Var > *smartresult = result ? new std::shared_ptr<  Var >(result) : 0;
+    resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(smartresult), SWIGTYPE_p_std__shared_ptrT_Var_t, SWIG_POINTER_OWN);
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_append(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type tempshared2 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "x", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:var_vec_append",kwnames,&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_append" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  {
+    int newmem = 0;
+    res2 = SWIG_ConvertPtrAndOwn(obj1, &argp2, SWIGTYPE_p_std__shared_ptrT_Var_t,  0 , &newmem);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "var_vec_append" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::value_type const &""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      if (argp2) tempshared2 = *reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp2);
+      delete reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp2);
+      arg2 = &tempshared2;
+    } else {
+      arg2 = (argp2) ? reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp2) : &tempshared2;
+    }
+  }
+  std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__append(arg1,(std::shared_ptr< Var > const &)*arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_var_vec__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)":new_var_vec")) SWIG_fail;
+  result = (std::vector< std::shared_ptr< Var > > *)new std::vector< std::shared_ptr< Var > >();
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_var_vec__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = 0 ;
+  int res1 = SWIG_OLDOBJ ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:new_var_vec",&obj0)) SWIG_fail;
+  {
+    std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *ptr = (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *)0;
+    res1 = swig::asptr(obj0, &ptr);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_var_vec" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const &""'"); 
+    }
+    if (!ptr) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_var_vec" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const &""'"); 
+    }
+    arg1 = ptr;
+  }
+  result = (std::vector< std::shared_ptr< Var > > *)new std::vector< std::shared_ptr< Var > >((std::vector< std::shared_ptr< Var > > const &)*arg1);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_NEW |  0 );
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  return resultobj;
+fail:
+  if (SWIG_IsNewObj(res1)) delete arg1;
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_empty(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_empty",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_empty" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = (bool)((std::vector< std::shared_ptr< Var > > const *)arg1)->empty();
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_size(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > >::size_type result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_size",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_size" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = ((std::vector< std::shared_ptr< Var > > const *)arg1)->size();
+  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_swap(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > > *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "v", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:var_vec_swap",kwnames,&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_swap" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t,  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "var_vec_swap" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > > &""'"); 
+  }
+  if (!argp2) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "var_vec_swap" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > > &""'"); 
+  }
+  arg2 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp2);
+  (arg1)->swap(*arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_begin(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > >::iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_begin",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_begin" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = (arg1)->begin();
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< std::shared_ptr< Var > >::iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_end(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > >::iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_end",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_end" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = (arg1)->end();
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< std::shared_ptr< Var > >::iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_rbegin(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > >::reverse_iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_rbegin",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_rbegin" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = (arg1)->rbegin();
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< std::shared_ptr< Var > >::reverse_iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_rend(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > >::reverse_iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_rend",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_rend" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = (arg1)->rend();
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< std::shared_ptr< Var > >::reverse_iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_clear(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_clear",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_clear" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  (arg1)->clear();
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_get_allocator(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  SwigValueWrapper< std::allocator< std::shared_ptr< Var > > > result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_get_allocator",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_get_allocator" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = ((std::vector< std::shared_ptr< Var > > const *)arg1)->get_allocator();
+  resultobj = SWIG_NewPointerObj((new std::vector< std::shared_ptr< Var > >::allocator_type(static_cast< const std::vector< std::shared_ptr< Var > >::allocator_type& >(result))), SWIGTYPE_p_std__allocatorT_std__shared_ptrT_Var_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_var_vec__SWIG_2(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > >::size_type arg1 ;
+  size_t val1 ;
+  int ecode1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:new_var_vec",&obj0)) SWIG_fail;
+  ecode1 = SWIG_AsVal_size_t(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_var_vec" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > >::size_type""'");
+  } 
+  arg1 = static_cast< std::vector< std::shared_ptr< Var > >::size_type >(val1);
+  result = (std::vector< std::shared_ptr< Var > > *)new std::vector< std::shared_ptr< Var > >(arg1);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_pop_back(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_pop_back",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_pop_back" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  (arg1)->pop_back();
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_resize__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::size_type arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  size_t val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:var_vec_resize",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_resize" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec_resize" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::size_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::size_type >(val2);
+  (arg1)->resize(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_erase__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::iterator arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  swig::SwigPyIterator *iter2 = 0 ;
+  int res2 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  std::vector< std::shared_ptr< Var > >::iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:var_vec_erase",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_erase" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, SWIG_as_voidptrptr(&iter2), swig::SwigPyIterator::descriptor(), 0);
+  if (!SWIG_IsOK(res2) || !iter2) {
+    SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec_erase" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::iterator""'");
+  } else {
+    swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *iter_t = dynamic_cast<swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *>(iter2);
+    if (iter_t) {
+      arg2 = iter_t->get_current();
+    } else {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec_erase" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::iterator""'");
+    }
+  }
+  result = std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__erase__SWIG_0(arg1,arg2);
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< std::shared_ptr< Var > >::iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_erase__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::iterator arg2 ;
+  std::vector< std::shared_ptr< Var > >::iterator arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  swig::SwigPyIterator *iter2 = 0 ;
+  int res2 ;
+  swig::SwigPyIterator *iter3 = 0 ;
+  int res3 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  std::vector< std::shared_ptr< Var > >::iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:var_vec_erase",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_erase" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, SWIG_as_voidptrptr(&iter2), swig::SwigPyIterator::descriptor(), 0);
+  if (!SWIG_IsOK(res2) || !iter2) {
+    SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec_erase" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::iterator""'");
+  } else {
+    swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *iter_t = dynamic_cast<swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *>(iter2);
+    if (iter_t) {
+      arg2 = iter_t->get_current();
+    } else {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec_erase" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::iterator""'");
+    }
+  }
+  res3 = SWIG_ConvertPtr(obj2, SWIG_as_voidptrptr(&iter3), swig::SwigPyIterator::descriptor(), 0);
+  if (!SWIG_IsOK(res3) || !iter3) {
+    SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec_erase" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::iterator""'");
+  } else {
+    swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *iter_t = dynamic_cast<swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *>(iter3);
+    if (iter_t) {
+      arg3 = iter_t->get_current();
+    } else {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec_erase" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::iterator""'");
+    }
+  }
+  result = std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__erase__SWIG_1(arg1,arg2,arg3);
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< std::shared_ptr< Var > >::iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_erase(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[4] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 3) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      swig::SwigPyIterator *iter = 0;
+      int res = SWIG_ConvertPtr(argv[1], SWIG_as_voidptrptr(&iter), swig::SwigPyIterator::descriptor(), 0);
+      _v = (SWIG_IsOK(res) && iter && (dynamic_cast<swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *>(iter) != 0));
+      if (_v) {
+        return _wrap_var_vec_erase__SWIG_0(self, args);
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      swig::SwigPyIterator *iter = 0;
+      int res = SWIG_ConvertPtr(argv[1], SWIG_as_voidptrptr(&iter), swig::SwigPyIterator::descriptor(), 0);
+      _v = (SWIG_IsOK(res) && iter && (dynamic_cast<swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *>(iter) != 0));
+      if (_v) {
+        swig::SwigPyIterator *iter = 0;
+        int res = SWIG_ConvertPtr(argv[2], SWIG_as_voidptrptr(&iter), swig::SwigPyIterator::descriptor(), 0);
+        _v = (SWIG_IsOK(res) && iter && (dynamic_cast<swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *>(iter) != 0));
+        if (_v) {
+          return _wrap_var_vec_erase__SWIG_1(self, args);
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'var_vec_erase'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< std::shared_ptr< Var > >::erase(std::vector< std::shared_ptr< Var > >::iterator)\n"
+    "    std::vector< std::shared_ptr< Var > >::erase(std::vector< std::shared_ptr< Var > >::iterator,std::vector< std::shared_ptr< Var > >::iterator)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_var_vec__SWIG_3(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > >::size_type arg1 ;
+  std::vector< std::shared_ptr< Var > >::value_type *arg2 = 0 ;
+  size_t val1 ;
+  int ecode1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type tempshared2 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  std::vector< std::shared_ptr< Var > > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:new_var_vec",&obj0,&obj1)) SWIG_fail;
+  ecode1 = SWIG_AsVal_size_t(obj0, &val1);
+  if (!SWIG_IsOK(ecode1)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_var_vec" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > >::size_type""'");
+  } 
+  arg1 = static_cast< std::vector< std::shared_ptr< Var > >::size_type >(val1);
+  {
+    int newmem = 0;
+    res2 = SWIG_ConvertPtrAndOwn(obj1, &argp2, SWIGTYPE_p_std__shared_ptrT_Var_t,  0 , &newmem);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "new_var_vec" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::value_type const &""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      if (argp2) tempshared2 = *reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp2);
+      delete reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp2);
+      arg2 = &tempshared2;
+    } else {
+      arg2 = (argp2) ? reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp2) : &tempshared2;
+    }
+  }
+  result = (std::vector< std::shared_ptr< Var > > *)new std::vector< std::shared_ptr< Var > >(arg1,(std::vector< std::shared_ptr< Var > >::value_type const &)*arg2);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_NEW |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_new_var_vec(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[3] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 2) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 0) {
+    return _wrap_new_var_vec__SWIG_0(self, args);
+  }
+  if (argc == 1) {
+    int _v;
+    {
+      int res = SWIG_AsVal_size_t(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      return _wrap_new_var_vec__SWIG_2(self, args);
+    }
+  }
+  if (argc == 1) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_new_var_vec__SWIG_1(self, args);
+    }
+  }
+  if (argc == 2) {
+    int _v;
+    {
+      int res = SWIG_AsVal_size_t(argv[0], NULL);
+      _v = SWIG_CheckState(res);
+    }
+    if (_v) {
+      int res = SWIG_ConvertPtr(argv[1], 0, SWIGTYPE_p_std__shared_ptrT_Var_t, 0);
+      _v = SWIG_CheckState(res);
+      if (_v) {
+        return _wrap_new_var_vec__SWIG_3(self, args);
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_var_vec'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< std::shared_ptr< Var > >::vector()\n"
+    "    std::vector< std::shared_ptr< Var > >::vector(std::vector< std::shared_ptr< Var > > const &)\n"
+    "    std::vector< std::shared_ptr< Var > >::vector(std::vector< std::shared_ptr< Var > >::size_type)\n"
+    "    std::vector< std::shared_ptr< Var > >::vector(std::vector< std::shared_ptr< Var > >::size_type,std::vector< std::shared_ptr< Var > >::value_type const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_push_back(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type *arg2 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type tempshared2 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "x", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:var_vec_push_back",kwnames,&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_push_back" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  {
+    int newmem = 0;
+    res2 = SWIG_ConvertPtrAndOwn(obj1, &argp2, SWIGTYPE_p_std__shared_ptrT_Var_t,  0 , &newmem);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "var_vec_push_back" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::value_type const &""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      if (argp2) tempshared2 = *reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp2);
+      delete reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp2);
+      arg2 = &tempshared2;
+    } else {
+      arg2 = (argp2) ? reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp2) : &tempshared2;
+    }
+  }
+  (arg1)->push_back((std::vector< std::shared_ptr< Var > >::value_type const &)*arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_front(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_front",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_front" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = (std::vector< std::shared_ptr< Var > >::value_type *) &((std::vector< std::shared_ptr< Var > > const *)arg1)->front();
+  {
+    std::shared_ptr<  Var > *smartresult = *result ? new std::shared_ptr<  Var >(*result) : 0;
+    resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(smartresult), SWIGTYPE_p_std__shared_ptrT_Var_t, SWIG_POINTER_OWN);
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_back(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_back",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_back" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = (std::vector< std::shared_ptr< Var > >::value_type *) &((std::vector< std::shared_ptr< Var > > const *)arg1)->back();
+  {
+    std::shared_ptr<  Var > *smartresult = *result ? new std::shared_ptr<  Var >(*result) : 0;
+    resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(smartresult), SWIGTYPE_p_std__shared_ptrT_Var_t, SWIG_POINTER_OWN);
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_assign(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::size_type arg2 ;
+  std::vector< std::shared_ptr< Var > >::value_type *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  size_t val2 ;
+  int ecode2 = 0 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type tempshared3 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "n",(char *) "x", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:var_vec_assign",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_assign" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec_assign" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::size_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::size_type >(val2);
+  {
+    int newmem = 0;
+    res3 = SWIG_ConvertPtrAndOwn(obj2, &argp3, SWIGTYPE_p_std__shared_ptrT_Var_t,  0 , &newmem);
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "var_vec_assign" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::value_type const &""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      if (argp3) tempshared3 = *reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3);
+      delete reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3);
+      arg3 = &tempshared3;
+    } else {
+      arg3 = (argp3) ? reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3) : &tempshared3;
+    }
+  }
+  (arg1)->assign(arg2,(std::vector< std::shared_ptr< Var > >::value_type const &)*arg3);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_resize__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::size_type arg2 ;
+  std::vector< std::shared_ptr< Var > >::value_type *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  size_t val2 ;
+  int ecode2 = 0 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type tempshared3 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:var_vec_resize",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_resize" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec_resize" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::size_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::size_type >(val2);
+  {
+    int newmem = 0;
+    res3 = SWIG_ConvertPtrAndOwn(obj2, &argp3, SWIGTYPE_p_std__shared_ptrT_Var_t,  0 , &newmem);
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "var_vec_resize" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::value_type const &""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      if (argp3) tempshared3 = *reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3);
+      delete reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3);
+      arg3 = &tempshared3;
+    } else {
+      arg3 = (argp3) ? reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3) : &tempshared3;
+    }
+  }
+  (arg1)->resize(arg2,(std::vector< std::shared_ptr< Var > >::value_type const &)*arg3);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_resize(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[4] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 3) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 2) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_size_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        return _wrap_var_vec_resize__SWIG_0(self, args);
+      }
+    }
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      {
+        int res = SWIG_AsVal_size_t(argv[1], NULL);
+        _v = SWIG_CheckState(res);
+      }
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__shared_ptrT_Var_t, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          return _wrap_var_vec_resize__SWIG_1(self, args);
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'var_vec_resize'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< std::shared_ptr< Var > >::resize(std::vector< std::shared_ptr< Var > >::size_type)\n"
+    "    std::vector< std::shared_ptr< Var > >::resize(std::vector< std::shared_ptr< Var > >::size_type,std::vector< std::shared_ptr< Var > >::value_type const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_insert__SWIG_0(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::iterator arg2 ;
+  std::vector< std::shared_ptr< Var > >::value_type *arg3 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  swig::SwigPyIterator *iter2 = 0 ;
+  int res2 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type tempshared3 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  std::vector< std::shared_ptr< Var > >::iterator result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOO:var_vec_insert",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_insert" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, SWIG_as_voidptrptr(&iter2), swig::SwigPyIterator::descriptor(), 0);
+  if (!SWIG_IsOK(res2) || !iter2) {
+    SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec_insert" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::iterator""'");
+  } else {
+    swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *iter_t = dynamic_cast<swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *>(iter2);
+    if (iter_t) {
+      arg2 = iter_t->get_current();
+    } else {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec_insert" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::iterator""'");
+    }
+  }
+  {
+    int newmem = 0;
+    res3 = SWIG_ConvertPtrAndOwn(obj2, &argp3, SWIGTYPE_p_std__shared_ptrT_Var_t,  0 , &newmem);
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "var_vec_insert" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::value_type const &""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      if (argp3) tempshared3 = *reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3);
+      delete reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3);
+      arg3 = &tempshared3;
+    } else {
+      arg3 = (argp3) ? reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp3) : &tempshared3;
+    }
+  }
+  result = std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__insert__SWIG_0(arg1,arg2,(std::shared_ptr< Var > const &)*arg3);
+  resultobj = SWIG_NewPointerObj(swig::make_output_iterator(static_cast< const std::vector< std::shared_ptr< Var > >::iterator & >(result)),
+    swig::SwigPyIterator::descriptor(),SWIG_POINTER_OWN);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_insert__SWIG_1(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::iterator arg2 ;
+  std::vector< std::shared_ptr< Var > >::size_type arg3 ;
+  std::vector< std::shared_ptr< Var > >::value_type *arg4 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  swig::SwigPyIterator *iter2 = 0 ;
+  int res2 ;
+  size_t val3 ;
+  int ecode3 = 0 ;
+  void *argp4 ;
+  int res4 = 0 ;
+  std::vector< std::shared_ptr< Var > >::value_type tempshared4 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOO:var_vec_insert",&obj0,&obj1,&obj2,&obj3)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_insert" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, SWIG_as_voidptrptr(&iter2), swig::SwigPyIterator::descriptor(), 0);
+  if (!SWIG_IsOK(res2) || !iter2) {
+    SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec_insert" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::iterator""'");
+  } else {
+    swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *iter_t = dynamic_cast<swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *>(iter2);
+    if (iter_t) {
+      arg2 = iter_t->get_current();
+    } else {
+      SWIG_exception_fail(SWIG_ArgError(SWIG_TypeError), "in method '" "var_vec_insert" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::iterator""'");
+    }
+  }
+  ecode3 = SWIG_AsVal_size_t(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "var_vec_insert" "', argument " "3"" of type '" "std::vector< std::shared_ptr< Var > >::size_type""'");
+  } 
+  arg3 = static_cast< std::vector< std::shared_ptr< Var > >::size_type >(val3);
+  {
+    int newmem = 0;
+    res4 = SWIG_ConvertPtrAndOwn(obj3, &argp4, SWIGTYPE_p_std__shared_ptrT_Var_t,  0 , &newmem);
+    if (!SWIG_IsOK(res4)) {
+      SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "var_vec_insert" "', argument " "4"" of type '" "std::vector< std::shared_ptr< Var > >::value_type const &""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      if (argp4) tempshared4 = *reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp4);
+      delete reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp4);
+      arg4 = &tempshared4;
+    } else {
+      arg4 = (argp4) ? reinterpret_cast< std::vector< std::shared_ptr< Var > >::value_type * >(argp4) : &tempshared4;
+    }
+  }
+  std_vector_Sl_std_shared_ptr_Sl_Var_Sg__Sg__insert__SWIG_1(arg1,arg2,arg3,(std::shared_ptr< Var > const &)*arg4);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_insert(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[5] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 4) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 3) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      swig::SwigPyIterator *iter = 0;
+      int res = SWIG_ConvertPtr(argv[1], SWIG_as_voidptrptr(&iter), swig::SwigPyIterator::descriptor(), 0);
+      _v = (SWIG_IsOK(res) && iter && (dynamic_cast<swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *>(iter) != 0));
+      if (_v) {
+        int res = SWIG_ConvertPtr(argv[2], 0, SWIGTYPE_p_std__shared_ptrT_Var_t, 0);
+        _v = SWIG_CheckState(res);
+        if (_v) {
+          return _wrap_var_vec_insert__SWIG_0(self, args);
+        }
+      }
+    }
+  }
+  if (argc == 4) {
+    int _v;
+    int res = swig::asptr(argv[0], (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > >**)(0));
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      swig::SwigPyIterator *iter = 0;
+      int res = SWIG_ConvertPtr(argv[1], SWIG_as_voidptrptr(&iter), swig::SwigPyIterator::descriptor(), 0);
+      _v = (SWIG_IsOK(res) && iter && (dynamic_cast<swig::SwigPyIterator_T<std::vector< std::shared_ptr< Var > >::iterator > *>(iter) != 0));
+      if (_v) {
+        {
+          int res = SWIG_AsVal_size_t(argv[2], NULL);
+          _v = SWIG_CheckState(res);
+        }
+        if (_v) {
+          int res = SWIG_ConvertPtr(argv[3], 0, SWIGTYPE_p_std__shared_ptrT_Var_t, 0);
+          _v = SWIG_CheckState(res);
+          if (_v) {
+            return _wrap_var_vec_insert__SWIG_1(self, args);
+          }
+        }
+      }
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'var_vec_insert'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    std::vector< std::shared_ptr< Var > >::insert(std::vector< std::shared_ptr< Var > >::iterator,std::vector< std::shared_ptr< Var > >::value_type const &)\n"
+    "    std::vector< std::shared_ptr< Var > >::insert(std::vector< std::shared_ptr< Var > >::iterator,std::vector< std::shared_ptr< Var > >::size_type,std::vector< std::shared_ptr< Var > >::value_type const &)\n");
+  return 0;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_reserve(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  std::vector< std::shared_ptr< Var > >::size_type arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  size_t val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "n", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:var_vec_reserve",kwnames,&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_reserve" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  ecode2 = SWIG_AsVal_size_t(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "var_vec_reserve" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var > >::size_type""'");
+  } 
+  arg2 = static_cast< std::vector< std::shared_ptr< Var > >::size_type >(val2);
+  (arg1)->reserve(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_var_vec_capacity(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var > >::size_type result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:var_vec_capacity",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "var_vec_capacity" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > const *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  result = ((std::vector< std::shared_ptr< Var > > const *)arg1)->capacity();
+  resultobj = SWIG_From_size_t(static_cast< size_t >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_var_vec(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  std::vector< std::shared_ptr< Var > > *arg1 = (std::vector< std::shared_ptr< Var > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:delete_var_vec",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_var_vec" "', argument " "1"" of type '" "std::vector< std::shared_ptr< Var > > *""'"); 
+  }
+  arg1 = reinterpret_cast< std::vector< std::shared_ptr< Var > > * >(argp1);
+  delete arg1;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *var_vec_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *obj;
+  if (!PyArg_ParseTuple(args,(char *)"O:swigregister", &obj)) return NULL;
+  SWIG_TypeNewClientData(SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, SWIG_NewClientData(obj));
+  return SWIG_Py_Void();
+}
+
 SWIGINTERN PyObject *_wrap_create_var(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   double arg1 = (double) 0.0 ;
@@ -16767,7 +18878,7 @@ SWIGINTERN PyObject *_wrap_Node_get_sparsity(PyObject *SWIGUNUSEDPARM(self), PyO
   std::shared_ptr< Node > tempshared1 ;
   std::shared_ptr< Node > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > > result;
+  SwigValueWrapper< std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Node_get_sparsity",&obj0)) SWIG_fail;
   {
@@ -16786,7 +18897,7 @@ SWIGINTERN PyObject *_wrap_Node_get_sparsity(PyObject *SWIGUNUSEDPARM(self), PyO
     }
   }
   result = (arg1)->get_sparsity();
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >(static_cast< const std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >(static_cast< const std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -16801,7 +18912,7 @@ SWIGINTERN PyObject *_wrap_Node_get_vars(PyObject *SWIGUNUSEDPARM(self), PyObjec
   std::shared_ptr< Node > tempshared1 ;
   std::shared_ptr< Node > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > > result;
+  SwigValueWrapper< std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Node_get_vars",&obj0)) SWIG_fail;
   {
@@ -16820,7 +18931,7 @@ SWIGINTERN PyObject *_wrap_Node_get_vars(PyObject *SWIGUNUSEDPARM(self), PyObjec
     }
   }
   result = (arg1)->get_vars();
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >(static_cast< const std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -16835,7 +18946,7 @@ SWIGINTERN PyObject *_wrap_Node_py_get_vars(PyObject *SWIGUNUSEDPARM(self), PyOb
   std::shared_ptr< Node > tempshared1 ;
   std::shared_ptr< Node > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > result;
+  SwigValueWrapper< std::unordered_set< std::shared_ptr< Var > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Node_py_get_vars",&obj0)) SWIG_fail;
   {
@@ -16854,7 +18965,7 @@ SWIGINTERN PyObject *_wrap_Node_py_get_vars(PyObject *SWIGUNUSEDPARM(self), PyOb
     }
   }
   result = (arg1)->py_get_vars();
-  resultobj = swig::from(static_cast< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >(result));
+  resultobj = SWIG_NewPointerObj((new std::unordered_set< std::shared_ptr< Var > >(static_cast< const std::unordered_set< std::shared_ptr< Var > >& >(result))), SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_Var_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -17198,7 +19309,7 @@ fail:
 SWIGINTERN PyObject *_wrap_Node_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   Node *arg1 = (Node *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< Node > tempshared1 ;
@@ -17228,14 +19339,14 @@ SWIGINTERN PyObject *_wrap_Node_set_name(PyObject *SWIGUNUSEDPARM(self), PyObjec
       arg1 = const_cast< Node * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Node_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Node_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Node_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Node_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -18642,7 +20753,7 @@ SWIGINTERN PyObject *_wrap_Summation_get_sparsity(PyObject *SWIGUNUSEDPARM(self)
   std::shared_ptr< Summation > tempshared1 ;
   std::shared_ptr< Summation > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > > result;
+  SwigValueWrapper< std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Summation_get_sparsity",&obj0)) SWIG_fail;
   {
@@ -18661,7 +20772,7 @@ SWIGINTERN PyObject *_wrap_Summation_get_sparsity(PyObject *SWIGUNUSEDPARM(self)
     }
   }
   result = (arg1)->get_sparsity();
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >(static_cast< const std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >(static_cast< const std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -18676,7 +20787,7 @@ SWIGINTERN PyObject *_wrap_Summation_get_vars(PyObject *SWIGUNUSEDPARM(self), Py
   std::shared_ptr< Summation > tempshared1 ;
   std::shared_ptr< Summation > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > > result;
+  SwigValueWrapper< std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Summation_get_vars",&obj0)) SWIG_fail;
   {
@@ -18695,7 +20806,7 @@ SWIGINTERN PyObject *_wrap_Summation_get_vars(PyObject *SWIGUNUSEDPARM(self), Py
     }
   }
   result = (arg1)->get_vars();
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >(static_cast< const std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -19039,7 +21150,7 @@ fail:
 SWIGINTERN PyObject *_wrap_Summation_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   Summation *arg1 = (Summation *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< Summation > tempshared1 ;
@@ -19069,14 +21180,14 @@ SWIGINTERN PyObject *_wrap_Summation_set_name(PyObject *SWIGUNUSEDPARM(self), Py
       arg1 = const_cast< Summation * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Summation_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Summation_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Summation_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Summation_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -19327,7 +21438,7 @@ fail:
 SWIGINTERN PyObject *_wrap_Summation_sparsity_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Summation *arg1 = (Summation *) 0 ;
-  std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *arg2 = (std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *) 0 ;
+  std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *arg2 = (std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< Summation > tempshared1 ;
@@ -19353,11 +21464,11 @@ SWIGINTERN PyObject *_wrap_Summation_sparsity_set(PyObject *SWIGUNUSEDPARM(self)
       arg1 = const_cast< Summation * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t, 0 |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Summation_sparsity_set" "', argument " "2"" of type '" "std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Summation_sparsity_set" "', argument " "2"" of type '" "std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *""'"); 
   }
-  arg2 = reinterpret_cast< std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > * >(argp2);
+  arg2 = reinterpret_cast< std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > * >(argp2);
   if (arg1) (arg1)->sparsity = *arg2;
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -19374,7 +21485,7 @@ SWIGINTERN PyObject *_wrap_Summation_sparsity_get(PyObject *SWIGUNUSEDPARM(self)
   std::shared_ptr< Summation > tempshared1 ;
   std::shared_ptr< Summation > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *result = 0 ;
+  std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *result = 0 ;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Summation_sparsity_get",&obj0)) SWIG_fail;
   {
@@ -19392,8 +21503,8 @@ SWIGINTERN PyObject *_wrap_Summation_sparsity_get(PyObject *SWIGUNUSEDPARM(self)
       arg1 = const_cast< Summation * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  result = (std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *)& ((arg1)->sparsity);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t, 0 |  0 );
+  result = (std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *)& ((arg1)->sparsity);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -19403,7 +21514,7 @@ fail:
 SWIGINTERN PyObject *_wrap_Summation_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Summation *arg1 = (Summation *) 0 ;
-  std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *arg2 = (std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *) 0 ;
+  std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *arg2 = (std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< Summation > tempshared1 ;
@@ -19429,11 +21540,11 @@ SWIGINTERN PyObject *_wrap_Summation_vars_set(PyObject *SWIGUNUSEDPARM(self), Py
       arg1 = const_cast< Summation * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0 |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Summation_vars_set" "', argument " "2"" of type '" "std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Summation_vars_set" "', argument " "2"" of type '" "std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *""'"); 
   }
-  arg2 = reinterpret_cast< std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > * >(argp2);
+  arg2 = reinterpret_cast< std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > * >(argp2);
   if (arg1) (arg1)->vars = *arg2;
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -19450,7 +21561,7 @@ SWIGINTERN PyObject *_wrap_Summation_vars_get(PyObject *SWIGUNUSEDPARM(self), Py
   std::shared_ptr< Summation > tempshared1 ;
   std::shared_ptr< Summation > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *result = 0 ;
+  std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *result = 0 ;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Summation_vars_get",&obj0)) SWIG_fail;
   {
@@ -19468,8 +21579,8 @@ SWIGINTERN PyObject *_wrap_Summation_vars_get(PyObject *SWIGUNUSEDPARM(self), Py
       arg1 = const_cast< Summation * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  result = (std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *)& ((arg1)->vars);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0 |  0 );
+  result = (std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *)& ((arg1)->vars);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -20014,7 +22125,7 @@ SWIGINTERN PyObject *_wrap_Var_get_vars(PyObject *SWIGUNUSEDPARM(self), PyObject
   std::shared_ptr< Var > tempshared1 ;
   std::shared_ptr< Var > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > > result;
+  SwigValueWrapper< std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Var_get_vars",&obj0)) SWIG_fail;
   {
@@ -20033,7 +22144,7 @@ SWIGINTERN PyObject *_wrap_Var_get_vars(PyObject *SWIGUNUSEDPARM(self), PyObject
     }
   }
   result = (arg1)->get_vars();
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >(static_cast< const std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -20318,7 +22429,7 @@ fail:
 SWIGINTERN PyObject *_wrap_Var_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   Var *arg1 = (Var *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< Var > tempshared1 ;
@@ -20348,14 +22459,14 @@ SWIGINTERN PyObject *_wrap_Var_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject
       arg1 = const_cast< Var * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Var_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Var_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Var_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Var_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -20815,7 +22926,7 @@ fail:
 SWIGINTERN PyObject *_wrap_Param_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   Param *arg1 = (Param *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< Param > tempshared1 ;
@@ -20845,14 +22956,14 @@ SWIGINTERN PyObject *_wrap_Param_set_name(PyObject *SWIGUNUSEDPARM(self), PyObje
       arg1 = const_cast< Param * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Param_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Param_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Param_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Param_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -21076,7 +23187,7 @@ SWIGINTERN PyObject *_wrap_Expression_get_vars(PyObject *SWIGUNUSEDPARM(self), P
   std::shared_ptr< Expression > tempshared1 ;
   std::shared_ptr< Expression > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > > result;
+  SwigValueWrapper< std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Expression_get_vars",&obj0)) SWIG_fail;
   {
@@ -21095,7 +23206,7 @@ SWIGINTERN PyObject *_wrap_Expression_get_vars(PyObject *SWIGUNUSEDPARM(self), P
     }
   }
   result = (arg1)->get_vars();
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >(static_cast< const std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -21439,7 +23550,7 @@ fail:
 SWIGINTERN PyObject *_wrap_Expression_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   Expression *arg1 = (Expression *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< Expression > tempshared1 ;
@@ -21469,14 +23580,14 @@ SWIGINTERN PyObject *_wrap_Expression_set_name(PyObject *SWIGUNUSEDPARM(self), P
       arg1 = const_cast< Expression * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Expression_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Expression_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Expression_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Expression_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -21598,7 +23709,7 @@ fail:
 SWIGINTERN PyObject *_wrap_Expression_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Expression *arg1 = (Expression *) 0 ;
-  std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *arg2 = (std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *) 0 ;
+  std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *arg2 = (std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< Expression > tempshared1 ;
@@ -21624,11 +23735,11 @@ SWIGINTERN PyObject *_wrap_Expression_vars_set(PyObject *SWIGUNUSEDPARM(self), P
       arg1 = const_cast< Expression * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0 |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Expression_vars_set" "', argument " "2"" of type '" "std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Expression_vars_set" "', argument " "2"" of type '" "std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *""'"); 
   }
-  arg2 = reinterpret_cast< std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > * >(argp2);
+  arg2 = reinterpret_cast< std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > * >(argp2);
   if (arg1) (arg1)->vars = *arg2;
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -21645,7 +23756,7 @@ SWIGINTERN PyObject *_wrap_Expression_vars_get(PyObject *SWIGUNUSEDPARM(self), P
   std::shared_ptr< Expression > tempshared1 ;
   std::shared_ptr< Expression > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *result = 0 ;
+  std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *result = 0 ;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Expression_vars_get",&obj0)) SWIG_fail;
   {
@@ -21663,8 +23774,8 @@ SWIGINTERN PyObject *_wrap_Expression_vars_get(PyObject *SWIGUNUSEDPARM(self), P
       arg1 = const_cast< Expression * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  result = (std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *)& ((arg1)->vars);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0 |  0 );
+  result = (std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *)& ((arg1)->vars);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -21953,7 +24064,7 @@ fail:
 SWIGINTERN PyObject *_wrap_VarVarMultiplyOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   VarVarMultiplyOperator *arg1 = (VarVarMultiplyOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< VarVarMultiplyOperator > tempshared1 ;
@@ -21983,14 +24094,14 @@ SWIGINTERN PyObject *_wrap_VarVarMultiplyOperator_set_name(PyObject *SWIGUNUSEDP
       arg1 = const_cast< VarVarMultiplyOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -22540,7 +24651,7 @@ fail:
 SWIGINTERN PyObject *_wrap_VarParamMultiplyOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   VarParamMultiplyOperator *arg1 = (VarParamMultiplyOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< VarParamMultiplyOperator > tempshared1 ;
@@ -22570,14 +24681,14 @@ SWIGINTERN PyObject *_wrap_VarParamMultiplyOperator_set_name(PyObject *SWIGUNUSE
       arg1 = const_cast< VarParamMultiplyOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -23127,7 +25238,7 @@ fail:
 SWIGINTERN PyObject *_wrap_VarOperatorMultiplyOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   VarOperatorMultiplyOperator *arg1 = (VarOperatorMultiplyOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< VarOperatorMultiplyOperator > tempshared1 ;
@@ -23157,14 +25268,14 @@ SWIGINTERN PyObject *_wrap_VarOperatorMultiplyOperator_set_name(PyObject *SWIGUN
       arg1 = const_cast< VarOperatorMultiplyOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -23714,7 +25825,7 @@ fail:
 SWIGINTERN PyObject *_wrap_ParamVarMultiplyOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   ParamVarMultiplyOperator *arg1 = (ParamVarMultiplyOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< ParamVarMultiplyOperator > tempshared1 ;
@@ -23744,14 +25855,14 @@ SWIGINTERN PyObject *_wrap_ParamVarMultiplyOperator_set_name(PyObject *SWIGUNUSE
       arg1 = const_cast< ParamVarMultiplyOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -24301,7 +26412,7 @@ fail:
 SWIGINTERN PyObject *_wrap_ParamParamMultiplyOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   ParamParamMultiplyOperator *arg1 = (ParamParamMultiplyOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< ParamParamMultiplyOperator > tempshared1 ;
@@ -24331,14 +26442,14 @@ SWIGINTERN PyObject *_wrap_ParamParamMultiplyOperator_set_name(PyObject *SWIGUNU
       arg1 = const_cast< ParamParamMultiplyOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -24888,7 +26999,7 @@ fail:
 SWIGINTERN PyObject *_wrap_ParamOperatorMultiplyOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   ParamOperatorMultiplyOperator *arg1 = (ParamOperatorMultiplyOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< ParamOperatorMultiplyOperator > tempshared1 ;
@@ -24918,14 +27029,14 @@ SWIGINTERN PyObject *_wrap_ParamOperatorMultiplyOperator_set_name(PyObject *SWIG
       arg1 = const_cast< ParamOperatorMultiplyOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -25475,7 +27586,7 @@ fail:
 SWIGINTERN PyObject *_wrap_OperatorVarMultiplyOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   OperatorVarMultiplyOperator *arg1 = (OperatorVarMultiplyOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< OperatorVarMultiplyOperator > tempshared1 ;
@@ -25505,14 +27616,14 @@ SWIGINTERN PyObject *_wrap_OperatorVarMultiplyOperator_set_name(PyObject *SWIGUN
       arg1 = const_cast< OperatorVarMultiplyOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorVarMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -26062,7 +28173,7 @@ fail:
 SWIGINTERN PyObject *_wrap_OperatorParamMultiplyOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   OperatorParamMultiplyOperator *arg1 = (OperatorParamMultiplyOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< OperatorParamMultiplyOperator > tempshared1 ;
@@ -26092,14 +28203,14 @@ SWIGINTERN PyObject *_wrap_OperatorParamMultiplyOperator_set_name(PyObject *SWIG
       arg1 = const_cast< OperatorParamMultiplyOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorParamMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -26649,7 +28760,7 @@ fail:
 SWIGINTERN PyObject *_wrap_OperatorOperatorMultiplyOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   OperatorOperatorMultiplyOperator *arg1 = (OperatorOperatorMultiplyOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< OperatorOperatorMultiplyOperator > tempshared1 ;
@@ -26679,14 +28790,14 @@ SWIGINTERN PyObject *_wrap_OperatorOperatorMultiplyOperator_set_name(PyObject *S
       arg1 = const_cast< OperatorOperatorMultiplyOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorOperatorMultiplyOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -27236,7 +29347,7 @@ fail:
 SWIGINTERN PyObject *_wrap_VarVarDivideOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   VarVarDivideOperator *arg1 = (VarVarDivideOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< VarVarDivideOperator > tempshared1 ;
@@ -27266,14 +29377,14 @@ SWIGINTERN PyObject *_wrap_VarVarDivideOperator_set_name(PyObject *SWIGUNUSEDPAR
       arg1 = const_cast< VarVarDivideOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarVarDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarVarDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarVarDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarVarDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -27823,7 +29934,7 @@ fail:
 SWIGINTERN PyObject *_wrap_VarParamDivideOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   VarParamDivideOperator *arg1 = (VarParamDivideOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< VarParamDivideOperator > tempshared1 ;
@@ -27853,14 +29964,14 @@ SWIGINTERN PyObject *_wrap_VarParamDivideOperator_set_name(PyObject *SWIGUNUSEDP
       arg1 = const_cast< VarParamDivideOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarParamDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarParamDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarParamDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarParamDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -28410,7 +30521,7 @@ fail:
 SWIGINTERN PyObject *_wrap_VarOperatorDivideOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   VarOperatorDivideOperator *arg1 = (VarOperatorDivideOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< VarOperatorDivideOperator > tempshared1 ;
@@ -28440,14 +30551,14 @@ SWIGINTERN PyObject *_wrap_VarOperatorDivideOperator_set_name(PyObject *SWIGUNUS
       arg1 = const_cast< VarOperatorDivideOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -28997,7 +31108,7 @@ fail:
 SWIGINTERN PyObject *_wrap_ParamVarDivideOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   ParamVarDivideOperator *arg1 = (ParamVarDivideOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< ParamVarDivideOperator > tempshared1 ;
@@ -29027,14 +31138,14 @@ SWIGINTERN PyObject *_wrap_ParamVarDivideOperator_set_name(PyObject *SWIGUNUSEDP
       arg1 = const_cast< ParamVarDivideOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamVarDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamVarDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamVarDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamVarDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -29584,7 +31695,7 @@ fail:
 SWIGINTERN PyObject *_wrap_ParamParamDivideOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   ParamParamDivideOperator *arg1 = (ParamParamDivideOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< ParamParamDivideOperator > tempshared1 ;
@@ -29614,14 +31725,14 @@ SWIGINTERN PyObject *_wrap_ParamParamDivideOperator_set_name(PyObject *SWIGUNUSE
       arg1 = const_cast< ParamParamDivideOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamParamDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamParamDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamParamDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamParamDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -30171,7 +32282,7 @@ fail:
 SWIGINTERN PyObject *_wrap_ParamOperatorDivideOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   ParamOperatorDivideOperator *arg1 = (ParamOperatorDivideOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< ParamOperatorDivideOperator > tempshared1 ;
@@ -30201,14 +32312,14 @@ SWIGINTERN PyObject *_wrap_ParamOperatorDivideOperator_set_name(PyObject *SWIGUN
       arg1 = const_cast< ParamOperatorDivideOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -30758,7 +32869,7 @@ fail:
 SWIGINTERN PyObject *_wrap_OperatorVarDivideOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   OperatorVarDivideOperator *arg1 = (OperatorVarDivideOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< OperatorVarDivideOperator > tempshared1 ;
@@ -30788,14 +32899,14 @@ SWIGINTERN PyObject *_wrap_OperatorVarDivideOperator_set_name(PyObject *SWIGUNUS
       arg1 = const_cast< OperatorVarDivideOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorVarDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorVarDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorVarDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorVarDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -31345,7 +33456,7 @@ fail:
 SWIGINTERN PyObject *_wrap_OperatorParamDivideOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   OperatorParamDivideOperator *arg1 = (OperatorParamDivideOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< OperatorParamDivideOperator > tempshared1 ;
@@ -31375,14 +33486,14 @@ SWIGINTERN PyObject *_wrap_OperatorParamDivideOperator_set_name(PyObject *SWIGUN
       arg1 = const_cast< OperatorParamDivideOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorParamDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorParamDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorParamDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorParamDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -31932,7 +34043,7 @@ fail:
 SWIGINTERN PyObject *_wrap_OperatorOperatorDivideOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   OperatorOperatorDivideOperator *arg1 = (OperatorOperatorDivideOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< OperatorOperatorDivideOperator > tempshared1 ;
@@ -31962,14 +34073,14 @@ SWIGINTERN PyObject *_wrap_OperatorOperatorDivideOperator_set_name(PyObject *SWI
       arg1 = const_cast< OperatorOperatorDivideOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorOperatorDivideOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -32519,7 +34630,7 @@ fail:
 SWIGINTERN PyObject *_wrap_VarVarPowerOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   VarVarPowerOperator *arg1 = (VarVarPowerOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< VarVarPowerOperator > tempshared1 ;
@@ -32549,14 +34660,14 @@ SWIGINTERN PyObject *_wrap_VarVarPowerOperator_set_name(PyObject *SWIGUNUSEDPARM
       arg1 = const_cast< VarVarPowerOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarVarPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarVarPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarVarPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarVarPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -33106,7 +35217,7 @@ fail:
 SWIGINTERN PyObject *_wrap_VarParamPowerOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   VarParamPowerOperator *arg1 = (VarParamPowerOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< VarParamPowerOperator > tempshared1 ;
@@ -33136,14 +35247,14 @@ SWIGINTERN PyObject *_wrap_VarParamPowerOperator_set_name(PyObject *SWIGUNUSEDPA
       arg1 = const_cast< VarParamPowerOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarParamPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarParamPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarParamPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarParamPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -33693,7 +35804,7 @@ fail:
 SWIGINTERN PyObject *_wrap_VarOperatorPowerOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   VarOperatorPowerOperator *arg1 = (VarOperatorPowerOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< VarOperatorPowerOperator > tempshared1 ;
@@ -33723,14 +35834,14 @@ SWIGINTERN PyObject *_wrap_VarOperatorPowerOperator_set_name(PyObject *SWIGUNUSE
       arg1 = const_cast< VarOperatorPowerOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "VarOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "VarOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -34280,7 +36391,7 @@ fail:
 SWIGINTERN PyObject *_wrap_ParamVarPowerOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   ParamVarPowerOperator *arg1 = (ParamVarPowerOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< ParamVarPowerOperator > tempshared1 ;
@@ -34310,14 +36421,14 @@ SWIGINTERN PyObject *_wrap_ParamVarPowerOperator_set_name(PyObject *SWIGUNUSEDPA
       arg1 = const_cast< ParamVarPowerOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamVarPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamVarPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamVarPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamVarPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -34867,7 +36978,7 @@ fail:
 SWIGINTERN PyObject *_wrap_ParamParamPowerOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   ParamParamPowerOperator *arg1 = (ParamParamPowerOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< ParamParamPowerOperator > tempshared1 ;
@@ -34897,14 +37008,14 @@ SWIGINTERN PyObject *_wrap_ParamParamPowerOperator_set_name(PyObject *SWIGUNUSED
       arg1 = const_cast< ParamParamPowerOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamParamPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamParamPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamParamPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamParamPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -35454,7 +37565,7 @@ fail:
 SWIGINTERN PyObject *_wrap_ParamOperatorPowerOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   ParamOperatorPowerOperator *arg1 = (ParamOperatorPowerOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< ParamOperatorPowerOperator > tempshared1 ;
@@ -35484,14 +37595,14 @@ SWIGINTERN PyObject *_wrap_ParamOperatorPowerOperator_set_name(PyObject *SWIGUNU
       arg1 = const_cast< ParamOperatorPowerOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ParamOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "ParamOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -36041,7 +38152,7 @@ fail:
 SWIGINTERN PyObject *_wrap_OperatorVarPowerOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   OperatorVarPowerOperator *arg1 = (OperatorVarPowerOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< OperatorVarPowerOperator > tempshared1 ;
@@ -36071,14 +38182,14 @@ SWIGINTERN PyObject *_wrap_OperatorVarPowerOperator_set_name(PyObject *SWIGUNUSE
       arg1 = const_cast< OperatorVarPowerOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorVarPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorVarPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorVarPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorVarPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -36628,7 +38739,7 @@ fail:
 SWIGINTERN PyObject *_wrap_OperatorParamPowerOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   OperatorParamPowerOperator *arg1 = (OperatorParamPowerOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< OperatorParamPowerOperator > tempshared1 ;
@@ -36658,14 +38769,14 @@ SWIGINTERN PyObject *_wrap_OperatorParamPowerOperator_set_name(PyObject *SWIGUNU
       arg1 = const_cast< OperatorParamPowerOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorParamPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorParamPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorParamPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorParamPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -37215,7 +39326,7 @@ fail:
 SWIGINTERN PyObject *_wrap_OperatorOperatorPowerOperator_set_name(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   OperatorOperatorPowerOperator *arg1 = (OperatorOperatorPowerOperator *) 0 ;
-  std::map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
+  std::unordered_map< std::shared_ptr< Node >,std::string > *arg2 = 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   std::shared_ptr< OperatorOperatorPowerOperator > tempshared1 ;
@@ -37245,14 +39356,14 @@ SWIGINTERN PyObject *_wrap_OperatorOperatorPowerOperator_set_name(PyObject *SWIG
       arg1 = const_cast< OperatorOperatorPowerOperator * >((smartarg1 ? smartarg1->get() : 0));
     }
   }
-  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "OperatorOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
   if (!argp2) {
-    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::map< std::shared_ptr< Node >,std::string > &""'"); 
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "OperatorOperatorPowerOperator_set_name" "', argument " "2"" of type '" "std::unordered_map< std::shared_ptr< Node >,std::string > &""'"); 
   }
-  arg2 = reinterpret_cast< std::map< std::shared_ptr< Node >,std::string > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_map< std::shared_ptr< Node >,std::string > * >(argp2);
   result = (arg1)->set_name(*arg2);
   resultobj = SWIG_From_std_string(static_cast< std::string >(result));
   return resultobj;
@@ -38003,7 +40114,7 @@ SWIGINTERN PyObject *_wrap_Component_get_vars(PyObject *SWIGUNUSEDPARM(self), Py
   std::shared_ptr< Component > tempshared1 ;
   std::shared_ptr< Component > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > > result;
+  SwigValueWrapper< std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Component_get_vars",&obj0)) SWIG_fail;
   {
@@ -38022,7 +40133,7 @@ SWIGINTERN PyObject *_wrap_Component_get_vars(PyObject *SWIGUNUSEDPARM(self), Py
     }
   }
   result = (arg1)->get_vars();
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -38037,7 +40148,7 @@ SWIGINTERN PyObject *_wrap_Component_py_get_vars(PyObject *SWIGUNUSEDPARM(self),
   std::shared_ptr< Component > tempshared1 ;
   std::shared_ptr< Component > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > result;
+  std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Component_py_get_vars",&obj0)) SWIG_fail;
   {
@@ -38056,7 +40167,7 @@ SWIGINTERN PyObject *_wrap_Component_py_get_vars(PyObject *SWIGUNUSEDPARM(self),
     }
   }
   result = (arg1)->py_get_vars();
-  resultobj = swig::from(static_cast< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >(result));
+  resultobj = swig::from(static_cast< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >(result));
   return resultobj;
 fail:
   return NULL;
@@ -38815,6 +40926,82 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Objective_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Objective *arg1 = (Objective *) 0 ;
+  std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *arg2 = (std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::shared_ptr< Objective > tempshared1 ;
+  std::shared_ptr< Objective > *smartarg1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Objective_vars_set",&obj0,&obj1)) SWIG_fail;
+  {
+    int newmem = 0;
+    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_Objective_t, 0 |  0 , &newmem);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Objective_vars_set" "', argument " "1"" of type '" "Objective *""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      tempshared1 = *reinterpret_cast< std::shared_ptr<  Objective > * >(argp1);
+      delete reinterpret_cast< std::shared_ptr<  Objective > * >(argp1);
+      arg1 = const_cast< Objective * >(tempshared1.get());
+    } else {
+      smartarg1 = reinterpret_cast< std::shared_ptr<  Objective > * >(argp1);
+      arg1 = const_cast< Objective * >((smartarg1 ? smartarg1->get() : 0));
+    }
+  }
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Objective_vars_set" "', argument " "2"" of type '" "std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *""'"); 
+  }
+  arg2 = reinterpret_cast< std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > * >(argp2);
+  if (arg1) (arg1)->vars = *arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Objective_vars_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Objective *arg1 = (Objective *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::shared_ptr< Objective > tempshared1 ;
+  std::shared_ptr< Objective > *smartarg1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Objective_vars_get",&obj0)) SWIG_fail;
+  {
+    int newmem = 0;
+    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_Objective_t, 0 |  0 , &newmem);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Objective_vars_get" "', argument " "1"" of type '" "Objective *""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      tempshared1 = *reinterpret_cast< std::shared_ptr<  Objective > * >(argp1);
+      delete reinterpret_cast< std::shared_ptr<  Objective > * >(argp1);
+      arg1 = const_cast< Objective * >(tempshared1.get());
+    } else {
+      smartarg1 = reinterpret_cast< std::shared_ptr<  Objective > * >(argp1);
+      arg1 = const_cast< Objective * >((smartarg1 ? smartarg1->get() : 0));
+    }
+  }
+  result = (std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *)& ((arg1)->vars);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Objective_get_vars(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Objective *arg1 = (Objective *) 0 ;
@@ -38823,7 +41010,7 @@ SWIGINTERN PyObject *_wrap_Objective_get_vars(PyObject *SWIGUNUSEDPARM(self), Py
   std::shared_ptr< Objective > tempshared1 ;
   std::shared_ptr< Objective > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > > result;
+  SwigValueWrapper< std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Objective_get_vars",&obj0)) SWIG_fail;
   {
@@ -38842,7 +41029,7 @@ SWIGINTERN PyObject *_wrap_Objective_get_vars(PyObject *SWIGUNUSEDPARM(self), Py
     }
   }
   result = (arg1)->get_vars();
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -39701,6 +41888,82 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Constraint_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Constraint *arg1 = (Constraint *) 0 ;
+  std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *arg2 = (std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::shared_ptr< Constraint > tempshared1 ;
+  std::shared_ptr< Constraint > *smartarg1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Constraint_vars_set",&obj0,&obj1)) SWIG_fail;
+  {
+    int newmem = 0;
+    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_Constraint_t, 0 |  0 , &newmem);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Constraint_vars_set" "', argument " "1"" of type '" "Constraint *""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      tempshared1 = *reinterpret_cast< std::shared_ptr<  Constraint > * >(argp1);
+      delete reinterpret_cast< std::shared_ptr<  Constraint > * >(argp1);
+      arg1 = const_cast< Constraint * >(tempshared1.get());
+    } else {
+      smartarg1 = reinterpret_cast< std::shared_ptr<  Constraint > * >(argp1);
+      arg1 = const_cast< Constraint * >((smartarg1 ? smartarg1->get() : 0));
+    }
+  }
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Constraint_vars_set" "', argument " "2"" of type '" "std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *""'"); 
+  }
+  arg2 = reinterpret_cast< std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > * >(argp2);
+  if (arg1) (arg1)->vars = *arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Constraint_vars_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Constraint *arg1 = (Constraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::shared_ptr< Constraint > tempshared1 ;
+  std::shared_ptr< Constraint > *smartarg1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Constraint_vars_get",&obj0)) SWIG_fail;
+  {
+    int newmem = 0;
+    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_Constraint_t, 0 |  0 , &newmem);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Constraint_vars_get" "', argument " "1"" of type '" "Constraint *""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      tempshared1 = *reinterpret_cast< std::shared_ptr<  Constraint > * >(argp1);
+      delete reinterpret_cast< std::shared_ptr<  Constraint > * >(argp1);
+      arg1 = const_cast< Constraint * >(tempshared1.get());
+    } else {
+      smartarg1 = reinterpret_cast< std::shared_ptr<  Constraint > * >(argp1);
+      arg1 = const_cast< Constraint * >((smartarg1 ? smartarg1->get() : 0));
+    }
+  }
+  result = (std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *)& ((arg1)->vars);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Constraint_get_vars(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Constraint *arg1 = (Constraint *) 0 ;
@@ -39709,7 +41972,7 @@ SWIGINTERN PyObject *_wrap_Constraint_get_vars(PyObject *SWIGUNUSEDPARM(self), P
   std::shared_ptr< Constraint > tempshared1 ;
   std::shared_ptr< Constraint > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > > result;
+  SwigValueWrapper< std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Constraint_get_vars",&obj0)) SWIG_fail;
   {
@@ -39728,7 +41991,7 @@ SWIGINTERN PyObject *_wrap_Constraint_get_vars(PyObject *SWIGUNUSEDPARM(self), P
     }
   }
   result = (arg1)->get_vars();
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -40397,6 +42660,82 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_ConditionalConstraint_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  ConditionalConstraint *arg1 = (ConditionalConstraint *) 0 ;
+  std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *arg2 = (std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::shared_ptr< ConditionalConstraint > tempshared1 ;
+  std::shared_ptr< ConditionalConstraint > *smartarg1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:ConditionalConstraint_vars_set",&obj0,&obj1)) SWIG_fail;
+  {
+    int newmem = 0;
+    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_ConditionalConstraint_t, 0 |  0 , &newmem);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ConditionalConstraint_vars_set" "', argument " "1"" of type '" "ConditionalConstraint *""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      tempshared1 = *reinterpret_cast< std::shared_ptr<  ConditionalConstraint > * >(argp1);
+      delete reinterpret_cast< std::shared_ptr<  ConditionalConstraint > * >(argp1);
+      arg1 = const_cast< ConditionalConstraint * >(tempshared1.get());
+    } else {
+      smartarg1 = reinterpret_cast< std::shared_ptr<  ConditionalConstraint > * >(argp1);
+      arg1 = const_cast< ConditionalConstraint * >((smartarg1 ? smartarg1->get() : 0));
+    }
+  }
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "ConditionalConstraint_vars_set" "', argument " "2"" of type '" "std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *""'"); 
+  }
+  arg2 = reinterpret_cast< std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > * >(argp2);
+  if (arg1) (arg1)->vars = *arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_ConditionalConstraint_vars_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  ConditionalConstraint *arg1 = (ConditionalConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::shared_ptr< ConditionalConstraint > tempshared1 ;
+  std::shared_ptr< ConditionalConstraint > *smartarg1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:ConditionalConstraint_vars_get",&obj0)) SWIG_fail;
+  {
+    int newmem = 0;
+    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_ConditionalConstraint_t, 0 |  0 , &newmem);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "ConditionalConstraint_vars_get" "', argument " "1"" of type '" "ConditionalConstraint *""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      tempshared1 = *reinterpret_cast< std::shared_ptr<  ConditionalConstraint > * >(argp1);
+      delete reinterpret_cast< std::shared_ptr<  ConditionalConstraint > * >(argp1);
+      arg1 = const_cast< ConditionalConstraint * >(tempshared1.get());
+    } else {
+      smartarg1 = reinterpret_cast< std::shared_ptr<  ConditionalConstraint > * >(argp1);
+      arg1 = const_cast< ConditionalConstraint * >((smartarg1 ? smartarg1->get() : 0));
+    }
+  }
+  result = (std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *)& ((arg1)->vars);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_ConditionalConstraint_get_vars(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   ConditionalConstraint *arg1 = (ConditionalConstraint *) 0 ;
@@ -40405,7 +42744,7 @@ SWIGINTERN PyObject *_wrap_ConditionalConstraint_get_vars(PyObject *SWIGUNUSEDPA
   std::shared_ptr< ConditionalConstraint > tempshared1 ;
   std::shared_ptr< ConditionalConstraint > *smartarg1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > > result;
+  SwigValueWrapper< std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:ConditionalConstraint_get_vars",&obj0)) SWIG_fail;
   {
@@ -40424,7 +42763,7 @@ SWIGINTERN PyObject *_wrap_ConditionalConstraint_get_vars(PyObject *SWIGUNUSEDPA
     }
   }
   result = (arg1)->get_vars();
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >(static_cast< const std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -40471,383 +42810,10 @@ SWIGINTERN PyObject *ConditionalConstraint_swigregister(PyObject *SWIGUNUSEDPARM
   return SWIG_Py_Void();
 }
 
-SWIGINTERN PyObject *_wrap_CSRJacobian_row_nnz_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  std::list< int,std::allocator< int > > *arg2 = (std::list< int,std::allocator< int > > *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CSRJacobian_row_nnz_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_row_nnz_set" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__listT_int_std__allocatorT_int_t_t, 0 |  0 );
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CSRJacobian_row_nnz_set" "', argument " "2"" of type '" "std::list< int,std::allocator< int > > *""'"); 
-  }
-  arg2 = reinterpret_cast< std::list< int,std::allocator< int > > * >(argp2);
-  if (arg1) (arg1)->row_nnz = *arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_row_nnz_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::list< int,std::allocator< int > > *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CSRJacobian_row_nnz_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_row_nnz_get" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  result = (std::list< int,std::allocator< int > > *)& ((arg1)->row_nnz);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__listT_int_std__allocatorT_int_t_t, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *arg2 = (std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CSRJacobian_vars_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_vars_set" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CSRJacobian_vars_set" "', argument " "2"" of type '" "std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *""'"); 
-  }
-  arg2 = reinterpret_cast< std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > * >(argp2);
-  if (arg1) (arg1)->vars = *arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_vars_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CSRJacobian_vars_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_vars_get" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  result = (std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *)& ((arg1)->vars);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_cons_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *arg2 = (std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 = 0 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"OO:CSRJacobian_cons_set",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_cons_set" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t, 0 |  0 );
-  if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CSRJacobian_cons_set" "', argument " "2"" of type '" "std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *""'"); 
-  }
-  arg2 = reinterpret_cast< std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > * >(argp2);
-  if (arg1) (arg1)->cons = *arg2;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_cons_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CSRJacobian_cons_get",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_cons_get" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  result = (std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *)& ((arg1)->cons);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t, 0 |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_add_constraint(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  std::shared_ptr< ConstraintBase > arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  char *  kwnames[] = {
-    (char *) "self",(char *) "arg2", NULL 
-  };
-  
-  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:CSRJacobian_add_constraint",kwnames,&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_add_constraint" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  {
-    int newmem = 0;
-    res2 = SWIG_ConvertPtrAndOwn(obj1, &argp2, SWIGTYPE_p_std__shared_ptrT_ConstraintBase_t,  0 , &newmem);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CSRJacobian_add_constraint" "', argument " "2"" of type '" "std::shared_ptr< ConstraintBase >""'"); 
-    }
-    if (argp2) arg2 = *(reinterpret_cast< std::shared_ptr< ConstraintBase > * >(argp2));
-    if (newmem & SWIG_CAST_NEW_MEMORY) delete reinterpret_cast< std::shared_ptr< ConstraintBase > * >(argp2);
-  }
-  (arg1)->add_constraint(arg2);
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_remove_constraint(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  std::shared_ptr< ConstraintBase > arg2 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  char *  kwnames[] = {
-    (char *) "self",(char *) "arg2", NULL 
-  };
-  
-  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:CSRJacobian_remove_constraint",kwnames,&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_remove_constraint" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  {
-    int newmem = 0;
-    res2 = SWIG_ConvertPtrAndOwn(obj1, &argp2, SWIGTYPE_p_std__shared_ptrT_ConstraintBase_t,  0 , &newmem);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "CSRJacobian_remove_constraint" "', argument " "2"" of type '" "std::shared_ptr< ConstraintBase >""'"); 
-    }
-    if (argp2) arg2 = *(reinterpret_cast< std::shared_ptr< ConstraintBase > * >(argp2));
-    if (newmem & SWIG_CAST_NEW_MEMORY) delete reinterpret_cast< std::shared_ptr< ConstraintBase > * >(argp2);
-  }
-  (arg1)->remove_constraint(arg2);
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_evaluate(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  double *arg2 = (double *) 0 ;
-  int arg3 ;
-  bool arg4 = (bool) true ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject *array2 = NULL ;
-  bool val4 ;
-  int ecode4 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  PyObject * obj2 = 0 ;
-  char *  kwnames[] = {
-    (char *) "self",(char *) "array_out",(char *) "new_eval", NULL 
-  };
-  
-  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO|O:CSRJacobian_evaluate",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_evaluate" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  {
-    npy_intp dims[1];
-    if (!PyInt_Check(obj1))
-    {
-      const char* typestring = pytype_string(obj1);
-      PyErr_Format(PyExc_TypeError,
-        "Int dimension expected.  '%s' given.",
-        typestring);
-      SWIG_fail;
-    }
-    arg3 = (int) PyInt_AsLong(obj1);
-    dims[0] = (npy_intp) arg3;
-    array2 = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-    if (!array2) SWIG_fail;
-    arg2 = (double*) array_data(array2);
-  }
-  if (obj2) {
-    ecode4 = SWIG_AsVal_bool(obj2, &val4);
-    if (!SWIG_IsOK(ecode4)) {
-      SWIG_exception_fail(SWIG_ArgError(ecode4), "in method '" "CSRJacobian_evaluate" "', argument " "4"" of type '" "bool""'");
-    } 
-    arg4 = static_cast< bool >(val4);
-  }
-  (arg1)->evaluate(arg2,arg3,arg4);
-  resultobj = SWIG_Py_Void();
-  {
-    resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array2);
-  }
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_get_row_nnz(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::list< int,std::allocator< int > > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CSRJacobian_get_row_nnz",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_get_row_nnz" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  result = (arg1)->get_row_nnz();
-  resultobj = swig::from(static_cast< std::list< int,std::allocator< int > > >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_CSRJacobian_get_col_ndx(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  std::list< int,std::allocator< int > > result;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:CSRJacobian_get_col_ndx",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "CSRJacobian_get_col_ndx" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  result = (arg1)->get_col_ndx();
-  resultobj = swig::from(static_cast< std::list< int,std::allocator< int > > >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_new_CSRJacobian(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *result = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)":new_CSRJacobian")) SWIG_fail;
-  result = (CSRJacobian *)new CSRJacobian();
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CSRJacobian, SWIG_POINTER_NEW |  0 );
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *_wrap_delete_CSRJacobian(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *resultobj = 0;
-  CSRJacobian *arg1 = (CSRJacobian *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  PyObject * obj0 = 0 ;
-  
-  if (!PyArg_ParseTuple(args,(char *)"O:delete_CSRJacobian",&obj0)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_CSRJacobian, SWIG_POINTER_DISOWN |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_CSRJacobian" "', argument " "1"" of type '" "CSRJacobian *""'"); 
-  }
-  arg1 = reinterpret_cast< CSRJacobian * >(argp1);
-  delete arg1;
-  resultobj = SWIG_Py_Void();
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
-SWIGINTERN PyObject *CSRJacobian_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
-  PyObject *obj;
-  if (!PyArg_ParseTuple(args,(char *)"O:swigregister", &obj)) return NULL;
-  SWIG_TypeNewClientData(SWIGTYPE_p_CSRJacobian, SWIG_NewClientData(obj));
-  return SWIG_Py_Void();
-}
-
 SWIGINTERN PyObject *_wrap_WNTRModel_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   WNTRModel *arg1 = (WNTRModel *) 0 ;
-  std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *arg2 = (std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *) 0 ;
+  std::unordered_set< std::shared_ptr< Var > > *arg2 = (std::unordered_set< std::shared_ptr< Var > > *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -40861,11 +42827,11 @@ SWIGINTERN PyObject *_wrap_WNTRModel_vars_set(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_vars_set" "', argument " "1"" of type '" "WNTRModel *""'"); 
   }
   arg1 = reinterpret_cast< WNTRModel * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_Var_t_t, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "WNTRModel_vars_set" "', argument " "2"" of type '" "std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "WNTRModel_vars_set" "', argument " "2"" of type '" "std::unordered_set< std::shared_ptr< Var > > *""'"); 
   }
-  arg2 = reinterpret_cast< std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_set< std::shared_ptr< Var > > * >(argp2);
   if (arg1) (arg1)->vars = *arg2;
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -40880,7 +42846,7 @@ SWIGINTERN PyObject *_wrap_WNTRModel_vars_get(PyObject *SWIGUNUSEDPARM(self), Py
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *result = 0 ;
+  std::unordered_set< std::shared_ptr< Var > > *result = 0 ;
   
   if (!PyArg_ParseTuple(args,(char *)"O:WNTRModel_vars_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
@@ -40888,8 +42854,8 @@ SWIGINTERN PyObject *_wrap_WNTRModel_vars_get(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_vars_get" "', argument " "1"" of type '" "WNTRModel *""'"); 
   }
   arg1 = reinterpret_cast< WNTRModel * >(argp1);
-  result = (std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *)& ((arg1)->vars);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  result = (std::unordered_set< std::shared_ptr< Var > > *)& ((arg1)->vars);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_Var_t_t, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -40899,7 +42865,7 @@ fail:
 SWIGINTERN PyObject *_wrap_WNTRModel_cons_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   WNTRModel *arg1 = (WNTRModel *) 0 ;
-  std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *arg2 = (std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *) 0 ;
+  std::unordered_set< std::shared_ptr< ConstraintBase > > *arg2 = (std::unordered_set< std::shared_ptr< ConstraintBase > > *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -40913,11 +42879,11 @@ SWIGINTERN PyObject *_wrap_WNTRModel_cons_set(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_cons_set" "', argument " "1"" of type '" "WNTRModel *""'"); 
   }
   arg1 = reinterpret_cast< WNTRModel * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t, 0 |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "WNTRModel_cons_set" "', argument " "2"" of type '" "std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "WNTRModel_cons_set" "', argument " "2"" of type '" "std::unordered_set< std::shared_ptr< ConstraintBase > > *""'"); 
   }
-  arg2 = reinterpret_cast< std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > * >(argp2);
+  arg2 = reinterpret_cast< std::unordered_set< std::shared_ptr< ConstraintBase > > * >(argp2);
   if (arg1) (arg1)->cons = *arg2;
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -40932,7 +42898,7 @@ SWIGINTERN PyObject *_wrap_WNTRModel_cons_get(PyObject *SWIGUNUSEDPARM(self), Py
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *result = 0 ;
+  std::unordered_set< std::shared_ptr< ConstraintBase > > *result = 0 ;
   
   if (!PyArg_ParseTuple(args,(char *)"O:WNTRModel_cons_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
@@ -40940,18 +42906,18 @@ SWIGINTERN PyObject *_wrap_WNTRModel_cons_get(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_cons_get" "', argument " "1"" of type '" "WNTRModel *""'"); 
   }
   arg1 = reinterpret_cast< WNTRModel * >(argp1);
-  result = (std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *)& ((arg1)->cons);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t, 0 |  0 );
+  result = (std::unordered_set< std::shared_ptr< ConstraintBase > > *)& ((arg1)->cons);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
 }
 
 
-SWIGINTERN PyObject *_wrap_WNTRModel_jac_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_WNTRModel_cons_vector_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   WNTRModel *arg1 = (WNTRModel *) 0 ;
-  CSRJacobian *arg2 = (CSRJacobian *) 0 ;
+  std::vector< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *arg2 = (std::vector< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -40959,18 +42925,18 @@ SWIGINTERN PyObject *_wrap_WNTRModel_jac_set(PyObject *SWIGUNUSEDPARM(self), PyO
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:WNTRModel_jac_set",&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OO:WNTRModel_cons_vector_set",&obj0,&obj1)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_jac_set" "', argument " "1"" of type '" "WNTRModel *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_cons_vector_set" "', argument " "1"" of type '" "WNTRModel *""'"); 
   }
   arg1 = reinterpret_cast< WNTRModel * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_CSRJacobian, 0 |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__vectorT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "WNTRModel_jac_set" "', argument " "2"" of type '" "CSRJacobian *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "WNTRModel_cons_vector_set" "', argument " "2"" of type '" "std::vector< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *""'"); 
   }
-  arg2 = reinterpret_cast< CSRJacobian * >(argp2);
-  if (arg1) (arg1)->jac = *arg2;
+  arg2 = reinterpret_cast< std::vector< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > * >(argp2);
+  if (arg1) (arg1)->cons_vector = *arg2;
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -40978,22 +42944,178 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_WNTRModel_jac_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+SWIGINTERN PyObject *_wrap_WNTRModel_cons_vector_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   WNTRModel *arg1 = (WNTRModel *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  CSRJacobian *result = 0 ;
+  std::vector< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *result = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"O:WNTRModel_jac_get",&obj0)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"O:WNTRModel_cons_vector_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_jac_get" "', argument " "1"" of type '" "WNTRModel *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_cons_vector_get" "', argument " "1"" of type '" "WNTRModel *""'"); 
   }
   arg1 = reinterpret_cast< WNTRModel * >(argp1);
-  result = (CSRJacobian *)& ((arg1)->jac);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_CSRJacobian, 0 |  0 );
+  result = (std::vector< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *)& ((arg1)->cons_vector);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_WNTRModel_vars_vector_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  WNTRModel *arg1 = (WNTRModel *) 0 ;
+  std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *arg2 = (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:WNTRModel_vars_vector_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_vars_vector_set" "', argument " "1"" of type '" "WNTRModel *""'"); 
+  }
+  arg1 = reinterpret_cast< WNTRModel * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "WNTRModel_vars_vector_set" "', argument " "2"" of type '" "std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *""'"); 
+  }
+  arg2 = reinterpret_cast< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > * >(argp2);
+  if (arg1) (arg1)->vars_vector = *arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_WNTRModel_vars_vector_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  WNTRModel *arg1 = (WNTRModel *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:WNTRModel_vars_vector_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_vars_vector_get" "', argument " "1"" of type '" "WNTRModel *""'"); 
+  }
+  arg1 = reinterpret_cast< WNTRModel * >(argp1);
+  result = (std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *)& ((arg1)->vars_vector);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_WNTRModel_is_structure_fixed_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  WNTRModel *arg1 = (WNTRModel *) 0 ;
+  bool arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  bool val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:WNTRModel_is_structure_fixed_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_is_structure_fixed_set" "', argument " "1"" of type '" "WNTRModel *""'"); 
+  }
+  arg1 = reinterpret_cast< WNTRModel * >(argp1);
+  ecode2 = SWIG_AsVal_bool(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "WNTRModel_is_structure_fixed_set" "', argument " "2"" of type '" "bool""'");
+  } 
+  arg2 = static_cast< bool >(val2);
+  if (arg1) (arg1)->is_structure_fixed = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_WNTRModel_is_structure_fixed_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  WNTRModel *arg1 = (WNTRModel *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  bool result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:WNTRModel_is_structure_fixed_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_is_structure_fixed_get" "', argument " "1"" of type '" "WNTRModel *""'"); 
+  }
+  arg1 = reinterpret_cast< WNTRModel * >(argp1);
+  result = (bool) ((arg1)->is_structure_fixed);
+  resultobj = SWIG_From_bool(static_cast< bool >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_WNTRModel_nnz_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  WNTRModel *arg1 = (WNTRModel *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:WNTRModel_nnz_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_nnz_set" "', argument " "1"" of type '" "WNTRModel *""'"); 
+  }
+  arg1 = reinterpret_cast< WNTRModel * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "WNTRModel_nnz_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->nnz = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_WNTRModel_nnz_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  WNTRModel *arg1 = (WNTRModel *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:WNTRModel_nnz_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_nnz_get" "', argument " "1"" of type '" "WNTRModel *""'"); 
+  }
+  arg1 = reinterpret_cast< WNTRModel * >(argp1);
+  result = (int) ((arg1)->nnz);
+  resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
   return NULL;
@@ -41295,6 +43417,152 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_WNTRModel_evaluate_csr_jacobian(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  WNTRModel *arg1 = (WNTRModel *) 0 ;
+  double *arg2 = (double *) 0 ;
+  int arg3 ;
+  int *arg4 = (int *) 0 ;
+  int arg5 ;
+  int *arg6 = (int *) 0 ;
+  int arg7 ;
+  bool arg8 = (bool) true ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject *array2 = NULL ;
+  PyObject *array4 = NULL ;
+  PyObject *array6 = NULL ;
+  bool val8 ;
+  int ecode8 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "values_array_out",(char *) "col_ndx_array_out",(char *) "row_nnz_array_out",(char *) "new_eval", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOOO|O:WNTRModel_evaluate_csr_jacobian",kwnames,&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_evaluate_csr_jacobian" "', argument " "1"" of type '" "WNTRModel *""'"); 
+  }
+  arg1 = reinterpret_cast< WNTRModel * >(argp1);
+  {
+    npy_intp dims[1];
+    if (!PyInt_Check(obj1))
+    {
+      const char* typestring = pytype_string(obj1);
+      PyErr_Format(PyExc_TypeError,
+        "Int dimension expected.  '%s' given.",
+        typestring);
+      SWIG_fail;
+    }
+    arg3 = (int) PyInt_AsLong(obj1);
+    dims[0] = (npy_intp) arg3;
+    array2 = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
+    if (!array2) SWIG_fail;
+    arg2 = (double*) array_data(array2);
+  }
+  {
+    npy_intp dims[1];
+    if (!PyInt_Check(obj2))
+    {
+      const char* typestring = pytype_string(obj2);
+      PyErr_Format(PyExc_TypeError,
+        "Int dimension expected.  '%s' given.",
+        typestring);
+      SWIG_fail;
+    }
+    arg5 = (int) PyInt_AsLong(obj2);
+    dims[0] = (npy_intp) arg5;
+    array4 = PyArray_SimpleNew(1, dims, NPY_INT);
+    if (!array4) SWIG_fail;
+    arg4 = (int*) array_data(array4);
+  }
+  {
+    npy_intp dims[1];
+    if (!PyInt_Check(obj3))
+    {
+      const char* typestring = pytype_string(obj3);
+      PyErr_Format(PyExc_TypeError,
+        "Int dimension expected.  '%s' given.",
+        typestring);
+      SWIG_fail;
+    }
+    arg7 = (int) PyInt_AsLong(obj3);
+    dims[0] = (npy_intp) arg7;
+    array6 = PyArray_SimpleNew(1, dims, NPY_INT);
+    if (!array6) SWIG_fail;
+    arg6 = (int*) array_data(array6);
+  }
+  if (obj4) {
+    ecode8 = SWIG_AsVal_bool(obj4, &val8);
+    if (!SWIG_IsOK(ecode8)) {
+      SWIG_exception_fail(SWIG_ArgError(ecode8), "in method '" "WNTRModel_evaluate_csr_jacobian" "', argument " "8"" of type '" "bool""'");
+    } 
+    arg8 = static_cast< bool >(val8);
+  }
+  (arg1)->evaluate_csr_jacobian(arg2,arg3,arg4,arg5,arg6,arg7,arg8);
+  resultobj = SWIG_Py_Void();
+  {
+    resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array2);
+  }
+  {
+    resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array4);
+  }
+  {
+    resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array6);
+  }
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_WNTRModel_set_structure(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  WNTRModel *arg1 = (WNTRModel *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:WNTRModel_set_structure",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_set_structure" "', argument " "1"" of type '" "WNTRModel *""'"); 
+  }
+  arg1 = reinterpret_cast< WNTRModel * >(argp1);
+  (arg1)->set_structure();
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_WNTRModel_release_structure(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  WNTRModel *arg1 = (WNTRModel *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:WNTRModel_release_structure",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_release_structure" "', argument " "1"" of type '" "WNTRModel *""'"); 
+  }
+  arg1 = reinterpret_cast< WNTRModel * >(argp1);
+  (arg1)->release_structure();
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_new_WNTRModel(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   WNTRModel *result = 0 ;
@@ -41335,48 +43603,6 @@ SWIGINTERN PyObject *WNTRModel_swigregister(PyObject *SWIGUNUSEDPARM(self), PyOb
   SWIG_TypeNewClientData(SWIGTYPE_p_WNTRModel, SWIG_NewClientData(obj));
   return SWIG_Py_Void();
 }
-
-SWIGINTERN PyObject *_wrap_compare_var_indices(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
-  PyObject *resultobj = 0;
-  std::shared_ptr< Var > arg1 ;
-  std::shared_ptr< Var > arg2 ;
-  void *argp1 ;
-  int res1 = 0 ;
-  void *argp2 ;
-  int res2 = 0 ;
-  PyObject * obj0 = 0 ;
-  PyObject * obj1 = 0 ;
-  char *  kwnames[] = {
-    (char *) "arg1",(char *) "arg2", NULL 
-  };
-  bool result;
-  
-  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:compare_var_indices",kwnames,&obj0,&obj1)) SWIG_fail;
-  {
-    int newmem = 0;
-    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_Var_t,  0 , &newmem);
-    if (!SWIG_IsOK(res1)) {
-      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "compare_var_indices" "', argument " "1"" of type '" "std::shared_ptr< Var >""'"); 
-    }
-    if (argp1) arg1 = *(reinterpret_cast< std::shared_ptr< Var > * >(argp1));
-    if (newmem & SWIG_CAST_NEW_MEMORY) delete reinterpret_cast< std::shared_ptr< Var > * >(argp1);
-  }
-  {
-    int newmem = 0;
-    res2 = SWIG_ConvertPtrAndOwn(obj1, &argp2, SWIGTYPE_p_std__shared_ptrT_Var_t,  0 , &newmem);
-    if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "compare_var_indices" "', argument " "2"" of type '" "std::shared_ptr< Var >""'"); 
-    }
-    if (argp2) arg2 = *(reinterpret_cast< std::shared_ptr< Var > * >(argp2));
-    if (newmem & SWIG_CAST_NEW_MEMORY) delete reinterpret_cast< std::shared_ptr< Var > * >(argp2);
-  }
-  result = (bool)compare_var_indices(arg1,arg2);
-  resultobj = SWIG_From_bool(static_cast< bool >(result));
-  return resultobj;
-fail:
-  return NULL;
-}
-
 
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
@@ -43216,6 +45442,360 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"int_list_swigregister", int_list_swigregister, METH_VARARGS, NULL},
+	 { (char *)"var_vec_iterator", _wrap_var_vec_iterator, METH_VARARGS, (char *)"\n"
+		"var_vec_iterator(var_vec self) -> SwigPyIterator\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec___nonzero__", _wrap_var_vec___nonzero__, METH_VARARGS, (char *)"\n"
+		"var_vec___nonzero__(var_vec self) -> bool\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > const *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec___bool__", _wrap_var_vec___bool__, METH_VARARGS, (char *)"\n"
+		"var_vec___bool__(var_vec self) -> bool\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > const *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec___len__", _wrap_var_vec___len__, METH_VARARGS, (char *)"\n"
+		"var_vec___len__(var_vec self) -> std::vector< std::shared_ptr< Var > >::size_type\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > const *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec___getslice__", (PyCFunction) _wrap_var_vec___getslice__, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"var_vec___getslice__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i, std::vector< std::shared_ptr< Var > >::difference_type j) -> var_vec\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"i: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"j: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"\n"
+		""},
+	 { (char *)"var_vec___setslice__", _wrap_var_vec___setslice__, METH_VARARGS, (char *)"\n"
+		"__setslice__(std::vector< std::shared_ptr< Var > >::difference_type i, std::vector< std::shared_ptr< Var > >::difference_type j)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"i: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"j: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"\n"
+		"var_vec___setslice__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i, std::vector< std::shared_ptr< Var > >::difference_type j, var_vec v)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"i: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"j: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"v: std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &\n"
+		"\n"
+		""},
+	 { (char *)"var_vec___delslice__", (PyCFunction) _wrap_var_vec___delslice__, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"var_vec___delslice__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i, std::vector< std::shared_ptr< Var > >::difference_type j)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"i: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"j: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"\n"
+		""},
+	 { (char *)"var_vec___delitem__", _wrap_var_vec___delitem__, METH_VARARGS, (char *)"\n"
+		"__delitem__(std::vector< std::shared_ptr< Var > >::difference_type i)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"i: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"\n"
+		"var_vec___delitem__(var_vec self, PySliceObject * slice)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"slice: PySliceObject *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec___getitem__", _wrap_var_vec___getitem__, METH_VARARGS, (char *)"\n"
+		"__getitem__(PySliceObject * slice) -> var_vec\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"slice: PySliceObject *\n"
+		"\n"
+		"var_vec___getitem__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i) -> std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > const *\n"
+		"i: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"\n"
+		""},
+	 { (char *)"var_vec___setitem__", _wrap_var_vec___setitem__, METH_VARARGS, (char *)"\n"
+		"__setitem__(PySliceObject * slice, var_vec v)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"slice: PySliceObject *\n"
+		"v: std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &\n"
+		"\n"
+		"__setitem__(PySliceObject * slice)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"slice: PySliceObject *\n"
+		"\n"
+		"var_vec___setitem__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i, std::vector< std::shared_ptr< Var > >::value_type const & x)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"i: std::vector< std::shared_ptr< Var > >::difference_type\n"
+		"x: std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_pop", _wrap_var_vec_pop, METH_VARARGS, (char *)"\n"
+		"var_vec_pop(var_vec self) -> std::vector< std::shared_ptr< Var > >::value_type\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_append", (PyCFunction) _wrap_var_vec_append, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"var_vec_append(var_vec self, std::vector< std::shared_ptr< Var > >::value_type const & x)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"x: std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_empty", _wrap_var_vec_empty, METH_VARARGS, (char *)"\n"
+		"var_vec_empty(var_vec self) -> bool\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > const *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_size", _wrap_var_vec_size, METH_VARARGS, (char *)"\n"
+		"var_vec_size(var_vec self) -> std::vector< std::shared_ptr< Var > >::size_type\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > const *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_swap", (PyCFunction) _wrap_var_vec_swap, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"var_vec_swap(var_vec self, var_vec v)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"v: std::vector< std::shared_ptr< Var > > &\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_begin", _wrap_var_vec_begin, METH_VARARGS, (char *)"\n"
+		"var_vec_begin(var_vec self) -> std::vector< std::shared_ptr< Var > >::iterator\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_end", _wrap_var_vec_end, METH_VARARGS, (char *)"\n"
+		"var_vec_end(var_vec self) -> std::vector< std::shared_ptr< Var > >::iterator\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_rbegin", _wrap_var_vec_rbegin, METH_VARARGS, (char *)"\n"
+		"var_vec_rbegin(var_vec self) -> std::vector< std::shared_ptr< Var > >::reverse_iterator\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_rend", _wrap_var_vec_rend, METH_VARARGS, (char *)"\n"
+		"var_vec_rend(var_vec self) -> std::vector< std::shared_ptr< Var > >::reverse_iterator\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_clear", _wrap_var_vec_clear, METH_VARARGS, (char *)"\n"
+		"var_vec_clear(var_vec self)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_get_allocator", _wrap_var_vec_get_allocator, METH_VARARGS, (char *)"\n"
+		"var_vec_get_allocator(var_vec self) -> std::vector< std::shared_ptr< Var > >::allocator_type\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > const *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_pop_back", _wrap_var_vec_pop_back, METH_VARARGS, (char *)"\n"
+		"var_vec_pop_back(var_vec self)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_erase", _wrap_var_vec_erase, METH_VARARGS, (char *)"\n"
+		"erase(std::vector< std::shared_ptr< Var > >::iterator pos) -> std::vector< std::shared_ptr< Var > >::iterator\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"pos: std::vector< std::shared_ptr< Var > >::iterator\n"
+		"\n"
+		"var_vec_erase(var_vec self, std::vector< std::shared_ptr< Var > >::iterator first, std::vector< std::shared_ptr< Var > >::iterator last) -> std::vector< std::shared_ptr< Var > >::iterator\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"first: std::vector< std::shared_ptr< Var > >::iterator\n"
+		"last: std::vector< std::shared_ptr< Var > >::iterator\n"
+		"\n"
+		""},
+	 { (char *)"new_var_vec", _wrap_new_var_vec, METH_VARARGS, (char *)"\n"
+		"var_vec()\n"
+		"var_vec(var_vec arg2)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"arg2: std::vector< std::shared_ptr< Var > > const &\n"
+		"\n"
+		"var_vec(std::vector< std::shared_ptr< Var > >::size_type size)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"size: std::vector< std::shared_ptr< Var > >::size_type\n"
+		"\n"
+		"new_var_vec(std::vector< std::shared_ptr< Var > >::size_type size, std::vector< std::shared_ptr< Var > >::value_type const & value) -> var_vec\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"size: std::vector< std::shared_ptr< Var > >::size_type\n"
+		"value: std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_push_back", (PyCFunction) _wrap_var_vec_push_back, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"var_vec_push_back(var_vec self, std::vector< std::shared_ptr< Var > >::value_type const & x)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"x: std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_front", _wrap_var_vec_front, METH_VARARGS, (char *)"\n"
+		"var_vec_front(var_vec self) -> std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > const *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_back", _wrap_var_vec_back, METH_VARARGS, (char *)"\n"
+		"var_vec_back(var_vec self) -> std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > const *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_assign", (PyCFunction) _wrap_var_vec_assign, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"var_vec_assign(var_vec self, std::vector< std::shared_ptr< Var > >::size_type n, std::vector< std::shared_ptr< Var > >::value_type const & x)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"n: std::vector< std::shared_ptr< Var > >::size_type\n"
+		"x: std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_resize", _wrap_var_vec_resize, METH_VARARGS, (char *)"\n"
+		"resize(std::vector< std::shared_ptr< Var > >::size_type new_size)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"new_size: std::vector< std::shared_ptr< Var > >::size_type\n"
+		"\n"
+		"var_vec_resize(var_vec self, std::vector< std::shared_ptr< Var > >::size_type new_size, std::vector< std::shared_ptr< Var > >::value_type const & x)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"new_size: std::vector< std::shared_ptr< Var > >::size_type\n"
+		"x: std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_insert", _wrap_var_vec_insert, METH_VARARGS, (char *)"\n"
+		"insert(std::vector< std::shared_ptr< Var > >::iterator pos, std::vector< std::shared_ptr< Var > >::value_type const & x) -> std::vector< std::shared_ptr< Var > >::iterator\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"pos: std::vector< std::shared_ptr< Var > >::iterator\n"
+		"x: std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		"var_vec_insert(var_vec self, std::vector< std::shared_ptr< Var > >::iterator pos, std::vector< std::shared_ptr< Var > >::size_type n, std::vector< std::shared_ptr< Var > >::value_type const & x)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"pos: std::vector< std::shared_ptr< Var > >::iterator\n"
+		"n: std::vector< std::shared_ptr< Var > >::size_type\n"
+		"x: std::vector< std::shared_ptr< Var > >::value_type const &\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_reserve", (PyCFunction) _wrap_var_vec_reserve, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"var_vec_reserve(var_vec self, std::vector< std::shared_ptr< Var > >::size_type n)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"n: std::vector< std::shared_ptr< Var > >::size_type\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_capacity", _wrap_var_vec_capacity, METH_VARARGS, (char *)"\n"
+		"var_vec_capacity(var_vec self) -> std::vector< std::shared_ptr< Var > >::size_type\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > const *\n"
+		"\n"
+		""},
+	 { (char *)"delete_var_vec", _wrap_delete_var_vec, METH_VARARGS, (char *)"\n"
+		"delete_var_vec(var_vec self)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: std::vector< std::shared_ptr< Var > > *\n"
+		"\n"
+		""},
+	 { (char *)"var_vec_swigregister", var_vec_swigregister, METH_VARARGS, NULL},
 	 { (char *)"create_var", (PyCFunction) _wrap_create_var, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
 		"create_var(double value=0.0, double lb=-1.0e100, double ub=1.0e100) -> std::shared_ptr< Var >\n"
 		"\n"
@@ -43395,7 +45975,7 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Node_get_sparsity", _wrap_Node_get_sparsity, METH_VARARGS, (char *)"\n"
-		"Node_get_sparsity(Node self) -> std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >\n"
+		"Node_get_sparsity(Node self) -> std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -43403,7 +45983,7 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Node_get_vars", _wrap_Node_get_vars, METH_VARARGS, (char *)"\n"
-		"Node_get_vars(Node self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >\n"
+		"Node_get_vars(Node self) -> std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -43411,7 +45991,7 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Node_py_get_vars", _wrap_Node_py_get_vars, METH_VARARGS, (char *)"\n"
-		"Node_py_get_vars(Node self) -> var_set\n"
+		"Node_py_get_vars(Node self) -> std::unordered_set< std::shared_ptr< Var > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -43467,12 +46047,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Node_set_name", (PyCFunction) _wrap_Node_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"Node_set_name(Node self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"Node_set_name(Node self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: Node *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"Node_get_type", _wrap_Node_get_type, METH_VARARGS, (char *)"\n"
@@ -43674,7 +46254,7 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Summation_get_sparsity", _wrap_Summation_get_sparsity, METH_VARARGS, (char *)"\n"
-		"Summation_get_sparsity(Summation self) -> std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >\n"
+		"Summation_get_sparsity(Summation self) -> std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -43682,7 +46262,7 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Summation_get_vars", _wrap_Summation_get_vars, METH_VARARGS, (char *)"\n"
-		"Summation_get_vars(Summation self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >\n"
+		"Summation_get_vars(Summation self) -> std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -43738,12 +46318,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Summation_set_name", (PyCFunction) _wrap_Summation_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"Summation_set_name(Summation self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"Summation_set_name(Summation self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: Summation *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"Summation_get_type", _wrap_Summation_get_type, METH_VARARGS, (char *)"\n"
@@ -43798,16 +46378,16 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Summation_sparsity_set", _wrap_Summation_sparsity_set, METH_VARARGS, (char *)"\n"
-		"Summation_sparsity_set(Summation self, std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > * sparsity)\n"
+		"Summation_sparsity_set(Summation self, std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > * sparsity)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: Summation *\n"
-		"sparsity: std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *\n"
+		"sparsity: std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *\n"
 		"\n"
 		""},
 	 { (char *)"Summation_sparsity_get", _wrap_Summation_sparsity_get, METH_VARARGS, (char *)"\n"
-		"Summation_sparsity_get(Summation self) -> std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *\n"
+		"Summation_sparsity_get(Summation self) -> std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -43815,16 +46395,16 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Summation_vars_set", _wrap_Summation_vars_set, METH_VARARGS, (char *)"\n"
-		"Summation_vars_set(Summation self, std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > * vars)\n"
+		"Summation_vars_set(Summation self, std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > * vars)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: Summation *\n"
-		"vars: std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *\n"
+		"vars: std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *\n"
 		"\n"
 		""},
 	 { (char *)"Summation_vars_get", _wrap_Summation_vars_get, METH_VARARGS, (char *)"\n"
-		"Summation_vars_get(Summation self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *\n"
+		"Summation_vars_get(Summation self) -> std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -43945,7 +46525,7 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Var_get_vars", _wrap_Var_get_vars, METH_VARARGS, (char *)"\n"
-		"Var_get_vars(Var self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >\n"
+		"Var_get_vars(Var self) -> std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -43992,12 +46572,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Var_set_name", (PyCFunction) _wrap_Var_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"Var_set_name(Var self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"Var_set_name(Var self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: Var *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"Var_get_type", _wrap_Var_get_type, METH_VARARGS, (char *)"\n"
@@ -44075,12 +46655,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Param_set_name", (PyCFunction) _wrap_Param_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"Param_set_name(Param self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"Param_set_name(Param self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: Param *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"Param_get_type", _wrap_Param_get_type, METH_VARARGS, (char *)"\n"
@@ -44127,7 +46707,7 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Expression_get_vars", _wrap_Expression_get_vars, METH_VARARGS, (char *)"\n"
-		"Expression_get_vars(Expression self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >\n"
+		"Expression_get_vars(Expression self) -> std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -44183,12 +46763,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Expression_set_name", (PyCFunction) _wrap_Expression_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"Expression_set_name(Expression self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"Expression_set_name(Expression self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: Expression *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"Expression_get_type", _wrap_Expression_get_type, METH_VARARGS, (char *)"\n"
@@ -44217,16 +46797,16 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Expression_vars_set", _wrap_Expression_vars_set, METH_VARARGS, (char *)"\n"
-		"Expression_vars_set(Expression self, std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > * vars)\n"
+		"Expression_vars_set(Expression self, std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > * vars)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: Expression *\n"
-		"vars: std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *\n"
+		"vars: std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *\n"
 		"\n"
 		""},
 	 { (char *)"Expression_vars_get", _wrap_Expression_vars_get, METH_VARARGS, (char *)"\n"
-		"Expression_vars_get(Expression self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *\n"
+		"Expression_vars_get(Expression self) -> std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -44281,12 +46861,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"VarVarMultiplyOperator_set_name", (PyCFunction) _wrap_VarVarMultiplyOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"VarVarMultiplyOperator_set_name(VarVarMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"VarVarMultiplyOperator_set_name(VarVarMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: VarVarMultiplyOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"VarVarMultiplyOperator_node1_set", _wrap_VarVarMultiplyOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -44381,12 +46961,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"VarParamMultiplyOperator_set_name", (PyCFunction) _wrap_VarParamMultiplyOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"VarParamMultiplyOperator_set_name(VarParamMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"VarParamMultiplyOperator_set_name(VarParamMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: VarParamMultiplyOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"VarParamMultiplyOperator_node1_set", _wrap_VarParamMultiplyOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -44481,12 +47061,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"VarOperatorMultiplyOperator_set_name", (PyCFunction) _wrap_VarOperatorMultiplyOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"VarOperatorMultiplyOperator_set_name(VarOperatorMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"VarOperatorMultiplyOperator_set_name(VarOperatorMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: VarOperatorMultiplyOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"VarOperatorMultiplyOperator_node1_set", _wrap_VarOperatorMultiplyOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -44581,12 +47161,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"ParamVarMultiplyOperator_set_name", (PyCFunction) _wrap_ParamVarMultiplyOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"ParamVarMultiplyOperator_set_name(ParamVarMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"ParamVarMultiplyOperator_set_name(ParamVarMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: ParamVarMultiplyOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"ParamVarMultiplyOperator_node1_set", _wrap_ParamVarMultiplyOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -44681,12 +47261,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"ParamParamMultiplyOperator_set_name", (PyCFunction) _wrap_ParamParamMultiplyOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"ParamParamMultiplyOperator_set_name(ParamParamMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"ParamParamMultiplyOperator_set_name(ParamParamMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: ParamParamMultiplyOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"ParamParamMultiplyOperator_node1_set", _wrap_ParamParamMultiplyOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -44781,12 +47361,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"ParamOperatorMultiplyOperator_set_name", (PyCFunction) _wrap_ParamOperatorMultiplyOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"ParamOperatorMultiplyOperator_set_name(ParamOperatorMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"ParamOperatorMultiplyOperator_set_name(ParamOperatorMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: ParamOperatorMultiplyOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"ParamOperatorMultiplyOperator_node1_set", _wrap_ParamOperatorMultiplyOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -44881,12 +47461,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"OperatorVarMultiplyOperator_set_name", (PyCFunction) _wrap_OperatorVarMultiplyOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"OperatorVarMultiplyOperator_set_name(OperatorVarMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"OperatorVarMultiplyOperator_set_name(OperatorVarMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: OperatorVarMultiplyOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"OperatorVarMultiplyOperator_node1_set", _wrap_OperatorVarMultiplyOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -44981,12 +47561,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"OperatorParamMultiplyOperator_set_name", (PyCFunction) _wrap_OperatorParamMultiplyOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"OperatorParamMultiplyOperator_set_name(OperatorParamMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"OperatorParamMultiplyOperator_set_name(OperatorParamMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: OperatorParamMultiplyOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"OperatorParamMultiplyOperator_node1_set", _wrap_OperatorParamMultiplyOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -45081,12 +47661,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"OperatorOperatorMultiplyOperator_set_name", (PyCFunction) _wrap_OperatorOperatorMultiplyOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"OperatorOperatorMultiplyOperator_set_name(OperatorOperatorMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"OperatorOperatorMultiplyOperator_set_name(OperatorOperatorMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: OperatorOperatorMultiplyOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"OperatorOperatorMultiplyOperator_node1_set", _wrap_OperatorOperatorMultiplyOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -45181,12 +47761,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"VarVarDivideOperator_set_name", (PyCFunction) _wrap_VarVarDivideOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"VarVarDivideOperator_set_name(VarVarDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"VarVarDivideOperator_set_name(VarVarDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: VarVarDivideOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"VarVarDivideOperator_node1_set", _wrap_VarVarDivideOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -45281,12 +47861,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"VarParamDivideOperator_set_name", (PyCFunction) _wrap_VarParamDivideOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"VarParamDivideOperator_set_name(VarParamDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"VarParamDivideOperator_set_name(VarParamDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: VarParamDivideOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"VarParamDivideOperator_node1_set", _wrap_VarParamDivideOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -45381,12 +47961,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"VarOperatorDivideOperator_set_name", (PyCFunction) _wrap_VarOperatorDivideOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"VarOperatorDivideOperator_set_name(VarOperatorDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"VarOperatorDivideOperator_set_name(VarOperatorDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: VarOperatorDivideOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"VarOperatorDivideOperator_node1_set", _wrap_VarOperatorDivideOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -45481,12 +48061,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"ParamVarDivideOperator_set_name", (PyCFunction) _wrap_ParamVarDivideOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"ParamVarDivideOperator_set_name(ParamVarDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"ParamVarDivideOperator_set_name(ParamVarDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: ParamVarDivideOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"ParamVarDivideOperator_node1_set", _wrap_ParamVarDivideOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -45581,12 +48161,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"ParamParamDivideOperator_set_name", (PyCFunction) _wrap_ParamParamDivideOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"ParamParamDivideOperator_set_name(ParamParamDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"ParamParamDivideOperator_set_name(ParamParamDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: ParamParamDivideOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"ParamParamDivideOperator_node1_set", _wrap_ParamParamDivideOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -45681,12 +48261,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"ParamOperatorDivideOperator_set_name", (PyCFunction) _wrap_ParamOperatorDivideOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"ParamOperatorDivideOperator_set_name(ParamOperatorDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"ParamOperatorDivideOperator_set_name(ParamOperatorDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: ParamOperatorDivideOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"ParamOperatorDivideOperator_node1_set", _wrap_ParamOperatorDivideOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -45781,12 +48361,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"OperatorVarDivideOperator_set_name", (PyCFunction) _wrap_OperatorVarDivideOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"OperatorVarDivideOperator_set_name(OperatorVarDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"OperatorVarDivideOperator_set_name(OperatorVarDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: OperatorVarDivideOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"OperatorVarDivideOperator_node1_set", _wrap_OperatorVarDivideOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -45881,12 +48461,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"OperatorParamDivideOperator_set_name", (PyCFunction) _wrap_OperatorParamDivideOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"OperatorParamDivideOperator_set_name(OperatorParamDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"OperatorParamDivideOperator_set_name(OperatorParamDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: OperatorParamDivideOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"OperatorParamDivideOperator_node1_set", _wrap_OperatorParamDivideOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -45981,12 +48561,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"OperatorOperatorDivideOperator_set_name", (PyCFunction) _wrap_OperatorOperatorDivideOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"OperatorOperatorDivideOperator_set_name(OperatorOperatorDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"OperatorOperatorDivideOperator_set_name(OperatorOperatorDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: OperatorOperatorDivideOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"OperatorOperatorDivideOperator_node1_set", _wrap_OperatorOperatorDivideOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -46081,12 +48661,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"VarVarPowerOperator_set_name", (PyCFunction) _wrap_VarVarPowerOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"VarVarPowerOperator_set_name(VarVarPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"VarVarPowerOperator_set_name(VarVarPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: VarVarPowerOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"VarVarPowerOperator_node1_set", _wrap_VarVarPowerOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -46181,12 +48761,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"VarParamPowerOperator_set_name", (PyCFunction) _wrap_VarParamPowerOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"VarParamPowerOperator_set_name(VarParamPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"VarParamPowerOperator_set_name(VarParamPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: VarParamPowerOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"VarParamPowerOperator_node1_set", _wrap_VarParamPowerOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -46281,12 +48861,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"VarOperatorPowerOperator_set_name", (PyCFunction) _wrap_VarOperatorPowerOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"VarOperatorPowerOperator_set_name(VarOperatorPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"VarOperatorPowerOperator_set_name(VarOperatorPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: VarOperatorPowerOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"VarOperatorPowerOperator_node1_set", _wrap_VarOperatorPowerOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -46381,12 +48961,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"ParamVarPowerOperator_set_name", (PyCFunction) _wrap_ParamVarPowerOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"ParamVarPowerOperator_set_name(ParamVarPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"ParamVarPowerOperator_set_name(ParamVarPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: ParamVarPowerOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"ParamVarPowerOperator_node1_set", _wrap_ParamVarPowerOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -46481,12 +49061,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"ParamParamPowerOperator_set_name", (PyCFunction) _wrap_ParamParamPowerOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"ParamParamPowerOperator_set_name(ParamParamPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"ParamParamPowerOperator_set_name(ParamParamPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: ParamParamPowerOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"ParamParamPowerOperator_node1_set", _wrap_ParamParamPowerOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -46581,12 +49161,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"ParamOperatorPowerOperator_set_name", (PyCFunction) _wrap_ParamOperatorPowerOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"ParamOperatorPowerOperator_set_name(ParamOperatorPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"ParamOperatorPowerOperator_set_name(ParamOperatorPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: ParamOperatorPowerOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"ParamOperatorPowerOperator_node1_set", _wrap_ParamOperatorPowerOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -46681,12 +49261,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"OperatorVarPowerOperator_set_name", (PyCFunction) _wrap_OperatorVarPowerOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"OperatorVarPowerOperator_set_name(OperatorVarPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"OperatorVarPowerOperator_set_name(OperatorVarPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: OperatorVarPowerOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"OperatorVarPowerOperator_node1_set", _wrap_OperatorVarPowerOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -46781,12 +49361,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"OperatorParamPowerOperator_set_name", (PyCFunction) _wrap_OperatorParamPowerOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"OperatorParamPowerOperator_set_name(OperatorParamPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"OperatorParamPowerOperator_set_name(OperatorParamPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: OperatorParamPowerOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"OperatorParamPowerOperator_node1_set", _wrap_OperatorParamPowerOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -46881,12 +49461,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"OperatorOperatorPowerOperator_set_name", (PyCFunction) _wrap_OperatorOperatorPowerOperator_set_name, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"OperatorOperatorPowerOperator_set_name(OperatorOperatorPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
+		"OperatorOperatorPowerOperator_set_name(OperatorOperatorPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg3) -> std::string\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: OperatorOperatorPowerOperator *\n"
-		"arg2: std::map< std::shared_ptr< Node >,std::string > &\n"
+		"arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &\n"
 		"\n"
 		""},
 	 { (char *)"OperatorOperatorPowerOperator_node1_set", _wrap_OperatorOperatorPowerOperator_node1_set, METH_VARARGS, (char *)"\n"
@@ -47017,7 +49597,7 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Component_get_vars", _wrap_Component_get_vars, METH_VARARGS, (char *)"\n"
-		"Component_get_vars(Component self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >\n"
+		"Component_get_vars(Component self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -47025,7 +49605,7 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Component_py_get_vars", _wrap_Component_py_get_vars, METH_VARARGS, (char *)"\n"
-		"Component_py_get_vars(Component self) -> var_set\n"
+		"Component_py_get_vars(Component self) -> var_vec\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -47165,8 +49745,25 @@ static PyMethodDef SwigMethods[] = {
 		"self: Objective *\n"
 		"\n"
 		""},
+	 { (char *)"Objective_vars_set", _wrap_Objective_vars_set, METH_VARARGS, (char *)"\n"
+		"Objective_vars_set(Objective self, std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > * vars)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Objective *\n"
+		"vars: std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *\n"
+		"\n"
+		""},
+	 { (char *)"Objective_vars_get", _wrap_Objective_vars_get, METH_VARARGS, (char *)"\n"
+		"Objective_vars_get(Objective self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Objective *\n"
+		"\n"
+		""},
 	 { (char *)"Objective_get_vars", _wrap_Objective_get_vars, METH_VARARGS, (char *)"\n"
-		"Objective_get_vars(Objective self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >\n"
+		"Objective_get_vars(Objective self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -47331,8 +49928,25 @@ static PyMethodDef SwigMethods[] = {
 		"self: Constraint *\n"
 		"\n"
 		""},
+	 { (char *)"Constraint_vars_set", _wrap_Constraint_vars_set, METH_VARARGS, (char *)"\n"
+		"Constraint_vars_set(Constraint self, std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > * vars)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Constraint *\n"
+		"vars: std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *\n"
+		"\n"
+		""},
+	 { (char *)"Constraint_vars_get", _wrap_Constraint_vars_get, METH_VARARGS, (char *)"\n"
+		"Constraint_vars_get(Constraint self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Constraint *\n"
+		"\n"
+		""},
 	 { (char *)"Constraint_get_vars", _wrap_Constraint_get_vars, METH_VARARGS, (char *)"\n"
-		"Constraint_get_vars(Constraint self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >\n"
+		"Constraint_get_vars(Constraint self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -47457,8 +50071,25 @@ static PyMethodDef SwigMethods[] = {
 		"self: ConditionalConstraint *\n"
 		"\n"
 		""},
+	 { (char *)"ConditionalConstraint_vars_set", _wrap_ConditionalConstraint_vars_set, METH_VARARGS, (char *)"\n"
+		"ConditionalConstraint_vars_set(ConditionalConstraint self, std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > * vars)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: ConditionalConstraint *\n"
+		"vars: std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *\n"
+		"\n"
+		""},
+	 { (char *)"ConditionalConstraint_vars_get", _wrap_ConditionalConstraint_vars_get, METH_VARARGS, (char *)"\n"
+		"ConditionalConstraint_vars_get(ConditionalConstraint self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: ConditionalConstraint *\n"
+		"\n"
+		""},
 	 { (char *)"ConditionalConstraint_get_vars", _wrap_ConditionalConstraint_get_vars, METH_VARARGS, (char *)"\n"
-		"ConditionalConstraint_get_vars(ConditionalConstraint self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >\n"
+		"ConditionalConstraint_get_vars(ConditionalConstraint self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -47474,122 +50105,17 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"ConditionalConstraint_swigregister", ConditionalConstraint_swigregister, METH_VARARGS, NULL},
-	 { (char *)"CSRJacobian_row_nnz_set", _wrap_CSRJacobian_row_nnz_set, METH_VARARGS, (char *)"\n"
-		"CSRJacobian_row_nnz_set(CSRJacobian self, int_list row_nnz)\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"row_nnz: std::list< int,std::allocator< int > > *\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_row_nnz_get", _wrap_CSRJacobian_row_nnz_get, METH_VARARGS, (char *)"\n"
-		"CSRJacobian_row_nnz_get(CSRJacobian self) -> int_list\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_vars_set", _wrap_CSRJacobian_vars_set, METH_VARARGS, (char *)"\n"
-		"CSRJacobian_vars_set(CSRJacobian self, var_list vars)\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"vars: std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_vars_get", _wrap_CSRJacobian_vars_get, METH_VARARGS, (char *)"\n"
-		"CSRJacobian_vars_get(CSRJacobian self) -> var_list\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_cons_set", _wrap_CSRJacobian_cons_set, METH_VARARGS, (char *)"\n"
-		"CSRJacobian_cons_set(CSRJacobian self, constraint_list cons)\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"cons: std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_cons_get", _wrap_CSRJacobian_cons_get, METH_VARARGS, (char *)"\n"
-		"CSRJacobian_cons_get(CSRJacobian self) -> constraint_list\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_add_constraint", (PyCFunction) _wrap_CSRJacobian_add_constraint, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"CSRJacobian_add_constraint(CSRJacobian self, std::shared_ptr< ConstraintBase > arg3)\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"arg2: std::shared_ptr< ConstraintBase >\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_remove_constraint", (PyCFunction) _wrap_CSRJacobian_remove_constraint, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"CSRJacobian_remove_constraint(CSRJacobian self, std::shared_ptr< ConstraintBase > arg3)\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"arg2: std::shared_ptr< ConstraintBase >\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_evaluate", (PyCFunction) _wrap_CSRJacobian_evaluate, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"CSRJacobian_evaluate(CSRJacobian self, double * array_out, bool new_eval=True)\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"array_out: double *\n"
-		"new_eval: bool\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_get_row_nnz", _wrap_CSRJacobian_get_row_nnz, METH_VARARGS, (char *)"\n"
-		"CSRJacobian_get_row_nnz(CSRJacobian self) -> int_list\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_get_col_ndx", _wrap_CSRJacobian_get_col_ndx, METH_VARARGS, (char *)"\n"
-		"CSRJacobian_get_col_ndx(CSRJacobian self) -> int_list\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"\n"
-		""},
-	 { (char *)"new_CSRJacobian", _wrap_new_CSRJacobian, METH_VARARGS, (char *)"new_CSRJacobian() -> CSRJacobian"},
-	 { (char *)"delete_CSRJacobian", _wrap_delete_CSRJacobian, METH_VARARGS, (char *)"\n"
-		"delete_CSRJacobian(CSRJacobian self)\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"self: CSRJacobian *\n"
-		"\n"
-		""},
-	 { (char *)"CSRJacobian_swigregister", CSRJacobian_swigregister, METH_VARARGS, NULL},
 	 { (char *)"WNTRModel_vars_set", _wrap_WNTRModel_vars_set, METH_VARARGS, (char *)"\n"
-		"WNTRModel_vars_set(WNTRModel self, var_list vars)\n"
+		"WNTRModel_vars_set(WNTRModel self, std::unordered_set< std::shared_ptr< Var > > * vars)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: WNTRModel *\n"
-		"vars: std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *\n"
+		"vars: std::unordered_set< std::shared_ptr< Var > > *\n"
 		"\n"
 		""},
 	 { (char *)"WNTRModel_vars_get", _wrap_WNTRModel_vars_get, METH_VARARGS, (char *)"\n"
-		"WNTRModel_vars_get(WNTRModel self) -> var_list\n"
+		"WNTRModel_vars_get(WNTRModel self) -> std::unordered_set< std::shared_ptr< Var > > *\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -47597,33 +50123,84 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"WNTRModel_cons_set", _wrap_WNTRModel_cons_set, METH_VARARGS, (char *)"\n"
-		"WNTRModel_cons_set(WNTRModel self, constraint_list cons)\n"
+		"WNTRModel_cons_set(WNTRModel self, std::unordered_set< std::shared_ptr< ConstraintBase > > * cons)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: WNTRModel *\n"
-		"cons: std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *\n"
+		"cons: std::unordered_set< std::shared_ptr< ConstraintBase > > *\n"
 		"\n"
 		""},
 	 { (char *)"WNTRModel_cons_get", _wrap_WNTRModel_cons_get, METH_VARARGS, (char *)"\n"
-		"WNTRModel_cons_get(WNTRModel self) -> constraint_list\n"
+		"WNTRModel_cons_get(WNTRModel self) -> std::unordered_set< std::shared_ptr< ConstraintBase > > *\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: WNTRModel *\n"
 		"\n"
 		""},
-	 { (char *)"WNTRModel_jac_set", _wrap_WNTRModel_jac_set, METH_VARARGS, (char *)"\n"
-		"WNTRModel_jac_set(WNTRModel self, CSRJacobian jac)\n"
+	 { (char *)"WNTRModel_cons_vector_set", _wrap_WNTRModel_cons_vector_set, METH_VARARGS, (char *)"\n"
+		"WNTRModel_cons_vector_set(WNTRModel self, std::vector< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > * cons_vector)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: WNTRModel *\n"
-		"jac: CSRJacobian *\n"
+		"cons_vector: std::vector< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *\n"
 		"\n"
 		""},
-	 { (char *)"WNTRModel_jac_get", _wrap_WNTRModel_jac_get, METH_VARARGS, (char *)"\n"
-		"WNTRModel_jac_get(WNTRModel self) -> CSRJacobian\n"
+	 { (char *)"WNTRModel_cons_vector_get", _wrap_WNTRModel_cons_vector_get, METH_VARARGS, (char *)"\n"
+		"WNTRModel_cons_vector_get(WNTRModel self) -> std::vector< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: WNTRModel *\n"
+		"\n"
+		""},
+	 { (char *)"WNTRModel_vars_vector_set", _wrap_WNTRModel_vars_vector_set, METH_VARARGS, (char *)"\n"
+		"WNTRModel_vars_vector_set(WNTRModel self, var_vec vars_vector)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: WNTRModel *\n"
+		"vars_vector: std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *\n"
+		"\n"
+		""},
+	 { (char *)"WNTRModel_vars_vector_get", _wrap_WNTRModel_vars_vector_get, METH_VARARGS, (char *)"\n"
+		"WNTRModel_vars_vector_get(WNTRModel self) -> var_vec\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: WNTRModel *\n"
+		"\n"
+		""},
+	 { (char *)"WNTRModel_is_structure_fixed_set", _wrap_WNTRModel_is_structure_fixed_set, METH_VARARGS, (char *)"\n"
+		"WNTRModel_is_structure_fixed_set(WNTRModel self, bool is_structure_fixed)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: WNTRModel *\n"
+		"is_structure_fixed: bool\n"
+		"\n"
+		""},
+	 { (char *)"WNTRModel_is_structure_fixed_get", _wrap_WNTRModel_is_structure_fixed_get, METH_VARARGS, (char *)"\n"
+		"WNTRModel_is_structure_fixed_get(WNTRModel self) -> bool\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: WNTRModel *\n"
+		"\n"
+		""},
+	 { (char *)"WNTRModel_nnz_set", _wrap_WNTRModel_nnz_set, METH_VARARGS, (char *)"\n"
+		"WNTRModel_nnz_set(WNTRModel self, int nnz)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: WNTRModel *\n"
+		"nnz: int\n"
+		"\n"
+		""},
+	 { (char *)"WNTRModel_nnz_get", _wrap_WNTRModel_nnz_get, METH_VARARGS, (char *)"\n"
+		"WNTRModel_nnz_get(WNTRModel self) -> int\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -47693,6 +50270,34 @@ static PyMethodDef SwigMethods[] = {
 		"array_out: double *\n"
 		"\n"
 		""},
+	 { (char *)"WNTRModel_evaluate_csr_jacobian", (PyCFunction) _wrap_WNTRModel_evaluate_csr_jacobian, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"WNTRModel_evaluate_csr_jacobian(WNTRModel self, double * values_array_out, int * col_ndx_array_out, int * row_nnz_array_out, bool new_eval=True)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: WNTRModel *\n"
+		"values_array_out: double *\n"
+		"col_ndx_array_out: int *\n"
+		"row_nnz_array_out: int *\n"
+		"new_eval: bool\n"
+		"\n"
+		""},
+	 { (char *)"WNTRModel_set_structure", _wrap_WNTRModel_set_structure, METH_VARARGS, (char *)"\n"
+		"WNTRModel_set_structure(WNTRModel self)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: WNTRModel *\n"
+		"\n"
+		""},
+	 { (char *)"WNTRModel_release_structure", _wrap_WNTRModel_release_structure, METH_VARARGS, (char *)"\n"
+		"WNTRModel_release_structure(WNTRModel self)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: WNTRModel *\n"
+		"\n"
+		""},
 	 { (char *)"new_WNTRModel", _wrap_new_WNTRModel, METH_VARARGS, (char *)"new_WNTRModel() -> WNTRModel"},
 	 { (char *)"delete_WNTRModel", _wrap_delete_WNTRModel, METH_VARARGS, (char *)"\n"
 		"delete_WNTRModel(WNTRModel self)\n"
@@ -47703,15 +50308,6 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"WNTRModel_swigregister", WNTRModel_swigregister, METH_VARARGS, NULL},
-	 { (char *)"compare_var_indices", (PyCFunction) _wrap_compare_var_indices, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"compare_var_indices(std::shared_ptr< Var > arg1, std::shared_ptr< Var > arg2) -> bool\n"
-		"\n"
-		"Parameters\n"
-		"----------\n"
-		"arg1: std::shared_ptr< Var >\n"
-		"arg2: std::shared_ptr< Var >\n"
-		"\n"
-		""},
 	 { NULL, NULL, 0, NULL }
 };
 
@@ -47977,7 +50573,6 @@ static void *_p_std__shared_ptrT_Objective_tTo_p_std__shared_ptrT_Component_t(vo
     *newmemory = SWIG_CAST_NEW_MEMORY;
     return (void *) new std::shared_ptr< Component >(*(std::shared_ptr< Objective > *)x);
 }
-static swig_type_info _swigt__p_CSRJacobian = {"_p_CSRJacobian", "CSRJacobian *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Component = {"_p_Component", "Component *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_ConditionalConstraint = {"_p_ConditionalConstraint", "ConditionalConstraint *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Constraint = {"_p_Constraint", "Constraint *", 0, 0, (void*)0, 0};
@@ -48020,19 +50615,19 @@ static swig_type_info _swigt__p_allocator_type = {"_p_allocator_type", "allocato
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_difference_type = {"_p_difference_type", "difference_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_double = {"_p_double", "double *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_int = {"_p_int", "int *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_key_type = {"_p_key_type", "key_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_PyObject = {"_p_p_PyObject", "PyObject **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_size_type = {"_p_size_type", "size_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__allocatorT_double_t = {"_p_std__allocatorT_double_t", "std::vector< double >::allocator_type *|std::allocator< double > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__allocatorT_int_t = {"_p_std__allocatorT_int_t", "std::list< int >::allocator_type *|std::allocator< int > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t = {"_p_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t", "std::list< std::shared_ptr< ConstraintBase > >::allocator_type *|std::allocator< std::shared_ptr< ConstraintBase > > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__allocatorT_std__shared_ptrT_Var_t_t = {"_p_std__allocatorT_std__shared_ptrT_Var_t_t", "std::allocator< std::shared_ptr< Var > > *|std::list< std::shared_ptr< Var > >::allocator_type *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__allocatorT_std__shared_ptrT_Var_t_t = {"_p_std__allocatorT_std__shared_ptrT_Var_t_t", "std::allocator< std::shared_ptr< Var > > *|std::list< std::shared_ptr< Var > >::allocator_type *|std::vector< std::shared_ptr< Var > >::allocator_type *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__invalid_argument = {"_p_std__invalid_argument", "std::invalid_argument *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__lessT_std__shared_ptrT_Var_t_t = {"_p_std__lessT_std__shared_ptrT_Var_t_t", "std::less< std::shared_ptr< Var > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__listT_int_std__allocatorT_int_t_t = {"_p_std__listT_int_std__allocatorT_int_t_t", "std::list< int,std::allocator< int > > *|std::list< int > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t = {"_p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t", "std::list< std::shared_ptr< ConstraintBase > > *|std::list< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t = {"_p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t", "std::list< std::shared_ptr< Var > > *|std::list< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__mapT_std__shared_ptrT_Node_t_std__string_t = {"_p_std__mapT_std__shared_ptrT_Node_t_std__string_t", "std::map< std::shared_ptr< Node >,std::string > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t = {"_p_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t", "std::set< std::shared_ptr< Var > > *|std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_Component_t = {"_p_std__shared_ptrT_Component_t", "std::shared_ptr< Component > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_ConditionalConstraint_t = {"_p_std__shared_ptrT_ConditionalConstraint_t", "std::shared_ptr< ConditionalConstraint > *", 0, 0, (void*)0, 0};
@@ -48071,18 +50666,23 @@ static swig_type_info _swigt__p_std__shared_ptrT_VarVarDivideOperator_t = {"_p_s
 static swig_type_info _swigt__p_std__shared_ptrT_VarVarMultiplyOperator_t = {"_p_std__shared_ptrT_VarVarMultiplyOperator_t", "std::shared_ptr< VarVarMultiplyOperator > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_VarVarPowerOperator_t = {"_p_std__shared_ptrT_VarVarPowerOperator_t", "std::shared_ptr< VarVarPowerOperator > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_Var_t = {"_p_std__shared_ptrT_Var_t", "std::shared_ptr< Var > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t = {"_p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t", "std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t = {"_p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t", "std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t = {"_p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t", "std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t = {"_p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t", "std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_double_std__allocatorT_double_t_t_t = {"_p_std__shared_ptrT_std__vectorT_double_std__allocatorT_double_t_t_t", "std::shared_ptr< std::vector< double,std::allocator< double > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t_t = {"_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t_t", "std::shared_ptr< std::vector< std::shared_ptr< Node >,std::allocator< std::shared_ptr< Node > > > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t = {"_p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t", "std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_var_set_t = {"_p_std__shared_ptrT_var_set_t", "std::shared_ptr< var_set > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t = {"_p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t", "std::unordered_map< std::shared_ptr< Node >,std::string > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t = {"_p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t", "std::unordered_set< std::shared_ptr< ConstraintBase > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__unordered_setT_std__shared_ptrT_Var_t_t = {"_p_std__unordered_setT_std__shared_ptrT_Var_t_t", "std::unordered_set< std::shared_ptr< Var > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_double_std__allocatorT_double_t_t = {"_p_std__vectorT_double_std__allocatorT_double_t_t", "std::vector< double,std::allocator< double > > *|std::vector< double > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__vectorT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t = {"_p_std__vectorT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t", "std::vector< std::shared_ptr< ConstraintBase >,std::allocator< std::shared_ptr< ConstraintBase > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t = {"_p_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t", "std::vector< std::shared_ptr< Node >,std::allocator< std::shared_ptr< Node > > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t = {"_p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t", "std::vector< std::shared_ptr< Var > > *|std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_swig__SwigPyIterator = {"_p_swig__SwigPyIterator", "swig::SwigPyIterator *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_value_type = {"_p_value_type", "value_type *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
-  &_swigt__p_CSRJacobian,
   &_swigt__p_Component,
   &_swigt__p_ConditionalConstraint,
   &_swigt__p_Constraint,
@@ -48125,6 +50725,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_char,
   &_swigt__p_difference_type,
   &_swigt__p_double,
+  &_swigt__p_int,
   &_swigt__p_key_type,
   &_swigt__p_p_PyObject,
   &_swigt__p_size_type,
@@ -48137,7 +50738,6 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_std__listT_int_std__allocatorT_int_t_t,
   &_swigt__p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t,
   &_swigt__p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t,
-  &_swigt__p_std__mapT_std__shared_ptrT_Node_t_std__string_t,
   &_swigt__p_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t,
   &_swigt__p_std__shared_ptrT_Component_t,
   &_swigt__p_std__shared_ptrT_ConditionalConstraint_t,
@@ -48176,18 +50776,23 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_std__shared_ptrT_VarVarMultiplyOperator_t,
   &_swigt__p_std__shared_ptrT_VarVarPowerOperator_t,
   &_swigt__p_std__shared_ptrT_Var_t,
-  &_swigt__p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t,
-  &_swigt__p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t,
+  &_swigt__p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t,
+  &_swigt__p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t,
   &_swigt__p_std__shared_ptrT_std__vectorT_double_std__allocatorT_double_t_t_t,
   &_swigt__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t_t,
+  &_swigt__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t,
   &_swigt__p_std__shared_ptrT_var_set_t,
+  &_swigt__p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,
+  &_swigt__p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t,
+  &_swigt__p_std__unordered_setT_std__shared_ptrT_Var_t_t,
   &_swigt__p_std__vectorT_double_std__allocatorT_double_t_t,
+  &_swigt__p_std__vectorT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t,
   &_swigt__p_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t,
+  &_swigt__p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t,
   &_swigt__p_swig__SwigPyIterator,
   &_swigt__p_value_type,
 };
 
-static swig_cast_info _swigc__p_CSRJacobian[] = {  {&_swigt__p_CSRJacobian, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Component[] = {  {&_swigt__p_Component, 0, 0, 0},  {&_swigt__p_Constraint, _p_ConstraintTo_p_Component, 0, 0},  {&_swigt__p_ConditionalConstraint, _p_ConditionalConstraintTo_p_Component, 0, 0},  {&_swigt__p_Objective, _p_ObjectiveTo_p_Component, 0, 0},  {&_swigt__p_ConstraintBase, _p_ConstraintBaseTo_p_Component, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_ConditionalConstraint[] = {  {&_swigt__p_ConditionalConstraint, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Constraint[] = {  {&_swigt__p_Constraint, 0, 0, 0},{0, 0, 0, 0}};
@@ -48230,6 +50835,7 @@ static swig_cast_info _swigc__p_allocator_type[] = {  {&_swigt__p_allocator_type
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_difference_type[] = {  {&_swigt__p_difference_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_double[] = {  {&_swigt__p_double, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_key_type[] = {  {&_swigt__p_key_type, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_PyObject[] = {  {&_swigt__p_p_PyObject, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_size_type[] = {  {&_swigt__p_size_type, 0, 0, 0},{0, 0, 0, 0}};
@@ -48242,7 +50848,6 @@ static swig_cast_info _swigc__p_std__lessT_std__shared_ptrT_Var_t_t[] = {  {&_sw
 static swig_cast_info _swigc__p_std__listT_int_std__allocatorT_int_t_t[] = {  {&_swigt__p_std__listT_int_std__allocatorT_int_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t[] = {  {&_swigt__p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t[] = {  {&_swigt__p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__mapT_std__shared_ptrT_Node_t_std__string_t[] = {  {&_swigt__p_std__mapT_std__shared_ptrT_Node_t_std__string_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t[] = {  {&_swigt__p_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_Component_t[] = {  {&_swigt__p_std__shared_ptrT_ConstraintBase_t, _p_std__shared_ptrT_ConstraintBase_tTo_p_std__shared_ptrT_Component_t, 0, 0},  {&_swigt__p_std__shared_ptrT_Constraint_t, _p_std__shared_ptrT_Constraint_tTo_p_std__shared_ptrT_Component_t, 0, 0},  {&_swigt__p_std__shared_ptrT_ConditionalConstraint_t, _p_std__shared_ptrT_ConditionalConstraint_tTo_p_std__shared_ptrT_Component_t, 0, 0},  {&_swigt__p_std__shared_ptrT_Objective_t, _p_std__shared_ptrT_Objective_tTo_p_std__shared_ptrT_Component_t, 0, 0},  {&_swigt__p_std__shared_ptrT_Component_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_ConditionalConstraint_t[] = {  {&_swigt__p_std__shared_ptrT_ConditionalConstraint_t, 0, 0, 0},{0, 0, 0, 0}};
@@ -48281,18 +50886,23 @@ static swig_cast_info _swigc__p_std__shared_ptrT_VarVarDivideOperator_t[] = {  {
 static swig_cast_info _swigc__p_std__shared_ptrT_VarVarMultiplyOperator_t[] = {  {&_swigt__p_std__shared_ptrT_VarVarMultiplyOperator_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_VarVarPowerOperator_t[] = {  {&_swigt__p_std__shared_ptrT_VarVarPowerOperator_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_Var_t[] = {  {&_swigt__p_std__shared_ptrT_Var_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_double_std__allocatorT_double_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__vectorT_double_std__allocatorT_double_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_var_set_t[] = {  {&_swigt__p_std__shared_ptrT_var_set_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t[] = {  {&_swigt__p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t[] = {  {&_swigt__p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__unordered_setT_std__shared_ptrT_Var_t_t[] = {  {&_swigt__p_std__unordered_setT_std__shared_ptrT_Var_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_double_std__allocatorT_double_t_t[] = {  {&_swigt__p_std__vectorT_double_std__allocatorT_double_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__vectorT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t[] = {  {&_swigt__p_std__vectorT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t[] = {  {&_swigt__p_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t[] = {  {&_swigt__p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_swig__SwigPyIterator[] = {  {&_swigt__p_swig__SwigPyIterator, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_value_type[] = {  {&_swigt__p_value_type, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
-  _swigc__p_CSRJacobian,
   _swigc__p_Component,
   _swigc__p_ConditionalConstraint,
   _swigc__p_Constraint,
@@ -48335,6 +50945,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_char,
   _swigc__p_difference_type,
   _swigc__p_double,
+  _swigc__p_int,
   _swigc__p_key_type,
   _swigc__p_p_PyObject,
   _swigc__p_size_type,
@@ -48347,7 +50958,6 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_std__listT_int_std__allocatorT_int_t_t,
   _swigc__p_std__listT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t,
   _swigc__p_std__listT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t,
-  _swigc__p_std__mapT_std__shared_ptrT_Node_t_std__string_t,
   _swigc__p_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t,
   _swigc__p_std__shared_ptrT_Component_t,
   _swigc__p_std__shared_ptrT_ConditionalConstraint_t,
@@ -48386,13 +50996,19 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_std__shared_ptrT_VarVarMultiplyOperator_t,
   _swigc__p_std__shared_ptrT_VarVarPowerOperator_t,
   _swigc__p_std__shared_ptrT_Var_t,
-  _swigc__p_std__shared_ptrT_std__mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t,
-  _swigc__p_std__shared_ptrT_std__setT_std__shared_ptrT_Var_t_std__lessT_std__shared_ptrT_Var_t_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t,
+  _swigc__p_std__shared_ptrT_std__unordered_mapT_std__shared_ptrT_Node_t_std__vectorT_int_std__allocatorT_int_t_t_t_t,
+  _swigc__p_std__shared_ptrT_std__unordered_setT_std__shared_ptrT_Var_t_t_t,
   _swigc__p_std__shared_ptrT_std__vectorT_double_std__allocatorT_double_t_t_t,
   _swigc__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t_t,
+  _swigc__p_std__shared_ptrT_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t_t,
   _swigc__p_std__shared_ptrT_var_set_t,
+  _swigc__p_std__unordered_mapT_std__shared_ptrT_Node_t_std__string_t,
+  _swigc__p_std__unordered_setT_std__shared_ptrT_ConstraintBase_t_t,
+  _swigc__p_std__unordered_setT_std__shared_ptrT_Var_t_t,
   _swigc__p_std__vectorT_double_std__allocatorT_double_t_t,
+  _swigc__p_std__vectorT_std__shared_ptrT_ConstraintBase_t_std__allocatorT_std__shared_ptrT_ConstraintBase_t_t_t,
   _swigc__p_std__vectorT_std__shared_ptrT_Node_t_std__allocatorT_std__shared_ptrT_Node_t_t_t,
+  _swigc__p_std__vectorT_std__shared_ptrT_Var_t_std__allocatorT_std__shared_ptrT_Var_t_t_t,
   _swigc__p_swig__SwigPyIterator,
   _swigc__p_value_type,
 };

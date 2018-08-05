@@ -187,6 +187,14 @@ class IpoptModel(_object):
     __swig_getmethods__["cons"] = _ipopt_model.IpoptModel_cons_get
     if _newclass:
         cons = _swig_property(_ipopt_model.IpoptModel_cons_get, _ipopt_model.IpoptModel_cons_set)
+    __swig_setmethods__["vars_vector"] = _ipopt_model.IpoptModel_vars_vector_set
+    __swig_getmethods__["vars_vector"] = _ipopt_model.IpoptModel_vars_vector_get
+    if _newclass:
+        vars_vector = _swig_property(_ipopt_model.IpoptModel_vars_vector_get, _ipopt_model.IpoptModel_vars_vector_set)
+    __swig_setmethods__["cons_vector"] = _ipopt_model.IpoptModel_cons_vector_set
+    __swig_getmethods__["cons_vector"] = _ipopt_model.IpoptModel_cons_vector_get
+    if _newclass:
+        cons_vector = _swig_property(_ipopt_model.IpoptModel_cons_vector_get, _ipopt_model.IpoptModel_cons_vector_set)
     __swig_setmethods__["solver_status"] = _ipopt_model.IpoptModel_solver_status_set
     __swig_getmethods__["solver_status"] = _ipopt_model.IpoptModel_solver_status_get
     if _newclass:
@@ -195,6 +203,14 @@ class IpoptModel(_object):
     __swig_getmethods__["hessian_map"] = _ipopt_model.IpoptModel_hessian_map_get
     if _newclass:
         hessian_map = _swig_property(_ipopt_model.IpoptModel_hessian_map_get, _ipopt_model.IpoptModel_hessian_map_set)
+    __swig_setmethods__["hessian_vector_var1"] = _ipopt_model.IpoptModel_hessian_vector_var1_set
+    __swig_getmethods__["hessian_vector_var1"] = _ipopt_model.IpoptModel_hessian_vector_var1_get
+    if _newclass:
+        hessian_vector_var1 = _swig_property(_ipopt_model.IpoptModel_hessian_vector_var1_get, _ipopt_model.IpoptModel_hessian_vector_var1_set)
+    __swig_setmethods__["hessian_vector_var2"] = _ipopt_model.IpoptModel_hessian_vector_var2_set
+    __swig_getmethods__["hessian_vector_var2"] = _ipopt_model.IpoptModel_hessian_vector_var2_get
+    if _newclass:
+        hessian_vector_var2 = _swig_property(_ipopt_model.IpoptModel_hessian_vector_var2_get, _ipopt_model.IpoptModel_hessian_vector_var2_set)
 
     def __init__(self):
         """__init__(IpoptModel self) -> IpoptModel"""

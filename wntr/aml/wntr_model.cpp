@@ -2,169 +2,145 @@
 
 void WNTRModel::get_x(double *array_out, int array_length_out)
 {
-    int i = 0;
-    for (std::shared_ptr<Var> &v_ptr : vars)
+  if (!is_structure_fixed)
     {
-        array_out[i] = v_ptr->value;
-        ++i;
+      throw std::runtime_error("The structure of the model must be fixed with set_structure before get_x can be called.");
+    }
+  int i = 0;
+  for (std::shared_ptr<Var> &v_ptr : vars_vector)
+    {
+      array_out[i] = v_ptr->value;
+      ++i;
     }
 }
 
 
 void WNTRModel::load_var_values_from_x(double *arrayin, int array_length_in)
 {
-    int i = 0;
-    for (std::shared_ptr<Var> &v_ptr: vars)
+  if (!is_structure_fixed)
     {
-        v_ptr->value = arrayin[i];
-        ++i;
+      throw std::runtime_error("The structure of the model must be fixed with set_structure before load_var_values_from_x can be called.");
+    }
+  int i = 0;
+  for (std::shared_ptr<Var> &v_ptr: vars_vector)
+    {
+      v_ptr->value = arrayin[i];
+      ++i;
     }
 }
 
 
 void WNTRModel::add_constraint(std::shared_ptr<ConstraintBase> con)
 {
-    cons.push_back(con);
-    jac.add_constraint(con);
+  if (is_structure_fixed)
+    {
+      throw std::runtime_error("The structure of the model must be released with release_structure before add_constraint can be called.");
+    }
+  cons.insert(con);
+  nnz += con->get_vars()->size();
 }
 
 
 void WNTRModel::remove_constraint(std::shared_ptr<ConstraintBase> con)
 {
-    auto cons_iterator = cons.begin();
-    std::advance(cons_iterator, con->index);
-    cons.erase(cons_iterator);
-    jac.remove_constraint(con);
+  if (is_structure_fixed)
+    {
+      throw std::runtime_error("The structure of the model must be released with release_structure before remove_constraint can be called.");
+    }
+  cons.erase(con);
+  nnz -= con->get_vars()->size();
 }
 
 
 void WNTRModel::evaluate(double *array_out, int array_length_out)
 {
-    int i = 0;
-    for (auto &ptr_to_con : cons)
+  if (!is_structure_fixed)
     {
-        array_out[i] = ptr_to_con->evaluate();
-        ++i;
+      throw std::runtime_error("The structure of the model must be fixed with set_structure before evaluate can be called.");
+    }
+  int i = 0;
+  for (auto &ptr_to_con : cons_vector)
+    {
+      array_out[i] = ptr_to_con->evaluate();
+      ++i;
     }
 }
 
 
-bool compare_var_indices(std::shared_ptr<Var> first, std::shared_ptr<Var> second)
+void WNTRModel::evaluate_csr_jacobian(double *values_array_out, int values_array_length_out, int *col_ndx_array_out, int col_ndx_array_length_out, int *row_nnz_array_out, int row_nnz_array_length_out, bool new_eval)
 {
-    return (first->index < second->index);
-}
-
-
-void CSRJacobian::add_constraint(std::shared_ptr<ConstraintBase> con)
-{
-    //  Gather some needed data
-    int last_row_nnz = row_nnz.back();
-    auto con_vars = con->get_vars();
-    int n_vars = con_vars->size();
-
-    //  Now add the number of nonzero elements to row_nnz
-    row_nnz.push_back(n_vars + last_row_nnz);
-
-    //  Now add the constraint to cons;
-    for (int i = 0; i < n_vars; ++i)
+  if (!is_structure_fixed)
     {
-        cons.push_back(con);
+      throw std::runtime_error("The structure of the model must be fixed with set_structure before evaluate_csr_jacobian can be called.");
     }
+  int _row_nnz = 0;
+  int _col_ndx = 0;
+  int _values = 0;
 
-    //  Now add the vars and the column indices
-    std::list<std::shared_ptr<Var> > vars_to_add;
-    for (auto &v : *(con_vars))
+  row_nnz_array_out[_row_nnz] = 0;
+  ++_row_nnz;
+
+  for (auto con_iter = cons_vector.begin(); con_iter != cons_vector.end(); ++con_iter)
     {
-        vars_to_add.push_back(v);
+      auto _vars = (*con_iter)->get_vars();
+      row_nnz_array_out[_row_nnz] = row_nnz_array_out[_row_nnz - 1] + _vars->size();
+      ++_row_nnz;
+      for (auto var_iter=_vars->begin(); var_iter!=_vars->end(); ++var_iter )
+	{
+	  values_array_out[_values] = (*con_iter)->ad(*(*var_iter), new_eval);
+	  col_ndx_array_out[_col_ndx] = (*var_iter)->index;
+	  ++_values;
+	  ++_col_ndx;
+	}
     }
-
-    vars_to_add.sort(compare_var_indices);
-    for (auto &v : vars_to_add)
-    {
-        vars.push_back(v);
-    }
-}
-
-
-void CSRJacobian::remove_constraint(std::shared_ptr<ConstraintBase> con)
-{
-    //  First create the iterators for row_nnz, col_ndx, vars, and cons;
-    auto row_nnz_iterator = row_nnz.begin();
-    auto vars_iterator = vars.begin();
-    auto vars_iterator2 = vars.begin();
-    auto cons_iterator = cons.begin();
-    auto cons_iterator2 = cons.begin();
-
-    //  Gather some needed data
-    std::advance(row_nnz_iterator, con->index);
-    int last_row_nnz = *row_nnz_iterator;
-    int n_vars = (con->get_vars())->size();
-
-    //  Now remove the number of nonzero elements from row_nnz
-    ++row_nnz_iterator;
-    row_nnz_iterator = row_nnz.erase(row_nnz_iterator);
-    while (row_nnz_iterator != row_nnz.end())
-    {
-        (*row_nnz_iterator) -= n_vars;
-        ++row_nnz_iterator;
-    }
-
-    //  Now remove the constraint from cons;
-    std::advance(cons_iterator, last_row_nnz);
-    std::advance(cons_iterator2, last_row_nnz + n_vars);
-    cons.erase(cons_iterator, cons_iterator2);
-
-    //  Now remove the vars and the column indices
-    std::advance(vars_iterator, last_row_nnz);
-    std::advance(vars_iterator2, last_row_nnz + n_vars);
-    vars.erase(vars_iterator, vars_iterator2);
-}
-
-
-void CSRJacobian::evaluate(double *array_out, int array_length_out, bool new_eval)
-{
-    auto con_iter = cons.begin();
-    auto var_iter = vars.begin();
-    int i = 0;
-
-    while (con_iter != cons.end() && var_iter != vars.end())
-    {
-        array_out[i] = (*con_iter)->ad(*(*var_iter), new_eval);
-        ++con_iter;
-        ++var_iter;
-        ++i;
-    }
-}
-
-
-std::list<int> CSRJacobian::get_col_ndx()
-{
-  std::list<int> col_ndx;
-  auto var_iter = vars.begin();
-  while (var_iter != vars.end())
-    {
-      col_ndx.push_back((*var_iter)->index);
-      ++ var_iter;
-    }
-  return col_ndx;
-}
-
-
-std::list<int> CSRJacobian::get_row_nnz()
-{
-    return row_nnz;
 }
 
 
 void WNTRModel::add_var(std::shared_ptr<Var> v)
 {
-  vars.push_back(v);
+  if (is_structure_fixed)
+    {
+      throw std::runtime_error("The structure of the model must be released with release_structure before add_var can be called.");
+    }
+  vars.insert(v);
 }
 
 
 void WNTRModel::remove_var(std::shared_ptr<Var> v)
 {
-  auto it = vars.begin();
-  std::advance(it, v->index);
-  vars.erase(it);
+  if (is_structure_fixed)
+    {
+      throw std::runtime_error("The structure of the model must be released with release_structure before remove_var can be called.");
+    }
+  vars.erase(v);
+}
+
+
+void WNTRModel::set_structure()
+{
+  is_structure_fixed = true;
+  
+  int _v = 0;
+  for (auto it = vars.begin(); it != vars.end(); ++it)
+    {
+      vars_vector.push_back(*it);
+      (*it)->index = _v;
+      ++_v;
+    }
+
+  int _c = 0;
+  for (auto it = cons.begin(); it != cons.end(); ++it)
+    {
+      (*it)->index = _c;
+      cons_vector.push_back(*it);
+      ++_c;
+    }
+}
+
+
+void WNTRModel::release_structure()
+{
+  is_structure_fixed = false;
+  cons_vector.clear();
+  vars_vector.clear();
 }

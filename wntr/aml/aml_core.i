@@ -59,8 +59,12 @@
 %template(var_list) std::list<std::shared_ptr<Var> >;
 %template(var_set) std::set<std::shared_ptr<Var> >;
 %template(int_list) std::list<int>;
+%template(var_vec) std::vector<std::shared_ptr<Var> >;
 
 %apply (double *ARGOUT_ARRAY1, int DIM1) {(double *array_out, int array_length_out)}
+%apply (double *ARGOUT_ARRAY1, int DIM1) {(double *values_array_out, int values_array_length_out)}
+%apply (int *ARGOUT_ARRAY1, int DIM1) {(int *col_ndx_array_out, int col_ndx_array_length_out)}
+%apply (int *ARGOUT_ARRAY1, int DIM1) {(int *row_nnz_array_out, int row_nnz_array_length_out)}
 %apply (double *IN_ARRAY1, int DIM1) {(double *array_in, int array_length_in)}
 
 %include "expression.hpp"

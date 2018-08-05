@@ -5,7 +5,7 @@
 #include "expression.hpp"
 
 
-std::set<std::shared_ptr<Var> > Node::py_get_vars()
+std::unordered_set<std::shared_ptr<Var> > Node::py_get_vars()
 {
   auto ptr_to_vars = get_vars();
   return *ptr_to_vars;
@@ -44,7 +44,7 @@ std::shared_ptr<Node> summation_helper(Node &n1, Node &n2, double c)
 	  auto coefs2 = n2.get_coefs();
 	  auto nodes2 = n2.get_nodes();
 	  int i = 0;
-	  std::shared_ptr<std::set<std::shared_ptr<Var> > > _n_vars;
+	  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > _n_vars;
 	  for (auto &_n : (*nodes2))
 	    {
 	      nodes1->push_back(_n);
@@ -100,8 +100,8 @@ std::shared_ptr<Node> summation_helper(Node &n1, Node &n2, double c)
 	  s->get_coefs()->push_back(1);
 	  s->get_nodes()->push_back(n2.shared_from_this());
 	  s->get_coefs()->push_back(c);
-	  std::shared_ptr<std::set<std::shared_ptr<Var> > > n1_vars = n1.get_vars();
-	  std::shared_ptr<std::set<std::shared_ptr<Var> > > n2_vars = n2.get_vars();
+	  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > n1_vars = n1.get_vars();
+	  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > n2_vars = n2.get_vars();
 	  for (auto &v : (*n1_vars))
 	    {
 	      (*(s->get_sparsity()))[v].push_back(0);
@@ -1035,39 +1035,39 @@ void Summation::set_coefs(std::shared_ptr<std::vector<double> > new_coefs)
 }
 
 
-std::shared_ptr<std::map<std::shared_ptr<Node>, std::vector<int> > > Node::get_sparsity()
+std::shared_ptr<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > > Node::get_sparsity()
 {
-  return std::make_shared<std::map<std::shared_ptr<Node>, std::vector<int> > >();
+  return std::make_shared<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > >();
 }
 
 
-std::shared_ptr<std::map<std::shared_ptr<Node>, std::vector<int> > > Summation::get_sparsity()
+std::shared_ptr<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > > Summation::get_sparsity()
 {
   return sparsity;
 }
 
 
-std::shared_ptr<std::set<std::shared_ptr<Var> > > Node::get_vars()
+std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > Node::get_vars()
 {
-  return std::make_shared<std::set<std::shared_ptr<Var> > >();
+  return std::make_shared<std::unordered_set<std::shared_ptr<Var> > >();
 }
 
 
-std::shared_ptr<std::set<std::shared_ptr<Var> > > Summation::get_vars()
+std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > Summation::get_vars()
 {
   return vars;
 }
 
 
-std::shared_ptr<std::set<std::shared_ptr<Var> > > Var::get_vars()
+std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > Var::get_vars()
 {
-  std::shared_ptr<std::set<std::shared_ptr<Var> > > vars = std::make_shared<std::set<std::shared_ptr<Var> > >();
+  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<Var> > >();
   vars->insert(std::static_pointer_cast<Var>(shared_from_this()));
   return vars;
 }
 
 
-std::shared_ptr<std::set<std::shared_ptr<Var> > > Expression::get_vars()
+std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > Expression::get_vars()
 {
   return vars;
 }
@@ -2234,13 +2234,13 @@ bool OperatorOperatorPowerOperator::has_ad2(Var &n1, Var &n2)
 }
 
 
-std::string Var::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string Var::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return name;
 }
 
 
-std::string Param::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string Param::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   if (name == "")
     {
@@ -2255,7 +2255,7 @@ std::string Param::set_name(std::map<std::shared_ptr<Node>, std::string> &str_ma
 }
 
 
-std::string Summation::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string Summation::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   std::string s = "(";
   std::ostringstream c;
@@ -2277,7 +2277,7 @@ std::string Summation::set_name(std::map<std::shared_ptr<Node>, std::string> &st
 }
 
 
-std::string Expression::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string Expression::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   std::string res;
   for (auto &n : (*nodes))
@@ -2289,163 +2289,163 @@ std::string Expression::set_name(std::map<std::shared_ptr<Node>, std::string> &s
 }
 
 
-std::string VarVarMultiplyOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string VarVarMultiplyOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " * " + node2->set_name(str_map) + ")";
 }
 
 
-std::string VarParamMultiplyOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string VarParamMultiplyOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " * " + node2->set_name(str_map) + ")";
 }
 
 
-std::string VarOperatorMultiplyOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string VarOperatorMultiplyOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " * " + str_map[node2] + ")";
 }
 
 
-std::string ParamVarMultiplyOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string ParamVarMultiplyOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " * " + node2->set_name(str_map) + ")";
 }
 
 
-std::string ParamParamMultiplyOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string ParamParamMultiplyOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " * " + node2->set_name(str_map) + ")";
 }
 
 
-std::string ParamOperatorMultiplyOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string ParamOperatorMultiplyOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " * " + str_map[node2] + ")";
 }
 
 
-std::string OperatorVarMultiplyOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string OperatorVarMultiplyOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + str_map[node1] + " * " + node2->set_name(str_map) + ")";
 }
 
 
-std::string OperatorParamMultiplyOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string OperatorParamMultiplyOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + str_map[node1] + " * " + node2->set_name(str_map) + ")";
 }
 
 
-std::string OperatorOperatorMultiplyOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string OperatorOperatorMultiplyOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + str_map[node1] + " * " + str_map[node2] + ")";
 }
 
 
-std::string VarVarDivideOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string VarVarDivideOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " / " + node2->set_name(str_map) + ")";
 }
 
 
-std::string VarParamDivideOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string VarParamDivideOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " / " + node2->set_name(str_map) + ")";
 }
 
 
-std::string VarOperatorDivideOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string VarOperatorDivideOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " / " + str_map[node2] + ")";
 }
 
 
-std::string ParamVarDivideOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string ParamVarDivideOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " / " + node2->set_name(str_map) + ")";
 }
 
 
-std::string ParamParamDivideOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string ParamParamDivideOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " / " + node2->set_name(str_map) + ")";
 }
 
 
-std::string ParamOperatorDivideOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string ParamOperatorDivideOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " / " + str_map[node2] + ")";
 }
 
 
-std::string OperatorVarDivideOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string OperatorVarDivideOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + str_map[node1] + " / " + node2->set_name(str_map) + ")";
 }
 
 
-std::string OperatorParamDivideOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string OperatorParamDivideOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + str_map[node1] + " / " + node2->set_name(str_map) + ")";
 }
 
 
-std::string OperatorOperatorDivideOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string OperatorOperatorDivideOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + str_map[node1] + " / " + str_map[node2] + ")";
 }
 
 
-std::string VarVarPowerOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string VarVarPowerOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " ** " + node2->set_name(str_map) + ")";
 }
 
 
-std::string VarParamPowerOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string VarParamPowerOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " ** " + node2->set_name(str_map) + ")";
 }
 
 
-std::string VarOperatorPowerOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string VarOperatorPowerOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " ** " + str_map[node2] + ")";
 }
 
 
-std::string ParamVarPowerOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string ParamVarPowerOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " ** " + node2->set_name(str_map) + ")";
 }
 
 
-std::string ParamParamPowerOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string ParamParamPowerOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " ** " + node2->set_name(str_map) + ")";
 }
 
 
-std::string ParamOperatorPowerOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string ParamOperatorPowerOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + node1->set_name(str_map) + " ** " + str_map[node2] + ")";
 }
 
 
-std::string OperatorVarPowerOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string OperatorVarPowerOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + str_map[node1] + " ** " + node2->set_name(str_map) + ")";
 }
 
 
-std::string OperatorParamPowerOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string OperatorParamPowerOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + str_map[node1] + " ** " + node2->set_name(str_map) + ")";
 }
 
 
-std::string OperatorOperatorPowerOperator::set_name(std::map<std::shared_ptr<Node>, std::string> &str_map)
+std::string OperatorOperatorPowerOperator::set_name(std::unordered_map<std::shared_ptr<Node>, std::string> &str_map)
 {
   return "(" + str_map[node1] + " ** " + str_map[node2] + ")";
 }
@@ -2509,7 +2509,7 @@ bool Expression::has_ad2(Var &n1, Var &n2)
 
 std::string Node::_print()
 {
-  std::map<std::shared_ptr<Node>, std::string> str_map;
+  std::unordered_map<std::shared_ptr<Node>, std::string> str_map;
   return set_name(str_map);
 }
 

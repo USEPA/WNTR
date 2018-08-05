@@ -757,28 +757,32 @@ def _solver_helper(model, solver, solver_options):
     logger.debug('solving')
     if solver == 'ipopt':
         model.solve()
-        return SolverStatus.converged, ''
-    elif solver is NewtonSolver:
-        _solver = NewtonSolver(solver_options)
-        return _solver.solve(model)
-    elif solver is scipy.optimize.fsolve:
-        x, infodict, ier, mesg = solver(model.evaluate_residuals, model.get_x(), **solver_options)
-        if ier != 1:
-            return SolverStatus.error, mesg
-        else:
-            model.load_var_values_from_x(x)
-            return SolverStatus.converged, mesg
-    elif solver in {scipy.optimize.newton_krylov, scipy.optimize.anderson, scipy.optimize.broyden1,
-                            scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
-                            scipy.optimize.diagbroyden}:
-        try:
-            x = solver(model.evaluate_residuals, model.get_x(), **solver_options)
-            model.load_var_values_from_x(x)
-            return SolverStatus.converged, ''
-        except:
-            return SolverStatus.error, ''
+        sol = SolverStatus.converged, ''
     else:
-        raise ValueError('Solver not recognized.')
+        model.set_structure()
+        if solver is NewtonSolver:
+            _solver = NewtonSolver(solver_options)
+            sol = _solver.solve(model)
+        elif solver is scipy.optimize.fsolve:
+            x, infodict, ier, mesg = solver(model.evaluate_residuals, model.get_x(), **solver_options)
+            if ier != 1:
+                sol = SolverStatus.error, mesg
+            else:
+                model.load_var_values_from_x(x)
+                sol = SolverStatus.converged, mesg
+        elif solver in {scipy.optimize.newton_krylov, scipy.optimize.anderson, scipy.optimize.broyden1,
+                                scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
+                                scipy.optimize.diagbroyden}:
+            try:
+                x = solver(model.evaluate_residuals, model.get_x(), **solver_options)
+                model.load_var_values_from_x(x)
+                sol = SolverStatus.converged, ''
+            except:
+                sol = SolverStatus.error, ''
+        else:
+            raise ValueError('Solver not recognized.')
+        model.release_structure()
+    return sol
 
 
 class _DenseJac(object):

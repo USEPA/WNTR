@@ -1,7 +1,24 @@
 import wntr.aml as aml
 import unittest
 import numpy as np
+from wntr.aml.aml import _OrderedNameDict
 from scipy.sparse import csr_matrix
+
+
+def compare_evaluation(self, m, true_r, true_j):
+    m.set_structure()
+    vec = m.get_x()
+    r = m.evaluate_residuals(vec)
+    j1 = m.evaluate_jacobian(new_eval=False)
+    j2 = m.evaluate_jacobian(new_eval=True)
+
+    for c in m.cons():
+        self.assertAlmostEqual(true_r[c], r[c.index], 10)
+        for v in m.vars():
+            self.assertAlmostEqual(true_j[c][v], j1[c.index, v.index], 10)
+            self.assertAlmostEqual(true_j[c][v], j2[c.index, v.index], 10)
+
+    m.release_structure()
 
 
 class TestExpression(unittest.TestCase):
@@ -118,26 +135,30 @@ class TestConstraint(unittest.TestCase):
         m.con1 = aml.create_constraint(m.x + 2.0*m.y + m.c)
         m.con2 = aml.create_constraint(m.x**2 - m.y**2 + 10)
 
-        vec = m.get_x()
-        r = m.evaluate_residuals(vec)
-        j = m.evaluate_jacobian().toarray()
-        if m.x.index == 0:
-            true_j = [[1, 2], [2 * x, -2 * y]]
-        else:
-            true_j = [[2, 1], [-2 * y, 2 * x]]
-        self.assertTrue(np.all(r == [x+2*y+c, x**2-y**2+10]))
-        self.assertTrue(np.all(j == true_j))
+        true_con_values = _OrderedNameDict()
+        true_con_values[m.con1] = x + 2 * y + c
+        true_con_values[m.con2] = x**2 - y**2 + 10
 
+        true_jac = _OrderedNameDict()
+        true_jac[m.con1] = _OrderedNameDict()
+        true_jac[m.con2] = _OrderedNameDict()
+        true_jac[m.con1][m.x] = 1
+        true_jac[m.con1][m.y] = 2
+        true_jac[m.con2][m.x] = 2*x
+        true_jac[m.con2][m.y] = -2*y
+
+        compare_evaluation(self, m, true_con_values, true_jac)
+
+        del true_con_values[m.con2]
+        del true_jac[m.con2]
         del m.con2
         m.con3 = aml.create_constraint(m.x*m.y)
-        r = m.evaluate_residuals(vec)
-        j = m.evaluate_jacobian().toarray()
-        if m.x.index == 0:
-            true_j = [[1, 2], [y, x]]
-        else:
-            true_j = [[2, 1], [x, y]]
-        self.assertTrue(np.all(r == [x+2*y+c, x*y]))
-        self.assertTrue(np.all(j == true_j))
+        true_con_values[m.con3] = x*y
+        true_jac[m.con3] = _OrderedNameDict()
+        true_jac[m.con3][m.x] = y
+        true_jac[m.con3][m.y] = x
+
+        compare_evaluation(self, m, true_con_values, true_jac)
 
     def test_if_then_constraints(self):
         m = aml.Model()
@@ -146,188 +167,165 @@ class TestConstraint(unittest.TestCase):
         m.x = aml.create_var(x)
         m.y = aml.create_var(y)
 
-        con1 = aml.create_conditional_constraint()
+        con1 = aml.create_conditional_constraint(lb=0, ub=0)
         con1.add_condition(m.x + 1, -(-m.x)**1.852 - (-m.x)**2 - m.y)
         con1.add_condition(m.x - 1, m.x)
         con1.add_final_expr(m.x**1.852 + m.x**2 - m.y)
         m.con1 = con1
 
-        con2 = aml.create_conditional_constraint()
+        con2 = aml.create_conditional_constraint(lb=0, ub=0)
         con2.add_condition(m.y + 1, -(-m.y)**(1.852) - (-m.y)**(2) - m.x)
         con2.add_condition(m.y - 1, m.y)
         con2.add_final_expr(m.y**(1.852) + m.y**(2) - m.x)
         m.con2 = con2
 
-        vec = m.get_x()
-        r = m.evaluate_residuals(vec)
-        j = m.evaluate_jacobian().toarray()
-        true_r = [-(abs(x)**1.852 + abs(x)**2) - y, -(abs(y)**1.852 + abs(y)**2) - x]
-        if m.x.index == 0:
-            true_j = [[1.852 * abs(x) ** 0.852 + 2 * abs(x), -1], [-1, 1.852 * abs(y) ** 0.852 + 2 * abs(y)]]
-        else:
-            true_j = [[-1, 1.852 * abs(x) ** 0.852 + 2 * abs(x)], [1.852 * abs(y) ** 0.852 + 2 * abs(y), -1]]
-        self.assertTrue(np.all(r==true_r))
-        for i in range(len(true_j)):
-            for k in range(len(true_j[i])):
-                self.assertAlmostEqual(true_j[i][k], j[i,k], 10)
+        true_con_values = _OrderedNameDict()
+        true_jac = _OrderedNameDict()
+        true_con_values[m.con1] = -(abs(x)**1.852 + abs(x)**2) - y
+        true_con_values[m.con2] = -(abs(y)**1.852 + abs(y)**2) - x
+        true_jac[m.con1] = _OrderedNameDict()
+        true_jac[m.con2] = _OrderedNameDict()
+        true_jac[m.con1][m.x] = 1.852 * abs(x) ** 0.852 + 2 * abs(x)
+        true_jac[m.con1][m.y] = -1
+        true_jac[m.con2][m.x] = -1
+        true_jac[m.con2][m.y] = 1.852 * abs(y) ** 0.852 + 2 * abs(y)
+        compare_evaluation(self, m, true_con_values, true_jac)
 
         x = 0.5
         y = 0.3
-        if m.x.index == 0:
-            vec[0] = x
-            vec[1] = y
-        else:
-            vec[0] = y
-            vec[1] = x
-        r = m.evaluate_residuals(vec)
-        j = m.evaluate_jacobian().toarray()
-        true_r = [x, y]
-        if m.x.index == 0:
-            true_j = [[1, 0], [0, 1]]
-        else:
-            true_j = [[0, 1], [1, 0]]
-        self.assertTrue(np.all(r==true_r))
-        for i in range(len(true_j)):
-            for k in range(len(true_j[i])):
-                self.assertAlmostEqual(true_j[i][k], j[i,k], 10)
+        m.x.value = x
+        m.y.value = y
+        true_con_values[m.con1] = x
+        true_con_values[m.con2] = y
+        true_jac[m.con1][m.x] = 1
+        true_jac[m.con1][m.y] = 0
+        true_jac[m.con2][m.x] = 0
+        true_jac[m.con2][m.y] = 1
+        compare_evaluation(self, m, true_con_values, true_jac)
 
         x = 4.5
         y = 3.7
-        if m.x.index == 0:
-            vec[0] = x
-            vec[1] = y
-        else:
-            vec[0] = y
-            vec[1] = x
-        r = m.evaluate_residuals(vec)
-        j = m.evaluate_jacobian().toarray()
-        true_r = [x**1.852 + x**2 - y, y**1.852 + y**2 - x]
-        if m.x.index == 0:
-            true_j = [[1.852 * x ** 0.852 + 2 * x, -1], [-1, 1.852 * y ** 0.852 + 2 * y]]
-        else:
-            true_j = [[-1, 1.852 * x ** 0.852 + 2 * x], [1.852 * y ** 0.852 + 2 * y, -1]]
-        self.assertTrue(np.all(r==true_r))
-        for i in range(len(true_j)):
-            for k in range(len(true_j[i])):
-                self.assertAlmostEqual(true_j[i][k], j[i,k], 10)
+        m.x.value = x
+        m.y.value = y
+        true_con_values[m.con1] = x**1.852 + x**2 - y
+        true_con_values[m.con2] = y**1.852 + y**2 - x
+        true_jac[m.con1][m.x] = 1.852 * x ** 0.852 + 2 * x
+        true_jac[m.con1][m.y] = -1
+        true_jac[m.con2][m.x] = -1
+        true_jac[m.con2][m.y] = 1.852 * y ** 0.852 + 2 * y
+        compare_evaluation(self, m, true_con_values, true_jac)
 
+        del true_con_values[m.con2]
+        del true_jac[m.con2]
         del m.con2
         con2 = aml.create_conditional_constraint()
-        con2.add_condition(m.y + 1, -(-m.y)**(2.852) - (-m.y)**(3) - m.x)
-        con2.add_condition(m.y - 1, m.y**(2))
-        con2.add_final_expr(m.y**(2.852) + m.y**(3) - m.x)
+        con2.add_condition(m.y + 1, -(-m.y)**2.852 - (-m.y)**3 - m.x)
+        con2.add_condition(m.y - 1, m.y**2)
+        con2.add_final_expr(m.y**2.852 + m.y**3 - m.x)
         m.con2 = con2
 
-        vec = m.get_x()
+        true_jac[m.con2] = _OrderedNameDict()
         x = -4.5
         y = -3.7
-        if m.x.index == 0:
-            vec[0] = x
-            vec[1] = y
-        else:
-            vec[0] = y
-            vec[1] = x
-        r = m.evaluate_residuals(vec)
-        j = m.evaluate_jacobian().toarray()
-        true_r = [-(abs(x)**1.852 + abs(x)**2) - y, -(abs(y)**2.852 + abs(y)**3) - x]
-        if m.x.index == 0:
-            true_j = [[1.852 * abs(x) ** 0.852 + 2 * abs(x), -1], [-1, 2.852 * abs(y) ** 1.852 + 3 * abs(y) ** 2]]
-        else:
-            true_j = [[-1, 1.852 * abs(x) ** 0.852 + 2 * abs(x)], [2.852 * abs(y) ** 1.852 + 3 * abs(y) ** 2, -1]]
-        self.assertTrue(np.all(r==true_r))
-        for i in range(len(true_j)):
-            for k in range(len(true_j[i])):
-                self.assertAlmostEqual(true_j[i][k], j[i,k], 10)
+        m.x.value = x
+        m.y.value = y
+        true_con_values[m.con1] = -(abs(x)**1.852 + abs(x)**2) - y
+        true_con_values[m.con2] = -(abs(y)**2.852 + abs(y)**3) - x
+        true_jac[m.con1][m.x] = 1.852 * abs(x) ** 0.852 + 2 * abs(x)
+        true_jac[m.con1][m.y] = -1
+        true_jac[m.con2][m.x] = -1
+        true_jac[m.con2][m.y] = 2.852 * abs(y) ** 1.852 + 3 * abs(y) ** 2
+        compare_evaluation(self, m, true_con_values, true_jac)
 
         x = 0.5
         y = 0.3
-        if m.x.index == 0:
-            vec[0] = x
-            vec[1] = y
-        else:
-            vec[0] = y
-            vec[1] = x
-        r = m.evaluate_residuals(vec)
-        j = m.evaluate_jacobian().toarray()
-        true_r = [x, y**2]
-        if m.x.index == 0:
-            true_j = [[1, 0], [0, 2 * y]]
-        else:
-            true_j = [[0, 1], [2 * y, 0]]
-        self.assertTrue(np.all(r == true_r))
-        for i in range(len(true_j)):
-            for k in range(len(true_j[i])):
-                self.assertAlmostEqual(true_j[i][k], j[i,k], 10)
+        m.x.value = x
+        m.y.value = y
+        true_con_values[m.con1] = x
+        true_con_values[m.con2] = y**2
+        true_jac[m.con1][m.x] = 1
+        true_jac[m.con1][m.y] = 0
+        true_jac[m.con2][m.x] = 0
+        true_jac[m.con2][m.y] = 2*y
+        compare_evaluation(self, m, true_con_values, true_jac)
 
         x = 4.5
         y = 3.7
-        if m.x.index == 0:
-            vec[0] = x
-            vec[1] = y
-        else:
-            vec[0] = y
-            vec[1] = x
-        r = m.evaluate_residuals(vec)
-        j = m.evaluate_jacobian().toarray()
-        true_r = [x**1.852 + x**2 - y, y**2.852 + y**3 - x]
-        if m.x.index == 0:
-            true_j = [[1.852 * x ** 0.852 + 2 * x, -1], [-1, 2.852 * y ** 1.852 + 3 * y ** 2]]
-        else:
-            true_j = [[-1, 1.852 * x ** 0.852 + 2 * x], [2.852 * y ** 1.852 + 3 * y ** 2, -1]]
-        self.assertTrue(np.all(r == true_r))
-        for i in range(len(true_j)):
-            for k in range(len(true_j[i])):
-                self.assertAlmostEqual(true_j[i][k], j[i,k], 10)
+        m.x.value = x
+        m.y.value = y
+        true_con_values[m.con1] = x**1.852 + x**2 - y
+        true_con_values[m.con2] = y**2.852 + y**3 - x
+        true_jac[m.con1][m.x] = 1.852 * x ** 0.852 + 2 * x
+        true_jac[m.con1][m.y] = -1
+        true_jac[m.con2][m.x] = -1
+        true_jac[m.con2][m.y] = 2.852 * y ** 1.852 + 3 * y ** 2
+        compare_evaluation(self, m, true_con_values, true_jac)
 
 
 class TestCSRJacobian(unittest.TestCase):
     def test_register_and_remove_constraint(self):
-        x = aml.create_var(2.0)
-        y = aml.create_var(3.0)
-        z = aml.create_var(4.0)
-        v = aml.create_var(10.0)
-        x.index = 0
-        y.index = 1
-        z.index = 2
-        v.index = 3
-        c1 = aml.create_constraint(x + y)
-        c1.index = 0
-        c2 = aml.create_constraint(x * y * v)
-        c2.index = 1
-        c3 = aml.create_constraint(z**3.0)
-        c3.index = 2
-        c4 = aml.create_constraint(x + 1.0 / v)
-        c4.index = 3
-        cons = [c1, c2, c3, c4]
-        j = aml.CSRJacobian()
-        j.add_constraint(c1)
-        j.add_constraint(c2)
-        j.add_constraint(c3)
-        j.add_constraint(c4)
-        con_values = [con.evaluate() for con in cons]
-        j_values = j.evaluate(len(j.cons))
-        A = csr_matrix((j_values, j.get_col_ndx(), j.get_row_nnz()), shape=(4, 4))
+        m = aml.Model('wntr')
+        m.x = aml.create_var(2.0)
+        m.y = aml.create_var(3.0)
+        m.z = aml.create_var(4.0)
+        m.v = aml.create_var(10.0)
+        m.c1 = aml.create_constraint(m.x + m.y)
+        m.c2 = aml.create_constraint(m.x * m.y * m.v)
+        m.c3 = aml.create_constraint(m.z**3.0)
+        m.c4 = aml.create_constraint(m.x + 1.0 / m.v)
+        m.set_structure()
+        con_values = m.evaluate_residuals()
+        A = m.evaluate_jacobian(new_eval=False)
 
-        true_con_values = [5.0, 60.0, 64.0, 2.1]
-        self.assertTrue(np.all(np.array(true_con_values) == np.array(con_values)))
-        true_jac = np.array([[1.0, 1.0, 0.0, 0.0],
-                             [30.0, 20.0, 0.0, 6.0],
-                             [0.0, 0.0, 48.0, 0.0],
-                             [1.0, 0.0, 0.0, -0.01]])
-        self.assertTrue(np.all(true_jac == A.toarray()))
+        true_con_values = _OrderedNameDict()
+        true_con_values[m.c1] = 5.0
+        true_con_values[m.c2] = 60.0
+        true_con_values[m.c3] = 64.0
+        true_con_values[m.c4] = 2.1
+        for c in m.cons():
+            self.assertTrue(true_con_values[c] == con_values[c.index])
+        true_jac = _OrderedNameDict()
+        true_jac[m.c1] = _OrderedNameDict()
+        true_jac[m.c2] = _OrderedNameDict()
+        true_jac[m.c3] = _OrderedNameDict()
+        true_jac[m.c4] = _OrderedNameDict()
+        true_jac[m.c1][m.x] = 1.0
+        true_jac[m.c1][m.y] = 1.0
+        true_jac[m.c1][m.z] = 0.0
+        true_jac[m.c1][m.v] = 0.0
+        true_jac[m.c2][m.x] = 30.0
+        true_jac[m.c2][m.y] = 20.0
+        true_jac[m.c2][m.z] = 0.0
+        true_jac[m.c2][m.v] = 6.0
+        true_jac[m.c3][m.x] = 0.0
+        true_jac[m.c3][m.y] = 0.0
+        true_jac[m.c3][m.z] = 48.0
+        true_jac[m.c3][m.v] = 0.0
+        true_jac[m.c4][m.x] = 1.0
+        true_jac[m.c4][m.y] = 0.0
+        true_jac[m.c4][m.z] = 0.0
+        true_jac[m.c4][m.v] = -0.01
+        for c in m.cons():
+            for v in m.vars():
+                self.assertTrue(true_jac[c][v] == A[c.index, v.index])
 
-        cons.remove(c3)
-        j.remove_constraint(c3)
-        c3 = aml.create_constraint(z)
-        cons.append(c3)
-        j.add_constraint(c3)
-        con_values = [con.evaluate() for con in cons]
-        true_con_values = [5.0, 60.0, 2.1, 4.0]
-        self.assertTrue(np.all(np.array(true_con_values) == np.array(con_values)))
-        j_values = j.evaluate(len(j.cons))
-        A = csr_matrix((j_values, j.get_col_ndx(), j.get_row_nnz()), shape=(4, 4))
-        true_jac = np.array([[1.0, 1.0, 0.0, 0.0],
-                             [30.0, 20.0, 0.0, 6.0],
-                             [1.0, 0.0, 0.0, -0.01],
-                             [0.0, 0.0, 1.0, 0.0]])
-        self.assertTrue(np.all(true_jac == A.toarray()))
+        m.release_structure()
+        del m.c3
+        m.c3 = aml.create_constraint(m.z)
+        m.set_structure()
+        con_values = m.evaluate_residuals()
+        A = m.evaluate_jacobian(new_eval=False)
+
+        true_con_values[m.c1] = 5.0
+        true_con_values[m.c2] = 60.0
+        true_con_values[m.c3] = 4.0
+        true_con_values[m.c4] = 2.1
+        for c in m.cons():
+            self.assertTrue(true_con_values[c] == con_values[c.index])
+        true_jac[m.c3][m.x] = 0.0
+        true_jac[m.c3][m.y] = 0.0
+        true_jac[m.c3][m.z] = 1.0
+        true_jac[m.c3][m.v] = 0.0
+        for c in m.cons():
+            for v in m.vars():
+                self.assertTrue(true_jac[c][v] == A[c.index, v.index])

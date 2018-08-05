@@ -1,77 +1,55 @@
 import sys
-from collections import OrderedDict
-from .aml_core import Node, Var, Param, create_var, create_param
-from .aml_core import Component, ConstraintBase, Constraint, ConditionalConstraint, Objective, create_constraint, create_conditional_constraint, create_objective
+from .aml_core import create_var, create_param, create_constraint, create_conditional_constraint, create_objective, Node, Var, Param, Component, ConstraintBase, Constraint, ConditionalConstraint, Objective, WNTRModel
+Var.__hash__ = None
+Param.__hash__ = None
+Constraint.__hash__ = None
+ConditionalConstraint.__hash__ = None
+Objective.__hash__ = None
 try:
     from .ipopt_model import IpoptModel
     ipopt_available = True
 except ImportError:
     ipopt_available = False
-from .aml_core import WNTRModel, CSRJacobian
+from .aml_core import WNTRModel
 import scipy
-if sys.version_info.major == 2:
-    from collections import MutableSet
-else:
-    from collections.abc import MutableSet
 from collections import OrderedDict
+from wntr.utils.ordered_set import OrderedSet
 if sys.version_info.major == 2:
     from collections import MutableMapping
 else:
     from collections.abc import MutableMapping
 
 
-class _OrderedIndexSet(MutableSet):
-    def __init__(self, iterable=None):
+class _OrderedNameDict(MutableMapping):
+    def __init__(self, mapping=None):
         self._data = OrderedDict()
-        self._reversed = OrderedDict()
-        if iterable is not None:
-            self.update(iterable)
+        self._keys = OrderedDict()
+        if mapping is not None:
+            self.update(mapping)
 
-    def __contains__(self, item):
-        return item.name in self._data
+    def __getitem__(self, item):
+        return self._data[item.name]
+
+    def __setitem__(self, key, value):
+        self._data[key.name] = value
+        self._keys[key.name] = key
+
+    def __delitem__(self, key):
+        del self._data[key.name]
+        del self._keys[key.name]
 
     def __iter__(self):
-        for name in self._data:
-            yield self._reversed[name]
+        return iter(self._keys.values())
 
     def __len__(self):
         return len(self._data)
 
-    def add(self, item):
-        """
-        Add an element
-        """
-        if item not in self:
-            item.index = len(self)
-            self._data[item.name] = 1
-            self._reversed[item.name] = item
-        else:
-            self._data[item.name] += 1
-
-    def discard(self, item):
-        """
-        Remove an element. Do not raise an exception if absent.
-        """
-        if item in self:
-            self._data[item.name] -= 1
-            if self._data[item.name] == 0:
-                for i in list(self)[item.index:]:
-                    i.index -= 1
-                item.index = -1
-                self._data.pop(item.name)
-                self._reversed.pop(item.name)
-
-    def update(self, iterable):
-        for i in iterable:
-            self.add(i)
-
-    def count(self, item):
-        return self._data[item.name]
-
     def __repr__(self):
         s = '{'
-        for i in self:
-            s += str(i)
+        for name, val in self._data.items():
+            s += str(name)
+            s += ': '
+            s += str(val)
             s += ', '
         s += '}'
         return s
@@ -80,13 +58,20 @@ class _OrderedIndexSet(MutableSet):
         return self.__repr__()
 
 
+class _OrderedNameSet(OrderedSet):
+    def __init__(self, iterable=None):
+        self._data = _OrderedNameDict()
+        if iterable is not None:
+            self.update(iterable)
+
+
 class Model(object):
     """
     A class for creating algebraic models.
     """
     def __init__(self, model_type='wntr'):
-        self._vars = _OrderedIndexSet()
-        self._cons = _OrderedIndexSet()
+        self._vars = _OrderedNameDict()
+        self._cons = _OrderedNameSet()
         self._obj = list()
         if model_type.upper() == 'WNTR':
             self._model = WNTRModel()
@@ -163,15 +148,17 @@ class Model(object):
 
     def _register_var(self, var):
         if var not in self._vars:
-            self._vars.add(var)
+            self._vars[var] = 1
             self._model.add_var(var)
         else:
-            self._vars.add(var)
+            self._vars[var] += 1
 
     def _remove_var(self, var):
-        if self._vars.count(var) == 1:
+        if self._vars[var] == 1:
             self._model.remove_var(var)
-        self._vars.remove(var)
+            del self._vars[var]
+        else:
+            self._vars[var] -= 1
 
     def _register_constraint(self, con):
         for v in con.py_get_vars():
@@ -194,7 +181,8 @@ class Model(object):
         self._model.set_objective(obj)
 
     def _remove_objective(self):
-        for v in self._obj.py_get_vars():
+        self._model.set_objective(create_param(value=1.0))
+        for v in self._obj[0].py_get_vars():
             self._remove_var(v)
         self._obj = list()
 
@@ -205,17 +193,18 @@ class Model(object):
         return r
 
     def evaluate_jacobian(self, x=None, new_eval=True):
-        if x is not None:
-            self._model.load_var_values_from_x(x)
-        if new_eval:
-            self.evaluate_residuals()
-        jac_values = self._model.jac.evaluate(len(self._model.jac.cons), False)
         n_vars = len(self._vars)
         n_cons = len(self._cons)
         if n_vars != n_cons:
             raise ValueError('The number of constraints and variables must be equal.')
-        result = scipy.sparse.csr_matrix((jac_values, self._model.jac.get_col_ndx(), self._model.jac.get_row_nnz()),
-                                         shape=(n_cons, n_vars))
+        if x is not None:
+            self._model.load_var_values_from_x(x)
+            self.evaluate_residuals()
+        elif new_eval:
+            self.evaluate_residuals()
+        jac_values, col_ndx, row_nnz = self._model.evaluate_csr_jacobian(self._model.nnz, self._model.nnz,
+                                                                         len(self._cons) + 1, False)
+        result = scipy.sparse.csr_matrix((jac_values, col_ndx, row_nnz), shape=(n_cons, n_vars))
         return result
 
     def get_x(self):
@@ -242,6 +231,20 @@ class Model(object):
             tmp += var._print()
             tmp += '\n'
         return tmp
+
+    def set_structure(self):
+        self._model.set_structure()
+
+    def release_structure(self):
+        self._model.release_structure()
+
+    def cons(self):
+        for i in self._cons:
+            yield i
+
+    def vars(self):
+        for i in self._vars:
+            yield i
 
 
 class _NodeDict(MutableMapping):

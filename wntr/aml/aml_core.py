@@ -2595,6 +2595,483 @@ class int_list(_object):
 int_list_swigregister = _aml_core.int_list_swigregister
 int_list_swigregister(int_list)
 
+class var_vec(_object):
+    """Proxy of C++ std::vector<(std::shared_ptr<(Var)>)> class."""
+
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, var_vec, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, var_vec, name)
+    __repr__ = _swig_repr
+
+    def iterator(self):
+        """
+        iterator(var_vec self) -> SwigPyIterator
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > *
+
+        """
+        return _aml_core.var_vec_iterator(self)
+
+    def __iter__(self):
+        return self.iterator()
+
+    def __nonzero__(self):
+        """
+        __nonzero__(var_vec self) -> bool
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > const *
+
+        """
+        return _aml_core.var_vec___nonzero__(self)
+
+
+    def __bool__(self):
+        """
+        __bool__(var_vec self) -> bool
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > const *
+
+        """
+        return _aml_core.var_vec___bool__(self)
+
+
+    def __len__(self):
+        """
+        __len__(var_vec self) -> std::vector< std::shared_ptr< Var > >::size_type
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > const *
+
+        """
+        return _aml_core.var_vec___len__(self)
+
+
+    def __getslice__(self, i, j):
+        """
+        __getslice__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i, std::vector< std::shared_ptr< Var > >::difference_type j) -> var_vec
+
+        Parameters
+        ----------
+        i: std::vector< std::shared_ptr< Var > >::difference_type
+        j: std::vector< std::shared_ptr< Var > >::difference_type
+
+        """
+        return _aml_core.var_vec___getslice__(self, i, j)
+
+
+    def __setslice__(self, *args):
+        """
+        __setslice__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i, std::vector< std::shared_ptr< Var > >::difference_type j)
+
+        Parameters
+        ----------
+        i: std::vector< std::shared_ptr< Var > >::difference_type
+        j: std::vector< std::shared_ptr< Var > >::difference_type
+
+        __setslice__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i, std::vector< std::shared_ptr< Var > >::difference_type j, var_vec v)
+
+        Parameters
+        ----------
+        i: std::vector< std::shared_ptr< Var > >::difference_type
+        j: std::vector< std::shared_ptr< Var > >::difference_type
+        v: std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &
+
+        """
+        return _aml_core.var_vec___setslice__(self, *args)
+
+
+    def __delslice__(self, i, j):
+        """
+        __delslice__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i, std::vector< std::shared_ptr< Var > >::difference_type j)
+
+        Parameters
+        ----------
+        i: std::vector< std::shared_ptr< Var > >::difference_type
+        j: std::vector< std::shared_ptr< Var > >::difference_type
+
+        """
+        return _aml_core.var_vec___delslice__(self, i, j)
+
+
+    def __delitem__(self, *args):
+        """
+        __delitem__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i)
+
+        Parameters
+        ----------
+        i: std::vector< std::shared_ptr< Var > >::difference_type
+
+        __delitem__(var_vec self, PySliceObject * slice)
+
+        Parameters
+        ----------
+        slice: PySliceObject *
+
+        """
+        return _aml_core.var_vec___delitem__(self, *args)
+
+
+    def __getitem__(self, *args):
+        """
+        __getitem__(var_vec self, PySliceObject * slice) -> var_vec
+
+        Parameters
+        ----------
+        slice: PySliceObject *
+
+        __getitem__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i) -> std::vector< std::shared_ptr< Var > >::value_type const &
+
+        Parameters
+        ----------
+        i: std::vector< std::shared_ptr< Var > >::difference_type
+
+        """
+        return _aml_core.var_vec___getitem__(self, *args)
+
+
+    def __setitem__(self, *args):
+        """
+        __setitem__(var_vec self, PySliceObject * slice, var_vec v)
+
+        Parameters
+        ----------
+        slice: PySliceObject *
+        v: std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > const &
+
+        __setitem__(var_vec self, PySliceObject * slice)
+
+        Parameters
+        ----------
+        slice: PySliceObject *
+
+        __setitem__(var_vec self, std::vector< std::shared_ptr< Var > >::difference_type i, std::vector< std::shared_ptr< Var > >::value_type const & x)
+
+        Parameters
+        ----------
+        i: std::vector< std::shared_ptr< Var > >::difference_type
+        x: std::vector< std::shared_ptr< Var > >::value_type const &
+
+        """
+        return _aml_core.var_vec___setitem__(self, *args)
+
+
+    def pop(self):
+        """
+        pop(var_vec self) -> std::vector< std::shared_ptr< Var > >::value_type
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > *
+
+        """
+        return _aml_core.var_vec_pop(self)
+
+
+    def append(self, x):
+        """
+        append(var_vec self, std::vector< std::shared_ptr< Var > >::value_type const & x)
+
+        Parameters
+        ----------
+        x: std::vector< std::shared_ptr< Var > >::value_type const &
+
+        """
+        return _aml_core.var_vec_append(self, x)
+
+
+    def empty(self):
+        """
+        empty(var_vec self) -> bool
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > const *
+
+        """
+        return _aml_core.var_vec_empty(self)
+
+
+    def size(self):
+        """
+        size(var_vec self) -> std::vector< std::shared_ptr< Var > >::size_type
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > const *
+
+        """
+        return _aml_core.var_vec_size(self)
+
+
+    def swap(self, v):
+        """
+        swap(var_vec self, var_vec v)
+
+        Parameters
+        ----------
+        v: std::vector< std::shared_ptr< Var > > &
+
+        """
+        return _aml_core.var_vec_swap(self, v)
+
+
+    def begin(self):
+        """
+        begin(var_vec self) -> std::vector< std::shared_ptr< Var > >::iterator
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > *
+
+        """
+        return _aml_core.var_vec_begin(self)
+
+
+    def end(self):
+        """
+        end(var_vec self) -> std::vector< std::shared_ptr< Var > >::iterator
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > *
+
+        """
+        return _aml_core.var_vec_end(self)
+
+
+    def rbegin(self):
+        """
+        rbegin(var_vec self) -> std::vector< std::shared_ptr< Var > >::reverse_iterator
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > *
+
+        """
+        return _aml_core.var_vec_rbegin(self)
+
+
+    def rend(self):
+        """
+        rend(var_vec self) -> std::vector< std::shared_ptr< Var > >::reverse_iterator
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > *
+
+        """
+        return _aml_core.var_vec_rend(self)
+
+
+    def clear(self):
+        """
+        clear(var_vec self)
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > *
+
+        """
+        return _aml_core.var_vec_clear(self)
+
+
+    def get_allocator(self):
+        """
+        get_allocator(var_vec self) -> std::vector< std::shared_ptr< Var > >::allocator_type
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > const *
+
+        """
+        return _aml_core.var_vec_get_allocator(self)
+
+
+    def pop_back(self):
+        """
+        pop_back(var_vec self)
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > *
+
+        """
+        return _aml_core.var_vec_pop_back(self)
+
+
+    def erase(self, *args):
+        """
+        erase(var_vec self, std::vector< std::shared_ptr< Var > >::iterator pos) -> std::vector< std::shared_ptr< Var > >::iterator
+
+        Parameters
+        ----------
+        pos: std::vector< std::shared_ptr< Var > >::iterator
+
+        erase(var_vec self, std::vector< std::shared_ptr< Var > >::iterator first, std::vector< std::shared_ptr< Var > >::iterator last) -> std::vector< std::shared_ptr< Var > >::iterator
+
+        Parameters
+        ----------
+        first: std::vector< std::shared_ptr< Var > >::iterator
+        last: std::vector< std::shared_ptr< Var > >::iterator
+
+        """
+        return _aml_core.var_vec_erase(self, *args)
+
+
+    def __init__(self, *args):
+        """
+        __init__(std::vector<(std::shared_ptr<(Var)>)> self) -> var_vec
+        __init__(std::vector<(std::shared_ptr<(Var)>)> self, var_vec arg2) -> var_vec
+
+        Parameters
+        ----------
+        arg2: std::vector< std::shared_ptr< Var > > const &
+
+        __init__(std::vector<(std::shared_ptr<(Var)>)> self, std::vector< std::shared_ptr< Var > >::size_type size) -> var_vec
+
+        Parameters
+        ----------
+        size: std::vector< std::shared_ptr< Var > >::size_type
+
+        __init__(std::vector<(std::shared_ptr<(Var)>)> self, std::vector< std::shared_ptr< Var > >::size_type size, std::vector< std::shared_ptr< Var > >::value_type const & value) -> var_vec
+
+        Parameters
+        ----------
+        size: std::vector< std::shared_ptr< Var > >::size_type
+        value: std::vector< std::shared_ptr< Var > >::value_type const &
+
+        """
+        this = _aml_core.new_var_vec(*args)
+        try:
+            self.this.append(this)
+        except __builtin__.Exception:
+            self.this = this
+
+    def push_back(self, x):
+        """
+        push_back(var_vec self, std::vector< std::shared_ptr< Var > >::value_type const & x)
+
+        Parameters
+        ----------
+        x: std::vector< std::shared_ptr< Var > >::value_type const &
+
+        """
+        return _aml_core.var_vec_push_back(self, x)
+
+
+    def front(self):
+        """
+        front(var_vec self) -> std::vector< std::shared_ptr< Var > >::value_type const &
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > const *
+
+        """
+        return _aml_core.var_vec_front(self)
+
+
+    def back(self):
+        """
+        back(var_vec self) -> std::vector< std::shared_ptr< Var > >::value_type const &
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > const *
+
+        """
+        return _aml_core.var_vec_back(self)
+
+
+    def assign(self, n, x):
+        """
+        assign(var_vec self, std::vector< std::shared_ptr< Var > >::size_type n, std::vector< std::shared_ptr< Var > >::value_type const & x)
+
+        Parameters
+        ----------
+        n: std::vector< std::shared_ptr< Var > >::size_type
+        x: std::vector< std::shared_ptr< Var > >::value_type const &
+
+        """
+        return _aml_core.var_vec_assign(self, n, x)
+
+
+    def resize(self, *args):
+        """
+        resize(var_vec self, std::vector< std::shared_ptr< Var > >::size_type new_size)
+
+        Parameters
+        ----------
+        new_size: std::vector< std::shared_ptr< Var > >::size_type
+
+        resize(var_vec self, std::vector< std::shared_ptr< Var > >::size_type new_size, std::vector< std::shared_ptr< Var > >::value_type const & x)
+
+        Parameters
+        ----------
+        new_size: std::vector< std::shared_ptr< Var > >::size_type
+        x: std::vector< std::shared_ptr< Var > >::value_type const &
+
+        """
+        return _aml_core.var_vec_resize(self, *args)
+
+
+    def insert(self, *args):
+        """
+        insert(var_vec self, std::vector< std::shared_ptr< Var > >::iterator pos, std::vector< std::shared_ptr< Var > >::value_type const & x) -> std::vector< std::shared_ptr< Var > >::iterator
+
+        Parameters
+        ----------
+        pos: std::vector< std::shared_ptr< Var > >::iterator
+        x: std::vector< std::shared_ptr< Var > >::value_type const &
+
+        insert(var_vec self, std::vector< std::shared_ptr< Var > >::iterator pos, std::vector< std::shared_ptr< Var > >::size_type n, std::vector< std::shared_ptr< Var > >::value_type const & x)
+
+        Parameters
+        ----------
+        pos: std::vector< std::shared_ptr< Var > >::iterator
+        n: std::vector< std::shared_ptr< Var > >::size_type
+        x: std::vector< std::shared_ptr< Var > >::value_type const &
+
+        """
+        return _aml_core.var_vec_insert(self, *args)
+
+
+    def reserve(self, n):
+        """
+        reserve(var_vec self, std::vector< std::shared_ptr< Var > >::size_type n)
+
+        Parameters
+        ----------
+        n: std::vector< std::shared_ptr< Var > >::size_type
+
+        """
+        return _aml_core.var_vec_reserve(self, n)
+
+
+    def capacity(self):
+        """
+        capacity(var_vec self) -> std::vector< std::shared_ptr< Var > >::size_type
+
+        Parameters
+        ----------
+        self: std::vector< std::shared_ptr< Var > > const *
+
+        """
+        return _aml_core.var_vec_capacity(self)
+
+    __swig_destroy__ = _aml_core.delete_var_vec
+    __del__ = lambda self: None
+var_vec_swigregister = _aml_core.var_vec_swigregister
+var_vec_swigregister(var_vec)
+
 
 def create_var(value=0.0, lb=-1.0e100, ub=1.0e100):
     """
@@ -2691,7 +3168,7 @@ class Node(_object):
 
     def get_sparsity(self):
         """
-        get_sparsity(Node self) -> std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >
+        get_sparsity(Node self) -> std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >
 
         Parameters
         ----------
@@ -2703,7 +3180,7 @@ class Node(_object):
 
     def get_vars(self):
         """
-        get_vars(Node self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
+        get_vars(Node self) -> std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >
 
         Parameters
         ----------
@@ -2715,7 +3192,7 @@ class Node(_object):
 
     def py_get_vars(self):
         """
-        py_get_vars(Node self) -> var_set
+        py_get_vars(Node self) -> std::unordered_set< std::shared_ptr< Var > >
 
         Parameters
         ----------
@@ -2791,11 +3268,11 @@ class Node(_object):
 
     def set_name(self, arg2):
         """
-        set_name(Node self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(Node self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.Node_set_name(self, arg2)
@@ -3072,7 +3549,7 @@ class Summation(Node):
 
     def get_sparsity(self):
         """
-        get_sparsity(Summation self) -> std::shared_ptr< std::map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >
+        get_sparsity(Summation self) -> std::shared_ptr< std::unordered_map< std::shared_ptr< Node >,std::vector< int,std::allocator< int > > > >
 
         Parameters
         ----------
@@ -3084,7 +3561,7 @@ class Summation(Node):
 
     def get_vars(self):
         """
-        get_vars(Summation self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
+        get_vars(Summation self) -> std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >
 
         Parameters
         ----------
@@ -3160,11 +3637,11 @@ class Summation(Node):
 
     def set_name(self, arg2):
         """
-        set_name(Summation self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(Summation self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.Summation_set_name(self, arg2)
@@ -3281,7 +3758,7 @@ class Var(Node):
 
     def get_vars(self):
         """
-        get_vars(Var self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
+        get_vars(Var self) -> std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >
 
         Parameters
         ----------
@@ -3345,11 +3822,11 @@ class Var(Node):
 
     def set_name(self, arg2):
         """
-        set_name(Var self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(Var self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.Var_set_name(self, arg2)
@@ -3450,11 +3927,11 @@ class Param(Node):
 
     def set_name(self, arg2):
         """
-        set_name(Param self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(Param self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.Param_set_name(self, arg2)
@@ -3515,7 +3992,7 @@ class Expression(Node):
 
     def get_vars(self):
         """
-        get_vars(Expression self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
+        get_vars(Expression self) -> std::shared_ptr< std::unordered_set< std::shared_ptr< Var > > >
 
         Parameters
         ----------
@@ -3591,11 +4068,11 @@ class Expression(Node):
 
     def set_name(self, arg2):
         """
-        set_name(Expression self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(Expression self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.Expression_set_name(self, arg2)
@@ -3695,11 +4172,11 @@ class VarVarMultiplyOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(VarVarMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(VarVarMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.VarVarMultiplyOperator_set_name(self, arg2)
@@ -3800,11 +4277,11 @@ class VarParamMultiplyOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(VarParamMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(VarParamMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.VarParamMultiplyOperator_set_name(self, arg2)
@@ -3905,11 +4382,11 @@ class VarOperatorMultiplyOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(VarOperatorMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(VarOperatorMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.VarOperatorMultiplyOperator_set_name(self, arg2)
@@ -4010,11 +4487,11 @@ class ParamVarMultiplyOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(ParamVarMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(ParamVarMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.ParamVarMultiplyOperator_set_name(self, arg2)
@@ -4115,11 +4592,11 @@ class ParamParamMultiplyOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(ParamParamMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(ParamParamMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.ParamParamMultiplyOperator_set_name(self, arg2)
@@ -4220,11 +4697,11 @@ class ParamOperatorMultiplyOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(ParamOperatorMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(ParamOperatorMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.ParamOperatorMultiplyOperator_set_name(self, arg2)
@@ -4325,11 +4802,11 @@ class OperatorVarMultiplyOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(OperatorVarMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(OperatorVarMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.OperatorVarMultiplyOperator_set_name(self, arg2)
@@ -4430,11 +4907,11 @@ class OperatorParamMultiplyOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(OperatorParamMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(OperatorParamMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.OperatorParamMultiplyOperator_set_name(self, arg2)
@@ -4535,11 +5012,11 @@ class OperatorOperatorMultiplyOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(OperatorOperatorMultiplyOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(OperatorOperatorMultiplyOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.OperatorOperatorMultiplyOperator_set_name(self, arg2)
@@ -4640,11 +5117,11 @@ class VarVarDivideOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(VarVarDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(VarVarDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.VarVarDivideOperator_set_name(self, arg2)
@@ -4745,11 +5222,11 @@ class VarParamDivideOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(VarParamDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(VarParamDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.VarParamDivideOperator_set_name(self, arg2)
@@ -4850,11 +5327,11 @@ class VarOperatorDivideOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(VarOperatorDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(VarOperatorDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.VarOperatorDivideOperator_set_name(self, arg2)
@@ -4955,11 +5432,11 @@ class ParamVarDivideOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(ParamVarDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(ParamVarDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.ParamVarDivideOperator_set_name(self, arg2)
@@ -5060,11 +5537,11 @@ class ParamParamDivideOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(ParamParamDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(ParamParamDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.ParamParamDivideOperator_set_name(self, arg2)
@@ -5165,11 +5642,11 @@ class ParamOperatorDivideOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(ParamOperatorDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(ParamOperatorDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.ParamOperatorDivideOperator_set_name(self, arg2)
@@ -5270,11 +5747,11 @@ class OperatorVarDivideOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(OperatorVarDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(OperatorVarDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.OperatorVarDivideOperator_set_name(self, arg2)
@@ -5375,11 +5852,11 @@ class OperatorParamDivideOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(OperatorParamDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(OperatorParamDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.OperatorParamDivideOperator_set_name(self, arg2)
@@ -5480,11 +5957,11 @@ class OperatorOperatorDivideOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(OperatorOperatorDivideOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(OperatorOperatorDivideOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.OperatorOperatorDivideOperator_set_name(self, arg2)
@@ -5585,11 +6062,11 @@ class VarVarPowerOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(VarVarPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(VarVarPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.VarVarPowerOperator_set_name(self, arg2)
@@ -5690,11 +6167,11 @@ class VarParamPowerOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(VarParamPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(VarParamPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.VarParamPowerOperator_set_name(self, arg2)
@@ -5795,11 +6272,11 @@ class VarOperatorPowerOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(VarOperatorPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(VarOperatorPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.VarOperatorPowerOperator_set_name(self, arg2)
@@ -5900,11 +6377,11 @@ class ParamVarPowerOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(ParamVarPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(ParamVarPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.ParamVarPowerOperator_set_name(self, arg2)
@@ -6005,11 +6482,11 @@ class ParamParamPowerOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(ParamParamPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(ParamParamPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.ParamParamPowerOperator_set_name(self, arg2)
@@ -6110,11 +6587,11 @@ class ParamOperatorPowerOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(ParamOperatorPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(ParamOperatorPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.ParamOperatorPowerOperator_set_name(self, arg2)
@@ -6215,11 +6692,11 @@ class OperatorVarPowerOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(OperatorVarPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(OperatorVarPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.OperatorVarPowerOperator_set_name(self, arg2)
@@ -6320,11 +6797,11 @@ class OperatorParamPowerOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(OperatorParamPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(OperatorParamPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.OperatorParamPowerOperator_set_name(self, arg2)
@@ -6425,11 +6902,11 @@ class OperatorOperatorPowerOperator(Node):
 
     def set_name(self, arg2):
         """
-        set_name(OperatorOperatorPowerOperator self, std::map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
+        set_name(OperatorOperatorPowerOperator self, std::unordered_map< std::shared_ptr< Node >,std::string > & arg2) -> std::string
 
         Parameters
         ----------
-        arg2: std::map< std::shared_ptr< Node >,std::string > &
+        arg2: std::unordered_map< std::shared_ptr< Node >,std::string > &
 
         """
         return _aml_core.OperatorOperatorPowerOperator_set_name(self, arg2)
@@ -6564,7 +7041,7 @@ class Component(_object):
 
     def get_vars(self):
         """
-        get_vars(Component self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
+        get_vars(Component self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >
 
         Parameters
         ----------
@@ -6576,7 +7053,7 @@ class Component(_object):
 
     def py_get_vars(self):
         """
-        py_get_vars(Component self) -> var_set
+        py_get_vars(Component self) -> var_vec
 
         Parameters
         ----------
@@ -6708,10 +7185,14 @@ class Objective(Component):
         """
         return _aml_core.Objective__print(self)
 
+    __swig_setmethods__["vars"] = _aml_core.Objective_vars_set
+    __swig_getmethods__["vars"] = _aml_core.Objective_vars_get
+    if _newclass:
+        vars = _swig_property(_aml_core.Objective_vars_get, _aml_core.Objective_vars_set)
 
     def get_vars(self):
         """
-        get_vars(Objective self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
+        get_vars(Objective self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >
 
         Parameters
         ----------
@@ -6877,10 +7358,14 @@ class Constraint(ConstraintBase):
         """
         return _aml_core.Constraint__print(self)
 
+    __swig_setmethods__["vars"] = _aml_core.Constraint_vars_set
+    __swig_getmethods__["vars"] = _aml_core.Constraint_vars_get
+    if _newclass:
+        vars = _swig_property(_aml_core.Constraint_vars_get, _aml_core.Constraint_vars_set)
 
     def get_vars(self):
         """
-        get_vars(Constraint self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
+        get_vars(Constraint self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >
 
         Parameters
         ----------
@@ -7023,10 +7508,14 @@ class ConditionalConstraint(ConstraintBase):
         """
         return _aml_core.ConditionalConstraint__print(self)
 
+    __swig_setmethods__["vars"] = _aml_core.ConditionalConstraint_vars_set
+    __swig_getmethods__["vars"] = _aml_core.ConditionalConstraint_vars_get
+    if _newclass:
+        vars = _swig_property(_aml_core.ConditionalConstraint_vars_get, _aml_core.ConditionalConstraint_vars_set)
 
     def get_vars(self):
         """
-        get_vars(ConditionalConstraint self) -> std::shared_ptr< std::set< std::shared_ptr< Var >,std::less< std::shared_ptr< Var > >,std::allocator< std::shared_ptr< Var > > > >
+        get_vars(ConditionalConstraint self) -> std::shared_ptr< std::vector< std::shared_ptr< Var >,std::allocator< std::shared_ptr< Var > > > >
 
         Parameters
         ----------
@@ -7039,100 +7528,6 @@ class ConditionalConstraint(ConstraintBase):
     __del__ = lambda self: None
 ConditionalConstraint_swigregister = _aml_core.ConditionalConstraint_swigregister
 ConditionalConstraint_swigregister(ConditionalConstraint)
-
-class CSRJacobian(_object):
-    """Proxy of C++ CSRJacobian class."""
-
-    __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, CSRJacobian, name, value)
-    __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, CSRJacobian, name)
-    __repr__ = _swig_repr
-    __swig_setmethods__["row_nnz"] = _aml_core.CSRJacobian_row_nnz_set
-    __swig_getmethods__["row_nnz"] = _aml_core.CSRJacobian_row_nnz_get
-    if _newclass:
-        row_nnz = _swig_property(_aml_core.CSRJacobian_row_nnz_get, _aml_core.CSRJacobian_row_nnz_set)
-    __swig_setmethods__["vars"] = _aml_core.CSRJacobian_vars_set
-    __swig_getmethods__["vars"] = _aml_core.CSRJacobian_vars_get
-    if _newclass:
-        vars = _swig_property(_aml_core.CSRJacobian_vars_get, _aml_core.CSRJacobian_vars_set)
-    __swig_setmethods__["cons"] = _aml_core.CSRJacobian_cons_set
-    __swig_getmethods__["cons"] = _aml_core.CSRJacobian_cons_get
-    if _newclass:
-        cons = _swig_property(_aml_core.CSRJacobian_cons_get, _aml_core.CSRJacobian_cons_set)
-
-    def add_constraint(self, arg2):
-        """
-        add_constraint(CSRJacobian self, std::shared_ptr< ConstraintBase > arg2)
-
-        Parameters
-        ----------
-        arg2: std::shared_ptr< ConstraintBase >
-
-        """
-        return _aml_core.CSRJacobian_add_constraint(self, arg2)
-
-
-    def remove_constraint(self, arg2):
-        """
-        remove_constraint(CSRJacobian self, std::shared_ptr< ConstraintBase > arg2)
-
-        Parameters
-        ----------
-        arg2: std::shared_ptr< ConstraintBase >
-
-        """
-        return _aml_core.CSRJacobian_remove_constraint(self, arg2)
-
-
-    def evaluate(self, array_out, new_eval=True):
-        """
-        evaluate(CSRJacobian self, double * array_out, bool new_eval=True)
-
-        Parameters
-        ----------
-        array_out: double *
-        new_eval: bool
-
-        """
-        return _aml_core.CSRJacobian_evaluate(self, array_out, new_eval)
-
-
-    def get_row_nnz(self):
-        """
-        get_row_nnz(CSRJacobian self) -> int_list
-
-        Parameters
-        ----------
-        self: CSRJacobian *
-
-        """
-        return _aml_core.CSRJacobian_get_row_nnz(self)
-
-
-    def get_col_ndx(self):
-        """
-        get_col_ndx(CSRJacobian self) -> int_list
-
-        Parameters
-        ----------
-        self: CSRJacobian *
-
-        """
-        return _aml_core.CSRJacobian_get_col_ndx(self)
-
-
-    def __init__(self):
-        """__init__(CSRJacobian self) -> CSRJacobian"""
-        this = _aml_core.new_CSRJacobian()
-        try:
-            self.this.append(this)
-        except __builtin__.Exception:
-            self.this = this
-    __swig_destroy__ = _aml_core.delete_CSRJacobian
-    __del__ = lambda self: None
-CSRJacobian_swigregister = _aml_core.CSRJacobian_swigregister
-CSRJacobian_swigregister(CSRJacobian)
 
 class WNTRModel(_object):
     """Proxy of C++ WNTRModel class."""
@@ -7150,10 +7545,22 @@ class WNTRModel(_object):
     __swig_getmethods__["cons"] = _aml_core.WNTRModel_cons_get
     if _newclass:
         cons = _swig_property(_aml_core.WNTRModel_cons_get, _aml_core.WNTRModel_cons_set)
-    __swig_setmethods__["jac"] = _aml_core.WNTRModel_jac_set
-    __swig_getmethods__["jac"] = _aml_core.WNTRModel_jac_get
+    __swig_setmethods__["cons_vector"] = _aml_core.WNTRModel_cons_vector_set
+    __swig_getmethods__["cons_vector"] = _aml_core.WNTRModel_cons_vector_get
     if _newclass:
-        jac = _swig_property(_aml_core.WNTRModel_jac_get, _aml_core.WNTRModel_jac_set)
+        cons_vector = _swig_property(_aml_core.WNTRModel_cons_vector_get, _aml_core.WNTRModel_cons_vector_set)
+    __swig_setmethods__["vars_vector"] = _aml_core.WNTRModel_vars_vector_set
+    __swig_getmethods__["vars_vector"] = _aml_core.WNTRModel_vars_vector_get
+    if _newclass:
+        vars_vector = _swig_property(_aml_core.WNTRModel_vars_vector_get, _aml_core.WNTRModel_vars_vector_set)
+    __swig_setmethods__["is_structure_fixed"] = _aml_core.WNTRModel_is_structure_fixed_set
+    __swig_getmethods__["is_structure_fixed"] = _aml_core.WNTRModel_is_structure_fixed_get
+    if _newclass:
+        is_structure_fixed = _swig_property(_aml_core.WNTRModel_is_structure_fixed_get, _aml_core.WNTRModel_is_structure_fixed_set)
+    __swig_setmethods__["nnz"] = _aml_core.WNTRModel_nnz_set
+    __swig_getmethods__["nnz"] = _aml_core.WNTRModel_nnz_get
+    if _newclass:
+        nnz = _swig_property(_aml_core.WNTRModel_nnz_get, _aml_core.WNTRModel_nnz_set)
 
     def get_x(self, array_out):
         """
@@ -7239,6 +7646,45 @@ class WNTRModel(_object):
         return _aml_core.WNTRModel_evaluate(self, array_out)
 
 
+    def evaluate_csr_jacobian(self, values_array_out, col_ndx_array_out, row_nnz_array_out, new_eval=True):
+        """
+        evaluate_csr_jacobian(WNTRModel self, double * values_array_out, int * col_ndx_array_out, int * row_nnz_array_out, bool new_eval=True)
+
+        Parameters
+        ----------
+        values_array_out: double *
+        col_ndx_array_out: int *
+        row_nnz_array_out: int *
+        new_eval: bool
+
+        """
+        return _aml_core.WNTRModel_evaluate_csr_jacobian(self, values_array_out, col_ndx_array_out, row_nnz_array_out, new_eval)
+
+
+    def set_structure(self):
+        """
+        set_structure(WNTRModel self)
+
+        Parameters
+        ----------
+        self: WNTRModel *
+
+        """
+        return _aml_core.WNTRModel_set_structure(self)
+
+
+    def release_structure(self):
+        """
+        release_structure(WNTRModel self)
+
+        Parameters
+        ----------
+        self: WNTRModel *
+
+        """
+        return _aml_core.WNTRModel_release_structure(self)
+
+
     def __init__(self):
         """__init__(WNTRModel self) -> WNTRModel"""
         this = _aml_core.new_WNTRModel()
@@ -7251,18 +7697,6 @@ class WNTRModel(_object):
 WNTRModel_swigregister = _aml_core.WNTRModel_swigregister
 WNTRModel_swigregister(WNTRModel)
 
-
-def compare_var_indices(arg1, arg2):
-    """
-    compare_var_indices(std::shared_ptr< Var > arg1, std::shared_ptr< Var > arg2) -> bool
-
-    Parameters
-    ----------
-    arg1: std::shared_ptr< Var >
-    arg2: std::shared_ptr< Var >
-
-    """
-    return _aml_core.compare_var_indices(arg1, arg2)
 # This file is compatible with both classic and new-style classes.
 
 
