@@ -2514,8 +2514,8 @@ std::string Node::_print()
 }
 
 
-int main ()
-{
+//int main ()
+//{
   //int N = 100000;
   //std::map<int, std::shared_ptr<Var> > x;
   //for (int i = 0; i < N; ++i)
@@ -2532,5 +2532,5 @@ int main ()
   //  {
   //    e->ad2(*(x[i]), *(x[i]), false, true);
   //  }
-  return 0;
-}
+//  return 0;
+//}
