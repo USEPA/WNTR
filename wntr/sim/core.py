@@ -155,6 +155,26 @@ class WNTRSimulator(WaterNetworkSimulator):
         if logger_level <= 1:
             logger.log(1, 'beginning of run_sim')
 
+        report_timestep = self._wn.options.time.report_timestep
+        hydraulic_timestep = self._wn.options.time.hydraulic_timestep
+        if report_timestep < hydraulic_timestep:
+            msg = 'The report timestep must be an integer multiple of the hydraulic timestep. Reducing the hydraulic timestep from {0} seconds to {1} seconds for this simulation.'.format(hydraulic_timestep, report_timestep)
+            logger.warning(msg)
+            warnings.warn(msg)
+            hydraulic_timestep = report_timestep
+        elif report_timestep%hydraulic_timestep != 0:
+            new_report = report_timestep - (report_timestep%hydraulic_timestep)
+            msg = 'The report timestep must be an integer multiple of the hydraulic timestep. Reducing the report timestep from {0} seconds to {1} seconds for this simulation.'.format(report_timestep, new_report)
+            logger.warning(msg)
+            warnings.warn(msg)
+            report_timestep = new_report
+
+        orig_report_timestep = self._wn.options.time.report_timestep
+        orig_hydraulic_timestep = self._wn.options.time.hydraulic_timestep
+
+        self._wn.options.time.report_timestep = report_timestep
+        self._wn.options.time.hydraulic_timestep = hydraulic_timestep
+
         self._time_per_step = []
 
         self._presolve_controls = ControlManager()
@@ -415,9 +435,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                     raise RuntimeError('Simulation did not converge. ' + message)
                 warnings.warn('Simulation did not converge. ' + message)
                 logger.warning('Simulation did not converge at time ' + str(self._get_time()) + '. ' + message)
-                model.get_results(results)
                 results.error_code = 2
-                return results
+                break
             X_init = np.array(self._X)
 
             # Enter results in network and update previous inputs
@@ -450,8 +469,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                     results.error_code = 2
                     warnings.warn('Exceeded maximum number of trials.')
                     logger.warning('Exceeded maximum number of trials at time %s', self._get_time())
-                    model.get_results(results)
-                    return results
+                    break
                 continue
 
             logger.debug('no changes made by postsolve controls; moving to next timestep')
@@ -480,6 +498,8 @@ class WNTRSimulator(WaterNetworkSimulator):
             self._time_per_step.append(time.time()-start_step_time)
 
         model.get_results(results)
+        self._wn.options.time.report_timestep = orig_report_timestep
+        self._wn.options.time.hydraulic_timestep = orig_hydraulic_timestep
         return results
 
     def _initialize_internal_graph(self):
