@@ -157,17 +157,21 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         report_timestep = self._wn.options.time.report_timestep
         hydraulic_timestep = self._wn.options.time.hydraulic_timestep
-        if report_timestep < hydraulic_timestep:
-            msg = 'The report timestep must be an integer multiple of the hydraulic timestep. Reducing the hydraulic timestep from {0} seconds to {1} seconds for this simulation.'.format(hydraulic_timestep, report_timestep)
-            logger.warning(msg)
-            warnings.warn(msg)
-            hydraulic_timestep = report_timestep
-        elif report_timestep%hydraulic_timestep != 0:
-            new_report = report_timestep - (report_timestep%hydraulic_timestep)
-            msg = 'The report timestep must be an integer multiple of the hydraulic timestep. Reducing the report timestep from {0} seconds to {1} seconds for this simulation.'.format(report_timestep, new_report)
-            logger.warning(msg)
-            warnings.warn(msg)
-            report_timestep = new_report
+        if type(report_timestep) is str:
+            if report_timestep.upper() != 'ALL':
+                raise ValueError('report timestep must be either an integer number of seconds or "ALL".')
+        else:
+            if report_timestep < hydraulic_timestep:
+                msg = 'The report timestep must be an integer multiple of the hydraulic timestep. Reducing the hydraulic timestep from {0} seconds to {1} seconds for this simulation.'.format(hydraulic_timestep, report_timestep)
+                logger.warning(msg)
+                warnings.warn(msg)
+                hydraulic_timestep = report_timestep
+            elif report_timestep%hydraulic_timestep != 0:
+                new_report = report_timestep - (report_timestep%hydraulic_timestep)
+                msg = 'The report timestep must be an integer multiple of the hydraulic timestep. Reducing the report timestep from {0} seconds to {1} seconds for this simulation.'.format(report_timestep, new_report)
+                logger.warning(msg)
+                warnings.warn(msg)
+                report_timestep = new_report
 
         orig_report_timestep = self._wn.options.time.report_timestep
         orig_hydraulic_timestep = self._wn.options.time.hydraulic_timestep
