@@ -957,9 +957,9 @@ class InpFile(object):
                 pump_name = current[1]
                 pump = self.wn.links[pump_name]
                 if current[2].upper() == 'PRICE':
-                    pump.energy_price = from_si(self.flow_units, float(current[2]), HydParam.Energy)
+                    pump.energy_price = from_si(self.flow_units, float(current[3]), HydParam.Energy)
                 elif current[2].upper() == 'PATTERN':
-                    pump.energy_pattern = current[2]
+                    pump.energy_pattern = current[3]
                 elif current[2].upper() in ['EFFIC', 'EFFICIENCY']:
                     curve_name = current[3]
                     curve_points = []
@@ -993,7 +993,7 @@ class InpFile(object):
             if pump.efficiency is not None:
                 f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump.efficiency.name).encode('ascii'))
             if pump.energy_price is not None:
-                f.write('PUMP {:10s} PRICE   {:s}\n'.format(pump_name, to_si(self.flow_units, pump.energy_price, HydParam.Energy)).encode('ascii'))
+                f.write('PUMP {:10s} PRICE   {:.4f}\n'.format(pump_name, to_si(self.flow_units, pump.energy_price, HydParam.Energy)).encode('ascii'))
             if pump.energy_pattern is not None:
                 f.write('PUMP {:10s} PATTERN {:s}\n'.format(pump_name, pump.energy_pattern).encode('ascii'))
         f.write('\n'.encode('ascii'))
