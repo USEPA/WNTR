@@ -14,6 +14,7 @@ import itertools
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 from wntr.network import Junction, Pipe, Valve, Pump, Tank, Reservoir
+from wntr.sim.network_isolation import check_for_isolated_junctions
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +182,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._prev_isolated_junctions = OrderedSet()
         self._prev_isolated_links = OrderedSet()
         self._model_updater = None
+        self._source_ids = None
 
         self._initialize_name_id_maps()
         self._initialize_internal_graph()
@@ -553,7 +555,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             n += 1
 
     def _initialize_internal_graph(self):
-        n_links = {}
+        n_links = OrderedDict()
         rows = []
         cols = []
         vals = []
@@ -580,10 +582,8 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         self._internal_graph = scipy.sparse.csr_matrix((vals, (rows, cols)))
 
-        ndx_map = {}
+        ndx_map = OrderedDict()
         for link_name, link in self._wn.links():
-            ndx1 = None
-            ndx2 = None
             from_node_name = link.start_node_name
             to_node_name = link.end_node_name
             from_node_id = self._node_name_to_id[from_node_name]
@@ -596,8 +596,9 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._number_of_connections = [0 for i in range(self._wn.num_nodes)]
         for node_id in self._node_id_to_name.keys():
             self._number_of_connections[node_id] = self._internal_graph.indptr[node_id+1] - self._internal_graph.indptr[node_id]
+        self._number_of_connections = np.array(self._number_of_connections, dtype=np.int64)
 
-        self._node_pairs_with_multiple_links = {}
+        self._node_pairs_with_multiple_links = OrderedDict()
         for from_node_id, to_node_id in n_links.keys():
             if n_links[(from_node_id, to_node_id)] > 1:
                 if (to_node_id, from_node_id) in self._node_pairs_with_multiple_links:
@@ -616,6 +617,15 @@ class WNTRSimulator(WaterNetworkSimulator):
                             self._internal_graph.data[ndx1] = 1
                             self._internal_graph.data[ndx2] = 1
 
+        self._source_ids = []
+        for node_name, node in self._wn.tanks():
+            node_id = self._node_name_to_id[node_name]
+            self._source_ids.append(node_id)
+        for node_name, node in self._wn.reservoirs():
+            node_id = self._node_name_to_id[node_name]
+            self._source_ids.append(node_id)
+        self._source_ids = np.array(self._source_ids, dtype=np.int64)
+
     def _update_internal_graph(self):
         data = self._internal_graph.data
         ndx_map = self._map_link_to_internal_graph_data_ndx
@@ -632,8 +642,6 @@ class WNTRSimulator(WaterNetworkSimulator):
                         data[ndx2] = 1
 
         for key, link_list in self._node_pairs_with_multiple_links.items():
-            from_node_id = key[0]
-            to_node_id = key[1]
             first_link = link_list[0]
             ndx1, ndx2 = ndx_map[first_link]
             data[ndx1] = 0
@@ -656,45 +664,12 @@ class WNTRSimulator(WaterNetworkSimulator):
             link = self._wn.get_link(l)
             link._is_isolated = False
 
-        node_set = [1 for i in range(len(self._wn.node_name_list))]
+        node_indicator = np.ones(self._wn.num_nodes, dtype=np.int64)
+        check_for_isolated_junctions(self._source_ids, node_indicator, self._internal_graph.indptr,
+                                     self._internal_graph.indices, self._internal_graph.data,
+                                     self._number_of_connections)
 
-        def grab_group(node_id):
-            node_set[node_id] = 0
-            nodes_to_explore = set()
-            nodes_to_explore.add(node_id)
-            indptr = self._internal_graph.indptr
-            indices = self._internal_graph.indices
-            data = self._internal_graph.data
-            num_connections = self._number_of_connections
-
-            while len(nodes_to_explore) != 0:
-                node_being_explored = nodes_to_explore.pop()
-                ndx = indptr[node_being_explored]
-                number_of_connections = num_connections[node_being_explored]
-                vals = data[ndx:ndx+number_of_connections]
-                cols = indices[ndx:ndx+number_of_connections]
-                for i, val in enumerate(vals):
-                    if val == 1:
-                        col = cols[i]
-                        if node_set[col] == 1:
-                            node_set[col] = 0
-                            nodes_to_explore.add(col)
-
-        for tank_name, tank in self._wn.tanks():
-            tank_id = self._node_name_to_id[tank_name]
-            if node_set[tank_id] == 1:
-                grab_group(tank_id)
-            else:
-                continue
-
-        for reservoir_name, reservoir in self._wn.reservoirs():
-            reservoir_id = self._node_name_to_id[reservoir_name]
-            if node_set[reservoir_id] == 1:
-                grab_group(reservoir_id)
-            else:
-                continue
-
-        isolated_junction_ids = [i for i in range(len(node_set)) if node_set[i] == 1]
+        isolated_junction_ids = [i for i in range(len(node_indicator)) if node_indicator[i] == 1]
         isolated_junctions = OrderedSet()
         isolated_links = OrderedSet()
         for j_id in isolated_junction_ids:
