@@ -29,6 +29,7 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
     
     Parameters
     ----------
+    wn: wntr.network.WaterNetworkModel
     tank_cost : pandas Series, optional
         Annual tank cost indexed by volume 
         (default values below, from [SOKZ12]_).
@@ -87,9 +88,9 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
         =============  =============  ================================
     
     pump_cost : pd.Series, optional
-        Annual pump cost indexed by maximum power 
+        Annual pump cost indexed by maximum power input to pump
         (default values below, from [SOKZ12]_).
-        Maximum Power is computed from the pump curve and pump efficiency 
+        Maximum Power for a HeadPump is computed from the pump curve
         as follows:
         
         .. math:: Pmp = g*rho/eff*exp(ln(A/(B*(C+1)))/C)*(A - B*(exp(ln(A/(B*(C+1)))/C))^C)
@@ -98,7 +99,7 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
         :math:`Pmp` is the maximum power (W), 
         :math:`g` is acceleration due to gravity (9.81 m/s^2), 
         :math:`rho` is the density of water (1000 kg/m^3), 
-        :math:`eff` is the overall pump efficiency (0.75), 
+        :math:`eff` is the global efficiency (0.75 default),
         :math:`A`, :math:`B`, and :math:`C` are the pump curve coefficients.
 
         ==================  ================================
@@ -158,14 +159,19 @@ def annual_network_cost(wn, tank_cost=None, pipe_cost=None, prv_cost=None,
         network_cost = network_cost + pipe_cost.iloc[idx]*link.length    
     
     # Pump construction cost
-    for link_name, link in wn.links(Pump):      
+    for link_name, link in wn.head_pumps():
         coeff = link.get_head_curve_coefficients()
         A = coeff[0]
         B = coeff[1]
         C = coeff[2]
-        # TODO: efficiency should be read from the inp file
-        eff = 0.75
-        Pmax = 9.81*1000/eff*np.exp(np.log(A/(B*(C+1)))/C)*(A - B*(np.exp(np.log(A/(B*(C+1)))/C))**C)
+        Pmax = 9.81*1000*np.exp(np.log(A/(B*(C+1)))/C)*(A - B*(np.exp(np.log(A/(B*(C+1)))/C))**C)
+        Pmax = Pmax / wn.options.energy.global_efficiency
+        idx = np.argmin([np.abs(pump_cost.index - Pmax)])
+        network_cost = network_cost + pump_cost.iloc[idx]
+
+    for link_name, link in wn.power_pumps():
+        Pmax = link.power
+        Pmax = Pmax / wn.options.energy.global_efficiency
         idx = np.argmin([np.abs(pump_cost.index - Pmax)])
         network_cost = network_cost + pump_cost.iloc[idx]
         
