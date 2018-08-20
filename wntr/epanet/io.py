@@ -1143,6 +1143,11 @@ class InpFile(object):
 #                control_name = control_name + '/' + str(round(threshold, 2))
             else:
                 if len(current) == 6:  # at time
+                    if 'TIME' not in current:
+                        raise ValueError('Unrecognized line in inp file: {0}'.format(line))
+                    if 'CLOCKTIME' in current:
+                        raise ValueError('Unrecognized line in inp file: {0}'.format(line))
+
                     if ':' in current[5]:
                         run_at_time = int(_str_time_to_sec(current[5]))
                     else:
@@ -1153,6 +1158,9 @@ class InpFile(object):
 #                        control_name = control_name + '/' + current[i]
 #                    control_name = control_name + '/' + str(run_at_time)
                 elif len(current) == 7:  # at clocktime
+                    if 'CLOCKTIME' not in current:
+                        raise ValueError('Unrecognized line in inp file: {0}'.format(line))
+
                     run_at_time = int(_clock_time_to_sec(current[5], current[6]))
                     control_obj = Control._time_control(self.wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)
 #                    control_name = ''
