@@ -27,6 +27,7 @@
 ;ID	Node1	Node2	Diameter	Type	Setting		MinorLoss
  v1	j1	j2	12		TCV	3.52		0.54
  v2 j2  j3  12      PSV 2.51        0.985
+ v3     j1      j2      12              GPV     GPVCurve	0.56
 
 [PATTERNS]
  pattern1			1.0	1.0	1.0	1.0
@@ -39,6 +40,9 @@
  curve1		30	20
  curve1		40	10
  curve1		50	0
+ GPVCurve	0	0
+ GPVCurve	10	5
+ GPVCurve	20	25
 
 [CONTROLS]
 link v1 0.82 at time 3.4

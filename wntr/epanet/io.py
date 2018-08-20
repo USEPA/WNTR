@@ -68,6 +68,7 @@ _PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
 _VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:15.11g} {mloss:15.11g} {com:>3s}\n'
+_GPV_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:20s} {mloss:15.11g} {com:>3s}\n'
 _VALVE_LABEL = '{:21s} {:20s} {:20s} {:>20s} {:4s} {:>20s} {:>20s}\n'
 
 _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
@@ -791,6 +792,7 @@ class InpFile(object):
                  'mloss': valve.minor_loss,
                  'com': ';'}
             valve_type = valve.valve_type
+            formatter = _VALVE_ENTRY
             if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = from_si(self.flow_units, valve._initial_setting, HydParam.Pressure)
             elif valve_type == 'FCV':
@@ -798,9 +800,10 @@ class InpFile(object):
             elif valve_type == 'TCV':
                 valve_set = valve._initial_setting
             elif valve_type == 'GPV':
-                valve_set = valve._initial_setting
+                valve_set = valve.headloss_curve_name
+                formatter = _GPV_ENTRY
             E['set'] = valve_set
-            f.write(_VALVE_ENTRY.format(**E).encode('ascii'))
+            f.write(formatter.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_emitters(self):
