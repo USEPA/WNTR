@@ -8,9 +8,9 @@ dependencies:
     - networkx
     - pandas
     - matplotlib
-    - plotly
+    - plotly<3
     - nose
-    - xlwt
     - enum34
+    - openpyxl
     - pip:
         - coveralls

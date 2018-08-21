@@ -8,8 +8,8 @@ dependencies:
     - networkx
     - pandas
     - matplotlib
-    - plotly
+    - plotly<3
     - nose
-    - xlwt
+    - openpyxl
     - pip:
         - coveralls

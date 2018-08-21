@@ -15,20 +15,20 @@ wn.add_pattern('SourcePattern', source_pattern)
 wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
 wn.add_source('Source2', '123', 'SETPOINT', 1000, 'SourcePattern')
 results = sim.run_sim()
-CHEM_at_5hr = results.node.loc['quality',5*3600,:]
+CHEM_at_5hr = results.node['quality'].loc[5*3600,:]
 wntr.graphics.plot_network(wn, node_attribute=CHEM_at_5hr, node_size=20, 
                       title='Chemical concentration, time = 5 hours')
-CHEM_at_node = results.node.loc['quality',:,'208']
+CHEM_at_node = results.node['quality'].loc[:,'208']
 plt.figure()
 CHEM_at_node.plot(title='Chemical concentration, node 208')
 
 # Run age scenario and plot results
 wn.options.quality.mode = 'AGE'
 results = sim.run_sim()
-AGE_at_5hr = results.node.loc['quality',5*3600,:]/3600.0 # convert to hours
+AGE_at_5hr = results.node['quality'].loc[5*3600,:]/3600.0 # convert to hours
 wntr.graphics.plot_network(wn, node_attribute=AGE_at_5hr, node_size=20, 
                       title='Water age (hrs), time = 5 hours')
-AGE_at_node = results.node.loc['quality',:,'208']/3600.0
+AGE_at_node = results.node['quality'].loc[:,'208']/3600.0
 plt.figure()
 AGE_at_node.plot(title='Water age, node 208')
 
@@ -36,10 +36,10 @@ AGE_at_node.plot(title='Water age, node 208')
 wn.options.quality.mode = 'TRACE'
 wn.options.quality.trace_node = '111'
 results = sim.run_sim()
-TRACE_at_5hr = results.node.loc['quality',5*3600,:]
+TRACE_at_5hr = results.node['quality'].loc[5*3600,:]
 wntr.graphics.plot_network(wn, node_attribute=TRACE_at_5hr, node_size=20, 
                       title='Trace percent, time = 5 hours')
-TRACE_at_node = results.node.loc['quality',:,'208']
+TRACE_at_node = results.node['quality'].loc[:,'208']
 plt.figure()
 TRACE_at_node.plot(title='Trace percent, node 208')
 

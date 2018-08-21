@@ -165,9 +165,9 @@ class TestPerformance(unittest.TestCase):
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
         
-        head_diff = abs(results.node['head', :, :] - epa_res.node['head', :, :])
-        demand_diff = abs(results.node['demand', :, wn.tank_name_list] - epa_res.node['demand', :, wn.tank_name_list])
-        flow_diff = abs(results.link['flowrate', :, :] - epa_res.link['flowrate', :, :])
+        head_diff = abs(results.node['head'] - epa_res.node['head'])
+        demand_diff = abs(results.node['demand'].loc[:, wn.tank_name_list] - epa_res.node['demand'].loc[:, wn.tank_name_list])
+        flow_diff = abs(results.link['flowrate'] - epa_res.link['flowrate'])
 
         self.Net1_avg_head_diff.append(head_diff.mean().mean())
         self.Net1_avg_demand_diff.append(demand_diff.mean().mean())
@@ -204,9 +204,9 @@ class TestPerformance(unittest.TestCase):
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
-        head_diff = abs(results.node['head', :, :] - epa_res.node['head', :, :])
-        demand_diff = abs(results.node['demand', :, wn.tank_name_list] - epa_res.node['demand', :, wn.tank_name_list])
-        flow_diff = abs(results.link['flowrate', :, :] - epa_res.link['flowrate', :, :])
+        head_diff = abs(results.node['head'] - epa_res.node['head'])
+        demand_diff = abs(results.node['demand'].loc[:, wn.tank_name_list] - epa_res.node['demand'].loc[:, wn.tank_name_list])
+        flow_diff = abs(results.link['flowrate'] - epa_res.link['flowrate'])
 
         self.Net3_avg_head_diff.append(head_diff.mean().mean())
         self.Net3_avg_demand_diff.append(demand_diff.mean().mean())
@@ -224,7 +224,7 @@ class TestPerformance(unittest.TestCase):
         self.assertLess(demand_diff.mean().mean(), 3.4e-7)
         self.assertLess(flow_diff.mean().mean(), 2.0e-7)
         self.assertLess(head_diff.max().max(), 3.3e-4)
-        self.assertLess(demand_diff.max().max(), 3.1e-6)
+        self.assertLess(demand_diff.max().max(), 3.2e-6)
         self.assertLess(flow_diff.max().max(), 4.8e-5)
         self.assertLess(head_diff.std().mean(), 2.6e-5)
         self.assertLess(demand_diff.std().mean(), 3.6e-7)
@@ -245,9 +245,9 @@ class TestPerformance(unittest.TestCase):
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim()
 
-        head_diff = abs(results.node['head', :, :] - epa_res.node['head', :, :])
-        demand_diff = abs(results.node['demand', :, wn.tank_name_list] - epa_res.node['demand', :, wn.tank_name_list])
-        flow_diff = abs(results.link['flowrate', :, :] - epa_res.link['flowrate', :, :])
+        head_diff = abs(results.node['head'] - epa_res.node['head'])
+        demand_diff = abs(results.node['demand'].loc[:, wn.tank_name_list] - epa_res.node['demand'].loc[:, wn.tank_name_list])
+        flow_diff = abs(results.link['flowrate'] - epa_res.link['flowrate'])
 
         self.Net6_mod_avg_head_diff.append(head_diff.mean().mean())
         self.Net6_mod_avg_demand_diff.append(demand_diff.mean().mean())

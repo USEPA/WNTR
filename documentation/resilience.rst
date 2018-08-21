@@ -163,7 +163,8 @@ at https://networkx.github.io/.
 Hydraulic metrics
 ---------------------
 
-Hydraulic metrics are based on flow, demand, and/or pressure. The 
+Hydraulic metrics are based on flow, demand, and/or pressure. With the exection of 
+expected demand and average expected demand, the
 calculation of these metrics requires simulation of network hydraulics that reflect how the
 system operates under normal or abnormal conditions.  
 Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metrics`.  
@@ -176,12 +177,20 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
    =====================================  ================================================================================================================================================
    Pressure                               To determine the number of node-time pairs above or below a specified pressure threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['pressure'].  
-
+   
+   Demand                                 To determine the number of node-time pairs above or below a specified demand threshold, 
+                                          use the :class:`~wntr.metrics.misc.query` method on results.node['demand']. 
+                                          This method can be used to compute the fraction of delivered demand, from [OsKS02]_.
+										  
+   Water service availability             Water service availability is the ratio of delivered demand to the expected demand.  
+                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.water_service_availability` method.
+                                          This method can be used to compute the fraction of delivered volume, from [OsKS02]_.
+										  
    Todini index                           The Todini index [Todi00]_ is related to the capability of a system to overcome 
                                           failures while still meeting demands and pressures at the nodes. The 
                                           Todini index defines resilience at a specific time as a measure of surplus 
                                           power at each node and measures relative energy redundancy. 
-                                          The Todini index can be computed using the :class:`~wntr.metrics.hydraulic.todini` method.
+                                          The Todini index can be computed using the :class:`~wntr.metrics.hydraulic.todini_index` method.
 
    Entropy                                Entropy [AwGB90]_ is a measure of uncertainty in a random variable.  
                                           In a water distribution network model, the random variable is 
@@ -191,13 +200,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           Connectivity will change at each time step, depending on the flow direction.  
                                           The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method can be used to weight the graph by a specified attribute. 
                                           Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
-
-   Fraction of delivered volume           Fraction of delivered volume is the ratio of total volume delivered to the total volume requested [OsKS02]_.  
-                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.fdv` method.
-
-   Fraction of delivered demand           Fraction of delivered demand is the fraction of time periods where demand is met [OsKS02]_.
-                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.hydraulic.fdd` method.
-	
+   
    Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier [USEPA15]_.
                                           The metric can be computed using the :class:`~wntr.metrics.hydraulic.expected_demand` method.  This method does not require running 
                                           a hydraulic simulation.
@@ -229,9 +232,7 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
 
    Concentration                          To determine the number of node-time pairs above or below a specified concentration threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CHEM or TRACE.
-
-   Fraction of delivered quality          Fraction of delivered quality is the fraction of time periods where water quality standards are met [OsKS02]_.
-                                          This metric can be computed as a function of time or space using the :class:`~wntr.metrics.water_quality.fdq` method
+                                          This method can be used to compute the fraction of delivered quality, from [OsKS02]_.
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water quality metrics.
@@ -284,13 +285,14 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
                                           Water Networks II [SOKZ12]_.  
                                           Default values can be included in the calculation.
                                           Network cost can be computed 
-                                          using the :class:`~wntr.metrics.economic.cost` method.
+                                          using the :class:`~wntr.metrics.economic.annual_network_cost` method.
 
    Greenhouse gas emissions               Greenhouse gas emissions is the annual emissions associated with pipes based on equations from the Battle of Water Networks II [SOKZ12]_.
                                           Default values can be included in the calculation.
                                           Greenhouse gas emissions can be computed 
-                                          using the :class:`~wntr.metrics.economic.ghg_emissions` method.
+                                          using the :class:`~wntr.metrics.economic.annual_ghg_emissions` method.
 
-   Pump operating energy and cost         The energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy` method. This
-                                          uses the flowrates and pressures from simulation results to compute pump energy and cost.
+   Pump operating energy and cost         The energy and cost required to operate a pump can be computed using the :class:`~wntr.metrics.economic.pump_energy` and 
+                                          :class:`~wntr.metrics.economic.pump_cost` methods. These
+                                          use the flowrates and pressures from simulation results to compute pump energy and cost.
    =====================================  ================================================================================================================================================

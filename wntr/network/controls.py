@@ -577,18 +577,24 @@ class SimTimeCondition(ControlCondition):
         if self._relation is Comparison.eq and (prev_time < self._threshold and self._threshold <= cur_time):
             self._backtrack = int(cur_time - self._threshold)
             return True
-        elif self._relation is Comparison.gt and cur_time >= self._threshold and prev_time < self._threshold:
-            self._backtrack = int(cur_time - self._threshold)
-            return True
-        elif self._relation is Comparison.gt and cur_time >= self._threshold and prev_time >= self._threshold:
+        elif self._relation is Comparison.gt and cur_time > self._threshold:
             self._backtrack = 0
             return True
-        elif self._relation is Comparison.lt and cur_time >= self._threshold and prev_time < self._threshold:
+        elif self._relation is Comparison.ge and cur_time >= self._threshold and prev_time < self._threshold:
             self._backtrack = int(cur_time - self._threshold)
-            return False
-        elif self._relation is Comparison.lt and cur_time >= self._threshold and prev_time >= self._threshold:
+            return True
+        elif self._relation is Comparison.ge and cur_time >= self._threshold and prev_time >= self._threshold:
             self._backtrack = 0
-            return False
+            return True
+        elif self._relation is Comparison.lt and cur_time < self._threshold:
+            self._backtrack = 0
+            return True
+        elif self._relation is Comparison.le and cur_time <= self._threshold:
+            self._backtrack = 0
+            return True
+        elif self._relation is Comparison.le and prev_time < self._threshold:
+            self._backtrack = int(cur_time - self._threshold)
+            return True
         else:
             self._backtrack = 0
             return False
@@ -1244,25 +1250,6 @@ class _ActiveFCVCondition(ControlCondition):
             return False
 
 
-class _ValveNewSettingCondition(ControlCondition):
-    def __init__(self, valve):
-        """
-        Parameters
-        ----------
-        valve: wntr.network.Valve
-        """
-        super(_ValveNewSettingCondition, self).__init__()
-        self._valve = valve
-
-    def requires(self):
-        return OrderedSet([self._valve])
-
-    def evaluate(self):
-        if self._valve.setting != self._valve._prev_setting:
-            return True
-        return False
-
-
 class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
     """
     A base class for deriving new control actions. The control action is run by calling run_control_action.
@@ -1514,6 +1501,14 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
         else:
             return 'Control'
 
+    @property
+    def condition(self):
+        return self._condition
+
+    @property
+    def priority(self):
+        return self._priority
+
 
 @DocInheritor({'is_control_action_required', 'run_control_action', 'requires', 'actions'})
 class Rule(ControlBase):
@@ -1665,10 +1660,10 @@ class Control(Rule):
         name: str
             The name of the control
         """
-        if isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
-            if condition._relation is not Comparison.eq:
-                raise ValueError('SimTimeConditions and TimeOfDayConditions used with Control must have a relation of '
-                                 'Comparison.eq. Otherwise use Rule.')
+        # if isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
+        #     if condition._relation is not Comparison.eq:
+        #         raise ValueError('SimTimeConditions and TimeOfDayConditions used with Control must have a relation of '
+        #                          'Comparison.eq. Otherwise use Rule.')
         if isinstance(condition, (ValueCondition, TankLevelCondition, RelativeCondition)):
             if condition._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
