@@ -176,10 +176,12 @@ def _clock_time_to_sec(s, am_pm):
         time_sec = (int(time_tuple.groups()[0])*60*60 +
                     int(time_tuple.groups()[1])*60 +
                     int(round(float(time_tuple.groups()[2]))))
-        if not am:
-            time_sec += 3600*12
         if s.startswith('12'):
             time_sec -= 3600*12
+        if not am:
+            if time_sec >= 3600*12:
+                raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+            time_sec += 3600*12
         return time_sec
     else:
         pattern2 = re.compile(r'^(\d+):(\d+)$')
@@ -187,20 +189,24 @@ def _clock_time_to_sec(s, am_pm):
         if bool(time_tuple):
             time_sec = (int(time_tuple.groups()[0])*60*60 +
                         int(time_tuple.groups()[1])*60)
-            if not am:
-                time_sec += 3600*12
             if s.startswith('12'):
                 time_sec -= 3600*12
+            if not am:
+                if time_sec >= 3600 * 12:
+                    raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                time_sec += 3600*12
             return time_sec
         else:
             pattern3 = re.compile(r'^(\d+)$')
             time_tuple = pattern3.search(s)
             if bool(time_tuple):
                 time_sec = int(time_tuple.groups()[0])*60*60
-                if not am:
-                    time_sec += 3600*12
                 if s.startswith('12'):
                     time_sec -= 3600*12
+                if not am:
+                    if time_sec >= 3600 * 12:
+                        raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                    time_sec += 3600*12
                 return time_sec
             else:
                 raise RuntimeError("Time format in "
