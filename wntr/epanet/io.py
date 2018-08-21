@@ -1142,10 +1142,8 @@ class InpFile(object):
 #                    control_name = control_name + '/' + current[i]
 #                control_name = control_name + '/' + str(round(threshold, 2))
             else:
-                if len(current) == 6:  # at time
+                if 'CLOCKTIME' not in current:  # at time
                     if 'TIME' not in current:
-                        raise ValueError('Unrecognized line in inp file: {0}'.format(line))
-                    if 'CLOCKTIME' in current:
                         raise ValueError('Unrecognized line in inp file: {0}'.format(line))
 
                     if ':' in current[5]:
@@ -1157,11 +1155,14 @@ class InpFile(object):
 #                    for i in range(len(current)-1):
 #                        control_name = control_name + '/' + current[i]
 #                    control_name = control_name + '/' + str(run_at_time)
-                elif len(current) == 7:  # at clocktime
-                    if 'CLOCKTIME' not in current:
-                        raise ValueError('Unrecognized line in inp file: {0}'.format(line))
-
-                    run_at_time = int(_clock_time_to_sec(current[5], current[6]))
+                else:  # at clocktime
+                    if len(current) < 7:
+                        if ':' in current[5]:
+                            run_at_time = int(_str_time_to_sec(current[5]))
+                        else:
+                            run_at_time = int(float(current[5])*3600)
+                    else:
+                        run_at_time = int(_clock_time_to_sec(current[5], current[6]))
                     control_obj = Control._time_control(self.wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)
 #                    control_name = ''
 #                    for i in range(len(current)-1):
@@ -1221,7 +1222,7 @@ class InpFile(object):
                             'time': all_control._condition._threshold / 3600.0}
                     if vals['setting'] is None:
                         continue
-                    if isinstance(all_control, SimTimeCondition):
+                    if isinstance(all_control._condition, TimeOfDayCondition):
                         vals['compare'] = 'CLOCKTIME'
                     f.write(entry.format(**vals).encode('ascii'))
                 elif isinstance(all_control._condition, (ValueCondition)):
