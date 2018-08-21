@@ -1334,7 +1334,8 @@ class InpFile(object):
                 pattern = None
             else:
                 pattern = self.wn.get_pattern(current[2])
-            node.demand_timeseries_list.remove_category('EN2 base')
+            # node.demand_timeseries_list.remove_category('EN2 base')  # Intended to remove category _NAME_ -- need
+            # fixing before we change it again.
             node.demand_timeseries_list.append((to_si(self.flow_units, float(current[1]), HydParam.Demand),
                                          pattern, category))
 
