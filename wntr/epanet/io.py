@@ -68,6 +68,7 @@ _PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
 _VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:15.11g} {mloss:15.11g} {com:>3s}\n'
+_GPV_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:20s} {mloss:15.11g} {com:>3s}\n'
 _VALVE_LABEL = '{:21s} {:20s} {:20s} {:>20s} {:4s} {:>20s} {:>20s}\n'
 
 _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
@@ -175,10 +176,12 @@ def _clock_time_to_sec(s, am_pm):
         time_sec = (int(time_tuple.groups()[0])*60*60 +
                     int(time_tuple.groups()[1])*60 +
                     int(round(float(time_tuple.groups()[2]))))
-        if not am:
-            time_sec += 3600*12
         if s.startswith('12'):
             time_sec -= 3600*12
+        if not am:
+            if time_sec >= 3600*12:
+                raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+            time_sec += 3600*12
         return time_sec
     else:
         pattern2 = re.compile(r'^(\d+):(\d+)$')
@@ -186,20 +189,24 @@ def _clock_time_to_sec(s, am_pm):
         if bool(time_tuple):
             time_sec = (int(time_tuple.groups()[0])*60*60 +
                         int(time_tuple.groups()[1])*60)
-            if not am:
-                time_sec += 3600*12
             if s.startswith('12'):
                 time_sec -= 3600*12
+            if not am:
+                if time_sec >= 3600 * 12:
+                    raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                time_sec += 3600*12
             return time_sec
         else:
             pattern3 = re.compile(r'^(\d+)$')
             time_tuple = pattern3.search(s)
             if bool(time_tuple):
                 time_sec = int(time_tuple.groups()[0])*60*60
-                if not am:
-                    time_sec += 3600*12
                 if s.startswith('12'):
                     time_sec -= 3600*12
+                if not am:
+                    if time_sec >= 3600 * 12:
+                        raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                    time_sec += 3600*12
                 return time_sec
             else:
                 raise RuntimeError("Time format in "
@@ -791,6 +798,7 @@ class InpFile(object):
                  'mloss': valve.minor_loss,
                  'com': ';'}
             valve_type = valve.valve_type
+            formatter = _VALVE_ENTRY
             if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = from_si(self.flow_units, valve._initial_setting, HydParam.Pressure)
             elif valve_type == 'FCV':
@@ -798,9 +806,10 @@ class InpFile(object):
             elif valve_type == 'TCV':
                 valve_set = valve._initial_setting
             elif valve_type == 'GPV':
-                valve_set = valve._initial_setting
+                valve_set = valve.headloss_curve_name
+                formatter = _GPV_ENTRY
             E['set'] = valve_set
-            f.write(_VALVE_ENTRY.format(**E).encode('ascii'))
+            f.write(formatter.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_emitters(self):
@@ -1139,7 +1148,10 @@ class InpFile(object):
 #                    control_name = control_name + '/' + current[i]
 #                control_name = control_name + '/' + str(round(threshold, 2))
             else:
-                if len(current) == 6:  # at time
+                if 'CLOCKTIME' not in current:  # at time
+                    if 'TIME' not in current:
+                        raise ValueError('Unrecognized line in inp file: {0}'.format(line))
+
                     if ':' in current[5]:
                         run_at_time = int(_str_time_to_sec(current[5]))
                     else:
@@ -1149,8 +1161,14 @@ class InpFile(object):
 #                    for i in range(len(current)-1):
 #                        control_name = control_name + '/' + current[i]
 #                    control_name = control_name + '/' + str(run_at_time)
-                elif len(current) == 7:  # at clocktime
-                    run_at_time = int(_clock_time_to_sec(current[5], current[6]))
+                else:  # at clocktime
+                    if len(current) < 7:
+                        if ':' in current[5]:
+                            run_at_time = int(_str_time_to_sec(current[5]))
+                        else:
+                            run_at_time = int(float(current[5])*3600)
+                    else:
+                        run_at_time = int(_clock_time_to_sec(current[5], current[6]))
                     control_obj = Control._time_control(self.wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)
 #                    control_name = ''
 #                    for i in range(len(current)-1):
@@ -1210,7 +1228,7 @@ class InpFile(object):
                             'time': all_control._condition._threshold / 3600.0}
                     if vals['setting'] is None:
                         continue
-                    if isinstance(all_control, SimTimeCondition):
+                    if isinstance(all_control._condition, TimeOfDayCondition):
                         vals['compare'] = 'CLOCKTIME'
                     f.write(entry.format(**vals).encode('ascii'))
                 elif isinstance(all_control._condition, (ValueCondition)):
@@ -1323,7 +1341,8 @@ class InpFile(object):
                 pattern = None
             else:
                 pattern = self.wn.get_pattern(current[2])
-            node.demand_timeseries_list.remove_category('EN2 base')
+            # node.demand_timeseries_list.remove_category('EN2 base')  # Intended to remove category _NAME_ -- need
+            # fixing before we change it again.
             node.demand_timeseries_list.append((to_si(self.flow_units, float(current[1]), HydParam.Demand),
                                          pattern, category))
 

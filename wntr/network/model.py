@@ -95,7 +95,15 @@ class WaterNetworkModel(AbstractModel):
         self._prev_sim_time = None  # the last time at which results were accepted
     
     def _compare(self, other):
-        """Comare the details of two models"""
+        """
+        Parameters
+        ----------
+        other: WaterNetworkModel
+
+        Returns
+        -------
+        bool
+        """
         if self.num_junctions  != other.num_junctions  or \
            self.num_reservoirs != other.num_reservoirs or \
            self.num_tanks      != other.num_tanks      or \
@@ -120,6 +128,9 @@ class WaterNetworkModel(AbstractModel):
                 return False
         if self.options != other.options:
             return False
+        for name, control in self.controls():
+            if not control._compare(other.get_control(name)):
+                return False
         return True
     
     def _sec_to_string(self, sec):
