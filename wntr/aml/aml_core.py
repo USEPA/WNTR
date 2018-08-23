@@ -3488,6 +3488,18 @@ class Node(_object):
         return _aml_core.Node_multiply_const(self, arg2)
 
 
+    def get_const(self):
+        """
+        get_const(Node self) -> double
+
+        Parameters
+        ----------
+        self: Node *
+
+        """
+        return _aml_core.Node_get_const(self)
+
+
     def _print(self):
         """
         _print(Node self) -> std::string
@@ -3713,6 +3725,18 @@ class Summation(Node):
 
         """
         return _aml_core.Summation_multiply_const(self, arg2)
+
+
+    def get_const(self):
+        """
+        get_const(Summation self) -> double
+
+        Parameters
+        ----------
+        self: Summation *
+
+        """
+        return _aml_core.Summation_get_const(self)
 
     __swig_destroy__ = _aml_core.delete_Summation
     __del__ = lambda self: None

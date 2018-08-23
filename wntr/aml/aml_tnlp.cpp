@@ -155,10 +155,10 @@ bool AML_NLP::eval_grad_f(Index n, const Number *x, bool new_x, Number *grad_f)
 	}
     }
   
-  //for (int i=0; i<n; ++i)
-  //  {
-  //    grad_f[i] = 0.0;
-  //  }
+  for (int i=0; i<n; ++i)
+    {
+      grad_f[i] = 0.0;
+    }
   
   auto obj_vars = get_model()->obj->get_vars();
   for (auto &ptr_to_var : *(obj_vars))
@@ -217,6 +217,7 @@ bool AML_NLP::eval_jac_g(Index n, const Number *x, bool new_x,
 	      ++i;
             }
         }
+      
     }
   else
     {

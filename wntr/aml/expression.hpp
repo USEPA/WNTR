@@ -102,6 +102,7 @@ public:
 
   virtual std::shared_ptr<Node> add_const(double);
   virtual void multiply_const(double);
+  virtual double get_const();
 
   std::string _print();
 };
@@ -130,6 +131,7 @@ public:
   double constant = 0.0;
   std::shared_ptr<Node> add_const(double) override;
   void multiply_const(double) override;
+  double get_const() override;
 };
 
 class Var: public Node

@@ -57,6 +57,7 @@ std::shared_ptr<Node> summation_helper(Node &n1, Node &n2, double c)
 		}
 	      ++i;
 	    }
+	  n1.add_const(c*n2.get_const());
 	  return n1.shared_from_this();
 	}
       else
@@ -82,6 +83,7 @@ std::shared_ptr<Node> summation_helper(Node &n1, Node &n2, double c)
 	    {
 	      new_coefs->push_back(c*_c);
 	    }
+	  n2.multiply_const(c);
 	  n2.set_coefs(new_coefs);
 	  n2.get_nodes()->push_back(n1.shared_from_this());
 	  n2.get_coefs()->push_back(1);
@@ -821,6 +823,7 @@ std::shared_ptr<Node> Node::operator-()
 	  new_coefs->push_back(-_c);
 	}
       set_coefs(new_coefs);
+      multiply_const(-1);
       return shared_from_this();
     }
   else
@@ -895,6 +898,18 @@ void Node::multiply_const(double c)
 void Summation::multiply_const(double c)
 {
   constant *= c;
+}
+
+
+double Node::get_const()
+{
+  return 0.0;
+}
+
+
+double Summation::get_const()
+{
+  return constant;
 }
 
 

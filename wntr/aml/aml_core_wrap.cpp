@@ -20620,6 +20620,40 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Node_get_const(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Node *arg1 = (Node *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::shared_ptr< Node > tempshared1 ;
+  std::shared_ptr< Node > *smartarg1 = 0 ;
+  PyObject * obj0 = 0 ;
+  double result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Node_get_const",&obj0)) SWIG_fail;
+  {
+    int newmem = 0;
+    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_Node_t, 0 |  0 , &newmem);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Node_get_const" "', argument " "1"" of type '" "Node *""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      tempshared1 = *reinterpret_cast< std::shared_ptr<  Node > * >(argp1);
+      delete reinterpret_cast< std::shared_ptr<  Node > * >(argp1);
+      arg1 = const_cast< Node * >(tempshared1.get());
+    } else {
+      smartarg1 = reinterpret_cast< std::shared_ptr<  Node > * >(argp1);
+      arg1 = const_cast< Node * >((smartarg1 ? smartarg1->get() : 0));
+    }
+  }
+  result = (double)(arg1)->get_const();
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Node__print(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Node *arg1 = (Node *) 0 ;
@@ -21751,6 +21785,40 @@ SWIGINTERN PyObject *_wrap_Summation_multiply_const(PyObject *SWIGUNUSEDPARM(sel
   arg2 = static_cast< double >(val2);
   (arg1)->multiply_const(arg2);
   resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Summation_get_const(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Summation *arg1 = (Summation *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::shared_ptr< Summation > tempshared1 ;
+  std::shared_ptr< Summation > *smartarg1 = 0 ;
+  PyObject * obj0 = 0 ;
+  double result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Summation_get_const",&obj0)) SWIG_fail;
+  {
+    int newmem = 0;
+    res1 = SWIG_ConvertPtrAndOwn(obj0, &argp1, SWIGTYPE_p_std__shared_ptrT_Summation_t, 0 |  0 , &newmem);
+    if (!SWIG_IsOK(res1)) {
+      SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Summation_get_const" "', argument " "1"" of type '" "Summation *""'"); 
+    }
+    if (newmem & SWIG_CAST_NEW_MEMORY) {
+      tempshared1 = *reinterpret_cast< std::shared_ptr<  Summation > * >(argp1);
+      delete reinterpret_cast< std::shared_ptr<  Summation > * >(argp1);
+      arg1 = const_cast< Summation * >(tempshared1.get());
+    } else {
+      smartarg1 = reinterpret_cast< std::shared_ptr<  Summation > * >(argp1);
+      arg1 = const_cast< Summation * >((smartarg1 ? smartarg1->get() : 0));
+    }
+  }
+  result = (double)(arg1)->get_const();
+  resultobj = SWIG_From_double(static_cast< double >(result));
   return resultobj;
 fail:
   return NULL;
@@ -46227,6 +46295,14 @@ static PyMethodDef SwigMethods[] = {
 		"arg2: double\n"
 		"\n"
 		""},
+	 { (char *)"Node_get_const", _wrap_Node_get_const, METH_VARARGS, (char *)"\n"
+		"Node_get_const(Node self) -> double\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Node *\n"
+		"\n"
+		""},
 	 { (char *)"Node__print", _wrap_Node__print, METH_VARARGS, (char *)"\n"
 		"Node__print(Node self) -> std::string\n"
 		"\n"
@@ -46444,6 +46520,14 @@ static PyMethodDef SwigMethods[] = {
 		"----------\n"
 		"self: Summation *\n"
 		"arg2: double\n"
+		"\n"
+		""},
+	 { (char *)"Summation_get_const", _wrap_Summation_get_const, METH_VARARGS, (char *)"\n"
+		"Summation_get_const(Summation self) -> double\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Summation *\n"
 		"\n"
 		""},
 	 { (char *)"delete_Summation", _wrap_delete_Summation, METH_VARARGS, (char *)"\n"
