@@ -2,3 +2,27 @@
 
 v0.1.6 (Master branch)
 ---------------------------------------------------
+
+* Introduced a known discrepancies between the WNTRSimulator and EpanetSimulators 
+  to model pump speed controls. See :ref:`discrepancies`.
+
+  * Pumps have speed settings which are adjustable by controls and/or patterns.  
+    With the EpanetSimulator, controls and patterns adjust the actual speed.  
+    With the WNTRSimulator, pumps have a 'base speed' (similar to junction demand 
+    and reservoir head), controls adjust the base speed, and speed patterns are 
+    a are a multiplier on the base speed. Results from the two simulators 
+    can match by scaling speed patterns and using controls appropriately.
+
+* Fixed bugs in the EPANET INP file reader/writer that impacted some model files, including 
+  issues with time controls, pump price and pattern, general purpose valves, and 
+  the demand section.
+
+* Included constant power pumps in annual network cost metric.
+
+* Updated the way hydraulic and reporting timesteps are handled.  If the 
+  reporting timestep is greater than the hydraulic timestep, then it is reset and a 
+  warning message is raised.
+
+* Restricted software tests to use Plotly version 2.x.  Plotly version 3 is not yet
+  compatible with network graphics.
+  
