@@ -1,6 +1,6 @@
 .. _whatsnew_0160:
 
-v0.1.6 (Master branch)
+v0.1.6 (September 11, 2018)
 ---------------------------------------------------
 
 * Introduced a known discrepancy between the WNTRSimulator and EpanetSimulator 
