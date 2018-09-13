@@ -16,6 +16,7 @@
 
 class Node;
 class ExpressionBase;
+class Leaf;
 class Var;
 class Param;
 class Float;
@@ -55,6 +56,7 @@ class Node: public std::enable_shared_from_this<Node>
 public:
   Node() = default;
   virtual ~Node() = default;
+  virtual std::string get_type() = 0;
 };
 
 
@@ -66,8 +68,6 @@ public:
   virtual std::shared_ptr<std::vector<std::shared_ptr<Operator> > > get_operators();
   virtual std::sahred_ptr<std::vector<std::shared_ptr<Var> > > get_vars();
   virtual std::string __str__() = 0;
-  virtual int get_num_operators();
-  virtual std::string get_type() = 0;
 
   std::shared_ptr<ExpressionBase> operator+(ExpressionBase&);
   std::shared_ptr<ExpressionBase> operator-(ExpressionBase&);
@@ -95,6 +95,9 @@ public:
   virtual bool has_ad(Var&) = 0;
   virtual bool has_ad2(Var&, Var&) = 0;
   virtual std::shared_ptr<ExpressionBase> sd(Var&, bool new_eval=true) = 0;
+
+  virtual std::shared_ptr<ExpressionBase> add_leaf(ExpressionBase&, double coef) = 0;
+  virtual std::shared_ptr<ExpressionBase> add_expr(ExpressionBase&, double coef) = 0;
 };
 
 
@@ -135,3 +138,24 @@ public:
   std::shared_ptr<ExpressionBase> sd(Var&, bool new_eval=true) override;
 };
 
+
+class Expression: public ExpressionBase
+{
+public:
+  Expression() = default;
+  ~Expression() = default;
+  std::shared_ptr<std::vector<std::shared_ptr<Operator> > > operators = std::make_shared<std::vector<std::shared_ptr<Operator> > >();
+  std::shared_ptr<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > > sparsity = std::make_shared<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > >();
+
+  void update_sparsity(std::shared_ptr<Node>, std::shared_ptr<Operator>);
+  
+  virtual std::sahred_ptr<std::vector<std::shared_ptr<Var> > > &get_vars() override;
+  std::string __str__() override;
+
+  double evaluate() override;
+  double ad(Var& bool new_eval=true) override;
+  double ad2(Var&, Var&, bool new_eval=true) override;
+  bool has_ad(Var&) override;
+  bool has_ad2(Var&, Var&) override;
+  std::shared_ptr<ExpressionBase> sd(Var&, bool new_eval=true) override;
+};
