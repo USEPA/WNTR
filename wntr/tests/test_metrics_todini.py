@@ -26,12 +26,10 @@ def test_Todini_Fig2_optCost_GPM():
     flowrate = results.link['flowrate']
     todini = wntr.metrics.todini_index(head, pressure, demand, flowrate, wn, 30) # h* = 30 m
 
-    # print('Todini: Fig2_optCost')
-    # print(todini[0])
-
     expected = 0.22
-    error = abs((todini[0] - expected)/expected)
-    assert_less(error, 0.1) # 10% error
+    error = abs(todini[0] - expected)
+    print(todini[0], expected, error)
+    assert_less(error, 0.01) 
 
 def test_Todini_Fig2_optCost_CMH():
     inp_file = join(datadir,'Todini_Fig2_optCost_CMH.inp')
@@ -51,12 +49,10 @@ def test_Todini_Fig2_optCost_CMH():
     flowrate = results.link['flowrate']
     todini = wntr.metrics.todini_index(head, pressure, demand, flowrate, wn, 30) # h* = 30 m
 
-    # print('Todini: Fig2_optCost')
-    # print(todini[0])
-
     expected = 0.22
-    error = abs((todini[0] - expected)/expected)
-    assert_less(error, 0.1) # 10% error
+    error = abs(todini[0] - expected)
+    print(todini[0], expected, error)
+    assert_less(error, 0.01) 
 
 def test_Todini_Fig2_solA_GPM():
     inp_file = join(datadir,'Todini_Fig2_solA_GPM.inp')
@@ -75,12 +71,11 @@ def test_Todini_Fig2_solA_GPM():
     demand = results.node['demand']
     flowrate = results.link['flowrate']
     todini = wntr.metrics.todini_index(head, pressure, demand, flowrate, wn, 30) # h* = 30 m
-    # print('Todini: Fig2_solA')
-    # print(todini[0])
-
+    
     expected = 0.41
-    error = abs((todini[0] - expected)/expected)
-    assert_less(error, 0.1) # 10% error
+    error = abs(todini[0] - expected)
+    print(todini[0], expected, error)
+    assert_less(error, 0.03) 
 
 def test_Todini_Fig2_solA_CMH():
     inp_file = join(datadir,'Todini_Fig2_solA_CMH.inp')
@@ -99,56 +94,11 @@ def test_Todini_Fig2_solA_CMH():
     demand = results.node['demand']
     flowrate = results.link['flowrate']
     todini = wntr.metrics.todini_index(head, pressure, demand, flowrate, wn, 30) # h* = 30 m
-    # print('Todini: Fig2_solA')
-    # print(todini[0])
-
+    
     expected = 0.41
-    error = abs((todini[0] - expected)/expected)
-    assert_less(error, 0.1) # 10% error
-
-
-#@expected_failure
-def test_Net6():
-    inp_file = join(net6dir,'Net6.inp')
-
-    # Create a water network model for results object
-    wn = wntr.network.WaterNetworkModel()
-    parser = wntr.epanet.InpFile()
-    wn = parser.read(inp_file)
-
-    sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim()
-
-    # Compute todini index
-    head = results.node['head']
-    pressure = results.node['pressure']
-    demand = results.node['demand']
-    flowrate = results.link['flowrate']
-    todini = wntr.metrics.todini_index(head, pressure, demand, flowrate, wn, 21.1) 
-
-    todini = np.array(todini)
-    Tave = np.mean(todini)
-    Tmax = max(todini)
-    Tmin = min(todini)
-
-    # print('Todini: Net6')
-    # print("  average index: " + str(Tave))
-    # print("  max index: " + str(Tmax))
-    # print("  min index: " + str(Tmin))
-    
-    raise SkipTest
-    
-    expected_Taverage = 0.267
-    error = abs((Tave - expected_Taverage)/expected_Taverage)
-    assert_less(error, 0.1) # 10% error
-
-    expected_Tmax = 0.547
-    error = abs((Tmax - expected_Tmax)/expected_Tmax)
-    assert_less(error, 0.1) # 10% error
-
-    expected_Tmin = 0.075
-    error = abs((Tmin - expected_Tmin)/expected_Tmin)
-    assert_less(error, 0.1) # 10% error
+    error = abs(todini[0] - expected)
+    print(todini[0], expected, error)
+    assert_less(error, 0.03) 
 
 if __name__ == '__main__':
-    test_Net6()
+    test_Todini_Fig2_solA_GPM()

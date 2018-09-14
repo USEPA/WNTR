@@ -1,6 +1,5 @@
 from __future__ import print_function
 from nose.tools import *
-from nose import SkipTest
 from os.path import abspath, dirname, join
 import numpy as np
 import pandas as pd
