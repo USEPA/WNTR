@@ -14,9 +14,19 @@ def test_terminal_nodes():
 
     G = wn.get_graph()
     terminal_nodes = G.terminal_nodes()
-    expected_nodes = set(['2', '9'])
-    assert_set_equal(set(terminal_nodes), expected_nodes)
+    expected = set(['2', '9'])
+    assert_set_equal(set(terminal_nodes), expected)
 
+def test_bridges():
+    inp_file = join(net1dir,'Net1.inp')
+    parser = wntr.epanet.InpFile()
+    wn = parser.read(inp_file)
+
+    G = wn.get_graph()
+    bridges = G.bridges()
+    expected = set(['9','10','110'])
+    assert_set_equal(set(bridges), expected)
+    
 def test_Net1_MultiDiGraph():
     inp_file = join(net1dir,'Net1.inp')
     parser = wntr.epanet.InpFile()
@@ -55,4 +65,4 @@ def test_Net1_MultiDiGraph():
     assert_dict_contains_subset(edge, G.adj)
 
 if __name__ == '__main__':
-    test_Net1()
+    test_bridges()

@@ -1,45 +1,18 @@
 from nose.tools import *
-from nose import SkipTest
 from os.path import abspath, dirname, join
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'networks_for_testing')
-net3dir = join(testdir,'..','..','examples','networks')
+netdir = join(testdir,'..','..','examples','networks')
 
-def test_average_expected_demand_net3_node101():
-    inp_file = join(net3dir,'Net3.inp')
-    wn = wntr.network.WaterNetworkModel(inp_file)
-    
-    expected_demand = wntr.metrics.hydraulic.expected_demand(wn)
-    ex_de101 = expected_demand['101'].mean()
-
-    expected = 0.012813608
-    error = abs((ex_de101 - expected)/expected)
-    assert_less(error, 0.01) # 1% error
-
-def test_population_net3():
-    inp_file = join(net3dir,'Net3.inp')
-    wn = wntr.network.WaterNetworkModel(inp_file)
-    pop = wntr.metrics.population(wn)
-    expected = 79000
-    error = abs((pop.sum() - expected)/expected)
-    assert_less(error, 0.01) # 1% error
-    
-def test_population_net6():
-    inp_file = join(net3dir,'Net6.inp')
-    wn = wntr.network.WaterNetworkModel(inp_file)
-    pop = wntr.metrics.population(wn)
-    expected = 152000
-    error = abs((pop.sum() - expected)/expected)
-    assert_less(error, 0.01) # 1% error
 
 """
 Compare the following results to WST impact files using TSG file
 121          SETPOINT      100000          0                86400
 """
 def test_mass_consumed():
-    inp_file = join(net3dir,'Net3.inp')
+    inp_file = join(netdir,'Net3.inp')
 
     wn = wntr.network.WaterNetworkModel(inp_file)
 
@@ -69,7 +42,7 @@ def test_mass_consumed():
 
 def test_volume_consumed():
 
-    inp_file = join(net3dir,'Net3.inp')
+    inp_file = join(netdir,'Net3.inp')
 
     wn = wntr.network.WaterNetworkModel(inp_file)
     
@@ -99,7 +72,7 @@ def test_volume_consumed():
 
 def test_extent_contaminated():
 
-    inp_file = join(net3dir,'Net3.inp')
+    inp_file = join(netdir,'Net3.inp')
 
     wn = wntr.network.WaterNetworkModel(inp_file)
     
@@ -125,9 +98,4 @@ def test_extent_contaminated():
     assert_less(error, 0.01) # 1% error
 
 if __name__ == '__main__':
-    test_average_expected_demand_net3_node101()
-    test_population_net3()
-    test_population_net6()
-    test_mass_consumed()
-    test_volume_consumed()
-    test_extent_contaminated()
+    unittest.main()

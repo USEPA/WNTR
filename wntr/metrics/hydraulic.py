@@ -83,7 +83,7 @@ def average_expected_demand(wn):
     end_time = start_time+lcm
     timestep = wn.options.time.pattern_timestep
         
-    exp_demand = expected_demand(wn, start_time, end_time, timestep)
+    exp_demand = expected_demand(wn, start_time, end_time-timestep, timestep)
     ave_exp_demand = exp_demand.mean(axis=0)
 
     return ave_exp_demand
