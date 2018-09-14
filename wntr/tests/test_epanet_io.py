@@ -25,7 +25,7 @@ class TestWriter(unittest.TestCase):
 
     def test_all(self):
         if sys.version_info.major < 3:
-            raise nose.SkipTest
+            raise nose.SkipTest # skip if python version < 3
         self.assertTrue(self.wn._compare(self.wn2))
 
     def test_pipe_minor_loss(self):
@@ -89,7 +89,7 @@ class TestInpFileWriter(unittest.TestCase):
 
     def test_wn(self):
         if sys.version_info.major < 3:
-            raise nose.SkipTest
+            raise nose.SkipTest # skip if python version < 3
         self.assertTrue(self.wn._compare(self.wn2))
 
     def test_junctions(self):

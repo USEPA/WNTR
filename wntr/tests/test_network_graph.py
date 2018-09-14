@@ -37,49 +37,66 @@ def test_bridges():
     expected = set(['9','10','110'])
     assert_set_equal(set(bridges), expected)
 
-def test_central_point_dominance():
-    inp_file = join(netdir,'Net1.inp')
+def test_diameter():
+    inp_file = join(datadir,'Anytown_ex2.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
+    for pump in wn.pump_name_list[:-1]: # remove 2 of the 3 pumps
+        wn.remove_link(pump)
+    G = wn.get_graph()
+    udG = G.to_undirected()
+    val = nx.diameter(udG)
+    excepted = 7 # Davide Soldi et al. (2015) Procedia Engineering
+    assert_equals(val, excepted)
+
+def test_central_point_dominance():
+    inp_file = join(datadir,'Anytown_ex2.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    for pump in wn.pump_name_list[:-1]: # remove 2 of the 3 pumps
+        wn.remove_link(pump)
     G = wn.get_graph()
 
-    CPD = G.central_point_dominance()
-
-    raise SkipTest
-    
-    assert_less(True, False)
+    val = G.central_point_dominance()
+    expected = 0.23 # Davide Soldi et al. (2015) Procedia Engineering
+    error = abs(expected-val)
+    assert_less(error, 0.01)
 
 def test_spectral_gap():
-    inp_file = join(netdir,'Net1.inp')
+    inp_file = join(datadir,'Anytown_ex2.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
+    for pump in wn.pump_name_list[:-1]: # remove 2 of the 3 pumps
+        wn.remove_link(pump)
     G = wn.get_graph()
 
-    sg = G.spectral_gap()
-
-    raise SkipTest
-    
-    assert_less(True, False)
+    val = G.spectral_gap()
+    expected = 1.5149 # Davide Soldi et al. (2015) Procedia Engineering
+    error = abs(expected-val)
+    assert_less(error,0.01)
 
 def test_algebraic_connectivity():
-    inp_file = join(netdir,'Net1.inp')
+    inp_file = join(datadir,'Anytown_ex2.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
+    for pump in wn.pump_name_list[:-1]: # remove 2 of the 3 pumps
+        wn.remove_link(pump)
     G = wn.get_graph()
     
-    AC = G.algebraic_connectivity()
-    
+    val = G.algebraic_connectivity()
+    expected = 0.1708 # Davide Soldi et al. (2015) Procedia Engineering
+    error = abs(expected-val)
     raise SkipTest
-    
-    assert_less(True, False)
+    assert_less(error,0.01)
 
 def test_crit_ratio_defrag():
-    inp_file = join(netdir,'Net1.inp')
+    inp_file = join(datadir,'Anytown_ex2.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
+    for pump in wn.pump_name_list[:-1]: # remove 2 of the 3 pumps
+        wn.remove_link(pump)
     G = wn.get_graph()
     
-    CRD = G.critical_ratio_defrag()
-
+    val = G.critical_ratio_defrag()
+    expected = 0.63 # Pandit et al. (2012) Critical Infrastucture Symposium
+    error = abs(expected-val)
     raise SkipTest
-    
-    assert_less(True, False)
+    assert_less(error,0.01)
     
 def test_Net1_MultiDiGraph():
     inp_file = join(netdir,'Net1.inp')
@@ -119,4 +136,4 @@ def test_Net1_MultiDiGraph():
     assert_dict_contains_subset(edge, G.adj)
 
 if __name__ == '__main__':
-    test_central_point_dominance()
+    test_diameter()

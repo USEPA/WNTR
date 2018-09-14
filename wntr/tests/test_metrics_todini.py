@@ -1,13 +1,10 @@
 from __future__ import print_function
 from nose.tools import *
-from nose import SkipTest
 from os.path import abspath, dirname, join
-import numpy as np
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'networks_for_testing')
-net6dir = join(testdir,'..','..','examples','networks')
 
 
 def test_Todini_Fig2_optCost_GPM():
