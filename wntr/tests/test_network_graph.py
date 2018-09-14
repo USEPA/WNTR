@@ -1,34 +1,88 @@
 from nose.tools import *
+from nose import SkipTest
 from os.path import abspath, dirname, join
 import numpy as np
+import networkx as nx
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'networks_for_testing')
-net1dir = join(testdir,'..','..','examples','networks')
+netdir = join(testdir,'..','..','examples','networks')
+
+def test_weight_graph():
+    inp_file = join(netdir,'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    G = wn.get_graph()
+    
+    G.weight_graph(wn.query_node_attribute('elevation'), wn.query_link_attribute('length'))
+    
+    assert_equal(G.node['111']['weight'], 10*0.3048)
+    assert_equal(G.edge['159']['161']['177']['weight'], 2000*0.3048)
 
 def test_terminal_nodes():
-    inp_file = join(net1dir,'Net1.inp')
-    parser = wntr.epanet.InpFile()
-    wn = parser.read(inp_file)
-
+    inp_file = join(netdir,'Net1.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
     G = wn.get_graph()
+    
     terminal_nodes = G.terminal_nodes()
     expected = set(['2', '9'])
     assert_set_equal(set(terminal_nodes), expected)
 
 def test_bridges():
-    inp_file = join(net1dir,'Net1.inp')
-    parser = wntr.epanet.InpFile()
-    wn = parser.read(inp_file)
-
+    inp_file = join(netdir,'Net1.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
     G = wn.get_graph()
+    
     bridges = G.bridges()
     expected = set(['9','10','110'])
     assert_set_equal(set(bridges), expected)
+
+def test_central_point_dominance():
+    inp_file = join(netdir,'Net1.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    G = wn.get_graph()
+
+    CPD = G.central_point_dominance()
+
+    raise SkipTest
+    
+    assert_less(True, False)
+
+def test_spectral_gap():
+    inp_file = join(netdir,'Net1.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    G = wn.get_graph()
+
+    sg = G.spectral_gap()
+
+    raise SkipTest
+    
+    assert_less(True, False)
+
+def test_algebraic_connectivity():
+    inp_file = join(netdir,'Net1.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    G = wn.get_graph()
+    
+    AC = G.algebraic_connectivity()
+    
+    raise SkipTest
+    
+    assert_less(True, False)
+
+def test_crit_ratio_defrag():
+    inp_file = join(netdir,'Net1.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    G = wn.get_graph()
+    
+    CRD = G.critical_ratio_defrag()
+
+    raise SkipTest
+    
+    assert_less(True, False)
     
 def test_Net1_MultiDiGraph():
-    inp_file = join(net1dir,'Net1.inp')
+    inp_file = join(netdir,'Net1.inp')
     parser = wntr.epanet.InpFile()
     wn = parser.read(inp_file)
     G = wn.get_graph()
@@ -65,4 +119,4 @@ def test_Net1_MultiDiGraph():
     assert_dict_contains_subset(edge, G.adj)
 
 if __name__ == '__main__':
-    test_bridges()
+    test_central_point_dominance()
