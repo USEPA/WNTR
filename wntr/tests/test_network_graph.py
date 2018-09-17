@@ -38,7 +38,7 @@ def test_bridges():
     assert_set_equal(set(bridges), expected)
 
 def test_diameter():
-    inp_file = join(datadir,'Anytown_ex2.inp')
+    inp_file = join(datadir,'Anytown.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
     for pump in wn.pump_name_list[:-1]: # remove 2 of the 3 pumps
         wn.remove_link(pump)
@@ -49,7 +49,7 @@ def test_diameter():
     assert_equals(val, excepted)
 
 def test_central_point_dominance():
-    inp_file = join(datadir,'Anytown_ex2.inp')
+    inp_file = join(datadir,'Anytown.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
     for pump in wn.pump_name_list[:-1]: # remove 2 of the 3 pumps
         wn.remove_link(pump)
@@ -61,7 +61,7 @@ def test_central_point_dominance():
     assert_less(error, 0.01)
 
 def test_spectral_gap():
-    inp_file = join(datadir,'Anytown_ex2.inp')
+    inp_file = join(datadir,'Anytown.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
     for pump in wn.pump_name_list[:-1]: # remove 2 of the 3 pumps
         wn.remove_link(pump)
@@ -73,7 +73,7 @@ def test_spectral_gap():
     assert_less(error,0.01)
 
 def test_algebraic_connectivity():
-    inp_file = join(datadir,'Anytown_ex2.inp')
+    inp_file = join(datadir,'Anytown.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
     for pump in wn.pump_name_list[:-1]: # remove 2 of the 3 pumps
         wn.remove_link(pump)
@@ -86,7 +86,7 @@ def test_algebraic_connectivity():
     assert_less(error,0.01)
 
 def test_crit_ratio_defrag():
-    inp_file = join(datadir,'Anytown_ex2.inp')
+    inp_file = join(datadir,'Anytown.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
     for pump in wn.pump_name_list[:-1]: # remove 2 of the 3 pumps
         wn.remove_link(pump)
