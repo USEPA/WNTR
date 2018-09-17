@@ -100,8 +100,7 @@ def test_crit_ratio_defrag():
     
 def test_Net1_MultiDiGraph():
     inp_file = join(netdir,'Net1.inp')
-    parser = wntr.epanet.InpFile()
-    wn = parser.read(inp_file)
+    wn = wntr.network.WaterNetworkModel(inp_file)
     G = wn.get_graph()
 
     node = {'11': {'pos': (30.0, 70.0),'type': 'Junction'},
