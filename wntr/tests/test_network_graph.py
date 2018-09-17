@@ -17,7 +17,7 @@ def test_weight_graph():
     G.weight_graph(wn.query_node_attribute('elevation'), wn.query_link_attribute('length'))
     
     assert_equal(G.node['111']['weight'], 10*0.3048)
-    assert_equal(G.edge['159']['161']['177']['weight'], 2000*0.3048)
+    assert_equal(G['159']['161']['177']['weight'], 2000*0.3048)
 
 def test_terminal_nodes():
     inp_file = join(netdir,'Net1.inp')
@@ -136,4 +136,4 @@ def test_Net1_MultiDiGraph():
     assert_dict_contains_subset(edge, G.adj)
 
 if __name__ == '__main__':
-    test_diameter()
+    test_weight_graph()
