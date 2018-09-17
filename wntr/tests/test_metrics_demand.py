@@ -1,3 +1,4 @@
+from __future__ import division
 from nose.tools import *
 from os.path import abspath, dirname, join
 import pandas as pd
