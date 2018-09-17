@@ -25,7 +25,7 @@ def test_Todini_Fig2_optCost_GPM():
 
     expected = 0.22
     error = abs(todini[0] - expected)
-    print(todini[0], expected, error)
+    #print(todini[0], expected, error)
     assert_less(error, 0.01) 
 
 def test_Todini_Fig2_optCost_CMH():
@@ -48,7 +48,7 @@ def test_Todini_Fig2_optCost_CMH():
 
     expected = 0.22
     error = abs(todini[0] - expected)
-    print(todini[0], expected, error)
+    #print(todini[0], expected, error)
     assert_less(error, 0.01) 
 
 def test_Todini_Fig2_solA_GPM():
@@ -71,7 +71,7 @@ def test_Todini_Fig2_solA_GPM():
     
     expected = 0.41
     error = abs(todini[0] - expected)
-    print(todini[0], expected, error)
+    #print(todini[0], expected, error)
     assert_less(error, 0.03) 
 
 def test_Todini_Fig2_solA_CMH():
@@ -94,7 +94,7 @@ def test_Todini_Fig2_solA_CMH():
     
     expected = 0.41
     error = abs(todini[0] - expected)
-    print(todini[0], expected, error)
+    #print(todini[0], expected, error)
     assert_less(error, 0.03) 
 
 if __name__ == '__main__':
