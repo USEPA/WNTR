@@ -22,66 +22,45 @@ class Param;
 class Float;
 class Expression;
 class Operator;
-class SummationOperator;
+class BinaryOperator;
+class AddOperator;
+class SubtractOperator;
 class MultiplyOperator;
 class DivideOperator;
 class PowerOperator;
-class SinOperator;
-class CosOperator;
-class TanOperator;
-class AsinOperator;
-class AcosOperator;
-class AtanOperator;
-class ExpOperator;
-class LogOperator;
-
-
-typedef std::unordered_map<std::shared_ptr<Node>, double> NodeDMap;
-typedef std::unordered_map<std::shared_ptr<Node>, bool> NodeBMap;
-typedef std::unordered_map<std::shared_ptr<Node>, std::shared_ptr<ExpressionBase> > NodeEMap;
-
-
-std::unorderd_set<std::string> leaf_types;
-leaf_types.insert("Var");
-leaf_types.insert("Param");
-leaf_types.insert("Float");
 
 
 std::shared_ptr<Var> create_var(double value=0.0, double lb=-1.0e100, double ub=1.0e100);
 std::shared_ptr<Param> create_param(double value=0.0);
+std::shared_ptr<Float> create_float(double vlaue=0.0);
 
 
-class Node: public std::enable_shared_from_this<Node>
+class Node
 {
 public:
   Node() = default;
   virtual ~Node() = default;
-  virtual std::string get_type() = 0;
+  double value;
 };
 
 
-class ExpressionBase: public Node
+class ExpressionBase: public Node, public std::enable_shared_from_this<ExpressionBase>
 {
 public:
   ExpressionBase() = default;
   virtual ~ExpressionBase() = default;
-  virtual std::shared_ptr<std::vector<std::shared_ptr<Operator> > > get_operators();
-  virtual std::sahred_ptr<std::vector<std::shared_ptr<Var> > > get_vars();
-  virtual std::string __str__() = 0;
 
-  std::shared_ptr<ExpressionBase> operator+(ExpressionBase&);
-  std::shared_ptr<ExpressionBase> operator-(ExpressionBase&);
-  std::shared_ptr<ExpressionBase> operator*(ExpressionBase&);
-  std::shared_ptr<ExpressionBase> operator/(ExpressionBase&);
+  virtual std::shared_ptr<ExpressionBase> operator+(ExpressionBase&) = 0;
+  virtual std::shared_ptr<ExpressionBase> operator-(ExpressionBase&) = 0;
+  virtual std::shared_ptr<ExpressionBase> operator*(ExpressionBase&) = 0;
+  virtual std::shared_ptr<ExpressionBase> operator/(ExpressionBase&) = 0;
+  virtual std::shared_ptr<ExpressionBase> __pow__(ExpressionBase&) = 0;
   std::shared_ptr<ExpressionBase> operator-();
-  std::shared_ptr<ExpressionBase> __pow__(ExpressionBase&);
-
   std::shared_ptr<ExpressionBase> operator+(double);
   std::shared_ptr<ExpressionBase> operator-(double);
   std::shared_ptr<ExpressionBase> operator*(double);
   std::shared_ptr<ExpressionBase> operator/(double);
   std::shared_ptr<ExpressionBase> __pow__(double);
-
   std::shared_ptr<ExpressionBase> __radd__(double);
   std::shared_ptr<ExpressionBase> __rsub__(double);
   std::shared_ptr<ExpressionBase> __rmul__(double);
@@ -89,53 +68,77 @@ public:
   std::shared_ptr<ExpressionBase> __rtruediv__(double);
   std::shared_ptr<ExpressionBase> __rpow__(double);
 
+  virtual std::shared_ptr<std::vector<std::shared_ptr<Operator> > > get_operators();
+  virtual std::shared_ptr<Expression> shallow_copy();
+  virtual int get_num_operators();
+  virtual bool is_leaf();
+  virtual bool is_var();
+  virtual bool is_param();
+  virtual bool is_float();
+  virtual bool is_expr();
+  virtual std::string __str__() = 0;
   virtual double evaluate() = 0;
-  virtual double ad(Var&, bool new_eval=true) = 0;
-  virtual double ad2(Var&, Var&, bool new_eval=true) = 0;
-  virtual bool has_ad(Var&) = 0;
-  virtual bool has_ad2(Var&, Var&) = 0;
-  virtual std::shared_ptr<ExpressionBase> sd(Var&, bool new_eval=true) = 0;
-
-  virtual std::shared_ptr<ExpressionBase> add_leaf(ExpressionBase&, double coef) = 0;
-  virtual std::shared_ptr<ExpressionBase> add_expr(ExpressionBase&, double coef) = 0;
+  virtual std::shared_ptr<Node> get_last_node();
 };
 
 
-class Operator: public Node
+class Leaf: public ExpressionBase
 {
 public:
-  Operator() = default;
-  virtual ~Operator() = default;
-  virtual void evaluate(NodeDMap &val_map) = 0;
-  virtual void ad(Var&, NodeDMap &val_map, NodeDMap &der_map, bool new_eval=true) = 0;
-  virtual void ad2(Var&, Var&, NodeDMap &val_map, NodeDMap &der_n1_map,
-		   NodeDMap &der_n2_map, NodeDMap &der2_map, bool new_eval=true) = 0;
-  virtual void has_ad(Var&, NodeBMap &der_map) = 0;
-  virtual void has_ad2(Var&, Var&, NodeBMap &der_n1_map, NodeBMap &der_n2_map,
-		       NodeBMap &der2_map) = 0;
-  virtual void sd(Var&, NodeEMap &val_map, NodeEMap &der_map, bool new_eval=true) = 0;
+  Leaf() = default;
+  virtual ~Leaf() = default;
+
+  virtual std::shared_ptr<ExpressionBase> operator+(ExpressionBase&) override;
+  virtual std::shared_ptr<ExpressionBase> operator-(ExpressionBase&) override;
+  virtual std::shared_ptr<ExpressionBase> operator*(ExpressionBase&) override;
+  virtual std::shared_ptr<ExpressionBase> operator/(ExpressionBase&) override;
+  virtual std::shared_ptr<ExpressionBase> __pow__(ExpressionBase&) override;
+
+  bool is_leaf() override;
+  double evaluate() override;
 };
 
 
-class Var: public ExpressionBase
+class Var: public Leaf
 {
 public:
   Var() = default;
   ~Var() = default;
   std::string name;
-  double value;
   double lb;
   double ub;
 
-  virtual std::sahred_ptr<std::vector<std::shared_ptr<Var> > > &get_vars() override;
+  bool is_var() override;
   std::string __str__() override;
+};
 
-  double evaluate() override;
-  double ad(Var& bool new_eval=true) override;
-  double ad2(Var&, Var&, bool new_eval=true) override;
-  bool has_ad(Var&) override;
-  bool has_ad2(Var&, Var&) override;
-  std::shared_ptr<ExpressionBase> sd(Var&, bool new_eval=true) override;
+
+class Float: public Leaf
+{
+public:
+  Float() = default;
+  ~Float() = default;
+
+  std::shared_ptr<ExpressionBase> operator+(ExpressionBase&) override;
+  std::shared_ptr<ExpressionBase> operator-(ExpressionBase&) override;
+  std::shared_ptr<ExpressionBase> operator*(ExpressionBase&) override;
+  std::shared_ptr<ExpressionBase> operator/(ExpressionBase&) override;
+  std::shared_ptr<ExpressionBase> __pow__(ExpressionBase&) override;
+  
+  bool is_float() override;
+  std::string __str__() override;
+};
+
+
+class Param: public Leaf
+{
+public:
+  Param() = default;
+  ~Param() = default;
+  std::string name;
+
+  std::string __str__() override;
+  bool is_param() override;
 };
 
 
@@ -145,17 +148,82 @@ public:
   Expression() = default;
   ~Expression() = default;
   std::shared_ptr<std::vector<std::shared_ptr<Operator> > > operators = std::make_shared<std::vector<std::shared_ptr<Operator> > >();
-  std::shared_ptr<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > > sparsity = std::make_shared<std::unordered_map<std::shared_ptr<Node>, std::vector<int> > >();
+  int num_operators = 0;
 
-  void update_sparsity(std::shared_ptr<Node>, std::shared_ptr<Operator>);
+  std::shared_ptr<ExpressionBase> operator+(ExpressionBase&) override;
+  std::shared_ptr<ExpressionBase> operator-(ExpressionBase&) override;
+  std::shared_ptr<ExpressionBase> operator*(ExpressionBase&) override;
+  std::shared_ptr<ExpressionBase> operator/(ExpressionBase&) override;
+  std::shared_ptr<ExpressionBase> __pow__(ExpressionBase&) override;
   
-  virtual std::sahred_ptr<std::vector<std::shared_ptr<Var> > > &get_vars() override;
+  std::shared_ptr<std::vector<std::shared_ptr<Operator> > > get_operators() override;
+  std::shared_ptr<Expression> shallow_copy() override;
+  int get_num_operators() override;
+  bool is_expr() override;
+  std::shared_ptr<Node> get_last_node() override;
   std::string __str__() override;
+  void add_operator(std::shared_ptr<Operator>);
 
   double evaluate() override;
-  double ad(Var& bool new_eval=true) override;
-  double ad2(Var&, Var&, bool new_eval=true) override;
-  bool has_ad(Var&) override;
-  bool has_ad2(Var&, Var&) override;
-  std::shared_ptr<ExpressionBase> sd(Var&, bool new_eval=true) override;
 };
+
+
+class Operator: public Node
+{
+public:
+  Operator() = default;
+  virtual ~Operator() = default;
+  virtual void evaluate() = 0;
+};
+
+
+class BinaryOperator: public Operator
+{
+public:
+  BinaryOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): arg1(_arg1), arg2(_arg2) {}
+  virtual ~BinaryOperator() = default;
+  std::shared_ptr<Node> arg1;
+  std::shared_ptr<Node> arg2;
+};
+
+
+class AddOperator: public BinaryOperator
+{
+public:
+  AddOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
+  void evaluate() override;
+};
+
+
+class SubtractOperator: public BinaryOperator
+{
+public:
+  SubtractOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
+  void evaluate() override;
+};
+
+
+class MultiplyOperator: public BinaryOperator
+{
+public:
+  MultiplyOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
+  void evaluate() override;
+};
+
+
+class DivideOperator: public BinaryOperator
+{
+public:
+  DivideOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
+  void evaluate() override;
+};
+
+
+class PowerOperator: public BinaryOperator
+{
+public:
+  PowerOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
+  void evaluate() override;
+};
+
+
