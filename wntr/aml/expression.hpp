@@ -30,8 +30,8 @@ class DivideOperator;
 class PowerOperator;
 
 
-std::shared_ptr<Var> create_var(double value=0.0, double lb=-1.0e100, double ub=1.0e100);
-std::shared_ptr<Param> create_param(double value=0.0);
+std::shared_ptr<Var> create_var(double value=0.0, double lb=-1.0e100, double ub=1.0e100, std::string name="");
+std::shared_ptr<Param> create_param(double value=0.0, std::string name="");
 std::shared_ptr<Float> create_float(double vlaue=0.0);
 
 
@@ -41,6 +41,11 @@ public:
   Node() = default;
   virtual ~Node() = default;
   double value;
+  virtual bool is_leaf();
+  virtual bool is_var();
+  virtual bool is_param();
+  virtual bool is_float();
+  virtual bool is_expr();
 };
 
 
@@ -71,14 +76,11 @@ public:
   virtual std::shared_ptr<std::vector<std::shared_ptr<Operator> > > get_operators();
   virtual std::shared_ptr<Expression> shallow_copy();
   virtual int get_num_operators();
-  virtual bool is_leaf();
-  virtual bool is_var();
-  virtual bool is_param();
-  virtual bool is_float();
-  virtual bool is_expr();
   virtual std::string __str__() = 0;
   virtual double evaluate() = 0;
   virtual std::shared_ptr<Node> get_last_node();
+  virtual std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_vars();
+  virtual std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_leaves();
 };
 
 
@@ -110,6 +112,7 @@ public:
 
   bool is_var() override;
   std::string __str__() override;
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_vars() override;
 };
 
 
@@ -163,8 +166,16 @@ public:
   std::shared_ptr<Node> get_last_node() override;
   std::string __str__() override;
   void add_operator(std::shared_ptr<Operator>);
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_vars() override;
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_leaves() override;
 
   double evaluate() override;
+
+private:
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > leaves = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
+  bool leaves_collected = false;
+  void collect_leaves();
 };
 
 
@@ -174,6 +185,7 @@ public:
   Operator() = default;
   virtual ~Operator() = default;
   virtual void evaluate() = 0;
+  virtual std::shared_ptr<std::vector<std::shared_ptr<Node> > > get_args() = 0;
 };
 
 
@@ -184,6 +196,7 @@ public:
   virtual ~BinaryOperator() = default;
   std::shared_ptr<Node> arg1;
   std::shared_ptr<Node> arg2;
+  std::shared_ptr<std::vector<std::shared_ptr<Node> > > get_args();
 };
 
 

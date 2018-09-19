@@ -1,20 +1,22 @@
 #include "expression.hpp"
 
 
-std::shared_ptr<Var> create_var(double value, double lb, double ub)
+std::shared_ptr<Var> create_var(double value, double lb, double ub, std::string name)
 {
   std::shared_ptr<Var> v = std::make_shared<Var>();
   v->value = value;
   v->lb = lb;
   v->ub = ub;
+  v->name = name;
   return v;
 }
 
 
-std::shared_ptr<Param> create_param(double value)
+std::shared_ptr<Param> create_param(double value, std::string name)
 {
   std::shared_ptr<Param> p = std::make_shared<Param>();
   p->value = value;
+  p->name = name;
   return p;
 }
 
@@ -534,31 +536,31 @@ int ExpressionBase::get_num_operators()
 }
 
 
-bool ExpressionBase::is_leaf()
+bool Node::is_leaf()
 {
   return false;
 }
 
 
-bool ExpressionBase::is_var()
+bool Node::is_var()
 {
   return false;
 }
 
 
-bool ExpressionBase::is_param()
+bool Node::is_param()
 {
   return false;
 }
 
 
-bool ExpressionBase::is_float()
+bool Node::is_float()
 {
   return false;
 }
 
 
-bool ExpressionBase::is_expr()
+bool Node::is_expr()
 {
   return false;
 }
@@ -567,6 +569,21 @@ bool ExpressionBase::is_expr()
 std::shared_ptr<Node> ExpressionBase::get_last_node()
 {
   return shared_from_this();
+}
+
+
+std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > ExpressionBase::get_vars()
+{
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
+  return vars;
+}
+
+
+std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > ExpressionBase::get_leaves()
+{
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > leaves = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
+  leaves->insert(shared_from_this());
+  return leaves;
 }
 
 
@@ -591,6 +608,14 @@ bool Var::is_var()
 std::string Var::__str__()
 {
   return name;
+}
+
+
+std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Var::get_vars()
+{
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
+  vars->insert(shared_from_this());
+  return vars;
 }
 
 
@@ -663,6 +688,60 @@ void Expression::add_operator(std::shared_ptr<Operator> oper)
 {
   operators->push_back(oper);
   num_operators += 1;
+}
+
+
+void Expression::collect_leaves()
+{
+  assert (!leaves_collected);
+  leaves_collected = true;
+  std::shared_ptr<Operator> oper;
+  std::shared_ptr<std::vector<std::shared_ptr<Node> > > args;
+  for (int i=0; i<num_operators; ++i)
+    {
+      oper = (*operators)[i];
+      args = oper->get_args();
+      for (std::shared_ptr<Node> &_arg : *args)
+	{
+	  if (_arg->is_leaf())
+	    {
+	      leaves->insert(std::dynamic_pointer_cast<ExpressionBase>(_arg));
+	      if (_arg->is_var())
+		{
+		  vars->insert(std::dynamic_pointer_cast<ExpressionBase>(_arg));
+		}
+	    }
+	}
+    }
+}
+
+
+std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Expression::get_vars()
+{
+  if (!leaves_collected)
+    {
+      collect_leaves();
+    }
+  return vars;
+}
+
+
+std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Expression::get_leaves()
+{
+  if (!leaves_collected)
+    {
+      collect_leaves();
+    }
+  return leaves;
+}
+
+
+std::shared_ptr<std::vector<std::shared_ptr<Node> > > BinaryOperator::get_args()
+{
+  std::shared_ptr<std::vector<std::shared_ptr<Node> > > args = std::make_shared<std::vector<std::shared_ptr<Node> > >();
+  args->push_back(arg1);
+  args->push_back(arg2);
+  return args;
 }
 
 
