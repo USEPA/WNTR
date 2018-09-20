@@ -785,3 +785,31 @@ void PowerOperator::evaluate()
 }
 
 
+int AddOperator::get_operator_type()
+{
+  return ADD;
+}
+
+
+int SubtractOperator::get_operator_type()
+{
+  return SUBTRACT;
+}
+
+
+int MultiplyOperator::get_operator_type()
+{
+  return MULTIPLY;
+}
+
+
+int DivideOperator::get_operator_type()
+{
+  return DIVIDE;
+}
+
+
+int PowerOperator::get_operator_type()
+{
+  return POWER;
+}
