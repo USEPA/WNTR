@@ -47,56 +47,56 @@ extension_modules = list()
 
 if use_swig:
     aml_core_ext = Extension("wntr.aml._aml_core",
-                             sources=[aml_core_i, expression_cxx, component_cxx, wntr_model_cxx],
+                             sources=[aml_core_i, expression_cxx],#, component_cxx, wntr_model_cxx],
                              language="c++",
                              extra_compile_args=["-std=c++11"],
                              include_dirs=[numpy_include, src_files],
                              library_dirs=[],
                              libraries=[],
                              swig_opts = ['-c++'])
-    network_isolation_ext = Extension("wntr.sim.network_isolation._network_isolation",
-                                      sources=[network_isolation_i, network_isolation_cxx],
-                                      language="c++",
-                                      include_dirs=[numpy_include, network_isolation_dir],
-                                      extra_compile_args=["-std=c++11"],
-                                      swig_opts=['-c++'])
-else:
-    aml_core_ext = Extension("wntr.aml._aml_core",
-                             sources=[expression_cxx, component_cxx, wntr_model_cxx, aml_core_wrap_cxx],
-                             language="c++",
-                             extra_compile_args=["-std=c++11"],
-                             include_dirs=[numpy_include, src_files],
-                             library_dirs=[],
-                             libraries=[])
-    network_isolation_ext = Extension("wntr.sim.network_isolation._network_isolation",
-                                      sources=[network_isolation_cxx, network_isolation_wrap_cxx],
-                                      language="c++",
-                                      include_dirs=[numpy_include, network_isolation_dir],
-                                      extra_compile_args=["-std=c++11"])
+#    network_isolation_ext = Extension("wntr.sim.network_isolation._network_isolation",
+#                                      sources=[network_isolation_i, network_isolation_cxx],
+#                                      language="c++",
+#                                      include_dirs=[numpy_include, network_isolation_dir],
+#                                      extra_compile_args=["-std=c++11"],
+#                                      swig_opts=['-c++'])
+#else:
+#    aml_core_ext = Extension("wntr.aml._aml_core",
+#                             sources=[expression_cxx, component_cxx, wntr_model_cxx, aml_core_wrap_cxx],
+#                             language="c++",
+#                             extra_compile_args=["-std=c++11"],
+#                             include_dirs=[numpy_include, src_files],
+#                             library_dirs=[],
+#                             libraries=[])
+#    network_isolation_ext = Extension("wntr.sim.network_isolation._network_isolation",
+#                                      sources=[network_isolation_cxx, network_isolation_wrap_cxx],
+#                                      language="c++",
+#                                      include_dirs=[numpy_include, network_isolation_dir],
+#                                      extra_compile_args=["-std=c++11"])
 
     
 extension_modules.append(aml_core_ext)
-extension_modules.append(network_isolation_ext)
+#extension_modules.append(network_isolation_ext)
 
-if ipopt_available:
-    if use_swig:
-        ipopt_model_ext = Extension("wntr.aml._ipopt_model",
-                                    sources=[ipopt_model_i, ipopt_model_cxx, aml_tnlp_cxx],
-                                    language="c++",
-                                    extra_compile_args=["-std=c++11"],
-                                    include_dirs=[numpy_include, src_files, ipopt_include],
-                                    library_dirs=[ipopt_lib],
-                                    libraries=[os.path.join(ipopt_lib, 'ipopt')],
-                                    swig_opts=['-c++'])
-    else:
-        ipopt_model_ext = Extension("wntr.aml._ipopt_model",
-                                    sources=[ipopt_model_cxx, aml_tnlp_cxx, ipopt_model_wrap_cxx],
-                                    language="c++",
-                                    extra_compile_args=["-std=c++11"],
-                                    include_dirs=[numpy_include, src_files, ipopt_include],
-                                    library_dirs=[ipopt_lib],
-                                    libraries=[os.path.join(ipopt_lib, 'ipopt')])
-    extension_modules.append(ipopt_model_ext)
+#if ipopt_available:
+#    if use_swig:
+#        ipopt_model_ext = Extension("wntr.aml._ipopt_model",
+#                                    sources=[ipopt_model_i, ipopt_model_cxx, aml_tnlp_cxx],
+#                                    language="c++",
+#                                    extra_compile_args=["-std=c++11"],
+#                                    include_dirs=[numpy_include, src_files, ipopt_include],
+#                                    library_dirs=[ipopt_lib],
+#                                    libraries=[os.path.join(ipopt_lib, 'ipopt')],
+#                                    swig_opts=['-c++'])
+#    else:
+#        ipopt_model_ext = Extension("wntr.aml._ipopt_model",
+#                                    sources=[ipopt_model_cxx, aml_tnlp_cxx, ipopt_model_wrap_cxx],
+#                                    language="c++",
+#                                    extra_compile_args=["-std=c++11"],
+#                                    include_dirs=[numpy_include, src_files, ipopt_include],
+#                                    library_dirs=[ipopt_lib],
+#                                    libraries=[os.path.join(ipopt_lib, 'ipopt')])
+#    extension_modules.append(ipopt_model_ext)
 
 DISTNAME = 'wntr'
 VERSION = '0.1.6'
