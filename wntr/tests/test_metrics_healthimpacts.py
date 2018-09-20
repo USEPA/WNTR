@@ -98,4 +98,4 @@ def test_extent_contaminated():
     assert_less(error, 0.01) # 1% error
 
 if __name__ == '__main__':
-    unittest.main()
+    test_extent_contaminated()

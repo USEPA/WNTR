@@ -83,4 +83,4 @@ def test_layout8():
     assert_less(error, 0.05) # 5% error
 
 if __name__ == '__main__':
-    unittest.main()
+    test_layout8()
