@@ -691,10 +691,30 @@ void Expression::add_operator(std::shared_ptr<Operator> oper)
 }
 
 
-void Expression::collect_leaves()
+std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Expression::get_vars()
 {
-  assert (!leaves_collected);
-  leaves_collected = true;
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
+  std::shared_ptr<Operator> oper;
+  std::shared_ptr<std::vector<std::shared_ptr<Node> > > args;
+  for (int i=0; i<num_operators; ++i)
+    {
+      oper = (*operators)[i];
+      args = oper->get_args();
+      for (std::shared_ptr<Node> &_arg : *args)
+	{
+	  if (_arg->is_var())
+	    {
+	      vars->insert(std::dynamic_pointer_cast<ExpressionBase>(_arg));
+	    }
+	}
+    }
+  return vars;
+}
+
+
+std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Expression::get_leaves()
+{
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > leaves = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
   std::shared_ptr<Operator> oper;
   std::shared_ptr<std::vector<std::shared_ptr<Node> > > args;
   for (int i=0; i<num_operators; ++i)
@@ -706,31 +726,8 @@ void Expression::collect_leaves()
 	  if (_arg->is_leaf())
 	    {
 	      leaves->insert(std::dynamic_pointer_cast<ExpressionBase>(_arg));
-	      if (_arg->is_var())
-		{
-		  vars->insert(std::dynamic_pointer_cast<ExpressionBase>(_arg));
-		}
 	    }
 	}
-    }
-}
-
-
-std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Expression::get_vars()
-{
-  if (!leaves_collected)
-    {
-      collect_leaves();
-    }
-  return vars;
-}
-
-
-std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Expression::get_leaves()
-{
-  if (!leaves_collected)
-    {
-      collect_leaves();
     }
   return leaves;
 }

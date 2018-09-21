@@ -178,12 +178,6 @@ public:
   std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_leaves() override;
 
   double evaluate() override;
-
-private:
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > leaves = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
-  bool leaves_collected = false;
-  void collect_leaves();
 };
 
 
