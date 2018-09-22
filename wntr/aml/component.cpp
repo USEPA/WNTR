@@ -1,37 +1,46 @@
 #include "component.hpp"
 
 
-std::vector<std::shared_ptr<Var> > Component::py_get_vars()
+std::unordered_set<std::shared_ptr<ExpressionBase> > Component::py_get_vars()
 {
   return *(get_vars());
 }
 
 
-std::shared_ptr<std::vector<std::shared_ptr<Var> > > Objective::get_vars()
+std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Objective::get_vars()
 {
-  return vars;
+  return expr->get_vars();
 }
 
 
-std::shared_ptr<std::vector<std::shared_ptr<Var> > > Constraint::get_vars()
+std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Constraint::get_vars()
 {
-  return vars;
+  return expr->get_vars();
 }
 
 
-std::shared_ptr<std::vector<std::shared_ptr<Var> > > ConditionalConstraint::get_vars()
+std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > ConditionalConstraint::get_vars()
 {
-  return vars;
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > all_vars;
+  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > e_vars;
+  for (auto &e : exprs)
+    {
+      e_vars = e->get_vars();
+      for (auto &v : (*e_vars))
+	{
+	  all_vars->insert(v);
+	}
+    }
+  return all_vars;
 }
 
 
-std::shared_ptr<Constraint> create_constraint(std::shared_ptr<Node> expr, double lb, double ub)
+std::shared_ptr<Constraint> create_constraint(std::shared_ptr<ExpressionBase> expr, double lb, double ub)
 {
   std::shared_ptr<Constraint> c = std::make_shared<Constraint>();
   c->expr = expr;
   c->lb = lb;
   c->ub = ub;
-  std::copy(expr->get_vars()->begin(), expr->get_vars()->end(), back_inserter(*(c->get_vars())));
   return c;
 }
 
@@ -45,28 +54,27 @@ std::shared_ptr<ConditionalConstraint> create_conditional_constraint(double lb, 
 }
 
 
-std::shared_ptr<Objective> create_objective(std::shared_ptr<Node> n)
+std::shared_ptr<Objective> create_objective(std::shared_ptr<ExpressionBase> n)
 {
   std::shared_ptr<Objective> o = std::make_shared<Objective>();
   o->expr = n;
-  std::copy(n->get_vars()->begin(), n->get_vars()->end(), back_inserter(*(o->get_vars())));
   return o;
 }
 
 
-std::string Constraint::_print()
+std::string Constraint::__str__()
 {
-  return expr->_print();
+  return expr->__str__();
 }
 
 
-std::string Objective::_print()
+std::string Objective::__str__()
 {
-  return expr->_print();
+  return expr->__str__();
 }
 
 
-std::string ConditionalConstraint::_print()
+std::string ConditionalConstraint::__str__()
 {
   std::string s = "";
   auto condition_iterator = condition_exprs.begin();
@@ -83,10 +91,10 @@ std::string ConditionalConstraint::_print()
         {
 	  s += "elif ";
         }
-      s += (*condition_iterator)->_print();
+      s += (*condition_iterator)->__str__();
       s += " <= 0:\n";
       s += "\t";
-      s += (*expr_iterator)->_print();
+      s += (*expr_iterator)->__str__();
       s += "\n";
       ++condition_iterator;
       ++expr_iterator;
@@ -94,7 +102,7 @@ std::string ConditionalConstraint::_print()
     }
   s += "else: \n";
   s += "\t";
-  s += (*expr_iterator)->_print();
+  s += (*expr_iterator)->__str__();
   s += "\n";
   return s;
 }
@@ -102,63 +110,26 @@ std::string ConditionalConstraint::_print()
 
 double Constraint::evaluate()
 {
-  value = expr->evaluate();
-  return value;
-}
-
-
-double Constraint::ad(Var &n, bool new_eval)
-{
-  return expr->ad(n, new_eval);
-}
-
-
-double Constraint::ad2(Var &n1, Var &n2, bool new_eval)
-{
-  return expr->ad2(n1, n2, new_eval);
+  return expr->evaluate();
 }
 
 
 double Objective::evaluate()
 {
-  value = expr->evaluate();
-  return value;
+  return expr->evaluate();
 }
 
 
-double Objective::ad(Var &n, bool new_eval)
-{
-  return expr->ad(n, new_eval);
-}
-
-
-double Objective::ad2(Var &n1, Var &n2, bool new_eval)
-{
-  return expr->ad2(n1, n2, new_eval);
-}
-
-
-void ConditionalConstraint::add_condition(std::shared_ptr<Node> condition, std::shared_ptr<Node> expr)
+void ConditionalConstraint::add_condition(std::shared_ptr<ExpressionBase> condition, std::shared_ptr<ExpressionBase> expr)
 {
   condition_exprs.push_back(condition);
   exprs.push_back(expr);
 }
 
 
-void ConditionalConstraint::add_final_expr(std::shared_ptr<Node> expr)
+void ConditionalConstraint::add_final_expr(std::shared_ptr<ExpressionBase> expr)
 {
   exprs.push_back(expr);
-  std::unordered_set<std::shared_ptr<Var> > all_vars;
-  std::shared_ptr<std::unordered_set<std::shared_ptr<Var> > > e_vars;
-  for (auto &e : exprs)
-    {
-      e_vars = e->get_vars();
-      for (auto &v : (*e_vars))
-	{
-	  all_vars.insert(v);
-	}
-    }
-  std::copy(all_vars.begin(), all_vars.end(), back_inserter(*(get_vars())));
 }
 
 
@@ -169,57 +140,50 @@ double ConditionalConstraint::evaluate()
   bool found = false;
   
   while (condition_iter != condition_exprs.end())
-  {
-    if ((*condition_iter)->evaluate() <= 0)
     {
-      value = (*expr_iter)->evaluate();
-      found = true;
-      break;
+      if ((*condition_iter)->evaluate() <= 0)
+	{
+	  return (*expr_iter)->evaluate();
+	}
+      ++condition_iter;
+      ++ expr_iter;
     }
-    ++condition_iter;
-    ++ expr_iter;
-  }
-  if (!found)
-  {
-    value = (*expr_iter)->evaluate();
-  }
-  return value;
+  return (*expr_iter)->evaluate();
 }
 
 
-double ConditionalConstraint::ad(Var &n, bool new_eval)
+void Objective::rad(bool new_eval)
+{
+  expr->rad(new_eval);
+}
+
+
+void Constraint::rad(bool new_eval)
+{
+  expr->rad(new_eval);
+}
+
+
+void ConditionalConstraint::rad(bool new_eval)
 {
   auto condition_iter = condition_exprs.begin();
   auto expr_iter = exprs.begin();
+  bool found = false;
   
   while (condition_iter != condition_exprs.end())
     {
       if ((*condition_iter)->evaluate() <= 0)
         {
-	  return (*expr_iter)->ad(n, new_eval);
+	  found = true;
+	  (*expr_iter)->rad(new_eval);
         }
       ++condition_iter;
       ++ expr_iter;
     }
-  return (*expr_iter)->ad(n, new_eval);
-}
-
-
-double ConditionalConstraint::ad2(Var &n1, Var &n2, bool new_eval)
-{
-  auto condition_iter = condition_exprs.begin();
-  auto expr_iter = exprs.begin();
-
-  while (condition_iter != condition_exprs.end())
+  if (!found)
     {
-      if ((*condition_iter)->evaluate() <= 0)
-        {
-	  return (*expr_iter)->ad2(n1, n2, new_eval);
-        }
-      ++condition_iter;
-      ++ expr_iter;
+      (*expr_iter)->rad(new_eval);
     }
-  return (*expr_iter)->ad2(n1, n2, new_eval);
 }
 
 
@@ -233,33 +197,3 @@ double ConditionalConstraint::get_dual()
 {
   return dual;
 }
-
-
-bool Constraint::has_ad2(Var &n1, Var &n2)
-{
-  return expr->has_ad2(n1, n2);
-}
-
-
-bool Objective::has_ad2(Var &n1, Var &n2)
-{
-  return expr->has_ad2(n1, n2);
-}
-
-
-bool ConditionalConstraint::has_ad2(Var &n1, Var &n2)
-{
-  auto expr_iter = exprs.begin();
-
-  while (expr_iter != exprs.end())
-    {
-      if ((*expr_iter)->has_ad2(n1, n2))
-      {
-	    return true;
-	  }
-      ++ expr_iter;
-    }
-  return false;
-}
-
-

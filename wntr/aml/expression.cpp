@@ -782,6 +782,66 @@ void PowerOperator::evaluate()
 }
 
 
+void Leaf::rad(bool new_eval)
+{
+  der = 1.0;
+}
+
+
+void Expression::rad(bool new_eval)
+{
+  if (new_eval)
+    {
+      evaluate();
+    }
+  for (int i=0; i<num_operators; ++i)
+    {
+      ((*operators)[i])->arg1->der = 0.0;
+      ((*operators)[i])->arg2->der = 0.0;
+    }
+  operators->back()->der = 1.0;
+  for (int i=num_operators-1; i>=0; --i)
+    {
+      ((*operators)[i])->rad();      
+    }
+}
+
+
+void AddOperator::rad()
+{
+  arg1->der += der;
+  arg2->der += der;
+}
+
+
+void SubtractOperator::rad()
+{
+  arg1->der += der;
+  arg2->der -= der;
+}
+
+
+void MultiplyOperator::rad()
+{
+  arg1->der += der * arg2->value;
+  arg2->der += der * arg1->value;
+}
+
+
+void DivideOperator::rad()
+{
+  arg1->der += der / (arg2->value);
+  arg2->der -= der * arg1->value / (arg2->value * arg2->value);
+}
+
+
+void PowerOperator::rad()
+{
+  arg1->der += der * arg2->value * ::pow(arg1->value, arg2->value - 1.0);
+  arg2->der += der * ::pow(arg1->value, arg2->value) * log(arg1->value);
+}
+
+
 int AddOperator::get_operator_type()
 {
   return ADD;

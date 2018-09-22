@@ -62,6 +62,7 @@ class ExpressionBase: public Node, public std::enable_shared_from_this<Expressio
 public:
   ExpressionBase() = default;
   virtual ~ExpressionBase() = default;
+  int index = -1;
 
   virtual std::shared_ptr<ExpressionBase> operator+(ExpressionBase&) = 0;
   virtual std::shared_ptr<ExpressionBase> operator-(ExpressionBase&) = 0;
@@ -86,6 +87,7 @@ public:
   virtual int get_num_operators();
   virtual std::string __str__() = 0;
   virtual double evaluate() = 0;
+  virtual void rad(bool new_eval=true) = 0;
   virtual std::shared_ptr<Node> get_last_node();
   virtual std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_vars();
   virtual std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_leaves();
@@ -106,6 +108,7 @@ public:
 
   bool is_leaf() override;
   double evaluate() override;
+  void rad(bool new_eval=true) override;
 };
 
 
@@ -178,6 +181,7 @@ public:
   std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_leaves() override;
 
   double evaluate() override;
+  void rad(bool new_eval=true) override;
 };
 
 
@@ -191,6 +195,7 @@ public:
   std::shared_ptr<Node> arg1;
   std::shared_ptr<Node> arg2;
   virtual void evaluate() = 0;
+  virtual void rad() = 0;
   virtual std::shared_ptr<std::vector<std::shared_ptr<Node> > > get_args() = 0;
   virtual int get_operator_type() = 0;
   virtual bool is_unary() {return false;}
@@ -213,6 +218,7 @@ class AddOperator: public BinaryOperator
 public:
   AddOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
   void evaluate() override;
+  void rad() override;
   int get_operator_type() override;
 };
 
@@ -222,6 +228,7 @@ class SubtractOperator: public BinaryOperator
 public:
   SubtractOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
   void evaluate() override;
+  void rad() override;
   int get_operator_type() override;
 };
 
@@ -231,6 +238,7 @@ class MultiplyOperator: public BinaryOperator
 public:
   MultiplyOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
   void evaluate() override;
+  void rad() override;
   int get_operator_type() override;
 };
 
@@ -240,6 +248,7 @@ class DivideOperator: public BinaryOperator
 public:
   DivideOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
   void evaluate() override;
+  void rad() override;
   int get_operator_type() override;
 };
 
@@ -249,6 +258,7 @@ class PowerOperator: public BinaryOperator
 public:
   PowerOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
   void evaluate() override;
+  void rad() override;
   int get_operator_type() override;
 };
 
