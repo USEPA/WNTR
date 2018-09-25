@@ -273,3 +273,66 @@ std::shared_ptr<std::unordered_map<Leaf*, double> > Evaluator::rad()
     }
   return res;
 }
+
+
+std::string Evaluator::__str__()
+{
+  std::string values[n_operators];
+  short oper;
+  int arg1_ndx;
+  int arg2_ndx;
+  std::string val1;
+  std::string val2;
+  int oper_ndx;
+  
+  for (int i=0; i<n_operators; ++i)
+    {
+      oper = operators[i];
+      arg1_ndx = arg1_indices[i];
+      arg2_ndx = arg2_indices[i];
+      if (arg1_ndx >= 0)
+	{
+	  val1 = leaves[arg1_ndx]->__str__();
+	}
+      else
+	{
+	  oper_ndx = _arg_ndx_to_operator_ndx(arg1_ndx);
+	  val1 = values[oper_ndx];
+	}
+      if (arg2_ndx >= 0)
+	{
+	  val2 = leaves[arg2_ndx]->__str__();
+	}
+      else
+	{
+	  oper_ndx = _arg_ndx_to_operator_ndx(arg2_ndx);
+	  val2 = values[oper_ndx];
+	}
+      
+      if (oper == ADD)
+	{
+	  values[i] = "(" + val1 + " + " + val2 + ")";
+	}
+      else if (oper == SUBTRACT)
+	{
+	  values[i] = "(" + val1 + " - " + val2 + ")";
+	}
+      else if (oper == VALUE)
+	{
+	  values[i] = val1;
+	}
+      else if (oper == MULTIPLY)
+	{
+	  values[i] = "(" + val1 + " * " + val2 + ")";
+	}
+      else if (oper == DIVIDE)
+	{
+	  values[i] = "(" + val1 + " / " + val2 + ")";
+	}
+      else if (oper == POWER)
+	{
+	  values[i] = "(" + val1 + " ** " + val2 + ")";
+	}
+    }
+  return values[n_operators - 1];
+}
