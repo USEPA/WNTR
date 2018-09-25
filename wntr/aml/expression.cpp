@@ -1,601 +1,350 @@
 #include "expression.hpp"
 
 
-std::shared_ptr<Var> create_var(double value, double lb, double ub, std::string name)
+Expression::~Expression()
 {
-  std::shared_ptr<Var> v = std::make_shared<Var>();
-  v->value = value;
-  v->lb = lb;
-  v->ub = ub;
-  v->name = name;
-  return v;
+  Float *f;
+  for (int i=0; i<num_floats; ++i)
+    {
+      f = (*floats)[i];
+      f->refcount -= 1;
+      if (f->refcount == 0)
+	{
+	  delete f;
+	}
+    }
 }
 
 
-std::shared_ptr<Param> create_param(double value, std::string name)
+void Expression::add_leaf(Leaf* leaf)
 {
-  std::shared_ptr<Param> p = std::make_shared<Param>();
-  p->value = value;
-  p->name = name;
-  return p;
+  if (!(leaf_to_ndx_map->count(leaf)))
+    {
+      leaves->push_back(leaf);
+      (*leaf_to_ndx_map)[leaf] = num_leaves;
+      num_leaves += 1;
+
+      if (leaf->is_float())
+	{
+	  Float *f = dynamic_cast<Float*>(leaf);
+	  f->refcount += 1;
+	  floats->push_back(f);
+	  num_floats += 1;
+	}
+    }  
 }
 
 
-std::shared_ptr<Float> create_float(double value)
+Expression* Expression::copy()
 {
-  std::shared_ptr<Float> f = std::make_shared<Float>();
-  f->value = value;
-  return f;
-}
-
-
-std::shared_ptr<Expression> ExpressionBase::shallow_copy()
-{
-  throw std::runtime_error("Cannot create a shallow copy");
-}
-
-
-std::shared_ptr<Expression> Expression::shallow_copy()
-{
-  std::shared_ptr<Expression> new_expr = std::make_shared<Expression>();
+  Expression* new_expr = new Expression();
   for (int i=0; i < num_operators; ++i)
     {
-      new_expr->add_operator((*operators)[i]);
+      new_expr->operators->push_back((*operators)[i]);
+      new_expr->args1->push_back((*args1)[i]);
+      new_expr->args2->push_back((*args2)[i]);
+      new_expr->num_operators += 1;
+    }
+  Leaf* leaf;
+  for (int i=0; i < num_leaves; ++i)
+    {
+      leaf = (*leaves)[i];
+      new_expr->add_leaf(leaf);
     }
   return new_expr;
 }
 
 
-std::shared_ptr<Expression> _expr_copy(ExpressionBase &n)
+Expression* _expr_copy(Expression* expr)
 {
-  std::shared_ptr<Expression> expr;
-  if (n.get_num_operators() != (int) (n.get_operators()->size()))
+  Expression* new_expr;
+  if ((int) (expr->operators->size()) != expr->num_operators)
     {
-      expr = n.shallow_copy();
+      new_expr = expr->copy();
     }
   else
     {
-      expr = std::make_shared<Expression>();
-      expr->operators = n.get_operators();
-      expr->num_operators = n.get_num_operators();
-    }
-  return expr;
-}
-
-
-template <class T>
-std::shared_ptr<ExpressionBase> expr_expr_binary_helper(ExpressionBase &n1, ExpressionBase &n2)
-{
-  std::shared_ptr<Expression> expr = _expr_copy(n1);
-  std::shared_ptr<std::vector<std::shared_ptr<Operator> > > _opers = n2.get_operators();
-  int _num_opers = n2.get_num_operators();
-  for (int i=0; i<_num_opers; ++i)
-    {
-      expr->add_operator((*_opers)[i]);
-    }
-  std::shared_ptr<T> op = std::make_shared<T>(n1.get_last_node(), n2.get_last_node());
-  expr->add_operator(op);
-  return expr;
-}
-
-
-template <class T>
-std::shared_ptr<ExpressionBase> expr_leaf_binary_helper(ExpressionBase &n1, ExpressionBase &n2)
-{
-  std::shared_ptr<Expression> expr = _expr_copy(n1);
-  std::shared_ptr<T> op = std::make_shared<T>(n1.get_last_node(), n2.shared_from_this());
-  expr->add_operator(op);
-  return expr;
-}
-
-
-template <class T>
-std::shared_ptr<ExpressionBase> leaf_expr_binary_helper(ExpressionBase &n1, ExpressionBase &n2)
-{
-  std::shared_ptr<Expression> expr = _expr_copy(n2);
-  std::shared_ptr<T> op = std::make_shared<T>(n1.shared_from_this(), n2.get_last_node());
-  expr->add_operator(op);
-  return expr;
-}
-
-
-template <class T>
-std::shared_ptr<ExpressionBase> leaf_leaf_binary_helper(ExpressionBase &n1, ExpressionBase &n2)
-{
-  std::shared_ptr<Expression> expr = std::make_shared<Expression>();
-  std::shared_ptr<T> op = std::make_shared<T>(n1.shared_from_this(), n2.shared_from_this());
-  expr->add_operator(op);
-  return expr;
-}
-
-
-std::shared_ptr<ExpressionBase> Leaf::operator+(ExpressionBase& n)
-{
-  if (n.is_float() && n.evaluate() == 0.0)
-    {
-      return shared_from_this();
-    }
-  else if (n.is_leaf())
-    {
-      return leaf_leaf_binary_helper<AddOperator>(*this, n);
-    }
-  else
-    {
-      return leaf_expr_binary_helper<AddOperator>(*this, n);
-    }
-}
-
-
-std::shared_ptr<ExpressionBase> Float::operator+(ExpressionBase& n)
-{
-  if (n.is_float())
-    {
-      return create_float(value + n.evaluate());
-    }
-  else if (n.is_leaf())
-    {
-      if (value == 0.0)
+      new_expr = new Expression();
+      new_expr->operators = expr->operators;
+      new_expr->args1 = expr->args1;
+      new_expr->args2 = expr->args2;
+      new_expr->leaves = expr->leaves;
+      new_expr->leaf_to_ndx_map = expr->leaf_to_ndx_map;
+      new_expr->floats = expr->floats;
+      new_expr->num_operators = expr->num_operators;
+      new_expr->num_leaves = expr->num_leaves;
+      new_expr->num_floats = expr->num_floats;
+      Float* f;
+      for (int i=0; i<new_expr->num_floats; ++i)
 	{
-	  return n.shared_from_this();
+	  f = (*(new_expr->floats))[i];
+	  f->refcount += 1;
+	}
+    }
+  return new_expr;
+}
+
+
+int _arg_ndx_to_operator_ndx(int arg_ndx)
+{
+  return (-arg_ndx) - 1;
+}
+
+
+int _operator_ndx_to_arg_ndx(int operator_ndx)
+{
+  return -(operator_ndx + 1);
+}
+
+
+ExpressionBase *binary_helper(Expression *n1, Expression *n2, const short operation)
+{
+  Expression *expr = _expr_copy(n1);
+  Leaf* leaf;
+  for (int i=0; i<n2->num_leaves; ++i)
+    {
+      leaf = (*(n2->leaves))[i];
+      expr->add_leaf(leaf);
+    }
+  int _arg1;
+  int _arg2;
+  for (int i=0; i<n2->num_operators; ++i)
+    {
+      expr->operators->push_back((*(n2->operators))[i]);
+      _arg1 = (*(n2->args1))[i];
+      _arg2 = (*(n2->args2))[i];
+      if (_arg1 < 0)
+	{
+	  expr->args1->push_back(_operator_ndx_to_arg_ndx(n1->num_operators + _arg_ndx_to_operator_ndx(_arg1)));
 	}
       else
 	{
-	  return leaf_leaf_binary_helper<AddOperator>(*this, n);
+	  expr->args1->push_back((*(expr->leaf_to_ndx_map))[(*(n2->leaves))[_arg1]]);
 	}
-    }
-  else
-    {
-      if (value == 0.0)
+      if (_arg2 < 0)
 	{
-	  return _expr_copy(n);
+	  expr->args2->push_back(_operator_ndx_to_arg_ndx(n1->num_operators + _arg_ndx_to_operator_ndx(_arg2)));
 	}
       else
 	{
-	  return leaf_expr_binary_helper<AddOperator>(*this, n);
+	  expr->args2->push_back((*(expr->leaf_to_ndx_map))[(*(n2->leaves))[_arg2]]);
 	}
+      expr->num_operators += 1;
     }
+  expr->operators->push_back(operation);
+  expr->args1->push_back(_operator_ndx_to_arg_ndx(n1->num_operators - 1));
+  expr->args2->push_back(_operator_ndx_to_arg_ndx(n1->num_operators + n2->num_operators - 1));
+  expr->num_operators += 1;
+  return expr;
 }
 
 
-std::shared_ptr<ExpressionBase> Expression::operator+(ExpressionBase& n)
+ExpressionBase *binary_helper(Expression *n1, Leaf *n2, const short operation)
 {
-  if (n.is_float() && n.evaluate() == 0.0)
+  Expression* expr = _expr_copy(n1);
+  expr->operators->push_back(operation);
+  expr->add_leaf(n2);
+  expr->args1->push_back(_operator_ndx_to_arg_ndx(n1->num_operators - 1));
+  expr->args2->push_back((*(expr->leaf_to_ndx_map))[n2]);
+  expr->num_operators += 1;
+  return expr;
+}
+
+
+ExpressionBase *binary_helper(Leaf *n1, Expression *n2, const short operation)
+{
+  Expression* expr = _expr_copy(n2);
+  expr->operators->push_back(operation);
+  expr->add_leaf(n1);
+  expr->args1->push_back((*(expr->leaf_to_ndx_map))[n1]);
+  expr->args2->push_back(_operator_ndx_to_arg_ndx(n2->num_operators - 1));
+  expr->num_operators += 1;
+  return expr;
+}
+
+
+ExpressionBase *binary_helper(Leaf *n1, Leaf *n2, const short operation)
+{
+  Expression *expr = new Expression();
+  expr->operators->push_back(operation);
+
+  expr->add_leaf(n1);
+  expr->add_leaf(n2);
+  expr->args1->push_back((*(expr->leaf_to_ndx_map))[n1]);
+  expr->args2->push_back((*(expr->leaf_to_ndx_map))[n2]);
+  expr->num_operators += 1;
+  return expr;
+}
+
+
+ExpressionBase* binary_helper2(ExpressionBase *n1, ExpressionBase *n2, const short operation)
+{
+  if (n1->is_leaf() && n2->is_leaf())
     {
-      return _expr_copy(*this);
+      return binary_helper(dynamic_cast<Leaf*>(n1), dynamic_cast<Leaf*>(n2), operation);
     }
-  else if (n.is_leaf())
+  else if (n1->is_leaf())
     {
-      return expr_leaf_binary_helper<AddOperator>(*this, n);
+      return binary_helper(dynamic_cast<Leaf*>(n1), dynamic_cast<Expression*>(n2), operation);
+    }
+  else if (n2->is_leaf())
+    {
+      return binary_helper(dynamic_cast<Expression*>(n1), dynamic_cast<Leaf*>(n2), operation);
     }
   else
     {
-      return expr_expr_binary_helper<AddOperator>(*this, n);
+      return binary_helper(dynamic_cast<Expression*>(n1), dynamic_cast<Expression*>(n2), operation);
     }
 }
 
 
-std::shared_ptr<ExpressionBase> Leaf::operator-(ExpressionBase& n)
+ExpressionBase* ExpressionBase::operator+(ExpressionBase& n)
 {
-  if (n.is_float() && n.evaluate() == 0.0)
-    {
-      return shared_from_this();
-    }
-  else if (n.is_leaf())
-    {
-      return leaf_leaf_binary_helper<SubtractOperator>(*this, n);
-    }
-  else
-    {
-      return leaf_expr_binary_helper<SubtractOperator>(*this, n);
-    }
+  return binary_helper2(this, &n, ADD);
 }
 
 
-std::shared_ptr<ExpressionBase> Float::operator-(ExpressionBase& n)
+ExpressionBase* ExpressionBase::operator-(ExpressionBase& n)
 {
-  if (n.is_float())
-    {
-      return create_float(value - n.evaluate());
-    }
-  else if (n.is_leaf())
-    {
-      if (value == 0.0)
-	{
-	  return -n;
-	}
-      else
-	{
-	  return leaf_leaf_binary_helper<SubtractOperator>(*this, n);
-	}
-    }
-  else
-    {
-      if (value == 0.0)
-	{
-	  return _expr_copy(*(-n));
-	}
-      else
-	{
-	  return leaf_expr_binary_helper<SubtractOperator>(*this, n);
-	}
-    }
+  return binary_helper2(this, &n, SUBTRACT);
 }
 
 
-std::shared_ptr<ExpressionBase> Expression::operator-(ExpressionBase& n)
+ExpressionBase* ExpressionBase::operator*(ExpressionBase& n)
 {
-  if (n.is_float() && n.evaluate() == 0.0)
-    {
-      return _expr_copy(*this);
-    }
-  else if (n.is_leaf())
-    {
-      return expr_leaf_binary_helper<SubtractOperator>(*this, n);
-    }
-  else
-    {
-      return expr_expr_binary_helper<SubtractOperator>(*this, n);
-    }
+  return binary_helper2(this, &n, MULTIPLY);
 }
 
 
-std::shared_ptr<ExpressionBase> Leaf::operator*(ExpressionBase& n)
+ExpressionBase* ExpressionBase::operator/(ExpressionBase& n)
 {
-  if (n.is_float())
-    {
-      if (n.evaluate() == 0.0)
-	{
-	  return create_float(0.0);
-	}
-      else if (n.evaluate() == 1.0)
-	{
-	  return shared_from_this();
-	}
-    }
-  if (n.is_leaf())
-    {
-      return leaf_leaf_binary_helper<MultiplyOperator>(*this, n);
-    }
-  return leaf_expr_binary_helper<MultiplyOperator>(*this, n);
+  return binary_helper2(this, &n, DIVIDE);
 }
 
 
-std::shared_ptr<ExpressionBase> Float::operator*(ExpressionBase& n)
+ExpressionBase* ExpressionBase::__pow__(ExpressionBase& n)
 {
-  if (value == 0.0)
-    {
-      return shared_from_this();
-    }
-  if (n.is_float())
-    {
-      return create_float(value * n.evaluate());
-    }
-  if (n.is_leaf())
-    {
-      if (value == 1.0)
-	{
-	  return n.shared_from_this();
-	}
-      return leaf_leaf_binary_helper<MultiplyOperator>(*this, n);
-    }
-  if (value == 1.0)
-    {
-      return _expr_copy(n);
-    }
-  return leaf_expr_binary_helper<MultiplyOperator>(*this, n);
+  return binary_helper2(this, &n, POWER);
 }
 
 
-std::shared_ptr<ExpressionBase> Expression::operator*(ExpressionBase& n)
+ExpressionBase* ExpressionBase::operator-()
 {
-  if (n.is_float())
-    {
-      if (n.evaluate() == 0.0)
-	{
-	  return n.shared_from_this();
-	}
-      if (n.evaluate() == 1.0)
-	{
-	  return _expr_copy(*this);
-	}
-    }
-  if (n.is_leaf())
-    {
-      return expr_leaf_binary_helper<MultiplyOperator>(*this, n);
-    }
-  return expr_expr_binary_helper<AddOperator>(*this, n);
-}
-
-
-std::shared_ptr<ExpressionBase> Leaf::operator/(ExpressionBase& n)
-{
-  if (n.is_float())
-    {
-      if (n.evaluate() == 0.0)
-	{
-	  throw std::runtime_error("Divide by zero.");
-	}
-      else if (n.evaluate() == 1.0)
-	{
-	  return shared_from_this();
-	}
-    }
-  if (n.is_leaf())
-    {
-      return leaf_leaf_binary_helper<DivideOperator>(*this, n);
-    }
-  return leaf_expr_binary_helper<DivideOperator>(*this, n);
-}
-
-
-std::shared_ptr<ExpressionBase> Float::operator/(ExpressionBase& n)
-{
-  if (value == 0.0)
-    {
-      if (n.is_float() && n.evaluate() == 0.0)
-	{
-	  throw std::runtime_error("Divide by zero.");	  
-	}
-      return shared_from_this();
-    }
-  if (n.is_float())
-    {
-      return create_float(value / n.evaluate());
-    }
-  if (n.is_leaf())
-    {
-      return leaf_leaf_binary_helper<DivideOperator>(*this, n);
-    }
-  return leaf_expr_binary_helper<DivideOperator>(*this, n);
-}
-
-
-std::shared_ptr<ExpressionBase> Expression::operator/(ExpressionBase& n)
-{
-  if (n.is_float())
-    {
-      if (n.evaluate() == 0.0)
-	{
-	  throw std::runtime_error("Divide by zero.");	  
-	}
-      if (n.evaluate() == 1.0)
-	{
-	  return _expr_copy(*this);
-	}
-    }
-  if (n.is_leaf())
-    {
-      return expr_leaf_binary_helper<DivideOperator>(*this, n);
-    }
-  return expr_expr_binary_helper<DivideOperator>(*this, n);
-}
-
-
-std::shared_ptr<ExpressionBase> ExpressionBase::operator-()
-{
-  std::shared_ptr<Float> f = create_float(0.0);
+  Float *f = new Float(0.0);
   return (*f) - (*this);
 }
 
 
-std::shared_ptr<ExpressionBase> Leaf::__pow__(ExpressionBase& n)
+ExpressionBase* ExpressionBase::operator+(double n)
 {
-  if (n.is_float())
-    {
-      if (n.evaluate() == 0.0)
-	{
-	  return create_float(1.0);
-	}
-      if (n.evaluate() == 1.0)
-	{
-	  return shared_from_this();
-	}
-    }
-  if (n.is_leaf())
-    {
-      return leaf_leaf_binary_helper<PowerOperator>(*this, n);
-    }
-  return leaf_expr_binary_helper<PowerOperator>(*this, n);
-}
-
-
-std::shared_ptr<ExpressionBase> Float::__pow__(ExpressionBase& n)
-{
-  if (value == 0.0)
-    {
-      if (n.is_float() && n.evaluate() == 0.0)
-	{
-	  throw std::runtime_error("Cannot compute zero to the power of zero.");
-	}
-      return shared_from_this();
-    }
-  if (value == 1.0)
-    {
-      return shared_from_this();
-    }
-  if (n.is_float())
-    {
-      return create_float(::pow(value, n.evaluate()));
-    }
-  if (n.is_leaf())
-    {
-      return leaf_leaf_binary_helper<PowerOperator>(*this, n);
-    }
-  return leaf_expr_binary_helper<PowerOperator>(*this, n);
-}
-
-
-std::shared_ptr<ExpressionBase> Expression::__pow__(ExpressionBase& n)
-{
-  if (n.is_float())
-    {
-      if (n.evaluate() == 0.0)
-	{
-	  return create_float(1.0);
-	}
-      if (n.evaluate() == 1.0)
-	{
-	  return _expr_copy(*this);
-	}
-    }
-  if (n.is_leaf())
-    {
-      return expr_leaf_binary_helper<PowerOperator>(*this, n);
-    }
-  return expr_expr_binary_helper<PowerOperator>(*this, n);
-}
-
-
-std::shared_ptr<ExpressionBase> ExpressionBase::operator+(double n)
-{
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return (*this) + (*f);
 }
 
 
-std::shared_ptr<ExpressionBase> ExpressionBase::operator-(double n)
+ExpressionBase* ExpressionBase::operator-(double n)
 {
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return (*this) - (*f);
 }
 
 
-std::shared_ptr<ExpressionBase> ExpressionBase::operator*(double n)
+ExpressionBase* ExpressionBase::operator*(double n)
 {
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return (*this) * (*f);
 }
 
 
-std::shared_ptr<ExpressionBase> ExpressionBase::operator/(double n)
+ExpressionBase* ExpressionBase::operator/(double n)
 {
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return (*this) / (*f);
 }
 
 
-std::shared_ptr<ExpressionBase> ExpressionBase::__pow__(double n)
+ExpressionBase* ExpressionBase::__pow__(double n)
 {
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return __pow__(*f);
 }
 
 
-std::shared_ptr<ExpressionBase> ExpressionBase::__radd__(double n)
+ExpressionBase* ExpressionBase::__radd__(double n)
 {
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return (*f) + (*this);
 }
 
 
-std::shared_ptr<ExpressionBase> ExpressionBase::__rsub__(double n)
+ExpressionBase* ExpressionBase::__rsub__(double n)
 {
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return (*f) - (*this);
 }
 
 
-std::shared_ptr<ExpressionBase> ExpressionBase::__rmul__(double n)
+ExpressionBase* ExpressionBase::__rmul__(double n)
 {
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return (*f) * (*this);
 }
 
 
-std::shared_ptr<ExpressionBase> ExpressionBase::__rdiv__(double n)
+ExpressionBase* ExpressionBase::__rdiv__(double n)
 {
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return (*f) / (*this);
 }
 
 
-std::shared_ptr<ExpressionBase> ExpressionBase::__rtruediv__(double n)
+ExpressionBase* ExpressionBase::__rtruediv__(double n)
 {
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return (*f) / (*this);
 }
 
 
-std::shared_ptr<ExpressionBase> ExpressionBase::__rpow__(double n)
+ExpressionBase* ExpressionBase::__rpow__(double n)
 {
-  std::shared_ptr<Float> f = create_float(n);
+  Float* f = new Float(n);
   return f->__pow__(*this);
 }
 
 
-std::shared_ptr<std::vector<std::shared_ptr<Operator> > > ExpressionBase::get_operators()
-{
-  std::shared_ptr<std::vector<std::shared_ptr<Operator> > > ops = std::make_shared<std::vector<std::shared_ptr<Operator> > >();
-  return ops;
-}
-
-
-int ExpressionBase::get_num_operators()
-{
-  return 0;
-}
-
-
-bool Node::is_leaf()
+bool ExpressionBase::is_leaf()
 {
   return false;
 }
 
 
-bool Node::is_var()
+bool ExpressionBase::is_var()
 {
   return false;
 }
 
 
-bool Node::is_param()
+bool ExpressionBase::is_param()
 {
   return false;
 }
 
 
-bool Node::is_float()
+bool ExpressionBase::is_float()
 {
   return false;
 }
 
 
-bool Node::is_expr()
+bool ExpressionBase::is_expr()
 {
   return false;
-}
-
-
-std::shared_ptr<Node> ExpressionBase::get_last_node()
-{
-  return shared_from_this();
-}
-
-
-std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > ExpressionBase::get_vars()
-{
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
-  return vars;
-}
-
-
-std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > ExpressionBase::get_leaves()
-{
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > leaves = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
-  leaves->insert(shared_from_this());
-  return leaves;
 }
 
 
 bool Leaf::is_leaf()
 {
   return true;
-}
-
-
-double Leaf::evaluate()
-{
-  return value;
 }
 
 
@@ -608,14 +357,6 @@ bool Var::is_var()
 std::string Var::__str__()
 {
   return name;
-}
-
-
-std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Var::get_vars()
-{
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
-  vars->insert(shared_from_this());
-  return vars;
 }
 
 
@@ -654,219 +395,13 @@ std::string Param::__str__()
 }
 
 
-std::shared_ptr<std::vector<std::shared_ptr<Operator> > > Expression::get_operators()
-{
-  return operators;
-}
-
-
-int Expression::get_num_operators()
-{
-  return num_operators;
-}
-
-
 bool Expression::is_expr()
 {
   return true;
 }
 
 
-std::shared_ptr<Node> Expression::get_last_node()
-{
-  return (*operators)[num_operators-1];
-}
-
-
 std::string Expression::__str__()
 {
   return "not implemented yet";
-}
-
-
-void Expression::add_operator(std::shared_ptr<Operator> oper)
-{
-  operators->push_back(oper);
-  num_operators += 1;
-}
-
-
-std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Expression::get_vars()
-{
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > vars = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
-  std::shared_ptr<Operator> oper;
-  std::shared_ptr<std::vector<std::shared_ptr<Node> > > args;
-  for (int i=0; i<num_operators; ++i)
-    {
-      oper = (*operators)[i];
-      args = oper->get_args();
-      for (std::shared_ptr<Node> &_arg : *args)
-	{
-	  if (_arg->is_var())
-	    {
-	      vars->insert(std::dynamic_pointer_cast<ExpressionBase>(_arg));
-	    }
-	}
-    }
-  return vars;
-}
-
-
-std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Expression::get_leaves()
-{
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > leaves = std::make_shared<std::unordered_set<std::shared_ptr<ExpressionBase> > >();
-  std::shared_ptr<Operator> oper;
-  std::shared_ptr<std::vector<std::shared_ptr<Node> > > args;
-  for (int i=0; i<num_operators; ++i)
-    {
-      oper = (*operators)[i];
-      args = oper->get_args();
-      for (std::shared_ptr<Node> &_arg : *args)
-	{
-	  if (_arg->is_leaf())
-	    {
-	      leaves->insert(std::dynamic_pointer_cast<ExpressionBase>(_arg));
-	    }
-	}
-    }
-  return leaves;
-}
-
-
-std::shared_ptr<std::vector<std::shared_ptr<Node> > > BinaryOperator::get_args()
-{
-  std::shared_ptr<std::vector<std::shared_ptr<Node> > > args = std::make_shared<std::vector<std::shared_ptr<Node> > >();
-  args->push_back(arg1);
-  args->push_back(arg2);
-  return args;
-}
-
-
-double Expression::evaluate()
-{
-  for (int i=0; i<num_operators; ++i)
-    {
-      ((*operators)[i])->evaluate();
-    }
-  return ((*operators)[num_operators-1])->value;
-}
-
-
-void AddOperator::evaluate()
-{
-  value = arg1->value + arg2->value;
-}
-
-
-void SubtractOperator::evaluate()
-{
-  value = arg1->value - arg2->value;
-}
-
-
-void MultiplyOperator::evaluate()
-{
-  value = arg1->value * arg2->value;
-}
-
-
-void DivideOperator::evaluate()
-{
-  value = arg1->value / arg2->value;
-}
-
-
-void PowerOperator::evaluate()
-{
-  value = ::pow(arg1->value, arg2->value);
-}
-
-
-void Leaf::rad(bool new_eval)
-{
-  der = 1.0;
-}
-
-
-void Expression::rad(bool new_eval)
-{
-  if (new_eval)
-    {
-      evaluate();
-    }
-  for (int i=0; i<num_operators; ++i)
-    {
-      ((*operators)[i])->arg1->der = 0.0;
-      ((*operators)[i])->arg2->der = 0.0;
-    }
-  operators->back()->der = 1.0;
-  for (int i=num_operators-1; i>=0; --i)
-    {
-      ((*operators)[i])->rad();      
-    }
-}
-
-
-void AddOperator::rad()
-{
-  arg1->der += der;
-  arg2->der += der;
-}
-
-
-void SubtractOperator::rad()
-{
-  arg1->der += der;
-  arg2->der -= der;
-}
-
-
-void MultiplyOperator::rad()
-{
-  arg1->der += der * arg2->value;
-  arg2->der += der * arg1->value;
-}
-
-
-void DivideOperator::rad()
-{
-  arg1->der += der / (arg2->value);
-  arg2->der -= der * arg1->value / (arg2->value * arg2->value);
-}
-
-
-void PowerOperator::rad()
-{
-  arg1->der += der * arg2->value * ::pow(arg1->value, arg2->value - 1.0);
-  arg2->der += der * ::pow(arg1->value, arg2->value) * log(arg1->value);
-}
-
-
-int AddOperator::get_operator_type()
-{
-  return ADD;
-}
-
-
-int SubtractOperator::get_operator_type()
-{
-  return SUBTRACT;
-}
-
-
-int MultiplyOperator::get_operator_type()
-{
-  return MULTIPLY;
-}
-
-
-int DivideOperator::get_operator_type()
-{
-  return DIVIDE;
-}
-
-
-int PowerOperator::get_operator_type()
-{
-  return POWER;
 }

@@ -14,83 +14,52 @@
 #include <iterator>
 
 
-const int ADD = -1;
-const int SUBTRACT = -2;
-const int MULTIPLY = -3;
-const int DIVIDE = -4;
-const int POWER = -5;
+const short VALUE = 0;
+const short ADD = 1;
+const short SUBTRACT = 2;
+const short MULTIPLY = 3;
+const short DIVIDE = 4;
+const short POWER = 5;
 
 
-class Node;
 class ExpressionBase;
 class Leaf;
 class Var;
 class Param;
 class Float;
 class Expression;
-class Operator;
-class BinaryOperator;
-class AddOperator;
-class SubtractOperator;
-class MultiplyOperator;
-class DivideOperator;
-class PowerOperator;
 
 
-std::shared_ptr<Var> create_var(double value=0.0, double lb=-1.0e100, double ub=1.0e100, std::string name="");
-std::shared_ptr<Param> create_param(double value=0.0, std::string name="");
-std::shared_ptr<Float> create_float(double vlaue=0.0);
-
-
-class Node
+class ExpressionBase
 {
 public:
-  Node() = default;
-  virtual ~Node() = default;
-  double value;
-  double der;
+  ExpressionBase() = default;
+  virtual ~ExpressionBase() = default;
+
+  ExpressionBase* operator+(ExpressionBase&);
+  ExpressionBase* operator-(ExpressionBase&);
+  ExpressionBase* operator*(ExpressionBase&);
+  ExpressionBase* operator/(ExpressionBase&);
+  ExpressionBase* __pow__(ExpressionBase&);
+  ExpressionBase* operator-();
+  ExpressionBase* operator+(double);
+  ExpressionBase* operator-(double);
+  ExpressionBase* operator*(double);
+  ExpressionBase* operator/(double);
+  ExpressionBase* __pow__(double);
+  ExpressionBase* __radd__(double);
+  ExpressionBase* __rsub__(double);
+  ExpressionBase* __rmul__(double);
+  ExpressionBase* __rdiv__(double);
+  ExpressionBase* __rtruediv__(double);
+  ExpressionBase* __rpow__(double);
+
   virtual bool is_leaf();
   virtual bool is_var();
   virtual bool is_param();
   virtual bool is_float();
   virtual bool is_expr();
-};
-
-
-class ExpressionBase: public Node, public std::enable_shared_from_this<ExpressionBase>
-{
-public:
-  ExpressionBase() = default;
-  virtual ~ExpressionBase() = default;
-  int index = -1;
-
-  virtual std::shared_ptr<ExpressionBase> operator+(ExpressionBase&) = 0;
-  virtual std::shared_ptr<ExpressionBase> operator-(ExpressionBase&) = 0;
-  virtual std::shared_ptr<ExpressionBase> operator*(ExpressionBase&) = 0;
-  virtual std::shared_ptr<ExpressionBase> operator/(ExpressionBase&) = 0;
-  virtual std::shared_ptr<ExpressionBase> __pow__(ExpressionBase&) = 0;
-  std::shared_ptr<ExpressionBase> operator-();
-  std::shared_ptr<ExpressionBase> operator+(double);
-  std::shared_ptr<ExpressionBase> operator-(double);
-  std::shared_ptr<ExpressionBase> operator*(double);
-  std::shared_ptr<ExpressionBase> operator/(double);
-  std::shared_ptr<ExpressionBase> __pow__(double);
-  std::shared_ptr<ExpressionBase> __radd__(double);
-  std::shared_ptr<ExpressionBase> __rsub__(double);
-  std::shared_ptr<ExpressionBase> __rmul__(double);
-  std::shared_ptr<ExpressionBase> __rdiv__(double);
-  std::shared_ptr<ExpressionBase> __rtruediv__(double);
-  std::shared_ptr<ExpressionBase> __rpow__(double);
-
-  virtual std::shared_ptr<std::vector<std::shared_ptr<Operator> > > get_operators();
-  virtual std::shared_ptr<Expression> shallow_copy();
-  virtual int get_num_operators();
   virtual std::string __str__() = 0;
-  virtual double evaluate() = 0;
-  virtual void rad(bool new_eval=true) = 0;
-  virtual std::shared_ptr<Node> get_last_node();
-  virtual std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_vars();
-  virtual std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_leaves();
 };
 
 
@@ -98,17 +67,11 @@ class Leaf: public ExpressionBase
 {
 public:
   Leaf() = default;
+  Leaf(double val): value(val) {}
   virtual ~Leaf() = default;
-
-  virtual std::shared_ptr<ExpressionBase> operator+(ExpressionBase&) override;
-  virtual std::shared_ptr<ExpressionBase> operator-(ExpressionBase&) override;
-  virtual std::shared_ptr<ExpressionBase> operator*(ExpressionBase&) override;
-  virtual std::shared_ptr<ExpressionBase> operator/(ExpressionBase&) override;
-  virtual std::shared_ptr<ExpressionBase> __pow__(ExpressionBase&) override;
+  double value;
 
   bool is_leaf() override;
-  double evaluate() override;
-  void rad(bool new_eval=true) override;
 };
 
 
@@ -116,14 +79,13 @@ class Var: public Leaf
 {
 public:
   Var() = default;
+  Var(double val): Leaf(val) {}
   ~Var() = default;
   std::string name;
-  double lb;
-  double ub;
+  int index = -1;
 
   bool is_var() override;
   std::string __str__() override;
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_vars() override;
 };
 
 
@@ -131,14 +93,10 @@ class Float: public Leaf
 {
 public:
   Float() = default;
+  Float(double val): Leaf(val) {}
   ~Float() = default;
+  int refcount = 0;
 
-  std::shared_ptr<ExpressionBase> operator+(ExpressionBase&) override;
-  std::shared_ptr<ExpressionBase> operator-(ExpressionBase&) override;
-  std::shared_ptr<ExpressionBase> operator*(ExpressionBase&) override;
-  std::shared_ptr<ExpressionBase> operator/(ExpressionBase&) override;
-  std::shared_ptr<ExpressionBase> __pow__(ExpressionBase&) override;
-  
   bool is_float() override;
   std::string __str__() override;
 };
@@ -148,6 +106,7 @@ class Param: public Leaf
 {
 public:
   Param() = default;
+  Param(double val): Leaf(val) {}
   ~Param() = default;
   std::string name;
 
@@ -160,106 +119,21 @@ class Expression: public ExpressionBase
 {
 public:
   Expression() = default;
-  ~Expression() = default;
-  std::shared_ptr<std::vector<std::shared_ptr<Operator> > > operators = std::make_shared<std::vector<std::shared_ptr<Operator> > >();
+  ~Expression();
+  Expression(const Expression&) = delete;
+  Expression &operator=(const Expression&) = delete;
+  std::shared_ptr<std::vector<short> > operators = std::make_shared<std::vector<short> >();
+  std::shared_ptr<std::vector<int> > args1 = std::make_shared<std::vector<int> >();
+  std::shared_ptr<std::vector<int> > args2 = std::make_shared<std::vector<int> >();
+  std::shared_ptr<std::vector<Leaf*> > leaves = std::make_shared<std::vector<Leaf*> >();
+  std::shared_ptr<std::unordered_map<Leaf*, int> > leaf_to_ndx_map = std::make_shared<std::unordered_map<Leaf*, int> >();
+  std::shared_ptr<std::vector<Float*> > floats = std::make_shared<std::vector<Float*> >();
   int num_operators = 0;
-
-  std::shared_ptr<ExpressionBase> operator+(ExpressionBase&) override;
-  std::shared_ptr<ExpressionBase> operator-(ExpressionBase&) override;
-  std::shared_ptr<ExpressionBase> operator*(ExpressionBase&) override;
-  std::shared_ptr<ExpressionBase> operator/(ExpressionBase&) override;
-  std::shared_ptr<ExpressionBase> __pow__(ExpressionBase&) override;
+  int num_leaves = 0;
+  int num_floats = 0;
   
-  std::shared_ptr<std::vector<std::shared_ptr<Operator> > > get_operators() override;
-  std::shared_ptr<Expression> shallow_copy() override;
-  int get_num_operators() override;
+  Expression* copy();
   bool is_expr() override;
-  std::shared_ptr<Node> get_last_node() override;
   std::string __str__() override;
-  void add_operator(std::shared_ptr<Operator>);
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_vars() override;
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > get_leaves() override;
-
-  double evaluate() override;
-  void rad(bool new_eval=true) override;
+  void add_leaf(Leaf*);
 };
-
-
-class Operator: public Node
-{
-public:
-  Operator() = default;
-  Operator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): arg1(_arg1), arg2(_arg2) {}
-  Operator(std::shared_ptr<Node> _arg1): arg1(_arg1) {}
-  virtual ~Operator() = default;
-  std::shared_ptr<Node> arg1;
-  std::shared_ptr<Node> arg2;
-  virtual void evaluate() = 0;
-  virtual void rad() = 0;
-  virtual std::shared_ptr<std::vector<std::shared_ptr<Node> > > get_args() = 0;
-  virtual int get_operator_type() = 0;
-  virtual bool is_unary() {return false;}
-  virtual bool is_binary() {return false;}
-};
-
-
-class BinaryOperator: public Operator
-{
-public:
-  BinaryOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): Operator(_arg1, _arg2) {}
-  virtual ~BinaryOperator() = default;
-  std::shared_ptr<std::vector<std::shared_ptr<Node> > > get_args() override;
-  bool is_binary() override {return true;}
-};
-
-
-class AddOperator: public BinaryOperator
-{
-public:
-  AddOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
-  void evaluate() override;
-  void rad() override;
-  int get_operator_type() override;
-};
-
-
-class SubtractOperator: public BinaryOperator
-{
-public:
-  SubtractOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
-  void evaluate() override;
-  void rad() override;
-  int get_operator_type() override;
-};
-
-
-class MultiplyOperator: public BinaryOperator
-{
-public:
-  MultiplyOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
-  void evaluate() override;
-  void rad() override;
-  int get_operator_type() override;
-};
-
-
-class DivideOperator: public BinaryOperator
-{
-public:
-  DivideOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
-  void evaluate() override;
-  void rad() override;
-  int get_operator_type() override;
-};
-
-
-class PowerOperator: public BinaryOperator
-{
-public:
-  PowerOperator(std::shared_ptr<Node> _arg1, std::shared_ptr<Node> _arg2): BinaryOperator(_arg1, _arg2) {}
-  void evaluate() override;
-  void rad() override;
-  int get_operator_type() override;
-};
-
-
