@@ -15,5 +15,6 @@ public:
   ~Evaluator();
   
   double evaluate();
-  //void rad();
+  void _evaluate(double *values);
+  std::shared_ptr<std::unordered_map<Leaf*, double> > rad();
 };
