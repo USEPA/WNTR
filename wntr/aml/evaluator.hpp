@@ -12,6 +12,8 @@ public:
   Leaf **leaves;
 
   Evaluator(ExpressionBase*);
+  Evaluator(const Evaluator&) = delete;
+  Evaluator &operator=(const Evaluator&) = delete;
   ~Evaluator();
   
   double evaluate();

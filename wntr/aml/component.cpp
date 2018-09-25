@@ -1,199 +1,145 @@
 #include "component.hpp"
 
 
-std::unordered_set<std::shared_ptr<ExpressionBase> > Component::py_get_vars()
+void ConditionalExpression::add_condition(ExpressionBase* condition, ExpressionBase* expr)
 {
-  return *(get_vars());
-}
-
-
-std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Objective::get_vars()
-{
-  return expr->get_vars();
-}
-
-
-std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > Constraint::get_vars()
-{
-  return expr->get_vars();
-}
-
-
-std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > ConditionalConstraint::get_vars()
-{
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > all_vars;
-  std::shared_ptr<std::unordered_set<std::shared_ptr<ExpressionBase> > > e_vars;
-  for (auto &e : exprs)
+  assert (conditions.size() == exprs.size());
+  if (condition->is_leaf())
     {
-      e_vars = e->get_vars();
-      for (auto &v : (*e_vars))
+      conditions.push_back(condition);
+    }
+  else
+    {
+      conditions.push_back(dynamic_cast<Expression*>(condition)->copy());
+    }
+  if (expr->is_leaf())
+    {
+      exprs.push_back(expr);
+    }
+  else
+    {
+      exprs.push_back(dynamic_cast<Expression*>(expr)->copy());
+    }
+}
+
+
+void ConditionalExpression::add_final_expr(ExpressionBase* expr)
+{
+  if (expr->is_leaf())
+    {
+      exprs.push_back(expr);
+    }
+  else
+    {
+      exprs.push_back(dynamic_cast<Expression*>(expr)->copy());
+    }
+}
+
+
+ConditionalExpression::~ConditionalExpression()
+{
+  for (auto &_condition : conditions)
+    {
+      if (_condition->is_expr())
 	{
-	  all_vars->insert(v);
+	  delete _condition;
 	}
     }
-  return all_vars;
-}
-
-
-std::shared_ptr<Constraint> create_constraint(std::shared_ptr<ExpressionBase> expr, double lb, double ub)
-{
-  std::shared_ptr<Constraint> c = std::make_shared<Constraint>();
-  c->expr = expr;
-  c->lb = lb;
-  c->ub = ub;
-  return c;
-}
-
-
-std::shared_ptr<ConditionalConstraint> create_conditional_constraint(double lb, double ub)
-{
-  std::shared_ptr<ConditionalConstraint> c = std::make_shared<ConditionalConstraint>();
-  c->lb = lb;
-  c->ub = ub;
-  return c;
-}
-
-
-std::shared_ptr<Objective> create_objective(std::shared_ptr<ExpressionBase> n)
-{
-  std::shared_ptr<Objective> o = std::make_shared<Objective>();
-  o->expr = n;
-  return o;
-}
-
-
-std::string Constraint::__str__()
-{
-  return expr->__str__();
-}
-
-
-std::string Objective::__str__()
-{
-  return expr->__str__();
-}
-
-
-std::string ConditionalConstraint::__str__()
-{
-  std::string s = "";
-  auto condition_iterator = condition_exprs.begin();
-  auto expr_iterator = exprs.begin();
-  int i = 0;
-  
-  while (condition_iterator != condition_exprs.end() && expr_iterator != exprs.end())
+  for (auto &_expr : exprs)
     {
-      if (i == 0)
-        {
-	  s += "if ";
-        }
-      else
-        {
-	  s += "elif ";
-        }
-      s += (*condition_iterator)->__str__();
-      s += " <= 0:\n";
-      s += "\t";
-      s += (*expr_iterator)->__str__();
-      s += "\n";
-      ++condition_iterator;
-      ++expr_iterator;
-      ++i;
+      if (_expr->is_expr())
+	{
+	  delete _expr;
+	}
     }
-  s += "else: \n";
-  s += "\t";
-  s += (*expr_iterator)->__str__();
-  s += "\n";
-  return s;
+}
+
+
+Constraint::Constraint(ExpressionBase* expr)
+{
+  conditions = new Evaluator*[0];
+  exprs = new Evaluator*[1];
+  exprs[0] = new Evaluator(expr);
+}
+
+
+Constraint::Constraint(ConditionalExpression* conditional_expr)
+{
+  conditions = new Evaluator*[conditional_expr->conditions.size()];
+  exprs = new Evaluator*[conditional_expr->exprs.size()];
+  for (int i=0; i<conditional_expr->conditions.size(); ++i)
+    {
+      conditions[i] = new Evaluator(conditional_expr->conditions[i]);
+      exprs[i] = new Evaluator(conditional_expr->exprs[i]);
+      num_conditions += 1;
+    }
+}
+
+
+Constraint::~Constraint()
+{
+  for (int i=0; i<num_conditions; ++i)
+    {
+      delete conditions[i];
+      delete exprs[i];
+    }
+  delete exprs[num_conditions];
+  delete conditions;
+  delete exprs;
 }
 
 
 double Constraint::evaluate()
 {
-  return expr->evaluate();
-}
-
-
-double Objective::evaluate()
-{
-  return expr->evaluate();
-}
-
-
-void ConditionalConstraint::add_condition(std::shared_ptr<ExpressionBase> condition, std::shared_ptr<ExpressionBase> expr)
-{
-  condition_exprs.push_back(condition);
-  exprs.push_back(expr);
-}
-
-
-void ConditionalConstraint::add_final_expr(std::shared_ptr<ExpressionBase> expr)
-{
-  exprs.push_back(expr);
-}
-
-
-double ConditionalConstraint::evaluate()
-{
-  auto condition_iter = condition_exprs.begin();
-  auto expr_iter = exprs.begin();
-  bool found = false;
-  
-  while (condition_iter != condition_exprs.end())
+  for (int i=0; i<num_conditions; ++i)
     {
-      if ((*condition_iter)->evaluate() <= 0)
+      if (conditions[i]->evaluate() <= 0)
 	{
-	  return (*expr_iter)->evaluate();
+	  return exprs[i]->evaluate();
 	}
-      ++condition_iter;
-      ++ expr_iter;
     }
-  return (*expr_iter)->evaluate();
+  return exprs[num_conditions]->evaluate();
 }
 
 
-void Objective::rad(bool new_eval)
+std::string Constraint::__str__()
 {
-  expr->rad(new_eval);
-}
-
-
-void Constraint::rad(bool new_eval)
-{
-  expr->rad(new_eval);
-}
-
-
-void ConditionalConstraint::rad(bool new_eval)
-{
-  auto condition_iter = condition_exprs.begin();
-  auto expr_iter = exprs.begin();
-  bool found = false;
+  if (num_conditions == 0)
+    {
+      return exprs[0]->__str__();
+    }
   
-  while (condition_iter != condition_exprs.end())
+  std::string s = "";
+  for (int i=0; i<num_conditions; ++i)
     {
-      if ((*condition_iter)->evaluate() <= 0)
-        {
-	  found = true;
-	  (*expr_iter)->rad(new_eval);
-        }
-      ++condition_iter;
-      ++ expr_iter;
+      if (i == 0)
+	{
+	  s += "if ";
+	}
+      else
+	{
+	  s += "elif ";
+	}
+      s += conditions[i]->__str__();
+      s += " <= 0:\n\t";
+      s += exprs[i]->__str__();
+      s += "\n";
     }
-  if (!found)
-    {
-      (*expr_iter)->rad(new_eval);
-    }
+  s += "else: \n\t";
+  s += exprs[num_conditions]->__str__();
+  s += "\n";
+  return s;
 }
 
 
-double Constraint::get_dual()
+std::shared_ptr<std::unordered_map<Leaf*, double> > Constraint::rad()
 {
-  return dual;
-}
-
-
-double ConditionalConstraint::get_dual()
-{
-  return dual;
+  for (int i=0; i<num_conditions; ++i)
+    {
+      if (conditions[i]->evaluate() <= 0)
+	{
+	  return exprs[i]->rad();
+	}
+    }
+  return exprs[num_conditions]->rad();
 }
