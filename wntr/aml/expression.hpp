@@ -137,3 +137,7 @@ public:
   std::string __str__() override;
   void add_leaf(Leaf*);
 };
+
+
+int _arg_ndx_to_operator_ndx(int);
+int _operator_ndx_to_arg_ndx(int);
