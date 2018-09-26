@@ -1,5 +1,5 @@
 import sys
-from .aml_core import Var, Param, Constraint, WNTRModel
+from .aml_core import Var, Param, Constraint, WNTRModel, Leaf
 Var.__hash__ = None
 Param.__hash__ = None
 Constraint.__hash__ = None
@@ -94,13 +94,13 @@ class Model(object):
         -------
         None
         """
-        if isinstance(val, (Node, Component, _NodeDict)):
+        if isinstance(val, (Leaf, Constraint, _NodeDict)):
             if hasattr(self, name):
                 raise ValueError('Model already has a {0} named {1}. If you want to replace the {0}, please remove the existing one first.'.format(type(val), name))
 
-        if isinstance(val, (Node, VarDict, ParamDict)):
+        if isinstance(val, (Leaf, VarDict, ParamDict)):
             val.name = name
-        elif isinstance(val, ConstraintBase):
+        elif isinstance(val, Constraint):
             val.name = name
             self._register_constraint(val)
         elif isinstance(val, ConstraintDict):
@@ -108,8 +108,8 @@ class Model(object):
             val._model = self
             for k, v in val.items():
                 self._register_constraint(v)
-        elif isinstance(val, Objective):
-            self._register_objective(val)
+        #elif isinstance(val, Objective):
+        #    self._register_objective(val)
 
         # The __setattr__ of the parent class should always be called so that the attribute actually gets set.
         super(Model, self).__setattr__(name, val)
@@ -129,9 +129,9 @@ class Model(object):
         """
         # The __delattr__ of the parent class should always be called so that the attribute actually gets removed.
         val = getattr(self, name)
-        if isinstance(val, (Node, VarDict, ParamDict)):
+        if isinstance(val, (Leaf, VarDict, ParamDict)):
             val.name = 'None'
-        elif isinstance(val, ConstraintBase):
+        elif isinstance(val, Constraint):
             self._remove_constraint(val)
             val.name = 'None'
         elif isinstance(val, ConstraintDict):

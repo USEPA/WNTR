@@ -29,12 +29,12 @@ class TestExpression(unittest.TestCase):
         z = 10.0
         c1 = 8.6
         c2 = 3.3
-        m.x = aml.create_var(x)
-        m.y = aml.create_var(y)
-        m.z = aml.create_var(z)
-        m.c1 = aml.create_param(c1)
+        m.x = aml.Var(x)
+        m.y = aml.Var(y)
+        m.z = aml.Var(z)
+        m.c1 = aml.Param(c1)
 
-        expr = m.x + m.y + m.c1 + c2
+        expr = aml.Constraint(m.x + m.y + m.c1 + c2)
 
         self.assertAlmostEqual(expr.evaluate(), x + y + c1 + c2, 10)
         self.assertEqual(expr.ad(m.x), 1)
@@ -45,10 +45,10 @@ class TestExpression(unittest.TestCase):
         m = aml.Model()
         x = 2.5
         y = -3.7
-        m.x = aml.create_var(x)
-        m.y = aml.create_var(y)
+        m.x = aml.Var(x)
+        m.y = aml.Var(y)
 
-        expr = m.x - m.y
+        expr = aml.Constraint(m.x - m.y)
         self.assertAlmostEqual(expr.evaluate(), x - y, 10)
         self.assertEqual(expr.ad(m.x), 1)
         self.assertEqual(expr.ad(m.y), -1)
@@ -57,10 +57,10 @@ class TestExpression(unittest.TestCase):
         m = aml.Model()
         x = 2.5
         y = -3.7
-        m.x = aml.create_var(x)
-        m.y = aml.create_var(y)
+        m.x = aml.Var(x)
+        m.y = aml.Var(y)
 
-        expr = m.x * m.y
+        expr = aml.Constraint(m.x * m.y)
         self.assertAlmostEqual(expr.evaluate(), x * y, 10)
         self.assertEqual(expr.ad(m.x), y)
         self.assertEqual(expr.ad(m.y), x)
@@ -69,10 +69,10 @@ class TestExpression(unittest.TestCase):
         m = aml.Model()
         x = 2.5
         y = -3.7
-        m.x = aml.create_var(x)
-        m.y = aml.create_var(y)
+        m.x = aml.Var(x)
+        m.y = aml.Var(y)
 
-        expr = m.x / m.y
+        expr = aml.Constraint(m.x / m.y)
         self.assertAlmostEqual(expr.evaluate(), x / y, 10)
         self.assertAlmostEqual(expr.ad(m.x), 1/y, 10)
         self.assertAlmostEqual(expr.ad(m.y), -x/y**2, 10)
@@ -81,10 +81,10 @@ class TestExpression(unittest.TestCase):
         m = aml.Model()
         x = 2.5
         y = -3.7
-        m.x = aml.create_var(x)
-        m.y = aml.create_var(y)
+        m.x = aml.Var(x)
+        m.y = aml.Var(y)
 
-        expr = m.x**(m.y)
+        expr = aml.Constraint(m.x**(m.y))
         self.assertAlmostEqual(expr.evaluate(), x ** y, 10)
         self.assertAlmostEqual(expr.ad(m.x), y*x**(y-1), 10)
         self.assertAlmostEqual(expr.ad(m.y), x**y * np.log(x), 10)
@@ -93,7 +93,7 @@ class TestExpression(unittest.TestCase):
     def test_exp(self):
         m = aml.Model()
         x = 2.5
-        m.x = aml.create_var(x)
+        m.x = aml.Var(x)
 
         expr = aml.exp(m.x)
         self.assertAlmostEqual(aml.value(expr), np.exp(x), 10)
@@ -103,7 +103,7 @@ class TestExpression(unittest.TestCase):
     def test_log(self):
         m = aml.Model()
         x = 2.5
-        m.x = aml.create_var(x)
+        m.x = aml.Var(x)
 
         expr = aml.log(m.x)
         self.assertAlmostEqual(aml.value(expr), np.log(x), 10)
@@ -113,7 +113,7 @@ class TestExpression(unittest.TestCase):
     def test_chain_rule(self):
         m = aml.Model()
         x = 1.1
-        m.x = aml.create_var(x)
+        m.x = aml.Var(x)
 
         expr = aml.exp((m.x + m.x**0.5)**2) - m.x
 
@@ -128,9 +128,9 @@ class TestConstraint(unittest.TestCase):
         x = 2.5
         y = -3.7
         c = 1.5
-        m.x = aml.create_var(x)
-        m.y = aml.create_var(y)
-        m.c = aml.create_param(c)
+        m.x = aml.Var(x)
+        m.y = aml.Var(y)
+        m.c = aml.Param(c)
 
         m.con1 = aml.create_constraint(m.x + 2.0*m.y + m.c)
         m.con2 = aml.create_constraint(m.x**2 - m.y**2 + 10)
@@ -164,8 +164,8 @@ class TestConstraint(unittest.TestCase):
         m = aml.Model()
         x = -4.5
         y = -3.7
-        m.x = aml.create_var(x)
-        m.y = aml.create_var(y)
+        m.x = aml.Var(x)
+        m.y = aml.Var(y)
 
         con1 = aml.create_conditional_constraint(lb=0, ub=0)
         con1.add_condition(m.x + 1, -(-m.x)**1.852 - (-m.x)**2 - m.y)
@@ -265,10 +265,10 @@ class TestConstraint(unittest.TestCase):
 class TestCSRJacobian(unittest.TestCase):
     def test_register_and_remove_constraint(self):
         m = aml.Model('wntr')
-        m.x = aml.create_var(2.0)
-        m.y = aml.create_var(3.0)
-        m.z = aml.create_var(4.0)
-        m.v = aml.create_var(10.0)
+        m.x = aml.Var(2.0)
+        m.y = aml.Var(3.0)
+        m.z = aml.Var(4.0)
+        m.v = aml.Var(10.0)
         m.c1 = aml.create_constraint(m.x + m.y)
         m.c2 = aml.create_constraint(m.x * m.y * m.v)
         m.c3 = aml.create_constraint(m.z**3.0)
@@ -329,3 +329,7 @@ class TestCSRJacobian(unittest.TestCase):
         for c in m.cons():
             for v in m.vars():
                 self.assertTrue(true_jac[c][v] == A[c.index, v.index])
+
+
+if __name__ == '__main__':
+    unittest.main()
