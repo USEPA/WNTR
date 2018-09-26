@@ -97,76 +97,566 @@ except __builtin__.Exception:
 
 SHARED_PTR_DISOWN = _aml_core.SHARED_PTR_DISOWN
 import collections
-
-def create_var(value=0.0, lb=-1.0e100, ub=1.0e100):
-    """
-    create_var(double value=0.0, double lb=-1.0e100, double ub=1.0e100) -> std::shared_ptr< Var >
-
-    Parameters
-    ----------
-    value: double
-    lb: double
-    ub: double
-
-    """
-    return _aml_core.create_var(value, lb, ub)
-
-def create_param(value=0.0):
-    """
-    create_param(double value=0.0) -> std::shared_ptr< Param >
-
-    Parameters
-    ----------
-    value: double
-
-    """
-    return _aml_core.create_param(value)
-
-def create_float(vlaue=0.0):
-    """
-    create_float(double vlaue=0.0) -> std::shared_ptr< Float >
-
-    Parameters
-    ----------
-    vlaue: double
-
-    """
-    return _aml_core.create_float(vlaue)
-class Node(_object):
-    """Proxy of C++ Node class."""
+class SwigPyIterator(_object):
+    """Proxy of C++ swig::SwigPyIterator class."""
 
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, Node, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, SwigPyIterator, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, Node, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, SwigPyIterator, name)
+
+    def __init__(self, *args, **kwargs):
+        raise AttributeError("No constructor defined - class is abstract")
+    __repr__ = _swig_repr
+    __swig_destroy__ = _aml_core.delete_SwigPyIterator
+    __del__ = lambda self: None
+
+    def value(self):
+        """
+        value(SwigPyIterator self) -> PyObject *
+
+        Parameters
+        ----------
+        self: swig::SwigPyIterator const *
+
+        """
+        return _aml_core.SwigPyIterator_value(self)
+
+
+    def incr(self, n=1):
+        """
+        incr(SwigPyIterator self, size_t n=1) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: size_t
+
+        """
+        return _aml_core.SwigPyIterator_incr(self, n)
+
+
+    def decr(self, n=1):
+        """
+        decr(SwigPyIterator self, size_t n=1) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: size_t
+
+        """
+        return _aml_core.SwigPyIterator_decr(self, n)
+
+
+    def distance(self, x):
+        """
+        distance(SwigPyIterator self, SwigPyIterator x) -> ptrdiff_t
+
+        Parameters
+        ----------
+        x: swig::SwigPyIterator const &
+
+        """
+        return _aml_core.SwigPyIterator_distance(self, x)
+
+
+    def equal(self, x):
+        """
+        equal(SwigPyIterator self, SwigPyIterator x) -> bool
+
+        Parameters
+        ----------
+        x: swig::SwigPyIterator const &
+
+        """
+        return _aml_core.SwigPyIterator_equal(self, x)
+
+
+    def copy(self):
+        """
+        copy(SwigPyIterator self) -> SwigPyIterator
+
+        Parameters
+        ----------
+        self: swig::SwigPyIterator const *
+
+        """
+        return _aml_core.SwigPyIterator_copy(self)
+
+
+    def next(self):
+        """
+        next(SwigPyIterator self) -> PyObject *
+
+        Parameters
+        ----------
+        self: swig::SwigPyIterator *
+
+        """
+        return _aml_core.SwigPyIterator_next(self)
+
+
+    def __next__(self):
+        """
+        __next__(SwigPyIterator self) -> PyObject *
+
+        Parameters
+        ----------
+        self: swig::SwigPyIterator *
+
+        """
+        return _aml_core.SwigPyIterator___next__(self)
+
+
+    def previous(self):
+        """
+        previous(SwigPyIterator self) -> PyObject *
+
+        Parameters
+        ----------
+        self: swig::SwigPyIterator *
+
+        """
+        return _aml_core.SwigPyIterator_previous(self)
+
+
+    def advance(self, n):
+        """
+        advance(SwigPyIterator self, ptrdiff_t n) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: ptrdiff_t
+
+        """
+        return _aml_core.SwigPyIterator_advance(self, n)
+
+
+    def __eq__(self, x):
+        """
+        __eq__(SwigPyIterator self, SwigPyIterator x) -> bool
+
+        Parameters
+        ----------
+        x: swig::SwigPyIterator const &
+
+        """
+        return _aml_core.SwigPyIterator___eq__(self, x)
+
+
+    def __ne__(self, x):
+        """
+        __ne__(SwigPyIterator self, SwigPyIterator x) -> bool
+
+        Parameters
+        ----------
+        x: swig::SwigPyIterator const &
+
+        """
+        return _aml_core.SwigPyIterator___ne__(self, x)
+
+
+    def __iadd__(self, n):
+        """
+        __iadd__(SwigPyIterator self, ptrdiff_t n) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: ptrdiff_t
+
+        """
+        return _aml_core.SwigPyIterator___iadd__(self, n)
+
+
+    def __isub__(self, n):
+        """
+        __isub__(SwigPyIterator self, ptrdiff_t n) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: ptrdiff_t
+
+        """
+        return _aml_core.SwigPyIterator___isub__(self, n)
+
+
+    def __add__(self, n):
+        """
+        __add__(SwigPyIterator self, ptrdiff_t n) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: ptrdiff_t
+
+        """
+        return _aml_core.SwigPyIterator___add__(self, n)
+
+
+    def __sub__(self, *args):
+        """
+        __sub__(SwigPyIterator self, ptrdiff_t n) -> SwigPyIterator
+
+        Parameters
+        ----------
+        n: ptrdiff_t
+
+        __sub__(SwigPyIterator self, SwigPyIterator x) -> ptrdiff_t
+
+        Parameters
+        ----------
+        x: swig::SwigPyIterator const &
+
+        """
+        return _aml_core.SwigPyIterator___sub__(self, *args)
+
+    def __iter__(self):
+        return self
+SwigPyIterator_swigregister = _aml_core.SwigPyIterator_swigregister
+SwigPyIterator_swigregister(SwigPyIterator)
+
+class var_set(_object):
+    """Proxy of C++ std::set<(p.Var)> class."""
+
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, var_set, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, var_set, name)
     __repr__ = _swig_repr
 
-    def __init__(self):
-        """__init__(Node self) -> Node"""
-        this = _aml_core.new_Node()
+    def iterator(self):
+        """
+        iterator(var_set self) -> SwigPyIterator
+
+        Parameters
+        ----------
+        self: std::set< Var * > *
+
+        """
+        return _aml_core.var_set_iterator(self)
+
+    def __iter__(self):
+        return self.iterator()
+
+    def __nonzero__(self):
+        """
+        __nonzero__(var_set self) -> bool
+
+        Parameters
+        ----------
+        self: std::set< Var * > const *
+
+        """
+        return _aml_core.var_set___nonzero__(self)
+
+
+    def __bool__(self):
+        """
+        __bool__(var_set self) -> bool
+
+        Parameters
+        ----------
+        self: std::set< Var * > const *
+
+        """
+        return _aml_core.var_set___bool__(self)
+
+
+    def __len__(self):
+        """
+        __len__(var_set self) -> std::set< Var * >::size_type
+
+        Parameters
+        ----------
+        self: std::set< Var * > const *
+
+        """
+        return _aml_core.var_set___len__(self)
+
+
+    def append(self, x):
+        """
+        append(var_set self, Var x)
+
+        Parameters
+        ----------
+        x: std::set< Var * >::value_type
+
+        """
+        return _aml_core.var_set_append(self, x)
+
+
+    def __contains__(self, x):
+        """
+        __contains__(var_set self, Var x) -> bool
+
+        Parameters
+        ----------
+        x: std::set< Var * >::value_type
+
+        """
+        return _aml_core.var_set___contains__(self, x)
+
+
+    def __getitem__(self, i):
+        """
+        __getitem__(var_set self, std::set< Var * >::difference_type i) -> Var
+
+        Parameters
+        ----------
+        i: std::set< Var * >::difference_type
+
+        """
+        return _aml_core.var_set___getitem__(self, i)
+
+
+    def add(self, x):
+        """
+        add(var_set self, Var x)
+
+        Parameters
+        ----------
+        x: std::set< Var * >::value_type
+
+        """
+        return _aml_core.var_set_add(self, x)
+
+
+    def discard(self, x):
+        """
+        discard(var_set self, Var x)
+
+        Parameters
+        ----------
+        x: std::set< Var * >::value_type
+
+        """
+        return _aml_core.var_set_discard(self, x)
+
+
+    def __init__(self, *args):
+        """
+        __init__(std::set<(p.Var)> self, std::less< Var * > const & arg2) -> var_set
+
+        Parameters
+        ----------
+        arg2: std::less< Var * > const &
+
+        __init__(std::set<(p.Var)> self) -> var_set
+        __init__(std::set<(p.Var)> self, var_set arg2) -> var_set
+
+        Parameters
+        ----------
+        arg2: std::set< Var * > const &
+
+        """
+        this = _aml_core.new_var_set(*args)
         try:
             self.this.append(this)
         except __builtin__.Exception:
             self.this = this
-    __swig_destroy__ = _aml_core.delete_Node
-    __del__ = lambda self: None
-    __swig_setmethods__["value"] = _aml_core.Node_value_set
-    __swig_getmethods__["value"] = _aml_core.Node_value_get
-    if _newclass:
-        value = _swig_property(_aml_core.Node_value_get, _aml_core.Node_value_set)
-Node_swigregister = _aml_core.Node_swigregister
-Node_swigregister(Node)
 
-class ExpressionBase(Node):
+    def empty(self):
+        """
+        empty(var_set self) -> bool
+
+        Parameters
+        ----------
+        self: std::set< Var * > const *
+
+        """
+        return _aml_core.var_set_empty(self)
+
+
+    def size(self):
+        """
+        size(var_set self) -> std::set< Var * >::size_type
+
+        Parameters
+        ----------
+        self: std::set< Var * > const *
+
+        """
+        return _aml_core.var_set_size(self)
+
+
+    def clear(self):
+        """
+        clear(var_set self)
+
+        Parameters
+        ----------
+        self: std::set< Var * > *
+
+        """
+        return _aml_core.var_set_clear(self)
+
+
+    def swap(self, v):
+        """
+        swap(var_set self, var_set v)
+
+        Parameters
+        ----------
+        v: std::set< Var * > &
+
+        """
+        return _aml_core.var_set_swap(self, v)
+
+
+    def count(self, x):
+        """
+        count(var_set self, Var x) -> std::set< Var * >::size_type
+
+        Parameters
+        ----------
+        x: std::set< Var * >::key_type const &
+
+        """
+        return _aml_core.var_set_count(self, x)
+
+
+    def begin(self):
+        """
+        begin(var_set self) -> std::set< Var * >::iterator
+
+        Parameters
+        ----------
+        self: std::set< Var * > *
+
+        """
+        return _aml_core.var_set_begin(self)
+
+
+    def end(self):
+        """
+        end(var_set self) -> std::set< Var * >::iterator
+
+        Parameters
+        ----------
+        self: std::set< Var * > *
+
+        """
+        return _aml_core.var_set_end(self)
+
+
+    def rbegin(self):
+        """
+        rbegin(var_set self) -> std::set< Var * >::reverse_iterator
+
+        Parameters
+        ----------
+        self: std::set< Var * > *
+
+        """
+        return _aml_core.var_set_rbegin(self)
+
+
+    def rend(self):
+        """
+        rend(var_set self) -> std::set< Var * >::reverse_iterator
+
+        Parameters
+        ----------
+        self: std::set< Var * > *
+
+        """
+        return _aml_core.var_set_rend(self)
+
+
+    def erase(self, *args):
+        """
+        erase(var_set self, Var x) -> std::set< Var * >::size_type
+
+        Parameters
+        ----------
+        x: std::set< Var * >::key_type const &
+
+        erase(var_set self, std::set< Var * >::iterator pos)
+
+        Parameters
+        ----------
+        pos: std::set< Var * >::iterator
+
+        erase(var_set self, std::set< Var * >::iterator first, std::set< Var * >::iterator last)
+
+        Parameters
+        ----------
+        first: std::set< Var * >::iterator
+        last: std::set< Var * >::iterator
+
+        """
+        return _aml_core.var_set_erase(self, *args)
+
+
+    def find(self, x):
+        """
+        find(var_set self, Var x) -> std::set< Var * >::iterator
+
+        Parameters
+        ----------
+        x: std::set< Var * >::key_type const &
+
+        """
+        return _aml_core.var_set_find(self, x)
+
+
+    def lower_bound(self, x):
+        """
+        lower_bound(var_set self, Var x) -> std::set< Var * >::iterator
+
+        Parameters
+        ----------
+        x: std::set< Var * >::key_type const &
+
+        """
+        return _aml_core.var_set_lower_bound(self, x)
+
+
+    def upper_bound(self, x):
+        """
+        upper_bound(var_set self, Var x) -> std::set< Var * >::iterator
+
+        Parameters
+        ----------
+        x: std::set< Var * >::key_type const &
+
+        """
+        return _aml_core.var_set_upper_bound(self, x)
+
+
+    def equal_range(self, x):
+        """
+        equal_range(var_set self, Var x) -> std::pair< std::set< Var * >::iterator,std::set< Var * >::iterator >
+
+        Parameters
+        ----------
+        x: std::set< Var * >::key_type const &
+
+        """
+        return _aml_core.var_set_equal_range(self, x)
+
+
+    def insert(self, __x):
+        """
+        insert(var_set self, Var __x) -> std::pair< std::set< Var * >::iterator,bool >
+
+        Parameters
+        ----------
+        __x: std::set< Var * >::value_type const &
+
+        """
+        return _aml_core.var_set_insert(self, __x)
+
+    __swig_destroy__ = _aml_core.delete_var_set
+    __del__ = lambda self: None
+var_set_swigregister = _aml_core.var_set_swigregister
+var_set_swigregister(var_set)
+
+class ExpressionBase(_object):
     """Proxy of C++ ExpressionBase class."""
 
     __swig_setmethods__ = {}
-    for _s in [Node]:
-        __swig_setmethods__.update(getattr(_s, '__swig_setmethods__', {}))
     __setattr__ = lambda self, name, value: _swig_setattr(self, ExpressionBase, name, value)
     __swig_getmethods__ = {}
-    for _s in [Node]:
-        __swig_getmethods__.update(getattr(_s, '__swig_getmethods__', {}))
     __getattr__ = lambda self, name: _swig_getattr(self, ExpressionBase, name)
 
     def __init__(self, *args, **kwargs):
@@ -177,7 +667,7 @@ class ExpressionBase(Node):
 
     def __neg__(self):
         """
-        __neg__(ExpressionBase self) -> std::shared_ptr< ExpressionBase >
+        __neg__(ExpressionBase self) -> ExpressionBase
 
         Parameters
         ----------
@@ -189,13 +679,13 @@ class ExpressionBase(Node):
 
     def __add__(self, *args):
         """
-        __add__(ExpressionBase self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
+        __add__(ExpressionBase self, ExpressionBase arg2) -> ExpressionBase
 
         Parameters
         ----------
         arg2: ExpressionBase &
 
-        __add__(ExpressionBase self, double arg2) -> std::shared_ptr< ExpressionBase >
+        __add__(ExpressionBase self, double arg2) -> ExpressionBase
 
         Parameters
         ----------
@@ -207,13 +697,13 @@ class ExpressionBase(Node):
 
     def __sub__(self, *args):
         """
-        __sub__(ExpressionBase self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
+        __sub__(ExpressionBase self, ExpressionBase arg2) -> ExpressionBase
 
         Parameters
         ----------
         arg2: ExpressionBase &
 
-        __sub__(ExpressionBase self, double arg2) -> std::shared_ptr< ExpressionBase >
+        __sub__(ExpressionBase self, double arg2) -> ExpressionBase
 
         Parameters
         ----------
@@ -225,13 +715,13 @@ class ExpressionBase(Node):
 
     def __mul__(self, *args):
         """
-        __mul__(ExpressionBase self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
+        __mul__(ExpressionBase self, ExpressionBase arg2) -> ExpressionBase
 
         Parameters
         ----------
         arg2: ExpressionBase &
 
-        __mul__(ExpressionBase self, double arg2) -> std::shared_ptr< ExpressionBase >
+        __mul__(ExpressionBase self, double arg2) -> ExpressionBase
 
         Parameters
         ----------
@@ -249,13 +739,13 @@ class ExpressionBase(Node):
 
     def __pow__(self, *args):
         """
-        __pow__(ExpressionBase self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
+        __pow__(ExpressionBase self, ExpressionBase arg2) -> ExpressionBase
 
         Parameters
         ----------
         arg2: ExpressionBase &
 
-        __pow__(ExpressionBase self, double arg2) -> std::shared_ptr< ExpressionBase >
+        __pow__(ExpressionBase self, double arg2) -> ExpressionBase
 
         Parameters
         ----------
@@ -267,7 +757,7 @@ class ExpressionBase(Node):
 
     def __radd__(self, arg2):
         """
-        __radd__(ExpressionBase self, double arg2) -> std::shared_ptr< ExpressionBase >
+        __radd__(ExpressionBase self, double arg2) -> ExpressionBase
 
         Parameters
         ----------
@@ -279,7 +769,7 @@ class ExpressionBase(Node):
 
     def __rsub__(self, arg2):
         """
-        __rsub__(ExpressionBase self, double arg2) -> std::shared_ptr< ExpressionBase >
+        __rsub__(ExpressionBase self, double arg2) -> ExpressionBase
 
         Parameters
         ----------
@@ -291,7 +781,7 @@ class ExpressionBase(Node):
 
     def __rmul__(self, arg2):
         """
-        __rmul__(ExpressionBase self, double arg2) -> std::shared_ptr< ExpressionBase >
+        __rmul__(ExpressionBase self, double arg2) -> ExpressionBase
 
         Parameters
         ----------
@@ -303,7 +793,7 @@ class ExpressionBase(Node):
 
     def __rdiv__(self, arg2):
         """
-        __rdiv__(ExpressionBase self, double arg2) -> std::shared_ptr< ExpressionBase >
+        __rdiv__(ExpressionBase self, double arg2) -> ExpressionBase
 
         Parameters
         ----------
@@ -315,7 +805,7 @@ class ExpressionBase(Node):
 
     def __rtruediv__(self, arg2):
         """
-        __rtruediv__(ExpressionBase self, double arg2) -> std::shared_ptr< ExpressionBase >
+        __rtruediv__(ExpressionBase self, double arg2) -> ExpressionBase
 
         Parameters
         ----------
@@ -327,7 +817,7 @@ class ExpressionBase(Node):
 
     def __rpow__(self, arg2):
         """
-        __rpow__(ExpressionBase self, double arg2) -> std::shared_ptr< ExpressionBase >
+        __rpow__(ExpressionBase self, double arg2) -> ExpressionBase
 
         Parameters
         ----------
@@ -335,42 +825,6 @@ class ExpressionBase(Node):
 
         """
         return _aml_core.ExpressionBase___rpow__(self, arg2)
-
-
-    def get_operators(self):
-        """
-        get_operators(ExpressionBase self) -> std::shared_ptr< std::vector< std::shared_ptr< Operator > > >
-
-        Parameters
-        ----------
-        self: ExpressionBase *
-
-        """
-        return _aml_core.ExpressionBase_get_operators(self)
-
-
-    def shallow_copy(self):
-        """
-        shallow_copy(ExpressionBase self) -> std::shared_ptr< Expression >
-
-        Parameters
-        ----------
-        self: ExpressionBase *
-
-        """
-        return _aml_core.ExpressionBase_shallow_copy(self)
-
-
-    def get_num_operators(self):
-        """
-        get_num_operators(ExpressionBase self) -> int
-
-        Parameters
-        ----------
-        self: ExpressionBase *
-
-        """
-        return _aml_core.ExpressionBase_get_num_operators(self)
 
 
     def is_leaf(self):
@@ -444,32 +898,15 @@ class ExpressionBase(Node):
         """
         return _aml_core.ExpressionBase___str__(self)
 
-
-    def evaluate(self):
-        """
-        evaluate(ExpressionBase self) -> double
-
-        Parameters
-        ----------
-        self: ExpressionBase *
-
-        """
-        return _aml_core.ExpressionBase_evaluate(self)
-
-
-    def get_last_node(self):
-        """
-        get_last_node(ExpressionBase self) -> std::shared_ptr< Node >
-
-        Parameters
-        ----------
-        self: ExpressionBase *
-
-        """
-        return _aml_core.ExpressionBase_get_last_node(self)
-
 ExpressionBase_swigregister = _aml_core.ExpressionBase_swigregister
 ExpressionBase_swigregister(ExpressionBase)
+cvar = _aml_core.cvar
+VALUE = cvar.VALUE
+ADD = cvar.ADD
+SUBTRACT = cvar.SUBTRACT
+MULTIPLY = cvar.MULTIPLY
+DIVIDE = cvar.DIVIDE
+POWER = cvar.POWER
 
 class Leaf(ExpressionBase):
     """Proxy of C++ Leaf class."""
@@ -488,60 +925,10 @@ class Leaf(ExpressionBase):
     __repr__ = _swig_repr
     __swig_destroy__ = _aml_core.delete_Leaf
     __del__ = lambda self: None
-
-    def __add__(self, arg2):
-        """
-        __add__(Leaf self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Leaf___add__(self, arg2)
-
-
-    def __sub__(self, arg2):
-        """
-        __sub__(Leaf self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Leaf___sub__(self, arg2)
-
-
-    def __mul__(self, arg2):
-        """
-        __mul__(Leaf self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Leaf___mul__(self, arg2)
-
-
-    def __truediv__(self, *args):
-        return _aml_core.Leaf___truediv__(self, *args)
-    __div__ = __truediv__
-
-
-
-    def __pow__(self, arg2):
-        """
-        __pow__(Leaf self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Leaf___pow__(self, arg2)
-
+    __swig_setmethods__["value"] = _aml_core.Leaf_value_set
+    __swig_getmethods__["value"] = _aml_core.Leaf_value_get
+    if _newclass:
+        value = _swig_property(_aml_core.Leaf_value_get, _aml_core.Leaf_value_set)
 
     def is_leaf(self):
         """
@@ -553,18 +940,6 @@ class Leaf(ExpressionBase):
 
         """
         return _aml_core.Leaf_is_leaf(self)
-
-
-    def evaluate(self):
-        """
-        evaluate(Leaf self) -> double
-
-        Parameters
-        ----------
-        self: Leaf *
-
-        """
-        return _aml_core.Leaf_evaluate(self)
 
 Leaf_swigregister = _aml_core.Leaf_swigregister
 Leaf_swigregister(Leaf)
@@ -582,9 +957,17 @@ class Var(Leaf):
     __getattr__ = lambda self, name: _swig_getattr(self, Var, name)
     __repr__ = _swig_repr
 
-    def __init__(self):
-        """__init__(Var self) -> Var"""
-        this = _aml_core.new_Var()
+    def __init__(self, *args):
+        """
+        __init__(Var self) -> Var
+        __init__(Var self, double val) -> Var
+
+        Parameters
+        ----------
+        val: double
+
+        """
+        this = _aml_core.new_Var(*args)
         try:
             self.this.append(this)
         except __builtin__.Exception:
@@ -595,14 +978,10 @@ class Var(Leaf):
     __swig_getmethods__["name"] = _aml_core.Var_name_get
     if _newclass:
         name = _swig_property(_aml_core.Var_name_get, _aml_core.Var_name_set)
-    __swig_setmethods__["lb"] = _aml_core.Var_lb_set
-    __swig_getmethods__["lb"] = _aml_core.Var_lb_get
+    __swig_setmethods__["index"] = _aml_core.Var_index_set
+    __swig_getmethods__["index"] = _aml_core.Var_index_get
     if _newclass:
-        lb = _swig_property(_aml_core.Var_lb_get, _aml_core.Var_lb_set)
-    __swig_setmethods__["ub"] = _aml_core.Var_ub_set
-    __swig_getmethods__["ub"] = _aml_core.Var_ub_get
-    if _newclass:
-        ub = _swig_property(_aml_core.Var_ub_get, _aml_core.Var_ub_set)
+        index = _swig_property(_aml_core.Var_index_get, _aml_core.Var_index_set)
 
     def is_var(self):
         """
@@ -643,69 +1022,27 @@ class Float(Leaf):
     __getattr__ = lambda self, name: _swig_getattr(self, Float, name)
     __repr__ = _swig_repr
 
-    def __init__(self):
-        """__init__(Float self) -> Float"""
-        this = _aml_core.new_Float()
+    def __init__(self, *args):
+        """
+        __init__(Float self) -> Float
+        __init__(Float self, double val) -> Float
+
+        Parameters
+        ----------
+        val: double
+
+        """
+        this = _aml_core.new_Float(*args)
         try:
             self.this.append(this)
         except __builtin__.Exception:
             self.this = this
     __swig_destroy__ = _aml_core.delete_Float
     __del__ = lambda self: None
-
-    def __add__(self, arg2):
-        """
-        __add__(Float self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Float___add__(self, arg2)
-
-
-    def __sub__(self, arg2):
-        """
-        __sub__(Float self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Float___sub__(self, arg2)
-
-
-    def __mul__(self, arg2):
-        """
-        __mul__(Float self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Float___mul__(self, arg2)
-
-
-    def __truediv__(self, *args):
-        return _aml_core.Float___truediv__(self, *args)
-    __div__ = __truediv__
-
-
-
-    def __pow__(self, arg2):
-        """
-        __pow__(Float self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Float___pow__(self, arg2)
-
+    __swig_setmethods__["refcount"] = _aml_core.Float_refcount_set
+    __swig_getmethods__["refcount"] = _aml_core.Float_refcount_get
+    if _newclass:
+        refcount = _swig_property(_aml_core.Float_refcount_get, _aml_core.Float_refcount_set)
 
     def is_float(self):
         """
@@ -746,9 +1083,17 @@ class Param(Leaf):
     __getattr__ = lambda self, name: _swig_getattr(self, Param, name)
     __repr__ = _swig_repr
 
-    def __init__(self):
-        """__init__(Param self) -> Param"""
-        this = _aml_core.new_Param()
+    def __init__(self, *args):
+        """
+        __init__(Param self) -> Param
+        __init__(Param self, double val) -> Param
+
+        Parameters
+        ----------
+        val: double
+
+        """
+        this = _aml_core.new_Param(*args)
         try:
             self.this.append(this)
         except __builtin__.Exception:
@@ -812,99 +1157,49 @@ class Expression(ExpressionBase):
     __swig_getmethods__["operators"] = _aml_core.Expression_operators_get
     if _newclass:
         operators = _swig_property(_aml_core.Expression_operators_get, _aml_core.Expression_operators_set)
+    __swig_setmethods__["args1"] = _aml_core.Expression_args1_set
+    __swig_getmethods__["args1"] = _aml_core.Expression_args1_get
+    if _newclass:
+        args1 = _swig_property(_aml_core.Expression_args1_get, _aml_core.Expression_args1_set)
+    __swig_setmethods__["args2"] = _aml_core.Expression_args2_set
+    __swig_getmethods__["args2"] = _aml_core.Expression_args2_get
+    if _newclass:
+        args2 = _swig_property(_aml_core.Expression_args2_get, _aml_core.Expression_args2_set)
+    __swig_setmethods__["leaves"] = _aml_core.Expression_leaves_set
+    __swig_getmethods__["leaves"] = _aml_core.Expression_leaves_get
+    if _newclass:
+        leaves = _swig_property(_aml_core.Expression_leaves_get, _aml_core.Expression_leaves_set)
+    __swig_setmethods__["leaf_to_ndx_map"] = _aml_core.Expression_leaf_to_ndx_map_set
+    __swig_getmethods__["leaf_to_ndx_map"] = _aml_core.Expression_leaf_to_ndx_map_get
+    if _newclass:
+        leaf_to_ndx_map = _swig_property(_aml_core.Expression_leaf_to_ndx_map_get, _aml_core.Expression_leaf_to_ndx_map_set)
+    __swig_setmethods__["floats"] = _aml_core.Expression_floats_set
+    __swig_getmethods__["floats"] = _aml_core.Expression_floats_get
+    if _newclass:
+        floats = _swig_property(_aml_core.Expression_floats_get, _aml_core.Expression_floats_set)
     __swig_setmethods__["num_operators"] = _aml_core.Expression_num_operators_set
     __swig_getmethods__["num_operators"] = _aml_core.Expression_num_operators_get
     if _newclass:
         num_operators = _swig_property(_aml_core.Expression_num_operators_get, _aml_core.Expression_num_operators_set)
+    __swig_setmethods__["num_leaves"] = _aml_core.Expression_num_leaves_set
+    __swig_getmethods__["num_leaves"] = _aml_core.Expression_num_leaves_get
+    if _newclass:
+        num_leaves = _swig_property(_aml_core.Expression_num_leaves_get, _aml_core.Expression_num_leaves_set)
+    __swig_setmethods__["num_floats"] = _aml_core.Expression_num_floats_set
+    __swig_getmethods__["num_floats"] = _aml_core.Expression_num_floats_get
+    if _newclass:
+        num_floats = _swig_property(_aml_core.Expression_num_floats_get, _aml_core.Expression_num_floats_set)
 
-    def __add__(self, arg2):
+    def copy(self):
         """
-        __add__(Expression self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Expression___add__(self, arg2)
-
-
-    def __sub__(self, arg2):
-        """
-        __sub__(Expression self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Expression___sub__(self, arg2)
-
-
-    def __mul__(self, arg2):
-        """
-        __mul__(Expression self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Expression___mul__(self, arg2)
-
-
-    def __truediv__(self, *args):
-        return _aml_core.Expression___truediv__(self, *args)
-    __div__ = __truediv__
-
-
-
-    def __pow__(self, arg2):
-        """
-        __pow__(Expression self, ExpressionBase arg2) -> std::shared_ptr< ExpressionBase >
-
-        Parameters
-        ----------
-        arg2: ExpressionBase &
-
-        """
-        return _aml_core.Expression___pow__(self, arg2)
-
-
-    def get_operators(self):
-        """
-        get_operators(Expression self) -> std::shared_ptr< std::vector< std::shared_ptr< Operator > > >
+        copy(Expression self) -> Expression
 
         Parameters
         ----------
         self: Expression *
 
         """
-        return _aml_core.Expression_get_operators(self)
-
-
-    def shallow_copy(self):
-        """
-        shallow_copy(Expression self) -> std::shared_ptr< Expression >
-
-        Parameters
-        ----------
-        self: Expression *
-
-        """
-        return _aml_core.Expression_shallow_copy(self)
-
-
-    def get_num_operators(self):
-        """
-        get_num_operators(Expression self) -> int
-
-        Parameters
-        ----------
-        self: Expression *
-
-        """
-        return _aml_core.Expression_get_num_operators(self)
+        return _aml_core.Expression_copy(self)
 
 
     def is_expr(self):
@@ -919,18 +1214,6 @@ class Expression(ExpressionBase):
         return _aml_core.Expression_is_expr(self)
 
 
-    def get_last_node(self):
-        """
-        get_last_node(Expression self) -> std::shared_ptr< Node >
-
-        Parameters
-        ----------
-        self: Expression *
-
-        """
-        return _aml_core.Expression_get_last_node(self)
-
-
     def __str__(self):
         """
         __str__(Expression self) -> std::string
@@ -943,316 +1226,476 @@ class Expression(ExpressionBase):
         return _aml_core.Expression___str__(self)
 
 
-    def add_operator(self, arg2):
+    def add_leaf(self, arg2):
         """
-        add_operator(Expression self, std::shared_ptr< Operator > arg2)
+        add_leaf(Expression self, Leaf arg2)
 
         Parameters
         ----------
-        arg2: std::shared_ptr< Operator >
+        arg2: Leaf *
 
         """
-        return _aml_core.Expression_add_operator(self, arg2)
-
-
-    def evaluate(self):
-        """
-        evaluate(Expression self) -> double
-
-        Parameters
-        ----------
-        self: Expression *
-
-        """
-        return _aml_core.Expression_evaluate(self)
+        return _aml_core.Expression_add_leaf(self, arg2)
 
 Expression_swigregister = _aml_core.Expression_swigregister
 Expression_swigregister(Expression)
 
-class Operator(Node):
-    """Proxy of C++ Operator class."""
+
+def _arg_ndx_to_operator_ndx(arg1):
+    """
+    _arg_ndx_to_operator_ndx(int arg1) -> int
+
+    Parameters
+    ----------
+    arg1: int
+
+    """
+    return _aml_core._arg_ndx_to_operator_ndx(arg1)
+
+def _operator_ndx_to_arg_ndx(arg1):
+    """
+    _operator_ndx_to_arg_ndx(int arg1) -> int
+
+    Parameters
+    ----------
+    arg1: int
+
+    """
+    return _aml_core._operator_ndx_to_arg_ndx(arg1)
+class Evaluator(_object):
+    """Proxy of C++ Evaluator class."""
 
     __swig_setmethods__ = {}
-    for _s in [Node]:
-        __swig_setmethods__.update(getattr(_s, '__swig_setmethods__', {}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, Operator, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Evaluator, name, value)
     __swig_getmethods__ = {}
-    for _s in [Node]:
-        __swig_getmethods__.update(getattr(_s, '__swig_getmethods__', {}))
-    __getattr__ = lambda self, name: _swig_getattr(self, Operator, name)
-
-    def __init__(self, *args, **kwargs):
-        raise AttributeError("No constructor defined - class is abstract")
+    __getattr__ = lambda self, name: _swig_getattr(self, Evaluator, name)
     __repr__ = _swig_repr
-    __swig_destroy__ = _aml_core.delete_Operator
-    __del__ = lambda self: None
-
-    def evaluate(self):
-        """
-        evaluate(Operator self)
-
-        Parameters
-        ----------
-        self: Operator *
-
-        """
-        return _aml_core.Operator_evaluate(self)
-
-Operator_swigregister = _aml_core.Operator_swigregister
-Operator_swigregister(Operator)
-
-class BinaryOperator(Operator):
-    """Proxy of C++ BinaryOperator class."""
-
-    __swig_setmethods__ = {}
-    for _s in [Operator]:
-        __swig_setmethods__.update(getattr(_s, '__swig_setmethods__', {}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, BinaryOperator, name, value)
-    __swig_getmethods__ = {}
-    for _s in [Operator]:
-        __swig_getmethods__.update(getattr(_s, '__swig_getmethods__', {}))
-    __getattr__ = lambda self, name: _swig_getattr(self, BinaryOperator, name)
-
-    def __init__(self, *args, **kwargs):
-        raise AttributeError("No constructor defined - class is abstract")
-    __repr__ = _swig_repr
-    __swig_destroy__ = _aml_core.delete_BinaryOperator
-    __del__ = lambda self: None
-    __swig_setmethods__["arg1"] = _aml_core.BinaryOperator_arg1_set
-    __swig_getmethods__["arg1"] = _aml_core.BinaryOperator_arg1_get
+    __swig_setmethods__["n_operators"] = _aml_core.Evaluator_n_operators_set
+    __swig_getmethods__["n_operators"] = _aml_core.Evaluator_n_operators_get
     if _newclass:
-        arg1 = _swig_property(_aml_core.BinaryOperator_arg1_get, _aml_core.BinaryOperator_arg1_set)
-    __swig_setmethods__["arg2"] = _aml_core.BinaryOperator_arg2_set
-    __swig_getmethods__["arg2"] = _aml_core.BinaryOperator_arg2_get
+        n_operators = _swig_property(_aml_core.Evaluator_n_operators_get, _aml_core.Evaluator_n_operators_set)
+    __swig_setmethods__["n_leaves"] = _aml_core.Evaluator_n_leaves_set
+    __swig_getmethods__["n_leaves"] = _aml_core.Evaluator_n_leaves_get
     if _newclass:
-        arg2 = _swig_property(_aml_core.BinaryOperator_arg2_get, _aml_core.BinaryOperator_arg2_set)
-BinaryOperator_swigregister = _aml_core.BinaryOperator_swigregister
-BinaryOperator_swigregister(BinaryOperator)
+        n_leaves = _swig_property(_aml_core.Evaluator_n_leaves_get, _aml_core.Evaluator_n_leaves_set)
+    __swig_setmethods__["operators"] = _aml_core.Evaluator_operators_set
+    __swig_getmethods__["operators"] = _aml_core.Evaluator_operators_get
+    if _newclass:
+        operators = _swig_property(_aml_core.Evaluator_operators_get, _aml_core.Evaluator_operators_set)
+    __swig_setmethods__["arg1_indices"] = _aml_core.Evaluator_arg1_indices_set
+    __swig_getmethods__["arg1_indices"] = _aml_core.Evaluator_arg1_indices_get
+    if _newclass:
+        arg1_indices = _swig_property(_aml_core.Evaluator_arg1_indices_get, _aml_core.Evaluator_arg1_indices_set)
+    __swig_setmethods__["arg2_indices"] = _aml_core.Evaluator_arg2_indices_set
+    __swig_getmethods__["arg2_indices"] = _aml_core.Evaluator_arg2_indices_get
+    if _newclass:
+        arg2_indices = _swig_property(_aml_core.Evaluator_arg2_indices_get, _aml_core.Evaluator_arg2_indices_set)
+    __swig_setmethods__["leaves"] = _aml_core.Evaluator_leaves_set
+    __swig_getmethods__["leaves"] = _aml_core.Evaluator_leaves_get
+    if _newclass:
+        leaves = _swig_property(_aml_core.Evaluator_leaves_get, _aml_core.Evaluator_leaves_set)
 
-class AddOperator(BinaryOperator):
-    """Proxy of C++ AddOperator class."""
-
-    __swig_setmethods__ = {}
-    for _s in [BinaryOperator]:
-        __swig_setmethods__.update(getattr(_s, '__swig_setmethods__', {}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, AddOperator, name, value)
-    __swig_getmethods__ = {}
-    for _s in [BinaryOperator]:
-        __swig_getmethods__.update(getattr(_s, '__swig_getmethods__', {}))
-    __getattr__ = lambda self, name: _swig_getattr(self, AddOperator, name)
-    __repr__ = _swig_repr
-
-    def __init__(self, _arg1, _arg2):
+    def __init__(self, arg2):
         """
-        __init__(AddOperator self, std::shared_ptr< Node > _arg1, std::shared_ptr< Node > _arg2) -> AddOperator
+        __init__(Evaluator self, ExpressionBase arg2) -> Evaluator
 
         Parameters
         ----------
-        _arg1: std::shared_ptr< Node >
-        _arg2: std::shared_ptr< Node >
+        arg2: ExpressionBase *
 
         """
-        this = _aml_core.new_AddOperator(_arg1, _arg2)
+        this = _aml_core.new_Evaluator(arg2)
         try:
             self.this.append(this)
         except __builtin__.Exception:
             self.this = this
+    __swig_destroy__ = _aml_core.delete_Evaluator
+    __del__ = lambda self: None
 
     def evaluate(self):
         """
-        evaluate(AddOperator self)
+        evaluate(Evaluator self) -> double
 
         Parameters
         ----------
-        self: AddOperator *
+        self: Evaluator *
 
         """
-        return _aml_core.AddOperator_evaluate(self)
+        return _aml_core.Evaluator_evaluate(self)
 
-    __swig_destroy__ = _aml_core.delete_AddOperator
-    __del__ = lambda self: None
-AddOperator_swigregister = _aml_core.AddOperator_swigregister
-AddOperator_swigregister(AddOperator)
 
-class SubtractOperator(BinaryOperator):
-    """Proxy of C++ SubtractOperator class."""
+    def _evaluate(self, values):
+        """
+        _evaluate(Evaluator self, double * values)
+
+        Parameters
+        ----------
+        values: double *
+
+        """
+        return _aml_core.Evaluator__evaluate(self, values)
+
+
+    def rad(self):
+        """
+        rad(Evaluator self) -> std::shared_ptr< std::unordered_map< Leaf *,double > >
+
+        Parameters
+        ----------
+        self: Evaluator *
+
+        """
+        return _aml_core.Evaluator_rad(self)
+
+
+    def __str__(self):
+        """
+        __str__(Evaluator self) -> std::string
+
+        Parameters
+        ----------
+        self: Evaluator *
+
+        """
+        return _aml_core.Evaluator___str__(self)
+
+
+    def get_vars(self):
+        """
+        get_vars(Evaluator self) -> std::shared_ptr< std::unordered_set< Var * > >
+
+        Parameters
+        ----------
+        self: Evaluator *
+
+        """
+        return _aml_core.Evaluator_get_vars(self)
+
+Evaluator_swigregister = _aml_core.Evaluator_swigregister
+Evaluator_swigregister(Evaluator)
+
+class ConditionalExpression(_object):
+    """Proxy of C++ ConditionalExpression class."""
 
     __swig_setmethods__ = {}
-    for _s in [BinaryOperator]:
-        __swig_setmethods__.update(getattr(_s, '__swig_setmethods__', {}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, SubtractOperator, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, ConditionalExpression, name, value)
     __swig_getmethods__ = {}
-    for _s in [BinaryOperator]:
-        __swig_getmethods__.update(getattr(_s, '__swig_getmethods__', {}))
-    __getattr__ = lambda self, name: _swig_getattr(self, SubtractOperator, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, ConditionalExpression, name)
     __repr__ = _swig_repr
+    __swig_setmethods__["conditions"] = _aml_core.ConditionalExpression_conditions_set
+    __swig_getmethods__["conditions"] = _aml_core.ConditionalExpression_conditions_get
+    if _newclass:
+        conditions = _swig_property(_aml_core.ConditionalExpression_conditions_get, _aml_core.ConditionalExpression_conditions_set)
+    __swig_setmethods__["exprs"] = _aml_core.ConditionalExpression_exprs_set
+    __swig_getmethods__["exprs"] = _aml_core.ConditionalExpression_exprs_get
+    if _newclass:
+        exprs = _swig_property(_aml_core.ConditionalExpression_exprs_get, _aml_core.ConditionalExpression_exprs_set)
 
-    def __init__(self, _arg1, _arg2):
-        """
-        __init__(SubtractOperator self, std::shared_ptr< Node > _arg1, std::shared_ptr< Node > _arg2) -> SubtractOperator
-
-        Parameters
-        ----------
-        _arg1: std::shared_ptr< Node >
-        _arg2: std::shared_ptr< Node >
-
-        """
-        this = _aml_core.new_SubtractOperator(_arg1, _arg2)
+    def __init__(self):
+        """__init__(ConditionalExpression self) -> ConditionalExpression"""
+        this = _aml_core.new_ConditionalExpression()
         try:
             self.this.append(this)
         except __builtin__.Exception:
             self.this = this
+    __swig_destroy__ = _aml_core.delete_ConditionalExpression
+    __del__ = lambda self: None
 
-    def evaluate(self):
+    def add_condition(self, condition, expr):
         """
-        evaluate(SubtractOperator self)
+        add_condition(ConditionalExpression self, ExpressionBase condition, ExpressionBase expr)
 
         Parameters
         ----------
-        self: SubtractOperator *
+        condition: ExpressionBase *
+        expr: ExpressionBase *
 
         """
-        return _aml_core.SubtractOperator_evaluate(self)
+        return _aml_core.ConditionalExpression_add_condition(self, condition, expr)
 
-    __swig_destroy__ = _aml_core.delete_SubtractOperator
-    __del__ = lambda self: None
-SubtractOperator_swigregister = _aml_core.SubtractOperator_swigregister
-SubtractOperator_swigregister(SubtractOperator)
 
-class MultiplyOperator(BinaryOperator):
-    """Proxy of C++ MultiplyOperator class."""
+    def add_final_expr(self, expr):
+        """
+        add_final_expr(ConditionalExpression self, ExpressionBase expr)
+
+        Parameters
+        ----------
+        expr: ExpressionBase *
+
+        """
+        return _aml_core.ConditionalExpression_add_final_expr(self, expr)
+
+ConditionalExpression_swigregister = _aml_core.ConditionalExpression_swigregister
+ConditionalExpression_swigregister(ConditionalExpression)
+
+class Constraint(_object):
+    """Proxy of C++ Constraint class."""
 
     __swig_setmethods__ = {}
-    for _s in [BinaryOperator]:
-        __swig_setmethods__.update(getattr(_s, '__swig_setmethods__', {}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, MultiplyOperator, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Constraint, name, value)
     __swig_getmethods__ = {}
-    for _s in [BinaryOperator]:
-        __swig_getmethods__.update(getattr(_s, '__swig_getmethods__', {}))
-    __getattr__ = lambda self, name: _swig_getattr(self, MultiplyOperator, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, Constraint, name)
     __repr__ = _swig_repr
+    __swig_setmethods__["conditions"] = _aml_core.Constraint_conditions_set
+    __swig_getmethods__["conditions"] = _aml_core.Constraint_conditions_get
+    if _newclass:
+        conditions = _swig_property(_aml_core.Constraint_conditions_get, _aml_core.Constraint_conditions_set)
+    __swig_setmethods__["exprs"] = _aml_core.Constraint_exprs_set
+    __swig_getmethods__["exprs"] = _aml_core.Constraint_exprs_get
+    if _newclass:
+        exprs = _swig_property(_aml_core.Constraint_exprs_get, _aml_core.Constraint_exprs_set)
+    __swig_setmethods__["num_conditions"] = _aml_core.Constraint_num_conditions_set
+    __swig_getmethods__["num_conditions"] = _aml_core.Constraint_num_conditions_get
+    if _newclass:
+        num_conditions = _swig_property(_aml_core.Constraint_num_conditions_get, _aml_core.Constraint_num_conditions_set)
+    __swig_setmethods__["index"] = _aml_core.Constraint_index_set
+    __swig_getmethods__["index"] = _aml_core.Constraint_index_get
+    if _newclass:
+        index = _swig_property(_aml_core.Constraint_index_get, _aml_core.Constraint_index_set)
+    __swig_setmethods__["name"] = _aml_core.Constraint_name_set
+    __swig_getmethods__["name"] = _aml_core.Constraint_name_get
+    if _newclass:
+        name = _swig_property(_aml_core.Constraint_name_get, _aml_core.Constraint_name_set)
 
-    def __init__(self, _arg1, _arg2):
+    def __init__(self, *args):
         """
-        __init__(MultiplyOperator self, std::shared_ptr< Node > _arg1, std::shared_ptr< Node > _arg2) -> MultiplyOperator
+        __init__(Constraint self, ExpressionBase expr) -> Constraint
 
         Parameters
         ----------
-        _arg1: std::shared_ptr< Node >
-        _arg2: std::shared_ptr< Node >
+        expr: ExpressionBase *
+
+        __init__(Constraint self, ConditionalExpression conditional_expr) -> Constraint
+
+        Parameters
+        ----------
+        conditional_expr: ConditionalExpression *
 
         """
-        this = _aml_core.new_MultiplyOperator(_arg1, _arg2)
+        this = _aml_core.new_Constraint(*args)
         try:
             self.this.append(this)
         except __builtin__.Exception:
             self.this = this
+    __swig_destroy__ = _aml_core.delete_Constraint
+    __del__ = lambda self: None
 
     def evaluate(self):
         """
-        evaluate(MultiplyOperator self)
+        evaluate(Constraint self) -> double
 
         Parameters
         ----------
-        self: MultiplyOperator *
+        self: Constraint *
 
         """
-        return _aml_core.MultiplyOperator_evaluate(self)
+        return _aml_core.Constraint_evaluate(self)
 
-    __swig_destroy__ = _aml_core.delete_MultiplyOperator
-    __del__ = lambda self: None
-MultiplyOperator_swigregister = _aml_core.MultiplyOperator_swigregister
-MultiplyOperator_swigregister(MultiplyOperator)
 
-class DivideOperator(BinaryOperator):
-    """Proxy of C++ DivideOperator class."""
+    def rad(self):
+        """
+        rad(Constraint self) -> std::shared_ptr< std::unordered_map< Leaf *,double > >
+
+        Parameters
+        ----------
+        self: Constraint *
+
+        """
+        return _aml_core.Constraint_rad(self)
+
+
+    def __str__(self):
+        """
+        __str__(Constraint self) -> std::string
+
+        Parameters
+        ----------
+        self: Constraint *
+
+        """
+        return _aml_core.Constraint___str__(self)
+
+
+    def get_vars(self):
+        """
+        get_vars(Constraint self) -> std::shared_ptr< std::unordered_set< Var * > >
+
+        Parameters
+        ----------
+        self: Constraint *
+
+        """
+        return _aml_core.Constraint_get_vars(self)
+
+Constraint_swigregister = _aml_core.Constraint_swigregister
+Constraint_swigregister(Constraint)
+
+class WNTRModel(_object):
+    """Proxy of C++ WNTRModel class."""
 
     __swig_setmethods__ = {}
-    for _s in [BinaryOperator]:
-        __swig_setmethods__.update(getattr(_s, '__swig_setmethods__', {}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, DivideOperator, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, WNTRModel, name, value)
     __swig_getmethods__ = {}
-    for _s in [BinaryOperator]:
-        __swig_getmethods__.update(getattr(_s, '__swig_getmethods__', {}))
-    __getattr__ = lambda self, name: _swig_getattr(self, DivideOperator, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, WNTRModel, name)
     __repr__ = _swig_repr
+    __swig_setmethods__["vars"] = _aml_core.WNTRModel_vars_set
+    __swig_getmethods__["vars"] = _aml_core.WNTRModel_vars_get
+    if _newclass:
+        vars = _swig_property(_aml_core.WNTRModel_vars_get, _aml_core.WNTRModel_vars_set)
+    __swig_setmethods__["cons"] = _aml_core.WNTRModel_cons_set
+    __swig_getmethods__["cons"] = _aml_core.WNTRModel_cons_get
+    if _newclass:
+        cons = _swig_property(_aml_core.WNTRModel_cons_get, _aml_core.WNTRModel_cons_set)
+    __swig_setmethods__["cons_vector"] = _aml_core.WNTRModel_cons_vector_set
+    __swig_getmethods__["cons_vector"] = _aml_core.WNTRModel_cons_vector_get
+    if _newclass:
+        cons_vector = _swig_property(_aml_core.WNTRModel_cons_vector_get, _aml_core.WNTRModel_cons_vector_set)
+    __swig_setmethods__["vars_vector"] = _aml_core.WNTRModel_vars_vector_set
+    __swig_getmethods__["vars_vector"] = _aml_core.WNTRModel_vars_vector_get
+    if _newclass:
+        vars_vector = _swig_property(_aml_core.WNTRModel_vars_vector_get, _aml_core.WNTRModel_vars_vector_set)
+    __swig_setmethods__["is_structure_fixed"] = _aml_core.WNTRModel_is_structure_fixed_set
+    __swig_getmethods__["is_structure_fixed"] = _aml_core.WNTRModel_is_structure_fixed_get
+    if _newclass:
+        is_structure_fixed = _swig_property(_aml_core.WNTRModel_is_structure_fixed_get, _aml_core.WNTRModel_is_structure_fixed_set)
+    __swig_setmethods__["nnz"] = _aml_core.WNTRModel_nnz_set
+    __swig_getmethods__["nnz"] = _aml_core.WNTRModel_nnz_get
+    if _newclass:
+        nnz = _swig_property(_aml_core.WNTRModel_nnz_get, _aml_core.WNTRModel_nnz_set)
 
-    def __init__(self, _arg1, _arg2):
+    def get_x(self, array_out):
         """
-        __init__(DivideOperator self, std::shared_ptr< Node > _arg1, std::shared_ptr< Node > _arg2) -> DivideOperator
+        get_x(WNTRModel self, double * array_out)
 
         Parameters
         ----------
-        _arg1: std::shared_ptr< Node >
-        _arg2: std::shared_ptr< Node >
+        array_out: double *
 
         """
-        this = _aml_core.new_DivideOperator(_arg1, _arg2)
+        return _aml_core.WNTRModel_get_x(self, array_out)
+
+
+    def load_var_values_from_x(self, array_in):
+        """
+        load_var_values_from_x(WNTRModel self, double * array_in)
+
+        Parameters
+        ----------
+        array_in: double *
+
+        """
+        return _aml_core.WNTRModel_load_var_values_from_x(self, array_in)
+
+
+    def add_constraint(self, arg2):
+        """
+        add_constraint(WNTRModel self, Constraint arg2)
+
+        Parameters
+        ----------
+        arg2: Constraint *
+
+        """
+        return _aml_core.WNTRModel_add_constraint(self, arg2)
+
+
+    def remove_constraint(self, arg2):
+        """
+        remove_constraint(WNTRModel self, Constraint arg2)
+
+        Parameters
+        ----------
+        arg2: Constraint *
+
+        """
+        return _aml_core.WNTRModel_remove_constraint(self, arg2)
+
+
+    def add_var(self, arg2):
+        """
+        add_var(WNTRModel self, ExpressionBase arg2)
+
+        Parameters
+        ----------
+        arg2: ExpressionBase *
+
+        """
+        return _aml_core.WNTRModel_add_var(self, arg2)
+
+
+    def remove_var(self, arg2):
+        """
+        remove_var(WNTRModel self, ExpressionBase arg2)
+
+        Parameters
+        ----------
+        arg2: ExpressionBase *
+
+        """
+        return _aml_core.WNTRModel_remove_var(self, arg2)
+
+
+    def evaluate(self, array_out):
+        """
+        evaluate(WNTRModel self, double * array_out)
+
+        Parameters
+        ----------
+        array_out: double *
+
+        """
+        return _aml_core.WNTRModel_evaluate(self, array_out)
+
+
+    def evaluate_csr_jacobian(self, values_array_out, col_ndx_array_out, row_nnz_array_out):
+        """
+        evaluate_csr_jacobian(WNTRModel self, double * values_array_out, int * col_ndx_array_out, int * row_nnz_array_out)
+
+        Parameters
+        ----------
+        values_array_out: double *
+        col_ndx_array_out: int *
+        row_nnz_array_out: int *
+
+        """
+        return _aml_core.WNTRModel_evaluate_csr_jacobian(self, values_array_out, col_ndx_array_out, row_nnz_array_out)
+
+
+    def set_structure(self):
+        """
+        set_structure(WNTRModel self)
+
+        Parameters
+        ----------
+        self: WNTRModel *
+
+        """
+        return _aml_core.WNTRModel_set_structure(self)
+
+
+    def release_structure(self):
+        """
+        release_structure(WNTRModel self)
+
+        Parameters
+        ----------
+        self: WNTRModel *
+
+        """
+        return _aml_core.WNTRModel_release_structure(self)
+
+
+    def __init__(self):
+        """__init__(WNTRModel self) -> WNTRModel"""
+        this = _aml_core.new_WNTRModel()
         try:
             self.this.append(this)
         except __builtin__.Exception:
             self.this = this
-
-    def evaluate(self):
-        """
-        evaluate(DivideOperator self)
-
-        Parameters
-        ----------
-        self: DivideOperator *
-
-        """
-        return _aml_core.DivideOperator_evaluate(self)
-
-    __swig_destroy__ = _aml_core.delete_DivideOperator
+    __swig_destroy__ = _aml_core.delete_WNTRModel
     __del__ = lambda self: None
-DivideOperator_swigregister = _aml_core.DivideOperator_swigregister
-DivideOperator_swigregister(DivideOperator)
-
-class PowerOperator(BinaryOperator):
-    """Proxy of C++ PowerOperator class."""
-
-    __swig_setmethods__ = {}
-    for _s in [BinaryOperator]:
-        __swig_setmethods__.update(getattr(_s, '__swig_setmethods__', {}))
-    __setattr__ = lambda self, name, value: _swig_setattr(self, PowerOperator, name, value)
-    __swig_getmethods__ = {}
-    for _s in [BinaryOperator]:
-        __swig_getmethods__.update(getattr(_s, '__swig_getmethods__', {}))
-    __getattr__ = lambda self, name: _swig_getattr(self, PowerOperator, name)
-    __repr__ = _swig_repr
-
-    def __init__(self, _arg1, _arg2):
-        """
-        __init__(PowerOperator self, std::shared_ptr< Node > _arg1, std::shared_ptr< Node > _arg2) -> PowerOperator
-
-        Parameters
-        ----------
-        _arg1: std::shared_ptr< Node >
-        _arg2: std::shared_ptr< Node >
-
-        """
-        this = _aml_core.new_PowerOperator(_arg1, _arg2)
-        try:
-            self.this.append(this)
-        except __builtin__.Exception:
-            self.this = this
-
-    def evaluate(self):
-        """
-        evaluate(PowerOperator self)
-
-        Parameters
-        ----------
-        self: PowerOperator *
-
-        """
-        return _aml_core.PowerOperator_evaluate(self)
-
-    __swig_destroy__ = _aml_core.delete_PowerOperator
-    __del__ = lambda self: None
-PowerOperator_swigregister = _aml_core.PowerOperator_swigregister
-PowerOperator_swigregister(PowerOperator)
+WNTRModel_swigregister = _aml_core.WNTRModel_swigregister
+WNTRModel_swigregister(WNTRModel)
 
 # This file is compatible with both classic and new-style classes.
 
