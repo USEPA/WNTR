@@ -11988,6 +11988,40 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Constraint_ad(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  Constraint *arg1 = (Constraint *) 0 ;
+  Var *arg2 = (Var *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  char *  kwnames[] = {
+    (char *) "self",(char *) "arg2", NULL 
+  };
+  double result;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:Constraint_ad",kwnames,&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Constraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Constraint_ad" "', argument " "1"" of type '" "Constraint *""'"); 
+  }
+  arg1 = reinterpret_cast< Constraint * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_Var, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Constraint_ad" "', argument " "2"" of type '" "Var *""'"); 
+  }
+  arg2 = reinterpret_cast< Var * >(argp2);
+  result = (double)(arg1)->ad(arg2);
+  resultobj = SWIG_From_double(static_cast< double >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *Constraint_swigregister(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *obj;
   if (!PyArg_ParseTuple(args,(char *)"O:swigregister", &obj)) return NULL;
@@ -14250,6 +14284,15 @@ static PyMethodDef SwigMethods[] = {
 		"Parameters\n"
 		"----------\n"
 		"self: Constraint *\n"
+		"\n"
+		""},
+	 { (char *)"Constraint_ad", (PyCFunction) _wrap_Constraint_ad, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"Constraint_ad(Constraint self, Var arg3) -> double\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Constraint *\n"
+		"arg2: Var *\n"
 		"\n"
 		""},
 	 { (char *)"Constraint_swigregister", Constraint_swigregister, METH_VARARGS, NULL},

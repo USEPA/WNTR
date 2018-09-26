@@ -35,6 +35,7 @@ public:
   std::string __str__();
   std::shared_ptr<std::unordered_set<Var*> > get_vars();
   std::vector<Var*> py_get_vars();
+  double ad(Var*);
 };
 
 

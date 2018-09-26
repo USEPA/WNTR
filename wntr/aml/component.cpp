@@ -175,3 +175,10 @@ std::vector<Var*> Constraint::py_get_vars()
     }
   return vars;
 }
+
+
+double Constraint::ad(Var* v)
+{
+  std::shared_ptr<std::unordered_map<Leaf*, double> > ders = rad();
+  return (*ders)[v];
+}

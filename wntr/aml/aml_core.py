@@ -1677,6 +1677,18 @@ class Constraint(_object):
         """
         return _aml_core.Constraint_py_get_vars(self)
 
+
+    def ad(self, arg2):
+        """
+        ad(Constraint self, Var arg2) -> double
+
+        Parameters
+        ----------
+        arg2: Var *
+
+        """
+        return _aml_core.Constraint_ad(self, arg2)
+
 Constraint_swigregister = _aml_core.Constraint_swigregister
 Constraint_swigregister(Constraint)
 
