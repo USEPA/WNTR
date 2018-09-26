@@ -7,7 +7,7 @@ void WNTRModel::get_x(double *array_out, int array_length_out)
       throw std::runtime_error("The structure of the model must be fixed with set_structure before get_x can be called.");
     }
   int i = 0;
-  for (std::shared_ptr<ExpressionBase> &v_ptr : vars_vector)
+  for (Var* &v_ptr : vars_vector)
     {
       array_out[i] = v_ptr->value;
       ++i;
@@ -22,7 +22,7 @@ void WNTRModel::load_var_values_from_x(double *arrayin, int array_length_in)
       throw std::runtime_error("The structure of the model must be fixed with set_structure before load_var_values_from_x can be called.");
     }
   int i = 0;
-  for (std::shared_ptr<ExpressionBase> &v_ptr: vars_vector)
+  for (Var* &v_ptr: vars_vector)
     {
       v_ptr->value = arrayin[i];
       ++i;
@@ -30,7 +30,7 @@ void WNTRModel::load_var_values_from_x(double *arrayin, int array_length_in)
 }
 
 
-void WNTRModel::add_constraint(std::shared_ptr<ConstraintBase> con)
+void WNTRModel::add_constraint(Constraint* con)
 {
   if (is_structure_fixed)
     {
@@ -41,7 +41,7 @@ void WNTRModel::add_constraint(std::shared_ptr<ConstraintBase> con)
 }
 
 
-void WNTRModel::remove_constraint(std::shared_ptr<ConstraintBase> con)
+void WNTRModel::remove_constraint(Constraint* con)
 {
   if (is_structure_fixed)
     {
@@ -67,7 +67,7 @@ void WNTRModel::evaluate(double *array_out, int array_length_out)
 }
 
 
-void WNTRModel::evaluate_csr_jacobian(double *values_array_out, int values_array_length_out, int *col_ndx_array_out, int col_ndx_array_length_out, int *row_nnz_array_out, int row_nnz_array_length_out, bool new_eval)
+void WNTRModel::evaluate_csr_jacobian(double *values_array_out, int values_array_length_out, int *col_ndx_array_out, int col_ndx_array_length_out, int *row_nnz_array_out, int row_nnz_array_length_out)
 {
   if (!is_structure_fixed)
     {
@@ -85,10 +85,10 @@ void WNTRModel::evaluate_csr_jacobian(double *values_array_out, int values_array
       auto _vars = (*con_iter)->get_vars();
       row_nnz_array_out[_row_nnz] = row_nnz_array_out[_row_nnz - 1] + _vars->size();
       ++_row_nnz;
-      (*con_iter)->rad(new_eval);
+      auto ders = (*con_iter)->rad();
       for (auto var_iter=_vars->begin(); var_iter!=_vars->end(); ++var_iter )
 	{
-	  values_array_out[_values] = (*var_iter)->der;
+	  values_array_out[_values] = (*ders)[*var_iter];
 	  col_ndx_array_out[_col_ndx] = (*var_iter)->index;
 	  ++_values;
 	  ++_col_ndx;
@@ -97,23 +97,25 @@ void WNTRModel::evaluate_csr_jacobian(double *values_array_out, int values_array
 }
 
 
-void WNTRModel::add_var(std::shared_ptr<ExpressionBase> v)
+void WNTRModel::add_var(ExpressionBase* v)
 {
   if (is_structure_fixed)
     {
       throw std::runtime_error("The structure of the model must be released with release_structure before add_var can be called.");
     }
-  vars.insert(v);
+  assert (v->is_var());
+  vars.insert(dynamic_cast<Var*>(v));
 }
 
 
-void WNTRModel::remove_var(std::shared_ptr<ExpressionBase> v)
+void WNTRModel::remove_var(ExpressionBase* v)
 {
   if (is_structure_fixed)
     {
       throw std::runtime_error("The structure of the model must be released with release_structure before remove_var can be called.");
     }
-  vars.erase(v);
+  assert (v->is_var());
+  vars.erase(dynamic_cast<Var*>(v));
 }
 
 

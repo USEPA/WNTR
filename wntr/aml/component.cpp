@@ -143,3 +143,23 @@ std::shared_ptr<std::unordered_map<Leaf*, double> > Constraint::rad()
     }
   return exprs[num_conditions]->rad();
 }
+
+
+std::shared_ptr<std::unordered_set<Var*> > Constraint::get_vars()
+{
+  if (num_conditions == 0)
+    {
+      return exprs[0]->get_vars();
+    }
+  std::shared_ptr<std::unordered_set<Var*> > vars = std::make_shared<std::unordered_set<Var*> >();
+  std::shared_ptr<std::unordered_set<Var*> > _vars;
+  for (int i=0; i<num_conditions; ++i)
+    {
+      _vars = exprs[i]->get_vars();
+      for (auto &v : *_vars)
+	{
+	  vars->insert(v);
+	}
+    }
+  return vars;
+}

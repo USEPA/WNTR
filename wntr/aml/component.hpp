@@ -33,6 +33,7 @@ public:
   double evaluate();
   std::shared_ptr<std::unordered_map<Leaf*, double> > rad();
   std::string __str__();
+  std::shared_ptr<std::unordered_set<Var*> > get_vars();
 };
 
 

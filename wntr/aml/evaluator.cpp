@@ -336,3 +336,17 @@ std::string Evaluator::__str__()
     }
   return values[n_operators - 1];
 }
+
+
+std::shared_ptr<std::unordered_set<Var*> > Evaluator::get_vars()
+{
+  std::shared_ptr<std::unordered_set<Var*> > vars = std::make_shared<std::unordered_set<Var*> >();
+  for (int i=0; i<n_leaves; ++i)
+    {
+      if (leaves[i]->is_var())
+	{
+	  vars->insert(dynamic_cast<Var*>(leaves[i]));
+	}
+    }
+  return vars;
+}
