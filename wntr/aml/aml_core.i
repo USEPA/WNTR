@@ -1,6 +1,4 @@
 %module aml_core
-%include <std_shared_ptr.i>
-%shared_ptr(var_set)
 %feature("kwargs");
 %feature("autodoc","3");
 %{
@@ -15,8 +13,7 @@
 %include "std_string.i"
 %include "pyabc.i"
 %include "std_vector.i"
-%include "std_set.i"
-%template(var_set) std::set<Var*>;
+%template(var_vector) std::vector<Var*>;
 %newobject ExpressionBase::operator+(ExpressionBase&);
 %newobject ExpressionBase::operator-(ExpressionBase&);
 %newobject ExpressionBase::operator*(ExpressionBase&);

@@ -95,7 +95,6 @@ except __builtin__.Exception:
         pass
     _newclass = 0
 
-SHARED_PTR_DISOWN = _aml_core.SHARED_PTR_DISOWN
 import collections
 class SwigPyIterator(_object):
     """Proxy of C++ swig::SwigPyIterator class."""
@@ -313,343 +312,482 @@ class SwigPyIterator(_object):
 SwigPyIterator_swigregister = _aml_core.SwigPyIterator_swigregister
 SwigPyIterator_swigregister(SwigPyIterator)
 
-class var_set(_object):
-    """Proxy of C++ std::set<(p.Var)> class."""
+class var_vector(_object):
+    """Proxy of C++ std::vector<(p.Var)> class."""
 
     __swig_setmethods__ = {}
-    __setattr__ = lambda self, name, value: _swig_setattr(self, var_set, name, value)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, var_vector, name, value)
     __swig_getmethods__ = {}
-    __getattr__ = lambda self, name: _swig_getattr(self, var_set, name)
+    __getattr__ = lambda self, name: _swig_getattr(self, var_vector, name)
     __repr__ = _swig_repr
 
     def iterator(self):
         """
-        iterator(var_set self) -> SwigPyIterator
+        iterator(var_vector self) -> SwigPyIterator
 
         Parameters
         ----------
-        self: std::set< Var * > *
+        self: std::vector< Var * > *
 
         """
-        return _aml_core.var_set_iterator(self)
+        return _aml_core.var_vector_iterator(self)
 
     def __iter__(self):
         return self.iterator()
 
     def __nonzero__(self):
         """
-        __nonzero__(var_set self) -> bool
+        __nonzero__(var_vector self) -> bool
 
         Parameters
         ----------
-        self: std::set< Var * > const *
+        self: std::vector< Var * > const *
 
         """
-        return _aml_core.var_set___nonzero__(self)
+        return _aml_core.var_vector___nonzero__(self)
 
 
     def __bool__(self):
         """
-        __bool__(var_set self) -> bool
+        __bool__(var_vector self) -> bool
 
         Parameters
         ----------
-        self: std::set< Var * > const *
+        self: std::vector< Var * > const *
 
         """
-        return _aml_core.var_set___bool__(self)
+        return _aml_core.var_vector___bool__(self)
 
 
     def __len__(self):
         """
-        __len__(var_set self) -> std::set< Var * >::size_type
+        __len__(var_vector self) -> std::vector< Var * >::size_type
 
         Parameters
         ----------
-        self: std::set< Var * > const *
+        self: std::vector< Var * > const *
 
         """
-        return _aml_core.var_set___len__(self)
+        return _aml_core.var_vector___len__(self)
+
+
+    def __getslice__(self, i, j):
+        """
+        __getslice__(var_vector self, std::vector< Var * >::difference_type i, std::vector< Var * >::difference_type j) -> var_vector
+
+        Parameters
+        ----------
+        i: std::vector< Var * >::difference_type
+        j: std::vector< Var * >::difference_type
+
+        """
+        return _aml_core.var_vector___getslice__(self, i, j)
+
+
+    def __setslice__(self, *args):
+        """
+        __setslice__(var_vector self, std::vector< Var * >::difference_type i, std::vector< Var * >::difference_type j)
+
+        Parameters
+        ----------
+        i: std::vector< Var * >::difference_type
+        j: std::vector< Var * >::difference_type
+
+        __setslice__(var_vector self, std::vector< Var * >::difference_type i, std::vector< Var * >::difference_type j, var_vector v)
+
+        Parameters
+        ----------
+        i: std::vector< Var * >::difference_type
+        j: std::vector< Var * >::difference_type
+        v: std::vector< Var *,std::allocator< Var * > > const &
+
+        """
+        return _aml_core.var_vector___setslice__(self, *args)
+
+
+    def __delslice__(self, i, j):
+        """
+        __delslice__(var_vector self, std::vector< Var * >::difference_type i, std::vector< Var * >::difference_type j)
+
+        Parameters
+        ----------
+        i: std::vector< Var * >::difference_type
+        j: std::vector< Var * >::difference_type
+
+        """
+        return _aml_core.var_vector___delslice__(self, i, j)
+
+
+    def __delitem__(self, *args):
+        """
+        __delitem__(var_vector self, std::vector< Var * >::difference_type i)
+
+        Parameters
+        ----------
+        i: std::vector< Var * >::difference_type
+
+        __delitem__(var_vector self, PySliceObject * slice)
+
+        Parameters
+        ----------
+        slice: PySliceObject *
+
+        """
+        return _aml_core.var_vector___delitem__(self, *args)
+
+
+    def __getitem__(self, *args):
+        """
+        __getitem__(var_vector self, PySliceObject * slice) -> var_vector
+
+        Parameters
+        ----------
+        slice: PySliceObject *
+
+        __getitem__(var_vector self, std::vector< Var * >::difference_type i) -> Var
+
+        Parameters
+        ----------
+        i: std::vector< Var * >::difference_type
+
+        """
+        return _aml_core.var_vector___getitem__(self, *args)
+
+
+    def __setitem__(self, *args):
+        """
+        __setitem__(var_vector self, PySliceObject * slice, var_vector v)
+
+        Parameters
+        ----------
+        slice: PySliceObject *
+        v: std::vector< Var *,std::allocator< Var * > > const &
+
+        __setitem__(var_vector self, PySliceObject * slice)
+
+        Parameters
+        ----------
+        slice: PySliceObject *
+
+        __setitem__(var_vector self, std::vector< Var * >::difference_type i, Var x)
+
+        Parameters
+        ----------
+        i: std::vector< Var * >::difference_type
+        x: std::vector< Var * >::value_type
+
+        """
+        return _aml_core.var_vector___setitem__(self, *args)
+
+
+    def pop(self):
+        """
+        pop(var_vector self) -> Var
+
+        Parameters
+        ----------
+        self: std::vector< Var * > *
+
+        """
+        return _aml_core.var_vector_pop(self)
 
 
     def append(self, x):
         """
-        append(var_set self, Var x)
+        append(var_vector self, Var x)
 
         Parameters
         ----------
-        x: std::set< Var * >::value_type
+        x: std::vector< Var * >::value_type
 
         """
-        return _aml_core.var_set_append(self, x)
+        return _aml_core.var_vector_append(self, x)
 
 
-    def __contains__(self, x):
+    def empty(self):
         """
-        __contains__(var_set self, Var x) -> bool
+        empty(var_vector self) -> bool
 
         Parameters
         ----------
-        x: std::set< Var * >::value_type
+        self: std::vector< Var * > const *
 
         """
-        return _aml_core.var_set___contains__(self, x)
+        return _aml_core.var_vector_empty(self)
 
 
-    def __getitem__(self, i):
+    def size(self):
         """
-        __getitem__(var_set self, std::set< Var * >::difference_type i) -> Var
+        size(var_vector self) -> std::vector< Var * >::size_type
 
         Parameters
         ----------
-        i: std::set< Var * >::difference_type
+        self: std::vector< Var * > const *
 
         """
-        return _aml_core.var_set___getitem__(self, i)
+        return _aml_core.var_vector_size(self)
 
 
-    def add(self, x):
+    def swap(self, v):
         """
-        add(var_set self, Var x)
+        swap(var_vector self, var_vector v)
 
         Parameters
         ----------
-        x: std::set< Var * >::value_type
+        v: std::vector< Var * > &
 
         """
-        return _aml_core.var_set_add(self, x)
+        return _aml_core.var_vector_swap(self, v)
 
 
-    def discard(self, x):
+    def begin(self):
         """
-        discard(var_set self, Var x)
+        begin(var_vector self) -> std::vector< Var * >::iterator
 
         Parameters
         ----------
-        x: std::set< Var * >::value_type
+        self: std::vector< Var * > *
 
         """
-        return _aml_core.var_set_discard(self, x)
+        return _aml_core.var_vector_begin(self)
+
+
+    def end(self):
+        """
+        end(var_vector self) -> std::vector< Var * >::iterator
+
+        Parameters
+        ----------
+        self: std::vector< Var * > *
+
+        """
+        return _aml_core.var_vector_end(self)
+
+
+    def rbegin(self):
+        """
+        rbegin(var_vector self) -> std::vector< Var * >::reverse_iterator
+
+        Parameters
+        ----------
+        self: std::vector< Var * > *
+
+        """
+        return _aml_core.var_vector_rbegin(self)
+
+
+    def rend(self):
+        """
+        rend(var_vector self) -> std::vector< Var * >::reverse_iterator
+
+        Parameters
+        ----------
+        self: std::vector< Var * > *
+
+        """
+        return _aml_core.var_vector_rend(self)
+
+
+    def clear(self):
+        """
+        clear(var_vector self)
+
+        Parameters
+        ----------
+        self: std::vector< Var * > *
+
+        """
+        return _aml_core.var_vector_clear(self)
+
+
+    def get_allocator(self):
+        """
+        get_allocator(var_vector self) -> std::vector< Var * >::allocator_type
+
+        Parameters
+        ----------
+        self: std::vector< Var * > const *
+
+        """
+        return _aml_core.var_vector_get_allocator(self)
+
+
+    def pop_back(self):
+        """
+        pop_back(var_vector self)
+
+        Parameters
+        ----------
+        self: std::vector< Var * > *
+
+        """
+        return _aml_core.var_vector_pop_back(self)
+
+
+    def erase(self, *args):
+        """
+        erase(var_vector self, std::vector< Var * >::iterator pos) -> std::vector< Var * >::iterator
+
+        Parameters
+        ----------
+        pos: std::vector< Var * >::iterator
+
+        erase(var_vector self, std::vector< Var * >::iterator first, std::vector< Var * >::iterator last) -> std::vector< Var * >::iterator
+
+        Parameters
+        ----------
+        first: std::vector< Var * >::iterator
+        last: std::vector< Var * >::iterator
+
+        """
+        return _aml_core.var_vector_erase(self, *args)
 
 
     def __init__(self, *args):
         """
-        __init__(std::set<(p.Var)> self, std::less< Var * > const & arg2) -> var_set
+        __init__(std::vector<(p.Var)> self) -> var_vector
+        __init__(std::vector<(p.Var)> self, var_vector arg2) -> var_vector
 
         Parameters
         ----------
-        arg2: std::less< Var * > const &
+        arg2: std::vector< Var * > const &
 
-        __init__(std::set<(p.Var)> self) -> var_set
-        __init__(std::set<(p.Var)> self, var_set arg2) -> var_set
+        __init__(std::vector<(p.Var)> self, std::vector< Var * >::size_type size) -> var_vector
 
         Parameters
         ----------
-        arg2: std::set< Var * > const &
+        size: std::vector< Var * >::size_type
+
+        __init__(std::vector<(p.Var)> self, std::vector< Var * >::size_type size, Var value) -> var_vector
+
+        Parameters
+        ----------
+        size: std::vector< Var * >::size_type
+        value: std::vector< Var * >::value_type
 
         """
-        this = _aml_core.new_var_set(*args)
+        this = _aml_core.new_var_vector(*args)
         try:
             self.this.append(this)
         except __builtin__.Exception:
             self.this = this
 
-    def empty(self):
+    def push_back(self, x):
         """
-        empty(var_set self) -> bool
+        push_back(var_vector self, Var x)
 
         Parameters
         ----------
-        self: std::set< Var * > const *
+        x: std::vector< Var * >::value_type
 
         """
-        return _aml_core.var_set_empty(self)
+        return _aml_core.var_vector_push_back(self, x)
 
 
-    def size(self):
+    def front(self):
         """
-        size(var_set self) -> std::set< Var * >::size_type
+        front(var_vector self) -> Var
 
         Parameters
         ----------
-        self: std::set< Var * > const *
+        self: std::vector< Var * > const *
 
         """
-        return _aml_core.var_set_size(self)
+        return _aml_core.var_vector_front(self)
 
 
-    def clear(self):
+    def back(self):
         """
-        clear(var_set self)
+        back(var_vector self) -> Var
 
         Parameters
         ----------
-        self: std::set< Var * > *
+        self: std::vector< Var * > const *
 
         """
-        return _aml_core.var_set_clear(self)
+        return _aml_core.var_vector_back(self)
 
 
-    def swap(self, v):
+    def assign(self, n, x):
         """
-        swap(var_set self, var_set v)
+        assign(var_vector self, std::vector< Var * >::size_type n, Var x)
 
         Parameters
         ----------
-        v: std::set< Var * > &
+        n: std::vector< Var * >::size_type
+        x: std::vector< Var * >::value_type
 
         """
-        return _aml_core.var_set_swap(self, v)
+        return _aml_core.var_vector_assign(self, n, x)
 
 
-    def count(self, x):
+    def resize(self, *args):
         """
-        count(var_set self, Var x) -> std::set< Var * >::size_type
+        resize(var_vector self, std::vector< Var * >::size_type new_size)
 
         Parameters
         ----------
-        x: std::set< Var * >::key_type const &
+        new_size: std::vector< Var * >::size_type
 
-        """
-        return _aml_core.var_set_count(self, x)
-
-
-    def begin(self):
-        """
-        begin(var_set self) -> std::set< Var * >::iterator
+        resize(var_vector self, std::vector< Var * >::size_type new_size, Var x)
 
         Parameters
         ----------
-        self: std::set< Var * > *
+        new_size: std::vector< Var * >::size_type
+        x: std::vector< Var * >::value_type
 
         """
-        return _aml_core.var_set_begin(self)
+        return _aml_core.var_vector_resize(self, *args)
 
 
-    def end(self):
+    def insert(self, *args):
         """
-        end(var_set self) -> std::set< Var * >::iterator
+        insert(var_vector self, std::vector< Var * >::iterator pos, Var x) -> std::vector< Var * >::iterator
 
         Parameters
         ----------
-        self: std::set< Var * > *
+        pos: std::vector< Var * >::iterator
+        x: std::vector< Var * >::value_type
 
-        """
-        return _aml_core.var_set_end(self)
-
-
-    def rbegin(self):
-        """
-        rbegin(var_set self) -> std::set< Var * >::reverse_iterator
+        insert(var_vector self, std::vector< Var * >::iterator pos, std::vector< Var * >::size_type n, Var x)
 
         Parameters
         ----------
-        self: std::set< Var * > *
+        pos: std::vector< Var * >::iterator
+        n: std::vector< Var * >::size_type
+        x: std::vector< Var * >::value_type
 
         """
-        return _aml_core.var_set_rbegin(self)
+        return _aml_core.var_vector_insert(self, *args)
 
 
-    def rend(self):
+    def reserve(self, n):
         """
-        rend(var_set self) -> std::set< Var * >::reverse_iterator
+        reserve(var_vector self, std::vector< Var * >::size_type n)
 
         Parameters
         ----------
-        self: std::set< Var * > *
+        n: std::vector< Var * >::size_type
 
         """
-        return _aml_core.var_set_rend(self)
+        return _aml_core.var_vector_reserve(self, n)
 
 
-    def erase(self, *args):
+    def capacity(self):
         """
-        erase(var_set self, Var x) -> std::set< Var * >::size_type
+        capacity(var_vector self) -> std::vector< Var * >::size_type
 
         Parameters
         ----------
-        x: std::set< Var * >::key_type const &
-
-        erase(var_set self, std::set< Var * >::iterator pos)
-
-        Parameters
-        ----------
-        pos: std::set< Var * >::iterator
-
-        erase(var_set self, std::set< Var * >::iterator first, std::set< Var * >::iterator last)
-
-        Parameters
-        ----------
-        first: std::set< Var * >::iterator
-        last: std::set< Var * >::iterator
+        self: std::vector< Var * > const *
 
         """
-        return _aml_core.var_set_erase(self, *args)
+        return _aml_core.var_vector_capacity(self)
 
-
-    def find(self, x):
-        """
-        find(var_set self, Var x) -> std::set< Var * >::iterator
-
-        Parameters
-        ----------
-        x: std::set< Var * >::key_type const &
-
-        """
-        return _aml_core.var_set_find(self, x)
-
-
-    def lower_bound(self, x):
-        """
-        lower_bound(var_set self, Var x) -> std::set< Var * >::iterator
-
-        Parameters
-        ----------
-        x: std::set< Var * >::key_type const &
-
-        """
-        return _aml_core.var_set_lower_bound(self, x)
-
-
-    def upper_bound(self, x):
-        """
-        upper_bound(var_set self, Var x) -> std::set< Var * >::iterator
-
-        Parameters
-        ----------
-        x: std::set< Var * >::key_type const &
-
-        """
-        return _aml_core.var_set_upper_bound(self, x)
-
-
-    def equal_range(self, x):
-        """
-        equal_range(var_set self, Var x) -> std::pair< std::set< Var * >::iterator,std::set< Var * >::iterator >
-
-        Parameters
-        ----------
-        x: std::set< Var * >::key_type const &
-
-        """
-        return _aml_core.var_set_equal_range(self, x)
-
-
-    def insert(self, __x):
-        """
-        insert(var_set self, Var __x) -> std::pair< std::set< Var * >::iterator,bool >
-
-        Parameters
-        ----------
-        __x: std::set< Var * >::value_type const &
-
-        """
-        return _aml_core.var_set_insert(self, __x)
-
-    __swig_destroy__ = _aml_core.delete_var_set
+    __swig_destroy__ = _aml_core.delete_var_vector
     __del__ = lambda self: None
-var_set_swigregister = _aml_core.var_set_swigregister
-var_set_swigregister(var_set)
+var_vector_swigregister = _aml_core.var_vector_swigregister
+var_vector_swigregister(var_vector)
 
 class ExpressionBase(_object):
     """Proxy of C++ ExpressionBase class."""
@@ -1526,6 +1664,18 @@ class Constraint(_object):
 
         """
         return _aml_core.Constraint_get_vars(self)
+
+
+    def py_get_vars(self):
+        """
+        py_get_vars(Constraint self) -> var_vector
+
+        Parameters
+        ----------
+        self: Constraint *
+
+        """
+        return _aml_core.Constraint_py_get_vars(self)
 
 Constraint_swigregister = _aml_core.Constraint_swigregister
 Constraint_swigregister(Constraint)

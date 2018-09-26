@@ -163,3 +163,15 @@ std::shared_ptr<std::unordered_set<Var*> > Constraint::get_vars()
     }
   return vars;
 }
+
+
+std::vector<Var*> Constraint::py_get_vars()
+{
+  std::vector<Var*> vars;
+  std::shared_ptr<std::unordered_set<Var*> > _vars = get_vars();
+  for (auto &_v : *_vars)
+    {
+      vars.push_back(_v);
+    }
+  return vars;
+}
