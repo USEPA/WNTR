@@ -5,7 +5,7 @@ class WNTRModel
 {
 public:
   std::unordered_set<Var*> vars;
-  std::unordered_set<Constraint*> cons;
+  std::set<Constraint*> cons;
   std::vector<Constraint*> cons_vector;
   std::vector<Var*> vars_vector;
   bool is_structure_fixed = false;
