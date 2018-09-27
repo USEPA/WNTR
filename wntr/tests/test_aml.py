@@ -164,17 +164,17 @@ class TestConstraint(unittest.TestCase):
         m.x = aml.Var(x)
         m.y = aml.Var(y)
 
-        con1 = aml.create_conditional_constraint(lb=0, ub=0)
+        con1 = aml.ConditionalExpression()
         con1.add_condition(m.x + 1, -(-m.x)**1.852 - (-m.x)**2 - m.y)
         con1.add_condition(m.x - 1, m.x)
         con1.add_final_expr(m.x**1.852 + m.x**2 - m.y)
-        m.con1 = con1
+        m.con1 = aml.Constraint(con1)
 
-        con2 = aml.create_conditional_constraint(lb=0, ub=0)
+        con2 = aml.ConditionalExpression()
         con2.add_condition(m.y + 1, -(-m.y)**(1.852) - (-m.y)**(2) - m.x)
         con2.add_condition(m.y - 1, m.y)
         con2.add_final_expr(m.y**(1.852) + m.y**(2) - m.x)
-        m.con2 = con2
+        m.con2 = aml.Constraint(con2)
 
         true_con_values = _OrderedNameDict()
         true_jac = _OrderedNameDict()
@@ -215,11 +215,11 @@ class TestConstraint(unittest.TestCase):
         del true_con_values[m.con2]
         del true_jac[m.con2]
         del m.con2
-        con2 = aml.create_conditional_constraint()
+        con2 = aml.ConditionalExpression()
         con2.add_condition(m.y + 1, -(-m.y)**2.852 - (-m.y)**3 - m.x)
         con2.add_condition(m.y - 1, m.y**2)
         con2.add_final_expr(m.y**2.852 + m.y**3 - m.x)
-        m.con2 = con2
+        m.con2 = aml.Constraint(con2)
 
         true_jac[m.con2] = _OrderedNameDict()
         x = -4.5
@@ -272,7 +272,7 @@ class TestCSRJacobian(unittest.TestCase):
         m.c4 = aml.Constraint(m.x + 1.0 / m.v)
         m.set_structure()
         con_values = m.evaluate_residuals()
-        A = m.evaluate_jacobian(new_eval=False)
+        A = m.evaluate_jacobian()
 
         true_con_values = _OrderedNameDict()
         true_con_values[m.c1] = 5.0
@@ -311,7 +311,7 @@ class TestCSRJacobian(unittest.TestCase):
         m.c3 = aml.Constraint(m.z)
         m.set_structure()
         con_values = m.evaluate_residuals()
-        A = m.evaluate_jacobian(new_eval=False)
+        A = m.evaluate_jacobian()
 
         true_con_values[m.c1] = 5.0
         true_con_values[m.c2] = 60.0

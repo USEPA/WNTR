@@ -73,6 +73,7 @@ Constraint::Constraint(ConditionalExpression* conditional_expr)
       exprs[i] = new Evaluator(conditional_expr->exprs[i]);
       num_conditions += 1;
     }
+  exprs[num_conditions] = new Evaluator(conditional_expr->exprs[num_conditions]);
 }
 
 

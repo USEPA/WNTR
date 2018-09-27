@@ -1,5 +1,5 @@
 import sys
-from .aml_core import Var, Param, Constraint, WNTRModel, Leaf
+from .aml_core import Var, Param, Constraint, WNTRModel, Leaf, ConditionalExpression
 Var.__hash__ = None
 Param.__hash__ = None
 Constraint.__hash__ = None
