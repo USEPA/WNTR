@@ -189,18 +189,15 @@ class Model(object):
         r = self._model.evaluate(len(self._cons))
         return r
 
-    def evaluate_jacobian(self, x=None, new_eval=True):
+    def evaluate_jacobian(self, x=None):
         n_vars = len(self._vars)
         n_cons = len(self._cons)
         if n_vars != n_cons:
             raise ValueError('The number of constraints and variables must be equal.')
         if x is not None:
             self._model.load_var_values_from_x(x)
-            self.evaluate_residuals()
-        elif new_eval:
-            self.evaluate_residuals()
         jac_values, col_ndx, row_nnz = self._model.evaluate_csr_jacobian(self._model.nnz, self._model.nnz,
-                                                                         len(self._cons) + 1, False)
+                                                                         len(self._cons) + 1)
         result = scipy.sparse.csr_matrix((jac_values, col_ndx, row_nnz), shape=(n_cons, n_vars))
         return result
 

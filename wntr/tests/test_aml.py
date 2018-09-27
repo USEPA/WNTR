@@ -2,21 +2,18 @@ import wntr.aml as aml
 import unittest
 import numpy as np
 from wntr.aml.aml import _OrderedNameDict
-from scipy.sparse import csr_matrix
 
 
 def compare_evaluation(self, m, true_r, true_j):
     m.set_structure()
     vec = m.get_x()
     r = m.evaluate_residuals(vec)
-    j1 = m.evaluate_jacobian(new_eval=False)
-    j2 = m.evaluate_jacobian(new_eval=True)
+    j = m.evaluate_jacobian()
 
     for c in m.cons():
         self.assertAlmostEqual(true_r[c], r[c.index], 10)
         for v in m.vars():
-            self.assertAlmostEqual(true_j[c][v], j1[c.index, v.index], 10)
-            self.assertAlmostEqual(true_j[c][v], j2[c.index, v.index], 10)
+            self.assertAlmostEqual(true_j[c][v], j[c.index, v.index], 10)
 
     m.release_structure()
 
@@ -132,28 +129,28 @@ class TestConstraint(unittest.TestCase):
         m.y = aml.Var(y)
         m.c = aml.Param(c)
 
-        m.con1 = aml.create_constraint(m.x + 2.0*m.y + m.c)
-        m.con2 = aml.create_constraint(m.x**2 - m.y**2 + 10)
+        m.con1 = aml.Constraint(m.x + 2.0 * m.y + m.c)
+        m.con2 = aml.Constraint(m.x ** 2 - m.y ** 2 + 10)
 
         true_con_values = _OrderedNameDict()
         true_con_values[m.con1] = x + 2 * y + c
-        true_con_values[m.con2] = x**2 - y**2 + 10
+        true_con_values[m.con2] = x ** 2 - y ** 2 + 10
 
         true_jac = _OrderedNameDict()
         true_jac[m.con1] = _OrderedNameDict()
         true_jac[m.con2] = _OrderedNameDict()
         true_jac[m.con1][m.x] = 1
         true_jac[m.con1][m.y] = 2
-        true_jac[m.con2][m.x] = 2*x
-        true_jac[m.con2][m.y] = -2*y
+        true_jac[m.con2][m.x] = 2 * x
+        true_jac[m.con2][m.y] = -2 * y
 
         compare_evaluation(self, m, true_con_values, true_jac)
 
         del true_con_values[m.con2]
         del true_jac[m.con2]
         del m.con2
-        m.con3 = aml.create_constraint(m.x*m.y)
-        true_con_values[m.con3] = x*y
+        m.con3 = aml.Constraint(m.x * m.y)
+        true_con_values[m.con3] = x * y
         true_jac[m.con3] = _OrderedNameDict()
         true_jac[m.con3][m.x] = y
         true_jac[m.con3][m.y] = x
@@ -269,10 +266,10 @@ class TestCSRJacobian(unittest.TestCase):
         m.y = aml.Var(3.0)
         m.z = aml.Var(4.0)
         m.v = aml.Var(10.0)
-        m.c1 = aml.create_constraint(m.x + m.y)
-        m.c2 = aml.create_constraint(m.x * m.y * m.v)
-        m.c3 = aml.create_constraint(m.z**3.0)
-        m.c4 = aml.create_constraint(m.x + 1.0 / m.v)
+        m.c1 = aml.Constraint(m.x + m.y)
+        m.c2 = aml.Constraint(m.x * m.y * m.v)
+        m.c3 = aml.Constraint(m.z**3.0)
+        m.c4 = aml.Constraint(m.x + 1.0 / m.v)
         m.set_structure()
         con_values = m.evaluate_residuals()
         A = m.evaluate_jacobian(new_eval=False)
@@ -311,7 +308,7 @@ class TestCSRJacobian(unittest.TestCase):
 
         m.release_structure()
         del m.c3
-        m.c3 = aml.create_constraint(m.z)
+        m.c3 = aml.Constraint(m.z)
         m.set_structure()
         con_values = m.evaluate_residuals()
         A = m.evaluate_jacobian(new_eval=False)

@@ -10904,6 +10904,58 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Evaluator_n_floats_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Evaluator_n_floats_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_n_floats_set" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Evaluator_n_floats_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->n_floats = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Evaluator_n_floats_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  int result;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Evaluator_n_floats_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_n_floats_get" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  result = (int) ((arg1)->n_floats);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Evaluator_operators_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Evaluator *arg1 = (Evaluator *) 0 ;
@@ -11106,6 +11158,58 @@ SWIGINTERN PyObject *_wrap_Evaluator_leaves_get(PyObject *SWIGUNUSEDPARM(self), 
   arg1 = reinterpret_cast< Evaluator * >(argp1);
   result = (Leaf **) ((arg1)->leaves);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_p_Leaf, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Evaluator_floats_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  Float **arg2 = (Float **) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:Evaluator_floats_set",&obj0,&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_floats_set" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_p_Float, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Evaluator_floats_set" "', argument " "2"" of type '" "Float **""'"); 
+  }
+  arg2 = reinterpret_cast< Float ** >(argp2);
+  if (arg1) (arg1)->floats = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Evaluator_floats_get(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  Float **result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Evaluator_floats_get",&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_floats_get" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  result = (Float **) ((arg1)->floats);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_p_Float, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -13950,6 +14054,23 @@ static PyMethodDef SwigMethods[] = {
 		"self: Evaluator *\n"
 		"\n"
 		""},
+	 { (char *)"Evaluator_n_floats_set", _wrap_Evaluator_n_floats_set, METH_VARARGS, (char *)"\n"
+		"Evaluator_n_floats_set(Evaluator self, int n_floats)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Evaluator *\n"
+		"n_floats: int\n"
+		"\n"
+		""},
+	 { (char *)"Evaluator_n_floats_get", _wrap_Evaluator_n_floats_get, METH_VARARGS, (char *)"\n"
+		"Evaluator_n_floats_get(Evaluator self) -> int\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Evaluator *\n"
+		"\n"
+		""},
 	 { (char *)"Evaluator_operators_set", _wrap_Evaluator_operators_set, METH_VARARGS, (char *)"\n"
 		"Evaluator_operators_set(Evaluator self, short * operators)\n"
 		"\n"
@@ -14012,6 +14133,23 @@ static PyMethodDef SwigMethods[] = {
 		""},
 	 { (char *)"Evaluator_leaves_get", _wrap_Evaluator_leaves_get, METH_VARARGS, (char *)"\n"
 		"Evaluator_leaves_get(Evaluator self) -> Leaf **\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Evaluator *\n"
+		"\n"
+		""},
+	 { (char *)"Evaluator_floats_set", _wrap_Evaluator_floats_set, METH_VARARGS, (char *)"\n"
+		"Evaluator_floats_set(Evaluator self, Float ** floats)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"self: Evaluator *\n"
+		"floats: Float **\n"
+		"\n"
+		""},
+	 { (char *)"Evaluator_floats_get", _wrap_Evaluator_floats_get, METH_VARARGS, (char *)"\n"
+		"Evaluator_floats_get(Evaluator self) -> Float **\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -14554,8 +14692,8 @@ static swig_type_info _swigt__p_difference_type = {"_p_difference_type", "differ
 static swig_type_info _swigt__p_double = {"_p_double", "double *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_int = {"_p_int", "int *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_Evaluator = {"_p_p_Evaluator", "Evaluator **", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_p_Float = {"_p_p_Float", "Float **", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_p_Leaf = {"_p_p_Leaf", "Leaf **", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_p_Float = {"_p_p_Float", 0, 0, 0, 0, 0};
 static swig_type_info _swigt__p_p_Param = {"_p_p_Param", 0, 0, 0, 0, 0};
 static swig_type_info _swigt__p_p_Var = {"_p_p_Var", 0, 0, 0, 0, 0};
 static swig_type_info _swigt__p_p_PyObject = {"_p_p_PyObject", "PyObject **", 0, 0, (void*)0, 0};
@@ -14638,7 +14776,7 @@ static swig_cast_info _swigc__p_difference_type[] = {  {&_swigt__p_difference_ty
 static swig_cast_info _swigc__p_double[] = {  {&_swigt__p_double, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_Evaluator[] = {  {&_swigt__p_p_Evaluator, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_p_Float[] = {{&_swigt__p_p_Float, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_p_Float[] = {  {&_swigt__p_p_Float, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_Param[] = {{&_swigt__p_p_Param, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_Var[] = {{&_swigt__p_p_Var, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_p_Leaf[] = {  {&_swigt__p_p_Float, _p_p_FloatTo_p_p_Leaf, 0, 0},  {&_swigt__p_p_Param, _p_p_ParamTo_p_p_Leaf, 0, 0},  {&_swigt__p_p_Leaf, 0, 0, 0},  {&_swigt__p_p_Var, _p_p_VarTo_p_p_Leaf, 0, 0},{0, 0, 0, 0}};

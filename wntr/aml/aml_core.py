@@ -1416,6 +1416,10 @@ class Evaluator(_object):
     __swig_getmethods__["n_leaves"] = _aml_core.Evaluator_n_leaves_get
     if _newclass:
         n_leaves = _swig_property(_aml_core.Evaluator_n_leaves_get, _aml_core.Evaluator_n_leaves_set)
+    __swig_setmethods__["n_floats"] = _aml_core.Evaluator_n_floats_set
+    __swig_getmethods__["n_floats"] = _aml_core.Evaluator_n_floats_get
+    if _newclass:
+        n_floats = _swig_property(_aml_core.Evaluator_n_floats_get, _aml_core.Evaluator_n_floats_set)
     __swig_setmethods__["operators"] = _aml_core.Evaluator_operators_set
     __swig_getmethods__["operators"] = _aml_core.Evaluator_operators_get
     if _newclass:
@@ -1432,6 +1436,10 @@ class Evaluator(_object):
     __swig_getmethods__["leaves"] = _aml_core.Evaluator_leaves_get
     if _newclass:
         leaves = _swig_property(_aml_core.Evaluator_leaves_get, _aml_core.Evaluator_leaves_set)
+    __swig_setmethods__["floats"] = _aml_core.Evaluator_floats_set
+    __swig_getmethods__["floats"] = _aml_core.Evaluator_floats_get
+    if _newclass:
+        floats = _swig_property(_aml_core.Evaluator_floats_get, _aml_core.Evaluator_floats_set)
 
     def __init__(self, arg2):
         """

@@ -16,12 +16,16 @@ Evaluator::Evaluator(ExpressionBase* expr)
       arg1_indices[0] = 0;
       arg2_indices[0] = 0;
       leaves[0] = leaf;
+      assert (!(leaf->is_float()));
+      floats = NULL;
+      n_floats = 0;
     }
   else
     {
       Expression* _expr = dynamic_cast<Expression*>(expr);
       n_operators = _expr->num_operators;
       n_leaves = _expr->num_leaves;
+      std::vector<Float*> tmp_floats;
       operators = new short[n_operators];
       arg1_indices = new int[n_operators];
       arg2_indices = new int[n_operators];
@@ -43,7 +47,14 @@ Evaluator::Evaluator(ExpressionBase* expr)
 	    {
 	      Float *f = dynamic_cast<Float*>(leaf);
 	      f->refcount += 1;
+	      tmp_floats.push_back(f);
 	    }
+	}
+      n_floats = tmp_floats.size();
+      floats = new Float*[n_floats];
+      for (int i=0; i<n_floats; ++i)
+	{
+	  floats[i] = tmp_floats[i];
 	}
     }
 }
@@ -51,25 +62,21 @@ Evaluator::Evaluator(ExpressionBase* expr)
 
 Evaluator::~Evaluator()
 {
-  Leaf *leaf;
   Float *f;
-  for (int i=0; i<n_leaves; ++i)
+  for (int i=0; i<n_floats; ++i)
     {
-      leaf = leaves[i];
-      if (leaf->is_float())
+      f = floats[i];
+      f->refcount -= 1;
+      if (f->refcount == 0)
 	{
-	  f = dynamic_cast<Float*>(leaf);
-	  f->refcount -= 1;
-	  if (f->refcount == 0)
-	    {
-	      delete f;
-	    }
+	  delete f;
 	}
     }
   delete operators;
   delete arg1_indices;
   delete arg2_indices;
   delete leaves;
+  delete floats;
 }
 
 
