@@ -10,7 +10,7 @@ datadir = join(testdir,'networks_for_testing')
 def test_Todini_Fig2_optCost_GPM():
     inp_file = join(datadir,'Todini_Fig2_optCost_GPM.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    sim = wntr.sim.EpanetSimulator(wn)
+    sim = wntr.sim.WNTRSimulator(wn)
     results = sim.run_sim()
     
     # Compute todini index
@@ -28,7 +28,7 @@ def test_Todini_Fig2_optCost_GPM():
 def test_Todini_Fig2_optCost_CMH():
     inp_file = join(datadir,'Todini_Fig2_optCost_CMH.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    sim = wntr.sim.EpanetSimulator(wn)
+    sim = wntr.sim.WNTRSimulator(wn)
     results = sim.run_sim()
 
     # Compute todini index
@@ -46,7 +46,7 @@ def test_Todini_Fig2_optCost_CMH():
 def test_Todini_Fig2_solA_GPM():
     inp_file = join(datadir,'Todini_Fig2_solA_GPM.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    sim = wntr.sim.EpanetSimulator(wn)
+    sim = wntr.sim.WNTRSimulator(wn)
     results = sim.run_sim()
 
     # Compute todini index
@@ -64,7 +64,7 @@ def test_Todini_Fig2_solA_GPM():
 def test_Todini_Fig2_solA_CMH():
     inp_file = join(datadir,'Todini_Fig2_solA_CMH.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    sim = wntr.sim.EpanetSimulator(wn)
+    sim = wntr.sim.WNTRSimulator(wn)
     results = sim.run_sim()
 
     # Compute todini index
