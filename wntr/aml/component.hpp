@@ -36,6 +36,7 @@ public:
   void rad();
   std::string __str__();
   std::vector<Var*> py_get_vars();
+  std::unordered_set<Var*> get_var_set();
   double ad(Var*);
 private:
   void set_vars();

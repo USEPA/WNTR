@@ -1067,6 +1067,14 @@ class Leaf(ExpressionBase):
     __swig_getmethods__["value"] = _aml_core.Leaf_value_get
     if _newclass:
         value = _swig_property(_aml_core.Leaf_value_get, _aml_core.Leaf_value_set)
+    __swig_setmethods__["der"] = _aml_core.Leaf_der_set
+    __swig_getmethods__["der"] = _aml_core.Leaf_der_get
+    if _newclass:
+        der = _swig_property(_aml_core.Leaf_der_get, _aml_core.Leaf_der_set)
+    __swig_setmethods__["index"] = _aml_core.Leaf_index_set
+    __swig_getmethods__["index"] = _aml_core.Leaf_index_get
+    if _newclass:
+        index = _swig_property(_aml_core.Leaf_index_get, _aml_core.Leaf_index_set)
 
     def is_leaf(self):
         """
@@ -1116,10 +1124,6 @@ class Var(Leaf):
     __swig_getmethods__["name"] = _aml_core.Var_name_get
     if _newclass:
         name = _swig_property(_aml_core.Var_name_get, _aml_core.Var_name_set)
-    __swig_setmethods__["index"] = _aml_core.Var_index_set
-    __swig_getmethods__["index"] = _aml_core.Var_index_get
-    if _newclass:
-        index = _swig_property(_aml_core.Var_index_get, _aml_core.Var_index_set)
 
     def is_var(self):
         """
@@ -1484,7 +1488,7 @@ class Evaluator(_object):
 
     def rad(self):
         """
-        rad(Evaluator self) -> std::shared_ptr< std::unordered_map< Leaf *,double > >
+        rad(Evaluator self)
 
         Parameters
         ----------
@@ -1508,7 +1512,7 @@ class Evaluator(_object):
 
     def get_vars(self):
         """
-        get_vars(Evaluator self) -> std::shared_ptr< std::unordered_set< Var * > >
+        get_vars(Evaluator self) -> std::shared_ptr< std::vector< Var *,std::allocator< Var * > > >
 
         Parameters
         ----------
@@ -1516,6 +1520,18 @@ class Evaluator(_object):
 
         """
         return _aml_core.Evaluator_get_vars(self)
+
+
+    def get_n_vars(self):
+        """
+        get_n_vars(Evaluator self) -> int
+
+        Parameters
+        ----------
+        self: Evaluator *
+
+        """
+        return _aml_core.Evaluator_get_n_vars(self)
 
 Evaluator_swigregister = _aml_core.Evaluator_swigregister
 Evaluator_swigregister(Evaluator)
@@ -1590,6 +1606,14 @@ class Constraint(_object):
     __swig_getmethods__["exprs"] = _aml_core.Constraint_exprs_get
     if _newclass:
         exprs = _swig_property(_aml_core.Constraint_exprs_get, _aml_core.Constraint_exprs_set)
+    __swig_setmethods__["vars"] = _aml_core.Constraint_vars_set
+    __swig_getmethods__["vars"] = _aml_core.Constraint_vars_get
+    if _newclass:
+        vars = _swig_property(_aml_core.Constraint_vars_get, _aml_core.Constraint_vars_set)
+    __swig_setmethods__["num_vars"] = _aml_core.Constraint_num_vars_set
+    __swig_getmethods__["num_vars"] = _aml_core.Constraint_num_vars_get
+    if _newclass:
+        num_vars = _swig_property(_aml_core.Constraint_num_vars_get, _aml_core.Constraint_num_vars_set)
     __swig_setmethods__["num_conditions"] = _aml_core.Constraint_num_conditions_set
     __swig_getmethods__["num_conditions"] = _aml_core.Constraint_num_conditions_get
     if _newclass:
@@ -1640,7 +1664,7 @@ class Constraint(_object):
 
     def rad(self):
         """
-        rad(Constraint self) -> std::shared_ptr< std::unordered_map< Leaf *,double > >
+        rad(Constraint self)
 
         Parameters
         ----------
@@ -1662,18 +1686,6 @@ class Constraint(_object):
         return _aml_core.Constraint___str__(self)
 
 
-    def get_vars(self):
-        """
-        get_vars(Constraint self) -> std::shared_ptr< std::unordered_set< Var * > >
-
-        Parameters
-        ----------
-        self: Constraint *
-
-        """
-        return _aml_core.Constraint_get_vars(self)
-
-
     def py_get_vars(self):
         """
         py_get_vars(Constraint self) -> var_vector
@@ -1684,6 +1696,18 @@ class Constraint(_object):
 
         """
         return _aml_core.Constraint_py_get_vars(self)
+
+
+    def get_var_set(self):
+        """
+        get_var_set(Constraint self) -> std::unordered_set< Var * >
+
+        Parameters
+        ----------
+        self: Constraint *
+
+        """
+        return _aml_core.Constraint_get_var_set(self)
 
 
     def ad(self, arg2):

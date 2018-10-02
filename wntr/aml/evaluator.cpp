@@ -164,11 +164,6 @@ void Evaluator::rad()
   double der2;
   int oper_ndx;
 
-  for (int i=0; i<n_leaves; ++i)
-    {
-      leaves[i]->der = 0.0;
-    }
-  
   ders[n_operators-1] = 1.0;
   
   for (int i=n_operators-1; i>=0; --i)

@@ -160,6 +160,10 @@ std::string Constraint::__str__()
 
 void Constraint::rad()
 {
+  for (int i=0; i<num_vars; ++i)
+    {
+      vars[i]->der = 0.0;
+    }
   bool found = false;
   for (int i=0; i<num_conditions; ++i)
     {
@@ -188,8 +192,23 @@ std::vector<Var*> Constraint::py_get_vars()
 }
 
 
+std::unordered_set<Var*> Constraint::get_var_set()
+{
+  std::unordered_set<Var*> var_set;
+  for (int i=0; i<num_vars; ++i)
+    {
+      var_set.insert(vars[i]);
+    }
+  return var_set;
+}
+
+
 double Constraint::ad(Var* v)
 {
+  if (!(get_var_set().count(v)))
+    {
+      return 0.0;
+    }
   rad();
   return v->der;
 }
