@@ -91,7 +91,7 @@ class NewtonSolver(object):
             if r_norm < self.tol:
                 return SolverStatus.converged, 'Solved Successfully'
 
-            J = model.evaluate_jacobian(x=None, new_eval=False)
+            J = model.evaluate_jacobian(x=None)
 
             # Call Linear solver
             try:
