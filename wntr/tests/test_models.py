@@ -101,8 +101,8 @@ class TestHeadloss(unittest.TestCase):
                 else:
                     r2 = f
                 self.assertAlmostEqual(r1, r2, 12)
-                d1 = m.hazen_williams_headloss['p1'].ad(m.flow['p1'], False)
-                d2 = m.hazen_williams_headloss['p1'].ad(m.flow['p1'], True)
+                d1 = m.hazen_williams_headloss['p1'].ad(m.flow['p1'])
+                d2 = m.hazen_williams_headloss['p1'].ad(m.flow['p1'])
                 d3 = approximate_derivative(m.hazen_williams_headloss['p1'], m.flow['p1'], 1e-6)
                 rel_diff = abs(d1-d2)/abs(d1) * 100
                 self.assertLess(rel_diff, 0.1)
@@ -158,8 +158,8 @@ class TestHeadloss(unittest.TestCase):
                         r2 = f
                     self.assertTrue(compare_floats(r1, r2, 1e-12, 1e-12))
                     if f < m.pump_q1 or f > m.pump_q2:
-                        d1 = m.head_pump_headloss['pump1'].ad(m.flow['pump1'], False)
-                        d2 = m.head_pump_headloss['pump1'].ad(m.flow['pump1'], True)
+                        d1 = m.head_pump_headloss['pump1'].ad(m.flow['pump1'])
+                        d2 = m.head_pump_headloss['pump1'].ad(m.flow['pump1'])
                         d3 = approximate_derivative(m.head_pump_headloss['pump1'], m.flow['pump1'], 1e-6)
                         self.assertTrue(compare_floats(d1, d2, 1e-12, 1e-12))
                         self.assertTrue(compare_floats(d1, d3, 1e-5, 1e-3))
@@ -189,8 +189,8 @@ class TestHeadloss(unittest.TestCase):
                 else:
                     r2 = f
                 self.assertTrue(compare_floats(r1, r2, 1e-12, 1e-12))
-                d1 = m.power_pump_headloss['pump2'].ad(m.flow['pump2'], False)
-                d2 = m.power_pump_headloss['pump2'].ad(m.flow['pump2'], True)
+                d1 = m.power_pump_headloss['pump2'].ad(m.flow['pump2'])
+                d2 = m.power_pump_headloss['pump2'].ad(m.flow['pump2'])
                 d3 = approximate_derivative(m.power_pump_headloss['pump2'], m.flow['pump2'], 1e-6)
                 self.assertTrue(compare_floats(d1, d2, 1e-12, 1e-12))
                 self.assertTrue(compare_floats(d1, d3, 1e-8, 1e-6))
@@ -257,8 +257,8 @@ class TestPDD(unittest.TestCase):
                 r2 = d - d_expected * (slope*(p - pnom) + 1.0)
             # print(p, r1, r2, abs(r1 - r2))
             self.assertAlmostEqual(r1, r2, 12)
-            der1 = m.pdd['j1'].ad(m.head['j1'], False)
-            der2 = m.pdd['j1'].ad(m.head['j1'], True)
+            der1 = m.pdd['j1'].ad(m.head['j1'])
+            der2 = m.pdd['j1'].ad(m.head['j1'])
             der3 = approximate_derivative(m.pdd['j1'], m.head['j1'], 1e-6)
             self.assertAlmostEqual(der1, der2, 7)
             self.assertAlmostEqual(der1, der3, 7)

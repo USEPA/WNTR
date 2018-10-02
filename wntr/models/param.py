@@ -22,9 +22,9 @@ def source_head_param(m, wn):
         m.source_head = aml.ParamDict()
 
         for node_name, node in wn.tanks():
-            m.source_head[node_name] = aml.create_param(value=node.head)
+            m.source_head[node_name] = aml.Param(node.head)
         for node_name, node in wn.reservoirs():
-            m.source_head[node_name] = aml.create_param(value=node.head_timeseries(wn.sim_time))
+            m.source_head[node_name] = aml.Param(node.head_timeseries(wn.sim_time))
     else:
         for node_name, node in wn.tanks():
             m.source_head[node_name].value = node.head
@@ -45,7 +45,7 @@ def expected_demand_param(m, wn):
         m.expected_demand = aml.ParamDict()
 
         for node_name, node in wn.junctions():
-            m.expected_demand[node_name] = aml.create_param(value=node.demand_timeseries_list(wn.sim_time))
+            m.expected_demand[node_name] = aml.Param(node.demand_timeseries_list(wn.sim_time))
     else:
         for node_name, node in wn.junctions():
             m.expected_demand[node_name].value = node.demand_timeseries_list(wn.sim_time)
@@ -76,7 +76,7 @@ class pmin_param(Definition):
             if node_name in m.pmin:
                 m.pmin[node_name].value = node.minimum_pressure
             else:
-                m.pmin[node_name] = aml.create_param(value=node.minimum_pressure)
+                m.pmin[node_name] = aml.Param(node.minimum_pressure)
 
             updater.add(node, 'minimum_pressure', pmin_param.update)
 
@@ -106,7 +106,7 @@ class pnom_param(Definition):
             if node_name in m.pnom:
                 m.pnom[node_name].value = node.nominal_pressure
             else:
-                m.pnom[node_name] = aml.create_param(value=node.nominal_pressure)
+                m.pnom[node_name] = aml.Param(node.nominal_pressure)
 
             updater.add(node, 'nominal_pressure', pnom_param.update)
 
@@ -136,7 +136,7 @@ class leak_coeff_param(Definition):
             if node_name in m.leak_coeff:
                 m.leak_coeff[node_name].value = node.leak_discharge_coeff
             else:
-                m.leak_coeff[node_name] = aml.create_param(value=node.leak_discharge_coeff)
+                m.leak_coeff[node_name] = aml.Param(node.leak_discharge_coeff)
 
             updater.add(node, 'leak_discharge_coeff', leak_coeff_param.update)
 
@@ -166,7 +166,7 @@ class leak_area_param(Definition):
             if node_name in m.leak_area:
                 m.leak_area[node_name].value = node.leak_area
             else:
-                m.leak_area[node_name] = aml.create_param(value=node.leak_area)
+                m.leak_area[node_name] = aml.Param(node.leak_area)
 
             updater.add(node, 'leak_area', leak_area_param.update)
 
@@ -226,14 +226,14 @@ class pdd_poly_coeffs_param(Definition):
                 m.pdd_poly2_coeffs_c[node_name].value = c2
                 m.pdd_poly2_coeffs_d[node_name].value = d2
             else:
-                m.pdd_poly1_coeffs_a[node_name] = aml.create_param(value=a1)
-                m.pdd_poly1_coeffs_b[node_name] = aml.create_param(value=b1)
-                m.pdd_poly1_coeffs_c[node_name] = aml.create_param(value=c1)
-                m.pdd_poly1_coeffs_d[node_name] = aml.create_param(value=d1)
-                m.pdd_poly2_coeffs_a[node_name] = aml.create_param(value=a2)
-                m.pdd_poly2_coeffs_b[node_name] = aml.create_param(value=b2)
-                m.pdd_poly2_coeffs_c[node_name] = aml.create_param(value=c2)
-                m.pdd_poly2_coeffs_d[node_name] = aml.create_param(value=d2)
+                m.pdd_poly1_coeffs_a[node_name] = aml.Param(a1)
+                m.pdd_poly1_coeffs_b[node_name] = aml.Param(b1)
+                m.pdd_poly1_coeffs_c[node_name] = aml.Param(c1)
+                m.pdd_poly1_coeffs_d[node_name] = aml.Param(d1)
+                m.pdd_poly2_coeffs_a[node_name] = aml.Param(a2)
+                m.pdd_poly2_coeffs_b[node_name] = aml.Param(b2)
+                m.pdd_poly2_coeffs_c[node_name] = aml.Param(c2)
+                m.pdd_poly2_coeffs_d[node_name] = aml.Param(d2)
 
             updater.add(node, 'minimum_pressure', pdd_poly_coeffs_param.update)
             updater.add(node, 'nominal_pressure', pdd_poly_coeffs_param.update)
@@ -277,10 +277,10 @@ class leak_poly_coeffs_param(Definition):
                 m.leak_poly_coeffs_c[node_name].value = c
                 m.leak_poly_coeffs_d[node_name].value = d
             else:
-                m.leak_poly_coeffs_a[node_name] = aml.create_param(value=a)
-                m.leak_poly_coeffs_b[node_name] = aml.create_param(value=b)
-                m.leak_poly_coeffs_c[node_name] = aml.create_param(value=c)
-                m.leak_poly_coeffs_d[node_name] = aml.create_param(value=d)
+                m.leak_poly_coeffs_a[node_name] = aml.Param(a)
+                m.leak_poly_coeffs_b[node_name] = aml.Param(b)
+                m.leak_poly_coeffs_c[node_name] = aml.Param(c)
+                m.leak_poly_coeffs_d[node_name] = aml.Param(d)
 
             updater.add(node, 'leak_discharge_coeff', leak_poly_coeffs_param.update)
             updater.add(node, 'leak_area', leak_poly_coeffs_param.update)
@@ -311,7 +311,7 @@ class elevation_param(Definition):
             if node_name in m.elevation:
                 m.elevation[node_name].value = node.elevation
             else:
-                m.elevation[node_name] = aml.create_param(value=node.elevation)
+                m.elevation[node_name] = aml.Param(node.elevation)
 
             updater.add(node, 'elevation', elevation_param.update)
 
@@ -342,7 +342,7 @@ class hw_resistance_param(Definition):
             if link_name in m.hw_resistance:
                 m.hw_resistance[link_name].value = value
             else:
-                m.hw_resistance[link_name] = aml.create_param(value=value)
+                m.hw_resistance[link_name] = aml.Param(value)
 
             updater.add(link, 'roughness', hw_resistance_param.update)
             updater.add(link, 'diameter', hw_resistance_param.update)
@@ -375,7 +375,7 @@ class minor_loss_param(Definition):
             if link_name in m.minor_loss:
                 m.minor_loss[link_name].value = value
             else:
-                m.minor_loss[link_name] = aml.create_param(value=value)
+                m.minor_loss[link_name] = aml.Param(value)
 
             updater.add(link, 'minor_loss', minor_loss_param.update)
             updater.add(link, 'diameter', minor_loss_param.update)
@@ -407,7 +407,7 @@ class tcv_resistance_param(Definition):
             if link_name in m.tcv_resistance:
                 m.tcv_resistance[link_name].value = value
             else:
-                m.tcv_resistance[link_name] = aml.create_param(value=value)
+                m.tcv_resistance[link_name] = aml.Param(value)
 
             updater.add(link, 'setting', tcv_resistance_param.update)
             updater.add(link, 'diameter', tcv_resistance_param.update)
@@ -439,7 +439,7 @@ class pump_power_param(Definition):
             if link_name in m.pump_power:
                 m.pump_power[link_name].value = value
             else:
-                m.pump_power[link_name] = aml.create_param(value=value)
+                m.pump_power[link_name] = aml.Param(value)
 
             updater.add(link, 'power', pump_power_param.update)
 
@@ -470,6 +470,6 @@ class valve_setting_param(Definition):
             if link_name in m.valve_setting:
                 m.valve_setting[link_name].value = value
             else:
-                m.valve_setting[link_name] = aml.create_param(value=value)
+                m.valve_setting[link_name] = aml.Param(value)
 
             updater.add(link, 'setting', valve_setting_param.update)

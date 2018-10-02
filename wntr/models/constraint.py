@@ -43,7 +43,7 @@ class mass_balance_constraint(Definition):
                     expr += m.flow[link_name]
                 if node.leak_status:
                     expr += m.leak_rate[node_name]
-                m.mass_balance[node_name] = aml.create_constraint(expr=expr, lb=0, ub=0)
+                m.mass_balance[node_name] = aml.Constraint(expr)
 
             updater.add(node, 'leak_status', mass_balance_constraint.update)
             updater.add(node, '_is_isolated', mass_balance_constraint.update)
@@ -82,7 +82,7 @@ class pdd_mass_balance_constraint(Definition):
                     expr += m.flow[link_name]
                 if node.leak_status:
                     expr += m.leak_rate[node_name]
-                m.pdd_mass_balance[node_name] = aml.create_constraint(expr=expr, lb=0, ub=0)
+                m.pdd_mass_balance[node_name] = aml.Constraint(expr)
 
             updater.add(node, 'leak_status', pdd_mass_balance_constraint.update)
             updater.add(node, '_is_isolated', pdd_mass_balance_constraint.update)
@@ -117,7 +117,7 @@ class hazen_williams_headloss_constraint(Definition):
             status = link.status
 
             if status == LinkStatus.Closed or link._is_isolated:
-                con = aml.create_constraint(expr=f, lb=0, ub=0)
+                con = aml.Constraint(f)
             else:
                 start_node_name = link.start_node_name
                 end_node_name = link.end_node_name
@@ -138,13 +138,14 @@ class hazen_williams_headloss_constraint(Definition):
                 c = m.hw_c
                 d = m.hw_d
 
-                con = aml.create_conditional_constraint(lb=0, ub=0)
+                con = aml.ConditionalExpression()
                 con.add_condition(f + m.hw_q2, k*(-f)**m.hw_exp + minor_k*f**m.hw_minor_exp + start_h - end_h)
                 con.add_condition(f + m.hw_q1, k*(-a*f**3 + b*f**2 - c*f + d) + minor_k*f**m.hw_minor_exp + start_h - end_h)
                 con.add_condition(f, -(k*m.hw_m*f) + minor_k*f**m.hw_minor_exp + start_h - end_h)
                 con.add_condition(f - m.hw_q1, -k*m.hw_m*f - minor_k*f**m.hw_minor_exp + start_h - end_h)
                 con.add_condition(f - m.hw_q2, -k*(a*f**3 + b*f**2 + c*f + d) - minor_k*f**m.hw_minor_exp + start_h - end_h)
                 con.add_final_expr(-k*f**m.hw_exp - minor_k*f**m.hw_minor_exp + start_h - end_h)
+                con = aml.Constraint(con)
 
             m.hazen_williams_headloss[link_name] = con
 
@@ -197,16 +198,17 @@ class pdd_constraint(Definition):
                     b2 = m.pdd_poly2_coeffs_b[node_name]
                     c2 = m.pdd_poly2_coeffs_c[node_name]
                     d2 = m.pdd_poly2_coeffs_d[node_name]
-                    con = aml.create_conditional_constraint(lb=0, ub=0)
+                    con = aml.ConditionalExpression()
                     con.add_condition(h - elev - pmin, d - d_expected*slope*(h-elev-pmin))
                     con.add_condition(h - elev - pmin - delta, d - d_expected*(a1*(h-elev)**3 + b1*(h-elev)**2 + c1*(h-elev) + d1))
                     con.add_condition(h - elev - pnom + delta, d - d_expected*((h-elev-pmin)/(pnom-pmin))**0.5)
                     con.add_condition(h - elev - pnom, d - d_expected*(a2*(h-elev)**3 + b2*(h-elev)**2 + c2*(h-elev) + d2))
                     con.add_final_expr(d - d_expected*(slope*(h - elev - pnom) + 1.0))
+                    con = aml.Constraint(con)
                 elif status == _DemandStatus.Full:
-                    con = aml.create_constraint(d - d_expected, 0, 0)
+                    con = aml.Constraint(d - d_expected)
                 else:
-                    con = aml.create_constraint(d, 0, 0)
+                    con = aml.Constraint(d)
 
                 m.pdd[node_name] = con
 
@@ -243,7 +245,7 @@ class head_pump_headloss_constraint(Definition):
             status = link.status
 
             if status == LinkStatus.Closed or link._is_isolated:
-                con = aml.create_constraint(expr=f, lb=0, ub=0)
+                con = aml.Constraint(f)
             else:
                 start_node_name = link.start_node_name
                 end_node_name = link.end_node_name
@@ -261,15 +263,17 @@ class head_pump_headloss_constraint(Definition):
 
                 if C <= 1:
                     a, b, c, d = get_pump_poly_coefficients(A, B, C, m)
-                    con = aml.create_conditional_constraint(lb=0, ub=0)
+                    con = aml.ConditionalExpression()
                     con.add_condition(f - m.pump_q1, m.pump_slope * f + A - end_h + start_h)
                     con.add_condition(f - m.pump_q2, a*f**3 + b*f**2 + c*f + d - end_h + start_h)
                     con.add_final_expr(A - B*f**C - end_h + start_h)
+                    con = aml.Constraint(con)
                 else:
                     q_bar, h_bar = get_pump_line_params(A, B, C, m)
-                    con = aml.create_conditional_constraint(lb=0, ub=0)
+                    con = aml.ConditionalExpression()
                     con.add_condition(f - q_bar, m.pump_slope*(f - q_bar) + h_bar - end_h + start_h)
                     con.add_final_expr(A - B*f**C - end_h + start_h)
+                    con = aml.Constraint(con)
 
             m.head_pump_headloss[link_name] = con
 
@@ -307,7 +311,7 @@ class power_pump_headloss_constraint(Definition):
             status = link.status
 
             if status == LinkStatus.Closed or link._is_isolated:
-                con = aml.create_constraint(expr=f, lb=0, ub=0)
+                con = aml.Constraint(f)
             else:
                 start_node_name = link.start_node_name
                 end_node_name = link.end_node_name
@@ -322,7 +326,7 @@ class power_pump_headloss_constraint(Definition):
                 else:
                     end_h = m.source_head[end_node_name]
 
-                con = aml.create_constraint(m.pump_power[link_name] + (start_h - end_h) * f * 9.81 * 1000.0, lb=0, ub=0)
+                con = aml.Constraint(m.pump_power[link_name] + (start_h - end_h) * f * (9.81 * 1000.0))
             m.power_pump_headloss[link_name] = con
 
             updater.add(link, 'status', power_pump_headloss_constraint.update)
@@ -358,7 +362,7 @@ class prv_headloss_constraint(Definition):
             status = link.status
 
             if status == LinkStatus.Closed or link._is_isolated:
-                con = aml.create_constraint(f, lb=0, ub=0)
+                con = aml.Constraint(f)
             else:
                 start_node_name = link.start_node_name
                 end_node_name = link.end_node_name
@@ -374,10 +378,10 @@ class prv_headloss_constraint(Definition):
                     end_h = m.source_head[end_node_name]
 
                 if status is wntr.network.LinkStatus.Active:
-                    con = aml.create_constraint(end_h - m.valve_setting[link_name] - m.elevation[end_node_name], lb=0, ub=0)
+                    con = aml.Constraint(end_h - m.valve_setting[link_name] - m.elevation[end_node_name])
                 else:
                     assert status == LinkStatus.Open
-                    con = aml.create_constraint(m.minor_loss[link_name]*f**2 - start_h + end_h, lb=0, ub=0)
+                    con = aml.Constraint(m.minor_loss[link_name]*f**2 - start_h + end_h)
             m.prv_headloss[link_name] = con
 
             updater.add(link, 'status', prv_headloss_constraint.update)
@@ -413,7 +417,7 @@ class fcv_headloss_constraint(Definition):
             status = link.status
 
             if status == LinkStatus.Closed or link._is_isolated:
-                con = aml.create_constraint(f, lb=0, ub=0)
+                con = aml.Constraint(f)
             else:
                 start_node_name = link.start_node_name
                 end_node_name = link.end_node_name
@@ -429,12 +433,13 @@ class fcv_headloss_constraint(Definition):
                     end_h = m.source_head[end_node_name]
 
                 if status == LinkStatus.Active:
-                    con = aml.create_constraint(f - m.valve_setting[link_name], lb=0, ub=0)
+                    con = aml.Constraint(f - m.valve_setting[link_name])
                 else:
                     assert status == LinkStatus.Open
-                    con = aml.create_conditional_constraint(lb=0, ub=0)
+                    con = aml.ConditionalExpression()
                     con.add_condition(f, -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
                     con.add_final_expr(m.minor_loss[link_name] * f ** 2 - start_h + end_h)
+                    con = aml.Constraint(con)
             m.fcv_headloss[link_name] = con
 
             updater.add(link, 'status', fcv_headloss_constraint.update)
@@ -470,7 +475,7 @@ class tcv_headloss_constraint(Definition):
             status = link.status
 
             if status == LinkStatus.Closed or link._is_isolated:
-                con = aml.create_constraint(f, lb=0, ub=0)
+                con = aml.Constraint(f)
             else:
                 start_node_name = link.start_node_name
                 end_node_name = link.end_node_name
@@ -486,14 +491,16 @@ class tcv_headloss_constraint(Definition):
                     end_h = m.source_head[end_node_name]
 
                 if status == LinkStatus.Active:
-                    con = aml.create_conditional_constraint(lb=0, ub=0)
+                    con = aml.ConditionalExpression()
                     con.add_condition(f, -m.tcv_resistance[link_name] * f ** 2 - start_h + end_h)
                     con.add_final_expr(m.tcv_resistance[link_name] * f ** 2 - start_h + end_h)
+                    con = aml.Constraint(con)
                 else:
                     assert status == LinkStatus.Open
-                    con = aml.create_conditional_constraint(lb=0, ub=0)
+                    con = aml.ConditionalExpression()
                     con.add_condition(f, -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
                     con.add_final_expr(m.minor_loss[link_name] * f ** 2 - start_h + end_h)
+                    con = aml.Constraint(con)
             m.tcv_headloss[link_name] = con
 
             updater.add(link, 'status', tcv_headloss_constraint.update)
@@ -541,12 +548,13 @@ class leak_constraint(Definition):
                     d = m.leak_poly_coeffs_d[node_name]
                     area = m.leak_area[node_name]
                     Cd = m.leak_coeff[node_name]
-                    con = aml.create_conditional_constraint(lb=0, ub=0)
+                    con = aml.ConditionalExpression()
                     con.add_condition(h - elev, leak_rate - slope*(h-elev))
                     con.add_condition(h - elev - delta, leak_rate - (a*(h-elev)**3 + b*(h-elev)**2 + c*(h-elev) + d))
                     con.add_final_expr(leak_rate - Cd*area*(2.0*9.81*(h-elev))**0.5)
+                    con = aml.Constraint(con)
                 elif status == _DemandStatus.Zero:
-                    con = aml.create_constraint(leak_rate, 0, 0)
+                    con = aml.Constraint(leak_rate)
                 else:
                     raise ValueError('Unrecognized _DemandStatus for node {0}: {1}'.format(node_name, status))
 

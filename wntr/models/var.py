@@ -23,7 +23,7 @@ def demand_var(m, wn, index_over=None):
 
     for node_name in index_over:
         node = wn.get_node(node_name)
-        m.demand[node_name] = aml.create_var(value=node.demand_timeseries_list(wn.sim_time))
+        m.demand[node_name] = aml.Var(node.demand_timeseries_list(wn.sim_time))
 
 
 def flow_var(m, wn, index_over=None):
@@ -45,7 +45,7 @@ def flow_var(m, wn, index_over=None):
 
     for link_name in index_over:
         link = wn.get_link(link_name)
-        m.flow[link_name] = aml.create_var(value=0.001)
+        m.flow[link_name] = aml.Var(0.001)
 
 
 def head_var(m, wn, index_over=None):
@@ -67,7 +67,7 @@ def head_var(m, wn, index_over=None):
 
     for node_name in index_over:
         node = wn.get_node(node_name)
-        m.head[node_name] = aml.create_var(value=node.elevation)
+        m.head[node_name] = aml.Var(node.elevation)
 
 
 def leak_rate_var(m, wn, index_over=None):
@@ -88,6 +88,6 @@ def leak_rate_var(m, wn, index_over=None):
         index_over = wn.junction_name_list + wn.tank_name_list
 
     for node_name in index_over:
-        m.leak_rate[node_name] = aml.create_var(value=0)
+        m.leak_rate[node_name] = aml.Var(0)
 
 
