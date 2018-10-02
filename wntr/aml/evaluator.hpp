@@ -20,7 +20,8 @@ public:
   
   double evaluate();
   void _evaluate(double *values);
-  std::shared_ptr<std::unordered_map<Leaf*, double> > rad();
+  void rad();
   std::string __str__();
-  std::shared_ptr<std::unordered_set<Var*> > get_vars();
+  std::shared_ptr<std::vector<Var*> > get_vars();
+  int get_n_vars();
 };

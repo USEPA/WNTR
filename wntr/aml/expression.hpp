@@ -71,6 +71,8 @@ public:
   Leaf(double val): value(val) {}
   virtual ~Leaf() = default;
   double value;
+  double der;
+  int index = -1;
 
   bool is_leaf() override;
 };
@@ -83,7 +85,6 @@ public:
   Var(double val): Leaf(val) {}
   ~Var() = default;
   std::string name;
-  int index = -1;
 
   bool is_var() override;
   std::string __str__() override;

@@ -37,7 +37,7 @@ void WNTRModel::add_constraint(Constraint* con)
       throw std::runtime_error("The structure of the model must be released with release_structure before add_constraint can be called.");
     }
   cons.insert(con);
-  nnz += con->get_vars()->size();
+  nnz += con->num_vars;
 }
 
 
@@ -48,7 +48,7 @@ void WNTRModel::remove_constraint(Constraint* con)
       throw std::runtime_error("The structure of the model must be released with release_structure before remove_constraint can be called.");
     }
   cons.erase(con);
-  nnz -= con->get_vars()->size();
+  nnz -= con->num_vars;
 }
 
 
@@ -80,16 +80,15 @@ void WNTRModel::evaluate_csr_jacobian(double *values_array_out, int values_array
   row_nnz_array_out[_row_nnz] = 0;
   ++_row_nnz;
 
-  for (auto con_iter = cons_vector.begin(); con_iter != cons_vector.end(); ++con_iter)
+  for (auto &con_iter : cons_vector)
     {
-      auto _vars = (*con_iter)->get_vars();
-      row_nnz_array_out[_row_nnz] = row_nnz_array_out[_row_nnz - 1] + _vars->size();
+      row_nnz_array_out[_row_nnz] = row_nnz_array_out[_row_nnz - 1] + con_iter->num_vars;
       ++_row_nnz;
-      auto ders = (*con_iter)->rad();
-      for (auto var_iter=_vars->begin(); var_iter!=_vars->end(); ++var_iter )
+      con_iter->rad();
+      for (int i=0; i<con_iter->num_vars; ++i)
 	{
-	  values_array_out[_values] = (*ders)[*var_iter];
-	  col_ndx_array_out[_col_ndx] = (*var_iter)->index;
+	  values_array_out[_values] = con_iter->vars[i]->der;
+	  col_ndx_array_out[_col_ndx] = con_iter->vars[i]->index;
 	  ++_values;
 	  ++_col_ndx;
 	}

@@ -60,6 +60,7 @@ Constraint::Constraint(ExpressionBase* expr)
   conditions = new Evaluator*[0];
   exprs = new Evaluator*[1];
   exprs[0] = new Evaluator(expr);
+  set_vars();
 }
 
 
@@ -74,6 +75,30 @@ Constraint::Constraint(ConditionalExpression* conditional_expr)
       num_conditions += 1;
     }
   exprs[num_conditions] = new Evaluator(conditional_expr->exprs[num_conditions]);
+  set_vars();
+}
+
+
+void Constraint::set_vars()
+{
+  std::unordered_set<Var*> vars_set;
+  std::shared_ptr<std::vector<Var*> > _vars;
+  for (int i=0; i<=num_conditions; ++i)
+    {
+      _vars = exprs[i]->get_vars();
+      for (Var* &v: *_vars)
+	{
+	  vars_set.insert(v);
+	}
+    }
+  num_vars = vars_set.size();
+  vars = new Var*[num_vars];
+  int i = 0;
+  for (auto &v : vars_set)
+    {
+      vars[i] = v;
+      ++i;
+    }
 }
 
 
@@ -133,53 +158,38 @@ std::string Constraint::__str__()
 }
 
 
-std::shared_ptr<std::unordered_map<Leaf*, double> > Constraint::rad()
+void Constraint::rad()
 {
+  bool found = false;
   for (int i=0; i<num_conditions; ++i)
     {
       if (conditions[i]->evaluate() <= 0)
 	{
-	  return exprs[i]->rad();
+	  exprs[i]->rad();
+	  found = true;
+	  break;
 	}
     }
-  return exprs[num_conditions]->rad();
-}
-
-
-std::shared_ptr<std::unordered_set<Var*> > Constraint::get_vars()
-{
-  if (num_conditions == 0)
+  if (!found)
     {
-      return exprs[0]->get_vars();
+      exprs[num_conditions]->rad();
     }
-  std::shared_ptr<std::unordered_set<Var*> > vars = std::make_shared<std::unordered_set<Var*> >();
-  std::shared_ptr<std::unordered_set<Var*> > _vars;
-  for (int i=0; i<num_conditions; ++i)
-    {
-      _vars = exprs[i]->get_vars();
-      for (auto &v : *_vars)
-	{
-	  vars->insert(v);
-	}
-    }
-  return vars;
 }
 
 
 std::vector<Var*> Constraint::py_get_vars()
 {
-  std::vector<Var*> vars;
-  std::shared_ptr<std::unordered_set<Var*> > _vars = get_vars();
-  for (auto &_v : *_vars)
+  std::vector<Var*> vars_vector;
+  for (int i=0; i<num_vars; ++i)
     {
-      vars.push_back(_v);
+      vars_vector.push_back(vars[i]);
     }
-  return vars;
+  return vars_vector;
 }
 
 
 double Constraint::ad(Var* v)
 {
-  std::shared_ptr<std::unordered_map<Leaf*, double> > ders = rad();
-  return (*ders)[v];
+  rad();
+  return v->der;
 }

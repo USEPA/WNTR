@@ -21,6 +21,8 @@ class Constraint
 public:
   Evaluator** conditions;
   Evaluator** exprs;
+  Var** vars;
+  int num_vars = 0;
   int num_conditions = 0;
   int index = -1;
   std::string name;
@@ -31,11 +33,12 @@ public:
   Constraint &operator=(const Constraint&) = delete;
   ~Constraint();
   double evaluate();
-  std::shared_ptr<std::unordered_map<Leaf*, double> > rad();
+  void rad();
   std::string __str__();
-  std::shared_ptr<std::unordered_set<Var*> > get_vars();
   std::vector<Var*> py_get_vars();
   double ad(Var*);
+private:
+  void set_vars();
 };
 
 

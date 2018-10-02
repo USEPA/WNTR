@@ -149,7 +149,7 @@ double Evaluator::evaluate()
 }
 
 
-std::shared_ptr<std::unordered_map<Leaf*, double> > Evaluator::rad()
+void Evaluator::rad()
 {
   double values[n_operators];
   _evaluate(values);
@@ -163,7 +163,11 @@ std::shared_ptr<std::unordered_map<Leaf*, double> > Evaluator::rad()
   double der1;
   double der2;
   int oper_ndx;
-  std::shared_ptr<std::unordered_map<Leaf*, double> > res = std::make_shared<std::unordered_map<Leaf*, double> >();
+
+  for (int i=0; i<n_leaves; ++i)
+    {
+      leaves[i]->der = 0.0;
+    }
   
   ders[n_operators-1] = 1.0;
   
@@ -261,7 +265,7 @@ std::shared_ptr<std::unordered_map<Leaf*, double> > Evaluator::rad()
       
       if (arg1_ndx >= 0)
 	{
-	  (*res)[leaves[arg1_ndx]] += der1;
+	  leaves[arg1_ndx]->der += der1;
 	}
       else
 	{
@@ -270,7 +274,7 @@ std::shared_ptr<std::unordered_map<Leaf*, double> > Evaluator::rad()
 	}
       if (arg2_ndx >= 0)
 	{
-	  (*res)[leaves[arg2_ndx]] += der2;
+	  leaves[arg2_ndx]->der += der2;
 	}
       else
 	{
@@ -278,7 +282,6 @@ std::shared_ptr<std::unordered_map<Leaf*, double> > Evaluator::rad()
 	  ders[oper_ndx] = der2;
 	}
     }
-  return res;
 }
 
 
@@ -345,14 +348,28 @@ std::string Evaluator::__str__()
 }
 
 
-std::shared_ptr<std::unordered_set<Var*> > Evaluator::get_vars()
+int Evaluator::get_n_vars()
 {
-  std::shared_ptr<std::unordered_set<Var*> > vars = std::make_shared<std::unordered_set<Var*> >();
+  int n_vars = 0;
   for (int i=0; i<n_leaves; ++i)
     {
       if (leaves[i]->is_var())
 	{
-	  vars->insert(dynamic_cast<Var*>(leaves[i]));
+	  n_vars += 1;
+	}
+    }
+  return n_vars;
+}
+
+
+std::shared_ptr<std::vector<Var*> > Evaluator::get_vars()
+{
+  std::shared_ptr<std::vector<Var*> > vars = std::make_shared<std::vector<Var*> >();
+  for (int i=0; i<n_leaves; ++i)
+    {
+      if (leaves[i]->is_var())
+	{
+	  vars->push_back(dynamic_cast<Var*>(leaves[i]));
 	}
     }
   return vars;
