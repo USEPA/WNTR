@@ -13,10 +13,36 @@ try:
     import plotly
 except:
     plotly = None
+try:
+    import folium
+except:
+    folium = None
 import logging
 
 logger = logging.getLogger(__name__)
 
+def _format_node_attribute(node_attribute, wn):
+    
+    if isinstance(node_attribute, str):
+        node_attribute = wn.query_node_attribute(node_attribute)
+    if isinstance(node_attribute, list):
+        node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
+    if isinstance(node_attribute, pd.Series):
+        node_attribute = dict(node_attribute)
+    
+    return node_attribute
+
+def _format_link_attribute(link_attribute, wn):
+    
+    if isinstance(link_attribute, str):
+        link_attribute = wn.query_link_attribute(link_attribute)
+    if isinstance(link_attribute, list):
+        link_attribute = dict(zip(link_attribute,[1]*len(link_attribute)))
+    if isinstance(link_attribute, pd.Series):
+        link_attribute = dict(link_attribute)
+            
+    return link_attribute
+        
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range = [None,None], node_cmap=None, node_labels=False,
                link_width=1, link_range = [None,None], link_cmap=None, link_labels=False,
@@ -37,8 +63,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         - If node_attribute is a list, then each node in the list is given a 
           value of 1.
         - If node_attribute is a pd.Series, then it should be in the format
-          {(nodeid,time): x} or {nodeid: x} where nodeid is a string and x is 
-          a float. The time index is not used in the plot.
+          {nodeid: x} where nodeid is a string and x is a float. 
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
 
@@ -50,8 +75,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         - If link_attribute is a list, then each link in the list is given a 
           value of 1.
         - If link_attribute is a pd.Series, then it should be in the format
-          {(linkid,time): x} or {linkid: x} where linkid is a string and x is 
-          a float. The time index is not used in the plot.
+          {linkid: x} where linkid is a string and x is a float. 
         - If link_attribute is a dict, then it should be in the format
           {linkid: x} where linkid is a string and x is a float.
 
@@ -125,80 +149,44 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     if len(pos) == 0:
         pos = None
 
-    # Node attribute
-    node_attr_from_list = False
-    if isinstance(node_attribute, str):
-        node_attribute = wn.query_node_attribute(node_attribute)
-    if isinstance(node_attribute, list):
-        node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
-        node_attr_from_list = True
-    if isinstance(node_attribute, pd.Series):
-        if node_attribute.index.nlevels == 2: # (nodeid, time) index
-            # drop time
-            node_attribute.reset_index(level=1, drop=True, inplace=True) 
-        node_attribute = dict(node_attribute)
-    
-    # Define node list, color, and colormap
-    if node_attribute is None:
+    # Define node properties
+    if node_attribute is not None:
+        node_attribute_from_list = False
+        if isinstance(node_attribute, list):
+            node_attribute_from_list = True
+            add_colorbar = False
+        node_attribute = _format_node_attribute(node_attribute, wn)
+        nodelist,nodecolor = zip(*node_attribute.items())
+        if node_attribute_from_list:
+            nodecolor = 'r'
+    else:
         nodelist = None
         nodecolor = 'k'
-    else:
-        nodelist,nodecolor = zip(*node_attribute.items())
-        if node_attr_from_list:
-            nodecolor = 'r'
-            add_colorbar = False
-        
-    # Link attribute
-    link_attr_from_list = False
-    if isinstance(link_attribute, str):
-        link_attribute = wn.query_link_attribute(link_attribute)
-    if isinstance(link_attribute, list):
-        all_link_attribute = dict(zip(wn.link_name_list,[0]*len(wn.link_name_list)))
-        for link in link_attribute:
-            all_link_attribute[link] = 1
-        link_attribute = all_link_attribute
-        link_attr_from_list = True
-    if isinstance(link_attribute, pd.Series):
-        if link_attribute.index.nlevels == 2: # (linkid, time) index
-            # drop time
-            link_attribute.reset_index(level=1, drop=True, inplace=True) 
-        link_attribute = dict(link_attribute)
-        
-    # Replace link_attribute dictionary defined as
-    # {link_name: attr} with {(start_node, end_node, link_name): attr}
+    
     if link_attribute is not None:
+        if isinstance(link_attribute, list):
+            link_cmap = custom_colormap(2, ['red', 'black'])
+            add_colorbar = False
+        link_attribute = _format_link_attribute(link_attribute, wn)
+        
+        # Replace link_attribute dictionary defined as
+        # {link_name: attr} with {(start_node, end_node, link_name): attr}
         attr = {}
         for link_name, value in link_attribute.items():
             link = wn.get_link(link_name)
             attr[(link.start_node_name, link.end_node_name, link_name)] = value
         link_attribute = attr
-    if type(link_width) is dict:
-        attr = {}
-        for link_name, value in link_width.items():
-            link = wn.get_link(link_name)
-            attr[(link.start_node_name, link.end_node_name, link_name)] = value
-        link_width = attr
-    
-    # Define link list, color, and colormap
-    if link_attribute is None:
+        
+        linklist,linkcolor = zip(*link_attribute.items())
+    else:
         linklist = None
         linkcolor = 'k'
-    else:
-        linklist,linkcolor = zip(*link_attribute.items())
-        if link_attr_from_list:
-            link_cmap = custom_colormap(2, ['black', 'red'])
-            add_colorbar = False
-            
-    if type(link_width) is dict:
-        linklist2,link_width = zip(*link_width.items())
-        if not linklist == linklist2:
-            logger.warning('Link color and width do not share the same \
-                           indexes, link width changed to 1.')
-            link_width = 1
-        
+    
     if title is not None:
         ax.set_title(title)
-
+        
+    edges = nx.draw_networkx_edges(G, pos, edge_color='grey', width=0.75, ax=ax)
+    
     nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
             nodelist=nodelist, node_color=nodecolor, node_size=node_size, 
             cmap=node_cmap, vmin=node_range[0], vmax = node_range[1], 
@@ -224,7 +212,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     return nodes, edges
 
 def plot_interactive_network(wn, node_attribute=None, title=None,
-               node_size=8, node_range = [None,None], node_cmap='Jet', node_labels=True,
+               node_size=8, node_range=[None,None], node_cmap='Jet', node_labels=True,
                link_width=1, add_colorbar=True, reverse_colormap=False,
                figsize=[700, 450], round_ndigits=2, filename=None, auto_open=True):
     """
@@ -243,8 +231,7 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         - If node_attribute is a list, then each node in the list is given a 
           value of 1.
         - If node_attribute is a pd.Series, then it should be in the format
-          {(nodeid,time): x} or {nodeid: x} where nodeid is a string and x is 
-          a float.
+          {nodeid: x} where nodeid is a string and x is a float.
           The time index is not used in the plot.
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
@@ -292,16 +279,15 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
     G = wn.get_graph()
     
     # Node attribute
-    if isinstance(node_attribute, str):
-        node_attribute = wn.query_node_attribute(node_attribute)
-    if isinstance(node_attribute, list):
-        node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
-    if isinstance(node_attribute, pd.Series):
-        if node_attribute.index.nlevels == 2: # (nodeid, time) index
-            # drop time
-            node_attribute.reset_index(level=1, drop=True, inplace=True) 
-        node_attribute = dict(node_attribute)
-
+    if node_attribute is not None:
+        if isinstance(node_attribute, list):
+            node_cmap = 'Red'
+            print(node_cmap)
+            add_colorbar = False
+        node_attribute = _format_node_attribute(node_attribute, wn)
+    else:
+        add_colorbar = False
+        
     # Create edge trace
     edge_trace = plotly.graph_objs.Scatter(
         x=[], 
@@ -339,8 +325,8 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         marker=plotly.graph_objs.Marker(
             showscale=add_colorbar,
             colorscale=node_cmap, 
-            cmin=node_range[0],
-            cmax=node_range[1],
+            cmin=node_range[0], # TODO: Not sure this works
+            cmax=node_range[1], # TODO: Not sure this works
             reversescale=reverse_colormap,
             color=[], 
             size=node_size,         
@@ -357,16 +343,16 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         try:
             # Add node attributes
             node_trace['marker']['color'].append(node_attribute[node])
-            #node_trace['marker']['size'].append(node_size)
+            #node_trace['marker']['size'].append(node_size) 
             # Add node labels
             if node_labels:
-                node_info = 'Node ' + str(node) + ', '+ \
+                node_info = wn.get_node(node).node_type + ' ' + str(node) + ', '+ \
                             str(round(node_attribute[node],round_ndigits))
                 node_trace['text'].append(node_info)
         except:
             node_trace['marker']['color'].append('#888')
             if node_labels:
-                node_info = 'Node ' + str(node)
+                node_info = wn.get_node(node).node_type + ' ' + str(node)
                 node_trace['text'].append(node_info)
             #node_trace['marker']['size'].append(5)
     #node_trace['marker']['colorbar']['title'] = 'Node colorbar title'
@@ -391,3 +377,133 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         plotly.offline.plot(fig, filename=filename, auto_open=auto_open)  
     else:
         plotly.offline.plot(fig, auto_open=auto_open)  
+
+def plot_leaflet_network(wn, node_attribute=None, link_attribute=None, 
+               node_size=4, node_range=[None,None], node_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
+               node_cmap_bins = 'cut', node_labels=True,
+               link_width=2, link_range=[None,None], link_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
+               link_cmap_bins = 'cut', link_labels=True,
+               add_legend=False, round_ndigits=2, zoom_start=15, filename='folium.html'):
+    
+    """
+    Create the network on a Leaflet map using folium.  
+    """
+    if folium is None:
+        raise ImportError('folium is required')
+    
+    if node_attribute is not None:
+        if isinstance(node_attribute, list):
+            node_cmap=['red']
+        node_attribute = _format_node_attribute(node_attribute, wn)
+        node_attribute = pd.Series(node_attribute)
+        if node_range[0] is not None:
+            node_attribute[node_attribute < node_range[0]] = node_range[0]
+        if node_range[1] is not None:
+            node_attribute[node_attribute > node_range[1]] = node_range[1]
+        if node_cmap_bins == 'cut':
+            node_colors, node_bins = pd.cut(node_attribute, len(node_cmap), 
+                                            labels=node_cmap, retbins =True)
+        elif node_cmap_bins == 'qcut':
+            node_colors, node_bins = pd.qcut(node_attribute, len(node_cmap), 
+                                             labels=node_cmap, retbins =True)
+        
+    if link_attribute is not None:
+        if isinstance(link_attribute, list):
+            link_cmap=['red']
+        link_attribute = _format_link_attribute(link_attribute, wn)
+        link_attribute = pd.Series(link_attribute)
+        if link_range[0] is not None:
+            link_attribute[link_attribute < link_range[0]] = link_range[0]
+        if link_range[1] is not None:
+            link_attribute[link_attribute > link_range[1]] = link_range[1]
+        if link_cmap_bins == 'cut':
+            link_colors, link_bins  = pd.cut(link_attribute, len(link_cmap), 
+                                             labels=link_cmap, retbins =True)
+        elif link_cmap_bins == 'qcut':
+            link_colors, link_bins  = pd.qcut(link_attribute, len(link_cmap), 
+                                              labels=link_cmap, retbins =True)
+        
+    G = wn.get_graph()
+    pos = nx.get_node_attributes(G,'pos')
+    center = pd.DataFrame(pos).mean(axis=1)
+    
+    m = folium.Map(location=[center.iloc[1], center.iloc[0]], zoom_start=zoom_start)
+    folium.TileLayer('cartodbpositron').add_to(m)
+    
+    for name, node in wn.nodes():
+        loc = (node.coordinates[1], node.coordinates[0])
+        radius = node_size
+        color = 'black'
+        if node_labels:
+            popup = node.node_type + ': ' + name
+        else:
+            popup = None
+                
+        if node_attribute is not None:
+            if name in node_attribute.index:
+                color = node_colors[name]
+                if node_labels:
+                    popup = node.node_type + ' ' + name + ', ' + \
+                            '{:.{prec}f}'.format(node_attribute[name], prec=round_ndigits)
+            else:
+                radius = 0
+        
+        folium.CircleMarker(loc, popup=popup, color=color, fill=True, 
+                            fill_color=color, radius=radius, fill_opacity=0.7, opacity=0.7).add_to(m)
+        
+    for name, link in wn.links():
+        start_loc = (link.start_node.coordinates[1], link.start_node.coordinates[0])
+        end_loc = (link.end_node.coordinates[1], link.end_node.coordinates[0])
+        weight = link_width
+        color='black'
+        if link_labels:
+            popup = link.link_type + ': ' + name
+        else:
+            popup = None
+        
+        if link_attribute is not None:
+            if name in link_attribute.index:
+                color = link_colors[name]
+                if link_labels:
+                    popup = link.link_type + ' ' + name + ', ' + \
+                        '{:.{prec}f}'.format(link_attribute[name], prec=round_ndigits)
+            else:
+                weight = 1.5
+        
+        folium.PolyLine([start_loc, end_loc], popup=popup, color=color, 
+                        weight=weight, opacity=0.7).add_to(m)
+    
+    height=0
+    if node_attribute is not None:
+        height = height + 50+len(node_cmap)*20
+    if link_attribute is not None:
+        height= height + 50+len(link_cmap)*20
+    if (add_legend) & (len(node_cmap) > 1) & (len(link_cmap) > 1):
+        legend_html = """<div style="position: fixed; 
+        bottom: 50px; left: 50px; width: 150px; height: """+str(height)+"""px; 
+        background-color:white;z-index:9999; font-size:14px; ">"""
+        if (node_attribute is not None) & (len(node_cmap) > 1):
+            legend_html = legend_html + """<br>
+            &nbsp;&nbsp;&nbsp; <b>Node legend</b> <br> """
+            for color, val in zip(node_cmap, node_bins[0:-1]):
+                val = '{:.{prec}f}'.format(val, prec=round_ndigits)
+                legend_html = legend_html + """
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-circle fa-1x" 
+                style="color:"""+ color +""" "></i> >= """+ val +""" <br>"""
+        if (link_attribute is not None) & (len(link_cmap) > 1):
+            legend_html = legend_html + """<br>
+            &nbsp;&nbsp;&nbsp; <b>Link legend</b> <br>"""
+            for color, val in zip(link_cmap, link_bins[0:-1]):
+                val = '{:.{prec}f}'.format(val, prec=round_ndigits)
+                legend_html = legend_html + """
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-square fa-1x" 
+                style="color:"""+ color +""" "></i> >= """+ val +""" <br>"""
+        legend_html = legend_html + """</div>"""
+        m.get_root().html.add_child(folium.Element(legend_html))
+    
+    #plugins.Search(points, search_zoom=20, ).add_to(m)
+    #m.add_child(folium.LatLngPopup())
+    folium.LayerControl().add_to(m)
+    
+    m.save(filename)
+ 

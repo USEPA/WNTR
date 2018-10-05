@@ -21,7 +21,7 @@ class TestLeakAdditionAndRemoval(unittest.TestCase):
         inp_file = join(test_datadir, 'leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         pipe = wn.get_link('pipe1')
-        wn.split_pipe('pipe1','pipe1__B','leak1')
+        wn = self.wntr.network.morph.split_pipe(wn,'pipe1','pipe1__B','leak1')
         leak1 = wn.get_node('leak1')
         leak1.add_leak(wn, 3.14159/4.0*0.1**2)
         pipeB = wn.get_link('pipe1__B')
@@ -52,7 +52,7 @@ class TestLeakResults(unittest.TestCase):
     def test_leak_demand(self):
         inp_file = join(test_datadir, 'leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.split_pipe('pipe2','pipe2__B','leak1')
+        wn = self.wntr.network.morph.split_pipe(wn,'pipe2','pipe2__B','leak1')
         leak1 = wn.get_node('leak1')
         leak1.add_leak(wn, area=math.pi/4.0*0.01**2, discharge_coeff=0.75)
         active_control_action = self.wntr.network.ControlAction(leak1, 'leak_status', True)
@@ -73,7 +73,7 @@ class TestLeakResults(unittest.TestCase):
     def test_leak_against_epanet(self):
         inp_file = join(test_datadir, 'leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.split_pipe('pipe2','pipe2__B','leak1')
+        wn = self.wntr.network.morph.split_pipe(wn,'pipe2','pipe2__B','leak1')
         leak1 = wn.get_node('leak1')
         leak1.add_leak(wn, area=math.pi/4.0*0.08**2, discharge_coeff=0.75, start_time=0, end_time=None)
         sim = self.wntr.sim.WNTRSimulator(wn)

@@ -62,7 +62,7 @@ for i in range(Imax):
         pipe = wn.get_link(pipe_to_fail)
         leak_diameter = pipe.diameter*0.3
         leak_area=3.14159*(leak_diameter/2)**2
-        wn.split_pipe(pipe_to_fail, pipe_to_fail + '_B', pipe_to_fail+'leak_node')
+        wn = wntr.network.morph.split_pipe(wn, pipe_to_fail, pipe_to_fail + '_B', pipe_to_fail+'leak_node')
         leak_node = wn.get_node(pipe_to_fail+'leak_node')
         leak_node.add_leak(wn, area=leak_area,
                           start_time=time_of_failure*3600,
