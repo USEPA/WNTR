@@ -282,7 +282,6 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
     if node_attribute is not None:
         if isinstance(node_attribute, list):
             node_cmap = 'Red'
-            print(node_cmap)
             add_colorbar = False
         node_attribute = _format_node_attribute(node_attribute, wn)
     else:
@@ -383,7 +382,8 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                node_cmap_bins = 'cut', node_labels=True,
                link_width=2, link_range=[None,None], link_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
                link_cmap_bins = 'cut', link_labels=True,
-               add_legend=False, round_ndigits=2, zoom_start=15, filename='folium.html'):
+               add_legend=False, round_ndigits=2, zoom_start=15, 
+               add_latlong_popup=False, filename='folium.html'):
     
     """
     Create the network on a Leaflet map using folium.  
@@ -430,55 +430,57 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     m = folium.Map(location=[center.iloc[1], center.iloc[0]], zoom_start=zoom_start)
     folium.TileLayer('cartodbpositron').add_to(m)
     
-    for name, node in wn.nodes():
-        loc = (node.coordinates[1], node.coordinates[0])
-        radius = node_size
-        color = 'black'
-        if node_labels:
-            popup = node.node_type + ': ' + name
-        else:
-            popup = None
-                
-        if node_attribute is not None:
-            if name in node_attribute.index:
-                color = node_colors[name]
-                if node_labels:
-                    popup = node.node_type + ' ' + name + ', ' + \
-                            '{:.{prec}f}'.format(node_attribute[name], prec=round_ndigits)
+    if node_size > 0:
+        for name, node in wn.nodes():
+            loc = (node.coordinates[1], node.coordinates[0])
+            radius = node_size
+            color = 'black'
+            if node_labels:
+                popup = node.node_type + ': ' + name
             else:
-                radius = 0
-        
-        folium.CircleMarker(loc, popup=popup, color=color, fill=True, 
-                            fill_color=color, radius=radius, fill_opacity=0.7, opacity=0.7).add_to(m)
-        
-    for name, link in wn.links():
-        start_loc = (link.start_node.coordinates[1], link.start_node.coordinates[0])
-        end_loc = (link.end_node.coordinates[1], link.end_node.coordinates[0])
-        weight = link_width
-        color='black'
-        if link_labels:
-            popup = link.link_type + ': ' + name
-        else:
-            popup = None
-        
-        if link_attribute is not None:
-            if name in link_attribute.index:
-                color = link_colors[name]
-                if link_labels:
-                    popup = link.link_type + ' ' + name + ', ' + \
-                        '{:.{prec}f}'.format(link_attribute[name], prec=round_ndigits)
+                popup = None
+                    
+            if node_attribute is not None:
+                if name in node_attribute.index:
+                    color = node_colors[name]
+                    if node_labels:
+                        popup = node.node_type + ' ' + name + ', ' + \
+                                '{:.{prec}f}'.format(node_attribute[name], prec=round_ndigits)
+                else:
+                    radius = 0
+            
+            folium.CircleMarker(loc, popup=popup, color=color, fill=True, 
+                                fill_color=color, radius=radius, fill_opacity=0.7, opacity=0.7).add_to(m)
+            
+    if link_width > 0:
+        for name, link in wn.links():            
+            start_loc = (link.start_node.coordinates[1], link.start_node.coordinates[0])
+            end_loc = (link.end_node.coordinates[1], link.end_node.coordinates[0])
+            weight = link_width
+            color='black'
+            if link_labels:
+                popup = link.link_type + ': ' + name
             else:
-                weight = 1.5
-        
-        folium.PolyLine([start_loc, end_loc], popup=popup, color=color, 
-                        weight=weight, opacity=0.7).add_to(m)
+                popup = None
+            
+            if link_attribute is not None:
+                if name in link_attribute.index:
+                    color = link_colors[name]
+                    if link_labels:
+                        popup = link.link_type + ' ' + name + ', ' + \
+                            '{:.{prec}f}'.format(link_attribute[name], prec=round_ndigits)
+                else:
+                    weight = 1.5
+            
+            folium.PolyLine([start_loc, end_loc], popup=popup, color=color, 
+                            weight=weight, opacity=0.7).add_to(m)
     
-    height=0
-    if node_attribute is not None:
-        height = height + 50+len(node_cmap)*20
-    if link_attribute is not None:
-        height= height + 50+len(link_cmap)*20
     if (add_legend) & (len(node_cmap) > 1) & (len(link_cmap) > 1):
+        height=0
+        if node_attribute is not None:
+            height = height + 50+len(node_cmap)*20
+        if link_attribute is not None:
+            height= height + 50+len(link_cmap)*20
         legend_html = """<div style="position: fixed; 
         bottom: 50px; left: 50px; width: 150px; height: """+str(height)+"""px; 
         background-color:white;z-index:9999; font-size:14px; ">"""
@@ -502,7 +504,8 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
         m.get_root().html.add_child(folium.Element(legend_html))
     
     #plugins.Search(points, search_zoom=20, ).add_to(m)
-    #m.add_child(folium.LatLngPopup())
+    if add_latlong_popup:
+        m.add_child(folium.LatLngPopup())
     folium.LayerControl().add_to(m)
     
     m.save(filename)
