@@ -32,15 +32,15 @@ def darcy_weisbach_constants(m):
 
 def pdd_constants(m):
     m.pdd_smoothing_delta = 0.2
-    m.pdd_slope = 1e-3
+    m.pdd_slope = 1e-11
 
 
 def head_pump_constants(m):
     m.pump_q1 = 0.0
     m.pump_q2 = 1e-8
-    m.pump_slope = -1e-3
+    m.pump_slope = -1e-11
 
 
 def leak_constants(m):
-    m.leak_delta = 0.2
-    m.leak_slope = 1e-3
+    m.leak_delta = 1e-4
+    m.leak_slope = 1e-11

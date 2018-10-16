@@ -140,11 +140,11 @@ def _get_control_managers(wn, pdd=False):
         categorize_control(c)
     for c in wn._get_valve_controls():
         categorize_control(c)
-    if pdd:
-        for c in wn._get_demand_status_controls():
-            categorize_control(c)
-    for c in wn._get_leak_model_status_controls():
-        categorize_control(c)
+    #if pdd:
+    #    for c in wn._get_demand_status_controls():
+    #        categorize_control(c)
+    #for c in wn._get_leak_model_status_controls():
+    #    categorize_control(c)
 
     return presolve_controls, postsolve_controls, rules
 
