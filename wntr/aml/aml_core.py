@@ -1724,7 +1724,7 @@ class Constraint(_object):
 
     def get_var_set(self):
         """
-        get_var_set(Constraint self) -> std::unordered_set< Var * >
+        get_var_set(Constraint self) -> std::set< Var * >
 
         Parameters
         ----------

@@ -2,11 +2,12 @@
 #include <vector>
 #include <list>
 #include <cmath>
-#include <unordered_map>
+#include <map>
+//#include <unordered_map>
 #include <stdexcept>
 #include <memory>
 #include <set>
-#include <unordered_set>
+//#include <unordered_set>
 #include <sstream>
 #include <iterator>
 #include <iostream>
@@ -130,7 +131,7 @@ public:
   std::shared_ptr<std::vector<int> > args1 = std::make_shared<std::vector<int> >();
   std::shared_ptr<std::vector<int> > args2 = std::make_shared<std::vector<int> >();
   std::shared_ptr<std::vector<Leaf*> > leaves = std::make_shared<std::vector<Leaf*> >();
-  std::shared_ptr<std::unordered_map<Leaf*, int> > leaf_to_ndx_map = std::make_shared<std::unordered_map<Leaf*, int> >();
+  std::shared_ptr<std::map<Leaf*, int> > leaf_to_ndx_map = std::make_shared<std::map<Leaf*, int> >();
   std::shared_ptr<std::vector<Float*> > floats = std::make_shared<std::vector<Float*> >();
   int num_operators = 0;
   int num_leaves = 0;

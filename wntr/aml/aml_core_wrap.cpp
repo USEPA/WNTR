@@ -3034,13 +3034,13 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_std__allocatorT_Var_p_t swig_types[25]
 #define SWIGTYPE_p_std__invalid_argument swig_types[26]
 #define SWIGTYPE_p_std__setT_Constraint_p_t swig_types[27]
-#define SWIGTYPE_p_std__shared_ptrT_std__unordered_mapT_Leaf_p_int_t_t swig_types[28]
-#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_Float_p_std__allocatorT_Float_p_t_t_t swig_types[29]
-#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_Leaf_p_std__allocatorT_Leaf_p_t_t_t swig_types[30]
-#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_Var_p_std__allocatorT_Var_p_t_t_t swig_types[31]
-#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_int_std__allocatorT_int_t_t_t swig_types[32]
-#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_short_std__allocatorT_short_t_t_t swig_types[33]
-#define SWIGTYPE_p_std__unordered_setT_Var_p_t swig_types[34]
+#define SWIGTYPE_p_std__setT_Var_p_t swig_types[28]
+#define SWIGTYPE_p_std__shared_ptrT_std__mapT_Leaf_p_int_t_t swig_types[29]
+#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_Float_p_std__allocatorT_Float_p_t_t_t swig_types[30]
+#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_Leaf_p_std__allocatorT_Leaf_p_t_t_t swig_types[31]
+#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_Var_p_std__allocatorT_Var_p_t_t_t swig_types[32]
+#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_int_std__allocatorT_int_t_t_t swig_types[33]
+#define SWIGTYPE_p_std__shared_ptrT_std__vectorT_short_std__allocatorT_short_t_t_t swig_types[34]
 #define SWIGTYPE_p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t swig_types[35]
 #define SWIGTYPE_p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t swig_types[36]
 #define SWIGTYPE_p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t swig_types[37]
@@ -10458,7 +10458,7 @@ fail:
 SWIGINTERN PyObject *_wrap_Expression_leaf_to_ndx_map_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   Expression *arg1 = (Expression *) 0 ;
-  std::shared_ptr< std::unordered_map< Leaf *,int > > arg2 ;
+  std::shared_ptr< std::map< Leaf *,int > > arg2 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 ;
@@ -10473,14 +10473,14 @@ SWIGINTERN PyObject *_wrap_Expression_leaf_to_ndx_map_set(PyObject *SWIGUNUSEDPA
   }
   arg1 = reinterpret_cast< Expression * >(argp1);
   {
-    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__shared_ptrT_std__unordered_mapT_Leaf_p_int_t_t,  0  | 0);
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__shared_ptrT_std__mapT_Leaf_p_int_t_t,  0  | 0);
     if (!SWIG_IsOK(res2)) {
-      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Expression_leaf_to_ndx_map_set" "', argument " "2"" of type '" "std::shared_ptr< std::unordered_map< Leaf *,int > >""'"); 
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Expression_leaf_to_ndx_map_set" "', argument " "2"" of type '" "std::shared_ptr< std::map< Leaf *,int > >""'"); 
     }  
     if (!argp2) {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Expression_leaf_to_ndx_map_set" "', argument " "2"" of type '" "std::shared_ptr< std::unordered_map< Leaf *,int > >""'");
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "Expression_leaf_to_ndx_map_set" "', argument " "2"" of type '" "std::shared_ptr< std::map< Leaf *,int > >""'");
     } else {
-      std::shared_ptr< std::unordered_map< Leaf *,int > > * temp = reinterpret_cast< std::shared_ptr< std::unordered_map< Leaf *,int > > * >(argp2);
+      std::shared_ptr< std::map< Leaf *,int > > * temp = reinterpret_cast< std::shared_ptr< std::map< Leaf *,int > > * >(argp2);
       arg2 = *temp;
       if (SWIG_IsNewObj(res2)) delete temp;
     }
@@ -10499,7 +10499,7 @@ SWIGINTERN PyObject *_wrap_Expression_leaf_to_ndx_map_get(PyObject *SWIGUNUSEDPA
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::shared_ptr< std::unordered_map< Leaf *,int > > result;
+  std::shared_ptr< std::map< Leaf *,int > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Expression_leaf_to_ndx_map_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Expression, 0 |  0 );
@@ -10508,7 +10508,7 @@ SWIGINTERN PyObject *_wrap_Expression_leaf_to_ndx_map_get(PyObject *SWIGUNUSEDPA
   }
   arg1 = reinterpret_cast< Expression * >(argp1);
   result =  ((arg1)->leaf_to_ndx_map);
-  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::unordered_map< Leaf *,int > >(static_cast< const std::shared_ptr< std::unordered_map< Leaf *,int > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__unordered_mapT_Leaf_p_int_t_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::shared_ptr< std::map< Leaf *,int > >(static_cast< const std::shared_ptr< std::map< Leaf *,int > >& >(result))), SWIGTYPE_p_std__shared_ptrT_std__mapT_Leaf_p_int_t_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -12335,7 +12335,7 @@ SWIGINTERN PyObject *_wrap_Constraint_get_var_set(PyObject *SWIGUNUSEDPARM(self)
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  SwigValueWrapper< std::unordered_set< Var * > > result;
+  SwigValueWrapper< std::set< Var * > > result;
   
   if (!PyArg_ParseTuple(args,(char *)"O:Constraint_get_var_set",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_Constraint, 0 |  0 );
@@ -12344,7 +12344,7 @@ SWIGINTERN PyObject *_wrap_Constraint_get_var_set(PyObject *SWIGUNUSEDPARM(self)
   }
   arg1 = reinterpret_cast< Constraint * >(argp1);
   result = (arg1)->get_var_set();
-  resultobj = SWIG_NewPointerObj((new std::unordered_set< Var * >(static_cast< const std::unordered_set< Var * >& >(result))), SWIGTYPE_p_std__unordered_setT_Var_p_t, SWIG_POINTER_OWN |  0 );
+  resultobj = SWIG_NewPointerObj((new std::set< Var * >(static_cast< const std::set< Var * >& >(result))), SWIGTYPE_p_std__setT_Var_p_t, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -12395,7 +12395,7 @@ SWIGINTERN PyObject *Constraint_swigregister(PyObject *SWIGUNUSEDPARM(self), PyO
 SWIGINTERN PyObject *_wrap_WNTRModel_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   WNTRModel *arg1 = (WNTRModel *) 0 ;
-  std::unordered_set< Var * > *arg2 = (std::unordered_set< Var * > *) 0 ;
+  std::set< Var * > *arg2 = (std::set< Var * > *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -12409,11 +12409,11 @@ SWIGINTERN PyObject *_wrap_WNTRModel_vars_set(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_vars_set" "', argument " "1"" of type '" "WNTRModel *""'"); 
   }
   arg1 = reinterpret_cast< WNTRModel * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__unordered_setT_Var_p_t, 0 |  0 );
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__setT_Var_p_t, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "WNTRModel_vars_set" "', argument " "2"" of type '" "std::unordered_set< Var * > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "WNTRModel_vars_set" "', argument " "2"" of type '" "std::set< Var * > *""'"); 
   }
-  arg2 = reinterpret_cast< std::unordered_set< Var * > * >(argp2);
+  arg2 = reinterpret_cast< std::set< Var * > * >(argp2);
   if (arg1) (arg1)->vars = *arg2;
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -12428,7 +12428,7 @@ SWIGINTERN PyObject *_wrap_WNTRModel_vars_get(PyObject *SWIGUNUSEDPARM(self), Py
   void *argp1 = 0 ;
   int res1 = 0 ;
   PyObject * obj0 = 0 ;
-  std::unordered_set< Var * > *result = 0 ;
+  std::set< Var * > *result = 0 ;
   
   if (!PyArg_ParseTuple(args,(char *)"O:WNTRModel_vars_get",&obj0)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
@@ -12436,8 +12436,8 @@ SWIGINTERN PyObject *_wrap_WNTRModel_vars_get(PyObject *SWIGUNUSEDPARM(self), Py
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_vars_get" "', argument " "1"" of type '" "WNTRModel *""'"); 
   }
   arg1 = reinterpret_cast< WNTRModel * >(argp1);
-  result = (std::unordered_set< Var * > *)& ((arg1)->vars);
-  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__unordered_setT_Var_p_t, 0 |  0 );
+  result = (std::set< Var * > *)& ((arg1)->vars);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__setT_Var_p_t, 0 |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -14162,16 +14162,16 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Expression_leaf_to_ndx_map_set", _wrap_Expression_leaf_to_ndx_map_set, METH_VARARGS, (char *)"\n"
-		"Expression_leaf_to_ndx_map_set(Expression self, std::shared_ptr< std::unordered_map< Leaf *,int > > leaf_to_ndx_map)\n"
+		"Expression_leaf_to_ndx_map_set(Expression self, std::shared_ptr< std::map< Leaf *,int > > leaf_to_ndx_map)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: Expression *\n"
-		"leaf_to_ndx_map: std::shared_ptr< std::unordered_map< Leaf *,int > >\n"
+		"leaf_to_ndx_map: std::shared_ptr< std::map< Leaf *,int > >\n"
 		"\n"
 		""},
 	 { (char *)"Expression_leaf_to_ndx_map_get", _wrap_Expression_leaf_to_ndx_map_get, METH_VARARGS, (char *)"\n"
-		"Expression_leaf_to_ndx_map_get(Expression self) -> std::shared_ptr< std::unordered_map< Leaf *,int > >\n"
+		"Expression_leaf_to_ndx_map_get(Expression self) -> std::shared_ptr< std::map< Leaf *,int > >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -14751,7 +14751,7 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Constraint_get_var_set", _wrap_Constraint_get_var_set, METH_VARARGS, (char *)"\n"
-		"Constraint_get_var_set(Constraint self) -> std::unordered_set< Var * >\n"
+		"Constraint_get_var_set(Constraint self) -> std::set< Var * >\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -14769,16 +14769,16 @@ static PyMethodDef SwigMethods[] = {
 		""},
 	 { (char *)"Constraint_swigregister", Constraint_swigregister, METH_VARARGS, NULL},
 	 { (char *)"WNTRModel_vars_set", _wrap_WNTRModel_vars_set, METH_VARARGS, (char *)"\n"
-		"WNTRModel_vars_set(WNTRModel self, std::unordered_set< Var * > * vars)\n"
+		"WNTRModel_vars_set(WNTRModel self, std::set< Var * > * vars)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: WNTRModel *\n"
-		"vars: std::unordered_set< Var * > *\n"
+		"vars: std::set< Var * > *\n"
 		"\n"
 		""},
 	 { (char *)"WNTRModel_vars_get", _wrap_WNTRModel_vars_get, METH_VARARGS, (char *)"\n"
-		"WNTRModel_vars_get(WNTRModel self) -> std::unordered_set< Var * > *\n"
+		"WNTRModel_vars_get(WNTRModel self) -> std::set< Var * > *\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
@@ -15037,13 +15037,13 @@ static swig_type_info _swigt__p_size_type = {"_p_size_type", "size_type *", 0, 0
 static swig_type_info _swigt__p_std__allocatorT_Var_p_t = {"_p_std__allocatorT_Var_p_t", "std::vector< Var * >::allocator_type *|std::allocator< Var * > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__invalid_argument = {"_p_std__invalid_argument", "std::invalid_argument *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__setT_Constraint_p_t = {"_p_std__setT_Constraint_p_t", "std::set< Constraint * > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__shared_ptrT_std__unordered_mapT_Leaf_p_int_t_t = {"_p_std__shared_ptrT_std__unordered_mapT_Leaf_p_int_t_t", "std::shared_ptr< std::unordered_map< Leaf *,int > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__setT_Var_p_t = {"_p_std__setT_Var_p_t", "std::set< Var * > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__shared_ptrT_std__mapT_Leaf_p_int_t_t = {"_p_std__shared_ptrT_std__mapT_Leaf_p_int_t_t", "std::shared_ptr< std::map< Leaf *,int > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_Float_p_std__allocatorT_Float_p_t_t_t = {"_p_std__shared_ptrT_std__vectorT_Float_p_std__allocatorT_Float_p_t_t_t", "std::shared_ptr< std::vector< Float *,std::allocator< Float * > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_Leaf_p_std__allocatorT_Leaf_p_t_t_t = {"_p_std__shared_ptrT_std__vectorT_Leaf_p_std__allocatorT_Leaf_p_t_t_t", "std::shared_ptr< std::vector< Leaf *,std::allocator< Leaf * > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_Var_p_std__allocatorT_Var_p_t_t_t = {"_p_std__shared_ptrT_std__vectorT_Var_p_std__allocatorT_Var_p_t_t_t", "std::shared_ptr< std::vector< Var *,std::allocator< Var * > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_int_std__allocatorT_int_t_t_t = {"_p_std__shared_ptrT_std__vectorT_int_std__allocatorT_int_t_t_t", "std::shared_ptr< std::vector< int,std::allocator< int > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_short_std__allocatorT_short_t_t_t = {"_p_std__shared_ptrT_std__vectorT_short_std__allocatorT_short_t_t_t", "std::shared_ptr< std::vector< short,std::allocator< short > > > *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_std__unordered_setT_Var_p_t = {"_p_std__unordered_setT_Var_p_t", "std::unordered_set< Var * > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t = {"_p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t", "std::vector< Constraint *,std::allocator< Constraint * > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t = {"_p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t", "std::vector< ExpressionBase *,std::allocator< ExpressionBase * > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t = {"_p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t", "std::vector< Var *,std::allocator< Var * > > *|std::vector< Var * > *", 0, 0, (void*)0, 0};
@@ -15078,13 +15078,13 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_std__allocatorT_Var_p_t,
   &_swigt__p_std__invalid_argument,
   &_swigt__p_std__setT_Constraint_p_t,
-  &_swigt__p_std__shared_ptrT_std__unordered_mapT_Leaf_p_int_t_t,
+  &_swigt__p_std__setT_Var_p_t,
+  &_swigt__p_std__shared_ptrT_std__mapT_Leaf_p_int_t_t,
   &_swigt__p_std__shared_ptrT_std__vectorT_Float_p_std__allocatorT_Float_p_t_t_t,
   &_swigt__p_std__shared_ptrT_std__vectorT_Leaf_p_std__allocatorT_Leaf_p_t_t_t,
   &_swigt__p_std__shared_ptrT_std__vectorT_Var_p_std__allocatorT_Var_p_t_t_t,
   &_swigt__p_std__shared_ptrT_std__vectorT_int_std__allocatorT_int_t_t_t,
   &_swigt__p_std__shared_ptrT_std__vectorT_short_std__allocatorT_short_t_t_t,
-  &_swigt__p_std__unordered_setT_Var_p_t,
   &_swigt__p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t,
   &_swigt__p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t,
   &_swigt__p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t,
@@ -15119,13 +15119,13 @@ static swig_cast_info _swigc__p_size_type[] = {  {&_swigt__p_size_type, 0, 0, 0}
 static swig_cast_info _swigc__p_std__allocatorT_Var_p_t[] = {  {&_swigt__p_std__allocatorT_Var_p_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__invalid_argument[] = {  {&_swigt__p_std__invalid_argument, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__setT_Constraint_p_t[] = {  {&_swigt__p_std__setT_Constraint_p_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__shared_ptrT_std__unordered_mapT_Leaf_p_int_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__unordered_mapT_Leaf_p_int_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__setT_Var_p_t[] = {  {&_swigt__p_std__setT_Var_p_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__shared_ptrT_std__mapT_Leaf_p_int_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__mapT_Leaf_p_int_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_Float_p_std__allocatorT_Float_p_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__vectorT_Float_p_std__allocatorT_Float_p_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_Leaf_p_std__allocatorT_Leaf_p_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__vectorT_Leaf_p_std__allocatorT_Leaf_p_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_Var_p_std__allocatorT_Var_p_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__vectorT_Var_p_std__allocatorT_Var_p_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_int_std__allocatorT_int_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__vectorT_int_std__allocatorT_int_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_short_std__allocatorT_short_t_t_t[] = {  {&_swigt__p_std__shared_ptrT_std__vectorT_short_std__allocatorT_short_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_std__unordered_setT_Var_p_t[] = {  {&_swigt__p_std__unordered_setT_Var_p_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t[] = {  {&_swigt__p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t[] = {  {&_swigt__p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t[] = {  {&_swigt__p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t, 0, 0, 0},{0, 0, 0, 0}};
@@ -15160,13 +15160,13 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_std__allocatorT_Var_p_t,
   _swigc__p_std__invalid_argument,
   _swigc__p_std__setT_Constraint_p_t,
-  _swigc__p_std__shared_ptrT_std__unordered_mapT_Leaf_p_int_t_t,
+  _swigc__p_std__setT_Var_p_t,
+  _swigc__p_std__shared_ptrT_std__mapT_Leaf_p_int_t_t,
   _swigc__p_std__shared_ptrT_std__vectorT_Float_p_std__allocatorT_Float_p_t_t_t,
   _swigc__p_std__shared_ptrT_std__vectorT_Leaf_p_std__allocatorT_Leaf_p_t_t_t,
   _swigc__p_std__shared_ptrT_std__vectorT_Var_p_std__allocatorT_Var_p_t_t_t,
   _swigc__p_std__shared_ptrT_std__vectorT_int_std__allocatorT_int_t_t_t,
   _swigc__p_std__shared_ptrT_std__vectorT_short_std__allocatorT_short_t_t_t,
-  _swigc__p_std__unordered_setT_Var_p_t,
   _swigc__p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t,
   _swigc__p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t,
   _swigc__p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t,

@@ -4,7 +4,7 @@
 class WNTRModel
 {
 public:
-  std::unordered_set<Var*> vars;
+  std::set<Var*> vars;
   std::set<Constraint*> cons;
   std::vector<Constraint*> cons_vector;
   std::vector<Var*> vars_vector;

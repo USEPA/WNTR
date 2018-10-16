@@ -81,7 +81,7 @@ Constraint::Constraint(ConditionalExpression* conditional_expr)
 
 void Constraint::set_vars()
 {
-  std::unordered_set<Var*> vars_set;
+  std::set<Var*> vars_set;
   std::shared_ptr<std::vector<Var*> > _vars;
   for (int i=0; i<=num_conditions; ++i)
     {
@@ -192,9 +192,9 @@ std::vector<Var*> Constraint::py_get_vars()
 }
 
 
-std::unordered_set<Var*> Constraint::get_var_set()
+std::set<Var*> Constraint::get_var_set()
 {
-  std::unordered_set<Var*> var_set;
+  std::set<Var*> var_set;
   for (int i=0; i<num_vars; ++i)
     {
       var_set.insert(vars[i]);
