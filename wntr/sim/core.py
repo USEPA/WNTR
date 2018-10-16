@@ -354,6 +354,9 @@ class WNTRSimulator(WaterNetworkSimulator):
                     wntr.sim.hydraulics.update_tank_heads(wn)
                 trial = 0
 
+                self._presolve_controls.reset()
+                self._rules.reset()
+
                 # check which presolve controls need to be activated before the next hydraulic timestep
                 presolve_controls_to_run = self._presolve_controls.check()
                 presolve_controls_to_run.sort(key=lambda i: i[0]._priority)  # sort them by priority
@@ -488,8 +491,6 @@ class WNTRSimulator(WaterNetworkSimulator):
             wntr.sim.hydraulics.update_model_for_controls(model, wn, model_updater, self._rules)
             wntr.models.param.source_head_param(model, wn)
             wntr.models.param.expected_demand_param(model, wn)
-            self._presolve_controls.reset()
-            self._rules.reset()
 
             # Solve
             solver_status, mesg = _solver_helper(model, solver, solver_options)
