@@ -31,6 +31,8 @@
 %newobject ExpressionBase::__rdiv__(double);
 %newobject ExpressionBase::__rtruediv__(double);
 %newobject ExpressionBase::__rpow__(double);
+%newobject abs(ExpressionBase&);
+%newobject sign(ExpressionBase&);
 
 %apply (double *ARGOUT_ARRAY1, int DIM1) {(double *array_out, int array_length_out)}
 %apply (double *ARGOUT_ARRAY1, int DIM1) {(double *values_array_out, int values_array_length_out)}

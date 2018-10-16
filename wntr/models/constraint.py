@@ -139,12 +139,9 @@ class hazen_williams_headloss_constraint(Definition):
                 d = m.hw_d
 
                 con = aml.ConditionalExpression()
-                con.add_condition(f + m.hw_q2, k*(-f)**m.hw_exp + minor_k*f**m.hw_minor_exp + start_h - end_h)
-                con.add_condition(f + m.hw_q1, k*(-a*f**3 + b*f**2 - c*f + d) + minor_k*f**m.hw_minor_exp + start_h - end_h)
-                con.add_condition(f, -(k*m.hw_m*f) + minor_k*f**m.hw_minor_exp + start_h - end_h)
-                con.add_condition(f - m.hw_q1, -k*m.hw_m*f - minor_k*f**m.hw_minor_exp + start_h - end_h)
-                con.add_condition(f - m.hw_q2, -k*(a*f**3 + b*f**2 + c*f + d) - minor_k*f**m.hw_minor_exp + start_h - end_h)
-                con.add_final_expr(-k*f**m.hw_exp - minor_k*f**m.hw_minor_exp + start_h - end_h)
+                con.add_condition(aml.abs(f) - m.hw_q1, -k*m.hw_m*f - aml.sign(f)*minor_k*f**m.hw_minor_exp + start_h - end_h)
+                con.add_condition(aml.abs(f) - m.hw_q2, -k*(a*f**3 + aml.sign(f)*b*f**2 + c*f + aml.sign(f)*d) - aml.sign(f)*minor_k*f**m.hw_minor_exp + start_h - end_h)
+                con.add_final_expr(-aml.sign(f)*k*aml.abs(f)**m.hw_exp - aml.sign(f)*minor_k*f**m.hw_minor_exp + start_h - end_h)
                 con = aml.Constraint(con)
 
             m.hazen_williams_headloss[link_name] = con

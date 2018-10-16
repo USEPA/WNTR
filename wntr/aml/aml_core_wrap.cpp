@@ -8405,6 +8405,34 @@ SWIGINTERN PyObject *Swig_var_POWER_get(void) {
 }
 
 
+SWIGINTERN int Swig_var_ABS_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable ABS is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_ABS_get(void) {
+  PyObject *pyobj = 0;
+  
+  pyobj = SWIG_From_short(static_cast< short >(ABS));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_SIGN_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable SIGN is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_SIGN_get(void) {
+  PyObject *pyobj = 0;
+  
+  pyobj = SWIG_From_short(static_cast< short >(SIGN));
+  return pyobj;
+}
+
+
 SWIGINTERN PyObject *_wrap_delete_ExpressionBase(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   ExpressionBase *arg1 = (ExpressionBase *) 0 ;
@@ -10845,6 +10873,62 @@ SWIGINTERN PyObject *_wrap__operator_ndx_to_arg_ndx(PyObject *SWIGUNUSEDPARM(sel
   arg1 = static_cast< int >(val1);
   result = (int)_operator_ndx_to_arg_ndx(arg1);
   resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_abs(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  ExpressionBase *arg1 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  char *  kwnames[] = {
+    (char *) "arg1", NULL 
+  };
+  ExpressionBase *result = 0 ;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"O:abs",kwnames,&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_ExpressionBase,  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "abs" "', argument " "1"" of type '" "ExpressionBase &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "abs" "', argument " "1"" of type '" "ExpressionBase &""'"); 
+  }
+  arg1 = reinterpret_cast< ExpressionBase * >(argp1);
+  result = (ExpressionBase *)abs(*arg1);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_ExpressionBase, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_sign(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  ExpressionBase *arg1 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj0 = 0 ;
+  char *  kwnames[] = {
+    (char *) "arg1", NULL 
+  };
+  ExpressionBase *result = 0 ;
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"O:sign",kwnames,&obj0)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1, SWIGTYPE_p_ExpressionBase,  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "sign" "', argument " "1"" of type '" "ExpressionBase &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "sign" "', argument " "1"" of type '" "ExpressionBase &""'"); 
+  }
+  arg1 = reinterpret_cast< ExpressionBase * >(argp1);
+  result = (ExpressionBase *)sign(*arg1);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_ExpressionBase, SWIG_POINTER_OWN |  0 );
   return resultobj;
 fail:
   return NULL;
@@ -14212,6 +14296,22 @@ static PyMethodDef SwigMethods[] = {
 		"arg1: int\n"
 		"\n"
 		""},
+	 { (char *)"abs", (PyCFunction) _wrap_abs, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"abs(ExpressionBase arg1) -> ExpressionBase\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"arg1: ExpressionBase &\n"
+		"\n"
+		""},
+	 { (char *)"sign", (PyCFunction) _wrap_sign, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"sign(ExpressionBase arg1) -> ExpressionBase\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"arg1: ExpressionBase &\n"
+		"\n"
+		""},
 	 { (char *)"Evaluator_n_operators_set", _wrap_Evaluator_n_operators_set, METH_VARARGS, (char *)"\n"
 		"Evaluator_n_operators_set(Evaluator self, int n_operators)\n"
 		"\n"
@@ -15771,6 +15871,8 @@ SWIG_init(void) {
   SWIG_addvarlink(SWIG_globals(),(char *)"MULTIPLY",Swig_var_MULTIPLY_get, Swig_var_MULTIPLY_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"DIVIDE",Swig_var_DIVIDE_get, Swig_var_DIVIDE_set);
   SWIG_addvarlink(SWIG_globals(),(char *)"POWER",Swig_var_POWER_get, Swig_var_POWER_set);
+  SWIG_addvarlink(SWIG_globals(),(char *)"ABS",Swig_var_ABS_get, Swig_var_ABS_set);
+  SWIG_addvarlink(SWIG_globals(),(char *)"SIGN",Swig_var_SIGN_get, Swig_var_SIGN_set);
 #if PY_VERSION_HEX >= 0x03000000
   return m;
 #else

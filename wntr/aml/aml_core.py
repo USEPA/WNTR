@@ -1045,6 +1045,8 @@ SUBTRACT = cvar.SUBTRACT
 MULTIPLY = cvar.MULTIPLY
 DIVIDE = cvar.DIVIDE
 POWER = cvar.POWER
+ABS = cvar.ABS
+SIGN = cvar.SIGN
 
 class Leaf(ExpressionBase):
     """Proxy of C++ Leaf class."""
@@ -1404,6 +1406,28 @@ def _operator_ndx_to_arg_ndx(arg1):
 
     """
     return _aml_core._operator_ndx_to_arg_ndx(arg1)
+
+def abs(arg1):
+    """
+    abs(ExpressionBase arg1) -> ExpressionBase
+
+    Parameters
+    ----------
+    arg1: ExpressionBase &
+
+    """
+    return _aml_core.abs(arg1)
+
+def sign(arg1):
+    """
+    sign(ExpressionBase arg1) -> ExpressionBase
+
+    Parameters
+    ----------
+    arg1: ExpressionBase &
+
+    """
+    return _aml_core.sign(arg1)
 class Evaluator(_object):
     """Proxy of C++ Evaluator class."""
 

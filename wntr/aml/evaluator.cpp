@@ -137,6 +137,21 @@ void Evaluator::_evaluate(double *values)
 	{
 	  values[i] = ::pow(val1, val2);
 	}
+      else if (oper == ABS)
+	{
+	  values[i] = std::abs(val1);
+	}
+      else if (oper == SIGN)
+	{
+	  if (val1 >= 0)
+	    {
+	      values[i] = 1.0;
+	    }
+	  else
+	    {
+	      values[i] = -1.0;
+	    }
+	}
     }
 }
 
@@ -172,7 +187,7 @@ void Evaluator::rad()
       arg1_ndx = arg1_indices[i];
       arg2_ndx = arg2_indices[i];
       der = ders[i];
-      
+
       if (oper == ADD)
 	{
 	  der1 = der;
@@ -257,6 +272,41 @@ void Evaluator::rad()
 	  der1 = der * val2 * ::pow(val1, val2 - 1.0);
 	  der2 = der * ::pow(val1, val2) * log(val1);
 	}
+      else if (oper == ABS)
+	{
+	  if (arg1_ndx >= 0)
+	    {
+	      val1 = leaves[arg1_ndx]->value;
+	    }
+	  else
+	    {
+	      oper_ndx = _arg_ndx_to_operator_ndx(arg1_ndx);
+	      val1 = values[oper_ndx];
+	    }
+	  if (val1 >= 0)
+	    {
+	      der1 = der;
+	    }
+	  else
+	    {
+	      der1 = -der;
+	    }
+	  der2 = 0.0;
+	}
+      else if (oper == SIGN)
+	{
+	  if (arg1_ndx >= 0)
+	    {
+	      val1 = leaves[arg1_ndx]->value;
+	    }
+	  else
+	    {
+	      oper_ndx = _arg_ndx_to_operator_ndx(arg1_ndx);
+	      val1 = values[oper_ndx];
+	    }
+	  der1 = 0.0;
+	  der2 = 0.0;
+	}
       
       if (arg1_ndx >= 0)
 	{
@@ -337,6 +387,14 @@ std::string Evaluator::__str__()
       else if (oper == POWER)
 	{
 	  values[i] = "(" + val1 + " ** " + val2 + ")";
+	}
+      else if (oper == ABS)
+	{
+	  values[i] = "abs(" + val1 + ")";
+	}
+      else if (oper == SIGN)
+	{
+	  values[i] = "sign(" + val1 + ")";
 	}
     }
   return values[n_operators - 1];

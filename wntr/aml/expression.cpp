@@ -198,6 +198,42 @@ ExpressionBase* binary_helper2(ExpressionBase *n1, ExpressionBase *n2, const sho
 }
 
 
+ExpressionBase *unary_helper(Expression *n, const short operation)
+{
+  Expression* expr = _expr_copy(n);
+  expr->operators->push_back(operation);
+  expr->args1->push_back(_operator_ndx_to_arg_ndx(n->num_operators - 1));
+  expr->args2->push_back(0);
+  expr->num_operators += 1;
+  return expr;
+}
+
+
+ExpressionBase *unary_helper(Leaf *n, const short operation)
+{
+  Expression *expr = new Expression();
+  expr->operators->push_back(operation);
+  expr->add_leaf(n);
+  expr->args1->push_back((*(expr->leaf_to_ndx_map))[n]);
+  expr->args2->push_back(0);
+  expr->num_operators += 1;
+  return expr;
+}
+
+
+ExpressionBase* unary_helper2(ExpressionBase *n, const short operation)
+{
+  if (n->is_leaf())
+    {
+      return unary_helper(dynamic_cast<Leaf*>(n), operation);
+    }
+  else
+    {
+      return unary_helper(dynamic_cast<Expression*>(n), operation);
+    }
+}
+
+
 ExpressionBase* ExpressionBase::operator+(ExpressionBase& n)
 {
   return binary_helper2(this, &n, ADD);
@@ -225,6 +261,18 @@ ExpressionBase* ExpressionBase::operator/(ExpressionBase& n)
 ExpressionBase* ExpressionBase::__pow__(ExpressionBase& n)
 {
   return binary_helper2(this, &n, POWER);
+}
+
+
+ExpressionBase* abs(ExpressionBase &n)
+{
+  return unary_helper2(&n, ABS);
+}
+
+
+ExpressionBase* sign(ExpressionBase &n)
+{
+  return unary_helper2(&n, SIGN);
 }
 
 

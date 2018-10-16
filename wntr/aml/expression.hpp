@@ -21,6 +21,8 @@ const short SUBTRACT = 2;
 const short MULTIPLY = 3;
 const short DIVIDE = 4;
 const short POWER = 5;
+const short ABS = 6;
+const short SIGN = 7;
 
 
 class ExpressionBase;
@@ -143,3 +145,5 @@ public:
 
 int _arg_ndx_to_operator_ndx(int);
 int _operator_ndx_to_arg_ndx(int);
+ExpressionBase* abs(ExpressionBase&);
+ExpressionBase* sign(ExpressionBase&);
