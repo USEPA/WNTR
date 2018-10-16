@@ -42,7 +42,7 @@ aml_core_i = os.path.join(src_files, 'aml_core.i')
 network_isolation_dir = os.path.join(project_dir, 'wntr', 'sim', 'network_isolation')
 network_isolation_cxx = os.path.join(network_isolation_dir, 'network_isolation.cpp')
 network_isolation_i = os.path.join(network_isolation_dir, 'network_isolation.i')
-network_isolation_wrap_cxx = os.path.join(network_isolation_dir, 'network_isolation_wrap.cxx')
+network_isolation_wrap_cxx = os.path.join(network_isolation_dir, 'network_isolation_wrap.cpp')
 
 extension_modules = list()
 
