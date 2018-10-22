@@ -13,7 +13,7 @@ Copyright
 ------------
 .. code-block:: none 
 
-   Copyright 2015-2017 National Technology & Engineering Solutions of Sandia, 
+   Copyright 2015-2018 National Technology & Engineering Solutions of Sandia, 
    LLC (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S. 
    Government retains certain rights in this software.
 

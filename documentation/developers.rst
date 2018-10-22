@@ -86,4 +86,4 @@ Development team
 WNTR was developed as part of a collaboration between the United States 
 Environmental Protection Agency National Homeland Security Research Center, 
 Sandia National Laboratories, and Purdue University.  
-See https://github.com/USEPA/WNTR/graphs/contributors for a list of contributors.
+See https://github.com/USEPA/WNTR/graphs/contributors for a full list of contributors.

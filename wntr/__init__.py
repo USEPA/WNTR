@@ -6,9 +6,9 @@ from wntr import scenario
 from wntr import graphics
 from wntr import utils
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
 
-__copyright__ = """Copyright 2015-2017 National Technology & Engineering 
+__copyright__ = """Copyright 2015-2018 National Technology & Engineering 
 Solutions of Sandia, LLC (NTESS). Under the terms of Contract DE-NA0003525 
 with NTESS, the U.S. Government retains certain rights in this software."""
 

@@ -1,9 +1,12 @@
-License Notice
-==============
+Copyright Notice
+=================
 
-Copyright 2015-2017 National Technology & Engineering Solutions of Sandia, LLC 
+Copyright 2015-2018 National Technology & Engineering Solutions of Sandia, LLC 
 (NTESS). Under the terms of Contract DE-NA0003525 with NTESS, the U.S. 
 Government retains certain rights in this software.
+
+License Notice
+=================
 
 This software is distributed under the Revised BSD License (see below).
 WNTR also leverages a variety of third-party software packages, which
