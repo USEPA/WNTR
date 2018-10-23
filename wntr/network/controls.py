@@ -1060,6 +1060,10 @@ class _CloseCVCondition(ControlCondition):
             else:
                 return False
 
+    def __str__(self):
+        s = '{0} head - {1} head < -{2} or {3} flow < {4}'.format(self._start_node.name, self._end_node.name, self.Htol, self._cv.name, -self.Qtol)
+        return s
+
 
 class _OpenCVCondition(ControlCondition):
     Htol = 0.0001524
@@ -1088,6 +1092,10 @@ class _OpenCVCondition(ControlCondition):
                 return True
         else:
             return False
+
+    def __str__(self):
+        s = '{0} head - {1} head > {2} and {3} flow >= {4}'.format(self._start_node.name, self._end_node.name, self.Htol, self._cv.name, -self.Qtol)
+        return s
 
 
 class _ClosePowerPumpCondition(ControlCondition):
@@ -1122,6 +1130,10 @@ class _ClosePowerPumpCondition(ControlCondition):
             return True
         return False
 
+    def __str__(self):
+        s = '{0} head - {1} head > {2:.4f}'.format(self._end_node.name, self._start_node.name, self.Hmax + self.Htol)
+        return s
+
 
 class _OpenPowerPumpCondition(ControlCondition):
     Htol = 0.0001524
@@ -1151,6 +1163,10 @@ class _OpenPowerPumpCondition(ControlCondition):
         if dh <= self.Hmax + self.Htol:
             return True
         return False
+
+    def __str__(self):
+        s = '{0} head - {1} head <= {2:.4f}'.format(self._end_node.name, self._start_node.name, self.Hmax + self.Htol)
+        return s
 
 
 class _CloseHeadPumpCondition(ControlCondition):
@@ -1188,6 +1204,14 @@ class _CloseHeadPumpCondition(ControlCondition):
             return True
         return False
 
+    def __str__(self):
+        a, b, c = self._pump.get_head_curve_coefficients()
+        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+            raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
+        Hmax = a
+        s = '{0} head - {1} head > {2:.4f}'.format(self._end_node.name, self._start_node.name, Hmax + self._Htol)
+        return s
+
 
 class _OpenHeadPumpCondition(ControlCondition):
     """
@@ -1224,6 +1248,14 @@ class _OpenHeadPumpCondition(ControlCondition):
             return True
         return False
 
+    def __str__(self):
+        a, b, c = self._pump.get_head_curve_coefficients()
+        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+            raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
+        Hmax = a
+        s = '{0} head - {1} head <= {2:.4f}'.format(self._end_node.name, self._start_node.name, Hmax + self._Htol)
+        return s
+
 
 class _ClosePRVCondition(ControlCondition):
     _Qtol = 2.83168e-6
@@ -1258,6 +1290,10 @@ class _ClosePRVCondition(ControlCondition):
         else:
             raise RuntimeError('Unexpected PRV _internal_status for valve {0}: {1}.'.format(self._prv,
                                                                                             self._prv._internal_status))
+
+    def __str__(self):
+        s = 'prv {0} needs to be closed'.format(self._prv.name)
+        return s
 
 
 class _OpenPRVCondition(ControlCondition):
@@ -1300,6 +1336,10 @@ class _OpenPRVCondition(ControlCondition):
             raise RuntimeError('Unexpected PRV _internal_status for valve {0}: {1}.'.format(self._prv,
                                                                                             self._prv._internal_status))
 
+    def __str__(self):
+        s = 'prv {0} needs to be open'.format(self._prv.name)
+        return s
+
 
 class _ActivePRVCondition(ControlCondition):
     _Qtol = 2.83168e-6
@@ -1338,6 +1378,10 @@ class _ActivePRVCondition(ControlCondition):
         else:
             raise RuntimeError('Unexpected PRV _internal_status for valve {0}: {1}.'.format(self._prv,
                                                                                             self._prv._internal_status))
+
+    def __str__(self):
+        s = 'prv {0} needs to be active'.format(self._prv.name)
+        return s
 
 
 class _OpenFCVCondition(ControlCondition):
