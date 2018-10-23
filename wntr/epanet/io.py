@@ -2001,7 +2001,17 @@ class InpFile(object):
     def _write_backdrop(self, f, wn):
         if wn.options.graphics is not None:
             f.write('[BACKDROP]\n'.encode('ascii'))
-            f.write('{}'.format(wn.options.graphics).encode('ascii'))
+            if wn.options.graphics.dimensions is not None:
+                f.write('DIMENSIONS    {0}    {1}    {2}    {3}\n'.format(wn.options.graphics.dimensions[0],
+                                                                        wn.options.graphics.dimensions[1],
+                                                                        wn.options.graphics.dimensions[2],
+                                                                        wn.options.graphics.dimensions[3]).encode('ascii'))
+            if wn.options.graphics.units is not None:
+                f.write('UNITS    {0}\n'.format(wn.options.graphics.units).encode('ascii'))
+            if wn.options.graphics.image_filename is not None:
+                f.write('FILE    {0}\n'.format(wn.options.graphics.image_filename).encode('ascii'))
+            if wn.options.graphics.offset is not None:
+                f.write('OFFSET    {0}    {1}\n'.format(wn.options.graphics.offset[0], wn.options.graphics.offset[1]).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
     def _read_tags(self):
@@ -3038,7 +3048,8 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
                     label = tmp_label
                 else:
                     tmp_line += " " + " ".join(line1.split()[1:])
-            new_lines_1.append((tmp_loc, tmp_line))
+            if tmp_line is not None:
+                new_lines_1.append((tmp_loc, tmp_line))
             label = None
             tmp_line = None
             tmp_loc = None
@@ -3052,7 +3063,8 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
                     label = tmp_label
                 else:
                     tmp_line += " " + " ".join(line2.split()[1:])
-            new_lines_2.append((tmp_loc, tmp_line))
+            if tmp_line is not None:
+                new_lines_2.append((tmp_loc, tmp_line))
         else:
             new_lines_1 = list(f1.iter(start1, stop1))
             new_lines_2 = list(f2.iter(start2, stop2))
@@ -3061,6 +3073,8 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
         different_lines_2.append(section)
 
         if len(new_lines_1) != len(new_lines_2):
+            orig_len_different_lines = len(different_lines_1)
+            assert orig_len_different_lines == len(different_lines_2)
             n1 = 0
             n2 = 0
             for loc1, line1 in new_lines_1:
@@ -3079,6 +3093,12 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
                     different_lines_1.append("")
             else:
                 raise RuntimeError('Unexpected')
+            if (not htmldiff) and (print_counter < print_max):
+                for i in range(orig_len_different_lines, len(different_lines_1)):
+                    print(_clean_line(wn, section, _convert_line(different_lines_1[i])), _clean_line(wn, section, _convert_line(different_lines_2[i])))
+                    print_counter += 1
+                    if print_counter >= print_max:
+                        print('...')
             continue
 
         f2_iter = iter(new_lines_2)
