@@ -34,41 +34,6 @@ class WaterNetworkSimulator(object):
         self._wn = wn
         self.mode = mode
 
-    def get_node_demand(self, node_name, start_time=None, end_time=None):
-        """
-        Calculates the demands at a node based on the demand pattern.
-
-        Parameters
-        ----------
-        node_name : string
-            Name of the node.
-        start_time : float
-            The start time of the demand values requested. Default is 0 sec.
-        end_time : float
-            The end time of the demand values requested. Default is the simulation end time in sec.
-
-        Returns
-        -------
-        demand_list : list of floats
-           A list of demand values at each hydraulic timestep.
-        """
-
-        # Set start and end time for demand values to be returned
-        if start_time is None:
-            start_time = 0
-        if end_time is None:
-            end_time = self._wn.options.time.duration
-
-        # Get node object
-        try:
-            node = self._wn.get_node(node_name)
-        except KeyError:
-            raise KeyError("Not a valid node name")
-        # Make sure node object is a Junction
-        assert(isinstance(node, Junction)), "Demands can only be calculated for Junctions"
-        # Calculate demand pattern values
-        return node.demands.get_values(start_time, end_time, self._wn.options.time.hydraulic_timestep)
-
     def _get_link_type(self, name):
         if isinstance(self._wn.get_link(name), Pipe):
             return 'pipe'
@@ -154,6 +119,30 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         if logger_level <= 1:
             logger.log(1, 'beginning of run_sim')
+
+        report_timestep = self._wn.options.time.report_timestep
+        hydraulic_timestep = self._wn.options.time.hydraulic_timestep
+        if type(report_timestep) is str:
+            if report_timestep.upper() != 'ALL':
+                raise ValueError('report timestep must be either an integer number of seconds or "ALL".')
+        else:
+            if report_timestep < hydraulic_timestep:
+                msg = 'The report timestep must be an integer multiple of the hydraulic timestep. Reducing the hydraulic timestep from {0} seconds to {1} seconds for this simulation.'.format(hydraulic_timestep, report_timestep)
+                logger.warning(msg)
+                warnings.warn(msg)
+                hydraulic_timestep = report_timestep
+            elif report_timestep%hydraulic_timestep != 0:
+                new_report = report_timestep - (report_timestep%hydraulic_timestep)
+                msg = 'The report timestep must be an integer multiple of the hydraulic timestep. Reducing the report timestep from {0} seconds to {1} seconds for this simulation.'.format(report_timestep, new_report)
+                logger.warning(msg)
+                warnings.warn(msg)
+                report_timestep = new_report
+
+        orig_report_timestep = self._wn.options.time.report_timestep
+        orig_hydraulic_timestep = self._wn.options.time.hydraulic_timestep
+
+        self._wn.options.time.report_timestep = report_timestep
+        self._wn.options.time.hydraulic_timestep = hydraulic_timestep
 
         self._time_per_step = []
 
@@ -415,9 +404,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                     raise RuntimeError('Simulation did not converge. ' + message)
                 warnings.warn('Simulation did not converge. ' + message)
                 logger.warning('Simulation did not converge at time ' + str(self._get_time()) + '. ' + message)
-                model.get_results(results)
                 results.error_code = 2
-                return results
+                break
             X_init = np.array(self._X)
 
             # Enter results in network and update previous inputs
@@ -450,8 +438,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                     results.error_code = 2
                     warnings.warn('Exceeded maximum number of trials.')
                     logger.warning('Exceeded maximum number of trials at time %s', self._get_time())
-                    model.get_results(results)
-                    return results
+                    break
                 continue
 
             logger.debug('no changes made by postsolve controls; moving to next timestep')
@@ -480,6 +467,8 @@ class WNTRSimulator(WaterNetworkSimulator):
             self._time_per_step.append(time.time()-start_step_time)
 
         model.get_results(results)
+        self._wn.options.time.report_timestep = orig_report_timestep
+        self._wn.options.time.hydraulic_timestep = orig_hydraulic_timestep
         return results
 
     def _initialize_internal_graph(self):

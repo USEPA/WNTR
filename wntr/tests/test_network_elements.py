@@ -159,7 +159,6 @@ def test_TimeSeries():
     
 
 def test_Demands():
-    raise SkipTest
     wn = wntr.network.WaterNetworkModel()
     
     pattern_points1 = [0.5, 1.0, 0.4, 0.2 ]
@@ -195,6 +194,9 @@ def test_Demands():
     demandlist2.clear()
     nose.tools.assert_equal(len(demandlist2), 0)
     nose.tools.assert_false(demandlist2)
+    
+    raise SkipTest
+    
     nose.tools.assert_equal(demandlist1.at(5), expectedtotal[0])
     nose.tools.assert_equal(demandlist1.at(13), expectedtotal[1])
     nose.tools.assert_equal(demandlist1.at(13, 'residential'), expectedresidential[1])
@@ -210,8 +212,4 @@ def test_Enums():
     pass
 
 if __name__ == '__main__':
-    test_Curve()
-    test_Pattern()
-    test_TimeSeries()
     test_Demands()
-    test_Enums()

@@ -68,6 +68,7 @@ _PUMP_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {ptype:8s} {params:20s} {com:
 _PUMP_LABEL = '{:21s} {:20s} {:20s} {:20s}\n'
 
 _VALVE_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:15.11g} {mloss:15.11g} {com:>3s}\n'
+_GPV_ENTRY = ' {name:20s} {node1:20s} {node2:20s} {diam:15.11g} {vtype:4s} {set:20s} {mloss:15.11g} {com:>3s}\n'
 _VALVE_LABEL = '{:21s} {:20s} {:20s} {:>20s} {:4s} {:>20s} {:>20s}\n'
 
 _CURVE_ENTRY = ' {name:10s} {x:12f} {y:12f} {com:>3s}\n'
@@ -175,10 +176,12 @@ def _clock_time_to_sec(s, am_pm):
         time_sec = (int(time_tuple.groups()[0])*60*60 +
                     int(time_tuple.groups()[1])*60 +
                     int(round(float(time_tuple.groups()[2]))))
-        if not am:
-            time_sec += 3600*12
         if s.startswith('12'):
             time_sec -= 3600*12
+        if not am:
+            if time_sec >= 3600*12:
+                raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+            time_sec += 3600*12
         return time_sec
     else:
         pattern2 = re.compile(r'^(\d+):(\d+)$')
@@ -186,20 +189,24 @@ def _clock_time_to_sec(s, am_pm):
         if bool(time_tuple):
             time_sec = (int(time_tuple.groups()[0])*60*60 +
                         int(time_tuple.groups()[1])*60)
-            if not am:
-                time_sec += 3600*12
             if s.startswith('12'):
                 time_sec -= 3600*12
+            if not am:
+                if time_sec >= 3600 * 12:
+                    raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                time_sec += 3600*12
             return time_sec
         else:
             pattern3 = re.compile(r'^(\d+)$')
             time_tuple = pattern3.search(s)
             if bool(time_tuple):
                 time_sec = int(time_tuple.groups()[0])*60*60
-                if not am:
-                    time_sec += 3600*12
                 if s.startswith('12'):
                     time_sec -= 3600*12
+                if not am:
+                    if time_sec >= 3600 * 12:
+                        raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                    time_sec += 3600*12
                 return time_sec
             else:
                 raise RuntimeError("Time format in "
@@ -791,6 +798,7 @@ class InpFile(object):
                  'mloss': valve.minor_loss,
                  'com': ';'}
             valve_type = valve.valve_type
+            formatter = _VALVE_ENTRY
             if valve_type in ['PRV', 'PSV', 'PBV']:
                 valve_set = from_si(self.flow_units, valve._initial_setting, HydParam.Pressure)
             elif valve_type == 'FCV':
@@ -798,9 +806,10 @@ class InpFile(object):
             elif valve_type == 'TCV':
                 valve_set = valve._initial_setting
             elif valve_type == 'GPV':
-                valve_set = valve._initial_setting
+                valve_set = valve.headloss_curve_name
+                formatter = _GPV_ENTRY
             E['set'] = valve_set
-            f.write(_VALVE_ENTRY.format(**E).encode('ascii'))
+            f.write(formatter.format(**E).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_emitters(self):
@@ -957,9 +966,9 @@ class InpFile(object):
                 pump_name = current[1]
                 pump = self.wn.links[pump_name]
                 if current[2].upper() == 'PRICE':
-                    pump.energy_price = from_si(self.flow_units, float(current[2]), HydParam.Energy)
+                    pump.energy_price = from_si(self.flow_units, float(current[3]), HydParam.Energy)
                 elif current[2].upper() == 'PATTERN':
-                    pump.energy_pattern = current[2]
+                    pump.energy_pattern = current[3]
                 elif current[2].upper() in ['EFFIC', 'EFFICIENCY']:
                     curve_name = current[3]
                     curve_points = []
@@ -993,7 +1002,7 @@ class InpFile(object):
             if pump.efficiency is not None:
                 f.write('PUMP {:10s} EFFIC   {:s}\n'.format(pump_name, pump.efficiency.name).encode('ascii'))
             if pump.energy_price is not None:
-                f.write('PUMP {:10s} PRICE   {:s}\n'.format(pump_name, to_si(self.flow_units, pump.energy_price, HydParam.Energy)).encode('ascii'))
+                f.write('PUMP {:10s} PRICE   {:.4f}\n'.format(pump_name, to_si(self.flow_units, pump.energy_price, HydParam.Energy)).encode('ascii'))
             if pump.energy_pattern is not None:
                 f.write('PUMP {:10s} PATTERN {:s}\n'.format(pump_name, pump.energy_pattern).encode('ascii'))
         f.write('\n'.encode('ascii'))
@@ -1139,7 +1148,10 @@ class InpFile(object):
 #                    control_name = control_name + '/' + current[i]
 #                control_name = control_name + '/' + str(round(threshold, 2))
             else:
-                if len(current) == 6:  # at time
+                if 'CLOCKTIME' not in current:  # at time
+                    if 'TIME' not in current:
+                        raise ValueError('Unrecognized line in inp file: {0}'.format(line))
+
                     if ':' in current[5]:
                         run_at_time = int(_str_time_to_sec(current[5]))
                     else:
@@ -1149,9 +1161,15 @@ class InpFile(object):
 #                    for i in range(len(current)-1):
 #                        control_name = control_name + '/' + current[i]
 #                    control_name = control_name + '/' + str(run_at_time)
-                elif len(current) == 7:  # at clocktime
-                    run_at_time = int(_clock_time_to_sec(current[5], current[6]))
-                    control_obj = Control._time_control(self.wn, run_at_time, 'SHIFTED_TIME', True, action_obj, control_name)
+                else:  # at clocktime
+                    if len(current) < 7:
+                        if ':' in current[5]:
+                            run_at_time = int(_str_time_to_sec(current[5]))
+                        else:
+                            run_at_time = int(float(current[5])*3600)
+                    else:
+                        run_at_time = int(_clock_time_to_sec(current[5], current[6]))
+                    control_obj = Control._time_control(self.wn, run_at_time, 'CLOCK_TIME', True, action_obj, control_name)
 #                    control_name = ''
 #                    for i in range(len(current)-1):
 #                        control_name = control_name + '/' + current[i]
@@ -1210,7 +1228,7 @@ class InpFile(object):
                             'time': all_control._condition._threshold / 3600.0}
                     if vals['setting'] is None:
                         continue
-                    if isinstance(all_control, SimTimeCondition):
+                    if isinstance(all_control._condition, TimeOfDayCondition):
                         vals['compare'] = 'CLOCKTIME'
                     f.write(entry.format(**vals).encode('ascii'))
                 elif isinstance(all_control._condition, (ValueCondition)):
@@ -1323,7 +1341,8 @@ class InpFile(object):
                 pattern = None
             else:
                 pattern = self.wn.get_pattern(current[2])
-            node.demand_timeseries_list.remove_category('EN2 base')
+            # node.demand_timeseries_list.remove_category('EN2 base')  # Intended to remove category _NAME_ -- need
+            # fixing before we change it again.
             node.demand_timeseries_list.append((to_si(self.flow_units, float(current[1]), HydParam.Demand),
                                          pattern, category))
 
@@ -1982,7 +2001,17 @@ class InpFile(object):
     def _write_backdrop(self, f, wn):
         if wn.options.graphics is not None:
             f.write('[BACKDROP]\n'.encode('ascii'))
-            f.write('{}'.format(wn.options.graphics).encode('ascii'))
+            if wn.options.graphics.dimensions is not None:
+                f.write('DIMENSIONS    {0}    {1}    {2}    {3}\n'.format(wn.options.graphics.dimensions[0],
+                                                                        wn.options.graphics.dimensions[1],
+                                                                        wn.options.graphics.dimensions[2],
+                                                                        wn.options.graphics.dimensions[3]).encode('ascii'))
+            if wn.options.graphics.units is not None:
+                f.write('UNITS    {0}\n'.format(wn.options.graphics.units).encode('ascii'))
+            if wn.options.graphics.image_filename is not None:
+                f.write('FILE    {0}\n'.format(wn.options.graphics.image_filename).encode('ascii'))
+            if wn.options.graphics.offset is not None:
+                f.write('OFFSET    {0}    {1}\n'.format(wn.options.graphics.offset[0], wn.options.graphics.offset[1]).encode('ascii'))
             f.write('\n'.encode('ascii'))
 
     def _read_tags(self):
@@ -2974,15 +3003,16 @@ def _clean_line(wn, sec, line):
 
     return line
 
-
-def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=20):
+def _diff_inp_files(file1, file2=None, float_tol=1e-8, max_diff_lines_per_section=5, 
+                    htmldiff_file='diff.html'):
     """
     Parameters
     ----------
     file1: str
     file2: str
     float_tol: float
-	
+    max_diff_lines_per_section: int
+    htmldiff_file: str
     """
     wn = InpFile().read(file1)
     f1 = _InpFileDifferHelper(file1)
@@ -2995,7 +3025,6 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
     different_lines_2 = []
     
     for section in _INP_SECTIONS:
-        print_counter = 0
         if not f1.contains_section(section):
             if f2.contains_section(section):
                 print('\tfile1 does not contain section {0} but file2 does.'.format(section))
@@ -3019,7 +3048,8 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
                     label = tmp_label
                 else:
                     tmp_line += " " + " ".join(line1.split()[1:])
-            new_lines_1.append((tmp_loc, tmp_line))
+            if tmp_line is not None:
+                new_lines_1.append((tmp_loc, tmp_line))
             label = None
             tmp_line = None
             tmp_loc = None
@@ -3033,7 +3063,8 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
                     label = tmp_label
                 else:
                     tmp_line += " " + " ".join(line2.split()[1:])
-            new_lines_2.append((tmp_loc, tmp_line))
+            if tmp_line is not None:
+                new_lines_2.append((tmp_loc, tmp_line))
         else:
             new_lines_1 = list(f1.iter(start1, stop1))
             new_lines_2 = list(f2.iter(start2, stop2))
@@ -3042,6 +3073,7 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
         different_lines_2.append(section)
 
         if len(new_lines_1) != len(new_lines_2):
+            assert len(different_lines_1) == len(different_lines_2)
             n1 = 0
             n2 = 0
             for loc1, line1 in new_lines_1:
@@ -3061,7 +3093,8 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
             else:
                 raise RuntimeError('Unexpected')
             continue
-
+        
+        section_line_counter = 0
         f2_iter = iter(new_lines_2)
         for loc1, line1 in new_lines_1:
             orig_line_1 = line1
@@ -3072,19 +3105,23 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
             line1 = _clean_line(wn, section, line1)
             line2 = _clean_line(wn, section, line2)
             if not _compare_lines(line1, line2, tol=float_tol):
-                if (not htmldiff) and (print_counter < print_max):
-                    print(line1, line2)
-                    print_counter = print_counter+1
-                if (not htmldiff) and print_counter >= print_max:
-                    print('...')
+                if section_line_counter < max_diff_lines_per_section:
+                    section_line_counter = section_line_counter+1
+                else:
                     break
                 different_lines_1.append(orig_line_1)
                 different_lines_2.append(orig_line_2)
-
-    if htmldiff:
+    
+    if len(different_lines_1) < 200: # If lines < 200 use difflib
         differ = difflib.HtmlDiff()
         html_diff = differ.make_file(different_lines_1, different_lines_2)
-        g = open('diff.html', 'w')
-        g.write(html_diff)
-        g.close()
-
+    else: # otherwise, create a simple html file
+        differ_df = pd.DataFrame([different_lines_1, different_lines_2], 
+                           index=[file1, file2]).transpose()
+        html_diff = differ_df.to_html()
+        
+    g = open(htmldiff_file, 'w')
+    g.write(html_diff)
+    g.close()
+    
+    return n
