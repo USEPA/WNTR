@@ -3003,15 +3003,16 @@ def _clean_line(wn, sec, line):
 
     return line
 
-
-def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max=20):
+def _diff_inp_files(file1, file2=None, float_tol=1e-8, max_diff_lines_per_section=5, 
+                    htmldiff_file='diff.html'):
     """
     Parameters
     ----------
     file1: str
     file2: str
     float_tol: float
-	
+    max_diff_lines_per_section: int
+    htmldiff_file: str
     """
     wn = InpFile().read(file1)
     f1 = _InpFileDifferHelper(file1)
@@ -3024,7 +3025,6 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
     different_lines_2 = []
     
     for section in _INP_SECTIONS:
-        print_counter = 0
         if not f1.contains_section(section):
             if f2.contains_section(section):
                 print('\tfile1 does not contain section {0} but file2 does.'.format(section))
@@ -3073,8 +3073,7 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
         different_lines_2.append(section)
 
         if len(new_lines_1) != len(new_lines_2):
-            orig_len_different_lines = len(different_lines_1)
-            assert orig_len_different_lines == len(different_lines_2)
+            assert len(different_lines_1) == len(different_lines_2)
             n1 = 0
             n2 = 0
             for loc1, line1 in new_lines_1:
@@ -3093,14 +3092,9 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
                     different_lines_1.append("")
             else:
                 raise RuntimeError('Unexpected')
-            if (not htmldiff) and (print_counter < print_max):
-                for i in range(orig_len_different_lines, len(different_lines_1)):
-                    print(_clean_line(wn, section, _convert_line(different_lines_1[i])), _clean_line(wn, section, _convert_line(different_lines_2[i])))
-                    print_counter += 1
-                    if print_counter >= print_max:
-                        print('...')
             continue
-
+        
+        section_line_counter = 0
         f2_iter = iter(new_lines_2)
         for loc1, line1 in new_lines_1:
             orig_line_1 = line1
@@ -3111,19 +3105,23 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, htmldiff=False, print_max
             line1 = _clean_line(wn, section, line1)
             line2 = _clean_line(wn, section, line2)
             if not _compare_lines(line1, line2, tol=float_tol):
-                if (not htmldiff) and (print_counter < print_max):
-                    print(line1, line2)
-                    print_counter = print_counter+1
-                if (not htmldiff) and print_counter >= print_max:
-                    print('...')
+                if section_line_counter < max_diff_lines_per_section:
+                    section_line_counter = section_line_counter+1
+                else:
                     break
                 different_lines_1.append(orig_line_1)
                 different_lines_2.append(orig_line_2)
-
-    if htmldiff:
+    
+    if len(different_lines_1) < 200: # If lines < 200 use difflib
         differ = difflib.HtmlDiff()
         html_diff = differ.make_file(different_lines_1, different_lines_2)
-        g = open('diff.html', 'w')
-        g.write(html_diff)
-        g.close()
-
+    else: # otherwise, create a simple html file
+        differ_df = pd.DataFrame([different_lines_1, different_lines_2], 
+                           index=[file1, file2]).transpose()
+        html_diff = differ_df.to_html()
+        
+    g = open(htmldiff_file, 'w')
+    g.write(html_diff)
+    g.close()
+    
+    return n
