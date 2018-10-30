@@ -12,12 +12,14 @@ matrix:
       env: CONDA_ENV=py27-min
     - python: 2.7
       env: CONDA_ENV=py27
-    - python: 3.4
-      env: CONDA_ENV=py34
+    #- python: 3.4
+    #  env: CONDA_ENV=py34
     - python: 3.5
       env: CONDA_ENV=py35
     - python: 3.6
       env: CONDA_ENV=py36
+    - python: 3.7
+      env: CONDA_ENV=py37
 
 addons:
     apt:
