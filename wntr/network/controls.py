@@ -427,6 +427,28 @@ class TimeOfDayCondition(ControlCondition):
         if model is not None and not self._repeat and self._threshold < model._start_clocktime and first_day < 1:
             self._first_day = 1
 
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: TimeOfDayCondition
+
+        Returns
+        -------
+        bool
+        """
+        if type(self) != type(other):
+            return False
+        if abs(self._threshold - other._threshold) > 1e-10:
+            return False
+        if self._relation != other._relation:
+            return False
+        if self._first_day != other._first_day:
+            return False
+        if self._repeat != other._repeat:
+            return False
+        return True
+
     @property
     def name(self):
         if not self._repeat:
@@ -534,6 +556,28 @@ class SimTimeCondition(ControlCondition):
         self._backtrack = 0
         self._first_time = first_time
 
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: SimTimeCondition
+
+        Returns
+        -------
+        bool
+        """
+        if type(self) != type(other):
+            return False
+        if abs(self._threshold - other._threshold) > 1e-10:
+            return False
+        if self._repeat != other._repeat:
+            return False
+        if self._first_time != other._first_time:
+            return False
+        if self._relation != other._relation:
+            return False
+        return True
+
     @property
     def name(self):
         if not self._repeat:
@@ -634,6 +678,28 @@ class ValueCondition(ControlCondition):
         self._threshold = ControlCondition._parse_value(threshold)
         self._backtrack = 0
 
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: ValueCondition
+
+        Returns
+        -------
+        bool
+        """
+        if type(self) != type(other):
+            return False
+        if not self._source_obj._compare(other._source_obj):
+            return False
+        if self._source_attr != other._source_attr:
+            return False
+        if abs(self._threshold - other._threshold) > 1e-10:
+            return False
+        if self._relation != other._relation:
+            return False
+        return True
+
     def requires(self):
         return OrderedSet([self._source_obj])
 
@@ -686,6 +752,28 @@ class TankLevelCondition(ValueCondition):
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
         self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
+
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: TankLevelCondition
+
+        Returns
+        -------
+        bool
+        """
+        if type(self) != type(other):
+            return False
+        if not self._source_obj._compare(other._source_obj):
+            return False
+        if self._source_attr != other._source_attr:
+            return False
+        if abs(self._threshold - other._threshold) > 1e-10:
+            return False
+        if self._relation != other._relation:
+            return False
+        return True
 
     def evaluate(self):
         self._backtrack = 0  # no backtracking is needed unless specified in the if statement below
@@ -741,6 +829,30 @@ class RelativeCondition(ControlCondition):
         self._threshold_obj = threshold_obj
         self._threshold_attr = threshold_attr
         self._backtrack = 0
+
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: RelativeCondition
+
+        Returns
+        -------
+        bool
+        """
+        if type(self) != type(other):
+            return False
+        if not self._source_obj._compare(other._source_obj):
+            return False
+        if self._source_attr != other._source_attr:
+            return False
+        if self._relation != other._relation:
+            return False
+        if not self._threshold_obj._compare(other._threshold_obj):
+            return False
+        if self._threshold_attr != other._threshold_attr:
+            return False
+        return True
 
     @property
     def name(self):
@@ -820,6 +932,24 @@ class OrCondition(ControlCondition):
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
 
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: OrCondition
+
+        Returns
+        -------
+        bool
+        """
+        if type(self) != type(other):
+            return False
+        if not self._condition_1._compare(other._condition_1):
+            return False
+        if not self._condition_2._compare(other._condition_2):
+            return False
+        return True
+
     def __str__(self):
         return "( " + str(self._condition_1) + " || " + str(self._condition_2) + " )"
 
@@ -863,6 +993,24 @@ class AndCondition(ControlCondition):
             if cond2._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
+
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: OrCondition
+
+        Returns
+        -------
+        bool
+        """
+        if type(self) != type(other):
+            return False
+        if not self._condition_1._compare(other._condition_1):
+            return False
+        if not self._condition_2._compare(other._condition_2):
+            return False
+        return True
 
     def __str__(self):
         return "( "+ str(self._condition_1) + " && " + str(self._condition_2) + " )"
@@ -912,6 +1060,10 @@ class _CloseCVCondition(ControlCondition):
             else:
                 return False
 
+    def __str__(self):
+        s = '{0} head - {1} head < -{2} or {3} flow < {4}'.format(self._start_node.name, self._end_node.name, self.Htol, self._cv.name, -self.Qtol)
+        return s
+
 
 class _OpenCVCondition(ControlCondition):
     Htol = 0.0001524
@@ -940,6 +1092,10 @@ class _OpenCVCondition(ControlCondition):
                 return True
         else:
             return False
+
+    def __str__(self):
+        s = '{0} head - {1} head > {2} and {3} flow >= {4}'.format(self._start_node.name, self._end_node.name, self.Htol, self._cv.name, -self.Qtol)
+        return s
 
 
 class _ClosePowerPumpCondition(ControlCondition):
@@ -974,6 +1130,10 @@ class _ClosePowerPumpCondition(ControlCondition):
             return True
         return False
 
+    def __str__(self):
+        s = '{0} head - {1} head > {2:.4f}'.format(self._end_node.name, self._start_node.name, self.Hmax + self.Htol)
+        return s
+
 
 class _OpenPowerPumpCondition(ControlCondition):
     Htol = 0.0001524
@@ -1003,6 +1163,10 @@ class _OpenPowerPumpCondition(ControlCondition):
         if dh <= self.Hmax + self.Htol:
             return True
         return False
+
+    def __str__(self):
+        s = '{0} head - {1} head <= {2:.4f}'.format(self._end_node.name, self._start_node.name, self.Hmax + self.Htol)
+        return s
 
 
 class _CloseHeadPumpCondition(ControlCondition):
@@ -1040,6 +1204,14 @@ class _CloseHeadPumpCondition(ControlCondition):
             return True
         return False
 
+    def __str__(self):
+        a, b, c = self._pump.get_head_curve_coefficients()
+        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+            raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
+        Hmax = a
+        s = '{0} head - {1} head > {2:.4f}'.format(self._end_node.name, self._start_node.name, Hmax + self._Htol)
+        return s
+
 
 class _OpenHeadPumpCondition(ControlCondition):
     """
@@ -1076,6 +1248,14 @@ class _OpenHeadPumpCondition(ControlCondition):
             return True
         return False
 
+    def __str__(self):
+        a, b, c = self._pump.get_head_curve_coefficients()
+        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+            raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
+        Hmax = a
+        s = '{0} head - {1} head <= {2:.4f}'.format(self._end_node.name, self._start_node.name, Hmax + self._Htol)
+        return s
+
 
 class _ClosePRVCondition(ControlCondition):
     _Qtol = 2.83168e-6
@@ -1110,6 +1290,10 @@ class _ClosePRVCondition(ControlCondition):
         else:
             raise RuntimeError('Unexpected PRV _internal_status for valve {0}: {1}.'.format(self._prv,
                                                                                             self._prv._internal_status))
+
+    def __str__(self):
+        s = 'prv {0} needs to be closed'.format(self._prv.name)
+        return s
 
 
 class _OpenPRVCondition(ControlCondition):
@@ -1152,6 +1336,10 @@ class _OpenPRVCondition(ControlCondition):
             raise RuntimeError('Unexpected PRV _internal_status for valve {0}: {1}.'.format(self._prv,
                                                                                             self._prv._internal_status))
 
+    def __str__(self):
+        s = 'prv {0} needs to be open'.format(self._prv.name)
+        return s
+
 
 class _ActivePRVCondition(ControlCondition):
     _Qtol = 2.83168e-6
@@ -1190,6 +1378,10 @@ class _ActivePRVCondition(ControlCondition):
         else:
             raise RuntimeError('Unexpected PRV _internal_status for valve {0}: {1}.'.format(self._prv,
                                                                                             self._prv._internal_status))
+
+    def __str__(self):
+        s = 'prv {0} needs to be active'.format(self._prv.name)
+        return s
 
 
 class _OpenFCVCondition(ControlCondition):
@@ -1291,6 +1483,34 @@ class BaseControlAction(six.with_metaclass(abc.ABCMeta, Subject)):
         """
         pass
 
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: BaseControlAction
+
+        Returns
+        -------
+        bool
+        """
+        if type(self) != type(other):
+            return False
+        target1, attr1 = self.target()
+        target2, attr2 = other.target()
+        val1 = self._value
+        val2 = other._value
+        if not target1._compare(target2):
+            return False
+        if attr1 != attr2:
+            return False
+        if type(val1) == float:
+            if abs(val1 - val2) > 1e-10:
+                return False
+        else:
+            if val1 != val2:
+                return False
+        return True
+
 
 @DocInheritor({'requires', 'target', 'run_control_action'})
 class ControlAction(BaseControlAction):
@@ -1333,20 +1553,6 @@ class ControlAction(BaseControlAction):
         if self._attribute.lower() in ['status']:
             return LinkStatus(int(self._value)).name
         return self._value
-
-    def _compare(self, other):
-        if self._target_obj == other._target_obj and \
-           self._attribute == other._attribute:
-            if type(self._value) == float:
-                if abs(self._value - other._value)<1e-10:
-                    return True
-                return False
-            else:
-                if self._value == other._value:
-                    return True
-                return False
-        else:
-            return False
 
     def run_control_action(self):
         setattr(self._target_obj, self._attribute, self._value)
@@ -1424,21 +1630,6 @@ class _InternalControlAction(BaseControlAction):
                                               self._internal_attr,
                                               self._value)
 
-    def _compare(self, other):
-        if ((self._target_obj == other._target_obj) and
-            (self._internal_attr == other._internal_attr) and
-            (self._property_attr == other._property_attr)):
-            if type(self._value) == float:
-                if abs(self._value - other._value)<1e-10:
-                    return True
-                return False
-            else:
-                if self._value == other._value:
-                    return True
-                return False
-        else:
-            return False
-
 
 #
 # Control classes
@@ -1508,6 +1699,36 @@ class ControlBase(six.with_metaclass(abc.ABCMeta, object)):
     @property
     def priority(self):
         return self._priority
+
+    def _compare(self, other):
+        """
+        Parameters
+        ----------
+        other: ControlBase
+
+        Returns
+        -------
+        bool
+        """
+        ret = True
+        msg = '_compare failed in ControlBase because '
+        if self.priority != other.priority:
+            ret = False
+            msg += 'priorities were not equal'
+        if self._control_type_str() != other._control_type_str():
+            ret = False
+            msg += '_control_type_strs were not equal'
+        if not self.condition._compare(other.condition):
+            ret = False
+            msg += 'conditions were not equal'
+        for action1, action2 in zip(self.actions(), other.actions()):
+            if not action1._compare(action2):
+                ret = False
+                msg += 'actions were not equal'
+                break
+        if ret is False:
+            print(msg)
+        return ret
 
 
 @DocInheritor({'is_control_action_required', 'run_control_action', 'requires', 'actions'})

@@ -68,3 +68,12 @@ def test_plot_tank_curve1():
     plt.close()
     
     assert_true(isfile(filename))
+
+def test_custom_colormap():
+    cmp = wntr.graphics.custom_colormap(numcolors=3, colors=['blue','white','red'], name='custom')
+    assert_equal(cmp.N,3)
+    assert_equal(cmp.name,'custom')
+    
+if __name__ == '__main__':
+    cmp = test_custom_colormap()
+    

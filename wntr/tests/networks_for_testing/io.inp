@@ -47,6 +47,10 @@
 [CONTROLS]
 link v1 0.82 at time 3.4
 link v2 2.61 if node t1 below 5.01
+link p1 closed at clocktime 5 am
+link p1 open at clocktime 5 pm
+link p1 closed at clocktime 20
+link p1 open at clocktime 22
 
 [COORDINATES]
 ;Node            	X-Coord         	Y-Coord

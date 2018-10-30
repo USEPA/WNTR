@@ -11,15 +11,8 @@ topographic, hydraulic, water quality, water security, or economic categories.
     population_impacted
 
 """
-from wntr.network import Junction
 from wntr.metrics.hydraulic import expected_demand
-import pandas as pd
-import numpy as np
-import sys
 import logging
-
-if sys.version_info >= (3,0):
-    from functools import reduce
 
 logger = logging.getLogger(__name__)
 

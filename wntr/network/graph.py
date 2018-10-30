@@ -130,8 +130,8 @@ class WntrMultiDiGraph(nx.MultiDiGraph):
         
         """
 
-        eig = nx.adjacency_spectrum(self)
-        spectral_gap = eig[0] - eig[1]
+        eig = nx.adjacency_spectrum(self.to_undirected())
+        spectral_gap = abs(eig[0] - eig[1])
 
         return spectral_gap.real
 
