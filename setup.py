@@ -5,7 +5,7 @@ import os
 import sys
 from distutils.spawn import find_executable
 
-use_swig = True
+use_swig = False
 
 try:
     numpy_include = numpy.get_include()
