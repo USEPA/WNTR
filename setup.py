@@ -100,7 +100,7 @@ extension_modules.append(network_isolation_ext)
 #    extension_modules.append(ipopt_model_ext)
 
 DISTNAME = 'wntr'
-VERSION = '0.1.6'
+VERSION = '0.1.7'
 PACKAGES = find_packages()
 EXTENSIONS = extension_modules
 DESCRIPTION = 'Water Network Tool for Resilience'

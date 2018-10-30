@@ -40,41 +40,6 @@ class WaterNetworkSimulator(object):
         self._wn = wn
         self.mode = mode
 
-    def get_node_demand(self, node_name, start_time=None, end_time=None):
-        """
-        Calculates the demands at a node based on the demand pattern.
-
-        Parameters
-        ----------
-        node_name : string
-            Name of the node.
-        start_time : float
-            The start time of the demand values requested. Default is 0 sec.
-        end_time : float
-            The end time of the demand values requested. Default is the simulation end time in sec.
-
-        Returns
-        -------
-        demand_list : list of floats
-           A list of demand values at each hydraulic timestep.
-        """
-
-        # Set start and end time for demand values to be returned
-        if start_time is None:
-            start_time = 0
-        if end_time is None:
-            end_time = self._wn.options.time.duration
-
-        # Get node object
-        try:
-            node = self._wn.get_node(node_name)
-        except KeyError:
-            raise KeyError("Not a valid node name")
-        # Make sure node object is a Junction
-        assert(isinstance(node, Junction)), "Demands can only be calculated for Junctions"
-        # Calculate demand pattern values
-        return node.demands.get_values(start_time, end_time, self._wn.options.time.hydraulic_timestep)
-
     def _get_link_type(self, name):
         if isinstance(self._wn.get_link(name), Pipe):
             return 'pipe'

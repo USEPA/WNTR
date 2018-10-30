@@ -34,8 +34,7 @@ class Earthquake(object):
 
         Returns
         ---------
-        R : pd.Series
-            Distance to epicenter (m)
+        A pandas Series with distance to epicenter (m)
         """
 
         R = pd.Series()
@@ -74,8 +73,7 @@ class Earthquake(object):
 
         Returns
         --------
-        PGA : pd.Series
-            Peak ground acceleration (g)
+        A pandas Series with peak ground acceleration (g)
         """
         R = R/1000 # convert m to km
         D = self.depth/1000 # convert m to km
@@ -117,8 +115,7 @@ class Earthquake(object):
 
         Returns
         --------
-        PGV : pd.Series
-            Peak ground velocity (m/s)
+        A pandas Series with peak ground velocity (m/s)
         """
         R = R/1000 # convert m to km
 
@@ -140,8 +137,19 @@ class Earthquake(object):
     def correction_factor(self, pipe_characteristics, diameter_weight=None, material_weight=None,
                           topography_weight=None, liquifaction_weight=None):
         """
-        Correction factor
-        Defaults based on Isoyama et al., 2000
+        Correction factor, maps pipe characteristics to weights
+        
+        Parameters
+        -----------
+        pipe_characteristics : pd.DataFrame
+            Pipe characteristics which includes diameter, material, topography, and liquifaction
+        
+        diameter_weight, material_weight, topography_weight, liquifaction_weight: dict
+            Weights, defaults based on Isoyama et al., 2000
+            
+        Returns
+        --------
+        A pandas Series with the correction factor
         """
 
         # Make sure the values are strings
@@ -187,8 +195,7 @@ class Earthquake(object):
 
         Returns
         -------
-        Repair rate : pd.Series
-            Number of repairs per m
+        A pandas Series with repair rate (number of repairs per m)
         """
         PGV = (100*PGV)/2.54 # in/s
 
