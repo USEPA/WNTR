@@ -464,10 +464,7 @@ epanet_unit_id = {'CFS': 0, 'GPM': 1, 'MGD': 2, 'IMGD': 3, 'AFD': 4,
 
 def test_Net1():
     inp_file = join(ex_datadir,'Net1.inp')
-
-    parser = wntr.epanet.InpFile()
-    wn = parser.read(inp_file)
-
+    wn = wntr.network.WaterNetworkModel(inp_file)
     G = wn.get_graph()
 
     node = G.node
@@ -567,9 +564,7 @@ def test_Net1():
 
 def test_query_node_attribute():
     inp_file = join(ex_datadir,'Net1.inp')
-
-    parser = wntr.epanet.InpFile()
-    wn = parser.read(inp_file)
+    wn = wntr.network.WaterNetworkModel(inp_file)
 
     elevation = 213.36 #700*float(units.ft/units.m) # ft to m
     nodes = wn.query_node_attribute('elevation', np.less, elevation)
@@ -580,9 +575,7 @@ def test_query_node_attribute():
 
 def test_query_pipe_attribute():
     inp_file = join(ex_datadir,'Net1.inp')
-
-    parser = wntr.epanet.InpFile()
-    wn = parser.read(inp_file)
+    wn = wntr.network.WaterNetworkModel(inp_file)
 
     length = 1609.344 #5280*float(units.ft/units.m) # ft to m
     pipes = wn.query_link_attribute('length', np.greater, length)
@@ -593,9 +586,7 @@ def test_query_pipe_attribute():
 
 def test_nzd_nodes():
     inp_file = join(ex_datadir,'Net1.inp')
-
-    parser = wntr.epanet.InpFile()
-    wn = parser.read(inp_file)
+    wn = wntr.network.WaterNetworkModel(inp_file)
     
     nzd_nodes = []
     for name, node in wn.junctions():

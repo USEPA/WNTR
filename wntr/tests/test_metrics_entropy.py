@@ -8,11 +8,7 @@ datadir = join(testdir, 'networks_for_testing')
 
 def test_layout1():
     inp_file = join(datadir,'Awumah_layout1.inp')
-
-    # Create a water network model for results object
-    wn = wntr.network.WaterNetworkModel()
-    parser = wntr.epanet.InpFile()
-    wn = parser.read(inp_file)
+    wn = wntr.network.WaterNetworkModel(inp_file)
 
     attr = {'1': 940.7,
             '2': 550.0,
@@ -48,11 +44,7 @@ def test_layout1():
 
 def test_layout8():
     inp_file = join(datadir,'Awumah_layout8.inp')
-
-    # Create a water network model for results object
-    wn = wntr.network.WaterNetworkModel()
-    parser = wntr.epanet.InpFile()
-    wn = parser.read(inp_file)
+    wn = wntr.network.WaterNetworkModel(inp_file)
 
     attr = {'1': 678.8,
             '2': 403.3,
@@ -91,5 +83,4 @@ def test_layout8():
     assert_less(error, 0.05) # 5% error
 
 if __name__ == '__main__':
-    test_layout1()
     test_layout8()

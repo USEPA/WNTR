@@ -1,6 +1,5 @@
 from __future__ import print_function
 from nose.tools import *
-from nose import SkipTest
 from os.path import abspath, dirname, join
 import wntr
 
@@ -85,7 +84,6 @@ def test_conc_waterquality_simulation():
     assert_less(error, 0.0001) # 0.01% error
 
 def test_age_waterquality_simulation():
-    #raise SkipTest
 
     inp_file = join(datadir,'Net3.inp')
 
