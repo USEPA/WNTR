@@ -12,7 +12,7 @@ wn = wntr.network.WaterNetworkModel(inp_file)
 epanet_sim = wntr.sim.EpanetSimulator(wn)
 epanet_sim_results = epanet_sim.run_sim()
 
-# Simulate using Scipy
+# Simulate using WNTR
 wntr_sim = wntr.sim.WNTRSimulator(wn)
 wntr_sim_results = wntr_sim.run_sim()
 
