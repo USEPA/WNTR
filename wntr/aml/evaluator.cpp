@@ -158,17 +158,19 @@ void Evaluator::_evaluate(double *values)
 
 double Evaluator::evaluate()
 {
-  double values[n_operators];
+  double *values = new double[n_operators];
   _evaluate(values);
-  return values[n_operators - 1];
+  double final_result = values[n_operators - 1];
+  delete [] values;
+  return final_result;
 }
 
 
 void Evaluator::rad()
 {
-  double values[n_operators];
+  double *values = new double[n_operators];
   _evaluate(values);
-  double ders[n_operators];
+  double *ders = new double[n_operators];
   short oper;
   int arg1_ndx;
   int arg2_ndx;
@@ -327,12 +329,14 @@ void Evaluator::rad()
 	  ders[oper_ndx] = der2;
 	}
     }
+  delete [] values;
+  delete [] ders;
 }
 
 
 std::string Evaluator::__str__()
 {
-  std::string values[n_operators];
+  std::string *values = new std::string[n_operators];
   short oper;
   int arg1_ndx;
   int arg2_ndx;
@@ -397,7 +401,9 @@ std::string Evaluator::__str__()
 	  values[i] = "sign(" + val1 + ")";
 	}
     }
-  return values[n_operators - 1];
+  std::string final_result = values[n_operators - 1];
+  delete [] values;
+  return final_result;
 }
 
 
