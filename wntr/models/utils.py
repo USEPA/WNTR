@@ -1,4 +1,5 @@
 from wntr.utils.ordered_set import OrderedDict, OrderedSet
+from six import with_metaclass
 import abc
 
 
@@ -17,7 +18,7 @@ class ModelUpdater(object):
                 func(m, wn, self, obj, attr)
 
 
-class Definition(object, metaclass=abc.ABCMeta):
+class Definition(with_metaclass(abc.ABCMeta, object)):
     @classmethod
     @abc.abstractmethod
     def build(cls, m, wn, updater, index_over=None):
