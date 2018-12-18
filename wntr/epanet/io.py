@@ -365,6 +365,9 @@ class InpFile(object):
 
         ### EMITTERS
         self._read_emitters()
+        
+        ### QUALITY
+        self._read_quality()
 
         self._read_mixing()
         self._read_report()
@@ -1326,7 +1329,7 @@ class InpFile(object):
 
     def _read_demands(self):
         demand_num = 0
-        for lnum, line in self.sections['[DEMANDS]']: # Private object on the WaterNetweorkModel
+        for lnum, line in self.sections['[DEMANDS]']:
             ldata = line.split(';')
             if len(ldata) > 1:
                 category = ldata[1]
@@ -1368,7 +1371,7 @@ class InpFile(object):
     ### Water Quality
 
     def _read_quality(self):
-        for lnum, line in self.sections['[QUALITY]']: # Private attribute on junctions
+        for lnum, line in self.sections['[QUALITY]']:
             line = line.split(';')[0]
             current = line.split()
             if current == []:
@@ -2015,7 +2018,7 @@ class InpFile(object):
             f.write('\n'.encode('ascii'))
 
     def _read_tags(self):
-        for lnum, line in self.sections['[TAGS]']: # Private attribute on nodes and links
+        for lnum, line in self.sections['[TAGS]']: 
             line = line.split(';')[0]
             current = line.split()
             if current == []:
