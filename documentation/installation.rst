@@ -34,7 +34,7 @@ WNTR can be installed as a Python package using standard open source software to
 	editing and debug features along with a graphical user interface. 
 	Debugging options are available from the toolbar.  
 	Code documentation is displayed in the object inspection 
-	window.  Pop-up information on class structure and functions is displayed in the 
+	window.  Pop-up information on class structure and functions are displayed in the 
 	editor and console windows.  
 	
 	To open a Python console, open a command prompt (cmd.exe on Windows, terminal window on Linux and Mac OS X) 
@@ -80,15 +80,15 @@ WNTR can be installed as a Python package using standard open source software to
 	  Uncompress the zip file using standard software tools (e.g. unzip, WinZip) and store them in a folder. 
 	  WNTR can then be installed by running a Python script, called setup.py, that is included in the source files.
 	  
-	  To build WNTR from the source files, open a command prompt from within the folder that contains files and run:: 
+	  To build WNTR from the source files, open a command prompt from within the folder that contains the files and run:: 
 	  
 		  python setup.py install
 	
-	**For developers**: Developers can install and build WNTR from source using git, which 
+	**For developers**: Developers can install and build WNTR from source files using git, which 
 	is a command line software tool for version control and software development.
 	It can be downloaded from http://git-scm.com. 
 		
-	To build WNTR from source using git, open a command prompt and run::
+	To build WNTR from source files using git, open a command prompt and run::
 
 		git clone https://github.com/USEPA/WNTR
 		cd WNTR
