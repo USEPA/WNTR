@@ -15,22 +15,7 @@ def test_skeletonize():
     wn = wntr.network.WaterNetworkModel(inp_file)
     
     expected_total_demand = 0.000763391376  # 12.1 GPM
-    
-    expected_map_0 = {} # 1:1 map
-    for name in wn.node_name_list:
-        expected_map_0[name] = [name]
-        
-    expected_map_4 = {}
-    expected_map_4['15'] = ['15', '14', '16']
-    expected_map_4['30'] = ['30', '32']
-    expected_map_4['56'] = ['56', '57']
-    expected_map_4['59'] = ['59', '64']
-    expected_map_4['14'] = []
-    expected_map_4['16'] = []
-    expected_map_4['32'] = []
-    expected_map_4['57'] = []
-    expected_map_4['64'] = []
-    
+
     expected_nums = pd.DataFrame(index=[0,4,8,12,24,36], columns=['num_nodes', 'num_links'])
     expected_nums.loc[0,:] = [wn.num_nodes, wn.num_links]
     expected_nums.loc[4,:] = [wn.num_nodes-5, wn.num_links-5]
@@ -52,10 +37,25 @@ def test_skeletonize():
         assert_almost_equal(total_demand.sum(), expected_total_demand,6)
         assert_equal(skel_wn.num_nodes, expected_nums.loc[i,'num_nodes'])
         assert_equal(skel_wn.num_links, expected_nums.loc[i,'num_links'])
+        
         if i == 0:
-            assert_dict_contains_subset(expected_map_0, skel_map)
+            expected_map = {} # 1:1 map
+            for name in wn.node_name_list:
+                expected_map[name] = [name]
+            assert_dict_contains_subset(expected_map, skel_map)
+        
         if i == 4:
-            assert_dict_contains_subset(expected_map_4, skel_map)
+            expected_map_subset = {}
+            expected_map_subset['15'] = ['15', '14', '16']
+            expected_map_subset['30'] = ['30', '32']
+            expected_map_subset['56'] = ['56', '57']
+            expected_map_subset['59'] = ['59', '64']
+            expected_map_subset['14'] = []
+            expected_map_subset['16'] = []
+            expected_map_subset['32'] = []
+            expected_map_subset['57'] = []
+            expected_map_subset['64'] = []
+            assert_dict_contains_subset(expected_map_subset, skel_map)
 
 def test_skeletonize_with_controls():
     inp_file = join(datadir, 'skeletonize.inp')
@@ -69,8 +69,13 @@ def test_skeletonize_with_controls():
     
     skel_wn = wntr.network.morph.skeletonize(wn, 12*0.0254)
     
-    wntr.graphics.plot_network(skel_wn, link_attribute='diameter', link_width=2, node_size=15)
+    #pipes = wn.query_link_attribute('diameter', np.less_equal, 12*0.0254)
+    #wntr.graphics.plot_network(wn, link_attribute = list(pipes.keys()))
+    #wntr.graphics.plot_network(skel_wn, link_attribute='diameter', link_width=2, node_size=15)
     
+    assert_equal(skel_wn.num_nodes, 20)
+    assert_equal(skel_wn.num_links, 24)
+        
     # TODO: finish test
     
 def test_series_merge_properties():
@@ -88,6 +93,8 @@ def test_series_merge_properties():
     wn.add_reservoir('R', base_head=125, coordinates=(0,2))
     wn.add_pipe('PR', 'R', 'J1', length=100, diameter=12, roughness=100,
                 minor_loss=0.0, status='OPEN')
+    
+    wn.options.time.duration = 0
     
     skel_wn = wntr.network.morph.skeletonize(wn, 8, branch_trim=False, 
             series_pipe_merge=True, parallel_pipe_merge=False, max_iterations=1)
@@ -113,6 +120,8 @@ def test_parallel_merge_properties():
     wn.add_reservoir('R', base_head=125, coordinates=(0,2))
     wn.add_pipe('PR', 'R', 'J1', length=100, diameter=450, roughness=100,
                 minor_loss=0.0, status='OPEN')
+    
+    wn.options.time.duration = 0
     
     skel_wn = wntr.network.morph.skeletonize(wn, 300, branch_trim=False, 
             series_pipe_merge=False, parallel_pipe_merge=True, max_iterations=1)
