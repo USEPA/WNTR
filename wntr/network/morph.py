@@ -6,12 +6,46 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-### TODO
-"""
-Add tests, check units
-"""
 
-class Skeletonize(object):
+def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge=True, 
+                parallel_pipe_merge=True, max_iterations=None, return_map=False):
+    """
+    Run iterative branch trim, series pipe merge, and parallel pipe merge 
+    operations based on a pipe diameter treshold.  
+        
+    Parameters
+    -------------
+    wn : WaterNetworkModel object
+    
+    pipe_threshold: float 
+        Pipe diameter threshold determines candidate pipes for skeletonization
+    
+    branch_trim : bool (optional)
+    
+    series_pipe_merge : bool (optional)
+    
+    parallel_pipe_merge : bool (optional)
+    
+    max_iterations : int or None (optional)
+    
+    return_map : bool (optional)
+                
+    Returns
+    --------
+    Skeletonized WaterNetworkModel object and (if return_map = True) a dictonary 
+    with original nodes as keys and grouped nodes as values
+    """
+    skel = _Skeletonize(wn)
+    
+    skel.run(pipe_diameter_threshold, branch_trim, series_pipe_merge, 
+             parallel_pipe_merge, max_iterations)
+    
+    if return_map:
+        return skel.wn, skel.skeleton_map
+    else:
+        return skel.wn
+
+class _Skeletonize(object):
     
     def __init__(self, wn):
         # Get a copy of the network
@@ -28,11 +62,11 @@ class Skeletonize(object):
             skel_map[node_name] = [node_name]
         self.skeleton_map = skel_map
 
-        # Get a list of components that are associated with controls
+        # Get a list of component names that are associated with controls
         comp_with_controls = []
         for name, control in wn.controls():
-            comp_with_controls.append(control.requires())
-        comp_with_controls = list(itertools.chain.from_iterable(comp_with_controls))
+            for req in control.requires():
+                comp_with_controls.append(req.name)
         self.comp_with_controls = list(set(comp_with_controls))
         
         # Calculate pipe headloss using a single period EPANET simulation
@@ -51,38 +85,33 @@ class Skeletonize(object):
         self.num_series_merge = 0
         self.num_parallel_merge = 0
         
-    def run(self, pipe_threshold):
+    def run(self, pipe_threshold, branch_trim=True, series_pipe_merge=True, 
+                parallel_pipe_merge=True, max_iterations=None):
         """
         Run iterative branch trim, series pipe merge, and parallel pipe merge 
         operations based on a pipe diameter treshold.  
-        
-        Parameters
-        -------------
-        pipe_threshold: float 
-            Pipe diameter threshold determines candidate pipes for skeleton 
-            steps
-            
-        Returns
-        --------
-        wn : WaterNetworkModel object
-            Skeletonized water network model
-        
-        skeleton_map : dict
-            Dictonary with original nodes as keys and grouped nodes as values
         """
         num_junctions = self.wn.num_junctions
+        iteration = 0
         flag = True
         
         while flag:
-            self.branch_trim(pipe_threshold)
-            self.series_pipe_merge(pipe_threshold)
-            self.parallel_pipe_merge(pipe_threshold)
+            if branch_trim:
+                self.branch_trim(pipe_threshold)
+            if series_pipe_merge:
+                self.series_pipe_merge(pipe_threshold)
+            if parallel_pipe_merge:
+                self.parallel_pipe_merge(pipe_threshold)
             
+            iteration = iteration + 1
+            
+            if (max_iterations is not None) and (iteration > max_iterations):
+                flag = False
             if num_junctions == self.wn.num_junctions:
                 flag = False
             else:
                 num_junctions = self.wn.num_junctions
-        
+
         return self.wn, self.skeleton_map
     
     def branch_trim(self, pipe_threshold):
@@ -91,18 +120,9 @@ class Skeletonize(object):
         Branch trimming removes deadend pipes smaller than the pipe 
         diameter threshold and redistributes demands (and associated demand 
         patterns) to the neighboring junction.
-        
-        Returns
-        --------
-        wn : WaterNetworkModel object
-            Skeletonized water network model
-        
-        skeleton_map : dict
-            Dictonary with original nodes as keys and grouped nodes as values
         """
         for junc_name in self.wn.junction_name_list:
-            junc = self.wn.get_node(junc_name)
-            if junc_name  in self.comp_with_controls:
+            if junc_name in self.comp_with_controls:
                 continue
             neighbors = list(nx.neighbors(self.G,junc_name))
             if len(neighbors) > 1:
@@ -120,7 +140,7 @@ class Skeletonize(object):
             pipe = self.wn.get_link(pipe_name)
             if not ((isinstance(pipe, wntr.network.Pipe)) and \
                 (pipe.diameter <= pipe_threshold) and \
-                pipe not in self.comp_with_controls):
+                pipe_name not in self.comp_with_controls):
                 continue
             
             logger.info('Branch trim:', junc_name, neighbors)
@@ -130,6 +150,7 @@ class Skeletonize(object):
             self.skeleton_map[junc_name] = []
             
             # Move demand
+            junc = self.wn.get_node(junc_name)
             for demand in junc.demand_timeseries_list:
                 neigh_junc.demand_timeseries_list.append(demand)
             junc.demand_timeseries_list.clear()
@@ -150,18 +171,9 @@ class Skeletonize(object):
         smaller than the pipe diameter threshold. The larger diameter pipe is 
         retained, demands (and associated demand patterns) are redistributed 
         to the nearest junction.
-        
-        Returns
-        --------
-        wn : WaterNetworkModel object
-            Skeletonized water network model
-        
-        skeleton_map : dict
-            Dictonary with original nodes as keys and grouped nodes as values
         """
         for junc_name in self.wn.junction_name_list:
-            junc = self.wn.get_node(junc_name)
-            if junc in self.comp_with_controls:
+            if junc_name in self.comp_with_controls:
                 continue
             neighbors = list(nx.neighbors(self.G,junc_name))
             if not (len(neighbors) == 2):
@@ -183,10 +195,10 @@ class Skeletonize(object):
             pipe1 = self.wn.get_link(pipe_name1)
             if not ((isinstance(pipe0, wntr.network.Pipe)) and \
                 (isinstance(pipe1, wntr.network.Pipe)) and \
-                (pipe0.diameter <= pipe_threshold) and \
-                (pipe1.diameter <= pipe_threshold) and \
-                pipe0 not in self.comp_with_controls and \
-                pipe1 not in self.comp_with_controls):
+                ((pipe0.diameter <= pipe_threshold) and \
+                (pipe1.diameter <= pipe_threshold)) and \
+                pipe_name0 not in self.comp_with_controls and \
+                pipe_name1 not in self.comp_with_controls):
                 continue
             # Find closest neighbor junction
             if (isinstance(neigh_junc0, wntr.network.Junction)) and \
@@ -209,6 +221,7 @@ class Skeletonize(object):
             self.skeleton_map[junc_name] = []
                 
             # Move demand
+            junc = self.wn.get_node(junc_name)
             for demand in junc.demand_timeseries_list:
                 closest_junc.demand_timeseries_list.append(demand)
             junc.demand_timeseries_list.clear()
@@ -222,14 +235,9 @@ class Skeletonize(object):
             # Compute new pipe properties
             props = self._series_merge_properties(pipe0, pipe1)
             
-            # Find larger diameter pipe
-            if pipe0.diameter > pipe1.diameter:
-                larger_pipe = pipe0
-            else:
-                larger_pipe = pipe1
-                
             # Add new pipe to wn and G
-            self.wn.add_pipe(larger_pipe.name, 
+            dominant_pipe = self._select_dominant_pipe(pipe0, pipe1)
+            self.wn.add_pipe(dominant_pipe.name, 
                              start_node_name=neigh_junc_name0, 
                              end_node_name=neigh_junc_name1, 
                              length=props['length'], 
@@ -239,7 +247,7 @@ class Skeletonize(object):
                              status=props['status']) 
             self.G.add_edge(neigh_junc_name0, 
                             neigh_junc_name1, 
-                            larger_pipe.name)
+                            dominant_pipe.name)
             
             self.num_series_merge +=1
             
@@ -251,19 +259,10 @@ class Skeletonize(object):
         treshold.  This operation combines pipes in parallel if both pipes are 
         smaller than the pipe diameter threshold. The larger diameter pipe is 
         retained.
-        
-        Returns
-        --------
-        wn : WaterNetworkModel object
-            Skeletonized water network model
-        
-        skeleton_map : dict
-            Dictonary with original nodes as keys and grouped nodes as values
         """
         
         for junc_name in self.wn.junction_name_list:
-            junc = self.wn.get_node(junc_name)
-            if junc in self.comp_with_controls:
+            if junc_name in self.comp_with_controls:
                 continue
             neighbors = nx.neighbors(self.G,junc_name)
             for neighbor in neighbors:
@@ -278,14 +277,14 @@ class Skeletonize(object):
                         continue # one of the pipes removed in previous loop
                     if not ((isinstance(pipe0, wntr.network.Pipe)) and \
                        (isinstance(pipe1, wntr.network.Pipe)) and \
-                        (pipe0.diameter <= pipe_threshold) and \
-                        (pipe1.diameter <= pipe_threshold) and \
-                        pipe0 not in self.comp_with_controls and \
-                        pipe1 not in self.comp_with_controls):
+                        ((pipe0.diameter <= pipe_threshold) and \
+                        (pipe1.diameter <= pipe_threshold)) and \
+                        pipe_name0 not in self.comp_with_controls and \
+                        pipe_name1 not in self.comp_with_controls):
                         continue
                     
                     logger.info('Parallel pipe merge:', junc_name, (pipe_name0, pipe_name1))
-                    
+
                     # Remove links from wn and G   
                     self.wn.remove_link(pipe_name0)
                     self.wn.remove_link(pipe_name1)
@@ -294,75 +293,62 @@ class Skeletonize(object):
             
                     # Compute new pipe properties
                     props = self._parallel_merge_properties(pipe0, pipe1)
-                    
-                    # Find larger diameter pipe
-                    if pipe0.diameter > pipe1.diameter:
-                        larger_pipe = pipe0
-                    else:
-                        larger_pipe = pipe1
-                        
+
                     # Add a new pipe to wn and G
-                    self.wn.add_pipe(larger_pipe.name, 
-                                     start_node_name=larger_pipe.start_node_name, 
-                                     end_node_name=larger_pipe.end_node_name,
+                    dominant_pipe = self._select_dominant_pipe(pipe0, pipe1)
+                    self.wn.add_pipe(dominant_pipe.name, 
+                                     start_node_name=dominant_pipe.start_node_name, 
+                                     end_node_name=dominant_pipe.end_node_name,
                                      length=props['length'], 
                                      diameter=props['diameter'], 
                                      roughness=props['roughness'], 
                                      minor_loss=props['minorloss'],
                                      status=props['status']) 
-                    self.G.add_edge(larger_pipe.start_node_name, 
-                                    larger_pipe.end_node_name, 
-                                    larger_pipe.name)
+                    self.G.add_edge(dominant_pipe.start_node_name, 
+                                    dominant_pipe.end_node_name, 
+                                    dominant_pipe.name)
                      
                     self.num_parallel_merge +=1
                     
         return self.wn, self.skeleton_map
     
+    def _select_dominant_pipe(self, pipe0, pipe1):
+        # Dominant pipe = larger diameter
+        if pipe0.diameter >= pipe1.diameter:
+            dominant_pipe = pipe0
+        else:
+            dominant_pipe = pipe1
+            
+        return dominant_pipe
+    
     def _series_merge_properties(self, pipe0, pipe1):
         
         props = {}
-        
-        if pipe0.diameter > pipe1.diameter:
-            larger_pipe = pipe0
-        else:
-            larger_pipe = pipe1
-        
-        props['length'] = pipe0.length + pipe1.length
-        props['roughness'] = larger_pipe.roughness
-             
-        numer = props['length'] * pow((1/props['roughness']), -1.852)
-        denom = ((pipe0.length * pow((1/pipe0.roughness), -1.852) * 
-                  pow(pipe0.diameter, -4.871)) + \
-                 (pipe1.length * pow((1/pipe1.roughness), -1.852) * 
-                  pow(pipe1.diameter, -4.871)) )
-        props['diameter'] = pow((numer/denom), (1.0/4.871)); 
+        dominant_pipe = self._select_dominant_pipe(pipe0, pipe1)
             
-        props['minorloss'] = larger_pipe.minor_loss
-        props['status'] = larger_pipe.status
+        props['length'] = pipe0.length + pipe1.length
+        props['diameter'] = dominant_pipe.diameter
+        props['minorloss'] = dominant_pipe.minor_loss
+        props['status'] = dominant_pipe.status
+        
+        props['roughness'] = (props['length']/(props['diameter']**4.87))**0.54 * \
+            ((pipe0.length/((pipe0.diameter**4.87)*(pipe0.roughness**1.85))) + \
+             (pipe1.length/((pipe1.diameter**4.87)*(pipe1.roughness**1.85))))**-0.54
         
         return props
          
     def _parallel_merge_properties(self, pipe0, pipe1):
         
         props = {}
+        dominant_pipe = self._select_dominant_pipe(pipe0, pipe1)
+            
+        props['length'] = dominant_pipe.length
+        props['diameter'] = dominant_pipe.diameter
+        props['minorloss'] = dominant_pipe.minor_loss
+        props['status'] = dominant_pipe.status
         
-        if pipe0.diameter > pipe1.diameter:
-            larger_pipe = pipe0
-        else:
-            larger_pipe = pipe1
-        
-        props['length'] = larger_pipe.length
-        props['roughness'] = larger_pipe.roughness
-             
-        headloss = self.headloss[larger_pipe.name]
-        numer = ( (pow(pipe0.length, -0.5*headloss)*(1/pipe0.roughness) * 
-                   pow(pipe0.diameter, 2.63)) + \
-                  (pow(pipe1.length, -0.5*headloss)*(1/pipe1.roughness) * 
-                   pow(pipe1.diameter, 2.63)) )
-        denom = pow(props['length'], 0.5*headloss)*(1/props['roughness'])
-        props['diameter'] = pow((numer/denom) , 1.0/2.63)
-        
-        props['minorloss'] = larger_pipe.minor_loss
-        props['status'] = larger_pipe.status
+        props['roughness'] = ((props['length']**0.54)/(props['diameter']**2.63)) * \
+            ((pipe0.roughness*(pipe0.diameter**2.63))/(pipe0.length**0.54) + \
+             (pipe1.roughness*(pipe1.diameter**2.63))/(pipe1.length**0.54))
         
         return props
