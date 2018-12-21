@@ -109,6 +109,8 @@ def test_series_merge_properties():
     
     wn.options.time.duration = 0
     
+    raise SkipTest
+    
     skel_wn = wntr.network.morph.skeletonize(wn, 8, branch_trim=False, 
             series_pipe_merge=True, parallel_pipe_merge=False, max_iterations=1)
     
@@ -135,6 +137,8 @@ def test_parallel_merge_properties():
                 minor_loss=0.0, status='OPEN')
     
     wn.options.time.duration = 0
+    
+    raise SkipTest
     
     skel_wn = wntr.network.morph.skeletonize(wn, 300, branch_trim=False, 
             series_pipe_merge=False, parallel_pipe_merge=True, max_iterations=1)
