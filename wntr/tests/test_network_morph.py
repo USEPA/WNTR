@@ -60,23 +60,36 @@ def test_skeletonize():
 def test_skeletonize_with_controls():
     inp_file = join(datadir, 'skeletonize.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    
-    # add controls
+
+    # add control to a link
     action = wntr.network.ControlAction(wn.get_link('60'), 'status', wntr.network.LinkStatus.Closed)
     condition = wntr.network.SimTimeCondition(wn, '==', 0)
     control = wntr.network.Control(condition=condition, then_action=action)
     wn.add_control('close_valve', control)
     
+    # add control to a node
+    action = wntr.network.ControlAction(wn.get_node('13'), 'elevation', 1)
+    condition = wntr.network.SimTimeCondition(wn, '==', 0)
+    control = wntr.network.Control(condition=condition, then_action=action)
+    wn.add_control('raise_node', control)
+    
     skel_wn = wntr.network.morph.skeletonize(wn, 12*0.0254)
     
-    #pipes = wn.query_link_attribute('diameter', np.less_equal, 12*0.0254)
-    #wntr.graphics.plot_network(wn, link_attribute = list(pipes.keys()))
-    #wntr.graphics.plot_network(skel_wn, link_attribute='diameter', link_width=2, node_size=15)
+    assert_equal(skel_wn.num_nodes, wn.num_nodes-17)
+    assert_equal(skel_wn.num_links, wn.num_links-22)
     
-    assert_equal(skel_wn.num_nodes, 20)
-    assert_equal(skel_wn.num_links, 24)
-        
-    # TODO: finish test
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    
+    # Change link 60 and 11 diameter to > 12, should get some results as above
+    link = wn.get_link('60')
+    link.diameter = 16*0.0254
+    link = wn.get_link('11')
+    link.diameter = 16*0.0254
+    
+    skel_wn = wntr.network.morph.skeletonize(wn, 12*0.0254)
+    
+    assert_equal(skel_wn.num_nodes, wn.num_nodes-17)
+    assert_equal(skel_wn.num_links, wn.num_links-22)
     
 def test_series_merge_properties():
     wn = wntr.network.WaterNetworkModel()

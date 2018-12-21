@@ -62,12 +62,17 @@ class _Skeletonize(object):
             skel_map[node_name] = [node_name]
         self.skeleton_map = skel_map
 
-        # Get a list of component names that are associated with controls
-        comp_with_controls = []
+        # Get a list of junction and pipe names that are associated with controls
+        junc_with_controls = []
+        pipe_with_controls = []
         for name, control in wn.controls():
             for req in control.requires():
-                comp_with_controls.append(req.name)
-        self.comp_with_controls = list(set(comp_with_controls))
+                if isinstance(req, wntr.network.Junction):
+                    junc_with_controls.append(req.name)
+                elif isinstance(req, wntr.network.Pipe):
+                    pipe_with_controls.append(req.name)
+        self.junc_with_controls = list(set(junc_with_controls))
+        self.pipe_with_controls = list(set(pipe_with_controls))
         
         # Calculate pipe headloss using a single period EPANET simulation
         duration = self.wn.options.time.duration
@@ -122,7 +127,7 @@ class _Skeletonize(object):
         patterns) to the neighboring junction.
         """
         for junc_name in self.wn.junction_name_list:
-            if junc_name in self.comp_with_controls:
+            if junc_name in self.junc_with_controls:
                 continue
             neighbors = list(nx.neighbors(self.G,junc_name))
             if len(neighbors) > 1:
@@ -140,7 +145,7 @@ class _Skeletonize(object):
             pipe = self.wn.get_link(pipe_name)
             if not ((isinstance(pipe, wntr.network.Pipe)) and \
                 (pipe.diameter <= pipe_threshold) and \
-                pipe_name not in self.comp_with_controls):
+                pipe_name not in self.pipe_with_controls):
                 continue
             
             logger.info('Branch trim:', junc_name, neighbors)
@@ -173,7 +178,7 @@ class _Skeletonize(object):
         to the nearest junction.
         """
         for junc_name in self.wn.junction_name_list:
-            if junc_name in self.comp_with_controls:
+            if junc_name in self.junc_with_controls:
                 continue
             neighbors = list(nx.neighbors(self.G,junc_name))
             if not (len(neighbors) == 2):
@@ -197,8 +202,8 @@ class _Skeletonize(object):
                 (isinstance(pipe1, wntr.network.Pipe)) and \
                 ((pipe0.diameter <= pipe_threshold) and \
                 (pipe1.diameter <= pipe_threshold)) and \
-                pipe_name0 not in self.comp_with_controls and \
-                pipe_name1 not in self.comp_with_controls):
+                pipe_name0 not in self.pipe_with_controls and \
+                pipe_name1 not in self.pipe_with_controls):
                 continue
             # Find closest neighbor junction
             if (isinstance(neigh_junc0, wntr.network.Junction)) and \
@@ -262,7 +267,7 @@ class _Skeletonize(object):
         """
         
         for junc_name in self.wn.junction_name_list:
-            if junc_name in self.comp_with_controls:
+            if junc_name in self.junc_with_controls:
                 continue
             neighbors = nx.neighbors(self.G,junc_name)
             for neighbor in neighbors:
@@ -279,8 +284,8 @@ class _Skeletonize(object):
                        (isinstance(pipe1, wntr.network.Pipe)) and \
                         ((pipe0.diameter <= pipe_threshold) and \
                         (pipe1.diameter <= pipe_threshold)) and \
-                        pipe_name0 not in self.comp_with_controls and \
-                        pipe_name1 not in self.comp_with_controls):
+                        pipe_name0 not in self.pipe_with_controls and \
+                        pipe_name1 not in self.pipe_with_controls):
                         continue
                     
                     logger.info('Parallel pipe merge:', junc_name, (pipe_name0, pipe_name1))
