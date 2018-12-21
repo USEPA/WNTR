@@ -14,7 +14,7 @@ def test_skeletonize():
     inp_file = join(datadir, 'skeletonize.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
     
-    expected_total_demand = 0.000763391376  # 12.1 GPM
+    expected_total_demand = 12.1/264.172/60  # 12.1 GPM converted to m3/s
 
     expected_nums = pd.DataFrame(index=[0,4,8,12,24,36], columns=['num_nodes', 'num_links'])
     expected_nums.loc[0,:] = [wn.num_nodes, wn.num_links]
@@ -87,7 +87,7 @@ def test_series_merge_properties():
     wn.add_pipe('P12', 'J1', 'J2', length=350, diameter=8, 
                 roughness=120, minor_loss=0.1, status='OPEN')
     wn.add_pipe('P23', 'J2', 'J3', length=250, diameter=6, 
-                roughness=80, minor_loss=0.0, status='CLOSED')
+                roughness=80, minor_loss=0.0, status='OPEN')
     
     # Add a source
     wn.add_reservoir('R', base_head=125, coordinates=(0,2))
@@ -115,7 +115,7 @@ def test_parallel_merge_properties():
     wn.add_pipe('P12a', 'J1', 'J2', length=280, diameter=250, 
                 roughness=120, minor_loss=0.1, status='OPEN')
     wn.add_pipe('P12b', 'J1', 'J2', length=220, diameter=300, 
-                roughness=100, minor_loss=0, status='CLOSED')
+                roughness=100, minor_loss=0, status='OPEN')
     # Add a source
     wn.add_reservoir('R', base_head=125, coordinates=(0,2))
     wn.add_pipe('PR', 'R', 'J1', length=100, diameter=450, roughness=100,
@@ -132,12 +132,12 @@ def test_parallel_merge_properties():
     assert_equal(link.diameter, 300)
     assert_almost_equal(link.roughness, 165, 0)
     assert_equal(link.minor_loss, 0)
-    assert_equal(link.status, 0) # closed
+    assert_equal(link.status, 1) # open
     
 if __name__ == '__main__':
-    #test_skeletonize()
+    test_skeletonize()
     test_skeletonize_with_controls()
-    #test_series_merge_properties()
-    #test_parallel_merge_properties()
+    test_series_merge_properties()
+    test_parallel_merge_properties()
     
 
