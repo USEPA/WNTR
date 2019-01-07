@@ -373,7 +373,8 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
     
     # Create figure
     data = [edge_trace, node_trace]
-    layout = plotly.graph_objs.Layout(
+    #layout = plotly.graph_objs.Layout(
+    layout = dict(
                     title=title,
                     titlefont=dict(size=16),
                     showlegend=False, 
