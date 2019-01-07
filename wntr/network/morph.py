@@ -1,3 +1,6 @@
+"""
+The wntr.network.morph module contains functions to modify network morphology.
+"""
 import wntr
 import networkx as nx
 import itertools
@@ -8,43 +11,58 @@ logger = logging.getLogger(__name__)
 
 
 def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge=True, 
-                parallel_pipe_merge=True, max_iterations=None, return_map=False):
+                parallel_pipe_merge=True, max_cycles=None, return_map=False):
     """
-    Run iterative branch trim, series pipe merge, and parallel pipe merge 
-    operations based on a pipe diameter treshold.  
+    Perform network skeletonization using branch trimming, series pipe merge, 
+    and parallel pipe merge operations. Candidate pipes for removal is based 
+    on a pipe diameter threshold.  
         
     Parameters
     -------------
-    wn : WaterNetworkModel object
+    wn: wntr WaterNetworkModel
+        A WaterNetworkModel object
     
     pipe_threshold: float 
-        Pipe diameter threshold determines candidate pipes for skeletonization
+        Pipe diameter threshold used to determine candidate pipes for 
+        skeletonization
     
-    branch_trim : bool (optional)
+    branch_trim: bool (optional, default = True)
+        Include branch trimming in skeletonization
     
-    series_pipe_merge : bool (optional)
-    
-    parallel_pipe_merge : bool (optional)
-    
-    max_iterations : int or None (optional)
-    
-    return_map : bool (optional)
+    series_pipe_merge: bool (optional, default = True)
+        Include series pipe merge in skeletonization
+        
+    parallel_pipe_merge: bool (optional, default = True)
+        Include parallel pipe merge in skeletonization
+        
+    max_cycles: int or None (optional, default = None)
+        Defines the maximum number of cycles in the skeletonization process. 
+        One cycle performs branch trimming for all candidate pipes, followed
+        by series pipe merging for all candidate pipes, followed by parallel 
+        pipe merging for all candidate pipes. If max_cycles is set to None, 
+        skeletonization will run until the network can no longer be reduced.
+        
+    return_map: bool (optional, default = False)
+        Return a skeletonization map.   The map is a dictionary 
+        that includes original nodes as keys and a list of skeletonized nodes 
+        that were merged into each original node as values.
                 
     Returns
     --------
-    Skeletonized WaterNetworkModel object and (if return_map = True) a dictonary 
-    with original nodes as keys and grouped nodes as values
+    A skeletonized WaterNetworkModel object and (if return_map = True) a 
+    skeletonization map.
     """
     skel = _Skeletonize(wn)
     
     skel.run(pipe_diameter_threshold, branch_trim, series_pipe_merge, 
-             parallel_pipe_merge, max_iterations)
+             parallel_pipe_merge, max_cycles)
     
     if return_map:
         return skel.wn, skel.skeleton_map
     else:
         return skel.wn
 
+		
 class _Skeletonize(object):
     
     def __init__(self, wn):
@@ -90,11 +108,12 @@ class _Skeletonize(object):
         self.num_series_merge = 0
         self.num_parallel_merge = 0
         
+		
     def run(self, pipe_threshold, branch_trim=True, series_pipe_merge=True, 
-                parallel_pipe_merge=True, max_iterations=None):
+                parallel_pipe_merge=True, max_cycles=None):
         """
         Run iterative branch trim, series pipe merge, and parallel pipe merge 
-        operations based on a pipe diameter treshold.  
+        operations based on a pipe diameter threshold.  
         """
         num_junctions = self.wn.num_junctions
         iteration = 0
@@ -110,7 +129,7 @@ class _Skeletonize(object):
             
             iteration = iteration + 1
             
-            if (max_iterations is not None) and (iteration > max_iterations):
+            if (max_cycles is not None) and (iteration > max_cycles):
                 flag = False
             if num_junctions == self.wn.num_junctions:
                 flag = False
@@ -119,10 +138,11 @@ class _Skeletonize(object):
 
         return self.wn, self.skeleton_map
     
+	
     def branch_trim(self, pipe_threshold):
         """
         Run a single branch trim operation based on a pipe diameter threshold.
-        Branch trimming removes deadend pipes smaller than the pipe 
+        Branch trimming removes dead-end pipes smaller than the pipe 
         diameter threshold and redistributes demands (and associated demand 
         patterns) to the neighboring junction.
         """
@@ -169,10 +189,11 @@ class _Skeletonize(object):
             
         return self.wn, self.skeleton_map
     
+	
     def series_pipe_merge(self, pipe_threshold):
         """
         Run a single series pipe merge operation based on a pipe diameter 
-        treshold.  This operation combines pipes in series if both pipes are 
+        threshold.  This operation combines pipes in series if both pipes are 
         smaller than the pipe diameter threshold. The larger diameter pipe is 
         retained, demands (and associated demand patterns) are redistributed 
         to the nearest junction.
@@ -258,10 +279,11 @@ class _Skeletonize(object):
             
         return self.wn, self.skeleton_map
         
+		
     def parallel_pipe_merge(self, pipe_threshold):
         """
         Run a single parallel pipe merge operation based on a pipe diameter 
-        treshold.  This operation combines pipes in parallel if both pipes are 
+        threshold.  This operation combines pipes in parallel if both pipes are 
         smaller than the pipe diameter threshold. The larger diameter pipe is 
         retained.
         """
@@ -317,7 +339,9 @@ class _Skeletonize(object):
                     
         return self.wn, self.skeleton_map
     
+	
     def _select_dominant_pipe(self, pipe0, pipe1):
+	
         # Dominant pipe = larger diameter
         if pipe0.diameter >= pipe1.diameter:
             dominant_pipe = pipe0
@@ -325,7 +349,8 @@ class _Skeletonize(object):
             dominant_pipe = pipe1
             
         return dominant_pipe
-    
+
+		
     def _series_merge_properties(self, pipe0, pipe1):
         
         props = {}
@@ -342,6 +367,7 @@ class _Skeletonize(object):
         
         return props
          
+		 
     def _parallel_merge_properties(self, pipe0, pipe1):
         
         props = {}

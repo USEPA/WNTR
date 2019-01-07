@@ -10,8 +10,8 @@ testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'networks_for_testing')
 netdir = join(testdir,'..','..','examples','networks')
 
+
 def test_skeletonize():
-    raise SkipTest
     
     inp_file = join(datadir, 'skeletonize.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
@@ -59,8 +59,8 @@ def test_skeletonize():
             expected_map_subset['64'] = []
             assert_dict_contains_subset(expected_map_subset, skel_map)
 
+
 def test_skeletonize_with_controls():
-    raise SkipTest
     
     inp_file = join(datadir, 'skeletonize.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
@@ -95,7 +95,9 @@ def test_skeletonize_with_controls():
     assert_equal(skel_wn.num_nodes, wn.num_nodes-17)
     assert_equal(skel_wn.num_links, wn.num_links-22)
     
+    
 def test_series_merge_properties():
+    
     wn = wntr.network.WaterNetworkModel()
     
     wn.add_junction('J1', base_demand=5, elevation=100.0, coordinates=(0,0))
@@ -114,7 +116,7 @@ def test_series_merge_properties():
     wn.options.time.duration = 0
     
     skel_wn = wntr.network.morph.skeletonize(wn, 8, branch_trim=False, 
-            series_pipe_merge=True, parallel_pipe_merge=False, max_iterations=1)
+            series_pipe_merge=True, parallel_pipe_merge=False, max_cycles=1)
     
     link = skel_wn.get_link('P12') # pipe P12 is the dominant pipe
     
@@ -124,7 +126,9 @@ def test_series_merge_properties():
     assert_equal(link.minor_loss, 0.1)
     assert_equal(link.status, 1) # open
 
+
 def test_parallel_merge_properties():
+    
     wn = wntr.network.WaterNetworkModel()
     
     wn.add_junction('J1', base_demand=5, elevation=100.0, coordinates=(0,0))
@@ -141,7 +145,7 @@ def test_parallel_merge_properties():
     wn.options.time.duration = 0
     
     skel_wn = wntr.network.morph.skeletonize(wn, 300, branch_trim=False, 
-            series_pipe_merge=False, parallel_pipe_merge=True, max_iterations=1)
+            series_pipe_merge=False, parallel_pipe_merge=True, max_cycles=1)
 
     link = skel_wn.get_link('P12b') # pipe P12b is the dominant pipe
     
@@ -151,10 +155,39 @@ def test_parallel_merge_properties():
     assert_equal(link.minor_loss, 0)
     assert_equal(link.status, 1) # open
     
+    
+def test_skeletonize_Net6():
+    
+    inp_file = join(netdir, 'Net6.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    skel_wn = wntr.network.morph.skeletonize(wn, 12*0.0254)
+    
+    assert_equal(wn.num_junctions, 3323)
+    assert_equal(skel_wn.num_junctions, 1121)
+    
+    sim = wntr.sim.EpanetSimulator(wn)
+    results_original = sim.run_sim()
+    
+    sim = wntr.sim.EpanetSimulator(skel_wn)
+    results_skel = sim.run_sim()
+    
+    skel_junctions = skel_wn.junction_name_list
+    
+    pressure_orig = results_original.node['pressure'].loc[:,skel_junctions]
+    pressure_skel = results_skel.node['pressure'].loc[:,skel_junctions]
+    pressure_diff = abs(pressure_orig - pressure_skel)
+    pressure_diff.index = pressure_diff.index/3600
+    
+    m50 = pressure_diff.quantile(0.50, axis=1)
+    
+    assert_less(m50.max(), 2)
+
+    
 if __name__ == '__main__':
     test_skeletonize()
     test_skeletonize_with_controls()
     test_series_merge_properties()
     test_parallel_merge_properties()
+    test_skeletonize_Net6()
     
 
