@@ -373,8 +373,7 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
     
     # Create figure
     data = [edge_trace, node_trace]
-    #layout = plotly.graph_objs.Layout(
-    layout = dict(
+    layout = plotly.graph_objs.Layout(
                     title=title,
                     titlefont=dict(size=16),
                     showlegend=False, 
@@ -384,10 +383,10 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
                     margin=dict(b=20,l=5,r=5,t=40),
                     xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
-    # Temporary fix for Python 3.4 with older version of plotly
-    import sys
-    if (sys.version_info.major == 3) and (sys.version_info.major == 4):
-        layout['validate'] = False
+    # Temporary fix for Python 3.4
+    #import sys
+    #if (sys.version_info.major == 3) and (sys.version_info.major == 4):
+    #    layout['validate'] = False
     
     fig = plotly.graph_objs.Figure(data=data,layout=layout)
     if filename:
