@@ -68,11 +68,15 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
 class _Skeletonize(object):
     
     def __init__(self, wn):
-        # Get a copy of the WaterNetworkModel
+        
+        # Get a copy of the WaterNetworkModel (increase recursion limit for python 2.7)
+        # recursion limit on python 2.7 = 1000, python 3.7 = 3000
         recursion_limit = sys.getrecursionlimit()
-        sys.setrecursionlimit(recursion_limit*2)
+        if sys.version_info.major < 3:
+            sys.setrecursionlimit(3000) 
         self.wn = copy.deepcopy(wn)
-        sys.setrecursionlimit(recursion_limit)
+        if sys.version_info.major < 3:
+            sys.setrecursionlimit(recursion_limit)
         
         # Get the WaterNetworkModel graph
         G = self.wn.get_graph()

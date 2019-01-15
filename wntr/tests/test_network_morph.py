@@ -156,14 +156,14 @@ def test_parallel_merge_properties():
     assert_equal(link.status, 1) # open
     
     
-def test_skeletonize_Net6():
+def test_skeletonize_Net3():
     
-    inp_file = join(netdir, 'Net6.inp')
+    inp_file = join(netdir, 'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    skel_wn = wntr.network.morph.skeletonize(wn, 12*0.0254)
+    skel_wn = wntr.network.morph.skeletonize(wn, 36*0.0254)
     
-    assert_equal(wn.num_junctions, 3323)
-    assert_equal(skel_wn.num_junctions, 1121)
+    assert_equal(wn.num_junctions, 92)
+    assert_equal(skel_wn.num_junctions, 45)
     
     sim = wntr.sim.WNTRSimulator(wn)
     results_original = sim.run_sim()
@@ -180,7 +180,16 @@ def test_skeletonize_Net6():
     
     m50 = pressure_diff.quantile(0.50, axis=1)
     
-    assert_less(m50.max(), 2)
+    """
+    import matplotlib.pylab as plt
+    wntr.graphics.plot_network(wn, title='Original')
+    wntr.graphics.plot_network(skel_wn, title='Skeletonized')
+    plt.figure()
+    m50.plot()
+    print(m50.mean())
+    """
+    assert_less(m50.max(), 1.5)
+    assert_less(m50.mean(), 0.15)
 
     
 if __name__ == '__main__':
@@ -188,6 +197,6 @@ if __name__ == '__main__':
     test_skeletonize_with_controls()
     test_series_merge_properties()
     test_parallel_merge_properties()
-    test_skeletonize_Net6()
+    test_skeletonize_Net3()
     
 
