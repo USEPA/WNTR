@@ -57,6 +57,8 @@ def test_skeletonize():
             expected_map_subset['32'] = []
             expected_map_subset['57'] = []
             expected_map_subset['64'] = []
+            print(expected_map_subset)
+            print(skel_map)
             assert_dict_contains_subset(expected_map_subset, skel_map)
 
 

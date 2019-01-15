@@ -24,7 +24,7 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
     wn: wntr WaterNetworkModel
         A WaterNetworkModel object
     
-    pipe_threshold: float 
+    pipe_diameter_threshold: float 
         Pipe diameter threshold used to determine candidate pipes for 
         skeletonization
     
@@ -69,8 +69,8 @@ class _Skeletonize(object):
     
     def __init__(self, wn):
         
-        # Get a copy of the WaterNetworkModel (increase recursion limit for python 2.7)
-        # recursion limit on python 2.7 = 1000, python 3.7 = 3000
+        # Get a copy of the WaterNetworkModel
+        # Increase recursion limit for python 2.7 from 1000 to 3000
         recursion_limit = sys.getrecursionlimit()
         if sys.version_info.major < 3:
             sys.setrecursionlimit(3000) 
