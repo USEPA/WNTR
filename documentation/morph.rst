@@ -116,14 +116,14 @@ Pressure differences are generally less than 2 meters in this example.
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net6.inp')
     ...
-    >>> print(wn)   # doctest: +SKIP
-    <WaterNetworkModel object at 0x03978184 >
 
 .. doctest::
 
     >>> skel_wn = wntr.network.morph.skeletonize(wn, 12*0.0254)
-    >>> wntr.graphics.plot_network(wn, title='Original')
-    >>> wntr.graphics.plot_network(skel_wn, title='Skeletonized')
+    >>> wntr.graphics.plot_network(wn, title='Original') # #doctest: +ELLIPSIS
+	(<matplotlib.collections.PathCollection object ...
+    >>> wntr.graphics.plot_network(skel_wn, title='Skeletonized') #doctest: +ELLIPSIS
+	(<matplotlib.collections.PathCollection object ...
 	
 .. _fig-skel-example:
 .. figure:: figures/skel_example.png
