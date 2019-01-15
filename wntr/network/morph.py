@@ -1,10 +1,12 @@
 """
 The wntr.network.morph module contains functions to modify network morphology.
 """
-import wntr
 import networkx as nx
 import itertools
 import copy
+import sys
+import wntr
+
 import logging
 
 logger = logging.getLogger(__name__)
@@ -66,10 +68,13 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
 class _Skeletonize(object):
     
     def __init__(self, wn):
-        # Get a copy of the network
+        # Get a copy of the WaterNetworkModel
+        recursion_limit = sys.getrecursionlimit()
+        sys.setrecursionlimit(recursion_limit*2)
         self.wn = copy.deepcopy(wn)
+        sys.setrecursionlimit(recursion_limit)
         
-        # Get a copy of the graph
+        # Get the WaterNetworkModel graph
         G = self.wn.get_graph()
         G = G.to_undirected()
         self.G = G
