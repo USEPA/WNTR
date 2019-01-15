@@ -8,7 +8,7 @@ dependencies:
     - networkx
     - pandas
     - matplotlib
-    - plotly<3
+    - plotly
     - nose
     - openpyxl
     - pip:

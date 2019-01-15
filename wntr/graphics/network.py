@@ -309,7 +309,7 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         text=[],
         hoverinfo='text',
         mode='lines',
-        line=plotly.graph_objs.Line(
+        line=dict(
             #colorscale=link_cmap,
             #reversescale=reverse_colormap,
             color='#888', #[], 
@@ -317,14 +317,14 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
     for edge in G.edges():
         x0, y0 = G.node[edge[0]]['pos']
         x1, y1 = G.node[edge[1]]['pos']
-        edge_trace['x'] += [x0, x1, None]
-        edge_trace['y'] += [y0, y1, None]
+        edge_trace['x'] += tuple([x0, x1, None])
+        edge_trace['y'] += tuple([y0, y1, None])
 #        try:
 #            # Add link attributes
 #            link_name = G[edge[0]][edge[1]].keys()[0]
-#            edge_trace['line']['color'].append(pipe_attr[link_name])
+#            edge_trace['line']['color'] += tuple([pipe_attr[link_name]])
 #            edge_info = 'Edge ' + str(link_name)
-#            edge_trace['text'].append(edge_info)
+#            edge_trace['text'] += tuple([edge_info])
 #        except:
 #            pass
 #    edge_trace['colorbar']['title'] = 'Link colorbar title'
@@ -336,7 +336,7 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         text=[],
         hoverinfo='text',
         mode='markers', 
-        marker=plotly.graph_objs.Marker(
+        marker=dict(
             showscale=add_colorbar,
             colorscale=node_cmap, 
             cmin=node_range[0],
@@ -352,27 +352,27 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
             line=dict(width=1)))
     for node in G.nodes():
         x, y = G.node[node]['pos']
-        node_trace['x'].append(x)
-        node_trace['y'].append(y)
+        node_trace['x'] += tuple([x])
+        node_trace['y'] += tuple([y])
         try:
             # Add node attributes
-            node_trace['marker']['color'].append(node_attribute[node])
+            node_trace['marker']['color'] += tuple([node_attribute[node]])
             #node_trace['marker']['size'].append(node_size)
             # Add node labels
             if node_labels:
                 node_info = 'Node ' + str(node) + ', '+ \
                             str(round(node_attribute[node],round_ndigits))
-                node_trace['text'].append(node_info)
+                node_trace['text'] += tuple([node_info])
         except:
-            node_trace['marker']['color'].append('#888')
+            node_trace['marker']['color'] += tuple(['#888'])
             if node_labels:
                 node_info = 'Node ' + str(node)
-                node_trace['text'].append(node_info)
-            #node_trace['marker']['size'].append(5)
+                node_trace['text'] += tuple([node_info])
+            #node_trace['marker']['size'] += tuple([5])
     #node_trace['marker']['colorbar']['title'] = 'Node colorbar title'
     
     # Create figure
-    data = plotly.graph_objs.Data([edge_trace, node_trace])
+    data = [edge_trace, node_trace]
     layout = plotly.graph_objs.Layout(
                     title=title,
                     titlefont=dict(size=16),
@@ -381,10 +381,12 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
                     height=figsize[1],
                     hovermode='closest',
                     margin=dict(b=20,l=5,r=5,t=40),
-                    xaxis=plotly.graph_objs.XAxis(showgrid=False, 
-                            zeroline=False, showticklabels=False),
-                    yaxis=plotly.graph_objs.YAxis(showgrid=False, 
-                            zeroline=False, showticklabels=False))
+                    xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False))
+    # Temporary fix for Python 3.4
+    #import sys
+    #if (sys.version_info.major == 3) and (sys.version_info.major == 4):
+    #    layout['validate'] = False
     
     fig = plotly.graph_objs.Figure(data=data,layout=layout)
     if filename:

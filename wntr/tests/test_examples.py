@@ -5,6 +5,7 @@ import sys
 import os
 from os import listdir
 from os.path import isfile, abspath, dirname, join
+from nose import SkipTest
 from subprocess import call
 
 testdir = dirname(abspath(str(__file__)))
@@ -28,6 +29,8 @@ class TestExamples(unittest.TestCase):
         flag = 0
         failed_examples = []
         for f in example_files:
+            if (sys.version_info.major == 3) and (sys.version_info.minor == 4) and (f == 'interactive_graphics.py'):
+                raise SkipTest # skip if python version = 3.4
             tmp_flag = call([sys.executable, join(examplesdir,f)])
             print(f, tmp_flag)
             if tmp_flag == 1:
