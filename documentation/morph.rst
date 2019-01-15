@@ -120,10 +120,10 @@ Pressure differences are generally less than 2 meters in this example.
 .. doctest::
 
     >>> skel_wn = wntr.network.morph.skeletonize(wn, 12*0.0254)
-    >>> wntr.graphics.plot_network(wn, title='Original') # #doctest: +ELLIPSIS
-	(<matplotlib.collections.PathCollection object ...
-    >>> wntr.graphics.plot_network(skel_wn, title='Skeletonized') #doctest: +ELLIPSIS
-	(<matplotlib.collections.PathCollection object ...
+    >>> wntr.graphics.plot_network(wn, title='Original') # doctest: +SKIP
+    (<matplotlib.collections.PathCollection object ...
+    >>> wntr.graphics.plot_network(skel_wn, title='Skeletonized') # doctest: +SKIP
+    (<matplotlib.collections.PathCollection object ...
 	
 .. _fig-skel-example:
 .. figure:: figures/skel_example.png
