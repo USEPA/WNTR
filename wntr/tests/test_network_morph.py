@@ -165,10 +165,10 @@ def test_skeletonize_Net6():
     assert_equal(wn.num_junctions, 3323)
     assert_equal(skel_wn.num_junctions, 1121)
     
-    sim = wntr.sim.EpanetSimulator(wn)
+    sim = wntr.sim.WNTRSimulator(wn)
     results_original = sim.run_sim()
     
-    sim = wntr.sim.EpanetSimulator(skel_wn)
+    sim = wntr.sim.WNTRSimulator(skel_wn)
     results_skel = sim.run_sim()
     
     skel_junctions = skel_wn.junction_name_list

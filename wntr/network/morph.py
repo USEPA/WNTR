@@ -94,7 +94,7 @@ class _Skeletonize(object):
         
         # Calculate pipe headloss using a single period EPANET simulation
         duration = self.wn.options.time.duration
-        sim = wntr.sim.EpanetSimulator(self.wn)
+        sim = wntr.sim.WNTRSimulator(self.wn)
         self.wn.options.time.duration = 0
         results = sim.run_sim()
         head = results.node['head']
@@ -168,7 +168,7 @@ class _Skeletonize(object):
                 pipe_name not in self.pipe_with_controls):
                 continue
             
-            logger.info('Branch trim:', junc_name, neighbors)
+            logger.info('Branch trim: '+ str(junc_name) + str(neighbors))
             
             # Update skeleton map        
             self.skeleton_map[neigh_junc_name].extend(self.skeleton_map[junc_name])
@@ -240,7 +240,7 @@ class _Skeletonize(object):
             else:
                 continue
             
-            logger.info('Series pipe merge:', junc_name, neighbors)
+            logger.info('Series pipe merge: ' + str(junc_name) + str(neighbors))
                 
             # Update skeleton map    
             self.skeleton_map[closest_junc.name].extend(self.skeleton_map[junc_name])
@@ -310,7 +310,7 @@ class _Skeletonize(object):
                         pipe_name1 not in self.pipe_with_controls):
                         continue
                     
-                    logger.info('Parallel pipe merge:', junc_name, (pipe_name0, pipe_name1))
+                    logger.info('Parallel pipe merge: '+ str(junc_name) + str((pipe_name0, pipe_name1)))
 
                     # Remove links from wn and G   
                     self.wn.remove_link(pipe_name0)
