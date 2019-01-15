@@ -22,6 +22,7 @@ designed to simulate and analyze resilience of water distribution networks.
    disaster_models
    resilience
    stochastic
+   morph
    license
    whatsnew
    developers

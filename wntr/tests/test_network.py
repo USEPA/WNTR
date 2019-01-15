@@ -1,6 +1,5 @@
 import unittest
 from os.path import abspath, dirname, join
-import copy
 import numpy as np
 from nose.tools import *
 import wntr
