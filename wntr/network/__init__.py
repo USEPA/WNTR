@@ -12,6 +12,5 @@ from .controls import Comparison, ControlPriority, TimeOfDayCondition, \
     OrCondition, AndCondition, ControlAction, Control, ControlManager, Rule
 from .graph import WntrMultiDiGraph
 from .morph import scale_node_coordinates, translate_node_coordinates, \
-    rotate_node_coordinates, convert_node_coordinates_UTM_to_latlong, \
-    convert_node_coordinates_to_latlong, split_pipe, skeletonize
+    rotate_node_coordinates, split_pipe, skeletonize
 

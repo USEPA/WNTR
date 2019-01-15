@@ -21,12 +21,19 @@ logger = logging.getLogger(__name__)
 
 def scale_node_coordinates(wn, scale):
     """
-    Scales node coordinates, using 1:scale (scale should be in meters)
+    Scales node coordinates, using 1:scale
     
     Parameters
     -----------
-    scale : float
-        Coordinate scale multiplier.
+    wn: wntr WaterNetworkModel
+        A WaterNetworkModel object
+    
+    scale: float
+        Coordinate scale multiplier, in meters
+    
+    Returns
+    --------
+    A WaterNetworkModel object with updated node coordinates
     """
     wn2 = copy.deepcopy(wn)
     
@@ -36,9 +43,25 @@ def scale_node_coordinates(wn, scale):
 
     return wn2
 
+
 def translate_node_coordinates(wn, x, y):
     """
     Translate node coordinates
+    
+    Parameters
+    -----------
+    wn: wntr WaterNetworkModel
+        A WaterNetworkModel object
+    
+    x: float
+        Translation in the x direction, in meters
+    
+    y: float
+        Translation in the y direction, in meters
+    
+    Returns
+    --------
+    A WaterNetworkModel object with updated node coordinates
     """
     wn2 = copy.deepcopy(wn)
     
@@ -48,9 +71,22 @@ def translate_node_coordinates(wn, x, y):
     
     return wn2
         
+
 def rotate_node_coordinates(wn, theta):
     """
     Rotate node coordinates counterclockwise by theta degrees
+    
+    Parameters
+    -----------
+    wn: wntr WaterNetworkModel
+        A WaterNetworkModel object
+    
+    theta: float
+        Node rotation, in degrees
+    
+    Returns
+    --------
+    A WaterNetworkModel object with updated node coordinates
     """
     wn2 = copy.deepcopy(wn)
     
@@ -63,60 +99,11 @@ def rotate_node_coordinates(wn, theta):
     
     return wn2
 
-def convert_node_coordinates_UTM_to_latlong(wn, zone_number, zone_letter):
-    """
-    Convert node coordinates from UTM to lat/long
-    """
-    if utm is None:
-        raise ImportError('utm is required')
-    
-    wn2 = copy.deepcopy(wn)
-    
-    for name, node in wn2.nodes():
-        pos = node.coordinates
-        lat, long = utm.to_latlon(pos[0], pos[1], zone_number, zone_letter)
-        node.coordinates = (long, lat)
-
-    return wn2
-
-def convert_node_coordinates_to_latlong(wn, Am, Bm, Alatlong, Blatlong):
-    """
-    Convert node coordinates from UTM to lat/long
-    """
-    if utm is None:
-        raise ImportError('utm is required')
-    
-    wn2 = copy.deepcopy(wn)
-    
-    A1 = Am
-    B1 = Bm
-    A2 = utm.from_latlon(Alatlong[0], Alatlong[1])
-    B2 = utm.from_latlon(Blatlong[0], Blatlong[1])
-    zone_number = A2[2]
-    zone_letter = A2[3] 
-    A2 = A2[0:2]
-    B2 = B2[0:2]
-    
-    cp1 = ((A1[0] + B1[0])/2, (A1[1] + B1[1])/2)
-    cp2 = ((A2[0] + B2[0])/2, (A2[1] + B2[1])/2)
-    
-    dist1 = np.mean([pdist(np.array([A1, cp1]))[0], pdist(np.array([B1, cp1]))[0]])     
-    dist2 = np.mean([pdist(np.array([A2, cp2]))[0], pdist(np.array([B2, cp2]))[0]])
-    
-    ratio = dist2/dist1
-    
-    for name, node in wn2.nodes():
-        pos = node.coordinates
-        scaled_vect = tuple(np.subtract(pos, cp1)*ratio)
-        new_pos = tuple(np.add(scaled_vect, cp2))
-        lat, long = utm.to_latlon(new_pos[0], new_pos[1], zone_number, zone_letter)
-        node.coordinates = (long, lat)
-    
-    return wn2
         
 def split_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name,
                add_pipe_at_node='end', split_at_point=0.5):
-    """Splits a pipe by adding a junction and one new pipe segment
+    """
+    Split a pipe by adding a junction and one new pipe segment
     
     This method is convenient when adding leaks to a pipe. It provides 
     an initially zero-demand node at some point along the pipe and then
@@ -181,7 +168,6 @@ def split_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name,
         The link is not a pipe, `split_at_point` is out of bounds, `add_pipe_at_node` is invalid.
     RuntimeError
         The `new_junction_name` or `new_pipe_name` is already in use.
-        
     """
     
     # Do sanity checks
@@ -253,10 +239,12 @@ def split_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name,
     
     return wn #(pipe, new_junction, new_pipe)
 
+
 def _break_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name_old_pipe,
                new_junction_name_new_pipe,
                add_pipe_at_node='end', split_at_point=0.5):
-    """BETA Breaks a pipe by adding a two unconnected junctions and one new pipe segment
+    """
+    BETA Break a pipe by adding a two unconnected junctions and one new pipe segment
     
     This method provides a true broken pipe -- i.e., there is no longer flow possible 
     from one side of the break to the other. This is more likely to break the model
@@ -325,7 +313,6 @@ def _break_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name_old_pip
     tuple
         Returns the new junctions that have been created, with the junction attached to the 
         original pipe as the first element of the tuple
-        
     """
     
     # Do sanity checks
@@ -488,7 +475,7 @@ class _Skeletonize(object):
         # Get a list of junction and pipe names that are associated with controls
         junc_with_controls = []
         pipe_with_controls = []
-        for name, control in wn.controls():
+        for name, control in self.wn.controls():
             for req in control.requires():
                 if isinstance(req, Junction):
                     junc_with_controls.append(req.name)
