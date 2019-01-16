@@ -6,7 +6,9 @@ Network morphology
 ======================================
 
 The water network model morphology can be modified is several ways using WNTR, including
-network skeletonization and modifying node coordinates.
+network skeletonization, 
+modifying node coordinates, and 
+split or break pipes.
 
 Network skeletonization
 ----------------------------
@@ -106,18 +108,6 @@ the 25th to 75th percentile (shaded region) for node pressure throughout the net
 Pressure differences are generally less than 2 meters in this example.
 
 .. doctest::
-    :hide:
-
-    >>> import wntr
-    >>> import numpy as np
-    >>> from __future__ import print_function
-    >>> try:
-    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net6.inp')
-    ... except:
-    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net6.inp')
-    ...
-
-.. doctest::
 
     >>> skel_wn = wntr.network.morph.skeletonize(wn, 12*0.0254)
     >>> wntr.graphics.plot_network(wn, title='Original') # doctest: +SKIP
@@ -150,14 +140,83 @@ Pressure differences are generally less than 2 meters in this example.
    Pressure differences between the original and skeletonized Net6.
 
 
-Modifying node coordinates
+Modify node coordinates
 ----------------------------
 
-WNTR includes several functions to modify node coordinates, including:
+WNTR includes several functions to modify node coordinates, denoted as :math:`(x, y)` below, including:
 
-1. Scale node coordinates
-2. Shift node coordinates
-3. Rotate node coordinates
-4. Translate node coordinates
-5. Convert node coordinates from lat-long to UTM
+1. :class:`~wntr.network.morph.scale_node_coordinates` which multiplies node coordinates by a scale factor (in meters). 
 
+   .. math:: (x, y) = (x*scale, y*scale)
+   
+2. :class:`~wntr.network.morph.translate_node_coordinates` which applies an offset (in meters) to each node coordinate in the x and y direction.
+   
+   .. math:: (x, y) = (x+offset_{x}, y+offset_{y})
+   
+3. :class:`~wntr.network.morph.rotate_node_coordinates` which rotates coordinates counterclockwise by :math:`\theta` degrees.
+   
+   .. math:: (x, y) = \begin{bmatrix} cos(\theta) & -sin(\theta) \\sin(\theta) & cos(\theta) \end{bmatrix} \boldsymbol{\cdot} (x, y)
+
+For example, the following example returns a copy of the water network model with 
+node coordinates scaled by 100 m.
+
+.. doctest::
+    :hide:
+
+    >>> import wntr
+    >>> import numpy as np
+    >>> from __future__ import print_function
+    >>> try:
+    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
+    ... except:
+    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+	
+.. doctest::
+
+    >>> wn_scaled_coord = wntr.network.morph.scale_node_coordinates(wn, 100)
+
+.. _split_break_pipes:
+
+Split or break pipes
+----------------------------
+
+WNTR includes the functions :class:`~wntr.network.morph.split_pipe` 
+and :class:`~wntr.network.morph.break_pipe` to split or break a pipe.
+
+For a pipe split, the original pipe into two pipes by adding a new 
+junction and new pipe to the model.  
+For a pipe break, the original pipe into two disconnected pipes by 
+adding two new junctions and new pipe to the model.  
+**With a pipe break, there is no longer flow possible from one side of the break to the other. 
+This is more likely to 
+introduce non-convergable hydraulics than a pipe split with a leak 
+added.**
+
+The updated model retains the original length of the pipe section. 
+The split occurs at a user specified distance between the 
+original start and end nodes of the pipe (in that direction). 
+The new pipe can be added to either end of the original pipe. 
+    
+* The new junction has a base demand of 0 and the default demand pattern.
+  The elevation and coordinates of the new junction are based on a linear 
+  interpolation between the end points of the original pipe.
+    
+* The new pipe has the same diameter, roughness, minor loss, 
+  and base status of the original pipe. 
+
+* Check valves are not added to the new
+  pipe. Since the new pipe can be connected at either the start
+  or the end of the original pipe, the user can control if the split occurs before
+  or after a check valve. 
+    
+* No controls are added to the new pipe; the original pipe keeps any controls. 
+
+The following example splits pipe '123' in Net3 into pipes '123' and '123_B'.  
+The new junction is named '123_node'.  The new node is then used to add a leak 
+to the model.
+
+.. doctest::
+
+    >>> wn = wntr.network.morph.split_pipe(wn, '123', '123_B', '123_node')
+    >>> leak_node = wn.get_node('123_node')           
+    >>> leak_node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)

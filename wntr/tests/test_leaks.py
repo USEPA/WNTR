@@ -6,37 +6,6 @@ testdir = dirname(abspath(str(__file__)))
 test_datadir = join(testdir,'networks_for_testing')
 ex_datadir = join(testdir,'..','..','examples','networks')
 
-class TestLeakAdditionAndRemoval(unittest.TestCase):
-
-    @classmethod
-    def setUpClass(self):
-        import wntr
-        self.wntr = wntr
-
-    @classmethod
-    def tearDownClass(self):
-        pass
-
-    def test_add_leak(self):
-        inp_file = join(test_datadir, 'leaks.inp')
-        wn = self.wntr.network.WaterNetworkModel(inp_file)
-        pipe = wn.get_link('pipe1')
-        wn = self.wntr.network.morph.split_pipe(wn,'pipe1','pipe1__B','leak1')
-        leak1 = wn.get_node('leak1')
-        leak1.add_leak(wn, 3.14159/4.0*0.1**2)
-        pipeB = wn.get_link('pipe1__B')
-        self.assertEqual(True, 'leak1' in [name for name,n in wn.nodes()])
-        self.assertEqual(True, 'leak1' in [name for name,n in wn.nodes(self.wntr.network.Junction)])
-        self.assertEqual(True, 'pipe1' in [name for name,l in wn.links()])
-        self.assertEqual(True, 'pipe1' in [name for name,l in wn.links(self.wntr.network.Pipe)])
-        self.assertEqual(True, 'pipe1__B' in [name for name,l in wn.links()])
-        self.assertEqual(True, 'pipe1__B' in [name for name,l in wn.links(self.wntr.network.Pipe)])
-        self.assertEqual(pipe.end_node_name, 'leak1')
-        self.assertEqual(pipeB.start_node_name, 'leak1')
-        self.assertEqual(pipe.diameter, pipeB.diameter)
-        self.assertEqual(pipe.roughness, pipeB.roughness)
-        self.assertEqual(pipe.minor_loss, pipeB.minor_loss)
-        self.assertEqual(pipe.initial_status, pipeB.initial_status)
 
 class TestLeakResults(unittest.TestCase):
 

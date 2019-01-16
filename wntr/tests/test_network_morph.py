@@ -2,13 +2,102 @@ from nose.tools import *
 from nose import SkipTest
 from os.path import abspath, dirname, join
 import pandas as pd
+import numpy as np
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
 datadir = join(testdir,'networks_for_testing')
 netdir = join(testdir,'..','..','examples','networks')
 
+def test_scale_node_coordinates():
+    
+    inp_file = join(netdir, 'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    node = wn.get_node('123')
+    coord = node.coordinates
+    
+    wn2 = wntr.network.morph.scale_node_coordinates(wn, 100)
+    node2 = wn2.get_node('123')
+    coord2 = node2.coordinates
+    
+    assert_equal(coord[0]*100, coord2[0])
+    assert_equal(coord[1]*100, coord2[1])
+    
+    
+def test_translate_node_coordinates():
+    
+    inp_file = join(netdir, 'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    node = wn.get_node('123')
+    coord = node.coordinates
+    
+    wn2 = wntr.network.morph.translate_node_coordinates(wn, 5,10)
+    node2 = wn2.get_node('123')
+    coord2 = node2.coordinates
+    
+    assert_equal(coord[0]+5, coord2[0])
+    assert_equal(coord[1]+10, coord2[1])
+    
+def test_rotate_node_coordinates():
+    
+    wn = wntr.network.WaterNetworkModel()
+    wn.add_junction('J1', base_demand=5, elevation=100.0, coordinates=(2,0))
+    
+    wn2 = wntr.network.morph.rotate_node_coordinates(wn, 45)
+    node2 = wn2.get_node('J1')
+    coord2 = node2.coordinates
+    
+    assert_almost_equal(np.sqrt(2), coord2[0], 6)
+    assert_almost_equal(np.sqrt(2), coord2[1], 6)
+    
+def test_split_pipe():
+        
+    inp_file = join(datadir, 'leaks.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    wn = wntr.network.morph.split_pipe(wn,'pipe1','pipe1__B','leak1')
+    
+    pipe = wn.get_link('pipe1')
+    pipeB = wn.get_link('pipe1__B')
+    
+    assert_equal(True, 'leak1' in [name for name,n in wn.nodes()])
+    assert_equal(True, 'leak1' in [name for name,n in wn.nodes(wntr.network.Junction)])
+    assert_equal(True, 'pipe1' in [name for name,l in wn.links()])
+    assert_equal(True, 'pipe1' in [name for name,l in wn.links(wntr.network.Pipe)])
+    assert_equal(True, 'pipe1__B' in [name for name,l in wn.links()])
+    assert_equal(True, 'pipe1__B' in [name for name,l in wn.links(wntr.network.Pipe)])
+    assert_equal(pipe.end_node_name, 'leak1')
+    assert_equal(pipeB.start_node_name, 'leak1')
+    assert_equal(pipe.diameter, pipeB.diameter)
+    assert_equal(pipe.roughness, pipeB.roughness)
+    assert_equal(pipe.minor_loss, pipeB.minor_loss)
+    assert_equal(pipe.initial_status, pipeB.initial_status)
 
+
+def test_break_pipe():
+        
+    inp_file = join(datadir, 'leaks.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    wn = wntr.network.morph.break_pipe(wn,'pipe1','pipe1__B','leak1','leak2')
+    
+    pipe = wn.get_link('pipe1')
+    pipeB = wn.get_link('pipe1__B')
+    
+    assert_equal(True, 'leak1' in [name for name,n in wn.nodes()])
+    assert_equal(True, 'leak1' in [name for name,n in wn.nodes(wntr.network.Junction)])
+    assert_equal(True, 'leak2' in [name for name,n in wn.nodes()])
+    assert_equal(True, 'leak2' in [name for name,n in wn.nodes(wntr.network.Junction)])
+    assert_equal(True, 'pipe1' in [name for name,l in wn.links()])
+    assert_equal(True, 'pipe1' in [name for name,l in wn.links(wntr.network.Pipe)])
+    assert_equal(True, 'pipe1__B' in [name for name,l in wn.links()])
+    assert_equal(True, 'pipe1__B' in [name for name,l in wn.links(wntr.network.Pipe)])
+    assert_equal(pipe.end_node_name, 'leak1')
+    assert_equal(pipeB.start_node_name, 'leak2')
+    assert_equal(pipe.diameter, pipeB.diameter)
+    assert_equal(pipe.roughness, pipeB.roughness)
+    assert_equal(pipe.minor_loss, pipeB.minor_loss)
+    assert_equal(pipe.initial_status, pipeB.initial_status)
+    
+    
 def test_skeletonize():
     
     inp_file = join(datadir, 'skeletonize.inp')
@@ -191,10 +280,8 @@ def test_skeletonize_Net3():
 
     
 if __name__ == '__main__':
-    test_skeletonize()
-    test_skeletonize_with_controls()
-    test_series_merge_properties()
-    test_parallel_merge_properties()
-    test_skeletonize_Net3()
+    test_split_pipe()
+    test_break_pipe()
+
     
 
