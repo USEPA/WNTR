@@ -108,6 +108,17 @@ the 25th to 75th percentile (shaded region) for node pressure throughout the net
 Pressure differences are generally less than 2 meters in this example.
 
 .. doctest::
+    :hide:
+
+    >>> import wntr
+    >>> import numpy as np
+    >>> from __future__ import print_function
+    >>> try:
+    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net6.inp')
+    ... except:
+    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net6.inp')
+	
+.. doctest::
 
     >>> skel_wn = wntr.network.morph.skeletonize(wn, 12*0.0254)
     >>> wntr.graphics.plot_network(wn, title='Original') # doctest: +SKIP
