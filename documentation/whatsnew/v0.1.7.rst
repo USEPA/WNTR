@@ -12,4 +12,4 @@ v0.1.7 (Master branch)
   
 * Fixed bugs in network cost, average expected demand, and spectral gap metrics.
 * Fixed bug in reading initial water quality from INP files.
-* Updated installation instructions in documentation.
+* Updated documentation, including installation instructions and a section on network morphology.
