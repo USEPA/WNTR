@@ -7,6 +7,7 @@ import sys
 import copy
 import numpy as np
 import networkx as nx
+from scipy.spatial.distance import pdist
 try:
     import utm
 except:
@@ -14,6 +15,7 @@ except:
     
 from wntr.network.elements import Reservoir, Pipe, Junction
 from wntr.sim.core import WNTRSimulator
+from wntr.sim import EpanetSimulator
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +115,167 @@ def rotate_node_coordinates(wn, theta):
     
     return wn2
 
+
+def convert_node_coordinates_UTM_to_latlong(wn, zone_number, zone_letter):
+    """
+    Convert node coordinates from UTM coordinates to lat/long coordinates
+    
+    Parameters
+    -----------
+    wn: wntr WaterNetworkModel
+        A WaterNetworkModel object
+    
+    zone_number: int
+       Zone number
+    
+    zone_letter: string
+        Zone letter
+    
+    Returns
+    --------
+    A WaterNetworkModel object with updated node coordinates (latitude, longitude)
+    """
+    if utm is None:
+        raise ImportError('utm package is required')
+    
+    wn2 = _deepcopy(wn)
+    
+    for name, node in wn2.nodes():
+        pos = node.coordinates
+        lat, long = utm.to_latlon(pos[0], pos[1], zone_number, zone_letter)
+        node.coordinates = (long, lat)
+
+    return wn2
+
+
+def convert_node_coordinates_latlong_to_UTM(wn):
+    """
+    Convert node coordinates lat/long coordinates to UTM coordinates
+    
+    Parameters
+    -----------
+    wn: wntr WaterNetworkModel
+        A WaterNetworkModel object
+    
+    Returns
+    --------
+    A WaterNetworkModel object with updated node coordinates (easting, northing)
+    """
+    if utm is None:
+        raise ImportError('utm package is required')
+    
+    wn2 = _deepcopy(wn)
+    
+    for name, node in wn2.nodes():
+        pos = node.coordinates
+        (easting, northing) = utm.from_latlon(pos[0], pos[1])
+        node.coordinates = (easting, northing)
+
+    return wn2
+
+
+def convert_node_coordinates_to_UTM(wn, utm_map):
+    """
+    Convert node coordinates to UTM coordinates
+    
+    Parameters
+    -----------
+    utm_map: dictionary
+        Dictionary containing two node names and their x, y coordinates in 
+        UTM easting, northing in the format
+        {'node name 1': (easting, northing), 'node name 2': (easting, northing)}
+    
+    Returns
+    --------
+    A WaterNetworkModel object with updated node coordinates (easting, northing)
+    """
+    
+    wn2 = _convert_with_map(wn, utm_map, 'UTM')
+    
+    return wn2
+
+
+def convert_node_coordinates_to_latlong(wn, latlong_map):
+    """
+    Convert node coordinates to lat/long coordinates
+    
+    Parameters
+    -----------
+    latlong_map: dictionary
+        Dictionary containing two node names and their x, y coordinates in
+        latitude, longitude in the format
+        {'node name 1': (latitude, longitude), 'node name 2': (latitude, longitude)}
+    
+    Returns
+    --------
+    A WaterNetworkModel object with updated node coordinates (latitude, longitude)
+    """
+    
+    wn2 = _convert_with_map(wn, latlong_map, 'LATLONG')
+    
+    return wn2
+
+def _convert_with_map(wn, node_map, flag):
+    
+    if utm is None:
+        raise ImportError('utm package is required')
+    
+    if not len(node_map.keys()) == 2:
+        print('latlong_map must have exactly 2 entries')
+        return
+    
+    wn2 = _deepcopy(wn)
+    
+    node_names = list(node_map.keys())
+    
+    A = []
+    B = []
+    for node_name, coords in node_map.items():
+        A.append(np.array(wn2.get_node(node_name).coordinates))
+        if flag == 'LATLONG':
+            utm_coords = utm.from_latlon(coords[0], coords[1])
+            zone_number = utm_coords[2]
+            zone_letter = utm_coords[3] 
+            B.append(np.array(utm_coords[0:2])) # B is in UTM coords
+        elif flag == 'UTM':
+            B.append(np.array(coords[0], coords[1])) # B is in UTM coords
+    
+    # Rotate, if needed
+    vect1 = A[1] - A[0]
+    vect2 = B[1] - B[0]
+    vect1_unit = vect1/np.linalg.norm(vect1)
+    vect2_unit = vect2/np.linalg.norm(vect2)
+    dotproduct = np.dot(vect1_unit, vect2_unit)
+    if dotproduct < 1:
+        angle = np.arccos(dotproduct)*180/np.pi
+        #print('angle', angle)
+        wn2 = rotate_node_coordinates(wn2, angle)
+        A[0] = np.array(wn2.get_node(node_names[0]).coordinates)
+        A[1] = np.array(wn2.get_node(node_names[1]).coordinates)
         
+    # Compute center points
+    cpA = np.mean(A, axis=0)
+    cpB = np.mean(B, axis=0)
+    
+    # Compute distance to each center point
+    distA = np.mean([pdist([A[0], cpA])[0], pdist([A[1], cpA])[0]])     
+    distB = np.mean([pdist([B[0], cpB])[0], pdist([B[1], cpB])[0]])
+    
+    # Compute ratio
+    ratio = distB/distA
+    
+    for name, node in wn2.nodes():
+        pos = node.coordinates
+        (easting, northing) = (np.array(pos) - cpA)*ratio + cpB
+        if flag == 'LATLONG':
+            lat, long = utm.to_latlon(easting, northing, zone_number, zone_letter)
+            node.coordinates = (lat, long)
+        elif flag == 'UTM':
+            node.coordinates = (easting, northing)
+    
+    return wn2
+
+
 def split_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name,
                add_pipe_at_end=True, split_at_point=0.5):
     """
@@ -317,7 +479,8 @@ def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name,
 
 
 def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge=True, 
-                parallel_pipe_merge=True, max_cycles=None, return_map=False):
+                parallel_pipe_merge=True, max_cycles=None, simulator='EpanetSimulator', 
+                return_map=False):
     """
     Perform network skeletonization using branch trimming, series pipe merge, 
     and parallel pipe merge operations. Candidate pipes for removal is based 
@@ -358,7 +521,7 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
     A skeletonized WaterNetworkModel object and (if return_map = True) a 
     skeletonization map.
     """
-    skel = _Skeletonize(wn)
+    skel = _Skeletonize(wn, simulator)
     
     skel.run(pipe_diameter_threshold, branch_trim, series_pipe_merge, 
              parallel_pipe_merge, max_cycles)
@@ -371,7 +534,7 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
 		
 class _Skeletonize(object):
     
-    def __init__(self, wn):
+    def __init__(self, wn, simulator):
         
         # Get a copy of the WaterNetworkModel
         self.wn = _deepcopy(wn)
@@ -401,7 +564,10 @@ class _Skeletonize(object):
         
         # Calculate pipe headloss using a single period EPANET simulation
         duration = self.wn.options.time.duration
-        sim = WNTRSimulator(self.wn)
+        if simulator == 'WNTRSimulator':
+            sim = WNTRSimulator(self.wn)
+        else:
+            sim = EpanetSimulator(self.wn)
         self.wn.options.time.duration = 0
         results = sim.run_sim()
         head = results.node['head']
