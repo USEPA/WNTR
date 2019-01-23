@@ -114,7 +114,7 @@ def test_skeletonize():
     expected_nums.loc[36,:] = [wn.num_nodes-29, wn.num_links-34]
     
     for i in [0,4,8,12,24,36]:
-        skel_wn, skel_map = wntr.network.morph.skeletonize(wn, float(i)*0.0254, return_map=True)
+        skel_wn, skel_map = wntr.network.morph.skeletonize(wn, float(i)*0.0254, return_map=True, use_epanet=False)
         
         demand =  wntr.metrics.expected_demand(skel_wn)
         total_demand = demand.loc[0,:].sum()
@@ -164,7 +164,7 @@ def test_skeletonize_with_controls():
     control = wntr.network.Control(condition=condition, then_action=action)
     wn.add_control('raise_node', control)
     
-    skel_wn = wntr.network.morph.skeletonize(wn, 12.0*0.0254)
+    skel_wn = wntr.network.morph.skeletonize(wn, 12.0*0.0254, use_epanet=False)
     
     assert_equal(skel_wn.num_nodes, wn.num_nodes-17)
     assert_equal(skel_wn.num_links, wn.num_links-22)
@@ -177,7 +177,7 @@ def test_skeletonize_with_controls():
     link = wn.get_link('11')
     link.diameter = 16*0.0254
     
-    skel_wn = wntr.network.morph.skeletonize(wn, 12.0*0.0254)
+    skel_wn = wntr.network.morph.skeletonize(wn, 12.0*0.0254, use_epanet=False)
     
     assert_equal(skel_wn.num_nodes, wn.num_nodes-17)
     assert_equal(skel_wn.num_links, wn.num_links-22)
@@ -203,7 +203,7 @@ def test_series_merge_properties():
     wn.options.time.duration = 0
     
     skel_wn = wntr.network.morph.skeletonize(wn, 8, branch_trim=False, 
-            series_pipe_merge=True, parallel_pipe_merge=False, max_cycles=1)
+            series_pipe_merge=True, parallel_pipe_merge=False, max_cycles=1, use_epanet=False)
     
     link = skel_wn.get_link('P12') # pipe P12 is the dominant pipe
     
@@ -232,7 +232,7 @@ def test_parallel_merge_properties():
     wn.options.time.duration = 0
     
     skel_wn = wntr.network.morph.skeletonize(wn, 300, branch_trim=False, 
-            series_pipe_merge=False, parallel_pipe_merge=True, max_cycles=1)
+            series_pipe_merge=False, parallel_pipe_merge=True, max_cycles=1, use_epanet=False)
 
     link = skel_wn.get_link('P12b') # pipe P12b is the dominant pipe
     
@@ -247,7 +247,7 @@ def test_skeletonize_Net3():
     
     inp_file = join(netdir, 'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    skel_wn = wntr.network.morph.skeletonize(wn, 36.0*0.0254)
+    skel_wn = wntr.network.morph.skeletonize(wn, 36.0*0.0254, use_epanet=False)
     
     assert_equal(wn.num_junctions, 92)
     assert_equal(skel_wn.num_junctions, 45)
