@@ -9,6 +9,8 @@ dependencies:
     - pandas
     - matplotlib
     - plotly
+    - folium
+    - utm
     - nose
     - openpyxl
     - pip:

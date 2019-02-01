@@ -9,6 +9,7 @@ dependencies:
     - pandas
     - matplotlib
     - plotly
+    - folium
     - nose
     - enum34
     - openpyxl
