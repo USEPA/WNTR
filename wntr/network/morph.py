@@ -223,7 +223,7 @@ def _convert_with_map(wn, node_map, flag):
         raise ImportError('utm package is required')
     
     if not len(node_map.keys()) == 2:
-        print('latlong_map must have exactly 2 entries')
+        print('map must have exactly 2 entries')
         return
     
     wn2 = _deepcopy(wn)
