@@ -143,7 +143,7 @@ def convert_node_coordinates_UTM_to_latlong(wn, zone_number, zone_letter):
     for name, node in wn2.nodes():
         pos = node.coordinates
         lat, long = utm.to_latlon(pos[0], pos[1], zone_number, zone_letter)
-        node.coordinates = (long, lat)
+        node.coordinates = (lat, long)
 
     return wn2
 
@@ -168,7 +168,9 @@ def convert_node_coordinates_latlong_to_UTM(wn):
     
     for name, node in wn2.nodes():
         pos = node.coordinates
-        (easting, northing) = utm.from_latlon(pos[0], pos[1])
+        utm_coords = utm.from_latlon(pos[0], pos[1])
+        easting = utm_coords[0]
+        northing = utm_coords[1]
         node.coordinates = (easting, northing)
 
     return wn2

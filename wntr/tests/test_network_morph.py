@@ -38,6 +38,7 @@ def test_translate_node_coordinates():
     assert_equal(coord[0]+5, coord2[0])
     assert_equal(coord[1]+10, coord2[1])
     
+    
 def test_rotate_node_coordinates():
     
     wn = wntr.network.WaterNetworkModel()
@@ -49,6 +50,45 @@ def test_rotate_node_coordinates():
     
     assert_almost_equal(np.sqrt(2), coord2[0], 6)
     assert_almost_equal(np.sqrt(2), coord2[1], 6)
+
+
+def test_UTM_to_latlong_to_UTM():
+    
+    wn = wntr.network.WaterNetworkModel()
+    wn.add_junction('J1', base_demand=5, elevation=100.0, 
+                    coordinates=(351521.07,3886097.33))
+    
+    wn2 = wntr.network.morph.convert_node_coordinates_UTM_to_latlong(wn, 13, 'S')
+    node2 = wn2.get_node('J1')
+    coord2 = node2.coordinates
+    
+    assert_almost_equal(35.106766, coord2[0], 6)
+    assert_almost_equal(-106.629181, coord2[1], 6)
+    
+    wn3 = wntr.network.morph.convert_node_coordinates_latlong_to_UTM(wn2)
+    node3 = wn3.get_node('J1')
+    coord3 = node3.coordinates
+    
+    assert_almost_equal(351521.07, coord3[0], 1)
+    assert_almost_equal(3886097.33, coord3[1], 1)
+
+
+def test_convert_node_coordinates_to_latlong():
+   
+    inp_file = join(netdir, 'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    latlong_map = {'Lake':(35.0623, -106.6587), 
+                   '219': (35.1918, -106.5248)}
+    
+    wn2 = wntr.network.morph.convert_node_coordinates_to_latlong(wn, latlong_map)
+    
+    for node_name in latlong_map.keys():
+        node = wn2.get_node(node_name)
+        coord = node.coordinates
+        print(coord)
+        assert_almost_equal(latlong_map[node_name][0], coord[0], 4)
+        assert_almost_equal(latlong_map[node_name][1], coord[1], 4)
+    
     
 def test_split_pipe():
         
@@ -280,8 +320,4 @@ def test_skeletonize_Net3():
 
     
 if __name__ == '__main__':
-    test_split_pipe()
-    test_break_pipe()
-
-    
-
+    test_convert_node_coordinates_to_latlong()

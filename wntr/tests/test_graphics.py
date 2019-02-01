@@ -39,6 +39,23 @@ def test_plot_interactive_network1():
     
     assert_true(isfile(filename))
 
+def test_plot_leaflet_network1():
+
+    filename = abspath(join(testdir, 'plot_leaflet_network1.html'))
+    if isfile(filename):
+        os.remove(filename)
+        
+    inp_file = join(ex_datadir,'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    latlong_map = {'Lake':(35.0623, -106.6587), 
+                   '219': (35.1918, -106.5248)}
+    wn2 = wntr.network.morph.convert_node_coordinates_to_latlong(wn, latlong_map)
+    
+    plt.figure()
+    wntr.graphics.plot_leaflet_network(wn2, filename=filename)
+    
+    assert_true(isfile(filename))
+    
 def test_plot_fragility_curve1():
     from scipy.stats import lognorm
     filename = abspath(join(testdir, 'plot_fragility_curve1.png'))
@@ -78,5 +95,5 @@ def test_custom_colormap():
     assert_equal(cmp.name,'custom')
     
 if __name__ == '__main__':
-    cmp = test_custom_colormap()
+    test_plot_leaflet_network1()
     
