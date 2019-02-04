@@ -364,7 +364,7 @@ class WaterNetworkModel(AbstractModel):
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
-                 min_vol=None, vol_curve=None, coordinates=None):
+                 min_vol=0.0, vol_curve=None, coordinates=None):
         """
         Adds a tank to the water network model
 
@@ -2303,7 +2303,7 @@ class NodeRegistry(Registry):
 
     def add_tank(self, name, elevation=0.0, init_level=3.048,
                  min_level=0.0, max_level=6.096, diameter=15.24,
-                 min_vol=None, vol_curve=None, coordinates=None):
+                 min_vol=0.0, vol_curve=None, coordinates=None):
         """
         Adds a tank to the water network model.
 
@@ -2339,8 +2339,7 @@ class NodeRegistry(Registry):
         min_level = float(min_level)
         max_level = float(max_level)
         diameter = float(diameter)
-        if min_vol is not None:
-            min_vol = float(min_vol)
+        min_vol = float(min_vol)
         if init_level < min_level:
             raise ValueError("Initial tank level must be greater than or equal to the tank minimum level.")
         if init_level > max_level:

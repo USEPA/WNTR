@@ -19,7 +19,8 @@ earthquake = wntr.scenario.Earthquake(epicenter, magnitude, depth)
 # Compute PGA
 R = earthquake.distance_to_epicenter(wn, element_type=wntr.network.Pipe)
 pga = earthquake.pga_attenuation_model(R)  
-wntr.graphics.plot_network(wn, link_attribute=pga,title='Peak Ground Acceleration (g)')
+wntr.graphics.plot_network(wn, link_attribute=pga,title='Peak Ground Acceleration (g)',
+                           node_size=0, link_width=2)
   
 # Define fragility curve  
 FC = wntr.scenario.FragilityCurve()
@@ -32,6 +33,6 @@ pipe_PEDS = FC.cdf_probability(pga)
 pipe_damage_state = FC.sample_damage_state(pipe_PEDS)
 pipe_damage_state_map = FC.get_priority_map()
 val = pipe_damage_state.map(pipe_damage_state_map)
-custom_cmp = wntr.graphics.custom_colormap(3, ['black', 'cyan', 'red'])
-wntr.graphics.plot_network(wn, link_attribute=val, link_cmap = custom_cmp,
-                        title='Damage state, 0 = None, 1 = Minor, 2 = Major')
+custom_cmp = wntr.graphics.custom_colormap(3, ['grey', 'royalblue', 'darkorange'])
+wntr.graphics.plot_network(wn, link_attribute=val, node_size=0, link_width=2,
+                           link_cmap=custom_cmp, title='Damage state: 0=None, 1=Minor, 2=Major')
