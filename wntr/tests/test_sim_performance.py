@@ -230,6 +230,7 @@ class TestPerformance(unittest.TestCase):
         self.assertLess(demand_diff.std().mean(), 3.6e-7)
         self.assertLess(flow_diff.std().mean(), 5.7e-7)
 
+    @unittest.skip('This test takes a long time')
     def test_Net6_mod_performance(self):
         t0 = time.time()
 
