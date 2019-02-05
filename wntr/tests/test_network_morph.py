@@ -1,5 +1,6 @@
 from nose.tools import *
 from nose import SkipTest
+import sys
 from os.path import abspath, dirname, join
 import pandas as pd
 import numpy as np
@@ -54,6 +55,9 @@ def test_rotate_node_coordinates():
 
 def test_UTM_to_latlong_to_UTM():
     
+    if (sys.version_info.major == 3) and (sys.version_info.minor == 4):
+        raise SkipTest # skip if python version == 3.4
+        
     wn = wntr.network.WaterNetworkModel()
     wn.add_junction('J1', base_demand=5, elevation=100.0, 
                     coordinates=(351521.07,3886097.33))
@@ -74,7 +78,10 @@ def test_UTM_to_latlong_to_UTM():
 
 
 def test_convert_node_coordinates_to_latlong():
-   
+    
+    if (sys.version_info.major == 3) and (sys.version_info.minor == 4):
+        raise SkipTest # skip if python version == 3.4
+        
     inp_file = join(netdir, 'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
     latlong_map = {'Lake':(35.0623, -106.6587), 
