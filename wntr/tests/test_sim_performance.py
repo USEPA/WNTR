@@ -230,15 +230,14 @@ class TestPerformance(unittest.TestCase):
         self.assertLess(demand_diff.std().mean(), 3.6e-7)
         self.assertLess(flow_diff.std().mean(), 5.7e-7)
 
-    @unittest.skip('This test takes a long time')
     def test_Net6_mod_performance(self):
         t0 = time.time()
 
         inp_file = join(ex_datadir,'Net6.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.duration = 24*3600
-        wn.options.time.hydraulic_timestep = 60
-        wn.options.time.report_timestep = 60
+        wn.options.time.hydraulic_timestep = 3660
+        wn.options.time.report_timestep = 3660
         wn.remove_control('control 72')  # this control never gets activated in epanet because it uses a threshold equal to the tank max level
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
