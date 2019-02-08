@@ -73,7 +73,7 @@ def plot_fragility_curve(FC, fill=True, key='Default',
     plt.ylabel(ylabel)
     plt.legend()
 
-def plot_pump_curve(pump, title='Pump curve', 
+def plot_pump_curve(pump, add_polyfit=True, title='Pump curve', 
                     xmin=0, xmax=None, ymin=0, ymax=None, 
                     xlabel='Head (m)', 
                     ylabel='Flow (m3/s)',
@@ -83,12 +83,15 @@ def plot_pump_curve(pump, title='Pump curve',
     
     Parameters
     -----------
-    pump : wntr.scenario.Pump object
+    pump : wntr.network.elements.Pump object
         Pump
         
+    add_polyfit: bool (optional)
+        Add a 2nd order polynomial fit to the points in the curve
+    
     title : string (optional)
         Plot title
-    
+
     xmin : float (optional)
         X axis minimum (default = 0)
     
@@ -109,6 +112,10 @@ def plot_pump_curve(pump, title='Pump curve',
     
     figsize : list (optional)
         Figure size (default = [8,4])
+        
+    Returns
+    ---------
+    If add_polyfit = True, the polynomial is returned
     """
     try:
         curve = pump.get_pump_curve()
@@ -126,15 +133,26 @@ def plot_pump_curve(pump, title='Pump curve',
     for pt in curve.points:
         x.append(pt[0])
         y.append(pt[1])
-    plt.scatter(x,y)
-    plt.plot(x,y, label=curve.name)    
+    
+    if add_polyfit:
+        z = np.polyfit(x, y, 2)
+        f = np.poly1d(z)
+        fx = np.linspace(0, f.roots[-1], 50)
+        fy = f(fx)
+        plt.plot(fx, fy, '--', linewidth=1)
+    
+    plt.plot(x, y, 'o', label=curve.name)    
+    
     if xmax is None:
-        xmax = max(x)
+        xmax = max(fx+fx/20)
     if ymax is None:
-        ymax = max(y)
+        ymax = max(fy+fy/20)
     plt.xlim((xmin,xmax))
     plt.ylim((ymin,ymax))
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend()
+    
+    if add_polyfit:
+        return f
     

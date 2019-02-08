@@ -5,7 +5,7 @@
 Network morphology
 ======================================
 
-The water network model morphology can be modified is several ways using WNTR, including
+The :class:`wntr.network.morph` module includes several functions to modify water network model morphology, including
 network skeletonization, 
 modifying node coordinates, and 
 split or break pipes.
@@ -150,6 +150,7 @@ Pressure differences are generally less than 2 meters in this example.
    
    Pressure differences between the original and skeletonized Net6.
 
+.. _modify_node_coords:
 
 Modify node coordinates
 ----------------------------
@@ -168,7 +169,18 @@ WNTR includes several functions to modify node coordinates, denoted as :math:`(x
    
    .. math:: (x, y) = \begin{bmatrix} cos(\theta) & -sin(\theta) \\sin(\theta) & cos(\theta) \end{bmatrix} \boldsymbol{\cdot} (x, y)
 
-For example, the following example returns a copy of the water network model with 
+4. :class:`~wntr.network.morph.convert_node_coordinates_UTM_to_latlong` and :class:`~wntr.network.morph.convert_node_coordinates_latlong_to_UTM` 
+   which converts node coordinates from UTM to latitude/longitude or visa-versa.  
+   **These functions require the Python package utm, which is an optional dependency of WNTR.**  
+   
+5. :class:`~wntr.network.morph.convert_node_coordinates_to_UTM` and :class:`~wntr.network.morph.convert_node_coordinates_to_latlong` 
+   which converts node coordinates from arbitrary distance units directly into UTM or latitude/longitude. 
+   **These functions require the Python package utm, which is an optional dependency of WNTR.**    
+   The user supplies the names of two nodes in their network along with their
+   UTM or latitude/longitude coordinates.  Ideally, these nodes span a decent range of the network (for example, 
+   the nodes could be in the upper right and lower left).
+
+The following example returns a copy of the water network model with 
 node coordinates scaled by 100 m.
 
 .. doctest::
@@ -185,6 +197,13 @@ node coordinates scaled by 100 m.
 .. doctest::
 
     >>> wn_scaled_coord = wntr.network.morph.scale_node_coordinates(wn, 100)
+
+The next example converts node coordinates to latitude/longitude.
+
+.. doctest::
+
+    >>> latlong_map = {'Lake':(35.0623, -106.6587), '219': (35.1918, -106.5248)}
+    >>> wn_latlong = wntr.network.morph.scale_node_coordinates(wn, latlong_map)
 
 .. _split_break_pipes:
 

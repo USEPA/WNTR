@@ -138,6 +138,10 @@ The following Python packages are optional:
   http://matplotlib.org/
 * Plotly [SPHC16]_: used to produce interactive scalable figures, 
   https://plot.ly/
+* folium [Filip19]_: used to produce Leaflet maps, 
+  http://python-visualization.github.io/folium/
+* utm [Bieni19]_: used to translate node coordinates to utm and lat/long (**Note, utm is not compatible with Python 3.4**),
+  https://pypi.org/project/utm/
 * openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
 * Numpydoc [VaCV11]_: used to build the user manual,

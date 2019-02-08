@@ -217,7 +217,7 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
                link_width=1, add_colorbar=True, reverse_colormap=False,
                figsize=[700, 450], round_ndigits=2, filename=None, auto_open=True):
     """
-    Create an interactive scalable network graphic using networkx and plotly.  
+    Create an interactive scalable network graphic using plotly.  
 
     Parameters
     ----------
@@ -382,15 +382,78 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         plotly.offline.plot(fig, auto_open=auto_open)  
 
 def plot_leaflet_network(wn, node_attribute=None, link_attribute=None, 
-               node_size=2, node_range=[None,None], node_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
-               node_cmap_bins = 'cut', node_labels=True,
-               link_width=2, link_range=[None,None], link_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
-               link_cmap_bins = 'cut', link_labels=True,
+               node_size=2, node_range=[None,None], 
+               node_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
+               node_cmap_bins='cut', node_labels=True,
+               link_width=2, link_range=[None,None], 
+               link_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
+               link_cmap_bins='cut', link_labels=True,
                add_legend=False, round_ndigits=2, zoom_start=13, 
                add_latlong_popup=False, filename='folium.html'):
-    
     """
-    Create the network on a Leaflet map using folium.  
+    Create an interactive scalable network graphic on a Leaflet map using folium.  
+
+    Parameters
+    ----------
+    wn : wntr WaterNetworkModel
+        A WaterNetworkModel object
+
+    node_attribute : str, list, pd.Series, or dict, optional
+        (default = None)
+
+        - If node_attribute is a string, then a node attribute dictionary is
+          created using node_attribute = wn.query_node_attribute(str)
+        - If node_attribute is a list, then each node in the list is given a 
+          value of 1.
+        - If node_attribute is a pd.Series, then it should be in the format
+          {nodeid: x} where nodeid is a string and x is a float. 
+        - If node_attribute is a dict, then it should be in the format
+          {nodeid: x} where nodeid is a string and x is a float
+
+    link_attribute : str, list, pd.Series, or dict, optional
+        (default = None)
+
+        - If link_attribute is a string, then a link attribute dictionary is
+          created using edge_attribute = wn.query_link_attribute(str)
+        - If link_attribute is a list, then each link in the list is given a 
+          value of 1.
+        - If link_attribute is a pd.Series, then it should be in the format
+          {linkid: x} where linkid is a string and x is a float. 
+        - If link_attribute is a dict, then it should be in the format
+          {linkid: x} where linkid is a string and x is a float.
+
+    node_size : int, optional
+        Node size (default = 10)
+
+    node_range : list, optional
+        Node range (default = [None,None], autoscale)
+
+    node_cmap : list of color names, optional
+        Node colors 
+    
+    node_cmap_bins: string, optional
+        Node color bins, 'cut' or 'qcut'
+    
+    node_labels: bool, optional
+        If True, the graph will include each node labelled with its name. 
+        (default = False)
+        
+    link_width : int, optional
+        Link width (default = 1)
+
+    link_range : list, optional
+        Link range (default = [None,None], autoscale)
+
+    link_cmap : list of color names, optional
+        Link colors
+    
+    link_cmap_bins: string, optional
+        Link color bins, 'cut' or 'qcut'
+        
+    link_labels: bool, optional
+        If True, the graph will include each link labelled with its name. 
+        (default = False)
+
     """
     if folium is None:
         raise ImportError('folium is required')
