@@ -8,7 +8,7 @@ Network morphology
 The water network model morphology can be modified is several ways using WNTR, including
 network skeletonization, 
 modifying node coordinates, and 
-split or break pipes.
+splitting or breaking pipes.
 
 Network skeletonization
 ----------------------------
@@ -20,7 +20,7 @@ Pipes that falls below a user defined pipe diameter threshold are candidates for
 
 1. **Branch trimming**: Dead-end pipes that are below the pipe diameter threshold are removed from the model (:numref:`fig-branch-trim`).  
    The demand and demand pattern assigned to the dead-end junction is moved to the junction that is retained in the model.  
-   Dead-end pipes that are connected to tanks or reservoirs cannot be removed from the model.
+   Dead-end pipes that are connected to tanks or reservoirs are not removed from the model.
    
 	.. _fig-branch-trim:
 	.. figure:: figures/skel_branch.png
@@ -42,7 +42,7 @@ Pipes that falls below a user defined pipe diameter threshold are candidates for
    :math:`L_{m}` is the length of the merged pipe, :math:`L_{1}` and :math:`L_{2}` are the lengths of the original pipes, 
    :math:`C_{m}` is the Hazen-Williams roughness coefficient of the merged pipe, and :math:`C_{1}` and :math:`C_{2}` are the Hazen-Williams roughness coefficients of the original pipes. 
    Note, if the original pipes have the same diameter, :math:`D_{m}` is based on the pipe name that comes first in alphabetical order.
-   Minor loss and pipe status of the merged pipe are set equal to minor loss and pipe status for the pipe selected for max diameter.
+   Minor loss and pipe status of the merged pipe are set equal to the minor loss and pipe status for the pipe selected for max diameter.
    
 	.. _fig-series-merge:
 	.. figure:: figures/skel_series.png
@@ -64,7 +64,7 @@ Pipes that falls below a user defined pipe diameter threshold are candidates for
    :math:`L_{m}` is the length of the merged pipe, :math:`L_{1}` and :math:`L_{2}` are the lengths of the original pipes, 
    :math:`C_{m}` is the Hazen-Williams roughness coefficient of the merged pipe, and :math:`C_{1}` and :math:`C_{2}` are the Hazen-Williams roughness coefficients of the original pipes. 
    Note, if the original pipes have the same diameter, :math:`D_{m}` is based on the pipe name that comes first in alphabetical order.
-   Minor loss and pipe status of the merged pipe are set equal to minor loss and pipe status for the pipe selected for max diameter.
+   Minor loss and pipe status of the merged pipe are set equal to the minor loss and pipe status for the pipe selected for max diameter.
    
    .. _fig-parallel-merge:
    .. figure:: figures/skel_parallel.png
@@ -98,7 +98,7 @@ part of network skeletonization, then the skeletonization map would contain the 
 This map indicates that the skeletonized network does not contain 'Junction 1', and that 'Junction 2' in the 
 skeletonized network is the merged product of the original 'Junction 1' and 'Junction 2'.  
 'Junction 2' in the skeletonized network will therefore contain demand and demand patterns from 
-the original 'Junction 1' and 'Junction 2'
+the original 'Junction 1' and 'Junction 2'.
 
 The following example performs network skeletonization on Net6 using a pipe diameter threshold of 12 inches.
 The skeletonization procedure reduces the number of nodes in the network from approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
@@ -168,7 +168,7 @@ WNTR includes several functions to modify node coordinates, denoted as :math:`(x
    
    .. math:: (x, y) = \begin{bmatrix} cos(\theta) & -sin(\theta) \\sin(\theta) & cos(\theta) \end{bmatrix} \boldsymbol{\cdot} (x, y)
 
-For example, the following example returns a copy of the water network model with 
+The following example returns a copy of the water network model with 
 node coordinates scaled by 100 m.
 
 .. doctest::
@@ -194,17 +194,17 @@ Split or break pipes
 WNTR includes the functions :class:`~wntr.network.morph.split_pipe` 
 and :class:`~wntr.network.morph.break_pipe` to split or break a pipe.
 
-For a pipe split, the original pipe into two pipes by adding a new 
+For a pipe split, the original pipe is split into two pipes by adding a new 
 junction and new pipe to the model.  
-For a pipe break, the original pipe into two disconnected pipes by 
-adding two new junctions and new pipe to the model.  
+For a pipe break, the original pipe is broken into two disconnected pipes by 
+adding two new junctions and a new pipe to the model.  
 **With a pipe break, there is no longer flow possible from one side of the break to the other. 
 This is more likely to 
 introduce non-convergable hydraulics than a pipe split with a leak 
 added.**
 
 The updated model retains the original length of the pipe section. 
-The split occurs at a user specified distance between the 
+The split or break occurs at a user specified distance between the 
 original start and end nodes of the pipe (in that direction). 
 The new pipe can be added to either end of the original pipe. 
     
