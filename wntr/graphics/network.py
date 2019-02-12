@@ -386,7 +386,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                node_cmap_bins = 'cut', node_labels=True,
                link_width=2, link_range=[None,None], link_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
                link_cmap_bins = 'cut', link_labels=True,
-               add_legend=False, round_ndigits=2, zoom_start=13, 
+               add_legend=False, node_legend_title = "Node Legend", link_legend_title = 'Link Legend', round_ndigits=2, zoom_start=13, 
                add_latlong_popup=False, filename='folium.html'):
     
     """
@@ -479,33 +479,34 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
             folium.PolyLine([start_loc, end_loc], popup=popup, color=color, 
                             weight=weight, opacity=0.7).add_to(m)
     
-    if (add_legend) & (len(node_cmap) > 1) & (len(link_cmap) > 1):
-        height=0
-        if node_attribute is not None:
-            height = height + 50+len(node_cmap)*20
-        if link_attribute is not None:
-            height= height + 50+len(link_cmap)*20
-        legend_html = """<div style="position: fixed; 
+    if (add_legend) & ((len(node_cmap) >= 1) or (len(link_cmap) >= 1)):
+        if node_attribute is not None:  #Produce node legend
+            height = 50+len(node_cmap)*20 + (int(len(node_legend_title)/20) + 1)*20
+            node_legend_html = """<div style="position: fixed; 
         bottom: 50px; left: 50px; width: 150px; height: """+str(height)+"""px; 
-        background-color:white;z-index:9999; font-size:14px; ">"""
-        if (node_attribute is not None) & (len(node_cmap) > 1):
-            legend_html = legend_html + """<br>
-            &nbsp;&nbsp;&nbsp; <b>Node legend</b> <br> """
+        background-color:white;z-index:9999; font-size:14px; "><br>
+            <b><P ALIGN=CENTER>""" + node_legend_title + """</b> </P>"""
             for color, val in zip(node_cmap, node_bins[0:-1]):
                 val = '{:.{prec}f}'.format(val, prec=round_ndigits)
-                legend_html = legend_html + """
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-circle fa-1x" 
+                node_legend_html += """
+                &emsp;<i class="fa fa-circle fa-1x" 
                 style="color:"""+ color +""" "></i> >= """+ val +""" <br>"""
-        if (link_attribute is not None) & (len(link_cmap) > 1):
-            legend_html = legend_html + """<br>
-            &nbsp;&nbsp;&nbsp; <b>Link legend</b> <br>"""
+            node_legend_html += """</div>"""
+            m.get_root().html.add_child(folium.Element(node_legend_html))
+			
+        if link_attribute is not None:   #Produce link legend
+            height = 50+len(link_cmap)*20 + (int(len(link_legend_title)/20) + 1)*20
+            link_legend_html = """<div style="position: fixed; 
+			bottom: 50px; left: 250px; width: 150px; height: """+str(height)+"""px; 
+			background-color:white;z-index:9999; font-size:14px; "><br>
+            <b><P ALIGN=CENTER>""" + link_legend_title + """</b> </P>"""
             for color, val in zip(link_cmap, link_bins[0:-1]):
                 val = '{:.{prec}f}'.format(val, prec=round_ndigits)
-                legend_html = legend_html + """
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-square fa-1x" 
+                link_legend_html += """
+               &emsp;<i class="fa fa-minus fa-1x" 
                 style="color:"""+ color +""" "></i> >= """+ val +""" <br>"""
-        legend_html = legend_html + """</div>"""
-        m.get_root().html.add_child(folium.Element(legend_html))
+            link_legend_html += """</div>"""
+            m.get_root().html.add_child(folium.Element(link_legend_html))
     
     #plugins.Search(points, search_zoom=20, ).add_to(m)
     if add_latlong_popup:
