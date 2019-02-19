@@ -5,7 +5,7 @@
 Network morphology
 ======================================
 
-The water network model morphology can be modified is several ways using WNTR, including
+The water network model morphology can be modified in several ways using WNTR, including
 network skeletonization, 
 modifying node coordinates, and 
 splitting or breaking pipes.
@@ -16,7 +16,8 @@ The goal of network skeletonization is to reduce the size of a water network mod
 Network skeletonization in WNTR follows the procedure outlined in [WCSG03]_.  
 The skeletonization process retains all tanks, reservoirs, valves, and pumps, along with all junctions and pipes that are associated with controls.
 Junction demands and demand patterns are retained in the skeletonized model, as described below.
-Pipes that falls below a user defined pipe diameter threshold are candidates for removal based on three operations, including:
+Merged pipes are assigned equivalent properties for diameter, length, and roughness to approximate the updated system behavoir.
+Pipes that fall below a user defined pipe diameter threshold are candidates for removal based on three operations, including:
 
 1. **Branch trimming**: Dead-end pipes that are below the pipe diameter threshold are removed from the model (:numref:`fig-branch-trim`).  
    The demand and demand pattern assigned to the dead-end junction is moved to the junction that is retained in the model.  
@@ -41,8 +42,8 @@ Pipes that falls below a user defined pipe diameter threshold are candidates for
    :math:`D_{m}` is the diameter of the merged pipe, :math:`D_{1}` and :math:`D_{2}` are the diameters of the original pipes, 
    :math:`L_{m}` is the length of the merged pipe, :math:`L_{1}` and :math:`L_{2}` are the lengths of the original pipes, 
    :math:`C_{m}` is the Hazen-Williams roughness coefficient of the merged pipe, and :math:`C_{1}` and :math:`C_{2}` are the Hazen-Williams roughness coefficients of the original pipes. 
-   Note, if the original pipes have the same diameter, :math:`D_{m}` is based on the pipe name that comes first in alphabetical order.
    Minor loss and pipe status of the merged pipe are set equal to the minor loss and pipe status for the pipe selected for max diameter.
+   Note, if the original pipes have the same diameter, :math:`D_{m}` is based on the pipe name that comes first in alphabetical order.
    
 	.. _fig-series-merge:
 	.. figure:: figures/skel_series.png
@@ -63,8 +64,8 @@ Pipes that falls below a user defined pipe diameter threshold are candidates for
    :math:`D_{m}` is the diameter of the merged pipe, :math:`D_{1}` and :math:`D_{2}` are the diameters of the original pipes, 
    :math:`L_{m}` is the length of the merged pipe, :math:`L_{1}` and :math:`L_{2}` are the lengths of the original pipes, 
    :math:`C_{m}` is the Hazen-Williams roughness coefficient of the merged pipe, and :math:`C_{1}` and :math:`C_{2}` are the Hazen-Williams roughness coefficients of the original pipes. 
-   Note, if the original pipes have the same diameter, :math:`D_{m}` is based on the pipe name that comes first in alphabetical order.
    Minor loss and pipe status of the merged pipe are set equal to the minor loss and pipe status for the pipe selected for max diameter.
+   Note, if the original pipes have the same diameter, :math:`D_{m}` is based on the pipe name that comes first in alphabetical order.
    
    .. _fig-parallel-merge:
    .. figure:: figures/skel_parallel.png
@@ -83,20 +84,22 @@ The user can specify if branch trimming, series pipe merge, and/or parallel pipe
 The user can also specify a maximum number of cycles to include in the process.
 
 Results from network skeletonization include the skeletonized water network model and (optionally) 
-a "skeletonization map" which maps original network nodes to skeletonized network nodes.  
+a "skeletonization map" which maps original network nodes to merged nodes that are represented in the skeletonized network.  
 The skeletonization map is a dictionary where 
 the keys are original network nodes and 
-the values are a list of nodes in the skeletonized network that were merged as a result of skeletonization operations.  
-For example, if 'Junction 1' was merged into 'Junction 2' as 
+the values are a list of nodes in the network that were merged as a result of skeletonization operations.  
+For example, if 'Junction 1' was merged into 'Junction 2' and 'Junction 3' remained unchanged as
 part of network skeletonization, then the skeletonization map would contain the following information::
 
 	{
 	'Junction 1': [],
-	'Junction 2': ['Junction 1', 'Junction 2']
+	'Junction 2': ['Junction 1', 'Junction 2'],
+	'Junction 3': ['Junction 3']
 	}
 
-This map indicates that the skeletonized network does not contain 'Junction 1', and that 'Junction 2' in the 
-skeletonized network is the merged product of the original 'Junction 1' and 'Junction 2'.  
+This map indicates that the skeletonized network does not contain 'Junction 1', 'Junction 2' in the 
+skeletonized network is the merged product of the original 'Junction 1' and 'Junction 2', and 
+'Junction 3' was not changed. 
 'Junction 2' in the skeletonized network will therefore contain demand and demand patterns from 
 the original 'Junction 1' and 'Junction 2'.
 
@@ -105,7 +108,7 @@ The skeletonization procedure reduces the number of nodes in the network from ap
 After simulating hydraulics on both the original and skeletonized network, node pressure can be compared to 
 determine how skeletonization impacts system behavoir. :numref:`fig-skel-hydraulics` shows the median (dark blue line) and 
 the 25th to 75th percentile (shaded region) for node pressure throughout the network over a 4 day simulation.
-Pressure differences are generally less than 2 meters in this example.
+Pressure differences are generally less than 5% in this example.
 
 .. doctest::
     :hide:
@@ -141,7 +144,7 @@ Pressure differences are generally less than 2 meters in this example.
     >>> results_skel = sim.run_sim()
     >>> pressure_orig = results_original.node['pressure'].loc[:,skel_wn.junction_name_list]
     >>> pressure_skel = results_skel.node['pressure'].loc[:,skel_wn.junction_name_list]
-    >>> pressure_diff = abs(pressure_orig - pressure_skel)
+    >>> pressure_diff = (abs(pressure_orig - pressure_skel)/pressure_orig)*100
 
 .. _fig-skel-hydraulics:
 .. figure:: figures/skel_hydraulics.png
