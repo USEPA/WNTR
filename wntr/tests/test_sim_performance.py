@@ -236,8 +236,8 @@ class TestPerformance(unittest.TestCase):
         inp_file = join(ex_datadir,'Net6.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         wn.options.time.duration = 24*3600
-        wn.options.time.hydraulic_timestep = 3660
-        wn.options.time.report_timestep = 3660
+        wn.options.time.hydraulic_timestep = 3600
+        wn.options.time.report_timestep = 3600
         wn.remove_control('control 72')  # this control never gets activated in epanet because it uses a threshold equal to the tank max level
         sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
