@@ -252,3 +252,10 @@ The WNTRSimulator includes the ability to
 These features are helpful when evaluating various response action plans or when 
 simulating long periods of time where the time resolution might vary.
 The file **hydraulic_simulation.py** includes examples of these features.
+
+
+Advanced: Customized models with WNTR's AML
+-------------------------------------------
+
+WNTR has a custom algebraic modeling language (AML) which is used for WNTR's hydraulic model (used in the :class:`~wntr.sim.core.WNTRSimulator`). This AML is primarily used for efficient evaluation and automatic differentiation (first derivatives only) of the constraints defining the hydraulic model. WNTR's AML drastically simplifies the implementation, maintenance, modification, and customization of hydraulic models. The AML allows defining variables and constraints in a natural way:
+
