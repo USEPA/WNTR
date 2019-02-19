@@ -1344,8 +1344,8 @@ class InpFile(object):
                 pattern = None
             else:
                 pattern = self.wn.get_pattern(current[2])
-            # node.demand_timeseries_list.remove_category('EN2 base')  # Intended to remove category _NAME_ -- need
-            # fixing before we change it again.
+            # In EPANET, the [DEMANDS] section overrides demands specified in [JUNCTIONS]
+            node.demand_timeseries_list.remove_category('EN2 base')  
             node.demand_timeseries_list.append((to_si(self.flow_units, float(current[1]), HydParam.Demand),
                                          pattern, category))
 
@@ -3026,6 +3026,7 @@ def _diff_inp_files(file1, file2=None, float_tol=1e-8, max_diff_lines_per_sectio
 
     different_lines_1 = []
     different_lines_2 = []
+    n = 0
     
     for section in _INP_SECTIONS:
         if not f1.contains_section(section):
