@@ -11,6 +11,5 @@ from .controls import Comparison, ControlPriority, TimeOfDayCondition, \
     SimTimeCondition, ValueCondition, TankLevelCondition, RelativeCondition, \
     OrCondition, AndCondition, ControlAction, Control, ControlManager, Rule
 from .graph import WntrMultiDiGraph
-from .morph import scale_node_coordinates, translate_node_coordinates, \
-    rotate_node_coordinates, split_pipe, skeletonize
+
 

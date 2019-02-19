@@ -10,7 +10,7 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Define the earthquake
-wn = wntr.network.morph.scale_node_coordinates(wn, 1000)
+wn = wntr.morph.scale_node_coordinates(wn, 1000)
 epicenter = (32000,15000) # x,y location
 magnitude = 7 # Richter scale
 depth = 10000 # m, shallow depth

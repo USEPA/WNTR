@@ -1,8 +1,7 @@
-wntr.network.morph module
+wntr.morph.skel module
 =====================================
 
-.. automodule:: wntr.network.morph
+.. automodule:: wntr.morph.skel
     :members:
-    :inherited-members:
     :no-undoc-members:
     :show-inheritance:

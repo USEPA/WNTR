@@ -73,7 +73,7 @@ Pipes that falls below a user defined pipe diameter threshold are candidates for
 	  
       Parallel pipe merge
 	  
-The :class:`~wntr.network.morph.skeletonize` function is used to perform network skeletonization.
+The :class:`~wntr.morph.skel.skeletonize` function is used to perform network skeletonization.
 The iterative algorithm first loops over all candidate pipes (pipes below the pipe diameter threshold) and removes branch pipes.  
 Then the algorithm loops over all candidate pipes and merges pipes in series.
 Finally, the algorithm loops over all candidate pipes and merges pipes in parallel.
@@ -120,7 +120,7 @@ Pressure differences are generally less than 2 meters in this example.
 	
 .. doctest::
 
-    >>> skel_wn = wntr.network.morph.skeletonize(wn, 12*0.0254)
+    >>> skel_wn = wntr.morph.skeletonize(wn, 12*0.0254)
     >>> wntr.graphics.plot_network(wn, title='Original') # doctest: +SKIP
     (<matplotlib.collections.PathCollection object ...
     >>> wntr.graphics.plot_network(skel_wn, title='Skeletonized') # doctest: +SKIP
@@ -156,15 +156,15 @@ Modify node coordinates
 
 WNTR includes several functions to modify node coordinates, denoted as :math:`(x, y)` below, including:
 
-1. :class:`~wntr.network.morph.scale_node_coordinates` which multiplies node coordinates by a scale factor (in meters). 
+1. :class:`~wntr.morph.node.scale_node_coordinates` which multiplies node coordinates by a scale factor (in meters). 
 
    .. math:: (x, y) = (x*scale, y*scale)
    
-2. :class:`~wntr.network.morph.translate_node_coordinates` which applies an offset (in meters) to each node coordinate in the x and y direction.
+2. :class:`~wntr.morph.node.translate_node_coordinates` which applies an offset (in meters) to each node coordinate in the x and y direction.
    
    .. math:: (x, y) = (x+offset_{x}, y+offset_{y})
    
-3. :class:`~wntr.network.morph.rotate_node_coordinates` which rotates coordinates counterclockwise by :math:`\theta` degrees.
+3. :class:`~wntr.morph.node.rotate_node_coordinates` which rotates coordinates counterclockwise by :math:`\theta` degrees.
    
    .. math:: (x, y) = \begin{bmatrix} cos(\theta) & -sin(\theta) \\sin(\theta) & cos(\theta) \end{bmatrix} \boldsymbol{\cdot} (x, y)
 
@@ -184,15 +184,15 @@ node coordinates scaled by 100 m.
 	
 .. doctest::
 
-    >>> wn_scaled_coord = wntr.network.morph.scale_node_coordinates(wn, 100)
+    >>> wn_scaled_coord = wntr.morph.scale_node_coordinates(wn, 100)
 
 .. _split_break_pipes:
 
 Split or break pipes
 ----------------------------
 
-WNTR includes the functions :class:`~wntr.network.morph.split_pipe` 
-and :class:`~wntr.network.morph.break_pipe` to split or break a pipe.
+WNTR includes the functions :class:`~wntr.morph.link.split_pipe` 
+and :class:`~wntr.morph.link.break_pipe` to split or break a pipe.
 
 For a pipe split, the original pipe is split into two pipes by adding a new 
 junction and new pipe to the model.  
@@ -228,6 +228,6 @@ to the model.
 
 .. doctest::
 
-    >>> wn = wntr.network.morph.split_pipe(wn, '123', '123_B', '123_node')
+    >>> wn = wntr.morph.split_pipe(wn, '123', '123_B', '123_node')
     >>> leak_node = wn.get_node('123_node')           
     >>> leak_node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)
