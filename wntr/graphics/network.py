@@ -137,7 +137,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
             # drop time
             node_attribute.reset_index(level=1, drop=True, inplace=True) 
         node_attribute = dict(node_attribute)
-    
+            
     # Define node list, color, and colormap
     if node_attribute is None:
         nodelist = None
@@ -198,7 +198,10 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         
     if title is not None:
         ax.set_title(title)
-
+    
+    edge_background = nx.draw_networkx_edges(G, pos, 
+            edge_color='gray', width=0.25, ax=ax)
+    
     nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
             nodelist=nodelist, node_color=nodecolor, node_size=node_size, 
             cmap=node_cmap, vmin=node_range[0], vmax = node_range[1], 
