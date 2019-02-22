@@ -30,7 +30,7 @@ incidents and guide the planning necessary to make systems more resilient over t
 
 The Water Network Tool for Resilience (WNTR, pronounced *winter*) is a Python 
 package designed to simulate and analyze resilience of water distribution networks.  
-Here, a network refers to the collection of pipes, pumps, nodes, and valves that 
+Here, a network refers to the collection of pipes, pumps, valves, junctions, tanks, and reservoirs that 
 make up a water distribution system. WNTR has an application programming interface (API) 
 that is flexible and allows for changes to the network structure and operations, 
 along with simulation of disruptive incidents and recovery actions.  
@@ -51,7 +51,7 @@ WNTR includes capabilities to:
 
 * **Generate water network models** from scratch or from existing EPANET-formatted water network model input (EPANET INP) files [Ross00]_ 
 
-* **Modify network structure** by adding/removing components and changing component characteristics
+* **Modify network structure** by adding/removing components, changing component characteristics, and using network morphology operations
 
 * **Modify network operation** by changing initial conditions, component settings, and time-based and conditional controls
 

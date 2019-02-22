@@ -52,6 +52,8 @@ citations are cross referenced using a 6 digit notation [*]_.
 
 .. [WWQP06] Walk, D.J., Worden, B.C., Quitoriano, V., and Pankow, K.L. (2006). Shakemap manual, Technical manual, users guide, and software guide. United States Geologic Survey, Retrieved on April 25, 2017 from http://pubs.usgs.gov/tm/2005/12A01/
 
+.. [WCSG03] Walski, T.M., Chase, D.V., Savic, D.A., Grayman, W., Beckwith, S. (2003). Advanced Water Distribution Modeling and Management, HAESTAD Press, Waterbury, CT, 693p.
+
 .. [*] Cross reference labels begins with 4 letters:
 
    * If the citation has one author, the first 4 letters of name are used

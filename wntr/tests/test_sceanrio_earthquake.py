@@ -22,7 +22,7 @@ def test_distance_to_epicenter():
     expected = np.sqrt(np.power(50-40,2)+np.power(70-55,2))
     assert_less(np.abs(R['12']-expected), 1E-5) 
 
-    wn.scale_node_coordinates(100)
+    wn = wntr.morph.scale_node_coordinates(wn,100)
     R = earthquake.distance_to_epicenter(wn,wntr.network.Junction)
     expected = np.sqrt(np.power(5000-40,2)+np.power(7000-55,2))
     assert_less(np.abs(R['12']-expected), 1E-5) 

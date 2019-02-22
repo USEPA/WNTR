@@ -2,9 +2,9 @@
 The wntr.graphics.network module includes methods plot the
 water network model.
 """
+import logging
 import networkx as nx
 import pandas as pd
-from wntr.graphics.color import custom_colormap
 try:
     import matplotlib.pyplot as plt
 except:
@@ -13,10 +13,33 @@ try:
     import plotly
 except:
     plotly = None
-import logging
+    
+from wntr.graphics.color import custom_colormap
 
 logger = logging.getLogger(__name__)
 
+def _format_node_attribute(node_attribute, wn):
+    
+    if isinstance(node_attribute, str):
+        node_attribute = wn.query_node_attribute(node_attribute)
+    if isinstance(node_attribute, list):
+        node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
+    if isinstance(node_attribute, pd.Series):
+        node_attribute = dict(node_attribute)
+    
+    return node_attribute
+
+def _format_link_attribute(link_attribute, wn):
+    
+    if isinstance(link_attribute, str):
+        link_attribute = wn.query_link_attribute(link_attribute)
+    if isinstance(link_attribute, list):
+        link_attribute = dict(zip(link_attribute,[1]*len(link_attribute)))
+    if isinstance(link_attribute, pd.Series):
+        link_attribute = dict(link_attribute)
+            
+    return link_attribute
+        
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range = [None,None], node_cmap=None, node_labels=False,
                link_width=1, link_range = [None,None], link_cmap=None, link_labels=False,
@@ -37,8 +60,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         - If node_attribute is a list, then each node in the list is given a 
           value of 1.
         - If node_attribute is a pd.Series, then it should be in the format
-          {(nodeid,time): x} or {nodeid: x} where nodeid is a string and x is 
-          a float. The time index is not used in the plot.
+          {nodeid: x} where nodeid is a string and x is a float. 
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
 
@@ -50,8 +72,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         - If link_attribute is a list, then each link in the list is given a 
           value of 1.
         - If link_attribute is a pd.Series, then it should be in the format
-          {(linkid,time): x} or {linkid: x} where linkid is a string and x is 
-          a float. The time index is not used in the plot.
+          {linkid: x} where linkid is a string and x is a float. 
         - If link_attribute is a dict, then it should be in the format
           {linkid: x} where linkid is a string and x is a float.
 
@@ -125,83 +146,44 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     if len(pos) == 0:
         pos = None
 
-    # Node attribute
-    node_attr_from_list = False
-    if isinstance(node_attribute, str):
-        node_attribute = wn.query_node_attribute(node_attribute)
-    if isinstance(node_attribute, list):
-        node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
-        node_attr_from_list = True
-    if isinstance(node_attribute, pd.Series):
-        if node_attribute.index.nlevels == 2: # (nodeid, time) index
-            # drop time
-            node_attribute.reset_index(level=1, drop=True, inplace=True) 
-        node_attribute = dict(node_attribute)
-            
-    # Define node list, color, and colormap
-    if node_attribute is None:
+    # Define node properties
+    if node_attribute is not None:
+        node_attribute_from_list = False
+        if isinstance(node_attribute, list):
+            node_attribute_from_list = True
+            add_colorbar = False
+        node_attribute = _format_node_attribute(node_attribute, wn)
+        nodelist,nodecolor = zip(*node_attribute.items())
+        if node_attribute_from_list:
+            nodecolor = 'r'
+    else:
         nodelist = None
         nodecolor = 'k'
-    else:
-        nodelist,nodecolor = zip(*node_attribute.items())
-        if node_attr_from_list:
-            nodecolor = 'r'
-            add_colorbar = False
-        
-    # Link attribute
-    link_attr_from_list = False
-    if isinstance(link_attribute, str):
-        link_attribute = wn.query_link_attribute(link_attribute)
-    if isinstance(link_attribute, list):
-        all_link_attribute = dict(zip(wn.link_name_list,[0]*len(wn.link_name_list)))
-        for link in link_attribute:
-            all_link_attribute[link] = 1
-        link_attribute = all_link_attribute
-        link_attr_from_list = True
-    if isinstance(link_attribute, pd.Series):
-        if link_attribute.index.nlevels == 2: # (linkid, time) index
-            # drop time
-            link_attribute.reset_index(level=1, drop=True, inplace=True) 
-        link_attribute = dict(link_attribute)
-        
-    # Replace link_attribute dictionary defined as
-    # {link_name: attr} with {(start_node, end_node, link_name): attr}
+    
     if link_attribute is not None:
+        if isinstance(link_attribute, list):
+            link_cmap = custom_colormap(2, ['red', 'black'])
+            add_colorbar = False
+        link_attribute = _format_link_attribute(link_attribute, wn)
+        
+        # Replace link_attribute dictionary defined as
+        # {link_name: attr} with {(start_node, end_node, link_name): attr}
         attr = {}
         for link_name, value in link_attribute.items():
             link = wn.get_link(link_name)
             attr[(link.start_node_name, link.end_node_name, link_name)] = value
         link_attribute = attr
-    if type(link_width) is dict:
-        attr = {}
-        for link_name, value in link_width.items():
-            link = wn.get_link(link_name)
-            attr[(link.start_node_name, link.end_node_name, link_name)] = value
-        link_width = attr
-    
-    # Define link list, color, and colormap
-    if link_attribute is None:
+        
+        linklist,linkcolor = zip(*link_attribute.items())
+    else:
         linklist = None
         linkcolor = 'k'
-    else:
-        linklist,linkcolor = zip(*link_attribute.items())
-        if link_attr_from_list:
-            link_cmap = custom_colormap(2, ['black', 'red'])
-            add_colorbar = False
-            
-    if type(link_width) is dict:
-        linklist2,link_width = zip(*link_width.items())
-        if not linklist == linklist2:
-            logger.warning('Link color and width do not share the same \
-                           indexes, link width changed to 1.')
-            link_width = 1
-        
+    
     if title is not None:
         ax.set_title(title)
-    
-    edge_background = nx.draw_networkx_edges(G, pos, 
-            edge_color='gray', width=0.25, ax=ax)
-    
+        
+    edge_background = nx.draw_networkx_edges(G, pos, edge_color='grey', 
+                                             width=0.5, ax=ax)
     nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
             nodelist=nodelist, node_color=nodecolor, node_size=node_size, 
             cmap=node_cmap, vmin=node_range[0], vmax = node_range[1], 
@@ -227,7 +209,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     return nodes, edges
 
 def plot_interactive_network(wn, node_attribute=None, title=None,
-               node_size=8, node_range = [None,None], node_cmap='Jet', node_labels=True,
+               node_size=8, node_range=[None,None], node_cmap='Jet', node_labels=True,
                link_width=1, add_colorbar=True, reverse_colormap=False,
                figsize=[700, 450], round_ndigits=2, filename=None, auto_open=True):
     """
@@ -246,8 +228,7 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         - If node_attribute is a list, then each node in the list is given a 
           value of 1.
         - If node_attribute is a pd.Series, then it should be in the format
-          {(nodeid,time): x} or {nodeid: x} where nodeid is a string and x is 
-          a float.
+          {nodeid: x} where nodeid is a string and x is a float.
           The time index is not used in the plot.
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
@@ -295,16 +276,14 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
     G = wn.get_graph()
     
     # Node attribute
-    if isinstance(node_attribute, str):
-        node_attribute = wn.query_node_attribute(node_attribute)
-    if isinstance(node_attribute, list):
-        node_attribute = dict(zip(node_attribute,[1]*len(node_attribute)))
-    if isinstance(node_attribute, pd.Series):
-        if node_attribute.index.nlevels == 2: # (nodeid, time) index
-            # drop time
-            node_attribute.reset_index(level=1, drop=True, inplace=True) 
-        node_attribute = dict(node_attribute)
-
+    if node_attribute is not None:
+        if isinstance(node_attribute, list):
+            node_cmap = 'Reds'
+            add_colorbar = False
+        node_attribute = _format_node_attribute(node_attribute, wn)
+    else:
+        add_colorbar = False
+        
     # Create edge trace
     edge_trace = plotly.graph_objs.Scatter(
         x=[], 
@@ -342,8 +321,8 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         marker=dict(
             showscale=add_colorbar,
             colorscale=node_cmap, 
-            cmin=node_range[0],
-            cmax=node_range[1],
+            cmin=node_range[0], # TODO: Not sure this works
+            cmax=node_range[1], # TODO: Not sure this works
             reversescale=reverse_colormap,
             color=[], 
             size=node_size,         
@@ -361,15 +340,16 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
             # Add node attributes
             node_trace['marker']['color'] += tuple([node_attribute[node]])
             #node_trace['marker']['size'].append(node_size)
+
             # Add node labels
             if node_labels:
-                node_info = 'Node ' + str(node) + ', '+ \
+                node_info = wn.get_node(node).node_type + ' ' + str(node) + ', '+ \
                             str(round(node_attribute[node],round_ndigits))
                 node_trace['text'] += tuple([node_info])
         except:
             node_trace['marker']['color'] += tuple(['#888'])
             if node_labels:
-                node_info = 'Node ' + str(node)
+                node_info = wn.get_node(node).node_type + ' ' + str(node)
                 node_trace['text'] += tuple([node_info])
             #node_trace['marker']['size'] += tuple([5])
     #node_trace['marker']['colorbar']['title'] = 'Node colorbar title'
