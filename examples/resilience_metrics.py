@@ -5,7 +5,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 def topographic_metrics(wn):
-    # Get a copy of the graph
+    # Get the WaterNetworkModel graph
     G = wn.get_graph()
 
     # Print general topographic information

@@ -31,7 +31,7 @@ def test_plot_interactive_network1():
     if isfile(filename):
         os.remove(filename)
         
-    inp_file = join(ex_datadir,'Net6.inp')
+    inp_file = join(ex_datadir,'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
 		
     plt.figure()
