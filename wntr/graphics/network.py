@@ -182,8 +182,8 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     if title is not None:
         ax.set_title(title)
         
-    edges = nx.draw_networkx_edges(G, pos, edge_color='grey', width=0.75, ax=ax)
-    
+    edge_background = nx.draw_networkx_edges(G, pos, edge_color='grey', 
+                                             width=0.5, ax=ax)
     nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
             nodelist=nodelist, node_color=nodecolor, node_size=node_size, 
             cmap=node_cmap, vmin=node_range[0], vmax = node_range[1], 

@@ -25,6 +25,7 @@ else:
 
 import numpy as np
 import networkx as nx
+import pandas as pd
 
 from .options import WaterNetworkOptions
 from .base import Link, Registry, LinkStatus, AbstractModel
@@ -1245,9 +1246,10 @@ class WaterNetworkModel(AbstractModel):
         """
         for node_name, node in self.nodes():
             
-            # Extact the node demand pattern and resample to match the pattern timestep
+            # Extract the node demand pattern and resample to match the pattern timestep
             demand_pattern = demand.loc[:, node_name]
-            demand_pattern.index = demand_pattern.index.astype('timedelta64[s]')
+            #demand_pattern.index = demand_pattern.index.astype('timedelta64[s]')
+            demand_pattern.index = pd.TimedeltaIndex(demand_pattern.index, 's')
             resample_offset = str(int(self.options.time.pattern_timestep))+'S'
             demand_pattern = demand_pattern.resample(resample_offset).mean()
 
