@@ -11,7 +11,7 @@ Software framework and limitations
 ======================================
 
 Before using WNTR, it is helpful to understand the software framework.
-WNTR is a Python package, which contains several object-oriented subpackages, listed in :numref:`table-wntr-subpackage`.
+WNTR is a Python package, which contains several subpackages, listed in :numref:`table-wntr-subpackage`.
 Each subpackage contains modules which contain classes, methods, and functions.
 See :ref:`api_documentation` for more information on the code structure.
 The classes used to generate water network models and 
@@ -23,12 +23,13 @@ run simulations are described in more detail below, followed by a list of softwa
    =================================================  =============================================================================================================================================================================================================================================================================
    Subpackage                                         Description
    =================================================  =============================================================================================================================================================================================================================================================================
-   :class:`~wntr.epanet`                              Contains EPANET 2 compatibility functions for WNTR.
-   :class:`~wntr.metrics`	                          Contains methods to compute resilience, including hydraulic, water quality, water security, and economic metrics. Methods to compute topographic metrics are included in the wntr.network.graph module.
-   :class:`~wntr.network`	                          Contains methods to define a water network model, network controls, and graph representation of the network.
+   :class:`~wntr.network`	                          Contains methods to define a water network model, network controls, model options, and graph representation of the network.
    :class:`~wntr.scenario`                            Contains methods to define disaster scenarios and fragility/survival curves.
    :class:`~wntr.sim`		                          Contains methods to run hydraulic and water quality simulations using the water network model.
+   :class:`~wntr.metrics`	                          Contains methods to compute resilience, including hydraulic, water quality, water security, and economic metrics. Methods to compute topographic metrics are included in the wntr.network.graph module.
+   :class:`~wntr.morph`	                              Contains methods to modify water network model morphology, including network skeletonization, modifying node coordinates, and splitting or breaking pipes.
    :class:`~wntr.graphics`                            Contains methods to generate graphics.
+   :class:`~wntr.epanet`                              Contains EPANET 2 compatibility functions for WNTR.
    :class:`~wntr.utils`                               Contains helper functions.
    =================================================  =============================================================================================================================================================================================================================================================================
 
@@ -149,4 +150,8 @@ Discrepancies
 -------------------------------------------
 Known discrepancies between the WNTRSimulator and EpanetSimulator are listed below.
 
-* Pumps have speed settings which are adjustable by controls and/or patterns.  With the EpanetSimulator, controls and patterns adjust the actual speed.  With the WNTRSimulator, pumps have a 'base speed' (similar to junction demand and reservoir head), controls adjust the base speed, and speed patterns are a are a multiplier on the base speed. Results from the two simulators can match by scaling speed patterns and using controls appropriately.
+* Pumps have speed settings which are adjustable by controls and/or patterns.  With the EpanetSimulator, 
+  controls and patterns adjust the actual speed.  With the WNTRSimulator, pumps have a 'base speed' 
+  (similar to junction demand and reservoir head), controls adjust the base speed, and speed patterns are 
+  a are a multiplier on the base speed. Results from the two simulators can match by scaling speed patterns 
+  and using controls appropriately.

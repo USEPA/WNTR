@@ -68,7 +68,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'WNTR'
-copyright = u'2015-2018 National Technology & Engineering Solutions of Sandia, LLC (NTESS)'
+copyright = u'2015-2019 National Technology & Engineering Solutions of Sandia, LLC (NTESS)'
 author = u'WNTR Developers'
 
 # The version info for the project you're documenting, acts as replacement for

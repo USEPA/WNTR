@@ -70,7 +70,25 @@ class TestWriter(unittest.TestCase):
     def test_controls(self):
         for name, control in self.wn.controls():
             self.assertTrue(control._compare(self.wn2.get_control(name)))
-
+        
+    def test_demands(self):
+        # In EPANET, the [DEMANDS] section overrides demands specified in [JUNCTIONS]
+        expected_length = {'j1': 2, # DEMANDS duplicates demand in JUNCTIONS
+                           'j2': 2, # DEMANDS does not duplicate demand in JUNCTIONS
+                           'j3': 1, # Only in JUNCTIONS
+                           'j4': 1} # Only in DEMANDS
+        for j_name, j in self.wn.junctions():
+            j2 = self.wn2.get_node(j_name)
+            assert len(j.demand_timeseries_list) == len(j2.demand_timeseries_list)
+            self.assertEqual(expected_length[j_name], len(j2.demand_timeseries_list))
+            for d, d2 in zip(j.demand_timeseries_list, j2.demand_timeseries_list):
+                self.assertEqual(d, d2)
+                # DEMANDS use pattern2, JUNCTIONS demands use pattern1
+                if j_name in ['j1', 'j2', 'j4']:    
+                    self.assertEqual(d2.pattern_name, 'pattern2') 
+                else:
+                    self.assertEqual(d2.pattern_name, 'pattern1') 
+                
 
 class TestInpFileWriter(unittest.TestCase):
 

@@ -1,5 +1,6 @@
 from wntr import epanet
 from wntr import network
+from wntr import morph
 from wntr import metrics
 from wntr import sim
 from wntr import scenario
@@ -10,7 +11,7 @@ from wntr import models
 
 __version__ = '0.1.7'
 
-__copyright__ = """Copyright 2015-2018 National Technology & Engineering 
+__copyright__ = """Copyright 2015-2019 National Technology & Engineering 
 Solutions of Sandia, LLC (NTESS). Under the terms of Contract DE-NA0003525 
 with NTESS, the U.S. Government retains certain rights in this software."""
 
