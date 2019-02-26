@@ -3044,9 +3044,10 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t swig_types[35]
 #define SWIGTYPE_p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t swig_types[36]
 #define SWIGTYPE_p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t swig_types[37]
-#define SWIGTYPE_p_swig__SwigPyIterator swig_types[38]
-static swig_type_info *swig_types[40];
-static swig_module_info swig_module = {swig_types, 39, 0, 0, 0, 0};
+#define SWIGTYPE_p_std__vectorT_int_std__allocatorT_int_t_t swig_types[38]
+#define SWIGTYPE_p_swig__SwigPyIterator swig_types[39]
+static swig_type_info *swig_types[41];
+static swig_module_info swig_module = {swig_types, 40, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -12392,6 +12393,56 @@ SWIGINTERN PyObject *Constraint_swigregister(PyObject *SWIGUNUSEDPARM(self), PyO
   return SWIG_Py_Void();
 }
 
+SWIGINTERN PyObject *_wrap_evaluate_subset(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
+  PyObject *resultobj = 0;
+  double *arg1 = (double *) 0 ;
+  std::vector< Constraint *,std::allocator< Constraint * > > *arg2 = (std::vector< Constraint *,std::allocator< Constraint * > > *) 0 ;
+  SwigValueWrapper< std::vector< int,std::allocator< int > > > arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  void *argp3 ;
+  int res3 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  char *  kwnames[] = {
+    (char *) "result",(char *) "cons",(char *) "indices", NULL 
+  };
+  
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:evaluate_subset",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_double, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "evaluate_subset" "', argument " "1"" of type '" "double *""'"); 
+  }
+  arg1 = reinterpret_cast< double * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "evaluate_subset" "', argument " "2"" of type '" "std::vector< Constraint *,std::allocator< Constraint * > > *""'"); 
+  }
+  arg2 = reinterpret_cast< std::vector< Constraint *,std::allocator< Constraint * > > * >(argp2);
+  {
+    res3 = SWIG_ConvertPtr(obj2, &argp3, SWIGTYPE_p_std__vectorT_int_std__allocatorT_int_t_t,  0  | 0);
+    if (!SWIG_IsOK(res3)) {
+      SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "evaluate_subset" "', argument " "3"" of type '" "std::vector< int,std::allocator< int > >""'"); 
+    }  
+    if (!argp3) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "evaluate_subset" "', argument " "3"" of type '" "std::vector< int,std::allocator< int > >""'");
+    } else {
+      std::vector< int,std::allocator< int > > * temp = reinterpret_cast< std::vector< int,std::allocator< int > > * >(argp3);
+      arg3 = *temp;
+      if (SWIG_IsNewObj(res3)) delete temp;
+    }
+  }
+  evaluate_subset(arg1,arg2,arg3);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_WNTRModel_vars_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   WNTRModel *arg1 = (WNTRModel *) 0 ;
@@ -12939,43 +12990,52 @@ fail:
 SWIGINTERN PyObject *_wrap_WNTRModel_evaluate(PyObject *SWIGUNUSEDPARM(self), PyObject *args, PyObject *kwargs) {
   PyObject *resultobj = 0;
   WNTRModel *arg1 = (WNTRModel *) 0 ;
-  double *arg2 = (double *) 0 ;
-  int arg3 ;
+  int arg2 ;
+  double *arg3 = (double *) 0 ;
+  int arg4 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
-  PyObject *array2 = NULL ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject *array3 = NULL ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
   char *  kwnames[] = {
-    (char *) "self",(char *) "array_out", NULL 
+    (char *) "self",(char *) "num_threads",(char *) "array_out", NULL 
   };
   
-  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OO:WNTRModel_evaluate",kwnames,&obj0,&obj1)) SWIG_fail;
+  if (!PyArg_ParseTupleAndKeywords(args,kwargs,(char *)"OOO:WNTRModel_evaluate",kwnames,&obj0,&obj1,&obj2)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_WNTRModel, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "WNTRModel_evaluate" "', argument " "1"" of type '" "WNTRModel *""'"); 
   }
   arg1 = reinterpret_cast< WNTRModel * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "WNTRModel_evaluate" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
   {
     npy_intp dims[1];
-    if (!PyInt_Check(obj1))
+    if (!PyInt_Check(obj2))
     {
-      const char* typestring = pytype_string(obj1);
+      const char* typestring = pytype_string(obj2);
       PyErr_Format(PyExc_TypeError,
         "Int dimension expected.  '%s' given.",
         typestring);
       SWIG_fail;
     }
-    arg3 = (int) PyInt_AsLong(obj1);
-    dims[0] = (npy_intp) arg3;
-    array2 = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
-    if (!array2) SWIG_fail;
-    arg2 = (double*) array_data(array2);
+    arg4 = (int) PyInt_AsLong(obj2);
+    dims[0] = (npy_intp) arg4;
+    array3 = PyArray_SimpleNew(1, dims, NPY_DOUBLE);
+    if (!array3) SWIG_fail;
+    arg3 = (double*) array_data(array3);
   }
-  (arg1)->evaluate(arg2,arg3);
+  (arg1)->evaluate(arg2,arg3,arg4);
   resultobj = SWIG_Py_Void();
   {
-    resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array2);
+    resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array3);
   }
   return resultobj;
 fail:
@@ -14768,6 +14828,16 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"Constraint_swigregister", Constraint_swigregister, METH_VARARGS, NULL},
+	 { (char *)"evaluate_subset", (PyCFunction) _wrap_evaluate_subset, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
+		"evaluate_subset(double * result, std::vector< Constraint *,std::allocator< Constraint * > > * cons, std::vector< int,std::allocator< int > > indices)\n"
+		"\n"
+		"Parameters\n"
+		"----------\n"
+		"result: double *\n"
+		"cons: std::vector< Constraint *,std::allocator< Constraint * > > *\n"
+		"indices: std::vector< int,std::allocator< int > >\n"
+		"\n"
+		""},
 	 { (char *)"WNTRModel_vars_set", _wrap_WNTRModel_vars_set, METH_VARARGS, (char *)"\n"
 		"WNTRModel_vars_set(WNTRModel self, std::set< Var * > * vars)\n"
 		"\n"
@@ -14925,11 +14995,12 @@ static PyMethodDef SwigMethods[] = {
 		"\n"
 		""},
 	 { (char *)"WNTRModel_evaluate", (PyCFunction) _wrap_WNTRModel_evaluate, METH_VARARGS | METH_KEYWORDS, (char *)"\n"
-		"WNTRModel_evaluate(WNTRModel self, double * array_out)\n"
+		"WNTRModel_evaluate(WNTRModel self, int num_threads, double * array_out)\n"
 		"\n"
 		"Parameters\n"
 		"----------\n"
 		"self: WNTRModel *\n"
+		"num_threads: int\n"
 		"array_out: double *\n"
 		"\n"
 		""},
@@ -15047,6 +15118,7 @@ static swig_type_info _swigt__p_std__shared_ptrT_std__vectorT_short_std__allocat
 static swig_type_info _swigt__p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t = {"_p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t", "std::vector< Constraint *,std::allocator< Constraint * > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t = {"_p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t", "std::vector< ExpressionBase *,std::allocator< ExpressionBase * > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t = {"_p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t", "std::vector< Var *,std::allocator< Var * > > *|std::vector< Var * > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__vectorT_int_std__allocatorT_int_t_t = {"_p_std__vectorT_int_std__allocatorT_int_t_t", "std::vector< int,std::allocator< int > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_swig__SwigPyIterator = {"_p_swig__SwigPyIterator", "swig::SwigPyIterator *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
@@ -15088,6 +15160,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t,
   &_swigt__p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t,
   &_swigt__p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t,
+  &_swigt__p_std__vectorT_int_std__allocatorT_int_t_t,
   &_swigt__p_swig__SwigPyIterator,
 };
 
@@ -15129,6 +15202,7 @@ static swig_cast_info _swigc__p_std__shared_ptrT_std__vectorT_short_std__allocat
 static swig_cast_info _swigc__p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t[] = {  {&_swigt__p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t[] = {  {&_swigt__p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t[] = {  {&_swigt__p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__vectorT_int_std__allocatorT_int_t_t[] = {  {&_swigt__p_std__vectorT_int_std__allocatorT_int_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_swig__SwigPyIterator[] = {  {&_swigt__p_swig__SwigPyIterator, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
@@ -15170,6 +15244,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_std__vectorT_Constraint_p_std__allocatorT_Constraint_p_t_t,
   _swigc__p_std__vectorT_ExpressionBase_p_std__allocatorT_ExpressionBase_p_t_t,
   _swigc__p_std__vectorT_Var_p_std__allocatorT_Var_p_t_t,
+  _swigc__p_std__vectorT_int_std__allocatorT_int_t_t,
   _swigc__p_swig__SwigPyIterator,
 };
 

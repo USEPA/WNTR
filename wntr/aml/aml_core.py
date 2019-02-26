@@ -1748,6 +1748,19 @@ class Constraint(_object):
 Constraint_swigregister = _aml_core.Constraint_swigregister
 Constraint_swigregister(Constraint)
 
+
+def evaluate_subset(result, cons, indices):
+    """
+    evaluate_subset(double * result, std::vector< Constraint *,std::allocator< Constraint * > > * cons, std::vector< int,std::allocator< int > > indices)
+
+    Parameters
+    ----------
+    result: double *
+    cons: std::vector< Constraint *,std::allocator< Constraint * > > *
+    indices: std::vector< int,std::allocator< int > >
+
+    """
+    return _aml_core.evaluate_subset(result, cons, indices)
 class WNTRModel(_object):
     """Proxy of C++ WNTRModel class."""
 
@@ -1853,16 +1866,17 @@ class WNTRModel(_object):
         return _aml_core.WNTRModel_remove_var(self, arg2)
 
 
-    def evaluate(self, array_out):
+    def evaluate(self, num_threads, array_out):
         """
-        evaluate(WNTRModel self, double * array_out)
+        evaluate(WNTRModel self, int num_threads, double * array_out)
 
         Parameters
         ----------
+        num_threads: int
         array_out: double *
 
         """
-        return _aml_core.WNTRModel_evaluate(self, array_out)
+        return _aml_core.WNTRModel_evaluate(self, num_threads, array_out)
 
 
     def evaluate_csr_jacobian(self, values_array_out, col_ndx_array_out, row_nnz_array_out):

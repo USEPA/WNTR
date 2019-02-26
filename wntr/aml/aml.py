@@ -183,10 +183,10 @@ class Model(object):
             self._remove_var(v)
         self._obj = list()
 
-    def evaluate_residuals(self, x=None):
+    def evaluate_residuals(self, x=None, num_threads=4):
         if x is not None:
             self._model.load_var_values_from_x(x)
-        r = self._model.evaluate(len(self._cons))
+        r = self._model.evaluate(num_threads, len(self._cons))
         return r
 
     def evaluate_jacobian(self, x=None):

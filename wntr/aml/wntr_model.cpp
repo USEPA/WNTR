@@ -1,5 +1,15 @@
 #include "wntr_model.hpp"
 
+
+void evaluate_subset(double* result, std::vector<Constraint*>* cons, std::vector<int> indices)
+{
+  for (int &ndx : indices)
+    {
+      result[ndx] = (*cons)[ndx]->evaluate();
+    }
+}
+
+
 void WNTRModel::get_x(double *array_out, int array_length_out)
 {
   if (!is_structure_fixed)
@@ -52,17 +62,40 @@ void WNTRModel::remove_constraint(Constraint* con)
 }
 
 
-void WNTRModel::evaluate(double *array_out, int array_length_out)
+void WNTRModel::evaluate(int num_threads, double *array_out, int array_length_out)
 {
   if (!is_structure_fixed)
     {
       throw std::runtime_error("The structure of the model must be fixed with set_structure before evaluate can be called.");
     }
-  int i = 0;
-  for (auto &ptr_to_con : cons_vector)
+  int cons_size = cons_vector.size();
+  int base_num_per_thread = cons_size/num_threads;
+  int remainder = cons_size%num_threads;
+  int _num_per_thread = 0;
+  int ndx = 0;
+  std::thread threads_array[num_threads];
+  for (int _thread=0; _thread<num_threads; ++_thread)
     {
-      array_out[i] = ptr_to_con->evaluate();
-      ++i;
+      _num_per_thread = base_num_per_thread;
+      if (_thread < remainder)
+	{
+	  _num_per_thread += 1;
+	}
+      std::vector<int> indices;
+      for (int i=0; i<_num_per_thread; ++i)
+	{
+	  indices.push_back(ndx);
+	  ++ndx;
+	}
+      threads_array[_thread] = std::thread(evaluate_subset, array_out, &cons_vector, indices);
+      //std::shared_ptr<std::thread> t = std::make_shared<std::thread>(evaluate_subset, array_out, &cons_vector, &indices);
+      //std::thread t(evaluate_subset, array_out, &cons_vector, &indices);
+      //threads_vector.push_back(t);
+    }
+  for (int _thread=0; _thread<num_threads; ++_thread)
+    {
+      //threads_vector[_thread]->join();
+      threads_array[_thread].join();
     }
 }
 
