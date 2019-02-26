@@ -206,7 +206,7 @@ The next example converts node coordinates to latitude/longitude.
 .. doctest::
 
     >>> latlong_map = {'Lake':(35.0623, -106.6587), '219': (35.1918, -106.5248)}
-    >>> wn_latlong = wntr.morph.convert_node_coordinates_to_latlong(wn, latlong_map)
+    >>> wn_latlong = wntr.morph.convert_node_coordinates_to_latlong(wn, latlong_map) # doctest: +SKIP
 
 .. _split_break_pipes:
 
