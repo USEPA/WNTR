@@ -32,7 +32,8 @@ The following example plots the network along with node elevation.
 
 .. doctest::
 
-    >>> wntr.graphics.plot_network(wn, node_attribute='elevation')
+    >>> wntr.graphics.plot_network(wn, node_attribute='elevation') # doctest: +SKIP
+    (<matplotlib.collections.PathCollection object ...
 
 .. _fig-overview:
 .. figure:: figures/plot_network.png
