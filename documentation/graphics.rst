@@ -57,7 +57,7 @@ For example, ...
 
 .. doctest::
 
-    >>> wntr.graphics.plot_interactive_network(wn, node_attribute='elevation')
+    >>> wntr.graphics.plot_interactive_network(wn, node_attribute='elevation') # doctest: +SKIP
 
 .. _fig-overview:
 .. figure:: figures/plot_interactive_network.png
