@@ -181,6 +181,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             * BT_MAXITER: the maximum number of iterations for each line search (default = 20)
             * BACKTRACKING: whether or not to use a line search (default = True)
             * BT_START_ITER: the newton iteration at which a line search should start being used (default = 2)
+            * THREADS: the number of threads to use in constraint and jacobian computations
         backup_solver_options: dict
         convergence_error: bool (optional)
             If convergence_error is True, an error will be raised if the

@@ -55,6 +55,11 @@ class NewtonSolver(object):
         else:
             self.bt_start_iter = self._options['BT_START_ITER']
 
+        if 'THREADS' not in self._options:
+            self.num_threads = 4
+        else:
+            self.num_threads = self._options['THREADS']
+
     def solve(self, model):
         """
 
@@ -81,11 +86,11 @@ class NewtonSolver(object):
                 r = r_
                 r_norm = new_norm
             else:
-                r = model.evaluate_residuals()
+                r = model.evaluate_residuals(num_threads=self.num_threads)
                 r_norm = np.max(abs(r))
 
             if logger_level <= 1:
-                if outer_iter<self.bt_start_iter:
+                if outer_iter < self.bt_start_iter:
                     logger.log(1, 'iter: {0:<4d} norm: {1:<10.2e}'.format(outer_iter, r_norm))
 
             if r_norm < self.tol:
@@ -106,7 +111,7 @@ class NewtonSolver(object):
                 for iter_bt in range(self.bt_maxiter):
                     x_ = x + alpha*d
                     model.load_var_values_from_x(x_)
-                    r_ = model.evaluate_residuals()
+                    r_ = model.evaluate_residuals(num_threads=self.num_threads)
                     new_norm = np.max(abs(r_))
                     if new_norm < (1.0-0.0001*alpha)*r_norm:
                         x = x_
