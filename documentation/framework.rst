@@ -23,12 +23,13 @@ run simulations are described in more detail below, followed by a list of softwa
    =================================================  =============================================================================================================================================================================================================================================================================
    Subpackage                                         Description
    =================================================  =============================================================================================================================================================================================================================================================================
-   :class:`~wntr.epanet`                              Contains EPANET 2 compatibility functions for WNTR.
-   :class:`~wntr.graphics`                            Contains methods to generate graphics.
-   :class:`~wntr.metrics`	                          Contains methods to compute resilience, including hydraulic, water quality, water security, and economic metrics. Methods to compute topographic metrics are included in the wntr.network.graph module.
-   :class:`~wntr.network`	                          Contains methods to define a water network model, network controls, model options, network morphology operations, and graph representation of the network.
+   :class:`~wntr.network`	                          Contains methods to define a water network model, network controls, model options, and graph representation of the network.
    :class:`~wntr.scenario`                            Contains methods to define disaster scenarios and fragility/survival curves.
    :class:`~wntr.sim`		                          Contains methods to run hydraulic and water quality simulations using the water network model.
+   :class:`~wntr.metrics`	                          Contains methods to compute resilience, including hydraulic, water quality, water security, and economic metrics. Methods to compute topographic metrics are included in the wntr.network.graph module.
+   :class:`~wntr.morph`	                              Contains methods to modify water network model morphology, including network skeletonization, modifying node coordinates, and splitting or breaking pipes.
+   :class:`~wntr.graphics`                            Contains methods to generate graphics.
+   :class:`~wntr.epanet`                              Contains EPANET 2 compatibility functions for WNTR.
    :class:`~wntr.utils`                               Contains helper functions.
    =================================================  =============================================================================================================================================================================================================================================================================
 

@@ -5,10 +5,10 @@
 Network morphology
 ======================================
 
-The :class:`wntr.morph` module includes several functions to modify water network model morphology, including
+The water network model morphology can be modified in several ways using WNTR, including
 network skeletonization, 
 modifying node coordinates, and 
-split or break pipes.
+splitting or breaking pipes.
 
 Network skeletonization
 ----------------------------
@@ -16,11 +16,12 @@ The goal of network skeletonization is to reduce the size of a water network mod
 Network skeletonization in WNTR follows the procedure outlined in [WCSG03]_.  
 The skeletonization process retains all tanks, reservoirs, valves, and pumps, along with all junctions and pipes that are associated with controls.
 Junction demands and demand patterns are retained in the skeletonized model, as described below.
-Pipes that falls below a user defined pipe diameter threshold are candidates for removal based on three operations, including:
+Merged pipes are assigned equivalent properties for diameter, length, and roughness to approximate the updated system behavoir.
+Pipes that fall below a user defined pipe diameter threshold are candidates for removal based on three operations, including:
 
 1. **Branch trimming**: Dead-end pipes that are below the pipe diameter threshold are removed from the model (:numref:`fig-branch-trim`).  
    The demand and demand pattern assigned to the dead-end junction is moved to the junction that is retained in the model.  
-   Dead-end pipes that are connected to tanks or reservoirs cannot be removed from the model.
+   Dead-end pipes that are connected to tanks or reservoirs are not removed from the model.
    
 	.. _fig-branch-trim:
 	.. figure:: figures/skel_branch.png
@@ -41,8 +42,8 @@ Pipes that falls below a user defined pipe diameter threshold are candidates for
    :math:`D_{m}` is the diameter of the merged pipe, :math:`D_{1}` and :math:`D_{2}` are the diameters of the original pipes, 
    :math:`L_{m}` is the length of the merged pipe, :math:`L_{1}` and :math:`L_{2}` are the lengths of the original pipes, 
    :math:`C_{m}` is the Hazen-Williams roughness coefficient of the merged pipe, and :math:`C_{1}` and :math:`C_{2}` are the Hazen-Williams roughness coefficients of the original pipes. 
+   Minor loss and pipe status of the merged pipe are set equal to the minor loss and pipe status for the pipe selected for max diameter.
    Note, if the original pipes have the same diameter, :math:`D_{m}` is based on the pipe name that comes first in alphabetical order.
-   Minor loss and pipe status of the merged pipe are set equal to minor loss and pipe status for the pipe selected for max diameter.
    
 	.. _fig-series-merge:
 	.. figure:: figures/skel_series.png
@@ -63,8 +64,8 @@ Pipes that falls below a user defined pipe diameter threshold are candidates for
    :math:`D_{m}` is the diameter of the merged pipe, :math:`D_{1}` and :math:`D_{2}` are the diameters of the original pipes, 
    :math:`L_{m}` is the length of the merged pipe, :math:`L_{1}` and :math:`L_{2}` are the lengths of the original pipes, 
    :math:`C_{m}` is the Hazen-Williams roughness coefficient of the merged pipe, and :math:`C_{1}` and :math:`C_{2}` are the Hazen-Williams roughness coefficients of the original pipes. 
+   Minor loss and pipe status of the merged pipe are set equal to the minor loss and pipe status for the pipe selected for max diameter.
    Note, if the original pipes have the same diameter, :math:`D_{m}` is based on the pipe name that comes first in alphabetical order.
-   Minor loss and pipe status of the merged pipe are set equal to minor loss and pipe status for the pipe selected for max diameter.
    
    .. _fig-parallel-merge:
    .. figure:: figures/skel_parallel.png
@@ -73,7 +74,7 @@ Pipes that falls below a user defined pipe diameter threshold are candidates for
 	  
       Parallel pipe merge
 	  
-The :class:`~wntr.morph.morph.skeletonize` function is used to perform network skeletonization.
+The :class:`~wntr.morph.skel.skeletonize` function is used to perform network skeletonization.
 The iterative algorithm first loops over all candidate pipes (pipes below the pipe diameter threshold) and removes branch pipes.  
 Then the algorithm loops over all candidate pipes and merges pipes in series.
 Finally, the algorithm loops over all candidate pipes and merges pipes in parallel.
@@ -83,29 +84,31 @@ The user can specify if branch trimming, series pipe merge, and/or parallel pipe
 The user can also specify a maximum number of cycles to include in the process.
 
 Results from network skeletonization include the skeletonized water network model and (optionally) 
-a "skeletonization map" which maps original network nodes to skeletonized network nodes.  
+a "skeletonization map" which maps original network nodes to merged nodes that are represented in the skeletonized network.  
 The skeletonization map is a dictionary where 
 the keys are original network nodes and 
-the values are a list of nodes in the skeletonized network that were merged as a result of skeletonization operations.  
-For example, if 'Junction 1' was merged into 'Junction 2' as 
+the values are a list of nodes in the network that were merged as a result of skeletonization operations.  
+For example, if 'Junction 1' was merged into 'Junction 2' and 'Junction 3' remained unchanged as
 part of network skeletonization, then the skeletonization map would contain the following information::
 
 	{
 	'Junction 1': [],
-	'Junction 2': ['Junction 1', 'Junction 2']
+	'Junction 2': ['Junction 1', 'Junction 2'],
+	'Junction 3': ['Junction 3']
 	}
 
-This map indicates that the skeletonized network does not contain 'Junction 1', and that 'Junction 2' in the 
-skeletonized network is the merged product of the original 'Junction 1' and 'Junction 2'.  
+This map indicates that the skeletonized network does not contain 'Junction 1', 'Junction 2' in the 
+skeletonized network is the merged product of the original 'Junction 1' and 'Junction 2', and 
+'Junction 3' was not changed. 
 'Junction 2' in the skeletonized network will therefore contain demand and demand patterns from 
-the original 'Junction 1' and 'Junction 2'
+the original 'Junction 1' and 'Junction 2'.
 
 The following example performs network skeletonization on Net6 using a pipe diameter threshold of 12 inches.
 The skeletonization procedure reduces the number of nodes in the network from approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
 After simulating hydraulics on both the original and skeletonized network, node pressure can be compared to 
 determine how skeletonization impacts system behavoir. :numref:`fig-skel-hydraulics` shows the median (dark blue line) and 
 the 25th to 75th percentile (shaded region) for node pressure throughout the network over a 4 day simulation.
-Pressure differences are generally less than 2 meters in this example.
+Pressure differences are generally less than 5% in this example.
 
 .. doctest::
     :hide:
@@ -141,7 +144,7 @@ Pressure differences are generally less than 2 meters in this example.
     >>> results_skel = sim.run_sim()
     >>> pressure_orig = results_original.node['pressure'].loc[:,skel_wn.junction_name_list]
     >>> pressure_skel = results_skel.node['pressure'].loc[:,skel_wn.junction_name_list]
-    >>> pressure_diff = abs(pressure_orig - pressure_skel)
+    >>> pressure_diff = (abs(pressure_orig - pressure_skel)/pressure_orig)*100
 
 .. _fig-skel-hydraulics:
 .. figure:: figures/skel_hydraulics.png
@@ -157,23 +160,23 @@ Modify node coordinates
 
 WNTR includes several functions to modify node coordinates, denoted as :math:`(x, y)` below, including:
 
-1. :class:`~wntr.morph.morph.scale_node_coordinates` which multiplies node coordinates by a scale factor (in meters). 
+1. :class:`~wntr.morph.node.scale_node_coordinates` which multiplies node coordinates by a scale factor (in meters). 
 
    .. math:: (x, y) = (x*scale, y*scale)
    
-2. :class:`~wntr.morph.morph.translate_node_coordinates` which applies an offset (in meters) to each node coordinate in the x and y direction.
+2. :class:`~wntr.morph.node.translate_node_coordinates` which applies an offset (in meters) to each node coordinate in the x and y direction.
    
    .. math:: (x, y) = (x+offset_{x}, y+offset_{y})
    
-3. :class:`~wntr.morph.morph.rotate_node_coordinates` which rotates coordinates counterclockwise by :math:`\theta` degrees.
+3. :class:`~wntr.morph.node.rotate_node_coordinates` which rotates coordinates counterclockwise by :math:`\theta` degrees.
    
    .. math:: (x, y) = \begin{bmatrix} cos(\theta) & -sin(\theta) \\sin(\theta) & cos(\theta) \end{bmatrix} \boldsymbol{\cdot} (x, y)
 
-4. :class:`~wntr.morph.morph.convert_node_coordinates_UTM_to_latlong` and :class:`~wntr.morph.morph.convert_node_coordinates_latlong_to_UTM` 
+4. :class:`~wntr.morph.node.convert_node_coordinates_UTM_to_latlong` and :class:`~wntr.morph.node.convert_node_coordinates_latlong_to_UTM` 
    which converts node coordinates from UTM to latitude/longitude or visa-versa.  
    **These functions require the Python package utm, which is an optional dependency of WNTR.**  
    
-5. :class:`~wntr.morph.morph.convert_node_coordinates_to_UTM` and :class:`~wntr.morph.morph.convert_node_coordinates_to_latlong` 
+5. :class:`~wntr.morph.node.convert_node_coordinates_to_UTM` and :class:`~wntr.morph.node.convert_node_coordinates_to_latlong` 
    which converts node coordinates from arbitrary distance units directly into UTM or latitude/longitude. 
    **These functions require the Python package utm, which is an optional dependency of WNTR.**    
    The user supplies the names of two nodes in their network along with their
@@ -210,20 +213,20 @@ The next example converts node coordinates to latitude/longitude.
 Split or break pipes
 ----------------------------
 
-WNTR includes the functions :class:`~wntr.morph.morph.split_pipe` 
-and :class:`~wntr.morph.morph.break_pipe` to split or break a pipe.
+WNTR includes the functions :class:`~wntr.morph.link.split_pipe` 
+and :class:`~wntr.morph.link.break_pipe` to split or break a pipe.
 
-For a pipe split, the original pipe into two pipes by adding a new 
+For a pipe split, the original pipe is split into two pipes by adding a new 
 junction and new pipe to the model.  
-For a pipe break, the original pipe into two disconnected pipes by 
-adding two new junctions and new pipe to the model.  
+For a pipe break, the original pipe is broken into two disconnected pipes by 
+adding two new junctions and a new pipe to the model.  
 **With a pipe break, there is no longer flow possible from one side of the break to the other. 
 This is more likely to 
 introduce non-convergable hydraulics than a pipe split with a leak 
 added.**
 
 The updated model retains the original length of the pipe section. 
-The split occurs at a user specified distance between the 
+The split or break occurs at a user specified distance between the 
 original start and end nodes of the pipe (in that direction). 
 The new pipe can be added to either end of the original pipe. 
     

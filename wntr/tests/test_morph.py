@@ -39,7 +39,7 @@ def test_translate_node_coordinates():
     assert_equal(coord[0]+5, coord2[0])
     assert_equal(coord[1]+10, coord2[1])
     
-    
+
 def test_rotate_node_coordinates():
     
     wn = wntr.network.WaterNetworkModel()
