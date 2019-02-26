@@ -1,5 +1,6 @@
 from wntr import epanet
 from wntr import network
+from wntr import morph
 from wntr import metrics
 from wntr import sim
 from wntr import scenario

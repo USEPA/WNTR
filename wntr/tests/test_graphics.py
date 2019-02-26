@@ -54,7 +54,7 @@ def test_plot_leaflet_network1():
     wn = wntr.network.WaterNetworkModel(inp_file)
     latlong_map = {'Lake':(35.0623, -106.6587), 
                    '219': (35.1918, -106.5248)}
-    wn2 = wntr.network.morph.convert_node_coordinates_to_latlong(wn, latlong_map)
+    wn2 = wntr.morph.convert_node_coordinates_to_latlong(wn, latlong_map)
     
     plt.figure()
     wntr.graphics.plot_leaflet_network(wn2, filename=filename)

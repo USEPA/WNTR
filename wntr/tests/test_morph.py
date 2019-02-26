@@ -17,7 +17,7 @@ def test_scale_node_coordinates():
     node = wn.get_node('123')
     coord = node.coordinates
     
-    wn2 = wntr.network.morph.scale_node_coordinates(wn, 100)
+    wn2 = wntr.morph.scale_node_coordinates(wn, 100)
     node2 = wn2.get_node('123')
     coord2 = node2.coordinates
     
@@ -32,7 +32,7 @@ def test_translate_node_coordinates():
     node = wn.get_node('123')
     coord = node.coordinates
     
-    wn2 = wntr.network.morph.translate_node_coordinates(wn, 5,10)
+    wn2 = wntr.morph.translate_node_coordinates(wn, 5,10)
     node2 = wn2.get_node('123')
     coord2 = node2.coordinates
     
@@ -45,7 +45,7 @@ def test_rotate_node_coordinates():
     wn = wntr.network.WaterNetworkModel()
     wn.add_junction('J1', base_demand=5, elevation=100.0, coordinates=(2,0))
     
-    wn2 = wntr.network.morph.rotate_node_coordinates(wn, 45)
+    wn2 = wntr.morph.rotate_node_coordinates(wn, 45)
     node2 = wn2.get_node('J1')
     coord2 = node2.coordinates
     
@@ -62,14 +62,14 @@ def test_UTM_to_latlong_to_UTM():
     wn.add_junction('J1', base_demand=5, elevation=100.0, 
                     coordinates=(351521.07,3886097.33))
     
-    wn2 = wntr.network.morph.convert_node_coordinates_UTM_to_latlong(wn, 13, 'S')
+    wn2 = wntr.morph.convert_node_coordinates_UTM_to_latlong(wn, 13, 'S')
     node2 = wn2.get_node('J1')
     coord2 = node2.coordinates
     
     assert_almost_equal(35.106766, coord2[0], 6)
     assert_almost_equal(-106.629181, coord2[1], 6)
     
-    wn3 = wntr.network.morph.convert_node_coordinates_latlong_to_UTM(wn2)
+    wn3 = wntr.morph.convert_node_coordinates_latlong_to_UTM(wn2)
     node3 = wn3.get_node('J1')
     coord3 = node3.coordinates
     
@@ -87,7 +87,7 @@ def test_convert_node_coordinates_to_latlong():
     latlong_map = {'Lake':(35.0623, -106.6587), 
                    '219': (35.1918, -106.5248)}
     
-    wn2 = wntr.network.morph.convert_node_coordinates_to_latlong(wn, latlong_map)
+    wn2 = wntr.morph.convert_node_coordinates_to_latlong(wn, latlong_map)
     
     for node_name in latlong_map.keys():
         node = wn2.get_node(node_name)
@@ -101,7 +101,7 @@ def test_split_pipe():
         
     inp_file = join(datadir, 'leaks.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    wn = wntr.network.morph.split_pipe(wn,'pipe1','pipe1__B','leak1')
+    wn = wntr.morph.split_pipe(wn,'pipe1','pipe1__B','leak1')
     
     pipe = wn.get_link('pipe1')
     pipeB = wn.get_link('pipe1__B')
@@ -124,7 +124,7 @@ def test_break_pipe():
         
     inp_file = join(datadir, 'leaks.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    wn = wntr.network.morph.break_pipe(wn,'pipe1','pipe1__B','leak1','leak2')
+    wn = wntr.morph.break_pipe(wn,'pipe1','pipe1__B','leak1','leak2')
     
     pipe = wn.get_link('pipe1')
     pipeB = wn.get_link('pipe1__B')
@@ -161,7 +161,7 @@ def test_skeletonize():
     expected_nums.loc[36,:] = [wn.num_nodes-29, wn.num_links-34]
     
     for i in [0,4,8,12,24,36]:
-        skel_wn, skel_map = wntr.network.morph.skeletonize(wn, float(i)*0.0254, return_map=True, use_epanet=False)
+        skel_wn, skel_map = wntr.morph.skeletonize(wn, float(i)*0.0254, return_map=True, use_epanet=False)
         
         demand =  wntr.metrics.expected_demand(skel_wn)
         total_demand = demand.loc[0,:].sum()
@@ -211,7 +211,7 @@ def test_skeletonize_with_controls():
     control = wntr.network.Control(condition=condition, then_action=action)
     wn.add_control('raise_node', control)
     
-    skel_wn = wntr.network.morph.skeletonize(wn, 12.0*0.0254, use_epanet=False)
+    skel_wn = wntr.morph.skeletonize(wn, 12.0*0.0254, use_epanet=False)
     
     assert_equal(skel_wn.num_nodes, wn.num_nodes-17)
     assert_equal(skel_wn.num_links, wn.num_links-22)
@@ -224,7 +224,7 @@ def test_skeletonize_with_controls():
     link = wn.get_link('11')
     link.diameter = 16*0.0254
     
-    skel_wn = wntr.network.morph.skeletonize(wn, 12.0*0.0254, use_epanet=False)
+    skel_wn = wntr.morph.skeletonize(wn, 12.0*0.0254, use_epanet=False)
     
     assert_equal(skel_wn.num_nodes, wn.num_nodes-17)
     assert_equal(skel_wn.num_links, wn.num_links-22)
@@ -249,7 +249,7 @@ def test_series_merge_properties():
     
     wn.options.time.duration = 0
     
-    skel_wn = wntr.network.morph.skeletonize(wn, 8, branch_trim=False, 
+    skel_wn = wntr.morph.skeletonize(wn, 8, branch_trim=False, 
             series_pipe_merge=True, parallel_pipe_merge=False, max_cycles=1, use_epanet=False)
     
     link = skel_wn.get_link('P12') # pipe P12 is the dominant pipe
@@ -278,7 +278,7 @@ def test_parallel_merge_properties():
     
     wn.options.time.duration = 0
     
-    skel_wn = wntr.network.morph.skeletonize(wn, 300, branch_trim=False, 
+    skel_wn = wntr.morph.skeletonize(wn, 300, branch_trim=False, 
             series_pipe_merge=False, parallel_pipe_merge=True, max_cycles=1, use_epanet=False)
 
     link = skel_wn.get_link('P12b') # pipe P12b is the dominant pipe
@@ -294,7 +294,7 @@ def test_skeletonize_Net3():
     
     inp_file = join(netdir, 'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    skel_wn = wntr.network.morph.skeletonize(wn, 36.0*0.0254, use_epanet=False)
+    skel_wn = wntr.morph.skeletonize(wn, 36.0*0.0254, use_epanet=False)
     
     assert_equal(wn.num_junctions, 92)
     assert_equal(skel_wn.num_junctions, 45)
