@@ -6,7 +6,7 @@ inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
 # Earthquake properties
-wn = wntr.morph.node.scale_node_coordinates(wn, 1000)
+wn = wntr.morph.scale_node_coordinates(wn, 1000)
 epicenter = (32000,15000) # x,y location
 magnitude = 6.5 # Richter scale
 depth = 10000 # m, shallow depth
@@ -22,7 +22,7 @@ wntr.graphics.plot_network(wn, link_attribute=pga, node_size=0, link_width=1.5,
 plt.scatter(epicenter[0], epicenter[1], s=1000, c='r', marker='*', zorder=2)
 
 # Define a leak at pipe '123'
-wn = wntr.morph.node.split_pipe(wn,'123', '123_B', '123_leak_node')
+wn = wntr.morph.split_pipe(wn,'123', '123_B', '123_leak_node')
 leak_node = wn.get_node('123_leak_node')           
 leak_node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)
                           
