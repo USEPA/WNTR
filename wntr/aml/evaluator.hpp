@@ -19,46 +19,46 @@ const int INEQUALITY = -9;
 class Leaf
 {
 public:
-  Leaf() = default;
+  Leaf(){}
   Leaf(double val): value(val) {}
-  virtual ~Leaf() = default;
+  virtual ~Leaf(){}
 
-  double value = 0;
+  double value;
 };
 
 
 class Var: public Leaf
 {
 public:
-  Var() = default;
+  Var(){}
   Var(double val): Leaf(val) {}
-  ~Var() = default;
+  ~Var(){}
 };
 
 
 class Param: public Leaf
 {
 public:
-  Param() = default;
+  Param(){}
   Param(double val): Leaf(val) {}
-  ~Param() = default;
+  ~Param(){}
 };
 
 
 class Float: public Leaf
 {
 public:
-  Float() = default;
+  Float(){}
   Float(double val): Leaf(val) {}
-  ~Float() = default;
+  ~Float(){}
 };
 
 
 class Constraint
 {
 public:
-  Constraint() = default;
-  ~Constraint() = default;
+  Constraint(){}
+  ~Constraint(){}
 
   void add_leaf(Leaf* leaf);
   void add_fn_rpn_term(int term);
@@ -73,7 +73,7 @@ public:
 class Evaluator
 {
 public:
-  Evaluator() = default;
+  Evaluator(){}
   ~Evaluator();
 
   Var* add_var(double value);

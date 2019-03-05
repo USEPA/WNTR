@@ -26,8 +26,11 @@ double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values)
   double arg2;
   double res;
   int stack_ndx = 0;
-  for (auto& ndx : (*rpn))
+  int rpn_size = rpn->size();
+  int ndx;
+  for (int i=0; i<rpn_size; ++i)
     {
+      ndx = (*rpn)[i];
       if (ndx >= 0)
 	{
 	  stack[stack_ndx] = ((*values)[ndx])->value;
