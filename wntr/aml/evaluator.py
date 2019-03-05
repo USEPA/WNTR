@@ -9,12 +9,12 @@ if _swig_python_version_info >= (2, 7, 0):
     def swig_import_helper():
         import importlib
         pkg = __name__.rpartition('.')[0]
-        mname = '.'.join((pkg, '_network_isolation')).lstrip('.')
+        mname = '.'.join((pkg, '_evaluator')).lstrip('.')
         try:
             return importlib.import_module(mname)
         except ImportError:
-            return importlib.import_module('_network_isolation')
-    _network_isolation = swig_import_helper()
+            return importlib.import_module('_evaluator')
+    _evaluator = swig_import_helper()
     del swig_import_helper
 elif _swig_python_version_info >= (2, 6, 0):
     def swig_import_helper():
@@ -22,31 +22,31 @@ elif _swig_python_version_info >= (2, 6, 0):
         import imp
         fp = None
         try:
-            fp, pathname, description = imp.find_module('_network_isolation', [dirname(__file__)])
+            fp, pathname, description = imp.find_module('_evaluator', [dirname(__file__)])
         except ImportError:
-            import _network_isolation
-            return _network_isolation
+            import _evaluator
+            return _evaluator
         try:
-            _mod = imp.load_module('_network_isolation', fp, pathname, description)
+            _mod = imp.load_module('_evaluator', fp, pathname, description)
         finally:
             if fp is not None:
                 fp.close()
         return _mod
-    _network_isolation = swig_import_helper()
+    _evaluator = swig_import_helper()
     del swig_import_helper
 else:
-    import _network_isolation
-# pull in all the attributes from _network_isolation
+    import _evaluator
+# pull in all the attributes from _evaluator
 if __name__.rpartition('.')[0] != '':
     if _swig_python_version_info >= (2, 7, 0):
         try:
-            from ._network_isolation import *
+            from ._evaluator import *
         except ImportError:
-            from _network_isolation import *
+            from _evaluator import *
     else:
-        from _network_isolation import *
+        from _evaluator import *
 else:
-    from _network_isolation import *
+    from _evaluator import *
 del _swig_python_version_info
 
 try:
@@ -105,6 +105,12 @@ except __builtin__.Exception:
     class _object:
         pass
     _newclass = 0
+
+
+
+
+
+
 
 # This file is compatible with both classic and new-style classes.
 
