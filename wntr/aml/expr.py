@@ -173,7 +173,7 @@ class ExpressionBase(Node, metaclass=abc.ABCMeta):
 
 class Leaf(ExpressionBase, metaclass=abc.ABCMeta):
 
-    __slots__ = ('_value',)
+    __slots__ = ('_value', '_c_obj')
 
     def is_leaf(self):
         return True
@@ -208,6 +208,8 @@ class Leaf(ExpressionBase, metaclass=abc.ABCMeta):
     @value.setter
     def value(self, val):
         self._value = val
+        if self._c_obj is not None:
+            self._c_obj.value = val
 
     def evaluate(self):
         return self._value
@@ -232,6 +234,7 @@ class Float(Leaf):
 
     def __init__(self, val):
         self._value = val
+        self._c_obj = None
 
     def is_constant(self):
         return True
@@ -296,6 +299,7 @@ class Var(Leaf):
     def __init__(self, val=0):
         self._value = val
         self._name = None
+        self._c_obj = None
 
     def is_constant(self):
         return False
@@ -349,6 +353,7 @@ class Param(Leaf):
     def __init__(self, val=0):
         self._value = val
         self._name = None
+        self._c_obj = None
 
     def is_constant(self):
         return False

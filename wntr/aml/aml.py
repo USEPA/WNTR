@@ -1,29 +1,32 @@
 import sys
 import scipy
+from wntr.aml._evaluator import Evaluator
+from wntr.aml.expr import Var, Param
 from collections import OrderedDict
-from wntr.utils.ordered_set import OrderedSet
 if sys.version_info.major == 2:
     from collections import MutableMapping
 else:
     from collections.abc import MutableMapping
 
 
+class Constraint(object):
+    def __init__(self, expr):
+        """
+
+        Parameters
+        ----------
+        expr: wntr.aml.expr.ExpressionBase
+        """
+        self._expr = expr
+
+
 class Model(object):
     """
     A class for creating algebraic models.
     """
-    def __init__(self, model_type='wntr'):
-        self._vars = _OrderedNameDict()
-        self._cons = _OrderedNameSet()
-        self._obj = list()
-        if model_type.upper() == 'WNTR':
-            self._model = WNTRModel()
-        elif model_type.upper() == 'IPOPT':
-            if not ipopt_available:
-                raise ValueError('Ipopt is not available')
-            self._model = IpoptModel()
-        else:
-            raise ValueError('Unrecognized model_type: '+model_type)
+    def __init__(self):
+        self._evaluator = Evaluator()
+        self._refcounts = OrderedDict()
 
     def __setattr__(self, name, val):
         """
@@ -40,9 +43,12 @@ class Model(object):
         -------
         None
         """
-        if isinstance(val, (Leaf, Constraint, _NodeDict)):
+        if isinstance(val, (Var, Param, Constraint, _NodeDict)):
             if hasattr(self, name):
                 raise ValueError('Model already has a {0} named {1}. If you want to replace the {0}, please remove the existing one first.'.format(type(val), name))
+
+        if type(val) == Var:
+            Do something!!!!!
 
         if isinstance(val, (Leaf, VarDict, ParamDict)):
             val.name = name
