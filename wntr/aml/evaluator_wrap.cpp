@@ -4654,6 +4654,150 @@ SWIGINTERN PyObject *Swig_var_INEQUALITY_get(void) {
 }
 
 
+SWIGINTERN int Swig_var_EXP_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable EXP is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_EXP_get(void) {
+  PyObject *pyobj = 0;
+  PyObject *self = 0;
+  
+  (void)self;
+  pyobj = SWIG_From_int(static_cast< int >(EXP));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_LOG_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable LOG is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_LOG_get(void) {
+  PyObject *pyobj = 0;
+  PyObject *self = 0;
+  
+  (void)self;
+  pyobj = SWIG_From_int(static_cast< int >(LOG));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_NEGATION_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable NEGATION is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_NEGATION_get(void) {
+  PyObject *pyobj = 0;
+  PyObject *self = 0;
+  
+  (void)self;
+  pyobj = SWIG_From_int(static_cast< int >(NEGATION));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_SIN_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable SIN is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_SIN_get(void) {
+  PyObject *pyobj = 0;
+  PyObject *self = 0;
+  
+  (void)self;
+  pyobj = SWIG_From_int(static_cast< int >(SIN));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_COS_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable COS is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_COS_get(void) {
+  PyObject *pyobj = 0;
+  PyObject *self = 0;
+  
+  (void)self;
+  pyobj = SWIG_From_int(static_cast< int >(COS));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_TAN_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable TAN is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_TAN_get(void) {
+  PyObject *pyobj = 0;
+  PyObject *self = 0;
+  
+  (void)self;
+  pyobj = SWIG_From_int(static_cast< int >(TAN));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_ASIN_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable ASIN is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_ASIN_get(void) {
+  PyObject *pyobj = 0;
+  PyObject *self = 0;
+  
+  (void)self;
+  pyobj = SWIG_From_int(static_cast< int >(ASIN));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_ACOS_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable ACOS is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_ACOS_get(void) {
+  PyObject *pyobj = 0;
+  PyObject *self = 0;
+  
+  (void)self;
+  pyobj = SWIG_From_int(static_cast< int >(ACOS));
+  return pyobj;
+}
+
+
+SWIGINTERN int Swig_var_ATAN_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable ATAN is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_ATAN_get(void) {
+  PyObject *pyobj = 0;
+  PyObject *self = 0;
+  
+  (void)self;
+  pyobj = SWIG_From_int(static_cast< int >(ATAN));
+  return pyobj;
+}
+
+
 SWIGINTERN int _wrap_new_Leaf__SWIG_0(PyObject *self, PyObject *args) {
   PyObject *resultobj = 0;
   Leaf *result = 0 ;
@@ -5396,6 +5540,56 @@ SWIGINTERN PyObject *_wrap_delete_Evaluator(PyObject *self, PyObject *args) {
   arg1 = reinterpret_cast< Evaluator * >(argp1);
   delete arg1;
   resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Evaluator_nnz_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Evaluator_nnz_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_nnz_set" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Evaluator_nnz_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->nnz = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Evaluator_nnz_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int result;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "Evaluator_nnz_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_nnz_get" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  result = (int) ((arg1)->nnz);
+  resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
   return NULL;
@@ -7028,8 +7222,11 @@ static PyHeapTypeObject SwigPyBuiltin__Constraint_type = {
 SWIGINTERN SwigPyClientData SwigPyBuiltin__Constraint_clientdata = {0, 0, 0, 0, 0, 0, (PyTypeObject *)&SwigPyBuiltin__Constraint_type};
 
 static SwigPyGetSet Evaluator___dict___getset = { SwigPyObject_get___dict__, 0 };
+static SwigPyGetSet Evaluator_nnz_getset = { _wrap_Evaluator_nnz_get, _wrap_Evaluator_nnz_set };
 SWIGINTERN PyGetSetDef SwigPyBuiltin__Evaluator_getset[] = {
     { (char *) "__dict__", (getter) SwigPyBuiltin_GetterClosure, (setter) 0, (char *)"Evaluator.__dict__", (void *) &Evaluator___dict___getset }
+,
+    { (char *) "nnz", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"Evaluator.nnz", (void *) &Evaluator_nnz_getset }
 ,
     {NULL, NULL, NULL, NULL, NULL} /* Sentinel */
 };
@@ -8054,6 +8251,33 @@ SWIG_init(void) {
   SWIG_addvarlink(SWIG_globals(),(char *)"INEQUALITY",Swig_var_INEQUALITY_get, Swig_var_INEQUALITY_set);
   PyDict_SetItemString(md, (char *)"INEQUALITY", PyObject_GetAttrString(SWIG_globals(), "INEQUALITY"));
   SwigPyBuiltin_AddPublicSymbol(public_interface, "INEQUALITY");
+  SWIG_addvarlink(SWIG_globals(),(char *)"EXP",Swig_var_EXP_get, Swig_var_EXP_set);
+  PyDict_SetItemString(md, (char *)"EXP", PyObject_GetAttrString(SWIG_globals(), "EXP"));
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "EXP");
+  SWIG_addvarlink(SWIG_globals(),(char *)"LOG",Swig_var_LOG_get, Swig_var_LOG_set);
+  PyDict_SetItemString(md, (char *)"LOG", PyObject_GetAttrString(SWIG_globals(), "LOG"));
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "LOG");
+  SWIG_addvarlink(SWIG_globals(),(char *)"NEGATION",Swig_var_NEGATION_get, Swig_var_NEGATION_set);
+  PyDict_SetItemString(md, (char *)"NEGATION", PyObject_GetAttrString(SWIG_globals(), "NEGATION"));
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "NEGATION");
+  SWIG_addvarlink(SWIG_globals(),(char *)"SIN",Swig_var_SIN_get, Swig_var_SIN_set);
+  PyDict_SetItemString(md, (char *)"SIN", PyObject_GetAttrString(SWIG_globals(), "SIN"));
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "SIN");
+  SWIG_addvarlink(SWIG_globals(),(char *)"COS",Swig_var_COS_get, Swig_var_COS_set);
+  PyDict_SetItemString(md, (char *)"COS", PyObject_GetAttrString(SWIG_globals(), "COS"));
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "COS");
+  SWIG_addvarlink(SWIG_globals(),(char *)"TAN",Swig_var_TAN_get, Swig_var_TAN_set);
+  PyDict_SetItemString(md, (char *)"TAN", PyObject_GetAttrString(SWIG_globals(), "TAN"));
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "TAN");
+  SWIG_addvarlink(SWIG_globals(),(char *)"ASIN",Swig_var_ASIN_get, Swig_var_ASIN_set);
+  PyDict_SetItemString(md, (char *)"ASIN", PyObject_GetAttrString(SWIG_globals(), "ASIN"));
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "ASIN");
+  SWIG_addvarlink(SWIG_globals(),(char *)"ACOS",Swig_var_ACOS_get, Swig_var_ACOS_set);
+  PyDict_SetItemString(md, (char *)"ACOS", PyObject_GetAttrString(SWIG_globals(), "ACOS"));
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "ACOS");
+  SWIG_addvarlink(SWIG_globals(),(char *)"ATAN",Swig_var_ATAN_get, Swig_var_ATAN_set);
+  PyDict_SetItemString(md, (char *)"ATAN", PyObject_GetAttrString(SWIG_globals(), "ATAN"));
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "ATAN");
   
   /* type '::Leaf' */
   builtin_pytype = (PyTypeObject *)&SwigPyBuiltin__Leaf_type;

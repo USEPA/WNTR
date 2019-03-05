@@ -326,7 +326,7 @@ void Evaluator::evaluate(double* array_out, int array_length_out)
 void Evaluator::evaluate_csr_jacobian(double* values_array_out, int values_array_length_out, int* col_ndx_array_out, int col_ndx_array_length_out, int* row_nnz_array_out, int row_nnz_array_length_out)
 {
   int num_cons = fn_rpn.size();
-  row_nnz[0] = 0;
+  row_nnz_array_out[0] = 0;
   int nnz_ndx = 0;
   int nnz;
   for (int con_ndx=0; con_ndx<num_cons; ++con_ndx)

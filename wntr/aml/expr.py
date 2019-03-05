@@ -602,6 +602,7 @@ class expression(ExpressionBase):
         rpn = list()
         for oper in self.operators():
             oper.get_rpn(rpn, leaf_ndx_map)
+        return rpn
 
 
 class Operator(Node, metaclass=abc.ABCMeta):

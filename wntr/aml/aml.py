@@ -196,7 +196,7 @@ class Model(object):
         jac = con.expr.reverse_sd()
         for v in con.expr.get_vars():
             jac_v = jac[v]
-            if jac_v in native_numeric_types:
+            if type(jac_v) in native_numeric_types:
                 jac_v = Float(jac_v)
             for f in jac_v.get_floats():
                 if f not in leaf_ndx_map:
@@ -241,7 +241,7 @@ class Model(object):
             self._evaluator.load_var_values_from_x(x)
         jac_values, col_ndx, row_nnz = self._evaluator.evaluate_csr_jacobian(self._evaluator.nnz,
                                                                              self._evaluator.nnz,
-                                                                             len(self._cons) + 1)
+                                                                             len(self._con_ccon_map) + 1)
         result = scipy.sparse.csr_matrix((jac_values, col_ndx, row_nnz), shape=(n_cons, n_vars))
         return result
 
