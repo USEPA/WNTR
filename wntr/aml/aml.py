@@ -1,13 +1,4 @@
 import sys
-from .aml_core import Var, Param, Constraint, WNTRModel, Leaf, ConditionalExpression, abs, sign
-Var.__hash__ = None
-Param.__hash__ = None
-Constraint.__hash__ = None
-try:
-    from .ipopt_model import IpoptModel
-    ipopt_available = True
-except ImportError:
-    ipopt_available = False
 import scipy
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
@@ -15,51 +6,6 @@ if sys.version_info.major == 2:
     from collections import MutableMapping
 else:
     from collections.abc import MutableMapping
-
-
-class _OrderedNameDict(MutableMapping):
-    def __init__(self, mapping=None):
-        self._data = OrderedDict()
-        self._keys = OrderedDict()
-        if mapping is not None:
-            self.update(mapping)
-
-    def __getitem__(self, item):
-        return self._data[item.name]
-
-    def __setitem__(self, key, value):
-        self._data[key.name] = value
-        self._keys[key.name] = key
-
-    def __delitem__(self, key):
-        del self._data[key.name]
-        del self._keys[key.name]
-
-    def __iter__(self):
-        return iter(self._keys.values())
-
-    def __len__(self):
-        return len(self._data)
-
-    def __repr__(self):
-        s = '{'
-        for name, val in self._data.items():
-            s += str(name)
-            s += ': '
-            s += str(val)
-            s += ', '
-        s += '}'
-        return s
-
-    def __str__(self):
-        return self.__repr__()
-
-
-class _OrderedNameSet(OrderedSet):
-    def __init__(self, iterable=None):
-        self._data = _OrderedNameDict()
-        if iterable is not None:
-            self.update(iterable)
 
 
 class Model(object):
