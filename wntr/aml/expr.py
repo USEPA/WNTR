@@ -4,10 +4,32 @@ import operator
 import collections.abc as collections_abc
 import math
 from wntr.utils.ordered_set import OrderedSet
+import enum
 
 native_numeric_types = {float, int}
 native_integer_types = {int, bool}
 native_boolean_types = {int, bool, str}
+
+
+class OperationEnum(enum.IntEnum):
+    add = -1
+    sub = -2
+    mul = -3
+    div = -4
+    pow = -5
+    abs = -6
+    sign = -7
+    if_else = -8
+    inequality = -9
+    exp = -10
+    log = -11
+    negation = -12
+    sin = -13
+    cos = -14
+    tan = -15
+    asin = -16
+    acos = -17
+    atan = -18
 
 
 class Node(object, metaclass=abc.ABCMeta):
@@ -167,6 +189,10 @@ class ExpressionBase(Node, metaclass=abc.ABCMeta):
     def reverse_sd(self):
         pass
 
+    @abc.abstractmethod
+    def get_rpn(self, leaf_ndx_map):
+        pass
+
     def __repr__(self):
         return str(self)
 
@@ -226,6 +252,9 @@ class Leaf(ExpressionBase, metaclass=abc.ABCMeta):
 
     def reverse_sd(self):
         return {self: self}
+
+    def get_rpn(self, leaf_ndx_map):
+        return [leaf_ndx_map[self]]
 
 
 class Float(Leaf):
@@ -569,6 +598,11 @@ class expression(ExpressionBase):
             return True
         return False
 
+    def get_rpn(self, leaf_ndx_map):
+        rpn = list()
+        for oper in self.operators():
+            oper.get_rpn(rpn, leaf_ndx_map)
+
 
 class Operator(Node, metaclass=abc.ABCMeta):
 
@@ -597,6 +631,10 @@ class Operator(Node, metaclass=abc.ABCMeta):
     def diff_up_symbolic(self, val_dict, der_dict):
         pass
 
+    @abc.abstractmethod
+    def get_rpn(self, rpn, leaf_ndx_map):
+        pass
+
 
 class BinaryOperator(Operator):
 
@@ -604,6 +642,7 @@ class BinaryOperator(Operator):
 
     operation = None
     str_repn = None
+    operation_enum = None
 
     def __init__(self, operand1, operand2):
         self._operand1 = operand1
@@ -673,6 +712,13 @@ class BinaryOperator(Operator):
             der_dict[self._operand2] = 0
         val_dict[self] = self.operation(val1, val2)
 
+    def get_rpn(self, rpn, leaf_ndx_map):
+        if self._operand1.is_leaf():
+            rpn.append(leaf_ndx_map[self._operand1])
+        if self._operand2.is_leaf():
+            rpn.append(leaf_ndx_map[self._operand2])
+        rpn.append(self.operation_enum)
+
 
 class AddOperator(BinaryOperator):
 
@@ -680,6 +726,7 @@ class AddOperator(BinaryOperator):
 
     operation = operator.add
     str_repn = '+'
+    operation_enum = OperationEnum.add.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -692,6 +739,7 @@ class SubtractOperator(BinaryOperator):
 
     operation = operator.sub
     str_repn = '-'
+    operation_enum = OperationEnum.sub.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -704,6 +752,7 @@ class MultiplyOperator(BinaryOperator):
 
     operation = operator.mul
     str_repn = '*'
+    operation_enum = OperationEnum.mul.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -716,6 +765,7 @@ class DivideOperator(BinaryOperator):
 
     operation = operator.truediv
     str_repn = '/'
+    operation_enum = OperationEnum.div.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -728,6 +778,7 @@ class PowerOperator(BinaryOperator):
 
     operation = operator.pow
     str_repn = '**'
+    operation_enum = OperationEnum.pow.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -742,6 +793,7 @@ class UnaryOperator(Operator):
 
     operation = None
     str_repn = None
+    operation_enum = None
 
     def __init__(self, operand):
         """
@@ -790,12 +842,18 @@ class UnaryOperator(Operator):
             der_dict[self._operand] = 0
         val_dict[self] = self.__class__.operation(val)
 
+    def get_rpn(self, rpn, leaf_ndx_map):
+        if self._operand.is_leaf():
+            rpn.append(leaf_ndx_map[self._operand])
+        rpn.append(self.operation_enum)
+
 
 class NegationOperator(UnaryOperator):
     __slots__ = ()
 
     operation = operator.neg
     str_repn = '-'
+    operation_enum = OperationEnum.negation.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -1009,6 +1067,21 @@ def inequality(body, lb=None, ub=None):
     return expr
 
 
+def sign(val):
+    if type(val) in native_numeric_types:
+        if val >= 0:
+            return 1
+        else:
+            return -1
+    return val._unary_operation_helper(SignOperator)
+
+
+def abs(val):
+    if type(val) in native_numeric_types:
+        return math.fabs(val)
+    return val._unary_operation_helper(AbsOperator)
+
+
 class IfElseOperator(Operator):
     __slots__ = ('_if_arg', '_then_arg', '_else_arg')
 
@@ -1117,6 +1190,13 @@ class IfElseOperator(Operator):
         der_dict[self._then_arg] += if_else(val_dict[self._if_arg], der, 0)
         der_dict[self._else_arg] += if_else(val_dict[self._if_arg], 0, der)
 
+    def get_rpn(self, rpn, leaf_ndx_map):
+        if self._then_arg.is_leaf():
+            rpn.append(leaf_ndx_map[self._then_arg])
+        if self._else_arg.is_leaf():
+            rpn.append(leaf_ndx_map[self._else_arg])
+        rpn.append(OperationEnum.if_else.value)
+
 
 class InequalityOperator(Operator):
     __slots__ = ('_lb', '_ub', '_body')
@@ -1170,12 +1250,44 @@ class InequalityOperator(Operator):
     def diff_down(self, val_dict, der_dict):
         pass
 
+    def get_rpn(self, rpn, leaf_ndx_map):
+        if self._body.is_leaf():
+            rpn.append(leaf_ndx_map[self._body])
+        rpn.append(leaf_ndx_map[self._lb])
+        rpn.append(leaf_ndx_map[self._ub])
+        rpn.append(OperationEnum.inequality.value)
+
+
+class SignOperator(UnaryOperator):
+    __slots__ = ()
+
+    operation = sign
+    str_repn = 'sign'
+    operation_enum = OperationEnum.sign.value
+
+    def diff_down(self, val_dict, der_dict):
+        pass
+
+
+class AbsOperator(UnaryOperator):
+    __slots__ = ()
+
+    operation = abs
+    str_repn = 'abs'
+    operation_enum = OperationEnum.abs.value
+
+    def diff_down(self, val_dict, der_dict):
+        der = der_dict[self]
+        der_dict[self._operand] += der * if_else(if_statement=inequality(body=val_dict[self._operand], lb=0),
+                                                 then_statement=Float(1), else_statement=Float(-1))
+
 
 class ExpOperator(UnaryOperator):
     __slots__ = ()
 
     operation = exp
     str_repn = 'exp'
+    operation_enum = OperationEnum.exp.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -1187,6 +1299,7 @@ class LogOperator(UnaryOperator):
 
     operation = log
     str_repn = 'log'
+    operation_enum = OperationEnum.log.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -1198,6 +1311,7 @@ class SinOperator(UnaryOperator):
 
     operation = sin
     str_repn = 'sin'
+    operation_enum = OperationEnum.sin.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -1209,6 +1323,7 @@ class CosOperator(UnaryOperator):
 
     operation = cos
     str_repn = 'cos'
+    operation_enum = OperationEnum.cos.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -1220,6 +1335,7 @@ class TanOperator(UnaryOperator):
 
     operation = tan
     str_repn = 'tan'
+    operation_enum = OperationEnum.tan.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -1231,6 +1347,7 @@ class AsinOperator(UnaryOperator):
 
     operation = asin
     str_repn = 'asin'
+    operation_enum = OperationEnum.asin.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -1242,6 +1359,7 @@ class AcosOperator(UnaryOperator):
 
     operation = acos
     str_repn = 'acos'
+    operation_enum = OperationEnum.acos.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
@@ -1253,6 +1371,7 @@ class AtanOperator(UnaryOperator):
 
     operation = atan
     str_repn = 'atan'
+    operation_enum = OperationEnum.atan.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]

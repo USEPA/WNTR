@@ -3,6 +3,7 @@
 #include <set>
 #include <map>
 #include <stdexcept>
+#include <cmath>
 
 
 const int ADD = -1;
@@ -14,6 +15,15 @@ const int ABS = -6;
 const int SIGN = -7;
 const int IF_ELSE = -8;
 const int INEQUALITY = -9;
+const int EXP = -10;
+const int LOG = -11;
+const int NEGATION = -12;
+const int SIN = -13;
+const int COS = -14;
+const int TAN = -15;
+const int ASIN = -16;
+const int ACOS = -17;
+const int ATAN = -18;
 
 
 class Leaf
@@ -75,6 +85,8 @@ class Evaluator
 public:
   Evaluator(){}
   ~Evaluator();
+
+  int nnz;
 
   Var* add_var(double value);
   Param* add_param(double value);
