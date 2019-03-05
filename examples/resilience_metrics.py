@@ -283,7 +283,7 @@ def water_security_metrics(wn):
     VC = wntr.metrics.volume_contaminant_consumed(demand, quality, 0.001)
     EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, 0.001)
 
-    wntr.graphics.plot_network(wn, node_attribute=MC.sum(axis=0), node_range = [0,400], node_size=40,
+    wntr.graphics.plot_network(wn, node_attribute=MC.sum(axis=0), node_range = [0,1e5], node_size=40,
                           title='Total mass consumed')
 
     plt.figure()

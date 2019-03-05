@@ -2583,6 +2583,8 @@ class BinFile(object):
             simulation results in a different format (such as directly to a file or database).
             
         """
+        self.results = wntr.sim.SimulationResults()
+        
         logger.debug('Read binary EPANET data from %s',filename)
         dt_str = '|S{}'.format(self.idlen)
         with open(filename, 'rb') as fin:
