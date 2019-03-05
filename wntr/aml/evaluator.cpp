@@ -217,3 +217,25 @@ void Evaluator::evaluate_csr_jacobian(double* values_array_out, int values_array
 	}
     }
 }
+
+
+void Evaluator::get_x(double *array_out, int array_length_out)
+{
+  int n_vars = var_vector.size();
+  for (int i=0; i<n_vars; ++i)
+    {
+      array_out[i] = var_vector[i]->value;
+    }
+}
+
+
+void Evaluator::load_var_values_from_x(double *arrayin, int array_length_in)
+{
+  int n_vars = var_vector.size();
+  for (int i=0; i<n_vars; ++i)
+    {
+      var_vector[i]->value = arrayin[i];
+    }
+}
+
+
