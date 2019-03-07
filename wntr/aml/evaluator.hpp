@@ -43,6 +43,8 @@ public:
   Var(){}
   Var(double val): Leaf(val) {}
   ~Var(){}
+
+  int index;
 };
 
 
@@ -77,6 +79,8 @@ public:
   std::vector<int> fn_rpn;
   std::map<Var*, std::vector<int> > jac_rpn;
   std::vector<Leaf*> leaves;
+
+  int index;
 };
 
 

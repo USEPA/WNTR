@@ -150,6 +150,61 @@ class hazen_williams_headloss_constraint(Definition):
             updater.add(link, '_is_isolated', hazen_williams_headloss_constraint.update)
 
 
+class approx_hazen_williams_headloss_constraint(Definition):
+    @classmethod
+    def build(cls, m, wn, updater, index_over=None):
+        """
+        Adds a mass balance to the model for the specified junctions.
+
+        Parameters
+        ----------
+        m: wntr.aml.aml.aml.Model
+        wn: wntr.network.model.WaterNetworkModel
+        updater: ModelUpdater
+        index_over: list of str
+            list of pipe names; default is all pipes in wn
+        """
+        if not hasattr(m, 'approx_hazen_williams_headloss'):
+            m.approx_hazen_williams_headloss = aml.ConstraintDict()
+
+        if index_over is None:
+            index_over = wn.pipe_name_list
+
+        for link_name in index_over:
+            if link_name in m.hazen_williams_headloss:
+                del m.approx_hazen_williams_headloss[link_name]
+
+            link = wn.get_link(link_name)
+            f = m.flow[link_name]
+            status = link.status
+
+            if status == LinkStatus.Closed or link._is_isolated:
+                con = aml.Constraint(f)
+            else:
+                eps = 1e-5  # Need to provide an options for this
+                start_node_name = link.start_node_name
+                end_node_name = link.end_node_name
+                start_node = wn.get_node(start_node_name)
+                end_node = wn.get_node(end_node_name)
+                if isinstance(start_node, wntr.network.Junction):
+                    start_h = m.head[start_node_name]
+                else:
+                    start_h = m.source_head[start_node_name]
+                if isinstance(end_node, wntr.network.Junction):
+                    end_h = m.head[end_node_name]
+                else:
+                    end_h = m.source_head[end_node_name]
+                k = m.hw_resistance[link_name]
+                minor_k = m.minor_loss[link_name]
+
+                con = aml.Constraint(expr=-aml.sign(f)*k*aml.abs(f)**m.hw_exp - eps*k**0.5*f - aml.sign(f)*minor_k*f**m.hw_minor_exp + start_h - end_h)
+
+            m.approx_hazen_williams_headloss[link_name] = con
+
+            updater.add(link, 'status', approx_hazen_williams_headloss_constraint.update)
+            updater.add(link, '_is_isolated', approx_hazen_williams_headloss_constraint.update)
+
+
 class pdd_constraint(Definition):
     @classmethod
     def build(cls, m, wn, updater, index_over=None):

@@ -11,7 +11,7 @@ else:
 
 
 class Constraint(object):
-    __slots__ = ('_expr', 'name')
+    __slots__ = ('_expr', 'name', '_c_obj')
 
     def __init__(self, expr):
         """
@@ -22,10 +22,18 @@ class Constraint(object):
         """
         self._expr = expr
         self.name = None
+        self._c_obj = None
 
     @property
     def expr(self):
         return self._expr
+
+    @property
+    def index(self):
+        if self._c_obj is None:
+            return None
+        else:
+            return self._c_obj.index
 
 
 class Model(object):
@@ -166,6 +174,7 @@ class Model(object):
 
     def _register_constraint(self, con):
         ccon = self._evaluator.add_constraint()
+        con._c_obj = ccon
         self._con_ccon_map[con] = ccon
         leaf_ndx_map = OrderedDict()
         referenced_vars = OrderedSet()

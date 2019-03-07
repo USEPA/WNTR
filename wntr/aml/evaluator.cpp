@@ -289,6 +289,7 @@ void Evaluator::set_structure()
     {
       var_vector.push_back(*var_iter);
       var_indices[*var_iter] = ndx;
+      (*var_iter)->index = ndx;
       ++ndx;
     }
 
@@ -298,6 +299,7 @@ void Evaluator::set_structure()
   for (con_iter = con_set.begin(); con_iter != con_set.end(); ++con_iter)
     {
       Constraint* con = *con_iter;
+      con->index = ndx;
       leaves.push_back(con->leaves);
       fn_rpn.push_back(con->fn_rpn);
       row_nnz.push_back(row_nnz[ndx] + con->jac_rpn.size());

@@ -5030,6 +5030,56 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Var_index_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Var *arg1 = (Var *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Var_index_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Var, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Var_index_set" "', argument " "1"" of type '" "Var *""'"); 
+  }
+  arg1 = reinterpret_cast< Var * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Var_index_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->index = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Var_index_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Var *arg1 = (Var *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int result;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "Var_index_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Var, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Var_index_get" "', argument " "1"" of type '" "Var *""'"); 
+  }
+  arg1 = reinterpret_cast< Var * >(argp1);
+  result = (int) ((arg1)->index);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGPY_DESTRUCTOR_CLOSURE(_wrap_delete_Var) /* defines _wrap_delete_Var_destructor_closure */
 
 SWIGINTERN int _wrap_new_Param__SWIG_0(PyObject *self, PyObject *args) {
@@ -5505,6 +5555,56 @@ SWIGINTERN PyObject *_wrap_Constraint_leaves_get(PyObject *self, PyObject *args)
   arg1 = reinterpret_cast< Constraint * >(argp1);
   result = (std::vector< Leaf * > *)& ((arg1)->leaves);
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_Leaf_p_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Constraint_index_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Constraint *arg1 = (Constraint *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Constraint_index_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Constraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Constraint_index_set" "', argument " "1"" of type '" "Constraint *""'"); 
+  }
+  arg1 = reinterpret_cast< Constraint * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Constraint_index_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->index = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Constraint_index_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Constraint *arg1 = (Constraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int result;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "Constraint_index_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Constraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Constraint_index_get" "', argument " "1"" of type '" "Constraint *""'"); 
+  }
+  arg1 = reinterpret_cast< Constraint * >(argp1);
+  result = (int) ((arg1)->index);
+  resultobj = SWIG_From_int(static_cast< int >(result));
   return resultobj;
 fail:
   return NULL;
@@ -6329,8 +6429,11 @@ static PyHeapTypeObject SwigPyBuiltin__Leaf_type = {
 
 SWIGINTERN SwigPyClientData SwigPyBuiltin__Leaf_clientdata = {0, 0, 0, 0, 0, 0, (PyTypeObject *)&SwigPyBuiltin__Leaf_type};
 
+static SwigPyGetSet Var_index_getset = { _wrap_Var_index_get, _wrap_Var_index_set };
 static SwigPyGetSet Var___dict___getset = { SwigPyObject_get___dict__, 0 };
 SWIGINTERN PyGetSetDef SwigPyBuiltin__Var_getset[] = {
+    { (char *) "index", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"Var.index", (void *) &Var_index_getset }
+,
     { (char *) "__dict__", (getter) SwigPyBuiltin_GetterClosure, (setter) 0, (char *)"Var.__dict__", (void *) &Var___dict___getset }
 ,
     {NULL, NULL, NULL, NULL, NULL} /* Sentinel */
@@ -6990,11 +7093,14 @@ static PyHeapTypeObject SwigPyBuiltin__Float_type = {
 SWIGINTERN SwigPyClientData SwigPyBuiltin__Float_clientdata = {0, 0, 0, 0, 0, 0, (PyTypeObject *)&SwigPyBuiltin__Float_type};
 
 static SwigPyGetSet Constraint_leaves_getset = { _wrap_Constraint_leaves_get, _wrap_Constraint_leaves_set };
+static SwigPyGetSet Constraint_index_getset = { _wrap_Constraint_index_get, _wrap_Constraint_index_set };
 static SwigPyGetSet Constraint___dict___getset = { SwigPyObject_get___dict__, 0 };
 static SwigPyGetSet Constraint_fn_rpn_getset = { _wrap_Constraint_fn_rpn_get, _wrap_Constraint_fn_rpn_set };
 static SwigPyGetSet Constraint_jac_rpn_getset = { _wrap_Constraint_jac_rpn_get, _wrap_Constraint_jac_rpn_set };
 SWIGINTERN PyGetSetDef SwigPyBuiltin__Constraint_getset[] = {
     { (char *) "leaves", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"Constraint.leaves", (void *) &Constraint_leaves_getset }
+,
+    { (char *) "index", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"Constraint.index", (void *) &Constraint_index_getset }
 ,
     { (char *) "__dict__", (getter) SwigPyBuiltin_GetterClosure, (setter) 0, (char *)"Constraint.__dict__", (void *) &Constraint___dict___getset }
 ,

@@ -374,6 +374,13 @@ class Var(Leaf):
     def is_potentially_variable(self):
         return True
 
+    @property
+    def index(self):
+        if self._c_obj is None:
+            return None
+        else:
+            return self._c_obj.index
+
 
 class Param(Leaf):
 
@@ -816,7 +823,7 @@ class UnaryOperator(Operator):
             val = self._operand._str()
         else:
             val = val_dict[self._operand]
-        val_dict[self] = self.str_repn + '(' + val + ')'
+        val_dict[self] = '(' + self.str_repn + '(' + val + ')' + ')'
 
     def operands(self):
         yield self._operand
