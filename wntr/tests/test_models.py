@@ -2,7 +2,6 @@ import wntr
 import unittest
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 from wntr.models.utils import ModelUpdater
 
 

@@ -139,8 +139,8 @@ class hazen_williams_headloss_constraint(Definition):
                 d = m.hw_d
 
                 con = aml.ConditionalExpression()
-                con.add_condition(aml.abs(f) - m.hw_q1, -k*m.hw_m*f - aml.sign(f)*minor_k*f**m.hw_minor_exp + start_h - end_h)
-                con.add_condition(aml.abs(f) - m.hw_q2, -k*(a*f**3 + aml.sign(f)*b*f**2 + c*f + aml.sign(f)*d) - aml.sign(f)*minor_k*f**m.hw_minor_exp + start_h - end_h)
+                con.add_condition(aml.inequality(body=aml.abs(f), ub=m.hw_q1), -k*m.hw_m*f - aml.sign(f)*minor_k*f**m.hw_minor_exp + start_h - end_h)
+                con.add_condition(aml.inequality(body=aml.abs(f), ub=m.hw_q2), -k*(a*f**3 + aml.sign(f)*b*f**2 + c*f + aml.sign(f)*d) - aml.sign(f)*minor_k*f**m.hw_minor_exp + start_h - end_h)
                 con.add_final_expr(-aml.sign(f)*k*aml.abs(f)**m.hw_exp - aml.sign(f)*minor_k*f**m.hw_minor_exp + start_h - end_h)
                 con = aml.Constraint(con)
 
@@ -251,10 +251,10 @@ class pdd_constraint(Definition):
                     c2 = m.pdd_poly2_coeffs_c[node_name]
                     d2 = m.pdd_poly2_coeffs_d[node_name]
                     con = aml.ConditionalExpression()
-                    con.add_condition(h - elev - pmin, d - d_expected*slope*(h-elev-pmin))
-                    con.add_condition(h - elev - pmin - delta, d - d_expected*(a1*(h-elev)**3 + b1*(h-elev)**2 + c1*(h-elev) + d1))
-                    con.add_condition(h - elev - pnom + delta, d - d_expected*((h-elev-pmin)/(pnom-pmin))**0.5)
-                    con.add_condition(h - elev - pnom, d - d_expected*(a2*(h-elev)**3 + b2*(h-elev)**2 + c2*(h-elev) + d2))
+                    con.add_condition(aml.inequality(body=h - elev - pmin, ub=0), d - d_expected*slope*(h-elev-pmin))
+                    con.add_condition(aml.inequality(body=h - elev - pmin - delta, ub=0), d - d_expected*(a1*(h-elev)**3 + b1*(h-elev)**2 + c1*(h-elev) + d1))
+                    con.add_condition(aml.inequality(body=h - elev - pnom + delta, ub=0), d - d_expected*((h-elev-pmin)/(pnom-pmin))**0.5)
+                    con.add_condition(aml.inequality(body=h - elev - pnom, ub=0), d - d_expected*(a2*(h-elev)**3 + b2*(h-elev)**2 + c2*(h-elev) + d2))
                     con.add_final_expr(d - d_expected*(slope*(h - elev - pnom) + 1.0))
                     con = aml.Constraint(con)
                 elif status == _DemandStatus.Full:
@@ -316,14 +316,14 @@ class head_pump_headloss_constraint(Definition):
                 if C <= 1:
                     a, b, c, d = get_pump_poly_coefficients(A, B, C, m)
                     con = aml.ConditionalExpression()
-                    con.add_condition(f - m.pump_q1, m.pump_slope * f + A - end_h + start_h)
-                    con.add_condition(f - m.pump_q2, a*f**3 + b*f**2 + c*f + d - end_h + start_h)
+                    con.add_condition(aml.inequality(body=f, ub=m.pump_q1), m.pump_slope * f + A - end_h + start_h)
+                    con.add_condition(aml.inequality(body=f, ub=m.pump_q2), a*f**3 + b*f**2 + c*f + d - end_h + start_h)
                     con.add_final_expr(A - B*f**C - end_h + start_h)
                     con = aml.Constraint(con)
                 else:
                     q_bar, h_bar = get_pump_line_params(A, B, C, m)
                     con = aml.ConditionalExpression()
-                    con.add_condition(f - q_bar, m.pump_slope*(f - q_bar) + h_bar - end_h + start_h)
+                    con.add_condition(aml.inequality(body=f, ub=q_bar), m.pump_slope*(f - q_bar) + h_bar - end_h + start_h)
                     con.add_final_expr(A - B*f**C - end_h + start_h)
                     con = aml.Constraint(con)
 
@@ -489,7 +489,7 @@ class fcv_headloss_constraint(Definition):
                 else:
                     assert status == LinkStatus.Open
                     con = aml.ConditionalExpression()
-                    con.add_condition(f, -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
+                    con.add_condition(aml.inequality(body=f, ub=0), -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
                     con.add_final_expr(m.minor_loss[link_name] * f ** 2 - start_h + end_h)
                     con = aml.Constraint(con)
             m.fcv_headloss[link_name] = con
@@ -544,13 +544,13 @@ class tcv_headloss_constraint(Definition):
 
                 if status == LinkStatus.Active:
                     con = aml.ConditionalExpression()
-                    con.add_condition(f, -m.tcv_resistance[link_name] * f ** 2 - start_h + end_h)
+                    con.add_condition(aml.inequality(f, ub=0), -m.tcv_resistance[link_name] * f ** 2 - start_h + end_h)
                     con.add_final_expr(m.tcv_resistance[link_name] * f ** 2 - start_h + end_h)
                     con = aml.Constraint(con)
                 else:
                     assert status == LinkStatus.Open
                     con = aml.ConditionalExpression()
-                    con.add_condition(f, -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
+                    con.add_condition(aml.inequality(f, ub=0), -m.minor_loss[link_name] * f ** 2 - start_h + end_h)
                     con.add_final_expr(m.minor_loss[link_name] * f ** 2 - start_h + end_h)
                     con = aml.Constraint(con)
             m.tcv_headloss[link_name] = con
@@ -601,8 +601,8 @@ class leak_constraint(Definition):
                     area = m.leak_area[node_name]
                     Cd = m.leak_coeff[node_name]
                     con = aml.ConditionalExpression()
-                    con.add_condition(h - elev, leak_rate - slope*(h-elev))
-                    con.add_condition(h - elev - delta, leak_rate - (a*(h-elev)**3 + b*(h-elev)**2 + c*(h-elev) + d))
+                    con.add_condition(aml.inequality(h, ub=elev), leak_rate - slope*(h-elev))
+                    con.add_condition(aml.inequality(h - elev, ub=delta), leak_rate - (a*(h-elev)**3 + b*(h-elev)**2 + c*(h-elev) + d))
                     con.add_final_expr(leak_rate - Cd*area*(2.0*9.81*(h-elev))**0.5)
                     con = aml.Constraint(con)
                 elif status == _DemandStatus.Zero:
