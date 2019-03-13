@@ -13,7 +13,6 @@ const int DIV = -4;
 const int POW = -5;
 const int ABS = -6;
 const int SIGN = -7;
-const int IF_ELSE = -8;
 const int INEQUALITY = -9;
 const int EXP = -10;
 const int LOG = -11;
@@ -84,6 +83,32 @@ public:
 };
 
 
+class IfElseConstraint
+{
+public:
+  IfElseConstraint(){}
+  ~IfElseConstraint(){}
+
+  void add_leaf(Leaf* leaf);
+  void end_condition();
+  void add_condition_rpn_term(int term);
+  void add_fn_rpn_term(int term);
+  void add_jac_rpn_term(Var* v, int term);
+
+  std::vector<int> current_condition_rpn;
+  std::vector<int> current_fn_rpn;
+  std::map<Var*, std::vector<int> > current_jac_rpn;
+  
+  std::vector<std::vector<int> > condition_rpn;
+  std::vector<std::vector<int> > fn_rpn;
+  std::map<Var*, std::vector<std::vector<int> > > jac_rpn;
+
+  std::vector<Leaf*> leaves;
+
+  int index;
+};
+
+
 class Evaluator
 {
 public:
@@ -96,11 +121,13 @@ public:
   Param* add_param(double value);
   Float* add_float(double value);
   Constraint* add_constraint();
+  IfElseConstraint* add_if_else_constraint();
 
   void remove_var(Var* v);
   void remove_param(Param* p);
   void remove_float(Float* f);
   void remove_constraint(Constraint* c);
+  void remove_if_else_constraint(IfElseConstraint* c);
 
   void set_structure();
 
@@ -115,14 +142,20 @@ private:
   std::set<Param*> param_set;
   std::set<Float*> float_set;
   std::set<Constraint*> con_set;
+  std::set<IfElseConstraint*> if_else_con_set;
 
   std::vector<Var*> var_vector;
-  
   std::vector<std::vector<Leaf*> > leaves;
-  std::vector<std::vector<int> > fn_rpn;
-  std::vector<std::vector<int> > jac_rpn;
   std::vector<int> col_ndx;
   std::vector<int> row_nnz;
+
+  std::vector<std::vector<int> > fn_rpn;
+  std::vector<std::vector<int> > jac_rpn;
+
+  std::vector<int> n_conditions;
+  std::vector<std::vector<int> > if_else_condition_rpn;
+  std::vector<std::vector<int> > if_else_fn_rpn;
+  std::vector<std::vector<int> > if_else_jac_rpn;
 };
 
 

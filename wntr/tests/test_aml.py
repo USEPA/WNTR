@@ -162,18 +162,16 @@ class TestConstraint(unittest.TestCase):
         m.x = aml.Var(x)
         m.y = aml.Var(y)
 
-        e = aml.if_else(if_statement=aml.inequality(body=m.x, ub=-1),
-                        then_statement=-(-m.x)**1.852 - (-m.x)**2 - m.y,
-                        else_statement=aml.if_else(if_statement=aml.inequality(body=m.x, ub=1),
-                                                   then_statement=m.x,
-                                                   else_statement=m.x**1.852 + m.x**2 - m.y))
+        e = aml.ConditionalExpression()
+        e.add_condition(aml.inequality(body=m.x, ub=-1), -(-m.x)**1.852 - (-m.x)**2 - m.y)
+        e.add_condition(aml.inequality(body=m.x, ub=1), m.x)
+        e.add_final_expr(m.x**1.852 + m.x**2 - m.y)
         m.con1 = aml.Constraint(e)
 
-        e = aml.if_else(if_statement=aml.inequality(body=m.y, ub=-1),
-                        then_statement=-(-m.y)**(1.852) - (-m.y)**(2) - m.x,
-                        else_statement=aml.if_else(if_statement=aml.inequality(body=m.y, ub=1),
-                                                   then_statement=m.y,
-                                                   else_statement=m.y**(1.852) + m.y**(2) - m.x))
+        e = aml.ConditionalExpression()
+        e.add_condition(aml.inequality(body=m.y, ub=-1), -(-m.y)**(1.852) - (-m.y)**(2) - m.x)
+        e.add_condition(aml.inequality(body=m.y, ub=1), m.y)
+        e.add_final_expr(m.y**(1.852) + m.y**(2) - m.x)
         m.con2 = aml.Constraint(e)
 
         true_con_values = OrderedDict()
@@ -215,12 +213,10 @@ class TestConstraint(unittest.TestCase):
         del true_con_values[m.con2]
         del true_jac[m.con2]
         del m.con2
-        e = aml.if_else(if_statement=aml.inequality(body=m.y, ub=-1),
-                        then_statement=-(-m.y)**2.852 - (-m.y)**3 - m.x,
-                        else_statement=aml.if_else(if_statement=aml.inequality(body=m.y, ub=1),
-                                                   then_statement=m.y**2,
-                                                   else_statement=m.y**2.852 + m.y**3 - m.x))
-
+        e = aml.ConditionalExpression()
+        e.add_condition(aml.inequality(body=m.y, ub=-1), -(-m.y)**2.852 - (-m.y)**3 - m.x)
+        e.add_condition(aml.inequality(body=m.y, ub=1), m.y**2)
+        e.add_final_expr(m.y**2.852 + m.y**3 - m.x)
         m.con2 = aml.Constraint(e)
 
         true_jac[m.con2] = OrderedDict()
@@ -263,7 +259,7 @@ class TestConstraint(unittest.TestCase):
 
 class TestCSRJacobian(unittest.TestCase):
     def test_register_and_remove_constraint(self):
-        m = aml.Model('wntr')
+        m = aml.Model()
         m.x = aml.Var(2.0)
         m.y = aml.Var(3.0)
         m.z = aml.Var(4.0)
@@ -308,7 +304,6 @@ class TestCSRJacobian(unittest.TestCase):
             for v in m.vars():
                 self.assertTrue(true_jac[c][v] == A[c.index, v.index])
 
-        m.release_structure()
         del m.c3
         m.c3 = aml.Constraint(m.z)
         m.set_structure()
@@ -321,6 +316,7 @@ class TestCSRJacobian(unittest.TestCase):
         true_con_values[m.c4] = 2.1
         for c in m.cons():
             self.assertTrue(true_con_values[c] == con_values[c.index])
+        true_jac[m.c3] = OrderedDict()
         true_jac[m.c3][m.x] = 0.0
         true_jac[m.c3][m.y] = 0.0
         true_jac[m.c3][m.z] = 1.0

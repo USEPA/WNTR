@@ -19,6 +19,47 @@ void Constraint::add_jac_rpn_term(Var* v, int term)
 }
 
 
+void IfElseConstraint::add_leaf(Leaf* leaf)
+{
+  leaves.push_back(leaf);
+}
+
+
+void IfElseConstraint::end_condition()
+{
+  condition_rpn.push_back(current_condition_rpn);
+  fn_rpn.push_back(current_fn_rpn);
+
+  std::map<Var*, std::vector<int> >::iterator jac_rpn_iter;
+  for (jac_rpn_iter=current_jac_rpn.begin(); jac_rpn_iter!=current_jac_rpn.end(); ++jac_rpn_iter)
+    {
+      jac_rpn[jac_rpn_iter->first].push_back(jac_rpn_iter->second);
+    }
+  
+  current_condition_rpn.clear();
+  current_fn_rpn.clear();
+  current_jac_rpn.clear();
+}
+
+
+void IfElseConstraint::add_condition_rpn_term(int term)
+{
+  current_condition_rpn.push_back(term);
+}
+
+
+void IfElseConstraint::add_fn_rpn_term(int term)
+{
+  current_fn_rpn.push_back(term);
+}
+
+
+void IfElseConstraint::add_jac_rpn_term(Var* v, int term)
+{
+  current_jac_rpn[v].push_back(term);
+}
+
+
 double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values)
 {
   double stack[rpn->size()];
@@ -93,19 +134,6 @@ double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values)
 		res = 1.0;
 	      else
 		res = -1.0;
-	    }
-	  else if (ndx == IF_ELSE)
-	    {
-	      --stack_ndx;
-	      arg2 = stack[stack_ndx];
-	      --stack_ndx;
-	      arg1 = stack[stack_ndx];
-	      --stack_ndx;
-	      arg = stack[stack_ndx];
-	      if (arg == 0)
-		res = arg2;
-	      else
-		res = arg1;
 	    }
 	  else if (ndx == INEQUALITY)
 	    {
@@ -193,6 +221,12 @@ Evaluator::~Evaluator()
       delete (*con_iter);
     }
 
+  std::set<IfElseConstraint*>::iterator if_else_con_iter;
+  for (if_else_con_iter = if_else_con_set.begin(); if_else_con_iter != if_else_con_set.end(); ++if_else_con_iter)
+    {
+      delete (*if_else_con_iter);
+    }
+
   std::set<Var*>::iterator var_iter;
   for (var_iter = var_set.begin(); var_iter != var_set.end(); ++var_iter)
     {
@@ -237,6 +271,22 @@ Float* Evaluator::add_float(double value)
 }
 
 
+Constraint* Evaluator::add_constraint()
+{
+  Constraint* c = new Constraint();
+  con_set.insert(c);
+  return c;
+}
+
+
+IfElseConstraint* Evaluator::add_if_else_constraint()
+{
+  IfElseConstraint* c = new IfElseConstraint();
+  if_else_con_set.insert(c);
+  return c;
+}
+
+
 void Evaluator::remove_var(Var* v)
 {
   var_set.erase(v);
@@ -265,34 +315,43 @@ void Evaluator::remove_constraint(Constraint* c)
 }
 
 
-Constraint* Evaluator::add_constraint()
+void Evaluator::remove_if_else_constraint(IfElseConstraint* c)
 {
-  Constraint* c = new Constraint();
-  con_set.insert(c);
-  return c;
+  if_else_con_set.erase(c);
+  delete c;
 }
 
 
 void Evaluator::set_structure()
 {
-  fn_rpn.clear();
+  var_vector.clear();
   leaves.clear();
-  jac_rpn.clear();
   col_ndx.clear();
   row_nnz.clear();
-  var_vector.clear();
 
-  std::map<Var*, int> var_indices;
+  fn_rpn.clear();
+  jac_rpn.clear();
+
+  n_conditions.clear();
+  if_else_condition_rpn.clear();
+  if_else_fn_rpn.clear();
+  if_else_jac_rpn.clear();
+
+  //******************************************
+  // Variables
+  //******************************************
   std::set<Var*>::iterator var_iter;
   int ndx = 0;
   for (var_iter = var_set.begin(); var_iter != var_set.end(); ++var_iter)
     {
       var_vector.push_back(*var_iter);
-      var_indices[*var_iter] = ndx;
       (*var_iter)->index = ndx;
       ++ndx;
     }
 
+  //******************************************
+  // Constraints
+  //******************************************
   row_nnz.push_back(0);
   ndx = 0;
   std::set<Constraint*>::iterator con_iter;
@@ -306,32 +365,108 @@ void Evaluator::set_structure()
       std::map<Var*, std::vector<int> >::iterator jac_rpn_iter;
       for (jac_rpn_iter = con->jac_rpn.begin(); jac_rpn_iter != con->jac_rpn.end(); ++jac_rpn_iter)
 	{
-	  col_ndx.push_back(var_indices[jac_rpn_iter->first]);
+	  col_ndx.push_back(jac_rpn_iter->first->index);
 	  jac_rpn.push_back(jac_rpn_iter->second);
 	}
       ++ndx;
     }
+
+  //******************************************
+  // IfElseConstraints
+  //******************************************
+  std::set<IfElseConstraint*>::iterator if_else_con_iter;
+  int _n_conditions = 0;
+  for (if_else_con_iter = if_else_con_set.begin(); if_else_con_iter != if_else_con_set.end(); ++if_else_con_iter)
+    {
+      IfElseConstraint* con = *if_else_con_iter;
+      con->index = ndx;
+      leaves.push_back(con->leaves);
+      _n_conditions = con->condition_rpn.size();
+      n_conditions.push_back(_n_conditions);
+      row_nnz.push_back(row_nnz[ndx] + con->jac_rpn.size()); // every vector in con->jac_rpn should be the same size
+      for (int i=0; i<_n_conditions; ++i)
+	{
+	  if_else_condition_rpn.push_back(con->condition_rpn[i]);
+	  if_else_fn_rpn.push_back(con->fn_rpn[i]);
+	  for (std::map<Var*, std::vector<std::vector<int> > >::iterator jac_rpn_iter=con->jac_rpn.begin(); jac_rpn_iter!=con->jac_rpn.end(); ++jac_rpn_iter)
+	    {
+	      if (((int) jac_rpn_iter->second.size()) != _n_conditions)
+		{
+		  throw std::runtime_error("The number of vectors in jac_rpn must be equal to the number of conditions for an IfElseConstraint.");
+		}
+	      if (i==0)
+		{
+		  col_ndx.push_back(jac_rpn_iter->first->index);
+		}
+	      if_else_jac_rpn.push_back(jac_rpn_iter->second[i]);
+	    }
+	}
+      ++ndx;
+    }
+  
   nnz = row_nnz.back();
 }
 
 
 void Evaluator::evaluate(double* array_out, int array_length_out)
 {
-  int num_cons = fn_rpn.size();
-  for (int i=0; i<num_cons; ++i)
+  int num_cons = con_set.size();
+  int num_if_else_cons = if_else_con_set.size();
+  int con_ndx = 0;
+  while (con_ndx<num_cons)
     {
-      array_out[i] = _evaluate(&(fn_rpn[i]), &(leaves[i]));
+      array_out[con_ndx] = _evaluate(&(fn_rpn[con_ndx]), &(leaves[con_ndx]));
+      ++con_ndx;
+    }
+
+  int c = 0;
+  int _n_conditions = 0;
+  bool found;
+  int condition_ndx = 0;
+  int i;
+  while (con_ndx < num_cons + num_if_else_cons)
+    {
+      found = false;
+      _n_conditions = n_conditions[c];
+      i = 0;
+      while (!found)
+	{
+	  if (if_else_condition_rpn[condition_ndx].size() == 0)
+	    {
+	      found = true;
+	    }
+	  else if (_evaluate(&(if_else_condition_rpn[condition_ndx]), &(leaves[con_ndx])) == 1)
+	    {
+	      found = true;
+	    }
+
+	  if (found)
+	    {
+	      array_out[con_ndx] = _evaluate(&(if_else_fn_rpn[condition_ndx]), &(leaves[con_ndx]));
+	      condition_ndx += _n_conditions - i;
+	    }
+	  else
+	    {
+	      ++condition_ndx;
+	      ++i;
+	    }
+	}
+      ++c;
+      ++con_ndx;
     }
 }
 
 
 void Evaluator::evaluate_csr_jacobian(double* values_array_out, int values_array_length_out, int* col_ndx_array_out, int col_ndx_array_length_out, int* row_nnz_array_out, int row_nnz_array_length_out)
 {
-  int num_cons = fn_rpn.size();
+  int num_cons = con_set.size();
+  int num_if_else_cons = if_else_con_set.size();
   row_nnz_array_out[0] = 0;
   int nnz_ndx = 0;
   int nnz;
-  for (int con_ndx=0; con_ndx<num_cons; ++con_ndx)
+
+  int con_ndx = 0;
+  while (con_ndx < num_cons)
     {
       row_nnz_array_out[con_ndx+1] = row_nnz[con_ndx+1];
       nnz = row_nnz[con_ndx+1] - row_nnz[con_ndx];
@@ -341,6 +476,54 @@ void Evaluator::evaluate_csr_jacobian(double* values_array_out, int values_array
 	  col_ndx_array_out[nnz_ndx] = col_ndx[nnz_ndx];
 	  ++nnz_ndx;
 	}
+      ++con_ndx;
+    }
+
+  int c = 0;
+  int i = 0;
+  int _n_conditions = 0;
+  bool found;
+  int condition_ndx = 0;
+  int jac_ndx = 0;
+  while (con_ndx < num_cons + num_if_else_cons)
+    {
+      row_nnz_array_out[con_ndx+1] = row_nnz[con_ndx+1];
+      nnz = row_nnz[con_ndx+1] - row_nnz[con_ndx];
+      _n_conditions = n_conditions[c];
+      i = 0;
+      found = false;
+      while (!found)
+	{
+	  if (if_else_condition_rpn[condition_ndx].size() == 0)
+	    {
+	      found = true;
+	    }
+	  else if (_evaluate(&(if_else_condition_rpn[condition_ndx]), &(leaves[con_ndx])) == 1)
+	    {
+	      found = true;
+	    }
+
+	  if (found)
+	    {
+	      for (int j=0; j<nnz; ++j)
+		{
+		  values_array_out[nnz_ndx] = _evaluate(&(if_else_jac_rpn[jac_ndx]), &(leaves[con_ndx]));
+		  col_ndx_array_out[nnz_ndx] = col_ndx[nnz_ndx];
+		  ++nnz_ndx;
+		  ++jac_ndx;
+		}
+	      condition_ndx += _n_conditions - i;
+	      jac_ndx += (_n_conditions - i - 1) * nnz;
+	    }
+	  else
+	    {
+	      ++condition_ndx;
+	      ++i;
+	      jac_ndx += nnz;
+	    }
+	}
+      ++con_ndx;
+      ++c;
     }
 }
 

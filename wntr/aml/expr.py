@@ -5,6 +5,7 @@ import collections.abc as collections_abc
 import math
 from wntr.utils.ordered_set import OrderedSet
 import enum
+from collections import deque
 
 native_numeric_types = {float, int}
 native_integer_types = {int, bool}
@@ -19,7 +20,6 @@ class OperationEnum(enum.IntEnum):
     pow = -5
     abs = -6
     sign = -7
-    if_else = -8
     inequality = -9
     exp = -10
     log = -11
@@ -229,6 +229,8 @@ class Leaf(ExpressionBase, metaclass=abc.ABCMeta):
 
     @property
     def value(self):
+        if self._c_obj is not None:
+            return self._c_obj.value
         return self._value
 
     @value.setter
@@ -251,7 +253,7 @@ class Leaf(ExpressionBase, metaclass=abc.ABCMeta):
         return {self: 1}
 
     def reverse_sd(self):
-        return {self: self}
+        return {self: 1}
 
     def get_rpn(self, leaf_ndx_map):
         return [leaf_ndx_map[self]]
@@ -606,10 +608,10 @@ class expression(ExpressionBase):
         return False
 
     def get_rpn(self, leaf_ndx_map):
-        rpn = list()
+        rpn_map = dict()
         for oper in self.operators():
-            oper.get_rpn(rpn, leaf_ndx_map)
-        return rpn
+            oper.get_rpn(rpn_map, leaf_ndx_map)
+        return rpn_map[self.last_node()]
 
 
 class Operator(Node, metaclass=abc.ABCMeta):
@@ -640,7 +642,7 @@ class Operator(Node, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def get_rpn(self, rpn, leaf_ndx_map):
+    def get_rpn(self, rpn_map, leaf_ndx_map):
         pass
 
 
@@ -720,12 +722,22 @@ class BinaryOperator(Operator):
             der_dict[self._operand2] = 0
         val_dict[self] = self.operation(val1, val2)
 
-    def get_rpn(self, rpn, leaf_ndx_map):
-        if self._operand1.is_leaf():
-            rpn.append(leaf_ndx_map[self._operand1])
+    def get_rpn(self, rpn_map, leaf_ndx_map):
         if self._operand2.is_leaf():
-            rpn.append(leaf_ndx_map[self._operand2])
-        rpn.append(self.operation_enum)
+            if self._operand1.is_leaf():
+                rpn_map[self] = [leaf_ndx_map[self._operand1], leaf_ndx_map[self._operand2], self.operation_enum]
+            else:
+                rpn_map[self] = _rpn = rpn_map[self._operand1]
+                _rpn.append(leaf_ndx_map[self._operand2])
+                _rpn.append(self.operation_enum)
+        elif self._operand1.is_leaf():
+            rpn_map[self] = _rpn = rpn_map[self._operand2]
+            _rpn.insert(0, leaf_ndx_map[self._operand1])
+            _rpn.append(self.operation_enum)
+        else:
+            rpn_map[self] = _rpn = rpn_map[self._operand1]
+            _rpn.extend(rpn_map[self._operand2])
+            _rpn.append(self.operation_enum)
 
 
 class AddOperator(BinaryOperator):
@@ -850,10 +862,12 @@ class UnaryOperator(Operator):
             der_dict[self._operand] = 0
         val_dict[self] = self.__class__.operation(val)
 
-    def get_rpn(self, rpn, leaf_ndx_map):
+    def get_rpn(self, rpn_map, leaf_ndx_map):
         if self._operand.is_leaf():
-            rpn.append(leaf_ndx_map[self._operand])
-        rpn.append(self.operation_enum)
+            rpn_map[self] = [leaf_ndx_map[self._operand], self.operation_enum]
+        else:
+            rpn_map[self] = _rpn = rpn_map[self._operand]
+            _rpn.append(self.operation_enum)
 
 
 class NegationOperator(UnaryOperator):
@@ -996,39 +1010,6 @@ def atan(val):
     return val._unary_operation_helper(AtanOperator)
 
 
-def if_else(if_statement, then_statement, else_statement):
-    """
-
-    Parameters
-    ----------
-    if_statement: ExpressionBase
-    then_statement: ExpressionBase
-    else_statement: ExpressionBase
-
-    Returns
-    -------
-    expr: ExpressionBase
-    """
-    if type(if_statement) in native_numeric_types or type(if_statement) in native_boolean_types:
-        if if_statement:
-            return then_statement
-        else:
-            return else_statement
-    if type(then_statement) in native_numeric_types:
-        then_statement = Float(then_statement)
-    if type(else_statement) in native_numeric_types:
-        else_statement = Float(else_statement)
-    assert if_statement.is_relational()
-    expr = expression(if_statement)
-    new_operator = IfElseOperator(if_statement.last_node(), then_statement.last_node(), else_statement.last_node())
-    for oper in then_statement.operators():
-        expr.append_operator(oper)
-    for oper in else_statement.operators():
-        expr.append_operator(oper)
-    expr.append_operator(new_operator)
-    return expr
-
-
 def inequality(body, lb=None, ub=None):
     """
 
@@ -1090,122 +1071,6 @@ def abs(val):
     return val._unary_operation_helper(AbsOperator)
 
 
-class IfElseOperator(Operator):
-    __slots__ = ('_if_arg', '_then_arg', '_else_arg')
-
-    def __init__(self, if_arg, then_arg, else_arg):
-        self._if_arg = if_arg
-        self._then_arg = then_arg
-        self._else_arg = else_arg
-
-    def evaluate(self, val_dict):
-        if_val = val_dict[self._if_arg]
-        if if_val:
-            if self._then_arg.is_leaf():
-                res = self._then_arg.value
-            else:
-                res = val_dict[self._then_arg]
-        else:
-            if self._else_arg.is_leaf():
-                res = self._else_arg.value
-            else:
-                res = val_dict[self._else_arg]
-        val_dict[self] = res
-
-    def operands(self):
-        yield self._if_arg
-        yield self._then_arg
-        yield self._else_arg
-
-    def _str(self, val_dict):
-        if_val = val_dict[self._if_arg]
-        if self._then_arg.is_leaf():
-            then_str = self._then_arg._str()
-        else:
-            then_str = val_dict[self._then_arg]
-        if self._else_arg.is_leaf():
-            else_str = self._else_arg._str()
-        else:
-            else_str = val_dict[self._else_arg]
-        s = '\n (\n'
-        s += '  if ' + if_val + ':\n'
-        s += '      ' + then_str.replace('\n', '\n    ') + '\n'
-        s += '  else:\n'
-        s += '      ' + else_str.replace('\n', '\n    ') + '\n'
-        s += '  )\n'
-        val_dict[self] = s
-
-    def diff_up(self, val_dict, der_dict):
-        if_val = val_dict[self._if_arg]
-        der_dict[self._if_arg] = 0
-        if if_val:
-            if self._then_arg.is_leaf():
-                val = self._then_arg.value
-                val_dict[self._then_arg] = val
-                if self._then_arg not in der_dict:
-                    der_dict[self._then_arg] = 0
-            else:
-                val = val_dict[self._then_arg]
-                der_dict[self._then_arg] = 0
-            if self._else_arg.is_leaf():
-                _val = self._else_arg.value
-                val_dict[self._else_arg] = _val
-                if self._else_arg not in der_dict:
-                    der_dict[self._else_arg] = 0
-            else:
-                der_dict[self._else_arg] = 0
-        else:
-            if self._else_arg.is_leaf():
-                val = self._else_arg.value
-                val_dict[self._else_arg] = val
-                if self._else_arg not in der_dict:
-                    der_dict[self._else_arg] = 0
-            else:
-                val = val_dict[self._else_arg]
-                der_dict[self._else_arg] = 0
-            if self._then_arg.is_leaf():
-                _val = self._then_arg.value
-                val_dict[self._then_arg] = _val
-                if self._then_arg not in der_dict:
-                    der_dict[self._then_arg] = 0
-            else:
-                der_dict[self._then_arg] = 0
-        val_dict[self] = val
-
-    def diff_up_symbolic(self, val_dict, der_dict):
-        der_dict[self._if_arg] = 0
-        if_val = val_dict[self._if_arg]
-        if self._then_arg.is_leaf():
-            then_val = self._then_arg
-            val_dict[self._then_arg] = then_val
-            if self._then_arg not in der_dict:
-                der_dict[self._then_arg] = 0
-        else:
-            then_val = val_dict[self._then_arg]
-            der_dict[self._then_arg] = 0
-        if self._else_arg.is_leaf():
-            else_val = self._else_arg
-            val_dict[self._else_arg] = else_val
-            if self._else_arg not in der_dict:
-                der_dict[self._else_arg] = 0
-        else:
-            else_val = val_dict[self._else_arg]
-            der_dict[self._else_arg] = 0
-        val_dict[self] = if_else(if_val, then_val, else_val)
-
-    def diff_down(self, val_dict, der_dict):
-        der = der_dict[self]
-        der_dict[self._then_arg] += if_else(val_dict[self._if_arg], der, 0)
-        der_dict[self._else_arg] += if_else(val_dict[self._if_arg], 0, der)
-
-    def get_rpn(self, rpn, leaf_ndx_map):
-        if self._then_arg.is_leaf():
-            rpn.append(leaf_ndx_map[self._then_arg])
-        if self._else_arg.is_leaf():
-            rpn.append(leaf_ndx_map[self._else_arg])
-        rpn.append(OperationEnum.if_else.value)
-
-
 class InequalityOperator(Operator):
     __slots__ = ('_lb', '_ub', '_body')
 
@@ -1258,12 +1123,14 @@ class InequalityOperator(Operator):
     def diff_down(self, val_dict, der_dict):
         pass
 
-    def get_rpn(self, rpn, leaf_ndx_map):
+    def get_rpn(self, rpn_map, leaf_ndx_map):
         if self._body.is_leaf():
-            rpn.append(leaf_ndx_map[self._body])
-        rpn.append(leaf_ndx_map[self._lb])
-        rpn.append(leaf_ndx_map[self._ub])
-        rpn.append(OperationEnum.inequality.value)
+            rpn_map[self] = _rpn = [leaf_ndx_map[self._body]]
+        else:
+            rpn_map[self] = _rpn = rpn_map[self._body]
+        _rpn.append(leaf_ndx_map[self._lb])
+        _rpn.append(leaf_ndx_map[self._ub])
+        _rpn.append(OperationEnum.inequality.value)
 
 
 class SignOperator(UnaryOperator):
@@ -1481,3 +1348,18 @@ def is_potentially_variable(obj):
     if type(obj) in native_numeric_types:
         return False
     return obj.is_potentially_variable()
+
+
+class ConditionalExpression(object):
+    def __init__(self):
+        self._conditions = list()
+        self._exprs = list()
+
+    def add_condition(self, condition, expr):
+        assert condition.is_relational()
+        self._conditions.append(condition)
+        self._exprs.append(expr)
+
+    def add_final_expr(self, expr):
+        self._conditions.append(Float(1))
+        self._exprs.append(expr)

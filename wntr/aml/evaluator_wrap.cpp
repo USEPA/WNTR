@@ -3735,18 +3735,21 @@ SwigPyBuiltin_iternextfunc_closure(SwigPyWrapperFunction wrapper, PyObject *a) {
 #define SWIGTYPE_p_Constraint swig_types[0]
 #define SWIGTYPE_p_Evaluator swig_types[1]
 #define SWIGTYPE_p_Float swig_types[2]
-#define SWIGTYPE_p_Leaf swig_types[3]
-#define SWIGTYPE_p_Param swig_types[4]
-#define SWIGTYPE_p_SwigPyObject swig_types[5]
-#define SWIGTYPE_p_Var swig_types[6]
-#define SWIGTYPE_p_char swig_types[7]
-#define SWIGTYPE_p_double swig_types[8]
-#define SWIGTYPE_p_int swig_types[9]
-#define SWIGTYPE_p_std__mapT_Var_p_std__vectorT_int_t_t swig_types[10]
-#define SWIGTYPE_p_std__vectorT_Leaf_p_t swig_types[11]
-#define SWIGTYPE_p_std__vectorT_int_t swig_types[12]
-static swig_type_info *swig_types[14];
-static swig_module_info swig_module = {swig_types, 13, 0, 0, 0, 0};
+#define SWIGTYPE_p_IfElseConstraint swig_types[3]
+#define SWIGTYPE_p_Leaf swig_types[4]
+#define SWIGTYPE_p_Param swig_types[5]
+#define SWIGTYPE_p_SwigPyObject swig_types[6]
+#define SWIGTYPE_p_Var swig_types[7]
+#define SWIGTYPE_p_char swig_types[8]
+#define SWIGTYPE_p_double swig_types[9]
+#define SWIGTYPE_p_int swig_types[10]
+#define SWIGTYPE_p_std__mapT_Var_p_std__vectorT_int_t_t swig_types[11]
+#define SWIGTYPE_p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t swig_types[12]
+#define SWIGTYPE_p_std__vectorT_Leaf_p_t swig_types[13]
+#define SWIGTYPE_p_std__vectorT_int_t swig_types[14]
+#define SWIGTYPE_p_std__vectorT_std__vectorT_int_t_t swig_types[15]
+static swig_type_info *swig_types[17];
+static swig_module_info swig_module = {swig_types, 16, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -4618,22 +4621,6 @@ SWIGINTERN PyObject *Swig_var_SIGN_get(void) {
   
   (void)self;
   pyobj = SWIG_From_int(static_cast< int >(SIGN));
-  return pyobj;
-}
-
-
-SWIGINTERN int Swig_var_IF_ELSE_set(PyObject *) {
-  SWIG_Error(SWIG_AttributeError,"Variable IF_ELSE is read-only.");
-  return 1;
-}
-
-
-SWIGINTERN PyObject *Swig_var_IF_ELSE_get(void) {
-  PyObject *pyobj = 0;
-  PyObject *self = 0;
-  
-  (void)self;
-  pyobj = SWIG_From_int(static_cast< int >(IF_ELSE));
   return pyobj;
 }
 
@@ -5613,6 +5600,634 @@ fail:
 
 SWIGPY_DESTRUCTOR_CLOSURE(_wrap_delete_Constraint) /* defines _wrap_delete_Constraint_destructor_closure */
 
+SWIGINTERN int _wrap_new_IfElseConstraint(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *result = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "new_IfElseConstraint takes no arguments");
+  result = (IfElseConstraint *)new IfElseConstraint();
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_IfElseConstraint, SWIG_BUILTIN_INIT |  0 );
+  return resultobj == Py_None ? -1 : 0;
+fail:
+  return -1;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_IfElseConstraint(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "delete_IfElseConstraint takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_IfElseConstraint" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  delete arg1;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_add_leaf(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  Leaf *arg2 = (Leaf *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_add_leaf",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_add_leaf" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_Leaf, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IfElseConstraint_add_leaf" "', argument " "2"" of type '" "Leaf *""'"); 
+  }
+  arg2 = reinterpret_cast< Leaf * >(argp2);
+  (arg1)->add_leaf(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_end_condition(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "IfElseConstraint_end_condition takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_end_condition" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  (arg1)->end_condition();
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_add_condition_rpn_term(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_add_condition_rpn_term",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_add_condition_rpn_term" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IfElseConstraint_add_condition_rpn_term" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  (arg1)->add_condition_rpn_term(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_add_fn_rpn_term(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_add_fn_rpn_term",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_add_fn_rpn_term" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IfElseConstraint_add_fn_rpn_term" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  (arg1)->add_fn_rpn_term(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_add_jac_rpn_term(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  Var *arg2 = (Var *) 0 ;
+  int arg3 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OO:IfElseConstraint_add_jac_rpn_term",&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_add_jac_rpn_term" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_Var, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IfElseConstraint_add_jac_rpn_term" "', argument " "2"" of type '" "Var *""'"); 
+  }
+  arg2 = reinterpret_cast< Var * >(argp2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "IfElseConstraint_add_jac_rpn_term" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = static_cast< int >(val3);
+  (arg1)->add_jac_rpn_term(arg2,arg3);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_current_condition_rpn_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  std::vector< int > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_current_condition_rpn_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_current_condition_rpn_set" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_int_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IfElseConstraint_current_condition_rpn_set" "', argument " "2"" of type '" "std::vector< int >""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IfElseConstraint_current_condition_rpn_set" "', argument " "2"" of type '" "std::vector< int >""'");
+    } else {
+      std::vector< int > * temp = reinterpret_cast< std::vector< int > * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->current_condition_rpn = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_current_condition_rpn_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::vector< int > result;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "IfElseConstraint_current_condition_rpn_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_current_condition_rpn_get" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  result =  ((arg1)->current_condition_rpn);
+  resultobj = SWIG_NewPointerObj((new std::vector< int >(static_cast< const std::vector< int >& >(result))), SWIGTYPE_p_std__vectorT_int_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_current_fn_rpn_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  std::vector< int > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_current_fn_rpn_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_current_fn_rpn_set" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_int_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IfElseConstraint_current_fn_rpn_set" "', argument " "2"" of type '" "std::vector< int >""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IfElseConstraint_current_fn_rpn_set" "', argument " "2"" of type '" "std::vector< int >""'");
+    } else {
+      std::vector< int > * temp = reinterpret_cast< std::vector< int > * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->current_fn_rpn = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_current_fn_rpn_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::vector< int > result;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "IfElseConstraint_current_fn_rpn_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_current_fn_rpn_get" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  result =  ((arg1)->current_fn_rpn);
+  resultobj = SWIG_NewPointerObj((new std::vector< int >(static_cast< const std::vector< int >& >(result))), SWIGTYPE_p_std__vectorT_int_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_current_jac_rpn_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  std::map< Var *,std::vector< int > > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_current_jac_rpn_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_current_jac_rpn_set" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_Var_p_std__vectorT_int_t_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IfElseConstraint_current_jac_rpn_set" "', argument " "2"" of type '" "std::map< Var *,std::vector< int > >""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IfElseConstraint_current_jac_rpn_set" "', argument " "2"" of type '" "std::map< Var *,std::vector< int > >""'");
+    } else {
+      std::map< Var *,std::vector< int > > * temp = reinterpret_cast< std::map< Var *,std::vector< int > > * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->current_jac_rpn = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_current_jac_rpn_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::map< Var *,std::vector< int > > result;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "IfElseConstraint_current_jac_rpn_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_current_jac_rpn_get" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  result =  ((arg1)->current_jac_rpn);
+  resultobj = SWIG_NewPointerObj((new std::map< Var *,std::vector< int > >(static_cast< const std::map< Var *,std::vector< int > >& >(result))), SWIGTYPE_p_std__mapT_Var_p_std__vectorT_int_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_condition_rpn_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  std::vector< std::vector< int > > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_condition_rpn_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_condition_rpn_set" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__vectorT_int_t_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IfElseConstraint_condition_rpn_set" "', argument " "2"" of type '" "std::vector< std::vector< int > >""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IfElseConstraint_condition_rpn_set" "', argument " "2"" of type '" "std::vector< std::vector< int > >""'");
+    } else {
+      std::vector< std::vector< int > > * temp = reinterpret_cast< std::vector< std::vector< int > > * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->condition_rpn = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_condition_rpn_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::vector< std::vector< int > > result;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "IfElseConstraint_condition_rpn_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_condition_rpn_get" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  result =  ((arg1)->condition_rpn);
+  resultobj = SWIG_NewPointerObj((new std::vector< std::vector< int > >(static_cast< const std::vector< std::vector< int > >& >(result))), SWIGTYPE_p_std__vectorT_std__vectorT_int_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_fn_rpn_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  std::vector< std::vector< int > > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_fn_rpn_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_fn_rpn_set" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__vectorT_std__vectorT_int_t_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IfElseConstraint_fn_rpn_set" "', argument " "2"" of type '" "std::vector< std::vector< int > >""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IfElseConstraint_fn_rpn_set" "', argument " "2"" of type '" "std::vector< std::vector< int > >""'");
+    } else {
+      std::vector< std::vector< int > > * temp = reinterpret_cast< std::vector< std::vector< int > > * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->fn_rpn = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_fn_rpn_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::vector< std::vector< int > > result;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "IfElseConstraint_fn_rpn_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_fn_rpn_get" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  result =  ((arg1)->fn_rpn);
+  resultobj = SWIG_NewPointerObj((new std::vector< std::vector< int > >(static_cast< const std::vector< std::vector< int > >& >(result))), SWIGTYPE_p_std__vectorT_std__vectorT_int_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_jac_rpn_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  std::map< Var *,std::vector< std::vector< int > > > arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 ;
+  int res2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_jac_rpn_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_jac_rpn_set" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  {
+    res2 = SWIG_ConvertPtr(obj1, &argp2, SWIGTYPE_p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t,  0  | 0);
+    if (!SWIG_IsOK(res2)) {
+      SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IfElseConstraint_jac_rpn_set" "', argument " "2"" of type '" "std::map< Var *,std::vector< std::vector< int > > >""'"); 
+    }  
+    if (!argp2) {
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "IfElseConstraint_jac_rpn_set" "', argument " "2"" of type '" "std::map< Var *,std::vector< std::vector< int > > >""'");
+    } else {
+      std::map< Var *,std::vector< std::vector< int > > > * temp = reinterpret_cast< std::map< Var *,std::vector< std::vector< int > > > * >(argp2);
+      arg2 = *temp;
+      if (SWIG_IsNewObj(res2)) delete temp;
+    }
+  }
+  if (arg1) (arg1)->jac_rpn = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_jac_rpn_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::map< Var *,std::vector< std::vector< int > > > result;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "IfElseConstraint_jac_rpn_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_jac_rpn_get" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  result =  ((arg1)->jac_rpn);
+  resultobj = SWIG_NewPointerObj((new std::map< Var *,std::vector< std::vector< int > > >(static_cast< const std::map< Var *,std::vector< std::vector< int > > >& >(result))), SWIGTYPE_p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t, SWIG_POINTER_OWN |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_leaves_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  std::vector< Leaf * > *arg2 = (std::vector< Leaf * > *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_leaves_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_leaves_set" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__vectorT_Leaf_p_t, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IfElseConstraint_leaves_set" "', argument " "2"" of type '" "std::vector< Leaf * > *""'"); 
+  }
+  arg2 = reinterpret_cast< std::vector< Leaf * > * >(argp2);
+  if (arg1) (arg1)->leaves = *arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_leaves_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  std::vector< Leaf * > *result = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "IfElseConstraint_leaves_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_leaves_get" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  result = (std::vector< Leaf * > *)& ((arg1)->leaves);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_std__vectorT_Leaf_p_t, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_index_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  int arg2 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int val2 ;
+  int ecode2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:IfElseConstraint_index_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_index_set" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  ecode2 = SWIG_AsVal_int(obj1, &val2);
+  if (!SWIG_IsOK(ecode2)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IfElseConstraint_index_set" "', argument " "2"" of type '" "int""'");
+  } 
+  arg2 = static_cast< int >(val2);
+  if (arg1) (arg1)->index = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_IfElseConstraint_index_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  IfElseConstraint *arg1 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  int result;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "IfElseConstraint_index_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_index_get" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
+  result = (int) ((arg1)->index);
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGPY_DESTRUCTOR_CLOSURE(_wrap_delete_IfElseConstraint) /* defines _wrap_delete_IfElseConstraint_destructor_closure */
+
 SWIGINTERN int _wrap_new_Evaluator(PyObject *self, PyObject *args) {
   PyObject *resultobj = 0;
   Evaluator *result = 0 ;
@@ -5807,6 +6422,27 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Evaluator_add_if_else_constraint(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  IfElseConstraint *result = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "Evaluator_add_if_else_constraint takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_add_if_else_constraint" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  result = (IfElseConstraint *)(arg1)->add_if_else_constraint();
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Evaluator_remove_var(PyObject *self, PyObject *args) {
   PyObject *resultobj = 0;
   Evaluator *arg1 = (Evaluator *) 0 ;
@@ -5916,6 +6552,35 @@ SWIGINTERN PyObject *_wrap_Evaluator_remove_constraint(PyObject *self, PyObject 
   }
   arg2 = reinterpret_cast< Constraint * >(argp2);
   (arg1)->remove_constraint(arg2);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Evaluator_remove_if_else_constraint(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  IfElseConstraint *arg2 = (IfElseConstraint *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Evaluator_remove_if_else_constraint",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_remove_if_else_constraint" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_IfElseConstraint, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Evaluator_remove_if_else_constraint" "', argument " "2"" of type '" "IfElseConstraint *""'"); 
+  }
+  arg2 = reinterpret_cast< IfElseConstraint * >(argp2);
+  (arg1)->remove_if_else_constraint(arg2);
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -7327,6 +7992,255 @@ static PyHeapTypeObject SwigPyBuiltin__Constraint_type = {
 
 SWIGINTERN SwigPyClientData SwigPyBuiltin__Constraint_clientdata = {0, 0, 0, 0, 0, 0, (PyTypeObject *)&SwigPyBuiltin__Constraint_type};
 
+static SwigPyGetSet IfElseConstraint_current_condition_rpn_getset = { _wrap_IfElseConstraint_current_condition_rpn_get, _wrap_IfElseConstraint_current_condition_rpn_set };
+static SwigPyGetSet IfElseConstraint_condition_rpn_getset = { _wrap_IfElseConstraint_condition_rpn_get, _wrap_IfElseConstraint_condition_rpn_set };
+static SwigPyGetSet IfElseConstraint_leaves_getset = { _wrap_IfElseConstraint_leaves_get, _wrap_IfElseConstraint_leaves_set };
+static SwigPyGetSet IfElseConstraint_index_getset = { _wrap_IfElseConstraint_index_get, _wrap_IfElseConstraint_index_set };
+static SwigPyGetSet IfElseConstraint___dict___getset = { SwigPyObject_get___dict__, 0 };
+static SwigPyGetSet IfElseConstraint_current_fn_rpn_getset = { _wrap_IfElseConstraint_current_fn_rpn_get, _wrap_IfElseConstraint_current_fn_rpn_set };
+static SwigPyGetSet IfElseConstraint_fn_rpn_getset = { _wrap_IfElseConstraint_fn_rpn_get, _wrap_IfElseConstraint_fn_rpn_set };
+static SwigPyGetSet IfElseConstraint_current_jac_rpn_getset = { _wrap_IfElseConstraint_current_jac_rpn_get, _wrap_IfElseConstraint_current_jac_rpn_set };
+static SwigPyGetSet IfElseConstraint_jac_rpn_getset = { _wrap_IfElseConstraint_jac_rpn_get, _wrap_IfElseConstraint_jac_rpn_set };
+SWIGINTERN PyGetSetDef SwigPyBuiltin__IfElseConstraint_getset[] = {
+    { (char *) "current_condition_rpn", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"IfElseConstraint.current_condition_rpn", (void *) &IfElseConstraint_current_condition_rpn_getset }
+,
+    { (char *) "condition_rpn", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"IfElseConstraint.condition_rpn", (void *) &IfElseConstraint_condition_rpn_getset }
+,
+    { (char *) "leaves", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"IfElseConstraint.leaves", (void *) &IfElseConstraint_leaves_getset }
+,
+    { (char *) "index", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"IfElseConstraint.index", (void *) &IfElseConstraint_index_getset }
+,
+    { (char *) "__dict__", (getter) SwigPyBuiltin_GetterClosure, (setter) 0, (char *)"IfElseConstraint.__dict__", (void *) &IfElseConstraint___dict___getset }
+,
+    { (char *) "current_fn_rpn", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"IfElseConstraint.current_fn_rpn", (void *) &IfElseConstraint_current_fn_rpn_getset }
+,
+    { (char *) "fn_rpn", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"IfElseConstraint.fn_rpn", (void *) &IfElseConstraint_fn_rpn_getset }
+,
+    { (char *) "current_jac_rpn", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"IfElseConstraint.current_jac_rpn", (void *) &IfElseConstraint_current_jac_rpn_getset }
+,
+    { (char *) "jac_rpn", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"IfElseConstraint.jac_rpn", (void *) &IfElseConstraint_jac_rpn_getset }
+,
+    {NULL, NULL, NULL, NULL, NULL} /* Sentinel */
+};
+
+SWIGINTERN PyObject *
+SwigPyBuiltin__IfElseConstraint_richcompare(PyObject *self, PyObject *other, int op) {
+  PyObject *result = NULL;
+  PyObject *tuple = PyTuple_New(1);
+  assert(tuple);
+  PyTuple_SET_ITEM(tuple, 0, other);
+  Py_XINCREF(other);
+  if (!result) {
+    if (SwigPyObject_Check(self) && SwigPyObject_Check(other)) {
+      result = SwigPyObject_richcompare((SwigPyObject *)self, (SwigPyObject *)other, op);
+    } else {
+      result = Py_NotImplemented;
+      Py_INCREF(result);
+    }
+  }
+  Py_DECREF(tuple);
+  return result;
+}
+
+SWIGINTERN PyMethodDef SwigPyBuiltin__IfElseConstraint_methods[] = {
+  { "add_leaf", (PyCFunction) _wrap_IfElseConstraint_add_leaf, METH_VARARGS, (char *) "" },
+  { "end_condition", (PyCFunction) _wrap_IfElseConstraint_end_condition, METH_VARARGS, (char *) "" },
+  { "add_condition_rpn_term", (PyCFunction) _wrap_IfElseConstraint_add_condition_rpn_term, METH_VARARGS, (char *) "" },
+  { "add_fn_rpn_term", (PyCFunction) _wrap_IfElseConstraint_add_fn_rpn_term, METH_VARARGS, (char *) "" },
+  { "add_jac_rpn_term", (PyCFunction) _wrap_IfElseConstraint_add_jac_rpn_term, METH_VARARGS, (char *) "" },
+  { NULL, NULL, 0, NULL } /* Sentinel */
+};
+
+static PyHeapTypeObject SwigPyBuiltin__IfElseConstraint_type = {
+  {
+#if PY_VERSION_HEX >= 0x03000000
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                                        /* ob_size */
+#endif
+    "evaluator.IfElseConstraint",             /* tp_name */
+    sizeof(SwigPyObject),                     /* tp_basicsize */
+    0,                                        /* tp_itemsize */
+    (destructor) (destructor) _wrap_delete_IfElseConstraint_destructor_closure,/* tp_dealloc */
+    (printfunc) 0,                            /* tp_print */
+    (getattrfunc) 0,                          /* tp_getattr */
+    (setattrfunc) 0,                          /* tp_setattr */
+#if PY_VERSION_HEX >= 0x03000000
+    0,                                        /* tp_compare */
+#else
+    (cmpfunc) 0,                              /* tp_compare */
+#endif
+    (reprfunc) 0,                             /* tp_repr */
+    &SwigPyBuiltin__IfElseConstraint_type.as_number,              /* tp_as_number */
+    &SwigPyBuiltin__IfElseConstraint_type.as_sequence,            /* tp_as_sequence */
+    &SwigPyBuiltin__IfElseConstraint_type.as_mapping,             /* tp_as_mapping */
+    (hashfunc) SwigPyObject_hash,             /* tp_hash */
+    (ternaryfunc) 0,                          /* tp_call */
+    (reprfunc) 0,                             /* tp_str */
+    (getattrofunc) 0,                         /* tp_getattro */
+    (setattrofunc) 0,                         /* tp_setattro */
+    &SwigPyBuiltin__IfElseConstraint_type.as_buffer,              /* tp_as_buffer */
+#if PY_VERSION_HEX >= 0x03000000
+    Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE,   /* tp_flags */
+#else
+    Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_CHECKTYPES, /* tp_flags */
+#endif
+    "::IfElseConstraint",                     /* tp_doc */
+    (traverseproc) 0,                         /* tp_traverse */
+    (inquiry) 0,                              /* tp_clear */
+    (richcmpfunc) SwigPyBuiltin__IfElseConstraint_richcompare,    /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    (getiterfunc) 0,                          /* tp_iter */
+    (iternextfunc) 0,                         /* tp_iternext */
+    SwigPyBuiltin__IfElseConstraint_methods,  /* tp_methods */
+    0,                                        /* tp_members */
+    SwigPyBuiltin__IfElseConstraint_getset,   /* tp_getset */
+    0,                                        /* tp_base */
+    0,                                        /* tp_dict */
+    (descrgetfunc) 0,                         /* tp_descr_get */
+    (descrsetfunc) 0,                         /* tp_descr_set */
+    (Py_ssize_t) offsetof(SwigPyObject, dict),/* tp_dictoffset */
+    (initproc) _wrap_new_IfElseConstraint,    /* tp_init */
+    (allocfunc) 0,                            /* tp_alloc */
+    (newfunc) 0,                              /* tp_new */
+    (freefunc) 0,                             /* tp_free */
+    (inquiry) 0,                              /* tp_is_gc */
+    (PyObject *) 0,                           /* tp_bases */
+    (PyObject *) 0,                           /* tp_mro */
+    (PyObject *) 0,                           /* tp_cache */
+    (PyObject *) 0,                           /* tp_subclasses */
+    (PyObject *) 0,                           /* tp_weaklist */
+    (destructor) 0,                           /* tp_del */
+#if PY_VERSION_HEX >= 0x02060000
+    (int) 0,                                  /* tp_version_tag */
+#endif
+#if PY_VERSION_HEX >= 0x03040000
+    (destructor) 0,                           /* tp_finalize */
+#endif
+#ifdef COUNT_ALLOCS
+    (Py_ssize_t) 0,                           /* tp_allocs */
+    (Py_ssize_t) 0,                           /* tp_frees */
+    (Py_ssize_t) 0,                           /* tp_maxalloc */
+#if PY_VERSION_HEX >= 0x02050000
+    0,                                        /* tp_prev */
+#endif
+    0,                                        /* tp_next */
+#endif
+  },
+#if PY_VERSION_HEX >= 0x03050000
+  {
+    (unaryfunc) 0,                            /* am_await */
+    (unaryfunc) 0,                            /* am_aiter */
+    (unaryfunc) 0,                            /* am_anext */
+  },
+#endif
+  {
+    (binaryfunc) 0,                           /* nb_add */
+    (binaryfunc) 0,                           /* nb_subtract */
+    (binaryfunc) 0,                           /* nb_multiply */
+#if PY_VERSION_HEX < 0x03000000
+    (binaryfunc) 0,                           /* nb_divide */
+#endif
+    (binaryfunc) 0,                           /* nb_remainder */
+    (binaryfunc) 0,                           /* nb_divmod */
+    (ternaryfunc) 0,                          /* nb_power */
+    (unaryfunc) 0,                            /* nb_negative */
+    (unaryfunc) 0,                            /* nb_positive */
+    (unaryfunc) 0,                            /* nb_absolute */
+    (inquiry) 0,                              /* nb_nonzero */
+    (unaryfunc) 0,                            /* nb_invert */
+    (binaryfunc) 0,                           /* nb_lshift */
+    (binaryfunc) 0,                           /* nb_rshift */
+    (binaryfunc) 0,                           /* nb_and */
+    (binaryfunc) 0,                           /* nb_xor */
+    (binaryfunc) 0,                           /* nb_or */
+#if PY_VERSION_HEX < 0x03000000
+    (coercion) 0,                             /* nb_coerce */
+#endif
+    (unaryfunc) 0,                            /* nb_int */
+#if PY_VERSION_HEX >= 0x03000000
+    (void *) 0,                               /* nb_reserved */
+#else
+    (unaryfunc) 0,                            /* nb_long */
+#endif
+    (unaryfunc) 0,                            /* nb_float */
+#if PY_VERSION_HEX < 0x03000000
+    (unaryfunc) 0,                            /* nb_oct */
+    (unaryfunc) 0,                            /* nb_hex */
+#endif
+    (binaryfunc) 0,                           /* nb_inplace_add */
+    (binaryfunc) 0,                           /* nb_inplace_subtract */
+    (binaryfunc) 0,                           /* nb_inplace_multiply */
+#if PY_VERSION_HEX < 0x03000000
+    (binaryfunc) 0,                           /* nb_inplace_divide */
+#endif
+    (binaryfunc) 0,                           /* nb_inplace_remainder */
+    (ternaryfunc) 0,                          /* nb_inplace_power */
+    (binaryfunc) 0,                           /* nb_inplace_lshift */
+    (binaryfunc) 0,                           /* nb_inplace_rshift */
+    (binaryfunc) 0,                           /* nb_inplace_and */
+    (binaryfunc) 0,                           /* nb_inplace_xor */
+    (binaryfunc) 0,                           /* nb_inplace_or */
+    (binaryfunc) 0,                           /* nb_floor_divide */
+    (binaryfunc) 0,                           /* nb_true_divide */
+    (binaryfunc) 0,                           /* nb_inplace_floor_divide */
+    (binaryfunc) 0,                           /* nb_inplace_true_divide */
+#if PY_VERSION_HEX >= 0x02050000
+    (unaryfunc) 0,                            /* nb_index */
+#endif
+#if PY_VERSION_HEX >= 0x03050000
+    (binaryfunc) 0,                           /* nb_matrix_multiply */
+    (binaryfunc) 0,                           /* nb_inplace_matrix_multiply */
+#endif
+  },
+  {
+    (lenfunc) 0,                              /* mp_length */
+    (binaryfunc) 0,                           /* mp_subscript */
+    (objobjargproc) 0,                        /* mp_ass_subscript */
+  },
+  {
+    (lenfunc) 0,                              /* sq_length */
+    (binaryfunc) 0,                           /* sq_concat */
+    (ssizeargfunc) 0,                         /* sq_repeat */
+    (ssizeargfunc) 0,                         /* sq_item */
+#if PY_VERSION_HEX >= 0x03000000
+    (void *) 0,                               /* was_sq_slice */
+#else
+    (ssizessizeargfunc) 0,                    /* sq_slice */
+#endif
+    (ssizeobjargproc) 0,                      /* sq_ass_item */
+#if PY_VERSION_HEX >= 0x03000000
+    (void *) 0,                               /* was_sq_ass_slice */
+#else
+    (ssizessizeobjargproc) 0,                 /* sq_ass_slice */
+#endif
+    (objobjproc) 0,                           /* sq_contains */
+    (binaryfunc) 0,                           /* sq_inplace_concat */
+    (ssizeargfunc) 0,                         /* sq_inplace_repeat */
+  },
+  {
+#if PY_VERSION_HEX < 0x03000000
+    (readbufferproc) 0,                       /* bf_getreadbuffer */
+    (writebufferproc) 0,                      /* bf_getwritebuffer */
+    (segcountproc) 0,                         /* bf_getsegcount */
+    (charbufferproc) 0,                       /* bf_getcharbuffer */
+#endif
+#if PY_VERSION_HEX >= 0x02060000
+    (getbufferproc) 0,                        /* bf_getbuffer */
+    (releasebufferproc) 0,                    /* bf_releasebuffer */
+#endif
+  },
+    (PyObject *) 0,                           /* ht_name */
+    (PyObject *) 0,                           /* ht_slots */
+#if PY_VERSION_HEX >= 0x03030000
+    (PyObject *) 0,                           /* ht_qualname */
+    0,                                        /* ht_cached_keys */
+#endif
+};
+
+SWIGINTERN SwigPyClientData SwigPyBuiltin__IfElseConstraint_clientdata = {0, 0, 0, 0, 0, 0, (PyTypeObject *)&SwigPyBuiltin__IfElseConstraint_type};
+
 static SwigPyGetSet Evaluator___dict___getset = { SwigPyObject_get___dict__, 0 };
 static SwigPyGetSet Evaluator_nnz_getset = { _wrap_Evaluator_nnz_get, _wrap_Evaluator_nnz_set };
 SWIGINTERN PyGetSetDef SwigPyBuiltin__Evaluator_getset[] = {
@@ -7361,10 +8275,12 @@ SWIGINTERN PyMethodDef SwigPyBuiltin__Evaluator_methods[] = {
   { "add_param", (PyCFunction) _wrap_Evaluator_add_param, METH_VARARGS, (char *) "" },
   { "add_float", (PyCFunction) _wrap_Evaluator_add_float, METH_VARARGS, (char *) "" },
   { "add_constraint", (PyCFunction) _wrap_Evaluator_add_constraint, METH_VARARGS, (char *) "" },
+  { "add_if_else_constraint", (PyCFunction) _wrap_Evaluator_add_if_else_constraint, METH_VARARGS, (char *) "" },
   { "remove_var", (PyCFunction) _wrap_Evaluator_remove_var, METH_VARARGS, (char *) "" },
   { "remove_param", (PyCFunction) _wrap_Evaluator_remove_param, METH_VARARGS, (char *) "" },
   { "remove_float", (PyCFunction) _wrap_Evaluator_remove_float, METH_VARARGS, (char *) "" },
   { "remove_constraint", (PyCFunction) _wrap_Evaluator_remove_constraint, METH_VARARGS, (char *) "" },
+  { "remove_if_else_constraint", (PyCFunction) _wrap_Evaluator_remove_if_else_constraint, METH_VARARGS, (char *) "" },
   { "set_structure", (PyCFunction) _wrap_Evaluator_set_structure, METH_VARARGS, (char *) "" },
   { "get_x", (PyCFunction) _wrap_Evaluator_get_x, METH_VARARGS, (char *) "" },
   { "load_var_values_from_x", (PyCFunction) _wrap_Evaluator_load_var_values_from_x, METH_VARARGS, (char *) "" },
@@ -7578,6 +8494,7 @@ static void *_p_VarTo_p_Leaf(void *x, int *SWIGUNUSEDPARM(newmemory)) {
 static swig_type_info _swigt__p_Constraint = {"_p_Constraint", "Constraint *", 0, 0, (void*)&SwigPyBuiltin__Constraint_clientdata, 0};
 static swig_type_info _swigt__p_Evaluator = {"_p_Evaluator", "Evaluator *", 0, 0, (void*)&SwigPyBuiltin__Evaluator_clientdata, 0};
 static swig_type_info _swigt__p_Float = {"_p_Float", "Float *", 0, 0, (void*)&SwigPyBuiltin__Float_clientdata, 0};
+static swig_type_info _swigt__p_IfElseConstraint = {"_p_IfElseConstraint", "IfElseConstraint *", 0, 0, (void*)&SwigPyBuiltin__IfElseConstraint_clientdata, 0};
 static swig_type_info _swigt__p_Leaf = {"_p_Leaf", "Leaf *", 0, 0, (void*)&SwigPyBuiltin__Leaf_clientdata, 0};
 static swig_type_info _swigt__p_Param = {"_p_Param", "Param *", 0, 0, (void*)&SwigPyBuiltin__Param_clientdata, 0};
 static swig_type_info _swigt__p_SwigPyObject = {"_p_SwigPyObject", "SwigPyObject *", 0, 0, (void*)0, 0};
@@ -7586,13 +8503,16 @@ static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_double = {"_p_double", "double *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_int = {"_p_int", "int *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__mapT_Var_p_std__vectorT_int_t_t = {"_p_std__mapT_Var_p_std__vectorT_int_t_t", "std::map< Var *,std::vector< int > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t = {"_p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t", "std::map< Var *,std::vector< std::vector< int > > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_Leaf_p_t = {"_p_std__vectorT_Leaf_p_t", "std::vector< Leaf * > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_int_t = {"_p_std__vectorT_int_t", "std::vector< int > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__vectorT_std__vectorT_int_t_t = {"_p_std__vectorT_std__vectorT_int_t_t", "std::vector< std::vector< int > > *", 0, 0, (void*)0, 0};
 
 static swig_type_info *swig_type_initial[] = {
   &_swigt__p_Constraint,
   &_swigt__p_Evaluator,
   &_swigt__p_Float,
+  &_swigt__p_IfElseConstraint,
   &_swigt__p_Leaf,
   &_swigt__p_Param,
   &_swigt__p_SwigPyObject,
@@ -7601,13 +8521,16 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_double,
   &_swigt__p_int,
   &_swigt__p_std__mapT_Var_p_std__vectorT_int_t_t,
+  &_swigt__p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t,
   &_swigt__p_std__vectorT_Leaf_p_t,
   &_swigt__p_std__vectorT_int_t,
+  &_swigt__p_std__vectorT_std__vectorT_int_t_t,
 };
 
 static swig_cast_info _swigc__p_Constraint[] = {  {&_swigt__p_Constraint, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Evaluator[] = {  {&_swigt__p_Evaluator, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Float[] = {  {&_swigt__p_Float, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_IfElseConstraint[] = {  {&_swigt__p_IfElseConstraint, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Leaf[] = {  {&_swigt__p_Param, _p_ParamTo_p_Leaf, 0, 0},  {&_swigt__p_Float, _p_FloatTo_p_Leaf, 0, 0},  {&_swigt__p_Leaf, 0, 0, 0},  {&_swigt__p_Var, _p_VarTo_p_Leaf, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Param[] = {  {&_swigt__p_Param, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SwigPyObject[] = {  {&_swigt__p_SwigPyObject, 0, 0, 0},{0, 0, 0, 0}};
@@ -7616,13 +8539,16 @@ static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0,
 static swig_cast_info _swigc__p_double[] = {  {&_swigt__p_double, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__mapT_Var_p_std__vectorT_int_t_t[] = {  {&_swigt__p_std__mapT_Var_p_std__vectorT_int_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t[] = {  {&_swigt__p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_Leaf_p_t[] = {  {&_swigt__p_std__vectorT_Leaf_p_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_int_t[] = {  {&_swigt__p_std__vectorT_int_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__vectorT_std__vectorT_int_t_t[] = {  {&_swigt__p_std__vectorT_std__vectorT_int_t_t, 0, 0, 0},{0, 0, 0, 0}};
 
 static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_Constraint,
   _swigc__p_Evaluator,
   _swigc__p_Float,
+  _swigc__p_IfElseConstraint,
   _swigc__p_Leaf,
   _swigc__p_Param,
   _swigc__p_SwigPyObject,
@@ -7631,8 +8557,10 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_double,
   _swigc__p_int,
   _swigc__p_std__mapT_Var_p_std__vectorT_int_t_t,
+  _swigc__p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t,
   _swigc__p_std__vectorT_Leaf_p_t,
   _swigc__p_std__vectorT_int_t,
+  _swigc__p_std__vectorT_std__vectorT_int_t_t,
 };
 
 
@@ -8351,9 +9279,6 @@ SWIG_init(void) {
   SWIG_addvarlink(SWIG_globals(),(char *)"SIGN",Swig_var_SIGN_get, Swig_var_SIGN_set);
   PyDict_SetItemString(md, (char *)"SIGN", PyObject_GetAttrString(SWIG_globals(), "SIGN"));
   SwigPyBuiltin_AddPublicSymbol(public_interface, "SIGN");
-  SWIG_addvarlink(SWIG_globals(),(char *)"IF_ELSE",Swig_var_IF_ELSE_get, Swig_var_IF_ELSE_set);
-  PyDict_SetItemString(md, (char *)"IF_ELSE", PyObject_GetAttrString(SWIG_globals(), "IF_ELSE"));
-  SwigPyBuiltin_AddPublicSymbol(public_interface, "IF_ELSE");
   SWIG_addvarlink(SWIG_globals(),(char *)"INEQUALITY",Swig_var_INEQUALITY_get, Swig_var_INEQUALITY_set);
   PyDict_SetItemString(md, (char *)"INEQUALITY", PyObject_GetAttrString(SWIG_globals(), "INEQUALITY"));
   SwigPyBuiltin_AddPublicSymbol(public_interface, "INEQUALITY");
@@ -8531,6 +9456,29 @@ SWIG_init(void) {
   Py_INCREF(builtin_pytype);
   PyModule_AddObject(m, "Constraint", (PyObject *)builtin_pytype);
   SwigPyBuiltin_AddPublicSymbol(public_interface, "Constraint");
+  d = md;
+  
+  /* type '::IfElseConstraint' */
+  builtin_pytype = (PyTypeObject *)&SwigPyBuiltin__IfElseConstraint_type;
+  builtin_pytype->tp_dict = d = PyDict_New();
+  SwigPyBuiltin_SetMetaType(builtin_pytype, metatype);
+  builtin_pytype->tp_new = PyType_GenericNew;
+  builtin_base_count = 0;
+  builtin_bases[builtin_base_count] = NULL;
+  SwigPyBuiltin_InitBases(builtin_pytype, builtin_bases);
+  PyDict_SetItemString(d, "this", this_descr);
+  PyDict_SetItemString(d, "thisown", thisown_descr);
+  if (PyType_Ready(builtin_pytype) < 0) {
+    PyErr_SetString(PyExc_TypeError, "Could not create type 'IfElseConstraint'.");
+#if PY_VERSION_HEX >= 0x03000000
+    return NULL;
+#else
+    return;
+#endif
+  }
+  Py_INCREF(builtin_pytype);
+  PyModule_AddObject(m, "IfElseConstraint", (PyObject *)builtin_pytype);
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "IfElseConstraint");
   d = md;
   
   /* type '::Evaluator' */
