@@ -35,6 +35,9 @@ class Constraint(object):
         else:
             return self._c_obj.index
 
+    def evaluate(self):
+        return self.expr.evaluate()
+
 
 class Model(object):
     """
@@ -131,7 +134,7 @@ class Model(object):
             self._refcounts[param] = 1
         else:
             self._refcounts[param] += 1
-            cparam = self._var_cvar_map[param]
+            cparam = self._param_cparam_map[param]
         return cparam
 
     def _increment_float(self, f):

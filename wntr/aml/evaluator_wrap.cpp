@@ -4625,6 +4625,22 @@ SWIGINTERN PyObject *Swig_var_SIGN_get(void) {
 }
 
 
+SWIGINTERN int Swig_var_IF_ELSE_set(PyObject *) {
+  SWIG_Error(SWIG_AttributeError,"Variable IF_ELSE is read-only.");
+  return 1;
+}
+
+
+SWIGINTERN PyObject *Swig_var_IF_ELSE_get(void) {
+  PyObject *pyobj = 0;
+  PyObject *self = 0;
+  
+  (void)self;
+  pyobj = SWIG_From_int(static_cast< int >(IF_ELSE));
+  return pyobj;
+}
+
+
 SWIGINTERN int Swig_var_INEQUALITY_set(PyObject *) {
   SWIG_Error(SWIG_AttributeError,"Variable INEQUALITY is read-only.");
   return 1;
@@ -9279,6 +9295,9 @@ SWIG_init(void) {
   SWIG_addvarlink(SWIG_globals(),(char *)"SIGN",Swig_var_SIGN_get, Swig_var_SIGN_set);
   PyDict_SetItemString(md, (char *)"SIGN", PyObject_GetAttrString(SWIG_globals(), "SIGN"));
   SwigPyBuiltin_AddPublicSymbol(public_interface, "SIGN");
+  SWIG_addvarlink(SWIG_globals(),(char *)"IF_ELSE",Swig_var_IF_ELSE_get, Swig_var_IF_ELSE_set);
+  PyDict_SetItemString(md, (char *)"IF_ELSE", PyObject_GetAttrString(SWIG_globals(), "IF_ELSE"));
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "IF_ELSE");
   SWIG_addvarlink(SWIG_globals(),(char *)"INEQUALITY",Swig_var_INEQUALITY_get, Swig_var_INEQUALITY_set);
   PyDict_SetItemString(md, (char *)"INEQUALITY", PyObject_GetAttrString(SWIG_globals(), "INEQUALITY"));
   SwigPyBuiltin_AddPublicSymbol(public_interface, "INEQUALITY");

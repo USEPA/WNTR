@@ -135,6 +135,23 @@ double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values)
 	      else
 		res = -1.0;
 	    }
+	  else if (ndx == IF_ELSE)
+	    {
+	      --stack_ndx;
+	      arg2 = stack[stack_ndx];
+	      --stack_ndx;
+	      arg1 = stack[stack_ndx];
+	      --stack_ndx;
+	      arg = stack[stack_ndx];
+	      if (arg == 1)
+		{
+		  res = arg1;
+		}
+	      else
+		{
+		  res = arg2;
+		}
+	    }
 	  else if (ndx == INEQUALITY)
 	    {
 	      --stack_ndx;

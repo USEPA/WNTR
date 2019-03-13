@@ -20,6 +20,7 @@ class OperationEnum(enum.IntEnum):
     pow = -5
     abs = -6
     sign = -7
+    if_else = -8
     inequality = -9
     exp = -10
     log = -11
@@ -1010,6 +1011,39 @@ def atan(val):
     return val._unary_operation_helper(AtanOperator)
 
 
+def if_else(if_statement, then_statement, else_statement):
+    """
+
+    Parameters
+    ----------
+    if_statement: ExpressionBase
+    then_statement: ExpressionBase
+    else_statement: ExpressionBase
+
+    Returns
+    -------
+    expr: ExpressionBase
+    """
+    if type(if_statement) in native_numeric_types or type(if_statement) in native_boolean_types:
+        if if_statement:
+            return then_statement
+        else:
+            return else_statement
+    if type(then_statement) in native_numeric_types:
+        then_statement = Float(then_statement)
+    if type(else_statement) in native_numeric_types:
+        else_statement = Float(else_statement)
+    assert if_statement.is_relational()
+    expr = expression(if_statement)
+    new_operator = IfElseOperator(if_statement.last_node(), then_statement.last_node(), else_statement.last_node())
+    for oper in then_statement.operators():
+        expr.append_operator(oper)
+    for oper in else_statement.operators():
+        expr.append_operator(oper)
+    expr.append_operator(new_operator)
+    return expr
+
+
 def inequality(body, lb=None, ub=None):
     """
 
@@ -1069,6 +1103,130 @@ def abs(val):
     if type(val) in native_numeric_types:
         return math.fabs(val)
     return val._unary_operation_helper(AbsOperator)
+
+
+class IfElseOperator(Operator):
+    __slots__ = ('_if_arg', '_then_arg', '_else_arg')
+
+    def __init__(self, if_arg, then_arg, else_arg):
+        self._if_arg = if_arg
+        self._then_arg = then_arg
+        self._else_arg = else_arg
+
+    def evaluate(self, val_dict):
+        if_val = val_dict[self._if_arg]
+        if if_val:
+            if self._then_arg.is_leaf():
+                res = self._then_arg.value
+            else:
+                res = val_dict[self._then_arg]
+        else:
+            if self._else_arg.is_leaf():
+                res = self._else_arg.value
+            else:
+                res = val_dict[self._else_arg]
+        val_dict[self] = res
+
+    def operands(self):
+        yield self._if_arg
+        yield self._then_arg
+        yield self._else_arg
+
+    def _str(self, val_dict):
+        if_val = val_dict[self._if_arg]
+        if self._then_arg.is_leaf():
+            then_str = self._then_arg._str()
+        else:
+            then_str = val_dict[self._then_arg]
+        if self._else_arg.is_leaf():
+            else_str = self._else_arg._str()
+        else:
+            else_str = val_dict[self._else_arg]
+        s = '\n (\n'
+        s += '  if ' + if_val + ':\n'
+        s += '      ' + then_str.replace('\n', '\n    ') + '\n'
+        s += '  else:\n'
+        s += '      ' + else_str.replace('\n', '\n    ') + '\n'
+        s += '  )\n'
+        val_dict[self] = s
+
+    def diff_up(self, val_dict, der_dict):
+        if_val = val_dict[self._if_arg]
+        der_dict[self._if_arg] = 0
+        if if_val:
+            if self._then_arg.is_leaf():
+                val = self._then_arg.value
+                val_dict[self._then_arg] = val
+                if self._then_arg not in der_dict:
+                    der_dict[self._then_arg] = 0
+            else:
+                val = val_dict[self._then_arg]
+                der_dict[self._then_arg] = 0
+            if self._else_arg.is_leaf():
+                _val = self._else_arg.value
+                val_dict[self._else_arg] = _val
+                if self._else_arg not in der_dict:
+                    der_dict[self._else_arg] = 0
+            else:
+                der_dict[self._else_arg] = 0
+        else:
+            if self._else_arg.is_leaf():
+                val = self._else_arg.value
+                val_dict[self._else_arg] = val
+                if self._else_arg not in der_dict:
+                    der_dict[self._else_arg] = 0
+            else:
+                val = val_dict[self._else_arg]
+                der_dict[self._else_arg] = 0
+            if self._then_arg.is_leaf():
+                _val = self._then_arg.value
+                val_dict[self._then_arg] = _val
+                if self._then_arg not in der_dict:
+                    der_dict[self._then_arg] = 0
+            else:
+                der_dict[self._then_arg] = 0
+        val_dict[self] = val
+
+    def diff_up_symbolic(self, val_dict, der_dict):
+        der_dict[self._if_arg] = 0
+        if_val = val_dict[self._if_arg]
+        if self._then_arg.is_leaf():
+            then_val = self._then_arg
+            val_dict[self._then_arg] = then_val
+            if self._then_arg not in der_dict:
+                der_dict[self._then_arg] = 0
+        else:
+            then_val = val_dict[self._then_arg]
+            der_dict[self._then_arg] = 0
+        if self._else_arg.is_leaf():
+            else_val = self._else_arg
+            val_dict[self._else_arg] = else_val
+            if self._else_arg not in der_dict:
+                der_dict[self._else_arg] = 0
+        else:
+            else_val = val_dict[self._else_arg]
+            der_dict[self._else_arg] = 0
+        val_dict[self] = if_else(if_val, then_val, else_val)
+
+    def diff_down(self, val_dict, der_dict):
+        der = der_dict[self]
+        der_dict[self._then_arg] += if_else(val_dict[self._if_arg], der, 0)
+        der_dict[self._else_arg] += if_else(val_dict[self._if_arg], 0, der)
+
+    def get_rpn(self, rpn_map, leaf_ndx_map):
+        if self._if_arg.is_leaf():
+            rpn_map[self] = _rpn = [leaf_ndx_map[self._if_arg]]
+        else:
+            rpn_map[self] = _rpn = rpn_map[self._if_arg]
+        if self._then_arg.is_leaf():
+            _rpn.append(leaf_ndx_map[self._then_arg])
+        else:
+            _rpn.extend(rpn_map[self._then_arg])
+        if self._else_arg.is_leaf():
+            _rpn.append(leaf_ndx_map[self._else_arg])
+        else:
+            _rpn.extend(rpn_map[self._else_arg])
+        _rpn.append(OperationEnum.if_else.value)
 
 
 class InequalityOperator(Operator):
@@ -1363,3 +1521,8 @@ class ConditionalExpression(object):
     def add_final_expr(self, expr):
         self._conditions.append(Float(1))
         self._exprs.append(expr)
+
+    def evaluate(self):
+        for i, cond in enumerate(self._conditions):
+            if cond.evaluate():
+                return self._exprs[i].evaluate()

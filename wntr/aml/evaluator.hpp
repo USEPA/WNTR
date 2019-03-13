@@ -13,6 +13,7 @@ const int DIV = -4;
 const int POW = -5;
 const int ABS = -6;
 const int SIGN = -7;
+const int IF_ELSE = -8;
 const int INEQUALITY = -9;
 const int EXP = -10;
 const int LOG = -11;
