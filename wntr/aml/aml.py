@@ -38,6 +38,9 @@ class Constraint(object):
     def evaluate(self):
         return self.expr.evaluate()
 
+    def reverse_ad(self):
+        return self.expr.reverse_ad()
+
 
 class Model(object):
     """

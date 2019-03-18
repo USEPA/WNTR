@@ -806,7 +806,8 @@ class PowerOperator(BinaryOperator):
         val1 = val_dict[self._operand1]
         val2 = val_dict[self._operand2]
         der_dict[self._operand1] += der * val2 * val1**(val2 - 1)
-        der_dict[self._operand2] += der * val1**val2 * log(val1)
+        if not self._operand2.is_leaf() or self._operand2.is_variable_type():
+            der_dict[self._operand2] += der * val1**val2 * log(val1)
 
 
 class UnaryOperator(Operator):
@@ -1526,3 +1527,8 @@ class ConditionalExpression(object):
         for i, cond in enumerate(self._conditions):
             if cond.evaluate():
                 return self._exprs[i].evaluate()
+
+    def reverse_ad(self):
+        for i, cond in enumerate(self._conditions):
+            if cond.evaluate():
+                return self._exprs[i].reverse_ad()
