@@ -828,7 +828,6 @@ class PowerOperator(BinaryOperator):
 class UnaryOperator(Operator):
     __slots__ = ('_operand',)
 
-    operation = None
     str_repn = None
     operation_enum = None
 
@@ -845,7 +844,7 @@ class UnaryOperator(Operator):
             val = self._operand.value
         else:
             val = val_dict[self._operand]
-        val_dict[self] = self.__class__.operation(val)
+        val_dict[self] = self.operation(val)
 
     def _str(self, val_dict):
         if self._operand.is_leaf():
@@ -866,7 +865,7 @@ class UnaryOperator(Operator):
         else:
             val = val_dict[self._operand]
             der_dict[self._operand] = 0
-        val_dict[self] = self.__class__.operation(val)
+        val_dict[self] = self.operation(val)
 
     def diff_up_symbolic(self, val_dict, der_dict):
         if self._operand.is_leaf():
@@ -877,7 +876,7 @@ class UnaryOperator(Operator):
         else:
             val = val_dict[self._operand]
             der_dict[self._operand] = 0
-        val_dict[self] = self.__class__.operation(val)
+        val_dict[self] = self.operation(val)
 
     def get_rpn(self, rpn_map, leaf_ndx_map):
         if self._operand.is_leaf():
@@ -886,17 +885,24 @@ class UnaryOperator(Operator):
             rpn_map[self] = _rpn = rpn_map[self._operand]
             _rpn.append(self.operation_enum)
 
+    @staticmethod
+    def operation(val):
+        raise NotImplementedError('Subclasses should implement this.')
+
 
 class NegationOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = operator.neg
     str_repn = '-'
     operation_enum = OperationEnum.negation.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
         der_dict[self._operand] -= der
+
+    @staticmethod
+    def operation(val):
+        return -val
 
 
 def exp(val):
@@ -1310,18 +1316,20 @@ class InequalityOperator(Operator):
 class SignOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = sign
     str_repn = 'sign'
     operation_enum = OperationEnum.sign.value
 
     def diff_down(self, val_dict, der_dict):
         pass
 
+    @staticmethod
+    def operation(val):
+        return sign(val)
+
 
 class AbsOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = abs
     str_repn = 'abs'
     operation_enum = OperationEnum.abs.value
 
@@ -1330,11 +1338,14 @@ class AbsOperator(UnaryOperator):
         der_dict[self._operand] += der * if_else(if_statement=inequality(body=val_dict[self._operand], lb=0),
                                                  then_statement=Float(1), else_statement=Float(-1))
 
+    @staticmethod
+    def operation(val):
+        return abs(val)
+
 
 class ExpOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = exp
     str_repn = 'exp'
     operation_enum = OperationEnum.exp.value
 
@@ -1342,11 +1353,14 @@ class ExpOperator(UnaryOperator):
         der = der_dict[self]
         der_dict[self._operand] += der * exp(val_dict[self._operand])
 
+    @staticmethod
+    def operation(val):
+        return exp(val)
+
 
 class LogOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = log
     str_repn = 'log'
     operation_enum = OperationEnum.log.value
 
@@ -1354,11 +1368,14 @@ class LogOperator(UnaryOperator):
         der = der_dict[self]
         der_dict[self._operand] += der / val_dict[self._operand]
 
+    @staticmethod
+    def operation(val):
+        return log(val)
+
 
 class SinOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = sin
     str_repn = 'sin'
     operation_enum = OperationEnum.sin.value
 
@@ -1366,11 +1383,14 @@ class SinOperator(UnaryOperator):
         der = der_dict[self]
         der_dict[self._operand] += der * cos(val_dict[self._operand])
 
+    @staticmethod
+    def operation(val):
+        return sin(val)
+
 
 class CosOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = cos
     str_repn = 'cos'
     operation_enum = OperationEnum.cos.value
 
@@ -1378,11 +1398,14 @@ class CosOperator(UnaryOperator):
         der = der_dict[self]
         der_dict[self._operand] -= der * sin(val_dict[self._operand])
 
+    @staticmethod
+    def operation(val):
+        return cos(val)
+
 
 class TanOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = tan
     str_repn = 'tan'
     operation_enum = OperationEnum.tan.value
 
@@ -1390,11 +1413,14 @@ class TanOperator(UnaryOperator):
         der = der_dict[self]
         der_dict[self._operand] += der / (cos(val_dict[self._operand])**2)
 
+    @staticmethod
+    def operation(val):
+        return tan(val)
+
 
 class AsinOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = asin
     str_repn = 'asin'
     operation_enum = OperationEnum.asin.value
 
@@ -1402,11 +1428,14 @@ class AsinOperator(UnaryOperator):
         der = der_dict[self]
         der_dict[self._operand] += der / (1 - val_dict[self._operand]**2)**0.5
 
+    @staticmethod
+    def operation(val):
+        return asin(val)
+
 
 class AcosOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = acos
     str_repn = 'acos'
     operation_enum = OperationEnum.acos.value
 
@@ -1414,17 +1443,24 @@ class AcosOperator(UnaryOperator):
         der = der_dict[self]
         der_dict[self._operand] -= der / (1 - val_dict[self._operand]**2)**0.5
 
+    @staticmethod
+    def operation(val):
+        return acos(val)
+
 
 class AtanOperator(UnaryOperator):
     __slots__ = ()
 
-    operation = atan
     str_repn = 'atan'
     operation_enum = OperationEnum.atan.value
 
     def diff_down(self, val_dict, der_dict):
         der = der_dict[self]
         der_dict[self._operand] += der / (1 + val_dict[self._operand]**2)
+
+    @staticmethod
+    def operation(val):
+        return atan(val)
 
 
 def value(obj):
