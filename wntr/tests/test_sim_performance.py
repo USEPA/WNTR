@@ -18,10 +18,13 @@ results_dir = join(testdir,'performance_results')
 def compare_results(wntr_res, epa_res, abs_threshold, rel_threshold):
     abs_diff = abs(wntr_res - epa_res)
     rel_diff = abs_diff / abs(epa_res)
-    abs_diff = abs_diff.mean()
-    rel_diff = rel_diff.mean()
-    diff = (abs_diff < abs_threshold) | (rel_diff < rel_threshold)
-    return diff.all()
+    abs_diffa = abs_diff.mean()
+    rel_diffa = rel_diff.mean()
+    abs_diffb = abs_diff.mean(axis=1)
+    rel_diffb = rel_diff.mean(axis=1)
+    diffa = (abs_diffa < abs_threshold) | (rel_diffa < rel_threshold)
+    diffb = (abs_diffb < abs_threshold) | (rel_diffb < rel_threshold)
+    return diffa.all() and diffb.all()
 
 
 class TestPerformance(unittest.TestCase):
