@@ -18,7 +18,7 @@ from wntr.models.utils import ModelUpdater
 logger = logging.getLogger(__name__)
 
 
-def create_hydraulic_model(wn, mode='DD', model_type='wntr'):
+def create_hydraulic_model(wn, mode='DD'):
     """
     Parameters
     ----------
@@ -32,9 +32,7 @@ def create_hydraulic_model(wn, mode='DD', model_type='wntr'):
     m: wntr.aml.Model
     model_updater: wntr.models.utils.ModelUpdater
     """
-    m = aml.Model(model_type=model_type)
-    if model_type == 'ipopt':
-        m.const_obj = aml.create_objective(aml.create_param(value=1.0))
+    m = aml.Model()
     model_updater = ModelUpdater()
 
     # Global constants
@@ -76,7 +74,7 @@ def create_hydraulic_model(wn, mode='DD', model_type='wntr'):
         constraint.pdd_constraint.build(m, wn, model_updater)
     else:
         raise ValueError('mode not recognized: ' + str(mode))
-    constraint.approx_hazen_williams_headloss_constraint.build(m, wn, model_updater)
+    constraint.hazen_williams_headloss_constraint.build(m, wn, model_updater)
     constraint.head_pump_headloss_constraint.build(m, wn, model_updater)
     constraint.power_pump_headloss_constraint.build(m, wn, model_updater)
     constraint.prv_headloss_constraint.build(m, wn, model_updater)

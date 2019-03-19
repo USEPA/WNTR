@@ -171,7 +171,7 @@ class approx_hazen_williams_headloss_constraint(Definition):
             index_over = wn.pipe_name_list
 
         for link_name in index_over:
-            if link_name in m.hazen_williams_headloss:
+            if link_name in m.approx_hazen_williams_headloss:
                 del m.approx_hazen_williams_headloss[link_name]
 
             link = wn.get_link(link_name)

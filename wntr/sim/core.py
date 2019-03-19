@@ -242,11 +242,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             logger.log(1, 'initializing hydraulic model')
 
-        if solver == 'ipopt':
-            model_type = 'ipopt'
-        else:
-            model_type = 'wntr'
-        model, model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=wn, mode=self.mode, model_type=model_type)
+        model, model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=wn, mode=self.mode)
         self._model = model
         self._model_updater = model_updater
         node_res, link_res = wntr.sim.hydraulics.initialize_results_dict(wn)
@@ -722,33 +718,28 @@ def _solver_helper(model, solver, solver_options):
     message: str
     """
     logger.debug('solving')
-    if solver == 'ipopt':
-        model.solve()
-        sol = SolverStatus.converged, ''
-    else:
-        model.set_structure()
-        if solver is NewtonSolver:
-            _solver = NewtonSolver(solver_options)
-            sol = _solver.solve(model)
-        elif solver is scipy.optimize.fsolve:
-            x, infodict, ier, mesg = solver(model.evaluate_residuals, model.get_x(), **solver_options)
-            if ier != 1:
-                sol = SolverStatus.error, mesg
-            else:
-                model.load_var_values_from_x(x)
-                sol = SolverStatus.converged, mesg
-        elif solver in {scipy.optimize.newton_krylov, scipy.optimize.anderson, scipy.optimize.broyden1,
-                                scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
-                                scipy.optimize.diagbroyden}:
-            try:
-                x = solver(model.evaluate_residuals, model.get_x(), **solver_options)
-                model.load_var_values_from_x(x)
-                sol = SolverStatus.converged, ''
-            except:
-                sol = SolverStatus.error, ''
+    model.set_structure()
+    if solver is NewtonSolver:
+        _solver = NewtonSolver(solver_options)
+        sol = _solver.solve(model)
+    elif solver is scipy.optimize.fsolve:
+        x, infodict, ier, mesg = solver(model.evaluate_residuals, model.get_x(), **solver_options)
+        if ier != 1:
+            sol = SolverStatus.error, mesg
         else:
-            raise ValueError('Solver not recognized.')
-        model.release_structure()
+            model.load_var_values_from_x(x)
+            sol = SolverStatus.converged, mesg
+    elif solver in {scipy.optimize.newton_krylov, scipy.optimize.anderson, scipy.optimize.broyden1,
+                            scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
+                            scipy.optimize.diagbroyden}:
+        try:
+            x = solver(model.evaluate_residuals, model.get_x(), **solver_options)
+            model.load_var_values_from_x(x)
+            sol = SolverStatus.converged, ''
+        except:
+            sol = SolverStatus.error, ''
+    else:
+        raise ValueError('Solver not recognized.')
     return sol
 
 
