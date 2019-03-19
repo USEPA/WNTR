@@ -3,7 +3,7 @@ from setuptools.extension import Extension
 import numpy
 import os
 
-use_swig = False
+use_swig = True
 
 try:
     numpy_include = numpy.get_include()

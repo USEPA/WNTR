@@ -61,7 +61,7 @@ void IfElseConstraint::add_jac_rpn_term(Var* v, int term)
 
 
 double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values)
-{
+{  
   double stack[rpn->size()];
   double arg1;
   double arg2;
@@ -124,7 +124,7 @@ double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values)
 	    {
 	      --stack_ndx;
 	      arg = stack[stack_ndx];
-	      res = ::abs(arg);
+	      res = std::abs(arg);
 	    }
 	  else if (ndx == SIGN)
 	    {

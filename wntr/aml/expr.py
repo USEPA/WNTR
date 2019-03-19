@@ -1532,3 +1532,21 @@ class ConditionalExpression(object):
         for i, cond in enumerate(self._conditions):
             if cond.evaluate():
                 return self._exprs[i].reverse_ad()
+
+    def __str__(self):
+        i = 0
+        s = '\n'
+        for _cond, _expr in zip(self._conditions, self._exprs):
+            if i == 0:
+                s += 'if '
+            else:
+                s += 'elif '
+            s += str(_cond)
+            s += ':\n    '
+            s += str(_expr)
+            s += '\n'
+            i += 1
+        return s
+
+    def __repr__(self):
+        return self.__str__()

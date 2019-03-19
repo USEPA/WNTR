@@ -74,7 +74,7 @@ def create_hydraulic_model(wn, mode='DD'):
         constraint.pdd_constraint.build(m, wn, model_updater)
     else:
         raise ValueError('mode not recognized: ' + str(mode))
-    constraint.hazen_williams_headloss_constraint.build(m, wn, model_updater)
+    constraint.approx_hazen_williams_headloss_constraint.build(m, wn, model_updater)
     constraint.head_pump_headloss_constraint.build(m, wn, model_updater)
     constraint.power_pump_headloss_constraint.build(m, wn, model_updater)
     constraint.prv_headloss_constraint.build(m, wn, model_updater)
