@@ -3,7 +3,7 @@ from setuptools.extension import Extension
 import numpy
 import os
 
-use_swig = True
+use_swig = False
 
 try:
     numpy_include = numpy.get_include()
@@ -39,7 +39,7 @@ if use_swig:
                                       extra_compile_args=[],
                                       swig_opts=['-c++', '-builtin'])
 else:
-    aml_core_ext = Extension("wntr.aml._aml_core",
+    aml_core_ext = Extension("wntr.aml._evaluator",
                              sources=[evaluator_cxx, evaluator_wrap_cxx],
                              language="c++",
                              extra_compile_args=[],
