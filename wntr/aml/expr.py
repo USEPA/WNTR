@@ -1,11 +1,13 @@
 import abc
 import itertools
 import operator
-import collections.abc as collections_abc
 import math
 from wntr.utils.ordered_set import OrderedSet
 import enum
-from collections import deque
+from six import with_metaclass
+
+if not hasattr(math, 'inf'):
+    math.inf = float('inf')
 
 native_numeric_types = {float, int}
 native_integer_types = {int, bool}
@@ -33,7 +35,7 @@ class OperationEnum(enum.IntEnum):
     atan = -18
 
 
-class Node(object, metaclass=abc.ABCMeta):
+class Node(with_metaclass(abc.ABCMeta, object)):
 
     __slots__ = ()
 
@@ -42,7 +44,7 @@ class Node(object, metaclass=abc.ABCMeta):
         pass
 
 
-class ExpressionBase(Node, metaclass=abc.ABCMeta):
+class ExpressionBase(with_metaclass(abc.ABCMeta, Node)):
     __slots__ = ()
 
     def is_relational(self):
@@ -106,6 +108,13 @@ class ExpressionBase(Node, metaclass=abc.ABCMeta):
             return self
         return self._binary_operation_helper(other, DivideOperator)
 
+    def __div__(self, other):
+        if other == 0:
+            raise ValueError('Divide by 0')
+        elif other == 1:
+            return self
+        return self._binary_operation_helper(other, DivideOperator)
+
     def __pow__(self, other):
         if other == 0:
             return 1
@@ -134,6 +143,12 @@ class ExpressionBase(Node, metaclass=abc.ABCMeta):
         return Float(other) * self
 
     def __rtruediv__(self, other):
+        assert type(other) in native_numeric_types
+        if other == 0:
+            return 0
+        return Float(other) / self
+
+    def __rdiv__(self, other):
         assert type(other) in native_numeric_types
         if other == 0:
             return 0
@@ -198,7 +213,7 @@ class ExpressionBase(Node, metaclass=abc.ABCMeta):
         return str(self)
 
 
-class Leaf(ExpressionBase, metaclass=abc.ABCMeta):
+class Leaf(with_metaclass(abc.ABCMeta, ExpressionBase)):
 
     __slots__ = ('_value', '_c_obj')
 
@@ -615,7 +630,7 @@ class expression(ExpressionBase):
         return rpn_map[self.last_node()]
 
 
-class Operator(Node, metaclass=abc.ABCMeta):
+class Operator(with_metaclass(abc.ABCMeta, Node)):
 
     __slots__ = ()
 
