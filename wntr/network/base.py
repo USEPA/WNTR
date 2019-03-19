@@ -334,20 +334,20 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         """:class:`~wntr.network.base.Node`: The start node object."""
         return self._start_node
     @start_node.setter
-    def start_node(self, name):
+    def start_node(self, node):
         self._node_reg.remove_usage(self.start_node_name, (self._link_name, self.link_type))
-        self._node_reg.add_usage(name, (self._link_name, self.link_type))
-        self._start_node = self._node_reg[name]
+        self._node_reg.add_usage(node.name, (self._link_name, self.link_type))
+        self._start_node = self._node_reg[node.name]
 
     @property
     def end_node(self):
         """:class:`~wntr.network.base.Node`: The end node object."""
         return self._end_node
     @end_node.setter
-    def end_node(self, name):
+    def end_node(self, node):
         self._node_reg.remove_usage(self.end_node_name, (self._link_name, self.link_type))
-        self._node_reg.add_usage(name, (self._link_name, self.link_type))
-        self._end_node = self._node_reg[name]
+        self._node_reg.add_usage(node.name, (self._link_name, self.link_type))
+        self._end_node = self._node_reg[node.name]
 
     @property
     def start_node_name(self):
@@ -566,11 +566,11 @@ class Registry(MutableMapping):
         """add args to usage[key]"""
         if not key:
             return
-        if not key in self._usage:
+        if not (key in self._usage):
             self._usage[key] = OrderedSet()
         for arg in args:
             self._usage[key].add(arg)
-    
+
     def remove_usage(self, key, *args):
         """remove args from usage[key]"""
         if not key:
