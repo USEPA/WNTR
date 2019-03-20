@@ -57,7 +57,7 @@ extension_modules.append(aml_core_ext)
 extension_modules.append(network_isolation_ext)
 
 DISTNAME = 'wntr'
-VERSION = '0.1.7'
+VERSION = '0.2.1'
 PACKAGES = find_packages()
 EXTENSIONS = extension_modules
 DESCRIPTION = 'Water Network Tool for Resilience'
