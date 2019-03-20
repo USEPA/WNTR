@@ -61,8 +61,8 @@ void IfElseConstraint::add_jac_rpn_term(Var* v, int term)
 
 
 double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values)
-{  
-  double stack[rpn->size()];
+{
+  double* stack = new double[(int) (rpn->size())];
   double arg1;
   double arg2;
   double arg;
@@ -226,7 +226,9 @@ double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values)
 	}
     }
   --stack_ndx;
-  return stack[stack_ndx];
+  res = stack[stack_ndx];
+  delete[] stack;
+  return res;
 }
 
 
