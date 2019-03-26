@@ -152,7 +152,3 @@ def plot_pump_curve(pump, add_polyfit=True, title='Pump curve',
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.legend()
-    
-    #if add_polyfit:
-    #    return f
-    
