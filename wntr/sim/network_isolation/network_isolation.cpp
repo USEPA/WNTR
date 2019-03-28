@@ -1,5 +1,16 @@
 #include "network_isolation.hpp"
 
+
+int get_long_size()
+{
+  if (CHAR_BIT != 8)
+    {
+      throw std::runtime_error("Expected CHAR_BIT to be 8. Please report this to the WNTR developers.");
+    }
+  return (int) sizeof(long);
+}
+
+
 void check_for_isolated_junctions(long *sources, int source_length, long *node_indicator, int num_nodes, long *indptr, int indptr_length, long *indices, int indices_length, long *data, int data_length, long *num_connections, int num_connections_length)
 {
   int source_id;

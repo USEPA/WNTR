@@ -14,7 +14,7 @@ import itertools
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 from wntr.network import Junction, Pipe, Valve, Pump, Tank, Reservoir
-from wntr.sim.network_isolation import check_for_isolated_junctions
+from wntr.sim.network_isolation import check_for_isolated_junctions, get_long_size
 
 logger = logging.getLogger(__name__)
 
@@ -148,6 +148,13 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._prev_isolated_links = OrderedSet()
         self._model_updater = None
         self._source_ids = None
+
+        long_size = get_long_size()
+        if long_size == 4:
+            self._int_dtype = np.int32
+        else:
+            assert long_size == 8
+            self._int_dtype = np.int64
 
         self._initialize_name_id_maps()
         self._initialize_internal_graph()
@@ -568,6 +575,9 @@ class WNTRSimulator(WaterNetworkSimulator):
                 vals.append(1)
                 vals.append(1)
 
+        rows = np.array(rows, dtype=self._int_dtype)
+        cols = np.array(cols, dtype=self._int_dtype)
+        vals = np.array(vals, dtype=self._int_dtype)
         self._internal_graph = scipy.sparse.csr_matrix((vals, (rows, cols)))
 
         ndx_map = OrderedDict()
@@ -584,7 +594,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._number_of_connections = [0 for i in range(self._wn.num_nodes)]
         for node_id in self._node_id_to_name.keys():
             self._number_of_connections[node_id] = self._internal_graph.indptr[node_id+1] - self._internal_graph.indptr[node_id]
-        self._number_of_connections = np.array(self._number_of_connections, dtype=np.int64)
+        self._number_of_connections = np.array(self._number_of_connections, dtype=self._int_dtype)
 
         self._node_pairs_with_multiple_links = OrderedDict()
         for from_node_id, to_node_id in n_links.keys():
@@ -612,7 +622,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         for node_name, node in self._wn.reservoirs():
             node_id = self._node_name_to_id[node_name]
             self._source_ids.append(node_id)
-        self._source_ids = np.array(self._source_ids, dtype=np.int64)
+        self._source_ids = np.array(self._source_ids, dtype=self._int_dtype)
 
     def _update_internal_graph(self):
         data = self._internal_graph.data
@@ -652,7 +662,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             link = self._wn.get_link(l)
             link._is_isolated = False
 
-        node_indicator = np.ones(self._wn.num_nodes, dtype=np.int64)
+        node_indicator = np.ones(self._wn.num_nodes, dtype=self._int_dtype)
         check_for_isolated_junctions(self._source_ids, node_indicator, self._internal_graph.indptr,
                                      self._internal_graph.indices, self._internal_graph.data,
                                      self._number_of_connections)

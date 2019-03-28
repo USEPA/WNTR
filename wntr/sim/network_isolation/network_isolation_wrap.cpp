@@ -3858,6 +3858,13 @@ namespace swig {
 #include <complex> 
 
 
+SWIGINTERNINLINE PyObject*
+  SWIG_From_int  (int value)
+{
+  return PyInt_FromLong((long) value);
+}
+
+
 #if NPY_API_VERSION < 0x00000007
 #define NPY_ARRAY_DEFAULT NPY_DEFAULT
 #define NPY_ARRAY_FARRAY  NPY_FARRAY
@@ -4338,6 +4345,19 @@ namespace swig {
 #ifdef __cplusplus
 extern "C" {
 #endif
+SWIGINTERN PyObject *_wrap_get_long_size(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  int result;
+  
+  if (!PyArg_ParseTuple(args,(char *)":get_long_size")) SWIG_fail;
+  result = (int)get_long_size();
+  resultobj = SWIG_From_int(static_cast< int >(result));
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_check_for_isolated_junctions(PyObject *self, PyObject *args) {
   PyObject *resultobj = 0;
   long *arg1 = (long *) 0 ;
@@ -4510,6 +4530,7 @@ fail:
 
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"SWIG_PyInstanceMethod_New", (PyCFunction)SWIG_PyInstanceMethod_New, METH_O, NULL},
+	 { (char *)"get_long_size", _wrap_get_long_size, METH_VARARGS, NULL},
 	 { (char *)"check_for_isolated_junctions", _wrap_check_for_isolated_junctions, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
