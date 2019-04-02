@@ -257,5 +257,22 @@ The file **hydraulic_simulation.py** includes examples of these features.
 Advanced: Customized models with WNTR's AML
 -------------------------------------------
 
-WNTR has a custom algebraic modeling language (AML) which is used for WNTR's hydraulic model (used in the :class:`~wntr.sim.core.WNTRSimulator`). This AML is primarily used for efficient evaluation and automatic differentiation (first derivatives only) of the constraints defining the hydraulic model. WNTR's AML drastically simplifies the implementation, maintenance, modification, and customization of hydraulic models. The AML allows defining variables and constraints in a natural way:
+WNTR has a custom algebraic modeling language (AML) which is used for WNTR's hydraulic model (used in the :class:`~wntr.sim.core.WNTRSimulator`). This AML is primarily used for efficient evaluation of constraint residuals and derivatives. WNTR's AML drastically simplifies the implementation, maintenance, modification, and customization of hydraulic models. The AML allows defining variables and constraints in a natural way. For example, suppose we want to solve the following system of nonlinear equations.
 
+.. math::
+
+   y - x^{2} = 0
+   y - x - 1 = 0
+
+We can create this model usin WNTR's AML as follows.
+   
+.. doctest::
+
+   >>> from wntr.sim import aml
+   >>> m = aml.Model()
+   >>> m.x = aml.Var()
+   >>> m.y = aml.Var()
+   >>> m.c1 = aml.Constraint(m.y - m.x**2)
+   >>> m.c2 = aml.Constraint(m.y - m.x - 1)
+
+Before
