@@ -83,9 +83,7 @@ for i in range(Imax):
     wn = pickle.load(f)
     f.close()
 
-### ANALYSIS ###
-nzd_junctions = [j_name for j_name, j in wn.junctions() if sum(d.base_value for d in j.demand_timeseries_list) != 0]
-
+### ANALYSIS ###  
 result_names = results.keys()
 for name in result_names:
 
