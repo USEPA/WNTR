@@ -458,8 +458,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                 wntr.sim.hydraulics.update_tank_heads(wn)
             wntr.sim.hydraulics.update_model_for_controls(model, wn, model_updater, self._presolve_controls)
             wntr.sim.hydraulics.update_model_for_controls(model, wn, model_updater, self._rules)
-            wntr.models.param.source_head_param(model, wn)
-            wntr.models.param.expected_demand_param(model, wn)
+            wntr.sim.models.param.source_head_param(model, wn)
+            wntr.sim.models.param.expected_demand_param(model, wn)
 
             # Solve
             solver_status, mesg = _solver_helper(model, solver, solver_options)

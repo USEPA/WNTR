@@ -1,7 +1,7 @@
 import sys
 import scipy
-from wntr.aml.evaluator import Evaluator
-from wntr.aml.expr import Var, Param, native_numeric_types, Float, ConditionalExpression
+from .evaluator import Evaluator
+from .expr import Var, Param, native_numeric_types, Float, ConditionalExpression
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 if sys.version_info.major == 2:

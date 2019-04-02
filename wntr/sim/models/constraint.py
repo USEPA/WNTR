@@ -1,11 +1,11 @@
 import logging
-from wntr import aml
+from wntr.sim import aml
 import wntr.network
 from wntr.network.base import _DemandStatus
 import warnings
 from wntr.utils.polynomial_interpolation import cubic_spline
 from wntr.network import LinkStatus
-from wntr.models.utils import ModelUpdater, Definition
+from wntr.sim.models.utils import ModelUpdater, Definition
 
 logger = logging.getLogger(__name__)
 

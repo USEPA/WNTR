@@ -2,7 +2,7 @@ import wntr
 import unittest
 import math
 import numpy as np
-from wntr.models.utils import ModelUpdater
+from wntr.sim.models.utils import ModelUpdater
 
 
 def compare_floats(a, b, tol=1e-5, rel_tol=1e-3):
@@ -56,19 +56,19 @@ class TestHeadloss(unittest.TestCase):
         wn.add_curve('curve3', 'HEAD', [(0.0, 10.0), (0.07, 5.0), (0.1, 0.0)])
         wn.add_pump('pump1', 't1', 'j1', 'HEAD', 'curve1')
         wn.add_pump('pump2', 't1', 'j1', 'POWER', 50.0)
-        cls.m = m = wntr.aml.Model()
+        cls.m = m = wntr.sim.aml.Model()
         cls.updater = updater = ModelUpdater()
-        wntr.models.constants.hazen_williams_constants(m)
-        wntr.models.param.hw_resistance_param.build(m, wn, updater)
-        wntr.models.param.minor_loss_param.build(m, wn, updater)
-        wntr.models.param.source_head_param(m, wn)
-        wntr.models.var.flow_var(m, wn)
-        wntr.models.var.head_var(m, wn)
-        wntr.models.constraint.hazen_williams_headloss_constraint.build(m, wn, updater)
-        wntr.models.constants.head_pump_constants(m)
-        wntr.models.constraint.head_pump_headloss_constraint.build(m, wn, updater)
-        wntr.models.param.pump_power_param.build(m, wn, updater)
-        wntr.models.constraint.power_pump_headloss_constraint.build(m, wn, updater)
+        wntr.sim.models.constants.hazen_williams_constants(m)
+        wntr.sim.models.param.hw_resistance_param.build(m, wn, updater)
+        wntr.sim.models.param.minor_loss_param.build(m, wn, updater)
+        wntr.sim.models.param.source_head_param(m, wn)
+        wntr.sim.models.var.flow_var(m, wn)
+        wntr.sim.models.var.head_var(m, wn)
+        wntr.sim.models.constraint.hazen_williams_headloss_constraint.build(m, wn, updater)
+        wntr.sim.models.constants.head_pump_constants(m)
+        wntr.sim.models.constraint.head_pump_headloss_constraint.build(m, wn, updater)
+        wntr.sim.models.param.pump_power_param.build(m, wn, updater)
+        wntr.sim.models.constraint.power_pump_headloss_constraint.build(m, wn, updater)
 
     def test_HW_headloss(self):
         wn = self.wn
@@ -140,7 +140,7 @@ class TestHeadloss(unittest.TestCase):
                     r1 = m.head_pump_headloss['pump1'].evaluate()
                     if status == 1:
                         if C <= 1:
-                            a, b, c, d = wntr.models.constraint.get_pump_poly_coefficients(A, B, C, m)
+                            a, b, c, d = wntr.sim.models.constraint.get_pump_poly_coefficients(A, B, C, m)
                             if f <= m.pump_q1:
                                 r2 = m.pump_slope * f + A - j1_head + t1_head
                             elif f <= m.pump_q2:
@@ -148,7 +148,7 @@ class TestHeadloss(unittest.TestCase):
                             else:
                                 r2 = A - B*f**C - j1_head + t1_head
                         else:
-                            q_bar, h_bar = wntr.models.constraint.get_pump_line_params(A, B, C, m)
+                            q_bar, h_bar = wntr.sim.models.constraint.get_pump_line_params(A, B, C, m)
                             if f <= q_bar:
                                 r2 = m.pump_slope * (f - q_bar) + h_bar - j1_head + t1_head
                             else:
@@ -204,17 +204,17 @@ class TestPDD(unittest.TestCase):
 
     def test_pdd(self):
         wn = self.wn
-        m = wntr.aml.Model()
+        m = wntr.sim.aml.Model()
         updater = ModelUpdater()
-        wntr.models.constants.pdd_constants(m)
-        wntr.models.param.expected_demand_param(m, wn)
-        wntr.models.param.elevation_param.build(m, wn, updater)
-        wntr.models.param.pdd_poly_coeffs_param.build(m, wn, updater)
-        wntr.models.param.pmin_param.build(m, wn, updater)
-        wntr.models.param.pnom_param.build(m, wn, updater)
-        wntr.models.var.head_var(m, wn)
-        wntr.models.var.demand_var(m, wn)
-        wntr.models.constraint.pdd_constraint.build(m, wn, updater)
+        wntr.sim.models.constants.pdd_constants(m)
+        wntr.sim.models.param.expected_demand_param(m, wn)
+        wntr.sim.models.param.elevation_param.build(m, wn, updater)
+        wntr.sim.models.param.pdd_poly_coeffs_param.build(m, wn, updater)
+        wntr.sim.models.param.pmin_param.build(m, wn, updater)
+        wntr.sim.models.param.pnom_param.build(m, wn, updater)
+        wntr.sim.models.var.head_var(m, wn)
+        wntr.sim.models.var.demand_var(m, wn)
+        wntr.sim.models.constraint.pdd_constraint.build(m, wn, updater)
 
         node = wn.get_node('j1')
 

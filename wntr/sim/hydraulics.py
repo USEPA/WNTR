@@ -11,9 +11,9 @@ from wntr.network.elements import Junction, Tank, Reservoir, Pipe, HeadPump, Pow
     TCValve, GPValve, PBValve
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
-from wntr import aml
-from wntr.models import constants, var, param, constraint
-from wntr.models.utils import ModelUpdater
+from wntr.sim import aml
+from wntr.sim.models import constants, var, param, constraint
+from wntr.sim.models.utils import ModelUpdater
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-import wntr.aml as aml
+import wntr.sim.aml as aml
 import unittest
 import numpy as np
 from collections import OrderedDict

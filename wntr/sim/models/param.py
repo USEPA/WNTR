@@ -1,9 +1,9 @@
 import logging
-from wntr import aml
+from wntr.sim import aml
 from wntr.utils.polynomial_interpolation import cubic_spline
 import math
 from wntr.network import LinkStatus
-from wntr.models.utils import ModelUpdater, Definition
+from wntr.sim.models.utils import ModelUpdater, Definition
 
 
 logger = logging.getLogger(__name__)

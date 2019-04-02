@@ -1,1 +1,1 @@
-from wntr.models import constants, param, var, constraint
+from wntr.sim.models import constants, param, var, constraint
