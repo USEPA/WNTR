@@ -18,14 +18,15 @@ from wntr.sim.models.utils import ModelUpdater
 logger = logging.getLogger(__name__)
 
 
-def create_hydraulic_model(wn, mode='DD'):
+def create_hydraulic_model(wn, mode='DD', HW_approx='default'):
     """
     Parameters
     ----------
     wn: WaterNetworkModel
     mode: str
-    model_type: str
-        'wntr' or 'ipopt'
+    HW_approx: str
+        Specifies which Hazen-Williams headloss approximation to use. Options are 'default' and 'piecewise'. Please
+        see the WNTR documentation on hydraulics for details.
 
     Returns
     -------
@@ -74,7 +75,12 @@ def create_hydraulic_model(wn, mode='DD'):
         constraint.pdd_constraint.build(m, wn, model_updater)
     else:
         raise ValueError('mode not recognized: ' + str(mode))
-    constraint.hazen_williams_headloss_constraint.build(m, wn, model_updater)
+    if HW_approx == 'default':
+        constraint.approx_hazen_williams_headloss_constraint.build(m, wn, model_updater)
+    elif HW_approx == 'piecewise':
+        constraint.piecewise_hazen_williams_headloss_constraint.build(m, wn, model_updater)
+    else:
+        raise ValueError('Unexpected value for HW_approx: ' + str(HW_approx))
     constraint.head_pump_headloss_constraint.build(m, wn, model_updater)
     constraint.power_pump_headloss_constraint.build(m, wn, model_updater)
     constraint.prv_headloss_constraint.build(m, wn, model_updater)

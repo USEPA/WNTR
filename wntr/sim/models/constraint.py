@@ -88,7 +88,7 @@ class pdd_mass_balance_constraint(Definition):
             updater.add(node, '_is_isolated', pdd_mass_balance_constraint.update)
 
 
-class hazen_williams_headloss_constraint(Definition):
+class piecewise_hazen_williams_headloss_constraint(Definition):
     @classmethod
     def build(cls, m, wn, updater, index_over=None):
         """
@@ -102,15 +102,15 @@ class hazen_williams_headloss_constraint(Definition):
         index_over: list of str
             list of pipe names; default is all pipes in wn
         """
-        if not hasattr(m, 'hazen_williams_headloss'):
-            m.hazen_williams_headloss = aml.ConstraintDict()
+        if not hasattr(m, 'piecewise_hazen_williams_headloss'):
+            m.piecewise_hazen_williams_headloss = aml.ConstraintDict()
 
         if index_over is None:
             index_over = wn.pipe_name_list
 
         for link_name in index_over:
-            if link_name in m.hazen_williams_headloss:
-                del m.hazen_williams_headloss[link_name]
+            if link_name in m.piecewise_hazen_williams_headloss:
+                del m.piecewise_hazen_williams_headloss[link_name]
 
             link = wn.get_link(link_name)
             f = m.flow[link_name]
@@ -144,10 +144,10 @@ class hazen_williams_headloss_constraint(Definition):
                 con.add_final_expr(-aml.sign(f)*k*aml.abs(f)**m.hw_exp - aml.sign(f)*minor_k*f**m.hw_minor_exp + start_h - end_h)
                 con = aml.Constraint(con)
 
-            m.hazen_williams_headloss[link_name] = con
+            m.piecewise_hazen_williams_headloss[link_name] = con
 
-            updater.add(link, 'status', hazen_williams_headloss_constraint.update)
-            updater.add(link, '_is_isolated', hazen_williams_headloss_constraint.update)
+            updater.add(link, 'status', piecewise_hazen_williams_headloss_constraint.update)
+            updater.add(link, '_is_isolated', piecewise_hazen_williams_headloss_constraint.update)
 
 
 class approx_hazen_williams_headloss_constraint(Definition):

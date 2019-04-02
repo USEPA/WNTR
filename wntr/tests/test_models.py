@@ -64,7 +64,7 @@ class TestHeadloss(unittest.TestCase):
         wntr.sim.models.param.source_head_param(m, wn)
         wntr.sim.models.var.flow_var(m, wn)
         wntr.sim.models.var.head_var(m, wn)
-        wntr.sim.models.constraint.hazen_williams_headloss_constraint.build(m, wn, updater)
+        wntr.sim.models.constraint.piecewise_hazen_williams_headloss_constraint.build(m, wn, updater)
         wntr.sim.models.constants.head_pump_constants(m)
         wntr.sim.models.constraint.head_pump_headloss_constraint.build(m, wn, updater)
         wntr.sim.models.param.pump_power_param.build(m, wn, updater)
@@ -91,7 +91,7 @@ class TestHeadloss(unittest.TestCase):
             self.updater.update(m, wn, pipe, 'status')
             for f in flows_to_test:
                 m.flow['p1'].value = f
-                r1 = m.hazen_williams_headloss['p1'].evaluate()
+                r1 = m.piecewise_hazen_williams_headloss['p1'].evaluate()
                 if status == 1:
                     if f <= 0:
                         r2 = abs_hw(pipe, f, m) + abs_minor_loss(pipe, f) + t1_head - j1_head
@@ -100,9 +100,9 @@ class TestHeadloss(unittest.TestCase):
                 else:
                     r2 = f
                 self.assertAlmostEqual(r1, r2, 12)
-                d1 = m.hazen_williams_headloss['p1'].reverse_ad()[m.flow['p1']]
-                d2 = m.hazen_williams_headloss['p1'].reverse_ad()[m.flow['p1']]
-                d3 = approximate_derivative(m.hazen_williams_headloss['p1'], m.flow['p1'], 1e-6)
+                d1 = m.piecewise_hazen_williams_headloss['p1'].reverse_ad()[m.flow['p1']]
+                d2 = m.piecewise_hazen_williams_headloss['p1'].reverse_ad()[m.flow['p1']]
+                d3 = approximate_derivative(m.piecewise_hazen_williams_headloss['p1'], m.flow['p1'], 1e-6)
                 rel_diff = abs(d1-d2)/abs(d1) * 100
                 self.assertLess(rel_diff, 0.1)
                 rel_diff = abs(d1-d3)/abs(d3) * 100

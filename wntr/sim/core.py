@@ -169,7 +169,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         return str(h)+':'+str(m)+':'+str(s)
 
     def run_sim(self, solver=NewtonSolver, backup_solver=None, solver_options=None,
-                backup_solver_options=None, convergence_error=True):
+                backup_solver_options=None, convergence_error=True, HW_approx='default'):
         """
         Run an extended period simulation (hydraulics only).
 
@@ -195,6 +195,9 @@ class WNTRSimulator(WaterNetworkSimulator):
             simulation does not converge. If convergence_error is False,
             a warning will be issued and results.error_code will be set to 2
             if the simulation does not converge.  Default = True.
+        HW_approx: str
+            Specifies which Hazen-Williams headloss approximation to use. Options are 'default' and 'piecewise'. Please
+            see the WNTR documentation on hydraulics for details.
         """
         if solver_options is None:
             solver_options = {}
@@ -249,7 +252,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             logger.log(1, 'initializing hydraulic model')
 
-        model, model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=wn, mode=self.mode)
+        model, model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=wn, mode=self.mode, HW_approx=HW_approx)
         self._model = model
         self._model_updater = model_updater
         node_res, link_res = wntr.sim.hydraulics.initialize_results_dict(wn)
