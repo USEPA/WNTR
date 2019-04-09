@@ -447,8 +447,11 @@ void Evaluator::set_structure()
 
 void Evaluator::remove_structure()
 {
-  is_structure_set = false;
-  delete[] stack;
+  if (is_structure_set)
+    {
+      is_structure_set = false;
+      delete[] stack;
+    }
 }
 
 

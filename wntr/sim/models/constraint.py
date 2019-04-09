@@ -232,7 +232,6 @@ class pdd_constraint(Definition):
             h = m.head[node_name]
             d = m.demand[node_name]
             d_expected = m.expected_demand[node_name]
-            status = node._demand_status
 
             if not node._is_isolated:
                 pmin = m.pmin[node_name]
