@@ -3,7 +3,7 @@ from setuptools.extension import Extension
 import numpy
 import os
 
-use_swig = True
+use_swig = False
 build = True
 
 extension_modules = list()
