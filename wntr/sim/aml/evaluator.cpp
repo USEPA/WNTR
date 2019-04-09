@@ -60,9 +60,8 @@ void IfElseConstraint::add_jac_rpn_term(Var* v, int term)
 }
 
 
-double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values)
+double _evaluate(double* stack, std::vector<int>* rpn, std::vector<Leaf*>* values)
 {
-  double* stack = new double[(int) (rpn->size())];
   double arg1;
   double arg2;
   double arg;
@@ -227,13 +226,14 @@ double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values)
     }
   --stack_ndx;
   res = stack[stack_ndx];
-  delete[] stack;
   return res;
 }
 
 
 Evaluator::~Evaluator()
 {
+  remove_structure();
+  
   std::set<Constraint*>::iterator con_iter;
   for (con_iter = con_set.begin(); con_iter != con_set.end(); ++con_iter)
     {
@@ -343,6 +343,11 @@ void Evaluator::remove_if_else_constraint(IfElseConstraint* c)
 
 void Evaluator::set_structure()
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
+  is_structure_set = true;
   var_vector.clear();
   leaves.clear();
   col_ndx.clear();
@@ -355,6 +360,8 @@ void Evaluator::set_structure()
   if_else_condition_rpn.clear();
   if_else_fn_rpn.clear();
   if_else_jac_rpn.clear();
+
+  int max_rpn_size = 0;
 
   //******************************************
   // Variables
@@ -380,12 +387,16 @@ void Evaluator::set_structure()
       con->index = ndx;
       leaves.push_back(con->leaves);
       fn_rpn.push_back(con->fn_rpn);
+      if (con->fn_rpn.size() > max_rpn_size)
+	max_rpn_size = con->fn_rpn.size();
       row_nnz.push_back(row_nnz[ndx] + con->jac_rpn.size());
       std::map<Var*, std::vector<int> >::iterator jac_rpn_iter;
       for (jac_rpn_iter = con->jac_rpn.begin(); jac_rpn_iter != con->jac_rpn.end(); ++jac_rpn_iter)
 	{
 	  col_ndx.push_back(jac_rpn_iter->first->index);
 	  jac_rpn.push_back(jac_rpn_iter->second);
+	  if (jac_rpn_iter->second.size() > max_rpn_size)
+	    max_rpn_size = jac_rpn_iter->second.size();
 	}
       ++ndx;
     }
@@ -406,7 +417,11 @@ void Evaluator::set_structure()
       for (int i=0; i<_n_conditions; ++i)
 	{
 	  if_else_condition_rpn.push_back(con->condition_rpn[i]);
+	  if (con->condition_rpn[i].size() > max_rpn_size)
+	    max_rpn_size = con->condition_rpn[i].size();
 	  if_else_fn_rpn.push_back(con->fn_rpn[i]);
+	  if (con->fn_rpn[i].size() > max_rpn_size)
+	    max_rpn_size = con->fn_rpn[i].size();
 	  for (std::map<Var*, std::vector<std::vector<int> > >::iterator jac_rpn_iter=con->jac_rpn.begin(); jac_rpn_iter!=con->jac_rpn.end(); ++jac_rpn_iter)
 	    {
 	      if (((int) jac_rpn_iter->second.size()) != _n_conditions)
@@ -418,12 +433,22 @@ void Evaluator::set_structure()
 		  col_ndx.push_back(jac_rpn_iter->first->index);
 		}
 	      if_else_jac_rpn.push_back(jac_rpn_iter->second[i]);
+	      if (jac_rpn_iter->second[i].size() > max_rpn_size)
+		max_rpn_size = jac_rpn_iter->second[i].size();
 	    }
 	}
       ++ndx;
     }
   
   nnz = row_nnz.back();
+  stack = new double[max_rpn_size];
+}
+
+
+void Evaluator::remove_structure()
+{
+  is_structure_set = false;
+  delete[] stack;
 }
 
 
@@ -434,7 +459,7 @@ void Evaluator::evaluate(double* array_out, int array_length_out)
   int con_ndx = 0;
   while (con_ndx<num_cons)
     {
-      array_out[con_ndx] = _evaluate(&(fn_rpn[con_ndx]), &(leaves[con_ndx]));
+      array_out[con_ndx] = _evaluate(stack, &(fn_rpn[con_ndx]), &(leaves[con_ndx]));
       ++con_ndx;
     }
 
@@ -454,14 +479,14 @@ void Evaluator::evaluate(double* array_out, int array_length_out)
 	    {
 	      found = true;
 	    }
-	  else if (_evaluate(&(if_else_condition_rpn[condition_ndx]), &(leaves[con_ndx])) == 1)
+	  else if (_evaluate(stack, &(if_else_condition_rpn[condition_ndx]), &(leaves[con_ndx])) == 1)
 	    {
 	      found = true;
 	    }
 
 	  if (found)
 	    {
-	      array_out[con_ndx] = _evaluate(&(if_else_fn_rpn[condition_ndx]), &(leaves[con_ndx]));
+	      array_out[con_ndx] = _evaluate(stack, &(if_else_fn_rpn[condition_ndx]), &(leaves[con_ndx]));
 	      condition_ndx += _n_conditions - i;
 	    }
 	  else
@@ -491,7 +516,7 @@ void Evaluator::evaluate_csr_jacobian(double* values_array_out, int values_array
       nnz = row_nnz[con_ndx+1] - row_nnz[con_ndx];
       for (int i=0; i<nnz; ++i)
 	{
-	  values_array_out[nnz_ndx] = _evaluate(&(jac_rpn[nnz_ndx]), &(leaves[con_ndx]));
+	  values_array_out[nnz_ndx] = _evaluate(stack, &(jac_rpn[nnz_ndx]), &(leaves[con_ndx]));
 	  col_ndx_array_out[nnz_ndx] = col_ndx[nnz_ndx];
 	  ++nnz_ndx;
 	}
@@ -517,7 +542,7 @@ void Evaluator::evaluate_csr_jacobian(double* values_array_out, int values_array
 	    {
 	      found = true;
 	    }
-	  else if (_evaluate(&(if_else_condition_rpn[condition_ndx]), &(leaves[con_ndx])) == 1)
+	  else if (_evaluate(stack, &(if_else_condition_rpn[condition_ndx]), &(leaves[con_ndx])) == 1)
 	    {
 	      found = true;
 	    }
@@ -526,7 +551,7 @@ void Evaluator::evaluate_csr_jacobian(double* values_array_out, int values_array
 	    {
 	      for (int j=0; j<nnz; ++j)
 		{
-		  values_array_out[nnz_ndx] = _evaluate(&(if_else_jac_rpn[jac_ndx]), &(leaves[con_ndx]));
+		  values_array_out[nnz_ndx] = _evaluate(stack, &(if_else_jac_rpn[jac_ndx]), &(leaves[con_ndx]));
 		  col_ndx_array_out[nnz_ndx] = col_ndx[nnz_ndx];
 		  ++nnz_ndx;
 		  ++jac_ndx;

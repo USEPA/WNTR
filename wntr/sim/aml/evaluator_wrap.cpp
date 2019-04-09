@@ -6327,6 +6327,56 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Evaluator_stack_set(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  double *arg2 = (double *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  PyObject * obj1 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:Evaluator_stack_set",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_stack_set" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_double, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Evaluator_stack_set" "', argument " "2"" of type '" "double *""'"); 
+  }
+  arg2 = reinterpret_cast< double * >(argp2);
+  if (arg1) (arg1)->stack = arg2;
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_Evaluator_stack_get(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  double *result = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "Evaluator_stack_get takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_stack_get" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  result = (double *) ((arg1)->stack);
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_double, 0 |  0 );
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Evaluator_add_var(PyObject *self, PyObject *args) {
   PyObject *resultobj = 0;
   Evaluator *arg1 = (Evaluator *) 0 ;
@@ -6624,6 +6674,26 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_Evaluator_remove_structure(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  Evaluator *arg1 = (Evaluator *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "Evaluator_remove_structure takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_Evaluator, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_remove_structure" "', argument " "1"" of type '" "Evaluator *""'"); 
+  }
+  arg1 = reinterpret_cast< Evaluator * >(argp1);
+  (arg1)->remove_structure();
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Evaluator_get_x(PyObject *self, PyObject *args) {
   PyObject *resultobj = 0;
   Evaluator *arg1 = (Evaluator *) 0 ;
@@ -6852,28 +6922,37 @@ SWIGPY_DESTRUCTOR_CLOSURE(_wrap_delete_Evaluator) /* defines _wrap_delete_Evalua
 
 SWIGINTERN PyObject *_wrap__evaluate(PyObject *self, PyObject *args) {
   PyObject *resultobj = 0;
-  std::vector< int > *arg1 = (std::vector< int > *) 0 ;
-  std::vector< Leaf * > *arg2 = (std::vector< Leaf * > *) 0 ;
+  double *arg1 = (double *) 0 ;
+  std::vector< int > *arg2 = (std::vector< int > *) 0 ;
+  std::vector< Leaf * > *arg3 = (std::vector< Leaf * > *) 0 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
   int res2 = 0 ;
+  void *argp3 = 0 ;
+  int res3 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
   double result;
   
-  if (!PyArg_ParseTuple(args,(char *)"OO:_evaluate",&obj0,&obj1)) SWIG_fail;
-  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_std__vectorT_int_t, 0 |  0 );
+  if (!PyArg_ParseTuple(args,(char *)"OOO:_evaluate",&obj0,&obj1,&obj2)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_double, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "_evaluate" "', argument " "1"" of type '" "std::vector< int > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "_evaluate" "', argument " "1"" of type '" "double *""'"); 
   }
-  arg1 = reinterpret_cast< std::vector< int > * >(argp1);
-  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__vectorT_Leaf_p_t, 0 |  0 );
+  arg1 = reinterpret_cast< double * >(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_std__vectorT_int_t, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "_evaluate" "', argument " "2"" of type '" "std::vector< Leaf * > *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "_evaluate" "', argument " "2"" of type '" "std::vector< int > *""'"); 
   }
-  arg2 = reinterpret_cast< std::vector< Leaf * > * >(argp2);
-  result = (double)_evaluate(arg1,arg2);
+  arg2 = reinterpret_cast< std::vector< int > * >(argp2);
+  res3 = SWIG_ConvertPtr(obj2, &argp3,SWIGTYPE_p_std__vectorT_Leaf_p_t, 0 |  0 );
+  if (!SWIG_IsOK(res3)) {
+    SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "_evaluate" "', argument " "3"" of type '" "std::vector< Leaf * > *""'"); 
+  }
+  arg3 = reinterpret_cast< std::vector< Leaf * > * >(argp3);
+  result = (double)_evaluate(arg1,arg2,arg3);
   resultobj = SWIG_From_double(static_cast< double >(result));
   return resultobj;
 fail:
@@ -8259,10 +8338,13 @@ SWIGINTERN SwigPyClientData SwigPyBuiltin__IfElseConstraint_clientdata = {0, 0, 
 
 static SwigPyGetSet Evaluator___dict___getset = { SwigPyObject_get___dict__, 0 };
 static SwigPyGetSet Evaluator_nnz_getset = { _wrap_Evaluator_nnz_get, _wrap_Evaluator_nnz_set };
+static SwigPyGetSet Evaluator_stack_getset = { _wrap_Evaluator_stack_get, _wrap_Evaluator_stack_set };
 SWIGINTERN PyGetSetDef SwigPyBuiltin__Evaluator_getset[] = {
     { (char *) "__dict__", (getter) SwigPyBuiltin_GetterClosure, (setter) 0, (char *)"Evaluator.__dict__", (void *) &Evaluator___dict___getset }
 ,
     { (char *) "nnz", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"Evaluator.nnz", (void *) &Evaluator_nnz_getset }
+,
+    { (char *) "stack", (getter) SwigPyBuiltin_GetterClosure, (setter) SwigPyBuiltin_SetterClosure, (char *)"Evaluator.stack", (void *) &Evaluator_stack_getset }
 ,
     {NULL, NULL, NULL, NULL, NULL} /* Sentinel */
 };
@@ -8298,6 +8380,7 @@ SWIGINTERN PyMethodDef SwigPyBuiltin__Evaluator_methods[] = {
   { "remove_constraint", (PyCFunction) _wrap_Evaluator_remove_constraint, METH_VARARGS, (char *) "" },
   { "remove_if_else_constraint", (PyCFunction) _wrap_Evaluator_remove_if_else_constraint, METH_VARARGS, (char *) "" },
   { "set_structure", (PyCFunction) _wrap_Evaluator_set_structure, METH_VARARGS, (char *) "" },
+  { "remove_structure", (PyCFunction) _wrap_Evaluator_remove_structure, METH_VARARGS, (char *) "" },
   { "get_x", (PyCFunction) _wrap_Evaluator_get_x, METH_VARARGS, (char *) "" },
   { "load_var_values_from_x", (PyCFunction) _wrap_Evaluator_load_var_values_from_x, METH_VARARGS, (char *) "" },
   { "evaluate", (PyCFunction) _wrap_Evaluator_evaluate, METH_VARARGS, (char *) "" },

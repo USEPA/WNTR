@@ -3,8 +3,8 @@ from setuptools.extension import Extension
 import numpy
 import os
 
-use_swig = False
-build = False
+use_swig = True
+build = True
 
 extension_modules = list()
 
@@ -16,7 +16,7 @@ if build:
 
     # inplace extension module
     project_dir = './'  # os.path.dirname(os.path.abspath(__file__))
-    src_files = os.path.join(project_dir, 'wntr', 'aml')
+    src_files = os.path.join(project_dir, 'wntr', 'sim', 'aml')
     evaluator_cxx = os.path.join(src_files, 'evaluator.cpp')
     evaluator_wrap_cxx = os.path.join(src_files, 'evaluator_wrap.cpp')
     evaluator_i = os.path.join(src_files, 'evaluator.i')
@@ -26,7 +26,7 @@ if build:
     network_isolation_wrap_cxx = os.path.join(network_isolation_dir, 'network_isolation_wrap.cpp')
 
     if use_swig:
-        aml_core_ext = Extension("wntr.aml._evaluator",
+        aml_core_ext = Extension("wntr.sim.aml._evaluator",
                                  sources=[evaluator_i, evaluator_cxx],
                                  language="c++",
                                  extra_compile_args=[],
@@ -41,7 +41,7 @@ if build:
                                           extra_compile_args=[],
                                           swig_opts=['-c++', '-builtin'])
     else:
-        aml_core_ext = Extension("wntr.aml._evaluator",
+        aml_core_ext = Extension("wntr.sim.aml._evaluator",
                                  sources=[evaluator_cxx, evaluator_wrap_cxx],
                                  language="c++",
                                  extra_compile_args=[],

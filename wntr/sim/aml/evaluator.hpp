@@ -117,6 +117,7 @@ public:
   ~Evaluator();
 
   int nnz;
+  double* stack;
 
   Var* add_var(double value);
   Param* add_param(double value);
@@ -131,6 +132,7 @@ public:
   void remove_if_else_constraint(IfElseConstraint* c);
 
   void set_structure();
+  void remove_structure();
 
   void get_x(double *array_out, int array_length_out);
   void load_var_values_from_x(double *array_in, int array_length_in);
@@ -139,6 +141,8 @@ public:
   void evaluate_csr_jacobian(double* values_array_out, int values_array_length_out, int* col_ndx_array_out, int col_ndx_array_length_out, int* row_nnz_array_out, int row_nnz_array_length_out);
 
 private:
+  bool is_structure_set = false;
+  
   std::set<Var*> var_set;
   std::set<Param*> param_set;
   std::set<Float*> float_set;
@@ -160,4 +164,4 @@ private:
 };
 
 
-double _evaluate(std::vector<int>* rpn, std::vector<Leaf*>* values);
+double _evaluate(double* stack, std::vector<int>* rpn, std::vector<Leaf*>* values);
