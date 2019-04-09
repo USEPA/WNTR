@@ -1,7 +1,6 @@
 import logging
 from wntr.sim import aml
 import wntr.network
-from wntr.network.base import _DemandStatus
 import warnings
 from wntr.utils.polynomial_interpolation import cubic_spline
 from wntr.network import LinkStatus
@@ -236,36 +235,30 @@ class pdd_constraint(Definition):
             status = node._demand_status
 
             if not node._is_isolated:
-                if status == _DemandStatus.Partial:
-                    pmin = m.pmin[node_name]
-                    pnom = m.pnom[node_name]
-                    elev = m.elevation[node_name]
-                    delta = m.pdd_smoothing_delta
-                    slope = m.pdd_slope
-                    a1 = m.pdd_poly1_coeffs_a[node_name]
-                    b1 = m.pdd_poly1_coeffs_b[node_name]
-                    c1 = m.pdd_poly1_coeffs_c[node_name]
-                    d1 = m.pdd_poly1_coeffs_d[node_name]
-                    a2 = m.pdd_poly2_coeffs_a[node_name]
-                    b2 = m.pdd_poly2_coeffs_b[node_name]
-                    c2 = m.pdd_poly2_coeffs_c[node_name]
-                    d2 = m.pdd_poly2_coeffs_d[node_name]
-                    con = aml.ConditionalExpression()
-                    con.add_condition(aml.inequality(body=h - elev - pmin, ub=0), d - d_expected*slope*(h-elev-pmin))
-                    con.add_condition(aml.inequality(body=h - elev - pmin - delta, ub=0), d - d_expected*(a1*(h-elev)**3 + b1*(h-elev)**2 + c1*(h-elev) + d1))
-                    con.add_condition(aml.inequality(body=h - elev - pnom + delta, ub=0), d - d_expected*((h-elev-pmin)/(pnom-pmin))**0.5)
-                    con.add_condition(aml.inequality(body=h - elev - pnom, ub=0), d - d_expected*(a2*(h-elev)**3 + b2*(h-elev)**2 + c2*(h-elev) + d2))
-                    con.add_final_expr(d - d_expected*(slope*(h - elev - pnom) + 1.0))
-                    con = aml.Constraint(con)
-                elif status == _DemandStatus.Full:
-                    con = aml.Constraint(d - d_expected)
-                else:
-                    con = aml.Constraint(d)
+                pmin = m.pmin[node_name]
+                pnom = m.pnom[node_name]
+                elev = m.elevation[node_name]
+                delta = m.pdd_smoothing_delta
+                slope = m.pdd_slope
+                a1 = m.pdd_poly1_coeffs_a[node_name]
+                b1 = m.pdd_poly1_coeffs_b[node_name]
+                c1 = m.pdd_poly1_coeffs_c[node_name]
+                d1 = m.pdd_poly1_coeffs_d[node_name]
+                a2 = m.pdd_poly2_coeffs_a[node_name]
+                b2 = m.pdd_poly2_coeffs_b[node_name]
+                c2 = m.pdd_poly2_coeffs_c[node_name]
+                d2 = m.pdd_poly2_coeffs_d[node_name]
+                con = aml.ConditionalExpression()
+                con.add_condition(aml.inequality(body=h - elev - pmin, ub=0), d - d_expected*slope*(h-elev-pmin))
+                con.add_condition(aml.inequality(body=h - elev - pmin - delta, ub=0), d - d_expected*(a1*(h-elev)**3 + b1*(h-elev)**2 + c1*(h-elev) + d1))
+                con.add_condition(aml.inequality(body=h - elev - pnom + delta, ub=0), d - d_expected*((h-elev-pmin)/(pnom-pmin))**0.5)
+                con.add_condition(aml.inequality(body=h - elev - pnom, ub=0), d - d_expected*(a2*(h-elev)**3 + b2*(h-elev)**2 + c2*(h-elev) + d2))
+                con.add_final_expr(d - d_expected*(slope*(h - elev - pnom) + 1.0))
+                con = aml.Constraint(con)
 
                 m.pdd[node_name] = con
 
             updater.add(node, '_is_isolated', pdd_constraint.update)
-            updater.add(node, '_demand_status', pdd_constraint.update)
 
 
 class head_pump_headloss_constraint(Definition):
@@ -588,32 +581,25 @@ class leak_constraint(Definition):
             if node.leak_status and not node._is_isolated:
                 leak_rate = m.leak_rate[node_name]
                 h = m.head[node_name]
-                status = node._leak_model_status
 
-                if status == _DemandStatus.Partial:
-                    elev = m.elevation[node_name]
-                    delta = m.leak_delta
-                    slope = m.leak_slope
-                    a = m.leak_poly_coeffs_a[node_name]
-                    b = m.leak_poly_coeffs_b[node_name]
-                    c = m.leak_poly_coeffs_c[node_name]
-                    d = m.leak_poly_coeffs_d[node_name]
-                    area = m.leak_area[node_name]
-                    Cd = m.leak_coeff[node_name]
-                    con = aml.ConditionalExpression()
-                    con.add_condition(aml.inequality(h, ub=elev), leak_rate - slope*(h-elev))
-                    con.add_condition(aml.inequality(h - elev, ub=delta), leak_rate - (a*(h-elev)**3 + b*(h-elev)**2 + c*(h-elev) + d))
-                    con.add_final_expr(leak_rate - Cd*area*(2.0*9.81*(h-elev))**0.5)
-                    con = aml.Constraint(con)
-                elif status == _DemandStatus.Zero:
-                    con = aml.Constraint(leak_rate)
-                else:
-                    raise ValueError('Unrecognized _DemandStatus for node {0}: {1}'.format(node_name, status))
+                elev = m.elevation[node_name]
+                delta = m.leak_delta
+                slope = m.leak_slope
+                a = m.leak_poly_coeffs_a[node_name]
+                b = m.leak_poly_coeffs_b[node_name]
+                c = m.leak_poly_coeffs_c[node_name]
+                d = m.leak_poly_coeffs_d[node_name]
+                area = m.leak_area[node_name]
+                Cd = m.leak_coeff[node_name]
+                con = aml.ConditionalExpression()
+                con.add_condition(aml.inequality(h, ub=elev), leak_rate - slope*(h-elev))
+                con.add_condition(aml.inequality(h - elev, ub=delta), leak_rate - (a*(h-elev)**3 + b*(h-elev)**2 + c*(h-elev) + d))
+                con.add_final_expr(leak_rate - Cd*area*(2.0*9.81*(h-elev))**0.5)
+                con = aml.Constraint(con)
 
                 m.leak_con[node_name] = con
 
             updater.add(node, 'leak_status', leak_constraint.update)
-            updater.add(node, '_leak_model_status', leak_constraint.update)
             updater.add(node, '_is_isolated', leak_constraint.update)
 
 

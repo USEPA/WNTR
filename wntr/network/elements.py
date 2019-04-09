@@ -41,7 +41,7 @@ if sys.version_info[0] == 2:
 else:
     from collections.abc import MutableSequence
 
-from .base import Node, Link, Registry, LinkStatus, _DemandStatus
+from .base import Node, Link, Registry, LinkStatus
 from .options import TimeOptions
 
 logger = logging.getLogger(__name__)
@@ -64,7 +64,6 @@ class Junction(Node):
         super(Junction, self).__init__(wn, name)
         self.demand_timeseries_list = Demands(self._pattern_reg)
         self.elevation = 0.0
-        self._demand_status = _DemandStatus.Partial
 
         self.nominal_pressure = 20.0
         """float: The nominal pressure attribute is used for pressure-dependent demand
@@ -83,7 +82,6 @@ class Junction(Node):
         self.leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'junction'+self._name+'start_leak_control'
         self._leak_end_control_name = 'junction'+self._name+'end_leak_control'
-        self._leak_model_status = _DemandStatus.Partial
 
         
     def __repr__(self):
@@ -220,8 +218,7 @@ class Tank(Node):
         self.leak_discharge_coeff = 0.0
         self._leak_start_control_name = 'tank'+self._name+'start_leak_control'
         self._leak_end_control_name = 'tank'+self._name+'end_leak_control'
-        self._leak_model_status = _DemandStatus.Partial
-        
+
     def __repr__(self):
         return "<Tank '{}', elevation={}, min_level={}, max_level={}, diameter={}, min_vol={}, vol_curve='{}'>".format(self._name, self.elevation, self.min_level, self.max_level, self.diameter, self.min_vol, (self.vol_curve.name if self.vol_curve else None))
 

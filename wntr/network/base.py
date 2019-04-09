@@ -707,39 +707,3 @@ class LinkStatus(enum.IntEnum):
     def __eq__(self, other):
         return int(self) == int(other) and (isinstance(other, int) or
                                             self.__class__.__name__ == other.__class__.__name__)
-
-
-class _DemandStatus(enum.IntEnum):
-    """
-    Enum class for demand statuses.
-
-    .. warning::
-        This is NOT the class for determining output status from an EPANET binary file.
-        The class for output status is wntr.epanet.util.LinkTankStatus.
-
-    .. rubric:: Enum Members
-
-    ================  ==================================================================
-    :attr:`~Full`     Full demand is provided.
-    :attr:`~Partial`  Partial demand is provided.
-    :attr:`~Zero`     No demand is provided.
-    ================  ==================================================================
-
-    """
-    Full = 0
-    Partial = 1
-    Zero = 1
-
-    def __init__(self, val):
-        if self.name != self.name.upper():
-            self._member_map_[self.name.upper()] = self
-        if self.name != self.name.lower():
-            self._member_map_[self.name.lower()] = self
-
-    def __str__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return int(self) == int(other) and (isinstance(other, int) or \
-                                            self.__class__.__name__ == other.__class__.__name__)
-
