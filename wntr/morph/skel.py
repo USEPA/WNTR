@@ -189,9 +189,9 @@ class _Skeletonize(object):
             # Move demand
             junc = self.wn.get_node(junc_name)
             for demand in junc.demand_timeseries_list:
-                demand.category = None
+                demand.category = "skeletonized"
                 neigh_junc.demand_timeseries_list.append(demand)
-            neigh_junc.demand_timeseries_list[0].category = 'none'#moves neigh_junc original base demand to [DEMANDS] section
+            neigh_junc.demand_timeseries_list[0].category = "skeletonized"#moves neigh_junc original base demand to [DEMANDS] section
             junc.demand_timeseries_list.clear()
 
             # Remove node and links from wn and G
@@ -265,7 +265,7 @@ class _Skeletonize(object):
             for demand in junc.demand_timeseries_list:
                 demand.category = None
                 closest_junc.demand_timeseries_list.append(demand)
-                closest_junc.demand_timeseries_list[0].category = 'none'#moves closest_junc original base demand to [DEMANDS] section
+                closest_junc.demand_timeseries_list[0].category = "skeletonized"#moves closest_junc original base demand to [DEMANDS] section
             junc.demand_timeseries_list.clear()
 
             # Remove node and links from wn and G
