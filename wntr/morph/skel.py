@@ -191,6 +191,7 @@ class _Skeletonize(object):
             for demand in junc.demand_timeseries_list:
                 demand.category = None
                 neigh_junc.demand_timeseries_list.append(demand)
+            neigh_junc.demand_timeseries_list[0].category = 'none'
             junc.demand_timeseries_list.clear()
 
             # Remove node and links from wn and G
@@ -264,6 +265,7 @@ class _Skeletonize(object):
             for demand in junc.demand_timeseries_list:
                 demand.category = None
                 closest_junc.demand_timeseries_list.append(demand)
+                closest_junc.demand_timeseries_list[0].category = 'none'
             junc.demand_timeseries_list.clear()
 
             # Remove node and links from wn and G
