@@ -263,7 +263,7 @@ class _Skeletonize(object):
             # Move demand
             junc = self.wn.get_node(junc_name)
             for demand in junc.demand_timeseries_list:
-                demand.category = None
+                demand.category = "skeletonized"
                 closest_junc.demand_timeseries_list.append(demand)
                 closest_junc.demand_timeseries_list[0].category = "skeletonized"#moves closest_junc original base demand to [DEMANDS] section
             junc.demand_timeseries_list.clear()
