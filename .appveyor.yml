@@ -15,7 +15,7 @@ install:
   - conda config --set always_yes yes
   - conda config --set auto_update_conda false
   - "echo %PATH%"
-  - "SET ADDITIONAL_CF_PKGS=setuptools pip coverage numpy scipy openpyxl networkx pandas matplotlib plotly"
+  - "SET ADDITIONAL_CF_PKGS=setuptools pip coverage numpy scipy openpyxl networkx pandas matplotlib plotly nose"
   - "%CONDAFORGE% %ADDITIONAL_CF_PKGS%"
   - "python setup.py develop"
   - python --version
