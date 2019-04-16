@@ -5,7 +5,7 @@
  j1              	0         	0           	pattern1                	;
  j2              	1.38         	100         	pattern1                	;
  j3			0		0		pattern1			;
- j4			0		0		pattern1			;
+ j4			0					;
 
 [RESERVOIRS]
 ;ID              	Head        	Pattern         
@@ -100,7 +100,12 @@ link p1 open at clocktime 22
 [TAGS]
 
 [DEMANDS]
-
+;Junction        	Demand      	Pattern         	Category
+j1			0 		pattern2
+j1			20		pattern2
+j2			50		pattern2
+j2			75		pattern2
+j4			0 		pattern2
 [STATUS]
 
 [RULES]

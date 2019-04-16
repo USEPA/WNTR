@@ -5,7 +5,7 @@ import networkx as nx
 inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
 
-# Get a copy of the graph
+# Get the WaterNetworkModel graph
 G = wn.get_graph()
 
 # Extract node and link properties
