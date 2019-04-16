@@ -232,7 +232,10 @@ double _evaluate(double* stack, std::vector<int>* rpn, std::vector<Leaf*>* value
 
 Evaluator::~Evaluator()
 {
-  remove_structure();
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   
   std::set<Constraint*>::iterator con_iter;
   for (con_iter = con_set.begin(); con_iter != con_set.end(); ++con_iter)
@@ -268,6 +271,10 @@ Evaluator::~Evaluator()
 
 Var* Evaluator::add_var(double value)
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   Var* v = new Var(value);
   var_set.insert(v);
   return v;
@@ -276,6 +283,10 @@ Var* Evaluator::add_var(double value)
 
 Param* Evaluator::add_param(double value)
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   Param* p = new Param(value);
   param_set.insert(p);
   return p;
@@ -284,6 +295,10 @@ Param* Evaluator::add_param(double value)
 
 Float* Evaluator::add_float(double value)
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   Float* f = new Float(value);
   float_set.insert(f);
   return f;
@@ -292,6 +307,10 @@ Float* Evaluator::add_float(double value)
 
 Constraint* Evaluator::add_constraint()
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   Constraint* c = new Constraint();
   con_set.insert(c);
   return c;
@@ -300,6 +319,10 @@ Constraint* Evaluator::add_constraint()
 
 IfElseConstraint* Evaluator::add_if_else_constraint()
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   IfElseConstraint* c = new IfElseConstraint();
   if_else_con_set.insert(c);
   return c;
@@ -308,6 +331,10 @@ IfElseConstraint* Evaluator::add_if_else_constraint()
 
 void Evaluator::remove_var(Var* v)
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   var_set.erase(v);
   delete v;
 }
@@ -315,6 +342,10 @@ void Evaluator::remove_var(Var* v)
 
 void Evaluator::remove_param(Param* p)
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   param_set.erase(p);
   delete p;
 }
@@ -322,6 +353,10 @@ void Evaluator::remove_param(Param* p)
 
 void Evaluator::remove_float(Float* f)
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   float_set.erase(f);
   delete f;
 }
@@ -329,6 +364,10 @@ void Evaluator::remove_float(Float* f)
 
 void Evaluator::remove_constraint(Constraint* c)
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   con_set.erase(c);
   delete c;
 }
@@ -336,6 +375,10 @@ void Evaluator::remove_constraint(Constraint* c)
 
 void Evaluator::remove_if_else_constraint(IfElseConstraint* c)
 {
+  if (is_structure_set)
+    {
+      remove_structure();
+    }
   if_else_con_set.erase(c);
   delete c;
 }
@@ -457,6 +500,10 @@ void Evaluator::remove_structure()
 
 void Evaluator::evaluate(double* array_out, int array_length_out)
 {
+  if (!is_structure_set)
+    {
+      throw std::runtime_error("Cannot call evaluate() if the structure is not set. Please call set_structure() first.");
+    }
   int num_cons = con_set.size();
   int num_if_else_cons = if_else_con_set.size();
   int con_ndx = 0;
@@ -506,6 +553,10 @@ void Evaluator::evaluate(double* array_out, int array_length_out)
 
 void Evaluator::evaluate_csr_jacobian(double* values_array_out, int values_array_length_out, int* col_ndx_array_out, int col_ndx_array_length_out, int* row_nnz_array_out, int row_nnz_array_length_out)
 {
+  if (!is_structure_set)
+    {
+      throw std::runtime_error("Cannot call evaluate_csr_jacobian() if the structure is not set. Please call set_structure() first.");
+    }
   int num_cons = con_set.size();
   int num_if_else_cons = if_else_con_set.size();
   row_nnz_array_out[0] = 0;
@@ -577,6 +628,10 @@ void Evaluator::evaluate_csr_jacobian(double* values_array_out, int values_array
 
 void Evaluator::get_x(double *array_out, int array_length_out)
 {
+  if (!is_structure_set)
+    {
+      throw std::runtime_error("Cannot call get_x() if the structure is not set. Please call set_structure() first.");
+    }
   int n_vars = var_vector.size();
   for (int i=0; i<n_vars; ++i)
     {
@@ -587,6 +642,10 @@ void Evaluator::get_x(double *array_out, int array_length_out)
 
 void Evaluator::load_var_values_from_x(double *arrayin, int array_length_in)
 {
+  if (!is_structure_set)
+    {
+      throw std::runtime_error("Cannot call load_var_values_from_x() if the structure is not set. Please call set_structure() first.");
+    }
   int n_vars = var_vector.size();
   for (int i=0; i<n_vars; ++i)
     {
