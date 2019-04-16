@@ -509,8 +509,8 @@ class InpFile(object):
         for junction_name in nnames:
             junction = wn.nodes[junction_name]
             if junction.demand_timeseries_list:
-                base_demands = junction.demand_timeseries_list.base_demand_list(category='EN2 base')
-                demand_patterns = junction.demand_timeseries_list.pattern_list(category='EN2 base')
+                base_demands = junction.demand_timeseries_list.base_demand_list()
+                demand_patterns = junction.demand_timeseries_list.pattern_list()
                 if base_demands:
                     base_demand = base_demands[0]
                 else:
@@ -1345,27 +1345,35 @@ class InpFile(object):
             else:
                 pattern = self.wn.get_pattern(current[2])
             # In EPANET, the [DEMANDS] section overrides demands specified in [JUNCTIONS]
-            node.demand_timeseries_list.remove_category('EN2 base')  
+            node.demand_timeseries_list.remove_category('EN2 base')
             node.demand_timeseries_list.append((to_si(self.flow_units, float(current[1]), HydParam.Demand),
                                          pattern, category))
 
     def _write_demands(self, f, wn):
         f.write('[DEMANDS]\n'.encode('ascii'))
-        entry = '{:10s} {:10s} {:10s}\n'
+        entry = '{:10s} {:10s} {:10s}; {:s}\n'
         label = '{:10s} {:10s} {:10s}\n'
         f.write(label.format(';ID', 'Demand', 'Pattern').encode('ascii'))
         nodes = list(wn.junction_name_list)
         # nodes.sort()
         for node in nodes:
             demands = wn.get_node(node).demand_timeseries_list
-            for ct, demand in enumerate(demands):
-                if demand.category == 'EN2 base': continue
-                E = {'node': node,
-                     'base': from_si(self.flow_units, demand.base_value, HydParam.Demand),
-                     'pat': ''}
-                if demand.pattern_name in wn.pattern_name_list:
-                    E['pat'] = demand.pattern_name
-                f.write(entry.format(E['node'], str(E['base']), E['pat']).encode('ascii'))
+            if len(demands) > 1:
+                for ct, demand in enumerate(demands):
+                    cat = str(demand.category)
+                    if cat.lower() == 'none':
+                        cat = ''
+                    elif cat == 'EN2 base':
+                        cat = ''
+                    else:
+                        cat = demand.category
+                    E = {'node': node,
+                         'base': from_si(self.flow_units, demand.base_value, HydParam.Demand),
+                         'pat': '',
+                         'cat': cat }
+                    if demand.pattern_name in wn.pattern_name_list:
+                        E['pat'] = demand.pattern_name
+                    f.write(entry.format(E['node'], str(E['base']), E['pat'], E['cat']).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     ### Water Quality
