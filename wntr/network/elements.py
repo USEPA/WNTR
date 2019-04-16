@@ -129,6 +129,10 @@ class Junction(Node):
             return self.demand_timeseries_list[0].base_value
         return 0.0
 
+    @base_demand.setter
+    def base_demand(self, value):
+        raise RuntimeWarning('The base_demand property is read-only. Please modify using demand_timeseries_list.')
+
     def add_leak(self, wn, area, discharge_coeff=0.75, start_time=None, end_time=None):
         """
         Add a leak control to the water network model
