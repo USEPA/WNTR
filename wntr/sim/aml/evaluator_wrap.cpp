@@ -4956,42 +4956,6 @@ fail:
 }
 
 
-SWIGINTERN PyObject *_wrap_StructureException_what(PyObject *self, PyObject *args) {
-  PyObject *resultobj = 0;
-  StructureException *arg1 = (StructureException *) 0 ;
-  void *argp1 = 0 ;
-  int res1 = 0 ;
-  char *result = 0 ;
-  
-  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "StructureException_what takes no arguments");
-  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_StructureException, 0 |  0 );
-  if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "StructureException_what" "', argument " "1"" of type '" "StructureException *""'"); 
-  }
-  arg1 = reinterpret_cast< StructureException * >(argp1);
-  {
-    try
-    {
-      result = (char *)(arg1)->what();
-    }
-    catch (StructureException &e)
-    {
-      std::string s("Evaluator error: "), s2(e.what());
-      s = s + s2;
-      SWIG_exception(SWIG_RuntimeError, s.c_str());
-    }
-    catch (...)
-    {
-      SWIG_exception(SWIG_RuntimeError, "unkown exception");
-    }
-  }
-  resultobj = SWIG_FromCharPtr((const char *)result);
-  return resultobj;
-fail:
-  return NULL;
-}
-
-
 SWIGINTERN PyObject *_wrap_delete_StructureException(PyObject *self, PyObject *args) {
   PyObject *resultobj = 0;
   StructureException *arg1 = (StructureException *) 0 ;
@@ -5021,6 +4985,42 @@ SWIGINTERN PyObject *_wrap_delete_StructureException(PyObject *self, PyObject *a
     }
   }
   resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_StructureException_what(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  StructureException *arg1 = (StructureException *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  char *result = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "StructureException_what takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_StructureException, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "StructureException_what" "', argument " "1"" of type '" "StructureException const *""'"); 
+  }
+  arg1 = reinterpret_cast< StructureException * >(argp1);
+  {
+    try
+    {
+      result = (char *)((StructureException const *)arg1)->what();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
+  resultobj = SWIG_FromCharPtr((const char *)result);
   return resultobj;
 fail:
   return NULL;
