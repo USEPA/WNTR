@@ -1366,9 +1366,9 @@ class InpFile(object):
             if len(demands) > 1:
                 for ct, demand in enumerate(demands):
                     cat = str(demand.category)
-                    if cat == 'EN2 base':
-                        cat = ''
-                    elif cat.lower() == 'none':
+                    #if cat == 'EN2 base':
+                    #    cat = ''
+                    if cat.lower() == 'none':
                         cat = ''
                     else:
                         cat = ' ;' + demand.category
