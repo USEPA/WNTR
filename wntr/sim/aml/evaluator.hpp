@@ -127,7 +127,7 @@ public:
 class Evaluator
 {
 public:
-  Evaluator(){}
+  Evaluator(){is_structure_set = false;}
   ~Evaluator();
 
   int nnz;
@@ -155,7 +155,7 @@ public:
   void evaluate_csr_jacobian(double* values_array_out, int values_array_length_out, int* col_ndx_array_out, int col_ndx_array_length_out, int* row_nnz_array_out, int row_nnz_array_length_out);
 
 private:
-  bool is_structure_set = false;
+  bool is_structure_set;
   
   std::set<Var*> var_set;
   std::set<Param*> param_set;
