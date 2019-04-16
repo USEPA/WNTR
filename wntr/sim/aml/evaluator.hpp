@@ -26,6 +26,20 @@ const int ACOS = -17;
 const int ATAN = -18;
 
 
+class StructureException: public std::exception
+{
+public:
+  StructureException() {msg = "StructureException";}
+  StructureException(std::string const &message) : msg(message) {}
+  virtual const char* what() const throw()
+  {
+    return msg.c_str();
+  }
+private:
+  std::string msg;
+};
+
+
 class Leaf
 {
 public:

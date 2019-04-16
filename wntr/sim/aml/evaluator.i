@@ -1,8 +1,28 @@
 %module evaluator
+%include exception.i
+
 %{
   #define SWIG_FILE_WITH_INIT
   #include "evaluator.hpp"
 %}
+
+%exception
+{
+  try
+    {
+      $action
+    }
+  catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+  catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+}
 
 %include "numpy.i"
 %init %{

@@ -469,7 +469,7 @@ void Evaluator::set_structure()
 	    {
 	      if (((int) jac_rpn_iter->second.size()) != _n_conditions)
 		{
-		  throw std::runtime_error("The number of vectors in jac_rpn must be equal to the number of conditions for an IfElseConstraint.");
+		  throw StructureException("The number of vectors in jac_rpn must be equal to the number of conditions for an IfElseConstraint.");
 		}
 	      if (i==0)
 		{
@@ -502,7 +502,7 @@ void Evaluator::evaluate(double* array_out, int array_length_out)
 {
   if (!is_structure_set)
     {
-      throw std::runtime_error("Cannot call evaluate() if the structure is not set. Please call set_structure() first.");
+      throw StructureException("Cannot call evaluate() if the structure is not set. Please call set_structure() first.");
     }
   int num_cons = con_set.size();
   int num_if_else_cons = if_else_con_set.size();
@@ -555,7 +555,7 @@ void Evaluator::evaluate_csr_jacobian(double* values_array_out, int values_array
 {
   if (!is_structure_set)
     {
-      throw std::runtime_error("Cannot call evaluate_csr_jacobian() if the structure is not set. Please call set_structure() first.");
+      throw StructureException("Cannot call evaluate_csr_jacobian() if the structure is not set. Please call set_structure() first.");
     }
   int num_cons = con_set.size();
   int num_if_else_cons = if_else_con_set.size();
@@ -630,7 +630,7 @@ void Evaluator::get_x(double *array_out, int array_length_out)
 {
   if (!is_structure_set)
     {
-      throw std::runtime_error("Cannot call get_x() if the structure is not set. Please call set_structure() first.");
+      throw StructureException("Cannot call get_x() if the structure is not set. Please call set_structure() first.");
     }
   int n_vars = var_vector.size();
   for (int i=0; i<n_vars; ++i)
@@ -644,7 +644,7 @@ void Evaluator::load_var_values_from_x(double *arrayin, int array_length_in)
 {
   if (!is_structure_set)
     {
-      throw std::runtime_error("Cannot call load_var_values_from_x() if the structure is not set. Please call set_structure() first.");
+      throw StructureException("Cannot call load_var_values_from_x() if the structure is not set. Please call set_structure() first.");
     }
   int n_vars = var_vector.size();
   for (int i=0; i<n_vars; ++i)

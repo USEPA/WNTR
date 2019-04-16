@@ -3730,6 +3730,9 @@ SwigPyBuiltin_iternextfunc_closure(SwigPyWrapperFunction wrapper, PyObject *a) {
 
 
 
+  #define SWIG_exception(code, msg) do { SWIG_Error(code, msg); SWIG_fail;; } while(0) 
+
+
 /* -------- TYPES TABLE (BEGIN) -------- */
 
 #define SWIGTYPE_p_Constraint swig_types[0]
@@ -3738,18 +3741,20 @@ SwigPyBuiltin_iternextfunc_closure(SwigPyWrapperFunction wrapper, PyObject *a) {
 #define SWIGTYPE_p_IfElseConstraint swig_types[3]
 #define SWIGTYPE_p_Leaf swig_types[4]
 #define SWIGTYPE_p_Param swig_types[5]
-#define SWIGTYPE_p_SwigPyObject swig_types[6]
-#define SWIGTYPE_p_Var swig_types[7]
-#define SWIGTYPE_p_char swig_types[8]
-#define SWIGTYPE_p_double swig_types[9]
-#define SWIGTYPE_p_int swig_types[10]
-#define SWIGTYPE_p_std__mapT_Var_p_std__vectorT_int_t_t swig_types[11]
-#define SWIGTYPE_p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t swig_types[12]
-#define SWIGTYPE_p_std__vectorT_Leaf_p_t swig_types[13]
-#define SWIGTYPE_p_std__vectorT_int_t swig_types[14]
-#define SWIGTYPE_p_std__vectorT_std__vectorT_int_t_t swig_types[15]
-static swig_type_info *swig_types[17];
-static swig_module_info swig_module = {swig_types, 16, 0, 0, 0, 0};
+#define SWIGTYPE_p_StructureException swig_types[6]
+#define SWIGTYPE_p_SwigPyObject swig_types[7]
+#define SWIGTYPE_p_Var swig_types[8]
+#define SWIGTYPE_p_char swig_types[9]
+#define SWIGTYPE_p_double swig_types[10]
+#define SWIGTYPE_p_int swig_types[11]
+#define SWIGTYPE_p_std__mapT_Var_p_std__vectorT_int_t_t swig_types[12]
+#define SWIGTYPE_p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t swig_types[13]
+#define SWIGTYPE_p_std__string swig_types[14]
+#define SWIGTYPE_p_std__vectorT_Leaf_p_t swig_types[15]
+#define SWIGTYPE_p_std__vectorT_int_t swig_types[16]
+#define SWIGTYPE_p_std__vectorT_std__vectorT_int_t_t swig_types[17]
+static swig_type_info *swig_types[19];
+static swig_module_info swig_module = {swig_types, 18, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3876,6 +3881,55 @@ SWIGINTERNINLINE PyObject*
   SWIG_From_int  (int value)
 {
   return PyInt_FromLong((long) value);
+}
+
+
+SWIGINTERN swig_type_info*
+SWIG_pchar_descriptor(void)
+{
+  static int init = 0;
+  static swig_type_info* info = 0;
+  if (!init) {
+    info = SWIG_TypeQuery("_p_char");
+    init = 1;
+  }
+  return info;
+}
+
+
+SWIGINTERNINLINE PyObject *
+SWIG_FromCharPtrAndSize(const char* carray, size_t size)
+{
+  if (carray) {
+    if (size > INT_MAX) {
+      swig_type_info* pchar_descriptor = SWIG_pchar_descriptor();
+      return pchar_descriptor ? 
+	SWIG_InternalNewPointerObj(const_cast< char * >(carray), pchar_descriptor, 0) : SWIG_Py_Void();
+    } else {
+#if PY_VERSION_HEX >= 0x03000000
+#if defined(SWIG_PYTHON_STRICT_BYTE_CHAR)
+      return PyBytes_FromStringAndSize(carray, static_cast< Py_ssize_t >(size));
+#else
+#if PY_VERSION_HEX >= 0x03010000
+      return PyUnicode_DecodeUTF8(carray, static_cast< Py_ssize_t >(size), "surrogateescape");
+#else
+      return PyUnicode_FromStringAndSize(carray, static_cast< Py_ssize_t >(size));
+#endif
+#endif
+#else
+      return PyString_FromStringAndSize(carray, static_cast< Py_ssize_t >(size));
+#endif
+    }
+  } else {
+    return SWIG_Py_Void();
+  }
+}
+
+
+SWIGINTERNINLINE PyObject * 
+SWIG_FromCharPtr(const char *cptr)
+{ 
+  return SWIG_FromCharPtrAndSize(cptr, (cptr ? strlen(cptr) : 0));
 }
 
 
@@ -4801,12 +4855,201 @@ SWIGINTERN PyObject *Swig_var_ATAN_get(void) {
 }
 
 
+SWIGINTERN int _wrap_new_StructureException__SWIG_0(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  StructureException *result = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "new_StructureException takes no arguments");
+  {
+    try
+    {
+      result = (StructureException *)new StructureException();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_StructureException, SWIG_BUILTIN_INIT |  0 );
+  return resultobj == Py_None ? -1 : 0;
+fail:
+  return -1;
+}
+
+
+SWIGINTERN int _wrap_new_StructureException__SWIG_1(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  std::string *arg1 = 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  PyObject * obj1 = 0 ;
+  StructureException *result = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"O:new_StructureException",&obj1)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj1, &argp1, SWIGTYPE_p_std__string,  0  | 0);
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "new_StructureException" "', argument " "1"" of type '" "std::string const &""'"); 
+  }
+  if (!argp1) {
+    SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in method '" "new_StructureException" "', argument " "1"" of type '" "std::string const &""'"); 
+  }
+  arg1 = reinterpret_cast< std::string * >(argp1);
+  {
+    try
+    {
+      result = (StructureException *)new StructureException((std::string const &)*arg1);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
+  resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_StructureException, SWIG_BUILTIN_INIT |  0 );
+  return resultobj == Py_None ? -1 : 0;
+fail:
+  return -1;
+}
+
+
+SWIGINTERN int _wrap_new_StructureException(PyObject *self, PyObject *args) {
+  Py_ssize_t argc;
+  PyObject *argv[2] = {
+    0
+  };
+  Py_ssize_t ii;
+  
+  if (!PyTuple_Check(args)) SWIG_fail;
+  argc = args ? PyObject_Length(args) : 0;
+  for (ii = 0; (ii < 1) && (ii < argc); ii++) {
+    argv[ii] = PyTuple_GET_ITEM(args,ii);
+  }
+  if (argc == 0) {
+    return _wrap_new_StructureException__SWIG_0(self, args);
+  }
+  if (argc == 1) {
+    int _v;
+    int res = SWIG_ConvertPtr(argv[0], 0, SWIGTYPE_p_std__string, 0);
+    _v = SWIG_CheckState(res);
+    if (_v) {
+      return _wrap_new_StructureException__SWIG_1(self, args);
+    }
+  }
+  
+fail:
+  SWIG_SetErrorMsg(PyExc_NotImplementedError,"Wrong number or type of arguments for overloaded function 'new_StructureException'.\n"
+    "  Possible C/C++ prototypes are:\n"
+    "    StructureException::StructureException()\n"
+    "    StructureException::StructureException(std::string const &)\n");
+  return -1;
+}
+
+
+SWIGINTERN PyObject *_wrap_StructureException_what(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  StructureException *arg1 = (StructureException *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  char *result = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "StructureException_what takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_StructureException, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "StructureException_what" "', argument " "1"" of type '" "StructureException const *""'"); 
+  }
+  arg1 = reinterpret_cast< StructureException * >(argp1);
+  {
+    try
+    {
+      result = (char *)((StructureException const *)arg1)->what();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
+  resultobj = SWIG_FromCharPtr((const char *)result);
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGINTERN PyObject *_wrap_delete_StructureException(PyObject *self, PyObject *args) {
+  PyObject *resultobj = 0;
+  StructureException *arg1 = (StructureException *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  
+  if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "delete_StructureException takes no arguments");
+  res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_StructureException, SWIG_POINTER_DISOWN |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_StructureException" "', argument " "1"" of type '" "StructureException *""'"); 
+  }
+  arg1 = reinterpret_cast< StructureException * >(argp1);
+  {
+    try
+    {
+      delete arg1;
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
+SWIGPY_DESTRUCTOR_CLOSURE(_wrap_delete_StructureException) /* defines _wrap_delete_StructureException_destructor_closure */
+
 SWIGINTERN int _wrap_new_Leaf__SWIG_0(PyObject *self, PyObject *args) {
   PyObject *resultobj = 0;
   Leaf *result = 0 ;
   
   if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "new_Leaf takes no arguments");
-  result = (Leaf *)new Leaf();
+  {
+    try
+    {
+      result = (Leaf *)new Leaf();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Leaf, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -4828,7 +5071,22 @@ SWIGINTERN int _wrap_new_Leaf__SWIG_1(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_Leaf" "', argument " "1"" of type '" "double""'");
   } 
   arg1 = static_cast< double >(val1);
-  result = (Leaf *)new Leaf(arg1);
+  {
+    try
+    {
+      result = (Leaf *)new Leaf(arg1);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Leaf, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -4883,7 +5141,22 @@ SWIGINTERN PyObject *_wrap_delete_Leaf(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_Leaf" "', argument " "1"" of type '" "Leaf *""'"); 
   }
   arg1 = reinterpret_cast< Leaf * >(argp1);
-  delete arg1;
+  {
+    try
+    {
+      delete arg1;
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -4948,7 +5221,22 @@ SWIGINTERN int _wrap_new_Var__SWIG_0(PyObject *self, PyObject *args) {
   Var *result = 0 ;
   
   if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "new_Var takes no arguments");
-  result = (Var *)new Var();
+  {
+    try
+    {
+      result = (Var *)new Var();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Var, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -4970,7 +5258,22 @@ SWIGINTERN int _wrap_new_Var__SWIG_1(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_Var" "', argument " "1"" of type '" "double""'");
   } 
   arg1 = static_cast< double >(val1);
-  result = (Var *)new Var(arg1);
+  {
+    try
+    {
+      result = (Var *)new Var(arg1);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Var, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -5025,7 +5328,22 @@ SWIGINTERN PyObject *_wrap_delete_Var(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_Var" "', argument " "1"" of type '" "Var *""'"); 
   }
   arg1 = reinterpret_cast< Var * >(argp1);
-  delete arg1;
+  {
+    try
+    {
+      delete arg1;
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5090,7 +5408,22 @@ SWIGINTERN int _wrap_new_Param__SWIG_0(PyObject *self, PyObject *args) {
   Param *result = 0 ;
   
   if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "new_Param takes no arguments");
-  result = (Param *)new Param();
+  {
+    try
+    {
+      result = (Param *)new Param();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Param, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -5112,7 +5445,22 @@ SWIGINTERN int _wrap_new_Param__SWIG_1(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_Param" "', argument " "1"" of type '" "double""'");
   } 
   arg1 = static_cast< double >(val1);
-  result = (Param *)new Param(arg1);
+  {
+    try
+    {
+      result = (Param *)new Param(arg1);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Param, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -5167,7 +5515,22 @@ SWIGINTERN PyObject *_wrap_delete_Param(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_Param" "', argument " "1"" of type '" "Param *""'"); 
   }
   arg1 = reinterpret_cast< Param * >(argp1);
-  delete arg1;
+  {
+    try
+    {
+      delete arg1;
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5182,7 +5545,22 @@ SWIGINTERN int _wrap_new_Float__SWIG_0(PyObject *self, PyObject *args) {
   Float *result = 0 ;
   
   if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "new_Float takes no arguments");
-  result = (Float *)new Float();
+  {
+    try
+    {
+      result = (Float *)new Float();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Float, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -5204,7 +5582,22 @@ SWIGINTERN int _wrap_new_Float__SWIG_1(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "new_Float" "', argument " "1"" of type '" "double""'");
   } 
   arg1 = static_cast< double >(val1);
-  result = (Float *)new Float(arg1);
+  {
+    try
+    {
+      result = (Float *)new Float(arg1);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Float, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -5259,7 +5652,22 @@ SWIGINTERN PyObject *_wrap_delete_Float(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_Float" "', argument " "1"" of type '" "Float *""'"); 
   }
   arg1 = reinterpret_cast< Float * >(argp1);
-  delete arg1;
+  {
+    try
+    {
+      delete arg1;
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5274,7 +5682,22 @@ SWIGINTERN int _wrap_new_Constraint(PyObject *self, PyObject *args) {
   Constraint *result = 0 ;
   
   if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "new_Constraint takes no arguments");
-  result = (Constraint *)new Constraint();
+  {
+    try
+    {
+      result = (Constraint *)new Constraint();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Constraint, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -5294,7 +5717,22 @@ SWIGINTERN PyObject *_wrap_delete_Constraint(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_Constraint" "', argument " "1"" of type '" "Constraint *""'"); 
   }
   arg1 = reinterpret_cast< Constraint * >(argp1);
-  delete arg1;
+  {
+    try
+    {
+      delete arg1;
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5323,7 +5761,22 @@ SWIGINTERN PyObject *_wrap_Constraint_add_leaf(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Constraint_add_leaf" "', argument " "2"" of type '" "Leaf *""'"); 
   }
   arg2 = reinterpret_cast< Leaf * >(argp2);
-  (arg1)->add_leaf(arg2);
+  {
+    try
+    {
+      (arg1)->add_leaf(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5352,7 +5805,22 @@ SWIGINTERN PyObject *_wrap_Constraint_add_fn_rpn_term(PyObject *self, PyObject *
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Constraint_add_fn_rpn_term" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
-  (arg1)->add_fn_rpn_term(arg2);
+  {
+    try
+    {
+      (arg1)->add_fn_rpn_term(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5390,7 +5858,22 @@ SWIGINTERN PyObject *_wrap_Constraint_add_jac_rpn_term(PyObject *self, PyObject 
     SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "Constraint_add_jac_rpn_term" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
-  (arg1)->add_jac_rpn_term(arg2,arg3);
+  {
+    try
+    {
+      (arg1)->add_jac_rpn_term(arg2,arg3);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5621,7 +6104,22 @@ SWIGINTERN int _wrap_new_IfElseConstraint(PyObject *self, PyObject *args) {
   IfElseConstraint *result = 0 ;
   
   if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "new_IfElseConstraint takes no arguments");
-  result = (IfElseConstraint *)new IfElseConstraint();
+  {
+    try
+    {
+      result = (IfElseConstraint *)new IfElseConstraint();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_IfElseConstraint, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -5641,7 +6139,22 @@ SWIGINTERN PyObject *_wrap_delete_IfElseConstraint(PyObject *self, PyObject *arg
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_IfElseConstraint" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
   }
   arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
-  delete arg1;
+  {
+    try
+    {
+      delete arg1;
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5670,7 +6183,22 @@ SWIGINTERN PyObject *_wrap_IfElseConstraint_add_leaf(PyObject *self, PyObject *a
     SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "IfElseConstraint_add_leaf" "', argument " "2"" of type '" "Leaf *""'"); 
   }
   arg2 = reinterpret_cast< Leaf * >(argp2);
-  (arg1)->add_leaf(arg2);
+  {
+    try
+    {
+      (arg1)->add_leaf(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5690,7 +6218,22 @@ SWIGINTERN PyObject *_wrap_IfElseConstraint_end_condition(PyObject *self, PyObje
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "IfElseConstraint_end_condition" "', argument " "1"" of type '" "IfElseConstraint *""'"); 
   }
   arg1 = reinterpret_cast< IfElseConstraint * >(argp1);
-  (arg1)->end_condition();
+  {
+    try
+    {
+      (arg1)->end_condition();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5719,7 +6262,22 @@ SWIGINTERN PyObject *_wrap_IfElseConstraint_add_condition_rpn_term(PyObject *sel
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IfElseConstraint_add_condition_rpn_term" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
-  (arg1)->add_condition_rpn_term(arg2);
+  {
+    try
+    {
+      (arg1)->add_condition_rpn_term(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5748,7 +6306,22 @@ SWIGINTERN PyObject *_wrap_IfElseConstraint_add_fn_rpn_term(PyObject *self, PyOb
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "IfElseConstraint_add_fn_rpn_term" "', argument " "2"" of type '" "int""'");
   } 
   arg2 = static_cast< int >(val2);
-  (arg1)->add_fn_rpn_term(arg2);
+  {
+    try
+    {
+      (arg1)->add_fn_rpn_term(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -5786,7 +6359,22 @@ SWIGINTERN PyObject *_wrap_IfElseConstraint_add_jac_rpn_term(PyObject *self, PyO
     SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "IfElseConstraint_add_jac_rpn_term" "', argument " "3"" of type '" "int""'");
   } 
   arg3 = static_cast< int >(val3);
-  (arg1)->add_jac_rpn_term(arg2,arg3);
+  {
+    try
+    {
+      (arg1)->add_jac_rpn_term(arg2,arg3);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -6249,7 +6837,22 @@ SWIGINTERN int _wrap_new_Evaluator(PyObject *self, PyObject *args) {
   Evaluator *result = 0 ;
   
   if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "new_Evaluator takes no arguments");
-  result = (Evaluator *)new Evaluator();
+  {
+    try
+    {
+      result = (Evaluator *)new Evaluator();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Evaluator, SWIG_BUILTIN_INIT |  0 );
   return resultobj == Py_None ? -1 : 0;
 fail:
@@ -6269,7 +6872,22 @@ SWIGINTERN PyObject *_wrap_delete_Evaluator(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "delete_Evaluator" "', argument " "1"" of type '" "Evaluator *""'"); 
   }
   arg1 = reinterpret_cast< Evaluator * >(argp1);
-  delete arg1;
+  {
+    try
+    {
+      delete arg1;
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -6399,7 +7017,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_add_var(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Evaluator_add_var" "', argument " "2"" of type '" "double""'");
   } 
   arg2 = static_cast< double >(val2);
-  result = (Var *)(arg1)->add_var(arg2);
+  {
+    try
+    {
+      result = (Var *)(arg1)->add_var(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Var, 0 |  0 );
   return resultobj;
 fail:
@@ -6429,7 +7062,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_add_param(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Evaluator_add_param" "', argument " "2"" of type '" "double""'");
   } 
   arg2 = static_cast< double >(val2);
-  result = (Param *)(arg1)->add_param(arg2);
+  {
+    try
+    {
+      result = (Param *)(arg1)->add_param(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Param, 0 |  0 );
   return resultobj;
 fail:
@@ -6459,7 +7107,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_add_float(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(ecode2), "in method '" "Evaluator_add_float" "', argument " "2"" of type '" "double""'");
   } 
   arg2 = static_cast< double >(val2);
-  result = (Float *)(arg1)->add_float(arg2);
+  {
+    try
+    {
+      result = (Float *)(arg1)->add_float(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Float, 0 |  0 );
   return resultobj;
 fail:
@@ -6480,7 +7143,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_add_constraint(PyObject *self, PyObject *ar
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_add_constraint" "', argument " "1"" of type '" "Evaluator *""'"); 
   }
   arg1 = reinterpret_cast< Evaluator * >(argp1);
-  result = (Constraint *)(arg1)->add_constraint();
+  {
+    try
+    {
+      result = (Constraint *)(arg1)->add_constraint();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_Constraint, 0 |  0 );
   return resultobj;
 fail:
@@ -6501,7 +7179,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_add_if_else_constraint(PyObject *self, PyOb
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_add_if_else_constraint" "', argument " "1"" of type '" "Evaluator *""'"); 
   }
   arg1 = reinterpret_cast< Evaluator * >(argp1);
-  result = (IfElseConstraint *)(arg1)->add_if_else_constraint();
+  {
+    try
+    {
+      result = (IfElseConstraint *)(arg1)->add_if_else_constraint();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_NewPointerObj(SWIG_as_voidptr(result), SWIGTYPE_p_IfElseConstraint, 0 |  0 );
   return resultobj;
 fail:
@@ -6530,7 +7223,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_remove_var(PyObject *self, PyObject *args) 
     SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Evaluator_remove_var" "', argument " "2"" of type '" "Var *""'"); 
   }
   arg2 = reinterpret_cast< Var * >(argp2);
-  (arg1)->remove_var(arg2);
+  {
+    try
+    {
+      (arg1)->remove_var(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -6559,7 +7267,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_remove_param(PyObject *self, PyObject *args
     SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Evaluator_remove_param" "', argument " "2"" of type '" "Param *""'"); 
   }
   arg2 = reinterpret_cast< Param * >(argp2);
-  (arg1)->remove_param(arg2);
+  {
+    try
+    {
+      (arg1)->remove_param(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -6588,7 +7311,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_remove_float(PyObject *self, PyObject *args
     SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Evaluator_remove_float" "', argument " "2"" of type '" "Float *""'"); 
   }
   arg2 = reinterpret_cast< Float * >(argp2);
-  (arg1)->remove_float(arg2);
+  {
+    try
+    {
+      (arg1)->remove_float(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -6617,7 +7355,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_remove_constraint(PyObject *self, PyObject 
     SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Evaluator_remove_constraint" "', argument " "2"" of type '" "Constraint *""'"); 
   }
   arg2 = reinterpret_cast< Constraint * >(argp2);
-  (arg1)->remove_constraint(arg2);
+  {
+    try
+    {
+      (arg1)->remove_constraint(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -6646,7 +7399,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_remove_if_else_constraint(PyObject *self, P
     SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Evaluator_remove_if_else_constraint" "', argument " "2"" of type '" "IfElseConstraint *""'"); 
   }
   arg2 = reinterpret_cast< IfElseConstraint * >(argp2);
-  (arg1)->remove_if_else_constraint(arg2);
+  {
+    try
+    {
+      (arg1)->remove_if_else_constraint(arg2);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -6666,7 +7434,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_set_structure(PyObject *self, PyObject *arg
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_set_structure" "', argument " "1"" of type '" "Evaluator *""'"); 
   }
   arg1 = reinterpret_cast< Evaluator * >(argp1);
-  (arg1)->set_structure();
+  {
+    try
+    {
+      (arg1)->set_structure();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -6686,7 +7469,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_remove_structure(PyObject *self, PyObject *
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "Evaluator_remove_structure" "', argument " "1"" of type '" "Evaluator *""'"); 
   }
   arg1 = reinterpret_cast< Evaluator * >(argp1);
-  (arg1)->remove_structure();
+  {
+    try
+    {
+      (arg1)->remove_structure();
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   return resultobj;
 fail:
@@ -6726,7 +7524,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_get_x(PyObject *self, PyObject *args) {
     if (!array2) SWIG_fail;
     arg2 = (double*) array_data(array2);
   }
-  (arg1)->get_x(arg2,arg3);
+  {
+    try
+    {
+      (arg1)->get_x(arg2,arg3);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array2);
@@ -6766,7 +7579,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_load_var_values_from_x(PyObject *self, PyOb
     arg2 = (double*) array_data(array2);
     arg3 = (int) array_size(array2,0);
   }
-  (arg1)->load_var_values_from_x(arg2,arg3);
+  {
+    try
+    {
+      (arg1)->load_var_values_from_x(arg2,arg3);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     if (is_new_object2 && array2)
@@ -6818,7 +7646,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_evaluate(PyObject *self, PyObject *args) {
     if (!array2) SWIG_fail;
     arg2 = (double*) array_data(array2);
   }
-  (arg1)->evaluate(arg2,arg3);
+  {
+    try
+    {
+      (arg1)->evaluate(arg2,arg3);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array2);
@@ -6901,7 +7744,22 @@ SWIGINTERN PyObject *_wrap_Evaluator_evaluate_csr_jacobian(PyObject *self, PyObj
     if (!array6) SWIG_fail;
     arg6 = (int*) array_data(array6);
   }
-  (arg1)->evaluate_csr_jacobian(arg2,arg3,arg4,arg5,arg6,arg7);
+  {
+    try
+    {
+      (arg1)->evaluate_csr_jacobian(arg2,arg3,arg4,arg5,arg6,arg7);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_Py_Void();
   {
     resultobj = SWIG_Python_AppendOutput(resultobj,(PyObject*)array2);
@@ -6952,7 +7810,22 @@ SWIGINTERN PyObject *_wrap__evaluate(PyObject *self, PyObject *args) {
     SWIG_exception_fail(SWIG_ArgError(res3), "in method '" "_evaluate" "', argument " "3"" of type '" "std::vector< Leaf * > *""'"); 
   }
   arg3 = reinterpret_cast< std::vector< Leaf * > * >(argp3);
-  result = (double)_evaluate(arg1,arg2,arg3);
+  {
+    try
+    {
+      result = (double)_evaluate(arg1,arg2,arg3);
+    }
+    catch (StructureException &e)
+    {
+      std::string s("Evaluator error: "), s2(e.what());
+      s = s + s2;
+      SWIG_exception(SWIG_RuntimeError, s.c_str());
+    }
+    catch (...)
+    {
+      SWIG_exception(SWIG_RuntimeError, "unkown exception");
+    }
+  }
   resultobj = SWIG_From_double(static_cast< double >(result));
   return resultobj;
 fail:
@@ -6965,6 +7838,227 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"_evaluate", _wrap__evaluate, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
+
+static SwigPyGetSet StructureException___dict___getset = { SwigPyObject_get___dict__, 0 };
+SWIGINTERN PyGetSetDef SwigPyBuiltin__StructureException_getset[] = {
+    { (char *) "__dict__", (getter) SwigPyBuiltin_GetterClosure, (setter) 0, (char *)"StructureException.__dict__", (void *) &StructureException___dict___getset }
+,
+    {NULL, NULL, NULL, NULL, NULL} /* Sentinel */
+};
+
+SWIGINTERN PyObject *
+SwigPyBuiltin__StructureException_richcompare(PyObject *self, PyObject *other, int op) {
+  PyObject *result = NULL;
+  PyObject *tuple = PyTuple_New(1);
+  assert(tuple);
+  PyTuple_SET_ITEM(tuple, 0, other);
+  Py_XINCREF(other);
+  if (!result) {
+    if (SwigPyObject_Check(self) && SwigPyObject_Check(other)) {
+      result = SwigPyObject_richcompare((SwigPyObject *)self, (SwigPyObject *)other, op);
+    } else {
+      result = Py_NotImplemented;
+      Py_INCREF(result);
+    }
+  }
+  Py_DECREF(tuple);
+  return result;
+}
+
+SWIGINTERN PyMethodDef SwigPyBuiltin__StructureException_methods[] = {
+  { "what", (PyCFunction) _wrap_StructureException_what, METH_VARARGS, (char *) "" },
+  { NULL, NULL, 0, NULL } /* Sentinel */
+};
+
+static PyHeapTypeObject SwigPyBuiltin__StructureException_type = {
+  {
+#if PY_VERSION_HEX >= 0x03000000
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                                        /* ob_size */
+#endif
+    "evaluator.StructureException",           /* tp_name */
+    sizeof(SwigPyObject),                     /* tp_basicsize */
+    0,                                        /* tp_itemsize */
+    (destructor) (destructor) _wrap_delete_StructureException_destructor_closure,/* tp_dealloc */
+    (printfunc) 0,                            /* tp_print */
+    (getattrfunc) 0,                          /* tp_getattr */
+    (setattrfunc) 0,                          /* tp_setattr */
+#if PY_VERSION_HEX >= 0x03000000
+    0,                                        /* tp_compare */
+#else
+    (cmpfunc) 0,                              /* tp_compare */
+#endif
+    (reprfunc) 0,                             /* tp_repr */
+    &SwigPyBuiltin__StructureException_type.as_number,            /* tp_as_number */
+    &SwigPyBuiltin__StructureException_type.as_sequence,          /* tp_as_sequence */
+    &SwigPyBuiltin__StructureException_type.as_mapping,           /* tp_as_mapping */
+    (hashfunc) SwigPyObject_hash,             /* tp_hash */
+    (ternaryfunc) 0,                          /* tp_call */
+    (reprfunc) 0,                             /* tp_str */
+    (getattrofunc) 0,                         /* tp_getattro */
+    (setattrofunc) 0,                         /* tp_setattro */
+    &SwigPyBuiltin__StructureException_type.as_buffer,            /* tp_as_buffer */
+#if PY_VERSION_HEX >= 0x03000000
+    Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE,   /* tp_flags */
+#else
+    Py_TPFLAGS_DEFAULT|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_CHECKTYPES, /* tp_flags */
+#endif
+    "::StructureException",                   /* tp_doc */
+    (traverseproc) 0,                         /* tp_traverse */
+    (inquiry) 0,                              /* tp_clear */
+    (richcmpfunc) SwigPyBuiltin__StructureException_richcompare,  /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    (getiterfunc) 0,                          /* tp_iter */
+    (iternextfunc) 0,                         /* tp_iternext */
+    SwigPyBuiltin__StructureException_methods,/* tp_methods */
+    0,                                        /* tp_members */
+    SwigPyBuiltin__StructureException_getset, /* tp_getset */
+    0,                                        /* tp_base */
+    0,                                        /* tp_dict */
+    (descrgetfunc) 0,                         /* tp_descr_get */
+    (descrsetfunc) 0,                         /* tp_descr_set */
+    (Py_ssize_t) offsetof(SwigPyObject, dict),/* tp_dictoffset */
+    (initproc) _wrap_new_StructureException,  /* tp_init */
+    (allocfunc) 0,                            /* tp_alloc */
+    (newfunc) 0,                              /* tp_new */
+    (freefunc) 0,                             /* tp_free */
+    (inquiry) 0,                              /* tp_is_gc */
+    (PyObject *) 0,                           /* tp_bases */
+    (PyObject *) 0,                           /* tp_mro */
+    (PyObject *) 0,                           /* tp_cache */
+    (PyObject *) 0,                           /* tp_subclasses */
+    (PyObject *) 0,                           /* tp_weaklist */
+    (destructor) 0,                           /* tp_del */
+#if PY_VERSION_HEX >= 0x02060000
+    (int) 0,                                  /* tp_version_tag */
+#endif
+#if PY_VERSION_HEX >= 0x03040000
+    (destructor) 0,                           /* tp_finalize */
+#endif
+#ifdef COUNT_ALLOCS
+    (Py_ssize_t) 0,                           /* tp_allocs */
+    (Py_ssize_t) 0,                           /* tp_frees */
+    (Py_ssize_t) 0,                           /* tp_maxalloc */
+#if PY_VERSION_HEX >= 0x02050000
+    0,                                        /* tp_prev */
+#endif
+    0,                                        /* tp_next */
+#endif
+  },
+#if PY_VERSION_HEX >= 0x03050000
+  {
+    (unaryfunc) 0,                            /* am_await */
+    (unaryfunc) 0,                            /* am_aiter */
+    (unaryfunc) 0,                            /* am_anext */
+  },
+#endif
+  {
+    (binaryfunc) 0,                           /* nb_add */
+    (binaryfunc) 0,                           /* nb_subtract */
+    (binaryfunc) 0,                           /* nb_multiply */
+#if PY_VERSION_HEX < 0x03000000
+    (binaryfunc) 0,                           /* nb_divide */
+#endif
+    (binaryfunc) 0,                           /* nb_remainder */
+    (binaryfunc) 0,                           /* nb_divmod */
+    (ternaryfunc) 0,                          /* nb_power */
+    (unaryfunc) 0,                            /* nb_negative */
+    (unaryfunc) 0,                            /* nb_positive */
+    (unaryfunc) 0,                            /* nb_absolute */
+    (inquiry) 0,                              /* nb_nonzero */
+    (unaryfunc) 0,                            /* nb_invert */
+    (binaryfunc) 0,                           /* nb_lshift */
+    (binaryfunc) 0,                           /* nb_rshift */
+    (binaryfunc) 0,                           /* nb_and */
+    (binaryfunc) 0,                           /* nb_xor */
+    (binaryfunc) 0,                           /* nb_or */
+#if PY_VERSION_HEX < 0x03000000
+    (coercion) 0,                             /* nb_coerce */
+#endif
+    (unaryfunc) 0,                            /* nb_int */
+#if PY_VERSION_HEX >= 0x03000000
+    (void *) 0,                               /* nb_reserved */
+#else
+    (unaryfunc) 0,                            /* nb_long */
+#endif
+    (unaryfunc) 0,                            /* nb_float */
+#if PY_VERSION_HEX < 0x03000000
+    (unaryfunc) 0,                            /* nb_oct */
+    (unaryfunc) 0,                            /* nb_hex */
+#endif
+    (binaryfunc) 0,                           /* nb_inplace_add */
+    (binaryfunc) 0,                           /* nb_inplace_subtract */
+    (binaryfunc) 0,                           /* nb_inplace_multiply */
+#if PY_VERSION_HEX < 0x03000000
+    (binaryfunc) 0,                           /* nb_inplace_divide */
+#endif
+    (binaryfunc) 0,                           /* nb_inplace_remainder */
+    (ternaryfunc) 0,                          /* nb_inplace_power */
+    (binaryfunc) 0,                           /* nb_inplace_lshift */
+    (binaryfunc) 0,                           /* nb_inplace_rshift */
+    (binaryfunc) 0,                           /* nb_inplace_and */
+    (binaryfunc) 0,                           /* nb_inplace_xor */
+    (binaryfunc) 0,                           /* nb_inplace_or */
+    (binaryfunc) 0,                           /* nb_floor_divide */
+    (binaryfunc) 0,                           /* nb_true_divide */
+    (binaryfunc) 0,                           /* nb_inplace_floor_divide */
+    (binaryfunc) 0,                           /* nb_inplace_true_divide */
+#if PY_VERSION_HEX >= 0x02050000
+    (unaryfunc) 0,                            /* nb_index */
+#endif
+#if PY_VERSION_HEX >= 0x03050000
+    (binaryfunc) 0,                           /* nb_matrix_multiply */
+    (binaryfunc) 0,                           /* nb_inplace_matrix_multiply */
+#endif
+  },
+  {
+    (lenfunc) 0,                              /* mp_length */
+    (binaryfunc) 0,                           /* mp_subscript */
+    (objobjargproc) 0,                        /* mp_ass_subscript */
+  },
+  {
+    (lenfunc) 0,                              /* sq_length */
+    (binaryfunc) 0,                           /* sq_concat */
+    (ssizeargfunc) 0,                         /* sq_repeat */
+    (ssizeargfunc) 0,                         /* sq_item */
+#if PY_VERSION_HEX >= 0x03000000
+    (void *) 0,                               /* was_sq_slice */
+#else
+    (ssizessizeargfunc) 0,                    /* sq_slice */
+#endif
+    (ssizeobjargproc) 0,                      /* sq_ass_item */
+#if PY_VERSION_HEX >= 0x03000000
+    (void *) 0,                               /* was_sq_ass_slice */
+#else
+    (ssizessizeobjargproc) 0,                 /* sq_ass_slice */
+#endif
+    (objobjproc) 0,                           /* sq_contains */
+    (binaryfunc) 0,                           /* sq_inplace_concat */
+    (ssizeargfunc) 0,                         /* sq_inplace_repeat */
+  },
+  {
+#if PY_VERSION_HEX < 0x03000000
+    (readbufferproc) 0,                       /* bf_getreadbuffer */
+    (writebufferproc) 0,                      /* bf_getwritebuffer */
+    (segcountproc) 0,                         /* bf_getsegcount */
+    (charbufferproc) 0,                       /* bf_getcharbuffer */
+#endif
+#if PY_VERSION_HEX >= 0x02060000
+    (getbufferproc) 0,                        /* bf_getbuffer */
+    (releasebufferproc) 0,                    /* bf_releasebuffer */
+#endif
+  },
+    (PyObject *) 0,                           /* ht_name */
+    (PyObject *) 0,                           /* ht_slots */
+#if PY_VERSION_HEX >= 0x03030000
+    (PyObject *) 0,                           /* ht_qualname */
+    0,                                        /* ht_cached_keys */
+#endif
+};
+
+SWIGINTERN SwigPyClientData SwigPyBuiltin__StructureException_clientdata = {0, 0, 0, 0, 0, 0, (PyTypeObject *)&SwigPyBuiltin__StructureException_type};
 
 static SwigPyGetSet Leaf___dict___getset = { SwigPyObject_get___dict__, 0 };
 static SwigPyGetSet Leaf_value_getset = { _wrap_Leaf_value_get, _wrap_Leaf_value_set };
@@ -8596,6 +9690,7 @@ static swig_type_info _swigt__p_Float = {"_p_Float", "Float *", 0, 0, (void*)&Sw
 static swig_type_info _swigt__p_IfElseConstraint = {"_p_IfElseConstraint", "IfElseConstraint *", 0, 0, (void*)&SwigPyBuiltin__IfElseConstraint_clientdata, 0};
 static swig_type_info _swigt__p_Leaf = {"_p_Leaf", "Leaf *", 0, 0, (void*)&SwigPyBuiltin__Leaf_clientdata, 0};
 static swig_type_info _swigt__p_Param = {"_p_Param", "Param *", 0, 0, (void*)&SwigPyBuiltin__Param_clientdata, 0};
+static swig_type_info _swigt__p_StructureException = {"_p_StructureException", "StructureException *", 0, 0, (void*)&SwigPyBuiltin__StructureException_clientdata, 0};
 static swig_type_info _swigt__p_SwigPyObject = {"_p_SwigPyObject", "SwigPyObject *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_Var = {"_p_Var", "Var *", 0, 0, (void*)&SwigPyBuiltin__Var_clientdata, 0};
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
@@ -8603,6 +9698,7 @@ static swig_type_info _swigt__p_double = {"_p_double", "double *", 0, 0, (void*)
 static swig_type_info _swigt__p_int = {"_p_int", "int *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__mapT_Var_p_std__vectorT_int_t_t = {"_p_std__mapT_Var_p_std__vectorT_int_t_t", "std::map< Var *,std::vector< int > > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t = {"_p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t", "std::map< Var *,std::vector< std::vector< int > > > *", 0, 0, (void*)0, 0};
+static swig_type_info _swigt__p_std__string = {"_p_std__string", "std::string *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_Leaf_p_t = {"_p_std__vectorT_Leaf_p_t", "std::vector< Leaf * > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_int_t = {"_p_std__vectorT_int_t", "std::vector< int > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__vectorT_std__vectorT_int_t_t = {"_p_std__vectorT_std__vectorT_int_t_t", "std::vector< std::vector< int > > *", 0, 0, (void*)0, 0};
@@ -8614,6 +9710,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_IfElseConstraint,
   &_swigt__p_Leaf,
   &_swigt__p_Param,
+  &_swigt__p_StructureException,
   &_swigt__p_SwigPyObject,
   &_swigt__p_Var,
   &_swigt__p_char,
@@ -8621,6 +9718,7 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_int,
   &_swigt__p_std__mapT_Var_p_std__vectorT_int_t_t,
   &_swigt__p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t,
+  &_swigt__p_std__string,
   &_swigt__p_std__vectorT_Leaf_p_t,
   &_swigt__p_std__vectorT_int_t,
   &_swigt__p_std__vectorT_std__vectorT_int_t_t,
@@ -8632,6 +9730,7 @@ static swig_cast_info _swigc__p_Float[] = {  {&_swigt__p_Float, 0, 0, 0},{0, 0, 
 static swig_cast_info _swigc__p_IfElseConstraint[] = {  {&_swigt__p_IfElseConstraint, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Leaf[] = {  {&_swigt__p_Param, _p_ParamTo_p_Leaf, 0, 0},  {&_swigt__p_Float, _p_FloatTo_p_Leaf, 0, 0},  {&_swigt__p_Leaf, 0, 0, 0},  {&_swigt__p_Var, _p_VarTo_p_Leaf, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Param[] = {  {&_swigt__p_Param, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_StructureException[] = {  {&_swigt__p_StructureException, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_SwigPyObject[] = {  {&_swigt__p_SwigPyObject, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_Var[] = {  {&_swigt__p_Var, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
@@ -8639,6 +9738,7 @@ static swig_cast_info _swigc__p_double[] = {  {&_swigt__p_double, 0, 0, 0},{0, 0
 static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__mapT_Var_p_std__vectorT_int_t_t[] = {  {&_swigt__p_std__mapT_Var_p_std__vectorT_int_t_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t[] = {  {&_swigt__p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t, 0, 0, 0},{0, 0, 0, 0}};
+static swig_cast_info _swigc__p_std__string[] = {  {&_swigt__p_std__string, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_Leaf_p_t[] = {  {&_swigt__p_std__vectorT_Leaf_p_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_int_t[] = {  {&_swigt__p_std__vectorT_int_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__vectorT_std__vectorT_int_t_t[] = {  {&_swigt__p_std__vectorT_std__vectorT_int_t_t, 0, 0, 0},{0, 0, 0, 0}};
@@ -8650,6 +9750,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_IfElseConstraint,
   _swigc__p_Leaf,
   _swigc__p_Param,
+  _swigc__p_StructureException,
   _swigc__p_SwigPyObject,
   _swigc__p_Var,
   _swigc__p_char,
@@ -8657,6 +9758,7 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_int,
   _swigc__p_std__mapT_Var_p_std__vectorT_int_t_t,
   _swigc__p_std__mapT_Var_p_std__vectorT_std__vectorT_int_t_t_t,
+  _swigc__p_std__string,
   _swigc__p_std__vectorT_Leaf_p_t,
   _swigc__p_std__vectorT_int_t,
   _swigc__p_std__vectorT_std__vectorT_int_t_t,
@@ -9411,6 +10513,29 @@ SWIG_init(void) {
   SWIG_addvarlink(SWIG_globals(),(char *)"ATAN",Swig_var_ATAN_get, Swig_var_ATAN_set);
   PyDict_SetItemString(md, (char *)"ATAN", PyObject_GetAttrString(SWIG_globals(), "ATAN"));
   SwigPyBuiltin_AddPublicSymbol(public_interface, "ATAN");
+  
+  /* type '::StructureException' */
+  builtin_pytype = (PyTypeObject *)&SwigPyBuiltin__StructureException_type;
+  builtin_pytype->tp_dict = d = PyDict_New();
+  SwigPyBuiltin_SetMetaType(builtin_pytype, metatype);
+  builtin_pytype->tp_new = PyType_GenericNew;
+  builtin_base_count = 0;
+  builtin_bases[builtin_base_count] = NULL;
+  SwigPyBuiltin_InitBases(builtin_pytype, builtin_bases);
+  PyDict_SetItemString(d, "this", this_descr);
+  PyDict_SetItemString(d, "thisown", thisown_descr);
+  if (PyType_Ready(builtin_pytype) < 0) {
+    PyErr_SetString(PyExc_TypeError, "Could not create type 'StructureException'.");
+#if PY_VERSION_HEX >= 0x03000000
+    return NULL;
+#else
+    return;
+#endif
+  }
+  Py_INCREF(builtin_pytype);
+  PyModule_AddObject(m, "StructureException", (PyObject *)builtin_pytype);
+  SwigPyBuiltin_AddPublicSymbol(public_interface, "StructureException");
+  d = md;
   
   /* type '::Leaf' */
   builtin_pytype = (PyTypeObject *)&SwigPyBuiltin__Leaf_type;
