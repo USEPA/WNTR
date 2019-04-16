@@ -15,10 +15,11 @@ Subpackages
     :maxdepth: 1
     
     wntr.epanet
+    wntr.graphics
     wntr.metrics
+    wntr.morph
     wntr.network
     wntr.scenario
     wntr.sim
-    wntr.graphics
     wntr.utils
 

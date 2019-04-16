@@ -1,6 +1,7 @@
 from nose.tools import *
+from nose import SkipTest
 from os.path import abspath, dirname, join, isfile
-import os
+import os, sys
 import wntr
 import matplotlib.pylab as plt
 
@@ -24,11 +25,13 @@ def test_plot_network1():
     assert_true(isfile(filename))
 
 def test_plot_interactive_network1():
+    if (sys.version_info.major == 3) and (sys.version_info.minor == 4):
+        raise SkipTest # skip if python version = 3.4
     filename = abspath(join(testdir, 'plot_interactive_network1.html'))
     if isfile(filename):
         os.remove(filename)
         
-    inp_file = join(ex_datadir,'Net6.inp')
+    inp_file = join(ex_datadir,'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
 		
     plt.figure()
