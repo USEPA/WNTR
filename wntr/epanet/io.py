@@ -1361,12 +1361,8 @@ class InpFile(object):
             if len(demands) > 1:
                 for ct, demand in enumerate(demands):
                     cat = str(demand.category)
-                    if cat.lower() == 'none':
+                    if cat == 'EN2 base':
                         cat = ''
-                    elif cat == 'EN2 base':
-                        cat = ''
-                    else:
-                        cat = demand.category
                     E = {'node': node,
                          'base': from_si(self.flow_units, demand.base_value, HydParam.Demand),
                          'pat': '',
