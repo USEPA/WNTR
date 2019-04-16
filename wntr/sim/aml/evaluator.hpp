@@ -31,7 +31,7 @@ class StructureException: public std::exception
 public:
   StructureException() {msg = "StructureException";}
   StructureException(std::string const &message) : msg(message) {}
-  virtual const char* what() const throw()
+  virtual const char* what()
   {
     return msg.c_str();
   }

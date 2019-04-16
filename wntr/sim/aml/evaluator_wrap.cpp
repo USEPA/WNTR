@@ -4966,13 +4966,13 @@ SWIGINTERN PyObject *_wrap_StructureException_what(PyObject *self, PyObject *arg
   if (args && PyTuple_Check(args) && PyTuple_GET_SIZE(args) > 0) SWIG_exception_fail(SWIG_TypeError, "StructureException_what takes no arguments");
   res1 = SWIG_ConvertPtr(self, &argp1,SWIGTYPE_p_StructureException, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
-    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "StructureException_what" "', argument " "1"" of type '" "StructureException const *""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "StructureException_what" "', argument " "1"" of type '" "StructureException *""'"); 
   }
   arg1 = reinterpret_cast< StructureException * >(argp1);
   {
     try
     {
-      result = (char *)((StructureException const *)arg1)->what();
+      result = (char *)(arg1)->what();
     }
     catch (StructureException &e)
     {

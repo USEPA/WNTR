@@ -326,5 +326,23 @@ class TestCSRJacobian(unittest.TestCase):
                 self.assertTrue(true_jac[c][v] == A[c.index, v.index])
 
 
+class TestExceptions(unittest.TestCase):
+    def test_structure_exception(self):
+        m = aml.Model()
+        m.x = aml.Var()
+        m.c = aml.Constraint(m.x - 1)
+        with self.assertRaises(RuntimeError):
+            m.get_x()
+        m.set_structure()
+        m.get_x()
+        m.y = aml.Var()
+        m.c2 = aml.Constraint(m.x + m.y)
+        with self.assertRaises(RuntimeError):
+            m.get_x()
+        m.set_structure()
+        x = m.get_x()
+        self.assertEqual(len(x), 2)
+
+
 if __name__ == '__main__':
     unittest.main()
