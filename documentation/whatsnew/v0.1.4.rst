@@ -43,5 +43,6 @@ WNTR is also tested on private servers using several large water utility network
   WaterNetworkModel.get_graph_deep_copy() has been removed (API change, see :class:`~wntr.network.model.WaterNetworkModel.get_graph`).
 * Modified the WaterNetworkModel.add_pattern() to no longer accept start_time and end_time options.  
   Binary patterns can be created using the Patterns object (API change, see :class:`~wntr.network.elements.Pattern.binary_pattern`).
+* The WaterNetworkModel method get_graph_deep_copy() was replaced with get_graph() (API change, see )
 * Added ENsaveinpfile to the EPANET toolkit (see :class:`~wntr.epanet.toolkit.ENepanet.ENsaveinpfile`)
 * Updated documentation

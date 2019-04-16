@@ -16,5 +16,6 @@ Submodules
    wntr.network.elements
    wntr.network.model
    wntr.network.graph
+   wntr.network.morph
    wntr.network.options
 

@@ -119,6 +119,15 @@ class Junction(Node):
             self._pattern_reg.add_usage(pattern_name, (self.name, 'Junction'))
         self.demand_timeseries_list.append((base, pattern_name, category))
 
+    @property
+    def base_demand(self):
+        """Get the base_value of the first demand in the demand_timeseries_list.
+
+        This is a read-only property.
+        """
+        if len(self.demand_timeseries_list) > 0:
+            return self.demand_timeseries_list[0].base_value
+        return 0.0
 
     def add_leak(self, wn, area, discharge_coeff=0.75, start_time=None, end_time=None):
         """
