@@ -45,6 +45,9 @@ class Node(with_metaclass(abc.ABCMeta, object)):
 
 
 class ExpressionBase(with_metaclass(abc.ABCMeta, Node)):
+    """
+    A base class for expressions (including variables and params).
+    """
     __slots__ = ()
 
     def is_relational(self):
@@ -60,6 +63,14 @@ class ExpressionBase(with_metaclass(abc.ABCMeta, Node)):
 
     @abc.abstractmethod
     def evaluate(self):
+        """
+        Evaluate the expression numerically.
+
+        Returns
+        -------
+        val: float
+            The floating point value of the expression.
+        """
         pass
 
     @abc.abstractmethod
@@ -314,6 +325,14 @@ class Float(Leaf):
 
 
 class Var(Leaf):
+    """
+    Variables
+
+    Parameters
+    ----------
+    val: float
+        value of the variable
+    """
 
     __slots__ = ('_name',)
 

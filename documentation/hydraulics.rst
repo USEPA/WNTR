@@ -257,11 +257,18 @@ The file **hydraulic_simulation.py** includes examples of these features.
 Advanced: Customized models with WNTR's AML
 -------------------------------------------
 
-WNTR has a custom algebraic modeling language (AML) which is used for WNTR's hydraulic model (used in the :class:`~wntr.sim.core.WNTRSimulator`). This AML is primarily used for efficient evaluation of constraint residuals and derivatives. WNTR's AML drastically simplifies the implementation, maintenance, modification, and customization of hydraulic models. The AML allows defining variables and constraints in a natural way. For example, suppose we want to solve the following system of nonlinear equations.
+WNTR has a custom algebraic modeling language (AML) which is used for
+WNTR's hydraulic model (used in the
+:class:`~wntr.sim.core.WNTRSimulator`). This AML is primarily used for
+efficient evaluation of constraint residuals and derivatives. WNTR's
+AML drastically simplifies the implementation, maintenance,
+modification, and customization of hydraulic models. The AML allows
+defining variables and constraints in a natural way. For example,
+suppose we want to solve the following system of nonlinear equations.
 
 .. math::
 
-   y - x^{2} = 0
+   y - x^{2} = 0 \\
    y - x - 1 = 0
 
 We can create this model usin WNTR's AML as follows.
@@ -270,9 +277,50 @@ We can create this model usin WNTR's AML as follows.
 
    >>> from wntr.sim import aml
    >>> m = aml.Model()
-   >>> m.x = aml.Var()
-   >>> m.y = aml.Var()
+   >>> m.x = aml.Var(1.0)
+   >>> m.y = aml.Var(1.0)
    >>> m.c1 = aml.Constraint(m.y - m.x**2)
    >>> m.c2 = aml.Constraint(m.y - m.x - 1)
 
-Before
+Before evaluating the constraint residuals or the jacobian, :func:`~wntr.sim.aml.aml.Model.set_structure` must be called:
+
+.. doctest::
+
+   >>> m.set_structure()
+   >>> m.evaluate_residuals()
+   array([ 0., -1.])
+   >>> m.evaluate_jacobian()
+   <2x2 sparse matrix of type '<class 'numpy.float64'>'
+	with 4 stored elements in Compressed Sparse Row format>
+   >>> m.evaluate_jacobian().toarray()
+   array([[-2.,  1.],
+       [-1.,  1.]])
+
+The methods :func:`~wntr.sim.aml.aml.Model.evaluate_residuals` and
+:func:`~wntr.sim.aml.aml.Model.evaluate_jacobian` return a numpy array
+and a scipy sparse csr matrix, respectively. Variable values can also
+be loaded with a numpy array. For example, a Newton
+step (without a line search) would look something like
+
+.. doctest::
+
+   >>> from scipy.sparse.linalg import spsolve
+   >>> x = m.get_x()
+   >>> d = spsolve(m.evaluate_jacobian(), -m.evaluate_residuals())
+   >>> x += d
+   >>> m.load_var_values_from_x(x)
+   >>> m.evaluate_residuals()
+   array([-1., 0.])
+
+WNTR includes an implementation of Newton's Method with a line search
+which can solve one of these models.
+
+.. doctest::
+
+   >>> from wntr.sim.solvers import NewtonSolver
+   >>> opt = NewtonSolver()
+   >>> res = opt.solve(m)
+   >>> m.x.value
+   1.618033988749989
+   >>> m.y.value
+   2.618033988749989

@@ -365,6 +365,14 @@ class Model(object):
         return tmp
 
     def set_structure(self):
+        """
+        This method essentially just orders all of the variables and constraints so that
+        the constraint residuals and the jacobian can be evaluated efficiently. This method
+        must be called before get_x, load_var_values_from_x, evaluate_residuals, or evaluate_jacobian
+        can be called. If any changes are made to the model (e.g., variables/constraints are
+        added/removed), then this method needs called again. Avoid calling this method too often
+        if you are concerned about efficiency.
+        """
         self._evaluator.set_structure()
 
     def cons(self):

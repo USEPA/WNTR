@@ -16,4 +16,5 @@ Submodules
    wntr.sim.hydraulics
    wntr.sim.results
    wntr.sim.solvers
+   wntr.sim.aml
 
