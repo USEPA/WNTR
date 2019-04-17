@@ -80,7 +80,7 @@ These classes are listed in :numref:`table-sim-subpackage`.
                                                       an EPANET simulation, and analyze results all within WNTR.
 	
 	:class:`~wntr.sim.core.WNTRSimulator`             The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulation and includes models to simulate pipe leaks. 
-	                                                  The WNTRSimulator does not perform water quality simulations.
+	                                                  The WNTRSimulator does not perform water quality simulations, however, the hydraulic simulation results can be used with the EpanetSimulator to perform water quality simulations. See :ref:`water_quality_simulation` for an example.
    =================================================  =============================================================================================================================================================================================================================================================================
 
 .. _limitations:
@@ -123,7 +123,7 @@ Current software limitations are noted:
 [VALVES], and
 [VERTICES].  
 
-However, **the following model options cannot be modified/created in WNTR**:
+However, **the following model options cannot be modified/created through the WNTR API**:
 
 * [EMITTERS] section
 * [LABELS] section
