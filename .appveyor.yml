@@ -2,8 +2,7 @@ environment:
 
   matrix:
 
-    - platform: x64
-      PYTHON_VERSION: 3.6
+    - PYTHON_VERSION: 3.6
       PYTHON: "C:\\Miniconda36"
 
 install:

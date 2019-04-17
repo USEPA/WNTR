@@ -50,20 +50,6 @@ class ExpressionBase(with_metaclass(abc.ABCMeta, Node)):
     def is_relational(self):
         return False
 
-    def is_numeric_data(self):
-        return False
-
-    def is_potentially_variable(self):
-        return True
-
-    @abc.abstractmethod
-    def is_fixed(self):
-        pass
-
-    @abc.abstractmethod
-    def is_constant(self):
-        pass
-
     @abc.abstractmethod
     def operators(self):
         pass
@@ -283,12 +269,6 @@ class Float(Leaf):
         self._value = val
         self._c_obj = None
 
-    def is_constant(self):
-        return True
-
-    def is_fixed(self):
-        return True
-
     def is_parameter_type(self):
         return False
 
@@ -300,9 +280,6 @@ class Float(Leaf):
 
     def is_expression_type(self):
         return False
-
-    def is_numeric_data(self):
-        return True
 
     def _str(self):
         return str(self.value)
@@ -318,9 +295,6 @@ class Float(Leaf):
 
     def get_leaves(self):
         return OrderedSet([self])
-
-    def is_potentially_variable(self):
-        return False
 
     def _binary_operation_helper(self, other, cls):
         if type(other) in native_numeric_types:
@@ -348,12 +322,6 @@ class Var(Leaf):
         self._name = None
         self._c_obj = None
 
-    def is_constant(self):
-        return False
-
-    def is_fixed(self):
-        return False
-
     def is_parameter_type(self):
         return False
 
@@ -388,9 +356,6 @@ class Var(Leaf):
 
     def get_leaves(self):
         return OrderedSet([self])
-
-    def is_potentially_variable(self):
-        return True
 
     @property
     def index(self):
@@ -409,12 +374,6 @@ class Param(Leaf):
         self._name = None
         self._c_obj = None
 
-    def is_constant(self):
-        return False
-
-    def is_fixed(self):
-        return True
-
     def is_parameter_type(self):
         return True
 
@@ -449,9 +408,6 @@ class Param(Leaf):
 
     def get_leaves(self):
         return OrderedSet([self])
-
-    def is_potentially_variable(self):
-        return False
 
 
 class expression(ExpressionBase):
@@ -576,15 +532,6 @@ class expression(ExpressionBase):
         for oper in self.operators():
             oper._str(val_dict)
         return val_dict[self.last_node()]
-
-    def is_constant(self):
-        return False
-
-    def is_fixed(self):
-        for v in self.get_vars():
-            if not v.is_fixed():
-                return False
-        return True
 
     def is_variable_type(self):
         return False
@@ -1469,61 +1416,6 @@ def value(obj):
     return obj.evaluate()
 
 
-def is_fixed(obj):
-    """
-    Returns True if the value of the object is fixed for the duration of a solve
-    (the value may or may not change between solves).
-
-    Parameters
-    ----------
-    obj: ExpressionBase
-        Also accepts floats and ints
-
-    Returns
-    -------
-    bool
-    """
-    if type(obj) in native_numeric_types:
-        return True
-    return obj.is_fixed()
-
-
-def is_numeric_data(obj):
-    """
-    Returns True if the value of the object is numeric data.
-
-    Parameters
-    ----------
-    obj: ExpressionBase
-        Also accepts floats and ints
-
-    Returns
-    -------
-    bool
-    """
-    if type(obj) in native_numeric_types:
-        return True
-    return obj.is_numeric_data()
-
-
-def is_constant(obj):
-    """
-    Returns True if the value of the object will never change.
-
-    Parameters
-    ----------
-    obj: ExpressionBase
-        Also accepts floats and ints
-
-    Returns
-    -------
-    bool
-    """
-    if type(obj) in native_numeric_types:
-        return True
-    return obj.is_constant()
-
-
 def is_variable_type(obj):
     """
     Returns True if the object is a variable.
@@ -1540,24 +1432,6 @@ def is_variable_type(obj):
     if type(obj) in native_numeric_types:
         return False
     return obj.is_variable_type()
-
-
-def is_potentially_variable(obj):
-    """
-    Returns True if the object may contain variables.
-
-    Parameters
-    ----------
-    obj: ExpressionBase
-        Also accepts floats and ints
-
-    Returns
-    -------
-    bool
-    """
-    if type(obj) in native_numeric_types:
-        return False
-    return obj.is_potentially_variable()
 
 
 class ConditionalExpression(object):
