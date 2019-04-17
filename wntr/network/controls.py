@@ -1384,6 +1384,137 @@ class _ActivePRVCondition(ControlCondition):
         return s
 
 
+class _ClosePSVCondition(ControlCondition):
+    _Qtol = 2.83168e-6
+
+    def __init__(self, wn, psv):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        psv: wntr.network.Valve
+        """
+        super(_ClosePSVCondition, self).__init__()
+        self._psv = psv
+        self._start_node = wn.get_node(self._psv.start_node)
+        self._end_node = wn.get_node(self._psv.end_node)
+        self._backtrack = 0
+
+    def requires(self):
+        return OrderedSet([self._psv])
+
+    def evaluate(self):
+        if self._psv._internal_status == LinkStatus.Active:
+            if self._psv.flow < -self._Qtol:
+                return True
+            return False
+        elif self._psv._internal_status == LinkStatus.Open:
+            if self._psv.flow < -self._Qtol:
+                return True
+            return False
+        elif self._psv._internal_status == LinkStatus.Closed:
+            return False
+        else:
+            raise RuntimeError('Unexpected PSV _internal_status for valve {0}: {1}.'.format(self._psv,
+                                                                                            self._psv._internal_status))
+
+    def __str__(self):
+        s = 'psv {0} needs to be closed'.format(self._psv.name)
+        return s
+
+
+class _OpenPSVCondition(ControlCondition):
+    _Qtol = 2.83168e-6
+    _Htol = 0.0001524
+
+    def __init__(self, wn, psv):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        psv: wntr.network.Valve
+        """
+        super(_OpenPSVCondition, self).__init__()
+        self._psv = psv
+        self._start_node = wn.get_node(self._psv.start_node)
+        self._end_node = wn.get_node(self._psv.end_node)
+        self._backtrack = 0
+        self._r = 0.0826 * 0.02 * self._psv.diameter ** (-4) * 2.0
+
+    def requires(self):
+        return OrderedSet([self._psv, self._start_node, self._end_node])
+
+    def evaluate(self):
+        setting = self._psv.setting + self._start_node.elevation
+        if self._psv._internal_status == LinkStatus.Active:
+            if self._psv.flow < -self._Qtol:
+                return False
+            elif self._end_node.head + self._r * abs(self._psv.flow)**2 > setting + self._Htol:
+                return True
+            return False
+        elif self._psv._internal_status == LinkStatus.Open:
+            return False
+        elif self._psv._internal_status == LinkStatus.Closed:
+            if ((self._end_node.head > setting + self._Htol) and
+                    (self._start_node.head > self._end_node.head + self._Htol)):
+                return True
+            return False
+        else:
+            raise RuntimeError('Unexpected PSV _internal_status for valve {0}: {1}.'.format(self._psv,
+                                                                                            self._psv._internal_status))
+
+    def __str__(self):
+        s = 'psv {0} needs to be open'.format(self._psv.name)
+        return s
+
+
+class _ActivePSVCondition(ControlCondition):
+    _Qtol = 2.83168e-6
+    _Htol = 0.0001524
+
+    def __init__(self, wn, psv):
+        """
+        Parameters
+        ----------
+        wn: wntr.network.WaterNetworkModel
+        psv: wntr.network.Valve
+        """
+        self._psv = psv
+        self._start_node = wn.get_node(self._psv.start_node)
+        self._end_node = wn.get_node(self._psv.end_node)
+        self._backtrack = 0
+        self._r = 0.0826 * 0.02 * self._psv.diameter ** (-4) * 2.0
+
+    def requires(self):
+        return OrderedSet([self._psv, self._start_node, self._end_node])
+
+    def evaluate(self):
+        setting = self._psv.setting + self._start_node.elevation
+        if self._psv._internal_status == LinkStatus.Active:
+            return False
+        elif self._psv._internal_status == LinkStatus.Open:
+            if self._psv.flow < -self._Qtol:
+                return False
+            elif (self._start_node.head < setting - self._Htol):
+                return True
+            return False
+        elif self._psv._internal_status == LinkStatus.Closed:
+            if ((self._end_node.head > setting + self._Htol) and
+                    (self._start_node.head > self._end_node.head + self._Htol)):
+                return False
+            elif ((self._start_node.head >= setting + self._Htol) and
+                  (self._start_node.head > self._end_node.head + self._Htol)):
+                return True
+            return False
+        else:
+            raise RuntimeError('Unexpected PSV _internal_status for valve {0}: {1}.'.format(self._psv,
+                                                                                            self._psv._internal_status))
+
+    def __str__(self):
+        s = 'psv {0} needs to be active'.format(self._psv.name)
+        return s
+
+
 class _OpenFCVCondition(ControlCondition):
     _Qtol = 2.83168e-6
     _Htol = 0.0001524

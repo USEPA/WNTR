@@ -432,6 +432,61 @@ class prv_headloss_constraint(Definition):
             updater.add(link, '_is_isolated', prv_headloss_constraint.update)
 
 
+class psv_headloss_constraint(Definition):
+    @classmethod
+    def build(cls, m, wn, updater, index_over=None):
+        """
+        Adds a headloss constraint to the model for the pressure sustaining valves.
+
+        Parameters
+        ----------
+        m: wntr.sim.aml.aml.Model
+        wn: wntr.network.model.WaterNetworkModel
+        updater: ModelUpdater
+        index_over: list of str
+            list of powerPump names; default is all powerPumps in wn
+        """
+        if not hasattr(m, 'psv_headloss'):
+            m.psv_headloss = aml.ConstraintDict()
+
+        if index_over is None:
+            index_over = wn.psv_name_list
+
+        for link_name in index_over:
+            if link_name in m.psv_headloss:
+                del m.psv_headloss[link_name]
+
+            link = wn.get_link(link_name)
+            f = m.flow[link_name]
+            status = link.status
+
+            if status == LinkStatus.Closed or link._is_isolated:
+                con = aml.Constraint(f)
+            else:
+                start_node_name = link.start_node_name
+                end_node_name = link.end_node_name
+                start_node = wn.get_node(start_node_name)
+                end_node = wn.get_node(end_node_name)
+                if isinstance(start_node, wntr.network.Junction):
+                    start_h = m.head[start_node_name]
+                else:
+                    start_h = m.source_head[start_node_name]
+                if isinstance(end_node, wntr.network.Junction):
+                    end_h = m.head[end_node_name]
+                else:
+                    end_h = m.source_head[end_node_name]
+
+                if status is wntr.network.LinkStatus.Active:
+                    con = aml.Constraint(start_h - m.valve_setting[link_name] - m.elevation[end_node_name])
+                else:
+                    assert status == LinkStatus.Open
+                    con = aml.Constraint(m.minor_loss[link_name]*f**2 - start_h + end_h)
+            m.psv_headloss[link_name] = con
+
+            updater.add(link, 'status', psv_headloss_constraint.update)
+            updater.add(link, '_is_isolated', psv_headloss_constraint.update)
+
+
 class fcv_headloss_constraint(Definition):
     @classmethod
     def build(cls, m, wn, updater, index_over=None):
