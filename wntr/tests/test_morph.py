@@ -166,11 +166,20 @@ def test_skeletonize():
         demand =  wntr.metrics.expected_demand(skel_wn)
         total_demand = demand.loc[0,:].sum()
         
+        # Write skel_wn to an inp file, read it back in, then extract the demands
+        skel_inp_file = 'skel_'+str(i)+'.inp'
+        skel_wn.write_inpfile(skel_inp_file, 'GPM')
+        skel_wn_io = wntr.network.WaterNetworkModel(skel_inp_file)
+        demand_io =  wntr.metrics.expected_demand(skel_wn_io)
+        total_demand_io = demand_io.loc[0,:].sum()
+
         #pipes = wn.query_link_attribute('diameter', np.less_equal, i*0.0254)
         #wntr.graphics.plot_network(wn, link_attribute = list(pipes.keys()), title=str(i))
         #wntr.graphics.plot_network(skel_wn, link_attribute='diameter', link_width=2, node_size=15, title=str(i))
         
         assert_almost_equal(total_demand.sum(), expected_total_demand,6)
+        assert_almost_equal(total_demand_io.sum(), expected_total_demand,6)
+        
         assert_equal(skel_wn.num_nodes, expected_nums.loc[i,'num_nodes'])
         assert_equal(skel_wn.num_links, expected_nums.loc[i,'num_links'])
         
@@ -327,4 +336,5 @@ def test_skeletonize_Net3():
 
     
 if __name__ == '__main__':
-    test_convert_node_coordinates_to_latlong()
+    test_skeletonize()
+

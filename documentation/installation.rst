@@ -29,6 +29,8 @@ WNTR can be installed as a Python package using standard open source software to
 		 
 	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, and
 	Matplotlib.  For more information on Python package dependencies, see :ref:`requirements`.
+	If your Python installation does not include these dependencies, you will need to install them. 
+	This is most commonly done using pip. 
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
 	editing and debug features along with a graphical user interface. 

@@ -15,6 +15,7 @@ wn.add_pattern('SourcePattern', source_pattern)
 wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
 wn.add_source('Source2', '123', 'SETPOINT', 1000, 'SourcePattern')
 results = sim.run_sim()
+
 CHEM_at_5hr = results.node['quality'].loc[5*3600,:]
 wntr.graphics.plot_network(wn, node_attribute=CHEM_at_5hr, node_size=20, 
                       title='Chemical concentration, time = 5 hours')
@@ -54,4 +55,6 @@ sim = wntr.sim.WNTRSimulator(wn)
 results = sim.run_sim()
 wn.assign_demand(results.node['demand'], 'PDD')
 sim = wntr.sim.EpanetSimulator(wn)
+wn.options.quality.mode = 'TRACE'
+wn.options.quality.trace_node = '111'
 results_withPDdemands = sim.run_sim()
