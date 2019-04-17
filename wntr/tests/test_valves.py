@@ -97,10 +97,6 @@ class TestPSVs(unittest.TestCase):
 
         sim = wntr.sim.WNTRSimulator(wn)
         res = sim.run_sim()
-        print('')
-        print(res.node['head'])
-        print(res.link['flowrate'])
-        print(res.link['status'])
 
         self.assertEqual(res.link['status'].loc[0, 'v1'], 2)
         self.assertEqual(res.link['status'].loc[3600, 'v1'], 2)

@@ -1312,7 +1312,7 @@ class _OpenPRVCondition(ControlCondition):
         self._start_node = wn.get_node(self._prv.start_node)
         self._end_node = wn.get_node(self._prv.end_node)
         self._backtrack = 0
-        self._r = 0.0826 * 0.02 * self._prv.diameter ** (-4) * 2.0
+        self._r = 8.0 * self._prv.minor_loss / (9.81 * math.pi**2 * self._prv.diameter**4)
 
     def requires(self):
         return OrderedSet([self._prv, self._start_node, self._end_node])
@@ -1356,7 +1356,7 @@ class _ActivePRVCondition(ControlCondition):
         self._start_node = wn.get_node(self._prv.start_node)
         self._end_node = wn.get_node(self._prv.end_node)
         self._backtrack = 0
-        self._r = 0.0826 * 0.02 * self._prv.diameter ** (-4) * 2.0
+        self._r = 8.0 * self._prv.minor_loss / (9.81 * math.pi**2 * self._prv.diameter**4)
 
     def requires(self):
         return OrderedSet([self._prv, self._start_node, self._end_node])
@@ -1439,7 +1439,7 @@ class _OpenPSVCondition(ControlCondition):
         self._start_node = wn.get_node(self._psv.start_node)
         self._end_node = wn.get_node(self._psv.end_node)
         self._backtrack = 0
-        self._r = 0.0826 * 0.02 * self._psv.diameter ** (-4) * 2.0
+        self._r = 8.0 * self._psv.minor_loss / (9.81 * math.pi**2 * self._psv.diameter**4)
 
     def requires(self):
         return OrderedSet([self._psv, self._start_node, self._end_node])
@@ -1483,7 +1483,7 @@ class _ActivePSVCondition(ControlCondition):
         self._start_node = wn.get_node(self._psv.start_node)
         self._end_node = wn.get_node(self._psv.end_node)
         self._backtrack = 0
-        self._r = 0.0826 * 0.02 * self._psv.diameter ** (-4) * 2.0
+        self._r = 8.0 * self._psv.minor_loss / (9.81 * math.pi**2 * self._psv.diameter**4)
 
     def requires(self):
         return OrderedSet([self._psv, self._start_node, self._end_node])
