@@ -287,12 +287,12 @@ Before evaluating the constraint residuals or the jacobian, :func:`~wntr.sim.aml
 .. doctest::
 
    >>> m.set_structure()
-   >>> m.evaluate_residuals()
+   >>> m.evaluate_residuals() # doctest: +SKIP
    array([ 0., -1.])
-   >>> m.evaluate_jacobian()
+   >>> m.evaluate_jacobian()  # doctest: +SKIP
    <2x2 sparse matrix of type '<class 'numpy.float64'>'
 	with 4 stored elements in Compressed Sparse Row format>
-   >>> m.evaluate_jacobian().toarray()
+   >>> m.evaluate_jacobian().toarray() # doctest: +SKIP
    array([[-2.,  1.],
        [-1.,  1.]])
 
@@ -309,7 +309,7 @@ step (without a line search) would look something like
    >>> d = spsolve(m.evaluate_jacobian(), -m.evaluate_residuals())
    >>> x += d
    >>> m.load_var_values_from_x(x)
-   >>> m.evaluate_residuals()
+   >>> m.evaluate_residuals() # doctest: +SKIP
    array([-1., 0.])
 
 WNTR includes an implementation of Newton's Method with a line search
@@ -320,7 +320,7 @@ which can solve one of these models.
    >>> from wntr.sim.solvers import NewtonSolver
    >>> opt = NewtonSolver()
    >>> res = opt.solve(m)
-   >>> m.x.value
+   >>> m.x.value # doctest: +SKIP
    1.618033988749989
-   >>> m.y.value
+   >>> m.y.value # doctest: +SKIP
    2.618033988749989
