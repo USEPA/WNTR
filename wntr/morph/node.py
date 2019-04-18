@@ -111,9 +111,9 @@ def rotate_node_coordinates(wn, theta):
     return wn2
 
 
-def convert_node_coordinates_UTM_to_latlong(wn, zone_number, zone_letter):
+def convert_node_coordinates_UTM_to_longlat(wn, zone_number, zone_letter):
     """
-    Convert node coordinates from UTM coordinates to lat/long coordinates
+    Convert node coordinates from UTM coordinates to longitude, latitude coordinates
     
     Parameters
     -----------
@@ -128,7 +128,7 @@ def convert_node_coordinates_UTM_to_latlong(wn, zone_number, zone_letter):
     
     Returns
     --------
-    A WaterNetworkModel object with updated node coordinates (latitude, longitude)
+    A WaterNetworkModel object with updated node coordinates (longitude, latitude)
     """
     if utm is None:
         raise ImportError('utm package is required')
@@ -138,14 +138,14 @@ def convert_node_coordinates_UTM_to_latlong(wn, zone_number, zone_letter):
     for name, node in wn2.nodes():
         pos = node.coordinates
         lat, long = utm.to_latlon(pos[0], pos[1], zone_number, zone_letter)
-        node.coordinates = (lat, long)
+        node.coordinates = (long, lat)
 
     return wn2
 
 
-def convert_node_coordinates_latlong_to_UTM(wn):
+def convert_node_coordinates_longlat_to_UTM(wn):
     """
-    Convert node coordinates lat/long coordinates to UTM coordinates
+    Convert node longitude, latitude coordinates to UTM coordinates
     
     Parameters
     -----------
@@ -163,7 +163,9 @@ def convert_node_coordinates_latlong_to_UTM(wn):
     
     for name, node in wn2.nodes():
         pos = node.coordinates
-        utm_coords = utm.from_latlon(pos[0], pos[1])
+        longitude = pos[0]
+        latitude = pos[1]
+        utm_coords = utm.from_latlon(latitude, longitude)
         easting = utm_coords[0]
         northing = utm_coords[1]
         node.coordinates = (easting, northing)
@@ -192,23 +194,23 @@ def convert_node_coordinates_to_UTM(wn, utm_map):
     return wn2
 
 
-def convert_node_coordinates_to_latlong(wn, latlong_map):
+def convert_node_coordinates_to_longlat(wn, longlat_map):
     """
-    Convert node coordinates to lat/long coordinates
+    Convert node coordinates to longitude, latitude coordinates
     
     Parameters
     -----------
-    latlong_map: dictionary
+    longlat_map: dictionary
         Dictionary containing two node names and their x, y coordinates in
-        latitude, longitude in the format
-        {'node name 1': (latitude, longitude), 'node name 2': (latitude, longitude)}
+        longitude, latitude in the format
+        {'node name 1': (longitude, latitude), 'node name 2': (longitude, latitude)}
     
     Returns
     --------
-    A WaterNetworkModel object with updated node coordinates (latitude, longitude)
+    A WaterNetworkModel object with updated node coordinates (longitude, latitude)
     """
     
-    wn2 = _convert_with_map(wn, latlong_map, 'LATLONG')
+    wn2 = _convert_with_map(wn, longlat_map, 'LONGLAT')
     
     return wn2
 
@@ -229,13 +231,17 @@ def _convert_with_map(wn, node_map, flag):
     B = []
     for node_name, coords in node_map.items():
         A.append(np.array(wn2.get_node(node_name).coordinates))
-        if flag == 'LATLONG':
-            utm_coords = utm.from_latlon(coords[0], coords[1])
+        if flag == 'LONGLAT':
+            longitude = coords[0]
+            latitude = coords[1]
+            utm_coords = utm.from_latlon(latitude, longitude)
             zone_number = utm_coords[2]
             zone_letter = utm_coords[3] 
             B.append(np.array(utm_coords[0:2])) # B is in UTM coords
         elif flag == 'UTM':
-            B.append(np.array(coords[0], coords[1])) # B is in UTM coords
+            easting = coords[0]
+            northing = coords[1]
+            B.append(np.array(easting, northing)) # B is in UTM coords
     
     # Rotate, if needed
     vect1 = A[1] - A[0]
@@ -264,9 +270,9 @@ def _convert_with_map(wn, node_map, flag):
     for name, node in wn2.nodes():
         pos = node.coordinates
         (easting, northing) = (np.array(pos) - cpA)*ratio + cpB
-        if flag == 'LATLONG':
+        if flag == 'LONGLAT':
             lat, long = utm.to_latlon(easting, northing, zone_number, zone_letter)
-            node.coordinates = (lat, long)
+            node.coordinates = (long, lat)
         elif flag == 'UTM':
             node.coordinates = (easting, northing)
     

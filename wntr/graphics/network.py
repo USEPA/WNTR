@@ -56,8 +56,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     wn : wntr WaterNetworkModel
         A WaterNetworkModel object
 
-    node_attribute : str, list, pd.Series, or dict, optional
-        (default = None)
+    node_attribute : None, str, list, pd.Series, or dict, optional
 
         - If node_attribute is a string, then a node attribute dictionary is
           created using node_attribute = wn.query_node_attribute(str)
@@ -68,8 +67,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
 
-    link_attribute : str, list, pd.Series, or dict, optional
-        (default = None)
+    link_attribute : None, str, list, pd.Series, or dict, optional
 
         - If link_attribute is a string, then a link attribute dictionary is
           created using edge_attribute = wn.query_link_attribute(str)
@@ -81,44 +79,41 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
           {linkid: x} where linkid is a string and x is a float.
 
     title : str, optional
-        Plot title (default = None)
+        Plot title 
 
     node_size : int, optional
-        Node size (default = 10)
+        Node size 
 
     node_range : list, optional
-        Node range (default = [None,None], autoscale)
+        Node range ([None,None] indicates autoscale)
 
     node_cmap : matplotlib.pyplot.cm colormap, optional
-        Node colormap (default = jet)
+        Node colormap 
         
     node_labels: bool, optional
         If True, the graph will include each node labelled with its name. 
-        (default = False)
         
     link_width : int, optional
-        Link width (default = 1)
+        Link width
 
     link_range : list, optional
-        Link range (default = [None,None], autoscale)
+        Link range ([None,None] indicates autoscale)
 
     link_cmap : matplotlib.pyplot.cm colormap, optional
-        Link colormap (default = jet)
+        Link colormap
         
     link_labels: bool, optional
         If True, the graph will include each link labelled with its name. 
-        (default = False)
         
     add_colorbar : bool, optional
-        Add colorbar (default = True)
+        Add colorbar
 
     directed : bool, optional
-        If True, plot the directed graph (default = False, converts the graph 
-        to undirected)
+        If True, plot the directed graph
     
     ax : matplotlib axes object, optional
-        Axes for plotting (default = None, creates a new figure with a single 
-        axes)
+        Axes for plotting (None indicates that a new figure with a single 
+        axes will be used)
         
     Returns
     -------
@@ -213,10 +208,11 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
 
     return nodes, edges
 
-def plot_interactive_network(wn, node_attribute=None, title=None,
+def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Value', title=None,
                node_size=8, node_range=[None,None], node_cmap='Jet', node_labels=True,
                link_width=1, add_colorbar=True, reverse_colormap=False,
-               figsize=[700, 450], round_ndigits=2, filename=None, auto_open=True):
+               figsize=[700, 450], round_ndigits=2, add_to_node_popup=None, 
+               filename=None, auto_open=True):
     """
     Create an interactive scalable network graphic using plotly.  
 
@@ -225,8 +221,7 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
     wn : wntr WaterNetworkModel
         A WaterNetworkModel object
 
-    node_attribute : str, list, pd.Series, or dict, optional
-        (default = None)
+    node_attribute : None, str, list, pd.Series, or dict, optional
 
         - If node_attribute is a string, then a node attribute dictionary is
           created using node_attribute = wn.query_node_attribute(str)
@@ -238,41 +233,52 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
 
+    node_attribute_name : str, optional 
+        The node attribute name, which is used in the node popup and node legend
+
     title : str, optional
-        Plot title (default = None)
+        Plot title
 
     node_size : int, optional
-        Node size (default = 8)
+        Node size
 
     node_range : list, optional
-        Node range (default = [None,None], autoscale)
+        Node range ([None,None] indicates autoscale)
 
     node_cmap : palette name string, optional
         Node colormap, options include Greys, YlGnBu, Greens, YlOrRd, Bluered, 
         RdBu, Reds, Blues, Picnic, Rainbow, Portland, Jet, Hot, Blackbody, 
-        Earth, Electric, Viridis (default = Jet)
+        Earth, Electric, Viridis
     
     node_labels: bool, optional
         If True, the graph will include each node labelled with its name and 
-        attribute value. (default = True)
+        attribute value.
         
     link_width : int, optional
-        Link width (default = 1)
+        Link width
     
     add_colorbar : bool, optional
-        Add colorbar (default = True)
+        Add colorbar
         
     reverse_colormap : bool, optional
-        Reverse colormap (default = True)
+        Reverse colormap
         
     figsize: list, optional
-        Figure size in pixels, default= [700, 450]
+        Figure size in pixels
 
     round_ndigits : int, optional
-        Number of digits to round node values used in the label (default = 2)
+        Number of digits to round node values used in the label
+    
+    add_to_node_popup : None or pd.DataFrame, optional
+        To add additional information to the node popup, use a DataFrame with 
+        node name as index and attributes as values.  Column names will be added
+        to the popup along with each value for a given node.
         
     filename : string, optional
-        HTML file name (default=None, temp-plot.html)
+        HTML file name (None indicates default name of temp-plot.html)
+    
+    auto_open : bool, optional
+        Open the HTML file after creation
     """
     if plotly is None:
         raise ImportError('plotly is required')
@@ -348,13 +354,20 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
 
             # Add node labels
             if node_labels:
-                node_info = wn.get_node(node).node_type + ' ' + str(node) + ', '+ \
-                            str(round(node_attribute[node],round_ndigits))
+                node_info = wn.get_node(node).node_type + ': ' + str(node) + '<br>'+ \
+                            node_attribute_name + ': ' + str(round(node_attribute[node],round_ndigits))
+                if add_to_node_popup is not None:
+                    if node in add_to_node_popup.index:
+                        for key, val in add_to_node_popup.loc[node].iteritems():
+                            node_info = node_info + '<br>' + \
+                                key + ': ' + '{:.{prec}f}'.format(val, prec=round_ndigits)
+                            
                 node_trace['text'] += tuple([node_info])
         except:
             node_trace['marker']['color'] += tuple(['#888'])
             if node_labels:
-                node_info = wn.get_node(node).node_type + ' ' + str(node)
+                node_info = wn.get_node(node).node_type + ': ' + str(node)
+                
                 node_trace['text'] += tuple([node_info])
             #node_trace['marker']['size'] += tuple([5])
     #node_trace['marker']['colorbar']['title'] = 'Node colorbar title'
@@ -383,15 +396,17 @@ def plot_interactive_network(wn, node_attribute=None, title=None,
         plotly.offline.plot(fig, auto_open=auto_open)  
 
 def plot_leaflet_network(wn, node_attribute=None, link_attribute=None, 
+               node_attribute_name = 'Value', 
+               link_attribute_name = 'Value',
                node_size=2, node_range=[None,None], 
                node_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
                node_cmap_bins = 'cut', node_labels=True,
                link_width=2, link_range=[None,None], 
                link_cmap=['cornflowerblue', 'forestgreen', 'gold', 'firebrick'], 
-               link_cmap_bins = 'cut', link_labels=True,
-               add_legend=False, node_legend_title = 'Node Legend', 
-               link_legend_title = 'Link Legend', round_ndigits=2, zoom_start=13, 
-               add_latlong_popup=False, filename='folium.html'):
+               link_cmap_bins='cut', link_labels=True,
+               add_legend=False, round_ndigits=2, zoom_start=13, 
+               add_to_node_popup=None, add_to_link_popup=None,
+               filename='folium.html'):
     """
     Create an interactive scalable network graphic on a Leaflet map using folium.  
 
@@ -400,8 +415,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     wn : wntr WaterNetworkModel
         A WaterNetworkModel object
 
-    node_attribute : str, list, pd.Series, or dict, optional
-        (default = None)
+    node_attribute : None, str, list, pd.Series, or dict, optional
 
         - If node_attribute is a string, then a node attribute dictionary is
           created using node_attribute = wn.query_node_attribute(str)
@@ -412,8 +426,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
         - If node_attribute is a dict, then it should be in the format
           {nodeid: x} where nodeid is a string and x is a float
 
-    link_attribute : str, list, pd.Series, or dict, optional
-        (default = None)
+    link_attribute : None, str, list, pd.Series, or dict, optional
 
         - If link_attribute is a string, then a link attribute dictionary is
           created using edge_attribute = wn.query_link_attribute(str)
@@ -424,11 +437,17 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
         - If link_attribute is a dict, then it should be in the format
           {linkid: x} where linkid is a string and x is a float.
 
+    node_attribute_name : str, optional 
+        The node attribute name, which is used in the node popup and node legend
+        
+    link_attribute_name : str, optional 
+        The link attribute name, which is used in the link popup and link legend
+        
     node_size : int, optional
-        Node size (default = 10)
+        Node size 
 
     node_range : list, optional
-        Node range (default = [None,None], autoscale)
+        Node range ([None,None] indicates autoscale)
 
     node_cmap : list of color names, optional
         Node colors 
@@ -438,13 +457,12 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     
     node_labels: bool, optional
         If True, the graph will include each node labelled with its name. 
-        (default = False)
         
     link_width : int, optional
-        Link width (default = 1)
+        Link width
 
     link_range : list, optional
-        Link range (default = [None,None], autoscale)
+        Link range ([None,None] indicates autoscale)
 
     link_cmap : list of color names, optional
         Link colors
@@ -454,9 +472,30 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
         
     link_labels: bool, optional
         If True, the graph will include each link labelled with its name. 
-        (default = False)
-
+    
+    add_legend: bool, optional
+         Add a legend to the map
+    
+    round_ndigits : int, optional
+        Rounds digits in the popup
+        
+    zoom_start : int, optional
+        Zoom start used to set initial scale of the map
+    
+    add_to_node_popup : None or pd.DataFrame, optional
+        To add additional information to the node popup, use a DataFrame with 
+        node name as index and attributes as values.  Column names will be added
+        to the popup along with each value for a given node.
+        
+    add_to_link_popup : None or pd.DataFrame, optional
+        To add additional information to the link popup, use a DataFrame with 
+        link name as index and attributes as values.  Column names will be added
+        to the popup along with each value for a given link.
+        
+    filename : str, optional
+        Filename used to save the map
     """
+    
     if folium is None:
         raise ImportError('folium is required')
     
@@ -496,25 +535,52 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     pos = nx.get_node_attributes(G,'pos')
     center = pd.DataFrame(pos).mean(axis=1)
     
-    m = folium.Map(location=[center.iloc[0], center.iloc[1]], zoom_start=zoom_start)
+    m = folium.Map(location=[center.iloc[1], center.iloc[0]], zoom_start=zoom_start)
     folium.TileLayer('cartodbpositron').add_to(m)
     
+    # Node popup
+    node_popup = {k: '' for k in wn.node_name_list}
+    if node_labels:
+        for name, node in wn.nodes():
+            node_popup[name] = node.node_type + ': ' + name
+            if node_attribute is not None:
+                if name in node_attribute.index:
+                    node_popup[name] = node_popup[name] + '<br>' + \
+                        node_attribute_name + ': ' + '{:.{prec}f}'.format(node_attribute[name], prec=round_ndigits)
+            if add_to_node_popup is not None:
+                if name in add_to_node_popup.index:
+                    for key, val in add_to_node_popup.loc[name].iteritems():
+                        node_popup[name] = node_popup[name] + '<br>' + \
+                            key + ': ' + '{:.{prec}f}'.format(val, prec=round_ndigits)
+                 
+    # Link popup
+    link_popup = {k: '' for k in wn.link_name_list}
+    if link_labels:
+        for name, link in wn.links():
+            link_popup[name] = link.link_type + ': ' + name
+            if link_attribute is not None:
+                if name in link_attribute.index:
+                    link_popup[name] = link_popup[name] + '<br>' + \
+                        link_attribute_name + ': ' + '{:.{prec}f}'.format(link_attribute[name], prec=round_ndigits)
+            if add_to_link_popup is not None:
+                if name in add_to_link_popup.index:
+                    for key, val in add_to_link_popup.loc[name].iteritems():
+                        link_popup[name] = link_popup[name] + '<br>' + \
+                            key + ': ' + '{:.{prec}f}'.format(val, prec=round_ndigits)
+                            
     if node_size > 0:
         for name, node in wn.nodes():
-            loc = (node.coordinates[0], node.coordinates[1])
+            loc = (node.coordinates[1], node.coordinates[0])
             radius = node_size
             color = 'black'
             if node_labels:
-                popup = node.node_type + ': ' + name
+                popup = node_popup[name]
             else:
                 popup = None
                     
             if node_attribute is not None:
                 if name in node_attribute.index:
                     color = node_colors[name]
-                    if node_labels:
-                        popup = node.node_type + ' ' + name + ', ' + \
-                                '{:.{prec}f}'.format(node_attribute[name], prec=round_ndigits)
                 else:
                     radius = 0.1
             
@@ -523,21 +589,18 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
             
     if link_width > 0:
         for name, link in wn.links():            
-            start_loc = (link.start_node.coordinates[0], link.start_node.coordinates[1])
-            end_loc = (link.end_node.coordinates[0], link.end_node.coordinates[1])
+            start_loc = (link.start_node.coordinates[1], link.start_node.coordinates[0])
+            end_loc = (link.end_node.coordinates[1], link.end_node.coordinates[0])
             weight = link_width
             color='black'
             if link_labels:
-                popup = link.link_type + ': ' + name
+                popup = link_popup[name]
             else:
                 popup = None
             
             if link_attribute is not None:
                 if name in link_attribute.index:
                     color = link_colors[name]
-                    if link_labels:
-                        popup = link.link_type + ' ' + name + ', ' + \
-                            '{:.{prec}f}'.format(link_attribute[name], prec=round_ndigits)
                 else:
                     weight = 1.5
             
@@ -546,11 +609,11 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     
     if (add_legend) & ((len(node_cmap) >= 1) or (len(link_cmap) >= 1)):
         if node_attribute is not None:  #Produce node legend
-            height = 50+len(node_cmap)*20 + (int(len(node_legend_title)/20) + 1)*20
+            height = 50+len(node_cmap)*20 + (int(len(node_attribute_name)/20) + 1)*20
             node_legend_html = """<div style="position: fixed; 
         bottom: 50px; left: 50px; width: 150px; height: """+str(height)+"""px; 
         background-color:white;z-index:9999; font-size:14px; "><br>
-            <b><P ALIGN=CENTER>""" + node_legend_title + """</b> </P>"""
+            <b><P ALIGN=CENTER>""" + "Node Legend: " + node_attribute_name + """</b> </P>"""
             for color, val in zip(node_cmap, node_bins[0:-1]):
                 val = '{:.{prec}f}'.format(val, prec=round_ndigits)
                 node_legend_html += """
@@ -560,11 +623,11 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
             m.get_root().html.add_child(folium.Element(node_legend_html))
 			
         if link_attribute is not None:   #Produce link legend
-            height = 50+len(link_cmap)*20 + (int(len(link_legend_title)/20) + 1)*20
+            height = 50+len(link_cmap)*20 + (int(len(link_attribute_name)/20) + 1)*20
             link_legend_html = """<div style="position: fixed; 
 			bottom: 50px; left: 250px; width: 150px; height: """+str(height)+"""px; 
 			background-color:white;z-index:9999; font-size:14px; "><br>
-            <b><P ALIGN=CENTER>""" + link_legend_title + """</b> </P>"""
+            <b><P ALIGN=CENTER>""" + "Link Legend: " + link_attribute_name + """</b> </P>"""
             for color, val in zip(link_cmap, link_bins[0:-1]):
                 val = '{:.{prec}f}'.format(val, prec=round_ndigits)
                 link_legend_html += """
@@ -574,8 +637,8 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
             m.get_root().html.add_child(folium.Element(link_legend_html))
     
     #plugins.Search(points, search_zoom=20, ).add_to(m)
-    if add_latlong_popup:
-        m.add_child(folium.LatLngPopup())
+    #if add_longlat_popup:
+    #    m.add_child(folium.LatLngPopup())
     folium.LayerControl().add_to(m)
     
     m.save(filename)
