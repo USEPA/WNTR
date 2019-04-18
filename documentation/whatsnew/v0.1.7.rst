@@ -10,6 +10,8 @@ v0.1.7 (Master branch)
   * Split and break pipes (i.e. splits a pipe into two pipes) (see :class:`~wntr.morph.link.split_pipe` and :class:`~wntr.morph.link.break_pipe`)
   * Note that methods to scale node coordinates and split pipes used to reside on the water network model object (API change)
   
-* Fixed bugs in network cost, average expected demand, and spectral gap metrics.
+* Fixed bugs in network cost, average expected demand, population, and spectral gap metrics.
 * Fixed bug in reading initial water quality from INP files.
+* Added a read-only `base_demand` attribute to junctions.  Base demand is defined using the first demand in the `demand_timeseries_list`.
+* Added a pull request template.
 * Updated documentation, including installation instructions and a section on network morphology.

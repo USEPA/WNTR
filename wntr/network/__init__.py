@@ -11,5 +11,3 @@ from .controls import Comparison, ControlPriority, TimeOfDayCondition, \
     SimTimeCondition, ValueCondition, TankLevelCondition, RelativeCondition, \
     OrCondition, AndCondition, ControlAction, Control, ControlManager, Rule
 from .graph import WntrMultiDiGraph
-
-
