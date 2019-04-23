@@ -964,7 +964,9 @@ class OrCondition(ControlCondition):
         return np.max([self._condition_1.backtrack, self._condition_2.backtrack])
 
     def requires(self):
-        return self._condition_1.requires().update(self._condition_2.requires())
+        req = self._condition_1.requires()
+        req.update(self._condition_2.requires())
+        return req
 
 
 @DocInheritor({'requires', 'evaluate', 'backtrack'})
