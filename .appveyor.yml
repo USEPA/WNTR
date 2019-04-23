@@ -12,7 +12,7 @@ install:
   - conda config --add channels anaconda
   - conda config --set always_yes yes
   - conda update -y conda
-  - conda install -y setuptools pip coverage numpy scipy openpysxl networkx pandas matplotlib=2.2.3 plotly nose
+  - conda install -y setuptools pip coverage numpy scipy openpyxl networkx pandas matplotlib=2.2.3 plotly nose
   - "echo %PATH%"
   - "python setup.py develop"
   - python --version
