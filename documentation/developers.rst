@@ -81,6 +81,13 @@ Pull requests must meet the following minimum requirements to be included in WNT
 
 * Network model files will not be duplicated in the repository.  Network files are stored in examples/network and wntr/tests/networks_for_testing only.
 
+.. note:: 
+  The USEPA/WNTR GitHub site, https://github.com/USEPA/WNTR, does not link to Travis CI for continuous integration software testing.  
+  The core development team uses the sandialabs/WNTR fork, https://github.com/sandialabs/wntr, to run tests.
+  To submit a Pull Request to USEPA/WNTR, the developer needs to link their fork to Travis so that test results can be inspected.
+  If the developer does not have Travis linked to their fork, the Pull Request can be submitted to the sandialabs/WNTR fork.
+  All bug reports and feature requests should be submitted to USEPA/WNTR.
+
 Development team
 -------------------
 WNTR was developed as part of a collaboration between the United States 
