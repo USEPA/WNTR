@@ -37,8 +37,9 @@ from .graph import WntrMultiDiGraph
 from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTimeCondition, ValueCondition, \
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
-    _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    ControlAction, _InternalControlAction, Control, ControlManager, Comparison, Rule
+    _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _ClosePSVCondition, _OpenPSVCondition, \
+    _ActivePSVCondition, _OpenFCVCondition, _ActiveFCVCondition, ControlAction, _InternalControlAction, Control, \
+    ControlManager, Comparison, Rule
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 
@@ -965,6 +966,22 @@ class WaterNetworkModel(AbstractModel):
                 close_condition = _ClosePRVCondition(self, valve)
                 open_condition = _OpenPRVCondition(self, valve)
                 active_condition = _ActivePRVCondition(self, valve)
+                close_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Closed, 'status')
+                open_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                active_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Active, 'status')
+                close_control = Control(condition=close_condition, then_action=close_action, priority=ControlPriority.very_high)
+                open_control = Control(condition=open_condition, then_action=open_action, priority=ControlPriority.very_low)
+                active_control = Control(condition=active_condition, then_action=active_action, priority=ControlPriority.very_low)
+                close_control._control_type = _ControlType.postsolve
+                open_control._control_type = _ControlType.postsolve
+                active_control._control_type = _ControlType.postsolve
+                valve_controls.append(close_control)
+                valve_controls.append(open_control)
+                valve_controls.append(active_control)
+            elif valve.valve_type == 'PSV':
+                close_condition = _ClosePSVCondition(self, valve)
+                open_condition = _OpenPSVCondition(self, valve)
+                active_condition = _ActivePSVCondition(self, valve)
                 close_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Closed, 'status')
                 open_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
                 active_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Active, 'status')

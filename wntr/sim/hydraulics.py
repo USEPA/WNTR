@@ -84,6 +84,7 @@ def create_hydraulic_model(wn, mode='DD', HW_approx='default'):
     constraint.head_pump_headloss_constraint.build(m, wn, model_updater)
     constraint.power_pump_headloss_constraint.build(m, wn, model_updater)
     constraint.prv_headloss_constraint.build(m, wn, model_updater)
+    constraint.psv_headloss_constraint.build(m, wn, model_updater)
     constraint.tcv_headloss_constraint.build(m, wn, model_updater)
     constraint.fcv_headloss_constraint.build(m, wn, model_updater)
     constraint.leak_constraint.build(m, wn, model_updater)
