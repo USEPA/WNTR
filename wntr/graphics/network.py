@@ -7,6 +7,7 @@ import networkx as nx
 import pandas as pd
 try:
     import matplotlib.pyplot as plt
+    from matplotlib import animation
 except:
     plt = None
 try:
@@ -49,7 +50,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                link_width=1, link_range = [None,None], link_cmap=None, link_labels=False,
                add_colorbar=True, directed=False, ax=None):
     """
-    Plot network graphic using networkx. 
+    Plot network graphic
 
     Parameters
     ----------
@@ -535,8 +536,9 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     pos = nx.get_node_attributes(G,'pos')
     center = pd.DataFrame(pos).mean(axis=1)
     
-    m = folium.Map(location=[center.iloc[1], center.iloc[0]], zoom_start=zoom_start)
-    folium.TileLayer('cartodbpositron').add_to(m)
+    m = folium.Map(location=[center.iloc[1], center.iloc[0]], zoom_start=zoom_start, 
+                   tiles='cartodbpositron')
+    #folium.TileLayer('cartodbpositron').add_to(m)
     
     # Node popup
     node_popup = {k: '' for k in wn.node_name_list}
@@ -639,7 +641,105 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     #plugins.Search(points, search_zoom=20, ).add_to(m)
     #if add_longlat_popup:
     #    m.add_child(folium.LatLngPopup())
+    
     folium.LayerControl().add_to(m)
     
     m.save(filename)
  
+def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
+               node_size=20, node_range = [None,None], node_cmap=None, node_labels=False,
+               link_width=1, link_range = [None,None], link_cmap=None, link_labels=False,
+               add_colorbar=True, directed=False, ax=None, repeat=True):
+    
+    """
+    Create a network animation
+
+    Parameters
+    ----------
+    wn : wntr WaterNetworkModel
+        A WaterNetworkModel object
+
+    node_attribute : pd.DataFrame, optional
+
+
+    link_attribute : pd.DataFrame, optional
+    """
+
+    if node_attribute is not None:
+        node_index = node_attribute.index
+        initial_node_values = node_attribute.iloc[0, :]
+        if node_range[0] is None:
+            node_range[0] = node_attribute.min().min()
+        if node_range[1] is None:
+            node_range[1] = node_attribute.max().max()
+    else:
+        node_index = None
+        initial_node_values = None
+        
+    if link_attribute is not None:
+        link_index = link_attribute.index
+        initial_link_values = link_attribute.iloc[0, :]
+        if link_range[0] is None:
+            link_range[0] = link_attribute.min().min()
+        if link_range[1] is None:
+            link_range[1] = link_attribute.max().max()
+    else:
+        link_index = None
+        initial_link_values = None
+    
+    if (node_index is not None) & (link_index is not None):
+        if len(node_index.symmetric_difference(link_index)) > 0:
+            print('Node attribute index does not equal link attribute index')
+            return
+        index = node_index
+    elif node_index is not None:
+        index = node_index
+    elif link_index is not None:
+        index = link_index
+    else:
+        print('Node attributes or link attributes must be included')
+        return
+    
+    if ax is None: # create a new figure
+        fig = plt.figure(facecolor='w', edgecolor='k')
+        ax = plt.gca()
+            
+    if title is not None:
+        title_name = title + ', ', str(index[0])
+    else:
+        title_name = '0'
+    
+    nodes, edges = plot_network(wn, node_attribute=initial_node_values, link_attribute=initial_link_values, title=title_name,
+               node_size=node_size, node_range=node_range, node_cmap=node_cmap, node_labels=node_labels,
+               link_width=link_width, link_range=link_range, link_cmap=link_cmap, link_labels=link_labels,
+               add_colorbar=add_colorbar, directed=directed, ax=ax)
+        
+    def update(n):
+        if node_attribute is not None:
+            node_values = node_attribute.iloc[n, :]
+        else:
+            node_values = None
+        
+        if link_attribute is not None:
+            link_values = link_attribute.iloc[n, :]
+        else:
+            link_values = None
+            
+        if title is not None:
+            title_name = title + ', ' + str(index[n])
+        else:
+            title_name = str(n)
+        
+        fig.clf()  
+        ax = plt.gca()
+        
+        nodes, edges = plot_network(wn, node_attribute=node_values, link_attribute=link_values, title=title_name,
+               node_size=node_size, node_range=node_range, node_cmap=node_cmap, node_labels=node_labels,
+               link_width=link_width, link_range=link_range, link_cmap=link_cmap, link_labels=link_labels,
+               add_colorbar=add_colorbar, directed=directed, ax=ax)
+        
+        return nodes, edges
+    
+    anim = animation.FuncAnimation(fig, update, interval=50, frames=len(index), blit=False, repeat=repeat)
+    
+    return anim
