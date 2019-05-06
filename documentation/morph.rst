@@ -158,31 +158,34 @@ Pressure differences are generally less than 5% in this example.
 Modify node coordinates
 ----------------------------
 
-WNTR includes several functions to modify node coordinates, denoted as :math:`(x, y)` below, including:
+WNTR includes several options to modify node coordinates, denoted as :math:`(x, y)` below, including:
 
-1. :class:`~wntr.morph.node.scale_node_coordinates` which multiplies node coordinates by a scale factor (in meters). 
+* **Scale coordinates**: Multiply coordinates by a scale factor (in meters) using the function :class:`~wntr.morph.node.scale_node_coordinates`.
 
    .. math:: (x, y) = (x*scale, y*scale)
    
-2. :class:`~wntr.morph.node.translate_node_coordinates` which applies an offset (in meters) to each node coordinate in the x and y direction.
+* **Translate coordinates**: Shift coordinates by an offset (in meters) in the x and y direction using the function :class:`~wntr.morph.node.translate_node_coordinates`.
    
    .. math:: (x, y) = (x+offset_{x}, y+offset_{y})
    
-3. :class:`~wntr.morph.node.rotate_node_coordinates` which rotates coordinates counterclockwise by :math:`\theta` degrees.
+* **Rotate coordinates**: Rotate coordinates counterclockwise by :math:`\theta` degrees using the function :class:`~wntr.morph.node.rotate_node_coordinates`.
    
    .. math:: (x, y) = \begin{bmatrix} cos(\theta) & -sin(\theta) \\sin(\theta) & cos(\theta) \end{bmatrix} \boldsymbol{\cdot} (x, y)
 
-4. :class:`~wntr.morph.node.convert_node_coordinates_UTM_to_latlong` and :class:`~wntr.morph.node.convert_node_coordinates_latlong_to_UTM` 
-   which converts node coordinates from UTM to latitude/longitude or visa-versa.  
-   **These functions require the Python package utm, which is an optional dependency of WNTR.**  
-   
-5. :class:`~wntr.morph.node.convert_node_coordinates_to_UTM` and :class:`~wntr.morph.node.convert_node_coordinates_to_latlong` 
-   which converts node coordinates from arbitrary distance units directly into UTM or latitude/longitude. 
-   **These functions require the Python package utm, which is an optional dependency of WNTR.**    
-   The user supplies the names of two nodes in their network along with their
-   UTM or latitude/longitude coordinates.  Ideally, these nodes span a decent range of the network (for example, 
-   the nodes could be in the upper right and lower left).
+* **Convert coordinates between UTM and longitude/latitude**: Convert coordinates from UTM to longitude\latitude 
+  or visa-versa using the functions 
+  :class:`~wntr.morph.node.convert_node_coordinates_UTM_to_longlat` and :class:`~wntr.morph.node.convert_node_coordinates_longlat_to_UTM`.
 
+* **Convert coordinates to UTM or longitude/latitude**: Convert coordinates from arbitrary distance units directly into UTM or longitude/latitude using the functions 
+  :class:`~wntr.morph.node.convert_node_coordinates_to_UTM` and
+  :class:`~wntr.morph.node.convert_node_coordinates_to_longlat`.
+  The user supplies the names of two nodes in their network along with their
+  UTM or longitude\latitude coordinates.  Ideally, these nodes span a decent range of the network (for example, 
+  the nodes could be in the upper right and lower left).
+
+.. note:: 
+   Functions that convert coordinates to UTM and longitude/latitude require the Python package utm, which is an optional dependency of WNTR.
+		 
 The following example returns a copy of the water network model with 
 node coordinates scaled by 100 m.
 
@@ -201,12 +204,12 @@ node coordinates scaled by 100 m.
 
     >>> wn_scaled_coord = wntr.morph.scale_node_coordinates(wn, 100)
 
-The next example converts node coordinates to latitude/longitude.
+The next example converts node coordinates to longitude\latitude.
 
 .. doctest::
 
-    >>> latlong_map = {'Lake':(35.0623, -106.6587), '219': (35.1918, -106.5248)}
-    >>> wn_latlong = wntr.morph.convert_node_coordinates_to_latlong(wn, latlong_map) # doctest: +SKIP
+    >>> longlat_map = {'Lake':(-106.6587, 35.0623), '219': (-106.5248, 35.1918)}
+    >>> wn_longlat = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
 
 .. _split_break_pipes:
 
