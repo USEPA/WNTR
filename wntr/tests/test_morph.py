@@ -84,15 +84,23 @@ def test_convert_node_coordinates_to_longlat():
         
     inp_file = join(netdir, 'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
+    
     longlat_map = {'Lake':(-106.6587, 35.0623), 
                    '219': (-106.5248, 35.191)}
-    
     wn2 = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
-    
     for node_name in longlat_map.keys():
         node = wn2.get_node(node_name)
         coord = node.coordinates
-        print(coord)
+        assert_almost_equal(longlat_map[node_name][0], coord[0], 4)
+        assert_almost_equal(longlat_map[node_name][1], coord[1], 4)
+        
+    #opposite rotation
+    longlat_map = {'Lake':(-106.6851, 35.1344),
+                   '219': (-106.5073, 35.0713)}
+    wn2 = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
+    for node_name in longlat_map.keys():
+        node = wn2.get_node(node_name)
+        coord = node.coordinates
         assert_almost_equal(longlat_map[node_name][0], coord[0], 4)
         assert_almost_equal(longlat_map[node_name][1], coord[1], 4)
     
@@ -167,7 +175,7 @@ def test_skeletonize():
         total_demand = demand.loc[0,:].sum()
         
         # Write skel_wn to an inp file, read it back in, then extract the demands
-        skel_inp_file = 'skel_'+str(i)+'.inp'
+        skel_inp_file = 'temp.inp'
         skel_wn.write_inpfile(skel_inp_file, 'GPM')
         skel_wn_io = wntr.network.WaterNetworkModel(skel_inp_file)
         demand_io =  wntr.metrics.expected_demand(skel_wn_io)
