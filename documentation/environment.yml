@@ -9,4 +9,3 @@ dependencies:
     - numpydoc
     - matplotlib
     - plotly
-    - enum34
