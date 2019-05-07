@@ -213,7 +213,7 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
                node_size=8, node_range=[None,None], node_cmap='Jet', node_labels=True,
                link_width=1, add_colorbar=True, reverse_colormap=False,
                figsize=[700, 450], round_ndigits=2, add_to_node_popup=None, 
-               filename=None, auto_open=True):
+               filename='plotly_network.html', auto_open=True):
     """
     Create an interactive scalable network graphic using plotly.  
 
@@ -276,7 +276,7 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
         to the popup along with each value for a given node.
         
     filename : string, optional
-        HTML file name (None indicates default name of temp-plot.html)
+        HTML file name
     
     auto_open : bool, optional
         Open the HTML file after creation
@@ -407,7 +407,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                link_cmap_bins='cut', link_labels=True,
                add_legend=False, round_ndigits=2, zoom_start=13, 
                add_to_node_popup=None, add_to_link_popup=None,
-               filename='folium.html'):
+               filename='leaflet_network.html'):
     """
     Create an interactive scalable network graphic on a Leaflet map using folium.  
 

@@ -8,6 +8,8 @@
     >>> import wntr
     >>> import numpy as np
     >>> import matplotlib.pylab as plt
+    >>> import plotly
+    >>> import folium
     >>> from __future__ import print_function
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
@@ -42,8 +44,9 @@ The following example plots the network along with node elevation.
 
 .. doctest::
 
-    >>> wntr.graphics.plot_network(wn, node_attribute='elevation') # doctest: +SKIP
-
+    >>> wntr.graphics.plot_network(wn, node_attribute='elevation') # doctest: +ELLIPSIS
+    (<matplotlib.collections.PathCollection object ...
+    
 .. _fig-network:
 .. figure:: figures/plot_basic_network.png
    :scale: 100 %
@@ -68,7 +71,8 @@ The following example plots the network along with node population.
 .. doctest::
 
     >>> population = wntr.metrics.population(wn)
-    >>> wntr.graphics.plot_interactive_network(wn, node_attribute=population, node_range=[0,500]) # doctest: +SKIP
+    >>> wntr.graphics.plot_interactive_network(wn, node_attribute=population, node_range=[0,500], 
+    ...                                        auto_open=False) # doctest: +ELLIPSIS
 
 .. _fig-plotly:
 .. figure:: figures/plot_plotly_network.png
@@ -97,7 +101,7 @@ The following example converts node coordinates to longitude/latitude and plots 
     >>> wn2 = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
     >>> length = wn2.query_link_attribute('length')
     >>> wntr.graphics.plot_leaflet_network(wn2, link_attribute=length, link_width=3, 
-    ...                                    link_range=[0,1000]) # doctest: +SKIP
+    ...                                    link_range=[0,1000]) # doctest: +ELLIPSIS
 
 
 .. _fig-leaflet:
@@ -135,7 +139,8 @@ The following example plots simulation results from above, showing pressure at a
 .. doctest::
 
     >>> pressure_at_node123 = results.node['pressure'].loc[:,'123']
-    >>> pressure_at_node123.plot() # doctest: +SKIP
+    >>> pressure_at_node123.plot() # doctest: +ELLIPSIS
+    <matplotlib.axes._subplots.AxesSubplot object ...
 
 .. _fig-timeseries:
 .. figure:: figures/plot_timeseries.png
@@ -160,9 +165,10 @@ The following example uses simulation results from above, and converts the graph
     >>> pressure = results.node['pressure']
     >>> fig = plt.figure()
     >>> ax = plt.gca()
-    >>> pressure.plot(legend=False, ax=ax)
-    >>> plotly.offline.plot_mpl(fig, filename='pressure_timeseries.html') # doctest: +SKIP
-	
+    >>> pressure.plot(legend=False, ax=ax) # doctest: +ELLIPSIS
+    <matplotlib.axes._subplots.AxesSubplot object ...
+    >>> plotly.offline.plot_mpl(fig, filename='pressure_timeseries.html', auto_open=False) # doctest: +SKIP
+    
 .. _fig-interactive_timeseries:
 .. figure:: figures/plot_interactive_timeseries.png
    :scale: 100 %
@@ -182,7 +188,7 @@ function :class:`~wntr.graphics.curve.plot_fragility_curve`.
     >>> FC = wntr.scenario.FragilityCurve()
     >>> FC.add_state('Minor', 1, {'Default': lognorm(0.5,scale=0.3)})
     >>> FC.add_state('Major', 2, {'Default': lognorm(0.5,scale=0.7)}) 
-    >>> wntr.graphics.plot_fragility_curve(FC, xlabel='Peak Ground Acceleration (g)') # doctest: +SKIP
+    >>> wntr.graphics.plot_fragility_curve(FC, xlabel='Peak Ground Acceleration (g)') # doctest: +ELLIPSIS
 
 .. _fig-fragility2:
 .. figure:: figures/fragility_curve.png
@@ -201,7 +207,7 @@ By default, a 2nd order polynomial is included in the graphic.
 .. doctest::
 
     >>> pump = wn.get_link('10')
-    >>> wntr.graphics.plot_pump_curve(pump) # doctest: +SKIP
+    >>> wntr.graphics.plot_pump_curve(pump) # doctest: +ELLIPSIS
 
 .. _fig-pump:
 .. figure:: figures/plot_pump_curve.png
