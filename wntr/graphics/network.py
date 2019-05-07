@@ -660,11 +660,53 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
         A WaterNetworkModel object
 
     node_attribute : pd.DataFrame, optional
-
+        Node attributes stored in a pandas DataFrames, where the index is 
+        time and columns are the node name 
 
     link_attribute : pd.DataFrame, optional
-    """
+        Link attributes stored in a pandas DataFrames, where the index is 
+        time and columns are the link name 
+    title : str, optional
+        Plot title 
 
+    node_size : int, optional
+        Node size 
+
+    node_range : list, optional
+        Node range ([None,None] indicates autoscale)
+
+    node_cmap : matplotlib.pyplot.cm colormap, optional
+        Node colormap 
+        
+    node_labels: bool, optional
+        If True, the graph will include each node labelled with its name. 
+        
+    link_width : int, optional
+        Link width
+
+    link_range : list, optional
+        Link range ([None,None] indicates autoscale)
+
+    link_cmap : matplotlib.pyplot.cm colormap, optional
+        Link colormap
+        
+    link_labels: bool, optional
+        If True, the graph will include each link labelled with its name. 
+        
+    add_colorbar : bool, optional
+        Add colorbar
+
+    directed : bool, optional
+        If True, plot the directed graph
+    
+    repeat : bool, optional
+        If True, the animation will repeat
+        
+    Returns
+    -------
+    matplotlib animation
+    """
+    
     if node_attribute is not None:
         node_index = node_attribute.index
         initial_node_values = node_attribute.iloc[0, :]

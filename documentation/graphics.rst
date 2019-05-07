@@ -7,6 +7,7 @@
 
     >>> import wntr
     >>> import numpy as np
+    >>> import matplotlib.pylab as plt
     >>> from __future__ import print_function
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
