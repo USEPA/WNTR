@@ -1,13 +1,16 @@
 name: wntr
+channels:
+    - defaults
+    - conda-forge
 dependencies:
     - python=3.6
     - numpy
     - scipy
     - networkx
     - pandas
-    - sphinx
-    - numpydoc
     - matplotlib
     - plotly
     - folium
     - utm
+    - sphinx
+    - numpydoc
