@@ -39,7 +39,7 @@ Node and link attributes can be specified using the following options:
 * Dictionary with node/link names and associated values (similar to Pandas Series)
 * List of node/link names (i.e. ``['123', '199']``), this highlights the node or link in red
 
-The following example plots the network along with node elevation.
+The following example plots the network along with node elevation (:numref:`fig-network`).
 
 .. doctest::
 
@@ -63,9 +63,9 @@ As with basic network graphics, a wide range of plotting options can be supplied
 However, link attributes currently cannot be displayed on the graphic.
 
 .. note:: 
-   This function requires the Python package plotly, which is an optional dependency of WNTR.
+   This function requires the Python package **plotly**, which is an optional dependency of WNTR.
    
-The following example plots the network along with node population.
+The following example plots the network along with node population (:numref:`fig-plotly`).
 
 .. doctest::
 
@@ -90,9 +90,10 @@ See :ref:`modify_node_coords` for more information on converting node coordinate
 As with basic network graphics, a wide range of plotting options can be supplied. 
 
 .. note:: 
-   This function requires the Python package folium, which is an optional dependency of WNTR.
+   This function requires the Python package **folium**, which is an optional dependency of WNTR.
    
-The following example converts node coordinates to longitude/latitude and plots the network along with pipe length over the city of Albuquerque (for demonstration purposes only). 
+The following example converts node coordinates to longitude/latitude and plots the network along 
+with pipe length over the city of Albuquerque (for demonstration purposes only) (:numref:`fig-leaflet`). 
 
 .. doctest::
 
@@ -133,7 +134,7 @@ Timeseries
 
 Timeseries graphics can be generated using options available in matplotlib and pandas.
 
-The following example plots simulation results from above, showing pressure at a single node over time.
+The following example plots simulation results from above, showing pressure at a single node over time (:numref:`fig-timeseries`).
 
 .. doctest::
 
@@ -155,9 +156,9 @@ Interactive timeseries graphics are useful when visualizing large datasets.
 Basic timeseries graphics can be converted to interactive timeseries graphics using the ``plot_mpl`` function from plotly.
 
 .. note:: 
-   This functionality requires the Python package plotly, which is an optional dependency of WNTR.
+   This functionality requires the Python package **plotly**, which is an optional dependency of WNTR.
    
-The following example uses simulation results from above, and converts the graphic to an interactive graphic.
+The following example uses simulation results from above, and converts the graphic to an interactive graphic (:numref:`fig-interactive_timeseries`).
 
 .. doctest::
 
@@ -181,6 +182,8 @@ Fragility curves
 Fragility curves can be plotted using the 
 function :class:`~wntr.graphics.curve.plot_fragility_curve`.
 
+The following example plots a fragility curve with two states (:numref:`fig-fragility2`).
+
 .. doctest::
 
     >>> from scipy.stats import lognorm
@@ -202,6 +205,8 @@ Pump curves
 Pump curves can be plotted using the 
 function :class:`~wntr.graphics.curve.plot_pump_curve`.
 By default, a 2nd order polynomial is included in the graphic.
+
+The following example plots a pump curve (:numref:`fig-pump`).
 
 .. doctest::
 

@@ -172,7 +172,7 @@ WNTR includes several options to modify node coordinates, denoted as :math:`(x, 
    
    .. math:: (x, y) = \begin{bmatrix} cos(\theta) & -sin(\theta) \\sin(\theta) & cos(\theta) \end{bmatrix} \boldsymbol{\cdot} (x, y)
 
-* **Convert coordinates between UTM and longitude/latitude**: Convert coordinates from UTM to longitude\latitude 
+* **Convert coordinates between UTM and longitude/latitude**: Convert coordinates from UTM to longitude/latitude 
   or visa-versa using the functions 
   :class:`~wntr.morph.node.convert_node_coordinates_UTM_to_longlat` and :class:`~wntr.morph.node.convert_node_coordinates_longlat_to_UTM`.
 
@@ -180,11 +180,11 @@ WNTR includes several options to modify node coordinates, denoted as :math:`(x, 
   :class:`~wntr.morph.node.convert_node_coordinates_to_UTM` and
   :class:`~wntr.morph.node.convert_node_coordinates_to_longlat`.
   The user supplies the names of two nodes in their network along with their
-  UTM or longitude\latitude coordinates.  Ideally, these nodes span a decent range of the network (for example, 
+  UTM or longitude/latitude coordinates.  Ideally, these nodes span a decent range of the network (for example, 
   the nodes could be in the upper right and lower left).
 
 .. note:: 
-   Functions that convert coordinates to UTM and longitude/latitude require the Python package utm, which is an optional dependency of WNTR.
+   Functions that convert coordinates to UTM and longitude/latitude require the Python package **utm**, which is an optional dependency of WNTR.
 		 
 The following example returns a copy of the water network model with 
 node coordinates scaled by 100 m.
@@ -204,7 +204,7 @@ node coordinates scaled by 100 m.
 
     >>> wn_scaled_coord = wntr.morph.scale_node_coordinates(wn, 100)
 
-The next example converts node coordinates to longitude\latitude.
+The next example converts node coordinates to longitude/latitude.
 
 .. doctest::
 
@@ -228,7 +228,7 @@ This is more likely to
 introduce non-convergable hydraulics than a pipe split with a leak 
 added.**
 
-The updated model retains the original length of the pipe section. 
+The updated model retains the original length of the pipe section (:numref:`fig-split-break`). 
 The split or break occurs at a user specified distance between the 
 original start and end nodes of the pipe (in that direction). 
 The new pipe can be added to either end of the original pipe. 
@@ -247,7 +247,7 @@ The new pipe can be added to either end of the original pipe.
     
 * No controls are added to the new pipe; the original pipe keeps any controls. 
 
-.. _fig-parallel-merge:
+.. _fig-split-break:
 .. figure:: figures/pipe_split_break.png
     :scale: 100 %
     :alt: Pipe split and pipe break
