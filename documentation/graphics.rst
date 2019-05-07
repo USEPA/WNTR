@@ -10,6 +10,7 @@
     >>> import matplotlib.pylab as plt
     >>> import plotly
     >>> import folium
+    >>> import utm
     >>> from __future__ import print_function
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')

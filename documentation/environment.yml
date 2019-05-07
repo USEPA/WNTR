@@ -9,3 +9,5 @@ dependencies:
     - numpydoc
     - matplotlib
     - plotly
+    - folium
+    - utm
