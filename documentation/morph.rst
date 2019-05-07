@@ -247,6 +247,13 @@ The new pipe can be added to either end of the original pipe.
     
 * No controls are added to the new pipe; the original pipe keeps any controls. 
 
+.. _fig-parallel-merge:
+.. figure:: figures/pipe_split_break.png
+    :scale: 100 %
+    :alt: Pipe split and pipe break
+	
+    Pipe split and pipe break
+	
 The following example splits pipe '123' in Net3 into pipes '123' and '123_B'.  
 The new junction is named '123_node'.  The new node is then used to add a leak 
 to the model.
