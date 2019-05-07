@@ -136,8 +136,10 @@ def test_network_animation1():
     results = sim.run_sim()
     
     pressure = results.node['pressure']
-    anim = wntr.graphics.network_animation(wn, node_attribute=pressure)
-
+    flowrate = results.link['flowrate']
+    anim = wntr.graphics.network_animation(wn, node_attribute=pressure, 
+                                           link_attribute=flowrate, repeat=True)
+    
     from matplotlib.animation import FuncAnimation
     assert_true(isinstance(anim, FuncAnimation))
     
@@ -180,5 +182,5 @@ def test_custom_colormap():
     assert_equal(cmp.name,'custom')
     
 if __name__ == '__main__':
-    test_plot_interactive_network1()
+    test_network_animation1()
     
