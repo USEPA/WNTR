@@ -756,4 +756,4 @@ class _DenseJac(object):
         self.model = model
 
     def eval(self, x):
-        return self.model.get_jacobian(x).toarray()
+        return self.model.evaluate_jacobian(x).toarray()
