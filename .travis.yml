@@ -18,6 +18,8 @@ matrix:
       env: CONDA_ENV=py36
     - python: 3.7
       dist: xenial
+      services:
+      - xvfb
       sudo: true
       env: CONDA_ENV=py37
 
