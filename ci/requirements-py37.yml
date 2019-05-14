@@ -11,7 +11,7 @@ dependencies:
     - matplotlib
     - plotly
     - folium
-    - utm		 
+    - utm
     - nose
     - openpyxl
     - pip:
