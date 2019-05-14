@@ -24,7 +24,10 @@ v0.1.7 (Master branch)
 * Fixed bugs in network cost, average expected demand, population, and spectral gap metrics.
 * Fixed bug in reading initial water quality from INP files.
 * Added a read-only `base_demand` attribute to junctions.  Base demand is defined using the first demand in the `demand_timeseries_list`.
+* Updated :class:`~wntr.network.model.WaterNetworkModel.query_node_attribute` and :class:`~wntr.network.model.WaterNetworkModel.query_link_attribute` to return a pandas Series instead of a dictionary (API change)
+* Added :class:`~wntr.network.model.WaterNetworkModel.describe` to return the number of links, nodes, patterns, etc in a WaterNetworkModel
 * Added a pull request template.
 * Dropped Travis CI tests for Python 3.4
 * Added Travis CI tests for Python 3.7
-* Updated documentation, including installation instructions and a section on network morphology.
+* Updated tests
+* Updated documentation, including installation instructions and a section on network morphology and graphics

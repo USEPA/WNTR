@@ -1196,14 +1196,15 @@ class WaterNetworkModel(AbstractModel):
         Parameters
         ----------
         level : int (0, 1, or 2)
-            Level 0 returns the number of Nodes, Links, Patterns, Curves, Sources, and Controls.
-            Level 1 includes information from Level 0 but 
-                divides Nodes into Junctions, Tanks, and Reservoirs, 
-                divides Links into Pipes, Pumps, and Valves, and 
-                divides Curves into Pump, Efficiency, Headloss, and Volume.
-            Level 2 includes information from Level 1 but 
-                divides Pumps into Head and Power, and 
-                divides Valves into PRV, PSV, PBV, TCV, FCV, and GPV.
+            
+           * Level 0 returns the number of Nodes, Links, Patterns, Curves, Sources, and Controls.
+           * Level 1 includes information from Level 0 but 
+             divides Nodes into Junctions, Tanks, and Reservoirs, 
+             divides Links into Pipes, Pumps, and Valves, and 
+             divides Curves into Pump, Efficiency, Headloss, and Volume.
+           * Level 2 includes information from Level 1 but 
+             divides Pumps into Head and Power, and 
+             divides Valves into PRV, PSV, PBV, TCV, FCV, and GPV.
             
         Returns
         -------
