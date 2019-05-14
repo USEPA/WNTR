@@ -22,11 +22,11 @@ class TestMinorLosses(unittest.TestCase):
         sim = wntr.sim.WNTRSimulator(wn, mode='DD')
 
         results1 = sim.run_sim()
-        wn.write_inpfile('tmp.inp', 'CMH')
+        wn.write_inpfile('temp.inp', 'CMH')
         
         raise SkipTest # EPANET seg faults (on Travis)
         
-        wn2 = wntr.network.WaterNetworkModel('tmp.inp')
+        wn2 = wntr.network.WaterNetworkModel('temp.inp')
         sim = wntr.sim.EpanetSimulator(wn2)
         results2 = sim.run_sim()
 
