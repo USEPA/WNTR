@@ -25,5 +25,6 @@ v0.1.7 (Master branch)
 * Fixed bug in reading initial water quality from INP files.
 * Added a read-only `base_demand` attribute to junctions.  Base demand is defined using the first demand in the `demand_timeseries_list`.
 * Added a pull request template.
-* Dropped support for Python 3.4
+* Dropped Travis CI tests for Python 3.4
+* Added Travis CI tests for Python 3.7
 * Updated documentation, including installation instructions and a section on network morphology.
