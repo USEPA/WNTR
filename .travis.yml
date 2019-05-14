@@ -3,6 +3,7 @@
 # https://github.com/xray/xray/blob/master/.travis.yml
 # https://github.com/scipy/scipy/blob/master/.travis.yml
 
+dist: xenial   # required for Python >= 3.7
 language: python
 sudo: false # if false, use TravisCI's container based build
 
@@ -16,8 +17,8 @@ matrix:
       env: CONDA_ENV=py35
     - python: 3.6
       env: CONDA_ENV=py36
-    #- python: 3.7
-    #  env: CONDA_ENV=py37
+    - python: 3.7
+      env: CONDA_ENV=py37
 
 addons:
     apt:
