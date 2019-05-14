@@ -54,9 +54,6 @@ def test_rotate_node_coordinates():
 
 
 def test_UTM_to_longlat_to_UTM():
-    
-    if (sys.version_info.major == 3) and (sys.version_info.minor == 4):
-        raise SkipTest # skip if python version == 3.4 (for utm)
         
     wn = wntr.network.WaterNetworkModel()
     wn.add_junction('J1', base_demand=5, elevation=100.0, 
@@ -78,9 +75,6 @@ def test_UTM_to_longlat_to_UTM():
     
 
 def test_convert_node_coordinates_to_longlat():
-    
-    if (sys.version_info.major == 3) and (sys.version_info.minor == 4):
-        raise SkipTest # skip if python version == 3.4 (for utm)
         
     inp_file = join(netdir, 'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)

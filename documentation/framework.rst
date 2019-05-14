@@ -128,7 +128,6 @@ However, **the following model options cannot be modified/created through the WN
 * [EMITTERS] section
 * [LABELS] section
 * [MIXING] section
-* [VERTICES] section
 
 While the EpanetSimulator uses all EPANET model options, several model options are not used by the WNTRSimulator.  
 Of the EPANET model options that directly apply to hydraulic simulations, **the following options are not supported by the WNTRSimulator**:
