@@ -21,6 +21,8 @@ WNTR documentation
    disaster_models
    resilience
    stochastic
+   morph
+   graphics
    license
    developers
    reference

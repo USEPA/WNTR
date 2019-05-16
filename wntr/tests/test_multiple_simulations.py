@@ -141,10 +141,10 @@ class TestPickle(unittest.TestCase):
         self.wn.options.time.duration = 10*3600
         sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.res2 = sim.run_sim(solver_options={'TOL':1e-8})
-        f=open('pickle_test.pickle','wb')
+        f=open('temp.pickle','wb')
         pickle.dump(self.wn,f)
         f.close()
-        f=open('pickle_test.pickle','rb')
+        f=open('temp.pickle','rb')
         wn2 = pickle.load(f)
         f.close()
         wn2.options.time.duration = 24*3600

@@ -153,24 +153,39 @@ Pressure differences are generally less than 5% in this example.
    
    Pressure differences between the original and skeletonized Net6.
 
+.. _modify_node_coords:
 
 Modify node coordinates
 ----------------------------
 
-WNTR includes several functions to modify node coordinates, denoted as :math:`(x, y)` below, including:
+WNTR includes several options to modify node coordinates, denoted as :math:`(x, y)` below, including:
 
-1. :class:`~wntr.morph.node.scale_node_coordinates` which multiplies node coordinates by a scale factor (in meters). 
+* **Scale coordinates**: Multiply coordinates by a scale factor (in meters) using the function :class:`~wntr.morph.node.scale_node_coordinates`.
 
    .. math:: (x, y) = (x*scale, y*scale)
    
-2. :class:`~wntr.morph.node.translate_node_coordinates` which applies an offset (in meters) to each node coordinate in the x and y direction.
+* **Translate coordinates**: Shift coordinates by an offset (in meters) in the x and y direction using the function :class:`~wntr.morph.node.translate_node_coordinates`.
    
    .. math:: (x, y) = (x+offset_{x}, y+offset_{y})
    
-3. :class:`~wntr.morph.node.rotate_node_coordinates` which rotates coordinates counterclockwise by :math:`\theta` degrees.
+* **Rotate coordinates**: Rotate coordinates counterclockwise by :math:`\theta` degrees using the function :class:`~wntr.morph.node.rotate_node_coordinates`.
    
    .. math:: (x, y) = \begin{bmatrix} cos(\theta) & -sin(\theta) \\sin(\theta) & cos(\theta) \end{bmatrix} \boldsymbol{\cdot} (x, y)
 
+* **Convert coordinates between UTM and longitude/latitude**: Convert coordinates from UTM to longitude/latitude 
+  or visa-versa using the functions 
+  :class:`~wntr.morph.node.convert_node_coordinates_UTM_to_longlat` and :class:`~wntr.morph.node.convert_node_coordinates_longlat_to_UTM`.
+
+* **Convert coordinates to UTM or longitude/latitude**: Convert coordinates from arbitrary distance units directly into UTM or longitude/latitude using the functions 
+  :class:`~wntr.morph.node.convert_node_coordinates_to_UTM` and
+  :class:`~wntr.morph.node.convert_node_coordinates_to_longlat`.
+  The user supplies the names of two nodes in their network along with their
+  UTM or longitude/latitude coordinates.  Ideally, these nodes span a decent range of the network (for example, 
+  the nodes could be in the upper right and lower left).
+
+.. note:: 
+   Functions that convert coordinates to UTM and longitude/latitude require the Python package **utm**, which is an optional dependency of WNTR.
+		 
 The following example returns a copy of the water network model with 
 node coordinates scaled by 100 m.
 
@@ -189,6 +204,13 @@ node coordinates scaled by 100 m.
 
     >>> wn_scaled_coord = wntr.morph.scale_node_coordinates(wn, 100)
 
+The next example converts node coordinates to longitude/latitude.
+
+.. doctest::
+
+    >>> longlat_map = {'Lake':(-106.6587, 35.0623), '219': (-106.5248, 35.1918)}
+    >>> wn_longlat = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
+
 .. _split_break_pipes:
 
 Split or break pipes
@@ -206,7 +228,7 @@ This is more likely to
 introduce non-convergable hydraulics than a pipe split with a leak 
 added.**
 
-The updated model retains the original length of the pipe section. 
+The updated model retains the original length of the pipe section (:numref:`fig-split-break`). 
 The split or break occurs at a user specified distance between the 
 original start and end nodes of the pipe (in that direction). 
 The new pipe can be added to either end of the original pipe. 
@@ -225,6 +247,13 @@ The new pipe can be added to either end of the original pipe.
     
 * No controls are added to the new pipe; the original pipe keeps any controls. 
 
+.. _fig-split-break:
+.. figure:: figures/pipe_split_break.png
+    :scale: 100 %
+    :alt: Pipe split and pipe break
+	
+    Pipe split and pipe break
+	
 The following example splits pipe '123' in Net3 into pipes '123' and '123_B'.  
 The new junction is named '123_node'.  The new node is then used to add a leak 
 to the model.

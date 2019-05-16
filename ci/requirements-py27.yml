@@ -1,6 +1,7 @@
 name: test_env
 channels:
     - defaults
+    - conda-forge
 dependencies:
     - python=2.7 
     - numpy
@@ -9,6 +10,8 @@ dependencies:
     - pandas
     - matplotlib
     - plotly
+    - folium
+    - utm
     - nose
     - enum34
     - openpyxl
