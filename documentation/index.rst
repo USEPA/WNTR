@@ -23,6 +23,7 @@ designed to simulate and analyze resilience of water distribution networks.
    resilience
    stochastic
    morph
+   graphics
    license
    whatsnew
    developers

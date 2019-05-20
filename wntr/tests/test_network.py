@@ -554,12 +554,12 @@ def test_Net1():
     expected_length = wntr.epanet.util.HydParam.Length._to_si(wn._inpfile.flow_units, expected_length)
 
     assert_dict_equal(dict(node), expected_node)
-    assert_dict_equal(elevation, expected_elevation)
+    assert_dict_equal(dict(elevation), expected_elevation)
     #assert_dict_equal(base_demand, expected_base_demand)
 
     assert_dict_equal(dict(edge), expected_edge)
-    assert_dict_equal(diameter, expected_diameter)
-    assert_dict_equal(length, expected_length)
+    assert_dict_equal(dict(diameter), expected_diameter)
+    assert_dict_equal(dict(length), expected_length)
 
 def test_query_node_attribute():
     inp_file = join(ex_datadir,'Net1.inp')

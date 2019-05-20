@@ -3,13 +3,31 @@
 v0.1.7 (Master branch)
 ---------------------------------------------------
 
-* Added a sub-package for network morphology (see :class:`wntr.morph`), which includes methods to
+* Added a module for network morphology (see :class:`~wntr.morph`), which includes methods to
 
   * Reduce network size through skeletonization (see :class:`~wntr.morph.skel.skeletonize`)
   * Scale, translate, and rotate node coordinates (see :class:`~wntr.morph.node.scale_node_coordinates`, :class:`~wntr.morph.node.translate_node_coordinates`, and :class:`~wntr.morph.node.rotate_node_coordinates`)
+  * Convert node coordinates between UTM and longitude/latitude (see 
+  :class:`~wntr.morph.node.convert_node_coordinates_UTM_to_longlat` and 
+  :class:`~wntr.morph.node.convert_node_coordinates_longlat_to_UTM`)
+  * Convert node coordinates to UTM or longitude/latitude (see 
+  :class:`~wntr.morph.node.convert_node_coordinates_to_UTM` and
+  :class:`~wntr.morph.node.convert_node_coordinates_to_longlat`)
   * Split and break pipes (i.e. splits a pipe into two pipes) (see :class:`~wntr.morph.link.split_pipe` and :class:`~wntr.morph.link.break_pipe`)
   * Note that methods to scale node coordinates and split pipes used to reside on the water network model object (API change)
+
+* Added additional graphics options, including:
+
+  * Interactive leaflet network graphics (see :class:`~wntr.graphics.network.plot_leaflet_network`)
+  * Network animation (see :class:`~wntr.graphics.network.network_animation`)
   
-* Fixed bugs in network cost, average expected demand, and spectral gap metrics.
+* Fixed bugs in network cost, average expected demand, population, and spectral gap metrics.
 * Fixed bug in reading initial water quality from INP files.
-* Updated documentation, including installation instructions and a section on network morphology.
+* Added a read-only `base_demand` attribute to junctions.  Base demand is defined using the first demand in the `demand_timeseries_list`.
+* Updated :class:`~wntr.network.model.WaterNetworkModel.query_node_attribute` and :class:`~wntr.network.model.WaterNetworkModel.query_link_attribute` to return a pandas Series instead of a dictionary (API change)
+* Added :class:`~wntr.network.model.WaterNetworkModel.describe` to return the number of links, nodes, patterns, etc in a WaterNetworkModel
+* Added a pull request template.
+* Dropped Travis CI tests for Python 3.4
+* Added Travis CI tests for Python 3.7
+* Updated tests
+* Updated documentation, including installation instructions and a section on network morphology and graphics

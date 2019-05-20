@@ -11,7 +11,7 @@ WNTR can be installed as a Python package using standard open source software to
 **Step 1**: Setup your Python environment
 
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
-	WNTR requires Python (versions 2.7, 3.4, 3.5, or 3.6) along with several Python package dependencies.
+	WNTR requires Python (versions 2.7, 3.5, 3.6, or 3.7) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
 	General information on Python can be found at https://www.python.org/.
@@ -29,6 +29,8 @@ WNTR can be installed as a Python package using standard open source software to
 		 
 	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, and
 	Matplotlib.  For more information on Python package dependencies, see :ref:`requirements`.
+	If your Python installation does not include these dependencies, you will need to install them. 
+	This is most commonly done using pip. 
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
 	editing and debug features along with a graphical user interface. 
@@ -113,7 +115,7 @@ WNTR can be installed as a Python package using standard open source software to
 
 Requirements
 -------------
-Requirements for WNTR include Python (2.7, 3.4, 3.5, or 3.6) along with several Python packages. 
+Requirements for WNTR include Python (2.7, 3.5, 3.6, or 3.7) along with several Python packages. 
 The following Python packages are required:
 
 * Numpy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
@@ -138,6 +140,10 @@ The following Python packages are optional:
   http://matplotlib.org/
 * Plotly [SPHC16]_: used to produce interactive scalable figures, 
   https://plot.ly/
+* folium [Filip19]_: used to produce Leaflet maps, 
+  http://python-visualization.github.io/folium/
+* utm [Bieni19]_: used to translate node coordinates to utm and lat/long,
+  https://pypi.org/project/utm/
 * openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
 * Numpydoc [VaCV11]_: used to build the user manual,

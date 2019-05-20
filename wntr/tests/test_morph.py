@@ -1,5 +1,6 @@
 from nose.tools import *
 from nose import SkipTest
+import sys
 from os.path import abspath, dirname, join
 import pandas as pd
 import numpy as np
@@ -38,6 +39,7 @@ def test_translate_node_coordinates():
     assert_equal(coord[0]+5, coord2[0])
     assert_equal(coord[1]+10, coord2[1])
     
+
 def test_rotate_node_coordinates():
     
     wn = wntr.network.WaterNetworkModel()
@@ -49,6 +51,53 @@ def test_rotate_node_coordinates():
     
     assert_almost_equal(np.sqrt(2), coord2[0], 6)
     assert_almost_equal(np.sqrt(2), coord2[1], 6)
+
+
+def test_UTM_to_longlat_to_UTM():
+        
+    wn = wntr.network.WaterNetworkModel()
+    wn.add_junction('J1', base_demand=5, elevation=100.0, 
+                    coordinates=(351521.07, 3886097.33)) # easting, northing
+    
+    wn2 = wntr.morph.convert_node_coordinates_UTM_to_longlat(wn, 13, 'S')
+    node2 = wn2.get_node('J1')
+    coord2 = node2.coordinates
+    
+    assert_almost_equal(-106.629181, coord2[0], 6) # longitude
+    assert_almost_equal(35.106766, coord2[1], 6) # latitude
+    
+    wn3 = wntr.morph.convert_node_coordinates_longlat_to_UTM(wn2)
+    node3 = wn3.get_node('J1')
+    coord3 = node3.coordinates
+    
+    assert_almost_equal(351521.07, coord3[0], 1) # easting
+    assert_almost_equal(3886097.33, coord3[1], 1) # northing
+    
+
+def test_convert_node_coordinates_to_longlat():
+        
+    inp_file = join(netdir, 'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    
+    longlat_map = {'Lake':(-106.6587, 35.0623), 
+                   '219': (-106.5248, 35.191)}
+    wn2 = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
+    for node_name in longlat_map.keys():
+        node = wn2.get_node(node_name)
+        coord = node.coordinates
+        assert_almost_equal(longlat_map[node_name][0], coord[0], 4)
+        assert_almost_equal(longlat_map[node_name][1], coord[1], 4)
+        
+    #opposite rotation
+    longlat_map = {'Lake':(-106.6851, 35.1344),
+                   '219': (-106.5073, 35.0713)}
+    wn2 = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
+    for node_name in longlat_map.keys():
+        node = wn2.get_node(node_name)
+        coord = node.coordinates
+        assert_almost_equal(longlat_map[node_name][0], coord[0], 4)
+        assert_almost_equal(longlat_map[node_name][1], coord[1], 4)
+    
     
 def test_split_pipe():
         
@@ -119,11 +168,20 @@ def test_skeletonize():
         demand =  wntr.metrics.expected_demand(skel_wn)
         total_demand = demand.loc[0,:].sum()
         
+        # Write skel_wn to an inp file, read it back in, then extract the demands
+        skel_inp_file = 'temp.inp'
+        skel_wn.write_inpfile(skel_inp_file, 'GPM')
+        skel_wn_io = wntr.network.WaterNetworkModel(skel_inp_file)
+        demand_io =  wntr.metrics.expected_demand(skel_wn_io)
+        total_demand_io = demand_io.loc[0,:].sum()
+
         #pipes = wn.query_link_attribute('diameter', np.less_equal, i*0.0254)
         #wntr.graphics.plot_network(wn, link_attribute = list(pipes.keys()), title=str(i))
         #wntr.graphics.plot_network(skel_wn, link_attribute='diameter', link_width=2, node_size=15, title=str(i))
         
         assert_almost_equal(total_demand.sum(), expected_total_demand,6)
+        assert_almost_equal(total_demand_io.sum(), expected_total_demand,6)
+        
         assert_equal(skel_wn.num_nodes, expected_nums.loc[i,'num_nodes'])
         assert_equal(skel_wn.num_links, expected_nums.loc[i,'num_links'])
         
@@ -280,8 +338,5 @@ def test_skeletonize_Net3():
 
     
 if __name__ == '__main__':
-    test_split_pipe()
-    test_break_pipe()
-
-    
+    test_UTM_to_longlat_to_UTM()
 

@@ -20,6 +20,7 @@ folder.  This example demonstrates how to:
 .. literalinclude:: ../examples/getting_started.py
 
 Additional examples, listed in :numref:`table-example`, are included in the examples folder.  
+Many examples are also embedded within the online documentation.
 
 .. _table-example:
 .. table:: Description of WNTR Example Files
@@ -35,8 +36,6 @@ Additional examples, listed in :numref:`table-example`, are included in the exam
    resilience_metrics.py           Compute resilience metrics, including topographic, hydraulic, water quality, water security, and economic metrics
    stochastic_simulation.py        Run a stochastic simulation
    fragility_curves.py             Define fragility curves
-   interactive_graphics.py         Create interactive network and time series graphics
-   animation.py                    Animate network graphics
    ==============================  ===================================================================================================================
 
 Several EPANET INP files are included in the examples/network folder.  Example
