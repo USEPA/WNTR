@@ -37,43 +37,67 @@ WNTR includes a custom Graph Class,
 :class:`~wntr.network.graph.WntrMultiDiGraph`.
 This class inherits from NetworkX MultiDigraph and includes additional methods 
 that are specific to WNTR. 
-The example **networkx_graph.py** can be used to generate a graph from a water network model.
-  
-A NetworkX graph can an be obtained using the following function:
 
-.. literalinclude:: ../examples/networkx_graph.py
-   :lines: 9
+A NetworkX graph can an be obtained from a WaterNetworkModel using the following function:
+
+.. doctest::
+    :hide:
+
+    >>> import wntr
+    >>> import numpy as np
+    >>> from __future__ import print_function
+    >>> try:
+    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
+    ... except:
+    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+	
+.. doctest::
+
+    >>> G = wn.get_graph()
 	
 The graph is stored as a nested dictionary.  The nodes and links (note that links are called `edges` in NetworkX)
 can be accessed using the following:
 
-.. literalinclude:: ../examples/networkx_graph.py
-   :lines: 12-14
+.. doctest::
+
+    >>> node_name = '123'
+    >>> G.node[node_name] # doctest: +SKIP
+    >>> G.adj[node_name] # doctest: +SKIP
 
 The graph can be used to access NetworkX methods, for example:
 
-.. literalinclude:: ../examples/networkx_graph.py
-   :lines: 3,17-20
-  
+.. doctest::
+
+    >>> import networkx as nx
+    >>> node_degree = G.degree()
+    >>> bet_cen = nx.betweenness_centrality(G)
+    >>> wntr.graphics.plot_network(wn, node_attribute=bet_cen) # doctest: +ELLIPSIS
+    (<matplotlib.collections.PathCollection object ...
+
 Some methods in NetworkX require that networks are undirected.  
 An **undirected graph** is a graph with no direction associated with links.
 The following NetworkX method can be used to convert a directed graph to an undirected graph:
 
-.. literalinclude:: ../examples/networkx_graph.py
-   :lines: 23
+.. doctest::
+
+    >>> uG = G.to_undirected()
 
 Some methods in NetworkX require that networks are connected.     
 A **connected graph** is a graph where a path exists between every node in the network (i.e., no node is disconnected).  
 The following NetworkX method can be used to check if a graph is connected:
 
-.. literalinclude:: ../examples/networkx_graph.py
-   :lines: 26
+.. doctest::
+
+    >>> nx.is_connected(uG)
+    True
 
 Some methods in NetworkX can use weighted graphs.
 A **weighted graph** is a graph in which each link is given a weight.  
 The WNTR method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` can be used to weight the graph by any attribute.
 In the following example, the graph is weighted by length.  This graph can then be used to compute path lengths:
 
-.. literalinclude:: ../examples/networkx_graph.py
-   :lines: 29-30
+.. doctest::
+
+    >>> length = wn.query_link_attribute('length')
+    >>> G.weight_graph(link_attribute = length)
 	
