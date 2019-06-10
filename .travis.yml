@@ -10,12 +10,20 @@ matrix:
     include:
     - python: 2.7
       env: CONDA_ENV=py27-min
+      services:
+      - xvfb
     - python: 2.7
       env: CONDA_ENV=py27
+      services:
+      - xvfb
     - python: 3.5
       env: CONDA_ENV=py35
+      services:
+      - xvfb
     - python: 3.6
       env: CONDA_ENV=py36
+      services:
+      - xvfb
     - python: 3.7
       dist: xenial
       services:
@@ -34,8 +42,10 @@ cache:
 
 before_script: 
     - "export DISPLAY=:99.0"
-    - if [[ "$TRAVIS_PYTHON_VERSION" != "3.7" ]]; then sh -e /etc/init.d/xvfb start; fi
-    - if [[ "$TRAVIS_PYTHON_VERSION" != "3.7" ]]; then sleep 3; fi # give xvfb some time to start
+    - if [[ "$CONDA_ENV" != "py37" ]]; then 
+        source /etc/init.d/xvfb start; 
+        sleep 3;
+      fi
 
 # setup miniconda for numpy, scipy, pandas
 before_install:
