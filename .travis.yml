@@ -9,10 +9,6 @@ sudo: false # if false, use TravisCI's container based build
 matrix:
     include:
     - python: 2.7
-      env: CONDA_ENV=py27-min
-      services:
-      - xvfb
-    - python: 2.7
       env: CONDA_ENV=py27
       services:
       - xvfb
