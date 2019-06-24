@@ -44,7 +44,7 @@ def topographic_metrics(wn):
     print("Number of pipes > 20 inches: " + str(len(pipes)))
     print("   " + str(pipes))
 
-    # Compute nodes with elevation <= treshold
+    # Compute nodes with elevation <= threshold
     elevation = 1.524 # m (5 feet)
     nodes = wn.query_node_attribute('elevation', np.less_equal, elevation)
     wntr.graphics.plot_network(wn, node_attribute=list(nodes.keys()),
@@ -94,9 +94,9 @@ def topographic_metrics(wn):
     Nbr_density = float(len(bridges))/G.number_of_edges()
     print("Density of bridges: " + str(Nbr_density))
 
-    # Compute spectal gap
+    # Compute spectral gap
     spectral_gap = G.spectral_gap()
-    print("Spectal gap: " + str(spectral_gap))
+    print("Spectral gap: " + str(spectral_gap))
 
     # Compute algebraic connectivity
     alg_con = G.algebraic_connectivity()
@@ -216,7 +216,7 @@ def water_quality_metrics(wn):
     wn.options.quality.trace_node = '111'
     results_TRACE = sim.run_sim()
 
-    # plot chem scenario
+    # Plot chem scenario
     CHEM_at_5hr = results_CHEM.node['quality'].loc[ 5*3600, :]
     wntr.graphics.plot_network(wn, node_attribute=CHEM_at_5hr, node_size=20,
                           title='Chemical concentration, time = 5 hours')
@@ -310,11 +310,11 @@ def population_impacted_metrics(wn):
                           title='Nodes impacted')
 
 def cost_ghg_metrics(wn):
-    # Copute network cost
+    # Compute network cost
     network_cost = wntr.metrics.annual_network_cost(wn)
     print("Network cost: $" + str(round(network_cost,2)))
 
-    # COmpute green house gas emissions
+    # Compute green house gas emissions
     network_ghg = wntr.metrics.annual_ghg_emissions(wn)
     print("Network GHG emissions: " + str(round(network_ghg,2)))
 

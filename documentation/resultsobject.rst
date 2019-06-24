@@ -1,8 +1,8 @@
-.. _simulation_results:
-
 .. raw:: latex
 
     \clearpage
+
+.. _simulation_results:
 
 Simulation results
 =============================

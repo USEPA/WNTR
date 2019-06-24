@@ -24,6 +24,7 @@ The wntr.epanet.util module contains unit conversion utilities based on EPANET u
 
 """
 import numpy as np
+import pandas as pd
 import enum
 import logging
 
@@ -490,7 +491,11 @@ class HydParam(enum.Enum):
         """
         # Convert to array for unit conversion
         data_type = type(data)
-        if data_type is dict:
+        if data_type is pd.core.frame.DataFrame:
+            data_index = data.index
+            data_columns = data.columns
+            data = data.values
+        elif data_type is dict:
             data_keys = data.keys()
             data = np.array(list(data.values()))
         elif data_type is list:
@@ -543,7 +548,9 @@ class HydParam(enum.Enum):
                 data = data * np.power(0.3048, 3)  # ft3 to m3
 
         # Convert back to input data type
-        if data_type is dict:
+        if data_type is pd.core.frame.DataFrame:
+            data = pd.DataFrame(data, columns=data_columns, index=data_index)
+        elif data_type is dict:
             data = dict(zip(data_keys, data))
         elif data_type is list:
             data = list(data)
