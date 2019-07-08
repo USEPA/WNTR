@@ -51,11 +51,10 @@ WNTR includes methods to change coordinate scale, as shown in the following exam
     >>> import wntr
     >>> np.random.seed(12343)
     >>> try:
-    ...    inp_file_name = '../examples/networks/Net3.inp'
+    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
-    ...    inp_file_name= 'examples/networks/Net3.inp'
-	>>> wn = wntr.network.WaterNetworkModel(inp_file_name)
-		
+    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+    
 .. doctest::
 
     >>> wn = wntr.morph.scale_node_coordinates(wn, 1000)

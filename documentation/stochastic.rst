@@ -65,10 +65,9 @@ The following example defines a fragility curve with two damage states: Minor da
     >>> import wntr
     >>> np.random.seed(12343)
     >>> try:
-    ...    inp_file_name = '../examples/networks/Net3.inp'
+    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
-    ...    inp_file_name= 'examples/networks/Net3.inp'
-	>>> wn = wntr.network.WaterNetworkModel(inp_file_name)
+    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 		
 .. doctest::
 
