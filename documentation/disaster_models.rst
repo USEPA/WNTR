@@ -10,7 +10,8 @@ They could be acute incidents like power outages and earthquakes
 or they could be long term issues like persistent pipe 
 leaks, population fluctuation, and changes to supply and demand. The following section describes
 disaster scenarios that can be modeled in WNTR.  
-The example **disaster_scenarios.py** demonstrates methods to define disaster scenarios.
+
+.. _earthquake:
 
 Earthquake
 -----------
@@ -41,18 +42,46 @@ See :ref:`stochastic_simulation` for more information on fragility curves.
 Since properties like peak ground acceleration, peak ground velocity, and repair rate are a function of the distance to the epicenter, 
 node coordinates in the water network model must be in units of meters.  
 Since some network models use other units for node coordinates, 
-WNTR includes a method to change the coordinate scale.  
-To change the node coordinate scale by a factor of 1000, for example, use the following code:
+WNTR includes methods to change coordinate scale, as shown in the following example.
 
-.. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 9
+.. doctest::
+    :hide:
+
+    >>> import numpy as np
+    >>> import wntr
+    >>> np.random.seed(12343)
+    >>> try:
+    ...    inp_file_name = '../examples/networks/Net3.inp'
+    ... except:
+    ...    inp_file_name= 'examples/networks/Net3.inp'
+	>>> wn = wntr.network.WaterNetworkModel(inp_file_name)
+		
+.. doctest::
+
+    >>> wn = wntr.morph.scale_node_coordinates(wn, 1000)
    
-The following code can be used to compute peak ground acceleration, peak ground velocity, and repair rate:
+The following example compute peak ground acceleration, peak ground velocity, and repair rate for each pipe.
 
-.. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 10-17
+.. doctest::
 
+    >>> epicenter = (32000,15000) # x,y location
+    >>> magnitude = 6.5 # Richter scale
+    >>> depth = 10000 # m, shallow depth
+    >>> earthquake = wntr.scenario.Earthquake(epicenter, magnitude, depth)
+    >>> distance = earthquake.distance_to_epicenter(wn, element_type=wntr.network.Pipe)
+    >>> pga = earthquake.pga_attenuation_model(distance)  
+    >>> pgv = earthquake.pgv_attenuation_model(distance)
+    >>> repair_rate = earthquake.repair_rate_model(pgv) 
 
+The earthquake properties can be plotted on the network, as follows.
+
+.. doctest::
+
+    >>> wntr.graphics.plot_network(wn, link_attribute=pga) # doctest: +ELLIPSIS
+    (<matplotlib.collections.PathCollection object ...
+
+.. _pipe_leak:
+	
 Pipe breaks or leaks
 ---------------------
 Pipes are susceptible to leaks.  Leaks can be caused by 
@@ -66,12 +95,16 @@ cast iron and even wood.
 
 WNTR includes methods to add leaks to junctions and tanks.
 Leaks can be added to a pipe by splitting the pipe and adding a junction.
-To add a leak to a specific pipe:
+The following example adds a leak to a specific pipe.
 
-.. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 25-27
+.. doctest::
 
-The method :class:`~wntr.network.elements.Junction.add_leak` adds time controls to a junction which includes the start and stop time for the leak.
+    >>> wn = wntr.morph.split_pipe(wn, '123', '123_B', '123_leak_node')
+    >>> leak_node = wn.get_node('123_leak_node')           
+    >>> leak_node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)
+
+The method :class:`~wntr.network.elements.Junction.add_leak` adds time controls to 
+a junction which includes the start and stop time for the leak.
 
 Power outage
 -------------
@@ -85,10 +118,12 @@ reduced water pressure. This can lead to shortages in some areas of
 the system. Typically, no lasting damage in the system is associated with power outages. 
 
 WNTR can be used to simulate power outages by changing the pump status from ON to OFF and defining the duration of the outage.
-To model the impact of a power outage on a specific pump:
+The following example adds a 5 hour power outage to a specific pump.
 
-.. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 31
+.. doctest::
+
+    >>> pump = wn.get_link('335')
+    >>> pump.add_outage(wn, 5*3600, 10*3600)
    
 The method :class:`~wntr.network.elements.Pump.add_outage` adds time controls to a pump to start and stop a power outage.
 When simulating power outages, consider placing check bypasses around pumps 
@@ -105,10 +140,20 @@ have a large impact on water pressure in the system.
 WNTR can be used to simulate fire fighting conditions in the system.  
 WNTR simulates fire fighting conditions by specifying the demand, time, and duration of fire fighting.
 Pressure dependent demand simulation is recommended in cases where fire fighting might impact expected demand.
-To model the impact of fire conditions at a specific node:
+The following example adds fireflow conditions at a specific node.
 
-.. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 34-42
+.. doctest::
+
+    >>> fire_flow_demand = 0.252 # 4000 gal/min = 0.252 m3/s
+    >>> fire_start = 10*3600
+    >>> fire_end = 14*3600
+    >>> fire_flow_pattern = wntr.network.elements.Pattern.binary_pattern('fire_flow', 
+    ...     step_size=wn.options.time.pattern_timestep, start_time=fire_start, 
+    ...     end_time=fire_end, duration=wn.options.time.duration)
+    >>> wn.add_pattern('fire_flow', fire_flow_pattern)
+    >>> node = wn.get_node('197')
+    >>> node.demand_timeseries_list.append( (fire_flow_demand, fire_flow_pattern, 'Fire flow'))
+
 
 Environmental change
 ---------------------
@@ -127,10 +172,15 @@ WNTR can be used to simulate the effects of environmental change on the water di
 changing supply and demand, adding disruptive conditions (i.e., power outages, pipe leaks) caused by severe weather, or by adding pipe leaks caused by subsidence.
 Power outages and pipe leaks are described above.  
 Changes to supply and demand can be simple (i.e., changing all nodes by a certain percent), or complex (i.e., using external data or correlated statistical methods).
-To model simple changes in supply and demand:
+The following example changes supply and demand in the model.
 
-.. literalinclude:: ../examples/disaster_scenarios.py
-   :lines: 45-49
+.. doctest::
+
+    >>> for reservoir_name, reservoir in wn.reservoirs():
+    ...     reservoir.head_timeseries.base_value = reservoir.head_timeseries.base_value*0.9
+    >>> for junction_name, junction in wn.junctions():
+    ...     for demand in junction.demand_timeseries_list:
+    ...         demand.base_value = demand.base_value*1.15
    
 Contamination
 --------------------
@@ -141,7 +191,7 @@ Recent incidents, including the Elk River chemical spill and Flint lead contamin
 highlight the need to minimize human health and economic impacts.
 
 WNTR simulates contamination incidents by introducing contaminants into the distribution system and allowing them to propagate through the system. 
-The example **water_quality_simulation.py** includes steps to define and simulate contamination incidents.
+The section on :ref:`water_quality_simulation` includes steps to define and simulate contamination incidents.
 
 Future versions of WNTR will be able to simulate changes in source water quality due to disruptions.
 
