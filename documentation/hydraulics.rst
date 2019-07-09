@@ -11,21 +11,33 @@ See :ref:`software_framework` for more information on features and limitations o
 The EpanetSimulator can be used to run demand-driven hydraulic simulations
 using the EPANET 2 Programmer's Toolkit.  The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
-A hydraulic simulation using the EpanetSimulator is run using the following code:
+A hydraulic simulation using the EpanetSimulator is run using the following code.
 
-.. literalinclude:: ../examples/hydraulic_simulation.py
-   :lines: 12-13
+.. doctest::
+    :hide:
+
+    >>> import wntr
+    >>> try:
+    ...    inp_file_name = '../examples/networks/Net3.inp'
+    ... except:
+    ...    inp_file_name= 'examples/networks/Net3.inp'
+	>>> wn = wntr.network.WaterNetworkModel(inp_file_name)
+	
+.. doctest::
+
+	>>> sim = wntr.sim.EpanetSimulator(wn)
+	>>> results = sim.run_sim()
 
 The WNTRSimulator is a pure Python hydraulics simulation engine based on the same equations
 as EPANET.  The WNTRSimulator does not include equations to run water quality 
 simulations.  The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulations
-in either demand-driven or pressure dependent demand mode.
+in either demand-driven or pressure dependent demand mode ('DD' or 'PDD').
 A hydraulic simulation using the WNTRSimulator is run using the following code:
 
-.. literalinclude:: ../examples/hydraulic_simulation.py
-   :lines: 16-17
+.. doctest::
 
-The example **hydraulic_simulation.py** can be used to run both simulators.
+	>>> sim = wntr.sim.WNTRSimulator(wn, mode='DD')
+	>>> results = sim.run_sim()
 
 More information on the simulators can be found in the API documentation, under
 :class:`~wntr.sim.epanet.EpanetSimulator` and 
@@ -237,7 +249,6 @@ In the example, the diameter of the leak is set to 0.5 cm, 1.0 cm, and 1.5 cm.
    
    Example relationship between leak demand (d) and pressure (p).
 
-
 Pause and restart 
 ------------------
 
@@ -251,4 +262,3 @@ The WNTRSimulator includes the ability to
 
 These features are helpful when evaluating various response action plans or when 
 simulating long periods of time where the time resolution might vary.
-The file **hydraulic_simulation.py** includes examples of these features.
