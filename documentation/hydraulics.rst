@@ -18,10 +18,9 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 
     >>> import wntr
     >>> try:
-    ...    inp_file_name = '../examples/networks/Net3.inp'
+    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
-    ...    inp_file_name= 'examples/networks/Net3.inp'
-	>>> wn = wntr.network.WaterNetworkModel(inp_file_name)
+    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 	
 .. doctest::
 

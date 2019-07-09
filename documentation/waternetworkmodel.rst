@@ -21,8 +21,8 @@ For more information on the water network model, see
 Build a model from an INP file
 ---------------------------------
 
-A water network model can be created directly from an EPANET INP file.  The following 
-example uses Net3.inp to build a water network model.
+A water network model can be created directly from an EPANET INP file.  
+The following example build a water network model.
 
 .. doctest::
     :hide:
@@ -41,7 +41,11 @@ example uses Net3.inp to build a water network model.
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-	
+
+.. note:: 
+  Unless otherwise noted, examples in the WNTR documentation use Net3.inp to build the
+  water network model, named ``wn``.
+  
 Build a model from scratch
 ---------------------------------
 
