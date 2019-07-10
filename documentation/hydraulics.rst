@@ -64,6 +64,19 @@ emitter exponent.
 All options are used with the EpanetSimulator.  
 Options that are not used with the WNTRSimulator are described in :ref:`limitations`.  
 
+The following example returns model options, which all have default values.
+
+.. doctest::
+
+    >>> wn.options # doctest: +SKIP
+    Time options:
+      duration            : 604800              
+      hydraulic_timestep  : 900                 
+      quality_timestep    : 900                 
+      rule_timestep       : 360.0               
+      pattern_timestep    : 3600
+      ...
+      
 Mass balance at nodes
 -------------------------
 Both simulators use the mass balance equations from EPANET [Ross00]_:
@@ -192,8 +205,8 @@ where
 :math:`d` is the actual demand (m³/s), 
 :math:`D_f` is the desired demand (m³/s), 
 :math:`p` is the pressure (Pa), 
-:math:`P_f` is the pressure above which the consumer should receive the desired demand (Pa), and 
-:math:`P_0` is the pressure below which the consumer cannot receive any water (Pa).  
+:math:`P_f` is the nominal pressure (Pa) - this is the pressure above which the consumer should receive the desired demand, and 
+:math:`P_0` is the minimum pressure (Pa) - this is the pressure below which the consumer cannot receive any water.  
 The set of nonlinear equations comprising the hydraulic 
 model and the pressure-demand relationship is solved directly using a 
 Newton-Raphson algorithm.  
@@ -213,6 +226,14 @@ Using the pressure dependent demand simulation, the demand starts to decrease wh
    
    Example relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
 
+The following example sets nominal and minimum pressure for each junction.  Note that nominal and minimum pressure can vary throughout the network.
+
+.. doctest::
+
+    >>> for name, node in wn.junctions():
+    ...     node.nominal_pressure = 21.097 # 30 psi
+    ...     node.minimum_pressure = 3.516 # 5 psi
+    
 Leak model
 -------------------------
 
@@ -248,12 +269,19 @@ In the example, the diameter of the leak is set to 0.5 cm, 1.0 cm, and 1.5 cm.
    
    Example relationship between leak demand (d) and pressure (p).
 
+The following example adds a leak to the water network model.
+
+.. doctest::
+
+    >>> node = wn.get_node('123')           
+    >>> node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)
+    
 Pause and restart 
 ------------------
 
 The WNTRSimulator includes the ability to 
 
-* Reset initial values and re-simulate using the same water network model.  Initial values include tank head, reservoir head, pipe status, pump status, and valve status.
+* Reset initial values and re-simulate using the same water network model.  Initial values include simulation time, tank head, reservoir head, pipe status, pump status, and valve status.
 
 * Pause a hydraulic simulation, change network operations, and then restart the simulation
 
@@ -261,3 +289,51 @@ The WNTRSimulator includes the ability to
 
 These features are helpful when evaluating various response action plans or when 
 simulating long periods of time where the time resolution might vary.
+
+The following example runs a hydraulic simulation for 10 hours and then restarts the simulation for another 14 hours.
+The results from the first 10 hours and last 14 hours can be combined for analysis or analyzed separately.  Furthermore, 
+network operations can be modified between simulations.
+
+.. doctest::
+
+    >>> wn.options.time.duration = 10*3600
+    >>> sim = wntr.sim.WNTRSimulator(wn)
+    >>> first_10_hours_results = sim.run_sim()
+    >>> wn.options.time.duration = 24*3600
+    >>> sim = wntr.sim.WNTRSimulator(wn)
+    >>> last_14_hours_results = sim.run_sim()
+    
+To restart the simulation from time zero, the user has several options.
+
+1. Use the existing water network model and reset initial conditions. 
+   Initial conditions include simulation time, tank head, reservoir head, pipe status, pump status, and valve status.
+   This option is useful when only initial conditions have changed between simulations.
+   
+   .. doctest::
+
+       >>> wn.reset_initial_values()
+
+2. Save the water network model to a file and reload that file each time a simulation is run.  
+   A pickle file is generally used for this purpose.  
+   This option is useful when the water network model contains custom controls that would not be reset using the option 1, 
+   or when the user wants to change operations between simulations.
+
+   .. doctest::
+
+       >>> # Save the water network model to a file before using it in a simulation
+       >>> import pickle
+       >>> f=open('wn.pickle','wb')
+       >>> pickle.dump(wn,f)
+       >>> f.close()
+       >>> sim = wntr.sim.WNTRSimulator(wn)
+       >>> results = sim.run_sim()
+    
+       >>> # Reload the water network model from the file before the next simulation
+       >>> f=open('wn.pickle','rb')
+       >>> wn = pickle.load(f)
+       >>> f.close()
+       >>> sim = wntr.sim.WNTRSimulator(wn)
+       >>> results = sim.run_sim()
+    
+If these options do not cover user specific needs, then the water network
+model would need to be recreated between simulations or reset by hand.
