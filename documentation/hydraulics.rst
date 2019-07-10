@@ -337,3 +337,5 @@ To restart the simulation from time zero, the user has several options.
     
 If these options do not cover user specific needs, then the water network
 model would need to be recreated between simulations or reset by hand.
+Note that when using the EpanetSimulator, the model is reset each time it is used in 
+a simulation.

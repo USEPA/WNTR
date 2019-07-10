@@ -86,8 +86,8 @@ When an element is added to the model, it is added to the model's registry.
 Within the registry, junctions, tanks, and reservoirs share a namespace (e.g. those elements cannot share names) and pipes, pumps, and valves share a namespace.
 
 For each method that adds an element to the model, there is a related object.  For example, the 
-:class:`~wntr.network.model.add_junction` method adds a 
-:class:`~wntr.network.element.Junction` object to the model.
+:class:`~wntr.network.model.WaterNetworkModel.add_junction` method adds a 
+:class:`~wntr.network.elements.Junction` object to the model.
 Generally, the object is not added to the model directly.
 
 The example below adds a junction and pipe to a water network model.
