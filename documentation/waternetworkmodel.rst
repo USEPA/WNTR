@@ -231,7 +231,7 @@ where the element object is not needed.
 
     >>> node_names = wn.node_name_list
     >>> num_nodes = wn.num_nodes
-    >>> wn.describe(level=0)
+    >>> wn.describe(level=0) # doctest: +SKIP
     {'Nodes': 97, 'Links': 119, 'Patterns': 5, 'Curves': 2, 'Sources': 0, 'Controls': 18}
 	 
 Query element attributes

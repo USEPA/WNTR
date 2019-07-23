@@ -169,10 +169,8 @@ The following example uses simulation results from above, and converts the graph
     >>> ax = fig.gca()
     >>> tankH.plot(legend=True, ax=ax) # doctest: +ELLIPSIS
     <matplotlib.axes._subplots.AxesSubplot object ...
-    >>> ax.set_xlabel('Simulation Time (hr)')
-    Text(0.5, 0, 'Simulation Time (hr)')
-    >>> ax.set_ylabel('Head (ft)')
-    Text(0, 0.5, 'Head (ft)')
+    >>> ax.set_xlabel('Simulation Time (hr)') # doctest: +SKIP
+    >>> ax.set_ylabel('Head (ft)') # doctest: +SKIP
     >>> plotly.offline.plot_mpl(fig, filename='tankhead_timeseries.html', auto_open=False) # doctest: +SKIP
     
 
