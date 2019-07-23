@@ -32,4 +32,5 @@ v0.1.7 (Master branch)
 * Dropped Travis CI tests for Python 3.4
 * Added Travis CI tests for Python 3.7
 * Updated tests
-* Updated documentation, including installation instructions and a section on network morphology and graphics
+* Updated documentation, including installation instructions and a section on network morphology and graphics.
+  Removed example files and integrated code examples directly into the documentation.

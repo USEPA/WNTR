@@ -46,8 +46,8 @@ def _format_link_attribute(link_attribute, wn):
     return link_attribute
         
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
-               node_size=20, node_range = [None,None], node_cmap=None, node_labels=False,
-               link_width=1, link_range = [None,None], link_cmap=None, link_labels=False,
+               node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
+               link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
                add_colorbar=True, directed=False, ax=None):
     """
     Plot network graphic
@@ -87,8 +87,11 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
 
     node_range : list, optional
         Node range ([None,None] indicates autoscale)
-
-    node_cmap : matplotlib.pyplot.cm colormap, optional
+        
+    node_alpha : int, optional
+        Node transparency
+        
+    node_cmap : matplotlib.pyplot.cm colormap or list of named colors, optional
         Node colormap 
         
     node_labels: bool, optional
@@ -100,7 +103,10 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     link_range : list, optional
         Link range ([None,None] indicates autoscale)
 
-    link_cmap : matplotlib.pyplot.cm colormap, optional
+    link_alpha : int, optional
+        Link transparency
+    
+    link_cmap : matplotlib.pyplot.cm colormap or list of named colors, optional
         Link colormap
         
     link_labels: bool, optional
@@ -128,10 +134,6 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     if plt is None:
         raise ImportError('matplotlib is required')
 
-    if node_cmap is None:
-        node_cmap = plt.cm.Spectral_r
-    if link_cmap is None:
-        link_cmap = plt.cm.Spectral_r
     if ax is None: # create a new figure
         plt.figure(facecolor='w', edgecolor='k')
         ax = plt.gca()
@@ -148,22 +150,40 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
 
     # Define node properties
     if node_attribute is not None:
-        node_attribute_from_list = False
+        
         if isinstance(node_attribute, list):
-            node_attribute_from_list = True
+            if node_cmap is None:
+                node_cmap = ['red', 'red']
             add_colorbar = False
+        
+        if node_cmap is None:
+            node_cmap = plt.cm.Spectral_r
+        elif isinstance(node_cmap, list):
+            if len(node_cmap) == 1:
+                node_cmap = node_cmap*2
+            node_cmap = custom_colormap(len(node_cmap), node_cmap)  
+         
         node_attribute = _format_node_attribute(node_attribute, wn)
         nodelist,nodecolor = zip(*node_attribute.items())
-        if node_attribute_from_list:
-            nodecolor = 'r'
+
     else:
         nodelist = None
         nodecolor = 'k'
     
     if link_attribute is not None:
+        
         if isinstance(link_attribute, list):
-            link_cmap = custom_colormap(2, ['red', 'black'])
+            if link_cmap is None:
+                link_cmap = ['red', 'red']
             add_colorbar = False
+
+        if link_cmap is None:
+            link_cmap = plt.cm.Spectral_r
+        elif isinstance(link_cmap, list):
+            if len(link_cmap) == 1:
+                link_cmap = link_cmap*2
+            link_cmap = custom_colormap(len(link_cmap), link_cmap)  
+            
         link_attribute = _format_link_attribute(link_attribute, wn)
         
         # Replace link_attribute dictionary defined as
@@ -187,10 +207,10 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     
     nodes = nx.draw_networkx_nodes(G, pos, with_labels=False, 
             nodelist=nodelist, node_color=nodecolor, node_size=node_size, 
-            cmap=node_cmap, vmin=node_range[0], vmax = node_range[1], 
+            alpha=node_alpha, cmap=node_cmap, vmin=node_range[0], vmax = node_range[1], 
             linewidths=0, ax=ax)
     edges = nx.draw_networkx_edges(G, pos, edgelist=linklist, 
-            edge_color=linkcolor, width=link_width, edge_cmap=link_cmap, 
+            edge_color=linkcolor, width=link_width, alpha=link_alpha, edge_cmap=link_cmap, 
             edge_vmin=link_range[0], edge_vmax=link_range[1], ax=ax)
     if node_labels:
         labels = dict(zip(wn.node_name_list, wn.node_name_list))
@@ -643,10 +663,9 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
     m.save(filename)
  
 def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
-               node_size=20, node_range = [None,None], node_cmap=None, node_labels=False,
-               link_width=1, link_range = [None,None], link_cmap=None, link_labels=False,
+               node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
+               link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
                add_colorbar=True, directed=False, ax=None, repeat=True):
-    
     """
     Create a network animation
 
@@ -662,6 +681,7 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
     link_attribute : pd.DataFrame, optional
         Link attributes stored in a pandas DataFrames, where the index is 
         time and columns are the link name 
+
     title : str, optional
         Plot title 
 
@@ -670,8 +690,11 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
 
     node_range : list, optional
         Node range ([None,None] indicates autoscale)
-
-    node_cmap : matplotlib.pyplot.cm colormap, optional
+        
+    node_alpha : int, optional
+        Node transparency
+        
+    node_cmap : matplotlib.pyplot.cm colormap or list of named colors, optional
         Node colormap 
         
     node_labels: bool, optional
@@ -683,7 +706,10 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
     link_range : list, optional
         Link range ([None,None] indicates autoscale)
 
-    link_cmap : matplotlib.pyplot.cm colormap, optional
+    link_alpha : int, optional
+        Link transparency
+    
+    link_cmap : matplotlib.pyplot.cm colormap or list of named colors, optional
         Link colormap
         
     link_labels: bool, optional
@@ -748,8 +774,8 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
         title_name = '0'
     
     nodes, edges = plot_network(wn, node_attribute=initial_node_values, link_attribute=initial_link_values, title=title_name,
-               node_size=node_size, node_range=node_range, node_cmap=node_cmap, node_labels=node_labels,
-               link_width=link_width, link_range=link_range, link_cmap=link_cmap, link_labels=link_labels,
+               node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
+               link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
                add_colorbar=add_colorbar, directed=directed, ax=ax)
         
     def update(n):
@@ -772,8 +798,8 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
         ax = plt.gca()
         
         nodes, edges = plot_network(wn, node_attribute=node_values, link_attribute=link_values, title=title_name,
-               node_size=node_size, node_range=node_range, node_cmap=node_cmap, node_labels=node_labels,
-               link_width=link_width, link_range=link_range, link_cmap=link_cmap, link_labels=link_labels,
+               node_size=node_size, node_range=node_range, node_alpha=node_alpha, node_cmap=node_cmap, node_labels=node_labels,
+               link_width=link_width, link_range=link_range, link_alpha=link_alpha, link_cmap=link_cmap, link_labels=link_labels,
                add_colorbar=add_colorbar, directed=directed, ax=ax)
         
         return nodes, edges

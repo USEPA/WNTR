@@ -73,8 +73,6 @@ WNTR can be installed as a Python package using standard open source software to
 	
 	  This will install the latest stable version of WNTR from https://pypi.python.org/pypi/wntr.  
 	
-	  .. note:: A WNTR installation using pip will not include the examples folder, which is referenced throughout this manual.  
-	
 	* **Option 2**: Users can download a zip file that includes source files and the examples folder from the US EPA GitHub organization.  
 	  To download the master (development) branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
 	  This downloads a zip file called WNTR-master.zip.

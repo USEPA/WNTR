@@ -116,6 +116,14 @@ Pressure differences are generally less than 5% in this example.
     >>> import wntr
     >>> import numpy as np
     >>> from __future__ import print_function
+    
+.. doctest::
+
+    >>> wn = wntr.network.WaterNetworkModel('Net6.inp') # doctest: +SKIP
+
+.. doctest::
+    :hide:
+    
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net6.inp')
     ... except:
