@@ -1,6 +1,6 @@
 .. _whatsnew_0170:
 
-v0.1.7 (Master branch)
+v0.1.7 (July 23, 2019)
 ---------------------------------------------------
 
 * Added a module for network morphology (see :class:`~wntr.morph`), which includes methods to
