@@ -1047,7 +1047,7 @@ class HydraulicModel(object):
             head[node_id] = node.head
         for name, node in self._wn.nodes(Reservoir):
             node_id = self._node_name_to_id[name]
-            head[node_id] = node.head_timeseries(self._wn.sim_time)
+            head[node_id] = node.head_timeseries.at(self._wn.sim_time)
         return head
 
     def initialize_demand(self):
@@ -1216,13 +1216,14 @@ class HydraulicModel(object):
                 self.leak_status[tank_id] = tank.leak_status
         for reservoir_name, reservoir in self._wn.nodes(Reservoir):
             reservoir_id = self._node_name_to_id[reservoir_name]
-            self.reservoir_head[reservoir_id] = reservoir.head_timeseries(self._wn.sim_time)
+            self.reservoir_head[reservoir_id] = reservoir.head_timeseries.at(self._wn.sim_time)
         for junction_name, junction in self._wn.nodes(Junction):
             junction_id = self._node_name_to_id[junction_name]
             #if junction_id in self.isolated_junction_ids:
             #    self.junction_demand[junction_id] = 0.0
             #else:
-            self.junction_demand[junction_id] = junction.demand_timeseries_list(self._wn.sim_time)
+            self.junction_demand[junction_id] = junction.demand_timeseries_list.at(self._wn.sim_time, 
+                                multiplier=self._wn.options.hydraulic.demand_multiplier)
             if junction._leak:
                 self.leak_status[junction_id] = junction.leak_status
         for link_name, link in self._wn.links():
@@ -1243,7 +1244,7 @@ class HydraulicModel(object):
                 self.pipe_resistance_coefficients[valve_id] = 0.0
         for pump_name, pump in self._wn.pumps():
             pump_id = self._link_name_to_id[pump_name]
-            self.pump_speeds[pump_id] = pump.speed_timeseries(self._wn.sim_time)
+            self.pump_speeds[pump_id] = pump.speed_timeseries.at(self._wn.sim_time)
         for link_id in self._link_ids:
             if self.link_status[link_id] == LinkStatus.closed:
                 self.closed_links.add(link_id)

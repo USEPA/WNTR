@@ -1200,7 +1200,7 @@ class _CloseHeadPumpCondition(ControlCondition):
         If True is returned, the pump needs to be closed
         """
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+        if self._pump.speed_timeseries.at(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         dh = self._end_node.head - self._start_node.head
@@ -1210,7 +1210,7 @@ class _CloseHeadPumpCondition(ControlCondition):
 
     def __str__(self):
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+        if self._pump.speed_timeseries.at(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         s = '{0} head - {1} head > {2:.4f}'.format(self._end_node.name, self._start_node.name, Hmax + self._Htol)
@@ -1244,7 +1244,7 @@ class _OpenHeadPumpCondition(ControlCondition):
         If True is returned, the pump needs to be closed
         """
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+        if self._pump.speed_timeseries.at(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         dh = self._end_node.head - self._start_node.head
@@ -1254,7 +1254,7 @@ class _OpenHeadPumpCondition(ControlCondition):
 
     def __str__(self):
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+        if self._pump.speed_timeseries.at(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         s = '{0} head - {1} head <= {2:.4f}'.format(self._end_node.name, self._start_node.name, Hmax + self._Htol)

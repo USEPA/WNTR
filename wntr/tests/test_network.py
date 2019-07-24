@@ -589,8 +589,9 @@ def test_nzd_nodes():
     
     nzd_nodes = []
     for name, node in wn.junctions():
-        demand = sum(node.demand_timeseries_list.get_values(0, wn.options.time.duration, 
-            wn.options.time.report_timestep) * wn.options.hydraulic.demand_multiplier)
+        demand = 0
+        for ts in np.arange(0, wn.options.time.duration, wn.options.time.report_timestep):
+            demand += node.demand_timeseries_list.at(ts)
         if demand > 0:
             nzd_nodes.append(name)
         
