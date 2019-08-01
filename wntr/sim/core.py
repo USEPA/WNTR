@@ -76,6 +76,7 @@ def _get_control_managers(wn, pdd=False):
     presolve_controls = ControlManager()
     postsolve_controls = ControlManager()
     rules = ControlManager()
+    feasibility_controls = ControlManager()
 
     def categorize_control(control):
         """
@@ -94,6 +95,8 @@ def _get_control_managers(wn, pdd=False):
             postsolve_controls.register_control(control)
         if control.epanet_control_type == _ControlType.rule:
             rules.register_control(control)
+        if control.epanet_control_type == _ControlType.feasibility:
+            feasibility_controls.register_control(control)
 
     for c_name, c in wn.controls():
         categorize_control(c)
@@ -106,7 +109,7 @@ def _get_control_managers(wn, pdd=False):
     for c in wn._get_valve_controls():
         categorize_control(c)
 
-    return presolve_controls, postsolve_controls, rules
+    return presolve_controls, postsolve_controls, rules, feasibility_controls
 
 
 class WNTRSimulator(WaterNetworkSimulator):
@@ -132,6 +135,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._presolve_controls = ControlManager()
         self._rules = ControlManager()
         self._postsolve_controls = ControlManager()
+        self._feasibility_controls = ControlManager()
         self._time_per_step = []
         self._solver = None
         self._model = None
@@ -232,7 +236,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
         wn = self._wn
 
-        self._presolve_controls, self._postsolve_controls, self._rules = _get_control_managers(wn, pdd=(self.mode == 'PDD'))
+        self._presolve_controls, self._postsolve_controls, self._rules, self._feasibility_controls = _get_control_managers(wn, pdd=(self.mode == 'PDD'))
 
         if logger_level <= 1:
             logger.log(1, 'collected presolve controls:')
@@ -243,6 +247,9 @@ class WNTRSimulator(WaterNetworkSimulator):
                 logger.log(1, '\t' + str(c))
             logger.log(1, 'collected postsolve controls:')
             for c in self._postsolve_controls:
+                logger.log(1, '\t' + str(c))
+            logger.log(1, 'collected feasibility controls:')
+            for c in self._feasibility_controls:
                 logger.log(1, '\t' + str(c))
 
             logger.log(1, 'initializing hydraulic model')
@@ -447,6 +454,16 @@ class WNTRSimulator(WaterNetworkSimulator):
                     for obj, attr in self._presolve_controls.get_changes():
                         logger.debug('\t{0}.{1} changed to {2}'.format(obj, attr, getattr(obj, attr)))
 
+            self._feasibility_controls.reset()
+            feasibility_controls_to_run = self._feasibility_controls.check()
+            feasibility_controls_to_run.sort(key=lambda i: i[0]._priority)
+            for c, b in feasibility_controls_to_run:
+                assert b == 0
+                c.run_control_action()
+            logger.debug('changes made by feasibility controls:')
+            for obj, attr in self._feasibility_controls.get_changes():
+                logger.debug('\t{0}.{1} changed to {2}'.format(obj, attr, getattr(obj, attr)))
+
             logger.info('simulation time = %s, trial = %d', self._get_time(), trial)
 
             # Prepare for solve
@@ -456,6 +473,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                 wntr.sim.hydraulics.update_tank_heads(wn)
             wntr.sim.hydraulics.update_model_for_controls(model, wn, model_updater, self._presolve_controls)
             wntr.sim.hydraulics.update_model_for_controls(model, wn, model_updater, self._rules)
+            wntr.sim.hydraulics.update_model_for_controls(model, wn, model_updater, self._feasibility_controls)
             wntr.sim.models.param.source_head_param(model, wn)
             wntr.sim.models.param.expected_demand_param(model, wn)
 

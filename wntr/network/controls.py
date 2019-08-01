@@ -243,6 +243,7 @@ class _ControlType(enum.Enum):
     postsolve = 1
     rule = 2
     pre_and_postsolve = 3
+    feasibility = 4  # controls necessary to ensure the problem being solved is feasible
 
 
 class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
