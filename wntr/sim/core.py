@@ -15,11 +15,15 @@ from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 from wntr.network import Junction, Pipe, Valve, Pump, Tank, Reservoir, LinkStatus
 from wntr.sim.network_isolation import check_for_isolated_junctions, get_long_size
+from wntr.sim.aml.aml import VarDict, ParamDict
+from wntr.sim.aml.expr import Var, Param
 import enum
 try:
     import plotly
 except ImportError:
     pass
+import pandas as pd
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -187,16 +191,37 @@ def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
         plotly.offline.plot(fig, auto_open=auto_open)
 
 
+def write_results_to_json(res, filename):
+    d = dict()
+    for t in res.node['head'].index:
+        d[t] = dict()
+        d[t]['head'] = dict()
+        d[t]['demand'] = dict()
+        d[t]['flow'] = dict()
+        for col in res.node['head'].columns:
+            d[t]['head'][col] = float(res.node['head'].at[t, col])
+        for col in res.node['demand'].columns:
+            d[t]['demand'][col] = float(res.node['demand'].at[t, col])
+        for col in res.link['flowrate'].columns:
+            d[t]['flow'][col] = float(res.link['flowrate'].at[t, col])
+
+    f = open(filename, 'w')
+    json.dump(d, f)
+    f.close()
+
+
 class _DiagnosticsOptions(enum.IntEnum):
     plot_network = 1
     disable = 2
     run_until_time = 3
     perform_next_step = 4
+    load_solution_from_json = 5
 
 
 class _Diagnostics(object):
-    def __init__(self, wn, enable=False):
+    def __init__(self, wn, model, enable=False):
         self.wn = wn
+        self.model = model
         self.enabled = enable
         self.time_to_enable = -1
 
@@ -222,6 +247,45 @@ class _Diagnostics(object):
                 self.time_to_enable = float(input('What sim time should diagnostics be enabled at? '))
             elif selection == _DiagnosticsOptions.perform_next_step:
                 pass
+            elif selection == _DiagnosticsOptions.load_solution_from_json:
+                self.load_solution_from_json()
+                self.run(next_step)
+
+    def load_solution_from_json(self):
+        t = int(self.wn.sim_time)
+        json_file = input('Path to json file: ')
+        f = open(json_file, 'r')
+        sol = json.load(f)
+        if str(t) not in sol:
+            print('no solution found for sim_time {0}'.format(t))
+            return
+        sol = sol[str(t)]
+        for v_name, val in sol.items():
+            if not hasattr(self.model, v_name):
+                continue
+            v = getattr(self.model, v_name)
+            print(v)
+            print(val)
+            if type(val) == dict:
+                for key, _val in val.items():
+                    if key not in v:
+                        continue
+                    _v = v[key]
+                    if type(_v) == Var:
+                        _v.value = _val
+                    else:
+                        if abs(_v.value - _val) > 1e-8:
+                            print('found difference between {0} values for {1}'.format(type(_v), str(_v)))
+                            print('from solution file: {0}'.format(_val))
+                            print('from model: {0}'.format(_v.value))
+            else:
+                if type(v) == Var:
+                    v.value = val
+                else:
+                    if abs(v.value - val) > 1e-8:
+                        print('found difference between {0} values for {1}'.format(type(v), str(v)))
+                        print('from solution file: {0}'.format(val))
+                        print('from model: {0}'.format(v.value))
 
 
 class WNTRSimulator(WaterNetworkSimulator):
@@ -586,14 +650,16 @@ class WNTRSimulator(WaterNetworkSimulator):
         HW_approx: str
             Specifies which Hazen-Williams headloss approximation to use. Options are 'default' and 'piecewise'. Please
             see the WNTR documentation on hydraulics for details.
+        diagnostics: bool
+            If True, then run with diagnostics on
         """
-        if diagnostics:
-            diagnostics = _Diagnostics(self._wn, enable=True)
-        else:
-            diagnostics = _Diagnostics(self._wn, enable=False)
-
         logger.debug('creating hydraulic model')
         self._model, self._model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=self._wn, mode=self.mode, HW_approx=HW_approx)
+
+        if diagnostics:
+            diagnostics = _Diagnostics(self._wn, self._model, enable=True)
+        else:
+            diagnostics = _Diagnostics(self._wn, self._model, enable=False)
 
         self._setup_sim_options(solver=solver, backup_solver=backup_solver, solver_options=solver_options,
                                 backup_solver_options=backup_solver_options, convergence_error=convergence_error)
@@ -622,6 +688,9 @@ class WNTRSimulator(WaterNetworkSimulator):
             self._wn._prev_sim_time = -1
 
         logger.debug('starting simulation')
+
+        logger.info('{0:<10}{1:<10}{2:<10}{3:<15}{4:<15}'.format('Sim Time', 'Trial', 'Solver', '# isolated', '# isolated'))
+        logger.info('{0:<10}{1:<10}{2:<10}{3:<15}{4:<15}'.format('', '', '# iter', 'junctions', 'links'))
         while True:
             if logger.getEffectiveLevel() <= logging.DEBUG:
                 logger.debug('\n\n')
@@ -638,11 +707,9 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             self._run_feasibility_controls()
 
-            logger.info('simulation time = %s, trial = %d', self._get_time(), trial)
-
             # Prepare for solve
             self._update_internal_graph()
-            self._get_isolated_junctions_and_links()
+            num_isolated_junctions, num_isolated_links = self._get_isolated_junctions_and_links()
             if not first_step and not resolve:
                 wntr.sim.hydraulics.update_tank_heads(self._wn)
             wntr.sim.hydraulics.update_model_for_controls(self._model, self._wn, self._model_updater, self._presolve_controls)
@@ -653,9 +720,9 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             diagnostics.run(next_step='solve')
 
-            solver_status, mesg = _solver_helper(self._model, self._solver, self._solver_options)
+            solver_status, mesg, iter_count = _solver_helper(self._model, self._solver, self._solver_options)
             if solver_status == 0 and self._backup_solver is not None:
-                solver_status, mesg = _solver_helper(self._model, self._backup_solver, self._backup_solver_options)
+                solver_status, mesg, iter_count = _solver_helper(self._model, self._backup_solver, self._backup_solver_options)
             if solver_status == 0:
                 if self._convergence_error:
                     logger.error('Simulation did not converge. ' + mesg)
@@ -664,6 +731,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                 logger.warning('Simulation did not converge at time ' + str(self._get_time()) + '. ' + mesg)
                 results.error_code = wntr.sim.results.ResultsStatus.error
                 break
+
+            logger.info('{0:<10}{1:<10}{2:<10}{3:<15}{4:<15}'.format(self._get_time(), trial, iter_count, num_isolated_junctions, num_isolated_links))
 
             # Enter results in network and update previous inputs
             logger.debug('storing results in network')
@@ -855,8 +924,6 @@ class WNTRSimulator(WaterNetworkSimulator):
                 link._is_isolated = True
                 isolated_links.add(l)
 
-        logger.info('Number of isolated junctions: ' + str(len(isolated_junctions)))
-        logger.info('Number of isolated links: ' + str(len(isolated_links)))
         if logger_level <= logging.DEBUG:
             if len(isolated_junctions) > 0 or len(isolated_links) > 0:
                 logger.debug('isolated junctions: {0}'.format(isolated_junctions))
@@ -867,6 +934,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                                                                           isolated_junctions, isolated_links)
         self._prev_isolated_junctions = isolated_junctions
         self._prev_isolated_links = isolated_links
+        return len(isolated_junctions), len(isolated_links)
 
 
 def _get_csr_data_index(a, row, col):
@@ -909,19 +977,19 @@ def _solver_helper(model, solver, solver_options):
     elif solver is scipy.optimize.fsolve:
         x, infodict, ier, mesg = solver(model.evaluate_residuals, model.get_x(), **solver_options)
         if ier != 1:
-            sol = SolverStatus.error, mesg
+            sol = SolverStatus.error, mesg, None
         else:
             model.load_var_values_from_x(x)
-            sol = SolverStatus.converged, mesg
+            sol = SolverStatus.converged, mesg, None
     elif solver in {scipy.optimize.newton_krylov, scipy.optimize.anderson, scipy.optimize.broyden1,
                             scipy.optimize.broyden2, scipy.optimize.excitingmixing, scipy.optimize.linearmixing,
                             scipy.optimize.diagbroyden}:
         try:
             x = solver(model.evaluate_residuals, model.get_x(), **solver_options)
             model.load_var_values_from_x(x)
-            sol = SolverStatus.converged, ''
+            sol = SolverStatus.converged, '', None
         except:
-            sol = SolverStatus.error, ''
+            sol = SolverStatus.error, '', None
     else:
         raise ValueError('Solver not recognized.')
     return sol
