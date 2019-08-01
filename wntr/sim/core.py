@@ -138,7 +138,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         s = int(s)
         return str(h)+':'+str(m)+':'+str(s)
 
-    def _setup_sim_options(self, solver, backup_solver, solver_options, backup_solver_options):
+    def _setup_sim_options(self, solver, backup_solver, solver_options, backup_solver_options, convergence_error):
         self._report_timestep = self._wn.options.time.report_timestep
         self._hydraulic_timestep = self._wn.options.time.hydraulic_timestep
         if type(self._report_timestep) is str:
@@ -184,6 +184,8 @@ class WNTRSimulator(WaterNetworkSimulator):
             if use_jac:
                 dense_jac = _DenseJac(self._model)
                 self._backup_solver_options['fprime'] = dense_jac.eval
+
+        self._convergence_error = convergence_error
 
     def _get_control_managers(self):
         self._presolve_controls = ControlManager()
@@ -435,7 +437,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._model, self._model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=self._wn, mode=self.mode, HW_approx=HW_approx)
 
         self._setup_sim_options(solver=solver, backup_solver=backup_solver, solver_options=solver_options,
-                                backup_solver_options=backup_solver_options)
+                                backup_solver_options=backup_solver_options, convergence_error=convergence_error)
 
         self._get_control_managers()
 
@@ -490,12 +492,11 @@ class WNTRSimulator(WaterNetworkSimulator):
             wntr.sim.models.param.source_head_param(self._model, self._wn)
             wntr.sim.models.param.expected_demand_param(self._model, self._wn)
 
-            # Solve
             solver_status, mesg = _solver_helper(self._model, self._solver, self._solver_options)
             if solver_status == 0 and self._backup_solver is not None:
                 solver_status, mesg = _solver_helper(self._model, self._backup_solver, self._backup_solver_options)
             if solver_status == 0:
-                if convergence_error:
+                if self._convergence_error:
                     logger.error('Simulation did not converge. ' + mesg)
                     raise RuntimeError('Simulation did not converge. ' + mesg)
                 warnings.warn('Simulation did not converge. ' + mesg)
