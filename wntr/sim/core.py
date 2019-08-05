@@ -257,22 +257,21 @@ class _Diagnostics(object):
         self.enabled = enable
         self.time_to_enable = -1
 
-    def get_command(self, next_step):
+    def get_command(self):
         print('please select what you would like to do:')
         for option in _DiagnosticsOptions:
-            if option == _DiagnosticsOptions.perform_next_step:
-                print('  {0} - {1}: {2}'.format(option.value, option.name, next_step))
-            else:
-                print('  {0} - {1}'.format(option.value, option.name))
+            print('  {0} - {1}'.format(option.value, option.name))
         selection = int(input())
         return selection
 
-    def run(self, next_step):
+    def run(self, last_step, next_step):
         if self.enabled and self.wn.sim_time >= self.time_to_enable:
-            selection = self.get_command(next_step)
+            print('last step: ', last_step)
+            print('next step: ', next_step)
+            selection = self.get_command()
             if selection == _DiagnosticsOptions.plot_network:
                 _plot_interactive_network(self.wn)
-                self.run(next_step)
+                self.run(last_step, next_step)
             elif selection == _DiagnosticsOptions.disable:
                 self.enabled = False
             elif selection == _DiagnosticsOptions.run_until_time:
@@ -281,13 +280,13 @@ class _Diagnostics(object):
                 pass
             elif selection == _DiagnosticsOptions.load_solution_from_json:
                 self.load_solution_from_json()
-                self.run(next_step)
+                self.run(last_step, next_step)
             elif selection == _DiagnosticsOptions.display_residuals:
                 self.display_residuals()
-                self.run(next_step)
+                self.run(last_step, next_step)
             elif selection == _DiagnosticsOptions.compare_link_status_to_solution:
                 self.compare_link_status_to_solution()
-                self.run(next_step)
+                self.run(last_step, next_step)
 
     def compare_link_status_to_solution(self):
         if int(self.wn.sim_time) != self.wn.sim_time:
@@ -811,7 +810,7 @@ class WNTRSimulator(WaterNetworkSimulator):
             wntr.sim.models.param.source_head_param(self._model, self._wn)
             wntr.sim.models.param.expected_demand_param(self._model, self._wn)
 
-            diagnostics.run(next_step='solve')
+            diagnostics.run(last_step='presolve controls, rules, and model updates', next_step='solve')
 
             solver_status, mesg, iter_count = _solver_helper(self._model, self._solver, self._solver_options)
             if solver_status == 0 and self._backup_solver is not None:
@@ -831,11 +830,14 @@ class WNTRSimulator(WaterNetworkSimulator):
             logger.debug('storing results in network')
             wntr.sim.hydraulics.store_results_in_network(self._wn, self._model, mode=self.mode)
 
+            diagnostics.run(last_step='solve and store results in network', next_step='postsolve controls')
+
             self._run_postsolve_controls()
             if self._postsolve_controls.changes_made():
                 resolve = True
                 self._update_internal_graph()
                 wntr.sim.hydraulics.update_model_for_controls(self._model, self._wn, self._model_updater, self._postsolve_controls)
+                diagnostics.run(last_step='postsolve controls and model updates', next_step='solve next trial')
                 trial += 1
                 if trial > max_trials:
                     if convergence_error:
@@ -846,6 +848,8 @@ class WNTRSimulator(WaterNetworkSimulator):
                     logger.warning('Exceeded maximum number of trials at time %s', self._get_time())
                     break
                 continue
+
+            diagnostics.run(last_step='postsolve controls and model updates', next_step='advance time')
 
             logger.debug('no changes made by postsolve controls; moving to next timestep')
 
