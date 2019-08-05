@@ -100,7 +100,7 @@ def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
         HTML file name (default=None, temp-plot.html)
     """
     if figsize is None:
-        figsize = [700, 450]
+        figsize = [1000, 700]
 
     node_attributes = ['_is_isolated', 'head', 'demand']
     link_attributes = ['status', '_is_isolated', 'flow']
@@ -150,6 +150,8 @@ def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
             if type(val) == float:
                 val = round(val, round_ndigits)
             link_text += '<br />{0}: {1}'.format(_attr, str(val))
+        link_text += '<br />{0}: {1}'.format('x_coord', 0.5 * (x0 + x1))
+        link_text += '<br />{0}: {1}'.format('y_coord', 0.5 * (y0 + y1))
         edge_name_trace['text'] += tuple([link_text])
 
     # Create node trace
@@ -171,6 +173,8 @@ def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
                 node_text += '<br />{0}: {1}'.format('pressure', round(_node.head-_node.elevation, round_ndigits))
         except:
             pass
+        node_text += '<br />{0}: {1}'.format('x_coord', x)
+        node_text += '<br />{0}: {1}'.format('y_coord', y)
         node_trace['text'] += tuple([node_text])
 
     # Create figure
