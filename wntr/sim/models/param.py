@@ -41,14 +41,15 @@ def expected_demand_param(m, wn):
     m: wntr.aml.aml.aml.Model
     wn: wntr.network.model.WaterNetworkModel
     """
+    demand_multiplier = wn.options.hydraulic.demand_multiplier
     if not hasattr(m, 'expected_demand'):
         m.expected_demand = aml.ParamDict()
 
         for node_name, node in wn.junctions():
-            m.expected_demand[node_name] = aml.Param(node.demand_timeseries_list(wn.sim_time))
+            m.expected_demand[node_name] = aml.Param(node.demand_timeseries_list(wn.sim_time) * demand_multiplier)
     else:
         for node_name, node in wn.junctions():
-            m.expected_demand[node_name].value = node.demand_timeseries_list(wn.sim_time)
+            m.expected_demand[node_name].value = node.demand_timeseries_list(wn.sim_time) * demand_multiplier
 
 
 class pmin_param(Definition):
