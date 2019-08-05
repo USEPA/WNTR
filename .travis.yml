@@ -10,10 +10,18 @@ matrix:
     include:
     - python: 3.5
       env: CONDA_ENV=py35
+      services:
+      - xvfb
     - python: 3.6
       env: CONDA_ENV=py36
-    #- python: 3.7
-    #  env: CONDA_ENV=py37
+      services:
+      - xvfb
+    - python: 3.7
+      dist: xenial
+      services:
+      - xvfb
+      sudo: true
+      env: CONDA_ENV=py37
 
 addons:
     apt:
@@ -26,8 +34,10 @@ cache:
 
 before_script: 
     - "export DISPLAY=:99.0"
-    - "sh -e /etc/init.d/xvfb start"
-    - sleep 3 # give xvfb some time to start
+    - if [[ "$CONDA_ENV" != "py37" ]]; then 
+        source /etc/init.d/xvfb start; 
+        sleep 3;
+      fi
 
 # setup miniconda for numpy, scipy, pandas
 before_install:

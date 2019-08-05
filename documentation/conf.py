@@ -43,6 +43,7 @@ extensions = [
 
 viewcode_import = True
 numpydoc_show_class_members = True
+numpydoc_show_inherited_class_members = False
 numpydoc_class_members_toctree = False
 autodoc_member_order = 'bysource'
 autoclass_content = 'both'

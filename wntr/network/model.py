@@ -1384,6 +1384,64 @@ class WaterNetworkModel(AbstractModel):
     
     ### #
     ### Helper functions
+    def describe(self, level=0):
+        """
+        Describe number of components in the network model
+        
+        Parameters
+        ----------
+        level : int (0, 1, or 2)
+            
+           * Level 0 returns the number of Nodes, Links, Patterns, Curves, Sources, and Controls.
+           * Level 1 includes information from Level 0 but 
+             divides Nodes into Junctions, Tanks, and Reservoirs, 
+             divides Links into Pipes, Pumps, and Valves, and 
+             divides Curves into Pump, Efficiency, Headloss, and Volume.
+           * Level 2 includes information from Level 1 but 
+             divides Pumps into Head and Power, and 
+             divides Valves into PRV, PSV, PBV, TCV, FCV, and GPV.
+            
+        Returns
+        -------
+        A dictionary with component counts
+        """
+        
+        d = {'Nodes': self.num_nodes,
+             'Links': self.num_links,
+             'Patterns': self.num_patterns,
+             'Curves': self.num_curves,
+             'Sources': self.num_sources,
+             'Controls': self.num_controls}
+        
+        if level >= 1:
+            d['Nodes'] = {
+                    'Junctions': self.num_junctions,
+                    'Tanks': self.num_tanks,
+                    'Reservoirs': self.num_reservoirs}
+            d['Links'] = {
+                    'Pipes': self.num_pipes,
+                    'Pumps': self.num_pumps,
+                    'Valves': self.num_valves}
+            d['Curves'] = {
+                    'Pump': len(self._curve_reg._pump_curves), 
+                    'Efficiency': len(self._curve_reg._efficiency_curves),  
+                    'Headloss': len(self._curve_reg._headloss_curves), 
+                    'Volume': len(self._curve_reg._volume_curves)}
+            
+        if level >= 2:
+            d['Links']['Pumps'] = {
+                    'Head': len(list(self.head_pumps())),
+                    'Power': len(list(self.power_pumps()))}
+            d['Links']['Valves'] = {
+                    'PRV': len(list(self.prvs())),
+                    'PSV': len(list(self.psvs())),
+                    'PBV': len(list(self.pbvs())),
+                    'TCV': len(list(self.tcvs())),
+                    'FCV': len(list(self.fcvs())),
+                    'GPV': len(list(self.gpvs()))}
+                
+        return d
+    
     def todict(self):
         """Dictionary representation of the water network model"""
         d = dict(options=self._options.todict(),
@@ -1519,16 +1577,16 @@ class WaterNetworkModel(AbstractModel):
 
         Returns
         -------
-        A dictionary of node names to attribute where node_type satisfies the
-        operation threshold.
+        A pandas Series that contains the attribute that satisfies the
+        operation threshold for a given node_type.
 
         Notes
         -----
-        If operation and value are both None, the dictionary will contain the attributes
+        If operation and value are both None, the Series will contain the attributes
         for all nodes with the specified attribute.
 
         """
-        node_attribute_dict = OrderedDict()
+        node_attribute_dict = {}
         for name, node in self.nodes(node_type):
             try:
                 if operation == None and value == None:
@@ -1539,7 +1597,7 @@ class WaterNetworkModel(AbstractModel):
                         node_attribute_dict[name] = node_attribute
             except AttributeError:
                 pass
-        return node_attribute_dict
+        return pd.Series(node_attribute_dict)
 
     def query_link_attribute(self, attribute, operation=None, value=None, link_type=None):
         """
@@ -1572,12 +1630,12 @@ class WaterNetworkModel(AbstractModel):
 
         Returns
         -------
-        A dictionary of link names to attributes where link_type satisfies the
-        operation threshold.
+        A pandas Series that contains the attribute that satisfies the
+        operation threshold for a given link_type.
 
         Notes
         -----
-        If operation and value are both None, the dictionary will contain the attributes
+        If operation and value are both None, the Series will contain the attributes
         for all links with the specified attribute.
 
         """
@@ -1592,7 +1650,7 @@ class WaterNetworkModel(AbstractModel):
                         link_attribute_dict[name] = link_attribute
             except AttributeError:
                 pass
-        return link_attribute_dict
+        return pd.Series(link_attribute_dict)
 
     def reset_initial_values(self):
         """
