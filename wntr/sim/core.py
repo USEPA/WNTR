@@ -24,6 +24,7 @@ except ImportError:
     pass
 import pandas as pd
 import json
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ class WaterNetworkSimulator(object):
 
 
 def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
-                             figsize=None, round_ndigits=2, filename=None, auto_open=True):
+                              figsize=None, round_ndigits=2, filename=None, auto_open=True):
     """
     Create an interactive scalable network graphic using networkx and plotly.
 
@@ -191,19 +192,48 @@ def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
         plotly.offline.plot(fig, auto_open=auto_open)
 
 
-def write_results_to_json(res, filename):
+def _write_DD_results_to_json_for_diagnostics(wn, res, filename, mode='DD'):
     d = dict()
+    if mode == 'DD':
+        demand_key = 'expected_demand'
+    elif mode == 'PDD':
+        demand_key = 'demand'
+    else:
+        raise ValueError('Unexpected mode: {0}'.format(mode))
+
     for t in res.node['head'].index:
         d[t] = dict()
         d[t]['head'] = dict()
-        d[t]['demand'] = dict()
+        d[t]['source_head'] = dict()
+        d[t][demand_key] = dict()
         d[t]['flow'] = dict()
         for col in res.node['head'].columns:
-            d[t]['head'][col] = float(res.node['head'].at[t, col])
+            node = wn.get_node(col)
+            if node.node_type in {'Tank', 'Reservoir'}:
+                d[t]['source_head'][col] = float(res.node['head'].at[t, col])
+            else:
+                d[t]['head'][col] = float(res.node['head'].at[t, col])
         for col in res.node['demand'].columns:
-            d[t]['demand'][col] = float(res.node['demand'].at[t, col])
+            node = wn.get_node(col)
+            if node.node_type in {'Tank', 'Reservoir'}:
+                pass
+            else:
+                d[t][demand_key][col] = float(res.node['demand'].at[t, col])
         for col in res.link['flowrate'].columns:
             d[t]['flow'][col] = float(res.link['flowrate'].at[t, col])
+
+    f = open(filename, 'w')
+    json.dump(d, f)
+    f.close()
+
+
+def _write_status_to_json(wn, res, filename):
+    d = dict()
+
+    for t in res.link['status'].index:
+        d[t] = dict()
+        for col in res.link['status'].columns:
+            d[t][col] = int(res.link['status'].at[t, col])
 
     f = open(filename, 'w')
     json.dump(d, f)
@@ -216,6 +246,8 @@ class _DiagnosticsOptions(enum.IntEnum):
     run_until_time = 3
     perform_next_step = 4
     load_solution_from_json = 5
+    display_residuals = 6
+    compare_link_status_to_solution = 7
 
 
 class _Diagnostics(object):
@@ -250,42 +282,103 @@ class _Diagnostics(object):
             elif selection == _DiagnosticsOptions.load_solution_from_json:
                 self.load_solution_from_json()
                 self.run(next_step)
+            elif selection == _DiagnosticsOptions.display_residuals:
+                self.display_residuals()
+                self.run(next_step)
+            elif selection == _DiagnosticsOptions.compare_link_status_to_solution:
+                self.compare_link_status_to_solution()
+                self.run(next_step)
+
+    def compare_link_status_to_solution(self):
+        if int(self.wn.sim_time) != self.wn.sim_time:
+            raise ValueError('wn.sim_time must be an int')
+        t = int(self.wn.sim_time)
+        json_file = input('path to json file: ')
+        f = open(json_file, 'r')
+        sol = json.load(f)
+        f.close()
+        if str(t) not in sol:
+            print('no solution found for sim_time {0}'.format(t))
+            return
+        sol = sol[str(t)]
+        index = list()
+        wntr_stat = list()
+        sol_stat = list()
+        stat_diff = list()
+        for link_name, stat in sol.items():
+            link = self.wn.get_link(link_name)
+            index.append(link_name)
+            wntr_stat.append(link.status)
+            sol_stat.append(stat)
+            if link.status == stat:
+                stat_diff.append(0)
+            else:
+                stat_diff.append(1)
+        df = pd.DataFrame({'wntr status': wntr_stat, 'sol status': sol_stat, 'diff': stat_diff}, index=index)
+        df.sort_values(by=['diff'], axis=0, ascending=False, inplace=True)
+        html_str = df.to_html()
+        f = open('status_comparison_' + str(int(self.wn.sim_time)) + '.html', 'w')
+        f.write(html_str)
+        f.close()
+        os.system('open status_comparison_' + str(int(self.wn.sim_time)) + '.html')
 
     def load_solution_from_json(self):
+        if int(self.wn.sim_time) != self.wn.sim_time:
+            raise ValueError('wn.sim_time must be an int')
         t = int(self.wn.sim_time)
         json_file = input('Path to json file: ')
         f = open(json_file, 'r')
         sol = json.load(f)
+        f.close()
         if str(t) not in sol:
             print('no solution found for sim_time {0}'.format(t))
             return
         sol = sol[str(t)]
         for v_name, val in sol.items():
             if not hasattr(self.model, v_name):
+                print('could not load {0} into the model because {0} is not an attribute of the model'.format(v_name))
                 continue
             v = getattr(self.model, v_name)
-            print(v)
-            print(val)
             if type(val) == dict:
                 for key, _val in val.items():
                     if key not in v:
+                        print('could not load {0}[{1}] into the model because {1} is not an element in model.{0}'.format(v_name, key))
                         continue
                     _v = v[key]
                     if type(_v) == Var:
                         _v.value = _val
                     else:
-                        if abs(_v.value - _val) > 1e-8:
-                            print('found difference between {0} values for {1}'.format(type(_v), str(_v)))
-                            print('from solution file: {0}'.format(_val))
-                            print('from model: {0}'.format(_v.value))
+                        if abs(_v.value - _val) > 1e-6:
+                            if abs(_val) <= 1e-8 or abs(_v.value - _val)/abs(_val) > 1e-6:
+                                print('found difference between {0} values for {1}'.format(type(_v), str(_v)))
+                                print('  from solution file: {0}'.format(_val))
+                                print('  from model: {0}'.format(_v.value))
             else:
                 if type(v) == Var:
                     v.value = val
                 else:
-                    if abs(v.value - val) > 1e-8:
-                        print('found difference between {0} values for {1}'.format(type(v), str(v)))
-                        print('from solution file: {0}'.format(val))
-                        print('from model: {0}'.format(v.value))
+                    if abs(v.value - val) > 1e-6:
+                        if abs(val) <= 1e-8 or abs(v.value - val)/abs(val) > 1e-6:
+                            print('found difference between {0} values for {1}'.format(type(v), str(v)))
+                            print('  from solution file: {0}'.format(val))
+                            print('  from model: {0}'.format(v.value))
+
+    def display_residuals(self):
+        self.model.set_structure()
+        r = abs(self.model.evaluate_residuals())
+
+        index = list()
+        resids = list()
+        for c in self.model.cons():
+            index.append(c.name)
+            resids.append(r[c.index])
+        all_resids = pd.DataFrame({'resids': resids}, index=index)
+        all_resids.sort_values(by=['resids'], axis=0, ascending=False, inplace=True)
+        html_str = all_resids.to_html()
+        f = open('resids_' + str(int(self.wn.sim_time)) + '.html', 'w')
+        f.write(html_str)
+        f.close()
+        os.system('open resids_' + str(int(self.wn.sim_time)) + '.html')
 
 
 class WNTRSimulator(WaterNetworkSimulator):
