@@ -414,14 +414,16 @@ class _Diagnostics(object):
 
         if isinstance(start_node, wntr.network.Junction):
             df.at['start_head', 'wntr'] = self.model.head[start_node.name].value
+            df.at['start_head', 'sol'] = sol['head'][start_node.name]
         else:
             df.at['start_head', 'wntr'] = self.model.source_head[start_node.name].value
-        df.at['start_head', 'sol'] = sol['head'][start_node.name]
-        if isinstance(start_node, wntr.network.Junction):
+            df.at['start_head', 'sol'] = sol['source_head'][start_node.name]
+        if isinstance(end_node, wntr.network.Junction):
             df.at['end_head', 'wntr'] = self.model.head[end_node.name].value
+            df.at['end_head', 'sol'] = sol['head'][end_node.name]
         else:
             df.at['end_head', 'wntr'] = self.model.source_head[end_node.name].value
-        df.at['end_head', 'sol'] = sol['head'][end_node.name]
+            df.at['end_head', 'sol'] = sol['source_head'][end_node.name]
 
         df.at['x_coord', 'wntr'] = 0.5 * (start_node.coordinates[0] + end_node.coordinates[0])
         df.at['x_coord', 'sol'] = 0.5 * (start_node.coordinates[0] + end_node.coordinates[0])
