@@ -921,14 +921,12 @@ class OrCondition(ControlCondition):
         self._condition_1 = cond1
         self._condition_2 = cond2
 
-        if isinstance(cond1, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
-                              RelativeCondition)):
+        if isinstance(cond1, TankLevelCondition):
             if cond1._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
 
-        if isinstance(cond2, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
-                              RelativeCondition)):
+        if isinstance(cond2, TankLevelCondition):
             if cond2._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
@@ -985,14 +983,12 @@ class AndCondition(ControlCondition):
         self._condition_1 = cond1
         self._condition_2 = cond2
 
-        if isinstance(cond1, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
-                              RelativeCondition)):
+        if isinstance(cond1, TankLevelCondition):
             if cond1._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
 
-        if isinstance(cond2, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
-                              RelativeCondition)):
+        if isinstance(cond2, TankLevelCondition):
             if cond2._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
