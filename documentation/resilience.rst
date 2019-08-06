@@ -45,8 +45,6 @@ For metrics that vary with respect to time and space, network animation can be u
 
    Example state transition plot and network graphic used to visualize resilience.
 
-The example **resilience_metrics.py** demonstrates how to compute these metrics.
-
 Topographic metrics
 ---------------------
 
@@ -72,55 +70,32 @@ at https://networkx.github.io/.
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
-   Node degree                            Node degree is the number of links adjacent to a node.  Node degree is a 
+   Node degree and terminal nodes         Node degree is the number of links adjacent to a node.  Node degree is a 
                                           measure of the number of branches in a network.  A node with degree 0 is not 
                                           connected to the network.  Terminal nodes have degree 1. A node connected to every node (including itself) 
                                           has a degree equal to the number of nodes in the network.  
                                           The average node degree is a system wide metric used to describe the number of 
                                           connected links in a network.
-                                          Node degree can be computed using the NetworkX method ``degree``.
-                                          Terminal nodes can be found using the method :class:`~wntr.network.graph.WntrMultiDiGraph.terminal_nodes`.
 
    Link density                           Link density is the ratio between the total number of links and the maximum 
                                           number of links in the network.  If links are allowed to connect a node to 
                                           itself, then the maximum number of links is :math:`{n}^{2}`, where :math:`n` is the number of nodes.  
                                           Otherwise, the maximum number of nodes is :math:`n(n-1)`.  Link density is 0 for a graph without edges 
                                           and 1 for a dense graph. The density of multigraphs can be higher than 1.
-                                          Link density can be computed using the NetworkX method ``density``.
 
    Eccentricity and diameter              Eccentricity is the maximum number of links between a node and all other nodes 
                                           in the graph. Eccentricity is a value between 0 and the number of links 
                                           in the network.  
                                           Diameter is the maximum eccentricity in the network. 
                                           Eccentricity and diameter can only be computed using undirected, connected networks.
-                                          Network X includes a method to convert directed graphs to undirected graphs, ``to_undirected``, and 
-                                          to check if graphs are connected, ``is_connected``.
-                                          Eccentricity and diameter can be computed using the  NetworkX methods 
-                                          ``eccentricity`` and ``diameter``.
-
-   Simple paths                           A simple path is a path between two nodes that does not repeat any nodes.  NetworkX includes a method, ``all_simple_paths``, to compute
-                                          all simple paths between two nodes.  
-                                          The method :class:`~wntr.network.graph.WntrMultiDiGraph.links_in_simple_paths`
-                                          can be used to extract all links in a simple path along with the number of times each link was used in the paths. 
-                                          Paths can be time dependent, if related to simulated flow direction.  The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` can be used 
-                                          to weight the graph by a specified attribute.
-
-   Shortest path lengths                  Shortest path lengths is the minimum number of links between a source node and all 
-                                          other nodes in the network.  Shortest path length is a value between 0 and 
-                                          the number of links in the network.
-                                          The average shortest path length is a system wide metric used to describe the number
-                                          of links between a node and all other nodes.
-                                          Shortest path lengths and average shortest path lengths can be computed using the following NetworkX methods
-                                          ``shortest_path_length`` and ``average_shortest_path_length``.
 
    Betweenness centrality                 Betweenness centrality is the fraction of shortest paths that pass through each 
                                           node.  Betweenness coefficient is a value between 0 and 1.
                                           Central point dominance is the average difference in betweenness centrality 
                                           of the most central point (having the maximum betweenness centrality) 
-                                          and all other nodes. These metrics can be computed using the NetworkX methods ``betweenness_centrality`` and the method :class:`~wntr.network.graph.WntrMultiDiGraph.central_point_dominance`
+                                          and all other nodes. 
 
    Closeness centrality                   Closeness centrality is the inverse of the sum of shortest path from one node to all other nodes.
-                                          Closeness centrality can be computed using the NetworkX method ``closeness_centrality``.
 
    Articulation points                    A node is considered an articulation point if the removal of that node 
                                           (along with all its incident edges) increases the number of connected 
@@ -128,13 +103,77 @@ at https://networkx.github.io/.
                                           Density of articulation points is the ratio of the number of articulation 
                                           points and the total number of nodes.  
                                           Density of articulation points is a value between 0 and 1.
-                                          Articulation points can be computed using the NetworkX method ``articulation_points``.
 
    Bridges                                A link is considered a bridge if the removal of that link increases the number of connected components in the network.
                                           The ratio of the number of bridges and the total number of links in the network is the bridge density.  Bridge density is a value between 0 and 1.
-                                          The method :class:`~wntr.network.graph.WntrMultiDiGraph.bridges` can be used to find bridges in a network.
+
+   Simple paths                           A simple path is a path between two nodes that does not repeat any nodes.  
+                                          Paths can be time dependent, if related to flow direction.  
+
+   Shortest path lengths                  Shortest path lengths is the minimum number of links between a source node and all 
+                                          other nodes in the network.  Shortest path length is a value between 0 and 
+                                          the number of links in the network.
+                                          The average shortest path length is a system wide metric used to describe the number
+                                          of links between a node and all other nodes.
    =====================================  ================================================================================================================================================
 
+.. doctest::
+    :hide:
+
+    >>> import wntr
+    >>> import networkx as nx
+    >>> import numpy as np
+    >>> try:
+    ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
+    ... except:
+    ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+
+The following example extracts a graph from the water network model, converts the graph to an undirected graph, 
+and computes node degree, 
+terminal nodes, 
+link density, 
+diameter, 
+eccentricity, 
+betweenness centrality, 
+central point dominance,
+closeness centrality, 
+articulation points, and 
+bridges.  
+Note that many of these metrics use NetworkX directly.  
+Some metrics, such as :class:`~wntr.network.graph.WntrMultiDiGraph.terminal_nodes` and 
+:class:`~wntr.network.graph.WntrMultiDiGraph.bridges`, are methods developed in WNTR that operate on the 
+:class:`~wntr.network.graph.WntrMultiDiGraph` class.
+
+.. doctest::
+
+    >>> G = wn.get_graph()
+    >>> uG = G.to_undirected() # undirected graph
+
+    >>> node_degree = G.degree()
+    >>> terminal_nodes = G.terminal_nodes()
+    >>> link_density = nx.density(G)
+    >>> diameter = nx.diameter(uG)
+    >>> eccentricity = nx.eccentricity(uG)
+    >>> betweenness_centrality = nx.betweenness_centrality(G)
+    >>> central_point_dominance = G.central_point_dominance()
+    >>> closeness_centrality = nx.closeness_centrality(G)
+    >>> articulation_points = list(nx.articulation_points(uG))
+    >>> bridges = G.bridges()
+	
+The following example extracts the shortest path lengths between all nodes and average shortest path length in the graph, then weights the 
+graph by flow direction and extracts all paths between two nodes.
+
+.. doctest::
+
+    >>> shortest_path_length = nx.shortest_path_length(uG)
+    >>> ave_shortest_path_length = nx.average_shortest_path_length(uG)
+    
+    >>> sim = wntr.sim.EpanetSimulator(wn)
+    >>> results = sim.run_sim()
+    >>> flowrate = results.link['flowrate']
+    >>> G.weight_graph(link_attribute = flowrate)
+    >>> all_paths = nx.all_simple_paths(G, '119', '193')
+	
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 
 	the total number of connected triples.  Clustering coefficient is a value between 0 and 1.
@@ -163,7 +202,7 @@ at https://networkx.github.io/.
 Hydraulic metrics
 ---------------------
 
-Hydraulic metrics are based on flow, demand, and/or pressure. With the exection of 
+Hydraulic metrics are based on flow, demand, and/or pressure. With the exception of 
 expected demand and average expected demand, the
 calculation of these metrics requires simulation of network hydraulics that reflect how the
 system operates under normal or abnormal conditions.  
@@ -214,7 +253,34 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           impacted by pressure below a specified threshold.
    =====================================  ================================================================================================================================================
 
+The following example simulates hydraulics in pressure dependent demand mode and then extracts 
+the nodes and times when pressure exceeds a threshold,
+water service availability, 
+todini index,
+and entropy.
 
+.. doctest::
+
+    >>> sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+    >>> results = sim.run_sim()
+    
+    >>> pressure = results.node['pressure']
+    >>> pressure_threshold = 21.09 # 30 psi
+    >>> pressure_above_threshold = wntr.metrics.query(pressure, np.greater, pressure_threshold)
+	
+    >>> expected_demand = wntr.metrics.expected_demand(wn)
+    >>> demand = results.node['demand']
+    >>> wsa = wntr.metrics.water_service_availability(expected_demand, demand)
+			
+    >>> head = results.node['head']
+    >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]            
+    >>> todini = wntr.metrics.todini_index(head, pressure, demand, pump_flowrate, wn, pressure_threshold)
+    
+    >>> G = wn.get_graph()
+    >>> flowrate = results.link['flowrate'].loc[12*3600,:]
+    >>> G.weight_graph(link_attribute=flowrate)
+    >>> entropy, system_entropy = wntr.metrics.entropy(G)
+    
 Water quality metrics
 ---------------------
 Water quality metrics are based on the concentration or water age. The
@@ -238,6 +304,41 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water quality metrics.
    =====================================  ================================================================================================================================================
 
+The following example runs a water age simulation, computes 
+water age using the last 48 hours of the simulation, 
+and the population that is impacted by water age greater than 24 hours.
+   
+.. doctest::
+
+    >>> wn.options.quality.mode = 'AGE'
+    >>> sim = wntr.sim.EpanetSimulator(wn)
+    >>> results = sim.run_sim()
+	
+    >>> age = results.node['quality']
+    >>> age_last_48h = age.loc[age.index[-1]-48*3600:age.index[-1]]
+    >>> average_age = age_last_48h.mean()/3600 # convert to hours
+	
+    >>> pop = wntr.metrics.population(wn)
+    >>> pop_impacted = wntr.metrics.population_impacted(pop, average_age, np.greater, 24)
+	
+The following example runs a chemical concentration water quality simulation and extracts nodes that exceed a threshold.
+	
+.. doctest::
+
+    >>> wn.options.quality.mode = 'CHEMICAL'
+    >>> source_pattern = wntr.network.elements.Pattern.binary_pattern('SourcePattern', step_size=3600, 
+    ...     start_time=2*3600, end_time=15*3600, duration=7*24*3600)
+    >>> wn.add_pattern('SourcePattern', source_pattern)
+    >>> wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
+    >>> wn.add_source('Source2', '123', 'SETPOINT', 1000, 'SourcePattern')
+    >>> sim = wntr.sim.EpanetSimulator(wn)
+    >>> results = sim.run_sim()
+	
+    >>> chem = results.node['quality']
+    >>> chem_threshold = 750
+    >>> mask = wntr.metrics.query(chem, np.greater, chem_threshold)
+    >>> chem_above_regulation = mask.any(axis=0) # True/False for each node
+	
 Water security metrics
 -----------------------
 Water security metrics quantify potential consequences of contamination scenarios.  These metrics are documented in [USEPA15]_.
@@ -263,6 +364,27 @@ Water security metrics included in WNTR are listed in  :numref:`table-water-secu
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water security metrics.
    =====================================  ================================================================================================================================================
+
+The following example uses results from a chemical water quality simulation (from above) to compute 
+mass consumed, 
+volume consumed,
+extent of contamination, 
+and the population impacted by mass consumed over a specified threshold.
+
+.. doctest::
+
+    >>> demand = results.node['demand'].loc[:,wn.junction_name_list]
+    >>> quality = results.node['quality'].loc[:,wn.junction_name_list]
+    >>> MC = wntr.metrics.mass_contaminant_consumed(demand, quality)
+    
+    >>> detection_limit = 750
+    >>> VC = wntr.metrics.volume_contaminant_consumed(demand, quality, detection_limit)
+    
+    >>> flowrate = results.link['flowrate'].loc[:,wn.pipe_name_list] 
+    >>> EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, detection_limit)
+	
+    >>> pop = wntr.metrics.population(wn)
+    >>> pop_impacted = wntr.metrics.population_impacted(pop, MC, np.greater, 80000)
 
 ..
 	Contaminate ingested
@@ -296,3 +418,19 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
                                           :class:`~wntr.metrics.economic.pump_cost` methods. These
                                           use the flowrates and pressures from simulation results to compute pump energy and cost.
    =====================================  ================================================================================================================================================
+
+The following example computes network cost, greenhouse gas emissions, and then runs a hydraulic simulation to compute pump energy and pump cost.
+   
+.. doctest::
+
+    >>> network_cost = wntr.metrics.annual_network_cost(wn)
+    
+    >>> network_ghg = wntr.metrics.annual_ghg_emissions(wn)
+
+    >>> sim = wntr.sim.EpanetSimulator(wn)
+    >>> results = sim.run_sim()
+    >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]
+    >>> head = results.node['head']
+    >>> pump_energy = wntr.metrics.pump_energy(pump_flowrate, head, wn)
+    >>> pump_cost = wntr.metrics.pump_cost(pump_flowrate, head, wn)
+    

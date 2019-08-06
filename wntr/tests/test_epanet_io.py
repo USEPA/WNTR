@@ -16,8 +16,8 @@ class TestWriter(unittest.TestCase):
 
         inp_file = join(test_datadir, 'io.inp')
         self.wn = self.wntr.network.WaterNetworkModel(inp_file)
-        self.wn.write_inpfile('_io_copy.inp', 'GPM')
-        self.wn2 = self.wntr.network.WaterNetworkModel('_io_copy.inp')
+        self.wn.write_inpfile('temp.inp', 'GPM')
+        self.wn2 = self.wntr.network.WaterNetworkModel('temp.inp')
 
     @classmethod
     def tearDownClass(self):
@@ -98,7 +98,7 @@ class TestInpFileWriter(unittest.TestCase):
         self.wntr = wntr
         inp_file = join(test_datadir, 'Net6_plus.inp') # UNITS = GPM
         self.wn = wntr.network.WaterNetworkModel(inp_file)
-        self.wn.write_inpfile('tmp.inp', units='LPM')
+        self.wn.write_inpfile('temp.inp', units='LPM')
         self.wn2 = self.wntr.network.WaterNetworkModel(inp_file)
 
     @classmethod
@@ -189,8 +189,8 @@ class TestNet3InpWriterResults(unittest.TestCase):
         sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
 
-        self.wn.write_inpfile('tmp.inp')
-        self.wn2 = self.wntr.network.WaterNetworkModel('tmp.inp')
+        self.wn.write_inpfile('temp.inp')
+        self.wn2 = self.wntr.network.WaterNetworkModel('temp.inp')
 
         sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.results2 = sim.run_sim()
@@ -235,8 +235,8 @@ class TestNet3InpUnitsResults(unittest.TestCase):
         sim = self.wntr.sim.EpanetSimulator(self.wn)
         self.results = sim.run_sim()
 
-        self.wn.write_inpfile('tmp_units.inp', units='CMH')
-        self.wn2 = self.wntr.network.WaterNetworkModel('tmp_units.inp')
+        self.wn.write_inpfile('temp.inp', units='CMH')
+        self.wn2 = self.wntr.network.WaterNetworkModel('temp.inp')
 
         sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.results2 = sim.run_sim()
