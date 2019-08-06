@@ -18,13 +18,13 @@ from wntr.sim.network_isolation import check_for_isolated_junctions, get_long_si
 from wntr.sim.aml.aml import VarDict, ParamDict
 from wntr.sim.aml.expr import Var, Param
 import enum
+import pandas as pd
+import json
+import os
 try:
     import plotly
 except ImportError:
     pass
-import pandas as pd
-import json
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -252,6 +252,7 @@ class _DiagnosticsOptions(enum.IntEnum):
     load_solution_from_json = 5
     display_residuals = 6
     compare_link_status_to_solution = 7
+    compare_link_sol = 8
 
 
 class _Diagnostics(object):
@@ -290,6 +291,9 @@ class _Diagnostics(object):
                 self.run(last_step, next_step)
             elif selection == _DiagnosticsOptions.compare_link_status_to_solution:
                 self.compare_link_status_to_solution()
+                self.run(last_step, next_step)
+            elif selection == _DiagnosticsOptions.compare_link_sol:
+                self.compare_link_sol()
                 self.run(last_step, next_step)
 
     def compare_link_status_to_solution(self):
@@ -382,6 +386,57 @@ class _Diagnostics(object):
         f.write(html_str)
         f.close()
         os.system('open resids_' + str(int(self.wn.sim_time)) + '.html')
+
+    def compare_link_sol(self):
+        link_name = input('link: ')
+        if int(self.wn.sim_time) != self.wn.sim_time:
+            raise ValueError('wn.sim_time must be an int')
+        t = int(self.wn.sim_time)
+        json_file = input('Path to json file: ')
+        f = open(json_file, 'r')
+        sol = json.load(f)
+        f.close()
+        if str(t) not in sol:
+            print('no solution found for sim_time {0}'.format(t))
+            return
+        sol = sol[str(t)]
+
+        link = self.wn.get_link(link_name)
+        start_node = link.start_node
+        end_node = link.end_node
+
+        df = pd.DataFrame({'wntr': np.ones(7) * np.nan,
+                           'sol': np.ones(7) * np.nan},
+                          index=['flow', 'start_head', 'end_head', 'x_coord', 'y_coord', 'start_node', 'end_node'])
+
+        df.at['flow', 'wntr'] = self.model.flow[link_name].value
+        df.at['flow', 'sol'] = sol['flow'][link_name]
+
+        if isinstance(start_node, wntr.network.Junction):
+            df.at['start_head', 'wntr'] = self.model.head[start_node.name].value
+        else:
+            df.at['start_head', 'wntr'] = self.model.source_head[start_node.name].value
+        df.at['start_head', 'sol'] = sol['head'][start_node.name]
+        if isinstance(start_node, wntr.network.Junction):
+            df.at['end_head', 'wntr'] = self.model.head[end_node.name].value
+        else:
+            df.at['end_head', 'wntr'] = self.model.source_head[end_node.name].value
+        df.at['end_head', 'sol'] = sol['head'][end_node.name]
+
+        df.at['x_coord', 'wntr'] = 0.5 * (start_node.coordinates[0] + end_node.coordinates[0])
+        df.at['x_coord', 'sol'] = 0.5 * (start_node.coordinates[0] + end_node.coordinates[0])
+        df.at['y_coord', 'wntr'] = 0.5 * (start_node.coordinates[1] + end_node.coordinates[1])
+        df.at['y_coord', 'sol'] = 0.5 * (start_node.coordinates[1] + end_node.coordinates[1])
+        df.at['start_node', 'wntr'] = start_node.name
+        df.at['start_node', 'sol'] = start_node.name
+        df.at['end_node', 'wntr'] = end_node.name
+        df.at['end_node', 'sol'] = end_node.name
+
+        html_str = df.to_html()
+        f = open('link_comparison_' + link_name + '_' + str(t) + '.html', 'w')
+        f.write(html_str)
+        f.close()
+        os.system('open link_comparison_' + link_name + '_' + str(t) + '.html')
 
 
 class WNTRSimulator(WaterNetworkSimulator):
