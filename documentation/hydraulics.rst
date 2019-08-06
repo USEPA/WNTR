@@ -411,4 +411,3 @@ which can solve one of these models.
    1.618033988749989
    >>> m.y.value # doctest: +SKIP
    2.618033988749989
-=======
