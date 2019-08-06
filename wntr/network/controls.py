@@ -1911,8 +1911,7 @@ class Rule(ControlBase):
             self._name = ''
         self._control_type = _ControlType.rule
 
-        if isinstance(condition, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
-                                  RelativeCondition)):
+        if isinstance(condition, TankLevelCondition):
             if condition._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
@@ -2017,15 +2016,6 @@ class Control(Rule):
         name: str
             The name of the control
         """
-        # if isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
-        #     if condition._relation is not Comparison.eq:
-        #         raise ValueError('SimTimeConditions and TimeOfDayConditions used with Control must have a relation of '
-        #                          'Comparison.eq. Otherwise use Rule.')
-        if isinstance(condition, (ValueCondition, TankLevelCondition, RelativeCondition)):
-            if condition._relation is Comparison.eq:
-                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
-                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
-
         self._condition = condition
         self._then_actions = [then_action]
         self._else_actions = []
