@@ -134,7 +134,7 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 
 * [EMITTERS] section
 * D-W and C-M headloss options in the [OPTIONS] section (H-W option is used)
-* Accuracy, unbalanced, demand multiplier, and emitter exponent from the [OPTIONS] section
+* Accuracy, unbalanced, and emitter exponent from the [OPTIONS] section
 * Multipoint curves in the [CURVES] section (3-point curves are supported)
 * Pump speed in the [PUMPS] section
 * Volume curves in the [TANKS] section
