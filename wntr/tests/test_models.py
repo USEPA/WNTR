@@ -224,7 +224,7 @@ class TestPDD(unittest.TestCase):
         h1 = node.elevation + pnom
         delta = m.pdd_smoothing_delta
         heads_to_test = [h0 - 1, h0, h0 + delta/2, h0 + delta, h0 + (pmin + pnom)/2, h1 - delta, h1 - delta/2, h1, h1 + 1]
-        d_expected = node.demand_timeseries_list(wn.sim_time)
+        d_expected = node.demand_timeseries_list.at(wn.sim_time, multiplier=wn.options.hydraulic.demand_multiplier)
 
         d = 0.01
 

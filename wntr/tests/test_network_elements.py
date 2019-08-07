@@ -70,19 +70,19 @@ def test_Pattern():
     nose.tools.assert_equal(pattern2a[2], expected_value)
     nose.tools.assert_equal(pattern2b.at(10), expected_value)
     nose.tools.assert_equal(pattern2b.at(12.5), expected_value)
-    nose.tools.assert_equal(pattern2b(14), expected_value)
-    nose.tools.assert_equal(pattern2b(9*5), expected_value)
+    nose.tools.assert_equal(pattern2b.at(14), expected_value)
+    nose.tools.assert_equal(pattern2b.at(9*5), expected_value)
     nose.tools.assert_not_equal(pattern2b.at(15), expected_value)
     
     pattern3 = elements.Pattern('nowrap', multipliers=pattern_points2, time_options=(0, 100), wrap=False)
     nose.tools.assert_equal(pattern3[5], 0.0)
     nose.tools.assert_equal(pattern3[-39], 0.0)
-    nose.tools.assert_equal(pattern3(-39), 0.0)
+    nose.tools.assert_equal(pattern3.at(-39), 0.0)
     nose.tools.assert_equal(pattern3.at(50), 1.0)
     
     pattern4 = elements.Pattern('constant')
     nose.tools.assert_equal(len(pattern4), 0)
-    nose.tools.assert_equal(pattern4(492), 1.0)
+    nose.tools.assert_equal(pattern4.at(492), 1.0)
     
     pattern5a = elements.Pattern('binary', [0.,0.,1.,1.,1.,1.,0.,0.,0.], time_options=(0, 1), wrap=False)
     pattern5b = elements.Pattern.binary_pattern('binary', step_size=1, start_time=2, end_time=6, duration=9)
