@@ -4,7 +4,7 @@ import numpy
 import os
 
 use_swig = False
-build = True
+build = False
 
 extension_modules = list()
 
