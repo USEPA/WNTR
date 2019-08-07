@@ -318,7 +318,7 @@ def store_results_in_network(wn, m, mode='DD'):
                        node.leak_demand)
 
     for name, node in wn.reservoirs():
-        node.head = node.head_timeseries(wn.sim_time)
+        node.head = node.head_timeseries.at(wn.sim_time)
         node.leak_demand = 0
         node.demand = (sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'INLET')) -
                        sum(wn.get_link(link_name).flow for link_name in wn.get_links_for_node(name, 'OUTLET')))
