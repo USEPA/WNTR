@@ -253,12 +253,14 @@ class _DiagnosticsOptions(enum.IntEnum):
     display_residuals = 6
     compare_link_status_to_solution = 7
     compare_link_sol = 8
+    store_var_values_in_network = 9
 
 
 class _Diagnostics(object):
-    def __init__(self, wn, model, enable=False):
+    def __init__(self, wn, model, mode, enable=False):
         self.wn = wn
         self.model = model
+        self.mode = mode
         self.enabled = enable
         self.time_to_enable = -1
 
@@ -294,6 +296,9 @@ class _Diagnostics(object):
                 self.run(last_step, next_step)
             elif selection == _DiagnosticsOptions.compare_link_sol:
                 self.compare_link_sol()
+                self.run(last_step, next_step)
+            elif selection == _DiagnosticsOptions.store_var_values_in_network:
+                self.store_var_values_in_network()
                 self.run(last_step, next_step)
 
     def compare_link_status_to_solution(self):
@@ -439,6 +444,9 @@ class _Diagnostics(object):
         f.write(html_str)
         f.close()
         os.system('open link_comparison_' + link_name + '_' + str(t) + '.html')
+
+    def store_var_values_in_network(self):
+        wntr.sim.hydraulics.store_results_in_network(self.wn, self.model, self.mode)
 
 
 class WNTRSimulator(WaterNetworkSimulator):
@@ -810,9 +818,9 @@ class WNTRSimulator(WaterNetworkSimulator):
         self._model, self._model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=self._wn, mode=self.mode, HW_approx=HW_approx)
 
         if diagnostics:
-            diagnostics = _Diagnostics(self._wn, self._model, enable=True)
+            diagnostics = _Diagnostics(self._wn, self._model, self.mode, enable=True)
         else:
-            diagnostics = _Diagnostics(self._wn, self._model, enable=False)
+            diagnostics = _Diagnostics(self._wn, self._model, self.mode, enable=False)
 
         self._setup_sim_options(solver=solver, backup_solver=backup_solver, solver_options=solver_options,
                                 backup_solver_options=backup_solver_options, convergence_error=convergence_error)
@@ -883,6 +891,7 @@ class WNTRSimulator(WaterNetworkSimulator):
                 warnings.warn('Simulation did not converge. ' + mesg)
                 logger.warning('Simulation did not converge at time ' + str(self._get_time()) + '. ' + mesg)
                 results.error_code = wntr.sim.results.ResultsStatus.error
+                diagnostics.run(last_step='solve', next_step='break')
                 break
 
             logger.info('{0:<10}{1:<10}{2:<10}{3:<15}{4:<15}'.format(self._get_time(), trial, iter_count, num_isolated_junctions, num_isolated_links))
