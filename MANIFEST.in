@@ -3,3 +3,7 @@ include LICENSE.txt
 include wntr/epanet/Darwin/*
 include wntr/epanet/Linux/*
 include wntr/epanet/Windows/*
+include wntr/sim/aml/*.pyd
+include wntr/sim/aml/*.so
+include wntr/sim/network_isolation/*.pyd
+include wntr/sim/network_isolation/*.so

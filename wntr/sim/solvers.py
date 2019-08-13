@@ -76,7 +76,7 @@ class NewtonSolver(object):
 
         x = model.get_x()
         if len(x) == 0:
-            return SolverStatus.converged, 'No variables or constraints'
+            return SolverStatus.converged, 'No variables or constraints', 0
 
         use_r_ = False
 
@@ -94,7 +94,7 @@ class NewtonSolver(object):
                     logger.log(1, 'iter: {0:<4d} norm: {1:<10.2e}'.format(outer_iter, r_norm))
 
             if r_norm < self.tol:
-                return SolverStatus.converged, 'Solved Successfully'
+                return SolverStatus.converged, 'Solved Successfully', outer_iter
 
             J = model.evaluate_jacobian(x=None)
 
@@ -102,7 +102,7 @@ class NewtonSolver(object):
             try:
                 d = -sp.linalg.spsolve(J, r, permc_spec='COLAMD', use_umfpack=False)
             except sp.linalg.MatrixRankWarning:
-                return SolverStatus.error, 'Jacobian is singular at iteration ' + str(outer_iter)
+                return SolverStatus.error, 'Jacobian is singular at iteration ' + str(outer_iter), outer_iter
 
             # Backtracking
             alpha = 1.0
@@ -120,14 +120,14 @@ class NewtonSolver(object):
                         alpha = alpha*self.rho
 
                 if iter_bt+1 >= self.bt_maxiter:
-                    return SolverStatus.error, 'Line search failed at iteration ' + str(outer_iter)
+                    return SolverStatus.error, 'Line search failed at iteration ' + str(outer_iter), outer_iter
                 if logger_level <= 1:
                     logger.log(1, 'iter: {0:<4d} norm: {1:<10.2e} alpha: {2:<10.2e}'.format(outer_iter, new_norm, alpha))
             else:
                 x += d
                 model.load_var_values_from_x(x)
             
-        return SolverStatus.error, 'Reached maximum number of iterations: ' + str(outer_iter)
+        return SolverStatus.error, 'Reached maximum number of iterations: ' + str(outer_iter), outer_iter
 
 
 

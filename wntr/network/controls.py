@@ -243,6 +243,7 @@ class _ControlType(enum.Enum):
     postsolve = 1
     rule = 2
     pre_and_postsolve = 3
+    feasibility = 4  # controls necessary to ensure the problem being solved is feasible
 
 
 class ControlCondition(six.with_metaclass(abc.ABCMeta, object)):
@@ -920,14 +921,12 @@ class OrCondition(ControlCondition):
         self._condition_1 = cond1
         self._condition_2 = cond2
 
-        if isinstance(cond1, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
-                              RelativeCondition)):
+        if isinstance(cond1, TankLevelCondition):
             if cond1._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
 
-        if isinstance(cond2, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
-                              RelativeCondition)):
+        if isinstance(cond2, TankLevelCondition):
             if cond2._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
@@ -984,14 +983,12 @@ class AndCondition(ControlCondition):
         self._condition_1 = cond1
         self._condition_2 = cond2
 
-        if isinstance(cond1, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
-                              RelativeCondition)):
+        if isinstance(cond1, TankLevelCondition):
             if cond1._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond1)))
 
-        if isinstance(cond2, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
-                              RelativeCondition)):
+        if isinstance(cond2, TankLevelCondition):
             if cond2._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(cond2)))
@@ -1200,7 +1197,7 @@ class _CloseHeadPumpCondition(ControlCondition):
         If True is returned, the pump needs to be closed
         """
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+        if self._pump.speed_timeseries.at(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         dh = self._end_node.head - self._start_node.head
@@ -1210,7 +1207,7 @@ class _CloseHeadPumpCondition(ControlCondition):
 
     def __str__(self):
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+        if self._pump.speed_timeseries.at(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         s = '{0} head - {1} head > {2:.4f}'.format(self._end_node.name, self._start_node.name, Hmax + self._Htol)
@@ -1244,7 +1241,7 @@ class _OpenHeadPumpCondition(ControlCondition):
         If True is returned, the pump needs to be closed
         """
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+        if self._pump.speed_timeseries.at(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         dh = self._end_node.head - self._start_node.head
@@ -1254,7 +1251,7 @@ class _OpenHeadPumpCondition(ControlCondition):
 
     def __str__(self):
         a, b, c = self._pump.get_head_curve_coefficients()
-        if self._pump.speed_timeseries(self._wn.sim_time) != 1.0:
+        if self._pump.speed_timeseries.at(self._wn.sim_time) != 1.0:
             raise NotImplementedError('Pump speeds other than 1.0 are not yet supported.')
         Hmax = a
         s = '{0} head - {1} head <= {2:.4f}'.format(self._end_node.name, self._start_node.name, Hmax + self._Htol)
@@ -1910,8 +1907,7 @@ class Rule(ControlBase):
             self._name = ''
         self._control_type = _ControlType.rule
 
-        if isinstance(condition, (TimeOfDayCondition, SimTimeCondition, ValueCondition, TankLevelCondition,
-                                  RelativeCondition)):
+        if isinstance(condition, TankLevelCondition):
             if condition._relation is Comparison.eq:
                 logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
                 warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
@@ -2016,15 +2012,6 @@ class Control(Rule):
         name: str
             The name of the control
         """
-        # if isinstance(condition, (TimeOfDayCondition, SimTimeCondition)):
-        #     if condition._relation is not Comparison.eq:
-        #         raise ValueError('SimTimeConditions and TimeOfDayConditions used with Control must have a relation of '
-        #                          'Comparison.eq. Otherwise use Rule.')
-        if isinstance(condition, (ValueCondition, TankLevelCondition, RelativeCondition)):
-            if condition._relation is Comparison.eq:
-                logger.warning('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
-                warnings.warn('Using Comparison.eq with {0} will probably not work!'.format(type(condition)))
-
         self._condition = condition
         self._then_actions = [then_action]
         self._else_actions = []
