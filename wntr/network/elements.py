@@ -1142,7 +1142,6 @@ class Pattern(object):
         if self.wrap:                      return self._multipliers[int(step%nmult)]
         elif step < 0 or step >= nmult:    return 0.0
         return self._multipliers[step]
-    __call__ = at
     
 
 class TimeSeries(object): 
@@ -1257,26 +1256,6 @@ class TimeSeries(object):
         if not self.pattern:
             return self._base
         return self._base * self.pattern.at(time)
-    __call__ = at
-    
-    def get_values(self, start_time, end_time, time_step):
-        """
-        Returns the values for a range of times.
-        
-        Parameters
-        ----------
-        start_time : int
-            Start time in seconds.
-        end_time : int
-            End time in seconds.
-        time_step : int
-            Time step.
-        """
-        demand_times = range(start_time, end_time + time_step, time_step)
-        demand_values = np.zeros((len(demand_times,)))
-        for ct, t in enumerate(demand_times):
-            demand_values[ct] = self.at(t)
-        return demand_values
     
     def todict(self):
         """Dictionary representation of the time series"""
@@ -1399,18 +1378,17 @@ class Demands(MutableSequence):
         """S.clear() - remove all entries"""
         self._list = []
 
-    def at(self, time, category=None):
+    def at(self, time, category=None, multiplier=1):
         """Return the total demand at a given time."""
         demand = 0.0
         if category:
             for dem in self._list:
                 if dem.category == category:  
-                    demand += dem.at(time)
+                    demand += dem.at(time)*multiplier
         else:
             for dem in self._list:
-                demand += dem.at(time)
+                demand += dem.at(time)*multiplier
         return demand
-    __call__ = at
     
     def remove_category(self, category):
         """Remove all demands from a specific category"""
@@ -1446,26 +1424,6 @@ class Demands(MutableSequence):
         for dem in self._list:
                 res.append(dem.category)
         return res
-
-    def get_values(self, start_time, end_time, time_step):
-        """
-        Returns the values for a range of times.
-        
-        Parameters
-        ----------
-        start_time : int
-            Start time in seconds
-        end_time : int
-            End time in seconds
-        time_step : int
-            time_step
-        """
-        demand_times = range(start_time, end_time + time_step, time_step)
-        demand_values = np.zeros((len(demand_times,)))
-        for dem in self._list:
-            for ct, t in enumerate(demand_times):
-                demand_values[ct] += dem(t)
-        return demand_values
         
 
 class Curve(object):

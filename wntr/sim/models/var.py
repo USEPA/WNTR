@@ -21,9 +21,10 @@ def demand_var(m, wn, index_over=None):
     if index_over is None:
         index_over = wn.junction_name_list
 
+    demand_multiplier = wn.options.hydraulic.demand_multiplier
     for node_name in index_over:
         node = wn.get_node(node_name)
-        m.demand[node_name] = aml.Var(node.demand_timeseries_list(wn.sim_time))
+        m.demand[node_name] = aml.Var(node.demand_timeseries_list.at(wn.sim_time, multiplier=demand_multiplier))
 
 
 def flow_var(m, wn, index_over=None):
