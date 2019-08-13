@@ -13,6 +13,4 @@ dependencies:
     - folium
     - nose
     - openpyxl
-    - pip:
-        - utm=0.4.2
-        - coveralls
+    - pip
