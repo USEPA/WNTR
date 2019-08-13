@@ -19,4 +19,10 @@ v0.2.1 (Aug 13, 2019)
 * Updated documentation for the new algebraic modeling module
 * Updated the controls for valves to improve the robustness of the WNTRSimulator. These changes ensure that, for example, when all of the downstream links of a PSV are closed, the PSV gets opened or closed appropriately.
 * Added a c++ extension module for efficiently detecting portions of the network that are isolated from tanks and reservoirs.
-
+* Added Appveyor testing
+* Added conda-forge distribution mechanism
+* Added some diagnostics features for debugging. This is primarily a utility for developers.
+* Improved the flexibility of controls by adding a ControlManager object. This object tracks changes and ensures that the hydraulic model gets updated appropriately.
+* Fixed a bug in the start_node and end_node properties for links
+* Fixed a bug in the controls for PRVs
+* Flushed out missing WaterNetworkModel methods (e.g., prv_name_list)
