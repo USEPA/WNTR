@@ -48,7 +48,7 @@ WNTR includes source code from the following third-party libraries:
 Numpy
 -----
 
-Copyright (c) 2005-2015, NumPy Developers.
+Copyright (c) 2005-2019, NumPy Developers.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
