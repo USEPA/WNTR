@@ -1,0 +1,22 @@
+.. _whatsnew_0210:
+
+v0.2.1 (Aug 13, 2019)
+---------------------------------------------------
+
+* Added a c++ extension module for algebraic modeling to facilitate model development and maintenance. This module
+
+  * makes modeling relatively easy but still enables efficient constraint and jacobian evaluations.
+  * reduces the burden of code maintenance. 
+  * makes the WNTRSimulator more flexible.
+
+* Support was added in the WNTRSimulator for
+
+  * PSV valves
+  * Global demand multipliers
+
+* Dropped support and testing for Python 2
+* Updated tests (primarily added new tests for the new c++ extension module for algebraic modeling)
+* Updated documentation for the new algebraic modeling module
+* Updated the controls for valves to improve the robustness of the WNTRSimulator. These changes ensure that, for example, when all of the downstream links of a PSV are closed, the PSV gets opened or closed appropriately.
+* Added a c++ extension module for efficiently detecting portions of the network that are isolated from tanks and reservoirs.
+

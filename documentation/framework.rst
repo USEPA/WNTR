@@ -139,7 +139,7 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * Pump speed in the [PUMPS] section
 * Volume curves in the [TANKS] section
 * Pattern start, report start, start clocktime, and statistics in the [TIMES] section
-* PSV, PBV, and GPV values in the [VALVES] section
+* PBV, and GPV values in the [VALVES] section
 
 **Future development of WNTR will address these limitations.**
 
