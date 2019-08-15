@@ -124,8 +124,6 @@ The following Python packages are required:
   https://networkx.github.io/
 * Pandas [Mcki13]_: used to analyze and store time series data, 
   http://pandas.pydata.org/
-* enum34 (for Python 2.7): used to add enumerated type support for Python 2.7, 
-  https://pypi.python.org/pypi/enum34
 
 These packages are included in the Anaconda Python distribution.
  

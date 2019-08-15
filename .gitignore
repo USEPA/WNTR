@@ -5,7 +5,6 @@ build/
 wntr.egg-info/
 
 *.pyc
-*.pyd
 *.egg
 *.coverage
 *.ipynb

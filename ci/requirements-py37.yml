@@ -13,6 +13,5 @@ dependencies:
     - folium
     - nose
     - openpyxl
-    - pip:
-        - utm
-        - coveralls
+    - pip
+# utm and coveralls are also installed with pip in the .travis.yml file after pip is updated. We need pip version 19.2.2 which is available through conda yet.
