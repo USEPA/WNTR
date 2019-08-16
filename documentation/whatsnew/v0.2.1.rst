@@ -1,0 +1,27 @@
+.. _whatsnew_0210:
+
+v0.2.1 (Aug 13, 2019)
+---------------------------------------------------
+
+* Added a c++ extension module for algebraic modeling to facilitate model development and maintenance. This module
+
+  * makes modeling relatively easy but still enables efficient constraint and jacobian evaluations.
+  * reduces the burden of code maintenance. 
+  * makes the WNTRSimulator more flexible.
+
+* Added a c++ extension module for efficiently detecting portions of the network that are isolated from tanks and reservoirs.
+* Support was added in the WNTRSimulator for
+
+  * PSV valves
+  * Global demand multipliers
+
+* Improved the flexibility of controls by adding a ControlManager object. This object tracks changes and ensures that the hydraulic model gets updated appropriately.
+* Updated the controls for valves to improve the robustness of the WNTRSimulator. These changes ensure that, for example, when all of the downstream links of a PSV are closed, the PSV gets opened or closed appropriately.
+* Fixed a bug in the start_node and end_node properties for links
+* Fixed a bug in the controls for PRVs
+* Flushed out missing WaterNetworkModel methods (e.g., prv_name_list)
+* Dropped support and testing for Python 2
+* Updated tests (primarily added new tests for the new c++ extension module for algebraic modeling)
+* Added Appveyor testing
+* Updated documentation for the new algebraic modeling module
+* Added conda-forge distribution mechanism

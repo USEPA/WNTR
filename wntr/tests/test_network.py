@@ -29,7 +29,7 @@ class TestNetworkCreation(unittest.TestCase):
         self.assertEqual(self.wn.num_reservoirs, 1)
 
     def test_num_tanks(self):
-        self.assertEqual(self.wn.num_tanks, 34)
+        self.assertEqual(self.wn.num_tanks, 32)
 
     def test_num_pipes(self):
         self.assertEqual(self.wn.num_pipes, 3829)
@@ -41,7 +41,7 @@ class TestNetworkCreation(unittest.TestCase):
         self.assertEqual(self.wn.num_valves, 2)
 
     def test_num_nodes(self):
-        self.assertEqual(self.wn.num_nodes, 3323+1+34)
+        self.assertEqual(self.wn.num_nodes, 3323+1+32)
 
     def test_num_links(self):
         self.assertEqual(self.wn.num_links, 3829+61+2)
@@ -589,8 +589,9 @@ def test_nzd_nodes():
     
     nzd_nodes = []
     for name, node in wn.junctions():
-        demand = sum(node.demand_timeseries_list.get_values(0, wn.options.time.duration, 
-            wn.options.time.report_timestep) * wn.options.hydraulic.demand_multiplier)
+        demand = 0
+        for ts in np.arange(0, wn.options.time.duration, wn.options.time.report_timestep):
+            demand += node.demand_timeseries_list.at(ts)
         if demand > 0:
             nzd_nodes.append(name)
         

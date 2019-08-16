@@ -107,6 +107,7 @@ class Node(six.with_metaclass(abc.ABCMeta, object)):
         self._curve_reg = wn._curve_reg
         self._coordinates = [0,0]
         self._source = None
+        self._is_isolated = False
 
     def _compare(self, other):
         if not type(self) == type(other):
@@ -270,6 +271,7 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         self._prev_setting = None
         self._setting = None
         self._flow = None
+        self._is_isolated = False
 
     def _compare(self, other):
         """
@@ -332,20 +334,20 @@ class Link(six.with_metaclass(abc.ABCMeta, object)):
         """:class:`~wntr.network.base.Node`: The start node object."""
         return self._start_node
     @start_node.setter
-    def start_node(self, name):
+    def start_node(self, node):
         self._node_reg.remove_usage(self.start_node_name, (self._link_name, self.link_type))
-        self._node_reg.add_usage(name, (self._link_name, self.link_type))
-        self._start_node = self._node_reg[name]
+        self._node_reg.add_usage(node.name, (self._link_name, self.link_type))
+        self._start_node = self._node_reg[node.name]
 
     @property
     def end_node(self):
         """:class:`~wntr.network.base.Node`: The end node object."""
         return self._end_node
     @end_node.setter
-    def end_node(self, name):
+    def end_node(self, node):
         self._node_reg.remove_usage(self.end_node_name, (self._link_name, self.link_type))
-        self._node_reg.add_usage(name, (self._link_name, self.link_type))
-        self._end_node = self._node_reg[name]
+        self._node_reg.add_usage(node.name, (self._link_name, self.link_type))
+        self._end_node = self._node_reg[node.name]
 
     @property
     def start_node_name(self):
@@ -564,11 +566,11 @@ class Registry(MutableMapping):
         """add args to usage[key]"""
         if not key:
             return
-        if not key in self._usage:
+        if not (key in self._usage):
             self._usage[key] = OrderedSet()
         for arg in args:
             self._usage[key].add(arg)
-    
+
     def remove_usage(self, key, *args):
         """remove args from usage[key]"""
         if not key:
@@ -672,19 +674,19 @@ class LinkType(enum.IntEnum):
 class LinkStatus(enum.IntEnum):
     """
     Enum class for link statuses.
-    
-    .. warning:: 
+
+    .. warning::
         This is NOT the class for determining output status from an EPANET binary file.
         The class for output status is wntr.epanet.util.LinkTankStatus.
 
     .. rubric:: Enum Members
 
-    ===============  ==================================================================
-    :attr:`~Closed`  Pipe/valve/pump is closed.
-    :attr:`~Opened`  Pipe/valve/pump is open.
-    :attr:`~Open`    Alias to "Opened"
-    :attr:`~Active`  Valve is partially open.
-    ===============  ==================================================================
+    =================  ==================================================================
+    :attr:`~Closed`    Pipe/valve/pump is closed.
+    :attr:`~Opened`    Pipe/valve/pump is open.
+    :attr:`~Open`      Alias to "Opened"
+    :attr:`~Active`    Valve is partially open.
+    =================  ==================================================================
 
     """
     Closed = 0
@@ -703,6 +705,5 @@ class LinkStatus(enum.IntEnum):
         return self.name
 
     def __eq__(self, other):
-        return int(self) == int(other) and (isinstance(other, int) or \
-               self.__class__.__name__ == other.__class__.__name__)
-
+        return int(self) == int(other) and (isinstance(other, int) or
+                                            self.__class__.__name__ == other.__class__.__name__)
