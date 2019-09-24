@@ -37,8 +37,9 @@ from .graph import WntrMultiDiGraph
 from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTimeCondition, ValueCondition, \
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
-    _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _OpenFCVCondition, _ActiveFCVCondition, \
-    ControlAction, _InternalControlAction, Control, ControlManager, Comparison, Rule
+    _ClosePRVCondition, _OpenPRVCondition, _ActivePRVCondition, _ClosePSVCondition, _OpenPSVCondition, \
+    _ActivePSVCondition, _OpenFCVCondition, _ActiveFCVCondition, ControlAction, _InternalControlAction, Control, \
+    ControlManager, Comparison, Rule
 from collections import OrderedDict
 from wntr.utils.ordered_set import OrderedSet
 
@@ -977,6 +978,68 @@ class WaterNetworkModel(AbstractModel):
                 valve_controls.append(close_control)
                 valve_controls.append(open_control)
                 valve_controls.append(active_control)
+
+                upstream_link_closed_conditions = list()
+                for upstream_link_name in self.get_links_for_node(node_name=valve.start_node_name, flag='ALL'):
+                    if upstream_link_name == valve.name:
+                        continue
+                    upstream_link = self.get_link(upstream_link_name)
+                    _condition = ValueCondition(source_obj=upstream_link, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Closed)
+                    upstream_link_closed_conditions.append(_condition)
+                if len(upstream_link_closed_conditions) == 0:
+                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
+                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
+                    control._control_type = _ControlType.feasibility
+                    valve_controls.append(control)
+                else:
+                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
+                    for _cond in upstream_link_closed_conditions:
+                        condition = AndCondition(cond1=condition, cond2=_cond)
+                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
+                    control._control_type = _ControlType.feasibility
+                    valve_controls.append(control)
+
+            elif valve.valve_type == 'PSV':
+                close_condition = _ClosePSVCondition(self, valve)
+                open_condition = _OpenPSVCondition(self, valve)
+                active_condition = _ActivePSVCondition(self, valve)
+                close_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Closed, 'status')
+                open_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                active_action = _InternalControlAction(valve, '_internal_status', LinkStatus.Active, 'status')
+                close_control = Control(condition=close_condition, then_action=close_action, priority=ControlPriority.very_high)
+                open_control = Control(condition=open_condition, then_action=open_action, priority=ControlPriority.very_low)
+                active_control = Control(condition=active_condition, then_action=active_action, priority=ControlPriority.very_low)
+                close_control._control_type = _ControlType.postsolve
+                open_control._control_type = _ControlType.postsolve
+                active_control._control_type = _ControlType.postsolve
+                valve_controls.append(close_control)
+                valve_controls.append(open_control)
+                valve_controls.append(active_control)
+
+                downstream_link_closed_conditions = list()
+                for downstream_link_name in self.get_links_for_node(node_name=valve.end_node_name, flag='ALL'):
+                    if downstream_link_name == valve.name:
+                        continue
+                    downstream_link = self.get_link(downstream_link_name)
+                    _condition = ValueCondition(source_obj=downstream_link, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Closed)
+                    downstream_link_closed_conditions.append(_condition)
+                if len(downstream_link_closed_conditions) == 0:
+                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
+                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
+                    control._control_type = _ControlType.feasibility
+                    valve_controls.append(control)
+                else:
+                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
+                    for _cond in downstream_link_closed_conditions:
+                        condition = AndCondition(cond1=condition, cond2=_cond)
+                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
+                    control._control_type = _ControlType.feasibility
+                    valve_controls.append(control)
+
             elif valve.valve_type == 'FCV':
                 open_condition = _OpenFCVCondition(self, valve)
                 active_condition = _ActiveFCVCondition(self, valve)
@@ -989,8 +1052,52 @@ class WaterNetworkModel(AbstractModel):
                 valve_controls.append(open_control)
                 valve_controls.append(active_control)
 
+                downstream_link_closed_conditions = list()
+                for downstream_link_name in self.get_links_for_node(node_name=valve.end_node_name, flag='ALL'):
+                    if downstream_link_name == valve.name:
+                        continue
+                    downstream_link = self.get_link(downstream_link_name)
+                    _condition = ValueCondition(source_obj=downstream_link, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Closed)
+                    downstream_link_closed_conditions.append(_condition)
+                if len(downstream_link_closed_conditions) == 0:
+                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
+                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
+                    control._control_type = _ControlType.feasibility
+                    valve_controls.append(control)
+                else:
+                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
+                    for _cond in downstream_link_closed_conditions:
+                        condition = AndCondition(cond1=condition, cond2=_cond)
+                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
+                    control._control_type = _ControlType.feasibility
+                    valve_controls.append(control)
+
+                upstream_link_closed_conditions = list()
+                for upstream_link_name in self.get_links_for_node(node_name=valve.start_node_name, flag='ALL'):
+                    if upstream_link_name == valve.name:
+                        continue
+                    upstream_link = self.get_link(upstream_link_name)
+                    _condition = ValueCondition(source_obj=upstream_link, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Closed)
+                    upstream_link_closed_conditions.append(_condition)
+                if len(upstream_link_closed_conditions) == 0:
+                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
+                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
+                    control._control_type = _ControlType.feasibility
+                    valve_controls.append(control)
+                else:
+                    condition = ValueCondition(source_obj=valve, source_attr='status', relation=Comparison.eq, threshold=LinkStatus.Active)
+                    for _cond in upstream_link_closed_conditions:
+                        condition = AndCondition(cond1=condition, cond2=_cond)
+                    action = _InternalControlAction(valve, '_internal_status', LinkStatus.Open, 'status')
+                    control = Control(condition=condition, then_action=action, priority=ControlPriority.low)
+                    control._control_type = _ControlType.feasibility
+                    valve_controls.append(control)
+
         return valve_controls
-    
+
     ### #
     ### Name lists
     @property
@@ -1060,26 +1167,114 @@ class WaterNetworkModel(AbstractModel):
         return list(self._link_reg.pipe_names)
 
     @property
-    def pump_name_list(self): 
+    def pump_name_list(self):
         """Get a list of pump names (both types included)
-        
+
         Returns
         -------
         list of strings
-        
+
         """
         return list(self._link_reg.pump_names)
 
     @property
-    def valve_name_list(self): 
-        """Get a list of valve names (all types included)
-        
+    def head_pump_name_list(self):
+        """Get a list of head pump names
+
         Returns
         -------
         list of strings
-        
+
+        """
+        return list(self._link_reg.head_pump_names)
+
+    @property
+    def power_pump_name_list(self):
+        """Get a list of power pump names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.power_pump_names)
+
+    @property
+    def valve_name_list(self):
+        """Get a list of valve names (all types included)
+
+        Returns
+        -------
+        list of strings
+
         """
         return list(self._link_reg.valve_names)
+
+    @property
+    def prv_name_list(self):
+        """Get a list of prv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.prv_names)
+
+    @property
+    def psv_name_list(self):
+        """Get a list of psv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.psv_names)
+
+    @property
+    def pbv_name_list(self):
+        """Get a list of pbv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.pbv_names)
+
+    @property
+    def tcv_name_list(self):
+        """Get a list of tcv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.tcv_names)
+
+    @property
+    def fcv_name_list(self):
+        """Get a list of fcv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.fcv_names)
+
+    @property
+    def gpv_name_list(self):
+        """Get a list of gpv names
+
+        Returns
+        -------
+        list of strings
+
+        """
+        return list(self._link_reg.gpv_names)
 
     @property
     def pattern_name_list(self): 
@@ -2359,6 +2554,46 @@ class LinkRegistry(Registry):
     def pump_names(self):
         """A list of all pump names"""
         return self._pumps
+
+    @property
+    def head_pump_names(self):
+        """A list of all head pump names"""
+        return self._head_pumps
+
+    @property
+    def power_pump_names(self):
+        """A list of all power pump names"""
+        return self._power_pumps
+
+    @property
+    def prv_names(self):
+        """A list of all prv names"""
+        return self._prvs
+
+    @property
+    def psv_names(self):
+        """A list of all psv names"""
+        return self._psvs
+
+    @property
+    def pbv_names(self):
+        """A list of all pbv names"""
+        return self._pbvs
+
+    @property
+    def tcv_names(self):
+        """A list of all tcv names"""
+        return self._tcvs
+
+    @property
+    def fcv_names(self):
+        """A list of all fcv names"""
+        return self._fcvs
+
+    @property
+    def gpv_names(self):
+        """A list of all gpv names"""
+        return self._gpvs
 
     def pipes(self):
         """Generator to get all pipes

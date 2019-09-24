@@ -29,7 +29,7 @@ class TestNetworkCreation(unittest.TestCase):
         self.assertEqual(self.wn.num_reservoirs, 1)
 
     def test_num_tanks(self):
-        self.assertEqual(self.wn.num_tanks, 34)
+        self.assertEqual(self.wn.num_tanks, 32)
 
     def test_num_pipes(self):
         self.assertEqual(self.wn.num_pipes, 3829)
@@ -41,7 +41,7 @@ class TestNetworkCreation(unittest.TestCase):
         self.assertEqual(self.wn.num_valves, 2)
 
     def test_num_nodes(self):
-        self.assertEqual(self.wn.num_nodes, 3323+1+34)
+        self.assertEqual(self.wn.num_nodes, 3323+1+32)
 
     def test_num_links(self):
         self.assertEqual(self.wn.num_links, 3829+61+2)
@@ -589,8 +589,9 @@ def test_nzd_nodes():
     
     nzd_nodes = []
     for name, node in wn.junctions():
-        demand = sum(node.demand_timeseries_list.get_values(0, wn.options.time.duration, 
-            wn.options.time.report_timestep) * wn.options.hydraulic.demand_multiplier)
+        demand = 0
+        for ts in np.arange(0, wn.options.time.duration, wn.options.time.report_timestep):
+            demand += node.demand_timeseries_list.at(ts)
         if demand > 0:
             nzd_nodes.append(name)
         
@@ -678,6 +679,28 @@ def test_add_get_remove_num():
            wn.num_sources]
     expected = [92,3,2,117,2,0,5,2,0]
     assert_list_equal(nums, expected)
+
+def test_describe():
+    inp_file = join(ex_datadir,'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    d0 = wn.describe(0)
+    assert_dict_equal(d0, {'Nodes': 97, 'Links': 119, 'Patterns': 5, 
+                           'Curves': 2, 'Sources': 0, 'Controls': 18})
+    
+    d1 = wn.describe(1)
+    assert_dict_equal(d1, {'Nodes': {'Junctions': 92,
+                                     'Tanks': 3,
+                                     'Reservoirs': 2}, 
+                           'Links': {'Pipes': 117,
+                                     'Pumps': 2,
+                                     'Valves': 0}, 
+                           'Patterns': 5, 
+                           'Curves': {'Pump': 2, 
+                                      'Efficiency': 0,  
+                                      'Headloss': 0, 
+                                      'Volume': 0}, 
+                           'Sources': 0, 
+                           'Controls': 18})
     
 if __name__ == '__main__':
     unittest.main()

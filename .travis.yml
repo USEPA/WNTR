@@ -8,14 +8,6 @@ sudo: false # if false, use TravisCI's container based build
 
 matrix:
     include:
-    - python: 2.7
-      env: CONDA_ENV=py27-min
-      services:
-      - xvfb
-    - python: 2.7
-      env: CONDA_ENV=py27
-      services:
-      - xvfb
     - python: 3.5
       env: CONDA_ENV=py35
       services:
@@ -72,7 +64,9 @@ install:
     - ls -l /home/travis/miniconda/envs/test_env/lib
     #- pip install . # use pip to automatically install anything not in the yml files (i.e. numpy/scipy/pandas for py3*)
     #- pip install scipy # won't do anything if already installed
-    - python setup.py install
+    - pip install --upgrade pip
+    - pip install utm==0.4.2 coveralls
+    - python setup.py develop
 
 script:
     - nosetests -v --nologcapture --with-coverage --with-doctest --doctest-extension=.rst --cover-package=wntr documentation/*.rst wntr 

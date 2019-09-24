@@ -31,7 +31,7 @@ The basic steps to define a control or rule are:
 3. Define the control or rule using the action(s) and condition(s)
 4. Add the control or rule to the water network model
 
-These steps are defined below.  Examples use the "Net3.inp" EPANET INP file to generate the water network model object, called `wn`.
+These steps are defined below.  
 
 Actions
 -----------------------

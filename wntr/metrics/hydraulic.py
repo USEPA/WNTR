@@ -37,6 +37,15 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None):
     wn : wntr WaterNetworkModel
         Water network model
         
+    start_time : int (optional)
+        Start time in seconds, if None then value is set to 0
+        
+    end_time : int  (optional)
+        End time in seconds, if None then value is set to wn.options.time.duration
+
+    timestep : int (optional)
+        Timestep, if None then value is set to wn.options.time.report_timestep
+    
     Returns
     -------
     A pandas DataFrame that contains expected demand in m3/s
@@ -50,11 +59,14 @@ def expected_demand(wn, start_time=None, end_time=None, timestep=None):
         timestep = wn.options.time.report_timestep
         
     exp_demand = {}
-    for name, junc in wn.junctions():
-        exp_demand[name] = junc.demand_timeseries_list.get_values(start_time, 
-                  end_time, timestep) * wn.options.hydraulic.demand_multiplier
-    
     tsteps = np.arange(start_time, end_time+timestep, timestep)
+    for name, junc in wn.junctions():
+        dem = []
+        for ts in tsteps:
+            dem.append(junc.demand_timeseries_list.at(ts, 
+                       multiplier=wn.options.hydraulic.demand_multiplier))
+        exp_demand[name] = dem 
+    
     exp_demand = pd.DataFrame(index=tsteps, data=exp_demand)
     
     return exp_demand
