@@ -26,7 +26,7 @@ and node and link types (i.e., Tank, Reservoir, Valve).
 
 .. _fig-graph:
 .. figure:: figures/graph.png
-   :scale: 75 %
+   :width: 389
    :alt: Directed multigraph
 
    Example directed multigraph.

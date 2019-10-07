@@ -25,7 +25,7 @@ Pipes that fall below a user defined pipe diameter threshold are candidates for 
    
 	.. _fig-branch-trim:
 	.. figure:: figures/skel_branch.png
-	   :scale: 100 %
+	   :width: 752
 	   :alt: Branch trim
 	   
 	   Branch trimming.
@@ -47,7 +47,7 @@ Pipes that fall below a user defined pipe diameter threshold are candidates for 
    
 	.. _fig-series-merge:
 	.. figure:: figures/skel_series.png
-	   :scale: 100 %
+	   :width: 731
 	   :alt: Series merge
 	   
 	   Series pipe merge.
@@ -69,7 +69,7 @@ Pipes that fall below a user defined pipe diameter threshold are candidates for 
    
    .. _fig-parallel-merge:
    .. figure:: figures/skel_parallel.png
-      :scale: 100 %
+      :width: 734
       :alt: Parallel merge
 	  
       Parallel pipe merge
@@ -139,7 +139,7 @@ Pressure differences are generally less than 5% in this example.
 	
 .. _fig-skel-example:
 .. figure:: figures/skel_example.png
-   :scale: 100 %
+   :width: 800
    :alt: Skeletonization example
    
    Original and skeletonized Net6.
@@ -156,7 +156,7 @@ Pressure differences are generally less than 5% in this example.
 
 .. _fig-skel-hydraulics:
 .. figure:: figures/skel_hydraulics.png
-   :scale: 100 %
+   :width: 640
    :alt: Skeletonization example
    
    Pressure differences between the original and skeletonized Net6.
@@ -257,7 +257,7 @@ The new pipe can be added to either end of the original pipe.
 
 .. _fig-split-break:
 .. figure:: figures/pipe_split_break.png
-    :scale: 100 %
+    :width: 774
     :alt: Pipe split and pipe break
 	
     Pipe split and pipe break
