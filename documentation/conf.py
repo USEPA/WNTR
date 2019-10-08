@@ -37,10 +37,11 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.autosummary',
-    'numpydoc',
+    'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
 ]
 
+napoleon_use_rtype = False
 viewcode_import = True
 numpydoc_show_class_members = True
 numpydoc_show_inherited_class_members = False

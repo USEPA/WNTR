@@ -122,7 +122,7 @@ To plot the damage state on the network, the state (i.e. Major) can be converted
     ...     link_cmap=custom_cmp, title='Damage state: 0=None, 1=Minor, 2=Major') # doctest: +ELLIPSIS
     (<matplotlib.collections.PathCollection object ...
    
-.. _fig-fragility:
+.. _fig-damage-state:
 .. figure:: figures/damage_state.png
    :width: 640
    :alt: Damage state

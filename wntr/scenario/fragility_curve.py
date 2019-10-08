@@ -8,7 +8,7 @@ import numpy as np
 
 class FragilityCurve(object):
     """
-   Fragility Curve class.
+    Fragility Curve class.
     """
 
     def __init__(self):
@@ -92,7 +92,7 @@ class FragilityCurve(object):
         """
         Sample the damage state using a uniform random variable
         
-         Parameters
+        Parameters
         -----------
         Pr : pd.Dataframe
             Probability of exceeding a damage state
