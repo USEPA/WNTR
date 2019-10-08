@@ -40,7 +40,7 @@ For metrics that vary with respect to time and space, network animation can be u
 
 .. _fig-metrics:
 .. figure:: figures/resilience_metrics.png
-   :scale: 100 %
+   :width: 962
    :alt: Resilience metrics
 
    Example state transition plot and network graphic used to visualize resilience.

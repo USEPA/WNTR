@@ -84,7 +84,7 @@ of exceeding the Minor damage state is 0.85.
 
 .. _fig-fragility:
 .. figure:: figures/fragility_curve.png
-   :scale: 100 %
+   :width: 800
    :alt: Fragility curve
 
    Example fragility curve.
@@ -124,7 +124,7 @@ To plot the damage state on the network, the state (i.e. Major) can be converted
    
 .. _fig-fragility:
 .. figure:: figures/damage_state.png
-   :scale: 100 %
+   :width: 640
    :alt: Damage state
 
    Damage state, selected from the fragility curve.

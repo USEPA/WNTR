@@ -2263,7 +2263,7 @@ class _EpanetRule(object):
             self.add_else(clause)
 
     def set_priority(self, priority):
-        self.priority = int(priority)
+        self.priority = int(float(priority))
 
     def __str__(self):
         if self.priority >= 0:
