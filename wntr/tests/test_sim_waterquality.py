@@ -28,7 +28,7 @@ def test_setpoint_waterquality_simulation():
     results = sim.run_sim()
 
     expected = 91661.72*(1e-6/0.001) # Node '159' at hour 6
-    print(results.node)
+    #print(results.node)
     error = abs((results.node['quality'].loc[6*3600, '159'] - expected)/expected)
     assert_less(error, 0.0001) # 0.01% error
 
@@ -99,7 +99,7 @@ def test_age_waterquality_simulation():
     # the epanet linux binary
     expected = 3.652*3600 # Node '159' at hour 6
     error = abs((results.node['quality'].loc[6*3600, '159'] - expected)/expected)
-    print([expected, results.node['quality'].loc[6*3600, '159']])
+    #print([expected, results.node['quality'].loc[6*3600, '159']])
     assert_less(error, 0.001) # 0.01% error
 
 def test_trace_waterquality_simulation():
@@ -112,7 +112,7 @@ def test_trace_waterquality_simulation():
 
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
-    print(results.node.keys())
+    #print(results.node.keys())
     expected = 91.66 # Node '159' at hour 6
     error = abs(float(results.node['quality'].loc[6*3600, '159'] - expected)/float(expected))
     assert_less(error, 0.0001) # 0.01% error
