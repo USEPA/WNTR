@@ -1,0 +1,6 @@
+.. _whatsnew_0220:
+
+v0.2.2 (master)
+---------------------------------------------------
+
+* Updated methods that use NetworkX to be compatible v2.4

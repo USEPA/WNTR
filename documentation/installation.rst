@@ -8,10 +8,22 @@ Installation
 
 WNTR can be installed as a Python package using standard open source software tools.
 
+Users can install the latest release of WNTR from PyPI using the following command::
+
+    pip install wntr
+    
+Developers can install the master (development) branch of WNTR from the GitHub repository using the following commands::
+
+    git clone https://github.com/USEPA/WNTR
+    cd WNTR
+    python setup.py develop
+
+Detailed instructions are included below.
+
 **Step 1**: Setup your Python environment
 
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
-	WNTR requires Python (versions 3.5, 3.6, or 3.7) along with several Python package dependencies.
+	WNTR requires 64-bit Python (versions 3.5, 3.6, or 3.7) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
 	General information on Python can be found at https://www.python.org/.
@@ -113,7 +125,7 @@ WNTR can be installed as a Python package using standard open source software to
 
 Requirements
 -------------
-Requirements for WNTR include Python (3.5, 3.6, or 3.7) along with several Python packages. 
+Requirements for WNTR include 64-bit Python (3.5, 3.6, or 3.7) along with several Python packages. 
 The following Python packages are required:
 
 * Numpy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 

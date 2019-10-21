@@ -59,23 +59,21 @@ if build:
     extension_modules.append(network_isolation_ext)
 
 DISTNAME = 'wntr'
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 PACKAGES = find_packages()
 EXTENSIONS = extension_modules
 DESCRIPTION = 'Water Network Tool for Resilience'
-LONG_DESCRIPTION = open('README.md').read()
 AUTHOR = 'WNTR Developers'
 MAINTAINER_EMAIL = 'kaklise@sandia.gov'
 LICENSE = 'Revised BSD'
 URL = 'https://github.com/USEPA/WNTR'
+DEPENDENCIES = []
 
-setuptools_kwargs = {
-    'zip_safe': False,
-    'install_requires': [],
-    'scripts': [],
-    'include_package_data': True
-}
-
+# use README file as the long description
+file_dir = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(file_dir, 'README.md'), encoding='utf-8') as f:
+    LONG_DESCRIPTION = f.read()
+    
 setup(name=DISTNAME,
       version=VERSION,
       packages=PACKAGES,
@@ -86,5 +84,7 @@ setup(name=DISTNAME,
       maintainer_email=MAINTAINER_EMAIL,
       license=LICENSE,
       url=URL,
-      **setuptools_kwargs)
-
+      zip_safe=False,
+      install_requires=DEPENDENCIES,
+      scripts=[],
+      include_package_data=True)
