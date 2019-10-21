@@ -61,7 +61,7 @@ can be accessed using the following:
 .. doctest::
 
     >>> node_name = '123'
-    >>> G.node[node_name] # doctest: +SKIP
+    >>> G.nodes[node_name] # doctest: +SKIP
     >>> G.adj[node_name] # doctest: +SKIP
 
 The graph can be used to access NetworkX methods, for example:
