@@ -4,3 +4,6 @@ v0.2.2 (master)
 ---------------------------------------------------
 
 * Updated methods that use NetworkX to be compatible v2.4
+* Added required dependencies to setup.py.  Required and optional dependencies  
+  are included in requirements.txt
+  
