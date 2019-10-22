@@ -221,7 +221,7 @@ Using the pressure dependent demand simulation, the demand starts to decrease wh
 
 .. _fig-pressure-dependent:
 .. figure:: figures/pressure_driven.png
-   :scale: 100 %
+   :width: 610
    :alt: Pressure driven example
    
    Example relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
@@ -264,7 +264,7 @@ In the example, the diameter of the leak is set to 0.5 cm, 1.0 cm, and 1.5 cm.
 
 .. _fig-leak:
 .. figure:: figures/leak_demand.png
-   :scale: 100 %
+   :width: 619
    :alt: Leak demand
    
    Example relationship between leak demand (d) and pressure (p).

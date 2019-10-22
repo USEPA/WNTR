@@ -38,7 +38,7 @@ Conceptually, DataFrames can be visualized as blocks of data with 2 axis, as sho
  
 .. _fig-dataframe:
 .. figure:: figures/dataframes.png
-   :scale: 100 %
+   :width: 526
    :alt: Pandas DataFrames
    
    Conceptual representation of DataFrames used to store simulation results.
@@ -135,7 +135,7 @@ Data can be plotted as a time-series, as shown in :numref:`fig-plot-timeseries`:
 
 .. _fig-plot-timeseries:
 .. figure:: figures/plot_timeseries.png
-   :scale: 100 %
+   :width: 640
    :alt: Time-series graph.
 
    Example time-series graphic.
@@ -150,7 +150,7 @@ plotted in a similar manner.
 	
 .. _fig-plot-network:
 .. figure:: figures/plot_network.png
-   :scale: 100 %
+   :width: 659
    :alt: Network graphic
 
    Example network graphic.

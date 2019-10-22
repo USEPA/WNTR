@@ -1,15 +1,12 @@
 wntr.sim.aml module
 ============================
 
-.. automodule:: wntr.sim.aml
+.. automodule:: wntr.sim.aml.aml
     :members:
     :no-undoc-members:
     :show-inheritance:
 
-Submodules
-----------
-
-.. toctree::
-
-   wntr.sim.aml.aml
-   wntr.sim.aml.expr
+.. automodule:: wntr.sim.aml.expr
+    :members:
+    :no-undoc-members:
+    :show-inheritance:

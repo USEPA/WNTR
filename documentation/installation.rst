@@ -25,7 +25,7 @@ Detailed instructions are included below.
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
 	WNTR requires 64-bit Python (versions 3.5, 3.6, or 3.7) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
-	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
+	the Python environment.  Anaconda can be downloaded from https://www.anaconda.com/distribution/.  
 	General information on Python can be found at https://www.python.org/.
 	
 	.. note:: 
@@ -57,14 +57,14 @@ Detailed instructions are included below.
 	
 	.. _fig-cmd-python:
 	.. figure:: figures/cmd_python.png
-	   :scale: 100 %
+	   :width: 891
 	   :alt: Python
 	   
 	   Opening a Python console from a command prompt.
    
 	.. _fig-spyder:
 	.. figure:: figures/spyder.png
-	   :scale: 100 %
+	   :width: 759
 	   :alt: Spyder
 	   
 	   Opening a Python console using Spyder.
