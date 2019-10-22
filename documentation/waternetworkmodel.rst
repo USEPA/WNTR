@@ -271,7 +271,7 @@ water network model.
     >>> wn.add_reservoir('res', base_head=125, head_pattern='pat1', coordinates=(0,2))
     >>> wn.add_pipe('pipe2', 'node1', 'res', length=100, diameter=0.3048, roughness=100, 
     ...     minor_loss=0.0, status='OPEN')
-	>>> wntr.graphics.plot_network(wn)
+    >>> wntr.graphics.plot_network(wn)
 
 .. doctest::
     :hide:
