@@ -94,7 +94,7 @@ The following NetworkX method can be used to check if a graph is connected:
 
 .. doctest::
 
-    >>> nx.is_connected(G)
+    >>> nx.is_connected(uG)
     True
 
 A **weighted graph** is a graph in which each link is given a weight.  
