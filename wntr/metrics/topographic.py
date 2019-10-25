@@ -181,3 +181,66 @@ def _links_in_simple_paths(G, sources, sinks):
                             link_count[link] = link_count[link]+1
 
     return link_count
+
+def valve_segments(G, valves):
+    
+    uG = G.to_undirected()
+    
+    node_names = list(uG.nodes())
+    link_names = [k for u,v,k in uG.edges(keys=True)] 
+    
+    # Pipe-node connectivity matrix
+    A = nx.incidence_matrix(uG).todense().T
+    AC = pd.DataFrame(A, columns=node_names, index=link_names, dtype=int)
+
+    # Valve-node connectivity matrix
+    VC = pd.DataFrame(0, columns=node_names, index=link_names)
+    for i, row in valves.iterrows():
+        VC.at[row['link'], row['node']] = 1
+        
+    # Deficient matrix
+    VD = AC - VC
+    
+    # Initialize valve segment matrix
+    # Add a row and column at the ends for node and pipe segment labeling
+    VS = VD.copy()
+    VS.loc['seg',:] = 0
+    VS.loc[:,'seg'] = 0
+    
+    # Identify columns and rows with no elements
+    column_with_no_element = VD.columns[VD.sum(axis=0) == 0]
+    row_with_no_element = VD.index[VD.sum(axis=1) == 0]
+    
+    # Assign segments to fully protected nodes and pipes
+    num_segments = 0
+    for node in column_with_no_element:
+        num_segments = num_segments+1
+        VS.at['seg',node] = num_segments 
+    for pipe in row_with_no_element:
+        num_segments = num_segments+1
+        VS.at[pipe,'seg'] = num_segments
+        
+    # Remove fully protected nodes and pipes from analysis matrix
+    VD.drop(row_with_no_element, axis=0, inplace=True)
+    VD.drop(column_with_no_element, axis=1, inplace=True)
+    
+    # Assign segments to other nodes and pipes. Loop through remaining nodes.
+    for node in VD.columns:
+        print(node)
+        pipes = VD.index[VD[node]==1]  # identify unprotected pipes at node
+        connected_segment = np.max(VS.loc[pipes,'seg'])
+        if connected_segment > 0: # at least one unprotected pipe is already assigned a segment. Connect current node to that segment.
+            VS.at['seg',node] = connected_segment
+            VS.loc[pipes,'seg'] = connected_segment
+        else: # unprotected pipes not already assigned a segment. Make a new segment.
+            if VS.at['seg',node] == 0 and (VS.loc[pipes,'seg'] == 0).any():
+                num_segments = num_segments+1
+                VS.at['seg',node] = num_segments
+                VS.loc[pipes,'seg'] = num_segments
+            elif VS.at['seg',node] != 0:
+                VS.loc[pipes,'seg'] = VS.at['seg',node]
+                
+    #NS = VS.loc['seg', node_names]
+    #PS = VS.loc[link_names, 'seg']
+    
+    return VS
