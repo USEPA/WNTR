@@ -1479,11 +1479,12 @@ class WaterNetworkModel(AbstractModel):
             nx.set_node_attributes(G, name='pos', values={name: node.coordinates})
             nx.set_node_attributes(G, name='type', values={name: node.node_type})
             
-            try: # weight nodes
-                value = node_weight[name]
-                nx.set_node_attributes(G, name='weight', values={name: value})
-            except:
-                pass
+            if node_weight is not None:
+                try: # weight nodes
+                    value = node_weight[name]
+                    nx.set_node_attributes(G, name='weight', values={name: value})
+                except:
+                    pass
             
         for name, link in self.links():
             start_node = link.start_node_name
@@ -1492,20 +1493,21 @@ class WaterNetworkModel(AbstractModel):
             nx.set_edge_attributes(G, name='type', 
                         values={(start_node, end_node, name): link.link_type})
                 
-            try: # weight links
-                value = link_weight[name]
-                if modify_direction and value < 0: # change the direction of the link and value
-                    G.remove_edge(start_node, end_node, name)
-                    G.add_edge(end_node, start_node, name)
-                    nx.set_edge_attributes(G, name='type', 
-                            values={(end_node, start_node, name): link.link_type})
-                    nx.set_edge_attributes(G, name='weight', 
-                            values={(end_node, start_node, name): -value})
-                else:
-                    nx.set_edge_attributes(G, name='weight', 
-                        values={(start_node, end_node, name): value})
-            except:
-                pass
+            if link_weight is not None:
+                try: # weight links
+                    value = link_weight[name]
+                    if modify_direction and value < 0: # change the direction of the link and value
+                        G.remove_edge(start_node, end_node, name)
+                        G.add_edge(end_node, start_node, name)
+                        nx.set_edge_attributes(G, name='type', 
+                                values={(end_node, start_node, name): link.link_type})
+                        nx.set_edge_attributes(G, name='weight', 
+                                values={(end_node, start_node, name): -value})
+                    else:
+                        nx.set_edge_attributes(G, name='weight', 
+                            values={(start_node, end_node, name): value})
+                except:
+                    pass
             
         return G
     

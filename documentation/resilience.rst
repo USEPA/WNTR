@@ -170,9 +170,9 @@ graph by flow direction and extracts all paths between two nodes.
     
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
-    >>> flowrate = results.link['flowrate']
-    >>> G.weight_graph(link_attribute = flowrate)
-    >>> all_paths = nx.all_simple_paths(G, '119', '193')
+    >>> flowrate = results.link['flowrate'].loc[3600,:]
+    >>> G_weighted = wn.get_graph(link_weight = flowrate)
+    >>> all_paths = nx.all_simple_paths(G_weighted, '119', '193')
 	
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 

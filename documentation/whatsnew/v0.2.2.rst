@@ -4,6 +4,13 @@ v0.2.2 (master)
 ---------------------------------------------------
 
 * Updated methods that use NetworkX to be compatible v2.4
+* `WntrMultiDiGraph` class has been removed and WNTR uses the NetworkX `MultiDiGraph` class directly.  
+  Methods associated with WntrMultiDiGraph have been relocated (API change).
+
+  * `wn.get_graph()` now returns a NetworkX MultiDiGraph.  That method can also be used to return a weighted graph. 
+    The method `weighted_graph` has been removed.
+  * Topographic metrics that were part of the WntrMultiDiGraph class are now located in the `wntr.metrics.topographic` module.  
+
 * Added required dependencies to setup.py.  Required and optional dependencies  
   are included in requirements.txt
 * Updated documentation

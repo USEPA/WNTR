@@ -92,12 +92,14 @@ The following NetworkX method can be used to check if a graph is connected:
     True
 
 Some methods in NetworkX can use weighted graphs.
-A **weighted graph** is a graph in which each link is given a weight.  
-The WNTR method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` can be used to weight the graph by any attribute.
-In the following example, the graph is weighted by length.  This graph can then be used to compute path lengths:
+A **weighted graph** is a graph in which each node or link is given a weight.  
+The WNTR method :class:`~wntr.network.model.WaterNetworkModel.get_graph` 
+can be used to weight the graph by an attribute.
+In the following example, the graph is weighted by length.  This graph can 
+then be used to compute path lengths:
 
 .. doctest::
 
     >>> length = wn.query_link_attribute('length')
-    >>> G.weight_graph(link_attribute = length)
+    >>> G = wn.get_graph(wn, link_weight=length)
 	
