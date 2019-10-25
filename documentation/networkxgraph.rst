@@ -35,10 +35,11 @@ NetworkX includes numerous methods to analyze the structure of complex networks.
 For more information on NetworkX, see https://networkx.github.io/.
 WNTR includes a custom Graph Class, 
 :class:`~wntr.network.graph.WntrMultiDiGraph`.
-This class inherits from NetworkX MultiDigraph and includes additional methods 
+This class inherits from NetworkX MultiDiGraph and includes additional methods 
 that are specific to WNTR. 
 
-A NetworkX graph can an be obtained from a WaterNetworkModel using the following function:
+A NetworkX directed multigraph can an be obtained from a WaterNetworkModel using 
+the following function:
 
 .. doctest::
     :hide:
@@ -53,7 +54,7 @@ A NetworkX graph can an be obtained from a WaterNetworkModel using the following
 	
 .. doctest::
 
-    >>> G = wn.get_graph()
+    >>> G = wn.get_graph() # directed multigraph
 	
 The graph is stored as a nested dictionary.  The nodes and links (note that links are called `edges` in NetworkX)
 can be accessed using the following:
@@ -70,20 +71,25 @@ The graph can be used to access NetworkX methods, for example:
 
     >>> import networkx as nx
     >>> node_degree = G.degree()
-    >>> bet_cen = nx.betweenness_centrality(G)
-    >>> wntr.graphics.plot_network(wn, node_attribute=bet_cen) # doctest: +ELLIPSIS
+    >>> closeness_centrality = nx.closeness_centrality(G)
+    >>> wntr.graphics.plot_network(wn, node_attribute=closeness_centrality) # doctest: +ELLIPSIS
     (<matplotlib.collections.PathCollection object ...
 
-Some methods in NetworkX require that networks are undirected.  
+Additional network types
+-------------------------------------------------
+Some methods in NetworkX require that networks are undirected, connected, 
+weighted, or have only one edge between nodes.
+
 An **undirected graph** is a graph with no direction associated with links.
-The following NetworkX method can be used to convert a directed graph to an undirected graph:
+The following NetworkX method can be used to convert a directed graph to 
+an undirected graph:
 
 .. doctest::
 
-    >>> uG = G.to_undirected()
-
-Some methods in NetworkX require that networks are connected.     
-A **connected graph** is a graph where a path exists between every node in the network (i.e., no node is disconnected).  
+    >>> uG = G.to_undirected() # undirected multigraph
+       
+A **connected graph** is a graph where a path exists between every node in the 
+network (i.e., no node is disconnected).  
 The following NetworkX method can be used to check if a graph is connected:
 
 .. doctest::
@@ -91,15 +97,20 @@ The following NetworkX method can be used to check if a graph is connected:
     >>> nx.is_connected(uG)
     True
 
-Some methods in NetworkX can use weighted graphs.
-A **weighted graph** is a graph in which each node or link is given a weight.  
+A **weighted graph** is a graph in which each node and/or link is given a weight.  
 The WNTR method :class:`~wntr.network.model.WaterNetworkModel.get_graph` 
-can be used to weight the graph by an attribute.
-In the following example, the graph is weighted by length.  This graph can 
-then be used to compute path lengths:
+can be used to weight the graph by node and/or link attributes.
+In the following example, the graph is weighted by length. This graph can then 
+be used to compute path lengths:
 
 .. doctest::
 
     >>> length = wn.query_link_attribute('length')
     >>> G = wn.get_graph(wn, link_weight=length)
 	
+A **simple graph** is a graph with one edge between nodes.
+The following NetworkX method can be used to convert a multigraph to a simple graph:
+
+.. doctest::
+
+    >>> sG = nx.Graph(G) # directed simple graph
