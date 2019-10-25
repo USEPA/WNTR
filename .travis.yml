@@ -70,9 +70,9 @@ install:
 
 script:
     - if [[ "$CONDA_ENV" == "py35" ]]; then 
-        nosetests -v --nologcapture --with-coverage --cover-package=wntr wntr 
+        nosetests -v --nologcapture --with-coverage --cover-package=wntr wntr;
       else
-        nosetests -v --nologcapture --with-coverage --with-doctest --doctest-extension=.rst --cover-package=wntr documentation/*.rst wntr 
+        nosetests -v --nologcapture --with-coverage --with-doctest --doctest-extension=.rst --cover-package=wntr documentation/*.rst wntr; 
       fi
       
 after_success:
