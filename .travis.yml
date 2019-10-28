@@ -8,10 +8,6 @@ sudo: false # if false, use TravisCI's container based build
 
 matrix:
     include:
-    - python: 3.5
-      env: CONDA_ENV=py35
-      services:
-      - xvfb
     - python: 3.6
       env: CONDA_ENV=py36
       services:
@@ -43,11 +39,7 @@ before_script:
 before_install:
     - echo "before install"
     - export PATH=/usr/lib/ccache:$PATH
-    - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-        wget http://repo.continuum.io/miniconda/Miniconda-3.16.0-Linux-x86_64.sh -O miniconda.sh;
-      else
-        wget http://repo.continuum.io/miniconda/Miniconda3-3.16.0-Linux-x86_64.sh -O miniconda.sh;
-      fi
+    - wget http://repo.continuum.io/miniconda/Miniconda3-3.16.0-Linux-x86_64.sh -O miniconda.sh
     - bash miniconda.sh -b -p $HOME/miniconda
     - export PATH="$HOME/miniconda/bin:$PATH"
     - hash -r
@@ -69,11 +61,7 @@ install:
     - python setup.py develop
 
 script:
-    - if [[ "$CONDA_ENV" == "py35" ]]; then 
-        nosetests -v --nologcapture --with-coverage --cover-package=wntr wntr;
-      else
-        nosetests -v --nologcapture --with-coverage --with-doctest --doctest-extension=.rst --cover-package=wntr documentation/*.rst wntr; 
-      fi
+    - nosetests -v --nologcapture --with-coverage --with-doctest --doctest-extension=.rst --cover-package=wntr documentation/*.rst wntr
       
 after_success:
     coveralls

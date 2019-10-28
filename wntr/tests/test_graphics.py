@@ -25,9 +25,6 @@ def test_plot_network1():
     assert_true(isfile(filename))
 
 def test_plot_network2():
-    if sys.version_info.major == 3 and sys.version_info.minor == 5:
-        raise SkipTest
-        
     filename = abspath(join(testdir, 'plot_network2.png'))
     if isfile(filename):
         os.remove(filename)
@@ -58,9 +55,6 @@ def test_plot_network3():
     assert_true(isfile(filename))
     
 def test_plot_network4():
-    if sys.version_info.major == 3 and sys.version_info.minor == 5:
-        raise SkipTest
-        
     filename = abspath(join(testdir, 'plot_network4.png'))
     if isfile(filename):
         os.remove(filename)
@@ -125,9 +119,6 @@ def test_plot_leaflet_network1():
     assert_true(isfile(filename))
     
 def test_network_animation1():
-    if sys.version_info.major == 3 and sys.version_info.minor == 5:
-        raise SkipTest
-        
     filename = abspath(join(testdir, 'plot_leaflet_network1.html'))
     if isfile(filename):
         os.remove(filename)
