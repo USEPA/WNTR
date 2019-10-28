@@ -145,6 +145,7 @@ Optional dependencies
 -------------------------
 
 The following Python packages are optional:
+
 * Plotly [SPHC16]_: used to produce interactive scalable graphics, 
   https://plot.ly/
 * folium [Filip19]_: used to produce Leaflet maps, 
