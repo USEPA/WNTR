@@ -45,6 +45,8 @@ For metrics that vary with respect to time and space, network animation can be u
 
    Example state transition plot and network graphic used to visualize resilience.
 
+.. _topographic_metrics:
+
 Topographic metrics
 ---------------------
 
@@ -57,12 +59,11 @@ the most reliable graph structure. On the other hand, a random lattice has nodes
 that are placed according to a random process. A real world water distribution system probably lies somewhere in
 between a regular lattice and a random lattice in terms of structure and reliability.
   
-NetworkX includes a wide range of topographic metrics that can be computed using 
-the WntrMultiDiGraph.  WNTR includes additional methods/metrics to help compute 
-resilience. These methods are in the :class:`~wntr.network.graph.WntrMultiDiGraph` class.
 Commonly used topographic metrics are listed in :numref:`table-topographic-metrics`.  
-Information on additional topographic metrics supported by NetworkX can be found 
-at https://networkx.github.io/.
+Many of these metrics can be computed using NetworkX directly 
+(see https://networkx.github.io/ for more information).
+WNTR includes additional topographic metrics to help compute resilience 
+(see :class:`~wntr.metrics.topographic` for more information).
 
 .. _table-topographic-metrics:
 .. table:: Topographic Resilience Metrics
@@ -128,40 +129,38 @@ at https://networkx.github.io/.
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 
-The following example extracts a graph from the water network model, converts the graph to an undirected graph, 
-and computes node degree, 
-terminal nodes, 
-link density, 
-diameter, 
-eccentricity, 
-betweenness centrality, 
-central point dominance,
-closeness centrality, 
-articulation points, and 
-bridges.  
-Note that many of these metrics use NetworkX directly.  
-Some metrics, such as :class:`~wntr.network.graph.WntrMultiDiGraph.terminal_nodes` and 
-:class:`~wntr.network.graph.WntrMultiDiGraph.bridges`, are methods developed in WNTR that operate on the 
-:class:`~wntr.network.graph.WntrMultiDiGraph` class.
+To compute topographic metrics, a NetworkX MultiDiGraph is first extracted from a
+WaterNetworkModel.  Note that some metrics require an undirected
+graph or a graph with a single edge between two nodes.
 
 .. doctest::
 
     >>> G = wn.get_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
-    
+
+The following example computes 
+node degree, 
+link density, 
+diameter, 
+eccentricity, 
+betweenness centrality, 
+closeness centrality, and 
+articulation points
+using NetworkX directly.  
+
+.. doctest::
+
     >>> node_degree = G.degree()
-    >>> terminal_nodes = G.terminal_nodes()
     >>> link_density = nx.density(G)
     >>> diameter = nx.diameter(uG)
     >>> eccentricity = nx.eccentricity(uG)
     >>> betweenness_centrality = nx.betweenness_centrality(sG)
-    >>> central_point_dominance = G.central_point_dominance()
     >>> closeness_centrality = nx.closeness_centrality(G)
     >>> articulation_points = list(nx.articulation_points(uG))
-    >>> bridges = G.bridges()
-	
-The following example extracts the shortest path lengths between all nodes and average shortest path length in the graph, then weights the 
+
+The next example extracts the shortest path lengths between all nodes and 
+average shortest path length, then weights the 
 graph by flow direction and extracts all paths between two nodes.
 
 .. doctest::
@@ -172,9 +171,18 @@ graph by flow direction and extracts all paths between two nodes.
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
     >>> flowrate = results.link['flowrate'].loc[3600,:]
-    >>> G_weighted = wn.get_graph(link_weight = flowrate)
-    >>> all_paths = nx.all_simple_paths(G_weighted, '119', '193')
-	
+    >>> wG = wn.get_graph(link_weight = flowrate)
+    >>> all_paths = nx.all_simple_paths(wG, '119', '193')
+    
+Additional topographic metrics can be computed using methods included
+in WNTR.
+
+.. doctest::
+
+    >>> terminal_nodes = wntr.metrics.terminal_nodes(G)
+    >>> central_point_dominance = wntr.metrics.central_point_dominance(G)
+    >>> bridges = wntr.metrics.bridges(G)
+    
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 
 	the total number of connected triples.  Clustering coefficient is a value between 0 and 1.
@@ -184,21 +192,21 @@ graph by flow direction and extracts all paths between two nodes.
       network to the maximum possible number of cycles in the network.  Meshedness coefficient is a value between 0 and 1.
 
       Spectral gap: The difference between the first and second eigenvalue of the networks adjacency matrix.
-	The method :class:`~wntr.network.graph.WntrMultiDiGraph.spectral_gap` can be used to find the spectral gap of the network.
+	The method :class:`~wntr.metrics.topographic.spectral_gap` can be used to find the spectral gap of the network.
 	
 	Algebraic connectivity	: The second smallest eigenvalue of the normalized Laplacian matrix of a network.
-	The method :class:`~wntr.network.graph.WntrMultiDiGraph.algebraic_connectivity` can be used to find the algebraic connectivity of the network.
+	The method :class:`~wntr.metrics.topographic.algebraic_connectivity` can be used to find the algebraic connectivity of the network.
 	
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
 	are connected in a network.  NPR is computed using ...
 	Connectivity will change at each time step, depending on the flow direction.  
-	The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method 
+	The method :class:`~wntr.network.WaterNetworkModel.get_graph` method 
 	can be used to weight the graph by a specified attribute. 
 	
 	Critical ratio of defragmentation: The threshold where the network loses its large-scale connectivity and 
 	defragments, as a function of the node degree.  The critical ratio of 
 	defragmentation is related to percolation theory. The ratio is equal to 0 if all 
-	The method :class:`~wntr.network.graph.WntrMultiDiGraph.critical_ratio_defrag` can be used to compute the critical ratio of defragmentation of the network.
+	The method :class:`~wntr.metrics.topographic.critical_ratio_defrag` can be used to compute the critical ratio of defragmentation of the network.
 
 Hydraulic metrics
 ---------------------
@@ -238,7 +246,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           when a network component fails.  A network that carries maximum entropy 
                                           flow is considered reliable with multiple alternate paths.
                                           Connectivity will change at each time step, depending on the flow direction.  
-                                          The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method can be used to weight the graph by a specified attribute. 
+                                          The method :class:`~wntr.network.WaterNetworkModel.get_graph` method can be used to generate a weighted graph. 
                                           Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
    
    Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier [USEPA15]_.
@@ -277,9 +285,8 @@ and entropy.
     >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]            
     >>> todini = wntr.metrics.todini_index(head, pressure, demand, pump_flowrate, wn, pressure_threshold)
     
-    >>> G = wn.get_graph()
     >>> flowrate = results.link['flowrate'].loc[12*3600,:]
-    >>> G.weight_graph(link_attribute=flowrate)
+    >>> G = wn.get_graph(link_weight=flowrate)
     >>> entropy, system_entropy = wntr.metrics.entropy(G)
     
 Water quality metrics

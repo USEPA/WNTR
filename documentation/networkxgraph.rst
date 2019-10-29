@@ -23,6 +23,8 @@ A NetworkX graph generated from a water network model stores
 the start and end node of each link, 
 node coordinates, 
 and node and link types (i.e., Tank, Reservoir, Valve). 
+NetworkX includes numerous methods to analyze the structure of complex networks.
+For more information on NetworkX, see https://networkx.github.io/.
 
 .. _fig-graph:
 .. figure:: figures/graph.png
@@ -31,13 +33,6 @@ and node and link types (i.e., Tank, Reservoir, Valve).
 
    Example directed multigraph.
    
-NetworkX includes numerous methods to analyze the structure of complex networks.
-For more information on NetworkX, see https://networkx.github.io/.
-WNTR includes a custom Graph Class, 
-:class:`~wntr.network.graph.WntrMultiDiGraph`.
-This class inherits from NetworkX MultiDiGraph and includes additional methods 
-that are specific to WNTR. 
-
 A NetworkX directed multigraph can an be obtained from a WaterNetworkModel using 
 the following function:
 
@@ -75,6 +70,8 @@ The graph can be used to access NetworkX methods, for example:
     >>> wntr.graphics.plot_network(wn, node_attribute=closeness_centrality) # doctest: +ELLIPSIS
     (<matplotlib.collections.PathCollection object ...
 
+See :ref:`topographic_metrics` for more information.
+
 Additional network types
 -------------------------------------------------
 Some methods in NetworkX require that networks are undirected, connected, 
@@ -106,7 +103,7 @@ be used to compute path lengths:
 .. doctest::
 
     >>> length = wn.query_link_attribute('length')
-    >>> G = wn.get_graph(wn, link_weight=length)
+    >>> wG = wn.get_graph(wn, link_weight=length) # weighted directed multigraph
 	
 A **simple graph** is a graph with one edge between nodes.
 The following NetworkX method can be used to convert a multigraph to a simple graph:
