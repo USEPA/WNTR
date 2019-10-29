@@ -239,7 +239,9 @@ def valve_segments(G, valves):
                 VS.loc[pipes,'seg'] = num_segments
             elif VS.at['seg',node] != 0:
                 VS.loc[pipes,'seg'] = VS.at['seg',node]
-                
+    
+    VS = VS.astype(int)
+    
     #NS = VS.loc['seg', node_names]
     #PS = VS.loc[link_names, 'seg']
     
