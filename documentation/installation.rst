@@ -23,7 +23,7 @@ Detailed instructions are included below.
 **Step 1**: Setup your Python environment
 
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
-	WNTR requires 64-bit Python (versions 3.5, 3.6, or 3.7) along with several Python package dependencies.
+	WNTR requires 64-bit Python (tested on versions 3.6 and 3.7) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
 	the Python environment.  Anaconda can be downloaded from https://www.anaconda.com/distribution/.  
 	General information on Python can be found at https://www.python.org/.
@@ -125,7 +125,7 @@ Detailed instructions are included below.
 
 Requirements
 -------------
-Requirements for WNTR include 64-bit Python (3.5, 3.6, or 3.7) along with several Python packages. 
+Requirements for WNTR include 64-bit Python (tested on versions 3.6 and 3.7) along with several Python packages. 
 The following Python packages are required:
 
 * Numpy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
@@ -136,7 +136,9 @@ The following Python packages are required:
   https://networkx.github.io/
 * Pandas [Mcki13]_: used to analyze and store time series data, 
   http://pandas.pydata.org/
-
+* Matplotlib [Hunt07]_: used to produce graphics, 
+  http://matplotlib.org/
+  
 These packages are included in the Anaconda Python distribution.
  
 Optional dependencies
@@ -144,9 +146,7 @@ Optional dependencies
 
 The following Python packages are optional:
 
-* Matplotlib [Hunt07]_: used to produce figures, 
-  http://matplotlib.org/
-* Plotly [SPHC16]_: used to produce interactive scalable figures, 
+* Plotly [SPHC16]_: used to produce interactive scalable graphics, 
   https://plot.ly/
 * folium [Filip19]_: used to produce Leaflet maps, 
   http://python-visualization.github.io/folium/

@@ -3,9 +3,9 @@ numpy
 scipy
 networkx
 pandas
+matplotlib
 
 # Optional
-matplotlib
 plotly
 folium
 utm
