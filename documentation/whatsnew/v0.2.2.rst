@@ -3,7 +3,7 @@
 v0.2.2 (master)
 ---------------------------------------------------
 
-* Updated methods that use NetworkX to be compatible v2.4
+* Updated methods that use NetworkX to be compatible with NetworkX 2.4
 * `WntrMultiDiGraph` class has been removed and WNTR uses the NetworkX `MultiDiGraph` class directly.  
   Methods associated with WntrMultiDiGraph have been relocated (API change).
 
@@ -13,5 +13,6 @@ v0.2.2 (master)
 
 * Added required dependencies to setup.py.  Required and optional dependencies  
   are included in requirements.txt
+* Dropped testing for Python 3.5 (matplotlib requires Python >= 3.6)
 * Updated documentation
   
