@@ -84,7 +84,7 @@ of exceeding the Minor damage state is 0.85.
 
 .. _fig-fragility:
 .. figure:: figures/fragility_curve.png
-   :scale: 100 %
+   :width: 800
    :alt: Fragility curve
 
    Example fragility curve.
@@ -122,9 +122,9 @@ To plot the damage state on the network, the state (i.e. Major) can be converted
     ...     link_cmap=custom_cmp, title='Damage state: 0=None, 1=Minor, 2=Major') # doctest: +ELLIPSIS
     (<matplotlib.collections.PathCollection object ...
    
-.. _fig-fragility:
+.. _fig-damage-state:
 .. figure:: figures/damage_state.png
-   :scale: 100 %
+   :width: 640
    :alt: Damage state
 
    Damage state, selected from the fragility curve.

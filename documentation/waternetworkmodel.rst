@@ -46,35 +46,6 @@ The following example build a water network model.
   Unless otherwise noted, examples in the WNTR documentation use Net3.inp to build the
   water network model, named ``wn``.
   
-Build a model from scratch
----------------------------------
-
-A water network model can also be created from scratch by adding elements to an empty model.  Elements 
-must be added before used.  For example, demand patterns are added to the model before they are 
-used within a junction.  The section below include additional information on adding elements to a 
-water network model.
- 
-.. doctest::
-
-    >>> wn = wntr.network.WaterNetworkModel()
-    >>> wn.add_pattern('pat1', [1])
-    >>> wn.add_pattern('pat2', [1,2,3,4,5,6,7,8,9,10])
-    >>> wn.add_junction('node1', base_demand=0.01, demand_pattern='pat1', elevation=100, 
-    ...     coordinates=(1,2))
-    >>> wn.add_junction('node2', base_demand=0.02, demand_pattern='pat2', elevation=50, 
-    ...     coordinates=(1,3))
-    >>> wn.add_pipe('pipe1', 'node1', 'node2', length=304.8, diameter=0.3048, roughness=100, 
-    ...    minor_loss=0.0, status='OPEN')
-    >>> wn.add_reservoir('res', base_head=125, head_pattern='pat1', coordinates=(0,2))
-    >>> wn.add_pipe('pipe2', 'node1', 'res', length=100, diameter=0.3048, roughness=100, 
-    ...     minor_loss=0.0, status='OPEN')
-
-.. doctest::
-    :hide:
-
-    >>> sim = wntr.sim.EpanetSimulator(wn) # make sure it's a valid model
-    >>> results = sim.run_sim()
-	
 Add elements
 ------------------
 
@@ -277,3 +248,33 @@ The EPANET INP file will not include features not supported by EPANET (i.e., pre
 .. doctest::
 
     >>> wn.write_inpfile('filename.inp')
+
+Build a model from scratch
+---------------------------------
+
+A water network model can also be created from scratch by adding elements to an empty model.  Elements 
+must be added before used.  For example, demand patterns are added to the model before they are 
+used within a junction.  The section below include additional information on adding elements to a 
+water network model.
+ 
+.. doctest::
+
+    >>> wn = wntr.network.WaterNetworkModel()
+    >>> wn.add_pattern('pat1', [1])
+    >>> wn.add_pattern('pat2', [1,2,3,4,5,6,7,8,9,10])
+    >>> wn.add_junction('node1', base_demand=0.01, demand_pattern='pat1', elevation=100, 
+    ...     coordinates=(1,2))
+    >>> wn.add_junction('node2', base_demand=0.02, demand_pattern='pat2', elevation=50, 
+    ...     coordinates=(1,3))
+    >>> wn.add_pipe('pipe1', 'node1', 'node2', length=304.8, diameter=0.3048, roughness=100, 
+    ...    minor_loss=0.0, status='OPEN')
+    >>> wn.add_reservoir('res', base_head=125, head_pattern='pat1', coordinates=(0,2))
+    >>> wn.add_pipe('pipe2', 'node1', 'res', length=100, diameter=0.3048, roughness=100, 
+    ...     minor_loss=0.0, status='OPEN')
+    >>> wntr.graphics.plot_network(wn) # doctest: +SKIP
+
+.. doctest::
+    :hide:
+
+    >>> sim = wntr.sim.EpanetSimulator(wn) # make sure it's a valid model
+    >>> results = sim.run_sim()

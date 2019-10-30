@@ -115,8 +115,8 @@ def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
         edge_dict['x'] = list()
         edge_dict['y'] = list()
     for edge in G.edges:
-        x0, y0 = G.node[edge[0]]['pos']
-        x1, y1 = G.node[edge[1]]['pos']
+        x0, y0 = G.nodes[edge[0]]['pos']
+        x1, y1 = G.nodes[edge[1]]['pos']
         link = wn.get_link(edge[2])
         if link._is_isolated:
             edge_dict = isolated_edges
@@ -139,8 +139,8 @@ def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
     edge_name_trace = plotly.graph_objs.Scatter(x=[], y=[], text=[], hoverinfo='text', mode='markers',
                                                 marker=dict(size=1))
     for edge in G.edges:
-        x0, y0 = G.node[edge[0]]['pos']
-        x1, y1 = G.node[edge[1]]['pos']
+        x0, y0 = G.nodes[edge[0]]['pos']
+        x1, y1 = G.nodes[edge[1]]['pos']
         link = wn.get_link(edge[2])
         edge_name_trace['x'] += tuple([0.5 * (x0 + x1)])
         edge_name_trace['y'] += tuple([0.5 * (y0 + y1)])
@@ -158,7 +158,7 @@ def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
     node_trace = plotly.graph_objs.Scatter(x=[], y=[], text=[], hoverinfo='text', mode='markers',
                                            marker=dict(size=node_size, color='Black', line=dict(width=1)))
     for node in G.nodes():
-        x, y = G.node[node]['pos']
+        x, y = G.nodes[node]['pos']
         node_trace['x'] += tuple([x])
         node_trace['y'] += tuple([y])
         _node = wn.get_node(node)
