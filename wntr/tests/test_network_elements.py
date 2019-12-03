@@ -118,12 +118,12 @@ def test_TimeSeries():
     nose.tools.assert_equals(tvv1.category, 'binary')
     
     # Test getitem
-    print(tvv1)
-    print(tvv2, pattern2)
+    #print(tvv1)
+    #print(tvv2, pattern2)
     nose.tools.assert_equals(tvv1.at(1), 0.0)
     nose.tools.assert_equals(tvv1.at(7202), 3.0)
     nose.tools.assert_equals(tvv2.at(1), 2.0)
-    print(tvv2, pattern2.time_options)
+    #print(tvv2, pattern2.time_options)
     nose.tools.assert_equals(tvv2.at(3602), 2.4)
     
     price1 = elements.TimeSeries(wn.patterns, 35.0, None)

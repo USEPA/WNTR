@@ -1,0 +1,11 @@
+.. _whatsnew_0220:
+
+v0.2.2 (master)
+---------------------------------------------------
+
+* Updated methods that use NetworkX to be compatible with NetworkX 2.4
+* Added required dependencies to setup.py.  Required and optional dependencies  
+  are included in requirements.txt
+* Dropped testing for Python 3.5 (matplotlib requires Python >= 3.6)
+* Updated documentation
+  

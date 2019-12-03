@@ -466,7 +466,7 @@ def test_Net1():
     wn = wntr.network.WaterNetworkModel(inp_file)
     G = wn.get_graph()
 
-    node = G.node
+    node = G.nodes
     elevation = wn.query_node_attribute('elevation')
     #base_demand = wn.query_node_attribute('base_demand')
     edge = G.adj

@@ -40,7 +40,7 @@ For metrics that vary with respect to time and space, network animation can be u
 
 .. _fig-metrics:
 .. figure:: figures/resilience_metrics.png
-   :scale: 100 %
+   :width: 962
    :alt: Resilience metrics
 
    Example state transition plot and network graphic used to visualize resilience.
@@ -146,15 +146,16 @@ Some metrics, such as :class:`~wntr.network.graph.WntrMultiDiGraph.terminal_node
 
 .. doctest::
 
-    >>> G = wn.get_graph()
-    >>> uG = G.to_undirected() # undirected graph
-
+    >>> G = wn.get_graph() # directed multigraph
+    >>> uG = G.to_undirected() # undirected multigraph
+    >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
+    
     >>> node_degree = G.degree()
     >>> terminal_nodes = G.terminal_nodes()
     >>> link_density = nx.density(G)
     >>> diameter = nx.diameter(uG)
     >>> eccentricity = nx.eccentricity(uG)
-    >>> betweenness_centrality = nx.betweenness_centrality(G)
+    >>> betweenness_centrality = nx.betweenness_centrality(sG)
     >>> central_point_dominance = G.central_point_dominance()
     >>> closeness_centrality = nx.closeness_centrality(G)
     >>> articulation_points = list(nx.articulation_points(uG))

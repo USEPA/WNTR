@@ -5,7 +5,6 @@ import sys
 import os
 from os import listdir
 from os.path import isfile, abspath, dirname, join
-from nose import SkipTest
 from subprocess import call
 
 testdir = dirname(abspath(str(__file__)))

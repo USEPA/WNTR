@@ -16,7 +16,7 @@ def test_weight_graph():
     
     G.weight_graph(wn.query_node_attribute('elevation'), wn.query_link_attribute('length'))
     
-    assert_equal(G.node['111']['weight'], 10*0.3048)
+    assert_equal(G.nodes['111']['weight'], 10*0.3048)
     assert_equal(G['159']['161']['177']['weight'], 2000*0.3048)
 
 def test_terminal_nodes():
@@ -131,7 +131,7 @@ def test_Net1_MultiDiGraph():
             '2':  {'12': {'110': {'type': 'Pipe'}}},
             '9':  {'10': {'9':   {'type': 'Pump'}}}}
 
-    assert_dict_contains_subset(node, G.node)
+    assert_dict_contains_subset(node, G.nodes)
     assert_dict_contains_subset(edge, G.adj)
 
 if __name__ == '__main__':

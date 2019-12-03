@@ -8,12 +8,24 @@ Installation
 
 WNTR can be installed as a Python package using standard open source software tools.
 
+Users can install the latest release of WNTR from PyPI using the following command::
+
+    pip install wntr
+    
+Developers can install the master (development) branch of WNTR from the GitHub repository using the following commands::
+
+    git clone https://github.com/USEPA/WNTR
+    cd WNTR
+    python setup.py develop
+
+Detailed instructions are included below.
+
 **Step 1**: Setup your Python environment
 
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
-	WNTR requires Python (versions 3.5, 3.6, or 3.7) along with several Python package dependencies.
+	WNTR requires 64-bit Python (tested on versions 3.6 and 3.7) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
-	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
+	the Python environment.  Anaconda can be downloaded from https://www.anaconda.com/distribution/.  
 	General information on Python can be found at https://www.python.org/.
 	
 	.. note:: 
@@ -45,14 +57,14 @@ WNTR can be installed as a Python package using standard open source software to
 	
 	.. _fig-cmd-python:
 	.. figure:: figures/cmd_python.png
-	   :scale: 100 %
+	   :width: 891
 	   :alt: Python
 	   
 	   Opening a Python console from a command prompt.
    
 	.. _fig-spyder:
 	.. figure:: figures/spyder.png
-	   :scale: 100 %
+	   :width: 759
 	   :alt: Spyder
 	   
 	   Opening a Python console using Spyder.
@@ -113,7 +125,7 @@ WNTR can be installed as a Python package using standard open source software to
 
 Requirements
 -------------
-Requirements for WNTR include Python (3.5, 3.6, or 3.7) along with several Python packages. 
+Requirements for WNTR include 64-bit Python (tested on versions 3.6 and 3.7) along with several Python packages. 
 The following Python packages are required:
 
 * Numpy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
@@ -124,7 +136,9 @@ The following Python packages are required:
   https://networkx.github.io/
 * Pandas [Mcki13]_: used to analyze and store time series data, 
   http://pandas.pydata.org/
-
+* Matplotlib [Hunt07]_: used to produce graphics, 
+  http://matplotlib.org/
+  
 These packages are included in the Anaconda Python distribution.
  
 Optional dependencies
@@ -132,9 +146,7 @@ Optional dependencies
 
 The following Python packages are optional:
 
-* Matplotlib [Hunt07]_: used to produce figures, 
-  http://matplotlib.org/
-* Plotly [SPHC16]_: used to produce interactive scalable figures, 
+* Plotly [SPHC16]_: used to produce interactive scalable graphics, 
   https://plot.ly/
 * folium [Filip19]_: used to produce Leaflet maps, 
   http://python-visualization.github.io/folium/

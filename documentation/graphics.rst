@@ -48,7 +48,7 @@ The following example plots the network along with node elevation (:numref:`fig-
     
 .. _fig-network:
 .. figure:: figures/plot_basic_network.png
-   :scale: 100 %
+   :width: 640
    :alt: Network
    
    Example basic network graphic.
@@ -75,7 +75,7 @@ The following example plots the network along with node population (:numref:`fig
 
 .. _fig-plotly:
 .. figure:: figures/plot_plotly_network.png
-   :scale: 100 %
+   :width: 715
    :alt: Network
 
 Example interactive network graphic.
@@ -145,7 +145,7 @@ The following example plots simulation results from above, showing pressure at a
 
 .. _fig-timeseries:
 .. figure:: figures/plot_timeseries.png
-   :scale: 100 %
+   :width: 640
    :alt: Network
    
    Example timeseries graphic.
@@ -200,7 +200,7 @@ The following example plots a fragility curve with two states (:numref:`fig-frag
 
 .. _fig-fragility2:
 .. figure:: figures/fragility_curve.png
-   :scale: 100 %
+   :width: 800
    :alt: Fragility curve
 
    Example fragility curve.
@@ -221,7 +221,7 @@ The following example plots a pump curve (:numref:`fig-pump`).
 
 .. _fig-pump:
 .. figure:: figures/plot_pump_curve.png
-   :scale: 100 %
+   :width: 800
    :alt: Pump curve
 
    Example pump curve.
