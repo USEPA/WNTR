@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge=True, 
                 parallel_pipe_merge=True, max_cycles=None, use_epanet=True, 
-                return_map=False):
+                return_map=False, return_copy=True):
     """
     Perform network skeletonization using branch trimming, series pipe merge, 
     and parallel pipe merge operations. Candidate pipes for removal is based 
@@ -60,7 +60,7 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
     A skeletonized WaterNetworkModel object and (if return_map = True) a 
     skeletonization map.
     """
-    skel = _Skeletonize(wn, use_epanet)
+    skel = _Skeletonize(wn, use_epanet, return_copy)
     
     skel.run(pipe_diameter_threshold, branch_trim, series_pipe_merge, 
              parallel_pipe_merge, max_cycles)
@@ -73,10 +73,13 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
 		
 class _Skeletonize(object):
     
-    def __init__(self, wn, use_epanet):
+    def __init__(self, wn, use_epanet, return_copy):
         
-        # Get a copy of the WaterNetworkModel
-        self.wn = _deepcopy_wn(wn)
+        if return_copy:
+            # Get a copy of the WaterNetworkModel
+            self.wn = _deepcopy_wn(wn)
+        else:
+            self.wn = wn
         
         # Get the WaterNetworkModel graph
         G = self.wn.get_graph()
@@ -112,7 +115,8 @@ class _Skeletonize(object):
         head = results.node['head']
         headloss = {}
         for link_name, link in self.wn.links():
-            headloss[link_name] = float(abs(head[link.start_node_name] - head[link.end_node_name]))
+            headloss[link_name] = float(abs(head.loc[0,link.start_node_name] - 
+                                            head.loc[0,link.end_node_name]))
         self.headloss = headloss
         self.wn.options.time.duration = duration
     
@@ -193,8 +197,8 @@ class _Skeletonize(object):
             junc.demand_timeseries_list.clear()
 
             # Remove node and links from wn and G
-            self.wn.remove_link(pipe_name)
-            self.wn.remove_node(junc_name)
+            self.wn.remove_link(pipe_name, force=True)
+            self.wn.remove_node(junc_name, force=True)
             self.G.remove_node(junc_name)
                     
             self.num_branch_trim +=1
@@ -265,9 +269,9 @@ class _Skeletonize(object):
             junc.demand_timeseries_list.clear()
 
             # Remove node and links from wn and G
-            self.wn.remove_link(pipe_name0)
-            self.wn.remove_link(pipe_name1)
-            self.wn.remove_node(junc_name)
+            self.wn.remove_link(pipe_name0, force=True)
+            self.wn.remove_link(pipe_name1, force=True)
+            self.wn.remove_node(junc_name, force=True)
             self.G.remove_node(junc_name)
             
             # Compute new pipe properties
@@ -325,8 +329,8 @@ class _Skeletonize(object):
                     logger.info('Parallel pipe merge: '+ str(junc_name) + str((pipe_name0, pipe_name1)))
 
                     # Remove links from wn and G   
-                    self.wn.remove_link(pipe_name0)
-                    self.wn.remove_link(pipe_name1)
+                    self.wn.remove_link(pipe_name0, force=True)
+                    self.wn.remove_link(pipe_name1, force=True)
                     self.G.remove_edge(neighbor, junc_name, pipe_name0) 
                     self.G.remove_edge(junc_name, neighbor, pipe_name1)
             
