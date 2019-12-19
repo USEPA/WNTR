@@ -116,6 +116,13 @@ WNTR includes additional topographic metrics to help compute resilience
                                           the number of links in the network.
                                           The average shortest path length is a system wide metric used to describe the number
                                           of links between a node and all other nodes.
+										  
+   Valve Segmentation			          Valve segmentation is the process of collecting links and nodes into groups based on the locations of valves in the network. Outputs for the algorithm include: 
+                                          1. a list of the nodes with their segment number, 
+                                          2. a list of the links with their segment number,  
+                                          3. the number of segments, and 
+                                          4. the number of nodes and links in the largest segment.
+										  Outputs 3 and 4 are optional and can be accessed by the output_flag=True argument.
    =====================================  ================================================================================================================================================
 
 .. doctest::
@@ -207,6 +214,18 @@ in WNTR.
 	defragments, as a function of the node degree.  The critical ratio of 
 	defragmentation is related to percolation theory. The ratio is equal to 0 if all 
 	The method :class:`~wntr.metrics.topographic.critical_ratio_defrag` can be used to compute the critical ratio of defragmentation of the network.
+	
+This example creates a list of node-link pairs to represent valves, then assigns
+a segment number to all nodes and links. Other optional outputs include
+the number of segments in the network and the number of nodes and links in the 
+largest segment.
+
+.. doctest::
+	
+	>>> valves = [['329', '61'] # valve 0 is on link 329 and protects node 61
+	>>>		,['333', '61']]
+	>>> node_segments, link_segments = valve_segments(G, valves)
+	>>> node_segments, link_segments, n_segments, max_seg_size = valve_segments(G, valves, output_flag=True)
 
 Hydraulic metrics
 ---------------------

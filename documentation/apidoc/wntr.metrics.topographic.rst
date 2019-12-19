@@ -1,5 +1,5 @@
 wntr.metrics.topographic module
-=========================
+===============================
 
 .. automodule:: wntr.metrics.topographic
     :members:
