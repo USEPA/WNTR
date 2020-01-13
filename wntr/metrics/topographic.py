@@ -183,29 +183,31 @@ def _links_in_simple_paths(G, sources, sinks):
 
     return link_count
 
-
-def valve_segments(G, valves, pandas_flag=False, output_flag=False):
+def valve_segments(G, valve_layer, use_numpy=True):
     """
     Valve segmentation
 
     Parameters
     -----------
-    valves : list
-        List of valves, denoted by node and pipe pairs
-    pandas_flag : boolean
-        Boolean to select Pandas (True) or Numpy (False) algorithm
-    output_flag : boolean
-        Boolean to include more output (True) or less (False)
-
+    valve_layer : pandas DataFrame
+        Valve layer, defined by node and link pairs (for example, valve 0 is 
+        on link A and protects node B). The valve_layer DataFrame is indexed by
+        valve number, with columns named 'node' and 'link'.
+    
+    use_numpy : bool
+        Boolean flag indicating if numpy is used directly to compute segments.
+        This can be faster for large networks with many valves.
+        
     Returns
     -------
-    output_flag = True : Two Pandas series (node and link segment number), 
-        total number of segments, and number of nodes+links in largest
-        segment
-    output_flag = False : Two Pandas series (node and link segment number)
-    
+    node_segments : pandas Series
+       Segment number for each node, indexed by node name
+    link_segments : pandas Series
+        Segment number for each link, indexed by link name
+    segment_size : pandas DataFrame
+        Number of nodes and links in each segment. The DataFrame is indexed by 
+        segmenet number, with columns named 'node' and 'link'.
     """
-    
     uG = G.to_undirected()
     
     node_names = ['N_'+n for n in list(uG.nodes())]
@@ -217,13 +219,13 @@ def valve_segments(G, valves, pandas_flag=False, output_flag=False):
     
     # Valve-node connectivity matrix
     VC = pd.DataFrame(0, columns=node_names, index=link_names)
-    for i, row in valves.iterrows():
+    for i, row in valve_layer.iterrows():
         VC.at['L_'+row['link'], 'N_'+row['node']] = 1
     
     # Valve deficient matrix
     VD = AC - VC
 
-    # Build Direct connectivity matrix, DC
+    # Direct connectivity matrix
     NI = pd.DataFrame(np.identity(len(node_names)),
                       index = node_names, columns = node_names)
     LI = pd.DataFrame(np.identity(len(link_names)),
@@ -236,7 +238,7 @@ def valve_segments(G, valves, pandas_flag=False, output_flag=False):
     # initialization for looping routine
     seg_index = 0
     
-    if pandas_flag == True:
+    if use_numpy == False: # use pandas data objects
         
         ''' Pandas valve segmentation routine '''
 
@@ -296,7 +298,7 @@ def valve_segments(G, valves, pandas_flag=False, output_flag=False):
                         seg_size = new_seg_size
                     
                     # Update seg, unabled, and seg_DC
-                    seg.update(connected_to_seg)
+                    #seg.update(connected_to_seg)
                     unlabeled = unlabeled.difference(connected_to_seg)
                     seg_DC.loc[connected_to_seg] = 1 # this is slow
                     
@@ -379,20 +381,10 @@ def valve_segments(G, valves, pandas_flag=False, output_flag=False):
     node_segments.index = node_segments.index.str[2::]
     link_segments.index = link_segments.index.str[2::]  
     
-    if output_flag == True:
-              
-        num_segments = max(node_segments.max(), link_segments.max())
-        
-        seg_link_sizes = link_segments.value_counts().rename('link')
-        seg_node_sizes = node_segments.value_counts().rename('node')
-        seg_sizes = pd.concat([seg_link_sizes, seg_node_sizes], axis=1).fillna(0)
-        max_elements = int(seg_sizes.sum(axis=1).max())
-        
-#        seg_total_size = seg_sizes.sum(axis=1)        
-#        max_links_or_nodes = int(seg_sizes.max().max())
-
-        return node_segments, link_segments, num_segments, max_elements
-
-    else:
-        
-        return node_segments, link_segments
+    # Extract segment sizes, for nodes and links
+    seg_link_sizes = link_segments.value_counts().rename('link')
+    seg_node_sizes = node_segments.value_counts().rename('node')
+    seg_sizes = pd.concat([seg_link_sizes, seg_node_sizes], axis=1).fillna(0)
+    seg_sizes = seg_sizes.astype(int)
+    
+    return node_segments, link_segments, seg_sizes
