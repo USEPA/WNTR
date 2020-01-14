@@ -79,7 +79,7 @@ These classes are listed in :numref:`table-sim-subpackage`.
                                                       This allows the user to read in EPANET INP files, modify the model, run 
                                                       an EPANET simulation, and analyze results all within WNTR.
 	
-	:class:`~wntr.sim.core.WNTRSimulator`             The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulation and includes models to simulate pipe leaks. 
+	:class:`~wntr.sim.core.WNTRSimulator`             The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulations and includes models to simulate pipe leaks. 
 	                                                  The WNTRSimulator does not perform water quality simulations, however, the hydraulic simulation results can be used with the EpanetSimulator to perform water quality simulations. See :ref:`water_quality_simulation` for an example.
    =================================================  =============================================================================================================================================================================================================================================================================
 
@@ -139,7 +139,7 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * Pump speed in the [PUMPS] section
 * Volume curves in the [TANKS] section
 * Pattern start, report start, start clocktime, and statistics in the [TIMES] section
-* PBV, and GPV values in the [VALVES] section
+* PBV and GPV values in the [VALVES] section
 
 **Future development of WNTR will address these limitations.**
 
@@ -152,5 +152,5 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
 * Pumps have speed settings which are adjustable by controls and/or patterns.  With the EpanetSimulator, 
   controls and patterns adjust the actual speed.  With the WNTRSimulator, pumps have a 'base speed' 
   (similar to junction demand and reservoir head), controls adjust the base speed, and speed patterns are 
-  a are a multiplier on the base speed. Results from the two simulators can match by scaling speed patterns 
+  a multiplier on the base speed. Results from the two simulators can match by scaling speed patterns 
   and using controls appropriately.

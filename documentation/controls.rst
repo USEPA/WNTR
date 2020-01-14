@@ -96,7 +96,7 @@ A control is created in WNTR with the :class:`~wntr.network.controls.Control` cl
 of any of the above conditions, and an action that should occur when the condition is true. 
 
 In the following example, a conditional control is defined that opens pipe 330 if the level of tank 1 goes above 46.0248 m.
-The target is the tank and the attribute is the tanks level.
+The target is the tank and the attribute is the tank's level.
 To specify that the condition should be true when the level is greater than the threshold, the operation is set to > and the threshold is set to 46.0248.
 The action `act1` from above is used in the control.
 
@@ -111,7 +111,7 @@ The action `act1` from above is used in the control.
     >>> print(ctrl1)
     Control control1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
     
-In the following example, a time-based control is defined that opens Pump 10 at hour 121.
+In the following example, a time-based control is defined that opens pump 10 at hour 121.
 A new action is defined that opens the pump.
 
 .. doctest::
@@ -136,7 +136,7 @@ If rules with conflicting actions should occur at the same time, the rule with t
 all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` enum. The default 
 priority is medium (3). 
 
-The following examples illustrate the creation of a rules, using conditions and actions similar to those defined above.
+The following examples illustrate the creation of rules, using conditions and actions similar to those defined above.
 
 .. doctest::
 
