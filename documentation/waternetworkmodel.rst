@@ -14,7 +14,7 @@ sources,
 simulation options,
 and node coordinates.
 Water network models can be built from scratch or built directly from an EPANET INP file.
-Sections of EPANET INP file that are not compatible with WNTR are described in :ref:`limitations`.  
+Sections of the EPANET INP file that are not compatible with WNTR are described in :ref:`limitations`.  
 For more information on the water network model, see 
 :class:`~wntr.network.model.WaterNetworkModel` in the API documentation.
 
@@ -22,7 +22,7 @@ Build a model from an INP file
 ---------------------------------
 
 A water network model can be created directly from an EPANET INP file.  
-The following example build a water network model.
+The following example builds a water network model.
 
 .. doctest::
     :hide:
@@ -54,7 +54,7 @@ junctions, tanks, reservoirs,
 pipes, pumps, valves,
 patterns, curves, sources, and controls.
 When an element is added to the model, it is added to the model's registry.
-Within the registry, junctions, tanks, and reservoirs share a namespace (e.g. those elements cannot share names) and pipes, pumps, and valves share a namespace.
+Within the registry, junctions, tanks, and reservoirs share a namespace (e.g., those elements cannot share names) and pipes, pumps, and valves share a namespace.
 
 For each method that adds an element to the model, there is a related object.  For example, the 
 :class:`~wntr.network.model.WaterNetworkModel.add_junction` method adds a 
@@ -130,17 +130,17 @@ The following example changes junction elevation, pipe diameter, and tank size.
     >>> tank = wn.get_node('1')
     >>> tank.diameter = tank.diameter*1.1
 
-Modify timeseries
+Modify time series
 -------------------------------
 
-Several network attributes are stored as a timeseries, including 
+Several network attributes are stored as a time series, including 
 junction demand, reservoir head, and pump speed. 
-A timeseries contains a base value, a pattern, and a category.
-Timeseries are added to the water network model when the junction, 
+A time series contains a base value, a pattern, and a category.
+Time series are added to the water network model when the junction, 
 reservoir, or pump is added.
 Since junctions can 
-have multiple demands, junction demands are stored as a list of timeseries.
-The following examples modify timeseries.
+have multiple demands, junction demands are stored as a list of time series.
+The following examples modify time series.
 
 Change reservoir supply:
 
@@ -156,7 +156,7 @@ Change junction demand base value:
     >>> junction = wn.get_node('121')
     >>> junction.demand_timeseries_list[0].base_value = 0.005
 	
-Add a new demand timeseries to the junction:
+Add a new demand time series to the junction:
 
 .. doctest::
 
@@ -210,10 +210,10 @@ Query element attributes
 
 The water network model contains methods to query node and link attributes.  These methods can 
 return attributes for all nodes or links, or for a subset using arguments that specify a node or link type 
-(i.e. junction or pipe), or by specifying a threshold (i.e. >= 10 m).  
+(i.e., junction or pipe), or by specifying a threshold (i.e., >= 10 m).  
 The query methods return a pandas Series with the element name and value.
 The following example returns node elevation, junction elevation, and junction elevations greater than 10 m (using a
-numpy operator)
+NumPy operator)
 
 .. doctest::
 

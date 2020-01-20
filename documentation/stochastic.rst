@@ -12,7 +12,7 @@ scenarios.  For disaster scenarios, the location, duration, and severity of diff
 can be drawn from distributions and included in the simulation.  
 Distributions can be a function of component properties (i.e., age, material) or 
 based on engineering standards.
-The Python packages Numpy and Scipy include statistical distributions and random selection methods that can be used for stochastic
+The Python packages NumPy and SciPy include statistical distributions and random selection methods that can be used for stochastic
 simulations.  
 
 For example, the following code can be used to select N unique pipes 
@@ -31,14 +31,14 @@ based on the failure probability of each pipe.
     >>> N = 2
     >>> selected_pipes = np.random.choice(pipe_names, N, replace=False, p=failure_probability)
 				     
-A `stochastic simulation example <https://github.com/USEPA/WNTR/blob/master/examples/stochastic_simulation.py>`_ runs multiple realizations 
+A `stochastic simulation example <https://github.com/USEPA/WNTR/blob/master/examples/stochastic_simulation.py>`_ provided with WNTR runs multiple realizations 
 of a pipe leak scenario where the location and duration are drawn from probability 
 distributions.
 
 Fragility curves
 ===============================
 Fragility curves are commonly used in disaster models to define the probability 
-of exceeding a given damage state as a function environmental change.
+of exceeding a given damage state as a function of environmental change.
 Fragility curves are closely related to survival curves, which are used to define the probability of component failure due to age.  
 For example, to estimate earthquake damage, fragility curves are defined as a function of peak
 ground acceleration, peak ground velocity, or repair rate.  
@@ -52,7 +52,7 @@ Fragility curves can have multiple damage states.
 Each state should correspond to specific changes to the network model that represent damage, for example, a major or minor leak.
 Each state is defined with a name (i.e., 'Major,' 'Minor'), 
 priority (i.e., 1, 2, where higher numbers = higher priority), 
-and distribution (using the Scipy Python package).
+and distribution (using the SciPy Python package).
 The distribution can be defined for all elements using the keyword 'Default,'
 or can be defined for individual components.
 Each fragility curve includes a 'No damage' state with priority 0 (lowest priority).
@@ -111,7 +111,7 @@ For example, if the pipe has Major damage, a large leak might be defined at that
     >>> failure_probability = FC.cdf_probability(pga)
     >>> damage_state = FC.sample_damage_state(failure_probability)
 
-To plot the damage state on the network, the state (i.e. Major) can be converted to a number using the priority map, as shown below.
+To plot the damage state on the network, the state (i.e., Major) can be converted to a number using the priority map, as shown below.
 
 .. doctest::
 

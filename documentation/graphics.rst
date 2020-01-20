@@ -31,13 +31,13 @@ link attributes, link width, and link range.
 
 Node and link attributes can be specified using the following options:
 
-* Name of the attribute (i.e. 'elevation' for nodes or 'length' for links), this calls
+* Name of the attribute (i.e., 'elevation' for nodes or 'length' for links), this calls
   :class:`~wntr.network.model.WaterNetworkModel.query_node_attribute` or
   :class:`~wntr.network.model.WaterNetworkModel.query_link_attribute` method on the water network model and returns 
-  a Pandas Series with node/link names and associated values
-* Pandas Series with node/link names and associated values, this option is useful to show simulation results (i.e. ``results.node['pressure'].loc[5*3600, :]``) and metrics (i.e. ``wntr.metrics.population(wn)``)
-* Dictionary with node/link names and associated values (similar to Pandas Series)
-* List of node/link names (i.e. ``['123', '199']``), this highlights the node or link in red
+  a pandas Series with node/link names and associated values
+* Pandas Series with node/link names and associated values, this option is useful to show simulation results (i.e., ``results.node['pressure'].loc[5*3600, :]``) and metrics (i.e., ``wntr.metrics.population(wn)``)
+* Dictionary with node/link names and associated values (similar to pandas Series)
+* List of node/link names (i.e., ``['123', '199']``), this highlights the node or link in red
 
 The following example plots the network along with node elevation (:numref:`fig-network`).
 
@@ -78,7 +78,7 @@ The following example plots the network along with node population (:numref:`fig
    :width: 715
    :alt: Network
 
-Example interactive network graphic.
+   Example interactive network graphic.
    
 Interactive Leaflet networks
 ------------------------------------------
@@ -110,15 +110,13 @@ with pipe length over the city of Albuquerque (for demonstration purposes only).
         <iframe src="_static/comp_leaflet_map.html" frameborder="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
     </div>
 
-Example interactive Leaflet network graphic.
+    Example interactive Leaflet network graphic.
    
 Network animation
 ----------------------
 
 Network animation can be generated using the 
-function :class:`~wntr.graphics.network.network_animation`.
-
-Node and link attributes can be specified using pandas DataFrames, where the 
+function :class:`~wntr.graphics.network.network_animation`. Node and link attributes can be specified using pandas DataFrames, where the 
 index is time and columns are the node or link name.  
 
 The following example creates a network animation of node quality over time.
@@ -130,10 +128,10 @@ The following example creates a network animation of node quality over time.
     >>> quality = results.node['quality']
     >>> wntr.graphics.network_animation(wn, node_attribute=quality) # doctest: +SKIP
    
-Timeseries
+Time series
 ------------------
 
-Timeseries graphics can be generated using options available in matplotlib and pandas.
+Time series graphics can be generated using options available in Matplotlib and pandas.
 
 The following example plots simulation results from above, showing pressure at a single node over time (:numref:`fig-timeseries`).
 
@@ -148,13 +146,13 @@ The following example plots simulation results from above, showing pressure at a
    :width: 640
    :alt: Network
    
-   Example timeseries graphic.
+   Example time series graphic.
 	
-Interactive timeseries
+Interactive time series
 --------------------------------
 
-Interactive timeseries graphics are useful when visualizing large datasets.  
-Basic timeseries graphics can be converted to interactive timeseries graphics using the ``plot_mpl`` function from plotly.
+Interactive time series graphics are useful when visualizing large datasets.  
+Basic time series graphics can be converted to interactive time series graphics using the ``plot_mpl`` function from plotly.
 
 .. note:: 
    This functionality requires the Python package **plotly**, which is an optional dependency of WNTR.
@@ -180,7 +178,7 @@ The following example uses simulation results from above, and converts the graph
         <iframe src="_static/tanklevel_timeseries.html" frameborder="0" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>
     </div>
 
-Example interactive timeseries graphic.
+    Example interactive time series graphic.
 
 Fragility curves
 -----------------

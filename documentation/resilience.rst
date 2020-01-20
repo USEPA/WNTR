@@ -177,26 +177,25 @@ graph by flow direction and extracts all paths between two nodes.
 	
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 
-	the total number of connected triples.  Clustering coefficient is a value between 0 and 1.
-	Clustering coefficient can be computed using the NetworkX method ``clustering``.
+	the total number of connected triples. Clustering coefficient is a value between 0 and 1.
+	Clustering coefficient can be computed using the NetworkX method ``clustering.``
 					
 	Meshedness coefficient: Meshedness coefficient is the ratio of the actual number of cycles in the 
-      network to the maximum possible number of cycles in the network.  Meshedness coefficient is a value between 0 and 1.
+      network to the maximum possible number of cycles in the network. Meshedness coefficient is a value between 0 and 1.
 
-      Spectral gap: The difference between the first and second eigenvalue of the networks adjacency matrix.
+      Spectral gap: Spectral gap is the difference between the first and second eigenvalue of the network's adjacency matrix.
 	The method :class:`~wntr.network.graph.WntrMultiDiGraph.spectral_gap` can be used to find the spectral gap of the network.
 	
-	Algebraic connectivity	: The second smallest eigenvalue of the normalized Laplacian matrix of a network.
+	Algebraic connectivity: Algebraic connectivity is the second smallest eigenvalue of the normalized Laplacian matrix of a network.
 	The method :class:`~wntr.network.graph.WntrMultiDiGraph.algebraic_connectivity` can be used to find the algebraic connectivity of the network.
 	
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
-	are connected in a network.  NPR is computed using ...
+	are connected in a network. NPR is computed using ...
 	Connectivity will change at each time step, depending on the flow direction.  
 	The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method 
 	can be used to weight the graph by a specified attribute. 
 	
-	Critical ratio of defragmentation: The threshold where the network loses its large-scale connectivity and 
-	defragments, as a function of the node degree.  The critical ratio of 
+	Critical ratio of defragmentation: Critical ratio of defragmentation is the threshold where the network loses its large-scale connectivity and defragments, as a function of the node degree. The critical ratio of 
 	defragmentation is related to percolation theory. The ratio is equal to 0 if all 
 	The method :class:`~wntr.network.graph.WntrMultiDiGraph.critical_ratio_defrag` can be used to compute the critical ratio of defragmentation of the network.
 
@@ -255,7 +254,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
    =====================================  ================================================================================================================================================
 
 The following example simulates hydraulics in pressure dependent demand mode and then extracts 
-the nodes and times when pressure exceeds a threshold,
+the nodes and times when pressure exceeds a threshold, and calculates the 
 water service availability, 
 todini index,
 and entropy.
@@ -307,7 +306,7 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
 
 The following example runs a water age simulation, computes 
 water age using the last 48 hours of the simulation, 
-and the population that is impacted by water age greater than 24 hours.
+and calculates the population that is impacted by water age greater than 24 hours.
    
 .. doctest::
 
@@ -420,7 +419,7 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
                                           use the flowrates and pressures from simulation results to compute pump energy and cost.
    =====================================  ================================================================================================================================================
 
-The following example computes network cost, greenhouse gas emissions, and then runs a hydraulic simulation to compute pump energy and pump cost.
+The following example computes network cost and greenhouse gas emissions, and then runs a hydraulic simulation to compute pump energy and pump cost.
    
 .. doctest::
 

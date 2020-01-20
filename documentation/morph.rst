@@ -42,7 +42,7 @@ Pipes that fall below a user defined pipe diameter threshold are candidates for 
    :math:`D_{m}` is the diameter of the merged pipe, :math:`D_{1}` and :math:`D_{2}` are the diameters of the original pipes, 
    :math:`L_{m}` is the length of the merged pipe, :math:`L_{1}` and :math:`L_{2}` are the lengths of the original pipes, 
    :math:`C_{m}` is the Hazen-Williams roughness coefficient of the merged pipe, and :math:`C_{1}` and :math:`C_{2}` are the Hazen-Williams roughness coefficients of the original pipes. 
-   Minor loss and pipe status of the merged pipe are set equal to the minor loss and pipe status for the pipe selected for max diameter.
+   Minor loss and pipe status of the merged pipe are set equal to the minor loss and pipe status for the pipe selected for maximum diameter.
    Note, if the original pipes have the same diameter, :math:`D_{m}` is based on the pipe name that comes first in alphabetical order.
    
 	.. _fig-series-merge:
@@ -98,10 +98,10 @@ part of network skeletonization, then the skeletonization map would contain the 
 	}
 
 This map indicates that the skeletonized network does not contain 'Junction 1', 'Junction 2' in the 
-skeletonized network is the merged product of the original 'Junction 1' and 'Junction 2', and 
+skeletonized network is the merged product of the original 'Junction 1' and 'Junction 2,' and 
 'Junction 3' was not changed. 
 'Junction 2' in the skeletonized network will therefore contain demand and demand patterns from 
-the original 'Junction 1' and 'Junction 2'.
+the original 'Junction 1' and 'Junction 2.'
 
 The following example performs network skeletonization on Net6 using a pipe diameter threshold of 12 inches.
 The skeletonization procedure reduces the number of nodes in the network from approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
@@ -263,7 +263,7 @@ The new pipe can be added to either end of the original pipe.
     Pipe split and pipe break
 	
 The following example splits pipe '123' in Net3 into pipes '123' and '123_B'.  
-The new junction is named '123_node'.  The new node is then used to add a leak 
+The new junction is named '123_node.' The new node is then used to add a leak 
 to the model.
 
 .. doctest::
