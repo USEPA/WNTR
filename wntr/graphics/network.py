@@ -48,7 +48,8 @@ def _format_link_attribute(link_attribute, wn):
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
                link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
-               valve_layer=None, add_colorbar=True, directed=False, ax=None):
+               valve_layer=None, add_colorbar=True, directed=False, ax=None,
+               filename='networkx_plot.png'):
     """
     Plot network graphic
 
@@ -248,7 +249,9 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
             valve_coordinates = (x0 + dx * 0.1,
                                      y0 + dy * 0.1)
             ax.scatter(valve_coordinates[0], valve_coordinates[1], 15, 'r', 'v')   
-            
+     
+    plt.savefig(filename)
+        
     return nodes, edges
 
 def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Value', title=None,

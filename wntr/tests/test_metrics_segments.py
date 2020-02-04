@@ -54,7 +54,10 @@ class TestSegmentation(unittest.TestCase):
         
         node_segments, link_segments, seg_size = wntr.metrics.topographic.valve_segments(G, valves)
         node_segments_P, link_segments_P, seg_size_P = wntr.metrics.topographic.valve_segments(G, valves, use_numpy=False)
-
+        
+        Net3_valves_answer = pd.read_excel("Net3_test_valves.xlsx", index_col=0, dtype=object)
+        
+        assert_frame_equal(valves, Net3_valves_answer)
         assert_series_equal(node_segments, node_segments_P)
         assert_series_equal(link_segments, link_segments_P)
         assert_frame_equal(seg_size, seg_size_P)
