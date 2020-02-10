@@ -52,7 +52,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         if self.reader is None:
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
-    def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None):
+    def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, version=2.0):
         """
         Run the EPANET simulator.
 
@@ -73,7 +73,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         """
         inpfile = file_prefix + '.inp'
         self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.en2_units)
-        enData = wntr.epanet.toolkit.ENepanet()
+        enData = wntr.epanet.toolkit.ENepanet(version=version)
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'
         if hydfile is None:
