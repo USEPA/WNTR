@@ -84,7 +84,7 @@ def test_extent_contaminated():
     sim = wntr.sim.EpanetSimulator(wn)
     results = sim.run_sim()
     
-    quality = results.node['quality'].loc[:,wn.junction_name_list]
+    quality = results.node['quality']
     flowrate = results.link['flowrate'].loc[:,wn.pipe_name_list] 
     
     EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, 0)

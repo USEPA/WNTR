@@ -81,7 +81,7 @@ def extent_contaminant(quality, flowrate, wn, detection_limit=0):
     ----------
     quality : pandas DataFrame
         A pandas Dataframe containing water quality 
-        (index = times, columns = junction names).
+        (index = times, columns = node names).
     
     flowrate : pandas DataFrame
         A pandas Dataframe containing flowrate 
