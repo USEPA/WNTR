@@ -48,20 +48,21 @@ class TestSegmentation(unittest.TestCase):
         # test Net3
         G = self.wn2.get_graph()
 
-        valves = wntr.network.generate_valve_layer(self.wn2, 'random', 50, 321)
+        valves = wntr.network.generate_valve_layer(self.wn2, 'random', 5, 321)
         
-        wntr.graphics.plot_network(self.wn2, node_size=4, valve_layer=valves)
-        
+        valves_answer = pd.DataFrame([['333','601'],
+                                    ['137', '129'],
+                                    ['153', '145'],
+                                    ['179', '161'],
+                                    ['235', '199']], columns=['link', 'node'])
+            
         node_segments, link_segments, seg_size = wntr.metrics.topographic.valve_segments(G, valves)
-        node_segments_P, link_segments_P, seg_size_P = wntr.metrics.topographic.valve_segments(G, valves, use_numpy=False)
         
-        Net3_valves_answer = pd.read_excel("Net3_test_valves.xlsx", index_col=0, dtype=object)
-        
-        assert_frame_equal(valves, Net3_valves_answer)
-        assert_series_equal(node_segments, node_segments_P)
-        assert_series_equal(link_segments, link_segments_P)
-        assert_frame_equal(seg_size, seg_size_P)
-        self.assertEqual(seg_size.shape[0], 20)
+        max_seg_size = seg_size.sum(axis=1).max()
+
+        assert_frame_equal(valves, valves_answer)
+        self.assertEqual(max_seg_size, 118+96)
+        self.assertEqual(seg_size.shape[0], 2)
         
 if __name__ == '__main__':
     unittest.main()

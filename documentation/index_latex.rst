@@ -15,6 +15,7 @@ WNTR documentation
    waternetworkmodel
    controls
    networkxgraph
+   layers
    hydraulics
    waterquality
    resultsobject

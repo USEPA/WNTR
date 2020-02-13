@@ -203,11 +203,10 @@ use NetworkX directly, while others use metrics included in WNTR.
       >>> results = sim.run_sim()
       
       >>> flowrate = results.link['flowrate']
-      >>> G.weight_graph(link_attribute = flowrate)
+      >>> G = wn.get_graph(link_weight=flowrate)
       >>> all_paths = nx.all_simple_paths(G, '119', '193')
 
-* Valve segmentation, where each valve is defined by a node and link pair (for example, 
-  valve 0 is on link 333 and protects node 601). 
+* Valve segmentation, where each valve is defined by a node and link pair (see :ref:`valve_layer`). 
 
   .. doctest::
 	
@@ -331,9 +330,8 @@ The following examples compute hydraulic metrics, including:
 
   .. doctest::
 
-      >>> G = wn.get_graph()
       >>> flowrate = results.link['flowrate'].loc[12*3600,:]
-      >>> G.weight_graph(link_attribute=flowrate)
+      >>> G = wn.get_graph(link_weight=flowrate)
       >>> entropy, system_entropy = wntr.metrics.entropy(G)
     
 Water quality metrics
