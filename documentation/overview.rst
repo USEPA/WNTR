@@ -83,7 +83,7 @@ WNTR was developed to greatly extend these capabilities.
 WNTR provides a flexible platform for modeling a wide range of disruptive incidents and repair strategies, and  
 pressure dependent demand hydraulic simulation is included to model the system during low pressure conditions.
 Furthermore, WNTR is compatible with widely used scientific computing packages for Python, 
-including NetworkX [HaSS08]_, Pandas [Mcki13]_, Numpy [VaCV11]_, Scipy [VaCV11]_, and Matplotlib [Hunt07]_.  
+including NetworkX [HaSS08]_, pandas [Mcki13]_, NumPy [VaCV11]_, SciPy [VaCV11]_, and Matplotlib [Hunt07]_.  
 These packages allow the user to build custom analysis directly in Python, and gain access to tools that
 analyze the structure of complex water distribution networks, 
 analyze time-series data from simulation results,

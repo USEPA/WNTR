@@ -14,7 +14,7 @@ sources,
 simulation options,
 and node coordinates.
 Water network models can be built from scratch or built directly from an EPANET INP file.
-Sections of EPANET INP file that are not compatible with WNTR are described in :ref:`limitations`.  
+Sections of the EPANET INP file that are not compatible with WNTR are described in :ref:`limitations`.  
 For more information on the water network model, see 
 :class:`~wntr.network.model.WaterNetworkModel` in the API documentation.
 
@@ -22,7 +22,7 @@ Build a model from an INP file
 ---------------------------------
 
 A water network model can be created directly from an EPANET INP file.  
-The following example build a water network model.
+The following example builds a water network model.
 
 .. doctest::
     :hide:
@@ -54,7 +54,7 @@ junctions, tanks, reservoirs,
 pipes, pumps, valves,
 patterns, curves, sources, and controls.
 When an element is added to the model, it is added to the model's registry.
-Within the registry, junctions, tanks, and reservoirs share a namespace (e.g. those elements cannot share names) and pipes, pumps, and valves share a namespace.
+Within the registry, junctions, tanks, and reservoirs share a namespace (e.g., those elements cannot share names) and pipes, pumps, and valves share a namespace.
 
 For each method that adds an element to the model, there is a related object.  For example, the 
 :class:`~wntr.network.model.WaterNetworkModel.add_junction` method adds a 
@@ -75,8 +75,8 @@ The example below adds a junction and pipe to a water network model.
 
     >>> wn.add_junction('new_junction', base_demand=10, demand_pattern='1', elevation=10, 
     ...     coordinates=(6, 25))
-    >>> wn.add_pipe('new_pipe', start_node_name='new_junction', end_node_name='101', length=10, 
-    ...     diameter=0.5, roughness=100, minor_loss=0)
+    >>> wn.add_pipe('new_pipe', start_node_name='new_junction', end_node_name='101', 
+    ...     length=10, diameter=0.5, roughness=100, minor_loss=0)
 			
 Remove elements
 ------------------
@@ -130,17 +130,17 @@ The following example changes junction elevation, pipe diameter, and tank size.
     >>> tank = wn.get_node('1')
     >>> tank.diameter = tank.diameter*1.1
 
-Modify timeseries
+Modify time series
 -------------------------------
 
-Several network attributes are stored as a timeseries, including 
+Several network attributes are stored as a time series, including 
 junction demand, reservoir head, and pump speed. 
-A timeseries contains a base value, a pattern, and a category.
-Timeseries are added to the water network model when the junction, 
+A time series contains a base value, a pattern, and a category.
+Time series are added to the water network model when the junction, 
 reservoir, or pump is added.
 Since junctions can 
-have multiple demands, junction demands are stored as a list of timeseries.
-The following examples modify timeseries.
+have multiple demands, junction demands are stored as a list of time series.
+The following examples modify time series.
 
 Change reservoir supply:
 
@@ -156,7 +156,7 @@ Change junction demand base value:
     >>> junction = wn.get_node('121')
     >>> junction.demand_timeseries_list[0].base_value = 0.005
 	
-Add a new demand timeseries to the junction:
+Add a new demand time series to the junction:
 
 .. doctest::
 
@@ -210,17 +210,18 @@ Query element attributes
 
 The water network model contains methods to query node and link attributes.  These methods can 
 return attributes for all nodes or links, or for a subset using arguments that specify a node or link type 
-(i.e. junction or pipe), or by specifying a threshold (i.e. >= 10 m).  
+(i.e., junction or pipe), or by specifying a threshold (i.e., >= 10 m).  
 The query methods return a pandas Series with the element name and value.
 The following example returns node elevation, junction elevation, and junction elevations greater than 10 m (using a
-numpy operator)
+NumPy operator)
 
 .. doctest::
 
     >>> node_elevation = wn.query_node_attribute('elevation')
-    >>> junction_elevation = wn.query_node_attribute('elevation', node_type=wntr.network.model.Junction)
-    >>> junction_elevation_10 = wn.query_node_attribute('elevation', np.greater_equal, 10, 
+    >>> junction_elevation = wn.query_node_attribute('elevation', 
     ...     node_type=wntr.network.model.Junction)
+    >>> junction_elevation_10 = wn.query_node_attribute('elevation', np.greater_equal, 
+    ...     10, node_type=wntr.network.model.Junction)
 	
 In a similar manner, link attributes can be queried, as shown below.
 
@@ -266,12 +267,12 @@ water network model.
     ...     coordinates=(1,2))
     >>> wn.add_junction('node2', base_demand=0.02, demand_pattern='pat2', elevation=50, 
     ...     coordinates=(1,3))
-    >>> wn.add_pipe('pipe1', 'node1', 'node2', length=304.8, diameter=0.3048, roughness=100, 
-    ...    minor_loss=0.0, status='OPEN')
+    >>> wn.add_pipe('pipe1', 'node1', 'node2', length=304.8, diameter=0.3048, 
+    ...    roughness=100, minor_loss=0.0, status='OPEN')
     >>> wn.add_reservoir('res', base_head=125, head_pattern='pat1', coordinates=(0,2))
     >>> wn.add_pipe('pipe2', 'node1', 'res', length=100, diameter=0.3048, roughness=100, 
     ...     minor_loss=0.0, status='OPEN')
-    >>> wntr.graphics.plot_network(wn) # doctest: +SKIP
+    >>> nodes, edges = wntr.graphics.plot_network(wn)
 
 .. doctest::
     :hide:
