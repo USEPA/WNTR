@@ -266,7 +266,8 @@ and entropy.
     
     >>> pressure = results.node['pressure']
     >>> pressure_threshold = 21.09 # 30 psi
-    >>> pressure_above_threshold = wntr.metrics.query(pressure, np.greater, pressure_threshold)
+    >>> pressure_above_threshold = wntr.metrics.query(pressure, np.greater, 
+    ...     pressure_threshold)
 	
     >>> expected_demand = wntr.metrics.expected_demand(wn)
     >>> demand = results.node['demand']
@@ -274,7 +275,8 @@ and entropy.
 			
     >>> head = results.node['head']
     >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]            
-    >>> todini = wntr.metrics.todini_index(head, pressure, demand, pump_flowrate, wn, pressure_threshold)
+    >>> todini = wntr.metrics.todini_index(head, pressure, demand, pump_flowrate, wn, 
+    ...     pressure_threshold)
     
     >>> G = wn.get_graph()
     >>> flowrate = results.link['flowrate'].loc[12*3600,:]
@@ -326,8 +328,8 @@ The following example runs a chemical concentration water quality simulation and
 .. doctest::
 
     >>> wn.options.quality.mode = 'CHEMICAL'
-    >>> source_pattern = wntr.network.elements.Pattern.binary_pattern('SourcePattern', step_size=3600, 
-    ...     start_time=2*3600, end_time=15*3600, duration=7*24*3600)
+    >>> source_pattern = wntr.network.elements.Pattern.binary_pattern('SourcePattern', 
+    ...     step_size=3600, start_time=2*3600, end_time=15*3600, duration=7*24*3600)
     >>> wn.add_pattern('SourcePattern', source_pattern)
     >>> wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
     >>> wn.add_source('Source2', '123', 'SETPOINT', 1000, 'SourcePattern')
@@ -354,11 +356,9 @@ Water security metrics included in WNTR are listed in  :numref:`table-water-secu
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.mass_contaminant_consumed` method.
 
    Volume consumed                        Volume consumed is the volume of a contaminant that exits the network via node demand at each node-time pair [USEPA15]_.   
-                                          A detection limit can be specified.
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.volume_contaminant_consumed` method.
 
    Extent of contamination                Extent of contamination is the length of contaminated pipe at each node-time pair [USEPA15]_.  
-                                          A detection limit can be specified.
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.extent_contaminant` method.
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 

@@ -49,7 +49,6 @@ WNTR includes methods to change coordinate scale, as shown in the following exam
 
     >>> import numpy as np
     >>> import wntr
-    >>> np.random.seed(12343)
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -76,8 +75,8 @@ The earthquake properties can be plotted on the network, as follows.
 
 .. doctest::
 
-    >>> wntr.graphics.plot_network(wn, link_attribute=pga) # doctest: +ELLIPSIS
-    (<matplotlib.collections.PathCollection object ...
+    >>> nodes, edges = wntr.graphics.plot_network(wn, link_attribute=pga) 
+
 
 .. _pipe_leak:
 	
@@ -151,7 +150,8 @@ The following example adds fire flow conditions at a specific node.
     ...     end_time=fire_end, duration=wn.options.time.duration)
     >>> wn.add_pattern('fire_flow', fire_flow_pattern)
     >>> node = wn.get_node('197')
-    >>> node.demand_timeseries_list.append( (fire_flow_demand, fire_flow_pattern, 'Fire flow'))
+    >>> node.demand_timeseries_list.append( (fire_flow_demand, fire_flow_pattern, 
+    ...     'Fire flow'))
 
 
 Environmental change
@@ -175,10 +175,10 @@ The following example changes supply and demand in the model.
 
 .. doctest::
 
-    >>> for reservoir_name, reservoir in wn.reservoirs():
-    ...     reservoir.head_timeseries.base_value = reservoir.head_timeseries.base_value*0.9
-    >>> for junction_name, junction in wn.junctions():
-    ...     for demand in junction.demand_timeseries_list:
+    >>> for res_name, res in wn.reservoirs():
+    ...     res.head_timeseries.base_value = res.head_timeseries.base_value*0.9
+    >>> for junc_name, junc in wn.junctions():
+    ...     for demand in junc.demand_timeseries_list:
     ...         demand.base_value = demand.base_value*1.15
    
 Contamination

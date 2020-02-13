@@ -18,6 +18,7 @@ Simulation results are stored in a :class:`~wntr.sim.results.SimulationResults` 
 
     >>> from __future__ import print_function, division
     >>> import pandas as pd
+    >>> import matplotlib.pylab as plt
 	>>> import wntr
     >>> pd.set_option('precision', 2)
     >>> try:
@@ -130,9 +131,22 @@ To access the pressure at time 3600 over all nodes (values displayed to 2 decima
 Data can be plotted as a time series, as shown in :numref:`fig-plot-timeseries`:
 
 .. doctest::
+    :hide:
+    
+    >>> fig = plt.figure()
+    
+.. doctest::
 
-    >>> pressure_at_node123.plot() #doctest:+SKIP 
+    >>> ax = pressure_at_node123.plot()
+    >>> text = ax.set_xlabel("Time (s)")
+    >>> text = ax.set_ylabel("Pressure (m)") 
 
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_timeseries.png', dpi=300)
+    
 .. _fig-plot-timeseries:
 .. figure:: figures/plot_timeseries.png
    :width: 640
@@ -141,13 +155,27 @@ Data can be plotted as a time series, as shown in :numref:`fig-plot-timeseries`:
    Example time series graphic.
    
 Data can also be plotted on the water network model, as shown in :numref:`fig-plot-network`.
+Note that the :class:`~wntr.graphics.network.plot_network` function returns matplotlib objects 
+for the the network nodes and edges, which can be further customized by the user.
 In this figure, the node pressure at 1 hr is plotted on the network. Link attributes can be 
 plotted in a similar manner.
 
 .. doctest::
+    :hide:
+    
+    >>> fig = plt.figure()
+    
+.. doctest::
 
-	>>> wntr.graphics.plot_network(wn, node_attribute=pressure_at_1hr, node_range=[30,55]) #doctest:+SKIP 
-	
+    >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute=pressure_at_1hr, 
+    ...    node_range=[30,55], node_colorbar_label='Pressure (m)')
+
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_network.png', dpi=300)
+    
 .. _fig-plot-network:
 .. figure:: figures/plot_network.png
    :width: 659
