@@ -183,7 +183,7 @@ def _links_in_simple_paths(G, sources, sinks):
 
     return link_count
 
-def valve_segments(G, valve_layer, use_numpy=True):
+def valve_segments(G, valve_layer):
     """
     Valve segmentation
 
@@ -193,10 +193,7 @@ def valve_segments(G, valve_layer, use_numpy=True):
         Valve layer, defined by node and link pairs (for example, valve 0 is 
         on link A and protects node B). The valve_layer DataFrame is indexed by
         valve number, with columns named 'node' and 'link'.
-    
-    use_numpy : bool
-        Boolean flag indicating if numpy is used directly to compute segments.
-        This can be faster for large networks with many valves.
+
         
     Returns
     -------
@@ -238,141 +235,71 @@ def valve_segments(G, valve_layer, use_numpy=True):
     # initialization for looping routine
     seg_index = 0
     
-    if use_numpy == False: # use pandas data objects
-        
-        ''' Pandas valve segmentation routine '''
+    DC_np = DC.to_numpy() # requires Pandas v.0.24.0
 
-        # vector of length nodes+links where the ith entry is the segment number of node/link i
-        seg_label = pd.Series(0, index=DC.index, dtype=int)
-        
-        # Loop over all nodes and links to grow segments
-        for i in seg_label.index:
-            
-            # Only assign a seg_label if node/link doesn't already have one
-            if seg_label.at[i] == 0:
-                
-                # Advance segment label and assign to node/link, mark as assigned
-                seg_index += 1
-                seg_label.at[i] = seg_index
-                
-                seg_size = (seg_label == seg_index).sum()
-                
-                flag = True
-                
-                #print(i)
-                
-                # Nodes and links that are part of the segment
-                seg = set([i])
-                
-                # Unlabeled nodes and links
-                unlabeled = set(seg_label.index[seg_label == 0])
-                 
-                # Connectivitiy of the segment
-                seg_DC = pd.Series(0, index=DC.columns)
-                seg_DC.loc[seg] = 1
-                
-                while flag:
-        
-                    # Connectivity of the unlabeled nodes and links
-                    unlabeled_DC = DC.loc[:,unlabeled]
-                    
-                    # Potential connectivitiy of the segment
-                    p_seg_DC = unlabeled_DC.add(seg_DC, axis=0)
-                    
-                    # Nodes and links that are connected to the segement
-                    #temp = p_seg_DC.max(axis=0) # This line is slow when the dataframe is large
-                    temp = p_seg_DC.values.max(axis=0)
-                    connected_to_seg = set(p_seg_DC.columns[temp > 1])
-                    
-                    #print('    ', connected_to_seg)
-                    
-                    # Update direct connectivity matrix and segment label
-                    #DC.loc[:,connected_to_seg] = p_seg_DC.loc[:,connected_to_seg] # This line is slow
-                    DC.loc[:,connected_to_seg].update(p_seg_DC.loc[:,connected_to_seg]) 
-                    seg_label[connected_to_seg] = seg_index
-                    
-                    new_seg_size = (seg_label == seg_index).sum()
-                    if seg_size == new_seg_size:
-                        flag = False
-                    else:
-                        seg_size = new_seg_size
-                    
-                    # Update seg, unabled, and seg_DC
-                    #seg.update(connected_to_seg)
-                    unlabeled = unlabeled.difference(connected_to_seg)
-                    seg_DC.loc[connected_to_seg] = 1 # this is slow
-                    
-        #        print(i, seg_size)
+    # vector of length nodes+links where the ith entry is the segment number of node/link i
+    seg_label = np.zeros(shape=(len(DC.index)), dtype=int)
+
     
-    else:
+    # Loop over all nodes and links to grow segments
+    for i in range(len(seg_label)):
         
-        ''' Numpy valve segmentation routine '''
-        
-        DC_np = DC.to_numpy() # requires Pandas v.0.24.0
-
-        # vector of length nodes+links where the ith entry is the segment number of node/link i
-        seg_label_np = np.zeros(shape=(len(DC.index)), dtype=int)
-
-        
-        # Loop over all nodes and links to grow segments
-        for i in range(len(seg_label_np)):
+        # Only assign a seg_label if node/link doesn't already have one
+        if seg_label[i] == 0:
             
-            # Only assign a seg_label if node/link doesn't already have one
-            if seg_label_np[i] == 0:
-                
-                # Advance segment label and assign to node/link, mark as assigned
-                seg_index += 1
-                seg_label_np[i] = seg_index
+            # Advance segment label and assign to node/link, mark as assigned
+            seg_index += 1
+            seg_label[i] = seg_index
+           
+            # Initialize segment size
+            seg_size = (seg_label == seg_index).sum()
+             
+            flag = True
+            
+            #print(i)
+    
+            # Nodes and links that are part of the segment
+            seg = np.where(seg_label == seg_index)[0]
+        
+            # Connectivitiy of the segment
+            seg_DC = np.zeros(shape=(DC_np.shape[0]), dtype=int)
+            seg_DC[seg] = 1
+    
+            while flag:          
                
-                # Initialize segment size
-                seg_size = (seg_label_np == seg_index).sum()
-                 
-                flag = True
+                # Potential connectivitiy of the segment      
+                p_seg_DC = DC_np + seg_DC[:,None] # this is slow
                 
-                #print(i)
-        
-                # Nodes and links that are part of the segment
-                seg = np.where(seg_label_np == seg_index)[0]
-            
-                # Connectivitiy of the segment
-                seg_DC = np.zeros(shape=(DC_np.shape[0]), dtype=int)
-                seg_DC[seg] = 1
-        
-                while flag:          
-                   
-                    # Potential connectivitiy of the segment      
-                    p_seg_DC = DC_np + seg_DC[:,None] # this is slow
+                # Nodes and links that are connected to the segment
+                temp = np.max(p_seg_DC,axis=0) # this is somewhat slow
+                connected_to_seg = np.where(temp > 1)[0]   
+                seg_DC[connected_to_seg] = 1
+      
+                # Label nodes/links connected to the segment
+                seg_label[connected_to_seg] = seg_index
+                
+                # Find new segment size
+                new_seg_size = (seg_label == seg_index).sum()
                     
-                    # Nodes and links that are connected to the segment
-                    temp = np.max(p_seg_DC,axis=0) # this is somewhat slow
-                    connected_to_seg = np.where(temp > 1)[0]   
-                    seg_DC[connected_to_seg] = 1
+                # Check for progress
+                if seg_size == new_seg_size:
+                    flag = False
+                else:
+                    seg_size = new_seg_size
           
-                    # Label nodes/links connected to the segment
-                    seg_label_np[connected_to_seg] = seg_index
-                    
-                    # Find new segment size
-                    new_seg_size = (seg_label_np == seg_index).sum()
-                        
-                    # Check for progress
-                    if seg_size == new_seg_size:
-                        flag = False
-                    else:
-                        seg_size = new_seg_size
-              
-                    # Update seg_DC and DC_np
-                    seg_DC = DC_np[:,i] + np.sum(
-                                            p_seg_DC[:,connected_to_seg],axis=1
-                                            ) # this is slow
-                    seg_DC = np.clip(seg_DC,0,1)          
-                    DC_np[:,connected_to_seg] = np.repeat(
-                                                seg_DC,len(connected_to_seg)).reshape(
-                                                len(seg_DC),len(connected_to_seg))
-                                                # this is somewhat slow
-        
-        #        print(i, seg_size)
-        
-        seg_label = pd.Series(seg_label_np, index=DC.index, dtype=int)  
+                # Update seg_DC and DC_np
+                seg_DC = DC_np[:,i] + np.sum(
+                                        p_seg_DC[:,connected_to_seg],axis=1
+                                        ) # this is slow
+                seg_DC = np.clip(seg_DC,0,1)          
+                DC_np[:,connected_to_seg] = np.repeat(
+                                            seg_DC,len(connected_to_seg)).reshape(
+                                            len(seg_DC),len(connected_to_seg))
+                                            # this is somewhat slow
+    
+    #        print(i, seg_size)
+    
+    seg_label = pd.Series(seg_label, index=DC.index, dtype=int)  
 
     # Separate node and link segments
     # remove leading N_ and L_ from node and link names
