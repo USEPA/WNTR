@@ -362,7 +362,7 @@ class HydraulicOptions(object):
         self.emitter_exponent = 0.5
         self.minimum_pressure = None
         self.required_pressure = None
-        self.pressure_exponenet = None
+        self.pressure_exponent = None
 
     def __eq__(self, other):
         if not type(self) == type(other):
