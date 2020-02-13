@@ -341,6 +341,13 @@ class HydraulicOptions(object):
         junctions
     emitter_exponent : float, default 0.5
         The exponent used when computing flow from an emitter
+    minimum_pressure : float, default None
+        The minimum nodal pressure - ONLY valid for EPANET 2.2
+    required_pressure: float, default None
+        The required nodal pressure - ONLY valid for EPANET 2.2
+    pressure_exponent: float, default None
+        The pressure exponent - ONLY valid for EPANET 2.2
+    
     """
     def __init__(self):
         # General options
@@ -353,6 +360,9 @@ class HydraulicOptions(object):
         self.pattern = '1'
         self.demand_multiplier = 1.0
         self.emitter_exponent = 0.5
+        self.minimum_pressure = None
+        self.required_pressure = None
+        self.pressure_exponenet = None
 
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -667,6 +677,10 @@ class SolverOptions(object):
         Number of solution trials that pass between status check 
     damplimit : float, default 0.0
         Accuracy value at which solution damping begins
+    headerror : float, default None
+        The head error convergence limit
+    flowchange : float, default None
+        The flow change convergence limit
         
     """
     def __init__(self):
@@ -678,6 +692,9 @@ class SolverOptions(object):
         self.checkfreq = 2
         self.maxcheck = 10
         self.damplimit = 0
+        self.headerror = None
+        self.flowchange = None
+        self.demand_model = None
         
     def __eq__(self, other):
         if not type(self) == type(other):
@@ -686,6 +703,7 @@ class SolverOptions(object):
         if abs(self.trials - other.trials)<1e-9 and \
            abs(self.accuracy - other.accuracy)<1e-9 and \
            self.unbalanced == other.unbalanced and \
+           self.demand_model == other.demand_model and \
            abs(self.tolerance - other.tolerance)<1e-9 and \
            abs(self.checkfreq - other.checkfreq)<1e-9 and \
            abs(self.maxcheck - other.maxcheck)<1e-9 and \
