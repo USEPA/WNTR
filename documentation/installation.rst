@@ -6,19 +6,30 @@ Installation
 ======================================
 .. include:: <isonum.txt>
 
-WNTR can be installed as a Python package using standard open source software tools.
+WNTR requires 64-bit Python (tested on versions 3.6 and 3.7) along with several 
+Python package dependencies. 
+See :ref:`requirements` and :ref:`optional_dependencies` for more information.
+WNTR can be installed as a Python package as breifly described below. 
+:ref:`detailed_instructions` are included in the following section.
 
 Users can install the latest release of WNTR from PyPI using the following command::
 
     pip install wntr
     
-Developers can install the master (development) branch of WNTR from the GitHub repository using the following commands::
+Developers can install the master (development) branch of WNTR from the GitHub 
+repository using the following commands::
 
     git clone https://github.com/USEPA/WNTR
     cd WNTR
     python setup.py develop
 
-Detailed instructions are included below.
+
+.. _detailed_instructions:
+
+Detailed instructions
+-------------------------
+
+Detailed installation instructions are included below.
 
 **Step 1**: Setup the Python environment
 
@@ -141,6 +152,8 @@ The following Python packages are required:
   
 These packages are included in the Anaconda Python distribution.
  
+.. _optional_dependencies:
+
 Optional dependencies
 -------------------------
 

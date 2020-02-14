@@ -17,7 +17,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def mass_contaminant_consumed(demand, quality):
+def mass_contaminant_consumed(demand, quality, detection_limit=0):
     """ Mass of contaminant consumed [USEPA15]_.
     
     Parameters
@@ -30,18 +30,22 @@ def mass_contaminant_consumed(demand, quality):
         A pandas Dataframe containing water quality 
         (index = times, columns = junction names).
     
+    detection_limit : float
+        Contaminant detection limit.
+        
     Returns
     --------
     A pandas DataFrame containing mass consumed
     """
     
+    maskQ = np.greater(quality, detection_limit)
     maskD = np.greater(demand, 0) # positive demand
     deltaT = quality.index[1] # this assumes constant timedelta
-    MC = demand*deltaT*quality*maskD # m3/s * s * kg/m3 - > kg
+    MC = demand*deltaT*quality[maskQ]*maskD # m3/s * s * kg/m3 - > kg
     
     return MC
 
-def volume_contaminant_consumed(demand, quality, detection_limit):
+def volume_contaminant_consumed(demand, quality, detection_limit=0):
     """ Volume of contaminant consumed [USEPA15]_.
     
     Parameters
@@ -69,7 +73,7 @@ def volume_contaminant_consumed(demand, quality, detection_limit):
     
     return VC
 
-def extent_contaminant(quality, flowrate, wn, detection_limit):
+def extent_contaminant(quality, flowrate, wn, detection_limit=0):
     """ 
     Extent of contaminant in the pipes [USEPA15]_.
     
@@ -77,7 +81,7 @@ def extent_contaminant(quality, flowrate, wn, detection_limit):
     ----------
     quality : pandas DataFrame
         A pandas Dataframe containing water quality 
-        (index = times, columns = junction names).
+        (index = times, columns = node names).
     
     flowrate : pandas DataFrame
         A pandas Dataframe containing flowrate 

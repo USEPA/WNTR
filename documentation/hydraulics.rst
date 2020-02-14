@@ -9,7 +9,7 @@ WNTR contains two simulators: the **EpanetSimulator** and the **WNTRSimulator**.
 See :ref:`software_framework` for more information on features and limitations of these simulators. 
 
 The EpanetSimulator can be used to run demand-driven hydraulic simulations
-using the EPANET 2 Programmer's Toolkit. The simulator can also be 
+using the EPANET 2.0 Programmer's Toolkit. The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
 A hydraulic simulation using the EpanetSimulator is run using the following code:
 
@@ -317,10 +317,11 @@ To restart the simulation from time zero, the user has several options.
    A pickle file is generally used for this purpose.  
    This option is useful when the water network model contains custom controls that would not be reset using the option 1, 
    or when the user wants to change operations between simulations.
-
+   
+   The following example saves the water network model to a file before using it in a simulation.
+   
    .. doctest::
 
-       >>> # Save the water network model to a file before using it in a simulation
        >>> import pickle
        >>> f=open('wn.pickle','wb')
        >>> pickle.dump(wn,f)
@@ -328,7 +329,10 @@ To restart the simulation from time zero, the user has several options.
        >>> sim = wntr.sim.WNTRSimulator(wn)
        >>> results = sim.run_sim()
     
-       >>> # Reload the water network model from the file before the next simulation
+   The next example reload the water network model from the file before the next simulation.
+   
+   .. doctest::
+   
        >>> f=open('wn.pickle','rb')
        >>> wn = pickle.load(f)
        >>> f.close()
