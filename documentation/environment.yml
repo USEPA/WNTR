@@ -6,6 +6,5 @@ dependencies:
     - networkx
     - pandas
     - matplotlib
-    - plotly
     - sphinx
     - numpydoc
