@@ -119,7 +119,7 @@ WNTR includes additional topographic metrics to help compute resilience
                                           of links between a node and all other nodes.
 										  
    Valve segmentation                     Valve segmentation groups links and nodes into segments based on the location of isolation valves. 
-                                          Valve segmentation returns a segement number for each node and link, along with
+                                          Valve segmentation returns a segment number for each node and link, along with
                                           the number of nodes and links in each segment.  This information can be plotted on the network and used in subsequent analysis.
    =====================================  ================================================================================================================================================
 
@@ -206,7 +206,7 @@ use NetworkX directly, while others use metrics included in WNTR.
       >>> G = wn.get_graph(link_weight=flowrate)
       >>> all_paths = nx.all_simple_paths(G, '119', '193')
 
-* Valve segmentation, where each valve is defined by a node and link pair (see :ref:`valve_layer`). 
+* Valve segmentation, where each valve is defined by a node and link pair (see :ref:`valve_layer`). See data layer documentation for further information.
 
   .. doctest::
 	
