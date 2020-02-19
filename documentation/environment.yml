@@ -1,8 +1,6 @@
 name: wntr
-channels:
-    - defaults
 dependencies:
-    - python=3.6
+    - python=3.7
     - numpy
     - scipy
     - networkx
