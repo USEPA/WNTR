@@ -34,7 +34,7 @@ import logging
 import math
 import six
 import copy
-from scipy.optimize import fsolve
+from scipy.optimize import fsolve, curve_fit
 
 if sys.version_info[0] == 2:
     from collections import MutableSequence
@@ -669,39 +669,78 @@ class HeadPump(Pump):
             A = (4.0/3.0)*H_1
             B = (1.0/3.0)*(H_1/(Q_1**2))
             C = 2
-        # 3-Point curve
-        elif curve.num_points == 3:
-            Q_1 = curve.points[0][0]
-            H_1 = curve.points[0][1]
-            Q_2 = curve.points[1][0]
-            H_2 = curve.points[1][1]
-            Q_3 = curve.points[2][0]
-            H_3 = curve.points[2][1]
-
-            # When the first points is at zero flow
-            if Q_1 == 0.0:
-                A = H_1
-                C = math.log((H_1 - H_2)/(H_1 - H_3))/math.log(Q_2/Q_3)
-                B = (H_1 - H_2)/(Q_2**C)
+        elif curve.num_points == 2:
+            raise RuntimeError('Coefficients for a 2 point curves cannot be generated. ')
+        else:
+            def fit3pt_Q1_eq_0(H1,H2,H3,Q2,Q3):
+                A = H1
+                C = math.log((H1 - H2)/(H1 - H3))/math.log(Q2/Q3)
+                B = (H1 - H2)/(Q2**C)
+                return A,B,C
+                
+            # 3-Point curve
+            if curve.num_points == 3:
+                Q_1 = curve.points[0][0]
+                H_1 = curve.points[0][1]
+                Q_2 = curve.points[1][0]
+                H_2 = curve.points[1][1]
+                Q_3 = curve.points[2][0]
+                H_3 = curve.points[2][1]
+    
+                # When the first points is at zero flow
+                if Q_1 == 0.0:
+                    A,B,C = fit3pt_Q1_eq_0(H_1,H_2,H_3,Q_2,Q_3)
+                else:
+                    def curve_fit_3pt(x):
+                        eq_array = [H_1 - x[0] + x[1]*Q_1**x[2],
+                                    H_2 - x[0] + x[1]*Q_2**x[2],
+                                    H_3 - x[0] + x[1]*Q_3**x[2]]
+                        return eq_array
+                    coeff = fsolve(curve_fit_3pt, [200, 1e-3, 1.5])
+                    A = coeff[0]
+                    B = coeff[1]
+                    C = coeff[2]
+            # Multi-point curve
             else:
-                def curve_fit(x):
-                    eq_array = [H_1 - x[0] + x[1]*Q_1**x[2],
-                                H_2 - x[0] + x[1]*Q_2**x[2],
-                                H_3 - x[0] + x[1]*Q_3**x[2]]
-                    return eq_array
-                coeff = fsolve(curve_fit, [200, 1e-3, 1.5])
+                Q = []
+                H = []
+                for pt in curve.points:
+                    Q.append(pt[0])
+                    H.append(pt[1])
+                
+                # Initial guess
+                A0,B0,C0 = fit3pt_Q1_eq_0(H[0],H[1],H[-1],Q[1],Q[-1])
+
+                def flow_vs_head_func(Q, a, b, c):
+                    return a - b * Q ** c
+                
+                try:
+                    coeff, cov = curve_fit(flow_vs_head_func, Q, H, [A0, B0, C0])
+                except RuntimeError:
+                    raise RuntimeError('The multi-point pump curve data ' + 
+                       'provided has a very poor fit that is not acceptable' +
+                       ' for this analysis.\n\n' + 'The failed data is:\n\n' +
+                       "Flow (m3/s): " + str(Q) + "\n\n" + "Head (m): " + 
+                       str(H))
+                    
                 A = coeff[0]
                 B = coeff[1]
                 C = coeff[2]
-
-        # Multi-point curve
-        else:
-            raise RuntimeError('Coefficient for Multipoint pump curves cannot be generated. ')
+                
 
         if A<=0 or B<0 or C<=0:
-            raise RuntimeError('Value of pump head curve coefficient is negative, which is not allowed. \nPump: {0} \nA: {1} \nB: {2} \nC:{3}'.format(self.name,A,B,C))
+            raise RuntimeError('Value of pump head curve coefficient is'+
+                               ' negative, which is not allowed. \nPump: '+
+                               '{0} \nA: {1} \nB: {2} \nC:{3}'.format(
+                                       self.name,A,B,C))
+        # with using scipy curve_fit, I think this is a waranted check 
+        elif np.isnan(A+B+C):
+            raise RuntimeError('One of the coefficients for the pump head '+
+                               'curve is NaN! \n'+
+                               'Pump: {0} \nA: {1} \nB: {2} \nC:{3}'.format(
+                                       self.name,A,B,C))
         return (A, B, C)
-
+    
     def get_design_flow(self):
         """
         Returns the design flow value for the pump.
