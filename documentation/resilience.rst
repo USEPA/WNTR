@@ -206,11 +206,11 @@ use NetworkX directly, while others use metrics included in WNTR.
       >>> G = wn.get_graph(link_weight=flowrate)
       >>> all_paths = nx.all_simple_paths(G, '119', '193')
 
-* Valve segmentation, where each valve is defined by a node and link pair (see :ref:`valve_layer`). See data layer documentation for further information.
+* Valve segmentation, where each valve is defined by a node and link pair (see :ref:`valvelayer`)
 
   .. doctest::
 	
-	  >>> valve_layer = wntr.network.generate_valve_layer(wn, 'random', 50)
+	  >>> valve_layer = wntr.network.generate_valve_layer(wn, 'random', 40)
 	  >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, valve_layer)
 
 
