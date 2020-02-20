@@ -48,7 +48,8 @@ def _format_link_attribute(link_attribute, wn):
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
                link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
-               add_colorbar=True, directed=False, ax=None):
+               add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
+               directed=False, ax=None):
     """
     Plot network graphic
 
@@ -115,6 +116,12 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     add_colorbar : bool, optional
         Add colorbar
 
+    node_colorbar_label: str, optional
+        Node colorbar label
+        
+    link_colorbar_label: str, optional
+        Link colorbar label
+        
     directed : bool, optional
         If True, plot the directed graph
     
@@ -124,7 +131,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         
     Returns
     -------
-    nodes, edges
+    nodes, edges : matplotlib objects for network nodes and edges
 
     Notes
     -----
@@ -224,9 +231,11 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
             labels[(link.start_node_name, link.end_node_name)] = link_name
         nx.draw_networkx_edge_labels(G, pos, labels, font_size=7, ax=ax)
     if add_node_colorbar and node_attribute:
-        plt.colorbar(nodes, shrink=0.5, pad=0, ax=ax)
+        clb = plt.colorbar(nodes, shrink=0.5, pad=0, ax=ax)
+        clb.ax.set_title(node_colorbar_label, fontsize=10)
     if add_link_colorbar and link_attribute:
-        plt.colorbar(edges, shrink=0.5, pad=0.05, ax=ax)
+        clb = plt.colorbar(edges, shrink=0.5, pad=0.05, ax=ax)
+        clb.ax.set_title(link_colorbar_label, fontsize=10)
     ax.axis('off')
 
     return nodes, edges

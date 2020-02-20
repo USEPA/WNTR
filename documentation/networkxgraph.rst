@@ -72,8 +72,7 @@ The graph can be used to access NetworkX methods, for example:
     >>> import networkx as nx
     >>> node_degree = G.degree()
     >>> closeness_centrality = nx.closeness_centrality(G)
-    >>> wntr.graphics.plot_network(wn, node_attribute=closeness_centrality) # doctest: +ELLIPSIS
-    (<matplotlib.collections.PathCollection object ...
+    >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute=closeness_centrality)
 
 Additional network types
 -------------------------------------------------

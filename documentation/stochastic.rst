@@ -29,7 +29,8 @@ based on the failure probability of each pipe.
     >>> pipe_names = ['pipe1', 'pipe2', 'pipe3', 'pipe4']
     >>> failure_probability = [0.10, 0.20, 0.30, 0.40]
     >>> N = 2
-    >>> selected_pipes = np.random.choice(pipe_names, N, replace=False, p=failure_probability)
+    >>> selected_pipes = np.random.choice(pipe_names, N, replace=False, 
+    ...     p=failure_probability)
 				     
 A `stochastic simulation example <https://github.com/USEPA/WNTR/blob/master/examples/stochastic_simulation.py>`_ provided with WNTR runs multiple realizations 
 of a pipe leak scenario where the location and duration are drawn from probability 
@@ -62,20 +63,26 @@ The following example defines a fragility curve with two damage states: Minor da
 .. doctest::
     :hide:
 
+    >>> import matplotlib.pylab as plt
     >>> import wntr
-    >>> np.random.seed(12343)
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
-		
+
 .. doctest::
 
     >>> from scipy.stats import lognorm
     >>> FC = wntr.scenario.FragilityCurve()
-    >>> FC.add_state('Minor', 1, {'Default': lognorm(0.5,scale=0.3)})
-    >>> FC.add_state('Major', 2, {'Default': lognorm(0.5,scale=0.7)}) 
-    >>> wntr.graphics.plot_fragility_curve(FC, xlabel='Peak Ground Acceleration (g)')
+    >>> FC.add_state('Minor', 1, {'Default': lognorm(0.5,scale=0.2)})
+    >>> FC.add_state('Major', 2, {'Default': lognorm(0.5,scale=0.5)}) 
+    >>> ax = wntr.graphics.plot_fragility_curve(FC, xlabel='Peak Ground Acceleration (g)')
+
+.. doctest::
+    :hide:
+    
+    >>> plt.tight_layout()
+    >>> plt.savefig('fragility_curve.png', dpi=300)
 
 :numref:`fig-fragility` illustrates the fragility curve as a function of peak ground acceleration.  
 For example, if the peak ground acceleration is 0.5 at 
@@ -97,7 +104,7 @@ For example, if the pipe has Major damage, a large leak might be defined at that
 
 .. doctest::
     :hide:
-	
+
     >>> wn = wntr.morph.scale_node_coordinates(wn, 1000)
     >>> epicenter = (32000,15000) # x,y location
     >>> magnitude = 6.5 # Richter scale
@@ -105,7 +112,8 @@ For example, if the pipe has Major damage, a large leak might be defined at that
     >>> earthquake = wntr.scenario.Earthquake(epicenter, magnitude, depth)
     >>> distance = earthquake.distance_to_epicenter(wn, element_type=wntr.network.Pipe)
     >>> pga = earthquake.pga_attenuation_model(distance)  
-
+    >>> np.random.seed(12343)
+    
 .. doctest::
 
     >>> failure_probability = FC.cdf_probability(pga)
@@ -118,10 +126,16 @@ To plot the damage state on the network, the state (i.e., Major) can be converte
     >>> priority_map = FC.get_priority_map()
     >>> damage_value = damage_state.map(priority_map)
     >>> custom_cmp = wntr.graphics.custom_colormap(3, ['grey', 'royalblue', 'darkorange'])
-    >>> wntr.graphics.plot_network(wn, link_attribute=damage_value, node_size=0, link_width=2,
-    ...     link_cmap=custom_cmp, title='Damage state: 0=None, 1=Minor, 2=Major') # doctest: +ELLIPSIS
-    (<matplotlib.collections.PathCollection object ...
+    >>> nodes, edges = wntr.graphics.plot_network(wn, link_attribute=damage_value, 
+    ...     node_size=0, link_width=2, link_cmap=custom_cmp, 
+    ...     title='Damage state: 0=None, 1=Minor, 2=Major') 
    
+.. doctest::
+    :hide:
+    
+    >>> plt.tight_layout()
+    >>> plt.savefig('damage_state.png', dpi=300)
+    
 .. _fig-damage-state:
 .. figure:: figures/damage_state.png
    :width: 640

@@ -87,6 +87,10 @@ def create_hydraulic_model(wn, mode='DD', HW_approx='default'):
     constraint.psv_headloss_constraint.build(m, wn, model_updater)
     constraint.tcv_headloss_constraint.build(m, wn, model_updater)
     constraint.fcv_headloss_constraint.build(m, wn, model_updater)
+    if len(wn.pbv_name_list) > 0:
+        raise NotImplementedError('PBV valves are not currently supported in the WNTRSimulator')
+    if len(wn.gpv_name_list) > 0:
+        raise NotImplementedError('GPV valves are not currently supported in the WNTRSimulator')
     constraint.leak_constraint.build(m, wn, model_updater)
 
     # TODO: Document that changing a curve with controls does not do anything; you have to change the pump_curve_name attribute on the pump

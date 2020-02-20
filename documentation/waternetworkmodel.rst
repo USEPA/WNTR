@@ -75,8 +75,8 @@ The example below adds a junction and pipe to a water network model.
 
     >>> wn.add_junction('new_junction', base_demand=10, demand_pattern='1', elevation=10, 
     ...     coordinates=(6, 25))
-    >>> wn.add_pipe('new_pipe', start_node_name='new_junction', end_node_name='101', length=10, 
-    ...     diameter=0.5, roughness=100, minor_loss=0)
+    >>> wn.add_pipe('new_pipe', start_node_name='new_junction', end_node_name='101', 
+    ...     length=10, diameter=0.5, roughness=100, minor_loss=0)
 			
 Remove elements
 ------------------
@@ -218,9 +218,10 @@ NumPy operator)
 .. doctest::
 
     >>> node_elevation = wn.query_node_attribute('elevation')
-    >>> junction_elevation = wn.query_node_attribute('elevation', node_type=wntr.network.model.Junction)
-    >>> junction_elevation_10 = wn.query_node_attribute('elevation', np.greater_equal, 10, 
+    >>> junction_elevation = wn.query_node_attribute('elevation', 
     ...     node_type=wntr.network.model.Junction)
+    >>> junction_elevation_10 = wn.query_node_attribute('elevation', np.greater_equal, 
+    ...     10, node_type=wntr.network.model.Junction)
 	
 In a similar manner, link attributes can be queried, as shown below.
 
@@ -266,12 +267,12 @@ water network model.
     ...     coordinates=(1,2))
     >>> wn.add_junction('node2', base_demand=0.02, demand_pattern='pat2', elevation=50, 
     ...     coordinates=(1,3))
-    >>> wn.add_pipe('pipe1', 'node1', 'node2', length=304.8, diameter=0.3048, roughness=100, 
-    ...    minor_loss=0.0, status='OPEN')
+    >>> wn.add_pipe('pipe1', 'node1', 'node2', length=304.8, diameter=0.3048, 
+    ...    roughness=100, minor_loss=0.0, status='OPEN')
     >>> wn.add_reservoir('res', base_head=125, head_pattern='pat1', coordinates=(0,2))
     >>> wn.add_pipe('pipe2', 'node1', 'res', length=100, diameter=0.3048, roughness=100, 
     ...     minor_loss=0.0, status='OPEN')
-    >>> wntr.graphics.plot_network(wn) # doctest: +SKIP
+    >>> nodes, edges = wntr.graphics.plot_network(wn)
 
 .. doctest::
     :hide:

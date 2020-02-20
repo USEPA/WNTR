@@ -52,9 +52,6 @@ The following example creates an action that opens pipe 330:
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
     ...
-    >>> print(wn)   # doctest: +SKIP
-    <WaterNetworkModel object at 0x03978184 >
-
 
 .. doctest::
 
@@ -95,6 +92,11 @@ Controls
 A control is created in WNTR with the :class:`~wntr.network.controls.Control` class, which takes an instance 
 of any of the above conditions, and an action that should occur when the condition is true. 
 
+Controls are also assigned a priority. 
+If controls with conflicting actions should occur at the same time, the control with the highest priority will override 
+all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` class. The default 
+priority is medium (3). 
+
 In the following example, a conditional control is defined that opens pipe 330 if the level of tank 1 goes above 46.0248 m.
 The target is the tank and the attribute is the tank's level.
 To specify that the condition should be true when the level is greater than the threshold, the operation is set to > and the threshold is set to 46.0248.
@@ -131,9 +133,10 @@ Rules
 A rule is created in WNTR with the :class:`~wntr.network.controls.Rule` class, which takes any of the above conditions, 
 a list of actions that should occur when the condition is true, and an optional list of actions that should occur 
 when the condition is false.  
-Rules also take an optional priority. 
+
+Like controls, rules are also assigned a priority. 
 If rules with conflicting actions should occur at the same time, the rule with the highest priority will override 
-all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` enum. The default 
+all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` class. The default 
 priority is medium (3). 
 
 The following examples illustrate the creation of rules, using conditions and actions similar to those defined above.
@@ -141,6 +144,7 @@ The following examples illustrate the creation of rules, using conditions and ac
 .. doctest::
 
     >>> cond2 = controls.SimTimeCondition(wn, controls.Comparison.ge, '121:00:00')
+    
     >>> rule1 = controls.Rule(cond1, [act1], name='rule1')
     >>> print(rule1)
     Rule rule1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
@@ -153,7 +157,7 @@ Since rules operate on a different timestep than controls, these rules might beh
 
 More complex rules can be written using one of the Boolean logic condition classes.
 The following example creates a new rule that will open pipe 330 if both conditions are true, 
-and otherwise it will open pipe 10. 
+and otherwise it will open pump 10. 
 
 .. doctest::
     

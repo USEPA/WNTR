@@ -5,8 +5,10 @@
 References
 ====================
 
-Due to limitations with cross referenced citations in reStructuredText (e.g., commas and spaces are not supported), 
-citations are cross referenced using a 6 digit notation [*]_. 
+.. only:: html
+
+   Due to limitations with cross referenced citations in reStructuredText (e.g., commas and spaces are not supported), 
+   citations are cross referenced using a 6 digit notation [*]_. 
 
 .. [ALA01] American Lifelines Alliance. (2001).  Seismic Fragility Formulations for Water Systems, Part 1 and 2.  Report for the American Lifelines Alliance, ASCE (Ed.) Reston, VA: American Society of Civil Engineers. April 2001.
 
