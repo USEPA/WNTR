@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 from setuptools.extension import Extension
 import numpy
 import os
+import re
 
 use_swig = False
 build = False
@@ -59,22 +60,29 @@ if build:
     extension_modules.append(network_isolation_ext)
 
 DISTNAME = 'wntr'
-VERSION = '0.2.1'
 PACKAGES = find_packages()
 EXTENSIONS = extension_modules
 DESCRIPTION = 'Water Network Tool for Resilience'
-LONG_DESCRIPTION = open('README.md').read()
 AUTHOR = 'WNTR Developers'
 MAINTAINER_EMAIL = 'kaklise@sandia.gov'
 LICENSE = 'Revised BSD'
 URL = 'https://github.com/USEPA/WNTR'
+DEPENDENCIES = ['numpy', 'scipy', 'networkx', 'pandas', 'matplotlib']
 
-setuptools_kwargs = {
-    'zip_safe': False,
-    'install_requires': [],
-    'scripts': [],
-    'include_package_data': True
-}
+# use README file as the long description
+file_dir = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(file_dir, 'README.md'), encoding='utf-8') as f:
+    LONG_DESCRIPTION = f.read()
+
+# get version from __init__.py
+with open(os.path.join(file_dir, 'wntr', '__init__.py')) as f:
+    version_file = f.read()
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        VERSION = version_match.group(1)
+    else:
+        raise RuntimeError("Unable to find version string.")
 
 setup(name=DISTNAME,
       version=VERSION,
@@ -86,5 +94,7 @@ setup(name=DISTNAME,
       maintainer_email=MAINTAINER_EMAIL,
       license=LICENSE,
       url=URL,
-      **setuptools_kwargs)
-
+      zip_safe=False,
+      install_requires=DEPENDENCIES,
+      scripts=[],
+      include_package_data=True)

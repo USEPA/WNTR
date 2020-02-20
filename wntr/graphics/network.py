@@ -48,7 +48,8 @@ def _format_link_attribute(link_attribute, wn):
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
                link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
-               add_colorbar=True, directed=False, ax=None):
+               add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
+               directed=False, ax=None):
     """
     Plot network graphic
 
@@ -115,6 +116,12 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
     add_colorbar : bool, optional
         Add colorbar
 
+    node_colorbar_label: str, optional
+        Node colorbar label
+        
+    link_colorbar_label: str, optional
+        Link colorbar label
+        
     directed : bool, optional
         If True, plot the directed graph
     
@@ -124,7 +131,7 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         
     Returns
     -------
-    nodes, edges
+    nodes, edges : matplotlib objects for network nodes and edges
 
     Notes
     -----
@@ -149,12 +156,13 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         pos = None
 
     # Define node properties
+    add_node_colorbar = add_colorbar
     if node_attribute is not None:
         
         if isinstance(node_attribute, list):
             if node_cmap is None:
                 node_cmap = ['red', 'red']
-            add_colorbar = False
+            add_node_colorbar = False
         
         if node_cmap is None:
             node_cmap = plt.cm.Spectral_r
@@ -170,12 +178,13 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         nodelist = None
         nodecolor = 'k'
     
+    add_link_colorbar = add_colorbar
     if link_attribute is not None:
         
         if isinstance(link_attribute, list):
             if link_cmap is None:
                 link_cmap = ['red', 'red']
-            add_colorbar = False
+            add_link_colorbar = False
 
         if link_cmap is None:
             link_cmap = plt.cm.Spectral_r
@@ -221,10 +230,12 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
             link = wn.get_link(link_name)
             labels[(link.start_node_name, link.end_node_name)] = link_name
         nx.draw_networkx_edge_labels(G, pos, labels, font_size=7, ax=ax)
-    if add_colorbar and node_attribute:
-        plt.colorbar(nodes, shrink=0.5, pad=0, ax=ax)
-    if add_colorbar and link_attribute:
-        plt.colorbar(edges, shrink=0.5, pad=0.05, ax=ax)
+    if add_node_colorbar and node_attribute:
+        clb = plt.colorbar(nodes, shrink=0.5, pad=0, ax=ax)
+        clb.ax.set_title(node_colorbar_label, fontsize=10)
+    if add_link_colorbar and link_attribute:
+        clb = plt.colorbar(edges, shrink=0.5, pad=0.05, ax=ax)
+        clb.ax.set_title(link_colorbar_label, fontsize=10)
     ax.axis('off')
 
     return nodes, edges
@@ -329,8 +340,8 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
             color='#888', #[], 
             width=link_width))
     for edge in G.edges():
-        x0, y0 = G.node[edge[0]]['pos']
-        x1, y1 = G.node[edge[1]]['pos']
+        x0, y0 = G.nodes[edge[0]]['pos']
+        x1, y1 = G.nodes[edge[1]]['pos']
         edge_trace['x'] += tuple([x0, x1, None])
         edge_trace['y'] += tuple([y0, y1, None])
 #        try:
@@ -365,7 +376,7 @@ def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Val
                 titleside='right'),
             line=dict(width=1)))
     for node in G.nodes():
-        x, y = G.node[node]['pos']
+        x, y = G.nodes[node]['pos']
         node_trace['x'] += tuple([x])
         node_trace['y'] += tuple([y])
         try:

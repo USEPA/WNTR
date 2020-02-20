@@ -119,7 +119,6 @@ def test_plot_leaflet_network1():
     assert_true(isfile(filename))
     
 def test_network_animation1():
-    
     filename = abspath(join(testdir, 'plot_leaflet_network1.html'))
     if isfile(filename):
         os.remove(filename)

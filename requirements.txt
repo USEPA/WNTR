@@ -1,6 +1,14 @@
-networkx
-pandas
+# Required
 numpy
 scipy
+networkx
+pandas
 matplotlib
+
+# Optional
 plotly
+folium
+utm
+openpyxl
+numpydocs
+nose

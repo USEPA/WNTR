@@ -25,7 +25,7 @@ Pipes that fall below a user defined pipe diameter threshold are candidates for 
    
 	.. _fig-branch-trim:
 	.. figure:: figures/skel_branch.png
-	   :scale: 100 %
+	   :width: 752
 	   :alt: Branch trim
 	   
 	   Branch trimming.
@@ -42,12 +42,12 @@ Pipes that fall below a user defined pipe diameter threshold are candidates for 
    :math:`D_{m}` is the diameter of the merged pipe, :math:`D_{1}` and :math:`D_{2}` are the diameters of the original pipes, 
    :math:`L_{m}` is the length of the merged pipe, :math:`L_{1}` and :math:`L_{2}` are the lengths of the original pipes, 
    :math:`C_{m}` is the Hazen-Williams roughness coefficient of the merged pipe, and :math:`C_{1}` and :math:`C_{2}` are the Hazen-Williams roughness coefficients of the original pipes. 
-   Minor loss and pipe status of the merged pipe are set equal to the minor loss and pipe status for the pipe selected for max diameter.
+   Minor loss and pipe status of the merged pipe are set equal to the minor loss and pipe status for the pipe selected for maximum diameter.
    Note, if the original pipes have the same diameter, :math:`D_{m}` is based on the pipe name that comes first in alphabetical order.
    
 	.. _fig-series-merge:
 	.. figure:: figures/skel_series.png
-	   :scale: 100 %
+	   :width: 731
 	   :alt: Series merge
 	   
 	   Series pipe merge.
@@ -69,7 +69,7 @@ Pipes that fall below a user defined pipe diameter threshold are candidates for 
    
    .. _fig-parallel-merge:
    .. figure:: figures/skel_parallel.png
-      :scale: 100 %
+      :width: 734
       :alt: Parallel merge
 	  
       Parallel pipe merge
@@ -98,29 +98,26 @@ part of network skeletonization, then the skeletonization map would contain the 
 	}
 
 This map indicates that the skeletonized network does not contain 'Junction 1', 'Junction 2' in the 
-skeletonized network is the merged product of the original 'Junction 1' and 'Junction 2', and 
+skeletonized network is the merged product of the original 'Junction 1' and 'Junction 2,' and 
 'Junction 3' was not changed. 
 'Junction 2' in the skeletonized network will therefore contain demand and demand patterns from 
-the original 'Junction 1' and 'Junction 2'.
+the original 'Junction 1' and 'Junction 2.'
 
-The following example performs network skeletonization on Net6 using a pipe diameter threshold of 12 inches.
-The skeletonization procedure reduces the number of nodes in the network from approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
-After simulating hydraulics on both the original and skeletonized network, node pressure can be compared to 
-determine how skeletonization impacts system behavoir. :numref:`fig-skel-hydraulics` shows the median (dark blue line) and 
-the 25th to 75th percentile (shaded region) for node pressure throughout the network over a 4 day simulation.
-Pressure differences are generally less than 5% in this example.
+The following example performs network skeletonization on Net6  
+and compares system pressure using the original and skeletonized networks.
+The example starts by creating a water network model for Net6 and then skeletonizing 
+it using a using a pipe diameter threshold of 12 inches. 
+The skeletonization procedure reduces the number of nodes in the network from 
+approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
 
 .. doctest::
     :hide:
 
     >>> import wntr
     >>> import numpy as np
+    >>> import matplotlib.pylab as plt
     >>> from __future__ import print_function
     
-.. doctest::
-
-    >>> wn = wntr.network.WaterNetworkModel('Net6.inp') # doctest: +SKIP
-
 .. doctest::
     :hide:
     
@@ -131,32 +128,84 @@ Pressure differences are generally less than 5% in this example.
 	
 .. doctest::
 
+    >>> wn = wntr.network.WaterNetworkModel('Net6.inp') # doctest: +SKIP
+    >>> wn.describe()
+    {'Nodes': 3356, 'Links': 3892, 'Patterns': 3, 'Curves': 60, 'Sources': 0, 'Controls': 124}
+    
     >>> skel_wn = wntr.morph.skeletonize(wn, 12*0.0254)
-    >>> wntr.graphics.plot_network(wn, title='Original') # doctest: +SKIP
-    (<matplotlib.collections.PathCollection object ...
-    >>> wntr.graphics.plot_network(skel_wn, title='Skeletonized') # doctest: +SKIP
-    (<matplotlib.collections.PathCollection object ...
-	
+    >>> skel_wn.describe()
+    {'Nodes': 1154, 'Links': 1610, 'Patterns': 3, 'Curves': 60, 'Sources': 0, 'Controls': 124}
+    
+    >>> fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,5))
+    >>> nodes, edges = wntr.graphics.plot_network(wn, node_size=10, title='Original', 
+    ...     ax=ax1) 
+    >>> nodes, edges = wntr.graphics.plot_network(skel_wn, node_size=10, 
+    ...     title='Skeletonized', ax=ax2)
+
+.. doctest::
+    :hide:
+    
+    >>> plt.tight_layout()
+    >>> plt.savefig('skel_example.png', dpi=300)
+    
 .. _fig-skel-example:
 .. figure:: figures/skel_example.png
-   :scale: 100 %
+   :width: 800
    :alt: Skeletonization example
    
    Original and skeletonized Net6.
+
+Hydraulic are then simulated using the original and skeletonized networks.
 
 .. doctest::
 
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results_original = sim.run_sim()
+    
     >>> sim = wntr.sim.EpanetSimulator(skel_wn)
     >>> results_skel = sim.run_sim()
-    >>> pressure_orig = results_original.node['pressure'].loc[:,skel_wn.junction_name_list]
-    >>> pressure_skel = results_skel.node['pressure'].loc[:,skel_wn.junction_name_list]
-    >>> pressure_diff = (abs(pressure_orig - pressure_skel)/pressure_orig)*100
+    
+The simulation results are used to compute the pressure difference between the 
+original and skeletonized networks.  The pressure difference is computed at 
+nodes that exist in the skeletonized network.
 
+.. doctest::
+
+    >>> skel_junctions = skel_wn.junction_name_list
+    >>> pressure_orig = results_original.node['pressure'].loc[:,skel_junctions]
+    >>> pressure_skel = results_skel.node['pressure'].loc[:,skel_junctions]
+    >>> pressure_diff = (abs(pressure_orig - pressure_skel)/pressure_orig)*100
+    >>> pressure_diff.index = pressure_diff.index/3600 # convert time to hours
+
+The 25th, 50th (median) and 75th percentiles in pressure difference can then be extracted.
+
+.. doctest::
+
+    >>> m25 = pressure_diff.quantile(0.25, axis=1)
+    >>> m50 = pressure_diff.quantile(0.50, axis=1)
+    >>> m75 = pressure_diff.quantile(0.75, axis=1)
+    
+:numref:`fig-skel-hydraulics` shows the median (dark blue line) and 
+the 25th to 75th percentile (shaded region) for node pressure throughout the network over a 4 day simulation.
+Pressure differences are very small in this example.
+
+.. doctest::
+
+    >>> fig = plt.figure()
+    >>> ax = m50.plot()
+    >>> poly = ax.fill_between(m25.index, m25, m75, color='b', alpha=0.2)
+    >>> text = ax.set_xlabel('Time (hr)')
+    >>> text = ax.set_ylabel('Percent change in pressure (%)')
+
+.. doctest::
+    :hide:
+    
+    >>> plt.tight_layout()
+    >>> plt.savefig('skel_hydraulics.png', dpi=300)
+    
 .. _fig-skel-hydraulics:
 .. figure:: figures/skel_hydraulics.png
-   :scale: 100 %
+   :width: 640
    :alt: Skeletonization example
    
    Pressure differences between the original and skeletonized Net6.
@@ -257,13 +306,13 @@ The new pipe can be added to either end of the original pipe.
 
 .. _fig-split-break:
 .. figure:: figures/pipe_split_break.png
-    :scale: 100 %
+    :width: 774
     :alt: Pipe split and pipe break
 	
     Pipe split and pipe break
 	
 The following example splits pipe '123' in Net3 into pipes '123' and '123_B'.  
-The new junction is named '123_node'.  The new node is then used to add a leak 
+The new junction is named '123_node.' The new node is then used to add a leak 
 to the model.
 
 .. doctest::
