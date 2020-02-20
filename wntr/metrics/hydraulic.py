@@ -292,7 +292,7 @@ def entropy(G, sources=None, sinks=None):
             continue
 
         sp = [] # simple path
-        if G.node[nodej]['type']  == 'Junction':
+        if G.nodes[nodej]['type']  == 'Junction':
             for source in sources:
                 if nx.has_path(G, source, nodej):
                     simple_paths = _all_simple_paths(G,source,target=nodej)

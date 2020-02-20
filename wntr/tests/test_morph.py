@@ -1,5 +1,4 @@
 from nose.tools import *
-from nose import SkipTest
 import sys
 from os.path import abspath, dirname, join
 import pandas as pd

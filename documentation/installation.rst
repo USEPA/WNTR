@@ -6,30 +6,53 @@ Installation
 ======================================
 .. include:: <isonum.txt>
 
-WNTR can be installed as a Python package using standard open source software tools.
+WNTR requires 64-bit Python (tested on versions 3.6 and 3.7) along with several 
+Python package dependencies. 
+See :ref:`requirements` and :ref:`optional_dependencies` for more information.
+WNTR can be installed as a Python package as breifly described below. 
+:ref:`detailed_instructions` are included in the following section.
 
-**Step 1**: Setup your Python environment
+Users can install the latest release of WNTR from PyPI using the following command::
+
+    pip install wntr
+    
+Developers can install the master (development) branch of WNTR from the GitHub 
+repository using the following commands::
+
+    git clone https://github.com/USEPA/WNTR
+    cd WNTR
+    python setup.py develop
+
+
+.. _detailed_instructions:
+
+Detailed instructions
+-------------------------
+
+Detailed installation instructions are included below.
+
+**Step 1**: Setup the Python environment
 
 	Python can be installed on Windows, Linux, and Mac OS X operating systems.
-	WNTR requires Python (versions 3.5, 3.6, or 3.7) along with several Python package dependencies.
+	WNTR requires 64-bit Python (tested on versions 3.6 and 3.7) along with several Python package dependencies.
 	Python distributions, such as Anaconda, are recommended to manage 
-	the Python environment.  Anaconda can be downloaded from https://www.continuum.io/downloads.  
+	the Python environment.  Anaconda can be downloaded from https://www.anaconda.com/distribution/.  
 	General information on Python can be found at https://www.python.org/.
 	
 	.. note:: 
-	   * We recommend installing Anaconda for a single user by selecting the 'Just Me' option during installation. 
-	     If a user-writeable location is selected for installation (e.g. C:\\Users\\username\\Anaconda3), then 
+	   * It is recommended to install Anaconda for a single user by selecting the 'Just Me' option during installation. 
+	     If a user-writeable location is selected for installation (e.g., C:\\Users\\username\\Anaconda3), then 
 	     the 'Just Me' option does not require administrator privileges.  
-	   * We also recommend adding Anaconda to your PATH environment variable. This will facilitate access to Python from a command prompt 
+	   * It is also recommended to add Anaconda to the PATH environment variable. This will facilitate access to Python from a command prompt 
 	     without having to include the full path name.
-	     This can be done by either 1) selecting the 'Add Anaconda to my PATH environment variable' option during installation or 2) manually adding C:\\Users\\username\\Anaconda3 to your environmental variables.
+	     This can be done by either 1) selecting the 'Add Anaconda to my PATH environment variable' option during installation or 2) manually adding C:\\Users\\username\\Anaconda3 to the environmental variables.
 	     Note that the first option is not recommended by Anaconda because it elevates the priority of Anaconda software over previously installed software.
 	     While the second option allows the user to define priority, this requires administrator privileges. 
-	     If Anaconda is not added to your PATH environment variable, you can run Python using the full path name (e.g. C:\\Users\\username\\Anaconda3\\python).
+	     If Anaconda is not added to the PATH environment variable, Python can be run by using the full path name (e.g., C:\\Users\\username\\Anaconda3\\python).
 		 
-	Anaconda includes the Python packages needed for WNTR, including Numpy, Scipy, NetworkX, Pandas, and
+	Anaconda includes the Python packages needed for WNTR, including NumPy, SciPy, NetworkX, pandas, and
 	Matplotlib.  For more information on Python package dependencies, see :ref:`requirements`.
-	If your Python installation does not include these dependencies, you will need to install them. 
+	If the Python installation does not include these dependencies, the user will need to install them. 
 	This is most commonly done using pip. 
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
@@ -45,14 +68,14 @@ WNTR can be installed as a Python package using standard open source software to
 	
 	.. _fig-cmd-python:
 	.. figure:: figures/cmd_python.png
-	   :scale: 100 %
+	   :width: 891
 	   :alt: Python
 	   
 	   Opening a Python console from a command prompt.
    
 	.. _fig-spyder:
 	.. figure:: figures/spyder.png
-	   :scale: 100 %
+	   :width: 759
 	   :alt: Spyder
 	   
 	   Opening a Python console using Spyder.
@@ -77,7 +100,7 @@ WNTR can be installed as a Python package using standard open source software to
 	  To download the master (development) branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
 	  This downloads a zip file called WNTR-master.zip.
 	  To download a specific release, go to https://github.com/USEPA/WNTR/releases and select a zip file.
-	  Uncompress the zip file using standard software tools (e.g. unzip, WinZip) and store them in a folder. 
+	  Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder. 
 	  WNTR can then be installed by running a Python script, called setup.py, that is included in the source files.
 	  
 	  To build WNTR from the source files, open a command prompt from within the folder that contains the files and run:: 
@@ -113,28 +136,30 @@ WNTR can be installed as a Python package using standard open source software to
 
 Requirements
 -------------
-Requirements for WNTR include Python (3.5, 3.6, or 3.7) along with several Python packages. 
+Requirements for WNTR include 64-bit Python (tested on versions 3.6 and 3.7) along with several Python packages. 
 The following Python packages are required:
 
-* Numpy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
+* NumPy [VaCV11]_: used to support large, multi-dimensional arrays and matrices, 
   http://www.numpy.org/
-* Scipy [VaCV11]_: used to support efficient routines for numerical integration, 
+* SciPy [VaCV11]_: used to support efficient routines for numerical integration, 
   http://www.scipy.org/
 * NetworkX [HaSS08]_: used to create and analyze complex networks, 
   https://networkx.github.io/
-* Pandas [Mcki13]_: used to analyze and store time series data, 
+* pandas [Mcki13]_: used to analyze and store time series data, 
   http://pandas.pydata.org/
-
+* Matplotlib [Hunt07]_: used to produce graphics, 
+  http://matplotlib.org/
+  
 These packages are included in the Anaconda Python distribution.
  
+.. _optional_dependencies:
+
 Optional dependencies
 -------------------------
 
 The following Python packages are optional:
 
-* Matplotlib [Hunt07]_: used to produce figures, 
-  http://matplotlib.org/
-* Plotly [SPHC16]_: used to produce interactive scalable figures, 
+* plotly [SPHC16]_: used to produce interactive scalable graphics, 
   https://plot.ly/
 * folium [Filip19]_: used to produce Leaflet maps, 
   http://python-visualization.github.io/folium/
@@ -142,7 +167,7 @@ The following Python packages are optional:
   https://pypi.org/project/utm/
 * openpyxl [GaCl18]_: used to read/write to Microsoft® Excel® spreadsheets,
   https://openpyxl.readthedocs.io
-* Numpydoc [VaCV11]_: used to build the user manual,
+* numpydoc [VaCV11]_: used to build the user manual,
   https://github.com/numpy/numpydoc
 * nose: used to run software tests,
   http://nose.readthedocs.io

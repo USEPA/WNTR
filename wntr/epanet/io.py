@@ -1781,9 +1781,11 @@ class InpFile(object):
         if wn.options.solver.demand_model is not None: 
             f.write('{:20s} {}\n'.format('DEMAND MODEL', wn.options.solver.demand_model).encode('ascii'))
         if wn.options.hydraulic.minimum_pressure is not None:
-            f.write('{:20s} {}\n'.format('MINIMUM PRESSURE', wn.options.hydraulic.minimum_pressure).encode('ascii'))
+            minimum_pressure = from_si(self.flow_units, wn.options.hydraulic.minimum_pressure, HydParam.Pressure)
+            f.write('{:20s} {}\n'.format('MINIMUM PRESSURE', minimum_pressure).encode('ascii'))
         if wn.options.hydraulic.required_pressure is not None:
-            f.write('{:20s} {}\n'.format('REQUIRED PRESSURE', wn.options.hydraulic.required_pressure).encode('ascii'))
+            required_pressure = from_si(self.flow_units, wn.options.hydraulic.required_pressure, HydParam.Pressure)
+            f.write('{:20s} {}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
         if wn.options.hydraulic.pressure_exponent is not None:
             f.write('{:20s} {}\n'.format('PRESSURE EXPONENT', wn.options.hydraulic.pressure_exponent).encode('ascii'))
         

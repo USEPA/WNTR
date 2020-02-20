@@ -205,7 +205,7 @@ class Tank(Node):
     ----------
     name : string
         Name of the tank.
-     wn : :class:`~wntr.network.model.WaterNetworkModel`
+    wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object the tank will belong to
 
     """

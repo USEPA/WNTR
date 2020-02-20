@@ -18,6 +18,7 @@ Simulation results are stored in a :class:`~wntr.sim.results.SimulationResults` 
 
     >>> from __future__ import print_function, division
     >>> import pandas as pd
+    >>> import matplotlib.pylab as plt
 	>>> import wntr
     >>> pd.set_option('precision', 2)
     >>> try:
@@ -27,18 +28,18 @@ Simulation results are stored in a :class:`~wntr.sim.results.SimulationResults` 
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
 
-The node and link results are dictionaries of Pandas DataFrames.  Each dictionary is a key:value pair, where
-the key is a result attribute (e.g. node demand, link flowrate) and the value is a DataFrame. 
+The node and link results are dictionaries of pandas DataFrames.  Each dictionary is a key:value pair, where
+the key is a result attribute (e.g., node demand, link flowrate) and the value is a DataFrame. 
 DataFrames are indexed by time step (in seconds from the start of the simulation) with columns that are
-labelled using node or link names. 
-The use of Pandas facilitates a comprehensive set of time series analysis options that can be used to evaluate results.
-For more information on Pandas, see http://pandas.pydata.org/.
+labeled using node or link names. 
+The use of pandas facilitates a comprehensive set of time series analysis options that can be used to evaluate results.
+For more information on pandas, see http://pandas.pydata.org/.
 
 Conceptually, DataFrames can be visualized as blocks of data with 2 axis, as shown in :numref:`fig-dataframe`.
  
 .. _fig-dataframe:
 .. figure:: figures/dataframes.png
-   :scale: 100 %
+   :width: 526
    :alt: Pandas DataFrames
    
    Conceptual representation of DataFrames used to store simulation results.
@@ -49,7 +50,7 @@ Node results include DataFrames for each of the following attributes:
 * Leak demand (only when the WNTRSimulator is used)
 * Head
 * Pressure
-* Quality (only when the EpanetSimulator is used. Water age, tracer percent, or chemical concentration is stored, depending on the mode of water quality mode)
+* Quality (only when the EpanetSimulator is used. Water age, tracer percent, or chemical concentration is stored, depending on the mode of water quality analysis)
 	
 For example, node results generated with the EpanetSimulator have the following keys:
 
@@ -100,7 +101,7 @@ To access node pressure over all nodes and times:
 
     >>> pressure = results.node['pressure']
 
-DataFrames can be sliced to extract specific information. For example, to access the pressure at node '123' over all times (the "":"" notation returns all variables along the specified axis, "head" returns the first 5 rows, values displayed to 2 decimal places):
+DataFrames can be sliced to extract specific information. For example, to access the pressure at node '123' over all times (the ":" notation returns all variables along the specified axis, "head" returns the first 5 rows, values displayed to 2 decimal places):
 
 .. doctest::
 
@@ -127,35 +128,62 @@ To access the pressure at time 3600 over all nodes (values displayed to 2 decima
     40     4.18
     Name: 3600, dtype: float32
 	
-Data can be plotted as a time-series, as shown in :numref:`fig-plot-timeseries`:
+Data can be plotted as a time series, as shown in :numref:`fig-plot-timeseries`:
 
 .. doctest::
+    :hide:
+    
+    >>> fig = plt.figure()
+    
+.. doctest::
 
-    >>> pressure_at_node123.plot() #doctest:+SKIP 
+    >>> ax = pressure_at_node123.plot()
+    >>> text = ax.set_xlabel("Time (s)")
+    >>> text = ax.set_ylabel("Pressure (m)") 
 
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_timeseries.png', dpi=300)
+    
 .. _fig-plot-timeseries:
 .. figure:: figures/plot_timeseries.png
-   :scale: 100 %
+   :width: 640
    :alt: Time-series graph.
 
-   Example time-series graphic.
+   Example time series graphic.
    
 Data can also be plotted on the water network model, as shown in :numref:`fig-plot-network`.
+Note that the :class:`~wntr.graphics.network.plot_network` function returns matplotlib objects 
+for the the network nodes and edges, which can be further customized by the user.
 In this figure, the node pressure at 1 hr is plotted on the network. Link attributes can be 
 plotted in a similar manner.
 
 .. doctest::
+    :hide:
+    
+    >>> fig = plt.figure()
+    
+.. doctest::
 
-	>>> wntr.graphics.plot_network(wn, node_attribute=pressure_at_1hr, node_range=[30,55]) #doctest:+SKIP 
-	
+    >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute=pressure_at_1hr, 
+    ...    node_range=[30,55], node_colorbar_label='Pressure (m)')
+
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_network.png', dpi=300)
+    
 .. _fig-plot-network:
 .. figure:: figures/plot_network.png
-   :scale: 100 %
+   :width: 659
    :alt: Network graphic
 
    Example network graphic.
 
-Network and time-series graphics can be customized to add titles, legends, axis labels, subplots, etc.
+Network and time series graphics can be customized to add titles, legends, axis labels, and/or subplots.
    
 Pandas includes methods to write DataFrames to CSV, HDF, JSON, and SQL.
 For example, DataFrames can be saved to Excel files using:

@@ -20,6 +20,12 @@ analyze resilience of water distribution networks. The software includes capabil
 
 For more information, go to http://wntr.readthedocs.io
 
+Installation
+--------------
+
+The latest release of WNTR can be installed from PyPI using the command ``pip install wntr``.
+Additional instructions are available at https://wntr.readthedocs.io/en/latest/installation.html.
+
 Citing WNTR
 -----------------
 
