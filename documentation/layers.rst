@@ -52,7 +52,6 @@ For example, the following valve layer defines a valve on Pipe 1 that protects J
 
 WNTR includes a method to generate valve layers based on **random** or **strategic** placement.  
 The following example generates a **random** valve placement with 40 valves.  
-In this valve layer, valve 0 is on link 317 and protects node 273. 
 The valve layer can be included in water network graphics (:numref:`fig-random-valve-layer`).
 
 .. doctest::
