@@ -56,10 +56,10 @@ def generate_valve_layer(wn, placement_type='strategic', n=1, seed=None):
             valve_layer.append([pipe_name, pipe.start_node_name])
             
     elif placement_type == 'strategic':
-        for junc_name, node in wn.junctions():
-            links = wn.get_links_for_node(junc_name)
+        for node_name, node in wn.nodes():
+            links = wn.get_links_for_node(node_name)
             for l in np.random.choice(links, max(len(links)-n,0), replace=False):
-                valve_layer.append([l, junc_name])
+                valve_layer.append([l, node_name])
             
     valve_layer = pd.DataFrame(valve_layer, columns=['link', 'node'])  
     
