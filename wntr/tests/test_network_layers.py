@@ -33,7 +33,7 @@ class TestValveLayer(unittest.TestCase):
            
         assert_frame_equal(valves, expected)
         
-    def test_segmentation_strategic(self):
+    def test_valve_layer_strategic(self):
         
         # Compute the expected number of valves for N-0, N-1, N-2, N-3, N-4
         G = self.wn.get_graph()

@@ -50,9 +50,9 @@ class TestSegmentation(unittest.TestCase):
             
         node_segments, link_segments, seg_size = wntr.metrics.topographic.valve_segments(G, valves)
         max_seg_size = seg_size.sum(axis=1).max()
+        num_segments = seg_size.shape[0]
         
         #import matplotlib
-        #num_segments = seg_size.shape[0]
         #cmap = matplotlib.colors.ListedColormap(np.random.rand(num_segments,3))
         #wntr.graphics.plot_network(self.wn2, node_segments, link_segments, valve_layer=valves,
         #                           node_cmap=cmap, link_cmap=cmap,
@@ -60,7 +60,7 @@ class TestSegmentation(unittest.TestCase):
         #                           link_range=[0.5,num_segments+0.5])
         
         self.assertEqual(max_seg_size, 112)
-        self.assertEqual(seg_size.shape[0], 15)
+        self.assertEqual(num_segments, 15)
         
     def test_segmentation_strategic(self):
         # test Net3
@@ -69,9 +69,9 @@ class TestSegmentation(unittest.TestCase):
         
         node_segments, link_segments, seg_size = wntr.metrics.topographic.valve_segments(G, valves)
         max_seg_size = seg_size.sum(axis=1).max()
+        num_segments = seg_size.shape[0]
         
         #import matplotlib
-        #num_segments = seg_size.shape[0]
         #cmap = matplotlib.colors.ListedColormap(np.random.rand(num_segments,3))
         #wntr.graphics.plot_network(self.wn2, node_segments, link_segments, valve_layer=valves,
         #                           node_cmap=cmap, link_cmap=cmap,
@@ -79,7 +79,7 @@ class TestSegmentation(unittest.TestCase):
         #                           link_range=[0.5,num_segments+0.5])
         
         self.assertEqual(max_seg_size, 19)
-        self.assertEqual(seg_size.shape[0], 38)
+        self.assertEqual(num_segments, 38)
         
 if __name__ == '__main__':
     unittest.main()
