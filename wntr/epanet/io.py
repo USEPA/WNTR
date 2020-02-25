@@ -412,8 +412,8 @@ class InpFile(object):
             self.flow_units = FlowUnits(units)
         elif self.flow_units is not None:
             self.flow_units = self.flow_units
-        elif isinstance(wn.options.hydraulic.en2_units, str):
-            units = wn.options.hydraulic.en2_units.upper()
+        elif isinstance(wn.options.hydraulic.inpfile_units, str):
+            units = wn.options.hydraulic.inpfile_units.upper()
             self.flow_units = FlowUnits[units]
         else:
             self.flow_units = FlowUnits.GPM
@@ -1624,7 +1624,7 @@ class InpFile(object):
                 key = words[0].upper()
                 if key == 'UNITS':
                     self.flow_units = FlowUnits[words[1].upper()]
-                    opts.hydraulic.en2_units = words[1].upper()
+                    opts.hydraulic.inpfile_units = words[1].upper()
                 elif key == 'HEADLOSS':
                     opts.hydraulic.headloss = words[1].upper()
                 elif key == 'HYDRAULICS':

@@ -1,7 +1,25 @@
 """
-The wntr.network.options module includes simulation options. This module has been modified to use the "attrs" package,
-which is a better method of creating data structure classes than the manual method used previously. This change
-may require users to add the attrs package if they do not already have it.
+The wntr.network.options module includes simulation options.
+
+.. note:: 
+
+    This module has been changed in version wntr-2.3 to incorporate the new options 
+    that EPANET 2.2 requires. It also reorganizes certain options so that they are 
+    more consistent with EPANET's groupings and make more logical sense. Therefore, 
+    this change is not necessarily backwards compatible, particularly when trying to
+    use pickle files with options generated with wntr <= 2.2.
+    For example, the options previously contained in the old SolverOptions class have 
+    been moved to the HydraulicOptions class.
+
+    Additionally, this module has been modified to use the "attrs" package,
+    which is a better method of creating data structure classes than the manual 
+    method used previously. This change will require users to add the attrs 
+    package if they do not already have it.
+
+    In cases where the class constructor indicates "NOTHING" is the default argument,
+    this should be interpreted that there is a factory function that will generate a 
+    new, blank element of the appropriate type.
+
 
 .. rubric:: Contents
 
@@ -15,7 +33,6 @@ may require users to add the attrs package if they do not already have it.
     ReactionOptions
     QualityOptions
     EnergyOptions
-    SolverOptions
     UserOptions
 
 """
@@ -314,9 +331,6 @@ class HydraulicOptions(object):
     
     Attributes
     ----------
-    units : str, default 'GPM'
-        Input/output units (EPANET); options are CFS, GPM, MGD, IMGD, AFD, LPS, 
-        LPM, MLD, CMH, and CMD
     headloss : str, default 'H-W'
         Formula to use for computing head loss through a pipe. Options are H-W, 
         D-W, and C-M
@@ -337,12 +351,12 @@ class HydraulicOptions(object):
         junctions
     emitter_exponent : float, default 0.5
         The exponent used when computing flow from an emitter
-    minimum_pressure : float, default None
-        The minimum nodal pressure - ONLY valid for EPANET 2.2
-    required_pressure: float, default None
-        The required nodal pressure - ONLY valid for EPANET 2.2
-    pressure_exponent: float, default None
-        The pressure exponent - ONLY valid for EPANET 2.2
+    minimum_pressure : float, default 0.0
+        The minimum nodal pressure - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
+    required_pressure: float, default 0.0
+        The required nodal pressure - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
+    pressure_exponent: float, default 0.5
+        The pressure exponent - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
     trials : int, default 40
         Maximum number of trials used to solve network hydraulics
     accuracy : float, default 0.001
@@ -362,11 +376,16 @@ class HydraulicOptions(object):
         The head error convergence limit
     flowchange : float, default None
         The flow change convergence limit
-    demand_model : str, default None, choices are {'DDA', 'DD', 'PDD', 'PDA'}
-        The DDA and PDA are the preferred abbreviations.
+    demand_model : str, default None
+        Demand model for EPANET 2.2; acceptable values are DD, PDD, DDA and PDA, though DDA and PDA are the preferred abbreviations.
+        Changing this option will break EPANET 2.0 if changed from None. For the WNTR simulator, please set the model when calling run_sim.
+    inpfile_units : str, default 'GPM'
+        Units for the INP-file; options are CFS, GPM, MGD, IMGD, AFD, LPS, 
+        LPM, MLD, CMH, and CMD. This **only** changes the units used in generating
+        the INP file -- it has no impact on the units used in WNTR, which are 
+        always SI units (m, kg, s).
     
     """
-    en2_units = attr.ib(default='GPM', repr=False)  # EPANET unit code
     headloss = attr.ib(default='H-W')  # H-W, D-W, C-M
     hydraulics = attr.ib(default=None)  # USE, SAVE
     hydraulics_filename = attr.ib(default=None)  # string
@@ -388,6 +407,7 @@ class HydraulicOptions(object):
     damplimit = attr.ib(default=0)
     headerror = attr.ib(default=0)
     flowchange = attr.ib(default=0)
+    inpfile_units = attr.ib(default='GPM', repr=False)  # EPANET unit code
 
     def __setattr__(self, name, value):
         if name == 'headloss':
@@ -410,10 +430,10 @@ class HydraulicOptions(object):
             value = str.upper(value)
             if value not in ['STOP', 'CONTINUE']:
                 raise ValueError('headloss must be either "STOP" or "CONTINUE"')
-        elif name == 'en2_units' and isinstance(value, str):
+        elif name == 'inpfile_units' and isinstance(value, str):
             value = str.upper(value)
             if value not in ['CFS', 'GPM', 'MGD', 'IMGD', 'AFD', 'LPS', 'LPM', 'MLD', 'CMH', 'CMD']:
-                raise ValueError('en2_units = "%s" is not a valid EPANET unit code', value)
+                raise ValueError('inpfile_units = "%s" is not a valid EPANET unit code', value)
         elif name == 'unbalanced_value':
             try:
                 value = _int_or_None(value)
@@ -424,7 +444,7 @@ class HydraulicOptions(object):
                 value = int(value)
             except ValueError:
                 raise ValueError('%s must be an integer', name)
-        elif name not in ['pattern', 'hydraulics_filename', 'en2_units']:
+        elif name not in ['pattern', 'hydraulics_filename', 'inpfile_units']:
             try:
                 value = float(value)
             except ValueError:
@@ -541,15 +561,15 @@ class QualityOptions(object):
         TRACE
     trace_node : str, default None
         Trace node name if quality = TRACE
-    wq_units : str, default None
-        Units for quality analysis; concentration for 'chemical', 's' for 'age',
-        '%' for 'trace'
     chemical : str, default None
         Chemical name for 'chemical' analysis
     diffusivity : float, default 1.0
         Molecular diffusivity of the chemical (default 1.0)
     tolerance : float, default 0.01
         Water quality solver tolerance
+    _wq_units : str, default None
+        Units for quality analysis; concentration for 'chemical', time in seconds for 'age',
+        percentage for 'trace'
 
     """
     parameter = attr.ib(default='NONE', 
@@ -744,6 +764,27 @@ class WaterNetworkOptions(object):
     (which would never be used and cause undiagnosable errors).
     The `user` attribute is a generic python class object that allows for 
     dynamically created attributes that are user specific.
+
+    Attributes
+    ----------
+    time : TimeOptions
+        Contains all timing options for the scenarios
+    hydraulic : HydraulicOptions
+        Contains hydraulic solver parameters
+    reaction : ReactionOptions
+        Contains chemical reaction parameters
+    quality : QualityOptions
+        Contains water quality simulation options and source definitions
+    energy : EnergyOptions
+        Contains parameters for energy calculations
+    results : ResultsOptions
+        Contains options for how for format and save results
+    graphics : GraphicsOptions
+        Contains EPANET graphics and background options and also the filename
+        for external node coordinates, if used
+    user : UserOptions
+        An empty class object that allows for storage of user-specific options
+    
 
     """
     time = attr.ib(factory=TimeOptions)
