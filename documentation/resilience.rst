@@ -120,7 +120,7 @@ WNTR includes additional topographic metrics to help compute resilience
 										  
    Valve segmentation                     Valve segmentation groups links and nodes into segments based on the location of isolation valves. 
                                           Valve segmentation returns a segment number for each node and link, along with
-                                          the number of nodes and links in each segment.  This information can be plotted on the network and used in subsequent analysis.
+                                          the number of nodes and links in each segment.  
    =====================================  ================================================================================================================================================
 
 .. doctest::

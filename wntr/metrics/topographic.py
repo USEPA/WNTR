@@ -29,7 +29,7 @@ def terminal_nodes(G):
 
     Parameters
     ----------
-    G : networkx MultiDiGraph
+    G: networkx MultiDiGraph
         Graph
 
     Returns
@@ -48,7 +48,7 @@ def bridges(G):
 
     Parameters
     ----------
-    G : networkx MultiDiGraph
+    G: networkx MultiDiGraph
         Graph
 
     Returns
@@ -71,7 +71,7 @@ def central_point_dominance(G):
     
     Parameters
     ----------
-    G : networkx MultiDiGraph
+    G: networkx MultiDiGraph
         Graph
         
     Returns
@@ -94,7 +94,7 @@ def spectral_gap(G):
     
     Parameters
     ----------
-    G : networkx MultiDiGraph
+    G: networkx MultiDiGraph
         Graph
         
     Returns
@@ -116,7 +116,7 @@ def algebraic_connectivity(G):
 
     Parameters
     ----------
-    G : networkx MultiDiGraph
+    G: networkx MultiDiGraph
         Graph
         
     Returns
@@ -137,7 +137,7 @@ def critical_ratio_defrag(G):
 
     Parameters
     ----------
-    G : networkx MultiDiGraph
+    G: networkx MultiDiGraph
         Graph
         
     Returns
@@ -158,9 +158,11 @@ def _links_in_simple_paths(G, sources, sinks):
 
     Parameters
     -----------
-    sources : list
+    G: networkx MultiDiGraph
+        Graph
+    sources: list
         List of source nodes
-    sinks : list
+    sinks: list
         List of sink nodes
 
     Returns
@@ -189,38 +191,40 @@ def valve_segments(G, valve_layer):
 
     Parameters
     -----------
-    valve_layer : pandas DataFrame
+    G: networkx MultiDiGraph
+        Graph
+    valve_layer: pandas DataFrame
         Valve layer, defined by node and link pairs (for example, valve 0 is 
         on link A and protects node B). The valve_layer DataFrame is indexed by
         valve number, with columns named 'node' and 'link'.
 
-        
     Returns
     -------
-    node_segments : pandas Series
+    node_segments: pandas Series
        Segment number for each node, indexed by node name
-    link_segments : pandas Series
+    link_segments: pandas Series
         Segment number for each link, indexed by link name
-    segment_size : pandas DataFrame
+    segment_size: pandas DataFrame
         Number of nodes and links in each segment. The DataFrame is indexed by 
-        segmenet number, with columns named 'node' and 'link'.
+        segment number, with columns named 'node' and 'link'.
     """
+    # Convert the graph to an undirected graph
     uG = G.to_undirected()
     
-    # Gather network information
-    nodes = [n for n in list(uG.nodes())]
-    node_names = ['N_'+n for n in nodes]
-    links = [k for u,v,k in uG.edges(keys=True)]
-    link_names = ['L_'+l for l in links] 
-    link_start = [u for u,v,k in uG.edges(keys=True)]
-    link_end = [v for u,v,k in uG.edges(keys=True)]
+    # Node and link names
+    nodes = list(uG.nodes()) # list of node names
+    links = list(uG.edges(keys=True)) # list of tuples with start node, end node, link name
     
+    # Append N_ and L_ to node and link names, used in matrices
+    matrix_node_names = ['N_'+n for n in nodes]
+    matrix_link_names = ['L_'+k for u,v,k in links]
+
     # Pipe-node connectivity matrix
     A = nx.incidence_matrix(uG).todense().T
-    AC = pd.DataFrame(A, columns=node_names, index=link_names, dtype=int)
+    AC = pd.DataFrame(A, columns=matrix_node_names, index=matrix_link_names, dtype=int)
     
     # Valve-node connectivity matrix
-    VC = pd.DataFrame(0, columns=node_names, index=link_names)
+    VC = pd.DataFrame(0, columns=matrix_node_names, index=matrix_link_names)
     for i, row in valve_layer.iterrows():
         VC.at['L_'+row['link'], 'N_'+row['node']] = 1
     
@@ -228,10 +232,10 @@ def valve_segments(G, valve_layer):
     VD = AC - VC
 
     # Direct connectivity matrix
-    NI = pd.DataFrame(np.identity(len(node_names)),
-                      index = node_names, columns = node_names)
-    LI = pd.DataFrame(np.identity(len(link_names)),
-                      index = link_names, columns = link_names)
+    NI = pd.DataFrame(np.identity(len(matrix_node_names)),
+                      index = matrix_node_names, columns = matrix_node_names)
+    LI = pd.DataFrame(np.identity(len(matrix_link_names)),
+                      index = matrix_link_names, columns = matrix_link_names)
     DC_left = pd.concat([NI, VD], sort=False)
     DC_right = pd.concat([VD.T, LI], sort=False)
     DC = pd.concat([DC_left, DC_right], axis=1, sort=False)
@@ -243,19 +247,18 @@ def valve_segments(G, valve_layer):
     # pre-processing to find isolated elements before looping
     seg_label = {}
 
-    for link in links:
-        link_valves = valve_layer[valve_layer['link']==link]
-        i = links.index(link)
-        if set(link_valves['node']) >= set([link_start[i], link_end[i]]):
+    for start_node, end_node, link_name in links:
+        link_valves = valve_layer[valve_layer['link']==link_name]
+        if set(link_valves['node']) >= set([start_node, end_node]):
             seg_index += 1
-            seg_label['L_'+link] = seg_index
+            seg_label['L_'+link_name] = seg_index
             
-    for node in nodes:
-        node_valves = valve_layer[valve_layer['node']==node]
-        node_links = [k for u,v,k in uG.edges(node, keys=True)]
+    for node_name in nodes:
+        node_valves = valve_layer[valve_layer['node']==node_name]
+        node_links = [k for u,v,k in uG.edges(node_name, keys=True)]
         if set(node_valves['link']) >= set(node_links):
             seg_index += 1
-            seg_label['N_'+node] = seg_index
+            seg_label['N_'+node_name] = seg_index
     
     # drop previously found isolated elements before looping
     DC = DC.drop(seg_label.keys())
@@ -286,13 +289,13 @@ def valve_segments(G, valve_layer):
             # Nodes and links that are part of the segment
             seg = np.where(seg_label_DC == seg_index)[0]
         
-            # Connectivitiy of the segment
+            # Connectivity of the segment
             seg_DC = np.zeros(shape=(DC_np.shape[0]), dtype=int)
             seg_DC[seg] = 1
     
             while flag:          
                
-                # Potential connectivitiy of the segment      
+                # Potential connectivity of the segment      
                 p_seg_DC = DC_np + seg_DC[:,None] # this is slow
                 
                 # Nodes and links that are connected to the segment
@@ -331,8 +334,8 @@ def valve_segments(G, valve_layer):
 
     # Separate node and link segments
     # remove leading N_ and L_ from node and link names
-    node_segments = seg_label[node_names]
-    link_segments = seg_label[link_names]
+    node_segments = seg_label[matrix_node_names]
+    link_segments = seg_label[matrix_link_names]
     node_segments.index = node_segments.index.str[2::]
     link_segments.index = link_segments.index.str[2::]  
     
