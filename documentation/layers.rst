@@ -81,7 +81,7 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
    
 The **strategic** placement specifies the number of pipes (n) from each node that do NOT contain a valve.  
 In this case, n is generally 0, 1, or 2 (i.e. N, N-1, or N-2 valve placement).
-The following example generates a **strategic** N-2 valve placement.
+The following example generates a strategic N-2 valve placement.
 The valve layer can be included in water network graphics (:numref:`fig-strategic-valve-layer`).
 
 .. doctest::
