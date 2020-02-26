@@ -34,7 +34,7 @@ import logging
 import math
 import six
 import copy
-from scipy.optimize import fsolve, curve_fit
+from scipy.optimize import curve_fit
 
 if sys.version_info[0] == 2:
     from collections import MutableSequence
@@ -625,35 +625,24 @@ class HeadPump(Pump):
         
     def get_head_curve_coefficients(self):
         """
-        Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
-        Coefficient can only be calculated for pump curves.
+        Returns the A, B, C coefficients pump curves.
 
-        For a single point curve the coefficients are generated according to the following equation:
+        * For a single point curve, the coefficients are generated according to the 
+          following equation:
 
-        A = 4/3 * H_1
-        B = 1/3 * H_1/Q_1^2
-        C = 2
-
-        For a three point curve the coefficients are generated according to the following equation:
-             When the first point is a zero flow: (All INP files we have come across)
-
-             A = H_1
-             C = ln((H_1 - H_2)/(H_1 - H_3))/ln(Q_2/Q_3)
-             B = (H_1 - H_2)/Q_2^C
-
-             When the first point is not zero, numpy fsolve is called to solve the following system of
-             equation:
-
-             H_1 = A - B*Q_1^C
-             H_2 = A - B*Q_2^C
-             H_3 = A - B*Q_3^C
-
-        Multi point curves are currently not supported
-
-        Parameters
-        ----------
-        pump_name : string
-            Name of the pump
+          :math:`A = 4/3 * H` 
+          
+          :math:`B = 1/3 * H/Q^2` 
+          
+          :math:`C = 2` 
+        
+        * For a two point curve, C is set to 1 and a straight line is fit between
+          the points.
+        
+        * For three point and multi-point curves, the coefficients are generated 
+          using ``scipy.optimize.curve_fit`` with the following equation:
+            
+          :math:`H = A - B*Q^C` 
 
         Returns
         -------
@@ -669,7 +658,6 @@ class HeadPump(Pump):
         
         # 1-Point curve - Replicate EPANET for a one point curve
         if curve.num_points == 1:
-            # 
             A = (4.0/3.0)*H[0]
             B = (1.0/3.0)*(H[0]/(Q[0]**2))
             C = 2
@@ -678,13 +666,12 @@ class HeadPump(Pump):
             B = - (H[1] - H[0]) / (Q[1]**2 - Q[0]**2)
             A = H[0] + B * Q[0] ** 2
             C = 1
-        # 3 - Multi-point curve (3 or more points) - This is not a perfect 
-        #     replication of EPANET. EPANET gives a mult-linear fit
+        # 3 - Multi-point curve (3 or more points) - Replicate EPANET for 
+        #     3 point curves.  For multi-point curves, this is not a perfect 
+        #     replication of EPANET. EPANET uses a mult-linear fit
         #     between points whereas this uses a regression fit of the same
         #     H = A - B * Q **C curve used for the three point fit.
         elif curve.num_points >= 3:
-            
-            
             A0 = H[0]
             C0 = math.log((H[0] - H[1])/(H[0] - H[-1]))/math.log(Q[1]/Q[-1])
             B0 = (H[0] - H[1])/(Q[1]**C0)
@@ -695,32 +682,23 @@ class HeadPump(Pump):
             try:
                 coeff, cov = curve_fit(flow_vs_head_func, Q, H, [A0, B0, C0])
             except RuntimeError:
-                raise RuntimeError('The multi-point pump curve data ' + 
-                   'provided has a very poor fit using ' +
-                   'scipy.opitmize.curve_fit that is not acceptable' +
-                   ' for this analysis.\n\n' + 'The failed data is:\n\n' +
-                   "Flow (m3/s): " + str(Q) + "\n\n" + "Head (m): " + 
-                   str(H))
-                                 # MUST convert to native python floats.
-            A = float(coeff[0])  # The curve_fit function returns numpy.float64
-            B = float(coeff[1])  # types which does not bind to the methods in 
-            C = float(coeff[2])  # expr.m correctly and causes errors 
-        else:
-            raise RuntimeError('Head pump: ' + self.__repr__ + 
-                               ' has an empty pump curve. ')
-                
+                raise RuntimeError('Head pump ' + self.name + 
+                                   ' results in a poor regression fit to H = A - B * Q^C')
 
+            A = float(coeff[0])  # convert to native python floats
+            B = float(coeff[1]) 
+            C = float(coeff[2])  
+        else:
+            raise RuntimeError('Head pump ' + self.name + 
+                               ' has an empty pump curve.')
+                
         if A<=0 or B<0 or C<=0:
-            raise RuntimeError('Value of pump head curve coefficient is'+
-                               ' negative, which is not allowed. \nPump: '+
-                               '{0} \nA: {1} \nB: {2} \nC:{3}'.format(
-                                       self.name,A,B,C))
+            raise RuntimeError('Head pump ' + self.name + 
+                               ' has a negative head curve coefficient.')
         # with using scipy curve_fit, I think this is a waranted check 
         elif np.isnan(A+B+C):
-            raise RuntimeError('One of the coefficients for the pump head '+
-                               'curve is NaN! \n'+
-                               'Pump: {0} \nA: {1} \nB: {2} \nC:{3}'.format(
-                                       self.name,A,B,C))
+            raise RuntimeError('Head pump ' + self.name + 
+                               ' has a coefficient which is NaN!')
         return (A, B, C)
     
     def get_design_flow(self):

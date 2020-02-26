@@ -377,17 +377,11 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertAlmostEqual(Y[2],0.0)
         
     def test_multi_pt_head_curve(self):
-        """ First bring into memory testing multi-point head curves
-         
-        These are curves that were obtained from an online source but then
-        randomly changed so that they are not the actual pump data but are 
-        similar."""
-        
-        pump_curves = pump_curves_for_testing()
+        pump_curves = pump_curves_for_testing() # change this to read in a csv file
     
         # these are the least squares optimal curve coefficients for 
         # pump_curves!            
-        expected_coefficients = [
+        expected_coef = [
                 (95.2793750017631, 92.93210451708887, 1.7962733026912), 
                 (65.73126364420834, 754.0506268456613, 3.4783989343179305), 
                 (21.278376275311476, 4077.4535673165924, 2.358360722834581), 
@@ -405,44 +399,44 @@ class TestNetworkMethods(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel()
         wn.add_junction("j1")
         wn.add_junction("j2")
-        
-        def run_get_head_curve_coefficients(pump_name,curve_name,curve_values,
-                                            wn):
-            wn.add_curve(curve_name,"HEAD",curve_values)
-            wn.add_pump(pump_name,"j1","j2",pump_type="HEAD",
-                        pump_parameter=curve_name)
-            pump = wn.get_link(pump_name)
-            return pump.get_head_curve_coefficients()
-        
+
         # check all of the pump_curves
         for idx, curve in enumerate(pump_curves):
-            pname = "p" + str(idx+1)
-            cname = "c" + str(idx+1)
-            cvalue = df_pumpcurve_2_tuple(curve)
-            coef = run_get_head_curve_coefficients(pname,cname,cvalue,wn)
-            self.assertAlmostEqual(coef,expected_coefficients[idx])
+            pump_name = "p" + str(idx+1)
+            curve_name = "c" + str(idx+1)
+            
+            wn.add_curve(curve_name,"HEAD",curve.values)
+            wn.add_pump(pump_name,"j1","j2",pump_type="HEAD", pump_parameter=curve_name)
+            pump = wn.get_link(pump_name)
+            coef = pump.get_head_curve_coefficients()
+    
+            for i in range(2):
+                error = abs(coef[i] - expected_coef[idx][i])/expected_coef[idx][i]
+                self.assertLess(error, 1e-6)
             #self.wntr.graphics.curve.plot_pump_curve(pump)
             #savefig(pump_name + "_" + cname + ".png")
             
+    def test_multi_pt_head_curve_expected_error(self):
         # now test two error conditions using bad datasets.
-        def neg_coeff_dataset():
-            return [(x,x**2 + 2*x + 3) for x in range(10)]
-            
-        def bad_fit_dataset():
-            return [(x,(-1)**x * np.exp(-0.001*x) * 100) for x in range(10)]
-        
-        def assertSpecificError(dataset,expected_message,pname,cname,wn):
-            with self.assertRaises(RuntimeError) as context:
-                run_get_head_curve_coefficients(pname,cname,dataset,wn)
-            self.assertTrue(expected_message in str(context.exception))
+        wn = self.wntr.network.WaterNetworkModel()
+        wn.add_junction("j1")
+        wn.add_junction("j2")
 
-        assertSpecificError(neg_coeff_dataset(),"Value of pump head curve "+
-                            "coefficient is negative","pneg","cneg",wn)
-    
-        assertSpecificError(bad_fit_dataset(),"The multi-point pump curve "+
-                            "data provided has a very poor fit","pbad","cbad",
-                            wn)
-        
+        # Negative coefficients
+        data_points1 = [(x,x**2 + 2*x + 3) for x in range(10)]
+        wn.add_curve("curve1","HEAD", data_points1)
+        wn.add_pump("pump1","j1","j2",pump_type="HEAD", pump_parameter="curve1")
+        pump = wn.get_link("pump1")
+        with self.assertRaises(RuntimeError):
+            pump.get_head_curve_coefficients()
+
+        # Bad fit
+        data_points2 = [(x,(-1)**x * np.exp(-0.001*x) * 100) for x in range(10)]
+        wn.add_curve("curve2","HEAD", data_points2)
+        wn.add_pump("pump2","j1","j2",pump_type="HEAD", pump_parameter="curve2")
+        pump = wn.get_link("pump2")
+        with self.assertRaises(RuntimeError):
+            pump.get_head_curve_coefficients()
 
     def test_get_links_for_node_all(self):
         wn = self.wntr.network.WaterNetworkModel()
@@ -791,7 +785,7 @@ def test_describe():
                            'Sources': 0, 
                            'Controls': 18})
         
-def pump_curves_for_testing():
+def pump_curves_for_testing(): # remove
     # as -is this data will create a lot of type errors unless it is converted 
     # to float. Use df_pumpcurve_2_tuple to convert it to the right type for 
     # use in unit testing.
@@ -860,9 +854,6 @@ def pump_curves_for_testing():
                  0.034161965,0.036876335,0.048019325,0.053792489,0.064882816],
                  "head (m)":[14.859,14.6685,14.478,13.716,12.573,12.192,9.525,
                        7.239,4.953]})]
-def df_pumpcurve_2_tuple(curve_df):  
-    # this has to be converted from numpy.float64 to a native python float.      
-    return [(float(x),float(y)) for x,y in curve_df.values]
     
 if __name__ == '__main__':
     unittest.main()
