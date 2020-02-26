@@ -166,7 +166,7 @@ Hydraulic are then simulated using the original and skeletonized networks.
     >>> results_skel = sim.run_sim()
     
 The simulation results are used to compute the pressure difference between the 
-original and skeletonized networks.  The pressure differnece is computed at 
+original and skeletonized networks.  The pressure difference is computed at 
 nodes that exist in the skeletonized network.
 
 .. doctest::
