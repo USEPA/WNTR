@@ -661,71 +661,53 @@ class HeadPump(Pump):
         """
         
         curve = self.get_pump_curve()
+        Q = []
+        H = []
+        for pt in curve.points:
+            Q.append(pt[0])
+            H.append(pt[1])
         
-        # 1-Point curve
+        # 1-Point curve - Replicate EPANET for a one point curve
         if curve.num_points == 1:
-            H_1 = curve.points[0][1]
-            Q_1 = curve.points[0][0]
-            A = (4.0/3.0)*H_1
-            B = (1.0/3.0)*(H_1/(Q_1**2))
+            # 
+            A = (4.0/3.0)*H[0]
+            B = (1.0/3.0)*(H[0]/(Q[0]**2))
             C = 2
+        # 2-Point curve - Replicate EPANET - generate a straight line
         elif curve.num_points == 2:
-            raise RuntimeError('Coefficients for a 2 point curves cannot be generated. ')
-        else:
-            def fit3pt_Q1_eq_0(H1,H2,H3,Q2,Q3):
-                A = H1
-                C = math.log((H1 - H2)/(H1 - H3))/math.log(Q2/Q3)
-                B = (H1 - H2)/(Q2**C)
-                return A,B,C
-                
-            # 3-Point curve
-            if curve.num_points == 3:
-                Q_1 = curve.points[0][0]
-                H_1 = curve.points[0][1]
-                Q_2 = curve.points[1][0]
-                H_2 = curve.points[1][1]
-                Q_3 = curve.points[2][0]
-                H_3 = curve.points[2][1]
-    
-                # When the first points is at zero flow
-                if Q_1 == 0.0:
-                    A,B,C = fit3pt_Q1_eq_0(H_1,H_2,H_3,Q_2,Q_3)
-                else:
-                    def curve_fit_3pt(x):
-                        eq_array = [H_1 - x[0] + x[1]*Q_1**x[2],
-                                    H_2 - x[0] + x[1]*Q_2**x[2],
-                                    H_3 - x[0] + x[1]*Q_3**x[2]]
-                        return eq_array
-                    coeff = fsolve(curve_fit_3pt, [200, 1e-3, 1.5])
-                    A = coeff[0]
-                    B = coeff[1]
-                    C = coeff[2]
-            # Multi-point curve
-            else:
-                Q = []
-                H = []
-                for pt in curve.points:
-                    Q.append(pt[0])
-                    H.append(pt[1])
-                
-                # Initial guess
-                A0,B0,C0 = fit3pt_Q1_eq_0(H[0],H[1],H[-1],Q[1],Q[-1])
+            B = - (H[1] - H[0]) / (Q[1]**2 - Q[0]**2)
+            A = H[0] + B * Q[0] ** 2
+            C = 1
+        # 3 - Multi-point curve (3 or more points) - This is not a perfect 
+        #     replication of EPANET. EPANET gives a mult-linear fit
+        #     between points whereas this uses a regression fit of the same
+        #     H = A - B * Q **C curve used for the three point fit.
+        elif curve.num_points >= 3:
+            
+            
+            A0 = H[0]
+            C0 = math.log((H[0] - H[1])/(H[0] - H[-1]))/math.log(Q[1]/Q[-1])
+            B0 = (H[0] - H[1])/(Q[1]**C0)
 
-                def flow_vs_head_func(Q, a, b, c):
-                    return a - b * Q ** c
-                
-                try:
-                    coeff, cov = curve_fit(flow_vs_head_func, Q, H, [A0, B0, C0])
-                except RuntimeError:
-                    raise RuntimeError('The multi-point pump curve data ' + 
-                       'provided has a very poor fit that is not acceptable' +
-                       ' for this analysis.\n\n' + 'The failed data is:\n\n' +
-                       "Flow (m3/s): " + str(Q) + "\n\n" + "Head (m): " + 
-                       str(H))
-                    
-                A = coeff[0]
-                B = coeff[1]
-                C = coeff[2]
+            def flow_vs_head_func(Q, a, b, c):
+                return a - b * Q ** c
+            
+            try:
+                coeff, cov = curve_fit(flow_vs_head_func, Q, H, [A0, B0, C0])
+            except RuntimeError:
+                raise RuntimeError('The multi-point pump curve data ' + 
+                   'provided has a very poor fit using ' +
+                   'scipy.opitmize.curve_fit that is not acceptable' +
+                   ' for this analysis.\n\n' + 'The failed data is:\n\n' +
+                   "Flow (m3/s): " + str(Q) + "\n\n" + "Head (m): " + 
+                   str(H))
+                                 # MUST convert to native python floats.
+            A = float(coeff[0])  # The curve_fit function returns numpy.float64
+            B = float(coeff[1])  # types which does not bind to the methods in 
+            C = float(coeff[2])  # expr.m correctly and causes errors 
+        else:
+            raise RuntimeError('Head pump: ' + self.__repr__ + 
+                               ' has an empty pump curve. ')
                 
 
         if A<=0 or B<0 or C<=0:
