@@ -50,7 +50,7 @@ class TestLeakResults(unittest.TestCase):
 
         inp_file = join(test_datadir, 'epanet_leaks.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
-        wn.options.hydraulic.en2_units = self.wntr.epanet.util.FlowUnits.CMH
+        wn.options.hydraulic.inpfile_units = self.wntr.epanet.util.FlowUnits.CMH
         sim = self.wntr.sim.EpanetSimulator(wn)
         epanet_results = sim.run_sim()
 

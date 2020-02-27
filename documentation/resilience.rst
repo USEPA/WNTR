@@ -128,75 +128,106 @@ at https://networkx.github.io/.
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 
-The following example extracts a graph from the water network model, converts the graph to an undirected graph, 
-and computes node degree, 
-terminal nodes, 
-link density, 
-diameter, 
-eccentricity, 
-betweenness centrality, 
-central point dominance,
-closeness centrality, 
-articulation points, and 
-bridges.  
-Note that many of these metrics use NetworkX directly.  
-Some metrics, such as :class:`~wntr.network.graph.WntrMultiDiGraph.terminal_nodes` and 
-:class:`~wntr.network.graph.WntrMultiDiGraph.bridges`, are methods developed in WNTR that operate on the 
-:class:`~wntr.network.graph.WntrMultiDiGraph` class.
-
+The following example extracts a directed multigraph from the water network model 
+and then converts the graph to 
+an undirected multigraph and an undirected simple graph.  These graphs are used to 
+compute topographic metrics.
+ 
 .. doctest::
 
     >>> G = wn.get_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
-    
-    >>> node_degree = G.degree()
-    >>> terminal_nodes = G.terminal_nodes()
-    >>> link_density = nx.density(G)
-    >>> diameter = nx.diameter(uG)
-    >>> eccentricity = nx.eccentricity(uG)
-    >>> betweenness_centrality = nx.betweenness_centrality(sG)
-    >>> central_point_dominance = G.central_point_dominance()
-    >>> closeness_centrality = nx.closeness_centrality(G)
-    >>> articulation_points = list(nx.articulation_points(uG))
-    >>> bridges = G.bridges()
-	
-The following example extracts the shortest path lengths between all nodes and average shortest path length in the graph, then weights the 
-graph by flow direction and extracts all paths between two nodes.
 
-.. doctest::
+The following examples compute topographic metrics, including:
 
-    >>> shortest_path_length = nx.shortest_path_length(uG)
-    >>> ave_shortest_path_length = nx.average_shortest_path_length(uG)
+* Node degree and terminal nodes
+
+  .. doctest::
+
+      >>> node_degree = G.degree()
+      >>> terminal_nodes = G.terminal_nodes()
+
+* Link density
+
+  .. doctest::
+
+      >>> link_density = nx.density(G)
+
+* Diameter and eccentricity
+
+  .. doctest::
+  
+      >>> diameter = nx.diameter(uG)
+      >>> eccentricity = nx.eccentricity(uG)
+      
+* Betweenness centrality and central point dominance
+
+  .. doctest::
+  
+      >>> betweenness_centrality = nx.betweenness_centrality(sG)
+      >>> central_point_dominance = G.central_point_dominance()
+      
+* Closeness centrality
+
+  .. doctest::
+  
+     >>> closeness_centrality = nx.closeness_centrality(G)
+     
+* Articulation points and bridges
+
+  .. doctest::
+  
+      >>> articulation_points = list(nx.articulation_points(uG))
+      >>> bridges = G.bridges()
+
+* Shortest path lengths between all nodes and average shortest path length
+
+  .. doctest::
+
+      >>> shortest_path_length = nx.shortest_path_length(uG)
+      >>> ave_shortest_path_length = nx.average_shortest_path_length(uG)
     
-    >>> sim = wntr.sim.EpanetSimulator(wn)
-    >>> results = sim.run_sim()
-    >>> flowrate = results.link['flowrate']
-    >>> G.weight_graph(link_attribute = flowrate)
-    >>> all_paths = nx.all_simple_paths(G, '119', '193')
-	
+* Paths between two nodes in a weighted graph, where the graph is weighted by flow direction from a hydraulic simulation
+
+  .. doctest::
+
+      >>> sim = wntr.sim.EpanetSimulator(wn)
+      >>> results = sim.run_sim()
+      
+      >>> flowrate = results.link['flowrate']
+      >>> G.weight_graph(link_attribute = flowrate)
+      >>> all_paths = nx.all_simple_paths(G, '119', '193')
+
+   
+
+Note that many of these metrics use NetworkX directly.  
+Some metrics, such as :class:`~wntr.network.graph.WntrMultiDiGraph.terminal_nodes` and 
+:class:`~wntr.network.graph.WntrMultiDiGraph.bridges`, are methods developed in WNTR that operate on the 
+:class:`~wntr.network.graph.WntrMultiDiGraph` class.
+
+
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 
-	the total number of connected triples.  Clustering coefficient is a value between 0 and 1.
-	Clustering coefficient can be computed using the NetworkX method ``clustering``.
+	the total number of connected triples. Clustering coefficient is a value between 0 and 1.
+	Clustering coefficient can be computed using the NetworkX method ``clustering.``
 					
 	Meshedness coefficient: Meshedness coefficient is the ratio of the actual number of cycles in the 
-      network to the maximum possible number of cycles in the network.  Meshedness coefficient is a value between 0 and 1.
+      network to the maximum possible number of cycles in the network. Meshedness coefficient is a value between 0 and 1.
 
-      Spectral gap: The difference between the first and second eigenvalue of the networks adjacency matrix.
+      Spectral gap: Spectral gap is the difference between the first and second eigenvalue of the network's adjacency matrix.
 	The method :class:`~wntr.network.graph.WntrMultiDiGraph.spectral_gap` can be used to find the spectral gap of the network.
 	
-	Algebraic connectivity	: The second smallest eigenvalue of the normalized Laplacian matrix of a network.
+	Algebraic connectivity: Algebraic connectivity is the second smallest eigenvalue of the normalized Laplacian matrix of a network.
 	The method :class:`~wntr.network.graph.WntrMultiDiGraph.algebraic_connectivity` can be used to find the algebraic connectivity of the network.
 	
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
-	are connected in a network.  NPR is computed using ...
+	are connected in a network. NPR is computed using ...
 	Connectivity will change at each time step, depending on the flow direction.  
 	The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method 
 	can be used to weight the graph by a specified attribute. 
 	
-	Critical ratio of defragmentation: The threshold where the network loses its large-scale connectivity and 
-	defragments, as a function of the node degree.  The critical ratio of 
+	Critical ratio of defragmentation: Critical ratio of defragmentation is the threshold where the network loses its large-scale connectivity and defragments, as a function of the node degree. The critical ratio of 
 	defragmentation is related to percolation theory. The ratio is equal to 0 if all 
 	The method :class:`~wntr.network.graph.WntrMultiDiGraph.critical_ratio_defrag` can be used to compute the critical ratio of defragmentation of the network.
 
@@ -254,33 +285,45 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           impacted by pressure below a specified threshold.
    =====================================  ================================================================================================================================================
 
-The following example simulates hydraulics in pressure dependent demand mode and then extracts 
-the nodes and times when pressure exceeds a threshold,
-water service availability, 
-todini index,
-and entropy.
+The following examples compute hydraulic metrics, including:
 
-.. doctest::
+* Nodes and times when pressure exceeds a threshold, using results from a hydraulic simulation
 
-    >>> sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
-    >>> results = sim.run_sim()
+  .. doctest::
+
+      >>> sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+      >>> results = sim.run_sim()
     
-    >>> pressure = results.node['pressure']
-    >>> pressure_threshold = 21.09 # 30 psi
-    >>> pressure_above_threshold = wntr.metrics.query(pressure, np.greater, pressure_threshold)
+      >>> pressure = results.node['pressure']
+      >>> threshold = 21.09 # 30 psi
+      >>> pressure_above_threshold = wntr.metrics.query(pressure, np.greater, 
+      ...     threshold)
+    
+* Water service availability
 	
-    >>> expected_demand = wntr.metrics.expected_demand(wn)
-    >>> demand = results.node['demand']
-    >>> wsa = wntr.metrics.water_service_availability(expected_demand, demand)
+  .. doctest::
+
+      >>> expected_demand = wntr.metrics.expected_demand(wn)
+      >>> demand = results.node['demand']
+      >>> wsa = wntr.metrics.water_service_availability(expected_demand, demand)
 			
-    >>> head = results.node['head']
-    >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]            
-    >>> todini = wntr.metrics.todini_index(head, pressure, demand, pump_flowrate, wn, pressure_threshold)
-    
-    >>> G = wn.get_graph()
-    >>> flowrate = results.link['flowrate'].loc[12*3600,:]
-    >>> G.weight_graph(link_attribute=flowrate)
-    >>> entropy, system_entropy = wntr.metrics.entropy(G)
+* Todini index
+
+  .. doctest::
+
+      >>> head = results.node['head']
+      >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]            
+      >>> todini = wntr.metrics.todini_index(head, pressure, demand, pump_flowrate, wn, 
+      ...     threshold)
+      
+* Entropy
+
+  .. doctest::
+
+      >>> G = wn.get_graph()
+      >>> flowrate = results.link['flowrate'].loc[12*3600,:]
+      >>> G.weight_graph(link_attribute=flowrate)
+      >>> entropy, system_entropy = wntr.metrics.entropy(G)
     
 Water quality metrics
 ---------------------
@@ -305,40 +348,46 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water quality metrics.
    =====================================  ================================================================================================================================================
 
-The following example runs a water age simulation, computes 
-water age using the last 48 hours of the simulation, 
-and the population that is impacted by water age greater than 24 hours.
+The following examples compute water quality metrics, including:
+
+* Water age using the last 48 hours of a water quality simulation
+
+  .. doctest::
+
+      >>> wn.options.quality.parameter = 'AGE'
+      >>> sim = wntr.sim.EpanetSimulator(wn)
+      >>> results = sim.run_sim()
+      
+      >>> age = results.node['quality']
+      >>> age_last_48h = age.loc[age.index[-1]-48*3600:age.index[-1]]
+      >>> average_age = age_last_48h.mean()/3600 # convert to hours
+
+* Population that is impacted by water age greater than 24 hours
    
-.. doctest::
+  .. doctest::
 
-    >>> wn.options.quality.mode = 'AGE'
-    >>> sim = wntr.sim.EpanetSimulator(wn)
-    >>> results = sim.run_sim()
+      >>> pop = wntr.metrics.population(wn)
+      >>> threshold = 24
+      >>> pop_impacted = wntr.metrics.population_impacted(pop, average_age, np.greater, 
+      ...     threshold)
 	
-    >>> age = results.node['quality']
-    >>> age_last_48h = age.loc[age.index[-1]-48*3600:age.index[-1]]
-    >>> average_age = age_last_48h.mean()/3600 # convert to hours
+* Nodes that exceed a chemical concentration using a water quality simulation
 	
-    >>> pop = wntr.metrics.population(wn)
-    >>> pop_impacted = wntr.metrics.population_impacted(pop, average_age, np.greater, 24)
-	
-The following example runs a chemical concentration water quality simulation and extracts nodes that exceed a threshold.
-	
-.. doctest::
+  .. doctest::
 
-    >>> wn.options.quality.mode = 'CHEMICAL'
-    >>> source_pattern = wntr.network.elements.Pattern.binary_pattern('SourcePattern', step_size=3600, 
-    ...     start_time=2*3600, end_time=15*3600, duration=7*24*3600)
-    >>> wn.add_pattern('SourcePattern', source_pattern)
-    >>> wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
-    >>> wn.add_source('Source2', '123', 'SETPOINT', 1000, 'SourcePattern')
-    >>> sim = wntr.sim.EpanetSimulator(wn)
-    >>> results = sim.run_sim()
+      >>> wn.options.quality.parameter = 'CHEMICAL'
+      >>> source_pattern = wntr.network.elements.Pattern.binary_pattern('SourcePattern', 
+      ...     step_size=3600, start_time=2*3600, end_time=15*3600, duration=7*24*3600)
+      >>> wn.add_pattern('SourcePattern', source_pattern)
+      >>> wn.add_source('Source1', '121', 'SETPOINT', 1000, 'SourcePattern')
+      >>> wn.add_source('Source2', '123', 'SETPOINT', 1000, 'SourcePattern')
+      >>> sim = wntr.sim.EpanetSimulator(wn)
+      >>> results = sim.run_sim()
 	
-    >>> chem = results.node['quality']
-    >>> chem_threshold = 750
-    >>> mask = wntr.metrics.query(chem, np.greater, chem_threshold)
-    >>> chem_above_regulation = mask.any(axis=0) # True/False for each node
+      >>> chem = results.node['quality']
+      >>> threshold = 750
+      >>> mask = wntr.metrics.query(chem, np.greater, threshold)
+      >>> chem_above_regulation = mask.any(axis=0) # True/False for each node
 	
 Water security metrics
 -----------------------
@@ -355,37 +404,50 @@ Water security metrics included in WNTR are listed in  :numref:`table-water-secu
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.mass_contaminant_consumed` method.
 
    Volume consumed                        Volume consumed is the volume of a contaminant that exits the network via node demand at each node-time pair [USEPA15]_.   
-                                          A detection limit can be specified.
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.volume_contaminant_consumed` method.
 
    Extent of contamination                Extent of contamination is the length of contaminated pipe at each node-time pair [USEPA15]_.  
-                                          A detection limit can be specified.
                                           The metric can be computed using the :class:`~wntr.metrics.water_security.extent_contaminant` method.
 
    Population impacted                    As stated above, population that is impacted by a specific quantity can be computed using the 
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water security metrics.
    =====================================  ================================================================================================================================================
 
-The following example uses results from a chemical water quality simulation (from above) to compute 
-mass consumed, 
-volume consumed,
-extent of contamination, 
-and the population impacted by mass consumed over a specified threshold.
+The following examples uses results from a chemical water quality simulation 
+(from above) to compute water security metrics, including:
 
-.. doctest::
+* Mass consumed
+  
+  .. doctest::
 
-    >>> demand = results.node['demand'].loc[:,wn.junction_name_list]
-    >>> quality = results.node['quality'].loc[:,wn.junction_name_list]
-    >>> MC = wntr.metrics.mass_contaminant_consumed(demand, quality)
+      >>> demand = results.node['demand'].loc[:,wn.junction_name_list]
+      >>> quality = results.node['quality'].loc[:,wn.junction_name_list]
+      >>> MC = wntr.metrics.mass_contaminant_consumed(demand, quality)
     
-    >>> detection_limit = 750
-    >>> VC = wntr.metrics.volume_contaminant_consumed(demand, quality, detection_limit)
+* Volume consumed
+
+  .. doctest::
     
-    >>> flowrate = results.link['flowrate'].loc[:,wn.pipe_name_list] 
-    >>> EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, detection_limit)
-	
-    >>> pop = wntr.metrics.population(wn)
-    >>> pop_impacted = wntr.metrics.population_impacted(pop, MC, np.greater, 80000)
+      >>> detection_limit = 750
+      >>> VC = wntr.metrics.volume_contaminant_consumed(demand, quality, 
+      ...     detection_limit)
+    
+* Extent of contamination
+  
+  .. doctest::
+    
+      >>> quality = results.node['quality'] # quality at all nodes
+      >>> flowrate = results.link['flowrate'].loc[:,wn.pipe_name_list] 
+      >>> EC = wntr.metrics.extent_contaminant(quality, flowrate, wn, detection_limit)
+    
+* Population impacted by mass consumed over a specified threshold.
+
+  .. doctest::
+
+      >>> pop = wntr.metrics.population(wn)
+      >>> threshold = 80000
+      >>> pop_impacted = wntr.metrics.population_impacted(pop, MC, np.greater, 
+      ...     threshold)
 
 ..
 	Contaminate ingested
@@ -420,18 +482,29 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
                                           use the flowrates and pressures from simulation results to compute pump energy and cost.
    =====================================  ================================================================================================================================================
 
-The following example computes network cost, greenhouse gas emissions, and then runs a hydraulic simulation to compute pump energy and pump cost.
+The following examples compute economic metrics, including:
+
+* Network cost
    
-.. doctest::
+  .. doctest::
 
-    >>> network_cost = wntr.metrics.annual_network_cost(wn)
-    
-    >>> network_ghg = wntr.metrics.annual_ghg_emissions(wn)
+      >>> network_cost = wntr.metrics.annual_network_cost(wn)
 
-    >>> sim = wntr.sim.EpanetSimulator(wn)
-    >>> results = sim.run_sim()
-    >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]
-    >>> head = results.node['head']
-    >>> pump_energy = wntr.metrics.pump_energy(pump_flowrate, head, wn)
-    >>> pump_cost = wntr.metrics.pump_cost(pump_flowrate, head, wn)
+* Greenhouse gas emission
+
+  .. doctest::
+
+      >>> network_ghg = wntr.metrics.annual_ghg_emissions(wn)
+
+* Pump energy and pump cost using results from a hydraulic simulation
+
+  .. doctest::
+  
+      >>> sim = wntr.sim.EpanetSimulator(wn)
+      >>> results = sim.run_sim()
+      
+      >>> pump_flowrate = results.link['flowrate'].loc[:,wn.pump_name_list]
+      >>> head = results.node['head']
+      >>> pump_energy = wntr.metrics.pump_energy(pump_flowrate, head, wn)
+      >>> pump_cost = wntr.metrics.pump_cost(pump_flowrate, head, wn)
     

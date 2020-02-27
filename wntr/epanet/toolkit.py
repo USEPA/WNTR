@@ -114,15 +114,21 @@ class ENepanet():
 
     fileLoaded = False
 
-    def __init__(self, inpfile='', rptfile='', binfile=''):
+    def __init__(self, inpfile='', rptfile='', binfile='', version=2.0):
 
         self.inpfile = inpfile
         self.rptfile = rptfile
         self.binfile = binfile
 
-        libnames = ['epanet2_x86','epanet2','epanet']
-        if '64' in platform.machine():
-            libnames.insert(0, 'epanet2_amd64')
+
+        if float(version) == 2.0:
+            libnames = ['epanet2_x86','epanet2','epanet']
+            if '64' in platform.machine():
+                libnames.insert(0, 'epanet2_amd64')
+        elif float(version) == 2.2:
+            libnames = ['epanet22', 'epanet22_win32']
+            if '64' in platform.machine():
+                libnames.insert(0, 'epanet22_amd64')
         for lib in libnames:
             try:
                 if os.name in ['nt','dos']:

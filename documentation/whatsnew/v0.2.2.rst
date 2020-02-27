@@ -3,6 +3,12 @@
 v0.2.2 (master)
 ---------------------------------------------------
 
+* Updated `plot_fragility_curve` and `plot_pump_curve` to use an existing 
+  matplotlib axes and return a matplotlib axes so users can customize the graphics.  
+  The optional input argument figsize was removed (API change).
+* Added optional input arguments to `plot_network` to add labels to node and link colorbars.
+* Added optional input argument for detection limit to `mass_contaminant_consumed` calculation. 
+  The default detection limit for mass consumed, volume consumed, and extent of contamination is 0.
 * Updated methods that use NetworkX to be compatible with NetworkX 2.4
 * Added required dependencies to setup.py.  Required and optional dependencies  
   are included in requirements.txt

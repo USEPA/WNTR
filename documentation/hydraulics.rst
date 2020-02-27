@@ -5,13 +5,13 @@
 Hydraulic simulation
 ==============================
 
-WNTR contains two simulators: the **WNTRSimulator** and the **EpanetSimulator**.
+WNTR contains two simulators: the **EpanetSimulator** and the **WNTRSimulator**.
 See :ref:`software_framework` for more information on features and limitations of these simulators. 
 
 The EpanetSimulator can be used to run demand-driven hydraulic simulations
-using the EPANET 2 Programmer's Toolkit.  The simulator can also be 
+using the EPANET 2.0 Programmer's Toolkit. The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
-A hydraulic simulation using the EpanetSimulator is run using the following code.
+A hydraulic simulation using the EpanetSimulator is run using the following code:
 
 .. doctest::
     :hide:
@@ -28,8 +28,8 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 	>>> results = sim.run_sim()
 
 The WNTRSimulator is a pure Python hydraulics simulation engine based on the same equations
-as EPANET.  The WNTRSimulator does not include equations to run water quality 
-simulations.  The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulations
+as EPANET. The WNTRSimulator does not include equations to run water quality 
+simulations. The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulations
 in either demand-driven or pressure dependent demand mode ('DD' or 'PDD').
 A hydraulic simulation using the WNTRSimulator is run using the following code:
 
@@ -173,7 +173,7 @@ create a piecewise smooth function.
 Demand-driven simulation
 -------------------------
 
-In demand-driven simulation, the pressure in the system depends on the node demands.
+In a demand-driven simulation, the pressure in the system depends on the node demands.
 The mass balance and headloss equations described above are solved assuming 
 that node demands are known and satisfied.  
 This assumption is reasonable under normal operating conditions and for use in network design.  
@@ -317,10 +317,11 @@ To restart the simulation from time zero, the user has several options.
    A pickle file is generally used for this purpose.  
    This option is useful when the water network model contains custom controls that would not be reset using the option 1, 
    or when the user wants to change operations between simulations.
-
+   
+   The following example saves the water network model to a file before using it in a simulation.
+   
    .. doctest::
 
-       >>> # Save the water network model to a file before using it in a simulation
        >>> import pickle
        >>> f=open('wn.pickle','wb')
        >>> pickle.dump(wn,f)
@@ -328,7 +329,10 @@ To restart the simulation from time zero, the user has several options.
        >>> sim = wntr.sim.WNTRSimulator(wn)
        >>> results = sim.run_sim()
     
-       >>> # Reload the water network model from the file before the next simulation
+   The next example reload the water network model from the file before the next simulation.
+   
+   .. doctest::
+   
        >>> f=open('wn.pickle','rb')
        >>> wn = pickle.load(f)
        >>> f.close()
@@ -351,14 +355,14 @@ efficient evaluation of constraint residuals and derivatives. WNTR's
 AML drastically simplifies the implementation, maintenance,
 modification, and customization of hydraulic models. The AML allows
 defining variables and constraints in a natural way. For example,
-suppose we want to solve the following system of nonlinear equations.
+suppose the user wants to solve the following system of nonlinear equations.
 
 .. math::
 
    y - x^{2} = 0 \\
    y - x - 1 = 0
 
-We can create this model usin WNTR's AML as follows.
+To create this model using WNTR's AML, the following can be used:
    
 .. doctest::
 
@@ -369,7 +373,7 @@ We can create this model usin WNTR's AML as follows.
    >>> m.c1 = aml.Constraint(m.y - m.x**2)
    >>> m.c2 = aml.Constraint(m.y - m.x - 1)
 
-Before evaluating the constraint residuals or the jacobian, :func:`~wntr.sim.aml.aml.Model.set_structure` must be called:
+Before evaluating the constraint residuals or the Jacobian, :func:`~wntr.sim.aml.aml.Model.set_structure` must be called:
 
 .. doctest::
 
@@ -384,9 +388,9 @@ Before evaluating the constraint residuals or the jacobian, :func:`~wntr.sim.aml
        [-1.,  1.]])
 
 The methods :func:`~wntr.sim.aml.aml.Model.evaluate_residuals` and
-:func:`~wntr.sim.aml.aml.Model.evaluate_jacobian` return a numpy array
-and a scipy sparse csr matrix, respectively. Variable values can also
-be loaded with a numpy array. For example, a Newton
+:func:`~wntr.sim.aml.aml.Model.evaluate_jacobian` return a NumPy array
+and a SciPy sparse CSR matrix, respectively. Variable values can also
+be loaded with a NumPy array. For example, a Newton
 step (without a line search) would look something like
 
 .. doctest::

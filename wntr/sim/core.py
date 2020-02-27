@@ -840,7 +840,7 @@ class WNTRSimulator(WaterNetworkSimulator):
         else:
             first_step = False
         trial = -1
-        max_trials = self._wn.options.solver.trials
+        max_trials = self._wn.options.hydraulic.trials
         resolve = False
         self._rule_iter = 0  # this is used to determine the rule timestep
 

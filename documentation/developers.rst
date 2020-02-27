@@ -33,7 +33,7 @@ the README section at https://github.com/USEPA/WNTR.
 	
 Tests can also be run locally using the Python package nose.  
 For more information on nose, see  http://nose.readthedocs.io/.
-nose comes with a command line software tool called nosetests.
+The nose package comes with a command line software tool called nosetests.
 Tests can be run in the WNTR directory using the following command::
 
 	nosetests -v --with-coverage --cover-package=wntr wntr
@@ -91,6 +91,6 @@ Pull requests must meet the following minimum requirements to be included in WNT
 Development team
 -------------------
 WNTR was developed as part of a collaboration between the United States 
-Environmental Protection Agency National Homeland Security Research Center, 
+Environmental Protection Agency Office of Research and Development, 
 Sandia National Laboratories, and Purdue University.  
 See https://github.com/USEPA/WNTR/graphs/contributors for a full list of contributors.

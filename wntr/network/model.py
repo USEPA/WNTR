@@ -1722,7 +1722,7 @@ class WaterNetworkModel(AbstractModel):
             logger.warning('Writing a minimal INP file without saved non-WNTR options (energy, etc.)')
             self._inpfile = wntr.epanet.InpFile()
         if units is None:
-            units = self._options.hydraulic.en2_units
+            units = self._options.hydraulic.inpfile_units
         self._inpfile.write(filename, self, units=units)
     
    

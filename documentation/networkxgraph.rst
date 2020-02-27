@@ -22,7 +22,7 @@ Multiple links with the same start and end node can be used to represent redunda
 A NetworkX graph generated from a water network model stores 
 the start and end node of each link, 
 node coordinates, 
-and node and link types (i.e., Tank, Reservoir, Valve). 
+and node and link types (i.e., tank, reservoir, valve). 
 
 .. _fig-graph:
 .. figure:: figures/graph.png
@@ -72,8 +72,7 @@ The graph can be used to access NetworkX methods, for example:
     >>> import networkx as nx
     >>> node_degree = G.degree()
     >>> closeness_centrality = nx.closeness_centrality(G)
-    >>> wntr.graphics.plot_network(wn, node_attribute=closeness_centrality) # doctest: +ELLIPSIS
-    (<matplotlib.collections.PathCollection object ...
+    >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute=closeness_centrality)
 
 Additional network types
 -------------------------------------------------
