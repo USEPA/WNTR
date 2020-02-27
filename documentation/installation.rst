@@ -9,7 +9,7 @@ Installation
 WNTR requires 64-bit Python (tested on versions 3.6 and 3.7) along with several 
 Python package dependencies. 
 See :ref:`requirements` and :ref:`optional_dependencies` for more information.
-WNTR can be installed as a Python package as breifly described below. 
+WNTR can be installed as a Python package as briefly described below. 
 :ref:`detailed_instructions` are included in the following section.
 
 Users can install the latest release of WNTR from PyPI using the following command::

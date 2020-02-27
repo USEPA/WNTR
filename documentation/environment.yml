@@ -1,7 +1,4 @@
 name: wntr
-channels:
-    - defaults
-    - conda-forge
 dependencies:
     - python=3.7
     - numpy
@@ -9,8 +6,5 @@ dependencies:
     - networkx
     - pandas
     - matplotlib
-    - plotly
-    - folium
-    - utm
     - sphinx
     - numpydoc

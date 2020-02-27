@@ -85,22 +85,20 @@ def plot_fragility_curve(FC, fill=True, key='Default',
     
     return ax
 
-def plot_pump_curve(pump, add_polyfit=True, title='Pump curve', 
+def plot_pump_curve(pump, title='Pump curve', 
                     xmin=0, xmax=None, ymin=0, ymax=None, 
-                    xlabel='Head (m)', 
-                    ylabel='Flow (m3/s)',
+                    xlabel='Flow (m3/s)',
+                    ylabel='Head (m)', 
                     ax=None):
     """
-    Plot pump curve.
+    Plot points in the pump curve along with the pump curve polynomial using 
+    head curve coefficients (H = A - B*Q**C)
     
     Parameters
     -----------
     pump : wntr.network.elements.Pump object
         Pump
         
-    add_polyfit: bool (optional)
-        Add a 2nd order polynomial fit to the points in the curve
-    
     title : string (optional)
         Plot title
 
@@ -117,10 +115,10 @@ def plot_pump_curve(pump, add_polyfit=True, title='Pump curve',
         Y axis maximum (default = None)
     
     xlabel : string (optional)
-        X axis label (default = 'Head (m)')
+        X axis label (default = 'Flow (m3/s)')
     
     ylabel : string (optional)
-        Y axis label (default = 'Flow (m3/s)')
+        Y axis label (default = 'Head (m)')
     
     ax : matplotlib axes object, optional
         Axes for plotting (None indicates that a new figure with a single 
@@ -145,25 +143,27 @@ def plot_pump_curve(pump, add_polyfit=True, title='Pump curve',
         
     ax.set_title(title)
     
-    x = []
-    y = []
+    Q = []
+    H = []
     for pt in curve.points:
-        x.append(pt[0])
-        y.append(pt[1])
+        Q.append(pt[0])
+        H.append(pt[1])
+ 
+    try:
+        coeff = pump.get_head_curve_coefficients()
+        A = coeff[0]
+        B = coeff[1]
+        C = coeff[2]
+        
+        Q_max = (A/B)**(1/C)
+        q = np.linspace(0, Q_max, 50)
+        h = A - B*q**C
+        
+        ax.plot(q, h, '--', linewidth=1)
+    except:
+        pass
     
-    if add_polyfit:
-        z = np.polyfit(x, y, 2)
-        f = np.poly1d(z)
-        fx = np.linspace(0, f.roots[-1], 50)
-        fy = f(fx)
-        ax.plot(fx, fy, '--', linewidth=1)
-    
-    ax.plot(x, y, 'o', label=curve.name)    
-    
-    if xmax is None:
-        xmax = max(fx+fx/20)
-    if ymax is None:
-        ymax = max(fy+fy/20)
+    ax.plot(Q, H, 'o', label=curve.name)    
     
     ax.set_xlim((xmin,xmax))
     ax.set_ylim((ymin,ymax))
