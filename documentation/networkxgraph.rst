@@ -22,7 +22,10 @@ Multiple links with the same start and end node can be used to represent redunda
 A NetworkX graph generated from a water network model stores 
 the start and end node of each link, 
 node coordinates, 
-and node and link types (i.e., tank, reservoir, valve). 
+and node and link types (i.e., tank, reservoir, valve).
+NetworkX includes numerous methods to analyze the structure of complex networks.
+For more information on NetworkX, see https://networkx.github.io/.
+
 
 .. _fig-graph:
 .. figure:: figures/graph.png
@@ -31,13 +34,6 @@ and node and link types (i.e., tank, reservoir, valve).
 
    Example directed multigraph.
    
-NetworkX includes numerous methods to analyze the structure of complex networks.
-For more information on NetworkX, see https://networkx.github.io/.
-WNTR includes a custom Graph Class, 
-:class:`~wntr.network.graph.WntrMultiDiGraph`.
-This class inherits from NetworkX MultiDiGraph and includes additional methods 
-that are specific to WNTR. 
-
 A NetworkX directed multigraph can an be obtained from a WaterNetworkModel using 
 the following function:
 
@@ -74,6 +70,8 @@ The graph can be used to access NetworkX methods, for example:
     >>> closeness_centrality = nx.closeness_centrality(G)
     >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute=closeness_centrality)
 
+See :ref:`topographic_metrics` for more information.
+
 Additional network types
 -------------------------------------------------
 Some methods in NetworkX require that networks are undirected, connected, 
@@ -96,16 +94,16 @@ The following NetworkX method can be used to check if a graph is connected:
     >>> nx.is_connected(uG)
     True
 
-A **weighted graph** is a graph in which each link is given a weight.  
-The WNTR method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` can 
-be used to weight the graph by any attribute.
+A **weighted graph** is a graph in which each node and/or link is given a weight.  
+The WNTR method :class:`~wntr.network.model.WaterNetworkModel.get_graph` 
+can be used to weight the graph by node and/or link attributes.
 In the following example, the graph is weighted by length. This graph can then 
 be used to compute path lengths:
 
 .. doctest::
 
     >>> length = wn.query_link_attribute('length')
-    >>> G.weight_graph(link_attribute=length)
+    >>> wG = wn.get_graph(wn, link_weight=length) # weighted directed multigraph
 	
 A **simple graph** is a graph with one edge between nodes.
 The following NetworkX method can be used to convert a multigraph to a simple graph:

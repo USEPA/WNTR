@@ -15,6 +15,6 @@ Submodules
    wntr.network.controls
    wntr.network.elements
    wntr.network.model
-   wntr.network.graph
+   wntr.network.layer
    wntr.network.options
 
