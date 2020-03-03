@@ -2163,8 +2163,22 @@ class NodeRegistry(Registry):
             raise ValueError("Initial tank level must be greater than or equal to the tank minimum level.")
         if init_level > max_level:
             raise ValueError("Initial tank level must be less than or equal to the tank maximum level.")
-        if vol_curve and not isinstance(vol_curve, six.string_types):
-            raise ValueError('Volume curve name must be a string')
+        if not vol_curve is None:
+            if not isinstance(vol_curve, six.string_types):
+                raise ValueError('Volume curve name must be a string')
+            elif not vol_curve in self._curve_reg.volume_curve_names:
+                raise ValueError('The volume curve ' + vol_curve + ' is not one of the curves in the ' +
+                                 'list of volume curves. Valid volume curves are:' + 
+                                 str(self._curve_reg.volume_curve_names))
+            vcurve = np.array(self._curve_reg[vol_curve].points)
+            if min_level < vcurve[0,0]:
+                raise ValueError('The volume curve ' + vol_curve + ' has a minimum value ({0:5.2f}) \n' +
+                                 'greater than the minimum level for tank "' + name + '" ({1:5.2f})\n' +
+                                 'please correct the user input.'.format(vcurve[0,0],min_level))
+            elif max_level > vcurve[-1,0]:
+                raise ValueError('The volume curve ' + vol_curve + ' has a maximum value ({0:5.2f}) \n' +
+                                 'less than the maximum level for tank "' + name + '" ({1:5.2f})\n' +
+                                 'please correct the user input.'.format(vcurve[-1,0],max_level))
         tank = Tank(name, self)
         tank.elevation = elevation
         tank.init_level = init_level

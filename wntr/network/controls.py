@@ -752,7 +752,23 @@ class TankLevelCondition(ValueCondition):
             raise ValueError('TankLevelConditions only support <= and >= relations.')
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
-        self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
+        # this is used to see if backtracking is needed
+        self._last_value = getattr(self._source_obj, self._source_attr)  
+        # avoid running interp on the same value every time on the static 
+        # threshold and having to build a numpy array every time this
+        # curve is evaluated.
+        if not self._source_obj.vol_curve is None:
+            self._vol_curve_array = np.array(self._source_obj.vol_curve.points)
+            if source_attr == 'head':
+                level = self._threshold - self._source_obj.elevation
+            elif source_attr == 'level':
+                level = self._threshold
+            else:
+                raise NotImplementedError("Pressure tank value conditions with a " + 
+                                             "volume curve have not been implemented.")
+            self._threshold_volume = np.interp(level,
+                                               self._vol_curve_array[:,0],
+                                               self._vol_curve_array[:,1])
 
     def _compare(self, other):
         """
@@ -778,7 +794,7 @@ class TankLevelCondition(ValueCondition):
 
     def evaluate(self):
         self._backtrack = 0  # no backtracking is needed unless specified in the if statement below
-        cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level
+        cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level, head, or pressure
         thresh_value = self._threshold
         relation = self._relation
         if relation is Comparison.gt:
@@ -798,7 +814,21 @@ class TankLevelCondition(ValueCondition):
             # slightly beyond the threshold. This ensures that relation(self._last_value, thresh_value) will be True
             # next time. This prevents us from computing very small backtrack values over and over.
             if self._source_obj.demand != 0:
-                self._backtrack = int(math.floor((cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand))
+                if self._source_obj.vol_curve is None:
+                    self._backtrack = int(math.floor((cur_value - thresh_value)
+                             *math.pi/4.0*self._source_obj.diameter**2
+                             /self._source_obj.demand))
+                else: # a volume curve must be used instead
+                    if self._source_attr == 'head':
+                        level = cur_value - self._source_obj.elevation
+                    else: 
+                        level = cur_value
+                    cur_value_volume = np.interp(level,
+                                                 self._vol_curve_array[:,0],
+                                                 self._vol_curve_array[:,1])
+                    self._backtrack = int(math.floor((cur_value_volume 
+                                                      - self._threshold_volume) 
+                                                      / self._source_obj.demand))
         self._last_value = cur_value  # update the last value
         return bool(state)
 

@@ -11,10 +11,18 @@ netdir = join(testdir,'..','..','examples','networks')
 
 
 def test_annual_network_cost():
+    # added to test cost interpolation for a multi-point volume curve on a tank.
+    inp_file = join(datadir,'Anytown_multipointcurves.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    
+    cost = wntr.metrics.annual_network_cost(wn)    
+    
+    # Actual test on cost.
     inp_file = join(netdir,'Net1.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
     
     cost = wntr.metrics.annual_network_cost(wn)
+    
     raise SkipTest # this is not fully verified
     assert_almost_equal(cost, 0,0) #460147,0) 
 
@@ -27,3 +35,4 @@ def test_annual_ghg_emissions():
     
 if __name__ == '__main__':
     test_annual_network_cost()
+    test_annual_ghg_emissions()

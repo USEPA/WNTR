@@ -928,7 +928,11 @@ class WNTRSimulator(WaterNetworkSimulator):
                 if self._wn.sim_time % self._report_timestep == 0:
                     wntr.sim.hydraulics.save_results(self._wn, node_res, link_res)
                     if len(results.time) > 0 and int(self._wn.sim_time) == results.time[-1]:
-                        raise RuntimeError('Simulation already solved this timestep')
+                        if int(self._wn.sim_time) != self._wn.sim_time:
+                            raise RuntimeError('Time steps increments smaller than 1 second are forbidden.'+
+                                               ' Keep time steps as an integer number of seconds.')
+                        else:
+                            raise RuntimeError('Simulation already solved this timestep')
                     results.time.append(int(self._wn.sim_time))
             elif self._report_timestep.upper() == 'ALL':
                 wntr.sim.hydraulics.save_results(self._wn, node_res, link_res)

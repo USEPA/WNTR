@@ -1,16 +1,13 @@
 from __future__ import print_function
 import unittest
 import sys
-import os
-import time
-import numpy as np
 from os.path import abspath, dirname, join
 import pandas
 
 pandas.set_option('display.max_rows', 10000)
 
 testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir,'networks_for_testing')
+test_networkdir = join(testdir,'networks_for_testing')
 ex_datadir = join(testdir,'..','..','examples','networks')
 results_dir = join(testdir,'performance_results')
 
@@ -45,11 +42,11 @@ class TestPerformance(unittest.TestCase):
         flow_diff_abs_threshold = 1e-5
         rel_threshold = 1e-3
         
-        inp_file = join(test_datadir, 'Anytown_multipointcurves.inp')
+        inp_file = join(test_networkdir, 'Anytown_multipointcurves.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         # Apply a curve that is very fine along H = a - b * Q ** c and 
-        # verify the answers are nearly identical.
+        # verify the answers are nearly identical under these conditions.
         A = 1.313e3
         B = 8.705e-6
         C = 1.796e0
@@ -134,11 +131,3 @@ class TestPerformance(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-    
-    
-    #import cProfile, pstats
-    #from pstats import SortKey
-    
-    #cProfile.run('unittest.main()')
-    #p = pstats.Stats('profile_results')
-    #p.sort_stats(SortKey.CUMULATIVE).print_stats(100)
