@@ -19,3 +19,4 @@ temp.rpt
 examples/*.inp
 wntr/tests/*.png
 wntr/tests/performance_results
+wntr/tests/test_head_pump_coefficients_TEMP.py
