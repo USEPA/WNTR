@@ -3,13 +3,13 @@ The wntr.morph.skel module contains functions to skeletonize water
 network models.
 """
 import logging
+import copy
 import itertools
 import networkx as nx
     
 from wntr.network.elements import Pipe, Junction
 from wntr.sim.core import WNTRSimulator
 from wntr.sim import EpanetSimulator
-from wntr.morph.node import _deepcopy_wn
 
 logger = logging.getLogger(__name__)
 
@@ -24,41 +24,41 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
     Parameters
     -------------
     wn: wntr WaterNetworkModel
-        A WaterNetworkModel object
-    
+        Water network model
     pipe_diameter_threshold: float 
         Pipe diameter threshold used to determine candidate pipes for 
         skeletonization
-    
-    branch_trim: bool (optional, default = True)
-        Include branch trimming in skeletonization
-    
-    series_pipe_merge: bool (optional, default = True)
-        Include series pipe merge in skeletonization
-        
-    parallel_pipe_merge: bool (optional, default = True)
-        Include parallel pipe merge in skeletonization
-        
-    max_cycles: int or None (optional, default = None)
-        Defines the maximum number of cycles in the skeletonization process. 
+    branch_trim: bool, optional
+        If True, include branch trimming in skeletonization
+    series_pipe_merge: bool, optional
+        If True, include series pipe merge in skeletonization
+    parallel_pipe_merge: bool, optional
+        If True, include parallel pipe merge in skeletonization
+    max_cycles: int or None, optional
+        Maximum number of cycles in the skeletonization process. 
         One cycle performs branch trimming for all candidate pipes, followed
         by series pipe merging for all candidate pipes, followed by parallel 
         pipe merging for all candidate pipes. If max_cycles is set to None, 
         skeletonization will run until the network can no longer be reduced.
-        
-    use_epanet: bool (optional)
-        If True, use the EpanetSimulator to compute headloss in pipes.  If False, 
-        use the WNTRSimulator to compute headloss in pipes
-    
-    return_map: bool (optional, default = False)
-        Return a skeletonization map.   The map is a dictionary 
+    use_epanet: bool, optional
+        If True, use the EpanetSimulator to compute headloss in pipes.  
+        If False, use the WNTRSimulator to compute headloss in pipes.
+    return_map: bool, optional
+        If True, return a skeletonization map. The map is a dictionary 
         that includes original nodes as keys and a list of skeletonized nodes 
         that were merged into each original node as values.
-                
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
+        
     Returns
     --------
-    A skeletonized WaterNetworkModel object and (if return_map = True) a 
-    skeletonization map.
+    wntr WaterNetworkModel
+        Skeletonized water network model
+    dictionary
+        Skeletonization map (if return_map = True) which includes original 
+        nodes as keys and a list of skeletonized nodes that were merged into 
+        each original node as values.
     """
     skel = _Skeletonize(wn, use_epanet, return_copy)
     
@@ -77,7 +77,7 @@ class _Skeletonize(object):
         
         if return_copy:
             # Get a copy of the WaterNetworkModel
-            self.wn = _deepcopy_wn(wn)
+            self.wn = copy.deepcopy(wn)
         else:
             self.wn = wn
         
