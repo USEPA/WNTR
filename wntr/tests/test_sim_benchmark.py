@@ -114,18 +114,18 @@ class Test_Benchmarks(unittest.TestCase):
         inp = self.ode_inp
         
         # change up the volume curve and make the pump curve nonlinear
-        self.ode_inp['vcurve'] = self._vol_curve1()
-        self.ode_inp['pC'] = 0.9
+        self.ode_inp['vcurve'] = array(self._vol_curve1())#[(x,x*pi*inp['D']**2/4.0) for x in range(54)]#
+        self.ode_inp['pC'] = 1.0
         epoint = (inp['pA']/inp['pB'])**(1/inp['pC'])
         pcurve = [(0.0,inp['pA']),
                   (0.5*epoint,inp['pA']-inp['pB']*(0.5*epoint)**inp['pC']),
                   (epoint,0.0)]
         # add the new curves to the model
         wn.add_curve('pcurve','HEAD',pcurve)
-        wn.add_curve('vcurve','VOLUME',self.ode_inp['vcurve'])
+        wn.add_curve('vcurve','VOLUME',self.ode_inp['vcurve'])#[(x,x*pi*inp['D']**2/4.0) for x in range(54)])#
         # now change the model
         t1 = wn.get_node('t1')
-        t1.volume_curve_name = 'vcurve'
+        t1.vol_curve_name = 'vcurve'
         pump1 = wn.get_link('pump1')
         pump1.pump_curve_name = 'pcurve'
         
@@ -142,7 +142,7 @@ class Test_Benchmarks(unittest.TestCase):
                                                               inp['pB'],
                                                               inp['pC'],
                                                               inp['dt_max'],
-                                                        array(inp['vcurve']))
+                                                              inp['vcurve'])
         
         create_graph = True
         if create_graph:
@@ -280,8 +280,12 @@ def single_reservoir_pump_pipe_tank_ode_solution(h20,D,d,L,C,tf,pA,pB,pC,
         h2 = x[1]
         dVdh2 = dVdh2_func(D,h2,vcurve,dh,h20)
         
-        return (Q/dVdh2) / (pB*pC * Q ** (pC-1.0) - (Q / (dVdh2)**2)/9.81 - L 
-                * 1.852 * 10.67 * Q**0.852 / (C**1.852 * d**4.8702)), Q / dVdh2 
+        try:
+            uu = ((Q/dVdh2) / (pB*pC * Q ** (pC-1.0) - (Q / (dVdh2)**2)/9.81 - L 
+                * 1.852 * 10.67 * Q**0.852 / (C**1.852 * d**4.8702)), Q / dVdh2 )
+            return uu[0], uu[1]
+        except:
+            print("What went wrong")
     
     
     dh = 0.0000001
@@ -298,9 +302,6 @@ def single_reservoir_pump_pipe_tank_ode_solution(h20,D,d,L,C,tf,pA,pB,pC,
     t = sol.t
     Q = sol.y[0,:]
     h2 = sol.y[1,:]
-    E_lost = zeros(len(h2))
-    for i,q in enumerate(Q):
-        E_lost[i] = L * S_hazen_will_si(q,C,d)
     
     return Q,t,h2
 
