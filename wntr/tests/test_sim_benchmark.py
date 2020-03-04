@@ -37,7 +37,7 @@ class Test_Benchmarks(unittest.TestCase):
                         'pB': 4.0,     # pump B coefficient
                         'pC': 1.0,     # pump C coefficient
                         'dt_max':1.0,   # maximum time step for the ode solution
-                        'dt_max_wntr':[100,1]}
+                        'dt_max_wntr':[1,10,50,100]}
         self.ode_inp = inp
 
         wn = self.wntr.network.WaterNetworkModel()
@@ -77,35 +77,35 @@ class Test_Benchmarks(unittest.TestCase):
         sim = self.sim
         inp = self.ode_inp
         
-#        # run the wntr model
-#        results = self._run_study(wn,sim)
-#        
-#        # run the ode solution
-#        Q,t,h2 = single_reservoir_pump_pipe_tank_ode_solution(inp['h20'],
-#                                                              inp['D'],
-#                                                              inp['d'],
-#                                                              inp['L'],
-#                                                              inp['C'],
-#                                                              inp['tf'],
-#                                                              inp['pA'],
-#                                                              inp['pB'],
-#                                                              inp['pC'],
-#                                                              inp['dt_max'])
-#
-#        hR2 = self._calc_wntr_ode_R2(results[0],t, h2, 'head', 't1', 'node')
-##        h_wntr_interp = interp(t,results[0].node['head']['t1'].index,
-##                               results[0].node['head']['t1'].values)
-##        hR2 = self._R2(h2,h_wntr_interp)
-#        self.assertLessEqual(0.95,hR2,msg="The WNTR numerical solution for tank head has R2" +
-#            " value less than 0.95 w/r to solution of an exact differential equation.")
-#
-#        QR2 = self._calc_wntr_ode_R2(results[0],t,Q,'flowrate','pump1','link')
-#        self.assertLessEqual(0.95,QR2,msg="The WNTR numerical solution for flow rate has R2" +
-#            " value less than 0.95 w/r to solution of an exact differential equation.")
-#        
-#        create_graph = True
-#        if create_graph:
-#            self._create_graph(t,Q,h2,inp['dt_max_wntr'],results,"constant_diameter")
+        # run the wntr model
+        results = self._run_study(wn,sim)
+        
+        # run the ode solution
+        Q,t,h2 = single_reservoir_pump_pipe_tank_ode_solution(inp['h20'],
+                                                              inp['D'],
+                                                              inp['d'],
+                                                              inp['L'],
+                                                              inp['C'],
+                                                              inp['tf'],
+                                                              inp['pA'],
+                                                              inp['pB'],
+                                                              inp['pC'],
+                                                              inp['dt_max'])
+
+        hR2 = self._calc_wntr_ode_R2(results[0],t, h2, 'head', 't1', 'node')
+#        h_wntr_interp = interp(t,results[0].node['head']['t1'].index,
+#                               results[0].node['head']['t1'].values)
+#        hR2 = self._R2(h2,h_wntr_interp)
+        self.assertLessEqual(0.95,hR2,msg="The WNTR numerical solution for tank head has R2" +
+            " value less than 0.95 w/r to solution of an exact differential equation.")
+
+        QR2 = self._calc_wntr_ode_R2(results[0],t,Q,'flowrate','pump1','link')
+        self.assertLessEqual(0.95,QR2,msg="The WNTR numerical solution for flow rate has R2" +
+            " value less than 0.95 w/r to solution of an exact differential equation.")
+        
+        create_graph = True
+        if create_graph:
+            self._create_graph(t,Q,h2,inp['dt_max_wntr'],results,"constant_diameter")
         
     def test_wntr_vs_ode_vcurve(self):
         
