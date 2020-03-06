@@ -284,7 +284,7 @@ class Tank(Node):
     
     
     def get_volume(self, level=None):
-        """Obtain the volume of the tank for a given level
+        """Obtain the volume of this tank for a given level
         
         Parameters
         ----------
@@ -294,6 +294,11 @@ class Tank(Node):
             tank level value.
             Level is equivalent to depth of fluid in the tank. Tank level is 
             equal to the tank head minus the tank elevation (height of the base)
+            
+        Returns
+        -------
+        vol: float 
+            Tank volume at level or at self.level if level=None
         """
         
         if self.vol_curve is None:
