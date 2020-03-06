@@ -281,6 +281,23 @@ class Tank(Node):
     def level(self):
         """Returns tank level (head - elevation)"""
         return self.head - self.elevation
+    
+    
+    def get_volume(self, level=None):
+        if self.vol_curve is None:
+            A = (np.pi / 4.0 * self.diameter ** 2)
+            if level is None:
+                level = self.level 
+            vol = A * level
+        else:
+            arr = np.array(self.vol_curve.points)
+            if level is None:
+                level = self.level
+            vol = np.interp(level,arr[:,0],arr[:,1])
+        return vol
+            
+            
+
 
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """

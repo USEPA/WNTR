@@ -754,21 +754,7 @@ class TankLevelCondition(ValueCondition):
         assert source_attr in {'level', 'pressure', 'head'}
         # this is used to see if backtracking is needed
         self._last_value = getattr(self._source_obj, self._source_attr)  
-        # avoid running interp on the same value every time on the static 
-        # threshold and having to build a numpy array every time this
-        # curve is evaluated.
-        if not self._source_obj.vol_curve is None:
-            self._vol_curve_array = np.array(self._source_obj.vol_curve.points)
-            if source_attr == 'head':
-                level = self._threshold - self._source_obj.elevation
-            elif source_attr == 'level':
-                level = self._threshold
-            else:
-                raise NotImplementedError("Pressure tank value conditions with a " + 
-                                             "volume curve have not been implemented.")
-            self._threshold_volume = np.interp(level,
-                                               self._vol_curve_array[:,0],
-                                               self._vol_curve_array[:,1])
+
 
     def _compare(self, other):
         """
@@ -813,21 +799,27 @@ class TankLevelCondition(ValueCondition):
             # be slightly later than when the tank level hits the threshold. This ensures the tank level will go
             # slightly beyond the threshold. This ensures that relation(self._last_value, thresh_value) will be True
             # next time. This prevents us from computing very small backtrack values over and over.
-            if self._source_obj.demand != 0:
+            if self._source_obj.demand != 0 and not self._source_obj.demand is None:
                 if self._source_obj.vol_curve is None:
                     self._backtrack = int(math.floor((cur_value - thresh_value)
                              *math.pi/4.0*self._source_obj.diameter**2
                              /self._source_obj.demand))
                 else: # a volume curve must be used instead
                     if self._source_attr == 'head':
+                        thresh_level = thresh_value - self._source_obj.elevation
                         level = cur_value - self._source_obj.elevation
-                    else: 
+                    elif self._source_attr == 'level':
+                        thresh_level = thresh_value
                         level = cur_value
-                    cur_value_volume = np.interp(level,
-                                                 self._vol_curve_array[:,0],
-                                                 self._vol_curve_array[:,1])
+                    else:
+                        raise NotImplementedError("Pressure tank value conditions with a " + 
+                                                     "volume curve have not been implemented.")
+                    
+                    cur_value_volume = self._source_obj.get_volume(level)
+                    thresh_volume = self._source_obj.get_volume(thresh_level)
+                    
                     self._backtrack = int(math.floor((cur_value_volume 
-                                                      - self._threshold_volume) 
+                                                      - thresh_volume) 
                                                       / self._source_obj.demand))
         self._last_value = cur_value  # update the last value
         return bool(state)

@@ -7,11 +7,10 @@ Created on Mon Mar  2 17:30:22 2020
 import unittest
 from os.path import abspath, dirname, join
 from nose.tools import *
-import wntr
 from scipy.optimize import fsolve
 from scipy.integrate import solve_ivp
 
-from numpy import pi, arange,squeeze,array, zeros,sqrt, interp, mean, exp, log
+from numpy import pi, arange,squeeze,array, zeros,sqrt, interp, mean, exp, log, concatenate
 from matplotlib import pyplot as plt
 
 testdir = dirname(abspath(str(__file__)))
@@ -109,25 +108,15 @@ class Test_Benchmarks(unittest.TestCase):
         
     def test_wntr_vs_ode_vcurve(self):
         
+        self._prepare_pump_and_vol_curve()
+        
+        self._delete_controls()
+        
         wn = self.wn
         sim = self.sim
         inp = self.ode_inp
         
-        # change up the volume curve and make the pump curve nonlinear
-        self.ode_inp['vcurve'] = array(self._vol_curve1())#[(x,x*pi*inp['D']**2/4.0) for x in range(54)]#
-        self.ode_inp['pC'] = 1.0
-        epoint = (inp['pA']/inp['pB'])**(1/inp['pC'])
-        pcurve = [(0.0,inp['pA']),
-                  (0.5*epoint,inp['pA']-inp['pB']*(0.5*epoint)**inp['pC']),
-                  (epoint,0.0)]
-        # add the new curves to the model
-        wn.add_curve('pcurve','HEAD',pcurve)
-        wn.add_curve('vcurve','VOLUME',self.ode_inp['vcurve'])#[(x,x*pi*inp['D']**2/4.0) for x in range(54)])#
-        # now change the model
-        t1 = wn.get_node('t1')
-        t1.vol_curve_name = 'vcurve'
-        pump1 = wn.get_link('pump1')
-        pump1.pump_curve_name = 'pcurve'
+
         
         # increase the duration of the simulation to capture saturation
         inp['tf'] = 800.0
@@ -162,12 +151,105 @@ class Test_Benchmarks(unittest.TestCase):
             " value less than 0.80 w/r to solution of an exact differential equation.")
         
         
+    def test_wntr_vs_ode_tank_control(self):
+        
+        self._prepare_pump_and_vol_curve()
+        
+        wn = self.wn
+        wntr = self.wntr
+        sim = self.sim
+        cntrl = wntr.network.controls
+        inp = self.ode_inp
+        
+        wn.add_pipe("bypass_pump1","r1","j1",length=5.0,diameter=inp['d'])
+        bypass_pump1 = wn.get_link("bypass_pump1")
+        # this pipe is not open unless the pump closes.
+        bypass_pump1.status = 0
+        
+        pump1 = wn.get_link("pump1")
+        t1 = wn.get_node("t1")
+        cond1 = cntrl.ValueCondition(t1,'level','>', 45)
+        cond2 = cntrl.ValueCondition(t1,'level','<', 40)
+        
+        act1 = cntrl.ControlAction(pump1,'status',0)
+        act2 = cntrl.ControlAction(pump1,'status',1)
+        act3 = cntrl.ControlAction(bypass_pump1,'status',1)
+        act4 = cntrl.ControlAction(bypass_pump1,'status',0)
+        rule1 = cntrl.Rule(cond1, [act1,act3], name="turn_off_pump")
+        rule2 = cntrl.Rule(cond2, [act2,act4], name="start_pump")
+        
+        wn.add_control("pump_off_bypass_open",rule1)
+        wn.add_control("pump_on_bypass_closed",rule2)
+        
+        inp['tf'] = 1200
+        wn.options.time.duration=inp['tf']
+        
+        results = self._run_study(wn,sim)
+        
+        # run the ode solution
+        Q,t,h2 = single_reservoir_pump_pipe_tank_ode_solution(inp['h20'],
+                                                              inp['D'],
+                                                              inp['d'],
+                                                              inp['L'],
+                                                              inp['C'],
+                                                              inp['tf'],
+                                                              inp['pA'],
+                                                              inp['pB'],
+                                                              inp['pC'],
+                                                              inp['dt_max'],
+                                                              inp['vcurve'],
+                                                              True,
+                                                              195.0,
+                                                              190.0)
+
+        create_graph = True
+        if create_graph:
+            self._create_graph(t,Q,h2,inp['dt_max_wntr'],results,"vcurve_and_controls")
+            
+        hR2 = self._calc_wntr_ode_R2(results[0],t, h2, 'head', 't1', 'node')
+
+        self.assertLessEqual(0.9,hR2,msg="The WNTR numerical solution for tank head has R2" +
+            " value less than 0.80 w/r to solution of an exact differential equation.")
+
+        QR2 = self._calc_wntr_ode_R2(results[0],t,Q,'flowrate','pump1','link')
+        self.assertLessEqual(0.05,QR2,msg="The WNTR numerical solution for flow rate has R2" +
+            " value less than 0.80 w/r to solution of an exact differential equation.")
+              
+    
+    def _prepare_pump_and_vol_curve(self):
+        """ change up the volume curve and make the pump curve nonlinear"""
+        if not 'vcurve' in self.ode_inp.keys():
+            self.ode_inp['vcurve'] = array(self._vol_curve1())
+            self.ode_inp['pC'] = 1.2
+            epoint = (self.ode_inp['pA']/self.ode_inp['pB'])**(1/self.ode_inp['pC'])
+            pcurve = [(0.0,self.ode_inp['pA']),
+                      (0.5*epoint,self.ode_inp['pA']-self.ode_inp['pB']*
+                       (0.5*epoint)**self.ode_inp['pC']),
+                      (epoint,0.0)]
+            # add the new curves to the model
+            self.wn.add_curve('pcurve','HEAD',pcurve)
+            self.wn.add_curve('vcurve','VOLUME',self.ode_inp['vcurve'])#[(x,x*pi*inp['D']**2/4.0) for x in range(54)])#
+            # now change the model
+            t1 = self.wn.get_node('t1')
+            t1.vol_curve_name = 'vcurve'
+            pump1 = self.wn.get_link('pump1')
+            pump1.pump_curve_name = 'pcurve'
+    
+    def _delete_controls(self):
+        try:
+            self.wn.remove_control("pump_off_bypass_open")
+            self.wn.remove_control("pump_on_bypass_closed")
+            self.wn.remove_link("bypass_pump1")
+        except:
+            pass
+        
     def _run_study(self,wn,sim):
         results = []
         dt_max_wntr = self.ode_inp['dt_max_wntr']
         for dtmax in dt_max_wntr:
             wn.options.time.hydraulic_timestep=dtmax
             wn.options.time.report_timestep=dtmax
+            wn.options.time.rule_timestep=dtmax
             result = sim.run_sim()
             results.append(result)
             wn.reset_initial_values()
@@ -177,7 +259,7 @@ class Test_Benchmarks(unittest.TestCase):
         """volume curve that has the same volume as the 1meter diameter 
            cylindrical tank at d=50"""
         return [(d,(pi/200.0)*d**2) 
-                                for d in arange(0,55)]
+                                for d in arange(0,100)]
     
     def _calc_wntr_ode_R2(self,wntr_res,t,ode_res,var_str,name,attrname):
         wntr_res_attr = getattr(wntr_res,attrname)
@@ -213,7 +295,10 @@ class Test_Benchmarks(unittest.TestCase):
         return 1 - ss_res / ss_tot
 
 def single_reservoir_pump_pipe_tank_ode_solution(h20,D,d,L,C,tf,pA,pB,pC,
-                                                 dt_max,vcurve=None):
+                                                 dt_max,vcurve=None,
+                                                 include_pump_control=False,
+                                                 pump_off_level=0,
+                                                 pump_back_on_level=0):
     """This produces a numerical solution to a water network that involves
        1 reservoir, 1 pump extracting water from the reservoir, a single pipe
        through which the water runs uphill with frictional losses, and a 
@@ -256,6 +341,9 @@ def single_reservoir_pump_pipe_tank_ode_solution(h20,D,d,L,C,tf,pA,pB,pC,
         H1 = pump_func(Q,pA,pB,pC)
         return H1 - H2 - L * S_hazen_will_si(Q,C,d)
     
+    def energy_balance_no_pump(Q,h2,d,D,L,C,vcurve,dh,h20):
+        return (4.0*Q/(pi * d**2.0))**2/(2*9.81) - v_head(Q,d,h2,vcurve,dh,h20) - h2 + L * S_hazen_will_si(Q,C,d)
+    
     def v_head(Q,diam,h2,vcurve,dh,h20):
         dVdh2 = dVdh2_func(D,h2,vcurve,dh,h20)
         return (Q/dVdh2)**2.0 / (2 * 9.81)
@@ -271,29 +359,58 @@ def single_reservoir_pump_pipe_tank_ode_solution(h20,D,d,L,C,tf,pA,pB,pC,
             raise ValueError("The depth-volume curve must not have a zero slope!")
         return dVdh2
     
-    def diff_eq(t,x,d,D,C,L,pA,pB,pC,vcurve,dh,h20):
+    def diff_eq(t,x,d,D,C,L,pA,pB,pC,vcurve,dh,h20,pump_on):
         # this can be derived from differentiating the energy balance and considering
         # the head gain integral of the tank becomes dh/dt = Q/A
         # the return is for dQ/dt and dh/dt
         Q = x[0]
         h2 = x[1]
-        dVdh2 = dVdh2_func(D,h2,vcurve,dh,h20)
         
-        try:
-            if t > 300:
-                pass
             
-            uu = ((Q/dVdh2) / (pB*pC * Q ** (pC-1.0) - (Q / (dVdh2)**2)/9.81 - L 
-                * 1.852 * 10.67 * Q**0.852 / (C**1.852 * d**4.8702)), Q / dVdh2 )
-            return uu[0], uu[1]
-        except:
-            print("What went wrong")
+
+            
+        if pump_on:
+            dVdh2 = dVdh2_func(D,h2,vcurve,dh,h20)
+            HZ_WIL = L * 1.852 * 10.67 * Q**0.852 / (C**1.852 * d**4.8702)
+            uu = ((Q/dVdh2) / (pB*pC * Q ** (pC-1.0) - (Q / (dVdh2)**2)/9.81 - 
+                   HZ_WIL), Q / dVdh2 )
+        else:
+            dVdh2 = dVdh2_func(D,h2,vcurve,-dh,h20)
+            HZ_WIL = L * 1.852 * 10.67 * (-Q)**0.852 / (C**1.852 * d**4.8702)
+            uu = (9.81*dVdh2 / (1.0 - (9.81*dVdh2**2*(HZ_WIL)/Q)), Q / dVdh2)
+            
+        return uu[0], uu[1] 
     
+    def choose_event(t,x,next_is_pump_on,event_1_threshold,event_2_threshold,include_pump_controls):
+        if include_pump_controls:
+            if not next_is_pump_on:
+                return pump_off_if_above_thresh(t,x,event_1_threshold)
+            else:
+                return pump_on_if_below_thresh(t,x,event_2_threshold)
+        else:
+            return 1.0
+
+    def pump_off_if_above_thresh(t, x,thresh):
+        h2 = x[1]
+        if h2 < thresh:
+            pump_on = 1.0
+        else:
+            pump_on = -1.0
+        return pump_on
+    
+    def pump_on_if_below_thresh(t,x,thresh):
+        h2 = x[1]
+        if h2 > thresh:
+            pump_off = 1.0
+        else:
+            pump_off = -1.0
+        return pump_off
     
     if h20 > pA:
         raise ValueError("The selected pump is incapable of pumping water into the tank!")
     
     dh = 0.0000001
+
     # first solve the initial state 
     Q0_list = [exp(log((pA-h20)/pB)/pC)]  # this is the solution with zero friction losses
     Q0 = fsolve(energy_balance_time0, Q0_list, args=(h20,d,D,L,C,pA,pB,pC,vcurve,dh,h20))
@@ -302,11 +419,45 @@ def single_reservoir_pump_pipe_tank_ode_solution(h20,D,d,L,C,tf,pA,pB,pC,
     assert abs(energy_balance_time0(Q0,h20,d,D,L,C,pA,pB,pC,vcurve,dh,h20)) <= 0.00001
     
     # now solve the differential equation
-    sol = solve_ivp(lambda t,x:diff_eq(t,x,d,D,C,L,pA,pB,pC,vcurve,dh,h20),
-                    (0.0,tf),array([Q0,h20]),max_step=dt_max)
-    t = sol.t
-    Q = sol.y[0,:]
-    h2 = sol.y[1,:]
+    pump_on = True
+    sol = []
+    tmax = 0.0
+    next_is_1 = True
+    h2_start = h20
+    while (tmax < tf):
+        event_func = lambda t,x:choose_event(t,x,not pump_on,pump_off_level,pump_back_on_level,include_pump_control)
+        event_func.terminal = True
+        temp_sol = solve_ivp(lambda t,x:diff_eq(t,x,d,D,C,L,pA,pB,pC,vcurve,dh,
+                                                 h20,pump_on),
+                    (tmax,tf),array([Q0,h2_start]),max_step=dt_max,
+                    
+                    events=event_func)
+        tmax = max(temp_sol.t)
+        if tmax < tf:
+            next_is_1 = not next_is_1
+            pump_on = not pump_on
+            h2_start = temp_sol.y[1,-1]
+            Q0_list = [0.1]
+            if pump_on:
+                Q0 = fsolve(energy_balance_time0, Q0_list, args=(h2_start,d,D,L,C,pA,pB,pC,vcurve,dh,h20))
+                assert abs(energy_balance_time0(Q0,h2_start,d,D,L,C,pA,pB,pC,vcurve,dh,h20)) <= 0.00001
+            else:
+                try:
+                    Q0 = fsolve(energy_balance_no_pump, Q0_list,args=(h2_start,d,D,L,C,vcurve,dh,h20) )
+                except:
+                    raise RuntimeError("The nonlinear solver for no-pump conditions failed!")
+                assert abs(energy_balance_no_pump(Q0,h2_start,d,D,L,C,vcurve,dh,h20)) <= 0.00001
+                Q0 = -Q0
+            
+            
+        sol.append(temp_sol)
+    t = array([])
+    Q = array([])
+    h2 = array([])
+    for sl in sol:
+        t = concatenate((t,sl.t),axis=0)
+        Q = concatenate((Q,sl.y[0,:]))
+        h2 = concatenate((h2,sl.y[1,:]))
     
     return Q,t,h2
 
