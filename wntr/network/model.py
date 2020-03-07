@@ -2140,8 +2140,19 @@ class NodeRegistry(Registry):
             Maximum tank level.
         diameter : float
             Tank diameter.
+            
+            If no volume curve is supplied, then this is the constant diameter
+            of a cylindrical tank. If a volume curve name (vol_curve) is supplied,
+            then this is the diameter of the tank for supports below the tank
+            which is not used in hydraulic analysis but is used for economic
+            analysis of the tank cost.
         min_vol : float
             Minimum tank volume.
+            
+            this variable only has an effect for constant diameter tanks. Otherwise,
+            the volume curve vol_curve limited by min_level and max_level takes
+            precidence in defining how the tank performs.
+            
         vol_curve : str
             Name of a volume curve (optional)
         coordinates : tuple of floats

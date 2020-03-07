@@ -207,6 +207,17 @@ class Tank(Node):
         Name of the tank.
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object the tank will belong to
+        
+    Tank volume can either be governed by a constant diameter or it can
+    be governed by a volume curve. If the tank has a volume curve, the 
+    diameter has no effect on WNTR hydraulic calculations but does represent the
+    diameter of supports below the tank for economic analysis. 
+    
+    This class is intended to be instantiated through the 
+    
+    wntr.network.model.WaterNetworkModel.add_tank()
+    
+    method. 
 
     """
 
