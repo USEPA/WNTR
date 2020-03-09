@@ -187,7 +187,7 @@ The following example uses simulation results from above, and converts the graph
 .. doctest::
 
     >>> tankH = results.node['pressure'].loc[:,wn.tank_name_list]
-    >>> tankH = tankH * 3.28084 # Convert tank heigh to ft
+    >>> tankH = tankH * 3.28084 # Convert tank head to ft
     >>> tankH.index /= 3600 # convert time to hours
     >>> ax = tankH.plot(legend=True)
     >>> text = ax.set_xlabel('Time (hr)')
