@@ -1,26 +1,6 @@
 """
 The wntr.network.options module includes simulation options.
 
-.. note:: 
-
-    This module has been changed in version wntr-2.3 to incorporate the new options 
-    that EPANET 2.2 requires. It also reorganizes certain options so that they are 
-    more consistent with EPANET's groupings and make more logical sense. Therefore, 
-    this change is not necessarily backwards compatible, particularly when trying to
-    use pickle files with options generated with wntr <= 2.2.
-    For example, the options previously contained in the old SolverOptions class have 
-    been moved to the HydraulicOptions class.
-
-    Additionally, this module has been modified to use the "attrs" package,
-    which is a better method of creating data structure classes than the manual 
-    method used previously. This change will require users to add the attrs 
-    package if they do not already have it.
-
-    In cases where the class constructor indicates "NOTHING" is the default argument,
-    this should be interpreted that there is a factory function that will generate a 
-    new, blank element of the appropriate type.
-
-
 .. rubric:: Contents
 
 .. autosummary::
@@ -35,11 +15,22 @@ The wntr.network.options module includes simulation options.
     EnergyOptions
     UserOptions
 
+
+.. note:: 
+
+    This module has been changed in version wntr-2.3 to incorporate the new options 
+    that EPANET 2.2 requires. It also reorganizes certain options so that they are 
+    more consistent with EPANET's groupings and make more logical sense. Therefore, 
+    this change is not necessarily backwards compatible, particularly when trying to
+    use pickle files with options generated with wntr <= 2.2.
+    For example, the options previously contained in the old SolverOptions class have 
+    been moved to the HydraulicOptions class.
+
+
 """
 import re
 import logging
-import attr
-from attr.validators import in_
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -81,52 +72,98 @@ def _new_param_opts():
     return ret
 
 
-@attr.s
-class TimeOptions(object):
+class _OptionsBase(object):
+    @classmethod
+    def factory(cls, val):
+        """Create an options object based on passing in an instance of the object, a dict, or a tuple"""
+        if isinstance(val, cls):
+            return val
+        elif isinstance(val, dict):
+            return cls(**val)
+        elif isinstance(val, (list, tuple)):
+            return cls(*val)
+        elif val is None:
+            return cls()
+        raise ValueError('Unknown type for %s.factory: %s',
+                         cls.__name__, type(val))
+
+    def __str__(self):
+        return "{}({})".format(self.__class__.__name__, ", ".join(["{}={}".format(k, repr(v)) for k, v in self.__dict__.items()]))
+    __repr__ = __str__
+
+    def __iter__(self):
+        for k, v in self.__dict__.items():
+            try: 
+                vv = dict(v)
+            except:
+                vv = v
+            yield k, vv
+
+    def __getitem__(self, index):
+        return self.__dict__[index]
+    
+    def __eq__(self, other):
+        for k in self.__dict__.keys():
+            if not self.__dict__[k] == other.__dict__[k]: return False
+        return True
+
+
+class TimeOptions(_OptionsBase):
     """
     Options related to simulation and model timing.
     
-    Attributes
+    Parameters
     ----------
-    duration : int, default 0
+    duration : int
         Simulation duration in seconds
-    hydraulic_timestep : int, default 3600
+    hydraulic_timestep : int
         Hydraulic timestep in seconds
-    quality_timestep : int, default 360
+    quality_timestep : int
         Water quality timestep in seconds 
-    rule_timestep : int, default 360
+    rule_timestep : int
         Rule timestep in seconds
-    pattern_timestep : int, default 3600
+    pattern_timestep : int
         Pattern timestep in seconds
-    pattern_start : int, default 0
+    pattern_start : int
         Time offset (in seconds) to find the starting pattern step; changes 
         where in pattern the pattern starts out, *not* what time the pattern 
         starts
-    report_timestep : int, default 3600
+    report_timestep : int
         Reporting timestep in seconds
-    report_start : int, default 0
+    report_start : int
         Start time of the report in seconds from the start of the simulation
     start_clocktime : int, default 0
         Time of day in seconds from 12 am at which the simulation begins
-    statistic: str, default='NONE' (off)
+    statistic: str
         Provide statistics rather than time series results in the report file.
         Options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the 
         EPANET User Manual)
     
     """
-    duration = attr.ib(default=0.0, converter=float)
-    hydraulic_timestep = attr.ib(default=3600.0, converter=float)
-    quality_timestep = attr.ib(default=360.0, converter=float)
-    rule_timestep = attr.ib(default=360.0, converter=float)
-    pattern_timestep = attr.ib(default=3600.0, converter=float)
-    pattern_start = attr.ib(default=0.0, converter=float)
-    report_timestep = attr.ib(default=3600.0, converter=float)
-    report_start = attr.ib(default=0.0, converter=float)
-    start_clocktime = attr.ib(default=0.0, converter=float)
-    statistic = attr.ib(default='NONE', validator=in_(['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE']))
     _pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     _pattern2 = re.compile(r'^(\d+):(\d+)$')
     _pattern3 = re.compile(r'^(\d+)$')
+    def __init__(self,
+                duration: float = 0.0,
+                hydraulic_timestep: float=3600.0,
+                quality_timestep: float=360.0,
+                rule_timestep: float=360.0,
+                pattern_timestep: float=3600.0,
+                pattern_start: float=0.0,
+                report_timestep: float=3600.0,
+                report_start: float=0.0,
+                start_clocktime: float=0.0,
+                statistic: str='NONE'):
+        self.duration = duration
+        self.hydraulic_timestep = hydraulic_timestep
+        self.quality_timestep = quality_timestep
+        self.rule_timestep = rule_timestep
+        self.pattern_timestep = pattern_timestep
+        self.pattern_start = pattern_start
+        self.report_timestep = report_timestep
+        self.report_start = report_start
+        self.start_clocktime = start_clocktime
+        self.statistic = statistic
 
     def __setattr__(self, name, value):
         if name == 'statistic':
@@ -139,31 +176,6 @@ class TimeOptions(object):
             except ValueError:
                 raise ValueError('%s must be a number', name)
         self.__dict__[name] = value
-
-    @classmethod
-    def factory(cls, val):
-        """Create an options object based on passing in an instance of the object, a dict, or a tuple"""
-        if isinstance(val, cls):
-            return val
-        elif isinstance(val, dict):
-            return cls(**val)
-        elif isinstance(val, (list, tuple)):
-            return cls(*val)
-        raise ValueError('Unknown type for %s.factory: %s',
-                         cls.__name__, type(val))
-
-    def todict(self):
-        """Dictionary representation of the options"""
-        return attr.asdict(self)
-    asdict = todict
-
-    def tostring(self):
-        """String representation of the time options"""
-        s = 'Time options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
 
     @classmethod
     def seconds_to_tuple(cls, sec):
@@ -271,15 +283,14 @@ class TimeOptions(object):
                     raise RuntimeError("Time format not recognized. ")
 
 
-@attr.s
-class GraphicsOptions(object):
+class GraphicsOptions(_OptionsBase):
     """
     Options related to graphics. 
     
     May be used to contain custom, user defined values. Default attributes 
     comprise the EPANET "backdrop" section options.
     
-    Attributes
+    Parameters
     ----------
     dimensions : 4-tuple or list
         (x, y, dx, dy) Dimensions for backdrop image 
@@ -291,123 +302,127 @@ class GraphicsOptions(object):
         Filename where image is located
     map_filename : string
         Filename used to store node coordinates in (node, x, y) format
-    """
-    dimensions = attr.ib(default=None)
-    units = attr.ib(default=None)
-    offset = attr.ib(default=None)
-    image_filename = attr.ib(default=None)
-    map_filename = attr.ib(default=None)
-
-    @classmethod
-    def factory(cls, val):
-        """Create an options object based on passing in an instance of the object, a dict, or a tuple"""
-        if isinstance(val, cls):
-            return val
-        elif isinstance(val, dict):
-            return cls(**val)
-        elif isinstance(val, (list, tuple)):
-            return cls(*val)
-        raise ValueError('Unknown type for %s.factory: %s',
-                         cls.__name__, type(val))
-
-    def todict(self):
-        """Dictionary representation of the options"""
-        return attr.asdict(self)
-    asdict = todict
-
-    def tostring(self):
-        """String representation of the graphics options"""
-        s = 'Graphics options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
     
+    """
+    def __init__(self,
+                 dimensions: list = None,
+                 units: str = None,
+                 offset: list = None,
+                 image_filename: str = None,
+                 map_filename: str = None):
+        self.dimensions = dimensions
+        self.units = units
+        self.offset = offset
+        self.image_filename = image_filename
+        self.map_filename = map_filename
 
-@attr.s
-class HydraulicOptions(object): 
+
+class HydraulicOptions(_OptionsBase): 
     """
     Options related to hydraulic model, including hydraulics. 
     
-    Attributes
+    Parameters
     ----------
-    headloss : str, default 'H-W'
+    headloss : str
         Formula to use for computing head loss through a pipe. Options are H-W, 
         D-W, and C-M
-    hydraulics : str, default None
+    hydraulics : str
         Indicates if a hydraulics file should be read in or saved; options are 
         None, USE and SAVE (default None)
     hydraulics_filename : str
         Filename to use if hydraulics = SAVE
-    viscosity : float, default 1.0
+    viscosity : float
         Kinematic viscosity of the fluid
-    specific_gravity : float, default 1.0
+    specific_gravity : float
         Specific gravity of the fluid 
-    pattern : str, default None
+    pattern : str
         Name of the default pattern for junction demands. If None, the 
         junctions with demands but without patterns will be held constant
-    demand_multiplier : float, default 1.0
+    demand_multiplier : float
         The demand multiplier adjusts the values of baseline demands for all 
         junctions
-    emitter_exponent : float, default 0.5
+    emitter_exponent : float
         The exponent used when computing flow from an emitter
-    minimum_pressure : float, default 0.0
+    minimum_pressure : float
         The minimum nodal pressure - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
-    required_pressure: float, default 0.0
+    required_pressure: float
         The required nodal pressure - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
-    pressure_exponent: float, default 0.5
+    pressure_exponent: float
         The pressure exponent - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
-    trials : int, default 40
+    trials : int
         Maximum number of trials used to solve network hydraulics
-    accuracy : float, default 0.001
+    accuracy : float
         Convergence criteria for hydraulic solutions (default 0.001)
-    unbalanced : str, default 'STOP'
+    unbalanced : str
         Indicate what happens if a hydraulic solution cannot be reached.  
         Options are STOP and CONTINUE
-    unbalanced_value : int, default None
+    unbalanced_value : int
         Number of additional trials if unbalanced = CONTINUE
-    checkfreq : int, default 2
+    checkfreq : int
         Number of solution trials that pass between status check 
-    maxcheck : int, default 10
+    maxcheck : int
         Number of solution trials that pass between status check 
-    damplimit : float, default 0.0
+    damplimit : float
         Accuracy value at which solution damping begins
-    headerror : float, default None
+    headerror : float
         The head error convergence limit
-    flowchange : float, default None
+    flowchange : float
         The flow change convergence limit
-    demand_model : str, default None
+    demand_model : str
         Demand model for EPANET 2.2; acceptable values are DD, PDD, DDA and PDA, though DDA and PDA are the preferred abbreviations.
         Changing this option will break EPANET 2.0 if changed from None. For the WNTR simulator, please set the model when calling run_sim.
-    inpfile_units : str, default 'GPM'
+    inpfile_units : str
         Units for the INP-file; options are CFS, GPM, MGD, IMGD, AFD, LPS, 
         LPM, MLD, CMH, and CMD. This **only** changes the units used in generating
-        the INP file -- it has no impact on the units used in WNTR, which are 
+        the INP file -- it has **no impact** on the units used in WNTR, which are 
         always SI units (m, kg, s).
     
     """
-    headloss = attr.ib(default='H-W')  # H-W, D-W, C-M
-    hydraulics = attr.ib(default=None)  # USE, SAVE
-    hydraulics_filename = attr.ib(default=None)  # string
-    viscosity = attr.ib(default=1.0)
-    specific_gravity = attr.ib(default=1.0)
-    pattern = attr.ib(default='1')  # any pattern string
-    demand_multiplier = attr.ib(default=1.0)
-    demand_model = attr.ib(default=None)  # DDA, PDA
-    minimum_pressure = attr.ib(default=0.0)
-    required_pressure = attr.ib(default=0.0)
-    pressure_exponent = attr.ib(default=0.5)
-    emitter_exponent = attr.ib(default=0.5)
-    trials = attr.ib(default=40)
-    accuracy = attr.ib(default=0.001)
-    unbalanced = attr.ib(default='STOP')  # STOP, CONTINUE
-    unbalanced_value = attr.ib(default=None) #int
-    checkfreq = attr.ib(default=2)
-    maxcheck = attr.ib(default=10)
-    damplimit = attr.ib(default=0)
-    headerror = attr.ib(default=0)
-    flowchange = attr.ib(default=0)
-    inpfile_units = attr.ib(default='GPM', repr=False)  # EPANET unit code
+    def __init__(self,
+                 headloss: str = 'H-W',
+                 hydraulics: str = None,
+                 hydraulics_filename: str = None,
+                 viscosity: float = 1.0,
+                 specific_gravity: float = 1.0,
+                 pattern: str = '1',
+                 demand_multiplier: float = 1.0,
+                 demand_model: str = None,
+                 minimum_pressure: float = 0.0,
+                 required_pressure: float = 0.0,
+                 pressure_exponent: float = 0.5,
+                 emitter_exponent: float = 0.5,
+                 trials: int = 40,
+                 accuracy: float = 0.001,
+                 unbalanced: str = 'STOP',
+                 unbalanced_value: int = None,
+                 checkfreq: int = 2,
+                 maxcheck: int = 10,
+                 damplimit: int = 0,
+                 headerror: float = 0,
+                 flowchange: float = 0,
+                 inpfile_units: str = 'GPM'):
+        self.headloss = headloss
+        self.hydraulics = hydraulics
+        self.hydraulics_filename = hydraulics_filename
+        self.viscosity = viscosity
+        self.specific_gravity = specific_gravity
+        self.pattern = pattern
+        self.demand_multiplier = demand_multiplier
+        self.demand_model = demand_model
+        self.minimum_pressure = minimum_pressure
+        self.required_pressure = required_pressure
+        self.pressure_exponent = pressure_exponent
+        self.emitter_exponent = emitter_exponent
+        self.trials = trials
+        self.accuracy = accuracy
+        self.unbalanced = unbalanced
+        self.unbalanced_value = unbalanced_value
+        self.checkfreq = checkfreq
+        self.maxcheck = maxcheck
+        self.damplimit = damplimit
+        self.headerror = headerror
+        self.flowchange = flowchange
+        self.inpfile_units = inpfile_units
 
     def __setattr__(self, name, value):
         if name == 'headloss':
@@ -451,64 +466,47 @@ class HydraulicOptions(object):
                 raise ValueError('%s must be a number', name)
         self.__dict__[name] = value
 
-    @classmethod
-    def factory(cls, val):
-        """Create an options object based on passing in an instance of the object, a dict, or a tuple"""
-        if isinstance(val, cls):
-            return val
-        elif isinstance(val, dict):
-            return cls(**val)
-        elif isinstance(val, (list, tuple)):
-            return cls(*val)
-        raise ValueError('Unknown type for %s.factory: %s',
-                         cls.__name__, type(val))
 
-    def todict(self):
-        """Dictionary representation of the options"""
-        return attr.asdict(self)
-    asdict = todict
-
-    def tostring(self):
-        """String representation of the hydraulic options"""
-        s = 'Hydraulic options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    
-
-@attr.s
-class ReactionOptions(object):
+class ReactionOptions(_OptionsBase):
     """
     Options related to water quality reactions.
     
-    Attributes
+    Parameters
     ----------
-    bulk_rxn_order : float, default 1.0
+    bulk_rxn_order : float
         Order of reaction occurring in the bulk fluid
-    wall_rxn_order : float, default 1.0
+    wall_rxn_order : float
         Order of reaction occurring at the pipe wall
-    tank_rxn_order : float, default 1.0
+    tank_rxn_order : float
         Order of reaction occurring in the tanks
-    bulk_rxn_coeff : float, default 0.0
+    bulk_rxn_coeff : float
         Reaction coefficient for bulk fluid and tanks
-    wall_rxn_coeff : float, default 0.0
+    wall_rxn_coeff : float
         Reaction coefficient for pipe walls
-    limiting_potential : float, default None
+    limiting_potential : float
         Specifies that reaction rates are proportional to the difference 
         between the current concentration and some limiting potential value, 
         off if None
-    roughness_correl : float, default None
+    roughness_correl : float
         Makes all default pipe wall reaction coefficients related to pipe 
         roughness, off if None
         
     """
-    bulk_rxn_order = attr.ib(default=1.0, converter=float)
-    wall_rxn_order = attr.ib(default=1.0, converter=float)
-    tank_rxn_order = attr.ib(default=1.0, converter=float)
-    bulk_rxn_coeff = attr.ib(default=0.0, converter=float)
-    wall_rxn_coeff = attr.ib(default=0.0, converter=float)
-    limiting_potential = attr.ib(default=None, converter=_float_or_None)
-    roughness_correl = attr.ib(default=None, converter=_float_or_None)
+    def __init__(self,
+                 bulk_rxn_order: float = 1.0,
+                 wall_rxn_order: float = 1.0,
+                 tank_rxn_order: float = 1.0,
+                 bulk_rxn_coeff: float = 0.0,
+                 wall_rxn_coeff: float = 0.0,
+                 limiting_potential: float = None,
+                 roughness_correl: float = None):
+        self.bulk_rxn_order = bulk_rxn_order
+        self.wall_rxn_order = wall_rxn_order
+        self.tank_rxn_order = tank_rxn_order
+        self.bulk_rxn_coeff = bulk_rxn_coeff
+        self.wall_rxn_coeff = wall_rxn_coeff
+        self.limiting_potential = limiting_potential
+        self.roughness_correl = roughness_correl
 
     def __setattr__(self, name, value):
         if name not in ['limiting_potential', 'roughness_correl']:
@@ -523,63 +521,42 @@ class ReactionOptions(object):
                 raise ValueError('%s must be a number or None', name)
         self.__dict__[name] = value
 
-    @classmethod
-    def factory(cls, val):
-        """Create an options object based on passing in an instance of the object, a dict, or a tuple"""
-        if isinstance(val, cls):
-            return val
-        elif isinstance(val, dict):
-            return cls(**val)
-        elif isinstance(val, (list, tuple)):
-            return cls(*val)
-        raise ValueError('Unknown type for %s.factory: %s',
-                         cls.__name__, type(val))
 
-    def todict(self):
-        """Dictionary representation of the options"""
-        return attr.asdict(self)
-    asdict = todict
-
-    def tostring(self):
-        """String representation of the quality options"""
-        s = 'Reaction options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
-
-
-@attr.s
-class QualityOptions(object):
+class QualityOptions(_OptionsBase):
     """
     Options related to water quality modeling.
     
-    Attributes
+    Parameters
     ----------
-    parameter : str, default 'None'
+    parameter : str
         Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and 
         TRACE
-    trace_node : str, default None
+    trace_node : str
         Trace node name if quality = TRACE
-    chemical : str, default None
+    chemical : str
         Chemical name for 'chemical' analysis
-    diffusivity : float, default 1.0
+    diffusivity : float
         Molecular diffusivity of the chemical (default 1.0)
-    tolerance : float, default 0.01
+    tolerance : float
         Water quality solver tolerance
-    _wq_units : str, default None
+    wq_units : str
         Units for quality analysis; concentration for 'chemical', time in seconds for 'age',
         percentage for 'trace'
 
     """
-    parameter = attr.ib(default='NONE', 
-                        validator=in_(['NONE', 'CHEMICAL', 'AGE', 'TRACE']), 
-                        converter=str.upper)
-    trace_node = attr.ib(default=None)
-    chemical_name = attr.ib(default='CHEMICAL')
-    diffusivity = attr.ib(default=1.0)
-    tolerance = attr.ib(default=0.01)
-    _wq_units = attr.ib(default='mg/L', repr=False)
+    def __init__(self,
+                 parameter: str = 'NONE',
+                 trace_node: str = None,
+                 chemical_name: str = 'CHEMICAL',
+                 diffusivity: float = 1.0,
+                 tolerance: float = 0.01,
+                 wq_units: str = 'mg/L'):
+        self.parameter = parameter
+        self.trace_node = trace_node
+        self.chemical_name = chemical_name
+        self.diffusivity = diffusivity
+        self.tolerance = tolerance
+        self.wq_units = wq_units
 
     def __setattr__(self, name, value):
         if name in ['diffusivity', 'tolerance']:
@@ -589,140 +566,79 @@ class QualityOptions(object):
                 raise ValueError('%s must be a number or None', name)
         self.__dict__[name] = value
 
-    @classmethod
-    def factory(cls, val):
-        """Create an options object based on passing in an instance of the object, a dict, or a tuple"""
-        if isinstance(val, cls):
-            return val
-        elif isinstance(val, dict):
-            return cls(**val)
-        elif isinstance(val, (list, tuple)):
-            return cls(*val)
-        raise ValueError('Unknown type for %s.factory: %s',
-                         cls.__name__, type(val))
 
-    def todict(self):
-        """Dictionary representation of the options"""
-        return attr.asdict(self)
-    asdict = todict
-
-    def tostring(self):
-        """String representation of the quality options"""
-        s = 'Water quality options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
-    
-
-@attr.s
-class EnergyOptions(object):
+class EnergyOptions(_OptionsBase):
     """
     Options related to energy calculations.
     
-    Attributes
+    Parameters
     ----------
-    global_price : float, default 0
+    global_price : float
         Global average cost per Joule
-    global_pattern : str, default None
+    global_pattern : str
         ID label of time pattern describing how energy price varies with time
-    global_efficiency : float, default 75.0
+    global_efficiency : float
         Global pump efficiency as percent; i.e., 75.0 means 75%
-    demand_charge : float, default None
+    demand_charge : float
         Added cost per maximum kW usage during the simulation period, or None
         
     """
-    global_price = attr.ib(default=0)
-    global_pattern = attr.ib(default=None)
-    global_efficiency = attr.ib(default=None)
-    demand_charge = attr.ib(default=None)
-
-    @classmethod
-    def factory(cls, val):
-        """Create an options object based on passing in an instance of the object, a dict, or a tuple"""
-        if isinstance(val, cls):
-            return val
-        elif isinstance(val, dict):
-            return cls(**val)
-        elif isinstance(val, (list, tuple)):
-            return cls(*val)
-        raise ValueError('Unknown type for %s.factory: %s',
-                         cls.__name__, type(val))
-
-    def todict(self):
-        """Dictionary representation of the options"""
-        return attr.asdict(self)
-    asdict = todict
-
-    def tostring(self):
-        """String representation of the energy options"""
-        s = 'Energy options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
+    def __init__(self,
+                global_price: float=0,
+                global_pattern: str=None,
+                global_efficiency: float=None,
+                demand_charge: float=None):
+        self.global_price = global_price
+        self.global_pattern = global_pattern
+        self.global_efficiency = global_efficiency
+        self.demand_charge = demand_charge
 
 
-@attr.s
-class ResultsOptions(object):
+class ResultsOptions(_OptionsBase):
     """
     Options related to results outputs.
 
-    Attributes
+    Parameters
     ----------
     rpt_filename : str
         Provides the filename to use for outputting an EPANET report file.
         By default, this will be the prefix plus ".rpt".
-    status : str, default 'NO'
+    status : str
         Output solver status ('YES', 'NO', 'FULL'). 'FULL' is only useful for debugging
-    summary : str, default 'YES'
+    summary : str
         Output summary information ('YES' or 'NO')
-    energy : str, default 'NO'
+    energy : str
         Output energy information
-    nodes : bool, default False
+    nodes : bool
         Output node information in report file
-    links : bool, default False
+    links : bool
         Output link information in report file
     
     """
-    pagesize = attr.ib(default=None)
-    rpt_filename = attr.ib(default=None)
-    status = attr.ib(default='NO')
-    summary = attr.ib(default='YES')
-    energy = attr.ib(default='NO')
-    nodes = attr.ib(default=False)
-    links = attr.ib(default=False)
-    rpt_params = attr.ib(factory=_new_rpt_params)
-    results_obj = attr.ib(factory=_new_results_obj)
-    param_opts = attr.ib(factory=_new_param_opts)
-
-    @classmethod
-    def factory(cls, val):
-        """Create an options object based on passing in an instance of the object, a dict, or a tuple"""
-        if isinstance(val, cls):
-            return val
-        elif isinstance(val, dict):
-            return cls(**val)
-        elif isinstance(val, (list, tuple)):
-            return cls(*val)
-        raise ValueError('Unknown type for %s.factory: %s',
-                         cls.__name__, type(val))
-
-    def todict(self):
-        """Dictionary representation of the options"""
-        return attr.asdict(self)
-    asdict = todict
-
-    def tostring(self):
-        """String representation of the hydraulic options"""
-        s = 'Hydraulic options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
+    def __init__(self,
+                pagesize: list=None,
+                rpt_filename: str=None,
+                status: str='NO',
+                summary: str='YES',
+                energy: str='NO',
+                nodes: bool=False,
+                links: bool=False,
+                rpt_params: dict=None,
+                results_obj: dict=None,
+                param_opts: dict=None):
+        self.pagesize = pagesize
+        self.rpt_filename = rpt_filename
+        self.status = status
+        self.summary = summary
+        self.energy = energy
+        self.nodes = nodes
+        self.links = links
+        self.rpt_params = rpt_params if rpt_params is not None else _new_rpt_params()
+        self.results_obj = results_obj if results_obj is not None else _new_results_obj()
+        self.param_opts = param_opts if param_opts is not None else _new_param_opts()
 
 
-class UserOptions(object):
+class UserOptions(_OptionsBase):
     """
     Options defined by the user.
     
@@ -733,39 +649,20 @@ class UserOptions(object):
     used by the user-built analysis scripts.
     
     """
-    def __init__(self, **params):
-        for k, v in params.items():
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
             self.__dict__[k] = v
 
-    def todict(self):
-        """Dictionary representation of the user options"""
-        return self.__dict__.copy()
-    
-    def tostring(self):
-        """String representation of the user options"""
-        s = 'UserOptions('
-        for k,v in self.__dict__.items():
-            s += '{0}={1}, '.format(k, str(v))
-        if s.endswith(', '):
-            s = s[0:-2] + ')'
-        return s
-    __repr__ = tostring
-    
 
-@attr.s
-class WaterNetworkOptions(object):
+class WaterNetworkOptions(_OptionsBase):
     """
     Water network model options class.
     
     These options mimic options in the EPANET User Manual.
-    The class uses the `__slots__` syntax to ensure that older code will raise 
-    an appropriate error -- for example, trying to set the options.duration 
-    value will result in an error rather than creating a new attribute 
-    (which would never be used and cause undiagnosable errors).
     The `user` attribute is a generic python class object that allows for 
     dynamically created attributes that are user specific.
 
-    Attributes
+    Parameters
     ----------
     time : TimeOptions
         Contains all timing options for the scenarios
@@ -782,19 +679,27 @@ class WaterNetworkOptions(object):
     graphics : GraphicsOptions
         Contains EPANET graphics and background options and also the filename
         for external node coordinates, if used
-    user : UserOptions
-        An empty class object that allows for storage of user-specific options
+    user : dict
+        An empty dictionary that allows for user specified options
     
-
     """
-    time = attr.ib(factory=TimeOptions)
-    hydraulic = attr.ib(factory=HydraulicOptions)
-    results = attr.ib(factory=ResultsOptions, eq=False)
-    quality = attr.ib(factory=QualityOptions)
-    reaction = attr.ib(factory=ReactionOptions)
-    energy = attr.ib(factory=EnergyOptions)
-    graphics = attr.ib(factory=GraphicsOptions)
-    user = attr.ib(factory=UserOptions, eq=False)
+    def __init__(self,
+                 time: TimeOptions = None,
+                 hydraulic: HydraulicOptions = None,
+                 results: ResultsOptions = None,
+                 quality: QualityOptions = None,
+                 reaction: ReactionOptions = None,
+                 energy: EnergyOptions = None,
+                 graphics: GraphicsOptions = None,
+                 user: UserOptions = None):
+        self.time = TimeOptions.factory(time)
+        self.hydraulic = HydraulicOptions.factory(hydraulic)
+        self.results = ResultsOptions.factory(results)
+        self.quality = QualityOptions.factory(quality)
+        self.reaction = ReactionOptions.factory(reaction)
+        self.energy = EnergyOptions.factory(energy)
+        self.graphics = GraphicsOptions.factory(graphics)
+        self.user = UserOptions.factory(user)
 
     def __setattr__(self, name, value):
         if name == 'time':
@@ -826,36 +731,12 @@ class WaterNetworkOptions(object):
                 raise ValueError('graphics must be a GraphicsOptions or convertable object')
             value = GraphicsOptions.factory(value)
         elif name == 'user':
-            if not isinstance(value, (UserOptions, dict)):
-                raise ValueError('user must be UserOptions or a dictionary')
-            if isinstance(value, dict):
-                value = UserOptions(**value)
+            value = UserOptions.factory(value)
         else:
             raise ValueError('%s is not a valid member of WaterNetworkModel')
         self.__dict__[name] = value
 
-    @classmethod
-    def factory(cls, val):
-        """Create an options object based on passing in an instance of the object, a dict, or a tuple"""
-        if isinstance(val, cls):
-            return val
-        elif isinstance(val, dict):
-            return cls(**val)
-        elif isinstance(val, (list, tuple)):
-            return cls(*val)
-        raise ValueError('Unknown type for %s.factory: %s',
-                         cls.__name__, type(val))
 
     def todict(self):
         """Dictionary representation of the options"""
-        return attr.asdict(self)
-    asdict = todict
-
-    def tostring(self):
-        """String representation of the energy options"""
-        s = 'Energy options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
-
+        return dict(self)
