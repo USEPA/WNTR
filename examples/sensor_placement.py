@@ -54,7 +54,7 @@ min_det_time = det_time_stats[['Scenario','Sensor','Min']]
 min_det_time.rename(columns = {'Min':'Impact'}, inplace = True)
 
 # Run sensor placement optimization to minimize detection time using 0 to 5 sensors
-#   The impact for undetected sceanrios is set at 1.5x the max sample time
+#   The impact for undetected scenarios is set at 1.5x the max sample time
 #   Sensor cost is defined uniformly using a value of 1.  This means that
 #   sensor_budget is equal to the number of sensors to place
 impactform = chama.optimize.ImpactFormulation()
