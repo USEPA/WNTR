@@ -12,7 +12,6 @@ dependencies:
     - plotly
     - folium
     - utm
-    - chama
     - nose
     - openpyxl
     - pip
