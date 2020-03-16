@@ -54,10 +54,9 @@ install:
     - conda list
     - echo $PATH
     - ls -l /home/travis/miniconda/envs/test_env/lib
-    #- pip install . # use pip to automatically install anything not in the yml files (i.e. numpy/scipy/pandas for py3*)
-    #- pip install scipy # won't do anything if already installed
     - pip install --upgrade pip
-    - pip install utm==0.4.2 coveralls
+    - pip install chama coveralls
+    - conda install -y --channel conda-forge glpk
     - python setup.py develop
 
 script:

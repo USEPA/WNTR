@@ -64,7 +64,8 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
     2  283  239
     3  295  249
     4  303  257
-    >>> nodes, edges = wntr.graphics.plot_network(wn, node_size=7, valve_layer=random_valve_layer)
+    >>> nodes, edges = wntr.graphics.plot_network(wn, node_size=7, 
+    ...     valve_layer=random_valve_layer)
     
 .. doctest::
     :hide:
@@ -87,7 +88,8 @@ The valve layer can be included in water network graphics (:numref:`fig-strategi
 .. doctest::
 
     >>> strategic_valve_layer = wntr.network.generate_valve_layer(wn, 'strategic', 2)
-    >>> nodes, edges = wntr.graphics.plot_network(wn, node_size=7, valve_layer=strategic_valve_layer)
+    >>> nodes, edges = wntr.graphics.plot_network(wn, node_size=7, 
+    ...     valve_layer=strategic_valve_layer)
     
 .. doctest::
     :hide:

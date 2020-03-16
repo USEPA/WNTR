@@ -609,38 +609,40 @@ class WaterNetworkModel(AbstractModel):
     
     ### # 
     ### Remove elements from the model
-    def remove_node(self, name, with_control=False):
+    def remove_node(self, name, with_control=False, force=False):
         """Removes a node from the water network model"""
         node = self.get_node(name)
-        if with_control:
-            x=[]
-            for control_name, control in self._controls.items():
-                if node in control.requires():
-                    logger.warning(control._control_type_str()+' '+control_name+' is being removed along with node '+name)
-                    x.append(control_name)
-            for i in x:
-                self.remove_control(i)
-        else:
-            for control_name, control in self._controls.items():
-                if node in control.requires():
-                    raise RuntimeError('Cannot remove node {0} without first removing control/rule {1}'.format(name, control_name))
+        if not force:
+            if with_control:
+                x=[]
+                for control_name, control in self._controls.items():
+                    if node in control.requires():
+                        logger.warning(control._control_type_str()+' '+control_name+' is being removed along with node '+name)
+                        x.append(control_name)
+                for i in x:
+                    self.remove_control(i)
+            else:
+                for control_name, control in self._controls.items():
+                    if node in control.requires():
+                        raise RuntimeError('Cannot remove node {0} without first removing control/rule {1}'.format(name, control_name))
         self._node_reg.__delitem__(name)
 
-    def remove_link(self, name, with_control=False):
+    def remove_link(self, name, with_control=False, force=False):
         """Removes a link from the water network model"""
         link = self.get_link(name)
-        if with_control:
-            x=[]
-            for control_name, control in self._controls.items():
-                if link in control.requires():
-                    logger.warning(control._control_type_str()+' '+control_name+' is being removed along with link '+name)
-                    x.append(control_name)
-            for i in x:
-                self.remove_control(i)
-        else:
-            for control_name, control in self._controls.items():
-                if link in control.requires():
-                    raise RuntimeError('Cannot remove link {0} without first removing control/rule {1}'.format(name, control_name))
+        if not force:
+            if with_control:
+                x=[]
+                for control_name, control in self._controls.items():
+                    if link in control.requires():
+                        logger.warning(control._control_type_str()+' '+control_name+' is being removed along with link '+name)
+                        x.append(control_name)
+                for i in x:
+                    self.remove_control(i)
+            else:
+                for control_name, control in self._controls.items():
+                    if link in control.requires():
+                        raise RuntimeError('Cannot remove link {0} without first removing control/rule {1}'.format(name, control_name))
         self._link_reg.__delitem__(name)
 
     def remove_pattern(self, name): 
