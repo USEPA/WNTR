@@ -211,7 +211,8 @@ use NetworkX directly, while others use metrics included in WNTR.
   .. doctest::
 	
 	  >>> valve_layer = wntr.network.generate_valve_layer(wn, 'random', 40)
-	  >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, valve_layer)
+	  >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, 
+	  ...     valve_layer)
 
 
 
