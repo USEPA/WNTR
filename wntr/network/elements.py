@@ -207,6 +207,17 @@ class Tank(Node):
         Name of the tank.
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object the tank will belong to
+        
+    Tank volume can either be governed by a constant diameter or it can
+    be governed by a volume curve. If the tank has a volume curve, the 
+    diameter has no effect on WNTR hydraulic calculations but does represent the
+    diameter of supports below the tank for economic analysis. 
+    
+    This class is intended to be instantiated through the 
+    
+    wntr.network.model.WaterNetworkModel.add_tank()
+    
+    method. 
 
     """
 
@@ -281,6 +292,40 @@ class Tank(Node):
     def level(self):
         """Returns tank level (head - elevation)"""
         return self.head - self.elevation
+    
+    
+    def get_volume(self, level=None):
+        """Obtain the volume of this tank for a given level
+        
+        Parameters
+        ----------
+        level: float or NoneType (optional)
+            The level at which the volume is to be calculated. 
+            If level=None, then the volume calculated is for the current 
+            tank level value.
+            Level is equivalent to depth of fluid in the tank. Tank level is 
+            equal to the tank head minus the tank elevation (height of the base)
+            
+        Returns
+        -------
+        vol: float 
+            Tank volume at level or at self.level if level=None
+        """
+        
+        if self.vol_curve is None:
+            A = (np.pi / 4.0 * self.diameter ** 2)
+            if level is None:
+                level = self.level 
+            vol = A * level
+        else:
+            arr = np.array(self.vol_curve.points)
+            if level is None:
+                level = self.level
+            vol = np.interp(level,arr[:,0],arr[:,1])
+        return vol
+            
+            
+
 
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
@@ -588,7 +633,7 @@ class HeadPump(Pump):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
-
+    
     """
 #    def __init__(self, name, start_node_name, end_node_name, wn):
 #        super(HeadPump,self).__init__(name, start_node_name, 

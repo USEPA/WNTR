@@ -32,7 +32,7 @@ ANYTOWN example
 
 [TANKS]
 ;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve
- 41              	215         	10          	10          	35          	32.65       	0           	                	;
+ 41              	215         	10          	10          	35          	32.65       	0               VCUR1                 	;
  42              	215         	10          	10          	35          	32.65       	0           	                	;
 
 [PIPES]
@@ -135,12 +135,41 @@ ANYTOWN example
  2                     11337.5          1142.8
 
 ;PUMP: ID			flow		efficiency
- E1              	0.          	0           
- E1              	2000        	50          
+ E1                       0.            0           
+ E1              	2000            50          
  E1              	4000        	65          
  E1              	6000        	55          
- E1              	8000        	40          
-
+ E1              	8000        	40    
+ 
+;TANK VOLUME: ID        level (ft)       volume(ft3)
+; This is a volume curve for the filling of 3 50ft spherical diameter tanks
+;VOLUME:
+ VCUR1                 10.00            0.00
+ VCUR1                 11.00            226.19
+ VCUR1                 12.00            659.73
+ VCUR1                 13.00            1281.77
+ VCUR1                 14.00            2073.45
+ VCUR1                 15.00            3015.93
+ VCUR1                 16.00            4090.35
+ VCUR1                 17.00            5277.88
+ VCUR1                 18.00            6559.65
+ VCUR1                 19.00            7916.81
+ VCUR1                 20.00            9330.53
+ VCUR1                 21.00            10781.95
+ VCUR1                 22.00            12252.21
+ VCUR1                 23.00            13722.48
+ VCUR1                 24.00            15173.89
+ VCUR1                 25.00            16587.61
+ VCUR1                 26.00            17944.78
+ VCUR1                 27.00            19226.55
+ VCUR1                 28.00            20414.07
+ VCUR1                 29.00            21488.49
+ VCUR1                 30.00            22430.97
+ VCUR1                 31.00            23222.65
+ VCUR1                 32.00            23844.69
+ VCUR1                 33.00            24278.23
+ VCUR1                 34.00            24504.42
+ VCUR1                 35.00            24730.42
 [CONTROLS]
 
 [RULES]

@@ -3,6 +3,7 @@ The wntr.graphics.curve module includes methods plot fragility curves and
 pump curves.
 """
 import numpy as np
+from scipy.optimize import fsolve
 try:
     import matplotlib.pyplot as plt
 except:
@@ -172,3 +173,117 @@ def plot_pump_curve(pump, title='Pump curve',
     ax.legend()
     
     return ax
+
+def plot_volume_curve(tank, title='Tank volume curve', 
+                    d0=0,
+                    ax=None):
+    """
+    Plots a tank volume curve and the corresponding axi-symmetric tank profile shape
+    
+    Parameters
+    -----------
+    tank : wntr.network.elements.Tank object
+        Tank
+        
+    title : string (optional)
+        Plot title
+        
+    d0 : float (optional)
+        Initial diameter of the tank 
+    
+    ax : matplotlib axes object, optional
+        Axes for plotting (None indicates that a new figure with a single 
+        axes will be used)
+        
+    Returns
+    ---------
+    fig, ax : matplot figure object, matplotlib list of 2 axes object
+              ax[0] is the left hand plot, ax[1] is the right hand plot
+    """
+    def no_curve_msg(tank):
+        print("Tank "+tank.name+" has no volume curve")
+        
+    def cone_vol_func(x,d,L,V,dn_gt_d):
+        dn = x[0]
+
+        if dn == d:
+            ans = (np.pi * d**2/4.0) * L
+        else:
+            b = -L * d / (dn - d)
+            if b > 0:
+                ans = (np.pi/12) * (dn**2 * (b+L) - d**2 * b) - V
+            else:
+                ans = (np.pi/12) * (d**2 * b - dn**2 * (b - L)) - V
+        return ans
+    
+    try:
+        curve = tank.vol_curve
+        if curve is None:
+            no_curve_msg(tank)
+            return
+    except:
+        no_curve_msg(tank)
+        return
+    
+    if plt is None:
+        raise ImportError('matplotlib is required')
+    
+    if ax is None: # create a new figure
+        fig,ax = plt.subplots(1,2,figsize=[12,4])
+
+    cdata = np.array(curve.points)
+    L = cdata[:,0]
+    V = cdata[:,1]
+    
+    Vlimit = np.interp([tank.min_level,tank.max_level],L,V)
+
+        
+    ax[0].plot(L, V, '-o', linewidth=1,label="volume curve",color='k')
+    ax[0].plot([tank.min_level,tank.min_level], [Vlimit[0],Vlimit[1]],'-.',label="lower limit",color='r')
+    ax[0].plot([tank.max_level,tank.max_level], [Vlimit[0],Vlimit[1]],'-.',label="upper limit",color='r')
+    ax[0].grid("on")
+    ax[0].set_xlabel("Tank level (m)")
+    ax[0].set_ylabel("Tank Volume (m)")
+    ax[0].set_title(title)
+    ax[0].legend()
+    # calculate the tank profile assuming an axi-symmetric tank
+    d = []
+    l = []
+    d.append(0.0)
+    d.append(tank.diameter)
+    d.append(tank.diameter)
+    l.append(0.0)
+    l.append(0.0)
+    l.append(tank.min_level)
+    lev0 = L[0]
+    vol0 = V[0]
+    for vol,lev in zip(V[1:],L[1:]):
+        dn = np.sqrt(4.0*(vol-vol0)/(np.pi * (lev-lev0)))
+        l.append(lev0)
+        l.append(lev)
+        d.append(dn)
+        d.append(dn)
+        lev0 = lev
+        vol0 = vol
+    l.append(l[-1])
+    d.append(0.0)
+    ax[1].plot(np.array(d)/2,l,label="tank profile")
+    max_d = max([tank.diameter,max(d)])
+    ax[1].plot([0.0,max_d/2.0],[tank.min_level,tank.min_level],'-.',label="lower limit",color='r')
+    ax[1].plot([0.0,max_d/2.0],[tank.max_level,tank.max_level],'-.',label="upper limit",color='r')
+    ax[1].plot([0.0,max_d/2.0],[0.0,0.0],'-.',label='elevation={0:5.2f}m'.format(tank.elevation),color='k')
+    ax[1].grid("on")
+    ax[1].set_xlabel("Equivalent axisymmetric tank radius (m)")
+    ax[1].set_ylabel("Tank level (m)")
+    ax[1].set_title("Geometric tank profile")
+    xlim = list(ax[1].get_xlim())
+    ylim = list(ax[1].get_ylim())
+    if np.diff(xlim) > np.diff(ylim):
+        ylim[1] = ylim[0] + (xlim[1]-xlim[0])
+    else:
+        xlim[1] = xlim[0] + (ylim[1] - ylim[0])
+    ax[1].set_xlim(xlim)
+    ax[1].set_ylim(ylim)
+    ax[1].legend()
+    
+    return fig,ax

@@ -143,7 +143,6 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * D-W and C-M headloss options in the [OPTIONS] section (H-W option is used)
 * Accuracy, unbalanced, and emitter exponent from the [OPTIONS] section
 * Pump speed in the [PUMPS] section
-* Volume curves in the [TANKS] section
 * Pattern start, report start, start clocktime, and statistics in the [TIMES] section
 * PBV and GPV values in the [VALVES] section
 
