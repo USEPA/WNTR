@@ -1662,17 +1662,33 @@ class InpFile(object):
                     opts.solver.trials = int(words[1])
                 elif key == 'ACCURACY':
                     opts.solver.accuracy = float(words[1])
+                elif key == 'HEADERROR':
+                    opts.solver.headerror = float(words[1])
+                elif key == 'FLOWCHANGE':
+                    opts.solver.flowchange = float(words[1])
                 elif key == 'UNBALANCED':
                     opts.solver.unbalanced = words[1].upper()
                     if len(words) > 2:
                         opts.solver.unbalanced_value = int(words[2])
+                elif key == 'MINIMUM':
+                    opts.hydraulic.minimum_pressure = float(words[2])
+                elif key == 'REQUIRED':
+                    opts.hydraulic.required_pressure = float(words[2])
+                elif key == 'PRESSURE':
+                    opts.hydraulic.pressure_exponenet = float(words[2])
                 elif key == 'PATTERN':
                     opts.hydraulic.pattern = words[1]
                 elif key == 'DEMAND':
                     if len(words) > 2:
-                        opts.hydraulic.demand_multiplier = float(words[2])
+                        if words[1].upper() == 'MULTIPLIER':
+                            opts.hydraulic.demand_multiplier = float(words[2])
+                        elif words[1].upper() == 'MODEL':
+                            opts.solver.demand_model = words[2]
+                        else:
+                            edata['key'] = ' '.join(words)
+                            raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
                     else:
-                        edata['key'] = 'DEMAND MULTIPLIER'
+                        edata['key'] = ' '.join(words)
                         raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 elif key == 'EMITTER':
                     if len(words) > 2:
@@ -1727,6 +1743,12 @@ class InpFile(object):
 
         f.write(entry_float.format('MAXCHECK', wn.options.solver.maxcheck).encode('ascii'))
 
+        if wn.options.solver.headerror is not None: 
+            f.write(entry_float.format('HEADERROR', wn.options.solver.headerror).encode('ascii'))
+
+        if wn.options.solver.flowchange is not None:
+            f.write(entry_float.format('FLOWCHANGE', wn.options.solver.flowchange).encode('ascii'))
+
         if wn.options.solver.damplimit != 0:
             f.write(entry_float.format('DAMPLIMIT', wn.options.solver.damplimit).encode('ascii'))
 
@@ -1756,6 +1778,17 @@ class InpFile(object):
         if wn.options.hydraulic.hydraulics is not None:
             f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulic.hydraulics, wn.options.hydraulic.hydraulics_filename).encode('ascii'))
 
+        if wn.options.solver.demand_model is not None: 
+            f.write('{:20s} {}\n'.format('DEMAND MODEL', wn.options.solver.demand_model).encode('ascii'))
+        if wn.options.hydraulic.minimum_pressure is not None:
+            minimum_pressure = from_si(self.flow_units, wn.options.hydraulic.minimum_pressure, HydParam.Pressure)
+            f.write('{:20s} {}\n'.format('MINIMUM PRESSURE', minimum_pressure).encode('ascii'))
+        if wn.options.hydraulic.required_pressure is not None:
+            required_pressure = from_si(self.flow_units, wn.options.hydraulic.required_pressure, HydParam.Pressure)
+            f.write('{:20s} {}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
+        if wn.options.hydraulic.pressure_exponent is not None:
+            f.write('{:20s} {}\n'.format('PRESSURE EXPONENT', wn.options.hydraulic.pressure_exponent).encode('ascii'))
+        
         if wn.options.graphics.map_filename is not None:
             f.write(entry_string.format('MAP', wn.options.graphics.map_filename).encode('ascii'))
         f.write('\n'.encode('ascii'))
