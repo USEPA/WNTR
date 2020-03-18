@@ -590,6 +590,14 @@ class HeadPump(Pump):
         The water network model this pump will belong to.
 
     """
+#    def __init__(self, name, start_node_name, end_node_name, wn):
+#        super(HeadPump,self).__init__(name, start_node_name, 
+#                                      end_node_name, wn)
+#        self._curve_coeffs = None
+#        self._coeffs_curve_points = None # these are used to verify whether
+#                                         # the pump curve was changed since
+#                                         # the _curve_coeffs were calculated
+    
     def __repr__(self):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
                    self.start_node, self.end_node, 'HEAD', self.pump_curve_name, 
@@ -618,6 +626,9 @@ class HeadPump(Pump):
         self._curve_reg.add_usage(name, (self._link_name, 'Pump'))
         self._curve_reg.set_curve_type(name, 'HEAD')
         self._pump_curve_name = name
+        # delete the pump curve coefficients because they have to be recaulcated 
+        # if a new curve is associated with the pump
+        self._curve_coeffs = None 
 
     def get_pump_curve(self):
         curve = self._curve_reg[self.pump_curve_name]
@@ -647,59 +658,74 @@ class HeadPump(Pump):
         Returns
         -------
         Tuple of pump curve coefficient (A, B, C). All floats.
+        
+        The coefficients are only calculated the first time this function
+        is called for a given HeadPump
         """
-        
-        curve = self.get_pump_curve()
-        Q = []
-        H = []
-        for pt in curve.points:
-            Q.append(pt[0])
-            H.append(pt[1])
-        
-        # 1-Point curve - Replicate EPANET for a one point curve
-        if curve.num_points == 1:
-            A = (4.0/3.0)*H[0]
-            B = (1.0/3.0)*(H[0]/(Q[0]**2))
-            C = 2
-        # 2-Point curve - Replicate EPANET - generate a straight line
-        elif curve.num_points == 2:
-            B = - (H[1] - H[0]) / (Q[1]**2 - Q[0]**2)
-            A = H[0] + B * Q[0] ** 2
-            C = 1
-        # 3 - Multi-point curve (3 or more points) - Replicate EPANET for 
-        #     3 point curves.  For multi-point curves, this is not a perfect 
-        #     replication of EPANET. EPANET uses a mult-linear fit
-        #     between points whereas this uses a regression fit of the same
-        #     H = A - B * Q **C curve used for the three point fit.
-        elif curve.num_points >= 3:
-            A0 = H[0]
-            C0 = math.log((H[0] - H[1])/(H[0] - H[-1]))/math.log(Q[1]/Q[-1])
-            B0 = (H[0] - H[1])/(Q[1]**C0)
-
-            def flow_vs_head_func(Q, a, b, c):
-                return a - b * Q ** c
+        def calculate_coefficients(curve):
+            Q = []
+            H = []
+            for pt in curve.points:
+                Q.append(pt[0])
+                H.append(pt[1])
             
-            try:
-                coeff, cov = curve_fit(flow_vs_head_func, Q, H, [A0, B0, C0])
-            except RuntimeError:
-                raise RuntimeError('Head pump ' + self.name + 
-                                   ' results in a poor regression fit to H = A - B * Q^C')
-
-            A = float(coeff[0])  # convert to native python floats
-            B = float(coeff[1]) 
-            C = float(coeff[2])  
-        else:
-            raise RuntimeError('Head pump ' + self.name + 
-                               ' has an empty pump curve.')
+            # 1-Point curve - Replicate EPANET for a one point curve
+            if curve.num_points == 1:
+                A = (4.0/3.0)*H[0]
+                B = (1.0/3.0)*(H[0]/(Q[0]**2))
+                C = 2
+            # 2-Point curve - Replicate EPANET - generate a straight line
+            elif curve.num_points == 2:
+                B = - (H[1] - H[0]) / (Q[1]**2 - Q[0]**2)
+                A = H[0] + B * Q[0] ** 2
+                C = 1
+            # 3 - Multi-point curve (3 or more points) - Replicate EPANET for 
+            #     3 point curves.  For multi-point curves, this is not a perfect 
+            #     replication of EPANET. EPANET uses a mult-linear fit
+            #     between points whereas this uses a regression fit of the same
+            #     H = A - B * Q **C curve used for the three point fit.
+            elif curve.num_points >= 3:
+                A0 = H[0]
+                C0 = math.log((H[0] - H[1])/(H[0] - H[-1]))/math.log(Q[1]/Q[-1])
+                B0 = (H[0] - H[1])/(Q[1]**C0)
+    
+                def flow_vs_head_func(Q, a, b, c):
+                    return a - b * Q ** c
                 
-        if A<=0 or B<0 or C<=0:
-            raise RuntimeError('Head pump ' + self.name + 
-                               ' has a negative head curve coefficient.')
-        # with using scipy curve_fit, I think this is a waranted check 
-        elif np.isnan(A+B+C):
-            raise RuntimeError('Head pump ' + self.name + 
-                               ' has a coefficient which is NaN!')
-        return (A, B, C)
+                try:
+                    coeff, cov = curve_fit(flow_vs_head_func, Q, H, [A0, B0, C0])
+                except RuntimeError:
+                    raise RuntimeError('Head pump ' + self.name + 
+                                       ' results in a poor regression fit to H = A - B * Q^C')
+    
+                A = float(coeff[0])  # convert to native python floats
+                B = float(coeff[1]) 
+                C = float(coeff[2])  
+            else:
+                raise RuntimeError('Head pump ' + self.name + 
+                                   ' has an empty pump curve.')
+                    
+            if A<=0 or B<0 or C<=0:
+                raise RuntimeError('Head pump ' + self.name + 
+                                   ' has a negative head curve coefficient.')
+            # with using scipy curve_fit, I think this is a waranted check 
+            elif np.isnan(A+B+C):
+                raise RuntimeError('Head pump ' + self.name + 
+                                   ' has a coefficient which is NaN!')
+            
+            self._coeffs_curve_points = curve.points                
+            self._curve_coeffs = [A,B,C]
+    
+        # main procedure    
+        curve = self.get_pump_curve()
+        if self._curve_coeffs is None or curve.points != self._coeffs_curve_points:
+            calculate_coefficients(curve)
+        
+        A = self._curve_coeffs[0]
+        B = self._curve_coeffs[1]
+        C = self._curve_coeffs[2]
+        
+        return A,B,C
     
     def get_design_flow(self):
         """

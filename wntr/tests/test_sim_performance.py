@@ -38,6 +38,37 @@ class TestPerformance(unittest.TestCase):
     @classmethod
     def tearDownClass(self):
         pass
+    
+    def test_Anytown_multipointcurves_performance(self):
+        head_diff_abs_threshold = 1e-3
+        demand_diff_abs_threshold = 1e-5
+        flow_diff_abs_threshold = 1e-5
+        rel_threshold = 1e-3
+        
+        inp_file = join(test_datadir, 'Anytown_multipointcurves.inp')
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+
+        # Apply a curve that is very fine along H = a - b * Q ** c and 
+        # verify the answers are nearly identical.
+        A = 1.313e3
+        B = 8.705e-6
+        C = 1.796e0
+        new_curve_name = 'perfect_curve'
+        cdata = [(10*q,A - B*(10*q)**C) for q in range(1200)]
+        wn.add_curve(new_curve_name,'HEAD',cdata)
+        for pump_name, pump in wn.pumps():
+            pump.pump_curve_name = new_curve_name
+            
+        epa_sim = self.wntr.sim.EpanetSimulator(wn)
+        epa_res = epa_sim.run_sim()
+
+        sim = self.wntr.sim.WNTRSimulator(wn)
+        results = sim.run_sim()
+
+        self.assertTrue(compare_results(results.node['head'], epa_res.node['head'], head_diff_abs_threshold, rel_threshold))
+        self.assertTrue(compare_results(results.node['demand'].loc[:, wn.tank_name_list], epa_res.node['demand'].loc[:, wn.tank_name_list], demand_diff_abs_threshold, rel_threshold))
+        self.assertTrue(compare_results(results.link['flowrate'], epa_res.link['flowrate'], flow_diff_abs_threshold, rel_threshold))
+        
 
     def test_Net1_performance(self):
         head_diff_abs_threshold = 1e-3
@@ -103,3 +134,11 @@ class TestPerformance(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+    
+    
+    #import cProfile, pstats
+    #from pstats import SortKey
+    
+    #cProfile.run('unittest.main()')
+    #p = pstats.Stats('profile_results')
+    #p.sort_stats(SortKey.CUMULATIVE).print_stats(100)
