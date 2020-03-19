@@ -25,6 +25,11 @@ v0.2.2 (master)
 * Added optional input arguments to :class:`~wntr.graphics.network.plot_network` to add labels to node and link colorbars.
 * Added optional input argument for detection limit to :class:`~wntr.metrics.water_security.mass_contaminant_consumed` calculation. 
   The default detection limit for mass consumed, volume consumed, and extent of contamination is 0.
+* Added support for mutlipoint curves in the WNTRSimualtor.  The points are fit to the same
+  function that is used for 3-point curves.
+* Added support for tank volume curves in the WNTRSimualtor.  
+  Tank volume curves are also now used in :class:`~wntr.metrics.economic.annual_network_cost`.
+  Tank curves can also be visualized using the function :class:`~wntr.graphics.curve.plot_volume_curve`.
 * Added NotImplementedErrors for PBV and GPV valves, when using the WNTRSimualtor
 * Updated methods to be compatible with NetworkX 2.4 and Pandas 1.0
 * Added required dependencies to setup.py.  Required and optional dependencies  
