@@ -50,6 +50,9 @@ logger = logging.getLogger(__name__)
 class Junction(Node):
     """
     Junction class, inherited from Node.
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_junction()` method. 
 
     Parameters
     ----------
@@ -57,7 +60,7 @@ class Junction(Node):
         Name of the junction.
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object the junction will belong to
-
+        
     """
 
     def __init__(self, name, wn):
@@ -200,7 +203,14 @@ class Junction(Node):
 class Tank(Node):
     """
     Tank class, inherited from Node.
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_tank()` method. 
+    
+    Tank volume can be defined using a constant diameter or a volume curve. 
+    If the tank has a volume curve, the diameter has no effect on hydraulic 
+    simulations. 
+    
     Parameters
     ----------
     name : string
@@ -208,17 +218,6 @@ class Tank(Node):
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object the tank will belong to
         
-    Tank volume can either be governed by a constant diameter or it can
-    be governed by a volume curve. If the tank has a volume curve, the 
-    diameter has no effect on WNTR hydraulic calculations but does represent the
-    diameter of supports below the tank for economic analysis. 
-    
-    This class is intended to be instantiated through the 
-    
-    wntr.network.model.WaterNetworkModel.add_tank()
-    
-    method. 
-
     """
 
     def __init__(self, name, wn):
@@ -295,21 +294,20 @@ class Tank(Node):
     
     
     def get_volume(self, level=None):
-        """Obtain the volume of this tank for a given level
+        """
+        Returns tank volume at a given level
         
         Parameters
         ----------
         level: float or NoneType (optional)
             The level at which the volume is to be calculated. 
-            If level=None, then the volume calculated is for the current 
-            tank level value.
-            Level is equivalent to depth of fluid in the tank. Tank level is 
-            equal to the tank head minus the tank elevation (height of the base)
+            If level=None, then the volume is calculated at the current 
+            tank level (self.level)
             
         Returns
         -------
         vol: float 
-            Tank volume at level or at self.level if level=None
+            Tank volume at a given level
         """
         
         if self.vol_curve is None:
@@ -323,13 +321,13 @@ class Tank(Node):
                 level = self.level
             vol = np.interp(level,arr[:,0],arr[:,1])
         return vol
-            
-            
 
 
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
-        Add a leak to a tank. Leaks are modeled by:
+        Add a leak to a tank. 
+        
+        Leaks are modeled by:
 
         Q = discharge_coeff*area*sqrt(2*g*h)
 
@@ -393,7 +391,10 @@ class Tank(Node):
 class Reservoir(Node):
     """
     Reservoir class, inherited from Node
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_reservoir()` method. 
+    
     Parameters
     ----------
     name : string
@@ -407,6 +408,7 @@ class Reservoir(Node):
         Head pattern.
         
     """
+    
     def __init__(self, name, wn, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(wn, name)
         self._head_timeseries = TimeSeries(wn._pattern_reg, base_head)
@@ -455,7 +457,10 @@ class Reservoir(Node):
 class Pipe(Link):
     """
     Pipe class, inherited from Link.
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pipe()` method. 
+    
     Parameters
     ----------
     name : string
@@ -466,7 +471,7 @@ class Pipe(Link):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pipe will belong to.
-
+        
     """
 
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -518,9 +523,11 @@ class Pump(Link):
     """
     Pump class, inherited from Link.
 
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
+    
     For details about the different subclasses, please see one of the following:
     :class:`~wntr.network.elements.HeadPump` and :class:`~wntr.network.elements.PowerPump`
-    
 
     Parameters
     ----------
@@ -532,7 +539,7 @@ class Pump(Link):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
-
+        
     """
 
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -622,6 +629,9 @@ class Pump(Link):
 class HeadPump(Pump):
     """
     Head pump class, inherited from Pump.
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
     
     Parameters
     ----------
@@ -790,6 +800,9 @@ class PowerPump(Pump):
     """
     Power pump class, inherited from Pump.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
+    
     Parameters
     ----------
     name : string
@@ -800,7 +813,7 @@ class PowerPump(Pump):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
-
+        
     """
     
     def __repr__(self):
@@ -834,12 +847,14 @@ class PowerPump(Pump):
 class Valve(Link):
     """
     Valve class, inherited from Link.
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     For details about the different subclasses, please see one of the following:
     :class:`~wntr.network.elements.PRValve`, :class:`~wntr.network.elements.PSValve`,
     :class:`~wntr.network.elements.PBValve`, :class:`~wntr.network.elements.FCValve`,
     :class:`~wntr.network.elements.TCValve`, and :class:`~wntr.network.elements.GPValve`.
-
 
     Parameters
     ----------
@@ -851,8 +866,9 @@ class Valve(Link):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
-
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(Valve, self).__init__(wn, name, start_node_name, end_node_name)
         self.diameter = 0.3048
@@ -900,6 +916,9 @@ class PRValve(Valve):
     """
     Pressure reducing valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -910,8 +929,9 @@ class PRValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
-
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(PRValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -925,6 +945,9 @@ class PSValve(Valve):
     """
     Pressure sustaining valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -935,8 +958,9 @@ class PSValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
-    
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(PSValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -950,6 +974,9 @@ class PBValve(Valve):
     """
     Pressure breaker valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -960,8 +987,9 @@ class PBValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
-    
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(PBValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -975,6 +1003,9 @@ class FCValve(Valve):
     """
     Flow control valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -985,8 +1016,9 @@ class FCValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
-    
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(FCValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -1000,6 +1032,9 @@ class TCValve(Valve):
     """
     Throttle control valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -1010,8 +1045,9 @@ class TCValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
-    
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(TCValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -1025,6 +1061,9 @@ class GPValve(Valve):
     """
     General purpose valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -1035,8 +1074,9 @@ class GPValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
-    
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(GPValve, self).__init__(name, start_node_name, end_node_name, wn)
         self._headloss_curve_name = None
@@ -1066,6 +1106,9 @@ class Pattern(object):
     """
     Pattern class.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pattern` method. 
+    
     Parameters
     ----------
     name : string
@@ -1079,6 +1122,7 @@ class Pattern(object):
         Boolean indicating if the pattern should be wrapped.
         If True (the default), then the pattern repeats itself forever; if 
         False, after the pattern has been exhausted, it will return 0.0.
+        
     """
     
     def __init__(self, name, multipliers=[], time_options=None, wrap=True):
@@ -1387,37 +1431,6 @@ class Demands(MutableSequence):
     def __repr__(self):
         return '<Demands: {}>'.format(repr(self._list))
     
-#    def tostring(self):
-#        """String representation of demands"""
-#        if len(self._list) == 0:
-#            s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
-#            s += '    None\n'
-#            return s
-##        elif len(self._list) == 1:
-##            s  = '  ========   ============   ====================   ==============\n'
-##            s += '  Demand:    {:12.6g}   {:20s}   {:14s}\n'.format(self._list[0].base_value,
-##                                                                    self._list[0].pattern_name,
-##                                                                    self._list[0].category)
-##            s += '  ========   ============   ====================   ==============\n'
-##            return s
-##        s  = '  ========   ============   ====================   ==============\n'
-##        s += '  Demand #   Base Value     Pattern Name           Category      \n'
-##        s += '  --------   ------------   --------------------   --------------\n'
-#        s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
-#        lf = '  [{:5d} ]  {}'
-#        for ct, dem in enumerate(self._list):
-#            s += lf.format(ct+1, dem.tostring())
-##        s += '  ========   ============   ====================   ==============\n'
-#        return s
-#    
-#    def tolist(self):
-#        """List representation of demands"""
-#        if len(self._list) == 0: return None
-#        d = []
-#        for demand in self._list:
-#            d.append(demand.todict())
-#        return d
-    
     def to_ts(self, obj):
         """Time series representation of demands"""
         if isinstance(obj, (list, tuple)) and len(obj) >= 2:
@@ -1499,7 +1512,10 @@ class Demands(MutableSequence):
 class Curve(object):
     """
     Curve base class.
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_curve` method. 
+    
     Parameters
     ----------
     name : str
@@ -1515,7 +1531,9 @@ class Curve(object):
         one of the simulators is run.
     options : WaterNetworkOptions, optional
         Water network options to lookup headloss function
+        
     """
+    
     def __init__(self, name, curve_type=None, points=[], 
                  original_units=None, current_units='SI', options=None):
         self._name = name
@@ -1625,7 +1643,10 @@ class Curve(object):
 class Source(object):
     """
     Water quality source class.
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_source` method. 
+    
     Parameters
     ----------
     name : string
@@ -1640,6 +1661,7 @@ class Source(object):
     pattern: Pattern, optional
         If None, then the value will be constant. Otherwise, the Pattern will be used
         (default = None).
+        
     """
 
 #    def __init__(self, name, node_registry, pattern_registry):

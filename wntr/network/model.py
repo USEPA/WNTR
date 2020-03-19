@@ -384,8 +384,8 @@ class WaterNetworkModel(AbstractModel):
         min_vol : float
             Minimum tank volume.
         vol_curve : str
-            Name of a volume curve (optional)
-        coordinates : tuple of floats
+            Name of a volume curve, optional
+        coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
             
         Raises
@@ -2175,23 +2175,14 @@ class NodeRegistry(Registry):
         max_level : float
             Maximum tank level.
         diameter : float
-            Tank diameter.
-            
-            If no volume curve is supplied, then this is the constant diameter
-            of a cylindrical tank. If a volume curve name (vol_curve) is supplied,
-            then this is the diameter of the tank for supports below the tank
-            which is not used in hydraulic analysis but is used for economic
-            analysis of the tank cost.
+            Tank diameter of a cylindrical tank (only used when the volume 
+            curve is None)
         min_vol : float
-            Minimum tank volume.
-            
-            this variable only has an effect for constant diameter tanks. Otherwise,
-            the volume curve vol_curve limited by min_level and max_level takes
-            precidence in defining how the tank performs.
-            
-        vol_curve : str
-            Name of a volume curve (optional)
-        coordinates : tuple of floats
+            Minimum tank volume (only used when the volume curve is None)
+        vol_curve : str, optional
+            Name of a volume curve. The volume curve overrides the tank diameter
+            and minimum volume.
+        coordinates : tuple of floats, optional
             X-Y coordinates of the node location.
             
         Raises

@@ -3,11 +3,7 @@ The wntr.graphics.curve module includes methods plot fragility curves and
 pump curves.
 """
 import numpy as np
-from scipy.optimize import fsolve
-try:
-    import matplotlib.pyplot as plt
-except:
-    plt = None
+import matplotlib.pyplot as plt
 import logging
 
 logger = logging.getLogger(__name__)
@@ -25,31 +21,22 @@ def plot_fragility_curve(FC, fill=True, key='Default',
     -----------
     FC : wntr.scenario.FragilityCurve object
         Fragility curve
-    
-    fill : bool (optional)
-        If true, fill area under the curve (default = True)
-    
-    key : string (optional)
-        Fragility curve state distribution key (default = 'Default')
-    
-    title : string (optional)
+    fill : bool, optional
+        If true, fill area under the curve
+    key : string, optional
+        Fragility curve state distribution key
+    title : string, optional
         Plot title
-    
-    xmin : float (optional)
-        X axis minimum (default = 0)
-    
-    xmax : float (optional)
-        X axis maximum (default = 1)
-    
-    npoints : int (optional)
-        Number of points (default = 100)
-    
-    xlabel : string (optional)
-        X axis label (default = 'x')
-    
-    ylabel : string (optional)
-        Y axis label (default = 'Probability of exceeding a damage state')
-    
+    xmin : float, optional
+        X axis minimum 
+    xmax : float, optional
+        X axis maximum 
+    npoints : int, optional
+        Number of points 
+    xlabel : string, optional
+        X axis label
+    ylabel : string, optional
+        Y axis label
     ax : matplotlib axes object, optional
         Axes for plotting (None indicates that a new figure with a single 
         axes will be used)
@@ -57,10 +44,7 @@ def plot_fragility_curve(FC, fill=True, key='Default',
     Returns
     ---------
     ax : matplotlib axes object
-"""
-    if plt is None:
-        raise ImportError('matplotlib is required')
-    
+    """
     if ax is None: # create a new figure
         plt.figure(figsize=[8,4])
         ax = plt.gca()
@@ -99,28 +83,20 @@ def plot_pump_curve(pump, title='Pump curve',
     -----------
     pump : wntr.network.elements.Pump object
         Pump
-        
-    title : string (optional)
+    title : string, optional
         Plot title
-
-    xmin : float (optional)
-        X axis minimum (default = 0)
-    
-    xmax : float (optional)
-        X axis maximum (default = None)
-    
-    ymin : float (optional)
-        Y axis minimum (default = 0)
-    
-    ymax : float (optional)
-        Y axis maximum (default = None)
-    
-    xlabel : string (optional)
-        X axis label (default = 'Flow (m3/s)')
-    
-    ylabel : string (optional)
-        Y axis label (default = 'Head (m)')
-    
+    xmin : float, optional
+        X axis minimum
+    xmax : float, optional
+        X axis maximum
+    ymin : float, optional
+        Y axis minimum
+    ymax : float, optional
+        Y axis maximum
+    xlabel : string, optional
+        X axis label
+    ylabel : string, optional
+        Y axis label 
     ax : matplotlib axes object, optional
         Axes for plotting (None indicates that a new figure with a single 
         axes will be used)
@@ -134,9 +110,6 @@ def plot_pump_curve(pump, title='Pump curve',
     except:
         print("Pump "+pump.name+" has no curve")
         return
-
-    if plt is None:
-        raise ImportError('matplotlib is required')
     
     if ax is None: # create a new figure
         plt.figure(figsize=[8,4])
@@ -144,12 +117,10 @@ def plot_pump_curve(pump, title='Pump curve',
         
     ax.set_title(title)
     
-    Q = []
-    H = []
-    for pt in curve.points:
-        Q.append(pt[0])
-        H.append(pt[1])
- 
+    cdata = np.array(curve.points)
+    Q = cdata[:,0]
+    H = cdata[:,1]
+
     try:
         coeff = pump.get_head_curve_coefficients()
         A = coeff[0]
@@ -175,7 +146,6 @@ def plot_pump_curve(pump, title='Pump curve',
     return ax
 
 def plot_volume_curve(tank, title='Tank volume curve', 
-                    d0=0,
                     ax=None):
     """
     Plots a tank volume curve and the corresponding axi-symmetric tank profile shape
@@ -183,51 +153,24 @@ def plot_volume_curve(tank, title='Tank volume curve',
     Parameters
     -----------
     tank : wntr.network.elements.Tank object
-        Tank
-        
-    title : string (optional)
+        Tank 
+    title : string, optional
         Plot title
-        
-    d0 : float (optional)
-        Initial diameter of the tank 
-    
     ax : matplotlib axes object, optional
-        Axes for plotting (None indicates that a new figure with a single 
-        axes will be used)
+        Axes for plotting (None indicates that a new figure with two subplots 
+        will be used)
         
     Returns
     ---------
-    fig, ax : matplot figure object, matplotlib list of 2 axes object
-              ax[0] is the left hand plot, ax[1] is the right hand plot
+    ax : matplotlib axes object
+        ax[0] is the left hand plot, ax[1] is the right hand plot
     """
-    def no_curve_msg(tank):
+    curve = tank.vol_curve
+    
+    if curve is None:
         print("Tank "+tank.name+" has no volume curve")
-        
-    def cone_vol_func(x,d,L,V,dn_gt_d):
-        dn = x[0]
-
-        if dn == d:
-            ans = (np.pi * d**2/4.0) * L
-        else:
-            b = -L * d / (dn - d)
-            if b > 0:
-                ans = (np.pi/12) * (dn**2 * (b+L) - d**2 * b) - V
-            else:
-                ans = (np.pi/12) * (d**2 * b - dn**2 * (b - L)) - V
-        return ans
-    
-    try:
-        curve = tank.vol_curve
-        if curve is None:
-            no_curve_msg(tank)
-            return
-    except:
-        no_curve_msg(tank)
         return
-    
-    if plt is None:
-        raise ImportError('matplotlib is required')
-    
+
     if ax is None: # create a new figure
         fig,ax = plt.subplots(1,2,figsize=[12,4])
 
@@ -235,17 +178,20 @@ def plot_volume_curve(tank, title='Tank volume curve',
     L = cdata[:,0]
     V = cdata[:,1]
     
-    Vlimit = np.interp([tank.min_level,tank.max_level],L,V)
+    V_min_level = tank.get_volume(tank.min_level)
+    V_max_level = tank.get_volume(tank.max_level)
 
-        
-    ax[0].plot(L, V, '-o', linewidth=1,label="volume curve",color='k')
-    ax[0].plot([tank.min_level,tank.min_level], [Vlimit[0],Vlimit[1]],'-.',label="lower limit",color='r')
-    ax[0].plot([tank.max_level,tank.max_level], [Vlimit[0],Vlimit[1]],'-.',label="upper limit",color='r')
+    ax[0].plot(L, V, '-o', linewidth=1,label="volume curve")
+    ax[0].plot([tank.min_level,tank.min_level], [V_min_level,V_max_level],'-.',
+        label="lower limit",color='r')
+    ax[0].plot([tank.max_level,tank.max_level], [V_min_level,V_max_level],'-.',
+        label="upper limit",color='r')
     ax[0].grid("on")
     ax[0].set_xlabel("Tank level (m)")
-    ax[0].set_ylabel("Tank Volume (m)")
+    ax[0].set_ylabel("Tank volume (m3)")
     ax[0].set_title(title)
     ax[0].legend()
+    
     # calculate the tank profile assuming an axi-symmetric tank
     d = []
     l = []
@@ -267,15 +213,19 @@ def plot_volume_curve(tank, title='Tank volume curve',
         vol0 = vol
     l.append(l[-1])
     d.append(0.0)
+    
     ax[1].plot(np.array(d)/2,l,label="tank profile")
     max_d = max([tank.diameter,max(d)])
-    ax[1].plot([0.0,max_d/2.0],[tank.min_level,tank.min_level],'-.',label="lower limit",color='r')
-    ax[1].plot([0.0,max_d/2.0],[tank.max_level,tank.max_level],'-.',label="upper limit",color='r')
-    ax[1].plot([0.0,max_d/2.0],[0.0,0.0],'-.',label='elevation={0:5.2f}m'.format(tank.elevation),color='k')
+    ax[1].plot([0.0,max_d/2.0],[tank.min_level,tank.min_level],'-.',
+        label="lower limit",color='r')
+    ax[1].plot([0.0,max_d/2.0],[tank.max_level,tank.max_level],'-.',
+        label="upper limit",color='r')
+    #ax[1].plot([0.0,max_d/2.0],[0.0,0.0],'-.',label='elevation={0:5.2f}m'.format(tank.elevation),color='k')
     ax[1].grid("on")
     ax[1].set_xlabel("Equivalent axisymmetric tank radius (m)")
     ax[1].set_ylabel("Tank level (m)")
     ax[1].set_title("Geometric tank profile")
+    
     xlim = list(ax[1].get_xlim())
     ylim = list(ax[1].get_ylim())
     if np.diff(xlim) > np.diff(ylim):
@@ -286,4 +236,4 @@ def plot_volume_curve(tank, title='Tank volume curve',
     ax[1].set_ylim(ylim)
     ax[1].legend()
     
-    return fig,ax
+    return ax
