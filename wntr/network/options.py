@@ -103,6 +103,8 @@ class _OptionsBase(object):
         return self.__dict__[index]
     
     def __eq__(self, other):
+        if other is None: return False
+        if not hasattr(other, '__dict__'): return False
         for k in self.__dict__.keys():
             if not self.__dict__[k] == other.__dict__[k]: return False
         return True
