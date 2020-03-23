@@ -176,7 +176,7 @@ Actions can also be combined, as shown in the following example.
     >>> cond4 = controls.OrCondition(cond1, cond2)
     >>> rule4 = controls.Rule(cond4, [act1, act2], name='rule4')
     >>> print(rule4)
-    Rule  := if ( Tank('1').level > 46.0248 || sim_time >= 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
+    Rule rule4 := if ( Tank('1').level > 46.0248 || sim_time >= 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
 
 The flexibility of rules provides an extremely powerful tool for defining complex network operations.
 
