@@ -311,7 +311,7 @@ The new pipe can be added to either end of the original pipe.
 	
     Pipe split and pipe break
 	
-The following example splits pipe '123' in Net3 into pipes '123' and '123_B'.  
+The following example splits pipe '123' in Net3 into pipes '123' and '123_B.'  
 The new junction is named '123_node.' The new node is then used to add a leak 
 to the model.
 

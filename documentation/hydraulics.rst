@@ -5,7 +5,7 @@
 Hydraulic simulation
 ==============================
 
-WNTR contains two simulators: the **EpanetSimulator** and the **WNTRSimulator**.
+WNTR contains two simulators: the EpanetSimulator and the WNTRSimulator.
 See :ref:`software_framework` for more information on features and limitations of these simulators. 
 
 The EpanetSimulator can be used to run demand-driven hydraulic simulations
@@ -27,7 +27,7 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 	>>> sim = wntr.sim.EpanetSimulator(wn)
 	>>> results = sim.run_sim()
 
-The WNTRSimulator is a pure Python hydraulics simulation engine based on the same equations
+The WNTRSimulator is a hydraulic simulation engine based on the same equations
 as EPANET. The WNTRSimulator does not include equations to run water quality 
 simulations. The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulations
 in either demand-driven or pressure dependent demand mode ('DD' or 'PDD').
@@ -224,7 +224,7 @@ Using the pressure dependent demand simulation, the demand starts to decrease wh
    :width: 610
    :alt: Pressure driven example
    
-   Example relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
+   Relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
 
 The following example sets nominal and minimum pressure for each junction.  Note that nominal and minimum pressure can vary throughout the network.
 
@@ -267,7 +267,7 @@ In the example, the diameter of the leak is set to 0.5 cm, 1.0 cm, and 1.5 cm.
    :width: 619
    :alt: Leak demand
    
-   Example relationship between leak demand (d) and pressure (p).
+   Relationship between leak demand (d) and pressure (p).
 
 The following example adds a leak to the water network model.
 
