@@ -95,7 +95,7 @@ The earthquake properties can be plotted on the network, as follows.
    :width: 640
    :alt: Peak ground acceleration
    
-   Peak ground acceleration
+   Peak ground acceleration.
    
 .. _pipe_leak:
 	
