@@ -71,14 +71,14 @@ Detailed installation instructions are included below.
 	   :width: 891
 	   :alt: Python
 	   
-	   Opening a Python console from a command prompt.
+	   Python console opened from a command prompt.
    
 	.. _fig-spyder:
 	.. figure:: figures/spyder.png
 	   :width: 759
 	   :alt: Spyder
 	   
-	   Opening a Python console using Spyder.
+	   Python console using Spyder.
 	   
 **Step 2**: Install WNTR
 	
