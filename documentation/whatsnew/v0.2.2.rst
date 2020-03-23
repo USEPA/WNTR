@@ -1,6 +1,6 @@
 .. _whatsnew_0220:
 
-v0.2.2 (master)
+v0.2.2 (March 23, 2020)
 ---------------------------------------------------
 
 * `WntrMultiDiGraph` class has been removed and WNTR now uses the NetworkX `MultiDiGraph` class directly.  
