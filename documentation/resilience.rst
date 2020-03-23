@@ -141,7 +141,7 @@ graph or a graph with a single edge between two nodes.
 .. doctest::
 
     >>> import networkx as nx
-	>>> G = wn.get_graph() # directed multigraph
+    >>> G = wn.get_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
 
