@@ -6,7 +6,7 @@
 
 Simulation results
 =============================
-Simulation results are stored in a :class:`~wntr.sim.results.SimulationResults` object which contains:
+Simulation results are stored in a results object which contains:
 
 * Timestamp when the results were created
 * Network name
@@ -30,7 +30,7 @@ Simulation results are stored in a :class:`~wntr.sim.results.SimulationResults` 
 
 The node and link results are dictionaries of pandas DataFrames.  Each dictionary is a key:value pair, where
 the key is a result attribute (e.g., node demand, link flowrate) and the value is a DataFrame. 
-DataFrames are indexed by time step (in seconds from the start of the simulation) with columns that are
+DataFrames are indexed by timestep (in seconds from the start of the simulation) with columns that are
 labeled using node or link names. 
 The use of pandas facilitates a comprehensive set of time series analysis options that can be used to evaluate results.
 For more information on pandas, see http://pandas.pydata.org/.
@@ -57,16 +57,8 @@ For example, node results generated with the EpanetSimulator have the following 
 .. doctest::
 
     >>> node_keys = results.node.keys()
-
-.. doctest::
-    :hide:
-
-    >>> node_keys = list(sorted(node_keys))
-
-.. doctest::
-
-    >>> print(node_keys)
-    ['demand', 'head', 'pressure', 'quality']
+    >>> print(node_keys) # doctest: +SKIP
+    dict_keys(['demand', 'head', 'pressure', 'quality']) 
 	
 Link results include DataFrames for each of the following attributes:
 
@@ -84,16 +76,8 @@ For example, link results generated with the EpanetSimulator have the following 
 .. doctest::
 
     >>> link_keys = results.link.keys()
-
-.. doctest::
-    :hide:
-
-    >>> link_keys = list(sorted(link_keys))
-
-.. doctest::
-
-    >>> print(link_keys)
-    ['flowrate', 'frictionfact', 'headloss', 'linkquality', 'rxnrate', 'setting', 'status', 'velocity']
+    >>> print(link_keys) # doctest: +SKIP
+    dict_keys(['flowrate', 'frictionfact', 'headloss', 'linkquality', 'rxnrate', 'setting', 'status', 'velocity']) 
 
 To access node pressure over all nodes and times:
 
@@ -101,12 +85,12 @@ To access node pressure over all nodes and times:
 
     >>> pressure = results.node['pressure']
 
-DataFrames can be sliced to extract specific information. For example, to access the pressure at node '123' over all times (the ":" notation returns all variables along the specified axis, "head" returns the first 5 rows, values displayed to 2 decimal places):
+DataFrames can be sliced to extract specific information. For example, to access the pressure at node '123' over all times (the ":" notation returns all variables along the specified axis, "head()" returns the first 5 rows, values displayed to 2 decimal places):
 
 .. doctest::
 
     >>> pressure_at_node123 = pressure.loc[:,'123']
-    >>> print(pressure_at_node123.head())
+    >>> print(pressure_at_node123.head()) 
     0       47.08
     900     47.13
     1800    47.18
@@ -152,11 +136,11 @@ Data can be plotted as a time series, as shown in :numref:`fig-plot-timeseries`:
    :width: 640
    :alt: Time-series graph.
 
-   Example time series graphic.
+   Time series graphic showing pressure at a node.
    
 Data can also be plotted on the water network model, as shown in :numref:`fig-plot-network`.
 Note that the :class:`~wntr.graphics.network.plot_network` function returns matplotlib objects 
-for the the network nodes and edges, which can be further customized by the user.
+for the network nodes and edges, which can be further customized by the user.
 In this figure, the node pressure at 1 hr is plotted on the network. Link attributes can be 
 plotted in a similar manner.
 
@@ -181,11 +165,21 @@ plotted in a similar manner.
    :width: 659
    :alt: Network graphic
 
-   Example network graphic.
+   Network graphic showing pressure at 1 hour.
 
 Network and time series graphics can be customized to add titles, legends, axis labels, and/or subplots.
    
-Pandas includes methods to write DataFrames to CSV, HDF, JSON, and SQL.
+Pandas includes methods to write DataFrames to the following file formats:
+
+* Excel
+* Comma-separated values (CSV)
+* Hierarchical Data Format (HDF)
+* JavaScript Object Notation (JSON)
+* Structured Query Language (SQL)
+
 For example, DataFrames can be saved to Excel files using:
 
    >>> pressure.to_excel('pressure.xlsx')
+
+.. note:: 
+   The Pandas method ``to_excel`` requires the Python package **openpyxl**, which is an optional dependency of WNTR.
