@@ -1,6 +1,6 @@
 .. _whatsnew_0220:
 
-v0.2.2 (master)
+v0.2.2 (March 23, 2020)
 ---------------------------------------------------
 
 * `WntrMultiDiGraph` class has been removed and WNTR now uses the NetworkX `MultiDiGraph` class directly.  
@@ -25,6 +25,9 @@ v0.2.2 (master)
 * Added optional input arguments to :class:`~wntr.graphics.network.plot_network` to add labels to node and link colorbars.
 * Added optional input argument for detection limit to :class:`~wntr.metrics.water_security.mass_contaminant_consumed` calculation. 
   The default detection limit for mass consumed, volume consumed, and extent of contamination is 0.
+* Efficiency updates for skeletonize and other network morphology functions. 
+  The functions can now make changes to the original water network model or a 
+  deepcopy of the model.
 * Added NotImplementedErrors for PBV and GPV valves, when using the WNTRSimualtor
 * Updated methods to be compatible with NetworkX 2.4 and Pandas 1.0
 * Added required dependencies to setup.py.  Required and optional dependencies  
