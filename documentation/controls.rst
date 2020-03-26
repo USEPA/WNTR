@@ -76,8 +76,8 @@ Conditions define when an action should occur. The condition classes are listed 
    :class:`~wntr.network.controls.SimTimeCondition`	     Condition based on time since start of the simulation
    :class:`~wntr.network.controls.ValueCondition`	     Compare a network element attribute to a set value
    :class:`~wntr.network.controls.RelativeCondition`	 Compare attributes of two different objects (e.g., levels from tanks 1 and 2)
-   :class:`~wntr.network.controls.OrCondition`	         Combine two WNTR Conditions with an OR
-   :class:`~wntr.network.controls.AndCondition`	         Combine two WNTR Conditions with an AND
+   :class:`~wntr.network.controls.OrCondition`	         Combine two WNTR conditions with an OR
+   :class:`~wntr.network.controls.AndCondition`	         Combine two WNTR conditions with an AND
    ====================================================  ========================================================================================
 
 All of the above conditions are valid EpanetSimulator conditions except :class:`~wntr.network.controls.RelativeCondition`.
@@ -174,9 +174,9 @@ Actions can also be combined, as shown in the following example.
 .. doctest::
 
     >>> cond4 = controls.OrCondition(cond1, cond2)
-    >>> rule4 = controls.Rule(cond4, [act1, act2])
+    >>> rule4 = controls.Rule(cond4, [act1, act2], name='rule4')
     >>> print(rule4)
-    Rule  := if ( Tank('1').level > 46.0248 || sim_time >= 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
+    Rule rule4 := if ( Tank('1').level > 46.0248 || sim_time >= 435600 sec ) then set Pipe('330').status to Open and set HeadPump('10').status to Open with priority 3
 
 The flexibility of rules provides an extremely powerful tool for defining complex network operations.
 
