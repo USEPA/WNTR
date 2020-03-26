@@ -13,7 +13,6 @@ The wntr.metrics.hydraulic module contains hydraulic metrics.
 
 """
 import wntr.network
-from wntr.network.graph import _all_simple_paths
 import numpy as np
 import pandas as pd
 import networkx as nx
@@ -295,7 +294,7 @@ def entropy(G, sources=None, sinks=None):
         if G.nodes[nodej]['type']  == 'Junction':
             for source in sources:
                 if nx.has_path(G, source, nodej):
-                    simple_paths = _all_simple_paths(G,source,target=nodej)
+                    simple_paths = nx.all_simple_paths(G,source,target=nodej)
                     sp = sp + ([p for p in simple_paths])
                     # all_simple_paths was modified to check 'has_path' in the
                     # loop, but this is still slow for large networks

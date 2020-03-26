@@ -16,7 +16,7 @@ Users can install the latest release of WNTR from PyPI using the following comma
 
     pip install wntr
     
-Developers can install the master (development) branch of WNTR from the GitHub 
+Developers can install the master branch of WNTR from the GitHub 
 repository using the following commands::
 
     git clone https://github.com/USEPA/WNTR
@@ -71,14 +71,14 @@ Detailed installation instructions are included below.
 	   :width: 891
 	   :alt: Python
 	   
-	   Opening a Python console from a command prompt.
+	   Python console opened from a command prompt.
    
 	.. _fig-spyder:
 	.. figure:: figures/spyder.png
 	   :width: 759
 	   :alt: Spyder
 	   
-	   Opening a Python console using Spyder.
+	   Python console using Spyder.
 	   
 **Step 2**: Install WNTR
 	
@@ -97,7 +97,7 @@ Detailed installation instructions are included below.
 	  This will install the latest stable version of WNTR from https://pypi.python.org/pypi/wntr.  
 	
 	* **Option 2**: Users can download a zip file that includes source files and the examples folder from the US EPA GitHub organization.  
-	  To download the master (development) branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
+	  To download the master branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
 	  This downloads a zip file called WNTR-master.zip.
 	  To download a specific release, go to https://github.com/USEPA/WNTR/releases and select a zip file.
 	  Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder. 
@@ -117,7 +117,7 @@ Detailed installation instructions are included below.
 		cd WNTR
 		python setup.py develop
 	
-	This will install the master (development) branch of WNTR from https://github.com/USEPA/WNTR.
+	This will install the master branch of WNTR from https://github.com/USEPA/WNTR.
 	More information for developers can be found in the :ref:`developers` section.
 
 **Step 3**: Test installation

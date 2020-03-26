@@ -3,19 +3,19 @@ The wntr.morph.skel module contains functions to skeletonize water
 network models.
 """
 import logging
+import copy
 import itertools
 import networkx as nx
     
 from wntr.network.elements import Pipe, Junction
 from wntr.sim.core import WNTRSimulator
 from wntr.sim import EpanetSimulator
-from wntr.morph.node import _deepcopy_wn
 
 logger = logging.getLogger(__name__)
 
 def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge=True, 
                 parallel_pipe_merge=True, max_cycles=None, use_epanet=True, 
-                return_map=False):
+                return_map=False, return_copy=True):
     """
     Perform network skeletonization using branch trimming, series pipe merge, 
     and parallel pipe merge operations. Candidate pipes for removal is based 
@@ -24,43 +24,43 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
     Parameters
     -------------
     wn: wntr WaterNetworkModel
-        A WaterNetworkModel object
-    
+        Water network model
     pipe_diameter_threshold: float 
         Pipe diameter threshold used to determine candidate pipes for 
         skeletonization
-    
-    branch_trim: bool (optional, default = True)
-        Include branch trimming in skeletonization
-    
-    series_pipe_merge: bool (optional, default = True)
-        Include series pipe merge in skeletonization
-        
-    parallel_pipe_merge: bool (optional, default = True)
-        Include parallel pipe merge in skeletonization
-        
-    max_cycles: int or None (optional, default = None)
-        Defines the maximum number of cycles in the skeletonization process. 
+    branch_trim: bool, optional
+        If True, include branch trimming in skeletonization
+    series_pipe_merge: bool, optional
+        If True, include series pipe merge in skeletonization
+    parallel_pipe_merge: bool, optional
+        If True, include parallel pipe merge in skeletonization
+    max_cycles: int or None, optional
+        Maximum number of cycles in the skeletonization process. 
         One cycle performs branch trimming for all candidate pipes, followed
         by series pipe merging for all candidate pipes, followed by parallel 
         pipe merging for all candidate pipes. If max_cycles is set to None, 
         skeletonization will run until the network can no longer be reduced.
-        
-    use_epanet: bool (optional)
-        If True, use the EpanetSimulator to compute headloss in pipes.  If False, 
-        use the WNTRSimulator to compute headloss in pipes
-    
-    return_map: bool (optional, default = False)
-        Return a skeletonization map.   The map is a dictionary 
+    use_epanet: bool, optional
+        If True, use the EpanetSimulator to compute headloss in pipes.  
+        If False, use the WNTRSimulator to compute headloss in pipes.
+    return_map: bool, optional
+        If True, return a skeletonization map. The map is a dictionary 
         that includes original nodes as keys and a list of skeletonized nodes 
         that were merged into each original node as values.
-                
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
+        
     Returns
     --------
-    A skeletonized WaterNetworkModel object and (if return_map = True) a 
-    skeletonization map.
+    wntr WaterNetworkModel
+        Skeletonized water network model
+    dictionary
+        Skeletonization map (if return_map = True) which includes original 
+        nodes as keys and a list of skeletonized nodes that were merged into 
+        each original node as values.
     """
-    skel = _Skeletonize(wn, use_epanet)
+    skel = _Skeletonize(wn, use_epanet, return_copy)
     
     skel.run(pipe_diameter_threshold, branch_trim, series_pipe_merge, 
              parallel_pipe_merge, max_cycles)
@@ -73,10 +73,13 @@ def skeletonize(wn, pipe_diameter_threshold, branch_trim=True, series_pipe_merge
 		
 class _Skeletonize(object):
     
-    def __init__(self, wn, use_epanet):
+    def __init__(self, wn, use_epanet, return_copy):
         
-        # Get a copy of the WaterNetworkModel
-        self.wn = _deepcopy_wn(wn)
+        if return_copy:
+            # Get a copy of the WaterNetworkModel
+            self.wn = copy.deepcopy(wn)
+        else:
+            self.wn = wn
         
         # Get the WaterNetworkModel graph
         G = self.wn.get_graph()
@@ -112,7 +115,8 @@ class _Skeletonize(object):
         head = results.node['head']
         headloss = {}
         for link_name, link in self.wn.links():
-            headloss[link_name] = float(abs(head[link.start_node_name] - head[link.end_node_name]))
+            headloss[link_name] = float(abs(head.loc[0,link.start_node_name] - 
+                                            head.loc[0,link.end_node_name]))
         self.headloss = headloss
         self.wn.options.time.duration = duration
     
@@ -193,8 +197,8 @@ class _Skeletonize(object):
             junc.demand_timeseries_list.clear()
 
             # Remove node and links from wn and G
-            self.wn.remove_link(pipe_name)
-            self.wn.remove_node(junc_name)
+            self.wn.remove_link(pipe_name, force=True)
+            self.wn.remove_node(junc_name, force=True)
             self.G.remove_node(junc_name)
                     
             self.num_branch_trim +=1
@@ -265,9 +269,9 @@ class _Skeletonize(object):
             junc.demand_timeseries_list.clear()
 
             # Remove node and links from wn and G
-            self.wn.remove_link(pipe_name0)
-            self.wn.remove_link(pipe_name1)
-            self.wn.remove_node(junc_name)
+            self.wn.remove_link(pipe_name0, force=True)
+            self.wn.remove_link(pipe_name1, force=True)
+            self.wn.remove_node(junc_name, force=True)
             self.G.remove_node(junc_name)
             
             # Compute new pipe properties
@@ -325,8 +329,8 @@ class _Skeletonize(object):
                     logger.info('Parallel pipe merge: '+ str(junc_name) + str((pipe_name0, pipe_name1)))
 
                     # Remove links from wn and G   
-                    self.wn.remove_link(pipe_name0)
-                    self.wn.remove_link(pipe_name1)
+                    self.wn.remove_link(pipe_name0, force=True)
+                    self.wn.remove_link(pipe_name1, force=True)
                     self.G.remove_edge(neighbor, junc_name, pipe_name0) 
                     self.G.remove_edge(junc_name, neighbor, pipe_name1)
             
