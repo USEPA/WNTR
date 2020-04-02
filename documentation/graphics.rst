@@ -64,7 +64,7 @@ for the the network nodes and edges, which can be further customized by the user
    :width: 640
    :alt: Network
    
-   Example basic network graphic.
+   Basic network graphic.
    
 Interactive Plotly networks
 ---------------------------------
@@ -91,7 +91,7 @@ The following example plots the network along with node population (:numref:`fig
    :width: 715
    :alt: Network
 
-   Example interactive network graphic.
+   Interactive network graphic.
    
 Interactive Leaflet networks
 ------------------------------------------
@@ -121,7 +121,7 @@ with pipe length over the city of Albuquerque (for demonstration purposes only) 
    :width: 640
    :alt: Network
    
-   Example interactive Leaflet network graphic.
+   Interactive Leaflet network graphic.
    
 .. raw:: html
     
@@ -171,7 +171,7 @@ The following example plots simulation results from above, showing pressure at a
    :width: 640
    :alt: Network
    
-   Example time series graphic.
+   Time series graphic.
 	
 Interactive time series
 --------------------------------
@@ -199,7 +199,7 @@ The following example uses simulation results from above, and converts the graph
    :width: 640
    :alt: Network
    
-   Example interactive time series graphic.
+   Interactive time series graphic.
    
 .. raw:: html
     
@@ -230,7 +230,7 @@ The following example plots a fragility curve with two states (:numref:`fig-frag
    :width: 800
    :alt: Fragility curve
 
-   Example fragility curve.
+   Fragility curve graphic.
    
 Pump curves
 -----------------
@@ -262,5 +262,5 @@ The following example plots a pump curve (:numref:`fig-pump`).
    :width: 800
    :alt: Pump curve
 
-   Example pump curve.
+   Pump curve graphic.
    

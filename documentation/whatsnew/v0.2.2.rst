@@ -1,17 +1,33 @@
 .. _whatsnew_0220:
 
-v0.2.2 (master)
+v0.2.2 (March 23, 2020)
 ---------------------------------------------------
 
-* Updated `plot_pump_curve` to include the pump curve based on
+* `WntrMultiDiGraph` class has been removed and WNTR now uses the NetworkX `MultiDiGraph` class directly.  
+  Methods associated with WntrMultiDiGraph have been relocated (API change).
+
+  * :class:`~wntr.network.model.WaterNetworkModel.get_graph` now returns a NetworkX MultiDiGraph.  
+    That method can also be used to return a weighted graph. 
+    The method `weighted_graph` has been removed.
+  * Topographic metrics that were part of the WntrMultiDiGraph class are now located in the 
+    :class:`~wntr.metrics.topographic` module.  
+
+* Added :class:`~wntr.metrics.topographic.valve_segments` method to groups links and nodes into 
+  segments based on the location of isolation valves.
+* Added :class:`~wntr.network.layer.generate_valve_layer` method to generate valve layers 
+  based on random or strategic placement.
+* Updated :class:`~wntr.graphics.curve.plot_pump_curve` to include the pump curve based on
   head curve coefficients, the optional input argument add_polyfit was removed (API change).
   Bug fix in x and y labels.
-* Updated `plot_fragility_curve` and `plot_pump_curve` to use an existing 
-  matplotlib axes and return a matplotlib axes so users can customize the graphics.  
+* Updated :class:`~wntr.graphics.curve.plot_fragility_curve` and :class:`~wntr.graphics.curve.plot_pump_curve` 
+  to use an existing matplotlib axes and return a matplotlib axes so users can customize the graphics.  
   The optional input argument figsize was removed (API change).
-* Added optional input arguments to `plot_network` to add labels to node and link colorbars.
-* Added optional input argument for detection limit to `mass_contaminant_consumed` calculation. 
+* Added optional input arguments to :class:`~wntr.graphics.network.plot_network` to add labels to node and link colorbars.
+* Added optional input argument for detection limit to :class:`~wntr.metrics.water_security.mass_contaminant_consumed` calculation. 
   The default detection limit for mass consumed, volume consumed, and extent of contamination is 0.
+* Efficiency updates for skeletonize and other network morphology functions. 
+  The functions can now make changes to the original water network model or a 
+  deepcopy of the model.
 * Added NotImplementedErrors for PBV and GPV valves, when using the WNTRSimualtor
 * Updated methods to be compatible with NetworkX 2.4 and Pandas 1.0
 * Added required dependencies to setup.py.  Required and optional dependencies  

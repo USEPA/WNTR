@@ -33,7 +33,6 @@ from .elements import Junction, Reservoir, Tank
 from .elements import Pipe, Pump, HeadPump, PowerPump
 from .elements import Valve, PRValve, PSValve, PBValve, TCValve, FCValve, GPValve
 from .elements import Pattern, TimeSeries, Demands, Curve, Source
-from .graph import WntrMultiDiGraph
 from .controls import ControlPriority, _ControlType, TimeOfDayCondition, SimTimeCondition, ValueCondition, \
     TankLevelCondition, RelativeCondition, OrCondition, AndCondition, _CloseCVCondition, _OpenCVCondition, \
     _ClosePowerPumpCondition, _OpenPowerPumpCondition, _CloseHeadPumpCondition, _OpenHeadPumpCondition, \
@@ -610,38 +609,40 @@ class WaterNetworkModel(AbstractModel):
     
     ### # 
     ### Remove elements from the model
-    def remove_node(self, name, with_control=False):
+    def remove_node(self, name, with_control=False, force=False):
         """Removes a node from the water network model"""
         node = self.get_node(name)
-        if with_control:
-            x=[]
-            for control_name, control in self._controls.items():
-                if node in control.requires():
-                    logger.warning(control._control_type_str()+' '+control_name+' is being removed along with node '+name)
-                    x.append(control_name)
-            for i in x:
-                self.remove_control(i)
-        else:
-            for control_name, control in self._controls.items():
-                if node in control.requires():
-                    raise RuntimeError('Cannot remove node {0} without first removing control/rule {1}'.format(name, control_name))
+        if not force:
+            if with_control:
+                x=[]
+                for control_name, control in self._controls.items():
+                    if node in control.requires():
+                        logger.warning(control._control_type_str()+' '+control_name+' is being removed along with node '+name)
+                        x.append(control_name)
+                for i in x:
+                    self.remove_control(i)
+            else:
+                for control_name, control in self._controls.items():
+                    if node in control.requires():
+                        raise RuntimeError('Cannot remove node {0} without first removing control/rule {1}'.format(name, control_name))
         self._node_reg.__delitem__(name)
 
-    def remove_link(self, name, with_control=False):
+    def remove_link(self, name, with_control=False, force=False):
         """Removes a link from the water network model"""
         link = self.get_link(name)
-        if with_control:
-            x=[]
-            for control_name, control in self._controls.items():
-                if link in control.requires():
-                    logger.warning(control._control_type_str()+' '+control_name+' is being removed along with link '+name)
-                    x.append(control_name)
-            for i in x:
-                self.remove_control(i)
-        else:
-            for control_name, control in self._controls.items():
-                if link in control.requires():
-                    raise RuntimeError('Cannot remove link {0} without first removing control/rule {1}'.format(name, control_name))
+        if not force:
+            if with_control:
+                x=[]
+                for control_name, control in self._controls.items():
+                    if link in control.requires():
+                        logger.warning(control._control_type_str()+' '+control_name+' is being removed along with link '+name)
+                        x.append(control_name)
+                for i in x:
+                    self.remove_control(i)
+            else:
+                for control_name, control in self._controls.items():
+                    if link in control.requires():
+                        raise RuntimeError('Cannot remove link {0} without first removing control/rule {1}'.format(name, control_name))
         self._link_reg.__delitem__(name)
 
     def remove_pattern(self, name): 
@@ -1453,29 +1454,64 @@ class WaterNetworkModel(AbstractModel):
                  )
         return d
     
-    def get_graph(self):
+    def get_graph(self, node_weight=None, link_weight=None, modify_direction=False):
         """
-        Returns a networkx graph of the water network model
-
+        Returns a networkx MultiDiGraph of the water network model
+        
+        Parameters
+        ----------
+        node_weight :  dict or pandas Series (optional)
+            Node weights
+        link_weight : dict or pandas Series (optional)
+            Link weights.  
+        modify_direction : bool (optional)
+            If True, than if the link weight is negative, the link start and 
+            end node are switched and the abs(weight) is assigned to the link
+            (this is useful when weighting graphs by flowrate). If False, link 
+            direction and weight are not changed.
+            
         Returns
         --------
-        WaterNetworkModel networkx graph.
+        networkx MultiDiGraph
         """
-        graph = WntrMultiDiGraph()
+        G = nx.MultiDiGraph()
         
         for name, node in self.nodes():
-            graph.add_node(name)
-            nx.set_node_attributes(graph, name='pos', values={name: node.coordinates})
-            nx.set_node_attributes(graph, name='type', values={name:node.node_type})
-        
+            G.add_node(name)
+            nx.set_node_attributes(G, name='pos', values={name: node.coordinates})
+            nx.set_node_attributes(G, name='type', values={name: node.node_type})
+            
+            if node_weight is not None:
+                try: # weight nodes
+                    value = node_weight[name]
+                    nx.set_node_attributes(G, name='weight', values={name: value})
+                except:
+                    pass
+            
         for name, link in self.links():
             start_node = link.start_node_name
             end_node = link.end_node_name
-            graph.add_edge(start_node, end_node, key=name)
-            nx.set_edge_attributes(graph, name='type', 
-                        values={(start_node, end_node, name):link.link_type})
-        
-        return graph
+            G.add_edge(start_node, end_node, key=name)
+            nx.set_edge_attributes(G, name='type', 
+                        values={(start_node, end_node, name): link.link_type})
+                
+            if link_weight is not None:
+                try: # weight links
+                    value = link_weight[name]
+                    if modify_direction and value < 0: # change the direction of the link and value
+                        G.remove_edge(start_node, end_node, name)
+                        G.add_edge(end_node, start_node, name)
+                        nx.set_edge_attributes(G, name='type', 
+                                values={(end_node, start_node, name): link.link_type})
+                        nx.set_edge_attributes(G, name='weight', 
+                                values={(end_node, start_node, name): -value})
+                    else:
+                        nx.set_edge_attributes(G, name='weight', 
+                            values={(start_node, end_node, name): value})
+                except:
+                    pass
+            
+        return G
     
     def assign_demand(self, demand, pattern_prefix='ResetDemand'):
         """

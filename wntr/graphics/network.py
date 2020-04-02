@@ -48,8 +48,8 @@ def _format_link_attribute(link_attribute, wn):
 def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
                node_size=20, node_range=[None,None], node_alpha=1, node_cmap=None, node_labels=False,
                link_width=1, link_range=[None,None], link_alpha=1, link_cmap=None, link_labels=False,
-               add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
-               directed=False, ax=None):
+               valve_layer=None, add_colorbar=True, node_colorbar_label='Node', link_colorbar_label='Link', 
+               directed=False, ax=None, filename=None):
     """
     Plot network graphic
 
@@ -237,7 +237,30 @@ def plot_network(wn, node_attribute=None, link_attribute=None, title=None,
         clb = plt.colorbar(edges, shrink=0.5, pad=0.05, ax=ax)
         clb.ax.set_title(link_colorbar_label, fontsize=10)
     ax.axis('off')
-
+    
+    if valve_layer is not None:
+        for valve_name, (pipe_name, node_name) in valve_layer.iterrows():
+            pipe = wn.get_link(pipe_name)
+            if node_name == pipe.start_node_name:
+                start_node = pipe.start_node
+                end_node = pipe.end_node
+            elif node_name == pipe.end_node_name:
+                start_node = pipe.end_node
+                end_node = pipe.start_node
+            else:
+                print("Not valid")
+                continue
+            x0 = start_node.coordinates[0]
+            dx = end_node.coordinates[0] - x0
+            y0 = start_node.coordinates[1]
+            dy = end_node.coordinates[1] - y0
+            valve_coordinates = (x0 + dx * 0.1,
+                                     y0 + dy * 0.1)
+            ax.scatter(valve_coordinates[0], valve_coordinates[1], 15, 'r', 'v')   
+     
+    if filename:
+        plt.savefig(filename)
+        
     return nodes, edges
 
 def plot_interactive_network(wn, node_attribute=None, node_attribute_name = 'Value', title=None,

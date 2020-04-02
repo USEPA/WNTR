@@ -12,9 +12,11 @@ netdir = join(testdir,'..','..','examples','networks')
 def test_weight_graph():
     inp_file = join(netdir,'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
-    G = wn.get_graph()
     
-    G.weight_graph(wn.query_node_attribute('elevation'), wn.query_link_attribute('length'))
+    node_weight = wn.query_node_attribute('elevation')
+    link_weight = wn.query_link_attribute('length')
+    
+    G = wn.get_graph(node_weight, link_weight)
     
     assert_equal(G.nodes['111']['weight'], 10*0.3048)
     assert_equal(G['159']['161']['177']['weight'], 2000*0.3048)
@@ -24,7 +26,7 @@ def test_terminal_nodes():
     wn = wntr.network.WaterNetworkModel(inp_file)
     G = wn.get_graph()
     
-    terminal_nodes = G.terminal_nodes()
+    terminal_nodes = wntr.metrics.terminal_nodes(G)
     expected = set(['2', '9'])
     assert_set_equal(set(terminal_nodes), expected)
 
@@ -33,7 +35,7 @@ def test_bridges():
     wn = wntr.network.WaterNetworkModel(inp_file)
     G = wn.get_graph()
     
-    bridges = G.bridges()
+    bridges = wntr.metrics.bridges(G)
     expected = set(['9','10','110'])
     assert_set_equal(set(bridges), expected)
 
@@ -55,7 +57,7 @@ def test_central_point_dominance():
         wn.remove_link(pump)
     G = wn.get_graph()
 
-    val = G.central_point_dominance()
+    val = wntr.metrics.central_point_dominance(G)
     expected = 0.23 # Davide Soldi et al. (2015) Procedia Engineering
     error = abs(expected-val)
     assert_less(error, 0.01)
@@ -67,7 +69,7 @@ def test_spectral_gap():
         wn.remove_link(pump)
     G = wn.get_graph()
 
-    val = G.spectral_gap()
+    val = wntr.metrics.spectral_gap(G)
     expected = 1.5149 # Davide Soldi et al. (2015) Procedia Engineering
     error = abs(expected-val)
     assert_less(error,0.01)
@@ -79,7 +81,7 @@ def test_algebraic_connectivity():
         wn.remove_link(pump)
     G = wn.get_graph()
     
-    val = G.algebraic_connectivity()
+    val = wntr.metrics.algebraic_connectivity(G)
     expected = 0.1708 # Davide Soldi et al. (2015) Procedia Engineering
     error = abs(expected-val)
     raise SkipTest
@@ -92,7 +94,7 @@ def test_crit_ratio_defrag():
         wn.remove_link(pump)
     G = wn.get_graph()
     
-    val = G.critical_ratio_defrag()
+    val = wntr.metrics.critical_ratio_defrag(G)
     expected = 0.63 # Pandit et al. (2012) Critical Infrastucture Symposium
     error = abs(expected-val)
     raise SkipTest
