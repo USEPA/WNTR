@@ -1867,7 +1867,7 @@ class InpFile(object):
         hrs, mm, sec = time.seconds_to_tuple(time.rule_timestep)
 
         ### TODO: RULE TIMESTEP is not written?!
-        # f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
+        f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
         f.write(entry.format('STATISTIC', wn.options.time.statistic).encode('ascii'))
         f.write('\n'.encode('ascii'))
 

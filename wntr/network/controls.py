@@ -737,7 +737,7 @@ class ValueCondition(ControlCondition):
         if np.isnan(self._threshold):
             relation = np.greater
             thresh_value = 0.0
-        state = relation(cur_value, thresh_value)
+        state = relation(np.round(cur_value,10), np.round(thresh_value,10))
         return bool(state)
 
 
@@ -788,8 +788,8 @@ class TankLevelCondition(ValueCondition):
         if np.isnan(self._threshold):  # what is this doing?
             relation = np.greater
             thresh_value = 0.0
-        state = relation(cur_value, thresh_value)  # determine if the condition is satisfied
-        if state and not relation(self._last_value, thresh_value):
+        state = relation(np.round(cur_value,10), np.round(thresh_value,10))  # determine if the condition is satisfied
+        if state and not relation(np.round(self._last_value,10), np.round(thresh_value,10)):
             # if the condition is satisfied and the last value did not satisfy the condition, then backtracking
             # is needed.
             # The math.floor is not actually needed, but I leave it here for clarity. We want the backtrack value to be
