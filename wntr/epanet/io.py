@@ -1721,7 +1721,14 @@ class InpFile(object):
                 raise RuntimeError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
             if opts.time.report_timestep % opts.time.hydraulic_timestep != 0:
                 raise RuntimeError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
-#            opts.hydraulic.emitter_exponent = to_si(self.flow_units, opts.hydraulic.emitter_exponent, HydParam.EmitterCoeff)
+        
+        # Convert EPANET 2.2 minimum/required pressures
+        if opts.hydraulic.minimum_pressure != 0.0:
+            minimum_pressure = to_si(self.flow_units, opts.hydraulic.minimum_pressure, HydParam.Pressure)
+            opts.hydraulic.minimum_pressure = minimum_pressure
+        if opts.hydraulic.required_pressure != 0.0:
+            required_pressure = from_si(self.flow_units, opts.hydraulic.required_pressure, HydParam.Pressure)
+            opts.hydraulic.required_pressure = required_pressure
 
     def _write_options(self, f, wn):
         f.write('[OPTIONS]\n'.encode('ascii'))
