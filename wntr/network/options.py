@@ -1,6 +1,26 @@
 """
 The wntr.network.options module includes simulation options.
 
+.. note:: 
+
+    This module has been changed in version wntr-2.3 to incorporate the new options 
+    that EPANET 2.2 requires. It also reorganizes certain options so that they are 
+    more consistent with EPANET's groupings and make more logical sense. Therefore, 
+    this change is not necessarily backwards compatible, particularly when trying to
+    use pickle files with options generated with wntr <= 2.2.
+    For example, the options previously contained in the old SolverOptions class have 
+    been moved to the HydraulicOptions class.
+
+    Additionally, this module has been modified to use the "attrs" package,
+    which is a better method of creating data structure classes than the manual 
+    method used previously. This change will require users to add the attrs 
+    package if they do not already have it.
+
+    In cases where the class constructor indicates "NOTHING" is the default argument,
+    this should be interpreted that there is a factory function that will generate a 
+    new, blank element of the appropriate type.
+
+
 .. rubric:: Contents
 
 .. autosummary::
