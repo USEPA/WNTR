@@ -4,7 +4,6 @@ scipy
 networkx
 pandas
 matplotlib
-attrs
 
 # Optional
 plotly

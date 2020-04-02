@@ -11,16 +11,6 @@ The wntr.network.options module includes simulation options.
     For example, the options previously contained in the old SolverOptions class have 
     been moved to the HydraulicOptions class.
 
-    Additionally, this module has been modified to use the "attrs" package,
-    which is a better method of creating data structure classes than the manual 
-    method used previously. This change will require users to add the attrs 
-    package if they do not already have it.
-
-    In cases where the class constructor indicates "NOTHING" is the default argument,
-    this should be interpreted that there is a factory function that will generate a 
-    new, blank element of the appropriate type.
-
-
 .. rubric:: Contents
 
 .. autosummary::
