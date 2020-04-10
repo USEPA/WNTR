@@ -1568,7 +1568,7 @@ class _ActiveFCVCondition(ControlCondition):
             return False
         elif self._fcv.flow < -self._Qtol:
             return False
-        elif self._fcv._internal_status == LinkStatus.Open and self._fcv.flow >= self._fcv.setting:
+        elif self._fcv._internal_status == LinkStatus.Open and self._fcv.flow >= self._fcv.setting + self._Qtol:
             return True
         else:
             return False
