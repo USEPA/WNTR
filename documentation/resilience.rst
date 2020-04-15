@@ -140,6 +140,7 @@ graph or a graph with a single edge between two nodes.
  
 .. doctest::
 
+    >>> import networkx as nx
     >>> G = wn.get_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
@@ -423,7 +424,7 @@ Water security metrics included in WNTR are listed in  :numref:`table-water-secu
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water security metrics.
    =====================================  ================================================================================================================================================
 
-The following examples uses results from a chemical water quality simulation 
+The following examples use the results from the chemical water quality simulation 
 (from above) to compute water security metrics, including:
 
 * Mass consumed
@@ -476,7 +477,7 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
-   Network cost                           Network cost is the annual maintenance and operations cost of tanks, pipes, vales, and pumps based on the equations from the Battle of 
+   Network cost                           Network cost is the annual maintenance and operations cost of tanks, pipes, valves, and pumps based on the equations from the Battle of 
                                           Water Networks II [SOKZ12]_.  
                                           Default values can be included in the calculation.
                                           Network cost can be computed 

@@ -20,7 +20,7 @@
 Water quality simulation
 ==================================
 
-Water quality simulations can only be run using the **EpanetSimulator**. 
+Water quality simulations can only be run using the EpanetSimulator. 
 As listed in the :ref:`software_framework` section,  this means that the hydraulic simulation must use demand-driven simulation.
 The WNTRSimulator can be used to compute demands under pressure dependent demand conditions and those 
 demands can be used in the EpanetSimulator (see :ref:`wq_pdd` below).
