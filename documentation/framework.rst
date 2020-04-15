@@ -48,7 +48,7 @@ Water network models can be built from scratch or built directly from EPANET INP
 Additionally, EPANET INP files can be generated from water network models.
 
 .. _table-network-subpackage:
-.. table:: Classes in the `network` Subpackage
+.. table:: Network Classes
 
    ==================================================  =============================================================================================================================================================================================================================================================================
    Class                                               Description
@@ -76,7 +76,7 @@ WNTR contains two simulators: the EpanetSimulator and the WNTRSimulator.
 These classes are listed in :numref:`table-sim-subpackage`.
 
 .. _table-sim-subpackage:
-.. table:: Classes in the `sim` Subpackage
+.. table:: Simulator Classes
 
    =================================================  =============================================================================================================================================================================================================================================================================
    Class                                              Description
