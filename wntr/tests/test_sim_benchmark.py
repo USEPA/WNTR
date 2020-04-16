@@ -90,11 +90,17 @@ class Test_Benchmarks(unittest.TestCase):
                                                               inp['pB'],
                                                               inp['pC'],
                                                               inp['dt_max'])
-
+    
         hR2 = self._calc_wntr_ode_R2(results[0],t, h2, 'head', 't1', 'node')
 #        h_wntr_interp = interp(t,results[0].node['head']['t1'].index,
 #                               results[0].node['head']['t1'].values)
 #        hR2 = self._R2(h2,h_wntr_interp)
+        print("\n\ntime\n\n")
+        print(t)
+        print("\n\nh2\n\n")
+        print(h2)
+        print("\n\nresult[0]\n\n")
+        print(results[0].node['head']['t1'])
         self.assertLessEqual(0.95,hR2,msg="The WNTR numerical solution for tank head has R2" +
             " value less than 0.95 w/r to solution of an exact differential equation.")
 
@@ -102,7 +108,7 @@ class Test_Benchmarks(unittest.TestCase):
         self.assertLessEqual(0.95,QR2,msg="The WNTR numerical solution for flow rate has R2" +
             " value less than 0.95 w/r to solution of an exact differential equation.")
         
-        create_graph = True
+        create_graph = False
         if create_graph:
             self._create_graph(t,Q,h2,inp['dt_max_wntr'],results,"constant_diameter")
         
@@ -137,7 +143,7 @@ class Test_Benchmarks(unittest.TestCase):
                                                               inp['dt_max'],
                                                               inp['vcurve'])
         
-        create_graph = True
+        create_graph = False
         if create_graph:
             self._create_graph(t,Q,h2,inp['dt_max_wntr'],results,"parabolic_vcurve")
 
@@ -202,7 +208,7 @@ class Test_Benchmarks(unittest.TestCase):
                                                               195.0,
                                                               190.0)
 
-        create_graph = True
+        create_graph = False
         if create_graph:
             self._create_graph(t,Q,h2,inp['dt_max_wntr'],results,"vcurve_and_controls")
             
