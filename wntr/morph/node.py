@@ -2,7 +2,6 @@
 The wntr.morph.node module contains functions to modify node coordinates.
 """
 import logging
-import sys
 import copy
 import numpy as np
 from scipy.spatial.distance import pdist
@@ -14,39 +13,29 @@ except:
 logger = logging.getLogger(__name__)
 
 
-def _deepcopy_wn(wn):
-    """
-    Increase recursion limit for python 2.7 from 1000 to 3000
-    """
-    recursion_limit = sys.getrecursionlimit()
-    
-    if sys.version_info.major < 3:
-        sys.setrecursionlimit(3000) 
-        
-    wn2 = copy.deepcopy(wn)
-    
-    if sys.version_info.major < 3:
-        sys.setrecursionlimit(recursion_limit)
-    
-    return wn2
-
-def scale_node_coordinates(wn, scale):
+def scale_node_coordinates(wn, scale, return_copy=True):
     """
     Scales node coordinates, using 1:scale
     
     Parameters
     -----------
     wn: wntr WaterNetworkModel
-        A WaterNetworkModel object
-    
+        Water network model
     scale: float
         Coordinate scale multiplier, in meters
-    
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
+        
     Returns
     --------
-    A WaterNetworkModel object with updated node coordinates
+    wntr WaterNetworkModel
+        Water network model with updated node coordinates
     """
-    wn2 = _deepcopy_wn(wn)
+    if return_copy: # Get a copy of the WaterNetworkModel
+        wn2 = copy.deepcopy(wn)
+    else:
+        wn2 = wn
     
     for name, node in wn2.nodes():
         pos = node.coordinates
@@ -55,26 +44,31 @@ def scale_node_coordinates(wn, scale):
     return wn2
 
 
-def translate_node_coordinates(wn, offset_x, offset_y):
+def translate_node_coordinates(wn, offset_x, offset_y, return_copy=True):
     """
     Translate node coordinates
     
     Parameters
     -----------
     wn: wntr WaterNetworkModel
-        A WaterNetworkModel object
-    
+        Water network model
     offset_x: tuple
         Translation in the x direction, in meters
-    
     offset_y: float
         Translation in the y direction, in meters
-    
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
+        
     Returns
     --------
-    A WaterNetworkModel object with updated node coordinates
+    wntr WaterNetworkModel
+        Water network model with updated node coordinates
     """
-    wn2 = _deepcopy_wn(wn)
+    if return_copy: # Get a copy of the WaterNetworkModel
+        wn2 = copy.deepcopy(wn)
+    else:
+        wn2 = wn
     
     for name, node in wn2.nodes():
         pos = node.coordinates
@@ -83,23 +77,29 @@ def translate_node_coordinates(wn, offset_x, offset_y):
     return wn2
         
 
-def rotate_node_coordinates(wn, theta):
+def rotate_node_coordinates(wn, theta, return_copy=True):
     """
     Rotate node coordinates counter-clockwise by theta degrees
     
     Parameters
     -----------
     wn: wntr WaterNetworkModel
-        A WaterNetworkModel object
-    
+        Water network model
     theta: float
         Node rotation, in degrees
-    
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
+        
     Returns
     --------
-    A WaterNetworkModel object with updated node coordinates
+    wntr WaterNetworkModel
+        Water network model with updated node coordinates
     """
-    wn2 = _deepcopy_wn(wn)
+    if return_copy: # Get a copy of the WaterNetworkModel
+        wn2 = copy.deepcopy(wn)
+    else:
+        wn2 = wn
     
     theta = np.radians(theta)
     R = np.array([[np.cos(theta),-np.sin(theta)], 
@@ -111,29 +111,34 @@ def rotate_node_coordinates(wn, theta):
     return wn2
 
 
-def convert_node_coordinates_UTM_to_longlat(wn, zone_number, zone_letter):
+def convert_node_coordinates_UTM_to_longlat(wn, zone_number, zone_letter, return_copy=True):
     """
     Convert node coordinates from UTM coordinates to longitude, latitude coordinates
     
     Parameters
     -----------
     wn: wntr WaterNetworkModel
-        A WaterNetworkModel object
-    
+        Water network model
     zone_number: int
        Zone number
-    
     zone_letter: string
         Zone letter
-    
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
+        
     Returns
     --------
-    A WaterNetworkModel object with updated node coordinates (longitude, latitude)
+    wntr WaterNetworkModel
+        Water network model with updated node coordinates (longitude, latitude)
     """
     if utm is None:
         raise ImportError('utm package is required')
     
-    wn2 = _deepcopy_wn(wn)
+    if return_copy: # Get a copy of the WaterNetworkModel
+        wn2 = copy.deepcopy(wn)
+    else:
+        wn2 = wn
     
     for name, node in wn2.nodes():
         pos = node.coordinates
@@ -143,23 +148,30 @@ def convert_node_coordinates_UTM_to_longlat(wn, zone_number, zone_letter):
     return wn2
 
 
-def convert_node_coordinates_longlat_to_UTM(wn):
+def convert_node_coordinates_longlat_to_UTM(wn, return_copy=True):
     """
     Convert node longitude, latitude coordinates to UTM coordinates
     
     Parameters
     -----------
     wn: wntr WaterNetworkModel
-        A WaterNetworkModel object
-    
+        Water network model
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
+        
     Returns
     --------
-    A WaterNetworkModel object with updated node coordinates (easting, northing)
+    wntr WaterNetworkModel
+        Water network model with updated node coordinates (easting, northing)
     """
     if utm is None:
         raise ImportError('utm package is required')
     
-    wn2 = _deepcopy_wn(wn)
+    if return_copy: # Get a copy of the WaterNetworkModel
+        wn2 = copy.deepcopy(wn)
+    else:
+        wn2 = wn
     
     for name, node in wn2.nodes():
         pos = node.coordinates
@@ -173,48 +185,60 @@ def convert_node_coordinates_longlat_to_UTM(wn):
     return wn2
 
 
-def convert_node_coordinates_to_UTM(wn, utm_map):
+def convert_node_coordinates_to_UTM(wn, utm_map, return_copy=True):
     """
     Convert node coordinates to UTM coordinates
     
     Parameters
     -----------
+    wn: wntr WaterNetworkModel
+        Water network model
     utm_map: dictionary
         Dictionary containing two node names and their x, y coordinates in 
         UTM easting, northing in the format
         {'node name 1': (easting, northing), 'node name 2': (easting, northing)}
-    
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
+        
     Returns
     --------
-    A WaterNetworkModel object with updated node coordinates (easting, northing)
+    wntr WaterNetworkModel
+        Water network model with updated node coordinates (easting, northing)
     """
     
-    wn2 = _convert_with_map(wn, utm_map, 'UTM')
+    wn2 = _convert_with_map(wn, utm_map, 'UTM', return_copy)
     
     return wn2
 
 
-def convert_node_coordinates_to_longlat(wn, longlat_map):
+def convert_node_coordinates_to_longlat(wn, longlat_map, return_copy=True):
     """
     Convert node coordinates to longitude, latitude coordinates
     
     Parameters
     -----------
+    wn: wntr WaterNetworkModel
+        Water network model
     longlat_map: dictionary
         Dictionary containing two node names and their x, y coordinates in
         longitude, latitude in the format
         {'node name 1': (longitude, latitude), 'node name 2': (longitude, latitude)}
-    
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
+        
     Returns
     --------
-    A WaterNetworkModel object with updated node coordinates (longitude, latitude)
+    wntr WaterNetworkModel
+        Water network model with updated node coordinates (longitude, latitude)
     """
     
-    wn2 = _convert_with_map(wn, longlat_map, 'LONGLAT')
+    wn2 = _convert_with_map(wn, longlat_map, 'LONGLAT', return_copy)
     
     return wn2
 
-def _convert_with_map(wn, node_map, flag):
+def _convert_with_map(wn, node_map, flag, return_copy):
     
     if utm is None:
         raise ImportError('utm package is required')
@@ -223,7 +247,10 @@ def _convert_with_map(wn, node_map, flag):
         print('map must have exactly 2 entries')
         return
     
-    wn2 = _deepcopy_wn(wn)
+    if return_copy: # Get a copy of the WaterNetworkModel
+        wn2 = copy.deepcopy(wn)
+    else:
+        wn2 = wn
     
     node_names = list(node_map.keys())
     

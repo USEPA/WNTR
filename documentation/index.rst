@@ -16,6 +16,7 @@ designed to simulate and analyze resilience of water distribution networks.
    waternetworkmodel
    controls
    networkxgraph
+   layers
    hydraulics
    waterquality
    resultsobject

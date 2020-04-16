@@ -45,6 +45,8 @@ For metrics that vary with respect to time and space, network animation can be u
 
    Example state transition plot and network graphic used to visualize resilience.
 
+.. _topographic_metrics:
+
 Topographic metrics
 ---------------------
 
@@ -57,12 +59,11 @@ the most reliable graph structure. On the other hand, a random lattice has nodes
 that are placed according to a random process. A real world water distribution system probably lies somewhere in
 between a regular lattice and a random lattice in terms of structure and reliability.
   
-NetworkX includes a wide range of topographic metrics that can be computed using 
-the WntrMultiDiGraph.  WNTR includes additional methods/metrics to help compute 
-resilience. These methods are in the :class:`~wntr.network.graph.WntrMultiDiGraph` class.
 Commonly used topographic metrics are listed in :numref:`table-topographic-metrics`.  
-Information on additional topographic metrics supported by NetworkX can be found 
-at https://networkx.github.io/.
+Many of these metrics can be computed using NetworkX directly 
+(see https://networkx.github.io/ for more information).
+WNTR includes additional topographic metrics to help compute resilience 
+(see :class:`~wntr.metrics.topographic` for more information).
 
 .. _table-topographic-metrics:
 .. table:: Topographic Resilience Metrics
@@ -105,7 +106,8 @@ at https://networkx.github.io/.
                                           Density of articulation points is a value between 0 and 1.
 
    Bridges                                A link is considered a bridge if the removal of that link increases the number of connected components in the network.
-                                          The ratio of the number of bridges and the total number of links in the network is the bridge density.  Bridge density is a value between 0 and 1.
+                                          The ratio of the number of bridges and the total number of links in the network is the bridge density.  
+                                          Bridge density is a value between 0 and 1.
 
    Simple paths                           A simple path is a path between two nodes that does not repeat any nodes.  
                                           Paths can be time dependent, if related to flow direction.  
@@ -115,6 +117,10 @@ at https://networkx.github.io/.
                                           the number of links in the network.
                                           The average shortest path length is a system wide metric used to describe the number
                                           of links between a node and all other nodes.
+										  
+   Valve segmentation                     Valve segmentation groups links and nodes into segments based on the location of isolation valves. 
+                                          Valve segmentation returns a segment number for each node and link, along with
+                                          the number of nodes and links in each segment.  
    =====================================  ================================================================================================================================================
 
 .. doctest::
@@ -128,25 +134,26 @@ at https://networkx.github.io/.
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
 
-The following example extracts a directed multigraph from the water network model 
-and then converts the graph to 
-an undirected multigraph and an undirected simple graph.  These graphs are used to 
-compute topographic metrics.
+To compute topographic metrics, a NetworkX MultiDiGraph is first extracted from a
+WaterNetworkModel.  Note that some metrics require an undirected
+graph or a graph with a single edge between two nodes.
  
 .. doctest::
 
+    >>> import networkx as nx
     >>> G = wn.get_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
 
-The following examples compute topographic metrics, including:
+The following examples compute topographic metrics. Note that many of these metrics 
+use NetworkX directly, while others use metrics included in WNTR. 
 
 * Node degree and terminal nodes
 
   .. doctest::
 
       >>> node_degree = G.degree()
-      >>> terminal_nodes = G.terminal_nodes()
+      >>> terminal_nodes = wntr.metrics.terminal_nodes(G)
 
 * Link density
 
@@ -166,7 +173,7 @@ The following examples compute topographic metrics, including:
   .. doctest::
   
       >>> betweenness_centrality = nx.betweenness_centrality(sG)
-      >>> central_point_dominance = G.central_point_dominance()
+      >>> central_point_dominance = wntr.metrics.central_point_dominance(G)
       
 * Closeness centrality
 
@@ -179,7 +186,7 @@ The following examples compute topographic metrics, including:
   .. doctest::
   
       >>> articulation_points = list(nx.articulation_points(uG))
-      >>> bridges = G.bridges()
+      >>> bridges = wntr.metrics.bridges(G)
 
 * Shortest path lengths between all nodes and average shortest path length
 
@@ -188,6 +195,7 @@ The following examples compute topographic metrics, including:
       >>> shortest_path_length = nx.shortest_path_length(uG)
       >>> ave_shortest_path_length = nx.average_shortest_path_length(uG)
     
+
 * Paths between two nodes in a weighted graph, where the graph is weighted by flow direction from a hydraulic simulation
 
   .. doctest::
@@ -196,15 +204,17 @@ The following examples compute topographic metrics, including:
       >>> results = sim.run_sim()
       
       >>> flowrate = results.link['flowrate']
-      >>> G.weight_graph(link_attribute = flowrate)
+      >>> G = wn.get_graph(link_weight=flowrate)
       >>> all_paths = nx.all_simple_paths(G, '119', '193')
 
-   
+* Valve segmentation, where each valve is defined by a node and link pair (see :ref:`valvelayer`)
 
-Note that many of these metrics use NetworkX directly.  
-Some metrics, such as :class:`~wntr.network.graph.WntrMultiDiGraph.terminal_nodes` and 
-:class:`~wntr.network.graph.WntrMultiDiGraph.bridges`, are methods developed in WNTR that operate on the 
-:class:`~wntr.network.graph.WntrMultiDiGraph` class.
+  .. doctest::
+	
+	  >>> valve_layer = wntr.network.generate_valve_layer(wn, 'random', 40)
+	  >>> node_segments, link_segments, segment_size = wntr.metrics.valve_segments(G, 
+	  ...     valve_layer)
+
 
 
 ..
@@ -224,12 +234,14 @@ Some metrics, such as :class:`~wntr.network.graph.WntrMultiDiGraph.terminal_node
 	Node-pair reliability: Node-pair reliability (NPR) is the probability that any two nodes 
 	are connected in a network. NPR is computed using ...
 	Connectivity will change at each time step, depending on the flow direction.  
-	The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method 
+	The method :class:`~wntr.network.WaterNetworkModel.get_graph` method 
 	can be used to weight the graph by a specified attribute. 
 	
 	Critical ratio of defragmentation: Critical ratio of defragmentation is the threshold where the network loses its large-scale connectivity and defragments, as a function of the node degree. The critical ratio of 
 	defragmentation is related to percolation theory. The ratio is equal to 0 if all 
-	The method :class:`~wntr.network.graph.WntrMultiDiGraph.critical_ratio_defrag` can be used to compute the critical ratio of defragmentation of the network.
+	The method :class:`~wntr.metrics.topographic.critical_ratio_defrag` can be used to compute the critical ratio of defragmentation of the network.
+	
+
 
 Hydraulic metrics
 ---------------------
@@ -269,7 +281,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           when a network component fails.  A network that carries maximum entropy 
                                           flow is considered reliable with multiple alternate paths.
                                           Connectivity will change at each time step, depending on the flow direction.  
-                                          The method :class:`~wntr.network.graph.WntrMultiDiGraph.weight_graph` method can be used to weight the graph by a specified attribute. 
+                                          The method :class:`~wntr.network.WaterNetworkModel.get_graph` method can be used to generate a weighted graph. 
                                           Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
    
    Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier [USEPA15]_.
@@ -320,9 +332,8 @@ The following examples compute hydraulic metrics, including:
 
   .. doctest::
 
-      >>> G = wn.get_graph()
       >>> flowrate = results.link['flowrate'].loc[12*3600,:]
-      >>> G.weight_graph(link_attribute=flowrate)
+      >>> G = wn.get_graph(link_weight=flowrate)
       >>> entropy, system_entropy = wntr.metrics.entropy(G)
     
 Water quality metrics
@@ -413,7 +424,7 @@ Water security metrics included in WNTR are listed in  :numref:`table-water-secu
                                           :class:`~wntr.metrics.misc.population_impacted` method.  This can be applied to water security metrics.
    =====================================  ================================================================================================================================================
 
-The following examples uses results from a chemical water quality simulation 
+The following examples use the results from the chemical water quality simulation 
 (from above) to compute water security metrics, including:
 
 * Mass consumed
@@ -466,7 +477,7 @@ Economic metrics included in WNTR are listed in  :numref:`table-economic-metrics
    =====================================  ================================================================================================================================================
    Metric                                 Description
    =====================================  ================================================================================================================================================
-   Network cost                           Network cost is the annual maintenance and operations cost of tanks, pipes, vales, and pumps based on the equations from the Battle of 
+   Network cost                           Network cost is the annual maintenance and operations cost of tanks, pipes, valves, and pumps based on the equations from the Battle of 
                                           Water Networks II [SOKZ12]_.  
                                           Default values can be included in the calculation.
                                           Network cost can be computed 

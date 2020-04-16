@@ -213,7 +213,7 @@ return attributes for all nodes or links, or for a subset using arguments that s
 (i.e., junction or pipe), or by specifying a threshold (i.e., >= 10 m).  
 The query methods return a pandas Series with the element name and value.
 The following example returns node elevation, junction elevation, and junction elevations greater than 10 m (using a
-NumPy operator)
+NumPy operator).
 
 .. doctest::
 
