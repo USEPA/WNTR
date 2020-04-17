@@ -391,7 +391,8 @@ def valve_criticality_length(link_lengths, valve_layer, node_segments,
     # Calculate the length-based valve crticiality
     if screen_updating:
         print('Length-Based Valve Criticality')
-    VC = {'Type': 'length'}
+    VC = {}
+    VC['Type'] = 'length'
     
     for i in range(n_valves):
         # identify the node-side and link-side segments
@@ -460,7 +461,8 @@ def valve_criticality_demand(node_demands, valve_layer, node_segments,
     # Calculate the demand-based valve crticiality
     if screen_updating:
         print('\n\nDemand-Based Valve Criticality')
-    VC = {'Type': 'demand'}
+    VC = {}
+    VC['Type'] = 'demand'
     for i in range(n_valves):
         # identify the node-side and link-side segments
         node_seg = node_segments[valve_layer.loc[i,'node']]
@@ -522,7 +524,8 @@ def valve_criticality_valve(valve_layer, node_segments, link_segments,
     # Calculate valve-based valve criticality
     if screen_updating:
         print('\n\nValve-Based Valve Criticality')
-    VC = {'Type': 'valve'}
+    VC = {}
+    VC['Type'] = 'valve'
     for i in range(n_valves):
         # identify the node-side and link-side segments
         node_seg = node_segments[valve_layer.loc[i,'node']]
