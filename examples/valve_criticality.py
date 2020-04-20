@@ -52,10 +52,9 @@ if valve_criticality_type == 'valve':
 # plot valve criticality results with the network
 filename = 'valve_criticality_map'
 title = 'Valve Criticality: ' + valve_crit['Type']
-fig, ax = plt.subplots(1, 1, figsize=(6, 6))
 wntr.graphics.plot_network(wn, valve_layer=valve_layer, 
                            valve_criticality=valve_crit, 
-                           title=title, node_size=10, ax=ax, filename=filename)
+                           title=title, node_size=10, filename=filename)
 
     
     
