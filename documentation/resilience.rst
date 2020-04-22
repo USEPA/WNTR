@@ -226,20 +226,20 @@ use NetworkX directly, while others use metrics included in WNTR.
   .. doctest::
 	
 	  >>> link_lengths = wn.query_link_attribute('length')
-	  >>> valve_crit_length = valve_criticality_length(link_lengths, valve_layer, node_segments, link_segments)
+	  >>> valve_crit_length = wntr.metrics.valve_criticality_length(link_lengths, valve_layer, node_segments, link_segments)
 
 * Valve criticality demand 
 
   .. doctest::
 	
 	  >>> node_demands = wn.query_node_attribute('base_demand')
-	  >>> valve_crit_demand = valve_criticality_demand(node_demands, valve_layer, node_segments, link_segments)
+	  >>> valve_crit_demand = wntr.metrics.valve_criticality_demand(node_demands, valve_layer, node_segments, link_segments)
 
 * Valve criticality valve
 
   .. doctest::
 	
-	  >>> valve_crit_valve = valve_criticality_valve(valve_layer, node_segments, link_segments)
+	  >>> valve_crit_valve = wntr.metrics.valve_criticality_valve(valve_layer, node_segments, link_segments)
 
 ..
 	Clustering coefficient: Clustering coefficient is the ratio between the total number of triangles and 
