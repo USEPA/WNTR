@@ -5,6 +5,7 @@ water network model.
 import logging
 import networkx as nx
 import pandas as pd
+from wntr.morph import convert_node_coordinates_to_longlat
 try:
     import matplotlib.pyplot as plt
     from matplotlib import animation
@@ -637,7 +638,7 @@ def plot_leaflet_network(wn, node_attribute=None, link_attribute=None,
                         )
         longlat_map = {'dummy_node1': (-100.125, 39.825),
                        'dummy_node2': (-99.825, 40.125)}
-        wn = wntr.morph.convert_node_coordinates_to_longlat(wn, longlat_map)
+        wn = convert_node_coordinates_to_longlat(wn, longlat_map)
         wn.remove_node('dummy_node1')
         wn.remove_node('dummy_node2')
         G = wn.get_graph()
