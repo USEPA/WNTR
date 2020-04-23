@@ -225,7 +225,7 @@ use NetworkX directly, while others use metrics included in WNTR.
 
   .. doctest::
 	
-	  >>> valve_crit = wntr.metrics.valve_criticality_valve(valve_layer, node_segments, link_segments)
+	  >>> valve_crit = wntr.metrics.valve_criticality(valve_layer, node_segments, link_segments)
 
 * Valve criticality length
 
