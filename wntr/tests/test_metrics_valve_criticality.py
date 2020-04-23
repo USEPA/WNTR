@@ -101,7 +101,7 @@ class TestSegmentation(unittest.TestCase):
         for valve in range(max(valve_crit, key=int)):
             self.assertEqual(round(valve_crit[valve],4), round(expected_valve_crit[valve],4))
 
-    def test_valve_criticality_valve(self):
+    def test_valve_criticality(self):
         # test Net3
 #        import matplotlib
 #        cmap = matplotlib.colors.ListedColormap(np.random.rand(num_segments,3))
@@ -112,10 +112,9 @@ class TestSegmentation(unittest.TestCase):
 
     
         # Calculate the valve-based valve criticality for each valve
-        valve_crit = wntr.metrics.topographic.valve_criticality_valve( 
-                                                                   self.valves, 
-                                                                   self.node_segments, 
-                                                                   self.link_segments)
+        valve_crit = wntr.metrics.topographic.valve_criticality(self.valves, 
+                                                                self.node_segments, 
+                                                                self.link_segments)
 
         # import csv    
         # with open('valve_crit_valve.csv', 'w', newline="") as csv_file:  
