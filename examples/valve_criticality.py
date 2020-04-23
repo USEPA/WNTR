@@ -45,7 +45,7 @@ if valve_criticality_type == 'demand':
                                                                link_segments)
 if valve_criticality_type == 'valve':
     # Calculate the valve-based valve criticality for each valve
-    valve_crit = wntr.metrics.topographic.valve_criticality_valve(valve_layer, 
+    valve_crit = wntr.metrics.topographic.valve_criticality(valve_layer, 
                                                                node_segments, 
                                                                link_segments)
 
@@ -55,6 +55,3 @@ title = 'Valve Criticality: ' + valve_crit['Type']
 wntr.graphics.plot_network(wn, valve_layer=valve_layer, 
                            valve_criticality=valve_crit, 
                            title=title, node_size=10, filename=filename)
-
-    
-    
