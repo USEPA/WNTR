@@ -7,7 +7,7 @@ from wntr import scenario
 from wntr import graphics
 from wntr import utils
 
-__version__ = '0.2.2'
+__version__ = '0.2.2.1'
 
 __copyright__ = """Copyright 2019 National Technology & Engineering 
 Solutions of Sandia, LLC (NTESS). Under the terms of Contract DE-NA0003525 
