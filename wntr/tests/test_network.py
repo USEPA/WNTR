@@ -688,11 +688,14 @@ def test_assign_demand():
     
     inp_file = join(ex_datadir, 'Net3.inp')
     wn = wntr.network.WaterNetworkModel(inp_file)
+    
     demands0 = wntr.metrics.expected_demand(wn)
+    pattern_name0 = wn.get_node('10').demand_timeseries_list[0].pattern_name
     
     wn.options.hydraulic.demand_multiplier = 1.5
     demands1 = wntr.metrics.expected_demand(wn)
     
+    assert_equal(pattern_name0, '1')
     assert_equal(len(wn.pattern_name_list), 5) # number of original patterns
     assert_less(abs((demands1/demands0).max().max()-1.5), 0.000001)
     
@@ -704,11 +707,13 @@ def test_assign_demand():
     wn.assign_demand(demands1*2, pattern_prefix='ResetDemand1_')
 
     demands2 = wntr.metrics.expected_demand(wn)
+    pattern_name = wn.get_node('10').demand_timeseries_list[0].pattern_name
     
     sim = wntr.sim.EpanetSimulator(wn)
     results2 = sim.run_sim()
     demands_sim2 = results2.node['demand'].loc[:,wn.junction_name_list]
     
+    assert_equal(pattern_name, 'ResetDemand1_10')
     assert_equal(len(wn.pattern_name_list), wn.num_junctions+5)
     assert_less(abs((demands2/demands1).max().max()-2), 0.000001)
     assert_less(abs((demands_sim2/demands_sim1).max().max()-2), 0.01)
@@ -717,11 +722,13 @@ def test_assign_demand():
     wn.assign_demand(demands_sim2, pattern_prefix='ResetDemand2_')
 
     demands2 = wntr.metrics.expected_demand(wn)
+    pattern_name = wn.get_node('10').demand_timeseries_list[0].pattern_name
     
     sim = wntr.sim.EpanetSimulator(wn)
     results2 = sim.run_sim()
     demands_sim2 = results2.node['demand'].loc[:,wn.junction_name_list]
     
+    assert_equal(pattern_name, 'ResetDemand2_10')
     assert_equal(len(wn.pattern_name_list), 2*wn.num_junctions+5)
     assert_less(abs((demands2/demands1).max().max()-2), 0.01)
     assert_less(abs((demands_sim2/demands_sim1).max().max()-2), 0.01)
