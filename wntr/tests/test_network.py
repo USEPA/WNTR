@@ -439,25 +439,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l4,['p5'])
         self.assertEqual(l5,[])
 
-#    def test_assign_demand(self):
-#        inp_file = join(ex_datadir, 'Net3.inp')
-#        wn = self.wntr.network.WaterNetworkModel(inp_file)
-#
-#        sim = self.wntr.sim.WNTRSimulator(wn)
-#        results1 = sim.run_sim()
-#
-#        demand = results1.node['demand']
-#        wn.assign_demand(demand)
-#
-#        sim = self.wntr.sim.EpanetSimulator(wn)
-#        results2 = sim.run_sim()
-#
-#        for node_name, node in self.wn.nodes():
-#            for t in self.res1.node.major_axis:
-#                self.assertAlmostEqual(results1.link.loc['flowrate', t, node_name],
-#                                       results2.link.loc['flowrate', t, node_name], 4)
-
-
+    
 epanet_unit_id = {'CFS': 0, 'GPM': 1, 'MGD': 2, 'IMGD': 3, 'AFD': 4,
                   'LPS': 5, 'LPM': 6, 'MLD': 7, 'CMH':  8, 'CMD': 9}
 
@@ -701,6 +683,56 @@ def test_describe():
                                       'Volume': 0}, 
                            'Sources': 0, 
                            'Controls': 18})
+
+def test_assign_demand():
     
+    inp_file = join(ex_datadir, 'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    
+    demands0 = wntr.metrics.expected_demand(wn)
+    pattern_name0 = wn.get_node('10').demand_timeseries_list[0].pattern_name
+    
+    wn.options.hydraulic.demand_multiplier = 1.5
+    demands1 = wntr.metrics.expected_demand(wn)
+    
+    assert_equal(pattern_name0, '1')
+    assert_equal(len(wn.pattern_name_list), 5) # number of original patterns
+    assert_less(abs((demands1/demands0).max().max()-1.5), 0.000001)
+    
+    sim1 = wntr.sim.EpanetSimulator(wn)
+    results1 = sim1.run_sim()
+    demands_sim1 = results1.node['demand'].loc[:,wn.junction_name_list]
+    
+    ### re-assign demands to be 2 times the original demands
+    wn.assign_demand(demands1*2, pattern_prefix='ResetDemand1_')
+
+    demands2 = wntr.metrics.expected_demand(wn)
+    pattern_name = wn.get_node('10').demand_timeseries_list[0].pattern_name
+    
+    sim = wntr.sim.EpanetSimulator(wn)
+    results2 = sim.run_sim()
+    demands_sim2 = results2.node['demand'].loc[:,wn.junction_name_list]
+    
+    assert_equal(pattern_name, 'ResetDemand1_10')
+    assert_equal(len(wn.pattern_name_list), wn.num_junctions+5)
+    assert_less(abs((demands2/demands1).max().max()-2), 0.000001)
+    assert_less(abs((demands_sim2/demands_sim1).max().max()-2), 0.01)
+    
+    ### re-assign demands using results from the simulation
+    wn.assign_demand(demands_sim2, pattern_prefix='ResetDemand2_')
+
+    demands2 = wntr.metrics.expected_demand(wn)
+    pattern_name = wn.get_node('10').demand_timeseries_list[0].pattern_name
+    
+    sim = wntr.sim.EpanetSimulator(wn)
+    results2 = sim.run_sim()
+    demands_sim2 = results2.node['demand'].loc[:,wn.junction_name_list]
+    
+    assert_equal(pattern_name, 'ResetDemand2_10')
+    assert_equal(len(wn.pattern_name_list), 2*wn.num_junctions+5)
+    assert_less(abs((demands2/demands1).max().max()-2), 0.01)
+    assert_less(abs((demands_sim2/demands_sim1).max().max()-2), 0.01)
+                
 if __name__ == '__main__':
-    unittest.main()
+    #unittest.main()
+    test_assign_demand()

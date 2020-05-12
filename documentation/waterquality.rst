@@ -139,7 +139,7 @@ water quality are run using the EpanetSimualtor.
     >>> sim = wntr.sim.WNTRSimulator(wn, 'PDD')
     >>> results = sim.run_sim()
 
-    >>> wn.assign_demand(results.node['demand'], 'PDD')
+    >>> wn.assign_demand(results.node['demand'].loc[:,wn.junction_name_list], 'PDD')
 	
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> wn.options.quality.mode = 'TRACE'
