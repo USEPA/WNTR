@@ -1517,40 +1517,42 @@ class WaterNetworkModel(AbstractModel):
         """
         Assign demands using values in a DataFrame. 
         
-        New demands are specified in a pandas DataFrame indexed by simulation
-        time (in seconds) and one column for each node. The method resets
-        node demands by creating a new demand pattern for each node and
-        resetting the base demand to 1. The demand pattern is resampled to
-        match the water network model pattern timestep. This method can be
+        New demands are specified in a pandas DataFrame indexed by
+        time (in seconds). The method resets junction demands by creating a 
+        new demand pattern and using a base demand of 1. 
+        The demand pattern is resampled to match the water network model 
+        pattern timestep. This method can be
         used to reset demands in a water network model to demands from a
         pressure dependent demand simulation.
 
         Parameters
         ----------
         demand : pandas DataFrame
-            A pandas DataFrame containing demands (index = time, columns = node names)
+            A pandas DataFrame containing demands (index = time, columns = junction names)
 
         pattern_prefix: string
-            Pattern prefix, default = 'ResetDemand'
+            Pattern name prefix, default = 'ResetDemand'.  The junction name is 
+            appended to the prefix to create a new pattern name.  
+            If the pattern name already exists, an error is thrown and the user 
+            should use a different pattern prefix name.
         """
-        for node_name, node in self.nodes():
+        for junc_name in demand.columns:
             
             # Extract the node demand pattern and resample to match the pattern timestep
-            demand_pattern = demand.loc[:, node_name]
-            #demand_pattern.index = demand_pattern.index.astype('timedelta64[s]')
+            demand_pattern = demand.loc[:, junc_name]
             demand_pattern.index = pd.TimedeltaIndex(demand_pattern.index, 's')
             resample_offset = str(int(self.options.time.pattern_timestep))+'S'
-            demand_pattern = demand_pattern.resample(resample_offset).mean()
+            demand_pattern = demand_pattern.resample(resample_offset).mean() / self.options.hydraulic.demand_multiplier
 
             # Add the pattern
-            pattern_name = pattern_prefix + node_name
+            # If the pattern name already exists, this fails 
+            pattern_name = pattern_prefix + junc_name
             self.add_pattern(pattern_name, demand_pattern.tolist())
-            pattern = self.get_pattern(pattern_name)
-
+            
             # Reset base demand
-            if hasattr(node, 'demands'):
-                node.demands.clear()
-                node.demands.append((1.0, pattern, 'PDD'))
+            junction = self.get_node(junc_name)
+            junction.demand_timeseries_list.clear()
+            junction.demand_timeseries_list.append((1.0, pattern_name))
 
     def get_links_for_node(self, node_name, flag='ALL'):
         """

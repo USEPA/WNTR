@@ -1,0 +1,11 @@
+.. _whatsnew_0221:
+
+v0.2.2.1
+---------------------------------------------------
+
+* Fixed :class:`~wntr.network.model.WaterNetworkModel.assign_demand`. 
+  The function now reassigns demands using the demand_timeseries_list and uses the demand 
+  multiplier to create a new pattern.
+* Updated tests
+* Updated documentation
+  
