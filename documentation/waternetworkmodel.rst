@@ -246,6 +246,9 @@ The water network model can be written to a file in EPANET INP format.
 By default, files are written in the LPS EPANET unit convention.
 The EPANET INP file will not include features not supported by EPANET (i.e., pressure dependent demand simulation options, custom element attributes).
 
+.. note:: 
+  The EPANET referred to here is EPANET 2.00.12, which does not include the pressure dependent algorithm in EPANET 2.2.0.
+
 .. doctest::
 
     >>> wn.write_inpfile('filename.inp')
@@ -255,7 +258,7 @@ Build a model from scratch
 
 A water network model can also be created from scratch by adding elements to an empty model.  Elements 
 must be added before used.  For example, demand patterns are added to the model before they are 
-used within a junction.  The section below include additional information on adding elements to a 
+used within a junction. The section below includes additional information on adding elements to a 
 water network model.
  
 .. doctest::

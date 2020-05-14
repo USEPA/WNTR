@@ -52,7 +52,7 @@ types of disasters.
 Fragility curves can have multiple damage states.  
 Each state should correspond to specific changes to the network model that represent damage, for example, a major or minor leak.
 Each state is defined with a name (i.e., 'Major,' 'Minor'), 
-priority (i.e., 1, 2, where higher numbers = higher priority), 
+priority (i.e., 1, 2, where increasing (higher) numbers equal higher priority), 
 and distribution (using the SciPy Python package).
 The distribution can be defined for all elements using the keyword 'Default,'
 or can be defined for individual components.

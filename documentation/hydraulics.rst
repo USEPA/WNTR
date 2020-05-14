@@ -9,9 +9,12 @@ WNTR contains two simulators: the EpanetSimulator and the WNTRSimulator.
 See :ref:`software_framework` for more information on features and limitations of these simulators. 
 
 The EpanetSimulator can be used to run demand-driven hydraulic simulations
-using the EPANET 2.0 Programmer's Toolkit. The simulator can also be 
+using the EPANET Programmer's Toolkit. The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
 A hydraulic simulation using the EpanetSimulator is run using the following code:
+
+.. note:: 
+  EPANET refers to EPANET 2.00.12. Future releases of WNTR will include EPANET 2.2.0.
 
 .. doctest::
     :hide:

@@ -89,3 +89,6 @@ analyze the structure of complex water distribution networks,
 analyze time-series data from simulation results,
 run simulations efficiently, and 
 create high-quality graphics and animations.
+
+.. note:: 
+  EPANET refers to EPANET 2.00.12 unless otherwise noted. Future releases of WNTR will include EPANET 2.2.0.

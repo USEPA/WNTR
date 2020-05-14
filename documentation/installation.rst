@@ -12,12 +12,12 @@ See :ref:`requirements` and :ref:`optional_dependencies` for more information.
 WNTR can be installed as a Python package as briefly described below. 
 :ref:`detailed_instructions` are included in the following section.
 
-Users can install the latest release of WNTR from PyPI using the following command::
+Users can install the latest release of WNTR from PyPI using the following command in a command line or PowerShell prompt::
 
     pip install wntr
     
 Developers can install the master branch of WNTR from the GitHub 
-repository using the following commands::
+repository using the following commands in a command line or PowerShell prompt::
 
     git clone https://github.com/USEPA/WNTR
     cd WNTR
@@ -56,7 +56,7 @@ Detailed installation instructions are included below.
 	This is most commonly done using pip. 
 	
 	Anaconda also comes with Spyder, an IDE, that includes enhanced 
-	editing and debug features along with a graphical user interface. 
+	editing and debugging features along with a graphical user interface. 
 	Debugging options are available from the toolbar.  
 	Code documentation is displayed in the object inspection 
 	window.  Pop-up information on class structure and functions are displayed in the 
@@ -90,7 +90,7 @@ Detailed installation instructions are included below.
 	* **Option 1**: Users can install WNTR using pip, which is a command line software tool used to install and manage Python 
 	  packages.  It can be downloaded from https://pypi.python.org/pypi/pip.
 	
-	  To install WNTR using pip, open a command prompt and run::
+	  To install WNTR using pip, open a command line or PowerShell prompt and run::
 
 		  pip install wntr
 	
@@ -103,7 +103,7 @@ Detailed installation instructions are included below.
 	  Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder. 
 	  WNTR can then be installed by running a Python script, called setup.py, that is included in the source files.
 	  
-	  To build WNTR from the source files, open a command prompt from within the folder that contains the files and run:: 
+	  To build WNTR from the source files, open a command line or PowerShell prompt from within the folder that contains the files and run:: 
 	  
 		  python setup.py install
 	
@@ -111,7 +111,7 @@ Detailed installation instructions are included below.
 	is a command line software tool for version control and software development.
 	It can be downloaded from http://git-scm.com. 
 		
-	To build WNTR from source files using git, open a command prompt and run::
+	To build WNTR from source files using git, open a command line or PowerShell prompt and run::
 
 		git clone https://github.com/USEPA/WNTR
 		cd WNTR

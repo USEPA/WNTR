@@ -66,7 +66,7 @@ for the the network nodes and edges, which can be further customized by the user
    
    Basic network graphic.
    
-Interactive Plotly networks
+Interactive plotly networks
 ---------------------------------
 
 Interactive plotly network graphics can be generated using the 
@@ -96,8 +96,8 @@ The following example plots the network along with node population (:numref:`fig
 Interactive Leaflet networks
 ------------------------------------------
 Interactive Leaflet network graphics can be generated using the 
-function :class:`~wntr.graphics.network.plot_leaflet_network`.
-This function produces an HTML file that overlays the network model onto a Leaflet map.
+function :class:`~wntr.graphics.network.plot_leaflet_network`. 
+This function produces an HTML file that overlays the network model onto a Leaflet map. 
 The network model should have coordinates in longitude/latitude. 
 See :ref:`modify_node_coords` for more information on converting node coordinates.
 As with basic network graphics, a wide range of plotting options can be supplied. 
@@ -187,7 +187,7 @@ The following example uses simulation results from above, and converts the graph
 .. doctest::
 
     >>> tankH = results.node['pressure'].loc[:,wn.tank_name_list]
-    >>> tankH = tankH * 3.28084 # Convert tank heigh to ft
+    >>> tankH = tankH * 3.28084 # Convert tank height to ft
     >>> tankH.index /= 3600 # convert time to hours
     >>> ax = tankH.plot(legend=True)
     >>> text = ax.set_xlabel('Time (hr)')

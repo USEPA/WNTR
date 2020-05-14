@@ -11,13 +11,13 @@ EPANET uses "controls" and "rules" to define conditions [Ross00]_. WNTR replicat
 **Controls** are defined using an "IF condition; THEN action" format.  
 Controls use a single action (i.e., closing/opening a link or changing the setting) based on a single condition (i.e., time based or tank level based).
 If a time based or tank level condition is not exactly matched at a simulation timestep, controls make use of partial timesteps to match the condition before the control is deployed.
-Controls in WNTR emulate EPANET controls.
+Controls in WNTR emulate EPANET simple controls.
 
 **Rules** are more complex; rules are defined using an "IF condition; THEN action1; ELSE action2" format, where the ELSE block is optional.
 Rules can use multiple conditions and multiple actions in each of the logical blocks.  Rules can also be prioritized to set the order of operation.
 If rules with conflicting actions should occur at the same time, the rule with the highest priority will override all others.
 Rules operate on a rule timestep specified by the user, which can be different from the simulation timestep.  
-Rules in WNTR emulate EPANET rules.
+Rules in WNTR emulate EPANET rule-based controls.
 
 When generating a water network model from an EPANET INP file, WNTR generates controls and rules based on input from the [CONTROLS] and [RULES] sections.  
 These controls and rules are then used when simulating hydraulics with either the EpanetSimulator or the WNTRSimulator.
@@ -39,7 +39,7 @@ Actions
 Control and rule actions tell the simulator what to do when a condition becomes "true." 
 Actions are created using the :class:`~wntr.network.controls.ControlAction` class.
 An action is defined by a target link, the attribute to change, and the value to change it to.
-The following example creates an action that opens pipe 330:
+The following example creates an action that opens pipe 330, in which a status of 1 means open:
 
 .. doctest::
     :hide:
