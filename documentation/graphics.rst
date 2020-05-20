@@ -39,7 +39,7 @@ Node and link attributes can be specified using the following options:
 * Dictionary with node/link names and associated values (similar to pandas Series)
 * List of node/link names (i.e., ``['123', '199']``), this highlights the node or link in red
 
-The following example plots the network along with node elevation (:numref:`fig-network`).
+The following example plots the network along with node elevation (:numref:`fig-network-2`).
 Note that the :class:`~wntr.graphics.network.plot_network` function returns matplotlib objects 
 for the the network nodes and edges, which can be further customized by the user.
 
@@ -59,7 +59,7 @@ for the the network nodes and edges, which can be further customized by the user
     >>> plt.tight_layout()
     >>> plt.savefig('plot_basic_network.png', dpi=300)
     
-.. _fig-network:
+.. _fig-network-2:
 .. figure:: figures/plot_basic_network.png
    :width: 640
    :alt: Network

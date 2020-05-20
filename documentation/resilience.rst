@@ -350,6 +350,7 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
    =====================================  ================================================================================================================================================
    Water age                              To determine the number of node-time pairs above or below a specified water age threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using AGE.
+										  Water age can be also be computed using the average age from the last 48 hours of the simulation results.
 
    Concentration                          To determine the number of node-time pairs above or below a specified concentration threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CHEM or TRACE.

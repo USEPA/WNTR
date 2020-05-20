@@ -51,7 +51,7 @@ Three types of water quality analysis are supported.  These options include wate
 .. doctest::
 
     >>> wn.options.quality.mode = 'AGE'
-
+	
 * **Tracer**: A water quality simulation can be used to compute the percent of flow originating from a specific location.
   The results include tracer percent values at each node.
   For example, to track a tracer from node '111,' set the 'quality' and 'tracer_node' options as follows:
@@ -63,11 +63,15 @@ Three types of water quality analysis are supported.  These options include wate
 
 * **Chemical concentration**: A water quality simulation can be used to compute chemical concentrations given a set of source injections.
   The results include chemical concentration values at each node.
-  To compute chemical concentrations, define sources (described in the :ref:`sources` section below) and set the 'quality' options as follows:
+  To compute chemical concentrations, set the 'quality' options as follows:
 
 .. doctest::
 
     >>> wn.options.quality.mode = 'CHEMICAL'
+	
+	The initial concentration is set using the `initial_quality` parameter on each node.  
+	This parameter can also be set using the [QUALITY] section of the INP file. 
+	The user can also define sources (described in the :ref:`sources` section below).
 
 * To skip the water quality simulation, set the 'quality' options as follows:
 

@@ -94,7 +94,7 @@ Detailed installation instructions are included below.
 
 		  pip install wntr
 	
-	  This will install the latest stable version of WNTR from https://pypi.python.org/pypi/wntr.  
+	  This will install the latest release of WNTR from https://pypi.python.org/pypi/wntr.  
 	
 	* **Option 2**: Users can download a zip file that includes source files and the examples folder from the US EPA GitHub organization.  
 	  To download the master branch, go to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."

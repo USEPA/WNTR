@@ -318,6 +318,7 @@ To restart the simulation from time zero, the user has several options.
 
 2. Save the water network model to a file and reload that file each time a simulation is run.  
    A pickle file is generally used for this purpose.  
+   A pickle file is a binary file used to serialize and de-serialize a Python object.
    This option is useful when the water network model contains custom controls that would not be reset using the option 1, 
    or when the user wants to change operations between simulations.
    

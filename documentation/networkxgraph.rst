@@ -52,8 +52,8 @@ the following function:
 
     >>> G = wn.get_graph() # directed multigraph
 	
-The graph is stored as a nested dictionary.  The nodes and links (note that links are called `edges` in NetworkX)
-can be accessed using the following:
+The graph is stored as a nested dictionary.  The nodes and links
+can be accessed using the graph's `node` and `adj` attribute (`adj` is used to get adjacent nodes and links).
 
 .. doctest::
 

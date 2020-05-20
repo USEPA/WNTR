@@ -33,6 +33,14 @@ The basic steps to define a control or rule are:
 
 These steps are defined below.  
 
+.. only:: html
+
+   See :ref:`api_documentation` for more information on the code structure.
+
+.. only:: latex
+
+   See the online API documentation at https://wntr.readthedocs.io for more information on the code structure.
+   
 Actions
 -----------------------
 
