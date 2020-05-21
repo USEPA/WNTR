@@ -120,7 +120,7 @@ For example, if the pipe has Major damage, a large leak might be defined at that
     >>> failure_probability = FC.cdf_probability(pga)
     >>> damage_state = FC.sample_damage_state(failure_probability)
 
-To plot the damage state on the network, the state (i.e., Major) can be converted to a number using the priority map, as shown below.
+To plot the damage state on the network, the state (i.e., Major) can be converted to a number using the priority map, as shown below (:numref:`fig-damage-state`).
 
 .. doctest::
 
