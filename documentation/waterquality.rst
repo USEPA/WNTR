@@ -69,9 +69,9 @@ Three types of water quality analysis are supported.  These options include wate
 
     >>> wn.options.quality.mode = 'CHEMICAL'
 	
-	The initial concentration is set using the `initial_quality` parameter on each node.  
-	This parameter can also be set using the [QUALITY] section of the INP file. 
-	The user can also define sources (described in the :ref:`sources` section below).
+The initial concentration is set using the `initial_quality` parameter on each node.  
+This parameter can also be set using the [QUALITY] section of the INP file. 
+The user can also define sources (described in the :ref:`sources` section below).
 
 * To skip the water quality simulation, set the 'quality' options as follows:
 

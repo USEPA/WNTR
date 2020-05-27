@@ -91,13 +91,13 @@ The following example plots the network along with node population (:numref:`fig
    :width: 715
    :alt: Network
 
-   Interactive network graphic.
+   Interactive network graphic with the legend showing the node population.
    
 Interactive Leaflet networks
 ------------------------------------------
 Interactive Leaflet network graphics can be generated using the 
 function :class:`~wntr.graphics.network.plot_leaflet_network`. 
-This function produces an HTML file that overlays the network model onto a Leaflet map. 
+This function produces an HTML file that overlays the network model onto a Leaflet map. Leaflet is an open-source JavaScript library for mobile-friendly interactive maps. More information on Leaflet is provided at https://leafletjs.com/.  
 The network model should have coordinates in longitude/latitude. 
 See :ref:`modify_node_coords` for more information on converting node coordinates.
 As with basic network graphics, a wide range of plotting options can be supplied. 

@@ -6,7 +6,7 @@ Water network controls
 ======================================
 
 One of the key features of water network models is the ability to control pipes, pumps, and valves using simple and complex conditions.  
-EPANET uses "controls" and "rules" to define conditions [Ross00]_. WNTR replicates EPANET functionality, and includes additional options, as described below.
+EPANET uses "controls" and "rules" to define conditions [Ross00]_. WNTR replicates EPANET functionality, and includes additional options, as described below. The EPANET user manual provides more information on simple controls and rule-based controls (controls and rules, respectively in WNTR) [Ross00]_.
 
 **Controls** are defined using an "IF condition; THEN action" format.  
 Controls use a single action (i.e., closing/opening a link or changing the setting) based on a single condition (i.e., time based or tank level based).
@@ -161,7 +161,8 @@ The following examples illustrate the creation of rules, using conditions and ac
     >>> print(rule2)
     Rule rule2 := if sim_time >= 435600 sec then set HeadPump('10').status to Open with priority 3
 
-Since rules operate on a different timestep than controls, these rules might behave differently than the controls defined above.
+Since rules operate on a different timestep than controls, these rules might behave differently than the controls defined above. 
+Controls (or simple controls in EPANET) operate on the hydraulic timestep while rules (or rule-based controls in EPANET) operate at a smaller timestep. By default, the rule time step is 1/10th of the hydraulic timestep.
 
 More complex rules can be written using one of the Boolean logic condition classes.
 The following example creates a new rule that will open pipe 330 if both conditions are true, 

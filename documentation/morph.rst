@@ -81,7 +81,15 @@ Finally, the algorithm loops over all candidate pipes and merges pipes in parall
 This initial set of operations can generate new branch pipes, pipes in series, and pipes in parallel.
 This cycle repeats until the network can no longer be reduced.  
 The user can specify if branch trimming, series pipe merge, and/or parallel pipe merge should be included in the skeletonization operations.  
-The user can also specify a maximum number of cycles to include in the process.
+The user can also specify a maximum number of cycles to include in the process. 
+
+.. only:: html
+
+   See :ref:`api_documentation` for more information on skeletonization.
+
+.. only:: latex
+
+   See the online API documentation at https://wntr.readthedocs.io for more information on skeletonization.
 
 Results from network skeletonization include the skeletonized water network model and (optionally) 
 a "skeletonization map" which maps original network nodes to merged nodes that are represented in the skeletonized network.  
