@@ -83,13 +83,9 @@ This cycle repeats until the network can no longer be reduced.
 The user can specify if branch trimming, series pipe merge, and/or parallel pipe merge should be included in the skeletonization operations.  
 The user can also specify a maximum number of cycles to include in the process. 
 
-.. only:: html
-
-   See :ref:`api_documentation` for more information on skeletonization.
-
 .. only:: latex
 
-   See the online API documentation at https://wntr.readthedocs.io for more information on skeletonization.
+   See the \href{https://wntr.readthedocs.io/en/latest/apidoc/wntr.morph.skel.html}{online API documentation} for more information on skeletonization.
 
 Results from network skeletonization include the skeletonized water network model and (optionally) 
 a "skeletonization map" which maps original network nodes to merged nodes that are represented in the skeletonized network.  

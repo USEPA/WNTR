@@ -48,36 +48,36 @@ Three types of water quality analysis are supported.  These options include wate
 * **Water age**: A water quality simulation can be used to compute water age at every node.
   To compute water age, set the 'quality' option as follows:
 
-.. doctest::
+  .. doctest::
 
-    >>> wn.options.quality.mode = 'AGE'
+      >>> wn.options.quality.mode = 'AGE'
 	
 * **Tracer**: A water quality simulation can be used to compute the percent of flow originating from a specific location.
   The results include tracer percent values at each node.
   For example, to track a tracer from node '111,' set the 'quality' and 'tracer_node' options as follows:
 
-.. doctest::
+  .. doctest::
 
-    >>> wn.options.quality.mode = 'TRACE'
-    >>> wn.options.quality.trace_node = '111'
+      >>> wn.options.quality.mode = 'TRACE'
+      >>> wn.options.quality.trace_node = '111'
 
 * **Chemical concentration**: A water quality simulation can be used to compute chemical concentrations given a set of source injections.
   The results include chemical concentration values at each node.
   To compute chemical concentrations, set the 'quality' options as follows:
 
-.. doctest::
+  .. doctest::
 
-    >>> wn.options.quality.mode = 'CHEMICAL'
+      >>> wn.options.quality.mode = 'CHEMICAL'
 	
-The initial concentration is set using the `initial_quality` parameter on each node.  
-This parameter can also be set using the [QUALITY] section of the INP file. 
-The user can also define sources (described in the :ref:`sources` section below).
+  The initial concentration is set using the `initial_quality` parameter on each node.  
+  This parameter can also be set using the [QUALITY] section of the INP file. 
+  The user can also define sources (described in the :ref:`sources` section below).
 
 * To skip the water quality simulation, set the 'quality' options as follows:
 
-.. doctest::
+  .. doctest::
 
-    >>> wn.options.quality.mode = 'NONE'
+      >>> wn.options.quality.mode = 'NONE'
 
 Additional water quality options include viscosity, diffusivity, specific gravity, tolerance, bulk reaction order, wall reaction order, 
 tank reaction order, bulk reaction coefficient, wall reaction coefficient, limiting potential, and roughness correlation.
