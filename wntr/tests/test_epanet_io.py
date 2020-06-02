@@ -213,6 +213,12 @@ class TestNet3InpWriterResults(unittest.TestCase):
         sim = self.wntr.sim.EpanetSimulator(self.wn2)
         self.results2 = sim.run_sim()
         
+        self.wn.write_inpfile('temp.inp')
+        self.wn22 = self.wntr.network.WaterNetworkModel('temp.inp')
+        self.wn22.options.hydraulic.demand_model = 'PDA'
+
+        sim = self.wntr.sim.EpanetSimulator(self.wn22)
+        self.results22 = sim.run_sim(version=2.2)
         
 
     @classmethod
@@ -223,21 +229,25 @@ class TestNet3InpWriterResults(unittest.TestCase):
         for link_name, link in self.wn.links():
             for t in self.results2.link['flowrate'].index:
                 self.assertLessEqual(abs(self.results2.link['flowrate'].loc[t,link_name] - self.results.link['flowrate'].loc[t,link_name]), 0.00001)
+                self.assertLessEqual(abs(self.results22.link['flowrate'].loc[t,link_name] - self.results.link['flowrate'].loc[t,link_name]), 0.00001)
 
     def test_node_demand(self):
         for node_name, node in self.wn.nodes():
             for t in self.results2.node['demand'].index:
                 self.assertAlmostEqual(self.results2.node['demand'].loc[t,node_name], self.results.node['demand'].loc[t,node_name], 4)
+                self.assertAlmostEqual(self.results22.node['demand'].loc[t,node_name], self.results.node['demand'].loc[t,node_name], 4)
 
     def test_node_head(self):
         for node_name, node in self.wn.nodes():
             for t in self.results2.node['head'].index:
                 self.assertLessEqual(abs(self.results2.node['head'].loc[t,node_name] - self.results.node['head'].loc[t,node_name]), 0.01)
+                self.assertLessEqual(abs(self.results22.node['head'].loc[t,node_name] - self.results.node['head'].loc[t,node_name]), 0.01)
 
     def test_node_pressure(self):
         for node_name, node in self.wn.nodes():
             for t in self.results2.node['pressure'].index:
                 self.assertLessEqual(abs(self.results2.node['pressure'].loc[t,node_name] - self.results.node['pressure'].loc[t,node_name]), 0.05)
+                self.assertLessEqual(abs(self.results22.node['pressure'].loc[t,node_name] - self.results.node['pressure'].loc[t,node_name]), 0.05)
 
 
 class TestNet3InpUnitsResults(unittest.TestCase):
