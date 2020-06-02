@@ -86,6 +86,18 @@ def runepanet(inpfile):
 class ENepanet():
     """Wrapper class to load the EPANET DLL object, then perform operations on
     the EPANET object that is created when a file is loaded.
+
+    Parameters
+    ----------
+    inpfile : str
+        Input file to use
+    rptfile : str
+        Output file to report to
+    binfile : str
+        Results file to generate
+    version : float
+        EPANET version to use (either 2.0 or 2.2)
+    
     """
     
     ENlib = None
