@@ -75,7 +75,7 @@ Pull requests must meet the following minimum requirements to be included in WNT
 
 * Code is expected to be documented using Read the Docs.  
 
-* Code is expected to be sufficiently tested using Travis CI.  `Sufficient` is judged by the strength of the test and code coverage.  80% code coverage is recommended.  
+* Code is expected to be sufficiently tested using Travis CI.  `Sufficient` is judged by the strength of the test and code coverage. An 80% code coverage is recommended.  
 
 * Large files (> 1Mb) will not be committed to the repository without prior approval.
 

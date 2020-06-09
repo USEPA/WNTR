@@ -352,7 +352,7 @@ a simulation.
 Advanced: Customized models with WNTR's AML
 -------------------------------------------
 
-WNTR has a custom algebraic modeling language (AML) which is used for
+WNTR has a custom algebraic modeling language (AML) that is used for
 WNTR's hydraulic model (used in the
 :class:`~wntr.sim.core.WNTRSimulator`). This AML is primarily used for
 efficient evaluation of constraint residuals and derivatives. WNTR's

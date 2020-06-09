@@ -12,11 +12,11 @@ splitting or breaking pipes.
 
 Network skeletonization
 ----------------------------
-The goal of network skeletonization is to reduce the size of a water network model with minimal impact on system behavoir.
+The goal of network skeletonization is to reduce the size of a water network model with minimal impact on system behavior.
 Network skeletonization in WNTR follows the procedure outlined in [WCSG03]_.  
 The skeletonization process retains all tanks, reservoirs, valves, and pumps, along with all junctions and pipes that are associated with controls.
 Junction demands and demand patterns are retained in the skeletonized model, as described below.
-Merged pipes are assigned equivalent properties for diameter, length, and roughness to approximate the updated system behavoir.
+Merged pipes are assigned equivalent properties for diameter, length, and roughness to approximate the updated system behavior.
 Pipes that fall below a user defined pipe diameter threshold are candidates for removal based on three operations, including:
 
 1. **Branch trimming**: Dead-end pipes that are below the pipe diameter threshold are removed from the model (:numref:`fig-branch-trim`).  
@@ -88,7 +88,7 @@ The user can also specify a maximum number of cycles to include in the process.
    See the \href{https://wntr.readthedocs.io/en/latest/apidoc/wntr.morph.skel.html}{online API documentation} for more information on skeletonization.
 
 Results from network skeletonization include the skeletonized water network model and (optionally) 
-a "skeletonization map" which maps original network nodes to merged nodes that are represented in the skeletonized network.  
+a "skeletonization map" that maps original network nodes to merged nodes that are represented in the skeletonized network.  
 The skeletonization map is a dictionary where 
 the keys are original network nodes and 
 the values are a list of nodes in the network that were merged as a result of skeletonization operations.  

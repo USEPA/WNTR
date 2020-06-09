@@ -18,7 +18,7 @@
 Graphics
 ======================================
 
-WNTR includes several functions to plot water network models and plot 
+WNTR includes several functions to plot water network models and to plot 
 fragility and pump curves.
 
 Networks
@@ -41,7 +41,7 @@ Node and link attributes can be specified using the following options:
 
 The following example plots the network along with node elevation (:numref:`fig-network-2`).
 Note that the :class:`~wntr.graphics.network.plot_network` function returns matplotlib objects 
-for the the network nodes and edges, which can be further customized by the user.
+for the network nodes and edges, which can be further customized by the user.
 
 .. doctest::
     :hide:
@@ -199,7 +199,7 @@ The following example uses simulation results from above, and converts the graph
    :width: 640
    :alt: Network
    
-   Interactive time series graphic.
+   Interactive time series graphic with the tank heights for Tank 1 (blue), Tank 2 (orange), and Tank 3 (green).
    
 .. raw:: html
     

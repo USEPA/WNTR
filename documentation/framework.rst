@@ -12,7 +12,7 @@ Software framework and limitations
 
 Before using WNTR, it is helpful to understand the software framework.
 WNTR is a Python package, which contains several subpackages, listed in :numref:`table-wntr-subpackage`.
-Each subpackage contains modules which contain classes, methods, and functions. 
+Each subpackage contains modules that contain classes, methods, and functions. 
 The classes used to generate water network models and 
 run simulations are described in more detail below, followed by a list of software limitations.
 
@@ -159,7 +159,7 @@ Discrepancies
 -------------------------------------------
 Known discrepancies between the WNTRSimulator and EpanetSimulator are listed below.
 
-* Pumps have speed settings which are adjustable by controls and/or patterns.  With the EpanetSimulator, 
+* Pumps have speed settings that are adjustable by controls and/or patterns.  With the EpanetSimulator, 
   controls and patterns adjust the actual speed.  With the WNTRSimulator, pumps have a 'base speed' 
   (similar to junction demand and reservoir head), controls adjust the base speed, and speed patterns are 
   a multiplier on the base speed. Results from the two simulators can match by scaling speed patterns 

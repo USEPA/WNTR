@@ -10,7 +10,7 @@ Overview
 Drinking water systems face multiple challenges, including aging infrastructure, 
 water quality concerns, uncertainty in supply and demand, natural disasters, 
 environmental emergencies, and cyber and terrorist attacks.  
-All of these have the potential to disrupt a large portion of a water system 
+All of these have the potential to disrupt a large portion of a water system, 
 causing damage to infrastructure and outages to customers.  
 Increasing resilience to these types of hazards is essential to improving 
 water security.  
