@@ -131,7 +131,7 @@ For :math:`q \geq 0`:
 These equations are symmetric across the origin
 and valid for any :math:`q`. Thus, this equation can be used for flow in
 either direction. However, the derivative with respect to :math:`q` at :math:`q = 0` 
-is :math:`0`. In certain scenarios, this can cause the Jacobian of the
+is :math:`0`. In certain scenarios, this can cause the Jacobian matrix of the
 set of hydraulic equations to become singular (when :math:`q=0`). 
 To overcome this limitation, the WNTRSimulator
 splits the domain of :math:`q` into six segments to

@@ -161,7 +161,7 @@ The following Python packages are optional:
 
 * plotly [SPHC16]_: used to produce interactive scalable graphics, 
   https://plot.ly/
-* folium [Filip19]_: used to produce Leaflet maps, 
+* folium [Folium]_: used to produce Leaflet maps, 
   http://python-visualization.github.io/folium/
 * utm [Bieni19]_: used to translate node coordinates to utm and lat/long,
   https://pypi.org/project/utm/
