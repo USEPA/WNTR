@@ -5,26 +5,13 @@
 Acknowledgements
 ======================================
 
-WNTR is developed through a collaboration between U.S. Environmental Protection Agency 
-and Sandia National Laboratories. The core development team is listed below. 
-Additional contributors can be found on the WNTR GitHub site at
-https://github.com/USEPA/WNTR/graphs/contributors.
+WNTR is developed through a collaboration between U.S. Environmental Protection Agency, Sandia National
+Laboratories, and the open-source community. The U.S. Environmental Protection Agency acknowledges the
+additional contributors to the WNTR tool, which can be found on the WNTR GitHub site at https://github.com/USEPA/WNTR/graphs/contributors.
 
-U.S. Environmental Protection Agency
-
-* Jonathan Burkhardt
-* Terranna Haxton
-* Regan Murray
-
-Sandia National Laboratories
-
-* Michael Bynum
-* David Hart
-* Joseph Hogge
-* Katherine Klise
 
 .. 
-   The U.S. Environmental Protection Agency acknowledges the technical review of the WNTR    software and user manual and/or technical editing provided by the following individuals:
+   The U.S. Environmental Protection Agency acknowledges the technical review of the WNTR software and user manual and/or technical editing provided by the following individuals:
 
    * Eun Jeong Cha, University of Illinois
    * Sudhir Kshirsagar, Global Quality Corp
