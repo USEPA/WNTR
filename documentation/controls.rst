@@ -35,7 +35,7 @@ These steps are defined below.
 
 .. only:: latex
 
-   See the \href{https://wntr.readthedocs.io/en/latest/apidoc/wntr.network.controls.html}{online API documentation} for more information on controls.
+   See the `online API documentation <https://wntr.readthedocs.io/en/latest/apidoc/wntr.network.controls.html>`_ for more information on controls.
    
 Actions
 -----------------------

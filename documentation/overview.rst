@@ -1,8 +1,6 @@
 .. raw:: latex
 
     \clearpage
-	\pagenumbering{arabic}
-	\setcounter{page}{1}
 	
 Overview
 ======================================
