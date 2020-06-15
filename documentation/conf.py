@@ -258,8 +258,9 @@ latex_elements = {
 
 # Additional stuff for the LaTeX preamble.
 'preamble':  '''%
+  \usepackage[nottoc]{tocbibind}
   \pagestyle{plain}
-  \pagenumbering{arabic}
+  %\pagenumbering{arabic}
   \\raggedright
   \\bibliographystyle{ieeetr}
 ''',

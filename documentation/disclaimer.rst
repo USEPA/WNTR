@@ -1,6 +1,6 @@
 .. raw:: latex
 
-    \pagenumbering{arabic}
+    \pagenumbering{roman}
     \setcounter{page}{1}
     \clearpage
 
