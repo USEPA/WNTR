@@ -20,13 +20,16 @@
 Water quality simulation
 ==================================
 
-Water quality simulations can only be run using the **EpanetSimulator**. 
+Water quality simulations can only be run using the EpanetSimulator. 
 As listed in the :ref:`software_framework` section,  this means that the hydraulic simulation must use demand-driven simulation.
 The WNTRSimulator can be used to compute demands under pressure dependent demand conditions and those 
 demands can be used in the EpanetSimulator (see :ref:`wq_pdd` below).
-  
+ 
+.. note:: 
+  The hydraulic simulation limitation is due to WNTR currently using EPANET 2.00.12, and not the currently released EPANET 2.2.0 with the pressure dependent algorithm. 
+ 
 After defining water quality options and sources (described in the :ref:`wq_options` and :ref:`sources` sections below), a hydraulic and water quality simulation 
-using the EpanetSimualtor is run using the following code:
+using the EpanetSimulator is run using the following code:
 
 .. doctest::
 
@@ -45,32 +48,36 @@ Three types of water quality analysis are supported.  These options include wate
 * **Water age**: A water quality simulation can be used to compute water age at every node.
   To compute water age, set the 'quality' option as follows:
 
-.. doctest::
+  .. doctest::
 
-    >>> wn.options.quality.mode = 'AGE'
-
+      >>> wn.options.quality.mode = 'AGE'
+	
 * **Tracer**: A water quality simulation can be used to compute the percent of flow originating from a specific location.
   The results include tracer percent values at each node.
   For example, to track a tracer from node '111,' set the 'quality' and 'tracer_node' options as follows:
 
-.. doctest::
+  .. doctest::
 
-    >>> wn.options.quality.mode = 'TRACE'
-    >>> wn.options.quality.trace_node = '111'
+      >>> wn.options.quality.mode = 'TRACE'
+      >>> wn.options.quality.trace_node = '111'
 
 * **Chemical concentration**: A water quality simulation can be used to compute chemical concentrations given a set of source injections.
   The results include chemical concentration values at each node.
-  To compute chemical concentrations, define sources (described in the :ref:`sources` section below) and set the 'quality' options as follows:
+  To compute chemical concentrations, set the 'quality' options as follows:
 
-.. doctest::
+  .. doctest::
 
-    >>> wn.options.quality.mode = 'CHEMICAL'
+      >>> wn.options.quality.mode = 'CHEMICAL'
+	
+  The initial concentration is set using the `initial_quality` parameter on each node.  
+  This parameter can also be set using the [QUALITY] section of the INP file. 
+  The user can also define sources (described in the :ref:`sources` section below).
 
 * To skip the water quality simulation, set the 'quality' options as follows:
 
-.. doctest::
+  .. doctest::
 
-    >>> wn.options.quality.mode = 'NONE'
+      >>> wn.options.quality.mode = 'NONE'
 
 Additional water quality options include viscosity, diffusivity, specific gravity, tolerance, bulk reaction order, wall reaction order, 
 tank reaction order, bulk reaction coefficient, wall reaction coefficient, limiting potential, and roughness correlation.
@@ -132,14 +139,14 @@ and water quality simulations are only available using the EpanetSimulator.
 The following example illustrates how to use pressure dependent demands in a water 
 quality simulation.  A hydraulic simulation is first run using the WNTRSimulator in PDD mode.
 The resulting demands are used to reset demands in the WaterNetworkModel and hydraulics and
-water quality are run using the EpanetSimualtor.
+water quality are run using the EpanetSimulator.
 
 .. doctest::
 
     >>> sim = wntr.sim.WNTRSimulator(wn, 'PDD')
     >>> results = sim.run_sim()
 
-    >>> wn.assign_demand(results.node['demand'], 'PDD')
+    >>> wn.assign_demand(results.node['demand'].loc[:,wn.junction_name_list], 'PDD')
 	
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> wn.options.quality.mode = 'TRACE'

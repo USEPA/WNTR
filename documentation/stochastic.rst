@@ -52,7 +52,7 @@ types of disasters.
 Fragility curves can have multiple damage states.  
 Each state should correspond to specific changes to the network model that represent damage, for example, a major or minor leak.
 Each state is defined with a name (i.e., 'Major,' 'Minor'), 
-priority (i.e., 1, 2, where higher numbers = higher priority), 
+priority (i.e., 1, 2, where increasing (higher) numbers equal higher priority), 
 and distribution (using the SciPy Python package).
 The distribution can be defined for all elements using the keyword 'Default,'
 or can be defined for individual components.
@@ -85,9 +85,9 @@ The following example defines a fragility curve with two damage states: Minor da
     >>> plt.savefig('fragility_curve.png', dpi=300)
 
 :numref:`fig-fragility` illustrates the fragility curve as a function of peak ground acceleration.  
-For example, if the peak ground acceleration is 0.5 at 
-a specific pipe, the probability of exceeding a Major damage state is 0.25 and the probability
-of exceeding the Minor damage state is 0.85.  
+For example, if the peak ground acceleration is 0.3 at 
+a specific pipe, the probability of exceeding a Major damage state is 0.16 and the probability
+of exceeding the Minor damage state is 0.80.  
 
 .. _fig-fragility:
 .. figure:: figures/fragility_curve.png
@@ -96,15 +96,19 @@ of exceeding the Minor damage state is 0.85.
 
    Example fragility curve.
 
-To use the fragility curve to assign damage to pipes, a random number is drawn between 0 and 1 and the associated probability of failure and damage state can be obtained.  
-The example below uses the fragility curve to select a damage state for each pipe based on peak ground acceleration.  See section :ref:`earthquake` 
-for an example that computes peak ground acceleration (pga, in the example below).
+To use the fragility curve to assign damage to pipes, a random number is drawn between 
+0 and 1 and the associated probability of failure and damage state can be obtained.  
+The example below uses the fragility curve to select a damage state for each pipe based on peak ground acceleration.  
 After obtaining the damage state for the pipe, the network can be changed to reflect the associated damage.
 For example, if the pipe has Major damage, a large leak might be defined at that location.
 
 .. doctest::
     :hide:
-
+    
+    >>> np.random.seed(12343)
+    
+.. doctest::
+    
     >>> wn = wntr.morph.scale_node_coordinates(wn, 1000)
     >>> epicenter = (32000,15000) # x,y location
     >>> magnitude = 6.5 # Richter scale
@@ -112,14 +116,11 @@ For example, if the pipe has Major damage, a large leak might be defined at that
     >>> earthquake = wntr.scenario.Earthquake(epicenter, magnitude, depth)
     >>> distance = earthquake.distance_to_epicenter(wn, element_type=wntr.network.Pipe)
     >>> pga = earthquake.pga_attenuation_model(distance)  
-    >>> np.random.seed(12343)
-    
-.. doctest::
 
     >>> failure_probability = FC.cdf_probability(pga)
     >>> damage_state = FC.sample_damage_state(failure_probability)
 
-To plot the damage state on the network, the state (i.e., Major) can be converted to a number using the priority map, as shown below.
+To plot the damage state on the network, the state (i.e., Major) can be converted to a number using the priority map, as shown below (:numref:`fig-damage-state`).
 
 .. doctest::
 

@@ -12,7 +12,7 @@ Software framework and limitations
 
 Before using WNTR, it is helpful to understand the software framework.
 WNTR is a Python package, which contains several subpackages, listed in :numref:`table-wntr-subpackage`.
-Each subpackage contains modules which contain classes, methods, and functions. 
+Each subpackage contains modules that contain classes, methods, and functions. 
 The classes used to generate water network models and 
 run simulations are described in more detail below, followed by a list of software limitations.
 
@@ -36,7 +36,7 @@ run simulations are described in more detail below, followed by a list of softwa
    :class:`~wntr.metrics`	                          Contains methods to compute resilience, including hydraulic, water quality, water security, and economic metrics. Methods to compute topographic metrics are included in the wntr.network.graph module.
    :class:`~wntr.morph`	                              Contains methods to modify water network model morphology, including network skeletonization, modifying node coordinates, and splitting or breaking pipes.
    :class:`~wntr.graphics`                            Contains methods to generate graphics.
-   :class:`~wntr.epanet`                              Contains EPANET 2.0 compatibility functions for WNTR.
+   :class:`~wntr.epanet`                              Contains EPANET 2.00.12 compatibility functions for WNTR.
    :class:`~wntr.utils`                               Contains helper functions.
    =================================================  =============================================================================================================================================================================================================================================================================
 
@@ -48,12 +48,12 @@ Water network models can be built from scratch or built directly from EPANET INP
 Additionally, EPANET INP files can be generated from water network models.
 
 .. _table-network-subpackage:
-.. table:: Classes in the `network` Subpackage
+.. table:: Network Classes
 
    ==================================================  =============================================================================================================================================================================================================================================================================
    Class                                               Description
    ==================================================  =============================================================================================================================================================================================================================================================================
-   :class:`~wntr.network.model.WaterNetworkModel`      Contains methods to generate water network models, including methods to read and write EPANET INP files, and access/add/remove/modify network components.  This class links to additional model classes (below) which define network components, controls, and model options.
+   :class:`~wntr.network.model.WaterNetworkModel`      Contains methods to generate water network models, including methods to read and write EPANET INP files, and access/add/remove/modify network components.  This class links to additional network classes that are listed below to define network components, controls, and model options.
    :class:`~wntr.network.elements.Junction`	           Contains methods to define junctions. Junctions are nodes where links connect. Water can enter or leave the network at a junction.
    :class:`~wntr.network.elements.Reservoir`           Contains methods to define reservoirs. Reservoirs are nodes with an infinite external source or sink.      
    :class:`~wntr.network.elements.Tank`                Contains methods to define tanks. Tanks are nodes with storage capacity.     
@@ -76,12 +76,12 @@ WNTR contains two simulators: the EpanetSimulator and the WNTRSimulator.
 These classes are listed in :numref:`table-sim-subpackage`.
 
 .. _table-sim-subpackage:
-.. table:: Classes in the `sim` Subpackage
+.. table:: Simulator Classes
 
    =================================================  =============================================================================================================================================================================================================================================================================
    Class                                              Description
    =================================================  =============================================================================================================================================================================================================================================================================
-   :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator uses the EPANET 2.0 Programmer's Toolkit [Ross00]_ to run demand-driven hydraulic simulations and water quality simulations.
+   :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator uses the EPANET Programmer's Toolkit [Ross00]_ to run demand-driven hydraulic simulations and water quality simulations.
                                                       When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation.
                                                       This allows the user to read in EPANET INP files, modify the model, run 
                                                       an EPANET simulation, and analyze results all within WNTR.
@@ -89,6 +89,9 @@ These classes are listed in :numref:`table-sim-subpackage`.
 	:class:`~wntr.sim.core.WNTRSimulator`             The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulations and includes models to simulate pipe leaks. 
 	                                                  The WNTRSimulator does not perform water quality simulations, however, the hydraulic simulation results can be used with the EpanetSimulator to perform water quality simulations. See :ref:`water_quality_simulation` for an example.
    =================================================  =============================================================================================================================================================================================================================================================================
+
+.. note:: 
+  EPANET refers to EPANET 2.00.12. Future releases of WNTR will include EPANET 2.2.0.
 
 .. _limitations:
    

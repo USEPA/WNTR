@@ -16,13 +16,13 @@ References
 
 .. [BaRR13] Barker, K., Ramirez-Marquez, J.E., and Rocco, C.M. (2013). Resilience-based network component importance measures. Reliability Engineering and System Safety, 117, 89-97.
 
-.. [Bieni19] Bieniek, T., et al. (2019). Bidirectional UTM-WGS84 converter for python, Retrieved on February 5, 2019 from https://github.com/Turbo87/utm
+.. [Bieni19] Bieniek, T., van Andel, B., and Bø, T.I. (2019). Bidirectional UTM-WGS84 converter for python, Retrieved on February 5, 2019 from https://github.com/Turbo87/utm
 
-.. [CrLo02] Crowl, D.A., and Louvar, J.F. (2002). Chemical Process Safety: Fundamentals with Applications, 3 edition. Upper Saddle River, NJ: Prentice Hall, 720p.
+.. [CrLo02] Crowl, D.A., and Louvar, J.F. (2011). Chemical Process Safety: Fundamentals with Applications, 3 edition. Upper Saddle River, NJ: Prentice Hall, 720p.
 
-.. [ELLT12] Eto, J.H., LaCommare, K.H., Larsen, P.H., Todd, A., and Fisher, E. (2012). An Examination of Temporal Trends in Electricity Reliability Based on Reports from U.S. Electric Utilities. Lawrence Berkeley National Laboratory Report Number 5268E. Berkeley, CA: Ernest Orlando Lawrence Berkeley National Laboratory, 68p
+.. [ELLT12] Eto, J.H., LaCommare, K.H., Larsen, P.H., Todd, A., and Fisher, E. (2012). An Examination of Temporal Trends in Electricity Reliability Based on Reports from U.S. Electric Utilities. Lawrence Berkeley National Laboratory Report Number LBNL-5268E. Berkeley, CA: Ernest Orlando Lawrence Berkeley National Laboratory, 68p
 
-.. [Filip19] Filipe, M.J., et al. (2019). Python Data Leaflet.js Maps, Retrieved on February 5, 2019 from https://github.com/python-visualization/folium
+.. [Folium] python-visualization/folium. (n.d.). Retrieved on February 5, 2019 from https://github.com/python-visualization/folium
 
 .. [GaCl18] Gazoni, E. and Clark, C. (2018) openpyxl - A Python library to read/write Excel 2010 xlsx/xlsm files, Retrieved on May 4, 2018 from https://openpyxl.readthedocs.io.
 
@@ -32,7 +32,7 @@ References
 
 .. [ICC12] International Code Council. (2011). 2012 International Fire Code, Appendix B - Fire-Flow Requirements for Buildings. Country Club Hills, IL: International Code Council, ISBN: 978-1-60983-046-5.
 
-.. [JCMG11] Joyner, D., Certik, O., Meurer, A., and Granger, B.E. (2011). Open source computer algebra systems, SymPy. ACM Communications in Computer Algebra, 45(4), 225-234.
+.. [JCMG11] Joyner, D., Certik, O., Meurer, A., and Granger, B.E. (2012). Open source computer algebra systems, SymPy. ACM Communications in Computer Algebra, 45(4), 225-234.
 
 .. [Mcki13] McKinney W. (2013). Python for Data Analysis: Data Wrangling with Pandas, NumPy, and IPython. Sebastopal, CA: O'Reilly Media, 1 edition, 466p.
 
@@ -54,11 +54,11 @@ References
 
 .. [VaCV11] van der Walt, S., Colbert, S.C., and Varoquaux, G. (2011). The NumPy array: A structure for efficient numerical computation. Computing in Science and Engineering, 13, 22-30.
 
-.. [WaSM88] Wagner, J.M., Shamir, U., and Marks, D.H. (1998). Water distribution reliability: Simulation methods. Journal of Water Resources Planning and Management, 114(3), 276-294.
+.. [WaSM88] Wagner, J.M., Shamir, U., and Marks, D.H. (1988). Water distribution reliability: Simulation methods. Journal of Water Resources Planning and Management, 114(3), 276-294.
 
-.. [WWQP06] Walk, D.J., Worden, B.C., Quitoriano, V., and Pankow, K.L. (2006). Shakemap manual, Technical manual, users guide, and software guide. United States Geologic Survey, Retrieved on April 25, 2017 from http://pubs.usgs.gov/tm/2005/12A01/
+.. [WWQP06] Wald, D.J., Worden, B.C., Quitoriano, V., and Pankow, K.L. (2006). ShakeMap manual: Technical manual, user's guide, and software guide. United States Geologic Survey, Retrieved on April 25, 2017 from http://pubs.usgs.gov/tm/2005/12A01/
 
-.. [WCSG03] Walski, T.M., Chase, D.V., Savic, D.A., Grayman, W., Beckwith, S. (2003). Advanced Water Distribution Modeling and Management, HAESTAD Press, Waterbury, CT, 693p.
+.. [WCSG03] Walski, T.M., Chase, D.V., Savic, D.A., Grayman, W., Beckwith, S. (2003). Advanced Water Distribution Modeling and Management. HAESTAD Press, Waterbury, CT, 693p.
 
 .. [*] Cross reference labels begins with 4 letters:
 

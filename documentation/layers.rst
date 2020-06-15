@@ -15,10 +15,10 @@ Valve layer
 
 While valves are typically included in the water network model, the user can also define a valve layer to be used in additional analysis.
 If the valves are not used in the hydraulic analysis, this can help reduce the size of the network.
-A valve layer can be used to groups links and nodes into segments based on the location of isolation valves.
+A valve layer can be used to group links and nodes into segments based on the location of isolation valves.
 In a valve layer, the location of each valve is defined using the link the valve is installed on 
 and the node the valve protects. This information is stored in a pandas DataFrame, which is indexed by valve 
-number with columns named 'link' and 'node'. 
+number with columns named 'link' and 'node.'
 For example, the following valve layer defines a valve on Pipe 1 that protects Junction A (:numref:`fig-valve-layer`).
 
 .. doctest::
@@ -35,13 +35,13 @@ For example, the following valve layer defines a valve on Pipe 1 that protects J
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
     >>> np.random.seed(123)
     >>> valve_layer = pd.DataFrame(columns=['link', 'node'])
-    >>> valve_layer.loc[0] = ['1', 'A']
+    >>> valve_layer.loc[0] = ['Pipe 1', 'Junction A']
     
 .. doctest::
 
     >>> print(valve_layer)
-      link node
-    0    1    A
+         link        node
+    0  Pipe 1  Junction A
     
 .. _fig-valve-layer:
 .. figure:: figures/valve_layer.png
@@ -51,7 +51,8 @@ For example, the following valve layer defines a valve on Pipe 1 that protects J
    Example valve placement.
 
 WNTR includes a method to generate valve layers based on **random** or **strategic** placement.  
-The following example generates a **random** valve placement with 40 valves.  
+The following example generates a **random** valve placement with 40 valves, 
+"head()" is used to return the first 5 rows.
 The valve layer can be included in water network graphics (:numref:`fig-random-valve-layer`).
 
 .. doctest::
@@ -81,7 +82,7 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
    Valve layer using random placement.
    
 The **strategic** placement specifies the number of pipes (n) from each node that do NOT contain a valve.  
-In this case, n is generally 0, 1, or 2 (i.e. N, N-1, or N-2 valve placement).
+In this case, n is generally 0, 1, or 2 (i.e., N, N-1, or N-2 valve placement).
 The following example generates a strategic N-2 valve placement.
 The valve layer can be included in water network graphics (:numref:`fig-strategic-valve-layer`).
 

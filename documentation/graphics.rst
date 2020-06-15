@@ -18,7 +18,7 @@
 Graphics
 ======================================
 
-WNTR includes several functions to plot water network models and plot 
+WNTR includes several functions to plot water network models and to plot 
 fragility and pump curves.
 
 Networks
@@ -39,9 +39,9 @@ Node and link attributes can be specified using the following options:
 * Dictionary with node/link names and associated values (similar to pandas Series)
 * List of node/link names (i.e., ``['123', '199']``), this highlights the node or link in red
 
-The following example plots the network along with node elevation (:numref:`fig-network`).
+The following example plots the network along with node elevation (:numref:`fig-network-2`).
 Note that the :class:`~wntr.graphics.network.plot_network` function returns matplotlib objects 
-for the the network nodes and edges, which can be further customized by the user.
+for the network nodes and edges, which can be further customized by the user.
 
 .. doctest::
     :hide:
@@ -59,14 +59,14 @@ for the the network nodes and edges, which can be further customized by the user
     >>> plt.tight_layout()
     >>> plt.savefig('plot_basic_network.png', dpi=300)
     
-.. _fig-network:
+.. _fig-network-2:
 .. figure:: figures/plot_basic_network.png
    :width: 640
    :alt: Network
    
-   Example basic network graphic.
+   Basic network graphic.
    
-Interactive Plotly networks
+Interactive plotly networks
 ---------------------------------
 
 Interactive plotly network graphics can be generated using the 
@@ -91,13 +91,13 @@ The following example plots the network along with node population (:numref:`fig
    :width: 715
    :alt: Network
 
-   Example interactive network graphic.
+   Interactive network graphic with the legend showing the node population.
    
 Interactive Leaflet networks
 ------------------------------------------
 Interactive Leaflet network graphics can be generated using the 
-function :class:`~wntr.graphics.network.plot_leaflet_network`.
-This function produces an HTML file that overlays the network model onto a Leaflet map.
+function :class:`~wntr.graphics.network.plot_leaflet_network`. 
+This function produces an HTML file that overlays the network model onto a Leaflet map. Leaflet is an open-source JavaScript library for mobile-friendly interactive maps. More information on Leaflet is provided at https://leafletjs.com/.  
 The network model should have coordinates in longitude/latitude. 
 See :ref:`modify_node_coords` for more information on converting node coordinates.
 As with basic network graphics, a wide range of plotting options can be supplied. 
@@ -121,7 +121,7 @@ with pipe length over the city of Albuquerque (for demonstration purposes only) 
    :width: 640
    :alt: Network
    
-   Example interactive Leaflet network graphic.
+   Interactive Leaflet network graphic.
    
 .. raw:: html
     
@@ -171,7 +171,7 @@ The following example plots simulation results from above, showing pressure at a
    :width: 640
    :alt: Network
    
-   Example time series graphic.
+   Time series graphic.
 	
 Interactive time series
 --------------------------------
@@ -199,7 +199,7 @@ The following example uses simulation results from above, and converts the graph
    :width: 640
    :alt: Network
    
-   Example interactive time series graphic.
+   Interactive time series graphic with the tank heights for Tank 1 (blue), Tank 2 (orange), and Tank 3 (green).
    
 .. raw:: html
     
@@ -230,7 +230,7 @@ The following example plots a fragility curve with two states (:numref:`fig-frag
    :width: 800
    :alt: Fragility curve
 
-   Example fragility curve.
+   Fragility curve graphic.
    
 Pump curves
 -----------------
@@ -262,5 +262,5 @@ The following example plots a pump curve (:numref:`fig-pump`).
    :width: 800
    :alt: Pump curve
 
-   Example pump curve.
+   Pump curve graphic.
    
