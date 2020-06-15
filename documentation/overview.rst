@@ -1,12 +1,15 @@
 .. raw:: latex
 
-    \pagenumbering{arabic}
-    \setcounter{page}{1}
     \clearpage
 	
 Overview
 ======================================
 
+.. raw:: latex
+
+    \pagenumbering{arabic}
+    \setcounter{page}{1}
+    
 Drinking water systems face multiple challenges, including aging infrastructure, 
 water quality concerns, uncertainty in supply and demand, natural disasters, 
 environmental emergencies, and cyber and terrorist attacks.  

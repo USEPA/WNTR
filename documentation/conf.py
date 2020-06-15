@@ -260,7 +260,7 @@ latex_elements = {
 'preamble':  '''%
   \usepackage[nottoc]{tocbibind}
   \pagestyle{plain}
-  %\pagenumbering{arabic}
+  \pagenumbering{gobble}
   \\raggedright
   \\bibliographystyle{ieeetr}
 ''',
