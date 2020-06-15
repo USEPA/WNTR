@@ -22,7 +22,7 @@ def test_mass_consumed():
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
 
     sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim()
+    results = sim.run_sim(version=2.0)
 
     demand = results.node['demand'].loc[:,wn.junction_name_list]
     quality = results.node['quality'].loc[:,wn.junction_name_list]
@@ -52,7 +52,7 @@ def test_volume_consumed():
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
 
     sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim()
+    results = sim.run_sim(version=2.0)
 
     demand = results.node['demand'].loc[:,wn.junction_name_list]
     quality = results.node['quality'].loc[:,wn.junction_name_list]
@@ -82,7 +82,7 @@ def test_extent_contaminated():
     wn.add_source('Source1', '121', 'SETPOINT', 100, 'NewPattern')
 
     sim = wntr.sim.EpanetSimulator(wn)
-    results = sim.run_sim()
+    results = sim.run_sim(version=2.0)
     
     quality = results.node['quality']
     flowrate = results.link['flowrate'].loc[:,wn.pipe_name_list] 

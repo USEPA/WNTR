@@ -1,0 +1,48 @@
+.. _whatsnew_0223:
+
+v0.2.3 (July, 2020)
+---------------------------------------------------
+
+* Make EPANET 2.2 the default engine for the :class:`EpanetSimulator` class.
+
+  * By default, the demand-driven analysis (DDA) mode is used without specifying this mode. To enable pressure-dependent demand analysis (PDA),
+    the appropriate option in the :class:`WaterNetworkOptions` object must be specified.
+
+  * To enable version 2.0 of the EPANET simulator, ``the wn.options.hydraulics.demand_model`` option must be set to ``None``, and the keyword argument ``version`` must be set to ``2.0`` when calling ``run_sim``.
+
+  * The EPANET 2.2 binaries for Mac and PC come directly from the official development site of the EPANET 2.2 on GitHub (https://github.com/OpenWaterAnalytics/EPANET).
+    The Linux binary came from the Travis.ci tests of the toolkit. The GUI application for EPANET 2.2 is available at https://www.epa.gov/water-research/epanet.
+
+* Certain options within the :class:`WaterNetworkOptions` classes have been changed to a) better describe the options, and b) the be consistent with the EPANET 2.2 nomenclature.
+  The mapping of old options to new options is given here:
+
+  Assuming a water network called ``wn``, the following properties of the ``wn.options`` object have been renamed or are new:
+
+=========================================   =========================================   =========================================================================
+Original name                               New (current) name                          Reasoning
+=========================================   =========================================   =========================================================================
+``results.statistic``                       ``time.statistic``                          Make consistent with EPANET options groups and statistic is over time.
+``hydraulic.units``                         ``hydraulic.inpfile_units``                 Make clear that the units **ONLY** apply to how the INP file is written.
+``quality.mode``                            ``quality.parameter``
+**options moved**, from ``quality``         ``reaction.*``  (*new*)
+``quality.bulk_rxn_order``                  ``reaction.bulk_rxn_order``
+``quality.wall_rxn_order``                  ``reaction.wall_rxn_order``
+``quality.tank_rxn_order``                  ``reaction.tank_rxn_order``
+``quality.bulk_rxn_coeff``                  ``reaction.bulk_rxn_coeff``
+``quality.wall_rxn_coeff``                  ``reaction.wall_rxn_coeff``
+``solver.*``  (*deleted*)                   **options moved**
+``solver.tolerance``                        ``quality.tolerance``
+``solver.trials``                           ``hydraulic.trials``
+``solver.accuracy``                         ``hydraulic.accuracy``
+``solver.unbalanced``                       ``hydraulic.unbalanced``
+``solver.unbalanced_value``                 ``hydraulic.unbalanced_value``
+``solver.checkfreq``                        ``hydraulic.checkfreq``
+``solver.maxcheck``                         ``hydraulic.maxcheck``
+``solver.damplimit``                        ``hydraulic.damplimit``
+**new**, set to ``None`` for EPANET 2.0     ``hydraulic.demand_model``
+"..."                                       ``hydraulic.minimum_pressure``
+"..."                                       ``hydraulic.required_pressure``
+"..."                                       ``hydraulic.pressure_exponent``
+"..."                                       ``hydraulic.headerror``
+"..."                                       ``hydraulic.flowchange``
+=========================================   =========================================   =========================================================================

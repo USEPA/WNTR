@@ -81,11 +81,9 @@ These classes are listed in :numref:`table-sim-subpackage`.
    =================================================  =============================================================================================================================================================================================================================================================================
    Class                                              Description
    =================================================  =============================================================================================================================================================================================================================================================================
-   :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator uses the EPANET 2.0 Programmer's Toolkit [Ross00]_ to run demand-driven hydraulic simulations and water quality simulations.
-                                                      When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation.
-                                                      This allows the user to read in EPANET INP files, modify the model, run 
-                                                      an EPANET simulation, and analyze results all within WNTR. Additionally, with an optional argument to the simulation runner, it can run demand-driven or pressure-dependent analyses using the new EPANET 2.2 solver. Options specific to EPANET 2.2 have been added to the 
-                                                      WaterNetworkOptions classes.
+   :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator uses the EPANET 2.2 Programmer's Toolkit [Ross00]_ to run demand-driven hydraulic simulations and water quality simulations. The ``wn.options.hydraulic.demand_model`` value can be used to change to pressure-dependent demand hydraulic simulations
+                                                      in EPANET. When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation.
+                                                      This allows the user to read in EPANET INP files, modify the model, run an EPANET simulation, and analyze results all within WNTR. For backwards compatibility, ``version=2.0`` can be added to the ``run_sim()`` command to use the older EPANET library.
 	
 	:class:`~wntr.sim.core.WNTRSimulator`             The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulations and includes models to simulate pipe leaks. 
 	                                                  The WNTRSimulator does not perform water quality simulations, however, the hydraulic simulation results can be used with the EpanetSimulator to perform water quality simulations. See :ref:`water_quality_simulation` for an example.
@@ -99,7 +97,10 @@ Current software limitations are noted:
 
 * Certain EPANET INP model options are not supported in WNTR, as outlined below.
 
-* Pressure dependent demand hydraulic simulation and leak models are only available using the WNTRSimulator.  
+* Pressure dependent demand available in the EpanetSimulator with minimum and required pressures set on a model-wide basis (through the WaterNetworkOptions values).
+  Per-node settings for minimum and required pressures are only available using the WNTRSimulator.
+
+* Leak models are only available using the WNTRSimulator.  
 
 * Water quality simulations are only available using the EpanetSimulator.  
 
@@ -149,6 +150,11 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * PBV and GPV values in the [VALVES] section
 
 **Future development of WNTR will address these limitations.**
+
+.. note::
+
+   The change to version 2.2 for EPANET as the default has led to certain name changes in the WaterNetworkOptions class to be consistent with
+   EPANET 2.2. Please see the class documentation for :class::`WaterNetworkOptions` to find the correct option names.
 
 .. _discrepancies:
 
