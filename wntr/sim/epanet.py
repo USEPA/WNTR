@@ -52,7 +52,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         if self.reader is None:
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
-    def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, version=2.0):
+    def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, version=2.2):
         """
         Run the EPANET simulator.
 

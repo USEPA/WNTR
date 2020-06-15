@@ -126,7 +126,7 @@ class ENepanet():
 
     fileLoaded = False
 
-    def __init__(self, inpfile='', rptfile='', binfile='', version=2.0):
+    def __init__(self, inpfile='', rptfile='', binfile='', version=2.2):
 
         self.inpfile = inpfile
         self.rptfile = rptfile
