@@ -772,17 +772,7 @@ def test_describe():
                                       'Volume': 0}, 
                            'Sources': 0, 
                            'Controls': 18})  
- """       
-def pump_curves_for_testing(): # remove
-    # as -is this data will create a lot of type errors unless it is converted 
-    # to float. Use df_pumpcurve_2_tuple to convert it to the right type for 
-    # use in unit testing.
-    df = read_csv(join(test_data_dir,'pump_practice_curves.csv'),skiprows=5)
-    clist = []
-    for i in range(11):
-        clist.append(df[df['curve number']==i].iloc[:,1:3])
-    return clist
-"""
+
 def test_assign_demand():
     
     inp_file = join(ex_datadir, 'Net3.inp')

@@ -1,10 +1,13 @@
-import wntr
 import unittest
 import math
 import numpy as np
+import pandas as pd
+from os.path import abspath, dirname, join
+import wntr
 from wntr.sim.models.utils import ModelUpdater
-from wntr.tests.test_network import pump_curves_for_testing
 
+testdir = dirname(abspath(str(__file__)))
+test_data_dir = join(testdir,'data_for_testing')
 
 def compare_floats(a, b, tol=1e-5, rel_tol=1e-3):
     if abs(a) >= 1e-8:
@@ -59,7 +62,14 @@ class TestHeadloss(unittest.TestCase):
         # add a single point, 2-point, and a set of multi-point curves to test
         wn.add_curve('curve4', 'HEAD', [(0.05, 5.0)])
         wn.add_curve('curve5', 'HEAD', [(0.0, 10.0),(0.1, 0.0)])
-        multi_point_pump_curves = pump_curves_for_testing() # change to read in a csv file
+        
+        #multi_point_pump_curves = pump_curves_for_testing() # change to read in a csv file
+        
+        df = pd.read_csv(join(test_data_dir,'pump_practice_curves.csv'),skiprows=5)
+        multi_point_pump_curves = []
+        for i in range(11):
+            multi_point_pump_curves.append(df[df['curve number']==i].iloc[:,1:3])
+        
         for i, curve in enumerate(multi_point_pump_curves):
             curve_name = 'curve{0:d}'.format(i+6)
             wn.add_curve(curve_name,'HEAD',curve.values)
