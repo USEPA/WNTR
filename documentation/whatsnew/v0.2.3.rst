@@ -18,31 +18,32 @@ v0.2.3 (July, 2020)
 
   Assuming a water network called ``wn``, the following properties of the ``wn.options`` object have been renamed or are new:
 
-=========================================   =========================================   =========================================================================
+=========================================   =========================================   ============================================================================
 Original name                               New (current) name                          Reasoning
-=========================================   =========================================   =========================================================================
+=========================================   =========================================   ============================================================================
 ``results.statistic``                       ``time.statistic``                          Make consistent with EPANET options groups and statistic is over time.
 ``hydraulic.units``                         ``hydraulic.inpfile_units``                 Make clear that the units **ONLY** apply to how the INP file is written.
-``quality.mode``                            ``quality.parameter``
-**options moved**, from ``quality``         ``reaction.*``  (*new*)
-``quality.bulk_rxn_order``                  ``reaction.bulk_rxn_order``
-``quality.wall_rxn_order``                  ``reaction.wall_rxn_order``
-``quality.tank_rxn_order``                  ``reaction.tank_rxn_order``
-``quality.bulk_rxn_coeff``                  ``reaction.bulk_rxn_coeff``
-``quality.wall_rxn_coeff``                  ``reaction.wall_rxn_coeff``
-``solver.*``  (*deleted*)                   **options moved**
-``solver.tolerance``                        ``quality.tolerance``
-``solver.trials``                           ``hydraulic.trials``
-``solver.accuracy``                         ``hydraulic.accuracy``
-``solver.unbalanced``                       ``hydraulic.unbalanced``
-``solver.unbalanced_value``                 ``hydraulic.unbalanced_value``
-``solver.checkfreq``                        ``hydraulic.checkfreq``
-``solver.maxcheck``                         ``hydraulic.maxcheck``
-``solver.damplimit``                        ``hydraulic.damplimit``
-**new**, set to ``None`` for EPANET 2.0     ``hydraulic.demand_model``
-"..."                                       ``hydraulic.minimum_pressure``
-"..."                                       ``hydraulic.required_pressure``
-"..."                                       ``hydraulic.pressure_exponent``
-"..."                                       ``hydraulic.headerror``
-"..."                                       ``hydraulic.flowchange``
-=========================================   =========================================   =========================================================================
+``quality.mode``                            ``quality.parameter``                       Make consistent with EPANET nomenclature.
+**options moved**, from ``quality``         ``reaction.*``  (*new*)                     Make consistent with EPANET groupings, keep reaction options together.
+``quality.bulk_rxn_order``                  ``reaction.bulk_rxn_order``                 "..."
+``quality.wall_rxn_order``                  ``reaction.wall_rxn_order``                 "..."
+``quality.tank_rxn_order``                  ``reaction.tank_rxn_order``                 "..."
+``quality.bulk_rxn_coeff``                  ``reaction.bulk_rxn_coeff``                 "..."
+``quality.wall_rxn_coeff``                  ``reaction.wall_rxn_coeff``                 "..."
+``solver.*``  (*deleted*)                   **options moved**                           Solver options are all hydraulic except one, and belong with hydraulics.
+``solver.trials``                           ``hydraulic.trials``                        "..."
+``solver.accuracy``                         ``hydraulic.accuracy``                      "..."
+``solver.unbalanced``                       ``hydraulic.unbalanced``                    "..."
+``solver.unbalanced_value``                 ``hydraulic.unbalanced_value``              "..."
+``solver.checkfreq``                        ``hydraulic.checkfreq``                     "..."
+``solver.maxcheck``                         ``hydraulic.maxcheck``                      "..."
+``solver.damplimit``                        ``hydraulic.damplimit``                     "..."
+**new**, set to ``None`` for EPANET 2.0     ``hydraulic.demand_model``                  New options specific to EPANET 2.2. Must be set to ``None`` when running 2.0
+"..."                                       ``hydraulic.minimum_pressure``              "..."
+"..."                                       ``hydraulic.required_pressure``             "..."
+"..."                                       ``hydraulic.pressure_exponent``             "..."
+"..."                                       ``hydraulic.headerror``                     "..."
+"..."                                       ``hydraulic.flowchange``                    "..."
+``solver.tolerance``                        ``quality.tolerance``                       Only old solver option that applies to quality, EPANET groups with quality.
+=========================================   =========================================   ============================================================================
+
