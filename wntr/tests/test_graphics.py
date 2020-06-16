@@ -180,13 +180,13 @@ def test_plot_tank_curve():
     tank_no_curve = wn.get_node('42')
     
     plt.figure()
-    shouldBeAxis = wntr.graphics.plot_volume_curve(tank_w_curve)
+    shouldBeAxis = wntr.graphics.plot_tank_volume_curve(tank_w_curve)
     plt.savefig(filename, format='png')
     plt.close()
     
     assert_true(isfile(filename))
     
-    shouldBeNone = wntr.graphics.plot_volume_curve(tank_no_curve)
+    shouldBeNone = wntr.graphics.plot_tank_volume_curve(tank_no_curve)
     assert_true(shouldBeNone is None)
 
 def test_custom_colormap():

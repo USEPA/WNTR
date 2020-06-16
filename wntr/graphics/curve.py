@@ -72,7 +72,7 @@ def plot_fragility_curve(FC, fill=True, key='Default',
 
 def plot_pump_curve(pump, title='Pump curve', 
                     xmin=0, xmax=None, ymin=0, ymax=None, 
-                    xlabel='Flow (m3/s)',
+                    xlabel='Flow (m$^3$/s)',
                     ylabel='Head (m)', 
                     ax=None):
     """
@@ -145,7 +145,7 @@ def plot_pump_curve(pump, title='Pump curve',
     
     return ax
 
-def plot_volume_curve(tank, title='Tank volume curve', 
+def plot_tank_volume_curve(tank, title='Tank volume curve', 
                     ax=None):
     """
     Plots a tank volume curve and the corresponding axi-symmetric tank profile shape
@@ -183,24 +183,24 @@ def plot_volume_curve(tank, title='Tank volume curve',
 
     ax[0].plot(L, V, '-o', linewidth=1,label="volume curve")
     ax[0].plot([tank.min_level,tank.min_level], [V_min_level,V_max_level],'-.',
-        label="lower limit",color='r')
+        label="min level",color='r')
     ax[0].plot([tank.max_level,tank.max_level], [V_min_level,V_max_level],'-.',
-        label="upper limit",color='r')
+        label="max level",color='r')
     ax[0].grid("on")
     ax[0].set_xlabel("Tank level (m)")
-    ax[0].set_ylabel("Tank volume (m3)")
+    ax[0].set_ylabel("Tank volume (m$^3$)")
     ax[0].set_title(title)
     ax[0].legend()
     
     # calculate the tank profile assuming an axi-symmetric tank
     d = []
     l = []
-    d.append(0.0)
-    d.append(tank.diameter)
-    d.append(tank.diameter)
-    l.append(0.0)
-    l.append(0.0)
-    l.append(tank.min_level)
+    #d.append(0.0)
+    #d.append(tank.diameter)
+    #d.append(tank.diameter)
+    #l.append(0.0)
+    #l.append(0.0)
+    #l.append(tank.min_level)
     lev0 = L[0]
     vol0 = V[0]
     for vol,lev in zip(V[1:],L[1:]):
@@ -211,15 +211,15 @@ def plot_volume_curve(tank, title='Tank volume curve',
         d.append(dn)
         lev0 = lev
         vol0 = vol
-    l.append(l[-1])
-    d.append(0.0)
+    #l.append(l[-1])
+    #d.append(0.0)
     
     ax[1].plot(np.array(d)/2,l,label="tank profile")
     max_d = max([tank.diameter,max(d)])
     ax[1].plot([0.0,max_d/2.0],[tank.min_level,tank.min_level],'-.',
-        label="lower limit",color='r')
+        label="min level",color='r')
     ax[1].plot([0.0,max_d/2.0],[tank.max_level,tank.max_level],'-.',
-        label="upper limit",color='r')
+        label="max level",color='r')
     #ax[1].plot([0.0,max_d/2.0],[0.0,0.0],'-.',label='elevation={0:5.2f}m'.format(tank.elevation),color='k')
     ax[1].grid("on")
     ax[1].set_xlabel("Equivalent axisymmetric tank radius (m)")
