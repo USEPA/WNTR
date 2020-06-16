@@ -174,6 +174,19 @@ def test_custom_colormap():
     assert_equal(cmp.N,3)
     assert_equal(cmp.name,'custom')
     
+def test_wn_to_geojson():
+    filename = abspath(join(ex_datadir, 'Net3.json'))
+    if isfile(filename):
+        os.remove(filename)
+        
+    inp_file = join(ex_datadir,'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+		
+    wntr.graphics.wn_to_geojson(wn, to_file=True)
+    
+    assert_true(isfile(filename))
+    
 if __name__ == '__main__':
-    test_network_animation1()
+    # test_network_animation1()
+    test_wn_to_geojson()
     

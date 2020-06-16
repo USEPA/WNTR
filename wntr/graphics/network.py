@@ -5,7 +5,10 @@ water network model.
 import logging
 import networkx as nx
 import pandas as pd
+import os
+import json
 from wntr.morph import convert_node_coordinates_to_longlat
+from wntr.epanet import FlowUnits
 try:
     import matplotlib.pyplot as plt
     from matplotlib import animation
@@ -1049,3 +1052,64 @@ def network_animation(wn, node_attribute=None, link_attribute=None, title=None,
     anim = animation.FuncAnimation(fig, update, interval=50, frames=len(index), blit=False, repeat=repeat)
     
     return anim
+
+def wn_to_geojson(wn, to_file=True):
+    """
+    Write a minimal geojson representation of the Water Network.
+
+    Parameters
+    ----------
+    wn: wntr WaterNetworkModel object
+        The network to be make the geojson from
+    to_file: Boolean, default=False
+        To save the geojson representation as a file in the directory of the
+        inp file
+    Returns
+    -------
+    wn_geojson: dict in geojson format
+        geojson spatial representation of the water network
+    """
+    inp_path = os.path.abspath(wn.name)
+    # Translate the nodes to geojson.
+    wn_geojson = {"type": "FeatureColllection",
+                  "features": []
+                  }
+    for name, node in wn.nodes():
+        feature = {"type": "Feature",
+                   "geometry": {"type": "Point",
+                                "coordinates": list(node.coordinates)
+                                },
+                   "id": name,
+                   "properties": {"ID": name,
+                                  }
+                   }
+        if node.node_type == 'Junction':
+            feature['properties']["Base Demand (gpm)"] = node.base_demand/FlowUnits.GPM.factor
+        else:
+            feature['properties']["Base Demand (gpm)"] = node.node_type
+        wn_geojson["features"].append(feature)
+    # Translate the links to geojson.
+    for name, link in wn.links():
+        link = wn.get_link(link)
+        start = list(link.start_node.coordinates)
+        end = list(link.end_node.coordinates)
+        feature = {"type": "Feature",
+                   "geometry": {"type": "LineString",
+                                "coordinates": [start, end]
+                                },
+                   "id": name,
+                   "properties": {"ID": name
+                                  }
+                   }
+        link_type = link.link_type
+        if link_type == 'Pump':
+            feature['properties']["Pipe Diameter (in)"] = "Pump"
+        else:
+            feature['properties']["Pipe Diameter (in)"] = round(link.diameter * 39.3701)
+        wn_geojson["features"].append(feature)
+    if to_file:
+        # Write out the network to the file.
+        output_file = inp_path.split('.inp')[0] + '.json'
+        with open(output_file, 'w') as fp:
+            json.dump(wn_geojson, fp)
+    return wn_geojson
