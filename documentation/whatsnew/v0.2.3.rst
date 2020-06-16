@@ -4,9 +4,9 @@ v0.2.3 (dev branch)
 ---------------------------------------------------
 The following features are under development in the dev branch and will be part of the next release.
  
-* Added support for mutlipoint pump curves in the WNTRSimualtor.  The points are fit to the same
+* Added support for mutlipoint pump curves in the WNTRSimulator.  The points are fit to the same
   function that is used for 3-point curves.
-* Added support for tank volume curves in the WNTRSimualtor.  
+* Added support for tank volume curves in the WNTRSimulator.  
   Tank volume curves are also now used in :class:`~wntr.metrics.economic.annual_network_cost`.
   Tank curves can also be visualized using the function :class:`~wntr.graphics.curve.plot_tank_volume_curve`.
 * Added method to get tank volume at a given level :class:`~wntr.network.elements.Tank.get_volume`.
