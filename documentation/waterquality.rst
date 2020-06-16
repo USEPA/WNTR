@@ -21,12 +21,6 @@ Water quality simulation
 ==================================
 
 Water quality simulations can only be run using the EpanetSimulator. 
-As listed in the :ref:`software_framework` section,  this means that the hydraulic simulation must use demand-driven simulation.
-The WNTRSimulator can be used to compute demands under pressure dependent demand conditions and those 
-demands can be used in the EpanetSimulator (see :ref:`wq_pdd` below).
- 
-.. note:: 
-  The hydraulic simulation limitation is due to WNTR currently using EPANET 2.00.12, and not the currently released EPANET 2.2.0 with the pressure dependent algorithm. 
  
 After defining water quality options and sources (described in the :ref:`wq_options` and :ref:`sources` sections below), a hydraulic and water quality simulation 
 using the EpanetSimulator is run using the following code:
@@ -42,13 +36,13 @@ The results include a quality value for each node (see :ref:`simulation_results`
 
 Options
 ----------
-Water quality simulation options are defined in the :class:`~wntr.network.options.WaterNetworkOptions` class.
+Simulation options are stored in ``wn.options``.
 Three types of water quality analysis are supported.  These options include water age, tracer, and chemical concentration.
 
 * **Water age**: A water quality simulation can be used to compute water age at every node.
   To compute water age, set the 'quality' option as follows:
 
-.. doctest::
+  .. doctest::
 
     >>> wn.options.quality.parameter = 'AGE'
 	
@@ -131,19 +125,20 @@ The method :class:`~wntr.network.model.WaterNetworkModel.remove_source` can be u
 When creating a water network model from an EPANET INP file, the sources that are defined in the [SOURCES] section are added to the water network model.  
 These sources are given the name 'INP#' where # is an integer related to the number of sources in the INP file.
 
-.. _wq_pdd:
+.. The following is not shown in the UM
+    _wq_pdd:
 
-Using PDD
-------------
+	Using PDD
+	------------
 
-As noted in the :ref:`software_framework` section, a pressure dependent demand hydraulic simulation is only available using the WNTRSimulator
-and water quality simulations are only available using the EpanetSimulator.
-The following example illustrates how to use pressure dependent demands in a water 
-quality simulation.  A hydraulic simulation is first run using the WNTRSimulator in PDD mode.
-The resulting demands are used to reset demands in the WaterNetworkModel and hydraulics and
-water quality are run using the EpanetSimulator.
+	As noted in the :ref:`software_framework` section, a pressure dependent demand hydraulic simulation is only available using the WNTRSimulator
+	and water quality simulations are only available using the EpanetSimulator.
+	The following example illustrates how to use pressure dependent demands in a water 
+	quality simulation.  A hydraulic simulation is first run using the WNTRSimulator in PDD mode.
+	The resulting demands are used to reset demands in the WaterNetworkModel and hydraulics and
+	water quality are run using the EpanetSimulator.
 
-.. doctest::
+	.. doctest::
 
     >>> wn.options.hydraulic.demand_model = 'PDA'
     >>> sim = wntr.sim.WNTRSimulator(wn)

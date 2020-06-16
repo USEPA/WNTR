@@ -8,13 +8,22 @@ Hydraulic simulation
 WNTR contains two simulators: the EpanetSimulator and the WNTRSimulator.
 See :ref:`software_framework` for more information on features and limitations of these simulators. 
 
-The EpanetSimulator can be used to run demand-driven hydraulic simulations
-using the EPANET Programmer's Toolkit. The simulator can also be 
-used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
-A hydraulic simulation using the EpanetSimulator is run using the following code:
+EpanetSimulator
+-----------------
+The EpanetSimulator can be used to run EPANET 2.00.12 Programmer's Toolkit [Ross00]_ or EPANET 2.2.0 Programmer's Toolkit [EPANET22]_.  
+EPANET 2.2.0 is used by default and runs demand-driven and pressure-dependent hydraulic analysis.  
+EPANET 2.00.12 runs demand-driven hydraulic analysis only.
+Both versions can also run water quality simulations, as described in :ref:`water_quality_simulation`.  
 
-.. note:: 
-  EPANET refers to EPANET 2.00.12. Future releases of WNTR will include EPANET 2.2.0.
+The user can switch between demand-driven analysis (DDA) or pressure driven analysis (PDA) by setting
+the ``wn.options.hydraulic.demand_model`` option.
+
+.. doctest::
+
+	>>> wn.options.hydraulic.demand_model = 'DDA'  
+	>>> wn.options.hydraulic.demand_model = 'PDA'
+	
+A hydraulic simulation using the EpanetSimulator is run using the following code:
 
 .. doctest::
     :hide:
@@ -28,13 +37,30 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 .. doctest::
 
 	>>> sim = wntr.sim.EpanetSimulator(wn)
-	>>> results = sim.run_sim()
+	>>> results = sim.run_sim() # by default, this runs EPANET 2.2.0
+	
+The user can switch between EPANET version 2.00.12 and 2.2.0 as shown below:
 
+.. doctest::
+
+	>>> results1 = sim.run_sim(version=2.0) # runs EPANET 2.00.12
+	>>> results2 = sim.run_sim(version=2.2) # runs EPANET 2.2.0
+	
+WNTRSimulator
+-----------------
 The WNTRSimulator is a hydraulic simulation engine based on the same equations
 as EPANET. The WNTRSimulator does not include equations to run water quality 
 simulations. The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulations
-in either demand-driven or pressure dependent demand mode ('DDA' or 'PDA').
-This is set py changing the network's options.hydraulic.demand_model value.
+in demand-driven or pressure dependent demand mode.
+
+As with the EpanetSimulator, the user can switch between DDA and PDA by setting
+the ``wn.options.hydraulic.demand_model`` option.  
+
+.. doctest::
+
+	>>> wn.options.hydraulic.demand_model = 'DDA'  
+	>>> wn.options.hydraulic.demand_model = 'PDA'
+	
 A hydraulic simulation using the WNTRSimulator is run using the following code:
 
 .. doctest::
@@ -42,14 +68,15 @@ A hydraulic simulation using the WNTRSimulator is run using the following code:
 	>>> sim = wntr.sim.WNTRSimulator(wn)
 	>>> results = sim.run_sim()
 
+
 More information on the simulators can be found in the API documentation, under
 :class:`~wntr.sim.epanet.EpanetSimulator` and 
 :class:`~wntr.sim.core.WNTRSimulator`.
 
 Options
 ----------
-Hydraulic simulation options are defined in the :class:`~wntr.network.options.WaterNetworkOptions` class.
-These options include 
+Simulation options are stored in ``wn.options``.
+Hydraulic simulation options include 
 duration, 
 hydraulic timestep, 
 rule timestep, 
@@ -63,24 +90,27 @@ headloss,
 trials, 
 accuracy, 
 unbalanced, 
-demand multiplier, and 
-emitter exponent.
-All options are used with the EpanetSimulator.  
+demand multiplier, 
+demand model,
+minimum pressure
+required pressure
+pressure exponent.
+
+Note that EPANET 2.0.12 does not use the demand model, minimum pressure, required pressure, or pressure exponent. [DAVE check this]
 Options that are not used with the WNTRSimulator are described in :ref:`limitations`.  
 
-The following example returns model options, which all have default values.
+The easiest way to view options is to print ``wn.options`` as a dictionary. For example, hydraulic options are shown below.
 
 .. doctest::
 
-    >>> wn.options # doctest: +SKIP
-    Time options:
-      duration            : 604800              
-      hydraulic_timestep  : 900                 
-      quality_timestep    : 900                 
-      rule_timestep       : 360.0               
-      pattern_timestep    : 3600
-      ...
-      
+	>>> print(dict(wn.options.hydraulic)) # doctest: +SKIP
+	{'accuracy': 0.001,
+	 'checkfreq': 2,
+	 'damplimit': 0.0,
+	 'demand_model': None,
+	 'demand_multiplier': 1.0,
+	 ...
+		  
 Mass balance at nodes
 -------------------------
 Both simulators use the mass balance equations from EPANET [Ross00]_:

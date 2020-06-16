@@ -81,42 +81,23 @@ These classes are listed in :numref:`table-sim-subpackage`.
    =================================================  =============================================================================================================================================================================================================================================================================
    Class                                              Description
    =================================================  =============================================================================================================================================================================================================================================================================
-   :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator uses the EPANET 2.2 Programmer's Toolkit [Ross00]_ to run demand-driven hydraulic simulations and water quality simulations. 
-                                                      The ``wn.options.hydraulic.demand_model`` value can be used to change to pressure-dependent demand hydraulic simulations in EPANET. 
-													  When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation.
+   :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator can run both the EPANET 2.00.12 Programmer's Toolkit [Ross00]_ and EPANET 2.2.0 Programmer's Toolkit [EPANET22]_ to run hydraulic and water quality simulations.  
+                                                      EPANET 2.2.0 (which is used by default) includes both demand-driven and pressure-dependent analysis, while EPANET 2.00.12 includes demand-driven analysis. 
+                                                      When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation.
                                                       This allows the user to read in EPANET INP files, modify the model, run an EPANET simulation, and analyze results all within WNTR. 
-                                                      For backwards compatibility, ``version=2.0`` can be added to the ``run_sim()`` command to use the older EPANET library.
 	
-	:class:`~wntr.sim.core.WNTRSimulator`             The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulations and includes models to simulate pipe leaks. 
-	                                                  The WNTRSimulator does not perform water quality simulations, however, the hydraulic simulation results can be used with the EpanetSimulator to perform water quality simulations. See :ref:`water_quality_simulation` for an example.
+	:class:`~wntr.sim.core.WNTRSimulator`             The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulations and includes models to simulate pipe leaks.
+                                                      The simulator includes an algebraic model, which can be extended to simulate additional components or behaviors in water network models.	
+	                                                  The WNTRSimulator does not perform water quality simulations.
    =================================================  =============================================================================================================================================================================================================================================================================
-
-.. note:: 
-  EPANET refers to EPANET 2.00.12. Future releases of WNTR will include EPANET 2.2.0.
 
 .. _limitations:
    
-Limitationsv0.2.3 (dev branch)
----------------------------------------------------
-The following features are under development in the dev branch and will be part of the next release.
- 
-* Added support for mutlipoint pump curves in the WNTRSimulator.  The points are fit to the same
-  function that is used for 3-point curves.
-* Added support for tank volume curves in the WNTRSimulator.  
-  Tank volume curves are also now used in :class:`~wntr.metrics.economic.annual_network_cost`.
-  Tank curves can also be visualized using the function :class:`~wntr.graphics.curve.plot_tank_volume_curve`.
-* Added method to get tank volume at a given level :class:`~wntr.network.elements.Tank.get_volume`.
-* Updated tests
-* Updated documentation
+Limitations
 ---------------
-Current software limitations are noted:
+Current WNTR limitations include:
 
 * Certain EPANET INP model options are not supported in WNTR, as outlined below.
-
-* Pressure dependent demand available in the EpanetSimulator with minimum and required pressures set on a model-wide basis (through the WaterNetworkOptions values).
-  Per-node settings for minimum and required pressures are only available using the WNTRSimulator.
-
-* Leak models are only available using the WNTRSimulator.  
 
 * Water quality simulations are only available using the EpanetSimulator.  
 
@@ -166,11 +147,6 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 
 **Future development of WNTR will address these limitations.**
 
-.. note::
-
-   The change to version 2.2 for EPANET as the default has led to certain name changes in the WaterNetworkOptions class to be consistent with
-   EPANET 2.2. Please see the class documentation for :class::`WaterNetworkOptions` to find the correct option names.
-
 .. _discrepancies:
 
 Discrepancies
@@ -191,4 +167,4 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
   While the WaterNetworkModel can store spatially variable minimum and required pressure that are used in the WNTRSimulator, 
   those values cannot be saved when writing an INP file, rather the minimum and required pressure values in the options are saved.
   This impacts the ability to use those junction attributes in the EpanetSimulator. 
- 
+* **Leak models**: Leak models are only available using the WNTRSimulator.  Emitters can be used to model leaks in EPANET.
