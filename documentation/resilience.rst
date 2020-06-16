@@ -303,7 +303,8 @@ The following examples compute hydraulic metrics, including:
 
   .. doctest::
 
-      >>> sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+      >>> wn.options.hydraulic.demand_model = 'PDA'
+      >>> sim = wntr.sim.WNTRSimulator(wn)
       >>> results = sim.run_sim()
     
       >>> pressure = results.node['pressure']

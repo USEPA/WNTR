@@ -388,17 +388,28 @@ class InpFile(object):
         
         return self.wn
 
-    def write(self, filename, wn, units=None):
+    def write(self, filename, wn, units=None, version=2.2):
         """
         Write a water network model into an EPANET INP file.
+
+        .. note::
+
+            Please note that by default, an EPANET 2.2 formatted file is written by WNTR. An INP file
+            with version 2.2 options *will not* work with EPANET 2.0 (command line nor GUI). By default,
+            WNTR will also use the EPANET 2.2 toolkit.
+        
 
         Parameters
         ----------
         filename : str
             Name of the EPANET INP file.
         units : str, int or FlowUnits
-            Name of the units being written to the EPANET INP file.
-        
+            Name of the units for the EPANET INP file to be written in.
+        version : float, {2.0, **2.2**}
+            Defaults to 2.2; use 2.0 to guarantee backward compatability, but this will turn off PDA mode 
+            and supress the writing of EPANET 2.2-specific options. If PDA mode is specified, a 
+            warning will be issued.
+
 		"""
 
         if not isinstance(wn, WaterNetworkModel):
@@ -445,7 +456,7 @@ class InpFile(object):
 
             self._write_times(f, wn)
             self._write_report(f, wn)
-            self._write_options(f, wn)
+            self._write_options(f, wn, version=version)
 
             self._write_coordinates(f, wn)
             self._write_vertices(f, wn)
@@ -1726,11 +1737,15 @@ class InpFile(object):
         if opts.hydraulic.minimum_pressure != 0.0:
             minimum_pressure = to_si(self.flow_units, opts.hydraulic.minimum_pressure, HydParam.Pressure)
             opts.hydraulic.minimum_pressure = minimum_pressure
+            for junc in self.wn.junctions():
+                junc.minimum_pressure = minimum_pressure
         if opts.hydraulic.required_pressure != 0.0:
             required_pressure = from_si(self.flow_units, opts.hydraulic.required_pressure, HydParam.Pressure)
             opts.hydraulic.required_pressure = required_pressure
+            for junc in self.wn.junctions():
+                junc.required_pressure = required_pressure
 
-    def _write_options(self, f, wn):
+    def _write_options(self, f, wn, version=2.2):
         f.write('[OPTIONS]\n'.encode('ascii'))
         entry_string = '{:20s} {:20s}\n'
         entry_float = '{:20s} {:.11g}\n'
@@ -1751,11 +1766,14 @@ class InpFile(object):
         f.write(entry_float.format('MAXCHECK', wn.options.hydraulic.maxcheck).encode('ascii'))
 
         # EPANET 2.2 OPTIONS
-        if wn.options.hydraulic.headerror != 0: 
-            f.write(entry_float.format('HEADERROR', wn.options.hydraulic.headerror).encode('ascii'))
+        if version == 2.0:
+            pass
+        else:
+            if wn.options.hydraulic.headerror != 0: 
+                f.write(entry_float.format('HEADERROR', wn.options.hydraulic.headerror).encode('ascii'))
 
-        if wn.options.hydraulic.flowchange != 0:
-            f.write(entry_float.format('FLOWCHANGE', wn.options.hydraulic.flowchange).encode('ascii'))
+            if wn.options.hydraulic.flowchange != 0:
+                f.write(entry_float.format('FLOWCHANGE', wn.options.hydraulic.flowchange).encode('ascii'))
 
         # EPANET 2.0 OPTIONS
         if wn.options.hydraulic.damplimit != 0:
@@ -1772,19 +1790,23 @@ class InpFile(object):
         f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.hydraulic.demand_multiplier).encode('ascii'))
 
         # EPANET 2.2 OPTIONS
-        if wn.options.hydraulic.demand_model is not None: 
-            f.write('{:20s} {}\n'.format('DEMAND MODEL', wn.options.hydraulic.demand_model).encode('ascii'))
+        if version == 2.0:
+            if wn.options.hydraulic.demand_model in ['PDA', 'PDD']: 
+                logger.critical('You have specified a PDA analysis using EPANET 2.0. This is not supported in EPANET 2.0. The analysis will default to DDA mode.')
+        else:
+            if wn.options.hydraulic.demand_model is not None: 
+                f.write('{:20s} {}\n'.format('DEMAND MODEL', wn.options.hydraulic.demand_model).encode('ascii'))
 
-        if wn.options.hydraulic.minimum_pressure != 0.0:
-            minimum_pressure = from_si(self.flow_units, wn.options.hydraulic.minimum_pressure, HydParam.Pressure)
-            f.write('{:20s} {}\n'.format('MINIMUM PRESSURE', minimum_pressure).encode('ascii'))
+            if wn.options.hydraulic.minimum_pressure != 0.0:
+                minimum_pressure = from_si(self.flow_units, wn.options.hydraulic.minimum_pressure, HydParam.Pressure)
+                f.write('{:20s} {}\n'.format('MINIMUM PRESSURE', minimum_pressure).encode('ascii'))
 
-        if wn.options.hydraulic.required_pressure != 0.0:
-            required_pressure = from_si(self.flow_units, wn.options.hydraulic.required_pressure, HydParam.Pressure)
-            f.write('{:20s} {}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
+            if wn.options.hydraulic.required_pressure != 0.0:
+                required_pressure = from_si(self.flow_units, wn.options.hydraulic.required_pressure, HydParam.Pressure)
+                f.write('{:20s} {}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
 
-        if wn.options.hydraulic.pressure_exponent != 0.5:
-            f.write('{:20s} {}\n'.format('PRESSURE EXPONENT', wn.options.hydraulic.pressure_exponent).encode('ascii'))
+            if wn.options.hydraulic.pressure_exponent != 0.5:
+                f.write('{:20s} {}\n'.format('PRESSURE EXPONENT', wn.options.hydraulic.pressure_exponent).encode('ascii'))
 
         # EPANET 2.0+ OPTIONS
         f.write(entry_float.format('EMITTER EXPONENT',  wn.options.hydraulic.emitter_exponent).encode('ascii'))

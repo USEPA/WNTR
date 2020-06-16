@@ -18,7 +18,7 @@ from wntr.sim.models.utils import ModelUpdater
 logger = logging.getLogger(__name__)
 
 
-def create_hydraulic_model(wn, mode='DD', HW_approx='default'):
+def create_hydraulic_model(wn, HW_approx='default'):
     """
     Parameters
     ----------
@@ -44,9 +44,10 @@ def create_hydraulic_model(wn, mode='DD', HW_approx='default'):
 
     param.source_head_param(m, wn)
     param.expected_demand_param(m, wn)
-    if mode == 'DD':
+    mode = wn.options.hydraulic.demand_model
+    if mode in ['DD', 'DDA']:
         pass
-    elif mode == 'PDD':
+    elif mode in ['PDD', 'PDA']:
         param.pmin_param.build(m, wn, model_updater)
         param.pnom_param.build(m, wn, model_updater)
         param.pdd_poly_coeffs_param.build(m, wn, model_updater)
@@ -60,17 +61,17 @@ def create_hydraulic_model(wn, mode='DD', HW_approx='default'):
     param.pump_power_param.build(m, wn, model_updater)
     param.valve_setting_param.build(m, wn, model_updater)
 
-    if mode == 'DD':
+    if mode in ['DD','DDA']:
         pass
-    elif mode == 'PDD':
+    elif mode in ['PDD','PDA']:
         var.demand_var(m, wn)
     var.flow_var(m, wn)
     var.head_var(m, wn)
     var.leak_rate_var(m, wn)
 
-    if mode == 'DD':
+    if mode in ['DD','DDA']:
         constraint.mass_balance_constraint.build(m, wn, model_updater)
-    elif mode == 'PDD':
+    elif mode in ['PDD','PDA']:
         constraint.pdd_mass_balance_constraint.build(m, wn, model_updater)
         constraint.pdd_constraint.build(m, wn, model_updater)
     else:
@@ -304,15 +305,16 @@ def get_results(wn, results, node_res, link_res):
     results.link = link_res
 
 
-def store_results_in_network(wn, m, mode='DD'):
+def store_results_in_network(wn, m):
     """
 
     Parameters
     ----------
     wn: wntr.network.WaterNetworkModel
     m: wntr.aml.Model
-    mode: str
+
     """
+    mode = wn.options.hydraulic.demand_model
     for name, link in wn.links():
         if link._is_isolated:
             link._flow = 0
@@ -326,7 +328,7 @@ def store_results_in_network(wn, m, mode='DD'):
             node.leak_demand = 0
         else:
             node.head = m.head[name].value
-            if mode == 'PDD':
+            if mode in ['PDD', 'PDA']:
                 node.demand = m.demand[name].value
             else:
                 node.demand = m.expected_demand[name].value

@@ -40,15 +40,20 @@ class WaterNetworkSimulator(object):
     wn : WaterNetworkModel object
         Water network model
 
-    mode: string (optional)
-        Specifies whether the simulation will be demand-driven (DD) or
-        pressure dependent demand (PDD), default = DD
+    .. warning::
+
+        The mode parameter has been deprecated. Please set the mode using the network option,
+        wn.options.hydraulic.demand_model.
+
+    
     """
 
-    def __init__(self, wn=None, mode='DD'):
+    def __init__(self, wn=None):
 
         self._wn = wn
-        self.mode = mode
+        # self.mode = mode
+        self.mode = self._wn.options.hydraulic.demand_model
+
 
     def _get_link_type(self, name):
         if isinstance(self._wn.get_link(name), Pipe):
@@ -196,11 +201,12 @@ def _plot_interactive_network(wn, title=None, node_size=8, link_width=2,
         plotly.offline.plot(fig, auto_open=auto_open)
 
 
-def _write_DD_results_to_json_for_diagnostics(wn, res, filename, mode='DD'):
+def _write_DD_results_to_json_for_diagnostics(wn, res, filename):
     d = dict()
-    if mode == 'DD':
+    mode = wn.options.hydraulic.demand_model
+    if mode in ['DD','DDA']:
         demand_key = 'expected_demand'
-    elif mode == 'PDD':
+    elif mode in ['PDD','PDA']:
         demand_key = 'demand'
     else:
         raise ValueError('Unexpected mode: {0}'.format(mode))
@@ -260,7 +266,8 @@ class _Diagnostics(object):
     def __init__(self, wn, model, mode, enable=False):
         self.wn = wn
         self.model = model
-        self.mode = mode
+        # self.mode = mode
+        self.mode = wn.options.hydraulic.demand_model
         self.enabled = enable
         self.time_to_enable = -1
 
@@ -446,6 +453,7 @@ class _Diagnostics(object):
         os.system('open link_comparison_' + link_name + '_' + str(t) + '.html')
 
     def store_var_values_in_network(self):
+        self.mode = self._wn.options.hydraulic.demand_model
         wntr.sim.hydraulics.store_results_in_network(self.wn, self.model, self.mode)
 
 
@@ -459,14 +467,16 @@ class WNTRSimulator(WaterNetworkSimulator):
     wn : WaterNetworkModel object
         Water network model
 
-    mode: string (optional)
-        Specifies whether the simulation will be demand-driven (DD) or
-        pressure dependent demand (PDD), default = DD
+
+    .. note::
+    
+        The mode parameter has been deprecated. Please set the mode using WaterNetworkOptions.hydraulic.demand_model
+
     """
 
-    def __init__(self, wn, mode='DD'):
+    def __init__(self, wn):
 
-        super(WNTRSimulator, self).__init__(wn, mode)
+        super(WNTRSimulator, self).__init__(wn)
 
         # attributes needed isolated junctions/links
         self._prev_isolated_junctions = OrderedSet()
@@ -815,7 +825,8 @@ class WNTRSimulator(WaterNetworkSimulator):
             If True, then run with diagnostics on
         """
         logger.debug('creating hydraulic model')
-        self._model, self._model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=self._wn, mode=self.mode, HW_approx=HW_approx)
+        self.mode = self._wn.options.hydraulic.demand_model
+        self._model, self._model_updater = wntr.sim.hydraulics.create_hydraulic_model(wn=self._wn, HW_approx=HW_approx)
 
         if diagnostics:
             diagnostics = _Diagnostics(self._wn, self._model, self.mode, enable=True)
@@ -898,7 +909,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
             # Enter results in network and update previous inputs
             logger.debug('storing results in network')
-            wntr.sim.hydraulics.store_results_in_network(self._wn, self._model, mode=self.mode)
+            wntr.sim.hydraulics.store_results_in_network(self._wn, self._model)
 
             diagnostics.run(last_step='solve and store results in network', next_step='postsolve controls')
 

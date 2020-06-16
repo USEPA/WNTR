@@ -36,10 +36,7 @@ import six
 import copy
 from scipy.optimize import curve_fit
 
-if sys.version_info[0] == 2:
-    from collections import MutableSequence
-else:
-    from collections.abc import MutableSequence
+from collections.abc import MutableSequence
 
 from .base import Node, Link, Registry, LinkStatus
 from .options import TimeOptions
@@ -68,7 +65,7 @@ class Junction(Node):
         self.demand_timeseries_list = Demands(self._pattern_reg)
         self.elevation = 0.0
 
-        self.nominal_pressure = 20.0
+        self.required_pressure = 20.0
         """float: The nominal pressure attribute is used for pressure-dependent demand
         simulations. This is the lowest pressure at which the junction receives 
         the full requested demand."""
@@ -94,7 +91,7 @@ class Junction(Node):
         if not super(Junction, self)._compare(other):
             return False
         if abs(self.elevation - other.elevation)<1e-9 and \
-           abs(self.nominal_pressure - other.nominal_pressure)<1e-9 and \
+           abs(self.required_pressure - other.required_pressure)<1e-9 and \
            abs(self.minimum_pressure - other.minimum_pressure)<1e-9 and \
            self._emitter_coefficient == other._emitter_coefficient:
             return True

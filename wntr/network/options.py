@@ -398,7 +398,7 @@ class HydraulicOptions(_OptionsBase):
                  specific_gravity: float = 1.0,
                  pattern: str = '1',
                  demand_multiplier: float = 1.0,
-                 demand_model: str = None,
+                 demand_model: str = 'DDA',
                  minimum_pressure: float = 0.0,
                  required_pressure: float = 0.0,
                  pressure_exponent: float = 0.5,

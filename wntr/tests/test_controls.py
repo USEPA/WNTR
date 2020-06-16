@@ -74,9 +74,10 @@ class TestTimeControls(unittest.TestCase):
         self.wn.options.time.report_timestep = 'all'
         for jname, j in self.wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
+            j.required_pressure = 15.0
 
-        sim = self.wntr.sim.WNTRSimulator(self.wn, mode='PDD')
+        self.wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.results = sim.run_sim()
 
     @classmethod
@@ -112,9 +113,10 @@ class TestConditionalControls(unittest.TestCase):
         wn.options.time.report_timestep = 'all'
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
+            j.required_pressure = 15.0
 
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         activated_flag = False
@@ -140,8 +142,9 @@ class TestConditionalControls(unittest.TestCase):
         wn.options.time.report_timestep = 'all'
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+            j.required_pressure = 15.0
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         activated_flag = False
@@ -178,8 +181,9 @@ class TestTankControls(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+            j.required_pressure = 15.0
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         tank_level_dropped_flag = False
@@ -196,8 +200,9 @@ class TestTankControls(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+            j.required_pressure = 15.0
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         tank_level_dropped_flag = False
@@ -232,8 +237,9 @@ class TestValveControls(unittest.TestCase):
         wn = self.wntr.network.WaterNetworkModel(inp_file)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+            j.required_pressure = 15.0
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
         
         flowrate = results.link['flowrate']
@@ -252,8 +258,9 @@ class TestValveControls(unittest.TestCase):
         tank2.head = tank2.init_level + tank2.elevation
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+            j.required_pressure = 15.0
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         flag1 = False
@@ -288,8 +295,9 @@ class TestControlCombinations(unittest.TestCase):
         wn.add_control('open_time_6',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+            j.required_pressure = 15.0
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         flag1 = False
@@ -321,8 +329,9 @@ class TestControlCombinations(unittest.TestCase):
         wn.add_control('open_time_19',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+            j.required_pressure = 15.0
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         flag1 = False
@@ -354,8 +363,9 @@ class TestControlCombinations(unittest.TestCase):
         wn.add_control('open_time_5',control)
         for jname, j in wn.nodes(self.wntr.network.Junction):
             j.minimum_pressure = 0.0
-            j.nominal_pressure = 15.0
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+            j.required_pressure = 15.0
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         flag1 = False

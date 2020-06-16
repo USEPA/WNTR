@@ -33,12 +33,13 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 The WNTRSimulator is a hydraulic simulation engine based on the same equations
 as EPANET. The WNTRSimulator does not include equations to run water quality 
 simulations. The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulations
-in either demand-driven or pressure dependent demand mode ('DD' or 'PDD').
+in either demand-driven or pressure dependent demand mode ('DDA' or 'PDA').
+This is set py changing the network's options.hydraulic.demand_model value.
 A hydraulic simulation using the WNTRSimulator is run using the following code:
 
 .. doctest::
 
-	>>> sim = wntr.sim.WNTRSimulator(wn, mode='DD')
+	>>> sim = wntr.sim.WNTRSimulator(wn)
 	>>> results = sim.run_sim()
 
 More information on the simulators can be found in the API documentation, under
@@ -234,7 +235,7 @@ The following example sets nominal and minimum pressure for each junction.  Note
 .. doctest::
 
     >>> for name, node in wn.junctions():
-    ...     node.nominal_pressure = 21.097 # 30 psi
+    ...     node.required_pressure = 21.097 # 30 psi
     ...     node.minimum_pressure = 3.516 # 5 psi
     
 Leak model
