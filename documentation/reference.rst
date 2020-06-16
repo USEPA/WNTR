@@ -22,6 +22,8 @@ References
 
 .. [ELLT12] Eto, J.H., LaCommare, K.H., Larsen, P.H., Todd, A., and Fisher, E. (2012). An Examination of Temporal Trends in Electricity Reliability Based on Reports from U.S. Electric Utilities. Lawrence Berkeley National Laboratory Report Number LBNL-5268E. Berkeley, CA: Ernest Orlando Lawrence Berkeley National Laboratory, 68p
 
+.. [EPANET22] https://epanet22.readthedocs.io/
+
 .. [Folium] python-visualization/folium. (n.d.). Retrieved on February 5, 2019 from https://github.com/python-visualization/folium
 
 .. [GaCl18] Gazoni, E. and Clark, C. (2018) openpyxl - A Python library to read/write Excel 2010 xlsx/xlsm files, Retrieved on May 4, 2018 from https://openpyxl.readthedocs.io.
