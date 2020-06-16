@@ -6,7 +6,6 @@ import logging
 import networkx as nx
 import pandas as pd
 import os
-import json
 from wntr.morph import convert_node_coordinates_to_longlat
 from wntr.epanet import FlowUnits
 try:
@@ -23,7 +22,10 @@ try:
     import folium.plugins
 except:
     folium = None
-    
+try:
+    import json
+except:
+    json = None    
 from wntr.graphics.color import custom_colormap
 
 logger = logging.getLogger(__name__)
@@ -1069,6 +1071,8 @@ def wn_to_geojson(wn, to_file=True):
     wn_geojson: dict in geojson format
         geojson spatial representation of the water network
     """
+    if json is None:
+        raise ImportError('json is required')
     inp_path = os.path.abspath(wn.name)
     # Translate the nodes to geojson.
     wn_geojson = {"type": "FeatureColllection",
