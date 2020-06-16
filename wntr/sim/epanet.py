@@ -52,7 +52,7 @@ class EpanetSimulator(WaterNetworkSimulator):
         if self.reader is None:
             self.reader = wntr.epanet.io.BinFile(result_types=result_types)
 
-    def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, version=2.0):
+    def run_sim(self, file_prefix='temp', save_hyd=False, use_hyd=False, hydfile=None, version=2.2):
         """
         Run the EPANET simulator.
 
@@ -69,10 +69,13 @@ class EpanetSimulator(WaterNetworkSimulator):
             Will save hydraulics to ``file_prefix + '.hyd'`` or to file specified in `hydfile_name`
         hydfile : str
             Optionally specify a filename for the hydraulics file other than the `file_prefix`
+        version : {2.0, 2.2}
+            Optionally change to version 2.2 of EPANET from the default 2.0.12. Valid choices are
+            either 2.0 (the default if no argument provided) or 2.2.
 
         """
         inpfile = file_prefix + '.inp'
-        self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.en2_units)
+        self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units)
         enData = wntr.epanet.toolkit.ENepanet(version=version)
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'

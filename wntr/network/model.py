@@ -81,8 +81,8 @@ class WaterNetworkModel(AbstractModel):
 
         # NetworkX Graph to store the pipe connectivity and node coordinates
 
-        self._Htol = 0.00015  # Head tolerance in meters.
-        self._Qtol = 2.8e-5  # Flow tolerance in m^3/s.
+        self._Htol = 0.0001524  # Head tolerance in meters.
+        self._Qtol = 2.83168e-6  # Flow tolerance in m^3/s.
 
         self._labels = None
 
@@ -795,15 +795,15 @@ class WaterNetworkModel(AbstractModel):
             min_head = tank.min_level+tank.elevation
             for link_name in all_links:
                 link = self.get_link(link_name)
-                link_has_cv = False
+                link_has_cv = False # flow leaving the tank (start node = tank)
                 if isinstance(link, Pipe):
                     if link.cv:
-                        if link.end_node == tank_name:
+                        if link.end_node_name == tank_name:
                             continue
                         else:
                             link_has_cv = True
                 elif isinstance(link, Pump):
-                    if link.end_node == tank_name:
+                    if link.end_node_name == tank_name:
                         continue
                     else:
                         link_has_cv = True
@@ -842,15 +842,15 @@ class WaterNetworkModel(AbstractModel):
             max_head = tank.max_level+tank.elevation
             for link_name in all_links:
                 link = self.get_link(link_name)
-                link_has_cv = False
+                link_has_cv = False # flow entering the tank (end node = tank)
                 if isinstance(link, Pipe):
                     if link.cv:
-                        if link.start_node == tank_name:
+                        if link.start_node_name == tank_name:
                             continue
                         else:
                             link_has_cv = True
                 if isinstance(link, Pump):
-                    if link.start_node == tank_name:
+                    if link.start_node_name == tank_name:
                         continue
                     else:
                         link_has_cv = True
@@ -1758,7 +1758,7 @@ class WaterNetworkModel(AbstractModel):
             logger.warning('Writing a minimal INP file without saved non-WNTR options (energy, etc.)')
             self._inpfile = wntr.epanet.InpFile()
         if units is None:
-            units = self._options.hydraulic.en2_units
+            units = self._options.hydraulic.inpfile_units
         self._inpfile.write(filename, self, units=units)
     
    

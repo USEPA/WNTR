@@ -1,6 +1,16 @@
 """
 The wntr.network.options module includes simulation options.
 
+.. note:: 
+
+    This module has been changed in version wntr-2.3 to incorporate the new options 
+    that EPANET 2.2 requires. It also reorganizes certain options so that they are 
+    more consistent with EPANET's groupings and make more logical sense. Therefore, 
+    this change is not necessarily backwards compatible, particularly when trying to
+    use pickle files with options generated with wntr <= 2.2.
+    For example, the options previously contained in the old SolverOptions class have 
+    been moved to the HydraulicOptions class.
+
 .. rubric:: Contents
 
 .. autosummary::
@@ -10,258 +20,289 @@ The wntr.network.options module includes simulation options.
     GraphicsOptions
     HydraulicOptions
     ResultsOptions
+    ReactionOptions
     QualityOptions
     EnergyOptions
-    SolverOptions
     UserOptions
 
+
+.. note:: 
+
+    This module has been changed in version wntr-2.3 to incorporate the new options 
+    that EPANET 2.2 requires. It also reorganizes certain options so that they are 
+    more consistent with EPANET's groupings and make more logical sense. Therefore, 
+    this change is not necessarily backwards compatible, particularly when trying to
+    use pickle files with options generated with wntr <= 2.2.
+    For example, the options previously contained in the old SolverOptions class have 
+    been moved to the HydraulicOptions class.
+
+
 """
+import re
 import logging
+import copy
 
 logger = logging.getLogger(__name__)
 
-class WaterNetworkOptions(object):
-    """
-    Water network model options class.
-    
-    These options mimic options in the EPANET User Manual.
-    The class uses the `__slots__` syntax to ensure that older code will raise 
-    an appropriate error -- for example, trying to set the options.duration 
-    value will result in an error rather than creating a new attribute 
-    (which would never be used and cause undiagnosable errors).
-    The `user` attribute is a generic python class object that allows for 
-    dynamically created attributes that are user specific.
+def _float_or_None(value):
+    """Converts a value to a float, but doesn't crash for values of None"""
+    if value is not None:
+        return float(value)
+    return None
 
-    """
-    __slots__ = ['_time','_hydraulic','_results','_quality','_energy','_solver','_graphics','_user']
 
-    def __init__(self):
-        self._time = TimeOptions()
-        self._hydraulic = HydraulicOptions()
-        self._results = ResultsOptions()
-        self._quality = QualityOptions()
-        self._energy = EnergyOptions()
-        self._solver = SolverOptions()
-        self._graphics = GraphicsOptions()
-        self._user = UserOptions()
-        
-    def __getstate__(self):
-        """Allow pickling with the __slots__ construct"""
-        return self._time, self._hydraulic, self._results, self._quality, self._energy, self._solver, self._graphics, self._user
+def _int_or_None(value):
+    """Converts a value to an int, but doesn't crash for values of None"""
+    if value is not None:
+        return int(value)
+    return None
+
+
+def _new_rpt_params():
+    ret = dict(elevation=False, demand=True, head=True, pressure=True,
+                quality=True, length=False, diameter=False, flow=True,
+                velocity=True, headloss=True, position=False, setting=False, reaction=False)
+    ret['f-factor'] = False
+    return ret
+
+
+def _new_results_obj():
+    ret = dict(demand=True, head=True, pressure=True, quality=True,
+                flow=True, linkquality=True, velocity=True, headloss=True, status=True,
+                setting=True, rxnrate=True, frictionfact=True)
+    return ret
+
+
+def _new_param_opts():
+    ret = dict(elevation=dict(), demand=dict(), head=dict(), pressure=dict(),
+                quality=dict(), length=dict(), diameter=dict(), flow=dict(), 
+                velocity=dict(), headloss=dict(), position=dict(), setting=dict(),
+                reaction=dict())
+    ret['f-factor'] = dict()
+    return ret
+
+
+class _OptionsBase(object):
+    @classmethod
+    def factory(cls, val):
+        """Create an options object based on passing in an instance of the object, a dict, or a tuple"""
+        if isinstance(val, cls):
+            return val
+        elif isinstance(val, dict):
+            return cls(**val)
+        elif isinstance(val, (list, tuple)):
+            return cls(*val)
+        elif val is None:
+            return cls()
+        raise ValueError('Unknown type for %s.factory: %s',
+                         cls.__name__, type(val))
+
+    def __str__(self):
+        return "{}({})".format(self.__class__.__name__, ", ".join(["{}={}".format(k, repr(v)) for k, v in self.__dict__.items()]))
+    __repr__ = __str__
+
+    def __iter__(self):
+        for k, v in self.__dict__.items():
+            try: 
+                vv = dict(v)
+            except:
+                vv = v
+            yield k, vv
+
+    def __getitem__(self, index):
+        return self.__dict__[index]
     
-    def __setstate__(self, state):
-        """Allow pickling with the __slots__ construct"""
-        self._time, self._hydraulic, self._results, self._quality, self._energy, self._solver, self._graphics, self._user = state
-        
     def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        ###  self.units == other.units and \
-        if self.time == other.time and \
-           self.hydraulic == other.hydraulic and \
-           self.quality == other.quality and \
-           self.energy == other.energy and \
-           self.results.statistic == other.results.statistic and \
-           self.solver == other.solver:
-               return True
-        return False
-    
-    def __ne__(self, other):
-        return not self.__eq__(other)
-    
-    @property
-    def time(self):
-        """Options related to model timing"""
-        return self._time
-    
-    @time.setter
-    def time(self, opts):
-        if not isinstance(opts, TimeOptions):
-            raise ValueError('time must be a TimeOptions object')
-        self._time = opts
-
-    @property
-    def hydraulic(self):
-        """Options related to the hydraulic model"""
-        return self._hydraulic
-    
-    @hydraulic.setter
-    def hydraulic(self, opts):
-        if not isinstance(opts, HydraulicOptions):
-            raise ValueError('hydraulic must be a HydraulicOptions object')
-        self._hydraulic = opts
-
-    @property
-    def results(self):
-        """Options related to the saving or presentation of results"""
-        return self._results
-    
-    @results.setter
-    def results(self, opts):
-        if not isinstance(opts, ResultsOptions):
-            raise ValueError('results must be a ResultsOptions object')
-        self._results = opts
-
-    @property
-    def quality(self):
-        """Options related to the water quality model"""
-        return self._quality
-    
-    @quality.setter
-    def quality(self, opts):
-        if not isinstance(opts, QualityOptions):
-            raise ValueError('quality must be a QualityOptions object')
-        self._quality = opts
-
-    @property
-    def energy(self):
-        """Options related to energy calculations"""
-        return self._energy
-    
-    @energy.setter
-    def energy(self, opts):
-        if not isinstance(opts, EnergyOptions):
-            raise ValueError('energy must be an EnergyOptions object')
-        self._energy = opts
-
-    @property
-    def solver(self):
-        """Options related to solver configuration"""
-        return self._solver
-    
-    @solver.setter
-    def solver(self, opts):
-        if not isinstance(opts, SolverOptions):
-            raise ValueError('solver must be a SolverOptions object')
-        self._solver = opts
-
-    @property
-    def graphics(self):
-        """Options related to graphics and mapping"""
-        return self._graphics
-    
-    @graphics.setter
-    def graphics(self, opts):
-        if not isinstance(opts, GraphicsOptions):
-            raise ValueError('graphics must be a GraphicsOptions object')
-        self._graphics = opts
-
-    @property
-    def user(self):
-        """User defined options"""
-        return self._user
-    
-    @user.setter
-    def user(self, opts):
-        if not isinstance(opts, UserOptions):
-            raise ValueError('quality must be a UserOptions object')
-        self._user = opts
-
-    def todict(self):
-        """Dictionary representation of the model options"""
-        return dict(time=self._time.todict(),
-                    hydraulic=self._hydraulic.todict(),
-                    quality=self._quality.todict(),
-                    energy=self._energy.todict(),
-                    solver=self._solver.todict(),
-                    results=self._results.todict(),
-                    graphics=self._graphics.todict(),
-                    user=self._user.todict())
-    
-    def tostring(self):
-        """String representation of the model options"""
-        s = ''
-        s += repr(self.time)
-        s += repr(self.hydraulic)
-        s += repr(self.quality)
-        s += repr(self.energy)
-        s += repr(self.solver)
-        s += repr(self.results)
-        s += repr(self.graphics)
-        s += repr(self.user)
-        return s
-    __repr__ = tostring
+        if other is None: return False
+        if not hasattr(other, '__dict__'): return False
+        for k in self.__dict__.keys():
+            if not self.__dict__[k] == other.__dict__[k]: return False
+        return True
 
 
-class TimeOptions(object):
+class TimeOptions(_OptionsBase):
     """
     Options related to simulation and model timing.
     
-    Attributes
+    Parameters
     ----------
-    duration : int, default 0
+    duration : int
         Simulation duration in seconds
-    hydraulic_timestep : int, default 3600
+    hydraulic_timestep : int
         Hydraulic timestep in seconds
-    quality_timestep : int, default 360
+    quality_timestep : int
         Water quality timestep in seconds 
-    rule_timestep : int, default 360
+    rule_timestep : int
         Rule timestep in seconds
-    pattern_timestep : int, default 3600
+    pattern_timestep : int
         Pattern timestep in seconds
-    pattern_start : int, default 0
+    pattern_start : int
         Time offset (in seconds) to find the starting pattern step; changes 
         where in pattern the pattern starts out, *not* what time the pattern 
         starts
-    report_timestep : int, default 3600
+    report_timestep : int
         Reporting timestep in seconds
-    report_start : int, default 0
+    report_start : int
         Start time of the report in seconds from the start of the simulation
     start_clocktime : int, default 0
         Time of day in seconds from 12 am at which the simulation begins
+    statistic: str
+        Provide statistics rather than time series results in the report file.
+        Options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the 
+        EPANET User Manual)
+    
     """
-    def __init__(self):
-        # Time related options
-        self.duration = 0
-        self.hydraulic_timestep = 3600
-        self.quality_timestep = 360.0
-        self.rule_timestep = 360.0
-        self.pattern_timestep = 3600.0
-        self.pattern_start = 0.0
-        self.report_timestep = 3600.0
-        self.report_start = 0.0
-        self.start_clocktime = 0.0
+    _pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
+    _pattern2 = re.compile(r'^(\d+):(\d+)$')
+    _pattern3 = re.compile(r'^(\d+)$')
+    def __init__(self,
+                duration: float = 0.0,
+                hydraulic_timestep: float=3600.0,
+                quality_timestep: float=360.0,
+                rule_timestep: float=360.0,
+                pattern_timestep: float=3600.0,
+                pattern_start: float=0.0,
+                report_timestep: float=3600.0,
+                report_start: float=0.0,
+                start_clocktime: float=0.0,
+                statistic: str='NONE'):
+        self.duration = duration
+        self.hydraulic_timestep = hydraulic_timestep
+        self.quality_timestep = quality_timestep
+        self.rule_timestep = rule_timestep
+        self.pattern_timestep = pattern_timestep
+        self.pattern_start = pattern_start
+        self.report_timestep = report_timestep
+        self.report_start = report_start
+        self.start_clocktime = start_clocktime
+        self.statistic = statistic
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        ###  self.units == other.units and \
-        if abs(self.duration - other.duration)<1e-9 and \
-           abs(self.hydraulic_timestep - other.hydraulic_timestep)<1e-9 and \
-           abs(self.quality_timestep - other.quality_timestep)<1e-9 and \
-           abs(self.rule_timestep - other.rule_timestep)<1e-9 and \
-           abs(self.pattern_timestep - other.pattern_timestep)<1e-9 and \
-           abs(self.pattern_start - other.pattern_start)<1e-9 and \
-           abs(self.report_timestep - other.report_timestep)<1e-9 and \
-           abs(self.report_start - other.report_start)<1e-9 and \
-           abs(self.start_clocktime - other.start_clocktime)<1e-9:
-               return True
-        return False
+    def __setattr__(self, name, value):
+        if name == 'statistic':
+            value = str.upper(value)
+            if value not in ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE']:
+                raise ValueError('headloss must be one of "H-W", "D-W", or "C-M"')
+        elif name not in ['report_timestep']:
+            try:
+                value = float(value)
+            except ValueError:
+                raise ValueError('%s must be a number', name)
+        self.__dict__[name] = value
 
-    def __ne__(self, other):
-        return not self == other
-    
-    def todict(self):
-        """Dictionary representation of the time options"""
-        return self.__dict__.copy()
+    @classmethod
+    def seconds_to_tuple(cls, sec):
+        hours = int(sec/3600.)
+        sec -= hours*3600
+        mm = int(sec/60.)
+        sec -= mm*60
+        return (hours, mm, int(sec))
 
-    def tostring(self):
-        """String representation of the time options"""
-        s = 'Time options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
-    
+    @classmethod
+    def time_str_to_seconds(cls, s):
+        """
+        Converts time format to seconds.
 
-class GraphicsOptions(object):
+        Parameters
+        ----------
+        s : string
+            Time string. Options are 'HH:MM:SS', 'HH:MM', 'HH'
+
+
+        Returns
+        -------
+        Integer value of time in seconds.
+        """
+        time_tuple = cls._pattern1.search(s)
+        if bool(time_tuple):
+            return (int(time_tuple.groups()[0])*60*60 +
+                    int(time_tuple.groups()[1])*60 +
+                    int(round(float(time_tuple.groups()[2]))))
+        else:
+            time_tuple = cls._pattern2.search(s)
+            if bool(time_tuple):
+                return (int(time_tuple.groups()[0])*60*60 +
+                        int(time_tuple.groups()[1])*60)
+            else:
+                time_tuple = cls._pattern3.search(s)
+                if bool(time_tuple):
+                    return int(time_tuple.groups()[0])*60*60
+                else:
+                    raise RuntimeError("Time format not recognized. ")
+
+    @classmethod
+    def clock_str_to_seconds(cls, s, am_pm):
+        """
+        Converts clocktime format to seconds.
+
+
+        Parameters
+        ----------
+        s : string
+            Time string. Options are 'HH:MM:SS', 'HH:MM', HH'
+
+        am : string
+            options are AM or PM
+
+
+        Returns
+        -------
+        Integer value of time in seconds
+
+        """
+        if am_pm.upper() == 'AM':
+            am = True
+        elif am_pm.upper() == 'PM':
+            am = False
+        else:
+            raise RuntimeError('am_pm option not recognized; options are AM or PM')
+
+        time_tuple = cls._pattern1.search(s)
+        if bool(time_tuple):
+            time_sec = (int(time_tuple.groups()[0])*60*60 +
+                        int(time_tuple.groups()[1])*60 +
+                        int(round(float(time_tuple.groups()[2]))))
+            if s.startswith('12'):
+                time_sec -= 3600*12
+            if not am:
+                if time_sec >= 3600*12:
+                    raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                time_sec += 3600*12
+            return time_sec
+        else:
+            time_tuple = cls._pattern2.search(s)
+            if bool(time_tuple):
+                time_sec = (int(time_tuple.groups()[0])*60*60 +
+                            int(time_tuple.groups()[1])*60)
+                if s.startswith('12'):
+                    time_sec -= 3600*12
+                if not am:
+                    if time_sec >= 3600 * 12:
+                        raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                    time_sec += 3600*12
+                return time_sec
+            else:
+                time_tuple = cls._pattern3.search(s)
+                if bool(time_tuple):
+                    time_sec = int(time_tuple.groups()[0])*60*60
+                    if s.startswith('12'):
+                        time_sec -= 3600*12
+                    if not am:
+                        if time_sec >= 3600 * 12:
+                            raise RuntimeError('Cannot specify am/pm for times greater than 12:00:00')
+                        time_sec += 3600*12
+                    return time_sec
+                else:
+                    raise RuntimeError("Time format not recognized. ")
+
+
+class GraphicsOptions(_OptionsBase):
     """
     Options related to graphics. 
     
     May be used to contain custom, user defined values. Default attributes 
     comprise the EPANET "backdrop" section options.
     
-    Attributes
+    Parameters
     ----------
     dimensions : 4-tuple or list
         (x, y, dx, dy) Dimensions for backdrop image 
@@ -273,461 +314,343 @@ class GraphicsOptions(object):
         Filename where image is located
     map_filename : string
         Filename used to store node coordinates in (node, x, y) format
+    
     """
-    def __init__(self):
-        self.dimensions = None
-        self.units = None
-        self.offset = None
-        self.image_filename = None
-        self.map_filename = None
-    
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if abs(self.dimensions[0] - other.dimensions[0])<1e-9 and \
-           abs(self.dimensions[1] - other.dimensions[1])<1e-9 and \
-           abs(self.dimensions[2] - other.dimensions[2])<1e-9 and \
-           abs(self.dimensions[3] - other.dimensions[3])<1e-9 and \
-           self.units == other.units and \
-           abs(self.offset[0] - other.offset[0])<1e-9 and \
-           abs(self.offset[1] - other.offset[1])<1e-9 and \
-           self.image_filename == other.image_filename and \
-           self.map_filename == other.map_filename:
-               return True
-        return False
+    def __init__(self,
+                 dimensions: list = None,
+                 units: str = None,
+                 offset: list = None,
+                 image_filename: str = None,
+                 map_filename: str = None):
+        self.dimensions = dimensions
+        self.units = units
+        self.offset = offset
+        self.image_filename = image_filename
+        self.map_filename = map_filename
 
-    def __ne__(self, other):
-        return not self == other
-    
-    def todict(self):
-        """Dictionary representation of the graphics options"""
-        return self.__dict__.copy()
-   
-    def tostring(self):
-        """String representation of the graphics options"""
-        s = 'Graphics options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
-    
 
-class HydraulicOptions(object): 
+class HydraulicOptions(_OptionsBase): 
     """
     Options related to hydraulic model, including hydraulics. 
     
-    Attributes
+    Parameters
     ----------
-    units : str, default 'GPM'
-        Input/output units (EPANET); options are CFS, GPM, MGD, IMGD, AFD, LPS, 
-        LPM, MLD, CMH, and CMD
-    headloss : str, default 'H-W'
+    headloss : str
         Formula to use for computing head loss through a pipe. Options are H-W, 
         D-W, and C-M
-    hydraulics : str, default None
+    hydraulics : str
         Indicates if a hydraulics file should be read in or saved; options are 
         None, USE and SAVE (default None)
     hydraulics_filename : str
         Filename to use if hydraulics = SAVE
-    viscosity : float, default 1.0
+    viscosity : float
         Kinematic viscosity of the fluid
-    specific_gravity : float, default 1.0
+    specific_gravity : float
         Specific gravity of the fluid 
-    pattern : str, default None
+    pattern : str
         Name of the default pattern for junction demands. If None, the 
         junctions with demands but without patterns will be held constant
-    demand_multiplier : float, default 1.0
+    demand_multiplier : float
         The demand multiplier adjusts the values of baseline demands for all 
         junctions
-    emitter_exponent : float, default 0.5
+    emitter_exponent : float
         The exponent used when computing flow from an emitter
-    minimum_pressure : float, default None
-        The minimum nodal pressure - ONLY valid for EPANET 2.2
-    required_pressure: float, default None
-        The required nodal pressure - ONLY valid for EPANET 2.2
-    pressure_exponent: float, default None
-        The pressure exponent - ONLY valid for EPANET 2.2
+    minimum_pressure : float
+        The minimum nodal pressure - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
+    required_pressure: float
+        The required nodal pressure - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
+    pressure_exponent: float
+        The pressure exponent - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
+    trials : int
+        Maximum number of trials used to solve network hydraulics
+    accuracy : float
+        Convergence criteria for hydraulic solutions (default 0.001)
+    unbalanced : str
+        Indicate what happens if a hydraulic solution cannot be reached.  
+        Options are STOP and CONTINUE
+    unbalanced_value : int
+        Number of additional trials if unbalanced = CONTINUE
+    checkfreq : int
+        Number of solution trials that pass between status check 
+    maxcheck : int
+        Number of solution trials that pass between status check 
+    damplimit : float
+        Accuracy value at which solution damping begins
+    headerror : float
+        The head error convergence limit
+    flowchange : float
+        The flow change convergence limit
+    demand_model : str
+        Demand model for EPANET 2.2; acceptable values are DD, PDD, DDA and PDA, though DDA and PDA are the preferred abbreviations.
+        Changing this option will break EPANET 2.0 if changed from None. For the WNTR simulator, please set the model when calling run_sim.
+    inpfile_units : str
+        Units for the INP-file; options are CFS, GPM, MGD, IMGD, AFD, LPS, 
+        LPM, MLD, CMH, and CMD. This **only** changes the units used in generating
+        the INP file -- it has **no impact** on the units used in WNTR, which are 
+        always SI units (m, kg, s).
     
     """
-    def __init__(self):
-        # General options
-        self.en2_units = 'GPM'
-        self.headloss = 'H-W'
-        self.hydraulics = None #string
-        self.hydraulics_filename = None #string
-        self.viscosity = 1.0
-        self.specific_gravity = 1.0
-        self.pattern = '1'
-        self.demand_multiplier = 1.0
-        self.emitter_exponent = 0.5
-        self.minimum_pressure = None
-        self.required_pressure = None
-        self.pressure_exponent = None
+    def __init__(self,
+                 headloss: str = 'H-W',
+                 hydraulics: str = None,
+                 hydraulics_filename: str = None,
+                 viscosity: float = 1.0,
+                 specific_gravity: float = 1.0,
+                 pattern: str = '1',
+                 demand_multiplier: float = 1.0,
+                 demand_model: str = None,
+                 minimum_pressure: float = 0.0,
+                 required_pressure: float = 0.0,
+                 pressure_exponent: float = 0.5,
+                 emitter_exponent: float = 0.5,
+                 trials: int = 40,
+                 accuracy: float = 0.001,
+                 unbalanced: str = 'STOP',
+                 unbalanced_value: int = None,
+                 checkfreq: int = 2,
+                 maxcheck: int = 10,
+                 damplimit: int = 0,
+                 headerror: float = 0,
+                 flowchange: float = 0,
+                 inpfile_units: str = 'GPM'):
+        self.headloss = headloss
+        self.hydraulics = hydraulics
+        self.hydraulics_filename = hydraulics_filename
+        self.viscosity = viscosity
+        self.specific_gravity = specific_gravity
+        self.pattern = pattern
+        self.demand_multiplier = demand_multiplier
+        self.demand_model = demand_model
+        self.minimum_pressure = minimum_pressure
+        self.required_pressure = required_pressure
+        self.pressure_exponent = pressure_exponent
+        self.emitter_exponent = emitter_exponent
+        self.trials = trials
+        self.accuracy = accuracy
+        self.unbalanced = unbalanced
+        self.unbalanced_value = unbalanced_value
+        self.checkfreq = checkfreq
+        self.maxcheck = maxcheck
+        self.damplimit = damplimit
+        self.headerror = headerror
+        self.flowchange = flowchange
+        self.inpfile_units = inpfile_units
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        ###  self.units == other.units and \
-        if self.headloss == other.headloss and \
-           self.hydraulics == other.hydraulics and \
-           self.hydraulics_filename == other.hydraulics_filename and \
-           abs(self.viscosity - other.viscosity)<1e-9 and \
-           abs(self.specific_gravity - other.specific_gravity)<1e-9 and \
-           self.pattern == other.pattern and \
-           abs(self.demand_multiplier - other.demand_multiplier)<1e-9 and \
-           abs(self.emitter_exponent - other.emitter_exponent)<1e-9:
-               return True
-        return False
+    def __setattr__(self, name, value):
+        if name == 'headloss':
+            value = str.upper(value)
+            if value not in ['H-W', 'D-W', 'C-M']:
+                raise ValueError('headloss must be one of "H-W", "D-W", or "C-M"')
+        elif name == 'hydraulics':
+            if value is not None:
+                value = str.upper(value)
+                if value not in ['USE', 'SAVE']:
+                    raise ValueError('hydraulics must be None (off) or one of "USE" or "SAVE"')
+        elif name == 'demand_model':
+            if value is not None:
+                value = str.upper(value)
+                if value not in ['DDA', 'DD', 'PDD', 'PDA']:
+                    raise ValueError('demand_model must be None (off) or one of "DDA" or "PDA"')
+                if value == 'DD': value = 'DDA'
+                if value == 'PDD': value = 'PDA'
+        elif name == 'unbalanced':
+            value = str.upper(value)
+            if value not in ['STOP', 'CONTINUE']:
+                raise ValueError('headloss must be either "STOP" or "CONTINUE"')
+        elif name == 'inpfile_units' and isinstance(value, str):
+            value = str.upper(value)
+            if value not in ['CFS', 'GPM', 'MGD', 'IMGD', 'AFD', 'LPS', 'LPM', 'MLD', 'CMH', 'CMD']:
+                raise ValueError('inpfile_units = "%s" is not a valid EPANET unit code', value)
+        elif name == 'unbalanced_value':
+            try:
+                value = _int_or_None(value)
+            except ValueError:
+                raise ValueError('%s must be an int or None', name)
+        elif name in ['trials', 'checkfreq', 'maxcheck']:
+            try:
+                value = int(value)
+            except ValueError:
+                raise ValueError('%s must be an integer', name)
+        elif name not in ['pattern', 'hydraulics_filename', 'inpfile_units']:
+            try:
+                value = float(value)
+            except ValueError:
+                raise ValueError('%s must be a number', name)
+        self.__dict__[name] = value
 
-    def __ne__(self, other):
-        return not self == other
 
-    def todict(self):
-        """Dictionary representation of the hydraulic options"""
-        return self.__dict__.copy()
-    
-    def tostring(self):
-        """String representation of the hydraulic options"""
-        s = 'Hydraulic options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
-    
-
-class ResultsOptions(object):
+class ReactionOptions(_OptionsBase):
     """
-    Options related to results outputs.
-
-    Attributes
+    Options related to water quality reactions.
+    
+    Parameters
     ----------
-    statistic : str, default 'None'
-        Output results as statistical values, rather than time-series; options 
-        are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the 
-        EPANET User Manual)
-    rpt_filename : str
-        Provides the filename to use for outputting an EPANET report file.
-        By default, this will be the prefix plus ".rpt".
-    status : str, default 'NO'
-        Output solver status ('YES', 'NO', 'FULL'). 'FULL' is only useful for debugging
-    summary : str, default 'YES'
-        Output summary information ('YES' or 'NO')
-    energy : str, default 'NO'
-        Output energy information
-    nodes : bool, default False
-        Output node information in report file
-    links : bool, default False
-        Output link information in report file
-    
-    """
-    def __init__(self):
-        self.statistic = 'NONE'
-        self.pagesize = None
-        self.rpt_filename = None
-        self.status = 'NO'
-        self.summary = 'YES'
-        self.energy = 'NO'
-        self.nodes = False
-        self.links = False
-        self.rpt_params = { 
-                           'elevation': False,
-                           'demand': True,
-                           'head': True,
-                           'pressure': True,
-                           'quality': True,
-                           'length': False,
-                           'diameter': False,
-                           'flow': True,
-                           'velocity': True,
-                           'headloss': True,
-                           'position': False,
-                           'setting': False,
-                           'reaction': False,
-                           'f-factor': False,
-                           }
-        self.results_obj = { # Node extended period results
-                           'demand': True,     #node demand (actual)
-                           'head': True,       #node head
-                           'pressure': True,   #node pressure
-                           'quality': True,    #node quality
-                           # Link extended period results
-                           'flow': True,       #flow in pipes
-                           'linkquality': True,#quality in pipes
-                           'velocity': True,   #velocity in pipes
-                           'headloss': True,   #headloss in pipes
-                           'status': True,     #link status
-                           'setting': True,    #valve/pump setting
-                           'rxnrate': True,    #reaction rate in pipes
-                           'frictionfact': True,   #friction factor in pipes
-                           }
-        self.param_opts = { # param name: [Default, Setting]
-                           'elevation': {},
-                           'demand': {},
-                           'head': {},
-                           'pressure': {},
-                           'quality': {},
-                           'length': {},
-                           'diameter': {},
-                           'flow': {},
-                           'velocity': {},
-                           'headloss': {},
-                           'position': {},
-                           'setting': {},
-                           'reaction': {},
-                           'f-factor': {},
-                           }        
-        
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        ###  self.units == other.units and \
-        if self.statistic == other.statistic and \
-           self.pagesize == other.pagesize and \
-           self.rpt_filename == other.rpt_filename and \
-           self.status == other.status and \
-           self.summary == other.summary and \
-           self.energy == other.energy and \
-           self.nodes == other.nodes and \
-           self.links == other.links:
-               return True
-        return False
-
-    def __ne__(self, other):
-        return not self == other
-
-    def todict(self):
-        """Dictionary representation of the results options"""
-        return self.__dict__.copy()
-   
-    def tostring(self):
-        """String representation of the results options"""
-        s = 'Results options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
-     
-        
-class QualityOptions(object):
-    """
-    Options related to water quality modeling.
-    
-    Attributes
-    ----------
-    mode : str, default 'None'
-        Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and 
-        TRACE
-    trace_node : str, default None
-        Trace node name if quality = TRACE
-    wq_units : str, default None
-        Units for quality analysis; concentration for 'chemical', 's' for 'age',
-        '%' for 'trace'
-    chemical : str, default None
-        Chemical name for 'chemical' analysis
-    diffusivity : float, default 1.0
-        Molecular diffusivity of the chemical (default 1.0)
-    bulk_rxn_order : float, default 1.0
+    bulk_rxn_order : float
         Order of reaction occurring in the bulk fluid
-    wall_rxn_order : float, default 1.0
+    wall_rxn_order : float
         Order of reaction occurring at the pipe wall
-    tank_rxn_order : float, default 1.0
+    tank_rxn_order : float
         Order of reaction occurring in the tanks
-    bulk_rxn_coeff : float, default 0.0
+    bulk_rxn_coeff : float
         Reaction coefficient for bulk fluid and tanks
-    wall_rxn_coeff : float, default 0.0
+    wall_rxn_coeff : float
         Reaction coefficient for pipe walls
-    limiting_potential : float, default None
+    limiting_potential : float
         Specifies that reaction rates are proportional to the difference 
         between the current concentration and some limiting potential value, 
         off if None
-    roughness_correl : float, default None
+    roughness_correl : float
         Makes all default pipe wall reaction coefficients related to pipe 
         roughness, off if None
         
     """
-    def __init__(self):
-        self.mode = 'NONE'
-        self.trace_node = None #string 
-        self.wq_units = 'mg/L' #string (mg/L or ug/L)
-        self.chemical_name = 'CHEMICAL' #string
-        self.diffusivity = 1.0
-        self.bulk_rxn_order = 1.0
-        self.wall_rxn_order = 1.0
-        self.tank_rxn_order = 1.0
-        self.bulk_rxn_coeff = 0.0
-        self.wall_rxn_coeff = 0.0
-        self.limiting_potential = None
-        self.roughness_correl = None
+    def __init__(self,
+                 bulk_rxn_order: float = 1.0,
+                 wall_rxn_order: float = 1.0,
+                 tank_rxn_order: float = 1.0,
+                 bulk_rxn_coeff: float = 0.0,
+                 wall_rxn_coeff: float = 0.0,
+                 limiting_potential: float = None,
+                 roughness_correl: float = None):
+        self.bulk_rxn_order = bulk_rxn_order
+        self.wall_rxn_order = wall_rxn_order
+        self.tank_rxn_order = tank_rxn_order
+        self.bulk_rxn_coeff = bulk_rxn_coeff
+        self.wall_rxn_coeff = wall_rxn_coeff
+        self.limiting_potential = limiting_potential
+        self.roughness_correl = roughness_correl
 
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        if self.mode != other.mode and \
-           self.trace_node != other.trace_node and \
-           self.wq_units != other.wq_units and \
-           self.chemical_name != other.chemical_name and \
-           abs(self.diffusivity - other.diffusivity)>1e-9 and \
-           abs(self.bulk_rxn_order - other.bulk_rxn_order)>1e-9 and \
-           abs(self.wall_rxn_order - other.wall_rxn_order)>1e-9 and \
-           abs(self.tank_rxn_order - other.tank_rxn_order)>1e-9 and \
-           abs(self.bulk_rxn_coeff - other.bulk_rxn_coeff)>1e-9 and \
-           abs(self.wall_rxn_coeff - other.wall_rxn_coeff)>1e-9:
-               return False
-        if self.limiting_potential and other.limiting_potential:
-            if abs(self.limiting_potential - other.limiting_potential)>1e-9:
-                return False
-        if self.limiting_potential or other.limiting_potential:
-            return False
-        if self.roughness_correl and other.roughness_correl:
-            if abs(self.roughness_correl - other.roughness_correl)>1e-9:
-                return False
-        if self.roughness_correl or other.roughness_correl:
-            return False
-        return True
+    def __setattr__(self, name, value):
+        if name not in ['limiting_potential', 'roughness_correl']:
+            try:
+                value = float(value)
+            except ValueError:
+                raise ValueError('%s must be a number', name)
+        else:
+            try:
+                value = _float_or_None(value)
+            except ValueError:
+                raise ValueError('%s must be a number or None', name)
+        self.__dict__[name] = value
 
-    def __ne__(self, other):
-        return not self == other
 
-    def todict(self):
-        """Dictionary representation of the quality options"""
-        return self.__dict__.copy()
-   
-    def tostring(self):
-        """String representation of the quality options"""
-        s = 'Water quality options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
+class QualityOptions(_OptionsBase):
+    """
+    Options related to water quality modeling.
     
+    Parameters
+    ----------
+    parameter : str
+        Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and 
+        TRACE
+    trace_node : str
+        Trace node name if quality = TRACE
+    chemical : str
+        Chemical name for 'chemical' analysis
+    diffusivity : float
+        Molecular diffusivity of the chemical (default 1.0)
+    tolerance : float
+        Water quality solver tolerance
+    wq_units : str
+        Units for quality analysis; concentration for 'chemical', time in seconds for 'age',
+        percentage for 'trace'
 
-class EnergyOptions(object):
+    """
+    def __init__(self,
+                 parameter: str = 'NONE',
+                 trace_node: str = None,
+                 chemical_name: str = 'CHEMICAL',
+                 diffusivity: float = 1.0,
+                 tolerance: float = 0.01,
+                 wq_units: str = 'mg/L'):
+        self.parameter = parameter
+        self.trace_node = trace_node
+        self.chemical_name = chemical_name
+        self.diffusivity = diffusivity
+        self.tolerance = tolerance
+        self.wq_units = wq_units
+
+    def __setattr__(self, name, value):
+        if name in ['diffusivity', 'tolerance']:
+            try:
+                value = float(value)
+            except ValueError:
+                raise ValueError('%s must be a number or None', name)
+        self.__dict__[name] = value
+
+
+class EnergyOptions(_OptionsBase):
     """
     Options related to energy calculations.
     
-    Attributes
+    Parameters
     ----------
-    global_price : float, default 0
+    global_price : float
         Global average cost per Joule
-    global_pattern : str, default None
+    global_pattern : str
         ID label of time pattern describing how energy price varies with time
-    global_efficiency : float, default 75.0
+    global_efficiency : float
         Global pump efficiency as percent; i.e., 75.0 means 75%
-    demand_charge : float, default None
+    demand_charge : float
         Added cost per maximum kW usage during the simulation period, or None
         
     """
-    def __init__(self):
-        self.global_price = 0
-        self.global_pattern = None
-        self.global_efficiency = 75.0
-        self.demand_charge = None
-
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        ###  self.units == other.units and \
-        if abs(self.global_price - other.global_price)>1e-9 and \
-           self.global_pattern != other.global_pattern and \
-           abs(self.global_efficiency - other.global_efficiency)>1e-9:
-               return False
-        if self.demand_charge and other.demand_charge:
-            if abs(self.demand_charge - other.demand_charge)>1e-9:
-               return False
-        if self.demand_charge and other.demand_charge:
-            return False
-        return True
-
-    def __ne__(self, other):
-        return not self == other
-
-    def todict(self):
-        """Dictionary representation of the energy options"""
-        return self.__dict__.copy()
-    
-    def tostring(self):
-        """String representation of the energy options"""
-        s = 'Energy options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
+    def __init__(self,
+                global_price: float=0,
+                global_pattern: str=None,
+                global_efficiency: float=None,
+                demand_charge: float=None):
+        self.global_price = global_price
+        self.global_pattern = global_pattern
+        self.global_efficiency = global_efficiency
+        self.demand_charge = demand_charge
 
 
-class SolverOptions(object):
+class ResultsOptions(_OptionsBase):
     """
-    Options related to solver options (for any solver).
+    Options related to results outputs.
 
-    Attributes
+    Parameters
     ----------
-    trials : int, default 40
-        Maximum number of trials used to solve network hydraulics
-    accuracy : float, default 0.001
-        Convergence criteria for hydraulic solutions (default 0.001)
-    unbalanced : str, default 'STOP'
-        Indicate what happens if a hydraulic solution cannot be reached.  
-        Options are STOP and CONTINUE
-    unbalanced_value : int, default None
-        Number of additional trials if unbalanced = CONTINUE
-    tolerance : float, default 0.01
-        Convergence criteria for water quality solutions
-    checkfreq : int, default 2
-        Number of solution trials that pass between status check 
-    maxcheck : int, default 10
-        Number of solution trials that pass between status check 
-    damplimit : float, default 0.0
-        Accuracy value at which solution damping begins
-    headerror : float, default None
-        The head error convergence limit
-    flowchange : float, default None
-        The flow change convergence limit
-        
-    """
-    def __init__(self):
-        self.trials = 40
-        self.accuracy = 0.001
-        self.unbalanced = 'STOP'
-        self.unbalanced_value = None #int
-        self.tolerance = 0.01
-        self.checkfreq = 2
-        self.maxcheck = 10
-        self.damplimit = 0
-        self.headerror = None
-        self.flowchange = None
-        self.demand_model = None
-        
-    def __eq__(self, other):
-        if not type(self) == type(other):
-            return False
-        ###  self.units == other.units and \
-        if abs(self.trials - other.trials)<1e-9 and \
-           abs(self.accuracy - other.accuracy)<1e-9 and \
-           self.unbalanced == other.unbalanced and \
-           self.demand_model == other.demand_model and \
-           abs(self.tolerance - other.tolerance)<1e-9 and \
-           abs(self.checkfreq - other.checkfreq)<1e-9 and \
-           abs(self.maxcheck - other.maxcheck)<1e-9 and \
-           abs(self.damplimit - other.damplimit)<1e-9:
-               return True
-        return False
-
-    def __ne__(self, other):
-        return not self == other
-
-    def todict(self):
-        """Dictionary representation of the solver options"""
-        return self.__dict__.copy()
+    rpt_filename : str
+        Provides the filename to use for outputting an EPANET report file.
+        By default, this will be the prefix plus ".rpt".
+    status : str
+        Output solver status ('YES', 'NO', 'FULL'). 'FULL' is only useful for debugging
+    summary : str
+        Output summary information ('YES' or 'NO')
+    energy : str
+        Output energy information
+    nodes : bool
+        Output node information in report file
+    links : bool
+        Output link information in report file
     
-    def tostring(self):
-        """String representation of the solver options"""
-        s = 'Solver options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
+    """
+    def __init__(self,
+                pagesize: list=None,
+                rpt_filename: str=None,
+                status: str='NO',
+                summary: str='YES',
+                energy: str='NO',
+                nodes: bool=False,
+                links: bool=False,
+                rpt_params: dict=None,
+                results_obj: dict=None,
+                param_opts: dict=None):
+        self.pagesize = pagesize
+        self.rpt_filename = rpt_filename
+        self.status = status
+        self.summary = summary
+        self.energy = energy
+        self.nodes = nodes
+        self.links = links
+        self.rpt_params = rpt_params if rpt_params is not None else _new_rpt_params()
+        self.results_obj = results_obj if results_obj is not None else _new_results_obj()
+        self.param_opts = param_opts if param_opts is not None else _new_param_opts()
 
 
-class UserOptions(object):
+class UserOptions(_OptionsBase):
     """
     Options defined by the user.
     
@@ -738,18 +661,94 @@ class UserOptions(object):
     used by the user-built analysis scripts.
     
     """
-    def __init__(self):
-        pass
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            self.__dict__[k] = v
+
+
+class WaterNetworkOptions(_OptionsBase):
+    """
+    Water network model options class.
+    
+    These options mimic options in the EPANET User Manual.
+    The `user` attribute is a generic python class object that allows for 
+    dynamically created attributes that are user specific.
+
+    Parameters
+    ----------
+    time : TimeOptions
+        Contains all timing options for the scenarios
+    hydraulic : HydraulicOptions
+        Contains hydraulic solver parameters
+    reaction : ReactionOptions
+        Contains chemical reaction parameters
+    quality : QualityOptions
+        Contains water quality simulation options and source definitions
+    energy : EnergyOptions
+        Contains parameters for energy calculations
+    results : ResultsOptions
+        Contains options for how for format and save results
+    graphics : GraphicsOptions
+        Contains EPANET graphics and background options and also the filename
+        for external node coordinates, if used
+    user : dict
+        An empty dictionary that allows for user specified options
+    
+    """
+    def __init__(self,
+                 time: TimeOptions = None,
+                 hydraulic: HydraulicOptions = None,
+                 results: ResultsOptions = None,
+                 quality: QualityOptions = None,
+                 reaction: ReactionOptions = None,
+                 energy: EnergyOptions = None,
+                 graphics: GraphicsOptions = None,
+                 user: UserOptions = None):
+        self.time = TimeOptions.factory(time)
+        self.hydraulic = HydraulicOptions.factory(hydraulic)
+        self.results = ResultsOptions.factory(results)
+        self.quality = QualityOptions.factory(quality)
+        self.reaction = ReactionOptions.factory(reaction)
+        self.energy = EnergyOptions.factory(energy)
+        self.graphics = GraphicsOptions.factory(graphics)
+        self.user = UserOptions.factory(user)
+
+    def __setattr__(self, name, value):
+        if name == 'time':
+            if not isinstance(value, (TimeOptions, dict, tuple, list)):
+                raise ValueError('time must be a TimeOptions or convertable object')
+            value = TimeOptions.factory(value)
+        elif name == 'hydraulic':
+            if not isinstance(value, (HydraulicOptions, dict, tuple, list)):
+                raise ValueError('hydraulic must be a HydraulicOptions or convertable object')
+            value = HydraulicOptions.factory(value)
+        elif name == 'results':
+            if not isinstance(value, (ResultsOptions, dict, tuple, list)):
+                raise ValueError('results must be a ResultsOptions or convertable object')
+            value = ResultsOptions.factory(value)
+        elif name == 'quality':
+            if not isinstance(value, (QualityOptions, dict, tuple, list)):
+                raise ValueError('quality must be a QualityOptions or convertable object')
+            value = QualityOptions.factory(value)
+        elif name == 'reaction':
+            if not isinstance(value, (ReactionOptions, dict, tuple, list)):
+                raise ValueError('reaction must be a ReactionOptions or convertable object')
+            value = ReactionOptions.factory(value)
+        elif name == 'energy':
+            if not isinstance(value, (EnergyOptions, dict, tuple, list)):
+                raise ValueError('energy must be a EnergyOptions or convertable object')
+            value = EnergyOptions.factory(value)
+        elif name == 'graphics':
+            if not isinstance(value, (GraphicsOptions, dict, tuple, list)):
+                raise ValueError('graphics must be a GraphicsOptions or convertable object')
+            value = GraphicsOptions.factory(value)
+        elif name == 'user':
+            value = UserOptions.factory(value)
+        else:
+            raise ValueError('%s is not a valid member of WaterNetworkModel')
+        self.__dict__[name] = value
+
 
     def todict(self):
-        """Dictionary representation of the user options"""
-        return self.__dict__.copy()
-    
-    def tostring(self):
-        """String representation of the user options"""
-        s = 'User options:\n'
-        for k,v in self.__dict__.items():
-            s += '  {0:<20}: {1:<20}\n'.format(k, str(v))
-        return s
-    __repr__ = tostring
-    
+        """Dictionary representation of the options"""
+        return dict(self)

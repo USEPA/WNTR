@@ -47,7 +47,7 @@ Three types of water quality analysis are supported.  These options include wate
 
 .. doctest::
 
-    >>> wn.options.quality.mode = 'AGE'
+    >>> wn.options.quality.parameter = 'AGE'
 
 * **Tracer**: A water quality simulation can be used to compute the percent of flow originating from a specific location.
   The results include tracer percent values at each node.
@@ -55,7 +55,7 @@ Three types of water quality analysis are supported.  These options include wate
 
 .. doctest::
 
-    >>> wn.options.quality.mode = 'TRACE'
+    >>> wn.options.quality.parameter = 'TRACE'
     >>> wn.options.quality.trace_node = '111'
 
 * **Chemical concentration**: A water quality simulation can be used to compute chemical concentrations given a set of source injections.
@@ -64,13 +64,13 @@ Three types of water quality analysis are supported.  These options include wate
 
 .. doctest::
 
-    >>> wn.options.quality.mode = 'CHEMICAL'
+    >>> wn.options.quality.parameter = 'CHEMICAL'
 
 * To skip the water quality simulation, set the 'quality' options as follows:
 
 .. doctest::
 
-    >>> wn.options.quality.mode = 'NONE'
+    >>> wn.options.quality.parameter = 'NONE'
 
 Additional water quality options include viscosity, diffusivity, specific gravity, tolerance, bulk reaction order, wall reaction order, 
 tank reaction order, bulk reaction coefficient, wall reaction coefficient, limiting potential, and roughness correlation.
@@ -142,7 +142,7 @@ water quality are run using the EpanetSimualtor.
     >>> wn.assign_demand(results.node['demand'], 'PDD')
 	
     >>> sim = wntr.sim.EpanetSimulator(wn)
-    >>> wn.options.quality.mode = 'TRACE'
+    >>> wn.options.quality.parameter = 'TRACE'
     >>> wn.options.quality.trace_node = '111'
     >>> results_withPDD = sim.run_sim()
 	

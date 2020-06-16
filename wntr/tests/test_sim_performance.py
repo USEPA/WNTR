@@ -77,6 +77,26 @@ class TestPerformance(unittest.TestCase):
         self.assertTrue(compare_results(results.node['demand'].loc[:, wn.tank_name_list], epa_res.node['demand'].loc[:, wn.tank_name_list], demand_diff_abs_threshold, rel_threshold))
         self.assertTrue(compare_results(results.link['flowrate'], epa_res.link['flowrate'], flow_diff_abs_threshold, rel_threshold))
 
+    def test_Net3_performance_PDA(self):
+        head_diff_abs_threshold = 1e-3
+        demand_diff_abs_threshold = 1e-5
+        flow_diff_abs_threshold = 1e-5
+        rel_threshold = 1e-3
+
+        inp_file = join(ex_datadir, 'Net3.inp')
+        wn = self.wntr.network.WaterNetworkModel(inp_file)
+        wn.options.hydraulic.demand_model = 'PDA'
+
+        epa_sim = self.wntr.sim.EpanetSimulator(wn)
+        epa_res = epa_sim.run_sim(version=2.2)
+
+        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+        results = sim.run_sim()
+
+        self.assertTrue(compare_results(results.node['head'], epa_res.node['head'], head_diff_abs_threshold, rel_threshold))
+        self.assertTrue(compare_results(results.node['demand'].loc[:, wn.tank_name_list], epa_res.node['demand'].loc[:, wn.tank_name_list], demand_diff_abs_threshold, rel_threshold))
+        self.assertTrue(compare_results(results.link['flowrate'], epa_res.link['flowrate'], flow_diff_abs_threshold, rel_threshold))
+
     def test_Net6_mod_performance(self):
         head_diff_abs_threshold = 1e-3
         demand_diff_abs_threshold = 1e-5
