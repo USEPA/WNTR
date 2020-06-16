@@ -1574,15 +1574,19 @@ class WaterNetworkModel(AbstractModel):
         A list of link names connected to the node
         """
         link_types = {'Pipe', 'Pump', 'Valve'}
-        if flag.upper() == 'ALL':
-            return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name in {self.get_link(link_name).start_node_name, self.get_link(link_name).end_node_name}]
-        elif flag.upper() == 'INLET':
-            return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name == self.get_link(link_name).end_node_name]
-        elif flag.upper() == 'OUTLET':
-            return [link_name for link_name, link_type in self._node_reg.get_usage(node_name) if link_type in link_types and node_name == self.get_link(link_name).start_node_name]
+        link_data = self._node_reg.get_usage(node_name)
+        if link_data is None:
+            return []
         else:
-            logger.error('Unrecognized flag: {0}'.format(flag))
-            raise ValueError('Unrecognized flag: {0}'.format(flag))
+            if flag.upper() == 'ALL':
+                return [link_name for link_name, link_type in link_data if link_type in link_types and node_name in {self.get_link(link_name).start_node_name, self.get_link(link_name).end_node_name}]
+            elif flag.upper() == 'INLET':
+                return [link_name for link_name, link_type in link_data if link_type in link_types and node_name == self.get_link(link_name).end_node_name]
+            elif flag.upper() == 'OUTLET':
+                return [link_name for link_name, link_type in link_data if link_type in link_types and node_name == self.get_link(link_name).start_node_name]
+            else:
+                logger.error('Unrecognized flag: {0}'.format(flag))
+                raise ValueError('Unrecognized flag: {0}'.format(flag))
 
     def query_node_attribute(self, attribute, operation=None, value=None, node_type=None):
         """
