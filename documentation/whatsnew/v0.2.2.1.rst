@@ -1,6 +1,6 @@
 .. _whatsnew_0221:
 
-v0.2.2.1
+v0.2.2.1 (June 16, 2020)
 ---------------------------------------------------
 
 * Fixed :class:`~wntr.network.model.WaterNetworkModel.assign_demand`. 
