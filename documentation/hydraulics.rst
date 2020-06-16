@@ -75,8 +75,8 @@ More information on the simulators can be found in the API documentation, under
 
 Options
 ----------
-Hydraulic simulation options are defined in the :class:`~wntr.network.options.WaterNetworkOptions` class.
-These options include 
+Simulation options are stored in ``wn.options``.
+Hydraulic simulation options include 
 duration, 
 hydraulic timestep, 
 rule timestep, 
@@ -90,24 +90,27 @@ headloss,
 trials, 
 accuracy, 
 unbalanced, 
-demand multiplier, and 
-emitter exponent.
-All options are used with the EpanetSimulator.  
+demand multiplier, 
+demand model,
+minimum pressure
+required pressure
+pressure exponent.
+
+Note that EPANET 2.0.12 does not use the demand model, minimum pressure, required pressure, or pressure exponent. [DAVE check this]
 Options that are not used with the WNTRSimulator are described in :ref:`limitations`.  
 
-The following example returns model options, which all have default values.
+The easiest way to view options is to print `wn.options`` as a dictionary. For example, hydraulic options are shown below.
 
 .. doctest::
 
-    >>> wn.options # doctest: +SKIP
-    Time options:
-      duration            : 604800              
-      hydraulic_timestep  : 900                 
-      quality_timestep    : 900                 
-      rule_timestep       : 360.0               
-      pattern_timestep    : 3600
-      ...
-      
+	>>> print(dict(wn.options.hydraulic)) # doctest: +SKIP
+	{'accuracy': 0.001,
+	 'checkfreq': 2,
+	 'damplimit': 0.0,
+	 'demand_model': None,
+	 'demand_multiplier': 1.0,
+	 ...
+		  
 Mass balance at nodes
 -------------------------
 Both simulators use the mass balance equations from EPANET [Ross00]_:

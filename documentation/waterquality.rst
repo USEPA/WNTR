@@ -36,13 +36,13 @@ The results include a quality value for each node (see :ref:`simulation_results`
 
 Options
 ----------
-Water quality simulation options are defined in the :class:`~wntr.network.options.WaterNetworkOptions` class.
+Simulation options are stored in ``wn.options``.
 Three types of water quality analysis are supported.  These options include water age, tracer, and chemical concentration.
 
 * **Water age**: A water quality simulation can be used to compute water age at every node.
   To compute water age, set the 'quality' option as follows:
 
-.. doctest::
+  .. doctest::
 
     >>> wn.options.quality.parameter = 'AGE'
 	
@@ -125,7 +125,8 @@ The method :class:`~wntr.network.model.WaterNetworkModel.remove_source` can be u
 When creating a water network model from an EPANET INP file, the sources that are defined in the [SOURCES] section are added to the water network model.  
 These sources are given the name 'INP#' where # is an integer related to the number of sources in the INP file.
 
-.. _wq_pdd:
+.. The following is not shown in the UM
+    _wq_pdd:
 
 	Using PDD
 	------------
