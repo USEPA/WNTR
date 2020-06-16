@@ -154,17 +154,40 @@ def update_network_previous_values(wn):
     for tank_name, tank in wn.tanks():
         tank._prev_head = tank.head
 
-
 def update_tank_heads(wn):
     """
     Parameters
     ----------
     wn: wntr.network.WaterNetworkModel
     """
+    dt = wn.sim_time - wn._prev_sim_time   
+
     for tank_name, tank in wn.tanks():
         q_net = tank.demand
-        delta_h = 4.0 * q_net * (wn.sim_time - wn._prev_sim_time) / (math.pi * tank.diameter ** 2)
+        dV = q_net * dt
+        
+        if tank.vol_curve is None:    
+            delta_h = 4.0 * dV / (math.pi * tank.diameter ** 2)
+        else:
+            vcurve = np.array(tank.vol_curve.points)
+            level_x = vcurve[:,0]
+            volume_y = vcurve[:,1]
+            
+            # I had to include this because the _prev_head is the reference
+            # point needed if the tank.head (and tank.level) have already
+            # been updated. This isn't a problem for cases with no volume curve.
+            if tank.head == tank._prev_head:
+                cur_level = tank.level
+            else:
+                cur_level = tank._prev_head - (tank.head - tank.level)
+                            
+            V0 = np.interp(cur_level,level_x,volume_y)
+            V1 = V0 + dV
+            level_new = np.interp(V1,volume_y,level_x)
+            delta_h = level_new - cur_level
+                
         tank.head = tank._prev_head + delta_h
+            
 
 
 def initialize_results_dict(wn):

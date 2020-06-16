@@ -1,7 +1,17 @@
 .. _whatsnew_0223:
 
-v0.2.3 (July, 2020)
+v0.2.3 (dev branch)
 ---------------------------------------------------
+The following features are under development in the dev branch and will be part of the next release.
+ 
+* Added support for mutlipoint pump curves in the WNTRSimulator.  The points are fit to the same
+  function that is used for 3-point curves.
+* Added support for tank volume curves in the WNTRSimulator.  
+  Tank volume curves are also now used in :class:`~wntr.metrics.economic.annual_network_cost`.
+  Tank curves can also be visualized using the function :class:`~wntr.graphics.curve.plot_tank_volume_curve`.
+* Added method to get tank volume at a given level :class:`~wntr.network.elements.Tank.get_volume`.
+* Updated tests
+* Updated documentation
 
 * Make EPANET 2.2 the default engine for the :class:`EpanetSimulator` class.
 
@@ -47,3 +57,9 @@ Original name                               New (current) name                  
 ``solver.tolerance``                        ``quality.tolerance``                       Only old solver option that applies to quality, EPANET groups with quality.
 =========================================   =========================================   ============================================================================
 
+
+Additional features planned for the 0.2.3 release include:
+
+* Additional valve topographic metrics
+* Graphics updates
+ 

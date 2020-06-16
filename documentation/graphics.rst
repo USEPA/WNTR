@@ -18,7 +18,7 @@
 Graphics
 ======================================
 
-WNTR includes several functions to plot water network models and plot 
+WNTR includes several functions to plot water network models and to plot 
 fragility and pump curves.
 
 Networks
@@ -39,9 +39,9 @@ Node and link attributes can be specified using the following options:
 * Dictionary with node/link names and associated values (similar to pandas Series)
 * List of node/link names (i.e., ``['123', '199']``), this highlights the node or link in red
 
-The following example plots the network along with node elevation (:numref:`fig-network`).
+The following example plots the network along with node elevation (:numref:`fig-network-2`).
 Note that the :class:`~wntr.graphics.network.plot_network` function returns matplotlib objects 
-for the the network nodes and edges, which can be further customized by the user.
+for the network nodes and edges, which can be further customized by the user.
 
 .. doctest::
     :hide:
@@ -59,14 +59,14 @@ for the the network nodes and edges, which can be further customized by the user
     >>> plt.tight_layout()
     >>> plt.savefig('plot_basic_network.png', dpi=300)
     
-.. _fig-network:
+.. _fig-network-2:
 .. figure:: figures/plot_basic_network.png
    :width: 640
    :alt: Network
    
    Basic network graphic.
    
-Interactive Plotly networks
+Interactive plotly networks
 ---------------------------------
 
 Interactive plotly network graphics can be generated using the 
@@ -91,13 +91,13 @@ The following example plots the network along with node population (:numref:`fig
    :width: 715
    :alt: Network
 
-   Interactive network graphic.
+   Interactive network graphic with the legend showing the node population.
    
 Interactive Leaflet networks
 ------------------------------------------
 Interactive Leaflet network graphics can be generated using the 
-function :class:`~wntr.graphics.network.plot_leaflet_network`.
-This function produces an HTML file that overlays the network model onto a Leaflet map.
+function :class:`~wntr.graphics.network.plot_leaflet_network`. 
+This function produces an HTML file that overlays the network model onto a Leaflet map. Leaflet is an open-source JavaScript library for mobile-friendly interactive maps. More information on Leaflet is provided at https://leafletjs.com/.  
 The network model should have coordinates in longitude/latitude. 
 See :ref:`modify_node_coords` for more information on converting node coordinates.
 As with basic network graphics, a wide range of plotting options can be supplied. 
@@ -187,7 +187,7 @@ The following example uses simulation results from above, and converts the graph
 .. doctest::
 
     >>> tankH = results.node['pressure'].loc[:,wn.tank_name_list]
-    >>> tankH = tankH * 3.28084 # Convert tank heigh to ft
+    >>> tankH = tankH * 3.28084 # Convert tank head to ft
     >>> tankH.index /= 3600 # convert time to hours
     >>> ax = tankH.plot(legend=True)
     >>> text = ax.set_xlabel('Time (hr)')
@@ -199,7 +199,7 @@ The following example uses simulation results from above, and converts the graph
    :width: 640
    :alt: Network
    
-   Interactive time series graphic.
+   Interactive time series graphic with the tank heights for Tank 1 (blue), Tank 2 (orange), and Tank 3 (green).
    
 .. raw:: html
     
@@ -263,4 +263,53 @@ The following example plots a pump curve (:numref:`fig-pump`).
    :alt: Pump curve
 
    Pump curve graphic.
+   
+Tank volume curves
+-------------------
+
+Tank curves and profiles can be plotted using the 
+function :class:`~wntr.graphics.curve.plot_tank_volume_curve`.
+
+The following example creates a tank curve and then plots the curve and 
+corresponding tank profile (:numref:`fig-tank`). The profile is 
+plotted as a stairstep line between points.  The minimum and maximum 
+level of the tank is included in the figure.
+
+.. doctest::
+    :hide:
+    
+    >>> fig = plt.figure()
+    
+.. doctest::
+
+    >>> wn.add_curve('Curve', 'VOLUME', [
+    ...    (1,	0),
+    ...    (2,	60),
+    ...    (3,	188),
+    ...    (4,	372),
+    ...    (5,	596),
+    ...    (6,	848),
+    ...    (7,	1114),
+    ...    (8,	1379),
+    ...    (9,	1631),
+    ...    (10, 1856),
+    ...    (11, 2039),
+    ...    (12, 2168),
+    ...    (13, 2228)])
+    >>> tank = wn.get_node('2')
+    >>> tank.vol_curve_name = 'Curve'
+    >>> ax = wntr.graphics.plot_tank_volume_curve(tank)
+
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('plot_tank_volume_curve.png', dpi=300)
+    
+.. _fig-tank:
+.. figure:: figures/plot_tank_volume_curve.png
+   :width: 800
+   :alt: Tank curve and profile
+
+   Tank curve and profile graphic.
    

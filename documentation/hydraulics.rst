@@ -9,9 +9,12 @@ WNTR contains two simulators: the EpanetSimulator and the WNTRSimulator.
 See :ref:`software_framework` for more information on features and limitations of these simulators. 
 
 The EpanetSimulator can be used to run demand-driven hydraulic simulations
-using the EPANET 2.0 Programmer's Toolkit. The simulator can also be 
+using the EPANET Programmer's Toolkit. The simulator can also be 
 used to run water quality simulations, as described in :ref:`water_quality_simulation`.  
 A hydraulic simulation using the EpanetSimulator is run using the following code:
+
+.. note:: 
+  EPANET refers to EPANET 2.00.12. Future releases of WNTR will include EPANET 2.2.0.
 
 .. doctest::
     :hide:
@@ -128,7 +131,7 @@ For :math:`q \geq 0`:
 These equations are symmetric across the origin
 and valid for any :math:`q`. Thus, this equation can be used for flow in
 either direction. However, the derivative with respect to :math:`q` at :math:`q = 0` 
-is :math:`0`. In certain scenarios, this can cause the Jacobian of the
+is :math:`0`. In certain scenarios, this can cause the Jacobian matrix of the
 set of hydraulic equations to become singular (when :math:`q=0`). 
 To overcome this limitation, the WNTRSimulator
 splits the domain of :math:`q` into six segments to
@@ -315,6 +318,7 @@ To restart the simulation from time zero, the user has several options.
 
 2. Save the water network model to a file and reload that file each time a simulation is run.  
    A pickle file is generally used for this purpose.  
+   A pickle file is a binary file used to serialize and de-serialize a Python object.
    This option is useful when the water network model contains custom controls that would not be reset using the option 1, 
    or when the user wants to change operations between simulations.
    
@@ -348,7 +352,7 @@ a simulation.
 Advanced: Customized models with WNTR's AML
 -------------------------------------------
 
-WNTR has a custom algebraic modeling language (AML) which is used for
+WNTR has a custom algebraic modeling language (AML) that is used for
 WNTR's hydraulic model (used in the
 :class:`~wntr.sim.core.WNTRSimulator`). This AML is primarily used for
 efficient evaluation of constraint residuals and derivatives. WNTR's

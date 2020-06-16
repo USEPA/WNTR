@@ -15,7 +15,7 @@ Valve layer
 
 While valves are typically included in the water network model, the user can also define a valve layer to be used in additional analysis.
 If the valves are not used in the hydraulic analysis, this can help reduce the size of the network.
-A valve layer can be used to groups links and nodes into segments based on the location of isolation valves.
+A valve layer can be used to group links and nodes into segments based on the location of isolation valves.
 In a valve layer, the location of each valve is defined using the link the valve is installed on 
 and the node the valve protects. This information is stored in a pandas DataFrame, which is indexed by valve 
 number with columns named 'link' and 'node.'
