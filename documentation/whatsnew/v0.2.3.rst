@@ -1,0 +1,12 @@
+.. _whatsnew_0230:
+
+v0.2.3 (dev branch)
+---------------------------------------------------
+
+* Added support for mutlipoint curves in the WNTRSimualtor.  The points are fit to the same
+  function that is used for 3-point curves.
+* Added support for tank volume curves in the WNTRSimualtor.  
+  Tank volume curves are also now used in :class:`~wntr.metrics.economic.annual_network_cost`.
+  Tank curves can also be visualized using the function :class:`~wntr.graphics.curve.plot_volume_curve`.
+* Updated documentation
+  

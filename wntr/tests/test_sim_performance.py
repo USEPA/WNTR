@@ -7,7 +7,7 @@ import pandas
 pandas.set_option('display.max_rows', 10000)
 
 testdir = dirname(abspath(str(__file__)))
-test_networkdir = join(testdir,'networks_for_testing')
+test_datadir = join(testdir,'networks_for_testing')
 ex_datadir = join(testdir,'..','..','examples','networks')
 results_dir = join(testdir,'performance_results')
 
@@ -42,7 +42,7 @@ class TestPerformance(unittest.TestCase):
         flow_diff_abs_threshold = 1e-5
         rel_threshold = 1e-3
         
-        inp_file = join(test_networkdir, 'Anytown_multipointcurves.inp')
+        inp_file = join(test_datadir, 'Anytown_multipointcurves.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         # Apply a curve that is very fine along H = a - b * Q ** c and 
