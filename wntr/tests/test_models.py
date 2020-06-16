@@ -243,7 +243,7 @@ class TestPDD(unittest.TestCase):
         node = wn.get_node('j1')
 
         pmin = node.minimum_pressure
-        pnom = node.nominal_pressure
+        pnom = node.required_pressure
         h0 = node.elevation + pmin
         h1 = node.elevation + pnom
         delta = m.pdd_smoothing_delta

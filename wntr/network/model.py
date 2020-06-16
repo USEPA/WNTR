@@ -18,10 +18,7 @@ import logging
 import six
 
 import sys
-if sys.version_info[0] == 2:
-    from collections import MutableSequence
-else:
-    from collections.abc import MutableSequence
+from collections.abc import MutableSequence
 
 import numpy as np
 import networkx as nx
@@ -1748,9 +1745,18 @@ class WaterNetworkModel(AbstractModel):
         inpfile.read(filename, wn=self)
         self._inpfile = inpfile
 
-    def write_inpfile(self, filename, units=None):
+    def write_inpfile(self, filename, units=None, version=2.2):
         """
         Writes the current water network model to an EPANET INP file
+
+        .. note::
+
+            By default, WNTR now uses EPANET version 2.2 for the EPANET simulator engine. Thus,
+            The WaterNetworkModel will also write an EPANET 2.2 formatted INP file by default as well.
+            Because the PDA analysis options will break EPANET 2.0, the ``version`` option will allow
+            the user to force EPANET 2.0 compatibility and the expense of pressured-dependent analysis 
+            options being turned off.
+
 
         Parameters
         ----------
@@ -1758,6 +1764,8 @@ class WaterNetworkModel(AbstractModel):
             Name of the inp file.
         units : str, int or FlowUnits
             Name of the units being written to the inp file.
+        version : float, {2.0, **2.2**}
+            Optionally specify forcing EPANET 2.0 compatibility.
 
         """
         if self._inpfile is None:
@@ -1765,7 +1773,7 @@ class WaterNetworkModel(AbstractModel):
             self._inpfile = wntr.epanet.InpFile()
         if units is None:
             units = self._options.hydraulic.inpfile_units
-        self._inpfile.write(filename, self, units=units)
+        self._inpfile.write(filename, self, units=units, version=version)
     
    
 class PatternRegistry(Registry):

@@ -28,6 +28,13 @@ class EpanetSimulator(WaterNetworkSimulator):
     is no looping within Python. The "ENsolveH" and "ENsolveQ" toolkit
     functions are used instead.
 
+
+    .. note::
+
+        WNTR now includes access to both the EPANET 2.0.12 and EPANET 2.2 toolkit libraries.
+        By default, version 2.2 will be used.
+
+
     Parameters
     ----------
     wn : WaterNetworkModel
@@ -57,7 +64,15 @@ class EpanetSimulator(WaterNetworkSimulator):
         Run the EPANET simulator.
 
         Runs the EPANET simulator through the compiled toolkit DLL. Can use/save hydraulics
-        to allow for separate WQ runs.
+        to allow for separate WQ runs. 
+
+        .. note:: 
+
+            By default, WNTR now uses the EPANET 2.2 toolkit as the engine for the EpanetSimulator.
+            To force usage of the older EPANET 2.0 toolkit, use the ``version`` command line option.
+            Note that if the demand_model option is set to PDA, then a warning will be issued, as
+            EPANET 2.0 does not support such analysis.
+        
 
         Parameters
         ----------
@@ -69,13 +84,15 @@ class EpanetSimulator(WaterNetworkSimulator):
             Will save hydraulics to ``file_prefix + '.hyd'`` or to file specified in `hydfile_name`
         hydfile : str
             Optionally specify a filename for the hydraulics file other than the `file_prefix`
-        version : {2.0, 2.2}
-            Optionally change to version 2.2 of EPANET from the default 2.0.12. Valid choices are
-            either 2.0 (the default if no argument provided) or 2.2.
+        version : float, {2.0, **2.2**}
+            Optionally change the version of the EPANET toolkit libraries. Valid choices are
+            either 2.2 (the default if no argument provided) or 2.0.
 
         """
+        if isinstance(version, str):
+            version = float(version)
         inpfile = file_prefix + '.inp'
-        self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units)
+        self._wn.write_inpfile(inpfile, units=self._wn.options.hydraulic.inpfile_units, version=version)
         enData = wntr.epanet.toolkit.ENepanet(version=version)
         rptfile = file_prefix + '.rpt'
         outfile = file_prefix + '.bin'

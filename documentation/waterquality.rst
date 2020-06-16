@@ -139,8 +139,9 @@ These sources are given the name 'INP#' where # is an integer related to the num
 	water quality are run using the EpanetSimulator.
 
 	.. doctest::
-
-		>>> sim = wntr.sim.WNTRSimulator(wn, 'PDD')
+	
+		>>> wn.options.hydraulic.demand_model = 'PDA'
+		>>> sim = wntr.sim.WNTRSimulator(wn)
 		>>> results = sim.run_sim()
 
 		>>> wn.assign_demand(results.node['demand'].loc[:,wn.junction_name_list], 'PDD')
@@ -149,4 +150,5 @@ These sources are given the name 'INP#' where # is an integer related to the num
 		>>> wn.options.quality.parameter = 'TRACE'
 		>>> wn.options.quality.trace_node = '111'
 		>>> results_withPDD = sim.run_sim()
+
 	

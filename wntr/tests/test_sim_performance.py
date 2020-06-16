@@ -118,7 +118,8 @@ class TestPerformance(unittest.TestCase):
         epa_sim = self.wntr.sim.EpanetSimulator(wn)
         epa_res = epa_sim.run_sim(version=2.2)
 
-        sim = self.wntr.sim.WNTRSimulator(wn, mode='PDD')
+        wn.options.hydraulic.demand_model = 'PDA'
+        sim = self.wntr.sim.WNTRSimulator(wn)
         results = sim.run_sim()
 
         self.assertTrue(compare_results(results.node['head'], epa_res.node['head'], head_diff_abs_threshold, rel_threshold))
