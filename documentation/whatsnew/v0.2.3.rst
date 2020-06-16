@@ -9,6 +9,7 @@ The following features are under development in the dev branch and will be part 
 * Added support for tank volume curves in the WNTRSimualtor.  
   Tank volume curves are also now used in :class:`~wntr.metrics.economic.annual_network_cost`.
   Tank curves can also be visualized using the function :class:`~wntr.graphics.curve.plot_tank_volume_curve`.
+* Added method to get tank volume at a given level :class:`~wntr.network.elements.Tank.get_volume`.
 * Updated tests
 * Updated documentation
 
