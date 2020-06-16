@@ -1,12 +1,13 @@
 import unittest
 from os.path import abspath, dirname, join
-from pandas import DataFrame
+import pandas as pd
 import numpy as np
 from nose.tools import *
 import wntr
 
 testdir = dirname(abspath(str(__file__)))
-test_datadir = join(testdir,'networks_for_testing')
+test_network_dir = join(testdir,'networks_for_testing')
+test_data_dir = join(testdir,'data_for_testing')
 ex_datadir = join(testdir,'..','..','examples','networks')
 
 class TestNetworkCreation(unittest.TestCase):
@@ -203,7 +204,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertNotIn('TANK-3326',{name for name, node in wn.nodes()})
         self.assertNotIn('TANK-3326',wn.node_name_list)
 
-        inp_file = join(test_datadir,'conditional_controls_1.inp')
+        inp_file = join(test_network_dir,'conditional_controls_1.inp')
         wn = self.wntr.network.WaterNetworkModel(inp_file)
 
         tank1 = wn.get_node('tank1')
@@ -377,8 +378,13 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertAlmostEqual(Y[2],0.0)
         
     def test_multi_pt_head_curve(self):
-        pump_curves = pump_curves_for_testing() # change this to read in a csv file
-    
+        #pump_curves = pump_curves_for_testing() # change this to read in a csv file
+        
+        df = pd.read_csv(join(test_data_dir,'pump_practice_curves.csv'),skiprows=5)
+        pump_curves = []
+        for i in range(11):
+            pump_curves.append(df[df['curve number']==i].iloc[:,1:3])
+
         # these are the least squares optimal curve coefficients for 
         # pump_curves!            
         expected_coef = [
@@ -522,25 +528,7 @@ class TestNetworkMethods(unittest.TestCase):
         self.assertEqual(l4,['p5'])
         self.assertEqual(l5,[])
 
-#    def test_assign_demand(self):
-#        inp_file = join(ex_datadir, 'Net3.inp')
-#        wn = self.wntr.network.WaterNetworkModel(inp_file)
-#
-#        sim = self.wntr.sim.WNTRSimulator(wn)
-#        results1 = sim.run_sim()
-#
-#        demand = results1.node['demand']
-#        wn.assign_demand(demand)
-#
-#        sim = self.wntr.sim.EpanetSimulator(wn)
-#        results2 = sim.run_sim()
-#
-#        for node_name, node in self.wn.nodes():
-#            for t in self.res1.node.major_axis:
-#                self.assertAlmostEqual(results1.link.loc['flowrate', t, node_name],
-#                                       results2.link.loc['flowrate', t, node_name], 4)
-
-
+    
 epanet_unit_id = {'CFS': 0, 'GPM': 1, 'MGD': 2, 'IMGD': 3, 'AFD': 4,
                   'LPS': 5, 'LPM': 6, 'MLD': 7, 'CMH':  8, 'CMD': 9}
 
@@ -783,77 +771,57 @@ def test_describe():
                                       'Headloss': 0, 
                                       'Volume': 0}, 
                            'Sources': 0, 
-                           'Controls': 18})
-        
-def pump_curves_for_testing(): # remove
-    # as -is this data will create a lot of type errors unless it is converted 
-    # to float. Use df_pumpcurve_2_tuple to convert it to the right type for 
-    # use in unit testing.
-    return [DataFrame(
-                {"flow (m3/s)":[0,0.105681915,0.176382668,0.28377588,
-                                0.376517515,0.463334953,0.565740579,
-                                0.613132057,0.715287247],
-                 "head (m)":[98.99904,91.31808,88.33104,85.344,79.36992,
-                       73.39584,64.008,55.4736,43.52544]}),
-               DataFrame(
-                {"flow (m3/s)":[0,0.044193533,0.077059091,0.125596807,
-                 0.177324675,0.214427091,0.229871141,0.263847712,
-                 0.272364103,0.287419644,0.329695508,0.342817819],
-                 "head (m)":[66.01968,65.8368,65.47104,65.10528,63.45936,
-                       62.54496,60.71616,59.80176,57.05856,54.864,51.2064,
-                       46.6344]}),
-               DataFrame(
-                {"flow (m3/s)":[0,0.013200266,0.023592001,0.032796828,
-                 0.04404861,0.056725625,0.067307444,0.081731919,0.090227983],
-                 "head (m)":[21.39696,21.12264,20.84832,19.75104,18.10512,
-                       17.55648,13.716,10.42416,7.13232]}),
-               DataFrame(
-                {"flow (m3/s)":[0,0.047618471,0.099386625,0.148381288,
-                 0.170674825,0.174439345,0.192396396,0.19726897,0.200258823,
-                 0.205367171,0.206927169,0.215247862,0.212702829,0.230197117,
-                 0.25382684],
-                 "head (m)":[81.153,80.6958,80.01,77.724,75.6666,74.5236,
-                       72.009,71.3232,70.4088,70.1802,69.9516,68.8086,68.58,
-                       61.722,54.864]}),
-               DataFrame(
-                {"flow (m3/s)":[0,0.082832516,0.157427491,0.238174748,
-                 0.312332802,0.394059908,0.411851362,0.425626409,0.430131793,
-                 0.435578582,0.449945424,0.490204636,0.508401729],
-                 "head (m)":[137.16,136.779,136.017,134.112,129.921,123.063,
-                       121.158,118.872,117.729,115.824,113.919,103.251,
-                       95.25]}),
-               DataFrame(
-                {"flow (m3/s)":[0,0.078451605,0.140215516,0.230802593,
-                 0.346271513,0.399431962,0.462893998,0.503652986,0.548177447,
-                 0.586089294,0.616837205,0.665963195],
-                 "head (m)":[128.188212,127.83312,127.122936,126.412752,
-                       123.216924,121.441464,117.890544,116.115084,110.788704,
-                       106.5276,99.42576,90.54846]}),
-               DataFrame(
-                {"flow (m3/s)":[0,0.015831766,0.042993772,0.086366598,
-                 0.110592715,0.136667964,0.148002742,0.166183444,0.192500825],
-                 "head (m)":[28.28544,26.09088,25.23744,24.384,22.67712,
-                       20.97024,18.288,15.8496,12.43584]}),
-               DataFrame(
-                {"flow (m3/s)":[0,0.005028586,0.009781127,0.013212743,
-                 0.014714396,0.021535734,0.024714589],
-                 "head (m)":[49.78908,49.28616,47.27448,42.7482,40.2336,
-                       29.16936,15.0876]}),
-               DataFrame(
-                {"flow (m3/s)":[0,0.015443564,0.031929845,0.049860221,
-                 0.058568851,0.066978995,0.073517522,0.080020689,0.088197281],
-                 "head (m)":[34.47288,34.07664,33.6804,31.6992,28.52928,
-                       26.94432,22.98192,19.01952,13.07592]}),
-               DataFrame(
-                {"flow (m3/s)":[0,0.029727745,0.062299117,0.093291238,
-                 0.126787743,0.156038659,0.192924986,0.222702993,0.252434918],
-                 "head (m)":[35.3568,32.6136,31.5468,30.48,28.3464,
-                       26.2128,22.86,19.812,15.5448]}),
-               DataFrame(
-                {"flow (m3/s)":[0,0.008879477,0.013076767,0.023278037,
-                 0.034161965,0.036876335,0.048019325,0.053792489,0.064882816],
-                 "head (m)":[14.859,14.6685,14.478,13.716,12.573,12.192,9.525,
-                       7.239,4.953]})]
+                           'Controls': 18})  
+
+def test_assign_demand():
     
+    inp_file = join(ex_datadir, 'Net3.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    
+    demands0 = wntr.metrics.expected_demand(wn)
+    pattern_name0 = wn.get_node('10').demand_timeseries_list[0].pattern_name
+    
+    wn.options.hydraulic.demand_multiplier = 1.5
+    demands1 = wntr.metrics.expected_demand(wn)
+    
+    assert_equal(pattern_name0, '1')
+    assert_equal(len(wn.pattern_name_list), 5) # number of original patterns
+    assert_less(abs((demands1/demands0).max().max()-1.5), 0.000001)
+    
+    sim1 = wntr.sim.EpanetSimulator(wn)
+    results1 = sim1.run_sim()
+    demands_sim1 = results1.node['demand'].loc[:,wn.junction_name_list]
+    
+    ### re-assign demands to be 2 times the original demands
+    wn.assign_demand(demands1*2, pattern_prefix='ResetDemand1_')
+
+    demands2 = wntr.metrics.expected_demand(wn)
+    pattern_name = wn.get_node('10').demand_timeseries_list[0].pattern_name
+    
+    sim = wntr.sim.EpanetSimulator(wn)
+    results2 = sim.run_sim()
+    demands_sim2 = results2.node['demand'].loc[:,wn.junction_name_list]
+    
+    assert_equal(pattern_name, 'ResetDemand1_10')
+    assert_equal(len(wn.pattern_name_list), wn.num_junctions+5)
+    assert_less(abs((demands2/demands1).max().max()-2), 0.000001)
+    assert_less(abs((demands_sim2/demands_sim1).max().max()-2), 0.01)
+    
+    ### re-assign demands using results from the simulation
+    wn.assign_demand(demands_sim2, pattern_prefix='ResetDemand2_')
+
+    demands2 = wntr.metrics.expected_demand(wn)
+    pattern_name = wn.get_node('10').demand_timeseries_list[0].pattern_name
+    
+    sim = wntr.sim.EpanetSimulator(wn)
+    results2 = sim.run_sim()
+    demands_sim2 = results2.node['demand'].loc[:,wn.junction_name_list]
+    
+    assert_equal(pattern_name, 'ResetDemand2_10')
+    assert_equal(len(wn.pattern_name_list), 2*wn.num_junctions+5)
+    assert_less(abs((demands2/demands1).max().max()-2), 0.01)
+    assert_less(abs((demands_sim2/demands_sim1).max().max()-2), 0.01)
+                
 if __name__ == '__main__':
-    unittest.main()
+    #unittest.main()
+    test_assign_demand()

@@ -281,7 +281,7 @@ Hydraulic metrics included in WNTR are listed in  :numref:`table-hydraulic-metri
                                           when a network component fails.  A network that carries maximum entropy 
                                           flow is considered reliable with multiple alternate paths.
                                           Connectivity will change at each time step, depending on the flow direction.  
-                                          The method :class:`~wntr.network.WaterNetworkModel.get_graph` method can be used to generate a weighted graph. 
+                                          The :class:`~wntr.network.WaterNetworkModel.get_graph` method can be used to generate a weighted graph. 
                                           Entropy can be computed using the :class:`~wntr.metrics.hydraulic.entropy` method.
    
    Expected demand                        Expected demand is computed at each node and timestep based on node demand, demand pattern, and demand multiplier [USEPA15]_.
@@ -349,7 +349,7 @@ Water quality metrics included in WNTR are listed in  :numref:`table-water-quali
    Metric                                 Description
    =====================================  ================================================================================================================================================
    Water age                              To determine the number of node-time pairs above or below a specified water age threshold, 
-                                          use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using AGE.
+                                          use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using AGE. Water age can also be computed using the average age from the last 48 hours of the simulation results.
 
    Concentration                          To determine the number of node-time pairs above or below a specified concentration threshold, 
                                           use the :class:`~wntr.metrics.misc.query` method on results.node['quality'] after a simulation using CHEM or TRACE.

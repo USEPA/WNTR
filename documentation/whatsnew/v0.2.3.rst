@@ -1,49 +1,55 @@
 .. _whatsnew_0223:
 
-v0.2.3 (July, 2020)
+v0.2.3 (dev branch)
 ---------------------------------------------------
+The following features are under development in the dev branch and will be part of the next release.
 
-* Make EPANET 2.2 the default engine for the :class:`EpanetSimulator` class.
+* Added EPANET 2.2 as the default engine in the EpanetSimulator.
 
-  * By default, the demand-driven analysis (DDA) mode is used without specifying this mode. To enable pressure-dependent demand analysis (PDA),
-    the appropriate option in the :class:`WaterNetworkOptions` object must be specified.
+  * When creating a WaterNetworkModel, ``wn``, from an EPANET INP file, the DEMAND MODEL, MINIMUM PRESSURE, and REQUIRED PRESSURE
+    along with other options are used to populate the WaterNetworkModel.  These options are stored in ``wn.options``.  
+    These options are also used when writing an INP file.  INP files created using EPANET 2.0 are compatible with this update.
 
-  * To enable version 2.0 of the EPANET simulator, ``the wn.options.hydraulics.demand_model`` option must be set to ``None``, and the keyword argument ``version`` must be set to ``2.0`` when calling ``run_sim``.
+  * To option to run demand-driven analysis (DDA) and pressure-dependent demand analysis (PDA) is stored in ``wn.options.hydraulic.demand_model`` 
+    If no demand model is specified, DDA is used. For backward compatibility, demand-driven analysis can be specified as DD or DDA and 
+    pressure-dependent demand analysis can be specified as PDA or PDD.
+  
+  * The EPANET 2.2 binaries for Mac and PC come from the Open Water Analytics EPANET 2.2 repository (https://github.com/OpenWaterAnalytics/EPANET).
+    The Linux binary came from the Travis.ci tests of the toolkit. 
+	
+  * The user can switch between EPANET version 2.0 and 2.2 as shown below:: 
+    
+		sim = wntr.sim.EpanetSimulator(wn)
+		results1 = sim.run_sim(version=2.0) # results using EPANET 2.0
+		results2 = sim.run_sim(version=2.2) # results using EPANET 2.2
+	
+  * EPANET 2.0 only runs demand-driven analysis
 
-  * The EPANET 2.2 binaries for Mac and PC come directly from the official development site of the EPANET 2.2 on GitHub (https://github.com/OpenWaterAnalytics/EPANET).
-    The Linux binary came from the Travis.ci tests of the toolkit. The GUI application for EPANET 2.2 is available at https://www.epa.gov/water-research/epanet.
+* Certain WaterNetworkModel option names have been updated to better align with EPANET nomenclature (API change).  Key changes are noted below:
+  
+  * Hydraulics options that were in ``wn.options.solver`` are now in ``wn.options.hydraulic``
+  * Reaction options that were in ``wn.options.quality`` now stored in ``wn.options.reactions``
+  * ``wn.options.quality.mode`` is now ``wn.options.quality.quality.parameter``    
+  * ``wn.options.hydraulic.units`` has been updated to ``wn.options.hydraulic.inpfile_units`` to make it clear that these units are only used when writing an INP file
 
-* Certain options within the :class:`WaterNetworkOptions` classes have been changed to a) better describe the options, and b) the be consistent with the EPANET 2.2 nomenclature.
-  The mapping of old options to new options is given here:
+* Junction attribute ``nominal_pressure`` was changed to ``required_pressure`` to better align with EPANET nomenclature (API change).
+  
+* While the WaterNetworkModel can store spatially variable minimum and required pressure that are used in the WNTRSimulator, 
+  those values cannot be saved when writing an INP file, rather the minimum and required pressure values in the options are saved.
+  This impacts the ability to use those junction attributes in the EpanetSimulator.  
+  This note has been added to the :ref:`discrepancies` section of the user manual.
+	
+* Added support for multi-point pump curves in the WNTRSimulator.  The points are fit to the same
+  function that is used for 3-point curves.
+* Added support for tank volume curves in the WNTRSimulator.  
+  Tank volume curves are also now used in :class:`~wntr.metrics.economic.annual_network_cost`.
+  Tank curves can also be visualized using the function :class:`~wntr.graphics.curve.plot_tank_volume_curve`.
+* Added method to get tank volume at a given level :class:`~wntr.network.elements.Tank.get_volume`.
+* Updated tests
+* Updated documentation
 
-  Assuming a water network called ``wn``, the following properties of the ``wn.options`` object have been renamed or are new:
+Additional features planned for the 0.2.3 release include:
 
-=========================================   =========================================   ============================================================================
-Original name                               New (current) name                          Reasoning
-=========================================   =========================================   ============================================================================
-``results.statistic``                       ``time.statistic``                          Make consistent with EPANET options groups and statistic is over time.
-``hydraulic.units``                         ``hydraulic.inpfile_units``                 Make clear that the units **ONLY** apply to how the INP file is written.
-``quality.mode``                            ``quality.parameter``                       Make consistent with EPANET nomenclature.
-**options moved**, from ``quality``         ``reaction.*``  (*new*)                     Make consistent with EPANET groupings, keep reaction options together.
-``quality.bulk_rxn_order``                  ``reaction.bulk_rxn_order``                 "..."
-``quality.wall_rxn_order``                  ``reaction.wall_rxn_order``                 "..."
-``quality.tank_rxn_order``                  ``reaction.tank_rxn_order``                 "..."
-``quality.bulk_rxn_coeff``                  ``reaction.bulk_rxn_coeff``                 "..."
-``quality.wall_rxn_coeff``                  ``reaction.wall_rxn_coeff``                 "..."
-``solver.*``  (*deleted*)                   **options moved**                           Solver options are all hydraulic except one, and belong with hydraulics.
-``solver.trials``                           ``hydraulic.trials``                        "..."
-``solver.accuracy``                         ``hydraulic.accuracy``                      "..."
-``solver.unbalanced``                       ``hydraulic.unbalanced``                    "..."
-``solver.unbalanced_value``                 ``hydraulic.unbalanced_value``              "..."
-``solver.checkfreq``                        ``hydraulic.checkfreq``                     "..."
-``solver.maxcheck``                         ``hydraulic.maxcheck``                      "..."
-``solver.damplimit``                        ``hydraulic.damplimit``                     "..."
-**new**, set to ``None`` for EPANET 2.0     ``hydraulic.demand_model``                  New options specific to EPANET 2.2. Must be set to ``None`` when running 2.0
-"..."                                       ``hydraulic.minimum_pressure``              "..."
-"..."                                       ``hydraulic.required_pressure``             "..."
-"..."                                       ``hydraulic.pressure_exponent``             "..."
-"..."                                       ``hydraulic.headerror``                     "..."
-"..."                                       ``hydraulic.flowchange``                    "..."
-``solver.tolerance``                        ``quality.tolerance``                       Only old solver option that applies to quality, EPANET groups with quality.
-=========================================   =========================================   ============================================================================
-
+* Additional valve topographic metrics
+* Graphics updates
+ 
