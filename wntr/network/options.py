@@ -3,13 +3,10 @@ The wntr.network.options module includes simulation options.
 
 .. note:: 
 
-    This module has been changed in version wntr-2.3 to incorporate the new options 
-    that EPANET 2.2 requires. It also reorganizes certain options so that they are 
-    more consistent with EPANET's groupings and make more logical sense. Therefore, 
-    this change is not necessarily backwards compatible, particularly when trying to
-    use pickle files with options generated with wntr <= 2.2.
-    For example, the options previously contained in the old SolverOptions class have 
-    been moved to the HydraulicOptions class.
+    This module has been changed in version 0.2.3 to incorporate the new options 
+    that EPANET 2.2 requires. It also reorganizes certain options to better align 
+    with EPANET nomenclature. This change is not backwards compatible, particularly 
+    when trying to use pickle files with older options.
 
 .. rubric:: Contents
 
@@ -24,18 +21,6 @@ The wntr.network.options module includes simulation options.
     QualityOptions
     EnergyOptions
     UserOptions
-
-
-.. note:: 
-
-    This module has been changed in version wntr-2.3 to incorporate the new options 
-    that EPANET 2.2 requires. It also reorganizes certain options so that they are 
-    more consistent with EPANET's groupings and make more logical sense. Therefore, 
-    this change is not necessarily backwards compatible, particularly when trying to
-    use pickle files with options generated with wntr <= 2.2.
-    For example, the options previously contained in the old SolverOptions class have 
-    been moved to the HydraulicOptions class.
-
 
 """
 import re
@@ -670,7 +655,7 @@ class WaterNetworkOptions(_OptionsBase):
     """
     Water network model options class.
     
-    These options mimic options in the EPANET User Manual.
+    These options mimic options in EPANET.
     The `user` attribute is a generic python class object that allows for 
     dynamically created attributes that are user specific.
 
