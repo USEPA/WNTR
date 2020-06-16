@@ -187,3 +187,8 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
   head pump curves are created by connecting the points with straight-line segments.  
   When using the WNTRSimulator, the points are fit to the same :math:`H = A - B*Q^C` 
   function that is used for 3-point curves.
+* **Variable minimum and required pressure**: 
+  While the WaterNetworkModel can store spatially variable minimum and required pressure that are used in the WNTRSimulator, 
+  those values cannot be saved when writing an INP file, rather the minimum and required pressure values in the options are saved.
+  This impacts the ability to use those junction attributes in the EpanetSimulator. 
+ 
