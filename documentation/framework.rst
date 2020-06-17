@@ -85,10 +85,10 @@ These classes are listed in :numref:`table-sim-subpackage`.
                                                       EPANET 2.2.0 (which is used by default) includes both demand-driven and pressure-dependent analysis, while EPANET 2.00.12 includes demand-driven analysis. 
                                                       When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation.
                                                       This allows the user to read in EPANET INP files, modify the model, run an EPANET simulation, and analyze results all within WNTR. 
-	
-	:class:`~wntr.sim.core.WNTRSimulator`             The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulations and includes models to simulate pipe leaks.
+    
+   :class:`~wntr.sim.core.WNTRSimulator`              The WNTRSimulator uses custom Python solvers to run demand-driven and pressure dependent demand hydraulic simulations and includes models to simulate pipe leaks.
                                                       The simulator includes an algebraic model, which can be extended to simulate additional components or behaviors in water network models.	
-	                                                  The WNTRSimulator does not perform water quality simulations.
+                                                      The WNTRSimulator does not perform water quality simulations.
    =================================================  =============================================================================================================================================================================================================================================================================
 
 .. _limitations:
