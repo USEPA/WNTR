@@ -232,7 +232,7 @@ according to the following pressure-demand relationship [WaSM88]_:
 	\begin{cases}
 	0 & p \leq P_0 \\
 	D_f(\frac{p-P_0}{P_f-P_0})^e & P_0 \leq p \leq P_f \\
-	D^f & p \geq P_f
+	D_f & p \geq P_f
 	\end{cases}
 
 where 
