@@ -66,7 +66,7 @@ class Junction(Node):
         self.elevation = 0.0
 
         self.required_pressure = 20.0
-        """float: The nominal pressure attribute is used for pressure-dependent demand
+        """float: The required pressure attribute is used for pressure-dependent demand
         simulations. This is the lowest pressure at which the junction receives 
         the full requested demand."""
 

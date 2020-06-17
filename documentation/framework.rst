@@ -159,6 +159,7 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
   (similar to junction demand and reservoir head), controls adjust the base speed, and speed patterns are 
   a multiplier on the base speed. Results from the two simulators can match by scaling speed patterns 
   and using controls appropriately.
+* **Leak models**: Leak models are only available using the WNTRSimulator.  Emitters can be used to model leaks in EPANET.
 * **Multi-point head pump curves**: When using the EpanetSimulator, multi-point 
   head pump curves are created by connecting the points with straight-line segments.  
   When using the WNTRSimulator, the points are fit to the same :math:`H = A - B*Q^C` 
@@ -167,4 +168,4 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
   While the WaterNetworkModel can store spatially variable minimum and required pressure that are used in the WNTRSimulator, 
   those values cannot be saved when writing an INP file, rather the minimum and required pressure values in the options are saved.
   This impacts the ability to use those junction attributes in the EpanetSimulator. 
-* **Leak models**: Leak models are only available using the WNTRSimulator.  Emitters can be used to model leaks in EPANET.
+

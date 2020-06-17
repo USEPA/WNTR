@@ -231,7 +231,7 @@ according to the following pressure-demand relationship [WaSM88]_:
 	d = 
 	\begin{cases}
 	0 & p \leq P_0 \\
-	D_f(\frac{p-P_0}{P_f-P_0})^{\frac{1}{2}} & P_0 \leq p \leq P_f \\
+	D_f(\frac{p-P_0}{P_f-P_0})^e & P_0 \leq p \leq P_f \\
 	D^f & p \geq P_f
 	\end{cases}
 
@@ -239,8 +239,9 @@ where
 :math:`d` is the actual demand (m³/s), 
 :math:`D_f` is the desired demand (m³/s), 
 :math:`p` is the pressure (Pa), 
-:math:`P_f` is the nominal pressure (Pa) - this is the pressure above which the consumer should receive the desired demand, and 
-:math:`P_0` is the minimum pressure (Pa) - this is the pressure below which the consumer cannot receive any water.  
+:math:`P_f` is the required pressure (Pa) - this is the pressure above which the consumer should receive the desired demand, and 
+:math:`P_0` is the minimum pressure (Pa) - this is the pressure below which the consumer cannot receive any water, 
+:math:`e` is the pressure exponent, usually set equal to 0.5.
 The set of nonlinear equations comprising the hydraulic 
 model and the pressure-demand relationship is solved directly using a 
 Newton-Raphson algorithm.  
@@ -260,7 +261,7 @@ Using the pressure dependent demand simulation, the demand starts to decrease wh
    
    Relationship between pressure (p) and demand (d) using both the demand-driven and pressure dependent demand simulations.
 
-The following example sets nominal and minimum pressure for each junction.  Note that nominal and minimum pressure can vary throughout the network.
+The following example sets required and minimum pressure for each junction.  Note that required and minimum pressure can vary throughout the network.
 
 .. doctest::
 

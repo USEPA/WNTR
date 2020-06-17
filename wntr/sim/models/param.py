@@ -86,7 +86,7 @@ class pnom_param(Definition):
     @classmethod
     def build(cls, m, wn, updater, index_over=None):
         """
-        Add a nominal pressure parameter to the model
+        Add a required pressure parameter to the model
 
         Parameters
         ----------
@@ -109,7 +109,6 @@ class pnom_param(Definition):
             else:
                 m.pnom[node_name] = aml.Param(node.required_pressure)
 
-            # updater.add(node, 'nominal_pressure', pnom_param.update)
             updater.add(node, 'required_pressure', pnom_param.update)
 
 
@@ -238,7 +237,6 @@ class pdd_poly_coeffs_param(Definition):
                 m.pdd_poly2_coeffs_d[node_name] = aml.Param(d2)
 
             updater.add(node, 'minimum_pressure', pdd_poly_coeffs_param.update)
-            # updater.add(node, 'nominal_pressure', pdd_poly_coeffs_param.update)
             updater.add(node, 'required_pressure', pdd_poly_coeffs_param.update)
 
 
