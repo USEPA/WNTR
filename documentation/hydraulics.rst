@@ -19,13 +19,6 @@ The user can switch between demand-driven analysis (DDA) or pressure driven anal
 the ``wn.options.hydraulic.demand_model`` option.
 
 .. doctest::
-
-	>>> wn.options.hydraulic.demand_model = 'DDA'  
-	>>> wn.options.hydraulic.demand_model = 'PDA'
-	
-A hydraulic simulation using the EpanetSimulator is run using the following code:
-
-.. doctest::
     :hide:
 
     >>> import wntr
@@ -33,6 +26,13 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
     ...    wn = wntr.network.model.WaterNetworkModel('examples/networks/Net3.inp')
+
+.. doctest::
+
+	>>> wn.options.hydraulic.demand_model = 'DDA'  
+	>>> wn.options.hydraulic.demand_model = 'PDA'
+	
+A hydraulic simulation using the EpanetSimulator is run using the following code:
 	
 .. doctest::
 
