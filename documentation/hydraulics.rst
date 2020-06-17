@@ -99,7 +99,7 @@ pressure exponent.
 Note that EPANET 2.0.12 does not use the demand model, minimum pressure, required pressure, or pressure exponent. [DAVE check this]
 Options that are not used with the WNTRSimulator are described in :ref:`limitations`.  
 
-The easiest way to view options is to print `wn.options`` as a dictionary. For example, hydraulic options are shown below.
+The easiest way to view options is to print ``wn.options`` as a dictionary. For example, hydraulic options are shown below.
 
 .. doctest::
 

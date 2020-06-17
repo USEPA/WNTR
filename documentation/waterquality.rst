@@ -144,7 +144,7 @@ These sources are given the name 'INP#' where # is an integer related to the num
 		>>> sim = wntr.sim.WNTRSimulator(wn)
 		>>> results = sim.run_sim()
 
-		>>> wn.assign_demand(results.node['demand'].loc[:,wn.junction_name_list], 'PDD')
+		>>> wn.assign_demand(results.node['demand'].loc[:,wn.junction_name_list])
 		
 		>>> sim = wntr.sim.EpanetSimulator(wn)
 		>>> wn.options.quality.parameter = 'TRACE'
