@@ -119,7 +119,7 @@ Modify element attributes
 To modify element attributes, the element object is first obtained using the
 :class:`~wntr.network.model.get_node` or 
 :class:`~wntr.network.model.get_link` methods.
-The following example changes junction elevation, pipe diameter, and tank size.
+The following example changes junction elevation, pipe diameter, and size for a constant diameter tank.
 
 .. doctest::
 

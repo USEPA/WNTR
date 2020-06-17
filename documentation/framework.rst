@@ -145,9 +145,7 @@ Of the EPANET model options that directly apply to hydraulic simulations, **the 
 * [EMITTERS] section
 * D-W and C-M headloss options in the [OPTIONS] section (H-W option is used)
 * Accuracy, unbalanced, and emitter exponent from the [OPTIONS] section
-* Multipoint curves in the [CURVES] section (3-point curves are supported)
 * Pump speed in the [PUMPS] section
-* Volume curves in the [TANKS] section
 * Pattern start, report start, start clocktime, and statistics in the [TIMES] section
 * PBV and GPV values in the [VALVES] section
 
@@ -159,8 +157,13 @@ Discrepancies
 -------------------------------------------
 Known discrepancies between the WNTRSimulator and EpanetSimulator are listed below.
 
-* Pumps have speed settings that are adjustable by controls and/or patterns.  With the EpanetSimulator, 
+* **Pump controls and patterns**: Pumps have speed settings which are adjustable 
+  by controls and/or patterns.  With the EpanetSimulator, 
   controls and patterns adjust the actual speed.  With the WNTRSimulator, pumps have a 'base speed' 
   (similar to junction demand and reservoir head), controls adjust the base speed, and speed patterns are 
   a multiplier on the base speed. Results from the two simulators can match by scaling speed patterns 
   and using controls appropriately.
+* **Multi-point head pump curves**: When using the EpanetSimulator, multi-point 
+  head pump curves are created by connecting the points with straight-line segments.  
+  When using the WNTRSimulator, the points are fit to the same :math:`H = A - B*Q^C` 
+  function that is used for 3-point curves.

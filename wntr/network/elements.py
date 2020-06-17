@@ -34,7 +34,7 @@ import logging
 import math
 import six
 import copy
-from scipy.optimize import fsolve
+from scipy.optimize import curve_fit
 
 if sys.version_info[0] == 2:
     from collections import MutableSequence
@@ -50,6 +50,9 @@ logger = logging.getLogger(__name__)
 class Junction(Node):
     """
     Junction class, inherited from Node.
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_junction()` method. 
 
     Parameters
     ----------
@@ -57,7 +60,7 @@ class Junction(Node):
         Name of the junction.
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object the junction will belong to
-
+        
     """
 
     def __init__(self, name, wn):
@@ -200,14 +203,21 @@ class Junction(Node):
 class Tank(Node):
     """
     Tank class, inherited from Node.
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_tank()` method. 
+    
+    Tank volume can be defined using a constant diameter or a volume curve. 
+    If the tank has a volume curve, the diameter has no effect on hydraulic 
+    simulations. 
+    
     Parameters
     ----------
     name : string
         Name of the tank.
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         WaterNetworkModel object the tank will belong to
-
+        
     """
 
     def __init__(self, name, wn):
@@ -281,10 +291,43 @@ class Tank(Node):
     def level(self):
         """Returns tank level (head - elevation)"""
         return self.head - self.elevation
+    
+    
+    def get_volume(self, level=None):
+        """
+        Returns tank volume at a given level
+        
+        Parameters
+        ----------
+        level: float or NoneType (optional)
+            The level at which the volume is to be calculated. 
+            If level=None, then the volume is calculated at the current 
+            tank level (self.level)
+            
+        Returns
+        -------
+        vol: float 
+            Tank volume at a given level
+        """
+        
+        if self.vol_curve is None:
+            A = (np.pi / 4.0 * self.diameter ** 2)
+            if level is None:
+                level = self.level 
+            vol = A * level
+        else:
+            arr = np.array(self.vol_curve.points)
+            if level is None:
+                level = self.level
+            vol = np.interp(level,arr[:,0],arr[:,1])
+        return vol
+
 
     def add_leak(self, wn, area, discharge_coeff = 0.75, start_time=None, end_time=None):
         """
-        Add a leak to a tank. Leaks are modeled by:
+        Add a leak to a tank. 
+        
+        Leaks are modeled by:
 
         Q = discharge_coeff*area*sqrt(2*g*h)
 
@@ -348,7 +391,10 @@ class Tank(Node):
 class Reservoir(Node):
     """
     Reservoir class, inherited from Node
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_reservoir()` method. 
+    
     Parameters
     ----------
     name : string
@@ -362,6 +408,7 @@ class Reservoir(Node):
         Head pattern.
         
     """
+    
     def __init__(self, name, wn, base_head=0.0, head_pattern=None):
         super(Reservoir, self).__init__(wn, name)
         self._head_timeseries = TimeSeries(wn._pattern_reg, base_head)
@@ -410,7 +457,10 @@ class Reservoir(Node):
 class Pipe(Link):
     """
     Pipe class, inherited from Link.
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pipe()` method. 
+    
     Parameters
     ----------
     name : string
@@ -421,7 +471,7 @@ class Pipe(Link):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pipe will belong to.
-
+        
     """
 
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -473,9 +523,11 @@ class Pump(Link):
     """
     Pump class, inherited from Link.
 
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
+    
     For details about the different subclasses, please see one of the following:
     :class:`~wntr.network.elements.HeadPump` and :class:`~wntr.network.elements.PowerPump`
-    
 
     Parameters
     ----------
@@ -487,7 +539,7 @@ class Pump(Link):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
-
+        
     """
 
     def __init__(self, name, start_node_name, end_node_name, wn):
@@ -578,6 +630,9 @@ class HeadPump(Pump):
     """
     Head pump class, inherited from Pump.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
+    
     Parameters
     ----------
     name : string
@@ -588,8 +643,16 @@ class HeadPump(Pump):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
-
+    
     """
+#    def __init__(self, name, start_node_name, end_node_name, wn):
+#        super(HeadPump,self).__init__(name, start_node_name, 
+#                                      end_node_name, wn)
+#        self._curve_coeffs = None
+#        self._coeffs_curve_points = None # these are used to verify whether
+#                                         # the pump curve was changed since
+#                                         # the _curve_coeffs were calculated
+    
     def __repr__(self):
         return "<Pump '{}' from '{}' to '{}', pump_type='{}', pump_curve={}, speed={}, status={}>".format(self._link_name,
                    self.start_node, self.end_node, 'HEAD', self.pump_curve_name, 
@@ -618,6 +681,9 @@ class HeadPump(Pump):
         self._curve_reg.add_usage(name, (self._link_name, 'Pump'))
         self._curve_reg.set_curve_type(name, 'HEAD')
         self._pump_curve_name = name
+        # delete the pump curve coefficients because they have to be recaulcated 
+        # if a new curve is associated with the pump
+        self._curve_coeffs = None 
 
     def get_pump_curve(self):
         curve = self._curve_reg[self.pump_curve_name]
@@ -625,83 +691,97 @@ class HeadPump(Pump):
         
     def get_head_curve_coefficients(self):
         """
-        Returns the A, B, C coefficients for a 1-point or a 3-point pump curve.
-        Coefficient can only be calculated for pump curves.
+        Returns the A, B, C coefficients pump curves.
 
-        For a single point curve the coefficients are generated according to the following equation:
+        * For a single point curve, the coefficients are generated according to the 
+          following equation:
 
-        A = 4/3 * H_1
-        B = 1/3 * H_1/Q_1^2
-        C = 2
-
-        For a three point curve the coefficients are generated according to the following equation:
-             When the first point is a zero flow: (All INP files we have come across)
-
-             A = H_1
-             C = ln((H_1 - H_2)/(H_1 - H_3))/ln(Q_2/Q_3)
-             B = (H_1 - H_2)/Q_2^C
-
-             When the first point is not zero, numpy fsolve is called to solve the following system of
-             equation:
-
-             H_1 = A - B*Q_1^C
-             H_2 = A - B*Q_2^C
-             H_3 = A - B*Q_3^C
-
-        Multi point curves are currently not supported
-
-        Parameters
-        ----------
-        pump_name : string
-            Name of the pump
+          :math:`A = 4/3 * H` 
+          
+          :math:`B = 1/3 * H/Q^2` 
+          
+          :math:`C = 2` 
+        
+        * For a two point curve, C is set to 1 and a straight line is fit between
+          the points.
+        
+        * For three point and multi-point curves, the coefficients are generated 
+          using ``scipy.optimize.curve_fit`` with the following equation:
+            
+          :math:`H = A - B*Q^C` 
 
         Returns
         -------
         Tuple of pump curve coefficient (A, B, C). All floats.
+        
+        The coefficients are only calculated the first time this function
+        is called for a given HeadPump
         """
-        
-        curve = self.get_pump_curve()
-        
-        # 1-Point curve
-        if curve.num_points == 1:
-            H_1 = curve.points[0][1]
-            Q_1 = curve.points[0][0]
-            A = (4.0/3.0)*H_1
-            B = (1.0/3.0)*(H_1/(Q_1**2))
-            C = 2
-        # 3-Point curve
-        elif curve.num_points == 3:
-            Q_1 = curve.points[0][0]
-            H_1 = curve.points[0][1]
-            Q_2 = curve.points[1][0]
-            H_2 = curve.points[1][1]
-            Q_3 = curve.points[2][0]
-            H_3 = curve.points[2][1]
-
-            # When the first points is at zero flow
-            if Q_1 == 0.0:
-                A = H_1
-                C = math.log((H_1 - H_2)/(H_1 - H_3))/math.log(Q_2/Q_3)
-                B = (H_1 - H_2)/(Q_2**C)
+        def calculate_coefficients(curve):
+            Q = []
+            H = []
+            for pt in curve.points:
+                Q.append(pt[0])
+                H.append(pt[1])
+            
+            # 1-Point curve - Replicate EPANET for a one point curve
+            if curve.num_points == 1:
+                A = (4.0/3.0)*H[0]
+                B = (1.0/3.0)*(H[0]/(Q[0]**2))
+                C = 2
+            # 2-Point curve - Replicate EPANET - generate a straight line
+            elif curve.num_points == 2:
+                B = - (H[1] - H[0]) / (Q[1]**2 - Q[0]**2)
+                A = H[0] + B * Q[0] ** 2
+                C = 1
+            # 3 - Multi-point curve (3 or more points) - Replicate EPANET for 
+            #     3 point curves.  For multi-point curves, this is not a perfect 
+            #     replication of EPANET. EPANET uses a mult-linear fit
+            #     between points whereas this uses a regression fit of the same
+            #     H = A - B * Q **C curve used for the three point fit.
+            elif curve.num_points >= 3:
+                A0 = H[0]
+                C0 = math.log((H[0] - H[1])/(H[0] - H[-1]))/math.log(Q[1]/Q[-1])
+                B0 = (H[0] - H[1])/(Q[1]**C0)
+    
+                def flow_vs_head_func(Q, a, b, c):
+                    return a - b * Q ** c
+                
+                try:
+                    coeff, cov = curve_fit(flow_vs_head_func, Q, H, [A0, B0, C0])
+                except RuntimeError:
+                    raise RuntimeError('Head pump ' + self.name + 
+                                       ' results in a poor regression fit to H = A - B * Q^C')
+    
+                A = float(coeff[0])  # convert to native python floats
+                B = float(coeff[1]) 
+                C = float(coeff[2])  
             else:
-                def curve_fit(x):
-                    eq_array = [H_1 - x[0] + x[1]*Q_1**x[2],
-                                H_2 - x[0] + x[1]*Q_2**x[2],
-                                H_3 - x[0] + x[1]*Q_3**x[2]]
-                    return eq_array
-                coeff = fsolve(curve_fit, [200, 1e-3, 1.5])
-                A = coeff[0]
-                B = coeff[1]
-                C = coeff[2]
-
-        # Multi-point curve
-        else:
-            raise RuntimeError('Coefficient for Multipoint pump curves cannot be generated. ')
-
-        if A<=0 or B<0 or C<=0:
-            raise RuntimeError('Value of pump head curve coefficient is negative, which is not allowed. \nPump: {0} \nA: {1} \nB: {2} \nC:{3}'.format(self.name,A,B,C))
-        return (A, B, C)
-
+                raise RuntimeError('Head pump ' + self.name + 
+                                   ' has an empty pump curve.')
+                    
+            if A<=0 or B<0 or C<=0:
+                raise RuntimeError('Head pump ' + self.name + 
+                                   ' has a negative head curve coefficient.')
+            # with using scipy curve_fit, I think this is a waranted check 
+            elif np.isnan(A+B+C):
+                raise RuntimeError('Head pump ' + self.name + 
+                                   ' has a coefficient which is NaN!')
+            
+            self._coeffs_curve_points = curve.points                
+            self._curve_coeffs = [A,B,C]
+    
+        # main procedure    
+        curve = self.get_pump_curve()
+        if self._curve_coeffs is None or curve.points != self._coeffs_curve_points:
+            calculate_coefficients(curve)
+        
+        A = self._curve_coeffs[0]
+        B = self._curve_coeffs[1]
+        C = self._curve_coeffs[2]
+        
+        return A,B,C
+    
     def get_design_flow(self):
         """
         Returns the design flow value for the pump.
@@ -720,6 +800,9 @@ class PowerPump(Pump):
     """
     Power pump class, inherited from Pump.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pump` method. 
+    
     Parameters
     ----------
     name : string
@@ -730,7 +813,7 @@ class PowerPump(Pump):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this pump will belong to.
-
+        
     """
     
     def __repr__(self):
@@ -764,12 +847,14 @@ class PowerPump(Pump):
 class Valve(Link):
     """
     Valve class, inherited from Link.
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     For details about the different subclasses, please see one of the following:
     :class:`~wntr.network.elements.PRValve`, :class:`~wntr.network.elements.PSValve`,
     :class:`~wntr.network.elements.PBValve`, :class:`~wntr.network.elements.FCValve`,
     :class:`~wntr.network.elements.TCValve`, and :class:`~wntr.network.elements.GPValve`.
-
 
     Parameters
     ----------
@@ -781,8 +866,9 @@ class Valve(Link):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
-
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(Valve, self).__init__(wn, name, start_node_name, end_node_name)
         self.diameter = 0.3048
@@ -830,6 +916,9 @@ class PRValve(Valve):
     """
     Pressure reducing valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -840,8 +929,9 @@ class PRValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
-
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(PRValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -855,6 +945,9 @@ class PSValve(Valve):
     """
     Pressure sustaining valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -865,8 +958,9 @@ class PSValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
-    
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(PSValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -880,6 +974,9 @@ class PBValve(Valve):
     """
     Pressure breaker valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -890,8 +987,9 @@ class PBValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to.
-    
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(PBValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -905,6 +1003,9 @@ class FCValve(Valve):
     """
     Flow control valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -915,8 +1016,9 @@ class FCValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
-    
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(FCValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -930,6 +1032,9 @@ class TCValve(Valve):
     """
     Throttle control valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -940,8 +1045,9 @@ class TCValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
-    
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(TCValve, self).__init__(name, start_node_name, end_node_name, wn)
 
@@ -955,6 +1061,9 @@ class GPValve(Valve):
     """
     General purpose valve class, inherited from Valve.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_valve` method. 
+    
     Parameters
     ----------
     name : string
@@ -965,8 +1074,9 @@ class GPValve(Valve):
          Name of the end node
     wn : :class:`~wntr.network.model.WaterNetworkModel`
         The water network model this valve will belong to
-    
+        
     """
+    
     def __init__(self, name, start_node_name, end_node_name, wn):
         super(GPValve, self).__init__(name, start_node_name, end_node_name, wn)
         self._headloss_curve_name = None
@@ -996,6 +1106,9 @@ class Pattern(object):
     """
     Pattern class.
     
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_pattern` method. 
+    
     Parameters
     ----------
     name : string
@@ -1009,6 +1122,7 @@ class Pattern(object):
         Boolean indicating if the pattern should be wrapped.
         If True (the default), then the pattern repeats itself forever; if 
         False, after the pattern has been exhausted, it will return 0.0.
+        
     """
     
     def __init__(self, name, multipliers=[], time_options=None, wrap=True):
@@ -1317,37 +1431,6 @@ class Demands(MutableSequence):
     def __repr__(self):
         return '<Demands: {}>'.format(repr(self._list))
     
-#    def tostring(self):
-#        """String representation of demands"""
-#        if len(self._list) == 0:
-#            s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
-#            s += '    None\n'
-#            return s
-##        elif len(self._list) == 1:
-##            s  = '  ========   ============   ====================   ==============\n'
-##            s += '  Demand:    {:12.6g}   {:20s}   {:14s}\n'.format(self._list[0].base_value,
-##                                                                    self._list[0].pattern_name,
-##                                                                    self._list[0].category)
-##            s += '  ========   ============   ====================   ==============\n'
-##            return s
-##        s  = '  ========   ============   ====================   ==============\n'
-##        s += '  Demand #   Base Value     Pattern Name           Category      \n'
-##        s += '  --------   ------------   --------------------   --------------\n'
-#        s = ' Demand#__  Base_Value___  Pattern_Name_________  Category______\n'
-#        lf = '  [{:5d} ]  {}'
-#        for ct, dem in enumerate(self._list):
-#            s += lf.format(ct+1, dem.tostring())
-##        s += '  ========   ============   ====================   ==============\n'
-#        return s
-#    
-#    def tolist(self):
-#        """List representation of demands"""
-#        if len(self._list) == 0: return None
-#        d = []
-#        for demand in self._list:
-#            d.append(demand.todict())
-#        return d
-    
     def to_ts(self, obj):
         """Time series representation of demands"""
         if isinstance(obj, (list, tuple)) and len(obj) >= 2:
@@ -1429,7 +1512,10 @@ class Demands(MutableSequence):
 class Curve(object):
     """
     Curve base class.
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_curve` method. 
+    
     Parameters
     ----------
     name : str
@@ -1445,7 +1531,9 @@ class Curve(object):
         one of the simulators is run.
     options : WaterNetworkOptions, optional
         Water network options to lookup headloss function
+        
     """
+    
     def __init__(self, name, curve_type=None, points=[], 
                  original_units=None, current_units='SI', options=None):
         self._name = name
@@ -1555,7 +1643,10 @@ class Curve(object):
 class Source(object):
     """
     Water quality source class.
-
+    
+    This class is intended to be instantiated through the 
+    :class:`~wntr.network.model.WaterNetworkModel.add_source` method. 
+    
     Parameters
     ----------
     name : string
@@ -1570,6 +1661,7 @@ class Source(object):
     pattern: Pattern, optional
         If None, then the value will be constant. Otherwise, the Pattern will be used
         (default = None).
+        
     """
 
 #    def __init__(self, name, node_registry, pattern_registry):
