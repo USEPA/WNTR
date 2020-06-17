@@ -35,13 +35,18 @@ The following features are under development in the dev branch and will be part 
   * ``wn.options.quality.mode`` is now ``wn.options.quality.quality.parameter``    
   * ``wn.options.hydraulic.units`` has been updated to ``wn.options.hydraulic.inpfile_units`` to make it clear that these units are only used when writing an INP file
 
-* Junction attribute ``nominal_pressure`` was changed to ``required_pressure`` to better align with EPANET nomenclature (API change).  
+* The following changes were made to handle new options in EPANET 2.2.0 INP files.  
 
-* The keyword argument `mode` has been removed from the WNTRSimulator.  DDA and PDA are now defined using ``wn.options.hydraulic.demand_model`` (as shown above) 
-  to make use of the new EPANET 2.2.0 options (API change).
+  * Junction attribute ``nominal_pressure`` was changed to ``required_pressure`` to better align with EPANET nomenclature (API change).  
+    If the WaterNetworkModel is created from a EPANET 2.2.0 INP file, the required and minimum pressure are defined from the REQUIRED PRESSURE and MINIMUM PRESSURE in the INP file.
 
-* The WNTRSimulator uses the exponent defined in ``wn.options.hydraulic.pressure_exponent`` to model the PDA pressure-demand relationship.  
-  The exponent had been set to 0.5 before, and could not be modified through options.
+  * The keyword argument `mode` has been removed from the WNTRSimulator.  DDA and PDA are now defined using ``wn.options.hydraulic.demand_model`` (as shown above) 
+    to make use of the new EPANET 2.2.0 options (API change).
+    If the WaterNetworkModel is created from a EPANET 2.2.0 INP file, this option is defined from the DEMAND MODEL in the INP file.
+
+  * The WNTRSimulator uses the exponent defined in ``wn.options.hydraulic.pressure_exponent`` to model the PDA pressure-demand relationship.  
+    The exponent had been set to 0.5 before, and could not be modified through options.
+    If the WaterNetworkModel is created from a EPANET 2.2.0 INP file, this option is defined from the PRESSURE EXPONENT in the INP file.
   
 * While the WaterNetworkModel can store spatially variable minimum and required pressure that are used in the WNTRSimulator, 
   those values cannot be saved when writing an INP file, rather the minimum and required pressure values in the options are saved.
