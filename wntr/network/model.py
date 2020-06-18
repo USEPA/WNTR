@@ -24,7 +24,7 @@ import numpy as np
 import networkx as nx
 import pandas as pd
 
-from .options import WaterNetworkOptions
+from .options import Options
 from .base import Link, Registry, LinkStatus, AbstractModel
 from .elements import Junction, Reservoir, Tank
 from .elements import Pipe, Pump, HeadPump, PowerPump
@@ -60,7 +60,7 @@ class WaterNetworkModel(AbstractModel):
         # Network name
         self.name = None
 
-        self._options = WaterNetworkOptions()
+        self._options = Options()
         self._node_reg = NodeRegistry(self)
         self._link_reg = LinkRegistry(self)
         self._pattern_reg = PatternRegistry(self)
@@ -179,7 +179,7 @@ class WaterNetworkModel(AbstractModel):
         
         Returns
         -------
-        WaterNetworkOptions
+        Options
         
         """
         return self._options

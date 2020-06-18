@@ -104,6 +104,8 @@ class pnom_param(Definition):
 
         for node_name in index_over:
             node = wn.get_node(node_name)
+            if node.required_pressure <= m.pdd_smoothing_delta:
+                raise ValueError('Required pressure for node %s must be greater than %s, the smoothing delta', node_name, m.pdd_smoothing_delta)
             if node_name in m.pnom:
                 m.pnom[node_name].value = node.required_pressure
             else:

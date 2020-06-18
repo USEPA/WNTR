@@ -470,7 +470,7 @@ class WNTRSimulator(WaterNetworkSimulator):
 
     .. note::
     
-        The mode parameter has been deprecated. Please set the mode using WaterNetworkOptions.hydraulic.demand_model
+        The mode parameter has been deprecated. Please set the mode using Options.hydraulic.demand_model
 
     """
 

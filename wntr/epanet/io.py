@@ -33,7 +33,7 @@ import wntr.network
 from wntr.network.base import Link
 from wntr.network.model import WaterNetworkModel
 from wntr.network.elements import Junction, Reservoir, Tank, Pipe, Pump, Valve
-from wntr.network.options import WaterNetworkOptions
+from wntr.network.options import Options
 from wntr.network.model import Pattern, LinkStatus, Curve, Demands, Source
 from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition, Comparison
 from wntr.network.controls import OrCondition, AndCondition, Control, ControlAction, _ControlType, Rule
@@ -1740,8 +1740,8 @@ class InpFile(object):
             opts.hydraulic.minimum_pressure = minimum_pressure
             for junc in self.wn.junctions():
                 junc.minimum_pressure = minimum_pressure
-        if opts.hydraulic.required_pressure != 0.0:
-            required_pressure = from_si(self.flow_units, opts.hydraulic.required_pressure, HydParam.Pressure)
+        if opts.hydraulic.required_pressure != 0.07:
+            required_pressure = to_si(self.flow_units, opts.hydraulic.required_pressure, HydParam.Pressure)
             opts.hydraulic.required_pressure = required_pressure
             for junc in self.wn.junctions():
                 junc.required_pressure = required_pressure
@@ -1800,11 +1800,11 @@ class InpFile(object):
 
             if wn.options.hydraulic.minimum_pressure != 0.0:
                 minimum_pressure = from_si(self.flow_units, wn.options.hydraulic.minimum_pressure, HydParam.Pressure)
-                f.write('{:20s} {}\n'.format('MINIMUM PRESSURE', minimum_pressure).encode('ascii'))
+                f.write('{:20s} {:.2f}\n'.format('MINIMUM PRESSURE', minimum_pressure).encode('ascii'))
 
-            if wn.options.hydraulic.required_pressure != 0.0:
+            if wn.options.hydraulic.required_pressure != 0.07:
                 required_pressure = from_si(self.flow_units, wn.options.hydraulic.required_pressure, HydParam.Pressure)
-                f.write('{:20s} {}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
+                f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
 
             if wn.options.hydraulic.pressure_exponent != 0.5:
                 f.write('{:20s} {}\n'.format('PRESSURE EXPONENT', wn.options.hydraulic.pressure_exponent).encode('ascii'))
@@ -1908,57 +1908,57 @@ class InpFile(object):
             if current == []:
                 continue
             if current[0].upper() in ['PAGE', 'PAGESIZE']:
-                self.wn.options.results.pagesize = int(current[1])
+                self.wn.options.report.pagesize = int(current[1])
             elif current[0].upper() in ['FILE']:
-                self.wn.options.results.file = current[1]
+                self.wn.options.report.file = current[1]
             elif current[0].upper() in ['STATUS']:
-                self.wn.options.results.status = current[1].upper()
+                self.wn.options.report.status = current[1].upper()
             elif current[0].upper() in ['SUMMARY']:
-                self.wn.options.results.summary = current[1].upper()
+                self.wn.options.report.summary = current[1].upper()
             elif current[0].upper() in ['ENERGY']:
-                self.wn.options.results.energy = current[1].upper()
+                self.wn.options.report.energy = current[1].upper()
             elif current[0].upper() in ['NODES']:
                 if current[1].upper() in ['NONE']:
-                    self.wn.options.results.nodes = False
+                    self.wn.options.report.nodes = False
                 elif current[1].upper() in ['ALL']:
-                    self.wn.options.results.nodes = True
-                elif not isinstance(self.wn.options.results.nodes, list):
-                    self.wn.options.results.nodes = []
+                    self.wn.options.report.nodes = True
+                elif not isinstance(self.wn.options.report.nodes, list):
+                    self.wn.options.report.nodes = []
                     for ct in range(len(current)-2):
                         i = ct + 2
-                        self.wn.options.results.nodes.append(current[i])
+                        self.wn.options.report.nodes.append(current[i])
                 else:
                     for ct in range(len(current)-2):
                         i = ct + 2
-                        self.wn.options.results.nodes.append(current[i])
+                        self.wn.options.report.nodes.append(current[i])
             elif current[0].upper() in ['LINKS']:
                 if current[1].upper() in ['NONE']:
-                    self.wn.options.results.links = False
+                    self.wn.options.report.links = False
                 elif current[1].upper() in ['ALL']:
-                    self.wn.options.results.links = True
-                elif not isinstance(self.wn.options.results.links, list):
-                    self.wn.options.results.links = []
+                    self.wn.options.report.links = True
+                elif not isinstance(self.wn.options.report.links, list):
+                    self.wn.options.report.links = []
                     for ct in range(len(current)-2):
                         i = ct + 2
-                        self.wn.options.results.links.append(current[i])
+                        self.wn.options.report.links.append(current[i])
                 else:
                     for ct in range(len(current)-2):
                         i = ct + 2
-                        self.wn.options.results.links.append(current[i])
+                        self.wn.options.report.links.append(current[i])
             else:
-                if current[0].lower() not in self.wn.options.results.report_params.keys():
+                if current[0].lower() not in self.wn.options.report.report_params.keys():
                     logger.warning('Unknown report parameter: %s', current[0])
                     continue
                 elif current[1].upper() in ['YES']:
-                    self.wn.options.results.report_params[current[0].lower()][1] = True
+                    self.wn.options.report.report_params[current[0].lower()][1] = True
                 elif current[1].upper() in ['NO']:
-                    self.wn.options.results.report_params[current[0].lower()][1] = False
+                    self.wn.options.report.report_params[current[0].lower()][1] = False
                 else:
-                    self.wn.options.results.param_opts[current[0].lower()][current[1].upper()] = float(current[2])
+                    self.wn.options.report.param_opts[current[0].lower()][current[1].upper()] = float(current[2])
 
     def _write_report(self, f, wn):
         f.write('[REPORT]\n'.encode('ascii'))
-        report = wn.options.results
+        report = wn.options.report
         if report.status.upper() != 'NO':
             f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
         if report.summary.upper() != 'YES':

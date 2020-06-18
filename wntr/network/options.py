@@ -12,11 +12,11 @@ The wntr.network.options module includes simulation options.
 
 .. autosummary::
 
-    WaterNetworkOptions
+    Options
     TimeOptions
     GraphicsOptions
     HydraulicOptions
-    ResultsOptions
+    ReportOptions
     ReactionOptions
     QualityOptions
     EnergyOptions
@@ -51,7 +51,7 @@ def _new_report_params():
     return ret
 
 
-def _new_results_obj():
+def _new_report_obj():
     ret = dict(demand=True, head=True, pressure=True, quality=True,
                 flow=True, linkquality=True, velocity=True, headloss=True, status=True,
                 setting=True, rxnrate=True, frictionfact=True)
@@ -132,7 +132,7 @@ class TimeOptions(_OptionsBase):
     start_clocktime : int, default 0
         Time of day in seconds from 12 am at which the simulation begins
     statistic: str
-        Provide statistics rather than time series results in the report file.
+        Provide statistics rather than time series report in the report file.
         Options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the 
         EPANET User Manual)
     
@@ -341,11 +341,11 @@ class HydraulicOptions(_OptionsBase):
     emitter_exponent : float
         The exponent used when computing flow from an emitter
     minimum_pressure : float
-        The minimum nodal pressure - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
+        The minimum nodal pressure - only valid for EPANET 2.2
     required_pressure: float
-        The required nodal pressure - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
+        The required nodal pressure - only valid for EPANET 2.2
     pressure_exponent: float
-        The pressure exponent - only valid for EPANET 2.2, this will break EPANET 2.0 if changed from the default
+        The pressure exponent - only valid for EPANET 2.2
     trials : int
         Maximum number of trials used to solve network hydraulics
     accuracy : float
@@ -367,7 +367,7 @@ class HydraulicOptions(_OptionsBase):
         The flow change convergence limit
     demand_model : str
         Demand model for EPANET 2.2; acceptable values are DD, PDD, DDA and PDA, though DDA and PDA are the preferred abbreviations.
-        Changing this option will break EPANET 2.0 if changed from None. For the WNTR simulator, please set the model when calling run_sim.
+        EPANET 2.0 only contains demand driven analysis, and will issue a warning if this option is not DD or DDA.
     inpfile_units : str
         Units for the INP-file; options are CFS, GPM, MGD, IMGD, AFD, LPS, 
         LPM, MLD, CMH, and CMD. This **only** changes the units used in generating
@@ -385,10 +385,10 @@ class HydraulicOptions(_OptionsBase):
                  demand_multiplier: float = 1.0,
                  demand_model: str = 'DDA',
                  minimum_pressure: float = 0.0,
-                 required_pressure: float = 0.0,
+                 required_pressure: float = 0.07,
                  pressure_exponent: float = 0.5,
                  emitter_exponent: float = 0.5,
-                 trials: int = 40,
+                 trials: int = 200,  # EPANET 2.2 increased the default from 40 to 200
                  accuracy: float = 0.001,
                  unbalanced: str = 'STOP',
                  unbalanced_value: int = None,
@@ -591,9 +591,9 @@ class EnergyOptions(_OptionsBase):
         self.demand_charge = demand_charge
 
 
-class ResultsOptions(_OptionsBase):
+class ReportOptions(_OptionsBase):
     """
-    Options related to results outputs.
+    Options related to report outputs.
 
     Parameters
     ----------
@@ -606,10 +606,12 @@ class ResultsOptions(_OptionsBase):
         Output summary information ('YES' or 'NO')
     energy : str
         Output energy information
-    nodes : bool
-        Output node information in report file
-    links : bool
-        Output link information in report file
+    nodes : None, "ALL", or list
+        Output node information in report file. If a list of node names is provided, 
+        EPANET only provides report information for those nodes.
+    links : None, "ALL", or list
+        Output link information in report file. If a list of link names is provided, 
+        EPANET only provides report information for those links.
     
     """
     def __init__(self,
@@ -621,7 +623,6 @@ class ResultsOptions(_OptionsBase):
                 nodes: bool=False,
                 links: bool=False,
                 report_params: dict=None,
-                results_obj: dict=None,
                 param_opts: dict=None):
         self.pagesize = pagesize
         self.report_filename = report_filename
@@ -631,7 +632,6 @@ class ResultsOptions(_OptionsBase):
         self.nodes = nodes
         self.links = links
         self.report_params = report_params if report_params is not None else _new_report_params()
-        self.results_obj = results_obj if results_obj is not None else _new_results_obj()
         self.param_opts = param_opts if param_opts is not None else _new_param_opts()
 
 
@@ -651,7 +651,7 @@ class UserOptions(_OptionsBase):
             self.__dict__[k] = v
 
 
-class WaterNetworkOptions(_OptionsBase):
+class Options(_OptionsBase):
     """
     Water network model options class.
     
@@ -671,8 +671,8 @@ class WaterNetworkOptions(_OptionsBase):
         Contains water quality simulation options and source definitions
     energy : EnergyOptions
         Contains parameters for energy calculations
-    results : ResultsOptions
-        Contains options for how for format and save results
+    report : ReportOptions
+        Contains options for how for format and save report
     graphics : GraphicsOptions
         Contains EPANET graphics and background options and also the filename
         for external node coordinates, if used
@@ -683,7 +683,7 @@ class WaterNetworkOptions(_OptionsBase):
     def __init__(self,
                  time: TimeOptions = None,
                  hydraulic: HydraulicOptions = None,
-                 results: ResultsOptions = None,
+                 report: ReportOptions = None,
                  quality: QualityOptions = None,
                  reaction: ReactionOptions = None,
                  energy: EnergyOptions = None,
@@ -691,7 +691,7 @@ class WaterNetworkOptions(_OptionsBase):
                  user: UserOptions = None):
         self.time = TimeOptions.factory(time)
         self.hydraulic = HydraulicOptions.factory(hydraulic)
-        self.results = ResultsOptions.factory(results)
+        self.report = ReportOptions.factory(report)
         self.quality = QualityOptions.factory(quality)
         self.reaction = ReactionOptions.factory(reaction)
         self.energy = EnergyOptions.factory(energy)
@@ -707,10 +707,10 @@ class WaterNetworkOptions(_OptionsBase):
             if not isinstance(value, (HydraulicOptions, dict, tuple, list)):
                 raise ValueError('hydraulic must be a HydraulicOptions or convertable object')
             value = HydraulicOptions.factory(value)
-        elif name == 'results':
-            if not isinstance(value, (ResultsOptions, dict, tuple, list)):
-                raise ValueError('results must be a ResultsOptions or convertable object')
-            value = ResultsOptions.factory(value)
+        elif name == 'report':
+            if not isinstance(value, (ReportOptions, dict, tuple, list)):
+                raise ValueError('report must be a ReportOptions or convertable object')
+            value = ReportOptions.factory(value)
         elif name == 'quality':
             if not isinstance(value, (QualityOptions, dict, tuple, list)):
                 raise ValueError('quality must be a QualityOptions or convertable object')

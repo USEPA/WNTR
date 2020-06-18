@@ -65,12 +65,12 @@ class Junction(Node):
         self.demand_timeseries_list = Demands(self._pattern_reg)
         self.elevation = 0.0
 
-        self.required_pressure = 20.0
+        self.required_pressure = self._options.hydraulic.required_pressure
         """float: The required pressure attribute is used for pressure-dependent demand
         simulations. This is the lowest pressure at which the junction receives 
         the full requested demand."""
 
-        self.minimum_pressure = 0.0
+        self.minimum_pressure = self._options.hydraulic.minimum_pressure
         """float: The minimum pressure attribute is used for pressure-dependent demand 
         simulations. Below this pressure, the junction will not receive any water."""
 
@@ -1526,7 +1526,7 @@ class Curve(object):
     current_units : str
         The units the points are currently defined in. This MUST be 'SI' by the time
         one of the simulators is run.
-    options : WaterNetworkOptions, optional
+    options : Options, optional
         Water network options to lookup headloss function
         
     """

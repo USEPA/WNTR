@@ -66,7 +66,7 @@ Additionally, EPANET INP files can be generated from water network models.
    :class:`~wntr.network.elements.Pattern`             Contains methods to define patterns. Demands, reservoir heads, pump schedules, and water quality sources can have patterns associated with them. 
    :class:`~wntr.network.controls.Control`             Contains methods to define controls. Controls define a single action based on a single condition.
    :class:`~wntr.network.controls.Rule`                Contains methods to define rules. Rules can define multiple actions and multiple conditions.
-   :class:`~wntr.network.options.WaterNetworkOptions`  Contains methods to define model options, including the simulation duration and time step.
+   :class:`~wntr.network.options.Options`  Contains methods to define model options, including the simulation duration and time step.
    ==================================================  =============================================================================================================================================================================================================================================================================
 
 Simulators
