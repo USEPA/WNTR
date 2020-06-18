@@ -18,7 +18,7 @@ wn.options.time.duration = 48*3600
 wn.options.time.hydraulic_timestep = 1800
 wn.options.time.report_timestep = 1800
 
-# Set nominal pressures
+# Set required pressures
 for name, node in wn.junctions():
     node.required_pressure = 15
 
