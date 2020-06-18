@@ -240,6 +240,7 @@ class InpFile(object):
     def read(self, inp_files, wn=None):
         """
         Method to read an EPANET INP file and load data into a water network model object.
+        Both EPANET 2.0 and EPANET 2.2 INP file options are recognized and handled.
 
         Parameters
         ----------
@@ -407,7 +408,7 @@ class InpFile(object):
             Name of the units for the EPANET INP file to be written in.
         version : float, {2.0, **2.2**}
             Defaults to 2.2; use 2.0 to guarantee backward compatability, but this will turn off PDA mode 
-            and supress the writing of EPANET 2.2-specific options. If PDA mode is specified, a 
+            and supress the writing of other EPANET 2.2-specific options. If PDA mode is specified, a 
             warning will be issued.
 
 		"""
@@ -1444,35 +1445,35 @@ class InpFile(object):
             val3 = float(current[2])
             if key1 == 'ORDER':
                 if key2 == 'BULK':
-                    self.wn.options.reaction.bulk_rxn_order = int(float(current[2]))
+                    self.wn.options.reaction.bulk_order = int(float(current[2]))
                 elif key2 == 'WALL':
-                    self.wn.options.reaction.wall_rxn_order = int(float(current[2]))
+                    self.wn.options.reaction.wall_order = int(float(current[2]))
                 elif key2 == 'TANK':
-                    self.wn.options.reaction.tank_rxn_order = int(float(current[2]))
+                    self.wn.options.reaction.tank_order = int(float(current[2]))
             elif key1 == 'GLOBAL':
                 if key2 == 'BULK':
-                    self.wn.options.reaction.bulk_rxn_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
+                    self.wn.options.reaction.bulk_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
                                                 mass_units=self.mass_units,
-                                                reaction_order=self.wn.options.reaction.bulk_rxn_order)
+                                                reaction_order=self.wn.options.reaction.bulk_order)
                 elif key2 == 'WALL':
-                    self.wn.options.reaction.wall_rxn_coeff = to_si(self.flow_units, val3, WallReactionCoeff,
+                    self.wn.options.reaction.wall_coeff = to_si(self.flow_units, val3, WallReactionCoeff,
                                                 mass_units=self.mass_units,
-                                                reaction_order=self.wn.options.reaction.wall_rxn_order)
+                                                reaction_order=self.wn.options.reaction.wall_order)
             elif key1 == 'BULK':
                 pipe = self.wn.get_link(current[1])
-                pipe.bulk_rxn_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
+                pipe.bulk_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
                                             mass_units=self.mass_units,
-                                            reaction_order=self.wn.options.reaction.bulk_rxn_order)
+                                            reaction_order=self.wn.options.reaction.bulk_order)
             elif key1 == 'WALL':
                 pipe = self.wn.get_link(current[1])
-                pipe.wall_rxn_coeff = to_si(self.flow_units, val3, WallReactionCoeff,
+                pipe.wall_coeff = to_si(self.flow_units, val3, WallReactionCoeff,
                                             mass_units=self.mass_units,
-                                            reaction_order=self.wn.options.reaction.wall_rxn_order)
+                                            reaction_order=self.wn.options.reaction.wall_order)
             elif key1 == 'TANK':
                 tank = self.wn.get_node(current[1])
-                tank.bulk_rxn_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
+                tank.bulk_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
                                             mass_units=self.mass_units,
-                                            reaction_order=self.wn.options.reaction.bulk_rxn_order)
+                                            reaction_order=self.wn.options.reaction.bulk_order)
             elif key1 == 'LIMITING':
                 self.wn.options.reaction.limiting_potential = float(current[2])
             elif key1 == 'ROUGHNESS':
@@ -1486,45 +1487,45 @@ class InpFile(object):
         entry_int = ' {:s} {:s} {:d}\n'
         entry_float = ' {:s} {:s} {:<10.4f}\n'
         for tank_name, tank in wn.nodes(Tank):
-            if tank.bulk_rxn_coeff is not None:
+            if tank.bulk_coeff is not None:
                 f.write(entry_float.format('TANK',tank_name,
                                            from_si(self.flow_units,
-                                                   tank.bulk_rxn_coeff,
+                                                   tank.bulk_coeff,
                                                    QualParam.BulkReactionCoeff,
                                                    mass_units=self.mass_units,
-                                                   reaction_order=wn.options.reaction.bulk_rxn_order)).encode('ascii'))
+                                                   reaction_order=wn.options.reaction.bulk_order)).encode('ascii'))
         for pipe_name, pipe in wn.links(Pipe):
-            if pipe.bulk_rxn_coeff is not None:
+            if pipe.bulk_coeff is not None:
                 f.write(entry_float.format('BULK',pipe_name,
                                            from_si(self.flow_units,
-                                                   pipe.bulk_rxn_coeff,
+                                                   pipe.bulk_coeff,
                                                    QualParam.BulkReactionCoeff,
                                                    mass_units=self.mass_units,
-                                                   reaction_order=wn.options.reaction.bulk_rxn_order)).encode('ascii'))
-            if pipe.wall_rxn_coeff is not None:
+                                                   reaction_order=wn.options.reaction.bulk_order)).encode('ascii'))
+            if pipe.wall_coeff is not None:
                 f.write(entry_float.format('WALL',pipe_name,
                                            from_si(self.flow_units,
-                                                   pipe.wall_rxn_coeff,
+                                                   pipe.wall_coeff,
                                                    QualParam.WallReactionCoeff,
                                                    mass_units=self.mass_units,
-                                                   reaction_order=wn.options.reaction.wall_rxn_order)).encode('ascii'))
+                                                   reaction_order=wn.options.reaction.wall_order)).encode('ascii'))
         f.write('\n'.encode('ascii'))
 #        f.write('[REACTIONS]\n'.encode('ascii'))  # EPANET GUI puts this line in here
-        f.write(entry_int.format('ORDER', 'BULK', int(wn.options.reaction.bulk_rxn_order)).encode('ascii'))
-        f.write(entry_int.format('ORDER', 'TANK', int(wn.options.reaction.tank_rxn_order)).encode('ascii'))
-        f.write(entry_int.format('ORDER', 'WALL', int(wn.options.reaction.wall_rxn_order)).encode('ascii'))
+        f.write(entry_int.format('ORDER', 'BULK', int(wn.options.reaction.bulk_order)).encode('ascii'))
+        f.write(entry_int.format('ORDER', 'TANK', int(wn.options.reaction.tank_order)).encode('ascii'))
+        f.write(entry_int.format('ORDER', 'WALL', int(wn.options.reaction.wall_order)).encode('ascii'))
         f.write(entry_float.format('GLOBAL','BULK',
                                    from_si(self.flow_units,
-                                           wn.options.reaction.bulk_rxn_coeff,
+                                           wn.options.reaction.bulk_coeff,
                                            QualParam.BulkReactionCoeff,
                                            mass_units=self.mass_units,
-                                           reaction_order=wn.options.reaction.bulk_rxn_order)).encode('ascii'))
+                                           reaction_order=wn.options.reaction.bulk_order)).encode('ascii'))
         f.write(entry_float.format('GLOBAL','WALL',
                                    from_si(self.flow_units,
-                                           wn.options.reaction.wall_rxn_coeff,
+                                           wn.options.reaction.wall_coeff,
                                            QualParam.WallReactionCoeff,
                                            mass_units=self.mass_units,
-                                           reaction_order=wn.options.reaction.wall_rxn_order)).encode('ascii'))
+                                           reaction_order=wn.options.reaction.wall_order)).encode('ascii'))
         if wn.options.reaction.limiting_potential is not None:
             f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.reaction.limiting_potential).encode('ascii'))
         if wn.options.reaction.roughness_correl is not None:
@@ -1654,15 +1655,15 @@ class InpFile(object):
                         if len(words) > 2:
                             if 'mg' in words[2].lower():
                                 self.mass_units = MassUnits.mg
-                                opts.quality.wq_units = words[2]
+                                opts.quality.inpfile_units = words[2]
                             elif 'ug' in words[2].lower():
                                 self.mass_units = MassUnits.ug
-                                opts.quality.wq_units = words[2]
+                                opts.quality.inpfile_units = words[2]
                             else:
                                 raise ValueError('Invalid chemical units in OPTIONS section')
                         else:
                             self.mass_units = MassUnits.mg
-                            opts.quality.wq_units = 'mg/L'                            
+                            opts.quality.inpfile_units = 'mg/L'                            
                 elif key == 'VISCOSITY':
                     opts.hydraulic.viscosity = float(words[1])
                 elif key == 'DIFFUSIVITY':
@@ -1816,7 +1817,7 @@ class InpFile(object):
         elif wn.options.quality.parameter.upper() in ['TRACE']:
             f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.parameter, wn.options.quality.trace_node).encode('ascii'))
         else:
-            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.chemical_name, wn.options.quality.wq_units).encode('ascii'))
+            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.chemical_name, wn.options.quality.inpfile_units).encode('ascii'))
 
         f.write(entry_float.format('DIFFUSIVITY', wn.options.quality.diffusivity).encode('ascii'))
 
@@ -1945,13 +1946,13 @@ class InpFile(object):
                         i = ct + 2
                         self.wn.options.results.links.append(current[i])
             else:
-                if current[0].lower() not in self.wn.options.results.rpt_params.keys():
+                if current[0].lower() not in self.wn.options.results.report_params.keys():
                     logger.warning('Unknown report parameter: %s', current[0])
                     continue
                 elif current[1].upper() in ['YES']:
-                    self.wn.options.results.rpt_params[current[0].lower()][1] = True
+                    self.wn.options.results.report_params[current[0].lower()][1] = True
                 elif current[1].upper() in ['NO']:
-                    self.wn.options.results.rpt_params[current[0].lower()][1] = False
+                    self.wn.options.results.report_params[current[0].lower()][1] = False
                 else:
                     self.wn.options.results.param_opts[current[0].lower()][current[1].upper()] = float(current[2])
 
@@ -1964,8 +1965,8 @@ class InpFile(object):
             f.write('SUMMARY    {}\n'.format(report.summary).encode('ascii'))
         if report.pagesize is not None:
             f.write('PAGE       {}\n'.format(report.pagesize).encode('ascii'))
-        if report.rpt_filename is not None:
-            f.write('FILE       {}\n'.format(report.rpt_filename).encode('ascii'))
+        if report.report_filename is not None:
+            f.write('FILE       {}\n'.format(report.report_filename).encode('ascii'))
         if report.energy.upper() != 'NO':
             f.write('ENERGY     {}\n'.format(report.status).encode('ascii'))
         if report.nodes is True:
@@ -1995,7 +1996,7 @@ class InpFile(object):
                     f.write(' {}'.format(link).encode('ascii'))
             f.write('\n'.encode('ascii'))
         # FIXME: defaults no longer located here
-#        for key, item in report.rpt_params.items():
+#        for key, item in report.report_params.items():
 #            if item[1] != item[0]:
 #                f.write('{:10s} {}\n'.format(key.upper(), item[1]).encode('ascii'))
         for key, item in report.param_opts.items():
@@ -2516,7 +2517,7 @@ class BinFile(object):
         self.chemical = None
         self.chem_units = None
         self.inp_file = None
-        self.rpt_file = None
+        self.report_file = None
         self.results = wntr.sim.SimulationResults()
         if result_types is None:
             self.items = [ member for name, member in ResultType.__members__.items() ]
@@ -2726,7 +2727,7 @@ class BinFile(object):
             self.chemical = chemical
             self.chem_units = wqunits
             self.inp_file = inpfile
-            self.rpt_file = rptfile
+            self.report_file = rptfile
             nodenames = []
             linknames = []
             nodenames = np.array(np.fromfile(fin, dtype=dt_str, count=nnodes), dtype=str).tolist()

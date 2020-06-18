@@ -43,7 +43,7 @@ def _int_or_None(value):
     return None
 
 
-def _new_rpt_params():
+def _new_report_params():
     ret = dict(elevation=False, demand=True, head=True, pressure=True,
                 quality=True, length=False, diameter=False, flow=True,
                 velocity=True, headloss=True, position=False, setting=False, reaction=False)
@@ -470,15 +470,15 @@ class ReactionOptions(_OptionsBase):
     
     Parameters
     ----------
-    bulk_rxn_order : float
+    bulk_order : float
         Order of reaction occurring in the bulk fluid
-    wall_rxn_order : float
+    wall_order : float
         Order of reaction occurring at the pipe wall
-    tank_rxn_order : float
+    tank_order : float
         Order of reaction occurring in the tanks
-    bulk_rxn_coeff : float
+    bulk_coeff : float
         Reaction coefficient for bulk fluid and tanks
-    wall_rxn_coeff : float
+    wall_coeff : float
         Reaction coefficient for pipe walls
     limiting_potential : float
         Specifies that reaction rates are proportional to the difference 
@@ -490,18 +490,18 @@ class ReactionOptions(_OptionsBase):
         
     """
     def __init__(self,
-                 bulk_rxn_order: float = 1.0,
-                 wall_rxn_order: float = 1.0,
-                 tank_rxn_order: float = 1.0,
-                 bulk_rxn_coeff: float = 0.0,
-                 wall_rxn_coeff: float = 0.0,
+                 bulk_order: float = 1.0,
+                 wall_order: float = 1.0,
+                 tank_order: float = 1.0,
+                 bulk_coeff: float = 0.0,
+                 wall_coeff: float = 0.0,
                  limiting_potential: float = None,
                  roughness_correl: float = None):
-        self.bulk_rxn_order = bulk_rxn_order
-        self.wall_rxn_order = wall_rxn_order
-        self.tank_rxn_order = tank_rxn_order
-        self.bulk_rxn_coeff = bulk_rxn_coeff
-        self.wall_rxn_coeff = wall_rxn_coeff
+        self.bulk_order = bulk_order
+        self.wall_order = wall_order
+        self.tank_order = tank_order
+        self.bulk_coeff = bulk_coeff
+        self.wall_coeff = wall_coeff
         self.limiting_potential = limiting_potential
         self.roughness_correl = roughness_correl
 
@@ -536,7 +536,7 @@ class QualityOptions(_OptionsBase):
         Molecular diffusivity of the chemical (default 1.0)
     tolerance : float
         Water quality solver tolerance
-    wq_units : str
+    inpfile_units : str
         Units for quality analysis; concentration for 'chemical', time in seconds for 'age',
         percentage for 'trace'
 
@@ -547,13 +547,13 @@ class QualityOptions(_OptionsBase):
                  chemical_name: str = 'CHEMICAL',
                  diffusivity: float = 1.0,
                  tolerance: float = 0.01,
-                 wq_units: str = 'mg/L'):
+                 inpfile_units: str = 'mg/L'):
         self.parameter = parameter
         self.trace_node = trace_node
         self.chemical_name = chemical_name
         self.diffusivity = diffusivity
         self.tolerance = tolerance
-        self.wq_units = wq_units
+        self.inpfile_units = inpfile_units
 
     def __setattr__(self, name, value):
         if name in ['diffusivity', 'tolerance']:
@@ -597,7 +597,7 @@ class ResultsOptions(_OptionsBase):
 
     Parameters
     ----------
-    rpt_filename : str
+    report_filename : str
         Provides the filename to use for outputting an EPANET report file.
         By default, this will be the prefix plus ".rpt".
     status : str
@@ -614,23 +614,23 @@ class ResultsOptions(_OptionsBase):
     """
     def __init__(self,
                 pagesize: list=None,
-                rpt_filename: str=None,
+                report_filename: str=None,
                 status: str='NO',
                 summary: str='YES',
                 energy: str='NO',
                 nodes: bool=False,
                 links: bool=False,
-                rpt_params: dict=None,
+                report_params: dict=None,
                 results_obj: dict=None,
                 param_opts: dict=None):
         self.pagesize = pagesize
-        self.rpt_filename = rpt_filename
+        self.report_filename = report_filename
         self.status = status
         self.summary = summary
         self.energy = energy
         self.nodes = nodes
         self.links = links
-        self.rpt_params = rpt_params if rpt_params is not None else _new_rpt_params()
+        self.report_params = report_params if report_params is not None else _new_report_params()
         self.results_obj = results_obj if results_obj is not None else _new_results_obj()
         self.param_opts = param_opts if param_opts is not None else _new_param_opts()
 

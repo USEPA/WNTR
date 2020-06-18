@@ -230,7 +230,7 @@ class Tank(Node):
         self._vol_curve_name = None
         self._mix_model = None
         self._mix_frac = None
-        self.bulk_rxn_coeff = None
+        self.bulk_coeff = None
         
         self._leak = False
         self.leak_status = False
@@ -250,7 +250,7 @@ class Tank(Node):
            abs(self.max_level   - other.max_level)<1e-9 and \
            abs(self.diameter    - other.diameter)<1e-9  and \
            abs(self.min_vol     - other.min_vol)<1e-9   and \
-           self.bulk_rxn_coeff == other.bulk_rxn_coeff   and \
+           self.bulk_coeff == other.bulk_coeff   and \
            self.vol_curve      == other.vol_curve:
             return True
         return False
@@ -478,8 +478,8 @@ class Pipe(Link):
         self.roughness = 100
         self.minor_loss = 0.0
         self.cv = False
-        self.bulk_rxn_coeff = None
-        self.wall_rxn_coeff = None
+        self.bulk_coeff = None
+        self.wall_coeff = None
         
     def __repr__(self):
         return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
@@ -494,8 +494,8 @@ class Pipe(Link):
            abs(self.roughness     - other.roughness)<1e-9  and \
            abs(self.minor_loss    - other.minor_loss)<1e-9 and \
            self.cv               == other.cv                and \
-           self.bulk_rxn_coeff   == other.bulk_rxn_coeff    and \
-           self.wall_rxn_coeff   == other.wall_rxn_coeff:
+           self.bulk_coeff   == other.bulk_coeff    and \
+           self.wall_coeff   == other.wall_coeff:
             return True
         return False
 
