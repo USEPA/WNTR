@@ -320,6 +320,7 @@ class GraphicsOptions(_OptionsBase):
         Filename used to store node coordinates in (node, x, y) format. This option is
         from the EPANET "[OPTIONS]" section. See note below.
     
+    
     .. note::
 
         Because the format of the MAP file is uncertain, file will need to be processed
