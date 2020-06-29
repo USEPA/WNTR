@@ -346,7 +346,7 @@ class GraphicsOptions(_OptionsBase):
 
     def __setattr__(self, name, value):
         if name == 'units':
-            value = str.upper(value)
+            value = str(value).upper()
             if value not in ['FEET','METERS','DEGREES','NONE']:
                 raise ValueError('Backdrop units must be one of FEET, METERS, DEGREES, or NONE')
         self.__dict__[name] = value
