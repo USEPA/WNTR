@@ -389,15 +389,15 @@ class InpFile(object):
         
         return self.wn
 
-    def write(self, filename, wn, units=None, version=2.2):
+    def write(self, filename, wn, units=None, version=2.2, force_coordinates=False):
         """
         Write a water network model into an EPANET INP file.
 
         .. note::
 
             Please note that by default, an EPANET 2.2 formatted file is written by WNTR. An INP file
-            with version 2.2 options *will not* work with EPANET 2.0 (command line nor GUI). By default,
-            WNTR will also use the EPANET 2.2 toolkit.
+            with version 2.2 options *will not* work with EPANET 2.0 (neither command line nor GUI). 
+            By default, WNTR will use the EPANET 2.2 toolkit.
         
 
         Parameters
@@ -459,7 +459,8 @@ class InpFile(object):
             self._write_report(f, wn)
             self._write_options(f, wn, version=version)
 
-            self._write_coordinates(f, wn)
+            if wn.options.graphics.map_filename is None or force_coordinates is True:
+                self._write_coordinates(f, wn)
             self._write_vertices(f, wn)
             self._write_labels(f, wn)
             self._write_backdrop(f, wn)
@@ -834,7 +835,7 @@ class InpFile(object):
             if current == []:
                 continue
             junction = self.wn.get_node(current[0])
-            junction._emitter_coefficient = to_si(self.flow_units, float(current[1]), HydParam.Flow)
+            junction.emitter_coefficient = to_si(self.flow_units, float(current[1]), HydParam.Flow)
 
     def _write_emitters(self, f, wn):
         f.write('[EMITTERS]\n'.encode('ascii'))
@@ -845,8 +846,8 @@ class InpFile(object):
         # njunctions.sort()
         for junction_name in njunctions:
             junction = wn.nodes[junction_name]
-            if junction._emitter_coefficient:
-                val = from_si(self.flow_units, junction._emitter_coefficient, HydParam.Flow)
+            if junction.emitter_coefficient:
+                val = from_si(self.flow_units, junction.emitter_coefficient, HydParam.Flow)
                 f.write(entry.format(junction_name, str(val)).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -1584,16 +1585,16 @@ class InpFile(object):
             tank_name = current[0]
             tank = self.wn.get_node(tank_name)
             if key == 'MIXED':
-                tank._mix_model = MixType.Mix1
+                tank.mixing_model = MixType.Mix1
             elif key == '2COMP' and len(current) > 2:
-                tank._mix_model = MixType.Mix2
-                tank._mix_frac = float(current[2])
+                tank.mixing_model = MixType.Mix2
+                tank.mixing_fraction = float(current[2])
             elif key == '2COMP' and len(current) < 3:
                 raise RuntimeError('Mixing model 2COMP requires fraction on tank %s'%tank_name)
             elif key == 'FIFO':
-                tank._mix_model = MixType.FIFO
+                tank.mixing_model = MixType.FIFO
             elif key == 'LIFO':
-                tank._mix_model = MixType.LIFO
+                tank.mixing_model = MixType.LIFO
 
     def _write_mixing(self, f, wn):
         f.write('[MIXING]\n'.encode('ascii'))
@@ -1602,21 +1603,21 @@ class InpFile(object):
         # lnames.sort()
         for tank_name in lnames:
             tank = wn.nodes[tank_name]
-            if tank._mix_model is not None:
-                if tank._mix_model in [MixType.Mixed, MixType.Mix1, 0]:
+            if tank._mixing_model is not None:
+                if tank._mixing_model in [MixType.Mixed, MixType.Mix1, 0]:
                     f.write(' {:19s} MIXED\n'.format(tank_name).encode('ascii'))
-                elif tank._mix_model in [MixType.TwoComp, MixType.Mix2, '2comp', '2COMP', 1]:
-                    f.write(' {:19s} 2COMP  {}\n'.format(tank_name, tank._mix_frac).encode('ascii'))
-                elif tank._mix_model in [MixType.FIFO, 2]:
+                elif tank._mixing_model in [MixType.TwoComp, MixType.Mix2, '2comp', '2COMP', 1]:
+                    f.write(' {:19s} 2COMP  {}\n'.format(tank_name, tank.mixing_fraction).encode('ascii'))
+                elif tank._mixing_model in [MixType.FIFO, 2]:
                     f.write(' {:19s} FIFO\n'.format(tank_name).encode('ascii'))
-                elif tank._mix_model in [MixType.LIFO, 3]:
+                elif tank._mixing_model in [MixType.LIFO, 3]:
                     f.write(' {:19s} LIFO\n'.format(tank_name).encode('ascii'))
-                elif isinstance(tank._mix_model, str) and tank._mix_frac is not None:
-                    f.write(' {:19s} {} {}\n'.format(tank_name, tank._mix_model, tank._mix_frac).encode('ascii'))
-                elif isinstance(tank._mix_model, str):
-                    f.write(' {:19s} {}\n'.format(tank_name, tank._mix_model).encode('ascii'))
+                elif isinstance(tank._mixing_model, str) and tank.mixing_fraction is not None:
+                    f.write(' {:19s} {} {}\n'.format(tank_name, tank._mixing_model, tank.mixing_fraction).encode('ascii'))
+                elif isinstance(tank._mixing_model, str):
+                    f.write(' {:19s} {}\n'.format(tank_name, tank._mixing_model).encode('ascii'))
                 else:
-                    logger.warning('Unknown mixing model: %s', tank._mix_model)
+                    logger.warning('Unknown mixing model: %s', tank._mixing_model)
         f.write('\n'.encode('ascii'))
 
     ### Options and Reporting

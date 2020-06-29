@@ -66,7 +66,7 @@ Additionally, EPANET INP files can be generated from water network models.
    :class:`~wntr.network.elements.Pattern`             Contains methods to define patterns. Demands, reservoir heads, pump schedules, and water quality sources can have patterns associated with them. 
    :class:`~wntr.network.controls.Control`             Contains methods to define controls. Controls define a single action based on a single condition.
    :class:`~wntr.network.controls.Rule`                Contains methods to define rules. Rules can define multiple actions and multiple conditions.
-   :class:`~wntr.network.options.Options`  Contains methods to define model options, including the simulation duration and time step.
+   :class:`~wntr.network.options.Options`              Contains methods to define model options, including the simulation duration and time step.
    ==================================================  =============================================================================================================================================================================================================================================================================
 
 Simulators
@@ -103,6 +103,12 @@ Current WNTR limitations include:
   Please also note that numerous bug fixes in EPANET 2.2 may mean that new 
   results do not exactly match original EPANET 2.0 simulation results.
 
+* Use of the "MAP" file option in EPANET will **not** automatically assign node
+  coordinates from that file. The user must handle reading/writing coordinate 
+  values to this file manually. If the ``wn.options.graphics.map_filename`` is
+  set, then the [COORDINATES] section of the INP file will be left blank to 
+  limit the file size (this can be overridden in InpFile.write).
+
 **WNTR reads in and writes all sections of EPANET INP files**.  This includes the following sections: 
 [BACKDROP], 
 [CONTROLS], 
@@ -131,11 +137,7 @@ Current WNTR limitations include:
 [VALVES], and
 [VERTICES].  
 
-However, **the following model options cannot be modified/created through the WNTR API**:
-
-* [EMITTERS] section
-* [LABELS] section
-* [MIXING] section
+However, **the [LABELS] section cannot be modified/created through the WNTR API**:
 
 While the EpanetSimulator uses all EPANET model options, several model options are not used by the WNTRSimulator.  
 Of the EPANET model options that directly apply to hydraulic simulations, **the following options are not supported by the WNTRSimulator**:

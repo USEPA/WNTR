@@ -108,34 +108,45 @@ class _OptionsBase(object):
 class TimeOptions(_OptionsBase):
     """
     Options related to simulation and model timing.
+    These options are named according to the EPANET 2.2 "Times" settings.
     
     Parameters
     ----------
     duration : int
-        Simulation duration in seconds
+        Simulation duration (seconds). Defaults to 0.
+
     hydraulic_timestep : int
-        Hydraulic timestep in seconds
+        Hydraulic timestep (seconds). Defaults to 3600 (one hour).
+
     quality_timestep : int
-        Water quality timestep in seconds 
+        Water quality timestep (seconds). Defaults to 360 (five minutes).
+
     rule_timestep : int
-        Rule timestep in seconds
+        Rule timestep (seconds). Defaults to 360 (five minutes).
+
     pattern_timestep : int
-        Pattern timestep in seconds
+        Pattern timestep (seconds). Defaults to 3600 (one hour).
+
     pattern_start : int
         Time offset (in seconds) to find the starting pattern step; changes 
         where in pattern the pattern starts out, *not* what time the pattern 
-        starts
+        starts. Defaults to 0.
+
     report_timestep : int
-        Reporting timestep in seconds
+        Reporting timestep (seconds). Defaults to 3600 (one hour).
+
     report_start : int
-        Start time of the report in seconds from the start of the simulation
-    start_clocktime : int, default 0
-        Time of day in seconds from 12 am at which the simulation begins
+        Start time of the report (in seconds) from the start of the simulation. Default 0.
+
+    start_clocktime : int
+        Time of day (in seconds from midnight) at which the simulation begins. Default 0 (midnight).
+
     statistic: str
         Provide statistics rather than time series report in the report file.
         Options are AVERAGED, MINIMUM, MAXIUM, RANGE, and NONE (as defined in the 
-        EPANET User Manual)
+        EPANET User Manual). Defaults to NONE.
     
+
     """
     _pattern1 = re.compile(r'^(\d+):(\d+):(\d+)$')
     _pattern2 = re.compile(r'^(\d+):(\d+)$')
@@ -166,7 +177,7 @@ class TimeOptions(_OptionsBase):
         if name == 'statistic':
             value = str.upper(value)
             if value not in ['AVERAGED', 'MINIMUM', 'MAXIMUM', 'RANGE', 'NONE']:
-                raise ValueError('headloss must be one of "H-W", "D-W", or "C-M"')
+                raise ValueError('Statistic must be one of AVERAGED, MINIMUM, MAXIMUM, RANGE or NONE')
         elif name not in ['report_timestep']:
             try:
                 value = float(value)
@@ -284,22 +295,41 @@ class GraphicsOptions(_OptionsBase):
     """
     Options related to graphics. 
     
-    May be used to contain custom, user defined values. Default attributes 
-    comprise the EPANET "backdrop" section options.
+    May be used to contain custom, user defined values. 
+    These options are taken from the EPANET "[BACKDROP]" section. 
+    Additionally, the "MAP" option (`map_filename`), which identifies a file containing 
+    node coordinates in the EPANET "[OPTIONS]" section, is also included here.
     
     Parameters
     ----------
     dimensions : 4-tuple or list
-        (x, y, dx, dy) Dimensions for backdrop image 
+        Dimensions for backdrop image in the order (LLx, LLy, URx, URy). By default, 
+        EPANET will make the image match the full extent of node coordinates (set to `None`).
+
     units : str
-        Units for backdrop image
+        Units for backdrop image dimensions. Must be one of FEET, METERS, DEGREES or NONE. 
+        Default is NONE.
+
     offset : 2-tuple or list
-        (x,y) offset for the network
+        Offset for the network in order (X, Y). Default is None (no offset).
+
     image_filename : string
-        Filename where image is located
+        Filename where image is located. Default is None.
+
     map_filename : string
-        Filename used to store node coordinates in (node, x, y) format
+        Filename used to store node coordinates in (node, x, y) format. This option is
+        from the EPANET "[OPTIONS]" section. See note below.
     
+    .. note::
+
+        Because the format of the MAP file is uncertain, file will need to be processed
+        by the user to assign coordinates to nodes, if desired. Remember that node 
+        coordinates have impact *only* on graphics and *do not* impact simulation results.
+        If the `map_filename` is not ``None``, then no [COORDINATES] will be written out
+        to INP files (to save space, since the simulator does not use that section).
+        This can be overwritten in the `write_inpfile` commands.
+    
+
     """
     def __init__(self,
                  dimensions: list = None,
@@ -313,67 +343,104 @@ class GraphicsOptions(_OptionsBase):
         self.image_filename = image_filename
         self.map_filename = map_filename
 
+    def __setattr__(self, name, value):
+        if name == 'units':
+            value = str.upper(value)
+            if value not in ['FEET','METERS','DEGREES','NONE']:
+                raise ValueError('Backdrop units must be one of FEET, METERS, DEGREES, or NONE')
+        self.__dict__[name] = value
+
 
 class HydraulicOptions(_OptionsBase): 
     """
-    Options related to hydraulic model, including hydraulics. 
+    Options related to hydraulic model.
+    These options are named according to the settings in the EPANET "[OPTIONS]"
+    section. Unless specified, these options are valid for both EPANET 2.0 and 2.2.
     
     Parameters
     ----------
     headloss : str
         Formula to use for computing head loss through a pipe. Options are H-W, 
-        D-W, and C-M
+        D-W, and C-M. Default is `H-W`.
+
     hydraulics : str
         Indicates if a hydraulics file should be read in or saved; options are 
-        None, USE and SAVE (default None)
+        None, USE and SAVE. Defaults to ``None``.
+
     hydraulics_filename : str
-        Filename to use if hydraulics = SAVE
+        Filename to use if ``hydraulics = 'SAVE'``. Defaults to ``None``.
+
     viscosity : float
-        Kinematic viscosity of the fluid
+        Kinematic viscosity of the fluid. Defaults to 1.0.
+
     specific_gravity : float
-        Specific gravity of the fluid 
+        Specific gravity of the fluid. Defaults to 1.0.
+
     pattern : str
-        Name of the default pattern for junction demands. If None, the 
-        junctions with demands but without patterns will be held constant
+        Name of the default pattern for junction demands. By default,
+        the default pattern is the pattern named "1". If this is set 
+        to None (or if pattern "1" does not exist), then
+        junctions with demands but without patterns will be held constant.
+
     demand_multiplier : float
         The demand multiplier adjusts the values of baseline demands for all 
-        junctions
+        junctions. Defaults to 1.0.
+
     emitter_exponent : float
-        The exponent used when computing flow from an emitter
+        The exponent used when computing flow from an emitter. Defaults to 0.5.
+
     minimum_pressure : float
-        The minimum nodal pressure - only valid for EPANET 2.2
+        (EPANET 2.2 only) The global minimum nodal pressure. Defaults to 0.0.
+
     required_pressure: float
-        The required nodal pressure - only valid for EPANET 2.2
+        (EPANET 2.2 only) The required nodal pressure. Defaults to 0.07 (m H2O)
+
     pressure_exponent: float
-        The pressure exponent - only valid for EPANET 2.2
+        (EPANET 2.2 only) The pressure exponent. Defaults to 0.5.
+
     trials : int
-        Maximum number of trials used to solve network hydraulics
+        Maximum number of trials used to solve network hydraulics. Defaults to 200.
+
     accuracy : float
-        Convergence criteria for hydraulic solutions (default 0.001)
+        Convergence criteria for hydraulic solutions. Defaults to 0.001.
+
+    headerror : float
+        (EPANET 2.2 only) Augments the `accuracy` option by adjusting the head 
+        error convergence limit. Defaults to 0 (off).
+
+    flowchange : float
+        (EPANET 2.2 only) Augments the `accuracy` option by adjusting the flow 
+        change convergence limit. Defaults to 0 (off).
+
     unbalanced : str
         Indicate what happens if a hydraulic solution cannot be reached.  
-        Options are STOP and CONTINUE
+        Options are STOP and CONTINUE. Defaults to STOP.
+
     unbalanced_value : int
-        Number of additional trials if unbalanced = CONTINUE
+        Number of additional trials if unbalanced = CONTINUE. Default is None.
+
     checkfreq : int
-        Number of solution trials that pass between status check 
+        Number of solution trials that pass between status checks. Default is 2.
+
     maxcheck : int
-        Number of solution trials that pass between status check 
+        Number of solution trials that pass between status check. Default is 10.
+
     damplimit : float
-        Accuracy value at which solution damping begins
-    headerror : float
-        The head error convergence limit
-    flowchange : float
-        The flow change convergence limit
+        Accuracy value at which solution damping begins. Default is 0 (no damping).
+
     demand_model : str
-        Demand model for EPANET 2.2; acceptable values are DD, PDD, DDA and PDA, though DDA and PDA are the preferred abbreviations.
-        EPANET 2.0 only contains demand driven analysis, and will issue a warning if this option is not DD or DDA.
+        Demand model for EPANET 2.2; acceptable values are DDA and PDA, 
+        though DD and PDD are accepted for backward compatibility. Default is DDA.
+        EPANET 2.0 only contains demand driven analysis, and will issue a warning 
+        if this option is not set to DDA.
+
     inpfile_units : str
         Units for the INP-file; options are CFS, GPM, MGD, IMGD, AFD, LPS, 
         LPM, MLD, CMH, and CMD. This **only** changes the units used in generating
         the INP file -- it has **no impact** on the units used in WNTR, which are 
-        always SI units (m, kg, s).
+        **always** SI units (m, kg, s).
     
+
     """
     def __init__(self,
                  headloss: str = 'H-W',
@@ -385,7 +452,7 @@ class HydraulicOptions(_OptionsBase):
                  demand_multiplier: float = 1.0,
                  demand_model: str = 'DDA',
                  minimum_pressure: float = 0.0,
-                 required_pressure: float = 0.07,
+                 required_pressure: float = 0.07,  # EPANET 2.2 default
                  pressure_exponent: float = 0.5,
                  emitter_exponent: float = 0.5,
                  trials: int = 200,  # EPANET 2.2 increased the default from 40 to 200
@@ -467,27 +534,42 @@ class HydraulicOptions(_OptionsBase):
 class ReactionOptions(_OptionsBase):
     """
     Options related to water quality reactions.
+    From the EPANET "[REACTIONS]" options.
     
     Parameters
     ----------
     bulk_order : float
-        Order of reaction occurring in the bulk fluid
+        Order of reaction occurring in the bulk fluid. Defaults to 1.0.
+
     wall_order : float
-        Order of reaction occurring at the pipe wall
+        Order of reaction occurring at the pipe wall; must be either 0 or 1. Defaults to 1.0.
+
     tank_order : float
-        Order of reaction occurring in the tanks
+        Order of reaction occurring in the tanks. Defaults to 1.0.
+
     bulk_coeff : float
-        Reaction coefficient for bulk fluid and tanks
+        Global reaction coefficient for bulk fluid and tanks. Defaults to 0.0.
+
     wall_coeff : float
-        Reaction coefficient for pipe walls
+        Global reaction coefficient for pipe walls. Defaults 0.0.
+
     limiting_potential : float
         Specifies that reaction rates are proportional to the difference 
         between the current concentration and some limiting potential value, 
-        off if None
+        Defaults to None (off).
+
     roughness_correl : float
         Makes all default pipe wall reaction coefficients related to pipe 
-        roughness, off if None
+        roughness, according to functions as defined in EPANET. Defaults
+        to None (off).
         
+
+    .. note::
+
+        Remember to use positive numbers for growth reaction coefficients and 
+        negative numbers for decay coefficients. The time units for all reaction
+        coefficients are in "per-second" and converted to/from EPANET units during I/O.
+
     """
     def __init__(self,
                  bulk_order: float = 1.0,
@@ -521,24 +603,33 @@ class ReactionOptions(_OptionsBase):
 
 class QualityOptions(_OptionsBase):
     """
-    Options related to water quality modeling.
+    Options related to water quality modeling. These options come from
+    the "[OPTIONS]" section of an EPANET INP file.
     
     Parameters
     ----------
     parameter : str
         Type of water quality analysis.  Options are NONE, CHEMICAL, AGE, and 
-        TRACE
+        TRACE. Defaults to None.
+
     trace_node : str
-        Trace node name if quality = TRACE
+        Trace node name if quality = TRACE. Defaults to None.
+
     chemical : str
-        Chemical name for 'chemical' analysis
+        Chemical name for 'chemical' analysis. Defaults to "CHEMICAL" if appropriate.
+
     diffusivity : float
-        Molecular diffusivity of the chemical (default 1.0)
+        Molecular diffusivity of the chemical. Defaults to 1.0.
+
     tolerance : float
-        Water quality solver tolerance
+        Water quality solver tolerance. Defaults to 0.01.
+
     inpfile_units : str
-        Units for quality analysis; concentration for 'chemical', time in seconds for 'age',
-        percentage for 'trace'
+        Units for quality analysis if the parameter is set to CHEMICAL. 
+        This is **only** relevant for the INP file. This value **must** be either
+        "mg/L" (default) or "ug/L" (miligrams or micrograms per liter). 
+        Internal WNTR units are always SI units (kg/m3).
+
 
     """
     def __init__(self,
@@ -567,18 +658,26 @@ class QualityOptions(_OptionsBase):
 class EnergyOptions(_OptionsBase):
     """
     Options related to energy calculations.
+    From the EPANET "[ENERGY]" settings.
     
     Parameters
     ----------
     global_price : float
-        Global average cost per Joule
+        Global average cost per Joule. Defaults to 0.
+
     global_pattern : str
-        ID label of time pattern describing how energy price varies with time
+        ID label of time pattern describing how energy price varies with time.
+        Defaults to None.
+
     global_efficiency : float
-        Global pump efficiency as percent; i.e., 75.0 means 75%
+        Global pump efficiency as percent; i.e., 75.0 means 75%.
+        Defaults to None.
+
     demand_charge : float
-        Added cost per maximum kW usage during the simulation period, or None
-        
+        Added cost per maximum kW usage during the simulation period.
+        Defaults to None.
+
+    
     """
     def __init__(self,
                 global_price: float=0,
@@ -593,26 +692,38 @@ class EnergyOptions(_OptionsBase):
 
 class ReportOptions(_OptionsBase):
     """
-    Options related to report outputs.
+    Options related to EPANET report outputs. 
+    The values in this options class *do not* affect the behavior of the WNTRSimulator.
+    These only affect what is written to an EPANET INP file and the results that are
+    in the EPANET-created report file.
 
     Parameters
     ----------
     report_filename : str
         Provides the filename to use for outputting an EPANET report file.
         By default, this will be the prefix plus ".rpt".
+
     status : str
         Output solver status ('YES', 'NO', 'FULL'). 'FULL' is only useful for debugging
+
     summary : str
         Output summary information ('YES' or 'NO')
+
     energy : str
         Output energy information
+
     nodes : None, "ALL", or list
         Output node information in report file. If a list of node names is provided, 
         EPANET only provides report information for those nodes.
+
     links : None, "ALL", or list
         Output link information in report file. If a list of link names is provided, 
         EPANET only provides report information for those links.
+
+    pagesize : str
+        Page size for EPANET report output
     
+
     """
     def __init__(self,
                 pagesize: list=None,
@@ -663,21 +774,29 @@ class Options(_OptionsBase):
     ----------
     time : TimeOptions
         Contains all timing options for the scenarios
+
     hydraulic : HydraulicOptions
         Contains hydraulic solver parameters
+
     reaction : ReactionOptions
         Contains chemical reaction parameters
+
     quality : QualityOptions
         Contains water quality simulation options and source definitions
+
     energy : EnergyOptions
         Contains parameters for energy calculations
+
     report : ReportOptions
         Contains options for how for format and save report
+
     graphics : GraphicsOptions
         Contains EPANET graphics and background options and also the filename
         for external node coordinates, if used
+
     user : dict
         An empty dictionary that allows for user specified options
+    
     
     """
     def __init__(self,

@@ -1745,7 +1745,7 @@ class WaterNetworkModel(AbstractModel):
         inpfile.read(filename, wn=self)
         self._inpfile = inpfile
 
-    def write_inpfile(self, filename, units=None, version=2.2):
+    def write_inpfile(self, filename, units=None, version=2.2, force_coordinates=False):
         """
         Writes the current water network model to an EPANET INP file
 
@@ -1754,7 +1754,7 @@ class WaterNetworkModel(AbstractModel):
             By default, WNTR now uses EPANET version 2.2 for the EPANET simulator engine. Thus,
             The WaterNetworkModel will also write an EPANET 2.2 formatted INP file by default as well.
             Because the PDA analysis options will break EPANET 2.0, the ``version`` option will allow
-            the user to force EPANET 2.0 compatibility and the expense of pressured-dependent analysis 
+            the user to force EPANET 2.0 compatibility at the expense of pressured-dependent analysis 
             options being turned off.
 
 
@@ -1762,10 +1762,18 @@ class WaterNetworkModel(AbstractModel):
         ----------
         filename : string
             Name of the inp file.
+
         units : str, int or FlowUnits
             Name of the units being written to the inp file.
+
         version : float, {2.0, **2.2**}
             Optionally specify forcing EPANET 2.0 compatibility.
+
+        force_coordinates : bool
+            This only applies if `self.options.graphics.map_filename` is not `None`,
+            and will force the COORDINATES section to be written even if a MAP file is
+            provided. False by default, but coordinates **are** written by default since
+            the MAP file is `None` by default.
 
         """
         if self._inpfile is None:
@@ -1773,7 +1781,7 @@ class WaterNetworkModel(AbstractModel):
             self._inpfile = wntr.epanet.InpFile()
         if units is None:
             units = self._options.hydraulic.inpfile_units
-        self._inpfile.write(filename, self, units=units, version=version)
+        self._inpfile.write(filename, self, units=units, version=version, force_coordinates=force_coordinates)
     
    
 class PatternRegistry(Registry):

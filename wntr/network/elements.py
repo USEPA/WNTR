@@ -40,6 +40,7 @@ from collections.abc import MutableSequence
 
 from .base import Node, Link, Registry, LinkStatus
 from .options import TimeOptions
+from wntr.epanet.util import MixType
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +75,7 @@ class Junction(Node):
         """float: The minimum pressure attribute is used for pressure-dependent demand 
         simulations. Below this pressure, the junction will not receive any water."""
 
-        self._emitter_coefficient = None
+        self.emitter_coefficient = None
         
         self._leak = False
         self.leak_status = False
@@ -93,7 +94,7 @@ class Junction(Node):
         if abs(self.elevation - other.elevation)<1e-9 and \
            abs(self.required_pressure - other.required_pressure)<1e-9 and \
            abs(self.minimum_pressure - other.minimum_pressure)<1e-9 and \
-           self._emitter_coefficient == other._emitter_coefficient:
+           self.emitter_coefficient == other.emitter_coefficient:
             return True
         return False
     
@@ -228,8 +229,8 @@ class Tank(Node):
         self._prev_head = self.head
         self.min_vol=0
         self._vol_curve_name = None
-        self._mix_model = None
-        self._mix_frac = None
+        self._mixing_model = None
+        self.mixing_fraction = None
         self.bulk_coeff = None
         
         self._leak = False
@@ -255,6 +256,31 @@ class Tank(Node):
             return True
         return False
     
+    @property
+    def mixing_model(self):
+        """
+        The mixing model to be used by EPANET. This only affects water quality 
+        simulations and has no impact on the WNTRSimulator. Uses the `MixType` 
+        enum object, or it will convert string values from MIXED, 2COMP, FIFO and LIFO.
+        By default, this is set to None, and will produce no output in the 
+        EPANET INP file and EPANET will assume complete and instantaneous mixing (MIXED).
+        """
+        return self._mixing_model
+    @mixing_model.setter
+    def mixing_model(self, value):
+        if isinstance(value, MixType):
+            self._mixing_model = value
+        elif isinstance(value, str):
+            value = value.upper()
+            if value == 'MIXED': self._mixing_model = MixType.Mixed
+            elif value == '2COMP': self._mixing_model = MixType.TwoComp
+            elif value == 'FIFO': self._mixing_model = MixType.FIFO
+            elif value == 'LIFO': self._mixing_model = MixType.LIFO
+            else:
+                raise ValueError('Mixing model must be MIXED, 2COMP, FIFO or LIFO or a MixType object')
+        else:
+            raise ValueError('Mixing model must be MIXED, 2COMP, FIFO or LIFO or a MixType object')
+
     @property
     def init_level(self):
         """The initial tank level at the start of simulation"""
