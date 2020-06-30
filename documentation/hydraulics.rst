@@ -11,11 +11,11 @@ See :ref:`software_framework` for more information on features and limitations o
 EpanetSimulator
 -----------------
 The EpanetSimulator can be used to run EPANET 2.00.12 Programmer's Toolkit [Ross00]_ or EPANET 2.2.0 Programmer's Toolkit [EPANET22]_.  
-EPANET 2.2.0 is used by default and runs demand-driven and pressure-dependent hydraulic analysis.  
+EPANET 2.2.0 is used by default and runs demand-driven and pressure dependent hydraulic analysis.  
 EPANET 2.00.12 runs demand-driven hydraulic analysis only.
 Both versions can also run water quality simulations, as described in :ref:`water_quality_simulation`.  
 
-The user can switch between demand-driven analysis (DDA) or pressure driven analysis (PDA) by setting
+The user can switch between pressure dependent demand (PDD) or demand-driven (DD) hydraulic simulation by setting
 the ``wn.options.hydraulic.demand_model`` option.
 
 .. doctest::
@@ -29,9 +29,14 @@ the ``wn.options.hydraulic.demand_model`` option.
 
 .. doctest::
 
-	>>> wn.options.hydraulic.demand_model = 'DDA'  
-	>>> wn.options.hydraulic.demand_model = 'PDA'
+	>>> wn.options.hydraulic.demand_model = 'DD'  
+	>>> wn.options.hydraulic.demand_model = 'PDD'
 	
+.. note:: 
+   EPANET 2.2.0 uses the terms demand-driven analysis (DDA) and pressure driven 
+   analysis (PDA).  In WNTR, the user can indicate demand-driven using 'DD' or 'DDA'
+   and pressure dependent demand using PDD or PDA.
+
 A hydraulic simulation using the EpanetSimulator is run using the following code:
 	
 .. doctest::
@@ -53,13 +58,13 @@ as EPANET. The WNTRSimulator does not include equations to run water quality
 simulations. The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulations
 in demand-driven or pressure dependent demand mode.
 
-As with the EpanetSimulator, the user can switch between DDA and PDA by setting
+As with the EpanetSimulator, the user can switch between DD and PDD by setting
 the ``wn.options.hydraulic.demand_model`` option.  
 
 .. doctest::
 
-	>>> wn.options.hydraulic.demand_model = 'DDA'  
-	>>> wn.options.hydraulic.demand_model = 'PDA'
+	>>> wn.options.hydraulic.demand_model = 'DD'  
+	>>> wn.options.hydraulic.demand_model = 'PDD'
 	
 A hydraulic simulation using the WNTRSimulator is run using the following code:
 
@@ -73,44 +78,28 @@ More information on the simulators can be found in the API documentation, under
 :class:`~wntr.sim.epanet.EpanetSimulator` and 
 :class:`~wntr.sim.core.WNTRSimulator`.
 
-Options
-----------
-Simulation options are stored in ``wn.options``.
-Hydraulic simulation options include 
-duration, 
-hydraulic timestep, 
-rule timestep, 
-pattern timestep, 
-pattern start, 
+Hydraulic options
+-------------------
+The hydraulic simulation options include 
+headloss model, 
+viscosity, 
+diffusivity, 
+trails,
+accuracy,
 default pattern, 
-report timestep, 
-report start, 
-start clocktime, 
-headloss, 
-trials, 
-accuracy, 
-unbalanced, 
 demand multiplier, 
 demand model,
-minimum pressure
-required pressure
+minimum pressure,
+required pressure, and 
 pressure exponent.
-
 Note that EPANET 2.0.12 does not use the demand model, minimum pressure, required pressure, or pressure exponent.
-Options that are not used with the WNTRSimulator are described in :ref:`limitations`.  
+Options that directly apply to hydraulic simulation that are not used in the
+WNTRSimulator are described in :ref:`limitations`.   
 
-The easiest way to view options is to print ``wn.options`` as a dictionary. For example, hydraulic options are shown below.
+When creating a water network model from an EPANET INP file, hydraulic options are populated from the [OPTIONS] sections of the EPANET INP file.
+All of these options can be modified in WNTR and then written to an EPANET INP file.
+More information on water network options can be found in :ref:`options`. 
 
-.. doctest::
-
-	>>> print(dict(wn.options.hydraulic)) # doctest: +SKIP
-	{'accuracy': 0.001,
-	 'checkfreq': 2,
-	 'damplimit': 0.0,
-	 'demand_model': None,
-	 'demand_multiplier': 1.0,
-	 ...
-		  
 Mass balance at nodes
 -------------------------
 Both simulators use the mass balance equations from EPANET [Ross00]_:

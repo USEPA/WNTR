@@ -82,7 +82,7 @@ These classes are listed in :numref:`table-sim-subpackage`.
    Class                                              Description
    =================================================  =============================================================================================================================================================================================================================================================================
    :class:`~wntr.sim.epanet.EpanetSimulator`          The EpanetSimulator can run both the EPANET 2.00.12 Programmer's Toolkit [Ross00]_ and EPANET 2.2.0 Programmer's Toolkit [EPANET22]_ to run hydraulic and water quality simulations.  
-                                                      EPANET 2.2.0 (which is used by default) includes both demand-driven and pressure-dependent analysis, while EPANET 2.00.12 includes only demand-driven analysis. 
+                                                      EPANET 2.2.0 (which is used by default) includes both demand-driven and pressure dependent analysis, while EPANET 2.00.12 includes only demand-driven analysis. 
                                                       When using the EpanetSimulator, the water network model is written to an EPANET INP file which is used to run an EPANET simulation.
                                                       This allows the user to read in EPANET INP files, modify the model, run an EPANET simulation, and analyze results all within WNTR. 
     
@@ -100,14 +100,9 @@ Current WNTR limitations include:
 * Certain EPANET INP model options are not supported in WNTR, as outlined below.
 
 * Water quality simulations are only available using the EpanetSimulator. 
-  Please also note that numerous bug fixes in EPANET 2.2 may mean that new 
-  results do not exactly match original EPANET 2.0 simulation results.
 
 * Use of the "MAP" file option in EPANET will **not** automatically assign node
-  coordinates from that file. The user must handle reading/writing coordinate 
-  values to this file manually. If the ``wn.options.graphics.map_filename`` is
-  set, then the [COORDINATES] section of the INP file will be left blank to 
-  limit the file size (this can be overridden in InpFile.write).
+  coordinates from that file. 
 
 **WNTR reads in and writes all sections of EPANET INP files**.  This includes the following sections: 
 [BACKDROP], 

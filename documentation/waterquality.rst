@@ -34,9 +34,8 @@ The results include a quality value for each node (see :ref:`simulation_results`
 
 .. _wq_options:
 
-Options
-----------
-Simulation options are stored in ``wn.options``.
+Water quality options
+------------------------
 Three types of water quality analysis are supported.  These options include water age, tracer, and chemical concentration.
 
 * **Water age**: A water quality simulation can be used to compute water age at every node.
@@ -75,12 +74,12 @@ Three types of water quality analysis are supported.  These options include wate
 
     >>> wn.options.quality.parameter = 'NONE'
 
-Additional water quality options include viscosity, diffusivity, specific gravity, tolerance, bulk reaction order, wall reaction order, 
+Additional water quality options include viscosity, diffusivity, tolerance, bulk reaction order, wall reaction order, 
 tank reaction order, bulk reaction coefficient, wall reaction coefficient, limiting potential, and roughness correlation.
-These parameters are defined in the :class:`~wntr.network.options.Options` API documentation.
 
 When creating a water network model from an EPANET INP file, water quality options are populated from the [OPTIONS] and [REACTIONS] sections of the EPANET INP file.
 All of these options can be modified in WNTR and then written to an EPANET INP file.
+More information on water network options can be found in :ref:`options`. 
 
 .. _sources:
 
@@ -140,7 +139,7 @@ These sources are given the name 'INP#' where # is an integer related to the num
 
 	.. doctest::
 	
-		>>> wn.options.hydraulic.demand_model = 'PDA'
+		>>> wn.options.hydraulic.demand_model = 'PDD'
 		>>> sim = wntr.sim.WNTRSimulator(wn)
 		>>> results = sim.run_sim()
 

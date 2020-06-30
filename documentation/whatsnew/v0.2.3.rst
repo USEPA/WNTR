@@ -10,12 +10,12 @@ The following features are under development in the dev branch and will be part 
     along with other options are used to populate the WaterNetworkModel.  These options are stored in ``wn.options``.  
     These options are also used when writing an INP file.  INP files created using EPANET 2.00.12 are compatible with this update.
 
-  * The option to run demand-driven analysis (DDA) and pressure-dependent demand analysis (PDA) is stored in ``wn.options.hydraulic.demand_model``. 
-    If no demand model is specified, DDA is used. For backward compatibility, demand-driven analysis can be specified as DD or DDA and 
-    pressure-dependent demand analysis can be specified as PDA or PDD::
+  * The option to run demand-driven and pressure dependent demand analysis is stored in ``wn.options.hydraulic.demand_model``. 
+    If no demand model is specified, demand-driven analysis is used. Note, demand-driven analysis can be specified as DD or DDA and 
+    pressure dependent demand analysis can be specified as PDA or PDD to maintain compatibility with EPANET 2.2.0::
 	
-		wn.options.hydraulic.demand_model = 'DDA' # specify demand-driven analysis 
-		wn.options.hydraulic.demand_model = 'PDA' # specify pressure-dependent demand analysis
+		wn.options.hydraulic.demand_model = 'DD' # specify demand-driven analysis 
+		wn.options.hydraulic.demand_model = 'PDD' # specify pressure dependent demand analysis
   
   * The EPANET 2.2.0 binaries for Mac and PC come from the Open Water Analytics EPANET 2.2.0 repository (https://github.com/OpenWaterAnalytics/EPANET).
     The Linux binary came from the Travis.ci tests of the toolkit from the same build as the Windows and Mac binaries.

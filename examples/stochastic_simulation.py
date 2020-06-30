@@ -67,7 +67,7 @@ for i in range(5):
                           end_time=(time_of_failure + duration_of_failure)*3600)
 
     # Simulate hydraulics and store results
-    wn.options.hydraulic.demand_model = 'PDA'
+    wn.options.hydraulic.demand_model = 'PDD'
     sim = wntr.sim.WNTRSimulator(wn)
     print('Pipe Breaks: ' + str(pipes_to_fail) + ', Start Time: ' + \
                 str(time_of_failure) + ', End Time: ' + \
