@@ -76,6 +76,7 @@ Three types of water quality analysis are supported.  These options include wate
 
 Additional water quality options include viscosity, diffusivity, tolerance, bulk reaction order, wall reaction order, 
 tank reaction order, bulk reaction coefficient, wall reaction coefficient, limiting potential, and roughness correlation.
+These parameters are defined in the :class:`~wntr.network.options.Options` API documentation.
 
 When creating a water network model from an EPANET INP file, water quality options are populated from the [OPTIONS] and [REACTIONS] sections of the EPANET INP file.
 All of these options can be modified in WNTR and then written to an EPANET INP file.

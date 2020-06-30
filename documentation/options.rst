@@ -7,7 +7,7 @@
 Options
 ================================
 
-Water network options are stored in an :class:`~wntr.network.options.WaterNetworkOptions` 
+Water network options are stored in an :class:`~wntr.network.options.Options` 
 class which divides options into the following sections:
 
 * :class:`~wntr.network.options.TimeOptions`: Options related to simulation and model timing
@@ -15,7 +15,7 @@ class which divides options into the following sections:
 * :class:`~wntr.network.options.QualityOptions`: Options related to water quality modeling
 * :class:`~wntr.network.options.ReactionOptions`: Options related to water quality reactions
 * :class:`~wntr.network.options.EnergyOptions`: Options related to energy calculations
-* :class:`~wntr.network.options.ResultsOptions`: Options related to results outputs
+* :class:`~wntr.network.options.ReportOptions`: Options related to reporting
 * :class:`~wntr.network.options.GraphicsOptions`: Options related to graphics
 * :class:`~wntr.network.options.UserOptions`: Options defined by the user
 

@@ -181,7 +181,7 @@ class TestInp22FileWriter(unittest.TestCase):
         inp_file = join(test_datadir, 'Net6_plus.inp') # UNITS = GPM
         self.wn = wntr.network.WaterNetworkModel(inp_file)
         self.wn.options.hydraulic.demand_model = 'PDA'
-        self.wn.options.hydraulic.minimum_pressure = 1.0
+        self.wn.options.hydraulic.required_pressure = 1.0
         self.wn.write_inpfile('temp2.inp', units='LPM')
         self.wn2 = self.wntr.network.WaterNetworkModel('temp2.inp')
 
@@ -191,7 +191,7 @@ class TestInp22FileWriter(unittest.TestCase):
 
     def test_pda(self):
         self.assertTrue(self.wn2.options.hydraulic.demand_model == 'PDA')
-        self.assertTrue(self.wn.options.hydraulic.minimum_pressure == 1.0)
+        self.assertTrue(self.wn.options.hydraulic.required_pressure == 1.0)
 
 
 class TestNet3InpWriterResults(unittest.TestCase):

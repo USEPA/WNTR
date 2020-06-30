@@ -99,7 +99,10 @@ Current WNTR limitations include:
 
 * Certain EPANET INP model options are not supported in WNTR, as outlined below.
 
-* Water quality simulations are only available using the EpanetSimulator.  
+* Water quality simulations are only available using the EpanetSimulator. 
+
+* Use of the "MAP" file option in EPANET will **not** automatically assign node
+  coordinates from that file. 
 
 **WNTR reads in and writes all sections of EPANET INP files**.  This includes the following sections: 
 [BACKDROP], 

@@ -40,6 +40,7 @@ from collections.abc import MutableSequence
 
 from .base import Node, Link, Registry, LinkStatus
 from .options import TimeOptions
+from wntr.epanet.util import MixType
 
 logger = logging.getLogger(__name__)
 
@@ -65,16 +66,16 @@ class Junction(Node):
         self.demand_timeseries_list = Demands(self._pattern_reg)
         self.elevation = 0.0
 
-        self.required_pressure = 20.0
+        self.required_pressure = self._options.hydraulic.required_pressure
         """float: The required pressure attribute is used for pressure-dependent demand
         simulations. This is the lowest pressure at which the junction receives 
         the full requested demand."""
 
-        self.minimum_pressure = 0.0
+        self.minimum_pressure = self._options.hydraulic.minimum_pressure
         """float: The minimum pressure attribute is used for pressure-dependent demand 
         simulations. Below this pressure, the junction will not receive any water."""
 
-        self._emitter_coefficient = None
+        self.emitter_coefficient = self._options.hydraulic.emitter_coefficient
         
         self._leak = False
         self.leak_status = False
@@ -93,7 +94,7 @@ class Junction(Node):
         if abs(self.elevation - other.elevation)<1e-9 and \
            abs(self.required_pressure - other.required_pressure)<1e-9 and \
            abs(self.minimum_pressure - other.minimum_pressure)<1e-9 and \
-           self._emitter_coefficient == other._emitter_coefficient:
+           self.emitter_coefficient == other.emitter_coefficient:
             return True
         return False
     
@@ -228,9 +229,9 @@ class Tank(Node):
         self._prev_head = self.head
         self.min_vol=0
         self._vol_curve_name = None
-        self._mix_model = None
-        self._mix_frac = None
-        self.bulk_rxn_coeff = None
+        self._mixing_model = None
+        self.mixing_fraction = None
+        self.bulk_coeff = None
         
         self._leak = False
         self.leak_status = False
@@ -250,11 +251,36 @@ class Tank(Node):
            abs(self.max_level   - other.max_level)<1e-9 and \
            abs(self.diameter    - other.diameter)<1e-9  and \
            abs(self.min_vol     - other.min_vol)<1e-9   and \
-           self.bulk_rxn_coeff == other.bulk_rxn_coeff   and \
+           self.bulk_coeff == other.bulk_coeff   and \
            self.vol_curve      == other.vol_curve:
             return True
         return False
     
+    @property
+    def mixing_model(self):
+        """
+        The mixing model to be used by EPANET. This only affects water quality 
+        simulations and has no impact on the WNTRSimulator. Uses the `MixType` 
+        enum object, or it will convert string values from MIXED, 2COMP, FIFO and LIFO.
+        By default, this is set to None, and will produce no output in the 
+        EPANET INP file and EPANET will assume complete and instantaneous mixing (MIXED).
+        """
+        return self._mixing_model
+    @mixing_model.setter
+    def mixing_model(self, value):
+        if isinstance(value, MixType):
+            self._mixing_model = value
+        elif isinstance(value, str):
+            value = value.upper()
+            if value == 'MIXED': self._mixing_model = MixType.Mixed
+            elif value == '2COMP': self._mixing_model = MixType.TwoComp
+            elif value == 'FIFO': self._mixing_model = MixType.FIFO
+            elif value == 'LIFO': self._mixing_model = MixType.LIFO
+            else:
+                raise ValueError('Mixing model must be MIXED, 2COMP, FIFO or LIFO or a MixType object')
+        else:
+            raise ValueError('Mixing model must be MIXED, 2COMP, FIFO or LIFO or a MixType object')
+
     @property
     def init_level(self):
         """The initial tank level at the start of simulation"""
@@ -478,8 +504,8 @@ class Pipe(Link):
         self.roughness = 100
         self.minor_loss = 0.0
         self.cv = False
-        self.bulk_rxn_coeff = None
-        self.wall_rxn_coeff = None
+        self.bulk_coeff = None
+        self.wall_coeff = None
         
     def __repr__(self):
         return "<Pipe '{}' from '{}' to '{}', length={}, diameter={}, roughness={}, minor_loss={}, check_valve={}, status={}>".format(self._link_name,
@@ -494,8 +520,8 @@ class Pipe(Link):
            abs(self.roughness     - other.roughness)<1e-9  and \
            abs(self.minor_loss    - other.minor_loss)<1e-9 and \
            self.cv               == other.cv                and \
-           self.bulk_rxn_coeff   == other.bulk_rxn_coeff    and \
-           self.wall_rxn_coeff   == other.wall_rxn_coeff:
+           self.bulk_coeff   == other.bulk_coeff    and \
+           self.wall_coeff   == other.wall_coeff:
             return True
         return False
 
@@ -1526,7 +1552,7 @@ class Curve(object):
     current_units : str
         The units the points are currently defined in. This MUST be 'SI' by the time
         one of the simulators is run.
-    options : WaterNetworkOptions, optional
+    options : Options, optional
         Water network options to lookup headloss function
         
     """
