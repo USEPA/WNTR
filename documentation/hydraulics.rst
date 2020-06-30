@@ -11,11 +11,11 @@ See :ref:`software_framework` for more information on features and limitations o
 EpanetSimulator
 -----------------
 The EpanetSimulator can be used to run EPANET 2.00.12 Programmer's Toolkit [Ross00]_ or EPANET 2.2.0 Programmer's Toolkit [EPANET22]_.  
-EPANET 2.2.0 is used by default and runs demand-driven and pressure-dependent hydraulic analysis.  
+EPANET 2.2.0 is used by default and runs demand-driven and pressure dependent hydraulic analysis.  
 EPANET 2.00.12 runs demand-driven hydraulic analysis only.
 Both versions can also run water quality simulations, as described in :ref:`water_quality_simulation`.  
 
-The user can switch between demand-driven analysis (DDA) or pressure driven analysis (PDA) by setting
+The user can switch between pressure dependent demand (PDD) or demand-driven (DD) hydraulic simulation by setting
 the ``wn.options.hydraulic.demand_model`` option.
 
 .. doctest::
@@ -29,9 +29,14 @@ the ``wn.options.hydraulic.demand_model`` option.
 
 .. doctest::
 
-	>>> wn.options.hydraulic.demand_model = 'DDA'  
-	>>> wn.options.hydraulic.demand_model = 'PDA'
+	>>> wn.options.hydraulic.demand_model = 'DD'  
+	>>> wn.options.hydraulic.demand_model = 'PDD'
 	
+.. note:: 
+   EPANET 2.2.0 uses the terms demand-driven analysis (DDA) and pressure driven 
+   analysis (PDA).  In WNTR, the user can indicate demand-driven using 'DD' or 'DDA'
+   and pressure dependent demand using PDD or PDA.
+
 A hydraulic simulation using the EpanetSimulator is run using the following code:
 	
 .. doctest::
@@ -53,13 +58,13 @@ as EPANET. The WNTRSimulator does not include equations to run water quality
 simulations. The WNTRSimulator includes the option to simulate leaks, and run hydraulic simulations
 in demand-driven or pressure dependent demand mode.
 
-As with the EpanetSimulator, the user can switch between DDA and PDA by setting
+As with the EpanetSimulator, the user can switch between DD and PDD by setting
 the ``wn.options.hydraulic.demand_model`` option.  
 
 .. doctest::
 
-	>>> wn.options.hydraulic.demand_model = 'DDA'  
-	>>> wn.options.hydraulic.demand_model = 'PDA'
+	>>> wn.options.hydraulic.demand_model = 'DD'  
+	>>> wn.options.hydraulic.demand_model = 'PDD'
 	
 A hydraulic simulation using the WNTRSimulator is run using the following code:
 

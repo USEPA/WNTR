@@ -303,7 +303,7 @@ The following examples compute hydraulic metrics, including:
 
   .. doctest::
 
-      >>> wn.options.hydraulic.demand_model = 'PDA'
+      >>> wn.options.hydraulic.demand_model = 'PDD'
       >>> sim = wntr.sim.WNTRSimulator(wn)
       >>> results = sim.run_sim()
     

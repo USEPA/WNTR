@@ -49,7 +49,7 @@ Options can be modified, as shown in the example below.
 .. doctest::
 
     >>> wn.options.time.duration = 86400
-    >>> wn.options.hydraulic.demand_model = 'PDA'
+    >>> wn.options.hydraulic.demand_model = 'PDD'
     
 Note that EPANET 2.0.12 does not use the demand model, minimum pressure, 
 required pressure, or pressure exponent from the hydraulic section.

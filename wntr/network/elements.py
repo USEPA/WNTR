@@ -75,7 +75,7 @@ class Junction(Node):
         """float: The minimum pressure attribute is used for pressure-dependent demand 
         simulations. Below this pressure, the junction will not receive any water."""
 
-        self.emitter_coefficient = self._options.hydraulic.emitter_coefficient
+        self.emitter_coefficient = None
         
         self._leak = False
         self.leak_status = False
