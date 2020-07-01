@@ -166,5 +166,6 @@ Known discrepancies between the WNTRSimulator and EpanetSimulator are listed bel
 * **Variable minimum and required pressure**: 
   While the WaterNetworkModel can store spatially variable minimum and required pressure that are used in the WNTRSimulator, 
   those values cannot be saved when writing an INP file, rather the minimum and required pressure values in the options are saved.
-  This impacts the ability to use those junction attributes in the EpanetSimulator. 
+  This impacts the ability to use those junction attributes in the EpanetSimulator. Also, while the minimum and required pressure
+  in an EPANET INP file are used to define junction attributes, if the options are later changed (in ``wn.options``) that has no impact on the junction attributes.
 

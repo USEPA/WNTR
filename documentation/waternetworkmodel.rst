@@ -21,8 +21,7 @@ For more information on the water network model, see
 Build a model from an INP file
 ---------------------------------
 
-A water network model can be created directly from an EPANET INP file.  
-[DAVE add a sentence about using 2.2 vs 2.0 files]  
+A water network model can be created directly from EPANET INP files using EPANET 2.00.12 or 2.2.0 format.  
 The following example builds a water network model.
 
 .. doctest::
@@ -246,11 +245,11 @@ Write a model to an INP file
 The water network model can be written to a file in EPANET INP format.
 By default, files are written in the LPS EPANET unit convention.
 The EPANET INP file will not include features not supported by EPANET (i.e., custom element attributes).
-[DAVE add a sentence about saving 2.2 vs 2.0 options to file. Make sure you can read these into the GUI]
+EPANET INP files can be saved in EPANET 2.00.12 or 2.2.0 format.
   
 .. doctest::
 
-    >>> wn.write_inpfile('filename.inp')
+    >>> wn.write_inpfile('filename.inp', version=2.2)
 
 Build a model from scratch
 ---------------------------------

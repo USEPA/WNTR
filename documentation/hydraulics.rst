@@ -34,8 +34,8 @@ the ``wn.options.hydraulic.demand_model`` option.
 	
 .. note:: 
    EPANET 2.2.0 uses the terms demand-driven analysis (DDA) and pressure driven 
-   analysis (PDA).  In WNTR, the user can indicate demand-driven using 'DD' or 'DDA'
-   and pressure dependent demand using PDD or PDA.
+   analysis (PDA).  In WNTR, the user can select demand-driven using 'DD' or 'DDA'
+   and pressure dependent demand using 'PDD' or 'PDA'.
 
 A hydraulic simulation using the EpanetSimulator is run using the following code:
 	
