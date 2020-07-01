@@ -27,27 +27,32 @@ are set to default values.  If the WaterNetworkModel is created using an EPANET 
 then the options are defined using values from that file. 
 
 .. doctest::
+    :hide:
+
+    >>> import wntr
+
+.. doctest::
 
     >>> wn = wntr.network.model.WaterNetworkModel()
-    >>> wn.options
+    >>> wn.options  # doctest: +SKIP
 
 Individual sections are selected as follows.
 
 .. doctest::
 
-    >>> wn.options.time
-    >>> wn.options.hydraulic
-    >>> wn.options.quality
-    >>> wn.options.reaction
-    >>> wn.options.energy
-    >>> wn.options.results
-    >>> wn.options.graphics
-    >>> wn.options.user
+    >>> wn.options.time  # doctest: +SKIP
+    >>> wn.options.hydraulic  # doctest: +SKIP
+    >>> wn.options.quality  # doctest: +SKIP
+    >>> wn.options.reaction  # doctest: +SKIP
+    >>> wn.options.energy  # doctest: +SKIP
+    >>> wn.options.results  # doctest: +SKIP
+    >>> wn.options.graphics  # doctest: +SKIP
+    >>> wn.options.user  # doctest: +SKIP
 
 Options can be modified, as shown in the example below.
 
 .. doctest::
-
+    
     >>> wn.options.time.duration = 86400
     >>> wn.options.hydraulic.demand_model = 'PDD'
     

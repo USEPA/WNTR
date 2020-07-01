@@ -18,7 +18,7 @@ The following features are under development in the dev branch and will be part 
 		wn.options.hydraulic.demand_model = 'PDD' # specify pressure dependent demand analysis
   
   * The EPANET 2.2.0 binaries for Mac and PC come from the Open Water Analytics EPANET 2.2.0 repository (https://github.com/OpenWaterAnalytics/EPANET).
-    The Linux binary came from the Travis.ci tests of the toolkit from the same build as the Windows and Mac binaries.
+    The Linux binary was built on Ubuntu and comes from the OWA group using the same source as the Windows and Mac binaries.
 	
   * The user can switch between EPANET version 2.00.12 and 2.2.0 as shown below:: 
     
