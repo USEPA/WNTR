@@ -45,7 +45,7 @@ Individual sections are selected as follows.
     >>> wn.options.quality  # doctest: +SKIP
     >>> wn.options.reaction  # doctest: +SKIP
     >>> wn.options.energy  # doctest: +SKIP
-    >>> wn.options.results  # doctest: +SKIP
+    >>> wn.options.report  # doctest: +SKIP
     >>> wn.options.graphics  # doctest: +SKIP
     >>> wn.options.user  # doctest: +SKIP
 
