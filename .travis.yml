@@ -18,6 +18,12 @@ matrix:
       - xvfb
       sudo: true
       env: CONDA_ENV=py37
+    - python: 3.8
+      dist: xenial
+      env: CONDA_ENG=py38
+      services:
+      - xvfb
+      sudo: true
 
 addons:
     apt:
