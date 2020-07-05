@@ -18,7 +18,8 @@ class TestPumpCost(unittest.TestCase):
         self.wn.options.time.report_timestep = 'all'
         self.wn.options.time.duration = 12*3600
         self.wn.options.energy.global_price = 3.61111111111e-8
-        sim = self.wntr.sim.WNTRSimulator(self.wn, mode='DD')
+        self.wn.options.hydraulic.demand_model = 'DDA'
+        sim = self.wntr.sim.WNTRSimulator(self.wn)
         self.results = sim.run_sim()
 
     @classmethod

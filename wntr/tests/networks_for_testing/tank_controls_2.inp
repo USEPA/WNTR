@@ -46,7 +46,7 @@
  Duration           	24:00 
  Hydraulic Timestep 	1:00 
  Quality Timestep   	1:00 
- Rule Timesetp		1:00
+ Rule Timestep		1:00
  Pattern Timestep   	6:00 
  Pattern Start      	0:00 
  Report Timestep    	1:00 

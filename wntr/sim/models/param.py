@@ -86,7 +86,7 @@ class pnom_param(Definition):
     @classmethod
     def build(cls, m, wn, updater, index_over=None):
         """
-        Add a nominal pressure parameter to the model
+        Add a required pressure parameter to the model
 
         Parameters
         ----------
@@ -104,12 +104,14 @@ class pnom_param(Definition):
 
         for node_name in index_over:
             node = wn.get_node(node_name)
+            if node.required_pressure <= m.pdd_smoothing_delta:
+                raise ValueError('Required pressure for node %s must be greater than %s, the smoothing delta', node_name, m.pdd_smoothing_delta)
             if node_name in m.pnom:
-                m.pnom[node_name].value = node.nominal_pressure
+                m.pnom[node_name].value = node.required_pressure
             else:
-                m.pnom[node_name] = aml.Param(node.nominal_pressure)
+                m.pnom[node_name] = aml.Param(node.required_pressure)
 
-            updater.add(node, 'nominal_pressure', pnom_param.update)
+            updater.add(node, 'required_pressure', pnom_param.update)
 
 
 class leak_coeff_param(Definition):
@@ -202,7 +204,7 @@ class pdd_poly_coeffs_param(Definition):
         for node_name in index_over:
             node = wn.get_node(node_name)
             pmin = node.minimum_pressure
-            pnom = node.nominal_pressure
+            pnom = node.required_pressure
             x1 = pmin
             f1 = 0.0
             x2 = pmin + m.pdd_smoothing_delta
@@ -237,7 +239,7 @@ class pdd_poly_coeffs_param(Definition):
                 m.pdd_poly2_coeffs_d[node_name] = aml.Param(d2)
 
             updater.add(node, 'minimum_pressure', pdd_poly_coeffs_param.update)
-            updater.add(node, 'nominal_pressure', pdd_poly_coeffs_param.update)
+            updater.add(node, 'required_pressure', pdd_poly_coeffs_param.update)
 
 
 class leak_poly_coeffs_param(Definition):

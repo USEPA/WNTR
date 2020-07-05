@@ -303,7 +303,8 @@ The following examples compute hydraulic metrics, including:
 
   .. doctest::
 
-      >>> sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+      >>> wn.options.hydraulic.demand_model = 'PDD'
+      >>> sim = wntr.sim.WNTRSimulator(wn)
       >>> results = sim.run_sim()
     
       >>> pressure = results.node['pressure']
@@ -365,7 +366,7 @@ The following examples compute water quality metrics, including:
 
   .. doctest::
 
-      >>> wn.options.quality.mode = 'AGE'
+      >>> wn.options.quality.parameter = 'AGE'
       >>> sim = wntr.sim.EpanetSimulator(wn)
       >>> results = sim.run_sim()
       
@@ -386,7 +387,7 @@ The following examples compute water quality metrics, including:
 	
   .. doctest::
 
-      >>> wn.options.quality.mode = 'CHEMICAL'
+      >>> wn.options.quality.parameter = 'CHEMICAL'
       >>> source_pattern = wntr.network.elements.Pattern.binary_pattern('SourcePattern', 
       ...     step_size=3600, start_time=2*3600, end_time=15*3600, duration=7*24*3600)
       >>> wn.add_pattern('SourcePattern', source_pattern)

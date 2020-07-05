@@ -30,7 +30,8 @@ class TestTCVs(unittest.TestCase):
         control = wntr.network.controls.Control._time_control(wn, 7200, time_flag='SIM_TIME', daily_flag=False, control_action=open_action)
         wn.add_control('c1', control)
 
-        sim = wntr.sim.WNTRSimulator(wn, mode='DD')
+        wn.options.hydraulic.demand_model = 'DDA'
+        sim = wntr.sim.WNTRSimulator(wn)
         results1 = sim.run_sim()
         
         raise SkipTest # EPANET seg faults

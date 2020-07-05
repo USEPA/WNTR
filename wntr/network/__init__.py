@@ -7,7 +7,7 @@ from .elements import Junction, Reservoir, Tank, Pipe, Pump, Valve, Pattern, \
     TimeSeries, Demands, Curve, Source
 from .model import WaterNetworkModel
 from .layer import generate_valve_layer
-from .options import WaterNetworkOptions
+from .options import Options
 from .controls import Comparison, ControlPriority, TimeOfDayCondition, \
     SimTimeCondition, ValueCondition, TankLevelCondition, RelativeCondition, \
     OrCondition, AndCondition, ControlAction, Control, ControlManager, Rule
