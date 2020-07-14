@@ -64,7 +64,7 @@ jobs:
         pip install coveralls
         python setup.py develop
     - name: Run Tests
-      run: nosetests -v --nologcapture --with-coverage --exclude=test_examples --cover-package=wntr wntr
+      run: nosetests -v --nologcapture --with-coverage --with-doctest --doctest-extension=.rst --exclude=test_examples --traverse-namespace --cover-package=wntr wntr
     - name: Upload Coverage
       run: coveralls
       env:
