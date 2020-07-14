@@ -41,7 +41,7 @@ jobs:
         COVERALLS_PARALLEL: true
   finish:
     name: Finish Coveralls
-    needs: cover
+    needs: test
     runs-on: ubuntu-latest
     container: python:3-slim
     steps:
