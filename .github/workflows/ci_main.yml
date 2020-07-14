@@ -6,9 +6,9 @@ name: CI Main
 # events but only for the master branch
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ test ]
   pull_request:
-    branches: [ master, dev ]
+    branches: [ test ]
 
 jobs:
   test-nix:
