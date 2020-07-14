@@ -2,15 +2,14 @@
 The wntr.morph.link module contains functions to split/break pipes.
 """
 import logging
-
+import copy
 from wntr.network.elements import Reservoir, Pipe
-from wntr.morph.node import _deepcopy_wn
 
 logger = logging.getLogger(__name__)
 
         
 def split_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name,
-               add_pipe_at_end=True, split_at_point=0.5):
+               add_pipe_at_end=True, split_at_point=0.5, return_copy=True):
     """
     Split a pipe by adding a junction and one new pipe segment.
     
@@ -37,40 +36,41 @@ def split_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name,
     
     Parameters
     ----------
+    wn: wntr WaterNetworkModel
+        Water network model
     pipe_name_to_split: string
         Name of the pipe to split.
-
     new_pipe_name: string
         Name of the new pipe to be added as the split part of the pipe.
-
     new_junction_name: string
         Name of the new junction to be added.
-
-    add_pipe_at_end: bool (optional)
+    add_pipe_at_end: bool, optional
         If True, add the new pipe between the new node and the original end node. 
         If False, add the new pipe between the original start node and the new node.
-        
-    split_at_point: float (optional)
+    split_at_point: float, optional
         Between 0 and 1, the position along the original pipe where the new 
         junction will be located.
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
         
     Returns
     -------
-    A WaterNetworkModel object with split pipe
+    wntr WaterNetworkModel
+        Water network model with split pipe
     """
     wn2 = _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name, 
                             [new_junction_name],
-                            add_pipe_at_end, split_at_point, 'SPLIT')
+                            add_pipe_at_end, split_at_point, 'SPLIT', return_copy)
     
     return wn2
     
 
 def break_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name_old_pipe,
-               new_junction_name_new_pipe, add_pipe_at_end=True, split_at_point=0.5):
+               new_junction_name_new_pipe, add_pipe_at_end=True, 
+               split_at_point=0.5, return_copy=True):
     """
     Break a pipe by adding a two unconnected junctions and one new pipe segment.
-    
-    
     
     This function splits the original pipe into two disconnected pipes by 
     adding two new junctions and new pipe to the model.  
@@ -99,41 +99,45 @@ def break_pipe(wn, pipe_name_to_split, new_pipe_name, new_junction_name_old_pipe
     
     Parameters
     ----------
+    wn: wntr WaterNetworkModel
+        Water network model
     pipe_name_to_split: string
         Name of the pipe to split.
-
     new_pipe_name: string
         Name of the new pipe to be added as the split part of the pipe.
-
     new_junction_name_old_pipe: string
         Name of the new junction to be added to the original pipe
-
-    new_junction_name_old_pipe: string
+    new_junction_name_new_pipe: string
         Name of the new junction to be added to the new pipe
-
-    add_pipe_at_node: string
-        Either 'START' or 'END', 'END' is default. The new pipe goes between this
-        original node and the new junction.
+    add_pipe_at_end: bool, optional
+        If True, add the new pipe at after the new junction. If False, add the 
+        new pipe before the new junction
+    split_at_point: float, optional
+        Relative position (value between 0 and 1) along the original pipe 
+        where the new junction will be located.
+    return_copy: bool, optional
+        If True, modify and return a copy of the WaterNetworkModel object.
+        If False, modify and return the original WaterNetworkModel object.
         
-    split_at_point: float
-        Between 0 and 1, the position along the original pipe where the new 
-        junction will be located.
-
     Returns
     -------
-    A WaterNetworkModel object with pipe break
+    wntr WaterNetworkModel
+        Water network model with pipe break
     """
     wn2 = _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name, 
                             [new_junction_name_old_pipe, new_junction_name_new_pipe],
-                            add_pipe_at_end, split_at_point, 'BREAK')
+                            add_pipe_at_end, split_at_point, 'BREAK', return_copy)
     
     return wn2
 
 def _split_or_break_pipe(wn, pipe_name_to_split, new_pipe_name, 
                          new_junction_names, add_pipe_at_end, split_at_point,
-                         flag):
+                         flag, return_copy):
     
-    wn2 = _deepcopy_wn(wn)
+    if return_copy: # Get a copy of the WaterNetworkModel
+        wn2 = copy.deepcopy(wn)
+    else:
+        wn2 = wn
     
     pipe = wn2.get_link(pipe_name_to_split)
     

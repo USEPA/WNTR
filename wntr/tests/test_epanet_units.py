@@ -39,7 +39,7 @@ def test_Demand():
                 data = 86400. # m3/d
             execute_test(typestring, flowunit, data, data_expected)
 
-def test_Emitter_Coefficient():
+def testemitter_coefficient():
     pass
 
 def test_Pipe_Diameter():

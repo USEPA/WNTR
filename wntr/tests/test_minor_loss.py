@@ -19,7 +19,8 @@ class TestMinorLosses(unittest.TestCase):
         wn.add_reservoir(name='r1', base_head=20.0)
         wn.add_junction(name='j1', base_demand=0.1)
         wn.add_pipe(name='p1', start_node_name='r1', end_node_name='j1', minor_loss=100.0)
-        sim = wntr.sim.WNTRSimulator(wn, mode='DD')
+        wn.options.hydraulic.demand_model = 'DDA'
+        sim = wntr.sim.WNTRSimulator(wn)
 
         results1 = sim.run_sim()
         wn.write_inpfile('temp.inp', 'CMH')

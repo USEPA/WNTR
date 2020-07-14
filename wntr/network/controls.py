@@ -737,7 +737,7 @@ class ValueCondition(ControlCondition):
         if np.isnan(self._threshold):
             relation = np.greater
             thresh_value = 0.0
-        state = relation(cur_value, thresh_value)
+        state = relation(np.round(cur_value,10), np.round(thresh_value,10))
         return bool(state)
 
 
@@ -752,7 +752,9 @@ class TankLevelCondition(ValueCondition):
             raise ValueError('TankLevelConditions only support <= and >= relations.')
         super(TankLevelCondition, self).__init__(source_obj, source_attr, relation, threshold)
         assert source_attr in {'level', 'pressure', 'head'}
-        self._last_value = getattr(self._source_obj, self._source_attr)  # this is used to see if backtracking is needed
+        # this is used to see if backtracking is needed
+        self._last_value = getattr(self._source_obj, self._source_attr)  
+
 
     def _compare(self, other):
         """
@@ -778,7 +780,7 @@ class TankLevelCondition(ValueCondition):
 
     def evaluate(self):
         self._backtrack = 0  # no backtracking is needed unless specified in the if statement below
-        cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level
+        cur_value = getattr(self._source_obj, self._source_attr)  # get the current tank level, head, or pressure
         thresh_value = self._threshold
         relation = self._relation
         if relation is Comparison.gt:
@@ -788,8 +790,8 @@ class TankLevelCondition(ValueCondition):
         if np.isnan(self._threshold):  # what is this doing?
             relation = np.greater
             thresh_value = 0.0
-        state = relation(cur_value, thresh_value)  # determine if the condition is satisfied
-        if state and not relation(self._last_value, thresh_value):
+        state = relation(np.round(cur_value,10), np.round(thresh_value,10))  # determine if the condition is satisfied
+        if state and not relation(np.round(self._last_value,10), np.round(thresh_value,10)):
             # if the condition is satisfied and the last value did not satisfy the condition, then backtracking
             # is needed.
             # The math.floor is not actually needed, but I leave it here for clarity. We want the backtrack value to be
@@ -797,8 +799,28 @@ class TankLevelCondition(ValueCondition):
             # be slightly later than when the tank level hits the threshold. This ensures the tank level will go
             # slightly beyond the threshold. This ensures that relation(self._last_value, thresh_value) will be True
             # next time. This prevents us from computing very small backtrack values over and over.
-            if self._source_obj.demand != 0:
-                self._backtrack = int(math.floor((cur_value - thresh_value)*math.pi/4.0*self._source_obj.diameter**2/self._source_obj.demand))
+            if self._source_obj.demand != 0 and not self._source_obj.demand is None:
+                if self._source_obj.vol_curve is None:
+                    self._backtrack = int(math.floor((cur_value - thresh_value)
+                             *math.pi/4.0*self._source_obj.diameter**2
+                             /self._source_obj.demand))
+                else: # a volume curve must be used instead
+                    if self._source_attr == 'head':
+                        thresh_level = thresh_value - self._source_obj.elevation
+                        level = cur_value - self._source_obj.elevation
+                    elif self._source_attr == 'level':
+                        thresh_level = thresh_value
+                        level = cur_value
+                    else:
+                        raise NotImplementedError("Pressure tank value conditions with a " + 
+                                                     "volume curve have not been implemented.")
+                    
+                    cur_value_volume = self._source_obj.get_volume(level)
+                    thresh_volume = self._source_obj.get_volume(thresh_level)
+                    
+                    self._backtrack = int(math.floor((cur_value_volume 
+                                                      - thresh_volume) 
+                                                      / self._source_obj.demand))
         self._last_value = cur_value  # update the last value
         return bool(state)
 
@@ -1568,7 +1590,7 @@ class _ActiveFCVCondition(ControlCondition):
             return False
         elif self._fcv.flow < -self._Qtol:
             return False
-        elif self._fcv._internal_status == LinkStatus.Open and self._fcv.flow >= self._fcv.setting:
+        elif self._fcv._internal_status == LinkStatus.Open and self._fcv.flow >= self._fcv.setting + self._Qtol:
             return True
         else:
             return False

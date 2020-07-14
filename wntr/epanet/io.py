@@ -33,7 +33,7 @@ import wntr.network
 from wntr.network.base import Link
 from wntr.network.model import WaterNetworkModel
 from wntr.network.elements import Junction, Reservoir, Tank, Pipe, Pump, Valve
-from wntr.network.options import WaterNetworkOptions
+from wntr.network.options import Options
 from wntr.network.model import Pattern, LinkStatus, Curve, Demands, Source
 from wntr.network.controls import TimeOfDayCondition, SimTimeCondition, ValueCondition, Comparison
 from wntr.network.controls import OrCondition, AndCondition, Control, ControlAction, _ControlType, Rule
@@ -240,6 +240,7 @@ class InpFile(object):
     def read(self, inp_files, wn=None):
         """
         Method to read an EPANET INP file and load data into a water network model object.
+        Both EPANET 2.0 and EPANET 2.2 INP file options are recognized and handled.
 
         Parameters
         ----------
@@ -388,17 +389,28 @@ class InpFile(object):
         
         return self.wn
 
-    def write(self, filename, wn, units=None):
+    def write(self, filename, wn, units=None, version=2.2, force_coordinates=False):
         """
         Write a water network model into an EPANET INP file.
+
+        .. note::
+
+            Please note that by default, an EPANET 2.2 formatted file is written by WNTR. An INP file
+            with version 2.2 options *will not* work with EPANET 2.0 (neither command line nor GUI). 
+            By default, WNTR will use the EPANET 2.2 toolkit.
+        
 
         Parameters
         ----------
         filename : str
             Name of the EPANET INP file.
         units : str, int or FlowUnits
-            Name of the units being written to the EPANET INP file.
-        
+            Name of the units for the EPANET INP file to be written in.
+        version : float, {2.0, **2.2**}
+            Defaults to 2.2; use 2.0 to guarantee backward compatability, but this will turn off PDA mode 
+            and supress the writing of other EPANET 2.2-specific options. If PDA mode is specified, a 
+            warning will be issued.
+
 		"""
 
         if not isinstance(wn, WaterNetworkModel):
@@ -412,8 +424,8 @@ class InpFile(object):
             self.flow_units = FlowUnits(units)
         elif self.flow_units is not None:
             self.flow_units = self.flow_units
-        elif isinstance(wn.options.hydraulic.en2_units, str):
-            units = wn.options.hydraulic.en2_units.upper()
+        elif isinstance(wn.options.hydraulic.inpfile_units, str):
+            units = wn.options.hydraulic.inpfile_units.upper()
             self.flow_units = FlowUnits[units]
         else:
             self.flow_units = FlowUnits.GPM
@@ -445,9 +457,10 @@ class InpFile(object):
 
             self._write_times(f, wn)
             self._write_report(f, wn)
-            self._write_options(f, wn)
+            self._write_options(f, wn, version=version)
 
-            self._write_coordinates(f, wn)
+            if wn.options.graphics.map_filename is None or force_coordinates is True:
+                self._write_coordinates(f, wn)
             self._write_vertices(f, wn)
             self._write_labels(f, wn)
             self._write_backdrop(f, wn)
@@ -822,7 +835,7 @@ class InpFile(object):
             if current == []:
                 continue
             junction = self.wn.get_node(current[0])
-            junction._emitter_coefficient = to_si(self.flow_units, float(current[1]), HydParam.Flow)
+            junction.emitter_coefficient = to_si(self.flow_units, float(current[1]), HydParam.Flow)
 
     def _write_emitters(self, f, wn):
         f.write('[EMITTERS]\n'.encode('ascii'))
@@ -833,8 +846,8 @@ class InpFile(object):
         # njunctions.sort()
         for junction_name in njunctions:
             junction = wn.nodes[junction_name]
-            if junction._emitter_coefficient:
-                val = from_si(self.flow_units, junction._emitter_coefficient, HydParam.Flow)
+            if junction.emitter_coefficient:
+                val = from_si(self.flow_units, junction.emitter_coefficient, HydParam.Flow)
                 f.write(entry.format(junction_name, str(val)).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
@@ -1390,9 +1403,9 @@ class InpFile(object):
             if current == []:
                 continue
             node = self.wn.get_node(current[0])
-            if self.wn.options.quality.mode == 'CHEMICAL':
+            if self.wn.options.quality.parameter == 'CHEMICAL':
                 quality = to_si(self.flow_units, float(current[1]), QualParam.Concentration, mass_units=self.mass_units)
-            elif self.wn.options.quality.mode == 'AGE':
+            elif self.wn.options.quality.parameter == 'AGE':
                 quality = to_si(self.flow_units, float(current[1]), QualParam.WaterAge)
             else :
                 quality = float(current[1])
@@ -1407,9 +1420,9 @@ class InpFile(object):
         for node_name in nnodes:
             node = wn.nodes[node_name]
             if node.initial_quality:
-                if wn.options.quality.mode == 'CHEMICAL':
+                if wn.options.quality.parameter == 'CHEMICAL':
                     quality = from_si(self.flow_units, node.initial_quality, QualParam.Concentration, mass_units=self.mass_units)
-                elif wn.options.quality.mode == 'AGE':
+                elif wn.options.quality.parameter == 'AGE':
                     quality = from_si(self.flow_units, node.initial_quality, QualParam.WaterAge)
                 else:
                     quality = node.initial_quality
@@ -1433,39 +1446,39 @@ class InpFile(object):
             val3 = float(current[2])
             if key1 == 'ORDER':
                 if key2 == 'BULK':
-                    self.wn.options.quality.bulk_rxn_order = int(float(current[2]))
+                    self.wn.options.reaction.bulk_order = int(float(current[2]))
                 elif key2 == 'WALL':
-                    self.wn.options.quality.wall_rxn_order = int(float(current[2]))
+                    self.wn.options.reaction.wall_order = int(float(current[2]))
                 elif key2 == 'TANK':
-                    self.wn.options.quality.tank_rxn_order = int(float(current[2]))
+                    self.wn.options.reaction.tank_order = int(float(current[2]))
             elif key1 == 'GLOBAL':
                 if key2 == 'BULK':
-                    self.wn.options.quality.bulk_rxn_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
+                    self.wn.options.reaction.bulk_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
                                                 mass_units=self.mass_units,
-                                                reaction_order=self.wn.options.quality.bulk_rxn_order)
+                                                reaction_order=self.wn.options.reaction.bulk_order)
                 elif key2 == 'WALL':
-                    self.wn.options.quality.wall_rxn_coeff = to_si(self.flow_units, val3, WallReactionCoeff,
+                    self.wn.options.reaction.wall_coeff = to_si(self.flow_units, val3, WallReactionCoeff,
                                                 mass_units=self.mass_units,
-                                                reaction_order=self.wn.options.quality.wall_rxn_order)
+                                                reaction_order=self.wn.options.reaction.wall_order)
             elif key1 == 'BULK':
                 pipe = self.wn.get_link(current[1])
-                pipe.bulk_rxn_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
+                pipe.bulk_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
                                             mass_units=self.mass_units,
-                                            reaction_order=self.wn.options.quality.bulk_rxn_order)
+                                            reaction_order=self.wn.options.reaction.bulk_order)
             elif key1 == 'WALL':
                 pipe = self.wn.get_link(current[1])
-                pipe.wall_rxn_coeff = to_si(self.flow_units, val3, WallReactionCoeff,
+                pipe.wall_coeff = to_si(self.flow_units, val3, WallReactionCoeff,
                                             mass_units=self.mass_units,
-                                            reaction_order=self.wn.options.quality.wall_rxn_order)
+                                            reaction_order=self.wn.options.reaction.wall_order)
             elif key1 == 'TANK':
                 tank = self.wn.get_node(current[1])
-                tank.bulk_rxn_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
+                tank.bulk_coeff = to_si(self.flow_units, val3, BulkReactionCoeff,
                                             mass_units=self.mass_units,
-                                            reaction_order=self.wn.options.quality.bulk_rxn_order)
+                                            reaction_order=self.wn.options.reaction.bulk_order)
             elif key1 == 'LIMITING':
-                self.wn.options.quality.limiting_potential = float(current[2])
+                self.wn.options.reaction.limiting_potential = float(current[2])
             elif key1 == 'ROUGHNESS':
-                self.wn.options.quality.roughness_correl = float(current[2])
+                self.wn.options.reaction.roughness_correl = float(current[2])
             else:
                 raise RuntimeError('Reaction option not recognized: %s'%key1)
 
@@ -1475,49 +1488,49 @@ class InpFile(object):
         entry_int = ' {:s} {:s} {:d}\n'
         entry_float = ' {:s} {:s} {:<10.4f}\n'
         for tank_name, tank in wn.nodes(Tank):
-            if tank.bulk_rxn_coeff is not None:
+            if tank.bulk_coeff is not None:
                 f.write(entry_float.format('TANK',tank_name,
                                            from_si(self.flow_units,
-                                                   tank.bulk_rxn_coeff,
+                                                   tank.bulk_coeff,
                                                    QualParam.BulkReactionCoeff,
                                                    mass_units=self.mass_units,
-                                                   reaction_order=wn.options.quality.bulk_rxn_order)).encode('ascii'))
+                                                   reaction_order=wn.options.reaction.bulk_order)).encode('ascii'))
         for pipe_name, pipe in wn.links(Pipe):
-            if pipe.bulk_rxn_coeff is not None:
+            if pipe.bulk_coeff is not None:
                 f.write(entry_float.format('BULK',pipe_name,
                                            from_si(self.flow_units,
-                                                   pipe.bulk_rxn_coeff,
+                                                   pipe.bulk_coeff,
                                                    QualParam.BulkReactionCoeff,
                                                    mass_units=self.mass_units,
-                                                   reaction_order=wn.options.quality.bulk_rxn_order)).encode('ascii'))
-            if pipe.wall_rxn_coeff is not None:
+                                                   reaction_order=wn.options.reaction.bulk_order)).encode('ascii'))
+            if pipe.wall_coeff is not None:
                 f.write(entry_float.format('WALL',pipe_name,
                                            from_si(self.flow_units,
-                                                   pipe.wall_rxn_coeff,
+                                                   pipe.wall_coeff,
                                                    QualParam.WallReactionCoeff,
                                                    mass_units=self.mass_units,
-                                                   reaction_order=wn.options.quality.wall_rxn_order)).encode('ascii'))
+                                                   reaction_order=wn.options.reaction.wall_order)).encode('ascii'))
         f.write('\n'.encode('ascii'))
 #        f.write('[REACTIONS]\n'.encode('ascii'))  # EPANET GUI puts this line in here
-        f.write(entry_int.format('ORDER', 'BULK', int(wn.options.quality.bulk_rxn_order)).encode('ascii'))
-        f.write(entry_int.format('ORDER', 'TANK', int(wn.options.quality.tank_rxn_order)).encode('ascii'))
-        f.write(entry_int.format('ORDER', 'WALL', int(wn.options.quality.wall_rxn_order)).encode('ascii'))
+        f.write(entry_int.format('ORDER', 'BULK', int(wn.options.reaction.bulk_order)).encode('ascii'))
+        f.write(entry_int.format('ORDER', 'TANK', int(wn.options.reaction.tank_order)).encode('ascii'))
+        f.write(entry_int.format('ORDER', 'WALL', int(wn.options.reaction.wall_order)).encode('ascii'))
         f.write(entry_float.format('GLOBAL','BULK',
                                    from_si(self.flow_units,
-                                           wn.options.quality.bulk_rxn_coeff,
+                                           wn.options.reaction.bulk_coeff,
                                            QualParam.BulkReactionCoeff,
                                            mass_units=self.mass_units,
-                                           reaction_order=wn.options.quality.bulk_rxn_order)).encode('ascii'))
+                                           reaction_order=wn.options.reaction.bulk_order)).encode('ascii'))
         f.write(entry_float.format('GLOBAL','WALL',
                                    from_si(self.flow_units,
-                                           wn.options.quality.wall_rxn_coeff,
+                                           wn.options.reaction.wall_coeff,
                                            QualParam.WallReactionCoeff,
                                            mass_units=self.mass_units,
-                                           reaction_order=wn.options.quality.wall_rxn_order)).encode('ascii'))
-        if wn.options.quality.limiting_potential is not None:
-            f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.quality.limiting_potential).encode('ascii'))
-        if wn.options.quality.roughness_correl is not None:
-            f.write(entry_float.format('ROUGHNESS','CORRELATION',wn.options.quality.roughness_correl).encode('ascii'))
+                                           reaction_order=wn.options.reaction.wall_order)).encode('ascii'))
+        if wn.options.reaction.limiting_potential is not None:
+            f.write(entry_float.format('LIMITING','POTENTIAL',wn.options.reaction.limiting_potential).encode('ascii'))
+        if wn.options.reaction.roughness_correl is not None:
+            f.write(entry_float.format('ROUGHNESS','CORRELATION',wn.options.reaction.roughness_correl).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_sources(self):
@@ -1572,16 +1585,16 @@ class InpFile(object):
             tank_name = current[0]
             tank = self.wn.get_node(tank_name)
             if key == 'MIXED':
-                tank._mix_model = MixType.Mix1
+                tank.mixing_model = MixType.Mix1
             elif key == '2COMP' and len(current) > 2:
-                tank._mix_model = MixType.Mix2
-                tank._mix_frac = float(current[2])
+                tank.mixing_model = MixType.Mix2
+                tank.mixing_fraction = float(current[2])
             elif key == '2COMP' and len(current) < 3:
                 raise RuntimeError('Mixing model 2COMP requires fraction on tank %s'%tank_name)
             elif key == 'FIFO':
-                tank._mix_model = MixType.FIFO
+                tank.mixing_model = MixType.FIFO
             elif key == 'LIFO':
-                tank._mix_model = MixType.LIFO
+                tank.mixing_model = MixType.LIFO
 
     def _write_mixing(self, f, wn):
         f.write('[MIXING]\n'.encode('ascii'))
@@ -1590,21 +1603,21 @@ class InpFile(object):
         # lnames.sort()
         for tank_name in lnames:
             tank = wn.nodes[tank_name]
-            if tank._mix_model is not None:
-                if tank._mix_model in [MixType.Mixed, MixType.Mix1, 0]:
+            if tank._mixing_model is not None:
+                if tank._mixing_model in [MixType.Mixed, MixType.Mix1, 0]:
                     f.write(' {:19s} MIXED\n'.format(tank_name).encode('ascii'))
-                elif tank._mix_model in [MixType.TwoComp, MixType.Mix2, '2comp', '2COMP', 1]:
-                    f.write(' {:19s} 2COMP  {}\n'.format(tank_name, tank._mix_frac).encode('ascii'))
-                elif tank._mix_model in [MixType.FIFO, 2]:
+                elif tank._mixing_model in [MixType.TwoComp, MixType.Mix2, '2comp', '2COMP', 1]:
+                    f.write(' {:19s} 2COMP  {}\n'.format(tank_name, tank.mixing_fraction).encode('ascii'))
+                elif tank._mixing_model in [MixType.FIFO, 2]:
                     f.write(' {:19s} FIFO\n'.format(tank_name).encode('ascii'))
-                elif tank._mix_model in [MixType.LIFO, 3]:
+                elif tank._mixing_model in [MixType.LIFO, 3]:
                     f.write(' {:19s} LIFO\n'.format(tank_name).encode('ascii'))
-                elif isinstance(tank._mix_model, str) and tank._mix_frac is not None:
-                    f.write(' {:19s} {} {}\n'.format(tank_name, tank._mix_model, tank._mix_frac).encode('ascii'))
-                elif isinstance(tank._mix_model, str):
-                    f.write(' {:19s} {}\n'.format(tank_name, tank._mix_model).encode('ascii'))
+                elif isinstance(tank._mixing_model, str) and tank.mixing_fraction is not None:
+                    f.write(' {:19s} {} {}\n'.format(tank_name, tank._mixing_model, tank.mixing_fraction).encode('ascii'))
+                elif isinstance(tank._mixing_model, str):
+                    f.write(' {:19s} {}\n'.format(tank_name, tank._mixing_model).encode('ascii'))
                 else:
-                    logger.warning('Unknown mixing model: %s', tank._mix_model)
+                    logger.warning('Unknown mixing model: %s', tank._mixing_model)
         f.write('\n'.encode('ascii'))
 
     ### Options and Reporting
@@ -1624,7 +1637,7 @@ class InpFile(object):
                 key = words[0].upper()
                 if key == 'UNITS':
                     self.flow_units = FlowUnits[words[1].upper()]
-                    opts.hydraulic.en2_units = words[1].upper()
+                    opts.hydraulic.inpfile_units = words[1].upper()
                 elif key == 'HEADLOSS':
                     opts.hydraulic.headloss = words[1].upper()
                 elif key == 'HYDRAULICS':
@@ -1633,25 +1646,25 @@ class InpFile(object):
                 elif key == 'QUALITY':
                     mode = words[1].upper()
                     if mode in ['NONE', 'AGE']:
-                        opts.quality.mode = words[1].upper()
+                        opts.quality.parameter = words[1].upper()
                     elif mode in ['TRACE']:
-                        opts.quality.mode = 'TRACE'
+                        opts.quality.parameter = 'TRACE'
                         opts.quality.trace_node = words[2]
                     else:
-                        opts.quality.mode = 'CHEMICAL'
+                        opts.quality.parameter = 'CHEMICAL'
                         opts.quality.chemical_name = words[1]
                         if len(words) > 2:
                             if 'mg' in words[2].lower():
                                 self.mass_units = MassUnits.mg
-                                opts.quality.wq_units = words[2]
+                                opts.quality.inpfile_units = words[2]
                             elif 'ug' in words[2].lower():
                                 self.mass_units = MassUnits.ug
-                                opts.quality.wq_units = words[2]
+                                opts.quality.inpfile_units = words[2]
                             else:
                                 raise ValueError('Invalid chemical units in OPTIONS section')
                         else:
                             self.mass_units = MassUnits.mg
-                            opts.quality.wq_units = 'mg/L'                            
+                            opts.quality.inpfile_units = 'mg/L'                            
                 elif key == 'VISCOSITY':
                     opts.hydraulic.viscosity = float(words[1])
                 elif key == 'DIFFUSIVITY':
@@ -1659,20 +1672,36 @@ class InpFile(object):
                 elif key == 'SPECIFIC':
                     opts.hydraulic.specific_gravity = float(words[2])
                 elif key == 'TRIALS':
-                    opts.solver.trials = int(words[1])
+                    opts.hydraulic.trials = int(words[1])
                 elif key == 'ACCURACY':
-                    opts.solver.accuracy = float(words[1])
+                    opts.hydraulic.accuracy = float(words[1])
+                elif key == 'HEADERROR':
+                    opts.hydraulic.headerror = float(words[1])
+                elif key == 'FLOWCHANGE':
+                    opts.hydraulic.flowchange = float(words[1])
                 elif key == 'UNBALANCED':
-                    opts.solver.unbalanced = words[1].upper()
+                    opts.hydraulic.unbalanced = words[1].upper()
                     if len(words) > 2:
-                        opts.solver.unbalanced_value = int(words[2])
+                        opts.hydraulic.unbalanced_value = int(words[2])
+                elif key == 'MINIMUM':
+                    opts.hydraulic.minimum_pressure = float(words[2])
+                elif key == 'REQUIRED':
+                    opts.hydraulic.required_pressure = float(words[2])
+                elif key == 'PRESSURE':
+                    opts.hydraulic.pressure_exponenet = float(words[2])
                 elif key == 'PATTERN':
                     opts.hydraulic.pattern = words[1]
                 elif key == 'DEMAND':
                     if len(words) > 2:
-                        opts.hydraulic.demand_multiplier = float(words[2])
+                        if words[1].upper() == 'MULTIPLIER':
+                            opts.hydraulic.demand_multiplier = float(words[2])
+                        elif words[1].upper() == 'MODEL':
+                            opts.hydraulic.demand_model = words[2]
+                        else:
+                            edata['key'] = ' '.join(words)
+                            raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s unknown option %(key)s' % edata)
                     else:
-                        edata['key'] = 'DEMAND MULTIPLIER'
+                        edata['key'] = ' '.join(words)
                         raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 elif key == 'EMITTER':
                     if len(words) > 2:
@@ -1681,13 +1710,13 @@ class InpFile(object):
                         edata['key'] = 'EMITTER EXPONENT'
                         raise RuntimeError('%(fname)s:%(lnum)-6d %(sec)13s no value provided for %(key)s' % edata)
                 elif key == 'TOLERANCE':
-                    opts.solver.tolerance = float(words[1])
+                    opts.quality.tolerance = float(words[1])
                 elif key == 'CHECKFREQ':
-                    opts.solver.checkfreq = float(words[1])
+                    opts.hydraulic.checkfreq = float(words[1])
                 elif key == 'MAXCHECK':
-                    opts.solver.maxcheck = float(words[1])
+                    opts.hydraulic.maxcheck = float(words[1])
                 elif key == 'DAMPLIMIT':
-                    opts.solver.damplimit = float(words[1])
+                    opts.hydraulic.damplimit = float(words[1])
                 elif key == 'MAP':
                     opts.graphics.map_filename = words[1]
                 else:
@@ -1705,9 +1734,20 @@ class InpFile(object):
                 raise RuntimeError('opts.report_timestep must be greater than or equal to opts.hydraulic_timestep.')
             if opts.time.report_timestep % opts.time.hydraulic_timestep != 0:
                 raise RuntimeError('opts.report_timestep must be a multiple of opts.hydraulic_timestep')
-#            opts.hydraulic.emitter_exponent = to_si(self.flow_units, opts.hydraulic.emitter_exponent, HydParam.EmitterCoeff)
+        
+        # Convert EPANET 2.2 minimum/required pressures
+        if opts.hydraulic.minimum_pressure != 0.0:
+            minimum_pressure = to_si(self.flow_units, opts.hydraulic.minimum_pressure, HydParam.Pressure)
+            opts.hydraulic.minimum_pressure = minimum_pressure
+            for junc in self.wn.junctions():
+                junc.minimum_pressure = minimum_pressure
+        if opts.hydraulic.required_pressure != 0.07:
+            required_pressure = to_si(self.flow_units, opts.hydraulic.required_pressure, HydParam.Pressure)
+            opts.hydraulic.required_pressure = required_pressure
+            for junc in self.wn.junctions():
+                junc.required_pressure = required_pressure
 
-    def _write_options(self, f, wn):
+    def _write_options(self, f, wn, version=2.2):
         f.write('[OPTIONS]\n'.encode('ascii'))
         entry_string = '{:20s} {:20s}\n'
         entry_float = '{:20s} {:.11g}\n'
@@ -1719,39 +1759,70 @@ class InpFile(object):
 
         f.write(entry_float.format('VISCOSITY', wn.options.hydraulic.viscosity).encode('ascii'))
 
-        f.write(entry_float.format('TRIALS', wn.options.solver.trials).encode('ascii'))
+        f.write(entry_float.format('TRIALS', wn.options.hydraulic.trials).encode('ascii'))
 
-        f.write(entry_float.format('ACCURACY', wn.options.solver.accuracy).encode('ascii'))
+        f.write(entry_float.format('ACCURACY', wn.options.hydraulic.accuracy).encode('ascii'))
 
-        f.write(entry_float.format('CHECKFREQ', wn.options.solver.checkfreq).encode('ascii'))
+        f.write(entry_float.format('CHECKFREQ', wn.options.hydraulic.checkfreq).encode('ascii'))
 
-        f.write(entry_float.format('MAXCHECK', wn.options.solver.maxcheck).encode('ascii'))
+        f.write(entry_float.format('MAXCHECK', wn.options.hydraulic.maxcheck).encode('ascii'))
 
-        if wn.options.solver.damplimit != 0:
-            f.write(entry_float.format('DAMPLIMIT', wn.options.solver.damplimit).encode('ascii'))
-
-        if wn.options.solver.unbalanced_value is None:
-            f.write(entry_string.format('UNBALANCED', wn.options.solver.unbalanced).encode('ascii'))
+        # EPANET 2.2 OPTIONS
+        if version == 2.0:
+            pass
         else:
-            f.write('{:20s} {:s} {:d}\n'.format('UNBALANCED', wn.options.solver.unbalanced, wn.options.solver.unbalanced_value).encode('ascii'))
+            if wn.options.hydraulic.headerror != 0: 
+                f.write(entry_float.format('HEADERROR', wn.options.hydraulic.headerror).encode('ascii'))
+
+            if wn.options.hydraulic.flowchange != 0:
+                f.write(entry_float.format('FLOWCHANGE', wn.options.hydraulic.flowchange).encode('ascii'))
+
+        # EPANET 2.0 OPTIONS
+        if wn.options.hydraulic.damplimit != 0:
+            f.write(entry_float.format('DAMPLIMIT', wn.options.hydraulic.damplimit).encode('ascii'))
+
+        if wn.options.hydraulic.unbalanced_value is None:
+            f.write(entry_string.format('UNBALANCED', wn.options.hydraulic.unbalanced).encode('ascii'))
+        else:
+            f.write('{:20s} {:s} {:d}\n'.format('UNBALANCED', wn.options.hydraulic.unbalanced, wn.options.hydraulic.unbalanced_value).encode('ascii'))
 
         if wn.options.hydraulic.pattern is not None:
             f.write(entry_string.format('PATTERN', wn.options.hydraulic.pattern).encode('ascii'))
 
         f.write(entry_float.format('DEMAND MULTIPLIER', wn.options.hydraulic.demand_multiplier).encode('ascii'))
 
+        # EPANET 2.2 OPTIONS
+        if version == 2.0:
+            if wn.options.hydraulic.demand_model in ['PDA', 'PDD']: 
+                logger.critical('You have specified a PDA analysis using EPANET 2.0. This is not supported in EPANET 2.0. The analysis will default to DDA mode.')
+        else:
+            if wn.options.hydraulic.demand_model is not None: 
+                f.write('{:20s} {}\n'.format('DEMAND MODEL', wn.options.hydraulic.demand_model).encode('ascii'))
+
+            if wn.options.hydraulic.minimum_pressure != 0.0:
+                minimum_pressure = from_si(self.flow_units, wn.options.hydraulic.minimum_pressure, HydParam.Pressure)
+                f.write('{:20s} {:.2f}\n'.format('MINIMUM PRESSURE', minimum_pressure).encode('ascii'))
+
+            if wn.options.hydraulic.required_pressure != 0.07:
+                required_pressure = from_si(self.flow_units, wn.options.hydraulic.required_pressure, HydParam.Pressure)
+                f.write('{:20s} {:.2f}\n'.format('REQUIRED PRESSURE', required_pressure).encode('ascii'))
+
+            if wn.options.hydraulic.pressure_exponent != 0.5:
+                f.write('{:20s} {}\n'.format('PRESSURE EXPONENT', wn.options.hydraulic.pressure_exponent).encode('ascii'))
+
+        # EPANET 2.0+ OPTIONS
         f.write(entry_float.format('EMITTER EXPONENT',  wn.options.hydraulic.emitter_exponent).encode('ascii'))
 
-        if wn.options.quality.mode.upper() in ['NONE', 'AGE']:
-            f.write(entry_string.format('QUALITY', wn.options.quality.mode).encode('ascii'))
-        elif wn.options.quality.mode.upper() in ['TRACE']:
-            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.mode, wn.options.quality.trace_node).encode('ascii'))
+        if wn.options.quality.parameter.upper() in ['NONE', 'AGE']:
+            f.write(entry_string.format('QUALITY', wn.options.quality.parameter).encode('ascii'))
+        elif wn.options.quality.parameter.upper() in ['TRACE']:
+            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.parameter, wn.options.quality.trace_node).encode('ascii'))
         else:
-            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.chemical_name, wn.options.quality.wq_units).encode('ascii'))
+            f.write('{:20s} {} {}\n'.format('QUALITY', wn.options.quality.chemical_name, wn.options.quality.inpfile_units).encode('ascii'))
 
         f.write(entry_float.format('DIFFUSIVITY', wn.options.quality.diffusivity).encode('ascii'))
 
-        f.write(entry_float.format('TOLERANCE', wn.options.solver.tolerance).encode('ascii'))
+        f.write(entry_float.format('TOLERANCE', wn.options.quality.tolerance).encode('ascii'))
 
         if wn.options.hydraulic.hydraulics is not None:
             f.write('{:20s} {:s} {:<30s}\n'.format('HYDRAULICS', wn.options.hydraulic.hydraulics, wn.options.hydraulic.hydraulics_filename).encode('ascii'))
@@ -1783,7 +1854,7 @@ class InpFile(object):
                 time = current[2]
                 opts.time.start_clocktime = _clock_time_to_sec(time, time_format)
             elif (current[0].upper() == 'STATISTIC'):
-                opts.results.statistic = current[1].upper()
+                opts.time.statistic = current[1].upper()
             else:
                 # Other time options: RULE TIMESTEP, PATTERN TIMESTEP, REPORT TIMESTEP, REPORT START
                 key_string = current[0] + '_' + current[1]
@@ -1793,29 +1864,30 @@ class InpFile(object):
         f.write('[TIMES]\n'.encode('ascii'))
         entry = '{:20s} {:10s}\n'
         time_entry = '{:20s} {:02d}:{:02d}:{:02d}\n'
+        time = wn.options.time
 
-        hrs, mm, sec = _sec_to_string(wn.options.time.duration)
+        hrs, mm, sec = time.seconds_to_tuple(time.duration)
         f.write(time_entry.format('DURATION', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = _sec_to_string(wn.options.time.hydraulic_timestep)
+        hrs, mm, sec = time.seconds_to_tuple(time.hydraulic_timestep)
         f.write(time_entry.format('HYDRAULIC TIMESTEP', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = _sec_to_string(wn.options.time.quality_timestep)
+        hrs, mm, sec = time.seconds_to_tuple(time.quality_timestep)
         f.write(time_entry.format('QUALITY TIMESTEP', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = _sec_to_string(wn.options.time.pattern_timestep)
+        hrs, mm, sec = time.seconds_to_tuple(time.pattern_timestep)
         f.write(time_entry.format('PATTERN TIMESTEP', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = _sec_to_string(wn.options.time.pattern_start)
+        hrs, mm, sec = time.seconds_to_tuple(time.pattern_start)
         f.write(time_entry.format('PATTERN START', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = _sec_to_string(wn.options.time.report_timestep)
+        hrs, mm, sec = time.seconds_to_tuple(time.report_timestep)
         f.write(time_entry.format('REPORT TIMESTEP', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = _sec_to_string(wn.options.time.report_start)
+        hrs, mm, sec = time.seconds_to_tuple(time.report_start)
         f.write(time_entry.format('REPORT START', hrs, mm, sec).encode('ascii'))
 
-        hrs, mm, sec = _sec_to_string(wn.options.time.start_clocktime)
+        hrs, mm, sec = time.seconds_to_tuple(time.start_clocktime)
         if hrs < 12:
             time_format = ' AM'
         else:
@@ -1823,11 +1895,11 @@ class InpFile(object):
             time_format = ' PM'
         f.write('{:20s} {:02d}:{:02d}:{:02d}{:s}\n'.format('START CLOCKTIME', hrs, mm, sec, time_format).encode('ascii'))
 
-        hrs, mm, sec = _sec_to_string(wn.options.time.rule_timestep)
+        hrs, mm, sec = time.seconds_to_tuple(time.rule_timestep)
 
         ### TODO: RULE TIMESTEP is not written?!
-        # f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
-        f.write(entry.format('STATISTIC', wn.options.results.statistic).encode('ascii'))
+        f.write(time_entry.format('RULE TIMESTEP', hrs, mm, int(sec)).encode('ascii'))
+        f.write(entry.format('STATISTIC', wn.options.time.statistic).encode('ascii'))
         f.write('\n'.encode('ascii'))
 
     def _read_report(self):
@@ -1837,65 +1909,65 @@ class InpFile(object):
             if current == []:
                 continue
             if current[0].upper() in ['PAGE', 'PAGESIZE']:
-                self.wn.options.results.pagesize = int(current[1])
+                self.wn.options.report.pagesize = int(current[1])
             elif current[0].upper() in ['FILE']:
-                self.wn.options.results.file = current[1]
+                self.wn.options.report.file = current[1]
             elif current[0].upper() in ['STATUS']:
-                self.wn.options.results.status = current[1].upper()
+                self.wn.options.report.status = current[1].upper()
             elif current[0].upper() in ['SUMMARY']:
-                self.wn.options.results.summary = current[1].upper()
+                self.wn.options.report.summary = current[1].upper()
             elif current[0].upper() in ['ENERGY']:
-                self.wn.options.results.energy = current[1].upper()
+                self.wn.options.report.energy = current[1].upper()
             elif current[0].upper() in ['NODES']:
                 if current[1].upper() in ['NONE']:
-                    self.wn.options.results.nodes = False
+                    self.wn.options.report.nodes = False
                 elif current[1].upper() in ['ALL']:
-                    self.wn.options.results.nodes = True
-                elif not isinstance(self.wn.options.results.nodes, list):
-                    self.wn.options.results.nodes = []
+                    self.wn.options.report.nodes = True
+                elif not isinstance(self.wn.options.report.nodes, list):
+                    self.wn.options.report.nodes = []
                     for ct in range(len(current)-2):
                         i = ct + 2
-                        self.wn.options.results.nodes.append(current[i])
+                        self.wn.options.report.nodes.append(current[i])
                 else:
                     for ct in range(len(current)-2):
                         i = ct + 2
-                        self.wn.options.results.nodes.append(current[i])
+                        self.wn.options.report.nodes.append(current[i])
             elif current[0].upper() in ['LINKS']:
                 if current[1].upper() in ['NONE']:
-                    self.wn.options.results.links = False
+                    self.wn.options.report.links = False
                 elif current[1].upper() in ['ALL']:
-                    self.wn.options.results.links = True
-                elif not isinstance(self.wn.options.results.links, list):
-                    self.wn.options.results.links = []
-                    for ct in xrange(len(current)-2):
+                    self.wn.options.report.links = True
+                elif not isinstance(self.wn.options.report.links, list):
+                    self.wn.options.report.links = []
+                    for ct in range(len(current)-2):
                         i = ct + 2
-                        self.wn.options.results.links.append(current[i])
+                        self.wn.options.report.links.append(current[i])
                 else:
-                    for ct in xrange(len(current)-2):
+                    for ct in range(len(current)-2):
                         i = ct + 2
-                        self.wn.options.results.links.append(current[i])
+                        self.wn.options.report.links.append(current[i])
             else:
-                if current[0].lower() not in self.wn.options.results.rpt_params.keys():
+                if current[0].lower() not in self.wn.options.report.report_params.keys():
                     logger.warning('Unknown report parameter: %s', current[0])
                     continue
                 elif current[1].upper() in ['YES']:
-                    self.wn.options.results.rpt_params[current[0].lower()][1] = True
+                    self.wn.options.report.report_params[current[0].lower()][1] = True
                 elif current[1].upper() in ['NO']:
-                    self.wn.options.results.rpt_params[current[0].lower()][1] = False
+                    self.wn.options.report.report_params[current[0].lower()][1] = False
                 else:
-                    self.wn.options.results.param_opts[current[0].lower()][current[1].upper()] = float(current[2])
+                    self.wn.options.report.param_opts[current[0].lower()][current[1].upper()] = float(current[2])
 
     def _write_report(self, f, wn):
         f.write('[REPORT]\n'.encode('ascii'))
-        report = wn.options.results
+        report = wn.options.report
         if report.status.upper() != 'NO':
             f.write('STATUS     {}\n'.format(report.status).encode('ascii'))
         if report.summary.upper() != 'YES':
             f.write('SUMMARY    {}\n'.format(report.summary).encode('ascii'))
         if report.pagesize is not None:
             f.write('PAGE       {}\n'.format(report.pagesize).encode('ascii'))
-        if report.rpt_filename is not None:
-            f.write('FILE       {}\n'.format(report.rpt_filename).encode('ascii'))
+        if report.report_filename is not None:
+            f.write('FILE       {}\n'.format(report.report_filename).encode('ascii'))
         if report.energy.upper() != 'NO':
             f.write('ENERGY     {}\n'.format(report.status).encode('ascii'))
         if report.nodes is True:
@@ -1925,7 +1997,7 @@ class InpFile(object):
                     f.write(' {}'.format(link).encode('ascii'))
             f.write('\n'.encode('ascii'))
         # FIXME: defaults no longer located here
-#        for key, item in report.rpt_params.items():
+#        for key, item in report.report_params.items():
 #            if item[1] != item[0]:
 #                f.write('{:10s} {}\n'.format(key.upper(), item[1]).encode('ascii'))
         for key, item in report.param_opts.items():
@@ -2446,7 +2518,7 @@ class BinFile(object):
         self.chemical = None
         self.chem_units = None
         self.inp_file = None
-        self.rpt_file = None
+        self.report_file = None
         self.results = wntr.sim.SimulationResults()
         if result_types is None:
             self.items = [ member for name, member in ResultType.__members__.items() ]
@@ -2656,7 +2728,7 @@ class BinFile(object):
             self.chemical = chemical
             self.chem_units = wqunits
             self.inp_file = inpfile
-            self.rpt_file = rptfile
+            self.report_file = rptfile
             nodenames = []
             linknames = []
             nodenames = np.array(np.fromfile(fin, dtype=dt_str, count=nnodes), dtype=str).tolist()

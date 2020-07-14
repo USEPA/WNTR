@@ -153,7 +153,7 @@ def test_plot_fragility_curve1():
     
     assert_true(isfile(filename))
     
-def test_plot_tank_curve1():
+def test_plot_pump_curve1():
     filename = abspath(join(testdir, 'plot_pump_curve1.png'))
     if isfile(filename):
         os.remove(filename)
@@ -168,6 +168,26 @@ def test_plot_tank_curve1():
     plt.close()
     
     assert_true(isfile(filename))
+    
+def test_plot_tank_curve():
+    filename = abspath(join(testdir, 'plot_tank_curve.png'))
+    if isfile(filename):
+        os.remove(filename)
+        
+    inp_file = join(test_datadir,'Anytown_multipointcurves.inp')
+    wn = wntr.network.WaterNetworkModel(inp_file)
+    tank_w_curve = wn.get_node('41')
+    tank_no_curve = wn.get_node('42')
+    
+    plt.figure()
+    shouldBeAxis = wntr.graphics.plot_tank_volume_curve(tank_w_curve)
+    plt.savefig(filename, format='png')
+    plt.close()
+    
+    assert_true(isfile(filename))
+    
+    shouldBeNone = wntr.graphics.plot_tank_volume_curve(tank_no_curve)
+    assert_true(shouldBeNone is None)
 
 def test_custom_colormap():
     cmp = wntr.graphics.custom_colormap(numcolors=3, colors=['blue','white','red'], name='custom')
@@ -176,4 +196,5 @@ def test_custom_colormap():
     
 if __name__ == '__main__':
     test_network_animation1()
+    test_plot_tank_curve()
     

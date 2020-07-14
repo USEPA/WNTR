@@ -1,8 +1,4 @@
-try:
-    import matplotlib.pyplot as plt
-    from matplotlib.colors import LinearSegmentedColormap
-except:
-    plt = None
+from matplotlib.colors import LinearSegmentedColormap
 import logging
 
 logger = logging.getLogger(__name__)
@@ -28,8 +24,6 @@ def custom_colormap(numcolors=11, colors=['blue','white','red'], name='custom'):
     --------
     cmap : matplotlib.colors.LinearSegmentedColormap object
     """
-    if plt is None:
-        raise ImportError('matplotlib is required')
     
     cmap = LinearSegmentedColormap.from_list(name=name, 
                                              colors = colors,

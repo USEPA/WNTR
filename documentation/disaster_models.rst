@@ -16,7 +16,7 @@ disaster scenarios that can be modeled in WNTR.
 Earthquake
 -----------
 Earthquakes can be some of the most sudden and impactful disasters that a 
-water systems experiences. An earthquake can cause lasting damage to the system that 
+water system experiences. An earthquake can cause lasting damage to the system that 
 could take weeks, if not months, to fully repair. Earthquakes can cause 
 damage to pipes, tanks, pumps, and other infrastructure.
 Additionally, earthquakes can cause power outages and fires. 
@@ -49,7 +49,6 @@ WNTR includes methods to change coordinate scale, as shown in the following exam
 
     >>> import numpy as np
     >>> import wntr
-    >>> np.random.seed(12343)
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -59,7 +58,7 @@ WNTR includes methods to change coordinate scale, as shown in the following exam
 
     >>> wn = wntr.morph.scale_node_coordinates(wn, 1000)
    
-The following example compute peak ground acceleration, peak ground velocity, and repair rate for each pipe.
+The following example computes peak ground acceleration, peak ground velocity, and repair rate for each pipe.
 
 .. doctest::
 
@@ -72,13 +71,32 @@ The following example compute peak ground acceleration, peak ground velocity, an
     >>> pgv = earthquake.pgv_attenuation_model(distance)
     >>> repair_rate = earthquake.repair_rate_model(pgv) 
 
-The earthquake properties can be plotted on the network, as follows.
+The earthquake properties can be plotted on the network using the following example. The resulting map is shown in :numref:`fig-network`.
 
 .. doctest::
+    :hide:
+    
+    >>> import matplotlib.pylab as plt
+	>>> fig = plt.figure()
+    
+.. doctest::
 
-    >>> wntr.graphics.plot_network(wn, link_attribute=pga) # doctest: +ELLIPSIS
-    (<matplotlib.collections.PathCollection object ...
+    >>> nodes, edges = wntr.graphics.plot_network(wn, link_attribute=pga, node_size=4,
+    ...     link_width=2, link_colorbar_label='PGA (g)')
 
+.. doctest::
+    :hide:
+
+    >>> plt.tight_layout()
+    >>> plt.savefig('network_pga.png', dpi=300)
+    
+.. _fig-network:
+.. figure:: figures/network_pga.png
+   :width: 640
+   :alt: Peak ground acceleration
+   
+   Peak ground acceleration.
+   
 .. _pipe_leak:
 	
 Pipe breaks or leaks
@@ -103,14 +121,14 @@ The following example adds a leak to a specific pipe.
     >>> leak_node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)
 
 The method :class:`~wntr.network.elements.Junction.add_leak` adds time controls to 
-a junction which includes the start and stop time for the leak.
+a junction, which includes the start and stop time for the leak.
 
 Power outage
 -------------
 Power outages can be small and brief, or they can also span over several days and 
-effect whole regions as seen in the 2003 Northeast Blackout. 
+affect whole regions as seen in the 2003 Northeast Blackout. 
 While the Northeast Blackout was an extreme case, a 2012 Lawrence Berkeley National Laboratory study [ELLT12]_ 
-showed the frequency and duration of power outages are increasing by a 
+showed the frequency and duration of power outages are increasing domestically by a 
 rate of two percent annually. In water distribution systems, 
 a power outage can cause pump stations to shut down and result in 
 reduced water pressure. This can lead to shortages in some areas of 
@@ -130,16 +148,16 @@ and check valves next to reservoirs.
 
 Fires
 ----------------
-WNTR can be used to simulate damage caused to system components due to fire and/or to simulate water usage due to fighting fires.  To fight fires, additional water is drawn from the system.  Fire codes vary by 
-state.  Minimum required fire flow and duration are generally based on building area and purpose.
+WNTR can be used to simulate damage caused to system components due to fire and/or to simulate water usage due to fighting fires. To fight fires, additional water is drawn from the system. Fire codes vary by 
+state. Minimum required fire flow and duration are generally based on the building's area and purpose.
 While small residential fires might require 1500 gallons/minute for 2 hours, large commercial
-spaces might require 8000 gallons/minute for 4 hours [ICC12]_.  This additional demand can 
+spaces might require 8000 gallons/minute for 4 hours [ICC12]_. This additional demand can 
 have a large impact on water pressure in the system.  
 
-WNTR can be used to simulate fire fighting conditions in the system.  
-WNTR simulates fire fighting conditions by specifying the demand, time, and duration of fire fighting.
-Pressure dependent demand simulation is recommended in cases where fire fighting might impact expected demand.
-The following example adds fireflow conditions at a specific node.
+WNTR can be used to simulate firefighting conditions in the system.  
+WNTR simulates firefighting conditions by specifying the demand, time, and duration of firefighting.
+Pressure dependent demand simulation is recommended in cases where firefighting might impact expected demand.
+The following example adds fire flow conditions at a specific node.
 
 .. doctest::
 
@@ -151,7 +169,8 @@ The following example adds fireflow conditions at a specific node.
     ...     end_time=fire_end, duration=wn.options.time.duration)
     >>> wn.add_pattern('fire_flow', fire_flow_pattern)
     >>> node = wn.get_node('197')
-    >>> node.demand_timeseries_list.append( (fire_flow_demand, fire_flow_pattern, 'Fire flow'))
+    >>> node.demand_timeseries_list.append( (fire_flow_demand, fire_flow_pattern, 
+    ...     'Fire flow'))
 
 
 Environmental change
@@ -165,7 +184,7 @@ For example, severe drought in California has forced lawmakers to reduce the
 state's water usage by 25 percent. 
 Environmental change also leads to sea level rise which can inundate distribution 
 systems. This is especially prevalent in cities built on unstable soils like 
-New Orleans and Washington, DC which are experiencing land subsidence. 
+New Orleans and Washington, DC, which are experiencing land subsidence. 
 
 WNTR can be used to simulate the effects of environmental change on the water distribution system by
 changing supply and demand, adding disruptive conditions (i.e., power outages, pipe leaks) caused by severe weather, or by adding pipe leaks caused by subsidence.
@@ -175,10 +194,10 @@ The following example changes supply and demand in the model.
 
 .. doctest::
 
-    >>> for reservoir_name, reservoir in wn.reservoirs():
-    ...     reservoir.head_timeseries.base_value = reservoir.head_timeseries.base_value*0.9
-    >>> for junction_name, junction in wn.junctions():
-    ...     for demand in junction.demand_timeseries_list:
+    >>> for res_name, res in wn.reservoirs():
+    ...     res.head_timeseries.base_value = res.head_timeseries.base_value*0.9
+    >>> for junc_name, junc in wn.junctions():
+    ...     for demand in junc.demand_timeseries_list:
     ...         demand.base_value = demand.base_value*1.15
    
 Contamination

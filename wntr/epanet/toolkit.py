@@ -86,6 +86,18 @@ def runepanet(inpfile):
 class ENepanet():
     """Wrapper class to load the EPANET DLL object, then perform operations on
     the EPANET object that is created when a file is loaded.
+
+    Parameters
+    ----------
+    inpfile : str
+        Input file to use
+    rptfile : str
+        Output file to report to
+    binfile : str
+        Results file to generate
+    version : float
+        EPANET version to use (either 2.0 or 2.2)
+    
     """
     
     ENlib = None
@@ -114,15 +126,21 @@ class ENepanet():
 
     fileLoaded = False
 
-    def __init__(self, inpfile='', rptfile='', binfile=''):
+    def __init__(self, inpfile='', rptfile='', binfile='', version=2.2):
 
         self.inpfile = inpfile
         self.rptfile = rptfile
         self.binfile = binfile
 
-        libnames = ['epanet2_x86','epanet2','epanet']
-        if '64' in platform.machine():
-            libnames.insert(0, 'epanet2_amd64')
+
+        if float(version) == 2.0:
+            libnames = ['epanet2_x86','epanet2','epanet']
+            if '64' in platform.machine():
+                libnames.insert(0, 'epanet2_amd64')
+        elif float(version) == 2.2:
+            libnames = ['epanet22', 'epanet22_win32']
+            if '64' in platform.machine():
+                libnames.insert(0, 'epanet22_amd64')
         for lib in libnames:
             try:
                 if os.name in ['nt','dos']:

@@ -18,9 +18,9 @@ wn.options.time.duration = 48*3600
 wn.options.time.hydraulic_timestep = 1800
 wn.options.time.report_timestep = 1800
 
-# Set nominal pressures
+# Set required pressures
 for name, node in wn.junctions():
-    node.nominal_pressure = 15
+    node.required_pressure = 15
 
 # Define failure probability for each pipe, based on pipe diameter. Failure
 # probability must sum to 1.  Net3 has a few pipes with diameter = 99 inches,
@@ -67,7 +67,8 @@ for i in range(5):
                           end_time=(time_of_failure + duration_of_failure)*3600)
 
     # Simulate hydraulics and store results
-    sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+    wn.options.hydraulic.demand_model = 'PDD'
+    sim = wntr.sim.WNTRSimulator(wn)
     print('Pipe Breaks: ' + str(pipes_to_fail) + ', Start Time: ' + \
                 str(time_of_failure) + ', End Time: ' + \
                 str(time_of_failure+duration_of_failure))

@@ -1,9 +1,13 @@
-import wntr
 import unittest
 import math
 import numpy as np
+import pandas as pd
+from os.path import abspath, dirname, join
+import wntr
 from wntr.sim.models.utils import ModelUpdater
 
+testdir = dirname(abspath(str(__file__)))
+test_data_dir = join(testdir,'data_for_testing')
 
 def compare_floats(a, b, tol=1e-5, rel_tol=1e-3):
     if abs(a) >= 1e-8:
@@ -54,6 +58,22 @@ class TestHeadloss(unittest.TestCase):
         wn.add_curve('curve1', 'HEAD', [(0.0, 10.0), (0.05, 5.0), (0.1, 0.0)])
         wn.add_curve('curve2', 'HEAD', [(0.0, 10.0), (0.03, 5.0), (0.1, 0.0)])
         wn.add_curve('curve3', 'HEAD', [(0.0, 10.0), (0.07, 5.0), (0.1, 0.0)])
+        
+        # add a single point, 2-point, and a set of multi-point curves to test
+        wn.add_curve('curve4', 'HEAD', [(0.05, 5.0)])
+        wn.add_curve('curve5', 'HEAD', [(0.0, 10.0),(0.1, 0.0)])
+        
+        #multi_point_pump_curves = pump_curves_for_testing() # change to read in a csv file
+        
+        df = pd.read_csv(join(test_data_dir,'pump_practice_curves.csv'),skiprows=5)
+        multi_point_pump_curves = []
+        for i in range(11):
+            multi_point_pump_curves.append(df[df['curve number']==i].iloc[:,1:3])
+        
+        for i, curve in enumerate(multi_point_pump_curves):
+            curve_name = 'curve{0:d}'.format(i+6)
+            wn.add_curve(curve_name,'HEAD',curve.values)
+            
         wn.add_pump('pump1', 't1', 'j1', 'HEAD', 'curve1')
         wn.add_pump('pump2', 't1', 'j1', 'POWER', 50.0)
         cls.m = m = wntr.sim.aml.Model()
@@ -114,11 +134,12 @@ class TestHeadloss(unittest.TestCase):
         wn = self.wn
         m = self.m
         pump = wn.get_link('pump1')
-        curve1 = wn.get_curve('curve1')
-        curve2 = wn.get_curve('curve2')
-        curve3 = wn.get_curve('curve3')
+        curves_to_test = []
+        for curve_name, curve in wn.curves.items():
+            if curve.curve_type == "HEAD":
+                curves_to_test.append(curve)
 
-        curves_to_test = [curve1, curve2, curve3]
+
         flows_to_test = [m.pump_q1 - 0.1, m.pump_q1, (m.pump_q1+m.pump_q2)/2, m.pump_q2, m.pump_q2+0.1]
         status_to_test = [1, 0]
 
@@ -181,12 +202,15 @@ class TestHeadloss(unittest.TestCase):
             pump.status = status
             self.updater.update(m, wn, pump, 'status')
             for f in flows_to_test:
-                m.flow['pump2'].value = f
+                ff = float(f) # expr.m does not bind to
+                              # numpy.float64 correctly
+                m.flow['pump2'].value = ff   
+                                                  
                 r1 = m.power_pump_headloss['pump2'].evaluate()
                 if status == 1:
-                    r2 = pump.power + (t1_head - j1_head) * f * 9.81 * 1000.0
+                    r2 = pump.power + (t1_head - j1_head) * ff * 9.81 * 1000.0
                 else:
-                    r2 = f
+                    r2 = ff
                 self.assertTrue(compare_floats(r1, r2, 1e-12, 1e-12))
                 d1 = m.power_pump_headloss['pump2'].reverse_ad()[m.flow['pump2']]
                 d2 = m.power_pump_headloss['pump2'].reverse_ad()[m.flow['pump2']]
@@ -204,6 +228,10 @@ class TestPDD(unittest.TestCase):
 
     def test_pdd(self):
         wn = self.wn
+        # Changed to handle the specific heads_to_test range, which is bad
+        node = wn.get_node('j1')
+        node.required_pressure = 20.0
+
         m = wntr.sim.aml.Model()
         updater = ModelUpdater()
         wntr.sim.models.constants.pdd_constants(m)
@@ -219,7 +247,7 @@ class TestPDD(unittest.TestCase):
         node = wn.get_node('j1')
 
         pmin = node.minimum_pressure
-        pnom = node.nominal_pressure
+        pnom = node.required_pressure
         h0 = node.elevation + pmin
         h1 = node.elevation + pnom
         delta = m.pdd_smoothing_delta
@@ -260,4 +288,7 @@ class TestPDD(unittest.TestCase):
             der2 = m.pdd['j1'].reverse_ad()[m.head['j1']]
             der3 = approximate_derivative(m.pdd['j1'], m.head['j1'], 1e-6)
             self.assertAlmostEqual(der1, der2, 7)
-            self.assertAlmostEqual(der1, der3, 7)
+            self.assertAlmostEqual(der1, der3, 6)
+
+if __name__ == "__main__":
+    unittest.main()
