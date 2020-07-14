@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: tests
+name: check
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -32,4 +32,22 @@ jobs:
         pip install coveralls
         python setup.py develop
     - name: Run Tests
-      run: nosetests -v --nologcapture --with-doctest --exclude=test_examples --traverse-namespace wntr
+      run: nosetests -v --nologcapture --with-doctest --with-coverage --cover-package=wntr --exclude=test_examples --traverse-namespace wntr
+    - name: Upload Coverage
+      run: coveralls
+      env:
+        GITHUB_TOKEN: ${{ secrets.github_token }}
+        COVERALLS_FLAG_NAME: python-${{ matrix.python-version }} ${{ matrix.os }}
+        COVERALLS_PARALLEL: true
+  finish:
+    name: Finish Coveralls
+    needs: cover
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+    - name: Finished
+      run: |
+        pip3 install --upgrade coveralls
+        coveralls --finish
+      env:
+        GITHUB_TOKEN: ${{ secrets.github_token }}
