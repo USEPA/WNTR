@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI
+name: CI Main
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -42,7 +42,7 @@ jobs:
       run: coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.github_token }}
-        COVERALLS_FLAG_NAME: ${{ matrix.os }} python-${{ matrix.python-version }}
+        COVERALLS_FLAG_NAME: ${{ matrix.os }} py${{ matrix.python-version }}
         COVERALLS_PARALLEL: true
   test-windows:
     name: Win Tests
@@ -69,7 +69,7 @@ jobs:
       run: coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.github_token }}
-        COVERALLS_FLAG_NAME: ${{ matrix.os }} python-${{ matrix.python-version }}
+        COVERALLS_FLAG_NAME: windows-latest py${{ matrix.python-version }}
         COVERALLS_PARALLEL: true
   finish:
     name: Finish Coveralls
