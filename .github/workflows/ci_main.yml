@@ -42,7 +42,7 @@ jobs:
       run: coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.github_token }}
-        COVERALLS_FLAG_NAME: python-${{ matrix.python-version }}
+        COVERALLS_FLAG_NAME: ${{ matrix.os }} python-${{ matrix.python-version }}
         COVERALLS_PARALLEL: true
   test-windows:
     name: Win Tests
@@ -69,7 +69,7 @@ jobs:
       run: coveralls
       env:
         GITHUB_TOKEN: ${{ secrets.github_token }}
-        COVERALLS_FLAG_NAME: python-${{ matrix.python-version }}
+        COVERALLS_FLAG_NAME: ${{ matrix.os }} python-${{ matrix.python-version }}
         COVERALLS_PARALLEL: true
   finish:
     name: Finish Coveralls
