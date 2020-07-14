@@ -35,4 +35,4 @@ jobs:
         python setup.py develop
     - name: Run Tests
       run: |
-        nosetests -v --nologcapture --with-doctest --doctest-extension=.rst documentation/*.rst wntr
+        nosetests -v --nologcapture --with-doctest --doctest-extension=.rst documentation/*.rst wntr/tests/test_examples.py
