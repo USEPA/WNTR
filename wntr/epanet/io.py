@@ -635,25 +635,32 @@ class InpFile(object):
             current = line.split()
             if current == []:
                 continue
-            if current[7].upper() == 'CV':
-                self.wn.add_pipe(current[0],
-                            current[1],
-                            current[2],
-                            to_si(self.flow_units, float(current[3]), HydParam.Length),
-                            to_si(self.flow_units, float(current[4]), HydParam.PipeDiameter),
-                            float(current[5]),
-                            float(current[6]),
-                            LinkStatus.Open,
-                            True)
-            else:
-                self.wn.add_pipe(current[0],
-                            current[1],
-                            current[2],
-                            to_si(self.flow_units, float(current[3]), HydParam.Length),
-                            to_si(self.flow_units, float(current[4]), HydParam.PipeDiameter),
-                            float(current[5]),
-                            float(current[6]),
-                            LinkStatus[current[7].upper()])
+            if len(current) == 8:
+                minor_loss = float(current[6])
+                if current[7].upper() == 'CV':
+                    link_status = LinkStatus.Open
+                    check_valve_flag = True
+                else:
+                    link_status = float(current[6])
+                    check_valve_flag = LinkStatus[current[7].upper()]
+            elif len(current) == 7:
+                minor_loss = float(current[6])
+                link_status = LinkStatus.Open
+                check_valve_flag = False
+            elif len(current) == 6:
+                minor_loss = 0.
+                link_status = LinkStatus.Open
+                check_valve_flag = False
+
+            self.wn.add_pipe(current[0],
+                        current[1],
+                        current[2],
+                        to_si(self.flow_units, float(current[3]), HydParam.Length),
+                        to_si(self.flow_units, float(current[4]), HydParam.PipeDiameter),
+                        float(current[5]),
+                        minor_loss,
+                        link_status,
+                        check_valve_flag)
 
     def _write_pipes(self, f, wn):
         f.write('[PIPES]\n'.encode('ascii'))
