@@ -641,8 +641,8 @@ class InpFile(object):
                     link_status = LinkStatus.Open
                     check_valve_flag = True
                 else:
-                    link_status = float(current[6])
-                    check_valve_flag = LinkStatus[current[7].upper()]
+                    link_status = LinkStatus[current[7].upper()]
+                    check_valve_flag = False
             elif len(current) == 7:
                 minor_loss = float(current[6])
                 link_status = LinkStatus.Open
