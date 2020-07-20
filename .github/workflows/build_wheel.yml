@@ -32,7 +32,7 @@ jobs:
     - name: Save wheel
       uses: actions/upload-artifact@v2
       with:
-        name: build
+        name: wheel
         path: dist/wntr*.whl
 
   test:
