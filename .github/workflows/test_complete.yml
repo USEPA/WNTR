@@ -36,7 +36,7 @@ jobs:
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       # if: ${{ matrix.os != 'windows-latest' }}
       with:
         name: coverage
@@ -68,7 +68,7 @@ jobs:
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       # if: ${{ matrix.os != 'windows-latest' }}
       with:
         name: coverage
@@ -103,7 +103,7 @@ jobs:
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       # if: ${{ matrix.os != 'windows-latest' }}
       with:
         name: coverage
@@ -125,7 +125,7 @@ jobs:
         pip install coveralls
         python setup.py develop
     - name: Download coverage artifacts from test matrix
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v2
       with:
         name: coverage
     - name: Setup coverage and combine reports
@@ -144,12 +144,12 @@ jobs:
         coverage json --pretty-print
         coverage html --show-contexts
     - name: Save coverage JSON
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: coverage
         path: coverage.json
     - name: Save coverage html
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: coverage
         path: htmlcov
