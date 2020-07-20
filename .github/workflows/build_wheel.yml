@@ -36,22 +36,27 @@ jobs:
         path: dist/wntr*.whl
 
   test:
+    name: Import test
     needs: build
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [windows-latest]    
     steps:
     - name: Set up Python 
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: ${{ matrix.python-version }}
     - name: Download wheel
       uses: actions/download-artifact@v2
       with:
         name: wheel
-    - run: dir
     - name: Install wntr
       run: |
         python -m pip install --upgrade pip
         pip install wheel
         pip install --find-links=. wntr
+    - name: Import test
+      run: |
         python -c "import wntr"
-
