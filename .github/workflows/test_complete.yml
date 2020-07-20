@@ -137,7 +137,7 @@ jobs:
         echo "    D:\\a\\WNTR\\WNTR\\wntr" >> .coveragerc
         echo "    /home/runner/work/WNTR/WNTR/wntr" >> .coveragerc
         echo "    /Users/runner/work/WNTR/WNTR/wntr" >> .coveragerc
-        coverage combine coverage
+        coverage combine
     - name: Create coverage report
       run: |
         coverage report
