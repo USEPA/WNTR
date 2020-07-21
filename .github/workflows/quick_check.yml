@@ -7,13 +7,11 @@ on:
   push:
     branches: 
     - '**'
-    branches-ignore:
-    - [master, dev]
+    branches-ignore: [master, dev]
   pull_request:
     branches:
     - '**'
-    branches-ignore:
-    - [master]
+    branches-ignore: [master]
 
 jobs:
   test:
