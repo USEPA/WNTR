@@ -5,9 +5,7 @@ name: build
 
 on:
   push:
-    branches: [ master, dev ]
-  pull_request:
-    branches: [ master, dev ]
+    branches: [ master ]
 
 jobs:
 
