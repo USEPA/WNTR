@@ -10,6 +10,57 @@ on:
     branches: [ master, dev ]
 
 jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install dependencies
+      run: |
+        python --version
+        python -m pip install --upgrade pip
+        pip install wheel
+        pip install -r requirements.txt
+    - name: Build wheel
+      run: |
+        python setup.py bdist_wheel
+        ls dist/*
+    - name: Save wheel
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel
+        path: dist/wntr*.whl
+
+  test:
+    name: Import test
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+        os: [windows-latest, macOS-latest, ubuntu-latest]    
+    steps:
+    - name: Set up Python 
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Download wheel
+      uses: actions/download-artifact@v2
+      with:
+        name: wheel
+    - name: Install wntr
+      run: |
+        python -m pip install --upgrade pip
+        pip install wheel
+        pip install --find-links=. wntr
+    - name: Import test
+      run: |
+        python -c "import wntr"
+
   windows:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -154,3 +205,27 @@ jobs:
         name: coverage
         path: htmlcov
 
+  coveralls:
+    needs: [ windows, macOS, linux ]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+    - name: Set up Python 
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - uses: actions/checkout@v2
+    - name: Install coverage
+      run: |
+        python -m pip install --upgrade pip
+        pip install coveralls
+    - name: Download coverage artifacts from test matrix
+      uses: actions/download-artifact@v2
+      with:
+        name: coverage
+    - name:
+      run: |
+        coverage combine
+        coveralls
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
