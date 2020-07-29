@@ -32,7 +32,7 @@ The latest release of WNTR can be installed from PyPI or Anaconda using one of t
 
   ``conda install -c conda-forge wntr``
   
-Additional installation instructions are available at https://wntr.readthedocs.io/en/latest/installation.html.
+Additional instructions are available at https://wntr.readthedocs.io/en/latest/installation.html.
 
 Citing WNTR
 -----------------
