@@ -255,9 +255,9 @@ where
 :math:`p` is the gauge pressure inside the pipe (Pa), 
 :math:`\alpha` is the discharge coefficient, and 
 :math:`\rho` is the density of the fluid.
-The default discharge coefficient is 0.75 (assuming turbulent flow), but 
+The default discharge coefficient is 0.75 (assuming turbulent flow) [Lamb01]_, but 
 the user can specify other values if needed.  
-The value of :math:`\alpha` is set to 0.5 (assuming large leaks out of steel pipes).  
+The value of :math:`\alpha` is set to 0.5 (assuming large leaks out of steel pipes) [Lamb01]_. 
 Leaks can be added to junctions and tanks.  
 A pipe break is modeled using a leak area large enough to drain the pipe.  
 WNTR includes methods to add leaks to any location along a pipe by splitting the pipe into two sections and adding a node. 

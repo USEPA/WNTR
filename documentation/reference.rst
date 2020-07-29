@@ -34,7 +34,9 @@ References
 
 .. [JCMG11] Joyner, D., Certik, O., Meurer, A., and Granger, B.E. (2012). Open source computer algebra systems, SymPy. ACM Communications in Computer Algebra, 45(4), 225-234.
 
-.. [Mcki13] McKinney W. (2013). Python for Data Analysis: Data Wrangling with Pandas, NumPy, and IPython. Sebastopal, CA: O'Reilly Media, 1 edition, 466p.
+.. [Lamb01] Lambert, A. (2001). What do we know about pressure-leakage relationships in distribution systems. Proceedings of the IWA Specialised Conference ‘System Approach to Leakage Control and Water Distribution Systems Management’, Brno, Czech Republic, 2001, May 16-18, 89-96.
+
+.. [Mcki13] McKinney, W. (2013). Python for Data Analysis: Data Wrangling with Pandas, NumPy, and IPython. Sebastopal, CA: O'Reilly Media, 1 edition, 466p.
 
 .. [NIAC09]	National Infrastructure Advisory Council (NIAC). (2009). Critical Infrastructure Resilience, Final Report and Recommendations, U.S. Department of Homeland Security, Washington, D.C., Accessed September 20, 2014. http://www.dhs.gov/xlibrary/assets/niac/niac_critical_infrastructure_resilience.pdf.
 
