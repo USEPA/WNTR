@@ -4,7 +4,6 @@
 [![TravisCI](https://travis-ci.org/sandialabs/WNTR.svg?branch=master)](https://travis-ci.org/sandialabs/WNTR)
 [![Coverage Status](https://coveralls.io/repos/github/sandialabs/WNTR/badge.svg?branch=master)](https://coveralls.io/github/sandialabs/WNTR?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/wntr/badge/?version=latest)](http://wntr.readthedocs.io/en/latest/?badge=latest)
-[![Downloads](https://pepy.tech/badge/wntr)](https://pepy.tech/project/wntr)
 
 The Water Network Tool for Resilience (WNTR) is a Python package designed to simulate and 
 analyze resilience of water distribution networks. The software includes capability to:
@@ -23,7 +22,16 @@ For more information, go to http://wntr.readthedocs.io
 Installation
 --------------
 
-The latest release of WNTR can be installed from PyPI using the command ``pip install wntr``.
+The latest release of WNTR can be installed from PyPI or Anaconda using one of the following commands in a command line or PowerShell prompt.
+
+* PyPI [![version](https://img.shields.io/pypi/v/wntr.svg?maxAge=3600)](https://pypi.org/project/wntr/) [![Downloads](https://pepy.tech/badge/wntr)](https://pepy.tech/project/wntr)
+
+  ``pip install wntr``
+  
+* Anaconda [![version](https://anaconda.org/conda-forge/wntr/badges/version.svg)](https://anaconda.org/conda-forge/wntr) [![downloads](https://anaconda.org/conda-forge/wntr/badges/downloads.svg)](https://anaconda.org/conda-forge/wntr)
+
+  ``conda install -c conda-forge wntr``
+  
 Additional instructions are available at https://wntr.readthedocs.io/en/latest/installation.html.
 
 Citing WNTR
