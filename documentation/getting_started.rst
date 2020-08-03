@@ -17,6 +17,12 @@ This example demonstrates how to:
 * Simulate hydraulics
 * Plot simulation results on the network
 
+.. note:: 
+   If WNTR is installed using PyPI or Anaconda, the examples folder is not included.  
+   The examples folder can be downloaded by going to https://github.com/USEPA/WNTR, select the "Clone or download" button and then select "Download ZIP."
+   Uncompress the zip file using standard software tools (e.g., unzip, WinZip) and store them in a folder.  
+   The following example assumes the user is running the example from the examples folder.
+
 .. literalinclude:: ../examples/getting_started.py
 
 Additional examples are included throughout the WNTR documentation.
@@ -26,3 +32,13 @@ Example networks range from a simple 9 node network to a 3,000 node network.
 Additional network models can be downloaded from the University of Kentucky 
 Water Distribution System Research Database at
 https://uknowledge.uky.edu/wdsrd.
+
+Additional examples
+-----------------------
+
+WNTR comes with additional examples that illustrate advanced use cases, including:
+
+* `Pipe leak, stochastic simulation example <https://github.com/USEPA/WNTR/blob/master/examples/stochastic_simulation.py>`_: 
+  This example runs multiple realizations of a pipe leak scenario where the location and duration are drawn from probability distributions.
+* `Sensor placement example <https://github.com/USEPA/WNTR/blob/master/examples/sensor_placement.py>`_: 
+  This example uses WNTR with Chama (https://chama.readthedocs.io) to optimize the placement of sensors that minimizes detection time. 

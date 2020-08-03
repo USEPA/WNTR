@@ -6,6 +6,9 @@ NetworkX graph
 ======================================
 
 WNTR can generate a NetworkX data object that stores network connectivity as a graph. 
+The ability to easily integrate NetworkX with WNTR facilitates the use of numerous standard graph algorithms, 
+including algorithms that describe network structure.
+
 A **graph** is a collection of nodes that are connected by links.  
 For water networks, nodes represent junctions, tanks, and reservoirs while links represent pipes, pumps, and valves.
 The NetworkX graph can be used to analyze network structure.

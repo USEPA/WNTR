@@ -10,7 +10,7 @@ design, maintenance, and operations of that system.
 All these aspects must work together to limit the effects of disasters and 
 enable rapid return to normal delivery of safe water to customers.
 Numerous resilience metrics have been suggested [USEPA14]_.  
-These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic.
+These metrics generally fall into five categories: topographic, hydraulic, water quality, water security, and economic [USEPA14]_.
 When quantifying resilience, 
 it is important to understand which metric best defines resilience for 
 a particular scenario.  WNTR includes many metrics to help 
@@ -43,7 +43,7 @@ For metrics that vary with respect to time and space, network animation can be u
    :width: 962
    :alt: Resilience metrics
 
-   Example state transition plot and network graphic used to visualize resilience.
+   Example state transition plot (left) and network graphic (right) used to visualize resilience.
 
 .. _topographic_metrics:
 
