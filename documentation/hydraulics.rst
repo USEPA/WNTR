@@ -2,6 +2,8 @@
 
     \clearpage
 
+.. _hydraulic_simulation:
+
 Hydraulic simulation
 ==============================
 
@@ -27,8 +29,11 @@ A hydraulic simulation using the EpanetSimulator is run using the following code
 	
 .. doctest::
 
-	>>> sim = wntr.sim.EpanetSimulator(wn)
-	>>> results = sim.run_sim()
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
+    >>> sim = wntr.sim.EpanetSimulator(wn)
+    >>> results = sim.run_sim()
 
 The WNTRSimulator is a hydraulic simulation engine based on the same equations
 as EPANET. The WNTRSimulator does not include equations to run water quality 
@@ -237,6 +242,8 @@ The following example sets nominal and minimum pressure for each junction.  Note
     ...     node.nominal_pressure = 21.097 # 30 psi
     ...     node.minimum_pressure = 3.516 # 5 psi
     
+.. _leak_model:
+
 Leak model
 -------------------------
 
@@ -328,6 +335,7 @@ To restart the simulation from time zero, the user has several options.
    .. doctest::
 
        >>> import pickle
+	   
        >>> f=open('wn.pickle','wb')
        >>> pickle.dump(wn,f)
        >>> f.close()
@@ -372,6 +380,7 @@ To create this model using WNTR's AML, the following can be used:
 .. doctest::
 
    >>> from wntr.sim import aml
+   
    >>> m = aml.Model()
    >>> m.x = aml.Var(1.0)
    >>> m.y = aml.Var(1.0)
@@ -401,6 +410,7 @@ step (without a line search) would look something like
 .. doctest::
 
    >>> from scipy.sparse.linalg import spsolve
+   
    >>> x = m.get_x()
    >>> d = spsolve(m.evaluate_jacobian(), -m.evaluate_residuals())
    >>> x += d
@@ -414,6 +424,7 @@ which can solve one of these models.
 .. doctest::
 
    >>> from wntr.sim.solvers import NewtonSolver
+   
    >>> opt = NewtonSolver()
    >>> res = opt.solve(m)
    >>> m.x.value # doctest: +SKIP

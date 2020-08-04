@@ -49,8 +49,6 @@ The following example creates an action that opens pipe 330, in which a status o
     :hide:
 
     >>> import wntr
-    >>> import numpy as np
-    >>> from __future__ import print_function
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -59,7 +57,10 @@ The following example creates an action that opens pipe 330, in which a status o
 
 .. doctest::
 
+    >>> import wntr # doctest: +SKIP
     >>> import wntr.network.controls as controls
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> pipe = wn.get_link('330')
     >>> act1 = controls.ControlAction(pipe, 'status', 1)
     >>> print(act1)

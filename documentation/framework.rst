@@ -59,8 +59,8 @@ Additionally, EPANET INP files can be generated from water network models.
    :class:`~wntr.network.elements.Tank`                Contains methods to define tanks. Tanks are nodes with storage capacity.     
    :class:`~wntr.network.elements.Pipe`		           Contains methods to define pipes. Pipes are links that transport water. 
    :class:`~wntr.network.elements.Pump`                Contains methods to define pumps. Pumps are links that increase hydraulic head.
-   :class:`~wntr.network.elements.Valve`               Contains methods to define valves. Valves are links that limit pressure or flow. 
-   :class:`~wntr.network.elements.Curve`               Contains methods to define curves. Curves are data pairs representing a relationship between two quantities.  Curves are used to define pump curves. 
+   :class:`~wntr.network.elements.Valve`               Contains methods to define valves. Valves are links that regulate pressure or flow. 
+   :class:`~wntr.network.elements.Curve`               Contains methods to define curves. Curves are data pairs representing a relationship between two quantities.  Curves are used to define pump, efficiency, headloss, and volume curves. 
    :class:`~wntr.network.elements.Source`              Contains methods to define sources. Sources define the location and characteristics of a substance injected directly into the network.
    :class:`~wntr.network.elements.Demands`             Contains methods to define multiple demands per junction. Demands are the rate of withdrawal from the network.
    :class:`~wntr.network.elements.Pattern`             Contains methods to define patterns. Demands, reservoir heads, pump schedules, and water quality sources can have patterns associated with them. 

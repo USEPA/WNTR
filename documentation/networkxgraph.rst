@@ -44,8 +44,6 @@ the following function:
     :hide:
 
     >>> import wntr
-    >>> import numpy as np
-    >>> from __future__ import print_function
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -53,6 +51,9 @@ the following function:
 	
 .. doctest::
 
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> G = wn.get_graph() # directed multigraph
 	
 The graph is stored as a nested dictionary.  The nodes and links
@@ -69,6 +70,7 @@ The graph can be used to access NetworkX methods, for example:
 .. doctest::
 
     >>> import networkx as nx
+	
     >>> node_degree = G.degree()
     >>> closeness_centrality = nx.closeness_centrality(G)
     >>> nodes, edges = wntr.graphics.plot_network(wn, node_attribute=closeness_centrality)

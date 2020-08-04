@@ -54,7 +54,7 @@ WNTR includes capabilities to:
 
 * **Generate water network models** from scratch or from existing EPANET-formatted water network model input (EPANET INP) files [Ross00]_ 
 
-* **Modify network structure** by adding/removing components, changing component characteristics, and using network morphology operations
+* **Modify network structure** by adding/removing components or changing component characteristics
 
 * **Modify network operation** by changing initial conditions, component settings, and time-based and conditional controls
 

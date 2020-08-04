@@ -62,8 +62,7 @@ between a regular lattice and a random lattice in terms of structure and reliabi
 Commonly used topographic metrics are listed in :numref:`table-topographic-metrics`.  
 Many of these metrics can be computed using NetworkX directly 
 (see https://networkx.github.io/ for more information).
-WNTR includes additional topographic metrics to help compute resilience 
-(see :class:`~wntr.metrics.topographic` for more information).
+WNTR includes additional topographic metrics to help compute resilience.
 
 .. _table-topographic-metrics:
 .. table:: Topographic Resilience Metrics
@@ -127,8 +126,6 @@ WNTR includes additional topographic metrics to help compute resilience
     :hide:
 
     >>> import wntr
-    >>> import networkx as nx
-    >>> import numpy as np
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -141,6 +138,9 @@ graph or a graph with a single edge between two nodes.
 .. doctest::
 
     >>> import networkx as nx
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> G = wn.get_graph() # directed multigraph
     >>> uG = G.to_undirected() # undirected multigraph
     >>> sG = nx.Graph(uG) # undirected simple graph (single edge between two nodes)
@@ -303,6 +303,8 @@ The following examples compute hydraulic metrics, including:
 
   .. doctest::
 
+      >>> import numpy as np
+	  
       >>> sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
       >>> results = sim.run_sim()
     

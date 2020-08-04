@@ -115,15 +115,8 @@ approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
 
 .. doctest::
     :hide:
-
+	
     >>> import wntr
-    >>> import numpy as np
-    >>> import matplotlib.pylab as plt
-    >>> from __future__ import print_function
-    
-.. doctest::
-    :hide:
-    
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net6.inp')
     ... except:
@@ -131,7 +124,10 @@ approximately 3000 to approximately 1000 (:numref:`fig-skel-example`).
 	
 .. doctest::
 
-    >>> wn = wntr.network.WaterNetworkModel('Net6.inp') # doctest: +SKIP
+    >>> import matplotlib.pylab as plt
+    >>> import wntr  # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net6.inp') # doctest: +SKIP
     >>> wn.describe()
     {'Nodes': 3356, 'Links': 3892, 'Patterns': 3, 'Curves': 60, 'Sources': 0, 'Controls': 124}
     
@@ -244,7 +240,7 @@ WNTR includes several options to modify node coordinates, denoted as :math:`(x, 
   the nodes could be in the upper right and lower left).
 
 .. note:: 
-   Functions that convert coordinates to UTM and longitude/latitude require the Python package **utm**, which is an optional dependency of WNTR.
+   Functions that convert coordinates to UTM and longitude/latitude require the Python package **utm** [Bieni19]_, which is an optional dependency of WNTR.
 		 
 The following example returns a copy of the water network model with 
 node coordinates scaled by 100 m.
@@ -253,8 +249,6 @@ node coordinates scaled by 100 m.
     :hide:
 
     >>> import wntr
-    >>> import numpy as np
-    >>> from __future__ import print_function
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -262,6 +256,7 @@ node coordinates scaled by 100 m.
 	
 .. doctest::
 
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> wn_scaled_coord = wntr.morph.scale_node_coordinates(wn, 100)
 
 The next example converts node coordinates to longitude/latitude. The longitude and latitude coordinates of two locations (e.g., nodes, tanks) on the map must be provided to convert the other node coordinates to longitude/latitude. 

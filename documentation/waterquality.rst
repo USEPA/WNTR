@@ -6,10 +6,6 @@
     :hide:
 
     >>> import wntr
-    >>> import numpy as np
-    >>> import matplotlib.pylab as plt
-    >>> import plotly
-    >>> from __future__ import print_function
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -33,6 +29,9 @@ using the EpanetSimulator is run using the following code:
 
 .. doctest::
 
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> sim = wntr.sim.EpanetSimulator(wn)
     >>> results = sim.run_sim()
 

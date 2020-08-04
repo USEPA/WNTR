@@ -25,14 +25,10 @@ A water network model can be created directly from an EPANET INP file.
 The following example builds a water network model.
 
 .. doctest::
-    :hide:
 
     >>> import wntr
-    >>> import numpy as np
 	
-.. doctest::
-
-    >>> wn = wntr.network.WaterNetworkModel('Net3.inp') # doctest: +SKIP
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
 
 .. doctest::
     :hide:
@@ -217,6 +213,8 @@ NumPy operator).
 
 .. doctest::
 
+    >>> import numpy as np
+    
     >>> node_elevation = wn.query_node_attribute('elevation')
     >>> junction_elevation = wn.query_node_attribute('elevation', 
     ...     node_type=wntr.network.model.Junction)
@@ -234,6 +232,7 @@ Reset initial conditions
 
 When using the same water network model to run multiple simulations using the WNTRSimulator, initial conditions need to be reset between simulations.  
 Initial conditions include simulation time, tank head, reservoir head, pipe status, pump status, and valve status.
+When using the EpanetSimualtor, this step is not needed since EPANET starts at the initial conditions each time it is run.
 
 .. doctest::
 

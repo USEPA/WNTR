@@ -25,7 +25,6 @@ For example, the following valve layer defines a valve on Pipe 1 that protects J
     :hide:
 
     >>> import wntr
-    >>> import networkx as nx
     >>> import numpy as np
     >>> import pandas as pd
     >>> import matplotlib.pylab as plt
@@ -57,6 +56,9 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
 
 .. doctest::
 
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> random_valve_layer = wntr.network.generate_valve_layer(wn, 'random', 40)
     >>> print(random_valve_layer.head())
       link node
