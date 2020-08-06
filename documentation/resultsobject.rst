@@ -87,6 +87,7 @@ Link results include DataFrames for each of the following attributes:
 * Reaction rate (only when the EpanetSimulator is used)
 * Link quality (only when the EpanetSimulator is used)
 
+The link results that are only accessible from the EpanetSimulator could be included in the WNTRSimulator in a future release.
 For example, link results generated with the EpanetSimulator have the following keys:
 
 .. doctest::

@@ -139,7 +139,7 @@ either direction. However, the derivative with respect to :math:`q` at :math:`q 
 is :math:`0`. In certain scenarios, this can cause the Jacobian matrix of the
 set of hydraulic equations to become singular (when :math:`q=0`). 
 To overcome this limitation, the WNTRSimulator
-splits the domain of :math:`q` into six segments to
+splits the domain of :math:`q` into segments to
 create a piecewise smooth function.
 
 .. as presented below.
