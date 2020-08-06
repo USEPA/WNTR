@@ -1594,7 +1594,7 @@ class Source(object):
 
     def __repr__(self):
         fmt = "<Source: '{}', '{}', '{}', {}, {}>"
-        return fmt.format(self.name, self.node_name, self.source_type, self._base, self._pattern_name)
+        return fmt.format(self.name, self.node_name, self.source_type, self._strength_timeseries.base_value, self._strength_timeseries.pattern_name)
 
     @property
     def strength_timeseries(self): 

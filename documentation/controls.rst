@@ -143,7 +143,7 @@ when the condition is false.
 Like controls, rules are also assigned a priority. 
 If rules with conflicting actions should occur at the same time, the rule with the highest priority will override 
 all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` class. The default 
-priority is medium (3). 
+priority is medium (3). Priority can only be assigned when the rule is created.
 
 The following examples illustrate the creation of rules, using conditions and actions similar to those defined above.
 
@@ -155,9 +155,10 @@ The following examples illustrate the creation of rules, using conditions and ac
     >>> print(rule1)
     Rule rule1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
     
-    >>> rule2 = controls.Rule(cond2, [act2], name='rule2')
+    >>> pri5 = controls.ControlPriority.high
+    >>> rule2 = controls.Rule(cond2, [act2], name='rule2', priority=pri5)
     >>> print(rule2)
-    Rule rule2 := if sim_time >= 435600 sec then set HeadPump('10').status to Open with priority 3
+    Rule rule2 := if sim_time >= 435600 sec then set HeadPump('10').status to Open with priority 5
 
 Since rules operate on a different timestep than controls, these rules might behave differently than the equivalent controls defined above. 
 Controls (or simple controls in EPANET) operate on the hydraulic timestep while Rules (or rule-based controls in EPANET) operate at a smaller timestep. 

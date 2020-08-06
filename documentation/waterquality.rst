@@ -125,6 +125,18 @@ For example, the following code can be used to add a source, and associated patt
 In the above example, the pattern is given a value of 1 between 2 and 15 hours, and 0 otherwise.
 The method :class:`~wntr.network.model.WaterNetworkModel.remove_source` can be used to remove sources from the water network model.
 
+Once a source has been added, it can be examined or modified.
+
+.. doctest::
+
+    >>> source = wn.get_source('Source')
+    >>> print(source)                                                                                           
+    <Source: 'Source', '121', 'SETPOINT', 1000, SourcePattern>
+
+    >>> source.strength_timeseries.base_value = 1500
+    >>> print(source)
+    <Source: 'Source', '121', 'SETPOINT', 1500, SourcePattern>
+
 When creating a water network model from an EPANET INP file, the sources that are defined in the [SOURCES] section are added to the water network model.  
 These sources are given the name 'INP#' where # is an integer related to the number of sources in the INP file.
 

@@ -126,6 +126,26 @@ The following example changes junction elevation, pipe diameter, and tank size.
     >>> tank = wn.get_node('1')
     >>> tank.diameter = tank.diameter*1.1
 
+The following shows how to add an additional demand to the junction 121.
+
+.. doctest::
+
+    >>> print(junction.demand_timeseries_list)  # doctest: +SKIP
+    <Demands: [<TimeSeries: base=0.002626444876132, pattern='1', category='None'>]> 
+    
+    >>> junction.add_demand(base=1.0, pattern_name='1')
+    >>> print(junction.demand_timeseries_list)  # doctest: +SKIP
+    <Demands: [<TimeSeries: base=0.002626444876132, pattern='1', category='None'>, <TimeSeries: base=1.0, pattern='1', category='None'>]>
+
+To remove the demand, use the Python ``del`` as with an array element.
+
+.. doctest::
+
+    >>> del junction.demand_timeseries_list[1]
+    >>> print(junction.demand_timeseries_list)
+    <Demands: [<TimeSeries: base=0.002626444876132, pattern='1', category='None'>]>
+
+
 Modify time series
 -------------------------------
 
