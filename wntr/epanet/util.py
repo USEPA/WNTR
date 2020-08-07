@@ -506,7 +506,7 @@ class HydParam(enum.Enum):
             data = data * flow_units.factor
             if self is HydParam.EmitterCoeff:
                 if flow_units.is_traditional:
-                    data = data / 0.7032  # flowunit/psi0.5 to flowunit/m0.5
+                    data = data * np.sqrt(0.7032)  # flowunit/psi0.5 to flowunit/m0.5
 
         elif self in [HydParam.PipeDiameter]:
             if flow_units.is_traditional:
@@ -592,7 +592,7 @@ class HydParam(enum.Enum):
             data = data / flow_units.factor
             if self is HydParam.EmitterCoeff:
                 if flow_units.is_traditional:
-                    data = data / 0.7032  # flowunit/psi0.5 from flowunit/m0.5
+                    data = data / np.sqrt(0.7032)  # flowunit/psi0.5 from flowunit/m0.5
 
         elif self in [HydParam.PipeDiameter]:
             if flow_units.is_traditional:
@@ -646,6 +646,18 @@ def to_si(from_units, data, param,
           darcy_weisbach=False, reaction_order=0):
     """Convert an EPANET parameter from internal to SI standard units.
 
+    .. note:: 
+
+        See the `Units <../units.html>`__ page for details on the units for each :class:`~HydParam` or :class:`~QualParam`.
+        Other than for flows, most parameters only have one US and one metric unit that is used by EPANET.
+        For example, even though flow might be specified in gallons, volumes would be specified in cubic feet
+        for any US/English flow rates, and in cubic meters for all metric flow units; e.g., never liters 
+        for volumes even when flow is declared as LPS.
+
+        Rememeber that internally, WNTR is **always** expecting the values for a parameter to be in true SI
+        units -- meters, kilograms, and seconds -- unless explicitly stated otherwise (e.g., hours for control times).
+
+
     Parameters
     ----------
     from_units : :class:`~FlowUnits`
@@ -669,6 +681,39 @@ def to_si(from_units, data, param,
         The data values convert into SI standard units
 
 
+    Examples
+    --------
+
+    First, we convert an array of flows from GPM to cubic meters per second (the SI units).
+
+    >>> from wntr.epanet.util import *
+    >>> flow_si = to_si(FlowUnits.GPM, [0.1, 1.0, 4.3], HydParam.Flow)
+    >>> print(flow_si)
+    [6.309019640000001e-06, 6.30901964e-05, 0.00027128784452]
+
+    Next, we show how to convert the quality parameter from the EPANET units of mg/L to kg/m3.
+    If that is not the mass units you prefer, it is possible to change them to ug/L, g/L, or kg/L,
+    as shown in the second example.
+
+    >>> to_si(FlowUnits.GPM, 4.6, QualParam.Quality)
+    0.0046
+    >>> to_si(FlowUnits.GPM, 4.6, QualParam.Quality, mass_units=MassUnits.ug)
+    4.599999999999999e-06
+
+    It is also possible to convert a dictionary of values.
+
+    >>> to_si(FlowUnits.GPM, {'node1': 5.6, 'node2': 1.2}, HydParam.Pressure)
+    {'node1': 3.9392568659127623, 'node2': 0.8441264712670206}
+
+    For certain coefficients, there are flags that will change how the conversion occurs. For example,
+    reaction coefficients depend on the reaction order.
+
+    >>> to_si(FlowUnits.GPM, 0.45, QualParam.BulkReactionCoeff, reaction_order=0)
+    0.45
+    >>> to_si(FlowUnits.GPM, 0.45, QualParam.BulkReactionCoeff, reaction_order=1)
+    5.208333333333333e-06
+
+
     """
     if isinstance(param, HydParam):
         return param._to_si(from_units, data, darcy_weisbach)
@@ -682,6 +727,18 @@ def from_si(to_units, data, param,
           mass_units=MassUnits.mg, pressure_units=None,
           darcy_weisbach=False, reaction_order=0):
     """Convert an EPANET parameter from SI standard units back to internal units.
+
+    .. note:: 
+
+        See the `Units <../units.html>`__ page for details on the units for each :class:`~HydParam` or :class:`~QualParam`.
+        Other than for flows, most parameters only have one US and one metric unit that is used by EPANET.
+        For example, even though flow might be specified in gallons, volumes would be specified in cubic feet
+        for any US/English flow rates, and in cubic meters for all metric flow units; e.g., never liters 
+        for volumes even when flow is declared as LPS.
+
+        Rememeber that internally, WNTR is **always** expecting the values for a parameter to be in true SI
+        units -- meters, kilograms, and seconds -- unless explicitly stated otherwise (e.g., hours for control times).
+
 
     Parameters
     ----------
@@ -704,6 +761,39 @@ def from_si(to_units, data, param,
     -------
     float, array-like, or dict
         The data values converted into EPANET internal units
+
+
+    Examples
+    --------
+
+    First, we convert an array of flows from SI (cubic meters per second) to GPM.
+
+    >>> from wntr.epanet.util import *
+    >>> flow_us = from_si(FlowUnits.GPM, [6.309019640000001e-06, 6.30901964e-05, 0.00027128784452], HydParam.Flow)
+    >>> print(flow_si)
+    [0.1, 1.0, 4.3]
+
+    Next, we show how to convert the quality parameter from kg/m3 to mg/L and then to ug/L.
+    
+    >>> from_si(FlowUnits.GPM, 0.0046, QualParam.Quality)
+    0.0046
+    >>> from_si(FlowUnits.GPM, 0.0046, QualParam.Quality, mass_units=MassUnits.ug)
+    4600.0
+
+    It is also possible to convert a dictionary of values.
+
+    >>> from_si(FlowUnits.GPM, {'node1': 3.9392568659127623, 'node2': 0.8441264712670206}, HydParam.Pressure)
+    {'node1': 5.6, 'node2': 1.2}
+    
+    Finally, an example showing the conversion of 1000 cubic meters per second into the different flow units.
+
+    >>> from_si(FlowUnits.GPM, 1000.0, HydParam.Flow)  # to gallons per minute
+    15850323.141488904
+    >>> from_si(FlowUnits.LPS, 1000.0, HydParam.Flow)  # to liters per second
+    1000000.0
+    >>> from_si(FlowUnits.MGD, 1000.0, HydParam.Flow)  # to million gallons per day
+    22824.465323744018
+
 
     """
     if isinstance(param, HydParam):
