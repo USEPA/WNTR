@@ -211,7 +211,7 @@ highlight the need to minimize human health and economic impacts.
 WNTR simulates contamination incidents by introducing contaminants into the distribution system and allowing them to propagate through the system. 
 The section on :ref:`water_quality_simulation` includes steps to define and simulate contamination incidents.
 
-Future versions of WNTR will be able to simulate changes in source water quality due to disruptions.
+Future versions of WNTR will be able to simulate changes in source water quality due to contamination incidents.
 
 Other disaster scenarios
 -------------------------------
