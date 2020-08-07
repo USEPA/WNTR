@@ -50,7 +50,7 @@ More information on the simulators can be found in the API documentation, under
 :class:`~wntr.sim.epanet.EpanetSimulator` and 
 :class:`~wntr.sim.core.WNTRSimulator`.
 The simulators use different solvers for the system of hydraulic equations; as such, small differences in the results
-are expected. When these differences change when a rule or control is activated, there can be larger differences.
+are expected.
 
 Options
 ----------
