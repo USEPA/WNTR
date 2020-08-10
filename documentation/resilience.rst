@@ -54,7 +54,7 @@ Topographic metrics, based on graph theory, can be used to assess the connectivi
 of water distribution networks.
 These metrics rely on the physical layout of the network components and can be used to
 understand how the underlying structure and connectivity constrains resilience. For
-example, a regular lattice, where each node has the same number of edges, is considered to be
+example, a regular lattice, where each node has the same number of edges (except at the border), is considered to be
 the most reliable graph structure. On the other hand, a random lattice has nodes and edges
 that are placed according to a random process. A real world water distribution system probably lies somewhere in
 between a regular lattice and a random lattice in terms of structure and reliability.
