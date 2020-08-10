@@ -166,13 +166,8 @@ The following example adds fire flow conditions at a specific node.
     >>> fire_flow_demand = 0.252 # 4000 gal/min = 0.252 m3/s
     >>> fire_start = 10*3600
     >>> fire_end = 14*3600
-    >>> fire_flow_pattern = wntr.network.elements.Pattern.binary_pattern('fire_flow', 
-    ...     step_size=wn.options.time.pattern_timestep, start_time=fire_start, 
-    ...     end_time=fire_end, duration=wn.options.time.duration)
-    >>> wn.add_pattern('fire_flow', fire_flow_pattern)
     >>> node = wn.get_node('197')
-    >>> node.demand_timeseries_list.append( (fire_flow_demand, fire_flow_pattern, 
-    ...     'Fire flow'))
+    >>> node.add_fire_fighting_demand(wn, fire_flow_demand, fire_start, fire_end)
 
 
 Environmental change
