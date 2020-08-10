@@ -2820,7 +2820,7 @@ class BinFile(object):
             self.save_network_desc_line('link_start', pd.Series(data=names[linkstart-1], index=linknames, copy=True))
             self.save_network_desc_line('link_end', pd.Series(data=names[linkend-1], index=linknames, copy=True))
             """
-            if custom_handlers is True:
+            if custom_handlers is True:  
                 logger.debug('... set up results object ...')
                 self.setup_ep_results(reporttimes, nodenames, linknames)
     
@@ -2935,7 +2935,7 @@ class NoSectionError(Exception):
     pass
 
 
-class _InpFileDifferHelper(object):
+class _InpFileDifferHelper(object):  # pragma: no cover
     def __init__(self, f):
         """
         Parameters
@@ -3016,7 +3016,7 @@ class _InpFileDifferHelper(object):
             return False
 
 
-def _convert_line(line):
+def _convert_line(line):  # pragma: no cover
     """
     Parameters
     ----------
@@ -3043,7 +3043,7 @@ def _convert_line(line):
     return tmp
 
 
-def _compare_lines(line1, line2, tol=1e-14):
+def _compare_lines(line1, line2, tol=1e-14):  # pragma: no cover
     """
     Parameters
     ----------
@@ -3076,7 +3076,7 @@ def _compare_lines(line1, line2, tol=1e-14):
     return True
 
 
-def _clean_line(wn, sec, line):
+def _clean_line(wn, sec, line):  # pragma: no cover
     """
     Parameters
     ----------
@@ -3102,7 +3102,7 @@ def _clean_line(wn, sec, line):
     return line
 
 def _diff_inp_files(file1, file2=None, float_tol=1e-8, max_diff_lines_per_section=5, 
-                    htmldiff_file='diff.html'):
+                    htmldiff_file='diff.html'):   # pragma: no cover
     """
     Parameters
     ----------
