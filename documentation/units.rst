@@ -100,9 +100,3 @@ For reference, :numref:`table-epanet-units` includes EPANET unit conventions [Ro
    | Water age            |   hours                             | hours                              |
    +----------------------+-------------------------------------+------------------------------------+
   
-
-Using unit conversion utilities
--------------------------------
-
-The :class:`wntr.epanet.util` module contains classes and functions for converting different values and parameters to 
-and from SI units. The API reference for this module contains numerous examples on how to use these functions.
