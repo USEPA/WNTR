@@ -102,7 +102,7 @@ If controls with conflicting actions should occur at the same time, the control 
 all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` class. The default 
 priority is medium (3). 
 
-In the following example, a conditional control is defined that opens pipe 330 if the level of tank 1 goes above 46.0248 m.
+In the following example, a conditional control is defined that opens pipe 330 if the level of tank 1 goes above 46.0248 m (151.0 ft).
 The target is the tank and the attribute is the tank's level.
 To specify that the condition should be true when the level is greater than the threshold, the operation is set to > and the threshold is set to 46.0248.
 The action `act1` from above is used in the control.
@@ -119,7 +119,8 @@ The action `act1` from above is used in the control.
     Control control1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
     
 In the following example, a time-based control is defined that opens pump 10 at hour 121.
-A new action is defined that opens the pump.
+A new action is defined that opens the pump. The SimTimeCondition parameter can be specified as decimal hours
+or as a string in ``[dd-]hh:mm[:ss]`` format. When printed, the output is converted to seconds.
 
 .. doctest::
     
@@ -142,7 +143,7 @@ when the condition is false.
 Like controls, rules are also assigned a priority. 
 If rules with conflicting actions should occur at the same time, the rule with the highest priority will override 
 all others. The priority argument should be an element of the :class:`~wntr.network.controls.ControlPriority` class. The default 
-priority is medium (3). 
+priority is medium (3). Priority can only be assigned when the rule is created.
 
 The following examples illustrate the creation of rules, using conditions and actions similar to those defined above.
 
@@ -154,12 +155,15 @@ The following examples illustrate the creation of rules, using conditions and ac
     >>> print(rule1)
     Rule rule1 := if Tank('1').level > 46.0248 then set Pipe('330').status to Open with priority 3
     
-    >>> rule2 = controls.Rule(cond2, [act2], name='rule2')
+    >>> pri5 = controls.ControlPriority.high
+    >>> rule2 = controls.Rule(cond2, [act2], name='rule2', priority=pri5)
     >>> print(rule2)
-    Rule rule2 := if sim_time >= 435600 sec then set HeadPump('10').status to Open with priority 3
+    Rule rule2 := if sim_time >= 435600 sec then set HeadPump('10').status to Open with priority 5
 
-Since rules operate on a different timestep than controls, these rules might behave differently than the controls defined above. 
-Controls (or simple controls in EPANET) operate on the hydraulic timestep while rules (or rule-based controls in EPANET) operate at a smaller timestep. By default, the rule time step is 1/10th of the hydraulic timestep.
+Since rules operate on a different timestep than controls, these rules might behave differently than the equivalent controls defined above. 
+Controls (or simple controls in EPANET) operate on the hydraulic timestep while Rules (or rule-based controls in EPANET) operate at a smaller timestep. 
+By default, the rule time step is 1/10th of the hydraulic timestep. It is important to remember that significant differences 
+may occur when timesteps are smaller; this applies not only to rule timesteps, but also to changing hydraulic or quality step sizes.
 
 More complex rules can be written using one of the Boolean logic condition classes.
 The following example creates a new rule that will open pipe 330 if both conditions are true, 

@@ -49,6 +49,8 @@ A hydraulic simulation using the WNTRSimulator is run using the following code:
 More information on the simulators can be found in the API documentation, under
 :class:`~wntr.sim.epanet.EpanetSimulator` and 
 :class:`~wntr.sim.core.WNTRSimulator`.
+The simulators use different solvers for the system of hydraulic equations; as such, small differences in the results
+are expected.
 
 Options
 ----------
