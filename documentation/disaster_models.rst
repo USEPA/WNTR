@@ -47,8 +47,8 @@ WNTR includes methods to change coordinate scale, as shown in the following exam
 .. doctest::
     :hide:
 
-    >>> import numpy as np
     >>> import wntr
+    >>> import matplotlib.pylab as plt
     >>> try:
     ...    wn = wntr.network.model.WaterNetworkModel('../examples/networks/Net3.inp')
     ... except:
@@ -56,6 +56,9 @@ WNTR includes methods to change coordinate scale, as shown in the following exam
     
 .. doctest::
 
+    >>> import wntr # doctest: +SKIP
+	
+    >>> wn = wntr.network.WaterNetworkModel('networks/Net3.inp') # doctest: +SKIP
     >>> wn = wntr.morph.scale_node_coordinates(wn, 1000)
    
 The following example computes peak ground acceleration, peak ground velocity, and repair rate for each pipe.
@@ -71,12 +74,11 @@ The following example computes peak ground acceleration, peak ground velocity, a
     >>> pgv = earthquake.pgv_attenuation_model(distance)
     >>> repair_rate = earthquake.repair_rate_model(pgv) 
 
-The earthquake properties can be plotted on the network, as follows.
+The earthquake properties can be plotted on the network using the following example. The resulting map is shown in :numref:`fig-network`.
 
 .. doctest::
     :hide:
     
-    >>> import matplotlib.pylab as plt
 	>>> fig = plt.figure()
     
 .. doctest::
@@ -110,7 +112,7 @@ This type of damage is especially common in older cities where distribution
 systems were constructed from outdated materials like 
 cast iron and even wood. 
 
-WNTR includes methods to add leaks to junctions and tanks.
+WNTR includes methods to add leaks to junctions and tanks (see :ref:`leak_model` for more details).
 Leaks can be added to a pipe by splitting the pipe and adding a junction.
 The following example adds a leak to a specific pipe.
 
@@ -121,14 +123,14 @@ The following example adds a leak to a specific pipe.
     >>> leak_node.add_leak(wn, area=0.05, start_time=2*3600, end_time=12*3600)
 
 The method :class:`~wntr.network.elements.Junction.add_leak` adds time controls to 
-a junction which includes the start and stop time for the leak.
+a junction, which includes the start and stop time for the leak.
 
 Power outage
 -------------
 Power outages can be small and brief, or they can also span over several days and 
-effect whole regions as seen in the 2003 Northeast Blackout. 
+affect whole regions as seen in the 2003 Northeast Blackout. 
 While the Northeast Blackout was an extreme case, a 2012 Lawrence Berkeley National Laboratory study [ELLT12]_ 
-showed the frequency and duration of power outages are increasing by a 
+showed the frequency and duration of power outages are increasing domestically by a 
 rate of two percent annually. In water distribution systems, 
 a power outage can cause pump stations to shut down and result in 
 reduced water pressure. This can lead to shortages in some areas of 
@@ -164,13 +166,8 @@ The following example adds fire flow conditions at a specific node.
     >>> fire_flow_demand = 0.252 # 4000 gal/min = 0.252 m3/s
     >>> fire_start = 10*3600
     >>> fire_end = 14*3600
-    >>> fire_flow_pattern = wntr.network.elements.Pattern.binary_pattern('fire_flow', 
-    ...     step_size=wn.options.time.pattern_timestep, start_time=fire_start, 
-    ...     end_time=fire_end, duration=wn.options.time.duration)
-    >>> wn.add_pattern('fire_flow', fire_flow_pattern)
     >>> node = wn.get_node('197')
-    >>> node.demand_timeseries_list.append( (fire_flow_demand, fire_flow_pattern, 
-    ...     'Fire flow'))
+    >>> node.add_fire_fighting_demand(wn, fire_flow_demand, fire_start, fire_end)
 
 
 Environmental change
@@ -184,7 +181,7 @@ For example, severe drought in California has forced lawmakers to reduce the
 state's water usage by 25 percent. 
 Environmental change also leads to sea level rise which can inundate distribution 
 systems. This is especially prevalent in cities built on unstable soils like 
-New Orleans and Washington, DC which are experiencing land subsidence. 
+New Orleans and Washington, DC, which are experiencing land subsidence. 
 
 WNTR can be used to simulate the effects of environmental change on the water distribution system by
 changing supply and demand, adding disruptive conditions (i.e., power outages, pipe leaks) caused by severe weather, or by adding pipe leaks caused by subsidence.
@@ -211,7 +208,7 @@ highlight the need to minimize human health and economic impacts.
 WNTR simulates contamination incidents by introducing contaminants into the distribution system and allowing them to propagate through the system. 
 The section on :ref:`water_quality_simulation` includes steps to define and simulate contamination incidents.
 
-Future versions of WNTR will be able to simulate changes in source water quality due to disruptions.
+Future versions of WNTR will be able to simulate changes in source water quality due to contamination incidents.
 
 Other disaster scenarios
 -------------------------------

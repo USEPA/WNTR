@@ -28,13 +28,13 @@ The tests are run each time changes are made to the repository.
 The tests cover a wide range of unit and 
 integration tests designed to ensure that the code is performing as expected.  
 New tests are developed each time new functionality is added to the code.   
-Testing status (passing/failed) and code coverage statistics are posted on 
+Testing status (passed/failed) and code coverage statistics are posted on 
 the README section at https://github.com/USEPA/WNTR.
 	
 Tests can also be run locally using the Python package nose.  
 For more information on nose, see  http://nose.readthedocs.io/.
 The nose package comes with a command line software tool called nosetests.
-Tests can be run in the WNTR directory using the following command::
+Tests can be run in the WNTR directory using the following command in a command line/PowerShell prompt::
 
 	nosetests -v --with-coverage --cover-package=wntr wntr
 
@@ -75,7 +75,7 @@ Pull requests must meet the following minimum requirements to be included in WNT
 
 * Code is expected to be documented using Read the Docs.  
 
-* Code is expected to be sufficiently tested using Travis CI.  `Sufficient` is judged by the strength of the test and code coverage.  80% code coverage is recommended.  
+* Code is expected to be sufficiently tested using Travis CI.  `Sufficient` is judged by the strength of the test and code coverage. An 80% code coverage is recommended.  
 
 * Large files (> 1Mb) will not be committed to the repository without prior approval.
 

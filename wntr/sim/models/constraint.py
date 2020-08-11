@@ -381,7 +381,7 @@ class prv_headloss_constraint(Definition):
     @classmethod
     def build(cls, m, wn, updater, index_over=None):
         """
-        Adds a headloss constraint to the model for the power pumps.
+        Adds a headloss constraint to the model for the pressure reducing valves.
 
         Parameters
         ----------
@@ -477,7 +477,7 @@ class psv_headloss_constraint(Definition):
                     end_h = m.source_head[end_node_name]
 
                 if status is wntr.network.LinkStatus.Active:
-                    con = aml.Constraint(start_h - m.valve_setting[link_name] - m.elevation[end_node_name])
+                    con = aml.Constraint(start_h - m.valve_setting[link_name] - m.elevation[start_node_name])
                 else:
                     assert status == LinkStatus.Open
                     con = aml.Constraint(m.minor_loss[link_name]*f**2 - start_h + end_h)

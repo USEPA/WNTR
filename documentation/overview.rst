@@ -1,16 +1,19 @@
 .. raw:: latex
 
     \clearpage
-	\pagenumbering{arabic}
-	\setcounter{page}{1}
 	
 Overview
 ======================================
 
+.. raw:: latex
+
+    \pagenumbering{arabic}
+    \setcounter{page}{1}
+    
 Drinking water systems face multiple challenges, including aging infrastructure, 
 water quality concerns, uncertainty in supply and demand, natural disasters, 
 environmental emergencies, and cyber and terrorist attacks.  
-All of these have the potential to disrupt a large portion of a water system 
+All of these have the potential to disrupt a large portion of a water system, 
 causing damage to infrastructure and outages to customers.  
 Increasing resilience to these types of hazards is essential to improving 
 water security.  
@@ -33,7 +36,11 @@ package designed to simulate and analyze resilience of water distribution networ
 Here, a network refers to the collection of pipes, pumps, valves, junctions, tanks, and reservoirs that 
 make up a water distribution system. WNTR has an application programming interface (API) 
 that is flexible and allows for changes to the network structure and operations, 
-along with simulation of disruptive incidents and recovery actions.  
+along with simulation of disruptive incidents and recovery actions. 
+
+WNTR is based upon EPANET, which is a tool to simulate the movement and fate of drinking water constituents within distribution systems. Users are encouraged to be familiar with the use of
+EPANET and/or should have background knowledge in hydraulics and pressurized pipe network modeling before using WNTR. EPANET has a graphical user interface that might be a useful tool to facilitate the visualization of the network and the associated analysis results. Information on EPANET can be found at https://www.epa.gov/water-research/epanet. WNTR is compatible with EPANET 2.00.12 [Ross00]_. In addition, users should have experience using Python, including the installation of additional Python packages. General information on Python can be found at https://www.python.org/. 
+
 WNTR can be installed through the United States Environmental Protection Agency (US EPA) 
 GitHub organization at https://github.com/USEPA/WNTR.  An integrated development environment 
 (IDE), like Spyder, is recommended for users and developers.
@@ -51,11 +58,11 @@ WNTR includes capabilities to:
 
 * **Generate water network models** from scratch or from existing EPANET-formatted water network model input (EPANET INP) files [Ross00]_ 
 
-* **Modify network structure** by adding/removing components, changing component characteristics, and using network morphology operations
+* **Modify network structure** by adding/removing components or changing component characteristics
 
-* **Modify network operation** by changing initial conditions, component settings, and time-based and conditional controls
+* **Modify network operation** by changing initial conditions, component settings, supply and demand, and time-based and conditional controls
 
-* **Add disruptive incidents** including damage to tanks, valves, and pumps, pipe leaks, power outages, contaminant injection, and changes to supply and demand
+* **Add disruptive incidents** including damage to tanks, valves, and pumps, pipe leaks, power outages, contaminant injection, and environmental changes
 
 * **Add response/repair/mitigation strategies** including leak repair, retrofitted pipes, power restoration, and backup generation
 
@@ -88,4 +95,8 @@ These packages allow the user to build custom analysis directly in Python, and g
 analyze the structure of complex water distribution networks, 
 analyze time-series data from simulation results,
 run simulations efficiently, and 
-create high-quality graphics and animations.
+create high-quality graphics and animations.     
+
+
+.. note:: 
+  EPANET refers to EPANET 2.00.12 unless otherwise noted. Future releases of WNTR will include EPANET 2.2.0.
