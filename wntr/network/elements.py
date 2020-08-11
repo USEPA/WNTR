@@ -196,7 +196,7 @@ class Junction(Node):
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
         
-    def add_fire_fighting_demand(self, wn, fire_flow_demand, fire_start=None, fire_end=None, pattern_name=None):
+    def add_fire_fighting_demand(self, wn, fire_flow_demand, fire_start, fire_end, pattern_name=None):
         """Add a new fire flow demand entry to the Junction
         
         Parameters
@@ -206,20 +206,17 @@ class Junction(Node):
         fire_flow_demand : float
             Fire flow demand
         fire_start : int
-            Start time of the fire flow in seconds. If fire_start is None, it
-            is assumed that the fire flow starts 4 hours into the simulation.
+            Start time of the fire flow in seconds. 
         fire_end : int
-            End time of the fire flow in seconds. If fire_end is None, it is 
-            assumed that the fire flow ends at the end of the simulation.
+            End time of the fire flow in seconds. 
         pattern_name : str or None
             Pattern name.  If pattern name is None, the pattern name is assigned to junction name + '_fire'
         """
+        if 'Fire_Flow' in self.demand_timeseries_list.category_list():
+            raise ValueError('A single junction can not have multiple fire flow demands')
+
         if pattern_name is None:
             pattern_name = self._name+'_fire'
-        if fire_start is None:
-            fire_start = 4*60*60
-        if fire_end is None:
-            fire_end = wn.options.time.duration
             
         fire_flow_pattern = Pattern(pattern_name).binary_pattern(pattern_name, 
                                           step_size=wn.options.time.pattern_timestep,
@@ -230,6 +227,19 @@ class Junction(Node):
         self._pattern_reg.add_usage(pattern_name, (self.name, 'Junction'))
         self.demand_timeseries_list.append((fire_flow_demand, fire_flow_pattern, 'Fire_Flow'))
 
+    def remove_fire_fighting_demand(self, wn):
+        """Removes a fire flow demand entry to the Junction
+        
+        Parameters
+        ----------
+        wn : :class:`~wntr.network.model.WaterNetworkModel`
+           Water network model
+        """
+        if 'Fire_Flow' in self.demand_timeseries_list.category_list():
+            pattern_name = self.demand_timeseries_list.pattern_list('Fire_Flow')[0].name
+            self._pattern_reg.remove_usage(pattern_name, (self.name, 'Junction'))
+            self.demand_timeseries_list.remove_category('Fire_Flow')
+            wn.remove_pattern(pattern_name)
 
 
 class Tank(Node):
@@ -379,6 +389,7 @@ class Tank(Node):
         self._leak = False
         wn._discard_control(self._leak_start_control_name)
         wn._discard_control(self._leak_end_control_name)
+
 
 class Reservoir(Node):
     """
