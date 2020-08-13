@@ -1,27 +1,29 @@
 """
 The following example uses WNTR to perform a hydraulic simulation of the 
 network both with and without fire fighting flow demands.
+Shown here are both add_fire_fighting_demand and remove_fire_fighting_demand
+methods.
 """
 import wntr
 
 # Create a water network model and simulate under nominal conditions
 inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
-sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
-results = sim.run_sim()
 
-# Add fire demand
-fire_name = 'fire_pattern'
+# Add fire demand and simulate
 fire_flow_demand = 0.252 # 4000 gal/min = 0.252 m3/s
 fire_start = 10*3600
 fire_end = 36*3600
 node = wn.get_node('197')
 node.add_fire_fighting_demand(wn, fire_flow_demand, fire_start, fire_end)
-
-# Reset initial values and simulate hydraulics with fire flow conditions
-wn.reset_initial_values()
 sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
 fire_results = sim.run_sim()
+
+# Reset initial values and simulate hydraulics under nominal conditions
+wn.reset_initial_values()
+node.remove_fire_fighting_demand(wn)
+sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+results = sim.run_sim()
 
 # Plot resulting differences on the network
 pressure_at_24hr = results.node['pressure'].loc[24*3600, :]
