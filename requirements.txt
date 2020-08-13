@@ -10,5 +10,4 @@ plotly
 folium
 utm
 openpyxl
-numpydocs
 nose
