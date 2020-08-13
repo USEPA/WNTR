@@ -22,6 +22,7 @@ The link direction is used as a reference to track flow direction in the network
 For example, positive flow indicates that the flow direction is from the start node to the end node 
 while negative flow indicates that the flow direction is from the end node to the start node.
 Multiple links with the same start and end node can be used to represent redundant pipes or backup pumps.
+
 A NetworkX graph generated from a water network model stores 
 the start and end node of each link, 
 node coordinates, 
@@ -32,7 +33,7 @@ For more information on NetworkX, see https://networkx.github.io/.
 
 .. _fig-graph:
 .. figure:: figures/graph.png
-   :width: 389
+   :width: 325
    :alt: Directed multigraph
 
    Example directed multigraph.

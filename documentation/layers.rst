@@ -75,16 +75,16 @@ The valve layer can be included in water network graphics (:numref:`fig-random-v
 
     >>> plt.tight_layout()
     >>> plt.savefig('random_valve_layer.png', dpi=300)
-    
+
 .. _fig-random-valve-layer:
 .. figure:: figures/random_valve_layer.png
-   :width: 640
+   :width: 500
    :alt: Valve layer
-
+   
    Valve layer using random placement.
    
 The **strategic** placement specifies the number of pipes (n) from each node that do NOT contain a valve.  
-In this case, n is generally 0, 1, or 2 (i.e., N, N-1, or N-2 valve placement).
+In this case, n is generally 0, 1, or 2 (i.e., N, N-1, or N-2 valve placement) [WaWC06]_ [LWFZ17]_.
 For example, if 3 pipes connect to a node and n = 2, then 2 of those pipes will not contain a valve and 1 pipe will contain a valve.
 The following example generates a strategic N-2 valve placement.
 The valve layer can be included in water network graphics (:numref:`fig-strategic-valve-layer`).
@@ -100,10 +100,10 @@ The valve layer can be included in water network graphics (:numref:`fig-strategi
 
     >>> plt.tight_layout()
     >>> plt.savefig('strategic_valve_layer.png', dpi=300)
-    
+
 .. _fig-strategic-valve-layer:
 .. figure:: figures/strategic_valve_layer.png
-   :width: 640
+   :width: 500
    :alt: Valve layer
    
    Valve layer using strategic N-2 placement.

@@ -1,102 +1,90 @@
 """
-The following example uses WNTR to calculate the importance of each large pipe 
-in the network by running a series of hydraulic simulations with one pipe 
-closed at a time and determining if minimum pressure criterion are met at each 
-node.
+The following example runs a pipe criticality analysis on large diameter pipes
+to compute the impact that pipe closures have on pressure in the system.  
+The analysis is run using a series of hydraulic simulations with one pipe 
+closed at a time and determines if minimum pressure criterion are met 
+at each junction.  Note that for many networks, simulations can fail when 
+certain pipes are closed. try:except blocks are recommended within the 
+simulation loop to catch these instances.
 """
 import numpy as np
-import matplotlib.pyplot as plt
 import wntr
 
-
-plt.close('all')
-
-
-### Create the water network model 
-inp_file = './Networks/Net3.inp'
+# Create a water network model 
+inp_file = 'networks/Net3.inp'
 wn = wntr.network.WaterNetworkModel(inp_file)
+
 # Adjust simulation options for criticality analyses
 analysis_end_time = 72*3600 
 wn.options.time.duration = analysis_end_time
-# Adjust water network for criticality analysis
 nominal_pressure = 17.57 
-pressure_threshold = 14.06 
 for name, node in wn.nodes():
     node.nominal_pressure = nominal_pressure
-expected_demand = wntr.metrics.expected_demand(wn)
-pop = wntr.metrics.population(wn)
 
+# Create a list of pipes with large diameter to include in the analysis
+pipes = wn.query_link_attribute('diameter', np.greater_equal, 24*0.0254, 
+                                link_type=wntr.network.model.Pipe)      
+pipes = list(pipes.index)
+wntr.graphics.plot_network(wn, link_attribute=pipes, 
+                           title='Pipes included in criticality analysis')
+   
+# Define the pressure threshold
+pressure_threshold = 14.06 
 
-summary = {}  
-### Run a hydraulic simulation using the original network
+# Run a preliminary simulation to determine if junctions drop below the 
+# pressure threshold during normal conditions
 sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
 results = sim.run_sim()
-temp = results.node['pressure'].min()
-temp = temp[temp < pressure_threshold]
-orig = list(temp.index)
+min_pressure = results.node['pressure'].loc[:,wn.junction_name_list].min()
+below_threshold_normal_conditions = set(min_pressure[min_pressure < pressure_threshold].index)
 
-
-### Run criticality simulation for each large diameter pipe.
-# This is a hydraulic simulation that closes the pipe after one day and
-# finds the nodes that dip below the minimum pressure threshold.
-# Only the largest pipes were selected to reduce the runtime of this example.
-pipes = wn.query_link_attribute('diameter', np.greater_equal, 30*0.0254, 
-                                link_type=wntr.network.model.Pipe)      
-pipes = list(pipes.keys())
-print('Number of pipes tested: ', str(len(pipes)))
+# Run the criticality analysis, closing one pipe for each simulation
+junctions_impacted = {} 
 for pipe_name in pipes:
-    print('Pipe: ', pipe_name)
-    wn = wntr.network.WaterNetworkModel(inp_file)
-    wn.options.time.duration = analysis_end_time
-    for name, node in wn.nodes():
-        node.nominal_pressure = nominal_pressure          
-    try:
-        pipe = wn.get_link(pipe_name)        
-        act = wntr.network.controls.ControlAction(pipe, 'status', wntr.network.LinkStatus.Closed)
-        cond = wntr.network.controls.SimTimeCondition(wn, '=', '24:00:00')
-        ctrl = wntr.network.controls.Control(cond, act)
-        wn.add_control('close pipe ' + pipe_name, ctrl)
-        sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
-        results = sim.run_sim(solver_options={'MAXITER':500})
-        temp = results.node['pressure'].min()
-        temp = temp[temp < pressure_threshold]
-        summary[pipe_name] = list(temp.index)  
-        print('   Complete')
-    except Exception as e:
-        summary[pipe_name] = e
-        print('   Failed')
-
-
-### Calculate difference between the original and pipe criticality simulations
-summary_len = {}
-summary_pop = {}
-failed_sim = {}
-for key, val in summary.items():
-    if type(val) is list:
-        summary[key] = list(set(val) - set(orig))
-        summary_len[key] = len(set(val) - set(orig))
-        summary_pop[key] = 0
-        for node in summary[key]:
-            summary_pop[key] = summary_pop[key] + pop[node]
-    else:
-        failed_sim[key] = val
-     
-        
-### Plot results         
-wntr.graphics.plot_network(wn, node_attribute=orig, 
-                           title='Nodes that fall below '+str(pressure_threshold)+' psi during normal operating conditions')
-wntr.graphics.plot_network(wn, link_attribute=summary_len, node_size=0, 
-                           link_width=2, add_colorbar=False, 
-                           title='Number of nodes impacted by low pressure conditions\nfor each pipe closure')
-wntr.graphics.plot_network(wn, link_attribute=summary_pop, node_size=0, 
-                           link_width=2, add_colorbar=False, 
-                           title='Number of people impacted by low pressure conditions\nfor each pipe closure')
-# Plot the affected network for the three most critical pipes
-sorted_keys = sorted(summary_len, key=summary_len.get)
-for i in np.arange(1,4,1):
-    pipe_name = sorted_keys[-i]
-    fig, ax = plt.subplots(1,1)
-    wntr.graphics.plot_network(wn, node_attribute=summary[pipe_name], 
-                               node_size=20, link_attribute=[pipe_name],
-                               title='Pipe '+pipe_name+' is critical \nfor normal operation of '+str(summary_len[pipe_name])+' nodes', ax=ax)
     
+    print('Pipe:', pipe_name)     
+    
+    # Reset the water network model
+    wn.reset_initial_values()
+    
+    #wn = wntr.network.WaterNetworkModel(inp_file)
+    #wn.options.time.duration = analysis_end_time
+    #for name, node in wn.nodes():
+    #    node.nominal_pressure = nominal_pressure
+
+    # Add a control to close the pipe
+    pipe = wn.get_link(pipe_name)        
+    act = wntr.network.controls.ControlAction(pipe, 'status', 
+                                              wntr.network.LinkStatus.Closed)
+    cond = wntr.network.controls.SimTimeCondition(wn, '=', '24:00:00')
+    ctrl = wntr.network.controls.Control(cond, act)
+    wn.add_control('close pipe ' + pipe_name, ctrl)
+        
+    # Run a PDD simulation
+    sim = wntr.sim.WNTRSimulator(wn, mode='PDD')
+    results = sim.run_sim()
+        
+    # Extract the number of junctions that dip below the minimum pressure threshold
+    min_pressure = results.node['pressure'].loc[:,wn.junction_name_list].min()
+    below_threshold = set(min_pressure[min_pressure < pressure_threshold].index)
+    
+    # Remove the set of junctions that were below the pressure threshold during 
+    # normal conditions and store the result
+    junctions_impacted[pipe_name] = below_threshold - below_threshold_normal_conditions
+        
+    # Remove the control
+    wn.remove_control('close pipe ' + pipe_name)
+
+# Extract the number of junctions impacted by low pressure conditions for each pipe closure  
+number_of_junctions_impacted = dict([(k,len(v)) for k,v in junctions_impacted.items()])
+        
+# Plot results         
+wntr.graphics.plot_network(wn, link_attribute=number_of_junctions_impacted, 
+                           node_size=0, link_width=2, 
+                           title='Number of junctions impacted by low pressure conditions\nfor each pipe closure')
+
+# Plot impacted junctions for a specific pipe closure
+pipe_name = '177'
+wntr.graphics.plot_network(wn, node_attribute=list(junctions_impacted[pipe_name]), 
+                           link_attribute=[pipe_name], node_size=20, 
+                           title='Pipe ' + pipe_name + ' is critical \nfor pressure conditions at '+str(number_of_junctions_impacted[pipe_name])+' nodes')

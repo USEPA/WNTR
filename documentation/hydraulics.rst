@@ -141,7 +141,7 @@ either direction. However, the derivative with respect to :math:`q` at :math:`q 
 is :math:`0`. In certain scenarios, this can cause the Jacobian matrix of the
 set of hydraulic equations to become singular (when :math:`q=0`). 
 To overcome this limitation, the WNTRSimulator
-splits the domain of :math:`q` into six segments to
+splits the domain of :math:`q` into segments to
 create a piecewise smooth function.
 
 .. as presented below.
@@ -224,8 +224,8 @@ Newton-Raphson algorithm.
 :numref:`fig-pressure-dependent` illustrates the pressure-demand relationship using both the demand-driven and pressure dependent demand simulations.
 In the example, 
 :math:`D_f` is 0.0025 m³/s (39.6 GPM),
-:math:`P_f` is 30 psi, and 
-:math:`P_0` is 5 psi.
+:math:`P_f` is 30 psi (21.097 m), and 
+:math:`P_0` is 5 psi (3.516 m).
 Using the demand-driven simulation, the demand is equal to :math:`D_f` regardless of pressure.  
 Using the pressure dependent demand simulation, the demand starts to decrease when the pressure is below :math:`P_f` and goes to 0 when pressure is below :math:`P_0`.
 
@@ -355,7 +355,8 @@ To restart the simulation from time zero, the user has several options.
        >>> results = sim.run_sim()
     
 If these options do not cover user specific needs, then the water network
-model would need to be recreated between simulations or reset by hand.
+model would need to be recreated between simulations or reset manually by changing individual attributes to the desired
+values.
 Note that when using the EpanetSimulator, the model is reset each time it is used in 
 a simulation.
 

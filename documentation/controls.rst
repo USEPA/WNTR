@@ -26,9 +26,9 @@ WNTR includes additional options to define controls and rules that can be used b
 
 The basic steps to define a control or rule are:
 
-1. Define the action(s)
-2. Define condition(s) (i.e., define what should cause the action to occur)
-3. Define the control or rule using the action(s) and condition(s)
+1. Define the action(s) (i.e., define the action that should occur, such as closing/opening a link)
+2. Define condition(s) (i.e., define what should cause the action to occur, such as a tank level)
+3. Define the control or rule using the action(s) and condition(s) (i.e., combine the defined action and condition)
 4. Add the control or rule to the water network model
 
 These steps are defined below.  
