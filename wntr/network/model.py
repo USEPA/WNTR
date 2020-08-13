@@ -1730,6 +1730,9 @@ class WaterNetworkModel(AbstractModel):
             link.setting = link.initial_setting
             link._prev_setting = None
 
+        for name, control in self.controls():
+            control._reset()
+
     def read_inpfile(self, filename):
         """
         Defines water network model components from an EPANET INP file
