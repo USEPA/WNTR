@@ -354,7 +354,8 @@ def valve_segments(G, valve_layer):
 def valve_criticality(valve_layer, node_segments, link_segments, 
                             screen_updating=False):
     """
-
+	A valve criticality metric: the number of valves surrounding each valve
+	
     Parameters
     ----------
 
@@ -437,7 +438,8 @@ def valve_criticality(valve_layer, node_segments, link_segments,
 def valve_criticality_length(link_lengths, valve_layer, node_segments, 
                              link_segments, screen_updating=False):
     """
-
+	A valve criticality metric: the ratio of the segment lengths on either side of the valve
+	
     Parameters
     ----------
 
@@ -507,7 +509,8 @@ def valve_criticality_length(link_lengths, valve_layer, node_segments,
 def valve_criticality_demand(node_demands, valve_layer, node_segments, 
                              link_segments, screen_updating=False):
     """
-
+	A valve criticality metric: the ratio of the sums of the node base demands on either side of a valve.
+	
     Parameters
     ----------
 
